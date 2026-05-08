@@ -23,9 +23,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/" className="text-xl font-bold tracking-tight text-white hover:text-indigo-300 transition-colors">Cimolace</Link>
             <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
               <Link href="/medos" className="px-3 py-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors">MedOS</Link>
+              <Link href="/engines" className="px-3 py-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors">Moteurs</Link>
               <Link href="/pricing" className="px-3 py-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors">Tarifs</Link>
-              <Link href="#infrastructures" className="px-3 py-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors">Solutions</Link>
-              <Link href="#how-it-works" className="px-3 py-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors">Fonctionnement</Link>
+              <Link href="/infrastructures/ecole" className="px-3 py-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors">Solutions</Link>
               <Link href={onboardingUrl} className="ml-3 bg-white text-black px-4 py-2 rounded-full hover:bg-white/90 transition-colors">Créer ma plateforme</Link>
             </nav>
             <Link href={onboardingUrl} className="md:hidden bg-white text-black text-sm px-4 py-2 rounded-full hover:bg-white/90 transition-colors">Démarrer</Link>
