@@ -1,6 +1,12 @@
 import { Module } from "@nestjs/common";
 import { AuthModule } from "./auth/auth.module";
 import { TenantModule } from "./tenant/tenant.module";
+import { CimolaceModule } from "./cimolace/cimolace.module";
+import { BillingModule } from "./billing/billing.module";
+import { CheckoutModule } from "./checkout/checkout.module";
+import { LiveModule } from "./live/live.module";
+import { MarketingModule } from "./marketing/marketing.module";
+import { NotificationsModule } from "./notifications/notifications.module";
 import { MedEhrModule } from "./med-ehr/med-ehr.module";
 import { MedNotesModule } from "./med-notes/med-notes.module";
 import { MedFormsModule } from "./med-forms/med-forms.module";
@@ -12,16 +18,12 @@ import { MedGdprModule } from "./med-gdpr/med-gdpr.module";
 
 @Module({
   imports: [
-    AuthModule,
-    TenantModule,
-    MedEhrModule,
-    MedNotesModule,
-    MedFormsModule,
-    MedHealthModule,
-    MedProgramsModule,
-    MedPrescriptionsModule,
-    MedChartingModule,
-    MedGdprModule,
+    AuthModule, TenantModule,
+    CimolaceModule, BillingModule, CheckoutModule,
+    LiveModule, MarketingModule, NotificationsModule,
+    MedEhrModule, MedNotesModule, MedFormsModule,
+    MedHealthModule, MedProgramsModule, MedPrescriptionsModule,
+    MedChartingModule, MedGdprModule,
   ],
 })
 export class AppModule {}
