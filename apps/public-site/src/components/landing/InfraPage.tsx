@@ -2,21 +2,20 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowRight, ArrowLeft, Puzzle } from "lucide-react";
 import { getOnboardingUrl } from "@/lib/urls";
 import { Badge } from "./Badge";
 
-interface Feature { title: string; desc: string; }
 interface Plan { name: string; price: string; features: string[]; highlight?: boolean; }
 
 interface InfraPageProps {
   title: string; icon: string; tagline: string; gradient: string;
   status?: "available" | "beta" | "coming-soon";
-  features: Feature[];
+  engines: string[];
   plans: Plan[];
 }
 
-export function InfraPage({ title, icon, tagline, gradient, status = "available", features, plans }: InfraPageProps) {
+export function InfraPage({ title, icon, tagline, gradient, status = "available", engines, plans }: InfraPageProps) {
   const onboardingUrl = getOnboardingUrl();
   return (
     <>
@@ -38,15 +37,19 @@ export function InfraPage({ title, icon, tagline, gradient, status = "available"
         </div>
       </section>
 
-      {/* Features */}
+      {/* Engines — "Moteurs inclus" */}
       <section className="relative bg-white py-24">
-        <div className="max-w-5xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-slate-900 text-center mb-16">Tout ce dont vous avez besoin.</h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {features.map((f, i) => (
-              <motion.div key={f.title} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.3, delay: i * 0.05 }} className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
-                <h3 className="font-semibold text-slate-900 mb-2">{f.title}</h3>
-                <p className="text-sm text-slate-500">{f.desc}</p>
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-purple-50 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full mb-4"><Puzzle className="w-3 h-3" />MOTEURS</div>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-3">Moteurs inclus dans {title}</h2>
+            <p className="text-slate-400 max-w-lg mx-auto">Cette infrastructure active automatiquement les moteurs Cimolace suivants. Vous pouvez en ajouter ou en retirer à tout moment.</p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {engines.map((e, i) => (
+              <motion.div key={e} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.25, delay: i * 0.04 }} className="bg-slate-50 border border-slate-100 rounded-xl px-5 py-4 text-sm text-slate-700 hover:border-purple-200 hover:bg-purple-50/30 transition-all flex items-start gap-3">
+                <span className="text-lg flex-shrink-0">{e.split(" — ")[0].split(" ")[0]}</span>
+                <span className="text-slate-600">{e.split(" — ").slice(1).join(" — ")}</span>
               </motion.div>
             ))}
           </div>
@@ -73,7 +76,7 @@ export function InfraPage({ title, icon, tagline, gradient, status = "available"
         </div>
       </section>
 
-      {/* Footer CTA */}
+      {/* CTA */}
       <section className="relative bg-slate-50 py-16 text-center">
         <p className="text-slate-500 mb-4">Une question ?</p>
         <Link href="/#faq" className="text-slate-900 font-semibold hover:underline">Consultez notre FAQ →</Link>

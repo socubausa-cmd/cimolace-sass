@@ -3,14 +3,7 @@ import { InfraPage } from "@/components/landing/InfraPage";
 
 export const metadata: Metadata = { title: "Bien-être & Coaching — Cimolace", description: "Programmes de coaching, suivis santé, communautés bien-être." };
 
-const features = [
-  { title: "Programmes de soins", desc: "Créez des programmes personnalisés J+N. Automatisations email/SMS." },
-  { title: "Trackers santé", desc: "Humeur, sommeil, activité, repas. Vos clients trackent, vous analysez." },
-  { title: "Agenda & RDV", desc: "Prise de rendez-vous en ligne. Rappels automatiques. Paiement intégré." },
-  { title: "Messagerie", desc: "Chat sécurisé avec vos clients. Groupes de coaching. Fichiers." },
-  { title: "Communauté", desc: "Forums privés par programme. Événements live. Défis collectifs." },
-  { title: "Paiements", desc: "Stripe, CinetPay, Orange Money. Abonnements ou séances à l'unité." },
-];
+const engines = ["🎯 Care Programs — Programmes de soins J+N","📊 Health Tracking — Suivi humeur, sommeil, activité","📅 Calendar — Disponibilités & RDV en ligne","💬 Chat Engine — Messagerie privée + groupes","👥 Forum — Communautés privées par programme","💳 Pay Engine — Abonnements & séances à l'unité"];
 
 const plans = [
   { name: "Starter", price: "19€", features: ["10 clients","2 programmes","Trackers santé","Chat illimité","Email support"] },
@@ -18,5 +11,5 @@ const plans = [
 ];
 
 export default function WellnessPage() {
-  return <InfraPage title="Bien-être & Coaching" icon="🌿" tagline="Programmes, suivis, communautés. Accompagnez vos clients de A à Z." gradient="from-green-500 to-emerald-600" features={features} plans={plans} />;
+  return <InfraPage title="Bien-être & Coaching" icon="🌿" tagline="Programmes, suivis, RDV, communautés. Accompagnez chaque client de A à Z." gradient="from-green-500 to-emerald-600" engines={engines} plans={plans} status="beta" />;
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { getOnboardingUrl } from "@/lib/urls";
 import { Badge } from "./Badge";
 
 const infrastructures = [
@@ -35,7 +36,7 @@ export function Infrastructures() {
           ))}
         </div>
         <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.4 }} className="mt-12 text-center">
-          <Link href="http://localhost:5173/onboarding" className="inline-flex items-center gap-2 text-slate-900 font-semibold hover:text-slate-600 transition-colors text-sm"><span className="text-lg">⚙️</span> Ou construisez votre propre infrastructure →</Link>
+          <Link href={getOnboardingUrl()} className="inline-flex items-center gap-2 text-slate-900 font-semibold hover:text-slate-600 transition-colors text-sm"><span className="text-lg">⚙️</span> Ou construisez votre propre infrastructure →</Link>
         </motion.div>
       </div>
     </section>
