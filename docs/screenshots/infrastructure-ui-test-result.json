@@ -1,0 +1,7 @@
+{
+  "unauthHasSessionRequired": true,
+  "unauthButtonsDisabled": true,
+  "authHasUnauthorized": false,
+  "authHasMedos": true,
+  "authHasApply": true
+}
