@@ -1,0 +1,17 @@
+# Fichiers exclus du build Docker Cloud Run
+.git
+.gitignore
+.github
+*.md
+.env*
+!.env.example
+node_modules
+apps/*/node_modules
+apps/api/dist
+apps/app/dist
+apps/public-site/.next
+supabase
+scripts
+docs
+.gcloudignore
+Dockerfile
