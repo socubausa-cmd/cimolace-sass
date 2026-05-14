@@ -7,6 +7,10 @@ import { DashboardProduct } from './pages/DashboardProduct';
 import { DashboardLives } from './pages/DashboardLives';
 import { DashboardLivesNew } from './pages/DashboardLivesNew';
 import { LiveJoin } from './pages/LiveJoin';
+import LiveHostPage from './pages/LiveHostPage';
+import LiveGuestPage from './pages/LiveGuestPage';
+import LiveClassroomPage from './pages/LiveClassroomPage';
+import LiveStudioPage from './pages/LiveStudioPage';
 import { MedosDashboard } from './pages/MedosDashboard';
 import { MedosPatients } from './pages/MedosPatients';
 import { MedosPatientDetail } from './pages/MedosPatientDetail';
@@ -52,6 +56,10 @@ function App() {
           <Route path="/dashboard/lives" element={<DashboardLives />} />
           <Route path="/dashboard/lives/new" element={<DashboardLivesNew />} />
           <Route path="/lives/:id/join" element={<LiveJoin />} />
+          <Route path="/lives/:id/host" element={<LiveHostPage />} />
+          <Route path="/lives/:id/guest" element={<LiveGuestPage />} />
+          <Route path="/lives/:id/classroom" element={<LiveClassroomPage />} />
+          <Route path="/lives/:id/studio" element={<LiveStudioPage />} />
           <Route path="/dashboard/liri" element={<DashboardLiri />} />
           <Route path="/studio/liri" element={<StudioLiriHubPage />} />
           <Route path="/studio/liri/cours" element={<StudioLiriCourseBuilderPage />} />
