@@ -1,0 +1,50 @@
+{
+  "longia_realtime_bus": {
+    "id": "longia_bus_v1",
+    "description": "Event bus temps réel — Prof ↔ Invités ↔ LONGIA (canal Supabase Realtime broadcast).",
+    "channel_pattern": "longia-bus-{live_session_id}",
+    "broadcast_event": "longia_bus",
+    "envelope_version": 1,
+    "event_types": [
+      "transcript.partial",
+      "transcript.final",
+      "student.action",
+      "student.question",
+      "audience.metric",
+      "secure_app.status",
+      "longia.prof.notification",
+      "longia.session_digest",
+      "longia.guest.response",
+      "longia.smartboard.action",
+      "multilang.caption"
+    ],
+    "routing": {
+      "to_prof": [
+        "longia.prof.notification",
+        "aggregated_confusion",
+        "priority_question",
+        "student.action"
+      ],
+      "to_guest": [
+        "longia.guest.response",
+        "summary.update",
+        "explanation.card",
+        "transcript.partial",
+        "transcript.final"
+      ],
+      "to_system": [
+        "transcript.partial",
+        "transcript.final",
+        "student.action",
+        "student.question",
+        "audience.metric",
+        "secure_app.status"
+      ]
+    },
+    "orchestration_notes": [
+      "Transcript → LONGIA Core (edge / client) → bus + UI.",
+      "Les student.action passent par longiaDecisionEngine (priorité, audience, timing).",
+      "Deux vues : journal hôte vs aide personnelle invité."
+    ]
+  }
+}

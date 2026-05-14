@@ -1,0 +1,54 @@
+[
+  {
+    "id": "text_06_section_header",
+    "label": "En-tête de section",
+    "category": "headers",
+    "usage": "Segmenter proprement un slide long.",
+    "nodes": [
+      {"type": "Rect", "attrs": {"x": 68, "y": 70, "width": 300, "height": 56, "cornerRadius": 18, "fill": "rgba(139,92,246,0.12)", "stroke": "rgba(139,92,246,0.30)"}},
+      {"type": "Text", "attrs": {"x": 96, "y": 84, "text": "Titre de section", "fontFamily": "Inter", "fontSize": 24, "fontStyle": "bold", "fill": "#6D28D9"}}
+    ]
+  },
+  {
+    "id": "text_07_subtitle_small_caps",
+    "label": "Sous-titre small caps",
+    "category": "subtitles",
+    "usage": "Sous-titre discret et premium.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 74, "y": 120, "text": "SOUS-TITRE OU CATÉGORIE", "fontFamily": "Inter", "fontSize": 18, "fontStyle": "bold", "fill": "#64748B", "letterSpacing": 2.1}}
+    ]
+  },
+  {
+    "id": "text_08_title_with_kicker",
+    "label": "Titre avec kicker",
+    "category": "titles",
+    "usage": "Couverture de section ou lancement de partie.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 74, "y": 86, "text": "KICKER", "fontFamily": "Inter", "fontSize": 18, "fontStyle": "bold", "fill": "#8B5CF6", "letterSpacing": 1.8}},
+      {"type": "Text", "attrs": {"x": 74, "y": 122, "width": 690, "text": "Ajouter un titre structuré et convaincant", "fontFamily": "Montserrat", "fontSize": 46, "fontStyle": "bold", "fill": "#0F172A", "lineHeight": 1.08}},
+      {"type": "Text", "attrs": {"x": 76, "y": 228, "width": 580, "text": "Ajoutez ici le contexte, l'intention ou l'angle de lecture.", "fontFamily": "Inter", "fontSize": 22, "fill": "#475569"}}
+    ]
+  },
+  {
+    "id": "text_09_numbered_heading",
+    "label": "Titre numéroté premium",
+    "category": "headers",
+    "usage": "Cours, étapes, parcours.",
+    "nodes": [
+      {"type": "Circle", "attrs": {"x": 104, "y": 114, "radius": 28, "fill": "rgba(139,92,246,0.14)", "stroke": "rgba(139,92,246,0.26)"}},
+      {"type": "Text", "attrs": {"x": 92, "y": 96, "width": 24, "text": "1", "fontFamily": "Montserrat", "fontSize": 28, "fontStyle": "bold", "fill": "#6D28D9", "align": "center"}},
+      {"type": "Text", "attrs": {"x": 150, "y": 92, "width": 640, "text": "Titre d'étape ou de chapitre", "fontFamily": "Inter", "fontSize": 34, "fontStyle": "bold", "fill": "#0F172A"}}
+    ]
+  },
+  {
+    "id": "text_10_dual_title_split",
+    "label": "Titre double colonne",
+    "category": "layout-text",
+    "usage": "Comparaison de deux concepts ou deux mondes.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 90, "y": 92, "width": 340, "text": "Bloc A", "fontFamily": "Montserrat", "fontSize": 40, "fontStyle": "bold", "fill": "#111827"}},
+      {"type": "Text", "attrs": {"x": 610, "y": 92, "width": 340, "text": "Bloc B", "fontFamily": "Montserrat", "fontSize": 40, "fontStyle": "bold", "fill": "#111827", "align": "right"}},
+      {"type": "Line", "attrs": {"points": [518, 86, 518, 170], "stroke": "rgba(15,23,42,0.14)", "strokeWidth": 3, "lineCap": "round"}}
+    ]
+  }
+]

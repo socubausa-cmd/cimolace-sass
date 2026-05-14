@@ -1,0 +1,281 @@
+import React, { forwardRef } from 'react';
+import { LiveCenterStageSmartBoard } from '@/features/live/host/components/LiveCenterStageSmartBoard';
+import { LiveHostLiriMobileBranch } from '@/features/live/host/components/LiveHostLiriMobileBranch';
+import { LiveStripBandeau } from '@/features/live/host/components/LiveStripBandeau';
+
+/**
+ * Colonne centrale du live (entre rails gauche / droite) : branche maquette mobile LIRI hôte
+ * ou bandeau membres + scène SmartBoard.
+ */
+export const LiveHostLiveCenterColumn = forwardRef(function LiveHostLiveCenterColumn(p, ref) {
+  const {
+    isGuestUi,
+    lhLayoutCompact,
+    hostCompactColOrder,
+    liveShell,
+    hostLiriMobileHostBranch,
+    memberCardsRef,
+    handleStop,
+    stopLiveBusy,
+    onlineMemberCount,
+    user,
+    lhMaquetteMainVideoRef,
+    lhMaquetteMiniVideoRef,
+    lhMaquettePipCanvasMainRef,
+    lhMaquettePipCanvasMiniRef,
+    lhMaquetteMainDisplay,
+    lhMaquetteMiniDisplay,
+    lhMaquetteRemoteWaiting,
+    videoBlur,
+    videoBeauty,
+    videoVbg,
+    videoChromaKey,
+    videoChromaColor,
+    videoChromaSens,
+    videoFilterCSS,
+    lhMaquetteCompositorSlide,
+    step,
+    stepCount,
+    displaySlidesHost,
+    sbActiveScene,
+    promotedId,
+    zone3PrivilegedSeats,
+    lhMaquetteSlideAreaRef,
+    phase,
+    lhStageFocusLayout,
+    longiaHubPushesLayout,
+    longiaHubOpen,
+    longiaSignalSubDrawer,
+    toggleNeuronQ,
+    neuronQActive,
+    debateArena,
+    debateLiveVoteCounts,
+    liveScenes,
+    neuronQResponses,
+    activeEtapes,
+    activeMembers,
+    smartBoardStageRef,
+    smartboardSceneFlags,
+    sharedImageGallery,
+    sharedImageLoop,
+    shopProducts,
+    spotlightOn,
+    sharingScreen,
+    roomRef,
+    onSmartboardBroadcast,
+    liveKitScreenEpoch,
+    camera2FluxParticipants,
+    toggleScreenShare,
+    progressivePlayback,
+    hostSmartboardPipStream,
+    sessionId,
+    setSbActiveScene,
+    onHostWhiteboardToolsRailSync,
+    floatingReactions,
+    openLongiaHubCoachPanel,
+    guestFooterBarBg,
+    hostArenaLiveBarProps,
+    showStripLocalHost,
+    livekitParticipantsMap,
+    cameraOn,
+    liveKitMediaEpoch,
+    handleGuestLeave,
+    liveStripDockMembers,
+    setForumTarget,
+    setMemberVideoPreview,
+    setModal,
+    arenaHostCameraCenter,
+    guestMobileAuthorityUi,
+    sessionTitle,
+    hostLiveKitParticipant,
+    setLiveLeftRailOpen,
+    setLiveRightRailOpen,
+    addMeshRequest,
+    guestCapabilityCaps,
+    joyKitSignalGrant,
+    guestMeshStatusLine,
+    arenaGuestFocusCenter,
+    arenaPanelCenter,
+    arenaMembersWallCenter,
+    arenaGuestFocusUserId,
+    arenaPanelUserIds,
+    liveParticipants,
+    guestJoyKitDrive,
+    guestCommAllowed,
+  } = p;
+
+  return (
+    <div
+      ref={ref}
+      data-lh-center-stage="1"
+      style={{
+        order: isGuestUi && lhLayoutCompact ? 1 : hostCompactColOrder.center,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: `${liveShell.gap}px`,
+        minHeight: 0,
+        minWidth: 0,
+        width: '100%',
+        maxWidth: '100%',
+        alignSelf: 'stretch',
+        boxSizing: 'border-box',
+      }}
+    >
+      {hostLiriMobileHostBranch && !isGuestUi ? (
+        <LiveHostLiriMobileBranch
+          handleStop={handleStop}
+          stopLiveBusy={stopLiveBusy}
+          onlineMemberCount={onlineMemberCount}
+          user={user}
+          lhMaquetteMainVideoRef={lhMaquetteMainVideoRef}
+          lhMaquetteMiniVideoRef={lhMaquetteMiniVideoRef}
+          lhMaquettePipCanvasMainRef={lhMaquettePipCanvasMainRef}
+          lhMaquettePipCanvasMiniRef={lhMaquettePipCanvasMiniRef}
+          lhMaquetteMainDisplay={lhMaquetteMainDisplay}
+          lhMaquetteMiniDisplay={lhMaquetteMiniDisplay}
+          lhMaquetteRemoteWaiting={lhMaquetteRemoteWaiting}
+          videoBlur={videoBlur}
+          videoBeauty={videoBeauty}
+          videoVbg={videoVbg}
+          videoChromaKey={videoChromaKey}
+          videoChromaColor={videoChromaColor}
+          videoChromaSens={videoChromaSens}
+          videoFilterCSS={videoFilterCSS}
+          lhMaquetteCompositorSlide={lhMaquetteCompositorSlide}
+          step={step}
+          stepCount={stepCount}
+          displaySlidesHost={displaySlidesHost}
+          sbActiveScene={sbActiveScene}
+          promotedId={promotedId}
+          zone3PrivilegedSeats={zone3PrivilegedSeats}
+          lhMaquetteSlideAreaRef={lhMaquetteSlideAreaRef}
+          liveShell={liveShell}
+          phase={phase}
+          lhStageFocusLayout={lhStageFocusLayout}
+          longiaHubPushesLayout={longiaHubPushesLayout}
+          longiaHubOpen={longiaHubOpen}
+          longiaSignalSubDrawer={longiaSignalSubDrawer}
+          toggleNeuronQ={toggleNeuronQ}
+          neuronQActive={neuronQActive}
+          debateArena={debateArena}
+          debateLiveVoteCounts={debateLiveVoteCounts}
+          liveScenes={liveScenes}
+          neuronQResponses={neuronQResponses}
+          activeEtapes={activeEtapes}
+          activeMembers={activeMembers}
+          smartBoardStageRef={smartBoardStageRef}
+          smartboardSceneFlags={smartboardSceneFlags}
+          sharedImageGallery={sharedImageGallery}
+          sharedImageLoop={sharedImageLoop}
+          shopProducts={shopProducts}
+          spotlightOn={spotlightOn}
+          sharingScreen={sharingScreen}
+          roomRef={roomRef}
+          onSmartboardBroadcast={onSmartboardBroadcast}
+          liveKitScreenEpoch={liveKitScreenEpoch}
+          camera2FluxParticipants={camera2FluxParticipants}
+          toggleScreenShare={toggleScreenShare}
+          progressivePlayback={progressivePlayback}
+          hostSmartboardPipStream={hostSmartboardPipStream}
+          sessionId={sessionId}
+          setSbActiveScene={setSbActiveScene}
+          onHostWhiteboardToolsRailSync={onHostWhiteboardToolsRailSync}
+          isGuestUi={isGuestUi}
+          floatingReactions={floatingReactions}
+          openLongiaHubCoachPanel={openLongiaHubCoachPanel}
+          guestFooterBarBg={guestFooterBarBg}
+          hostArenaLiveBarProps={hostArenaLiveBarProps}
+        />
+      ) : (
+        <>
+          <LiveStripBandeau
+            ref={memberCardsRef}
+            isGuestUi={isGuestUi}
+            liveShell={liveShell}
+            phase={phase}
+            showStripLocalHost={showStripLocalHost}
+            livekitParticipantsMap={livekitParticipantsMap}
+            cameraOn={cameraOn}
+            liveKitMediaEpoch={liveKitMediaEpoch}
+            user={user}
+            stopLiveBusy={stopLiveBusy}
+            handleStop={handleStop}
+            handleGuestLeave={handleGuestLeave}
+            onlineMemberCount={onlineMemberCount}
+            liveStripDockMembers={liveStripDockMembers}
+            promotedId={promotedId}
+            setForumTarget={setForumTarget}
+            setMemberVideoPreview={setMemberVideoPreview}
+            setModal={setModal}
+            arenaHostCameraCenter={arenaHostCameraCenter}
+            guestMobileAuthorityUi={guestMobileAuthorityUi}
+          />
+
+          <LiveCenterStageSmartBoard
+            phase={phase}
+            isGuestUi={isGuestUi}
+            liveShell={liveShell}
+            lhStageFocusLayout={lhStageFocusLayout}
+            longiaHubPushesLayout={longiaHubPushesLayout}
+            longiaHubOpen={longiaHubOpen}
+            longiaSignalSubDrawer={longiaSignalSubDrawer}
+            guestMobileAuthorityUi={guestMobileAuthorityUi}
+            sessionTitle={sessionTitle}
+            step={step}
+            stepCount={stepCount}
+            displaySlidesHost={displaySlidesHost}
+            hostLiveKitParticipant={hostLiveKitParticipant}
+            liveKitMediaEpoch={liveKitMediaEpoch}
+            setLiveLeftRailOpen={setLiveLeftRailOpen}
+            setLiveRightRailOpen={setLiveRightRailOpen}
+            addMeshRequest={addMeshRequest}
+            guestCapabilityCaps={guestCapabilityCaps}
+            joyKitSignalGrant={joyKitSignalGrant}
+            guestMeshStatusLine={guestMeshStatusLine}
+            arenaHostCameraCenter={arenaHostCameraCenter}
+            arenaGuestFocusCenter={arenaGuestFocusCenter}
+            arenaPanelCenter={arenaPanelCenter}
+            arenaMembersWallCenter={arenaMembersWallCenter}
+            arenaGuestFocusUserId={arenaGuestFocusUserId}
+            arenaPanelUserIds={arenaPanelUserIds}
+            promotedId={promotedId}
+            liveParticipants={liveParticipants}
+            livekitParticipantsMap={livekitParticipantsMap}
+            cameraOn={cameraOn}
+            toggleNeuronQ={toggleNeuronQ}
+            neuronQActive={neuronQActive}
+            debateArena={debateArena}
+            debateLiveVoteCounts={debateLiveVoteCounts}
+            liveScenes={liveScenes}
+            neuronQResponses={neuronQResponses}
+            activeEtapes={activeEtapes}
+            activeMembers={activeMembers}
+            smartBoardStageRef={smartBoardStageRef}
+            smartboardSceneFlags={smartboardSceneFlags}
+            sharedImageGallery={sharedImageGallery}
+            sharedImageLoop={sharedImageLoop}
+            shopProducts={shopProducts}
+            spotlightOn={spotlightOn}
+            sharingScreen={sharingScreen}
+            roomRef={roomRef}
+            guestJoyKitDrive={guestJoyKitDrive}
+            onSmartboardBroadcast={onSmartboardBroadcast}
+            liveKitScreenEpoch={liveKitScreenEpoch}
+            camera2FluxParticipants={camera2FluxParticipants}
+            guestCommAllowed={guestCommAllowed}
+            toggleScreenShare={toggleScreenShare}
+            progressivePlayback={progressivePlayback}
+            hostSmartboardPipStream={hostSmartboardPipStream}
+            sessionId={sessionId}
+            setSbActiveScene={setSbActiveScene}
+            onHostWhiteboardToolsRailSync={onHostWhiteboardToolsRailSync}
+            floatingReactions={floatingReactions}
+            openLongiaHubCoachPanel={openLongiaHubCoachPanel}
+            guestFooterBarBg={guestFooterBarBg}
+            hostArenaLiveBarProps={hostArenaLiveBarProps}
+          />
+        </>
+      )}
+    </div>
+  );
+});

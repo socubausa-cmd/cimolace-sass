@@ -1,0 +1,13 @@
+{
+  "_comment": "Miroir documentaire. Base complète ISNA/NGOWAZULU/Prorascence : netlify/functions/_lib/immersiveKnowledgeBase.md (voir docs/AGENT_IA_BASE_CONNAISSANCES.md)",
+  "version": "2026-03-20",
+  "institution": {
+    "name": "Prorascence Academy",
+    "shortName": "ISNA",
+    "tagline": "École de science métaphysique et de traditions africaines."
+  },
+  "founder": {
+    "titles": ["5ᵉ Manikongo", "Ngowazulu", "Professeur Kimbembe", "Badika Jel David"],
+    "role": "Fondateur de la Prorascience / ISNA"
+  }
+}

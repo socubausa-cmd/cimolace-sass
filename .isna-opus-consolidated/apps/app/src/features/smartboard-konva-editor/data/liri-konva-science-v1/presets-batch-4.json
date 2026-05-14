@@ -1,0 +1,89 @@
+[
+  {
+    "id": "science_16_earth_water_cycle",
+    "label": "Terre — cycle naturel",
+    "discipline": "earth",
+    "usage": "Cycle de l’eau, carbone, échanges naturels.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 74, "y": 70, "text": "Cycle naturel", "fontFamily": "Montserrat", "fontSize": 36, "fontStyle": "bold", "fill": "#0F172A"}},
+      {"type": "Circle", "attrs": {"x": 338, "y": 256, "radius": 62, "fill": "rgba(8,145,178,0.10)", "stroke": "rgba(8,145,178,0.26)", "strokeWidth": 3}},
+      {"type": "Circle", "attrs": {"x": 700, "y": 256, "radius": 62, "fill": "rgba(8,145,178,0.10)", "stroke": "rgba(8,145,178,0.26)", "strokeWidth": 3}},
+      {"type": "Circle", "attrs": {"x": 700, "y": 500, "radius": 62, "fill": "rgba(8,145,178,0.10)", "stroke": "rgba(8,145,178,0.26)", "strokeWidth": 3}},
+      {"type": "Circle", "attrs": {"x": 338, "y": 500, "radius": 62, "fill": "rgba(8,145,178,0.10)", "stroke": "rgba(8,145,178,0.26)", "strokeWidth": 3}},
+      {"type": "Arrow", "attrs": {"points": [400, 256, 638, 256], "stroke": "#0891B2", "fill": "#0891B2", "pointerLength": 10, "pointerWidth": 10, "strokeWidth": 4}},
+      {"type": "Arrow", "attrs": {"points": [700, 318, 700, 438], "stroke": "#0891B2", "fill": "#0891B2", "pointerLength": 10, "pointerWidth": 10, "strokeWidth": 4}},
+      {"type": "Arrow", "attrs": {"points": [638, 500, 400, 500], "stroke": "#0891B2", "fill": "#0891B2", "pointerLength": 10, "pointerWidth": 10, "strokeWidth": 4}},
+      {"type": "Arrow", "attrs": {"points": [338, 438, 338, 318], "stroke": "#0891B2", "fill": "#0891B2", "pointerLength": 10, "pointerWidth": 10, "strokeWidth": 4}}
+    ]
+  },
+  {
+    "id": "science_17_earth_landscape_evolution",
+    "label": "Terre — évolution d’un paysage",
+    "discipline": "earth",
+    "usage": "Avant / transformation / après.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 118, "y": 84, "text": "Avant", "fontFamily": "Montserrat", "fontSize": 36, "fontStyle": "bold", "fill": "#A16207"}},
+      {"type": "Text", "attrs": {"x": 454, "y": 84, "text": "Transformation", "fontFamily": "Montserrat", "fontSize": 36, "fontStyle": "bold", "fill": "#A16207", "align": "center", "width": 160}},
+      {"type": "Text", "attrs": {"x": 800, "y": 84, "text": "Après", "fontFamily": "Montserrat", "fontSize": 36, "fontStyle": "bold", "fill": "#A16207"}},
+      {"type": "Rect", "attrs": {"x": 70, "y": 170, "width": 250, "height": 290, "cornerRadius": 24, "fill": "rgba(217,119,6,0.08)", "stroke": "rgba(217,119,6,0.22)"}},
+      {"type": "Rect", "attrs": {"x": 394, "y": 170, "width": 250, "height": 290, "cornerRadius": 24, "fill": "rgba(217,119,6,0.08)", "stroke": "rgba(217,119,6,0.22)"}},
+      {"type": "Rect", "attrs": {"x": 718, "y": 170, "width": 250, "height": 290, "cornerRadius": 24, "fill": "rgba(217,119,6,0.08)", "stroke": "rgba(217,119,6,0.22)"}},
+      {"type": "Arrow", "attrs": {"points": [320, 316, 394, 316], "stroke": "#D97706", "fill": "#D97706", "pointerLength": 12, "pointerWidth": 12, "strokeWidth": 4}},
+      {"type": "Arrow", "attrs": {"points": [644, 316, 718, 316], "stroke": "#D97706", "fill": "#D97706", "pointerLength": 12, "pointerWidth": 12, "strokeWidth": 4}}
+    ]
+  },
+  {
+    "id": "science_18_method_scientific_process",
+    "label": "Méthode — hypothèse à conclusion",
+    "discipline": "method",
+    "usage": "Démarche scientifique complète.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 72, "y": 72, "text": "Démarche scientifique", "fontFamily": "Montserrat", "fontSize": 38, "fontStyle": "bold", "fill": "#0F172A"}},
+      {"type": "Rect", "attrs": {"x": 64, "y": 310, "width": 152, "height": 94, "cornerRadius": 18, "fill": "rgba(124,58,237,0.10)", "stroke": "rgba(124,58,237,0.24)"}},
+      {"type": "Rect", "attrs": {"x": 248, "y": 310, "width": 152, "height": 94, "cornerRadius": 18, "fill": "rgba(124,58,237,0.10)", "stroke": "rgba(124,58,237,0.24)"}},
+      {"type": "Rect", "attrs": {"x": 432, "y": 310, "width": 152, "height": 94, "cornerRadius": 18, "fill": "rgba(124,58,237,0.10)", "stroke": "rgba(124,58,237,0.24)"}},
+      {"type": "Rect", "attrs": {"x": 616, "y": 310, "width": 152, "height": 94, "cornerRadius": 18, "fill": "rgba(124,58,237,0.10)", "stroke": "rgba(124,58,237,0.24)"}},
+      {"type": "Rect", "attrs": {"x": 800, "y": 310, "width": 152, "height": 94, "cornerRadius": 18, "fill": "rgba(124,58,237,0.10)", "stroke": "rgba(124,58,237,0.24)"}},
+      {"type": "Text", "attrs": {"x": 92, "y": 342, "width": 96, "text": "Question", "fontFamily": "Inter", "fontSize": 22, "fontStyle": "bold", "fill": "#6D28D9", "align": "center"}},
+      {"type": "Text", "attrs": {"x": 274, "y": 342, "width": 100, "text": "Hypothèse", "fontFamily": "Inter", "fontSize": 22, "fontStyle": "bold", "fill": "#6D28D9", "align": "center"}},
+      {"type": "Text", "attrs": {"x": 468, "y": 342, "width": 80, "text": "Test", "fontFamily": "Inter", "fontSize": 22, "fontStyle": "bold", "fill": "#6D28D9", "align": "center"}},
+      {"type": "Text", "attrs": {"x": 646, "y": 342, "width": 92, "text": "Résultat", "fontFamily": "Inter", "fontSize": 22, "fontStyle": "bold", "fill": "#6D28D9", "align": "center"}},
+      {"type": "Text", "attrs": {"x": 828, "y": 342, "width": 96, "text": "Conclusion", "fontFamily": "Inter", "fontSize": 22, "fontStyle": "bold", "fill": "#6D28D9", "align": "center"}},
+      {"type": "Arrow", "attrs": {"points": [216, 357, 248, 357], "stroke": "#7C3AED", "fill": "#7C3AED", "pointerLength": 10, "pointerWidth": 10, "strokeWidth": 4}},
+      {"type": "Arrow", "attrs": {"points": [400, 357, 432, 357], "stroke": "#7C3AED", "fill": "#7C3AED", "pointerLength": 10, "pointerWidth": 10, "strokeWidth": 4}},
+      {"type": "Arrow", "attrs": {"points": [584, 357, 616, 357], "stroke": "#7C3AED", "fill": "#7C3AED", "pointerLength": 10, "pointerWidth": 10, "strokeWidth": 4}},
+      {"type": "Arrow", "attrs": {"points": [768, 357, 800, 357], "stroke": "#7C3AED", "fill": "#7C3AED", "pointerLength": 10, "pointerWidth": 10, "strokeWidth": 4}}
+    ]
+  },
+  {
+    "id": "science_19_method_observation_vs_interpretation",
+    "label": "Méthode — observation / interprétation",
+    "discipline": "method",
+    "usage": "Former l’esprit critique.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 112, "y": 78, "width": 300, "text": "Observation", "fontFamily": "Montserrat", "fontSize": 40, "fontStyle": "bold", "fill": "#7C3AED"}},
+      {"type": "Text", "attrs": {"x": 624, "y": 78, "width": 300, "text": "Interprétation", "fontFamily": "Montserrat", "fontSize": 40, "fontStyle": "bold", "fill": "#7C3AED", "align": "right"}},
+      {"type": "Rect", "attrs": {"x": 74, "y": 160, "width": 380, "height": 408, "cornerRadius": 24, "fill": "rgba(124,58,237,0.08)", "stroke": "rgba(124,58,237,0.20)"}},
+      {"type": "Rect", "attrs": {"x": 582, "y": 160, "width": 380, "height": 408, "cornerRadius": 24, "fill": "rgba(124,58,237,0.08)", "stroke": "rgba(124,58,237,0.20)"}},
+      {"type": "Text", "attrs": {"x": 108, "y": 208, "width": 312, "text": "Ce que l’on voit\nmesure\nconstate", "fontFamily": "Inter", "fontSize": 28, "fontStyle": "bold", "fill": "#6D28D9", "lineHeight": 1.7}},
+      {"type": "Text", "attrs": {"x": 616, "y": 208, "width": 312, "text": "Ce que l’on déduit\nexplique\npropose", "fontFamily": "Inter", "fontSize": 28, "fontStyle": "bold", "fill": "#6D28D9", "lineHeight": 1.7}}
+    ]
+  },
+  {
+    "id": "science_20_method_variables_simple",
+    "label": "Méthode — variables simple",
+    "discipline": "method",
+    "usage": "Variable indépendante / dépendante / résultat.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 72, "y": 72, "text": "Variables d’une expérience", "fontFamily": "Montserrat", "fontSize": 36, "fontStyle": "bold", "fill": "#0F172A"}},
+      {"type": "Rect", "attrs": {"x": 88, "y": 290, "width": 220, "height": 120, "cornerRadius": 20, "fill": "rgba(124,58,237,0.10)", "stroke": "rgba(124,58,237,0.24)"}},
+      {"type": "Rect", "attrs": {"x": 410, "y": 290, "width": 220, "height": 120, "cornerRadius": 20, "fill": "rgba(124,58,237,0.10)", "stroke": "rgba(124,58,237,0.24)"}},
+      {"type": "Rect", "attrs": {"x": 732, "y": 290, "width": 220, "height": 120, "cornerRadius": 20, "fill": "rgba(124,58,237,0.10)", "stroke": "rgba(124,58,237,0.24)"}},
+      {"type": "Text", "attrs": {"x": 118, "y": 326, "width": 160, "text": "Variable\nmanipulée", "fontFamily": "Inter", "fontSize": 26, "fontStyle": "bold", "fill": "#6D28D9", "align": "center"}},
+      {"type": "Text", "attrs": {"x": 444, "y": 326, "width": 152, "text": "Variable\nobservée", "fontFamily": "Inter", "fontSize": 26, "fontStyle": "bold", "fill": "#6D28D9", "align": "center"}},
+      {"type": "Text", "attrs": {"x": 774, "y": 338, "width": 136, "text": "Résultat", "fontFamily": "Inter", "fontSize": 26, "fontStyle": "bold", "fill": "#6D28D9", "align": "center"}},
+      {"type": "Arrow", "attrs": {"points": [308, 350, 410, 350], "stroke": "#7C3AED", "fill": "#7C3AED", "pointerLength": 12, "pointerWidth": 12, "strokeWidth": 4}},
+      {"type": "Arrow", "attrs": {"points": [630, 350, 732, 350], "stroke": "#7C3AED", "fill": "#7C3AED", "pointerLength": 12, "pointerWidth": 12, "strokeWidth": 4}}
+    ]
+  }
+]

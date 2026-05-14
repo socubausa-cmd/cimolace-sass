@@ -1,0 +1,1266 @@
+[
+  {
+    "id": "sci_bio_cellule_annote",
+    "label": "Cellule annotée",
+    "family": "biology",
+    "familyLabel": "Biologie",
+    "usage": "Cellule, organe, structure",
+    "pedagogicalGoal": "Faire comprendre la structure d'un objet vivant d'un seul regard.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#22c55e18",
+          "stroke": "#22c55e55",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Schéma annoté — cellule",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Visuel central · étiquettes · code couleur",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 420,
+          "y": 220,
+          "width": 220,
+          "height": 160,
+          "cornerRadius": 20,
+          "fill": "rgba(34,197,94,0.15)",
+          "stroke": "#16a34a",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 440,
+          "y": 280,
+          "width": 180,
+          "text": "Noyau",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fill": "#166534",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            540,
+            300,
+            660,
+            260
+          ],
+          "stroke": "#64748b",
+          "strokeWidth": 2,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 670,
+          "y": 240,
+          "width": 220,
+          "text": "Membrane",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#334155",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 72,
+          "y": 480,
+          "width": 880,
+          "height": 88,
+          "cornerRadius": 10,
+          "fill": "rgba(15,23,42,0.06)",
+          "stroke": "rgba(15,23,42,0.12)",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 496,
+          "width": 840,
+          "text": "Légende : chaque couleur = une partie · reliez les étiquettes au schéma.",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fill": "#475569",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_bio_appareil_resp",
+    "label": "Appareil respiratoire",
+    "family": "biology",
+    "familyLabel": "Biologie",
+    "usage": "Organes · appareil",
+    "pedagogicalGoal": "Structurer un appareil avec étiquettes reliées.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#22c55e18",
+          "stroke": "#22c55e55",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Appareil respiratoire — vue d'ensemble",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Étiquettes reliées au schéma central",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 400,
+          "y": 200,
+          "width": 240,
+          "height": 200,
+          "cornerRadius": 16,
+          "fill": "rgba(34,197,94,0.12)",
+          "stroke": "#22c55e",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 420,
+          "y": 280,
+          "width": 200,
+          "text": "Poumon",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#166534",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 720,
+          "y": 220,
+          "width": 240,
+          "text": "Trachée",
+          "fontFamily": "Inter",
+          "fontSize": 17,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            640,
+            260,
+            700,
+            240
+          ],
+          "stroke": "#94a3b8",
+          "strokeWidth": 2,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 520,
+          "width": 860,
+          "text": "Code couleur : voies aériennes / échanges gazeux",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#64748b",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_bio_cycle_vie",
+    "label": "Cycle de vie",
+    "family": "biology",
+    "familyLabel": "Biologie",
+    "usage": "Reproduction · métamorphose",
+    "pedagogicalGoal": "Montrer la continuité et le ordre des étapes.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#0ea5e918",
+          "stroke": "#0ea5e955",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Cycle biologique",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Étapes dans le sens des flèches",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Circle",
+        "attrs": {
+          "x": 520,
+          "y": 320,
+          "radius": 100,
+          "fill": "rgba(14,165,233,0.15)",
+          "stroke": "#0ea5e9",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 460,
+          "y": 300,
+          "width": 120,
+          "text": "Œuf",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#0f172a",
+          "align": "center"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            620,
+            320,
+            700,
+            280
+          ],
+          "stroke": "#0ea5e9",
+          "strokeWidth": 3,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 710,
+          "y": 260,
+          "width": 120,
+          "text": "Larve",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            520,
+            420,
+            520,
+            480
+          ],
+          "stroke": "#0ea5e9",
+          "strokeWidth": 3,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 480,
+          "y": 500,
+          "width": 120,
+          "text": "Adulte",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#0f172a",
+          "align": "center"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 580,
+          "width": 860,
+          "text": "Une étape = un bloc · titre + point clé",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#64748b",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_bio_chaine_alim",
+    "label": "Chaîne alimentaire",
+    "family": "biology",
+    "familyLabel": "Biologie",
+    "usage": "Flux d’énergie",
+    "pedagogicalGoal": "Visualiser qui mange qui.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#84cc1618",
+          "stroke": "#84cc1655",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Chaîne alimentaire simplifiée",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Producteur → consommateurs",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 120,
+          "y": 220,
+          "width": 160,
+          "text": "Producteur",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#365314",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 360,
+          "y": 220,
+          "width": 40,
+          "text": "→",
+          "fontFamily": "Inter",
+          "fontSize": 28,
+          "fill": "#64748b",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 420,
+          "y": 220,
+          "width": 160,
+          "text": "Herbivore",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#365314",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 620,
+          "y": 220,
+          "width": 40,
+          "text": "→",
+          "fontFamily": "Inter",
+          "fontSize": 28,
+          "fill": "#64748b",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 680,
+          "y": 220,
+          "width": 200,
+          "text": "Carnivore",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#365314",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 72,
+          "y": 320,
+          "width": 880,
+          "height": 72,
+          "cornerRadius": 10,
+          "fill": "rgba(132,204,22,0.1)",
+          "stroke": "rgba(101,163,13,0.35)",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 340,
+          "width": 820,
+          "text": "Énergie : pertes à chaque maillon (10 % environ en général)",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fill": "#3f6212",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_bio_classification",
+    "label": "Classification du vivant",
+    "family": "biology",
+    "familyLabel": "Biologie",
+    "usage": "Règne · embranchement",
+    "pedagogicalGoal": "Ordonner la connaissance en tableau.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#8b5cf618",
+          "stroke": "#8b5cf655",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Tableau de classification",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Hiérarchie : règne → groupe → exemple",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 80,
+          "y": 200,
+          "width": 280,
+          "height": 48,
+          "cornerRadius": 8,
+          "fill": "rgba(139,92,246,0.15)",
+          "stroke": "#7c3aed",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 96,
+          "y": 214,
+          "width": 240,
+          "text": "Règne",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#5b21b6",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 400,
+          "y": 200,
+          "width": 280,
+          "height": 48,
+          "cornerRadius": 8,
+          "fill": "rgba(139,92,246,0.1)",
+          "stroke": "#7c3aed",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 416,
+          "y": 214,
+          "width": 240,
+          "text": "Embranchement",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#5b21b6",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 720,
+          "y": 200,
+          "width": 240,
+          "height": 48,
+          "cornerRadius": 8,
+          "fill": "rgba(139,92,246,0.08)",
+          "stroke": "#7c3aed",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 736,
+          "y": 214,
+          "width": 200,
+          "text": "Exemple",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#5b21b6",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 300,
+          "width": 860,
+          "text": "Complétez les lignes avec vos exemples de cours.",
+          "fontFamily": "Inter",
+          "fontSize": 17,
+          "fill": "#475569",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_bio_maladie_causal",
+    "label": "Maladie : cause → effet",
+    "family": "biology",
+    "familyLabel": "Biologie",
+    "usage": "Infection · chaîne causale",
+    "pedagogicalGoal": "Scientifiser un phénomène biologique.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#ef444418",
+          "stroke": "#ef444455",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Chaîne causale biologique",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Cause → mécanisme → effet → conséquence",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 80,
+          "y": 220,
+          "width": 200,
+          "text": "Cause",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#991b1b",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 300,
+          "y": 220,
+          "width": 40,
+          "text": "→",
+          "fontFamily": "Inter",
+          "fontSize": 24,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 360,
+          "y": 220,
+          "width": 200,
+          "text": "Mécanisme",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#991b1b",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 580,
+          "y": 220,
+          "width": 40,
+          "text": "→",
+          "fontFamily": "Inter",
+          "fontSize": 24,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 640,
+          "y": 220,
+          "width": 200,
+          "text": "Effet visible",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#991b1b",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 72,
+          "y": 360,
+          "width": 880,
+          "height": 100,
+          "cornerRadius": 12,
+          "fill": "rgba(239,68,68,0.08)",
+          "stroke": "rgba(239,68,68,0.25)",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 380,
+          "width": 820,
+          "text": "Ajoutez la conséquence pour le patient / l’écosystème.",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fill": "#7f1d1d",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_bio_adn",
+    "label": "ADN simplifié",
+    "family": "biology",
+    "familyLabel": "Biologie",
+    "usage": "Structure · bases",
+    "pedagogicalGoal": "Rendre visible l'organisation de l'information héréditaire.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#06b6d418",
+          "stroke": "#06b6d455",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "ADN — schéma simplifié",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Double brin · complémentarité des bases",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 200,
+          "y": 220,
+          "width": 640,
+          "height": 100,
+          "cornerRadius": 12,
+          "fill": "rgba(6,182,212,0.12)",
+          "stroke": "#0891b2",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 240,
+          "y": 248,
+          "width": 560,
+          "text": "A — T · G — C  (appariement)",
+          "fontFamily": "Inter",
+          "fontSize": 20,
+          "fill": "#155e75",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 380,
+          "width": 860,
+          "text": "Complétez : sens de lecture · gène · protéine",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fill": "#475569",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_bio_metamorphose",
+    "label": "Métamorphose",
+    "family": "biology",
+    "familyLabel": "Biologie",
+    "usage": "Développement",
+    "pedagogicalGoal": "Étapes successives avec flèches.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#f9731618",
+          "stroke": "#f9731655",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Métamorphose",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Avant → transitions → après",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 100,
+          "y": 240,
+          "width": 140,
+          "text": "Stade 1",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            240,
+            270,
+            320,
+            270
+          ],
+          "stroke": "#f97316",
+          "strokeWidth": 3,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 340,
+          "y": 240,
+          "width": 140,
+          "text": "Stade 2",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            480,
+            270,
+            560,
+            270
+          ],
+          "stroke": "#f97316",
+          "strokeWidth": 3,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 580,
+          "y": 240,
+          "width": 140,
+          "text": "Stade 3",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 400,
+          "width": 860,
+          "text": "Une étape = un dessin ou photo + légende courte",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#64748b",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_bio_organe_fonction",
+    "label": "Organe et fonction",
+    "family": "biology",
+    "familyLabel": "Biologie",
+    "usage": "Structure / fonction",
+    "pedagogicalGoal": "Relier anatomie et rôle physiologique.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#22c55e18",
+          "stroke": "#22c55e55",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Organe ↔ fonction",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Deux colonnes reliées",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 80,
+          "y": 200,
+          "width": 380,
+          "height": 200,
+          "cornerRadius": 14,
+          "fill": "rgba(34,197,94,0.08)",
+          "stroke": "#22c55e",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 100,
+          "y": 220,
+          "width": 320,
+          "text": "Structure\n(anatomie)",
+          "fontFamily": "Inter",
+          "fontSize": 18,
+          "fill": "#14532d",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 560,
+          "y": 200,
+          "width": 380,
+          "height": 200,
+          "cornerRadius": 14,
+          "fill": "rgba(34,197,94,0.08)",
+          "stroke": "#22c55e",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 580,
+          "y": 220,
+          "width": 320,
+          "text": "Fonction\n(physiologie)",
+          "fontFamily": "Inter",
+          "fontSize": 18,
+          "fill": "#14532d",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            460,
+            300,
+            560,
+            300
+          ],
+          "stroke": "#64748b",
+          "strokeWidth": 2,
+          "lineCap": "round"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_bio_veg_animal",
+    "label": "Végétal / animal",
+    "family": "biology",
+    "familyLabel": "Biologie",
+    "usage": "Comparaison",
+    "pedagogicalGoal": "Opposer critères et exemples.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#84cc1618",
+          "stroke": "#84cc1655",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Comparaison végétal / animal",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Deux colonnes · critères · exemples",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 100,
+          "y": 220,
+          "width": 380,
+          "text": "Végétal\n• paroi\n• plastes\n• autotrophe",
+          "fontFamily": "Inter",
+          "fontSize": 17,
+          "fill": "#365314",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 540,
+          "y": 220,
+          "width": 380,
+          "text": "Animal\n• pas de paroi\n• hétérotrophe\n• mobilité",
+          "fontFamily": "Inter",
+          "fontSize": 17,
+          "fill": "#365314",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 72,
+          "y": 420,
+          "width": 880,
+          "height": 64,
+          "cornerRadius": 10,
+          "fill": "rgba(132,204,22,0.12)",
+          "stroke": "rgba(65,163,13,0.3)",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 440,
+          "width": 820,
+          "text": "Conclusion : une phrase qui résume la distinction utile au cours",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fill": "#3f6212",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      }
+    ]
+  }
+]

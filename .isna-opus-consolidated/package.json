@@ -1,0 +1,12 @@
+{
+  "name": "isna-platform-v2",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev:api": "npm run start:dev -w @isna/api",
+    "dev:app": "npm run dev -w @isna/app",
+    "dev:public-site": "npm run dev -w @isna/public-site",
+    "dev:worker": "npm run dev -w @isna/worker",
+    "build": "npm run build --workspaces --if-present"
+  }
+}

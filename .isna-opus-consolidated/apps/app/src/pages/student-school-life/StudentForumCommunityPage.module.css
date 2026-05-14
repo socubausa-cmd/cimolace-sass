@@ -1,0 +1,387 @@
+/* Forum Community — "artisan chaud" UI
+   - Tokens via CSS variables (scoped to this page root)
+   - CSS Modules for maintainability
+   - Light/Dark via prefers-color-scheme
+*/
+
+.forum {
+  /* --- typography --- */
+  --forum-font-display: "Cinzel", serif;
+  --forum-font-body: "Libre Baskerville", serif;
+  --forum-font-ui: "Montserrat", sans-serif;
+
+  /* --- spacing (8px rhythm) --- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 40px;
+  --s-8: 48px;
+
+  /* --- radii (avoid "round everywhere") --- */
+  --r-1: 10px;
+  --r-2: 14px;
+  --r-3: 18px;
+
+  /* --- motion --- */
+  --t-fast: 150ms;
+  --t-med: 240ms;
+  --e-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* --- color: warm craft (default dark) --- */
+  --c-bg: #0f0e0b;
+  --c-bg-2: #14110c;
+  --c-ink: #f3efe7;
+  --c-ink-2: rgba(243, 239, 231, 0.78);
+  --c-mute: rgba(243, 239, 231, 0.56);
+  --c-line: rgba(243, 239, 231, 0.12);
+  --c-surface: rgba(255, 255, 255, 0.04);
+  --c-surface-2: rgba(255, 255, 255, 0.06);
+  --c-amber: #c7a24b;
+  --c-clay: #b77855;
+  --c-sage: #7a9a7a;
+
+  color: var(--c-ink);
+  font-family: var(--forum-font-body);
+}
+
+@media (prefers-color-scheme: light) {
+  .forum {
+    --c-bg: #fbf7ef;
+    --c-bg-2: #f4efe4;
+    --c-ink: #15120c;
+    --c-ink-2: rgba(21, 18, 12, 0.76);
+    --c-mute: rgba(21, 18, 12, 0.52);
+    --c-line: rgba(21, 18, 12, 0.12);
+    --c-surface: rgba(21, 18, 12, 0.04);
+    --c-surface-2: rgba(21, 18, 12, 0.06);
+    --c-amber: #a77f1f;
+    --c-clay: #9a5c3a;
+    --c-sage: #3f6a4a;
+  }
+}
+
+.frame {
+  position: relative;
+  padding: var(--s-6) var(--s-5);
+  background:
+    /* subtle paper grain (no images) */
+    radial-gradient(1200px 700px at 10% -10%, rgba(199, 162, 75, 0.14), transparent 55%),
+    radial-gradient(900px 620px at 105% 10%, rgba(183, 120, 85, 0.10), transparent 55%),
+    radial-gradient(880px 600px at 70% 110%, rgba(122, 154, 122, 0.10), transparent 60%),
+    /* texture lines */
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 12px),
+    linear-gradient(180deg, var(--c-bg), var(--c-bg-2));
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-3);
+  overflow: hidden;
+}
+
+.frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(1px 1px at 20% 35%, rgba(255, 255, 255, 0.05), transparent 60%),
+    radial-gradient(1px 1px at 65% 60%, rgba(255, 255, 255, 0.045), transparent 60%),
+    radial-gradient(1px 1px at 85% 25%, rgba(255, 255, 255, 0.04), transparent 60%);
+  opacity: 0.8;
+  mix-blend-mode: overlay;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-6);
+}
+
+@media (min-width: 980px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding-bottom: var(--s-4);
+  border-bottom: 1px dashed var(--c-line);
+}
+
+.title {
+  font-family: var(--forum-font-display);
+  letter-spacing: 0.02em;
+  line-height: 1.02;
+  font-size: clamp(26px, 3.2vw, 40px);
+  margin: 0;
+}
+
+.subtitle {
+  margin: var(--s-2) 0 0;
+  color: var(--c-mute);
+  font-family: var(--forum-font-ui);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.countPill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(199, 162, 75, 0.35);
+  background: linear-gradient(180deg, rgba(199, 162, 75, 0.18), rgba(199, 162, 75, 0.06));
+  color: var(--c-ink);
+  font-family: var(--forum-font-ui);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.main {
+  min-width: 0;
+}
+
+.aside {
+  position: relative;
+  padding: var(--s-5);
+  border-radius: var(--r-2);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+}
+
+.asideTitle {
+  font-family: var(--forum-font-display);
+  font-size: 16px;
+  margin: 0 0 var(--s-3);
+  letter-spacing: 0.02em;
+}
+
+.asideText {
+  margin: 0;
+  color: var(--c-ink-2);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.searchRow {
+  display: grid;
+  gap: var(--s-2);
+  margin-top: var(--s-4);
+}
+
+.label {
+  font-family: var(--forum-font-ui);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-mute);
+}
+
+.input {
+  width: 100%;
+  border-radius: var(--r-1);
+  border: 1px solid var(--c-line);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--c-ink);
+  padding: 12px 12px;
+  font-family: var(--forum-font-ui);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--t-fast) var(--e-standard), transform var(--t-fast) var(--e-standard);
+}
+
+@media (prefers-color-scheme: light) {
+  .input {
+    background: rgba(255, 255, 255, 0.6);
+  }
+}
+
+.input:focus-visible {
+  border-color: rgba(199, 162, 75, 0.65);
+  box-shadow: 0 0 0 4px rgba(199, 162, 75, 0.18);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: var(--s-5) 0 0;
+  display: grid;
+  gap: var(--s-4);
+}
+
+.card {
+  position: relative;
+  border-radius: var(--r-2);
+  border: 1px solid var(--c-line);
+  background: linear-gradient(180deg, var(--c-surface), rgba(0, 0, 0, 0.02));
+  padding: var(--s-5);
+  transform: translateZ(0);
+  transition: transform var(--t-med) var(--e-standard), border-color var(--t-med) var(--e-standard);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(199, 162, 75, 0.28);
+}
+
+.card:focus-within {
+  border-color: rgba(199, 162, 75, 0.52);
+  box-shadow: 0 0 0 4px rgba(199, 162, 75, 0.12);
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-4);
+  align-items: baseline;
+}
+
+.formation {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-family: var(--forum-font-ui);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--c-ink-2);
+}
+
+.date {
+  font-family: var(--forum-font-ui);
+  font-size: 11px;
+  color: var(--c-mute);
+  white-space: nowrap;
+}
+
+.question {
+  margin: var(--s-3) 0 0;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--c-ink);
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--c-line);
+  background: var(--c-surface-2);
+  color: var(--c-ink-2);
+  font-family: var(--forum-font-ui);
+  font-size: 12px;
+}
+
+.chipAccent {
+  border-color: rgba(199, 162, 75, 0.32);
+  color: var(--c-amber);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-4);
+}
+
+.btn {
+  appearance: none;
+  border-radius: 999px;
+  border: 1px solid var(--c-line);
+  background: transparent;
+  color: var(--c-ink);
+  font-family: var(--forum-font-ui);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  transition: transform var(--t-fast) var(--e-standard), background var(--t-fast) var(--e-standard),
+    border-color var(--t-fast) var(--e-standard);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btnPrimary {
+  border-color: rgba(199, 162, 75, 0.5);
+  background: linear-gradient(180deg, rgba(199, 162, 75, 0.36), rgba(199, 162, 75, 0.14));
+  color: var(--c-ink);
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(199, 162, 75, 0.35);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(199, 162, 75, 0.18);
+}
+
+.clipWrap {
+  margin-top: var(--s-4);
+  border-radius: var(--r-2);
+  border: 1px solid var(--c-line);
+  background: rgba(0, 0, 0, 0.2);
+  padding: var(--s-3);
+}
+
+@media (prefers-color-scheme: light) {
+  .clipWrap {
+    background: rgba(255, 255, 255, 0.7);
+  }
+}
+
+.video {
+  width: 100%;
+  max-height: 380px;
+  border-radius: var(--r-1);
+  display: block;
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal {
+  animation: riseIn 420ms var(--e-standard) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    animation: none;
+  }
+  .card,
+  .btn {
+    transition: none;
+  }
+}
+

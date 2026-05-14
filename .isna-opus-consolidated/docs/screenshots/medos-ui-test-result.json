@@ -1,0 +1,19 @@
+{
+  "screenshots": [
+    "docs/screenshots/medos-practitioner-dashboard.png",
+    "docs/screenshots/medos-practitioner-patients.png",
+    "docs/screenshots/medos-practitioner-patient-detail.png",
+    "docs/screenshots/medos-practitioner-dashboard-mobile.png",
+    "docs/screenshots/medos-patient-portal-dashboard.png",
+    "docs/screenshots/medos-patient-portal-notes.png"
+  ],
+  "checks": {
+    "dashboardHasPhase1A": true,
+    "dashboardNotDisabled": true,
+    "dashboardCopyClean": true,
+    "patientsHasList": true,
+    "detailHasSoap": true,
+    "patientPortalNotPlaceholder": true,
+    "patientNotesLoaded": true
+  }
+}

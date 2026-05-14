@@ -1,0 +1,27 @@
+[
+  {
+    "id": "science_layout_01_bio_diagram",
+    "label": "Bio — schéma annoté complet",
+    "recipe": ["science_01_biology_annotated_diagram", "science_elem_07_label_box_bio", "science_elem_18_science_callout"]
+  },
+  {
+    "id": "science_layout_02_phys_graph",
+    "label": "Physique — graphe et résultat",
+    "recipe": ["science_09_physics_graph_curve", "science_elem_10_axis_xy", "science_elem_19_result_card", "science_elem_20_formula_box"]
+  },
+  {
+    "id": "science_layout_03_chem_reaction",
+    "label": "Chimie — réaction + conditions",
+    "recipe": ["science_11_chem_reaction_visual", "science_14_chem_conditions_reaction", "science_elem_09_label_box_chem"]
+  },
+  {
+    "id": "science_layout_04_earth_cycle",
+    "label": "Terre — cycle + explication",
+    "recipe": ["science_16_earth_water_cycle", "science_elem_18_science_callout", "science_elem_14_before_after_arrow"]
+  },
+  {
+    "id": "science_layout_05_method_process",
+    "label": "Méthode — hypothèse à conclusion",
+    "recipe": ["science_18_method_scientific_process", "science_19_method_observation_vs_interpretation", "science_elem_17_method_badge"]
+  }
+]

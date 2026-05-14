@@ -1,0 +1,45 @@
+{
+  "longia_decision_engine": {
+    "id": "longia_decision_engine_v1",
+    "enabled": true,
+    "description": "Cerveau central : quoi envoyer, à qui, quand, sous quelle forme — anti-bruit.",
+    "inputs": [
+      "transcript.partial",
+      "transcript.final",
+      "student.action",
+      "student.question",
+      "audience.metric",
+      "chat.message",
+      "chat.window_heuristic",
+      "teacher.action",
+      "secure_app.status",
+      "browser.visibility"
+    ],
+    "priority_levels": ["low", "medium", "high", "critical"],
+    "target_channels": [
+      "teacher_notification",
+      "guest_response",
+      "smartboard_suggestion",
+      "clip_marker",
+      "quiz_suggestion",
+      "recap_store",
+      "silent_store"
+    ],
+    "decision_modes": [
+      "send_now",
+      "aggregate_then_send",
+      "delay",
+      "store_only",
+      "auto_apply",
+      "require_confirmation"
+    ],
+    "default_thresholds": {
+      "confused_min_for_teacher": 3,
+      "confused_topic_high": 3,
+      "confused_mass_total": 6,
+      "flush_window_ms": 14000,
+      "burst_immediate_total": 6
+    },
+    "scoring_note": "score ≈ importance × fréquence × urgence × portée (implémentation simplifiée dans longiaDecisionEngine.js)"
+  }
+}

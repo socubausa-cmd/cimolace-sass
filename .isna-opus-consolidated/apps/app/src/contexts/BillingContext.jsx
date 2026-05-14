@@ -1,0 +1,299 @@
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { supabase } from '@/lib/customSupabaseClient';
+import { resolveApiOrigin } from '@/lib/androidApiHost';
+import { useAuth } from '@/hooks/useAuth';
+import { authRefreshIsBlocked, getFreshAccessToken } from '@/lib/authToken';
+
+const BillingContext = createContext(null);
+
+export const useBilling = () => {
+  const ctx = useContext(BillingContext);
+  if (!ctx) throw new Error('useBilling must be used within BillingProvider');
+  return ctx;
+};
+
+const GRACE_DAYS_DEFAULT = 3;
+
+/** Vite proxifie vers `netlify dev` ; sans lui → 500. Mettre `VITE_USE_NETLIFY_BILLING_IN_DEV=1` dans `.env` pour appeler la fonction en local. */
+const useNetlifyBillingInDev =
+  import.meta.env.DEV && String(import.meta.env.VITE_USE_NETLIFY_BILLING_IN_DEV || '').trim() === '1';
+
+function computeStatus(sub, graceDays) {
+  if (!sub) return { status: 'none', inGrace: false };
+  const rawStatus = String(sub.status || '').toLowerCase();
+  const expiresAt = sub.expires_at ? new Date(sub.expires_at).getTime() : null;
+  const now = Date.now();
+
+  if (rawStatus === 'canceled') return { status: 'expired', inGrace: false };
+  if (!expiresAt) {
+    // If missing expires_at, fallback to status field.
+    if (rawStatus === 'active') return { status: 'active', inGrace: false };
+    if (rawStatus === 'past_due') return { status: 'past_due', inGrace: true };
+    return { status: rawStatus || 'none', inGrace: false };
+  }
+
+  if (expiresAt > now) return { status: 'active', inGrace: false };
+
+  const graceMs = Math.max(0, Number(graceDays || 0)) * 24 * 60 * 60 * 1000;
+  if (now <= expiresAt + graceMs) return { status: 'past_due', inGrace: true };
+  return { status: 'expired', inGrace: false };
+}
+
+export const BillingProvider = ({ children, graceDays = GRACE_DAYS_DEFAULT }) => {
+  const { user } = useAuth();
+  const [subscription, setSubscription] = useState(null);
+  const [subscriptionComputed, setSubscriptionComputed] = useState(null);
+  const [activeRenewalLink, setActiveRenewalLink] = useState(null);
+  const [recentPayments, setRecentPayments] = useState([]);
+  const [licenseActivation, setLicenseActivation] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  // Evite les boucles de 401 Invalid token sur endpoint Netlify.
+  const endpointBlockedUntilRef = useRef(0);
+  const last401WarnAtRef = useRef(0);
+  const last5xxWarnAtRef = useRef(0);
+  const refreshInFlightRef = useRef(null);
+
+  const refresh = async ({ silent = false } = {}) => {
+    if (!user?.id) {
+      setSubscription(null);
+      setSubscriptionComputed(null);
+      setActiveRenewalLink(null);
+      setRecentPayments([]);
+      setLicenseActivation(null);
+      setLoading(false);
+      return;
+    }
+    if (silent && refreshInFlightRef.current) {
+      return refreshInFlightRef.current;
+    }
+    if (silent && authRefreshIsBlocked()) {
+      return;
+    }
+    if (!silent) setLoading(true);
+    if (!silent) setError(null);
+
+    const promise = (async () => {
+    try {
+      const apiOrigin = resolveApiOrigin();
+      const token = await getFreshAccessToken();
+      const tryNetlifyBilling =
+        token &&
+        Date.now() >= endpointBlockedUntilRef.current &&
+        (!import.meta.env.DEV || useNetlifyBillingInDev);
+
+      if (tryNetlifyBilling) {
+        const readSubscriptionStatus = async (accessToken, { hasRetried401 = false } = {}) => {
+          let res;
+          try {
+            res = await fetch(`${apiOrigin}/.netlify/functions/billing-subscription-status`, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+          } catch {
+            // Proxy/functions local indisponible (ex: ECONNREFUSED) : évite le spam d'appels/erreurs.
+            endpointBlockedUntilRef.current = Date.now() + 3 * 60 * 1000;
+            return null;
+          }
+          if (res.status === 401) {
+            // Si le token local est stale, force un refresh et retente une fois.
+            if (!hasRetried401) {
+              const refreshedToken = await getFreshAccessToken({ forceRefresh: true });
+              if (refreshedToken) {
+                return readSubscriptionStatus(refreshedToken, { hasRetried401: true });
+              }
+            }
+            // Bloque temporairement l'endpoint et passe en fallback Supabase direct.
+            endpointBlockedUntilRef.current = Date.now() + 3 * 60 * 1000;
+            const now = Date.now();
+            if (now - last401WarnAtRef.current > 30_000) {
+              last401WarnAtRef.current = now;
+              console.warn('[billing] billing-subscription-status returned 401, switching to DB fallback for 3 min');
+            }
+            return null;
+          }
+          // 5xx / proxy : en local, Vite envoie vers `netlify dev` — sans serveur ou sans env admin → erreur répétée en console.
+          if (res.status >= 500) {
+            endpointBlockedUntilRef.current = Date.now() + 3 * 60 * 1000;
+            const now = Date.now();
+            if (now - last5xxWarnAtRef.current > 45_000) {
+              last5xxWarnAtRef.current = now;
+              console.warn(
+                '[billing] billing-subscription-status HTTP',
+                res.status,
+                '— repli Supabase côté client pour 3 min. En dev : lancer `netlify dev` (port 8888) et définir SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY dans .env à la racine, ou ignorer si le repli DB suffit.',
+              );
+            }
+            return null;
+          }
+          if (!res.ok) return null;
+          return res.json().catch(() => null);
+        };
+
+        let payload = await readSubscriptionStatus(token);
+        if (payload) {
+          const pendingPayment = (Array.isArray(payload?.recentPayments) ? payload.recentPayments : []).find((p) => {
+            const st = String(p?.payment_status || '').toLowerCase();
+            return ['pending', 'confirming', 'partially_paid'].includes(st);
+          });
+          if (pendingPayment?.id) {
+            const paymentToken = await getFreshAccessToken();
+            await fetch(`${apiOrigin}/.netlify/functions/billing-payment-status?id=${encodeURIComponent(pendingPayment.id)}`, {
+              headers: paymentToken ? { Authorization: `Bearer ${paymentToken}` } : undefined,
+            }).catch(() => null);
+            const tokenAfterPaymentCheck = await getFreshAccessToken();
+            const refreshedPayload = tokenAfterPaymentCheck
+              ? await readSubscriptionStatus(tokenAfterPaymentCheck)
+              : null;
+            if (refreshedPayload) payload = refreshedPayload;
+          }
+
+          setSubscription(payload?.subscription || null);
+          setSubscriptionComputed(payload?.computed || null);
+          setActiveRenewalLink(payload?.activeRenewalLink || null);
+          setRecentPayments(Array.isArray(payload?.recentPayments) ? payload.recentPayments : []);
+          setLicenseActivation(payload?.licenseActivation || null);
+          if (!silent) setLoading(false);
+          return;
+        }
+      }
+
+      // Fallback on direct read if endpoint not available.
+      const fallbackSelect = 'id,user_id,plan_id,status,provider,payment_method,started_at,expires_at,created_at';
+      let fallbackSubscription = null;
+      {
+        const { data: prioritized, error: prioErr } = await supabase
+          .from('billing_subscriptions')
+          .select(fallbackSelect)
+          .eq('user_id', user.id)
+          .in('status', ['active', 'past_due'])
+          .order('expires_at', { ascending: false, nullsFirst: false })
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (prioErr) throw prioErr;
+        fallbackSubscription = Array.isArray(prioritized) ? prioritized[0] || null : null;
+      }
+      if (!fallbackSubscription) {
+        const { data: latest, error: latestErr } = await supabase
+          .from('billing_subscriptions')
+          .select(fallbackSelect)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (latestErr) throw latestErr;
+        fallbackSubscription = Array.isArray(latest) ? latest[0] || null : null;
+      }
+      setSubscription(fallbackSubscription);
+      setSubscriptionComputed(null);
+      setActiveRenewalLink(null);
+      setRecentPayments([]);
+      setLicenseActivation(null);
+    } catch (e) {
+      setError(e);
+      setSubscription(null);
+      setSubscriptionComputed(null);
+      setActiveRenewalLink(null);
+      setRecentPayments([]);
+      setLicenseActivation(null);
+    } finally {
+      if (!silent) setLoading(false);
+    }
+    })();
+
+    if (silent) {
+      refreshInFlightRef.current = promise;
+      promise.finally(() => {
+        if (refreshInFlightRef.current === promise) refreshInFlightRef.current = null;
+      });
+    }
+    await promise;
+  };
+
+  useEffect(() => {
+    refresh({ silent: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return undefined;
+    const t = window.setInterval(() => {
+      refresh({ silent: true });
+    }, 30000);
+    return () => window.clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return undefined;
+    const onFocus = () => refresh({ silent: true });
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') refresh({ silent: true });
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return undefined;
+    const channel = supabase
+      .channel(`billing-realtime-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'billing_subscriptions', filter: `user_id=eq.${user.id}` },
+        () => refresh({ silent: true })
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'billing_payments', filter: `user_id=eq.${user.id}` },
+        () => refresh({ silent: true })
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        () => refresh({ silent: true })
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  const computed = useMemo(() => computeStatus(subscription, graceDays), [subscription, graceDays]);
+
+  const value = useMemo(
+    () => ({
+      subscription,
+      loading,
+      error,
+      status: computed.status, // none | active | past_due | expired
+      inGrace: computed.inGrace,
+      graceDays,
+      computed: subscriptionComputed,
+      activeRenewalLink,
+      recentPayments,
+      licenseActivation,
+      refresh,
+    }),
+    [
+      subscription,
+      loading,
+      error,
+      computed.status,
+      computed.inGrace,
+      graceDays,
+      subscriptionComputed,
+      activeRenewalLink,
+      recentPayments,
+      licenseActivation,
+    ]
+  );
+
+  return <BillingContext.Provider value={value}>{children}</BillingContext.Provider>;
+};
+

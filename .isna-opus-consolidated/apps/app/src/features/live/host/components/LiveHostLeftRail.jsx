@@ -1,0 +1,222 @@
+import React from 'react';
+import { ChevronLeft, ChevronRight, Boxes, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { LiriWordmark } from '@/components/brand/LiriWordmark';
+import { designerShellCloseBtn } from '@/lib/liriDesignerShellClasses';
+import LiriHostLeftLiveAssistantRail from '@/components/live-room/LiriHostLeftLiveAssistantRail';
+import LiveHostInviteManagementPanel from '@/components/live-room/LiveHostInviteManagementPanel';
+import { PHASE } from '@/features/live/host/liveHostConstants';
+
+export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
+  {
+    hostCompactColOrder,
+    liveShell,
+    liveLeftRailCollapsedStrip,
+    longiaHubPushesLayout,
+    lhLayoutCompact,
+    liveLeftRailOpen,
+    setLiveLeftRailOpen,
+    phase,
+    meshPanelOpen,
+    setMeshPanelOpen,
+    setLongiaSignalSubDrawer,
+    openLongiaHubControlMesh,
+    openLongiaHubCoachPanel,
+    longiaHubOpen,
+    longiaSignalSubDrawer,
+    lhStageFocusLayout,
+    sessionId,
+    sessionTitle,
+    user,
+    onlineMemberCount,
+    liveDuration,
+    curEtape,
+    waitingEntries,
+    onApproveWaiting,
+    onRejectWaiting,
+    onOpenLongiaWaiting,
+  },
+  ref,
+) {
+  return (
+    <div
+      ref={ref}
+      className="lh-sy lh-sp-dim"
+      style={{
+        order: hostCompactColOrder.left,
+        background: liveLeftRailCollapsedStrip
+          ? 'linear-gradient(180deg, rgba(14,11,24,.99) 0%, rgba(8,7,14,.995) 100%)'
+          : liveShell.panelBg,
+        borderRadius: liveShell.panelRadius,
+        border: liveShell.panelBorder,
+        padding: liveLeftRailCollapsedStrip ? '10px 6px' : '16px',
+        display:
+          longiaHubPushesLayout || (lhLayoutCompact && !liveLeftRailOpen) ? 'none' : 'flex',
+        flexDirection: 'column',
+        gap: liveLeftRailCollapsedStrip ? '8px' : '11px',
+        alignItems: liveLeftRailCollapsedStrip ? 'center' : undefined,
+        overflow: 'hidden',
+        transition: 'opacity .2s, padding .2s ease, background .2s ease',
+        opacity: longiaHubPushesLayout || (lhLayoutCompact && !liveLeftRailOpen) ? 0 : 1,
+        pointerEvents:
+          longiaHubPushesLayout || (lhLayoutCompact && !liveLeftRailOpen) ? 'none' : 'auto',
+        minHeight: 0,
+        minWidth: 0,
+        alignSelf: 'stretch',
+        boxShadow: liveLeftRailCollapsedStrip
+          ? 'inset 0 0 0 1px rgba(255,255,255,.1), inset 0 1px 0 rgba(255,255,255,.06)'
+          : 'inset 0 1px 0 rgba(255,255,255,0.04), 0 0 0 1px rgba(255,255,255,0.02) inset',
+      }}
+    >
+      {liveLeftRailCollapsedStrip ? (
+        <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-3 py-1">
+          <button
+            type="button"
+            onClick={() => setLiveLeftRailOpen(true)}
+            title="Agrandir le panneau gauche"
+            aria-label="Agrandir le panneau gauche"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/22 bg-[#0a0814]/92 text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,.08)] transition hover:border-violet-400/45 hover:bg-[#100d1a]/95 hover:text-white"
+          >
+            <ChevronRight className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
+          </button>
+          <span
+            className="h-2 w-2 shrink-0 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,.85)]"
+            style={{ animation: 'lhPulse 2s infinite' }}
+            title="En direct"
+            aria-hidden
+          />
+          {phase === PHASE.LIVE ? (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  if (meshPanelOpen) {
+                    setMeshPanelOpen(false);
+                    setLongiaSignalSubDrawer((d) => (d === 'mesh' ? null : d));
+                  } else {
+                    openLongiaHubControlMesh();
+                  }
+                }}
+                title="LIRI Control Mesh — hub LONGIA (Signaux)"
+                aria-label="Control Mesh"
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_rgba(255,255,255,.06)] transition ${
+                  meshPanelOpen || (longiaHubOpen && longiaSignalSubDrawer === 'mesh')
+                    ? 'border-amber-400/55 bg-amber-500/18 text-amber-100'
+                    : 'border-white/22 bg-[#0a0814]/92 text-[#d4a012] hover:border-amber-400/35 hover:text-amber-200'
+                }`}
+              >
+                <Boxes className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  openLongiaHubCoachPanel();
+                }}
+                title="IA — coach formateur (chat et rendus)"
+                aria-label="IA — coach formateur"
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_rgba(255,255,255,.06)] transition ${
+                  longiaHubOpen && longiaSignalSubDrawer === 'host_coach'
+                    ? 'border-violet-400/55 bg-violet-500/18 text-violet-100'
+                    : 'border-white/22 bg-[#0a0814]/92 text-violet-200/95 hover:border-violet-400/45 hover:text-violet-100'
+                }`}
+              >
+                <Sparkles className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
+              </button>
+            </>
+          ) : null}
+        </div>
+      ) : (
+        <>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '8px',
+              paddingBottom: '12px',
+              borderBottom: '1px solid rgba(255,255,255,.08)',
+            }}
+          >
+            <div
+              style={{
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                minHeight: 46,
+              }}
+            >
+              <LiriWordmark
+                variant="mark"
+                size="rail"
+                letterClassName="text-white"
+                className="text-white drop-shadow-[0_2px_10px_rgba(124,58,237,0.35)]"
+              />
+            </div>
+            {phase === PHASE.LIVE && !lhStageFocusLayout ? (
+              <button
+                type="button"
+                onClick={() => setLiveLeftRailOpen(false)}
+                title="Fermer le panneau gauche"
+                className={cn(designerShellCloseBtn, 'h-8 w-8')}
+                aria-label="Fermer le panneau gauche"
+              >
+                <ChevronLeft className="h-4 w-4" aria-hidden />
+              </button>
+            ) : null}
+          </div>
+          <div
+            style={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              marginTop: 4,
+              paddingRight: 2,
+              scrollbarWidth: 'thin',
+            }}
+          >
+            {phase === PHASE.LIVE && !lhStageFocusLayout ? (
+              <>
+                <LiveHostInviteManagementPanel
+                  inviteUrl={
+                    sessionId
+                      ? typeof window !== 'undefined'
+                        ? `${window.location.origin}/live/${sessionId}`
+                        : `/live/${sessionId}`
+                      : ''
+                  }
+                  sessionTitle={sessionTitle}
+                  hostDisplayName={user?.full_name || user?.email || 'Formateur'}
+                  participantOnlineCount={Math.max(1, onlineMemberCount)}
+                  liveDuration={liveDuration || ''}
+                  currentStepTitle={curEtape?.title || ''}
+                  waitingEntries={waitingEntries}
+                  onApproveWaiting={onApproveWaiting}
+                  onRejectWaiting={onRejectWaiting}
+                  onOpenLongiaWaiting={onOpenLongiaWaiting}
+                />
+                <LiriHostLeftLiveAssistantRail />
+              </>
+            ) : (
+              <p
+                style={{
+                  fontSize: 10,
+                  lineHeight: 1.5,
+                  color: 'rgba(255,255,255,.38)',
+                  margin: '8px 0 0',
+                }}
+              >
+                {phase === PHASE.LIVE
+                  ? 'Panneau réduit en mode scène plein écran. Quittez le focus scène pour le fil temps réel.'
+                  : 'Chargement de la salle…'}
+              </p>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+});
+
+export default LiveHostLeftRail;

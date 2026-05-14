@@ -1,0 +1,700 @@
+[
+  {
+    "id": "sci_uni_definition",
+    "label": "Définition scientifique",
+    "family": "universal",
+    "familyLabel": "Blocs universels science",
+    "usage": "Mot · définition",
+    "pedagogicalGoal": "Fixer le vocabulaire.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#47556918",
+          "stroke": "#47556955",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Définition",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Terme · définition simple · mot-clé",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 220,
+          "width": 200,
+          "text": "Terme :",
+          "fontFamily": "Inter",
+          "fontSize": 24,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 280,
+          "width": 860,
+          "text": "Définition : …",
+          "fontFamily": "Inter",
+          "fontSize": 18,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 72,
+          "y": 400,
+          "width": 880,
+          "height": 72,
+          "cornerRadius": 10,
+          "fill": "rgba(245,158,11,0.15)",
+          "stroke": "#f59e0b",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 422,
+          "width": 820,
+          "text": "Mot-clé : …",
+          "fontFamily": "Inter",
+          "fontSize": 17,
+          "fill": "#92400e",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_uni_a_retenir",
+    "label": "À retenir (3 points)",
+    "family": "universal",
+    "familyLabel": "Blocs universels science",
+    "usage": "Mémorisation",
+    "pedagogicalGoal": "Synthèse courte.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#f59e0b18",
+          "stroke": "#f59e0b55",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "À retenir",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "3 points maximum",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 100,
+          "y": 240,
+          "width": 800,
+          "text": "1. …\n2. …\n3. …",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#92400e",
+          "align": "left",
+          "lineHeight": 1.7,
+          "fontStyle": "bold"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_uni_exemple_concret",
+    "label": "Exemple concret",
+    "family": "universal",
+    "familyLabel": "Blocs universels science",
+    "usage": "Concept → réel",
+    "pedagogicalGoal": "Ancrer au quotidien.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#47556918",
+          "stroke": "#47556955",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Exemple concret",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Concept · cas réel · lien quotidien",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 80,
+          "y": 220,
+          "width": 400,
+          "height": 140,
+          "cornerRadius": 10,
+          "fill": "rgba(71,85,105,0.1)",
+          "stroke": "#475569",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 100,
+          "y": 260,
+          "width": 360,
+          "text": "Concept",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 520,
+          "y": 220,
+          "width": 400,
+          "height": 140,
+          "cornerRadius": 10,
+          "fill": "rgba(34,197,94,0.1)",
+          "stroke": "#22c55e",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 540,
+          "y": 260,
+          "width": 360,
+          "text": "Exemple réel",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_uni_schema_legende",
+    "label": "Schéma + légende",
+    "family": "universal",
+    "familyLabel": "Blocs universels science",
+    "usage": "Visuel + texte",
+    "pedagogicalGoal": "Annotations limitées.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#47556918",
+          "stroke": "#47556955",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Schéma + légende",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "3 à 6 annotations max",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 200,
+          "y": 200,
+          "width": 600,
+          "height": 240,
+          "cornerRadius": 12,
+          "fill": "rgba(148,163,184,0.15)",
+          "stroke": "#94a3b8",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 380,
+          "y": 320,
+          "width": 240,
+          "text": "Schéma principal",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#64748b",
+          "align": "center"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 72,
+          "y": 480,
+          "width": 880,
+          "height": 72,
+          "cornerRadius": 8,
+          "fill": "rgba(15,23,42,0.06)",
+          "stroke": "#64748b",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 500,
+          "width": 820,
+          "text": "Légende : symbole → signification",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_uni_comparaison",
+    "label": "Comparaison A / B",
+    "family": "universal",
+    "familyLabel": "Blocs universels science",
+    "usage": "Propriétés",
+    "pedagogicalGoal": "Structurer l’opposition.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#47556918",
+          "stroke": "#47556955",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Comparaison",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "A vs B · propriétés · conclusion",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 100,
+          "y": 240,
+          "width": 380,
+          "text": "A : …",
+          "fontFamily": "Inter",
+          "fontSize": 18,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 540,
+          "y": 240,
+          "width": 380,
+          "text": "B : …",
+          "fontFamily": "Inter",
+          "fontSize": 18,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 72,
+          "y": 400,
+          "width": 880,
+          "height": 80,
+          "cornerRadius": 10,
+          "fill": "rgba(71,85,105,0.1)",
+          "stroke": "#475569",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 424,
+          "width": 820,
+          "text": "Conclusion : …",
+          "fontFamily": "Inter",
+          "fontSize": 17,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_uni_formule_expliquee",
+    "label": "Formule expliquée",
+    "family": "universal",
+    "familyLabel": "Blocs universels science",
+    "usage": "Symboles",
+    "pedagogicalGoal": "Sens de chaque terme.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#47556918",
+          "stroke": "#47556955",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Formule",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Relation · unités · phrase",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 120,
+          "y": 260,
+          "width": 780,
+          "text": "Formule :  ___________",
+          "fontFamily": "Inter",
+          "fontSize": 28,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 360,
+          "width": 860,
+          "text": "Chaque symbole : nom · unité · sens physique",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fill": "#475569",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_uni_processus_etapes",
+    "label": "Processus en étapes",
+    "family": "universal",
+    "familyLabel": "Blocs universels science",
+    "usage": "Séquence",
+    "pedagogicalGoal": "Ordre logique.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#47556918",
+          "stroke": "#47556955",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Processus",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Étapes numérotées",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 100,
+          "y": 240,
+          "width": 800,
+          "text": "Étape 1 → Étape 2 → Étape 3 → Résultat",
+          "fontFamily": "Inter",
+          "fontSize": 20,
+          "fill": "#334155",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_uni_erreur_a_eviter",
+    "label": "Erreur à éviter",
+    "family": "universal",
+    "familyLabel": "Blocs universels science",
+    "usage": "Préconception",
+    "pedagogicalGoal": "Corriger avant d’apprendre par cœur.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#ef444418",
+          "stroke": "#ef444455",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Erreur à éviter",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Croyance fausse · correction",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 220,
+          "width": 860,
+          "text": "Idée fausse courante : …",
+          "fontFamily": "Inter",
+          "fontSize": 18,
+          "fill": "#991b1b",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 300,
+          "width": 860,
+          "text": "Correction scientifique : …",
+          "fontFamily": "Inter",
+          "fontSize": 18,
+          "fill": "#15803d",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,242 @@
+{
+  "ai_hub_ui": {
+    "id": "longia_ui_001",
+    "version": "1.0",
+    "layout_mode": "unified",
+    "mount_points": {
+      "bottom_bar": true,
+      "right_panel": true,
+      "canvas_overlays": true,
+      "floating_quick_help": true
+    },
+    "shell": {
+      "right_panel": {
+        "enabled": true,
+        "default_width": 380,
+        "min_width": 320,
+        "max_width": 520,
+        "resizable": true,
+        "collapsible": true,
+        "default_state": "expanded"
+      },
+      "bottom_bar": {
+        "enabled": true,
+        "height": 64,
+        "persistent": true,
+        "input_placeholder": "Écris à LONGIA…",
+        "voice_button": true,
+        "send_button": true,
+        "quick_mode_switch": true
+      }
+    },
+    "header": {
+      "enabled": true,
+      "show_avatar": true,
+      "avatar_icon": "sparkles",
+      "title": "LONGIA",
+      "subtitle_mode": "dynamic_context",
+      "status_badge": {
+        "enabled": true,
+        "values": [
+          "En écoute",
+          "Coach actif",
+          "Architect actif",
+          "Analyse la scène",
+          "Prêt à agir"
+        ]
+      },
+      "context_line": {
+        "enabled": true,
+        "template": "Je vois : {{project_type}} / {{selection_type}} / {{quick_mode}}"
+      },
+      "actions": [
+        "pin_panel",
+        "collapse_panel",
+        "expand_panel",
+        "open_settings"
+      ]
+    },
+    "message_area": {
+      "enabled": true,
+      "human_message_first": true,
+      "show_message_cards": true,
+      "message_card": {
+        "show_avatar": true,
+        "show_timestamp": false,
+        "show_tone_label": false,
+        "allow_rich_text": true,
+        "allow_markdown_light": true
+      },
+      "empty_state": {
+        "title": "Bonjour 👋",
+        "message": "Je peux t’aider à démarrer. Dis-moi ce que tu veux créer, ou choisis une action ci-dessous.",
+        "actions": [
+          "Créer un document",
+          "Créer un visuel",
+          "Importer un modèle"
+        ]
+      }
+    },
+    "action_strip": {
+      "enabled": true,
+      "placement": "below_main_message",
+      "display_mode": "chips_and_cards",
+      "max_primary_actions": 4,
+      "action_schema": {
+        "label": "string",
+        "action": "string",
+        "icon": "string_optional",
+        "variant": "primary|secondary|ghost",
+        "clickable": true,
+        "previewable": true
+      }
+    },
+    "suggestion_cards": {
+      "enabled": true,
+      "placement": "stack_below_actions",
+      "display_mode": "compact_cards",
+      "show_reason": true,
+      "show_explain_button": true,
+      "show_apply_button": true,
+      "schema": {
+        "label": "string",
+        "description": "string",
+        "why": "string",
+        "apply_action": "string",
+        "explain_action": "string"
+      }
+    },
+    "tabs": {
+      "enabled": true,
+      "items": [
+        { "id": "suggestions", "label": "Suggestion", "icon": "sparkles", "default": true },
+        { "id": "actions", "label": "Action", "icon": "pointer" },
+        { "id": "tutorial", "label": "Tutoriel", "icon": "info" },
+        { "id": "architect", "label": "Architect", "icon": "wand" },
+        { "id": "history", "label": "Historique", "icon": "history" }
+      ]
+    },
+    "tab_content": {
+      "suggestions": {
+        "sections": ["top_suggestions", "recommended_next_steps", "design_variants", "contextual_improvements"]
+      },
+      "actions": {
+        "sections": ["available_for_selection", "available_for_page", "available_for_project"],
+        "show_only_relevant_actions": true
+      },
+      "tutorial": {
+        "sections": ["what_is_selected", "what_you_can_do", "step_by_step_help", "tool_explanations"],
+        "interactive_highlight": true
+      },
+      "architect": {
+        "sections": [
+          "create_from_prompt",
+          "guided_document_flow",
+          "template_picker",
+          "rebuild_from_import",
+          "style_variants"
+        ]
+      },
+      "history": {
+        "sections": [
+          "recent_messages",
+          "applied_actions",
+          "dismissed_suggestions",
+          "generated_outputs"
+        ]
+      }
+    },
+    "bottom_bar_contract": {
+      "input_modes": ["free_chat", "command", "create", "ask_tool_help"],
+      "quick_mode_values": ["coach", "architect", "auto"],
+      "submit_behavior": {
+        "send_to_edge_function": true,
+        "show_typing_state": true,
+        "write_back_to_store": true,
+        "fallback_local_on_error": true
+      }
+    },
+    "canvas_overlays": {
+      "enabled": true,
+      "trigger": "selection_change",
+      "show_near_selected_object": true,
+      "overlay_types": ["quick_actions", "help_info", "transform_suggestions", "style_suggestions"],
+      "rules": {
+        "must_be_discreet": true,
+        "must_not_cover_core_content": true,
+        "must_be_clickable": true,
+        "must_disappear_when_irrelevant": true
+      }
+    },
+    "floating_quick_help": {
+      "enabled": true,
+      "show_when_user_hesitates": true,
+      "show_when_nothing_selected": true,
+      "position": "contextual",
+      "content": {
+        "empty_canvas": [
+          "Créer un document",
+          "Ajouter un texte",
+          "Importer un modèle",
+          "Générer une infographie"
+        ],
+        "page_selected": [
+          "Ajouter un en-tête",
+          "Ajouter un pied de page",
+          "Créer une nouvelle page",
+          "Appliquer un style global"
+        ]
+      }
+    },
+    "response_rendering": {
+      "supports": [
+        "plain_message",
+        "rich_message",
+        "action_buttons",
+        "template_cards",
+        "style_variant_cards",
+        "preview_cards",
+        "expandable_explanations"
+      ],
+      "priority_order": ["human_message", "primary_actions", "suggestions", "details"]
+    },
+    "states": {
+      "idle": {
+        "header_status": "En écoute",
+        "message": "Je suis prêt. Dis-moi ce que tu veux créer ou modifier."
+      },
+      "analyzing": {
+        "header_status": "Analyse la scène",
+        "show_loader": true,
+        "loader_label": "LONGIA réfléchit…"
+      },
+      "coach_active": {
+        "header_status": "Coach actif"
+      },
+      "architect_active": {
+        "header_status": "Architect actif"
+      },
+      "error_fallback": {
+        "header_status": "Prêt à aider",
+        "message": "Je peux quand même te proposer une solution de départ."
+      }
+    },
+    "styling": {
+      "visual_tone": "premium_sober_human",
+      "radius": 20,
+      "shadow": "soft",
+      "spacing": "generous",
+      "message_priority": "high",
+      "button_style": "rounded_modern",
+      "panel_style": "glass_dark_or_light_adaptive"
+    },
+    "behavior_rules": [
+      "Human message before action buttons.",
+      "Never open with raw technical diagnostics.",
+      "Always show a path forward.",
+      "Only show relevant tools for current context.",
+      "Keep suggestions clickable.",
+      "Make the panel useful for both beginner and expert."
+    ]
+  }
+}

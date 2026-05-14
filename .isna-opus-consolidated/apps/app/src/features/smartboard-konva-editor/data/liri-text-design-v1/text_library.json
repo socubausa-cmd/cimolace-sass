@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "name": "LIRI Smart Text Library V1",
+    "total_blocks": 120
+  },
+  "categories": {
+    "Pedagogie": [
+      "Aujourd'hui nous allons comprendre un concept fondamental : ...",
+      "Objectif du cours : à la fin, vous serez capable de ...",
+      "Retenez ceci : ...",
+      "En résumé : ..."
+    ],
+    "Science": [
+      "Un phénomène scientifique est défini comme ...",
+      "Ce processus se déroule en plusieurs étapes : ...",
+      "La cause principale est ..."
+    ],
+    "Math": [
+      "On cherche à résoudre : ...",
+      "On obtient : ...",
+      "Par conséquent : ..."
+    ],
+    "Litteraire": [
+      "L'auteur cherche à montrer que ...",
+      "Le thème principal est ...",
+      "Conclusion littéraire : ..."
+    ],
+    "Business": [
+      "Vous avez ce problème : ...",
+      "Voici la solution : ...",
+      "Passez à l'action maintenant"
+    ],
+    "Spirituel": [
+      "La vérité est que ...",
+      "Ce qui est dedans est dehors ...",
+      "Vérité finale : ..."
+    ]
+  }
+}

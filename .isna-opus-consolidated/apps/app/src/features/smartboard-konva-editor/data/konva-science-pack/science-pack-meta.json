@@ -1,0 +1,41 @@
+{
+  "name": "LIRI Konva — Pack Science complet",
+  "version": "1.0.0",
+  "description": "Presets pédagogiques scientifiques : compréhension, démonstration, mémorisation (biologie, physique, chimie, Terre, méthode, universels).",
+  "canvas": {
+    "width": 1037,
+    "height": 750
+  },
+  "designRules": [
+    "Un slide = une idée scientifique principale",
+    "Schéma, flèche, contraste, code couleur plutôt que long paragraphe",
+    "Textes courts, lisibles en projection",
+    "Visuels explicatifs, pas décoratifs"
+  ],
+  "families": [
+    {
+      "id": "biology",
+      "label": "Biologie"
+    },
+    {
+      "id": "physics",
+      "label": "Physique"
+    },
+    {
+      "id": "chemistry",
+      "label": "Chimie"
+    },
+    {
+      "id": "earth",
+      "label": "Terre & environnement"
+    },
+    {
+      "id": "method",
+      "label": "Méthode scientifique"
+    },
+    {
+      "id": "universal",
+      "label": "Blocs universels science"
+    }
+  ]
+}

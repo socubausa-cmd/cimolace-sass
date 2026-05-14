@@ -1,0 +1,57 @@
+[
+  {
+    "id": "text_01_hero_centered",
+    "label": "Hero centré premium",
+    "category": "titles",
+    "usage": "Couverture de slide ou ouverture d'événement.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 118, "y": 86, "width": 800, "text": "Ajouter un titre", "fontFamily": "Montserrat", "fontSize": 54, "fontStyle": "bold", "fill": "#0F172A", "align": "center", "letterSpacing": 0.3}},
+      {"type": "Text", "attrs": {"x": 182, "y": 156, "width": 672, "text": "Ajouter un sous-titre clair, bref et lisible à distance", "fontFamily": "Inter", "fontSize": 24, "fill": "#64748B", "align": "center", "lineHeight": 1.35}}
+    ]
+  },
+  {
+    "id": "text_02_hero_left_editorial",
+    "label": "Hero éditorial gauche",
+    "category": "titles",
+    "usage": "Magazine, storytelling, introduction d'idée forte.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 74, "y": 94, "width": 540, "text": "Ajouter un titre éditorial", "fontFamily": "Playfair Display", "fontSize": 48, "fontStyle": "bold", "fill": "#111827", "lineHeight": 1.08}},
+      {"type": "Text", "attrs": {"x": 76, "y": 224, "width": 420, "text": "Ajoutez un angle, une tension ou une promesse de lecture pour guider l'œil.", "fontFamily": "Inter", "fontSize": 22, "fill": "#475569", "lineHeight": 1.45}},
+      {"type": "Line", "attrs": {"points": [76, 206, 176, 206], "stroke": "#8B5CF6", "strokeWidth": 5, "lineCap": "round"}}
+    ]
+  },
+  {
+    "id": "text_03_bold_stacked_poster",
+    "label": "Affiche empilée géante",
+    "category": "display",
+    "usage": "Affiche, promo, impact visuel rapide.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 58, "y": 90, "width": 920, "text": "TITRE\nIMPACT", "fontFamily": "Bebas Neue", "fontSize": 118, "fontStyle": "bold", "fill": "#111111", "lineHeight": 0.86, "letterSpacing": 1.2}},
+      {"type": "Text", "attrs": {"x": 70, "y": 344, "width": 400, "text": "Sous-ligne courte ou promesse", "fontFamily": "Inter", "fontSize": 22, "fill": "#475569"}}
+    ]
+  },
+  {
+    "id": "text_04_business_title_kpi",
+    "label": "Titre business KPI",
+    "category": "business",
+    "usage": "Présentation stratégique, réunion, KPI.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 74, "y": 78, "width": 630, "text": "Titre stratégique", "fontFamily": "Inter", "fontSize": 42, "fontStyle": "bold", "fill": "#0F172A"}},
+      {"type": "Text", "attrs": {"x": 76, "y": 132, "width": 560, "text": "Résumé exécutif de la slide en une phrase concise.", "fontFamily": "Inter", "fontSize": 22, "fill": "#64748B"}},
+      {"type": "Rect", "attrs": {"x": 760, "y": 72, "width": 170, "height": 92, "cornerRadius": 18, "fill": "rgba(34,197,94,0.10)", "stroke": "rgba(34,197,94,0.24)"}},
+      {"type": "Text", "attrs": {"x": 792, "y": 90, "text": "+32%", "fontFamily": "Montserrat", "fontSize": 38, "fontStyle": "bold", "fill": "#16A34A"}},
+      {"type": "Text", "attrs": {"x": 800, "y": 130, "text": "croissance", "fontFamily": "Inter", "fontSize": 18, "fill": "#166534"}}
+    ]
+  },
+  {
+    "id": "text_05_quote_luxury",
+    "label": "Citation luxe",
+    "category": "quote",
+    "usage": "Phrase mémorielle ou adage fort.",
+    "nodes": [
+      {"type": "Rect", "attrs": {"x": 86, "y": 220, "width": 866, "height": 182, "cornerRadius": 28, "fill": "rgba(24,18,36,0.82)", "stroke": "rgba(212,160,23,0.28)"}},
+      {"type": "Text", "attrs": {"x": 126, "y": 268, "width": 788, "text": "\"Ajoutez ici la phrase forte que l'élève doit retenir.\"", "fontFamily": "Cinzel", "fontSize": 30, "fontStyle": "bold", "fill": "#F8F0C8", "align": "center", "lineHeight": 1.35}},
+      {"type": "Text", "attrs": {"x": 346, "y": 352, "width": 350, "text": "— Source ou formule finale", "fontFamily": "Libre Baskerville", "fontSize": 18, "fill": "#E5D6A1", "align": "center"}}
+    ]
+  }
+]
