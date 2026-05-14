@@ -115,16 +115,39 @@ SUPABASE_ANON_KEY_STAGING="eyJh..."
 Dans Dashboard Supabase → SQL Editor → **New query** → exécuter dans cet ORDRE :
 
 ```sql
--- Fichier 1 : supabase/migrations/20250505_001_tenants.sql
--- Fichier 2 : supabase/migrations/20250505_002_access_passes.sql
--- Fichier 3 : supabase/migrations/20250505_003_live_sessions.sql
--- Fichier 4 : supabase/migrations/20250505000004_marketing.sql
--- Fichier 5 : supabase/migrations/20260514_001_liri_studio_workspaces.sql
--- Fichier 6 : supabase/migrations/20260514_002_billing_multi_provider.sql
--- Fichier 7 : supabase/migrations/20260514_003_missing_tables.sql
+-- Copier-coller chaque fichier depuis GitHub, UN PAR UN, dans l'ordre :
+-- https://github.com/socubausa-cmd/cimolace-sass/tree/main/supabase/migrations
+-- 
+-- 01. 20250505000001_tenants.sql
+-- 02. 20250505000002_access_passes.sql
+-- 03. 20250505000003_live_sessions.sql
+-- 04. 20250505000004_marketing.sql
+-- 05. 20250505000005_billing.sql
+-- 06. 20250510000006_cimolace_catalog.sql
+-- 07. 20250512000006_live_participants.sql
+-- 08. 20250512000007_live_recordings.sql
+-- 09. 20260510000007_medos_core.sql
+-- 10. 20260510000008_medos_forms_health.sql
+-- 11. 20260511000009_medos_note_reads.sql
+-- 12. 20260512000010_smartboard.sql
+-- 13. 20260513000013_stripe_connect.sql
+-- 14. 20260513000014_billing_rls.sql
+-- 15. 20260513000015_liri_conversations.sql
+-- 16. 20260513000016_booking.sql
+-- 17. 20260513000017_pawapay_deposits.sql
+-- 18. 20260513000018_forum.sql
+-- 19. 20260513000019_notifications.sql
+-- 20. 20260513000020_email_engine.sql
+-- 21. 20260513000021_sms_engine.sql
+-- 22. 20260513000022_ai_video.sql
+-- 23. 20260513000023_billing_v2.sql
+-- 24. 20260514_001_liri_studio_workspaces.sql
+-- 25. 20260514_002_billing_multi_provider.sql
+-- 26. 20260514_003_missing_tables.sql
 ```
 
-> 💡 Copie le contenu de chaque fichier depuis GitHub : https://github.com/socubausa-cmd/cimolace-sass/tree/main/supabase/migrations
+> ⚠️ 26 fichiers à exécuter UN PAR UN. Ne pas les fusionner dans une seule requête.
+> 💡 Ouvre chaque fichier sur GitHub, copie le contenu, colle dans SQL Editor, Run.
 
 ### 2.5 Exécuter le seed
 
@@ -355,7 +378,7 @@ curl -H "X-Tenant-Slug: isna" https://api.staging.cimolace.com/tenants/current
 ☐ Projet gcloud "cimolace-staging" créé
 ☐ APIs Cloud Build + Cloud Run activées
 ☐ Projet Supabase "cimolace-staging" créé
-☐ 7 migrations SQL exécutées sur Supabase Staging
+☐ 26 migrations SQL exécutées sur Supabase Staging
 ☐ Seed 2 tenants exécuté
 ☐ Projet LiveKit Cloud "cimolace-staging" créé
 ☐ Vercel CLI installé + login
