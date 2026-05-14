@@ -1,7 +1,6 @@
 {
-  "buildCommand": "cd apps/public-site && npm run build",
-  "outputDirectory": "apps/public-site/.next",
-  "devCommand": "cd apps/public-site && npm run dev",
-  "framework": "nextjs",
-  "installCommand": "npm ci --prefix apps/public-site"
+  "buildCommand": "cd ../.. && npm ci && cd apps/public-site && npm run build",
+  "outputDirectory": "../../apps/public-site/.next",
+  "devCommand": "cd ../.. && npm run dev:public",
+  "framework": "nextjs"
 }
