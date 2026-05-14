@@ -1,6 +1,7 @@
 {
-  "buildCommand": "cd ../.. && npm ci && cd apps/public-site && npm run build",
+  "installCommand": "cd ../.. && npm ci",
+  "buildCommand": "cd ../.. && npm run build --workspace=apps/public-site",
   "outputDirectory": "../../apps/public-site/.next",
-  "devCommand": "cd ../.. && npm run dev:public",
+  "devCommand": "cd ../.. && npm run dev --workspace=apps/public-site",
   "framework": "nextjs"
 }
