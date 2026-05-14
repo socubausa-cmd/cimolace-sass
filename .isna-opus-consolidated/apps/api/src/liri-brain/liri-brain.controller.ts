@@ -99,4 +99,36 @@ export class LiriBrainController {
     const generator = this.liriBrain.streamChat(model, messages, tenant);
     return sseFromGenerator(generator);
   }
+
+  // ── Bloc Edge IA ────────────────────────────────────────────────────────
+
+  @Post('smartboard/chat')
+  async smartboardDesignerChat(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) {
+    return this.liriBrain.smartboardDesignerChat(t.id, (r as any).user.id, d.messages, d.context);
+  }
+
+  @Post('generate-quiz')
+  async generateQuiz(@Body() d: any, @CurrentTenant() t: TenantContext) {
+    return this.liriBrain.generateQuiz(t.id, d.content, d.questionCount || 5);
+  }
+
+  @Post('generate-mindmap')
+  async generateMindmap(@Body() d: any, @CurrentTenant() t: TenantContext) {
+    return this.liriBrain.generateMindmap(t.id, d.content);
+  }
+
+  @Post('generate-transcript')
+  async generateTranscript(@Body() d: any, @CurrentTenant() t: TenantContext) {
+    return this.liriBrain.generateTranscript(t.id, d.content);
+  }
+
+  @Post('translate')
+  async translate(@Body() d: any, @CurrentTenant() t: TenantContext) {
+    return this.liriBrain.translate(t.id, d.content, d.targetLang || 'en');
+  }
+
+  @Post('text-to-speech')
+  async textToSpeech(@Body() d: any, @CurrentTenant() t: TenantContext) {
+    return this.liriBrain.textToSpeech(t.id, d.text, d.voice || 'alloy');
+  }
 }

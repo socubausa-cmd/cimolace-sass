@@ -363,4 +363,77 @@ export class LiriBrainService {
     }
     yield { content: '', done: true };
   }
+
+  // ── Edge IA Methods ────────────────────────────────────────────────────
+
+  async smartboardDesignerChat(tenantId: string, userId: string, messages: any[], context?: any) {
+    const response = await this.callAI('Tu es un expert SmartBoard designer. Aide l\'utilisateur à créer des slides pédagogiques professionnels.',
+      messages.map((m: any) => ({ role: m.role, content: m.content })), 2000);
+    return { reply: response, context };
+  }
+
+  async generateQuiz(tenantId: string, content: string, questionCount = 5) {
+    const response = await this.callAI(
+      `Génère ${questionCount} questions QCM (4 choix) basées sur ce contenu. Format JSON: [{"question":"...","choices":["A","B","C","D"],"answer":"A","explanation":"..."}]`,
+      [{ role: 'user', content }], 2000);
+    const match = response.match(/\[[\s\S]*\]/);
+    return { questions: match ? JSON.parse(match[0]) : [{ raw: response }], count: questionCount };
+  }
+
+  async generateMindmap(tenantId: string, content: string) {
+    const response = await this.callAI(
+      'Crée une mindmap (carte mentale) à partir de ce contenu. Format: nœud central → branches → sous-branches. Format JSON: {"central":"Titre","branches":[{"label":"...","children":["..."]}]}',
+      [{ role: 'user', content }], 1500);
+    const match = response.match(/\{[\s\S]*\}/);
+    return match ? JSON.parse(match[0]) : { central: 'Contenu', branches: [{ label: response.slice(0, 60), children: [] }] };
+  }
+
+  async generateTranscript(tenantId: string, content: string) {
+    const response = await this.callAI(
+      'Transforme ce contenu en transcription formatée (horodatée). Format: [{"time":"00:00","speaker":"Intervenant","text":"..."}]',
+      [{ role: 'user', content }], 2000);
+    const match = response.match(/\[[\s\S]*\]/);
+    return { transcript: match ? JSON.parse(match[0]) : [{ time: '00:00', speaker: 'Narrateur', text: response.slice(0, 200) }] };
+  }
+
+  async translate(tenantId: string, content: string, targetLang: string) {
+    const response = await this.callAI(`Translate the following text to ${targetLang}. Return only the translated text.`,
+      [{ role: 'user', content }], 1000);
+    return { translation: response, targetLang };
+  }
+
+  async textToSpeech(tenantId: string, text: string, voice: string) {
+    // OpenAI TTS
+    const apiKey = this.config.get<string>('OPENAI_API_KEY');
+    if (apiKey && apiKey !== 'replace_me') {
+      try {
+        const res = await fetch('https://api.openai.com/v1/audio/speech', {
+          method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'tts-1', voice, input: text.slice(0, 4096) }),
+        });
+        if (res.ok) {
+          const buffer = Buffer.from(await res.arrayBuffer());
+          return { audioBase64: buffer.toString('base64'), format: 'mp3', voice };
+        }
+      } catch (e: any) { this.logger.warn(`TTS failed: ${e.message}`); }
+    }
+    return { audioBase64: null, message: 'TTS non disponible (OPENAI_API_KEY requis)', voice };
+  }
+
+  private async callAI(system: string, messages: { role: string; content: string }[], maxTokens = 2000): Promise<string> {
+    const apiKey = this.config.get<string>('DEEPSEEK_API_KEY');
+    if (apiKey && apiKey !== 'replace_me') {
+      try {
+        const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+          body: JSON.stringify({ model: 'deepseek-chat', messages: [{ role: 'system', content: system }, ...messages], max_tokens: maxTokens }),
+        });
+        if (res.ok) {
+          const json: any = await res.json();
+          return json.choices?.[0]?.message?.content?.trim() || '';
+        }
+      } catch { /* fallback */ }
+    }
+    return `[Fallback] ${messages[0]?.content?.slice(0, 100) || 'contenu'}... (clé API non configurée)`;
+  }
 }
