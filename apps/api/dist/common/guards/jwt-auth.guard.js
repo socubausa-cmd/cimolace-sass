@@ -19,14 +19,28 @@ let JwtAuthGuard = class JwtAuthGuard {
     async canActivate(context) {
         const request = context.switchToHttp().getRequest();
         const authHeader = request.headers.authorization;
-        if (!authHeader?.startsWith("Bearer "))
-            throw new common_1.UnauthorizedException("Missing token");
+        if (!authHeader?.startsWith('Bearer ')) {
+            throw new common_1.UnauthorizedException('Token manquant');
+        }
         const token = authHeader.slice(7);
-        const user = await this.authService.verifyToken(token);
-        if (!user)
-            throw new common_1.UnauthorizedException("Invalid token");
-        request.user = user;
-        return true;
+        const medosPayload = this.authService.verifyMedosToken(token);
+        if (medosPayload) {
+            request.user = {
+                id: medosPayload.sub,
+                email: medosPayload.email,
+                role: medosPayload.role,
+                tenant_id: medosPayload.tenant_id,
+                tenant_slug: medosPayload.tenant_slug,
+                _source: 'medos',
+            };
+            return true;
+        }
+        const supabaseUser = await this.authService.verifyToken(token);
+        if (supabaseUser) {
+            request.user = { ...supabaseUser, _source: 'supabase' };
+            return true;
+        }
+        throw new common_1.UnauthorizedException('Token invalide ou expiré');
     }
 };
 exports.JwtAuthGuard = JwtAuthGuard;

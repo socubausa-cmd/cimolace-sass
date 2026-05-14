@@ -8,9 +8,16 @@ const http = require('http');
 const crypto = require('crypto');
 
 // ── Config ──────────────────────────────────────────────────────────────
-const API = 'http://localhost:4000';
-const SUPABASE_URL = 'https://fwfupxvmwtxbtbjdeqvu.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3ZnVweHZtd3R4YnRiamRlcXZ1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzk5MTQ2OCwiZXhwIjoyMDkzNTY3NDY4fQ.vInOwyDXAqmG8MzM2pTle8ZuTfEjEvdPJdPR5UC7eLk';
+const API = process.env.API_URL ?? 'http://localhost:4000';
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.error(
+    'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. Load them from a local .env file; never commit real secrets.',
+  );
+  process.exit(1);
+}
 
 const TIMESTAMP = Date.now();
 const TEST_EMAIL = `e2e-${TIMESTAMP}@test.local`;

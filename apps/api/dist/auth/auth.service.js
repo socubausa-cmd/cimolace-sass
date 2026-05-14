@@ -12,15 +12,51 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const supabase_js_1 = require("@supabase/supabase-js");
+const crypto_1 = require("crypto");
+const jwt = require('jsonwebtoken');
 let AuthService = class AuthService {
     constructor() {
-        this.supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL ?? "", process.env.SUPABASE_SERVICE_ROLE_KEY ?? "", { auth: { persistSession: false } });
+        this.supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL ?? '', process.env.SUPABASE_SERVICE_ROLE_KEY ?? '', { auth: { persistSession: false } });
+        this.jwtSecret = process.env.MEDOS_JWT_SECRET ?? '';
+        if (!this.jwtSecret) {
+            console.warn('[MedOS] MEDOS_JWT_SECRET non défini — le pont tenant-token ne fonctionnera pas');
+        }
     }
     async verifyToken(token) {
         const { data, error } = await this.supabase.auth.getUser(token);
         if (error || !data.user)
             return null;
-        return { id: data.user.id, email: data.user.email };
+        return { id: data.user.id, email: data.user.email ?? '', role: 'authenticated' };
+    }
+    generateMedosToken(payload) {
+        if (!this.jwtSecret)
+            throw new Error('MEDOS_JWT_SECRET manquant');
+        return jwt.sign({ ...payload, iss: 'medos' }, this.jwtSecret, {
+            expiresIn: '15m',
+            algorithm: 'HS256',
+        });
+    }
+    verifyMedosToken(token) {
+        if (!this.jwtSecret)
+            return null;
+        try {
+            const payload = jwt.verify(token, this.jwtSecret, {
+                algorithms: ['HS256'],
+                issuer: 'medos',
+            });
+            return payload;
+        }
+        catch {
+            return null;
+        }
+    }
+    safeCompare(a, b) {
+        try {
+            return (0, crypto_1.timingSafeEqual)(Buffer.from(a, 'hex'), Buffer.from(b, 'hex'));
+        }
+        catch {
+            return false;
+        }
     }
     getClient() {
         return this.supabase;

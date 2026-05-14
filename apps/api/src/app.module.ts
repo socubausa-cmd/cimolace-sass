@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { HealthController } from "./health.controller";
 import { AuthModule } from "./auth/auth.module";
 import { TenantModule } from "./tenant/tenant.module";
 import { CimolaceModule } from "./cimolace/cimolace.module";
@@ -17,6 +18,7 @@ import { MedChartingModule } from "./med-charting/med-charting.module";
 import { MedGdprModule } from "./med-gdpr/med-gdpr.module";
 
 @Module({
+  controllers: [HealthController],
   imports: [
     AuthModule, TenantModule,
     CimolaceModule, BillingModule, CheckoutModule,

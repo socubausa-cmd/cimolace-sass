@@ -30,6 +30,9 @@ let TenantService = class TenantService {
             return null;
         return { ...membership.tenants, role: membership.role };
     }
+    async resolveForUser(slug, userId) {
+        return this.resolveTenant(userId, slug);
+    }
     async getTenantById(tenantId) {
         const supabase = this.authService.getClient();
         const { data } = await supabase.from("tenants").select("*").eq("id", tenantId).single();

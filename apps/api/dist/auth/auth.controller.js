@@ -15,21 +15,57 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
+const auth_service_1 = require("./auth.service");
+const tenant_api_key_service_1 = require("../tenant/tenant-api-key.service");
+const tenant_token_dto_1 = require("./tenant-token.dto");
 let AuthController = class AuthController {
+    constructor(authService, tenantApiKeyService) {
+        this.authService = authService;
+        this.tenantApiKeyService = tenantApiKeyService;
+    }
     async me(req) {
         return { data: { id: req.user.id, email: req.user.email } };
+    }
+    async tenantToken(dto) {
+        const keyData = await this.tenantApiKeyService.validateKey(dto.apiKey);
+        if (!keyData) {
+            throw new common_1.UnauthorizedException('Clé API invalide ou révoquée');
+        }
+        const token = this.authService.generateMedosToken({
+            sub: dto.userId,
+            email: dto.email,
+            role: dto.role,
+            tenant_id: keyData.tenantId,
+            tenant_slug: keyData.tenantSlug,
+        });
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+        return {
+            token,
+            expiresAt,
+            tenantSlug: keyData.tenantSlug,
+        };
     }
 };
 exports.AuthController = AuthController;
 __decorate([
-    (0, common_1.Get)("me"),
+    (0, common_1.Get)('me'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "me", null);
+__decorate([
+    (0, common_1.Post)('tenant-token'),
+    (0, common_1.HttpCode)(200),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [tenant_token_dto_1.TenantTokenDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "tenantToken", null);
 exports.AuthController = AuthController = __decorate([
-    (0, common_1.Controller)("auth")
+    (0, common_1.Controller)('auth'),
+    __metadata("design:paramtypes", [auth_service_1.AuthService,
+        tenant_api_key_service_1.TenantApiKeyService])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map

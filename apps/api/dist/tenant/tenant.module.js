@@ -11,13 +11,14 @@ const common_1 = require("@nestjs/common");
 const auth_module_1 = require("../auth/auth.module");
 const tenant_service_1 = require("./tenant.service");
 const tenant_controller_1 = require("./tenant.controller");
+const tenant_api_key_controller_1 = require("./tenant-api-key.controller");
 let TenantModule = class TenantModule {
 };
 exports.TenantModule = TenantModule;
 exports.TenantModule = TenantModule = __decorate([
     (0, common_1.Module)({
         imports: [auth_module_1.AuthModule],
-        controllers: [tenant_controller_1.TenantController],
+        controllers: [tenant_controller_1.TenantController, tenant_api_key_controller_1.TenantApiKeyController],
         providers: [tenant_service_1.TenantService],
         exports: [tenant_service_1.TenantService],
     })

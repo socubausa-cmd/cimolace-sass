@@ -29,6 +29,10 @@ let BillingService = class BillingService {
         const { data } = await this.supabase.from("invoices").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false });
         return data ?? [];
     }
+    async handleWebhook(payload, signature) {
+        console.log("Webhook received", { sig: signature?.slice(0, 10), len: payload.length });
+        return { received: true };
+    }
 };
 exports.BillingService = BillingService;
 exports.BillingService = BillingService = __decorate([

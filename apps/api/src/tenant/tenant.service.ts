@@ -19,6 +19,10 @@ export class TenantService {
     return { ...(membership.tenants as any), role: membership.role };
   }
 
+  async resolveForUser(slug: string, userId: string) {
+    return this.resolveTenant(userId, slug);
+  }
+
   async getTenantById(tenantId: string) {
     const supabase = this.authService.getClient();
     const { data } = await supabase.from("tenants").select("*").eq("id", tenantId).single();

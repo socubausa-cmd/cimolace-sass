@@ -20,11 +20,19 @@ let TenantGuard = class TenantGuard {
         const request = context.switchToHttp().getRequest();
         const userId = request.user?.id;
         if (!userId)
-            throw new common_1.ForbiddenException("User not authenticated");
-        const slug = request.headers["x-tenant-slug"] ?? undefined;
+            throw new common_1.ForbiddenException('Utilisateur non authentifié');
+        if (request.user?._source === 'medos' && request.user.tenant_id) {
+            request.tenant = {
+                id: request.user.tenant_id,
+                slug: request.user.tenant_slug,
+                userRole: request.user.role,
+            };
+            return true;
+        }
+        const slug = request.headers['x-tenant-slug'] ?? undefined;
         const tenant = await this.tenantService.resolveTenant(userId, slug);
         if (!tenant)
-            throw new common_1.ForbiddenException("No tenant access");
+            throw new common_1.ForbiddenException('Accès tenant refusé');
         request.tenant = tenant;
         return true;
     }
