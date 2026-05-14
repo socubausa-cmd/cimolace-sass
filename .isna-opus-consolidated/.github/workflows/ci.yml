@@ -1,0 +1,84 @@
+name: CI/CD — ISNA V2
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Lint & Typecheck ──────────────────────────────────────────────────────
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Typecheck API
+        run: cd apps/api && npx tsc --noEmit -p tsconfig.json
+      - name: Typecheck Frontend
+        run: cd apps/app && npx tsc --noEmit
+
+  # ── Build ─────────────────────────────────────────────────────────────────
+  build:
+    needs: lint-and-typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Build API
+        run: cd apps/api && npm run build
+      - name: Build Frontend
+        run: cd apps/app && npm run build
+
+  # ── Tests — Isolation Multi-Tenant ────────────────────────────────────────
+  test-multi-tenant:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL_STAGING }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_STAGING }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Run Multi-Tenant Tests
+        run: cd apps/api && npm test -- --testPathPattern="multi-tenant"
+
+  # ── Tests — Auth & Guards ─────────────────────────────────────────────────
+  test-auth:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Run Auth Tests
+        run: cd apps/api && npm test -- --testPathPattern="auth|tenant|guard"
+
+  # ── Tests — Billing Webhook ───────────────────────────────────────────────
+  test-billing:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Run Billing Tests
+        run: cd apps/api && npm test -- --testPathPattern="billing|checkout"
