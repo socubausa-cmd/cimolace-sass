@@ -1,45 +1,39 @@
 # ============================================================================
 # Dockerfile — ISNA V2 API NestJS
-# Cible : Google Cloud Run
-# Port : 4000
+# Cible : Google Cloud Run — Port 4000
+# Stratégie : build apps/api/ uniquement (pas de dépendances workspace)
 # ============================================================================
 
 # ── Stage 1: Build ──────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Root workspace config
-COPY package.json package-lock.json ./
-COPY apps/api/package.json apps/api/package.json
-COPY apps/api/tsconfig.json apps/api/tsconfig.json
-COPY apps/api/tsconfig.build.json apps/api/tsconfig.build.json 2>/dev/null || true
-COPY packages/ packages/
+# Copier uniquement le package.json de l'API (pas le monorepo)
+COPY apps/api/package.json ./
 
-RUN npm ci --ignore-scripts
+# Installer TOUT (dev inclus → besoin de @nestjs/cli, typescript pour build)
+RUN npm install --legacy-peer-deps --ignore-scripts
 
-# Source
-COPY apps/api/src apps/api/src
-COPY apps/api/nest-cli.json apps/api/nest-cli.json 2>/dev/null || true
+# Copier le source et la config TypeScript
+COPY apps/api/tsconfig.json ./
+COPY apps/api/tsconfig.build.json ./
+COPY apps/api/nest-cli.json ./
+COPY apps/api/src ./src
 
 # Build NestJS → dist/
-RUN cd apps/api && npx nest build
+RUN npx nest build
 
 # ── Stage 2: Production ─────────────────────────────────────────────────────
 FROM node:20-alpine
 WORKDIR /app
 
-# Prod deps only
-COPY package.json package-lock.json ./
-COPY apps/api/package.json apps/api/package.json
-COPY packages/ packages/
+# Copier package.json et installer dépendances PROD uniquement
+COPY apps/api/package.json ./
+RUN npm install --omit=dev --legacy-peer-deps --ignore-scripts && npm cache clean --force
 
-RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
+# Copier le build depuis le stage 1
+COPY --from=builder /app/dist ./dist
 
-# Copy built app
-COPY --from=builder /app/apps/api/dist apps/api/dist
-COPY --from=builder /app/apps/api/node_modules apps/api/node_modules 2>/dev/null || true
-
-# Runtime deps
 RUN apk add --no-cache tini
 
 ENV NODE_ENV=production
@@ -48,4 +42,4 @@ ENV PORT=4000
 EXPOSE 4000
 
 ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["node", "apps/api/dist/main.js"]
+CMD ["node", "dist/main.js"]
