@@ -14,4 +14,3 @@ supabase
 scripts
 docs
 .gcloudignore
-Dockerfile
