@@ -10,7 +10,7 @@ apps/*/node_modules
 apps/api/dist
 apps/app/dist
 apps/public-site/.next
-supabase
+/supabase
 scripts
 docs
 .gcloudignore
