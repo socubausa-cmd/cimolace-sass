@@ -1,5 +1,5 @@
 {
-  "installCommand": "cp ../../package-lock.json . && npm ci",
+  "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "framework": "nextjs"
