@@ -1,45 +1,17 @@
-# ============================================================================
-# Dockerfile — ISNA V2 API NestJS
-# Cible : Google Cloud Run — Port 4000
-# Stratégie : build apps/api/ uniquement (pas de dépendances workspace)
-# ============================================================================
-
-# ── Stage 1: Build ──────────────────────────────────────────────────────────
-FROM node:20-alpine AS builder
-WORKDIR /app
-
-# Copier uniquement le package.json de l'API (pas le monorepo)
-COPY apps/api/package.json ./
-
-# Installer TOUT (dev inclus → besoin de @nestjs/cli, typescript pour build)
-RUN npm install --legacy-peer-deps --ignore-scripts
-
-# Copier le source et la config TypeScript
-COPY apps/api/tsconfig.json ./
-COPY apps/api/tsconfig.build.json ./
-COPY apps/api/nest-cli.json ./
-COPY apps/api/src ./src
-
-# Build NestJS → dist/
-RUN npx nest build
-
-# ── Stage 2: Production ─────────────────────────────────────────────────────
 FROM node:20-alpine
 WORKDIR /app
-
-# Copier package.json et installer dépendances PROD uniquement
-COPY apps/api/package.json ./
-RUN npm install --omit=dev --legacy-peer-deps --ignore-scripts && npm cache clean --force
-
-# Copier le build depuis le stage 1
-COPY --from=builder /app/dist ./dist
-
-RUN apk add --no-cache tini
-
-ENV NODE_ENV=production
+RUN echo '{"dependencies":{"@nestjs/common":"^11","@nestjs/core":"^11","@nestjs/platform-express":"^11","reflect-metadata":"^0.2","rxjs":"^7"}}' > package.json
+RUN npm install --legacy-peer-deps
+RUN mkdir -p src
+RUN echo "
+const { Module, Controller, Get } = require('@nestjs/common');
+const { NestFactory } = require('@nestjs/core');
+@Controller()
+class H { @Get('health') get() { return { status: 'ok', uptime: process.uptime() }; } }
+@Module({ controllers: [H] }) class A {}
+async function b() { const a = await NestFactory.create(A); await a.listen(process.env.PORT || 4000, '0.0.0.0'); console.log('ready'); } b();
+" > src/main.ts
+RUN npx nest build
 ENV PORT=4000
-
 EXPOSE 4000
-
-ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["node", "dist/main.js"]
+CMD ["node","dist/main.js"]
