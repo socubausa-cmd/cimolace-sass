@@ -126,6 +126,29 @@ export function MyAppointments() {
     }
   }
 
+  async function joinTeleconsult(appointmentId: string) {
+    try {
+      const res = await fetch(API + '/med/teleconsult/appointment/' + appointmentId + '/join', {
+        method: 'POST',
+        headers: authHeaders(),
+      });
+      if (!res.ok) {
+        const b = await res.json().catch(() => ({}));
+        setError(b?.message || `Erreur ${res.status}`);
+        return;
+      }
+      const { url, token } = await res.json();
+      if (!url || !token) {
+        setError('Reponse LiveKit invalide');
+        return;
+      }
+      const meetUrl = `https://meet.livekit.io/custom?liveKitUrl=${encodeURIComponent(url)}&token=${encodeURIComponent(token)}`;
+      window.open(meetUrl, '_blank', 'noopener,noreferrer');
+    } catch (err: any) {
+      setError(err?.message || 'Echec');
+    }
+  }
+
   async function handleCancel(id: string) {
     if (!confirm('Annuler ce rendez-vous ?')) return;
     try {
@@ -183,7 +206,13 @@ export function MyAppointments() {
           </div>
         )}
         {upcoming.map((a) => (
-          <AppointmentCard key={a.id} a={a} onCancel={() => handleCancel(a.id)} canCancel />
+          <AppointmentCard
+            key={a.id}
+            a={a}
+            onCancel={() => handleCancel(a.id)}
+            onJoinTeleconsult={() => joinTeleconsult(a.id)}
+            canCancel
+          />
         ))}
       </section>
 
@@ -193,7 +222,7 @@ export function MyAppointments() {
             Historique ({past.length})
           </h3>
           {past.slice(0, 10).map((a) => (
-            <AppointmentCard key={a.id} a={a} onCancel={() => {}} canCancel={false} />
+            <AppointmentCard key={a.id} a={a} onCancel={() => {}} onJoinTeleconsult={() => {}} canCancel={false} />
           ))}
         </section>
       )}
@@ -252,12 +281,27 @@ export function MyAppointments() {
   );
 }
 
-function AppointmentCard({ a, onCancel, canCancel }: { a: Appointment; onCancel: () => void; canCancel: boolean }) {
+function AppointmentCard({
+  a,
+  onCancel,
+  onJoinTeleconsult,
+  canCancel,
+}: {
+  a: Appointment;
+  onCancel: () => void;
+  onJoinTeleconsult: () => void;
+  canCancel: boolean;
+}) {
   const dt = new Date(a.scheduled_at);
   const meta = appTypeMeta(a.appointment_type);
   const IconCmp = meta.icon;
   const isCancelled = a.status === 'cancelled';
   const isCompleted = a.status === 'completed';
+  const isTeleconsult = a.appointment_type === 'teleconsult';
+  // Join button visible from 15min before to 2h after scheduled_at
+  const startMs = dt.getTime();
+  const now = Date.now();
+  const joinable = isTeleconsult && !isCancelled && !isCompleted && now >= startMs - 15 * 60 * 1000 && now <= startMs + 2 * 3600 * 1000;
   return (
     <div
       style={{
@@ -291,6 +335,15 @@ function AppointmentCard({ a, onCancel, canCancel }: { a: Appointment; onCancel:
       </div>
 
       <StatusBadge status={a.status} />
+
+      {joinable && (
+        <button
+          onClick={onJoinTeleconsult}
+          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+        >
+          <Video size={14} /> Rejoindre
+        </button>
+      )}
 
       {canCancel && !isCancelled && !isCompleted && (
         <button

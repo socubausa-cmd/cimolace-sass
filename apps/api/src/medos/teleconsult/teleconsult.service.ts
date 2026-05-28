@@ -96,7 +96,7 @@ export class TeleconsultService {
     actorRole: TenantContext['userRole'],
     sessionId: string,
     displayName?: string,
-  ): Promise<{ room: string; token: string; ttl: string }> {
+  ): Promise<{ room: string; token: string; url: string; ttl: string }> {
     const { data: session, error } = await this.supabase.client
       .from('med_teleconsult_sessions')
       .select('*')
@@ -131,7 +131,12 @@ export class TeleconsultService {
           displayName,
         );
 
-    return { room: roomName, token, ttl: isHost ? '4h' : '1h' };
+    return {
+      room: roomName,
+      token,
+      url: this.livekit.getUrl(),
+      ttl: isHost ? '4h' : '1h',
+    };
   }
 
   async markJoined(
@@ -152,6 +157,66 @@ export class TeleconsultService {
       .single();
     if (error || !data) throw new NotFoundException('Session introuvable');
     return data;
+  }
+
+  /**
+   * Convenience flow for the UI: from an appointment, get-or-create the
+   * teleconsult session (doctor) or fetch the existing one (patient),
+   * then issue a token. Lets the UI implement "Start / Join" as a single
+   * click without juggling two endpoints.
+   */
+  async joinFromAppointment(
+    tenant: TenantContext,
+    actorId: string,
+    actorRole: TenantContext['userRole'],
+    appointmentId: string,
+    displayName?: string,
+  ): Promise<{ session_id: string; room: string; token: string; url: string; ttl: string }> {
+    const { data: appt } = await this.supabase.client
+      .from('med_appointments')
+      .select('id, patient_id, practitioner_id, teleconsult_session_id, appointment_type')
+      .eq('tenant_id', tenant.id)
+      .eq('id', appointmentId)
+      .single();
+    if (!appt) throw new NotFoundException('RDV introuvable');
+    const a = appt as any;
+
+    // Verify the patient owns this appointment
+    if (actorRole === 'patient') {
+      const { data: pat } = await this.supabase.client
+        .from('med_patients')
+        .select('patient_user_id')
+        .eq('id', a.patient_id)
+        .single();
+      if ((pat as any)?.patient_user_id !== actorId) {
+        throw new ForbiddenException('Accès refusé à ce RDV');
+      }
+    }
+
+    let sessionId: string | null = a.teleconsult_session_id;
+
+    if (!sessionId) {
+      if (actorRole === 'patient') {
+        throw new NotFoundException(
+          "Aucune session de téléconsultation n'est encore prête. Demandez à votre praticien de la démarrer.",
+        );
+      }
+      const session = await this.create(tenant, a.practitioner_id, {
+        patient_id: a.patient_id,
+        appointment_id: a.id,
+        recording_consented: false,
+      });
+      sessionId = (session as any).id as string;
+    }
+
+    const tokenResp = await this.issueToken(
+      tenant,
+      actorId,
+      actorRole,
+      sessionId,
+      displayName,
+    );
+    return { session_id: sessionId, ...tokenResp };
   }
 
   async end(

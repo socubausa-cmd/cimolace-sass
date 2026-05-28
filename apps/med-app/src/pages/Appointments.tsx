@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@isna/ui/auth';
-import { Calendar, Plus, X, Clock, Trash2, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Plus, X, Clock, Trash2, CheckCircle, XCircle, AlertCircle, Video } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
@@ -226,6 +226,29 @@ export function Appointments() {
     }
   }
 
+  async function startTeleconsult(appointmentId: string) {
+    try {
+      const res = await fetch(API + '/med/teleconsult/appointment/' + appointmentId + '/join', {
+        method: 'POST',
+        headers: authHeaders(),
+      });
+      if (!res.ok) {
+        const b = await res.json().catch(() => ({}));
+        setError(b?.message || `Erreur ${res.status}`);
+        return;
+      }
+      const { url, token } = await res.json();
+      if (!url || !token) {
+        setError('Reponse LiveKit invalide');
+        return;
+      }
+      const meetUrl = `https://meet.livekit.io/custom?liveKitUrl=${encodeURIComponent(url)}&token=${encodeURIComponent(token)}`;
+      window.open(meetUrl, '_blank', 'noopener,noreferrer');
+    } catch (err: any) {
+      setError(err?.message || 'Echec');
+    }
+  }
+
   async function appointmentAction(id: string, action: 'confirm' | 'cancel' | 'complete' | 'no-show') {
     try {
       const body = action === 'cancel' ? JSON.stringify({ reason: 'Annulé par le praticien' }) : undefined;
@@ -331,6 +354,15 @@ export function Appointments() {
                         </div>
                       </div>
                       <ApptStatusBadge status={appt.status} />
+                      {appt.appointment_type === 'teleconsult' && appt.status !== 'cancelled' && appt.status !== 'completed' && (
+                        <button
+                          onClick={() => startTeleconsult(appt.id)}
+                          title="Démarrer la téléconsultation"
+                          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
+                        >
+                          <Video size={14} /> Démarrer
+                        </button>
+                      )}
                       <ApptActions status={appt.status} onAction={(a) => appointmentAction(appt.id, a)} />
                     </div>
                   );

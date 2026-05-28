@@ -89,4 +89,26 @@ export class TeleconsultController {
   ) {
     return this.service.end(tenant, tenant.userRole, id, dto);
   }
+
+  /**
+   * One-shot helper for the UI: takes an appointment_id, gets-or-creates
+   * the underlying teleconsult session (depending on role), then issues a
+   * LiveKit token. The "Démarrer la téléconsult" / "Rejoindre" buttons
+   * call this from a single click.
+   */
+  @Post('appointment/:appointmentId/join')
+  @Roles('owner', 'practitioner', 'clinic_admin', 'patient')
+  joinFromAppointment(
+    @Param('appointmentId') appointmentId: string,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.service.joinFromAppointment(
+      tenant,
+      req.user.id,
+      tenant.userRole,
+      appointmentId,
+      req.user.email,
+    );
+  }
 }

@@ -31,6 +31,11 @@ export class LiveKitService {
     this.apiSecret = secret;
   }
 
+  /** Public LiveKit URL (wss://…) for clients to connect to. */
+  getUrl(): string {
+    return this.livekitUrl;
+  }
+
   async generateParticipantToken(
     roomName: string,
     userId: string,
