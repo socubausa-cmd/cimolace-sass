@@ -246,6 +246,40 @@ Limite 50 MB par fichier (cap Supabase free tier), privé, accès uniquement via
 
 ---
 
+## 7bis. Pièges Cloud Run qui m'ont mordu (pour éviter au prochain)
+
+### Un build SUCCESS ≠ une révision qui sert le trafic
+
+J'ai pushé le commit P5.1+3+4, lancé `bash scripts/deploy-api-cloudrun.sh --prod`, attendu que `gcloud builds list` montre `SUCCESS`, et que `/health` réponde. **Tout semblait OK** — mais le `uptime` de `/health` était bas (donc nouvelle révision OK), pourtant les nouveaux endpoints (`/liri/admin/consumption`, `/mbolo/products/.../live/join`) retournaient 404.
+
+**Cause** : la nouvelle révision (00022) avait `exit(1)` au boot Nest. Cloud Run a rejeté son health check et a laissé tout le trafic sur la révision précédente (00021). Mais `/health` répondait quand même — par la 00021. Et `uptime` était bas parce que Cloud Run avait recyclé l'instance 00021 pour une raison non liée.
+
+**Comment diagnostiquer rapidement** :
+```bash
+# La révision qui sert vraiment :
+gcloud run revisions list --service=cimolace-api --region=europe-west1 --limit=5 --format="value(name,active,creationTimestamp)"
+
+# Les logs de la révision suspecte :
+gcloud logging read 'resource.type=cloud_run_revision AND resource.labels.revision_name=cimolace-api-XXXXX' --limit=20 --format="value(textPayload)"
+```
+
+**Règle d'or à appliquer** : après un deploy, probe **un endpoint NOUVEAU** ajouté dans le commit. Si la réponse n'est pas celle attendue → c'est probablement une révision qui n'est pas live. Ne te fie pas à `/health` seul.
+
+### Erreur typique : DI Guard cross-module
+
+Le bug qui a provoqué l'`exit(1)` :
+```
+Nest can't resolve dependencies of the JwtAuthGuard (?).
+AuthService at index [0] is available in the MboloModule context.
+```
+
+`JwtAuthGuard` a `constructor(private auth: AuthService)`. Quand un controller dans `MboloModule` applique ce guard, Nest tente d'instancier le guard **dans le scope de MboloModule**, pas dans celui où le guard est défini. Solution : **chaque module qui applique JwtAuthGuard doit importer AuthModule** (qui exporte AuthService).
+
+Vrai pour TOUS les guards du dossier `common/guards/` :
+- `JwtAuthGuard` → needs `AuthModule`
+- `TenantGuard` → needs `TenantModule`
+- `RolesGuard` → reflector only, OK partout
+
 ## 8. Pièges connus / dette technique
 
 1. **`AttachmentsPanel` est dupliqué** entre `apps/med-app/src/components/` et `apps/patient-portal/src/components/`. Idem `useAuth`, certaines styles. Quand on aura le temps : créer `packages/ui-medos/` pour partager.
