@@ -522,3 +522,406 @@ export const cimolaceAdminApi = {
       )
       .then(unwrap),
 };
+
+// ─── Prescriptions ──────────────────────────────────────────────────────────
+
+export interface PrescriptionItem {
+  id: string;
+  prescription_id: string;
+  position: number;
+  drug_name: string;
+  drug_code: string | null;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  route: string | null;
+  quantity: string | null;
+  notes: string | null;
+  is_substitutable: boolean;
+}
+
+export interface Prescription {
+  id: string;
+  tenant_id: string;
+  patient_id: string;
+  practitioner_id: string;
+  consultation_note_id: string | null;
+  prescription_number: string | null;
+  issued_at: string;
+  validity_days: number;
+  status: "draft" | "signed" | "dispensed" | "cancelled";
+  patient_instructions: string | null;
+  practitioner_notes: string | null;
+  signed_at: string | null;
+  signature_hash: string | null;
+  cancelled_at: string | null;
+  cancellation_reason: string | null;
+  pdf_url: string | null;
+  items?: PrescriptionItem[];
+}
+
+export const prescriptionsApi = {
+  list: (params: { patient_id?: string; status?: string } = {}) =>
+    api
+      .get<ApiEnvelope<Prescription[]>>("/med/prescriptions", { params })
+      .then(unwrap),
+  get: (id: string) =>
+    api.get<ApiEnvelope<Prescription>>(`/med/prescriptions/${id}`).then(unwrap),
+  create: (body: {
+    patient_id: string;
+    consultation_note_id?: string;
+    validity_days?: number;
+    patient_instructions?: string;
+    practitioner_notes?: string;
+    items?: Array<Omit<PrescriptionItem, "id" | "prescription_id" | "position">>;
+  }) =>
+    api.post<ApiEnvelope<Prescription>>("/med/prescriptions", body).then(unwrap),
+  update: (id: string, body: Partial<{ validity_days: number; patient_instructions: string; practitioner_notes: string }>) =>
+    api.patch<ApiEnvelope<Prescription>>(`/med/prescriptions/${id}`, body).then(unwrap),
+  addItem: (id: string, item: Omit<PrescriptionItem, "id" | "prescription_id" | "position">) =>
+    api.post<ApiEnvelope<PrescriptionItem>>(`/med/prescriptions/${id}/items`, item).then(unwrap),
+  updateItem: (id: string, itemId: string, item: Partial<PrescriptionItem>) =>
+    api.patch<ApiEnvelope<PrescriptionItem>>(`/med/prescriptions/${id}/items/${itemId}`, item).then(unwrap),
+  removeItem: (id: string, itemId: string) =>
+    api.delete<ApiEnvelope<{ id: string }>>(`/med/prescriptions/${id}/items/${itemId}`).then(unwrap),
+  sign: (id: string) =>
+    api.post<ApiEnvelope<Prescription>>(`/med/prescriptions/${id}/sign`).then(unwrap),
+  cancel: (id: string, reason: string) =>
+    api.post<ApiEnvelope<Prescription>>(`/med/prescriptions/${id}/cancel`, { reason }).then(unwrap),
+  listMine: () =>
+    api.get<ApiEnvelope<Prescription[]>>("/med/me/prescriptions").then(unwrap),
+};
+
+// ─── Appointments ───────────────────────────────────────────────────────────
+
+export interface Availability {
+  id: string;
+  practitioner_id: string;
+  weekday: number | null;
+  specific_date: string | null;
+  start_time: string;
+  end_time: string;
+  slot_duration_minutes: number;
+  buffer_minutes: number;
+  is_active: boolean;
+}
+
+export interface Appointment {
+  id: string;
+  patient_id: string;
+  practitioner_id: string;
+  scheduled_at: string;
+  duration_minutes: number;
+  appointment_type: "in_person" | "teleconsult" | "phone" | "home_visit";
+  reason: string | null;
+  status: "requested" | "confirmed" | "rescheduled" | "cancelled" | "completed" | "no_show";
+  internal_notes: string | null;
+  consultation_note_id: string | null;
+  teleconsult_session_id: string | null;
+}
+
+export const availabilityApi = {
+  list: (practitionerId?: string) =>
+    api
+      .get<ApiEnvelope<Availability[]>>("/med/availability", {
+        params: { practitioner_id: practitionerId },
+      })
+      .then(unwrap),
+  create: (body: {
+    practitioner_id: string;
+    weekday?: number;
+    specific_date?: string;
+    start_time: string;
+    end_time: string;
+    slot_duration_minutes?: number;
+    buffer_minutes?: number;
+  }) => api.post<ApiEnvelope<Availability>>("/med/availability", body).then(unwrap),
+  update: (id: string, body: Partial<Availability>) =>
+    api.patch<ApiEnvelope<Availability>>(`/med/availability/${id}`, body).then(unwrap),
+  remove: (id: string) =>
+    api.delete<ApiEnvelope<{ id: string }>>(`/med/availability/${id}`).then(unwrap),
+};
+
+export const appointmentsApi = {
+  list: (params: { patient_id?: string; practitioner_id?: string; status?: string; from?: string; to?: string } = {}) =>
+    api.get<ApiEnvelope<Appointment[]>>("/med/appointments", { params }).then(unwrap),
+  get: (id: string) =>
+    api.get<ApiEnvelope<Appointment>>(`/med/appointments/${id}`).then(unwrap),
+  create: (body: { patient_id: string; practitioner_id: string; scheduled_at: string; duration_minutes?: number; appointment_type?: Appointment["appointment_type"]; reason?: string }) =>
+    api.post<ApiEnvelope<Appointment>>("/med/appointments", body).then(unwrap),
+  update: (id: string, body: Partial<Appointment>) =>
+    api.patch<ApiEnvelope<Appointment>>(`/med/appointments/${id}`, body).then(unwrap),
+  findSlots: (practitionerId: string, from: string, to: string) =>
+    api
+      .get<ApiEnvelope<Array<{ start: string; end: string }>>>("/med/appointments/slots", {
+        params: { practitioner_id: practitionerId, from, to },
+      })
+      .then(unwrap),
+  confirm: (id: string) =>
+    api.post<ApiEnvelope<Appointment>>(`/med/appointments/${id}/confirm`).then(unwrap),
+  cancel: (id: string, reason: string) =>
+    api.post<ApiEnvelope<Appointment>>(`/med/appointments/${id}/cancel`, { reason }).then(unwrap),
+  complete: (id: string) =>
+    api.post<ApiEnvelope<Appointment>>(`/med/appointments/${id}/complete`).then(unwrap),
+  noShow: (id: string) =>
+    api.post<ApiEnvelope<Appointment>>(`/med/appointments/${id}/no-show`).then(unwrap),
+};
+
+// ─── Messaging ──────────────────────────────────────────────────────────────
+
+export interface MessageThread {
+  id: string;
+  patient_id: string;
+  subject: string | null;
+  status: "open" | "awaiting_patient" | "awaiting_staff" | "closed" | "archived";
+  priority: "low" | "normal" | "high" | "urgent";
+  last_message_at: string | null;
+  assigned_practitioner_id: string | null;
+}
+
+export interface Message {
+  id: string;
+  thread_id: string;
+  sender_id: string;
+  sender_role: string;
+  body: string;
+  attachment_ids: string[];
+  read_at: string | null;
+  is_system: boolean;
+  created_at: string;
+}
+
+export const messagingApi = {
+  listThreads: (params: { status?: string; patient_id?: string } = {}) =>
+    api.get<ApiEnvelope<MessageThread[]>>("/med/threads", { params }).then(unwrap),
+  getThread: (id: string) =>
+    api.get<ApiEnvelope<MessageThread>>(`/med/threads/${id}`).then(unwrap),
+  createThread: (body: { patient_id: string; subject?: string; priority?: MessageThread["priority"]; initial_message?: string }) =>
+    api.post<ApiEnvelope<{ thread: MessageThread; first_message: Message | null }>>("/med/threads", body).then(unwrap),
+  closeThread: (id: string, reason?: string) =>
+    api.post<ApiEnvelope<MessageThread>>(`/med/threads/${id}/close`, { reason }).then(unwrap),
+  send: (threadId: string, body: { body: string; attachment_ids?: string[] }) =>
+    api.post<ApiEnvelope<Message>>(`/med/threads/${threadId}/messages`, body).then(unwrap),
+  listMessages: (threadId: string) =>
+    api.get<ApiEnvelope<Message[]>>(`/med/threads/${threadId}/messages`).then(unwrap),
+  markRead: (threadId: string, messageId: string) =>
+    api.post<ApiEnvelope<Message>>(`/med/threads/${threadId}/messages/${messageId}/read`).then(unwrap),
+};
+
+// ─── Programs ───────────────────────────────────────────────────────────────
+
+export interface CareProgram {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  duration_days: number | null;
+  is_template: boolean;
+  is_active: boolean;
+}
+
+export interface ProgramStep {
+  id: string;
+  program_id: string;
+  position: number;
+  title: string;
+  description: string | null;
+  step_type: "task" | "form" | "measurement" | "content" | "appointment" | "reminder";
+  due_after_days: number;
+  is_required: boolean;
+}
+
+export interface ProgramEnrollment {
+  id: string;
+  program_id: string;
+  patient_id: string;
+  enrolled_at: string;
+  status: "active" | "paused" | "completed" | "abandoned";
+  current_step_position: number;
+  progress_percent: number;
+}
+
+export const programsApi = {
+  list: (category?: string) =>
+    api.get<ApiEnvelope<CareProgram[]>>("/med/programs", { params: { category } }).then(unwrap),
+  get: (id: string) =>
+    api.get<ApiEnvelope<CareProgram & { steps: ProgramStep[] }>>(`/med/programs/${id}`).then(unwrap),
+  create: (body: Partial<CareProgram> & { title: string }) =>
+    api.post<ApiEnvelope<CareProgram>>("/med/programs", body).then(unwrap),
+  update: (id: string, body: Partial<CareProgram>) =>
+    api.patch<ApiEnvelope<CareProgram>>(`/med/programs/${id}`, body).then(unwrap),
+  listSteps: (programId: string) =>
+    api.get<ApiEnvelope<ProgramStep[]>>(`/med/programs/${programId}/steps`).then(unwrap),
+  addStep: (programId: string, body: Partial<ProgramStep> & { title: string }) =>
+    api.post<ApiEnvelope<ProgramStep>>(`/med/programs/${programId}/steps`, body).then(unwrap),
+  removeStep: (programId: string, stepId: string) =>
+    api.delete<ApiEnvelope<{ id: string }>>(`/med/programs/${programId}/steps/${stepId}`).then(unwrap),
+  enroll: (programId: string, body: { patient_id: string; notes?: string }) =>
+    api.post<ApiEnvelope<ProgramEnrollment>>(`/med/programs/${programId}/enroll`, body).then(unwrap),
+  listEnrollments: (params: { patient_id?: string; status?: string } = {}) =>
+    api.get<ApiEnvelope<ProgramEnrollment[]>>("/med/enrollments", { params }).then(unwrap),
+  updateEnrollment: (id: string, body: Partial<ProgramEnrollment>) =>
+    api.patch<ApiEnvelope<ProgramEnrollment>>(`/med/enrollments/${id}`, body).then(unwrap),
+};
+
+// ─── Clinical Lists (factorisé pour les 5 ressources) ───────────────────────
+
+type ClinicalResource = "allergies" | "medications" | "problems" | "immunizations" | "lab-results";
+
+function makeClinicalApi<T = Record<string, unknown>>(resource: ClinicalResource) {
+  const base = `/med/${resource}`;
+  return {
+    create: (body: T & { patient_id: string }) =>
+      api.post<ApiEnvelope<T>>(base, body).then(unwrap),
+    listForPatient: (patientId: string) =>
+      api.get<ApiEnvelope<T[]>>(`${base}/patient/${patientId}`).then(unwrap),
+    update: (id: string, body: Partial<T>) =>
+      api.patch<ApiEnvelope<T>>(`${base}/${id}`, body).then(unwrap),
+    remove: (id: string) =>
+      api.delete<ApiEnvelope<{ id: string }>>(`${base}/${id}`).then(unwrap),
+  };
+}
+
+export const clinicalApi = {
+  allergies: makeClinicalApi("allergies"),
+  medications: makeClinicalApi("medications"),
+  problems: makeClinicalApi("problems"),
+  immunizations: makeClinicalApi("immunizations"),
+  labResults: makeClinicalApi("lab-results"),
+};
+
+// ─── Teleconsult ────────────────────────────────────────────────────────────
+
+export interface TeleconsultSession {
+  id: string;
+  appointment_id: string | null;
+  patient_id: string;
+  practitioner_id: string;
+  livekit_room_name: string;
+  status: "scheduled" | "active" | "ended" | "cancelled" | "failed";
+  recording_consented: boolean;
+  duration_seconds: number | null;
+}
+
+export const teleconsultApi = {
+  list: (patientId?: string) =>
+    api.get<ApiEnvelope<TeleconsultSession[]>>("/med/teleconsult", { params: { patient_id: patientId } }).then(unwrap),
+  create: (body: { patient_id: string; appointment_id?: string; recording_consented?: boolean }) =>
+    api.post<ApiEnvelope<TeleconsultSession>>("/med/teleconsult", body).then(unwrap),
+  issueToken: (id: string) =>
+    api.post<ApiEnvelope<{ room: string; token: string; ttl: string }>>(`/med/teleconsult/${id}/token`).then(unwrap),
+  join: (id: string) =>
+    api.post<ApiEnvelope<TeleconsultSession>>(`/med/teleconsult/${id}/join`).then(unwrap),
+  end: (id: string, body: { ended_reason?: string; connection_quality?: string; quick_note?: string } = {}) =>
+    api.post<ApiEnvelope<TeleconsultSession>>(`/med/teleconsult/${id}/end`, body).then(unwrap),
+};
+
+// ─── Attachments ────────────────────────────────────────────────────────────
+
+export interface Attachment {
+  id: string;
+  owner_type: string;
+  owner_id: string;
+  patient_id: string;
+  file_name: string;
+  file_size_bytes: number;
+  mime_type: string;
+  storage_bucket: string;
+  storage_path: string;
+  category: string | null;
+  description: string | null;
+  visible_to_patient: boolean;
+  uploaded_by: string;
+  uploaded_by_role: string;
+  taken_at: string | null;
+  created_at: string;
+}
+
+export const attachmentsApi = {
+  getUploadUrl: (bucket?: string) =>
+    api.post<ApiEnvelope<{ upload_url: string; storage_path: string; bucket: string }>>("/med/attachments/upload-url", { bucket }).then(unwrap),
+  register: (body: Partial<Attachment> & { owner_type: string; owner_id: string; patient_id: string; file_name: string; file_size_bytes: number; mime_type: string; storage_path: string }) =>
+    api.post<ApiEnvelope<Attachment>>("/med/attachments", body).then(unwrap),
+  listByOwner: (owner_type: string, owner_id: string) =>
+    api.get<ApiEnvelope<Attachment[]>>("/med/attachments", { params: { owner_type, owner_id } }).then(unwrap),
+  listForPatient: (patientId: string) =>
+    api.get<ApiEnvelope<Attachment[]>>(`/med/attachments/patient/${patientId}`).then(unwrap),
+  getDownloadUrl: (id: string) =>
+    api.get<ApiEnvelope<{ download_url: string; expires_in: number }>>(`/med/attachments/${id}/download-url`).then(unwrap),
+  update: (id: string, body: Partial<Attachment>) =>
+    api.patch<ApiEnvelope<Attachment>>(`/med/attachments/${id}`, body).then(unwrap),
+  remove: (id: string) =>
+    api.delete<ApiEnvelope<{ id: string }>>(`/med/attachments/${id}`).then(unwrap),
+};
+
+// ─── GDPR ───────────────────────────────────────────────────────────────────
+
+export interface ConsentRecord {
+  id: string;
+  patient_id: string;
+  scope: string;
+  granted: boolean;
+  granted_at: string;
+  revoked_at: string | null;
+  consent_version: string;
+}
+
+export interface GdprExport {
+  id: string;
+  patient_id: string;
+  status: "pending" | "processing" | "ready" | "downloaded" | "expired" | "failed";
+  format: "json" | "pdf" | "zip";
+  scope: string;
+  file_url: string | null;
+  expires_at: string | null;
+}
+
+export interface GdprAnonymization {
+  id: string;
+  original_patient_id: string;
+  pseudonym: string;
+  status: "pending" | "processing" | "completed" | "failed" | "reverted";
+  method: string;
+  legal_basis: string;
+}
+
+export const gdprApi = {
+  recordConsent: (body: { patient_id: string; scope: string; granted: boolean; consent_text: string; consent_version: string }) =>
+    api.post<ApiEnvelope<ConsentRecord>>("/med/gdpr/consents", body).then(unwrap),
+  listConsents: (patientId: string) =>
+    api.get<ApiEnvelope<ConsentRecord[]>>(`/med/gdpr/consents/patient/${patientId}`).then(unwrap),
+  revokeConsent: (id: string) =>
+    api.post<ApiEnvelope<ConsentRecord>>(`/med/gdpr/consents/${id}/revoke`).then(unwrap),
+  requestExport: (body: { patient_id: string; format?: GdprExport["format"]; scope?: string }) =>
+    api.post<ApiEnvelope<GdprExport>>("/med/gdpr/exports", body).then(unwrap),
+  listExports: (patientId?: string) =>
+    api.get<ApiEnvelope<GdprExport[]>>("/med/gdpr/exports", { params: { patient_id: patientId } }).then(unwrap),
+  requestAnonymization: (body: { patient_id: string; legal_basis: string; method?: string; scope?: string }) =>
+    api.post<ApiEnvelope<GdprAnonymization>>("/med/gdpr/anonymizations", body).then(unwrap),
+  listAnonymizations: () =>
+    api.get<ApiEnvelope<GdprAnonymization[]>>("/med/gdpr/anonymizations").then(unwrap),
+};
+
+// ─── Invitations ────────────────────────────────────────────────────────────
+
+export interface PatientInvitation {
+  id: string;
+  patient_id: string;
+  invited_name: string;
+  invited_email: string | null;
+  invited_phone: string | null;
+  status: "pending" | "sent" | "opened" | "accepted" | "expired" | "cancelled";
+  expires_at: string;
+  resent_count: number;
+}
+
+export const invitationsApi = {
+  create: (body: { patient_id: string; invited_name: string; invited_email?: string; invited_phone?: string; expires_in_days?: number; sent_via?: string; custom_message?: string }) =>
+    api.post<ApiEnvelope<{ invitation: PatientInvitation; raw_token: string; accept_url: string }>>("/med/invitations", body).then(unwrap),
+  list: (status?: string) =>
+    api.get<ApiEnvelope<PatientInvitation[]>>("/med/invitations", { params: { status } }).then(unwrap),
+  resend: (id: string) =>
+    api.post<ApiEnvelope<{ id: string; resent_count: number }>>(`/med/invitations/${id}/resend`).then(unwrap),
+  cancel: (id: string) =>
+    api.delete<ApiEnvelope<{ id: string }>>(`/med/invitations/${id}`).then(unwrap),
+};

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Démo widget MEDOS — ZahirWellness</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      margin: 0;
+      padding: 40px 20px;
+      background: #f9fafb;
+      color: #111827;
+    }
+    .container { max-width: 720px; margin: 0 auto; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    p.subtitle { color: #6b7280; margin: 0 0 32px; }
+    .demo-block {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .demo-block h2 {
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #4f46e5;
+      margin: 0 0 16px;
+    }
+    .mode-switcher {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .mode-switcher button {
+      background: #fff;
+      border: 1px solid #d1d5db;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font: inherit;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .mode-switcher button.active {
+      background: #4f46e5;
+      color: #fff;
+      border-color: #4f46e5;
+    }
+    .info {
+      background: #eff6ff;
+      border-left: 3px solid #3b82f6;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #1e40af;
+      margin-bottom: 16px;
+    }
+    code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Démo intégration MEDOS</h1>
+    <p class="subtitle">
+      Cette page simule ce que verrait un visiteur de
+      <code>zahirwellness.com</code> avec le widget MEDOS embarqué.
+    </p>
+
+    <div class="demo-block">
+      <h2>Widget patient-portal</h2>
+      <div class="info">
+        Le widget appelle <code>POST /v1/medos/embed/token</code> côté API
+        avec l'Origin courant. Si l'Origin est whitelisté dans
+        <code>tenant_domains</code>, un JWT court (15 min) est retourné et le
+        widget peut alors appeler <code>/med/me/notes</code>.
+      </div>
+      <div class="mode-switcher">
+        <button data-mode="patient-portal" class="active">patient-portal</button>
+        <button data-mode="consent-form">consent-form</button>
+        <button data-mode="health-tracker">health-tracker</button>
+      </div>
+      <div id="medos-portal"></div>
+    </div>
+
+    <div class="demo-block">
+      <h2>Snippet HTML à coller</h2>
+      <pre style="background:#1f2937;color:#f3f4f6;padding:16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5"><code>&lt;div id="medos-portal"&gt;&lt;/div&gt;
+
+&lt;script
+  src="https://cimolace.space/medos/v1/embed.js"
+  data-tenant="zahirwellness"
+  data-mode="patient-portal"
+  data-primary-color="#10b981"
+  async
+&gt;&lt;/script&gt;</code></pre>
+    </div>
+  </div>
+
+  <script>
+    // Charge dynamiquement le widget avec le mode sélectionné
+    function loadWidget(mode) {
+      const target = document.getElementById('medos-portal');
+      target.innerHTML = ''; // reset
+
+      // Supprime tout ancien script de widget
+      document.querySelectorAll('script[data-medos-widget]').forEach((s) => s.remove());
+
+      const script = document.createElement('script');
+      script.src = '/medos/v1/embed.js';
+      script.setAttribute('data-tenant', 'zahirwellness');
+      script.setAttribute('data-mode', mode);
+      script.setAttribute('data-api-base', window.location.origin.includes('localhost') ? 'https://api.cimolace.space' : 'https://api.cimolace.space');
+      script.setAttribute('data-primary-color', '#10b981');
+      script.setAttribute('data-medos-widget', 'true');
+      script.async = true;
+      document.body.appendChild(script);
+    }
+
+    document.querySelectorAll('.mode-switcher button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-switcher button').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        loadWidget(btn.dataset.mode);
+      });
+    });
+
+    // Charge le widget par défaut au démarrage
+    loadWidget('patient-portal');
+  </script>
+</body>
+</html>
