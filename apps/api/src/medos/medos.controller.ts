@@ -189,6 +189,28 @@ export class MedosPatientMeController {
   ) {
     return this.medosService.markSharedNoteRead(tenant, req.user.id, id);
   }
+
+  /** Lister les entrées du journal santé du patient connecté */
+  @Get('health')
+  @Roles('patient')
+  @AuditResource({ resource: 'health_entry', action: 'list' })
+  listMyHealthEntries(
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.medosService.listMyHealthEntries(tenant, req.user.id);
+  }
+
+  /** Créer une entrée du journal santé pour le patient connecté */
+  @Post('health')
+  @Roles('patient')
+  createMyHealthEntry(
+    @Body() dto: Record<string, unknown>,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.medosService.createMyHealthEntry(tenant, req.user.id, dto);
+  }
 }
 
 // ---------------------------------------------------------------------------

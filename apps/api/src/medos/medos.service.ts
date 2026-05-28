@@ -797,4 +797,50 @@ export class MedosService {
     }
     return (data ?? []) as unknown as Record<string, unknown>[];
   }
+
+  // -----------------------------------------------------------------------
+  // Patient self-service — health journal
+  // -----------------------------------------------------------------------
+
+  /**
+   * Resolve the med_patients row for the logged-in patient.
+   * Returns null when the patient has no dossier yet in this tenant
+   * (covers the case where the patient signed up but the doctor hasn't
+   * created their record).
+   */
+  private async findPatientByUser(
+    tenantId: string,
+    userId: string,
+  ): Promise<{ id: string } | null> {
+    const { data } = await this.supabase.client
+      .from('med_patients')
+      .select('id')
+      .eq('tenant_id', tenantId)
+      .eq('patient_user_id', userId)
+      .single();
+    return (data as { id: string } | null) ?? null;
+  }
+
+  async listMyHealthEntries(tenant: TenantContext, userId: string) {
+    const patient = await this.findPatientByUser(tenant.id, userId);
+    if (!patient) return [] as Record<string, unknown>[];
+    return this.getHealthEntries(tenant, patient.id);
+  }
+
+  async createMyHealthEntry(
+    tenant: TenantContext,
+    userId: string,
+    dto: Record<string, unknown>,
+  ) {
+    const patient = await this.findPatientByUser(tenant.id, userId);
+    if (!patient) {
+      throw new NotFoundException(
+        "Aucun dossier patient n'existe pour vous dans cet espace. Contactez votre praticien.",
+      );
+    }
+    return this.createHealthEntry(tenant, userId, {
+      ...dto,
+      patient_id: patient.id,
+    });
+  }
 }
