@@ -130,4 +130,23 @@ export class GdprController {
   listAnonymizations(@CurrentTenant() tenant: TenantContext) {
     return this.service.listAnonymizations(tenant);
   }
+
+  // ── Audit log (staff read-only) ────────────────────────────────────────
+
+  @Get('audit-log')
+  @Roles('owner', 'clinic_admin', 'practitioner')
+  listAuditLog(
+    @CurrentTenant() tenant: TenantContext,
+    @Query('limit') limit?: string,
+    @Query('resource') resource?: string,
+    @Query('action') action?: string,
+    @Query('actor_id') actorId?: string,
+  ) {
+    return this.service.listAuditLog(tenant, {
+      limit: limit ? Math.min(Number(limit), 500) : 200,
+      resource,
+      action,
+      actor_id: actorId,
+    });
+  }
 }

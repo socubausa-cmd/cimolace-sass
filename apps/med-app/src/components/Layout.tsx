@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Stethoscope, Users, FileText, Pill, ClipboardList, Heart, BookOpen, LayoutDashboard, Mic, MessageCircle, Calendar } from 'lucide-react';
+import { Stethoscope, Users, Pill, ClipboardList, Heart, BookOpen, LayoutDashboard, Mic, MessageCircle, Calendar, Shield } from 'lucide-react';
 
 const nav = [
   { to: '/dashboard',     icon: LayoutDashboard, label: 'Dashboard' },
@@ -11,6 +11,7 @@ const nav = [
   { to: '/health',        icon: Heart,           label: 'Suivi santé' },
   { to: '/programs',      icon: BookOpen,        label: 'Programmes' },
   { to: '/messages',      icon: MessageCircle,   label: 'Messages' },
+  { to: '/audit',         icon: Shield,          label: 'Audit & RGPD' },
 ];
 
 export function Layout() {

@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, ClipboardList, Heart, BookOpen, Pill, MessageCircle, User, Brain, Calendar } from 'lucide-react';
+import { LayoutDashboard, FileText, ClipboardList, Heart, BookOpen, Pill, MessageCircle, User, Brain, Calendar, Shield } from 'lucide-react';
 
 const nav = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Accueil' },
@@ -12,6 +12,7 @@ const nav = [
   { to: '/health', icon: Heart, label: 'Suivi sante' },
   { to: '/programs', icon: BookOpen, label: 'Programmes' },
   { to: '/messages', icon: MessageCircle, label: 'Messages' },
+  { to: '/privacy', icon: Shield, label: 'Confidentialite' },
 ];
 
 export function PatientLayout() {

@@ -12,6 +12,7 @@ import { MyPrescriptions } from './pages/MyPrescriptions';
 import { Messages } from './pages/Messages';
 import { MyChartingNotes } from './pages/MyChartingNotes';
 import { MyAppointments } from './pages/MyAppointments';
+import { MyPrivacy } from './pages/MyPrivacy';
 import { PatientLayout } from './components/PatientLayout';
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ function AppRoutes() {
         <Route path="/messages" element={<Messages />} />
         <Route path="/charting-notes" element={<MyChartingNotes />} />
         <Route path="/appointments" element={<MyAppointments />} />
+        <Route path="/privacy" element={<MyPrivacy />} />
       </Route>
     </Routes>
   );

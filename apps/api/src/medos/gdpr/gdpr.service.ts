@@ -291,4 +291,27 @@ export class GdprService {
     if (error) throw new InternalServerErrorException(error.message);
     return data ?? [];
   }
+
+  /**
+   * Read the MEDOS audit log for the tenant. Staff only — patient view of
+   * their own audit trail would need a separate endpoint with filtering by
+   * actor_id / resource_id.
+   */
+  async listAuditLog(
+    tenant: TenantContext,
+    opts: { limit?: number; resource?: string; action?: string; actor_id?: string } = {},
+  ) {
+    let q = this.supabase.client
+      .from('med_audit_log')
+      .select('*')
+      .eq('tenant_id', tenant.id);
+    if (opts.resource) q = q.eq('resource', opts.resource);
+    if (opts.action) q = q.eq('action', opts.action);
+    if (opts.actor_id) q = q.eq('actor_id', opts.actor_id);
+    const { data, error } = await q
+      .order('created_at', { ascending: false })
+      .limit(opts.limit ?? 200);
+    if (error) throw new InternalServerErrorException(error.message);
+    return data ?? [];
+  }
 }

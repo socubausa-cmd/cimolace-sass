@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Heart, Activity, Moon, Dumbbell, Droplets, Plus, X } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
@@ -127,6 +128,35 @@ export function MyHealth() {
           </div>
         ))}
       </div>
+
+      {entries.length >= 2 && (
+        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, marginBottom: 16 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Evolution sur les 30 derniers jours</h3>
+          <ResponsiveContainer width="100%" height={240}>
+            <LineChart
+              data={[...entries]
+                .slice(0, 30)
+                .reverse()
+                .map((e: any) => ({
+                  date: new Date(e.entry_date || e.created_at).toLocaleDateString('fr', { day: '2-digit', month: 'short' }),
+                  Humeur: e.mood_score,
+                  Energie: e.energy_level,
+                  Sommeil: e.sleep_hours,
+                }))}
+              margin={{ top: 8, right: 20, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="date" fontSize={11} stroke="#64748b" />
+              <YAxis domain={[0, 10]} fontSize={11} stroke="#64748b" />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="Humeur" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="Energie" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="Sommeil" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 3 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
         <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Historique</h3>
