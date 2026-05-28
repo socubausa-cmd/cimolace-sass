@@ -3,13 +3,17 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   Param,
   Patch,
   Post,
   Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
+import { PrescriptionsPdfService } from './prescriptions-pdf.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
@@ -37,7 +41,10 @@ type AuthRequest = Request & { user: { id: string; email?: string } };
 @Controller('med/prescriptions')
 @UseGuards(JwtAuthGuard, TenantGuard, MedosEnabledGuard)
 export class PrescriptionsController {
-  constructor(private readonly service: PrescriptionsService) {}
+  constructor(
+    private readonly service: PrescriptionsService,
+    private readonly pdfService: PrescriptionsPdfService,
+  ) {}
 
   /** Créer une nouvelle ordonnance en statut draft */
   @Post()
@@ -143,6 +150,27 @@ export class PrescriptionsController {
     @Req() req: AuthRequest,
   ) {
     return this.service.sign(tenant, req.user.id, id);
+  }
+
+  /**
+   * Generate a print-ready HTML version of the prescription. The browser
+   * auto-triggers window.print() so the user gets a PDF via "Save as PDF".
+   * Supports auth via Authorization header OR ?token=… query (the latter
+   * is required because <a target=_blank> can't carry headers).
+   */
+  @Get(':id/pdf')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'practitioner', 'clinic_admin', 'receptionist', 'patient')
+  @Header('Content-Type', 'text/html; charset=utf-8')
+  @Header('Cache-Control', 'private, no-store')
+  async getPdf(
+    @Param('id') id: string,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+    @Res() res: Response,
+  ) {
+    const html = await this.pdfService.renderHtml(tenant, req.user.id, id);
+    res.send(html);
   }
 
   /** Annuler une ordonnance (signed -> cancelled). Reason obligatoire. */

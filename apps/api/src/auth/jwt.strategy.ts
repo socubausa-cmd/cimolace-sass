@@ -98,7 +98,14 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     const audience = config.get<string>('SUPABASE_JWT_AUD')?.trim();
 
     const opts: StrategyOptions = {
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      // Accept JWT from either the Authorization header (standard API calls)
+      // or from a ?token= query parameter. The query path is needed for links
+      // opened in a new tab (PDF downloads, file exports) where we can't set
+      // headers. All write endpoints use POST/PATCH/DELETE so this stays safe.
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        ExtractJwt.fromUrlQueryParameter('token'),
+      ]),
       ignoreExpiration: false,
       secretOrKeyProvider: createSupabaseSecretProvider(config),
       algorithms: ['HS256', 'ES256'],

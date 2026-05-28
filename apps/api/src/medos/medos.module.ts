@@ -30,6 +30,7 @@ import {
   PrescriptionsPatientController,
 } from './prescriptions/prescriptions.controller';
 import { PrescriptionsService } from './prescriptions/prescriptions.service';
+import { PrescriptionsPdfService } from './prescriptions/prescriptions-pdf.service';
 import {
   AppointmentsController,
   AvailabilityController,
@@ -89,6 +90,7 @@ import { InvitationsService } from './invitations/invitations.service';
     TenantDomainsService,
     // Clinical modules
     PrescriptionsService,
+    PrescriptionsPdfService,
     AppointmentsService,
     MessagingService,
     ProgramsService,
