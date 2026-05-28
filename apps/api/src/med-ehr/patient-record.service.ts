@@ -7,7 +7,27 @@ export class PatientRecordService {
 
   async create(tenantId: string, data: any) {
     const supabase = this.authService.getClient();
-    const { data: record, error } = await supabase.from("patient_records").insert({ tenant_id: tenantId, ...data }).select().single();
+    // patient_user_id is nullable now (draft dossier pre-invitation). If caller
+    // doesn't provide one (most likely path from the doctor "+ Nouveau patient"
+    // modal), we leave it NULL — invitation flow will set it later.
+    const payload = {
+      tenant_id: tenantId,
+      first_name: data.first_name ?? null,
+      last_name: data.last_name ?? null,
+      email: data.email ?? null,
+      phone: data.phone ?? null,
+      date_of_birth: data.date_of_birth ?? null,
+      gender: data.gender ?? null,
+      blood_type: data.blood_type ?? null,
+      allergies: data.allergies ?? [],
+      patient_user_id: data.patient_user_id ?? null,
+      status: data.status ?? "active",
+    };
+    const { data: record, error } = await supabase
+      .from("patient_records")
+      .insert(payload)
+      .select()
+      .single();
     if (error) throw error;
     return record;
   }

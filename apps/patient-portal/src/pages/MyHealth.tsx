@@ -1,0 +1,40 @@
+import { useState, useEffect } from 'react';
+import { Heart, Activity, Moon, Dumbbell, Droplets } from 'lucide-react';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
+
+export function MyHealth() {
+  const [entries, setEntries] = useState<any[]>([]);
+  useEffect(() => {
+    const t = localStorage.getItem('supabase_token'); if (!t) return;
+    fetch(API + '/med/health', { headers: { Authorization: 'Bearer ' + t, 'X-Tenant-Slug': localStorage.getItem('tenant_slug') || '' } })
+      .then(r => r.json()).then(d => setEntries(d.data||d||[])).catch(()=>{});
+  }, []);
+  const latest = entries[0] || {};
+  const metrics = [
+    { icon: Heart, label: 'Humeur', value: latest.mood_score, unit: '/10', color: '#ef4444' },
+    { icon: Activity, label: 'Energie', value: latest.energy_level, unit: '/10', color: '#f59e0b' },
+    { icon: Moon, label: 'Sommeil', value: latest.sleep_hours, unit: 'h', color: '#8b5cf6' },
+    { icon: Dumbbell, label: 'Exercice', value: latest.exercise_minutes, unit: 'min', color: '#10b981' },
+    { icon: Droplets, label: 'Eau', value: latest.water_liters, unit: 'L', color: '#3b82f6' },
+  ];
+  return (
+    <div>
+      <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20 }}>Mon journal de sante</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
+        {metrics.map(m => (
+          <div key={m.label} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <m.icon size={20} color={m.color} />
+            <div><div style={{ fontSize: 12, color: '#64748b' }}>{m.label}</div><div style={{ fontSize: 20, fontWeight: 700 }}>{m.value || '-'} <span style={{ fontSize: 12, color: '#94a3b8' }}>{m.unit}</span></div></div>
+          </div>
+        ))}
+      </div>
+      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
+        <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Historique</h3>
+        {entries.length === 0 && <p style={{ color: '#94a3b8' }}>Aucune entree. Commencez votre suivi !</p>}
+        {entries.slice(0, 10).map((e: any) => (
+          <div key={e.id} style={{ padding: '8px 0', borderTop: '1px solid #f1f5f9', fontSize: 13, color: '#64748b' }}>{new Date(e.entry_date||e.created_at).toLocaleDateString('fr')} — Humeur: {e.mood_score||'-'}/10, Sommeil: {e.sleep_hours||'-'}h</div>
+        ))}
+      </div>
+    </div>
+  );
+}
