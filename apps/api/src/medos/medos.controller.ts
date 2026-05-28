@@ -211,6 +211,31 @@ export class MedosPatientMeController {
   ) {
     return this.medosService.createMyHealthEntry(tenant, req.user.id, dto);
   }
+
+  /** Lister les formulaires disponibles pour le patient connecté */
+  @Get('forms')
+  @Roles('patient')
+  @AuditResource({ resource: 'form', action: 'list' })
+  listMyForms(@CurrentTenant() tenant: TenantContext) {
+    return this.medosService.listMyForms(tenant);
+  }
+
+  /** Soumettre une réponse à un formulaire (patient self-service) */
+  @Post('forms/:id/responses')
+  @Roles('patient')
+  submitMyFormResponse(
+    @Param('id') formId: string,
+    @Body() body: { responses: Record<string, unknown> },
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.medosService.submitMyFormResponse(
+      tenant,
+      req.user.id,
+      formId,
+      body?.responses ?? {},
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------

@@ -843,4 +843,69 @@ export class MedosService {
       patient_id: patient.id,
     });
   }
+
+  /**
+   * Forms visible to the patient: tenant-specific forms + global templates
+   * (tenant_id IS NULL AND is_template = true). Returns answered status by
+   * checking med_form_responses for this patient.
+   */
+  async listMyForms(tenant: TenantContext) {
+    const { data, error } = await this.supabase.client
+      .from('med_medical_forms')
+      .select('*')
+      .or(`tenant_id.eq.${tenant.id},and(tenant_id.is.null,is_template.eq.true)`)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      this.logger.error('listMyForms', error.message);
+      throw new InternalServerErrorException('Erreur interne');
+    }
+    return (data ?? []) as unknown as Record<string, unknown>[];
+  }
+
+  async submitMyFormResponse(
+    tenant: TenantContext,
+    userId: string,
+    formId: string,
+    responses: Record<string, unknown>,
+  ) {
+    const patient = await this.findPatientByUser(tenant.id, userId);
+    if (!patient) {
+      throw new NotFoundException(
+        "Aucun dossier patient n'existe pour vous dans cet espace. Contactez votre praticien.",
+      );
+    }
+
+    // Verify the form exists either as a tenant form or a global template.
+    const { data: form } = await this.supabase.client
+      .from('med_medical_forms')
+      .select('id, tenant_id, is_template')
+      .eq('id', formId)
+      .single();
+    if (!form) throw new NotFoundException('Formulaire introuvable');
+    const row = form as { tenant_id: string | null; is_template: boolean };
+    if (row.tenant_id !== tenant.id && !(row.tenant_id === null && row.is_template)) {
+      throw new ForbiddenException('Ce formulaire n\'est pas accessible');
+    }
+
+    const { data, error } = await this.supabase.client
+      .from('med_form_responses')
+      .insert({
+        tenant_id: tenant.id,
+        form_id: formId,
+        patient_id: patient.id,
+        submitted_by: userId,
+        responses: responses as any,
+      } as any)
+      .select('*')
+      .single();
+
+    if (error) {
+      this.logger.error('submitMyFormResponse', error.message);
+      throw new InternalServerErrorException('Erreur interne');
+    }
+
+    await this.writeAudit(tenant.id, userId, 'med_form_response', (data as any).id, 'submit');
+    return data as unknown as Record<string, unknown>;
+  }
 }
