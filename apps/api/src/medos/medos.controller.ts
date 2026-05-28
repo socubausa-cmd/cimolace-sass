@@ -226,7 +226,11 @@ export class MedosFormsController {
     @CurrentTenant() tenant: TenantContext,
     @Req() req: AuthRequest,
   ) {
-    return this.medosService.createForm(tenant, req.user.id, dto);
+    return this.medosService.createForm(
+      tenant,
+      req.user.id,
+      dto as unknown as Record<string, unknown>,
+    );
   }
 
   @Post(':id/responses')
@@ -287,8 +291,7 @@ export class MedosHealthController {
   getEntries(
     @Param('patientId') patientId: string,
     @CurrentTenant() tenant: TenantContext,
-    @Req() req: AuthRequest,
   ) {
-    return this.medosService.getHealthEntries(tenant, req.user.id, patientId);
+    return this.medosService.getHealthEntries(tenant, patientId);
   }
 }
