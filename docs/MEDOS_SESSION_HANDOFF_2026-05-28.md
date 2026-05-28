@@ -1,7 +1,7 @@
 # MEDOS / Cimolace — Session Handoff
-**Date :** 2026-05-28
+**Date :** 2026-05-28 (mise à jour : Liri Sessions + Mbolo Live)
 **Branche :** `main` (à jour avec `origin/main`)
-**Dernier commit :** `79c6e767` (P5 refactor Liri)
+**Dernier commit :** `e4d82cbc` (P5.1 + P5.3 + P5.4 — Liri unification complète)
 
 Ce document est destiné à **l'agent qui reprend le projet**. Lis-le entièrement avant de toucher au code. Il décrit (a) ce qui a été livré, (b) ce qui marche et ce qui ne marche pas, (c) les décisions architecturales prises, (d) les pièges connus, (e) la roadmap suivante.
 
@@ -101,10 +101,13 @@ isna_platform_v2/
 | 66 | RGPD docteur + audit log viewer | `8c0105e9` | Nouveau endpoint `GET /med/gdpr/audit-log` |
 | 67 | Polish (edit patient modal + graph santé Recharts) | `8c0105e9` | |
 
-### Sprint P5 — Architecture
+### Sprint P5 — Architecture (Liri unification)
 | # | Tâche | Commit | Notes |
 |---|---|---|---|
-| 68 | Refactor MEDOS teleconsult → Liri | `79c6e767` | Voir §1 et §5 |
+| 68 | Refactor MEDOS teleconsult → Liri | `79c6e767` | Premier pas. MEDOS injecte LiveService au lieu d'appeler LiveKit |
+| 70 | Persister `liri_sessions` (billing minutes) | `e4d82cbc` | Migration prod + endpoint `GET /liri/admin/consumption` |
+| 71 | Mbolo Live demo via Liri (preuve du pattern) | `e4d82cbc` | `POST /mbolo/products/:id/live/join?role=seller|viewer` |
+| 72 | Zero-LiveKit MEDOS (sortir scopedRoomName) | `e4d82cbc` | `LiveService.roomNameFor()` — MEDOS n'importe plus LiveKit |
 
 ### Hors sprints — Bug fix critique pré-existant
 | Sujet | Commit |
@@ -178,11 +181,18 @@ async issueShoppingToken(tenant, userId, role, saleId) {
 }
 ```
 
-### Ce qui reste à faire dans Liri (P5.1)
+### Ce qui est fait dans Liri (P5 complet)
 
-- **Persistance des sessions Liri** : créer la table `liri_sessions { id, tenant_id, purpose, external_ref, started_at, ended_at, host_user_id }` + insérer dans `issueTokenForSession`. Sans ça, le billing minutes ne peut pas faire la somme cross-engines.
-- **Migrer la création de room name** : actuellement `TeleconsultService.create()` continue d'importer `LiveKitService` juste pour appeler `LiveKitService.scopedRoomName()`. Sortir cette fonction de `LiveKitService` et la mettre dans `LiveService.roomNameFor(tenantSlug, externalRef)` pour qu'aucun moteur métier n'ait plus besoin d'importer `LiveKitModule`.
-- **Recording + replay** : `LiveService.issueTokenForSession` accepte aujourd'hui `purpose` et `role`. Ajouter `recordingConsent: boolean` qui, si vrai, déclenche `ensureRoom` avec recording activé.
+- ✅ **Persistance** : table `liri_sessions` (tenant_id, purpose, external_ref, room_name, host_user_id, started_at, ended_at, duration_seconds, metadata). `LiveService.issueTokenForSession` upserte une ligne, `endLiriSession` calcule la durée.
+- ✅ **Billing endpoint** : `GET /liri/admin/consumption?from=&to=` retourne `{ total_minutes, breakdown:[{purpose, session_count, total_minutes}] }`. Défaut = mois en cours.
+- ✅ **Room name helper** : `LiveService.roomNameFor(tenantSlug, externalRef)` — MEDOS n'importe plus LiveKitService.
+- ✅ **Pattern prouvé sur 2 moteurs** : MEDOS teleconsult + Mbolo Live shopping. Les deux passent par `issueTokenForSession({ purpose, externalRef, ... })` avec leurs propres purposes.
+
+### Ce qui reste à faire dans Liri (P5.5+)
+
+- **Recording + replay** : `issueTokenForSession` accepte aujourd'hui `purpose`, `role`, `metadata`. Ajouter `recordingConsent: boolean` qui, si vrai, déclenche `ensureRoom` avec recording activé + crée une ligne `liri_replays` quand la session se ferme.
+- **UI consumption** : pas encore exposée dans `apps/app` admin. Cibler une carte "Consommation vidéo ce mois" dans le tenant dashboard, qui appelle `/liri/admin/consumption` et affiche le breakdown par moteur (MEDOS / Mbolo / ISNA).
+- **Webhook LiveKit → ferme la session Liri** : aujourd'hui c'est MEDOS qui appelle `endLiriSession` quand le médecin ferme. Si quelqu'un quitte sans cliquer "Terminer", la session reste ouverte. Le `livekit-webhook.controller.ts` doit écouter `room_finished` et appeler `endLiriSession` automatiquement.
 
 ---
 
