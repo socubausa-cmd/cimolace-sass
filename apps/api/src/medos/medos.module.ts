@@ -62,10 +62,15 @@ import {
   InvitationsPublicController,
 } from './invitations/invitations.controller';
 import { InvitationsService } from './invitations/invitations.service';
+// MEDOS routes all video through Liri (LiveModule). We don't import
+// LiveKitModule directly anymore — that would re-introduce the bypass
+// the P5 refactor specifically eliminated.
+import { LiveModule } from '../live/live.module';
 
 @Module({
   imports: [
     TenantModule,
+    LiveModule, // Liri — single authority for all video sessions
     // JwtModule pour signer/vérifier les embed-tokens (15 min lifetime).
     JwtModule.registerAsync({
       imports: [ConfigModule],

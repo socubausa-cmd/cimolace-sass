@@ -6,6 +6,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service';
+// IMPORTANT — P5 architectural decision:
+// MEDOS routes ALL video sessions through Liri (LiveService), not LiveKit
+// directly. This is the contract: one video authority for the whole
+// platform, so MEDOS / Mbolo / ISNA share recording, replay, billing
+// minutes, and any future provider swap. See docs/MEDOS_DEMO_ZAHIR_SCRIPT.md
+// and the handoff doc for the why.
+import { LiveService } from '../../live/live.service';
 import { LiveKitService } from '../../livekit/livekit.service';
 import type { TenantContext } from '../../tenant/tenant.types';
 import {
@@ -19,7 +26,13 @@ export class TeleconsultService {
 
   constructor(
     private readonly supabase: SupabaseService,
+    /**
+     * Only used by `create()` to derive a deterministic room name during
+     * session insert (the row needs a `livekit_room_name` non-null at
+     * creation time). All token issuance goes through Liri below.
+     */
     private readonly livekit: LiveKitService,
+    private readonly liri: LiveService,
   ) {}
 
   /**
@@ -89,7 +102,13 @@ export class TeleconsultService {
     return data;
   }
 
-  /** Génère un token LiveKit pour rejoindre la room (host ou participant). */
+  /**
+   * Issue a video session token. ROUTED THROUGH LIRI — MEDOS no longer
+   * touches LiveKit directly. The medical access control (patient owns
+   * the session, doctor belongs to the tenant) stays here; the actual
+   * token issuance is delegated to Liri so recording / replay / billing
+   * minutes can be unified across MEDOS / Mbolo / ISNA.
+   */
   async issueToken(
     tenant: TenantContext,
     actorId: string,
@@ -105,7 +124,8 @@ export class TeleconsultService {
       .single();
     if (error || !session) throw new NotFoundException('Session introuvable');
 
-    // Vérifier accès
+    // Medical access control (kept in MEDOS — Liri doesn't need to know
+    // about patient_user_id ↔ session.patient_id rules).
     if (actorRole === 'patient') {
       const { data: pat } = await this.supabase.client
         .from('med_patients')
@@ -117,25 +137,27 @@ export class TeleconsultService {
       }
     }
 
-    const roomName = (session as any).livekit_room_name as string;
     const isHost =
       actorRole === 'practitioner' ||
       actorRole === 'owner' ||
       actorRole === 'clinic_admin';
 
-    const token = isHost
-      ? await this.livekit.generateHostToken(roomName, actorId, displayName)
-      : await this.livekit.generateParticipantToken(
-          roomName,
-          actorId,
-          displayName,
-        );
+    // Delegate to Liri. The session.id is a stable, unique external_ref
+    // so re-joins reuse the same LiveKit room.
+    const result = await this.liri.issueTokenForSession({
+      tenantSlug: tenant.slug,
+      externalRef: sessionId,
+      purpose: 'medical_teleconsult',
+      userId: actorId,
+      displayName,
+      role: isHost ? 'host' : 'guest',
+    });
 
     return {
-      room: roomName,
-      token,
-      url: this.livekit.getUrl(),
-      ttl: isHost ? '4h' : '1h',
+      room: result.room,
+      token: result.token,
+      url: result.url,
+      ttl: result.ttl,
     };
   }
 
