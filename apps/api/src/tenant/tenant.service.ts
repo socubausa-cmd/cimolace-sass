@@ -9,14 +9,31 @@ export class TenantService {
     const supabase = this.authService.getClient();
     // If slug provided, resolve by slug; otherwise get user's first tenant
     if (tenantSlug) {
-      const { data: tenant } = await supabase.from("tenants").select("*").eq("slug", tenantSlug).single();
+      const { data: tenant } = await supabase
+        .from("tenants")
+        .select("*")
+        .eq("slug", tenantSlug)
+        .single();
       if (!tenant) return null;
-      const { data: membership } = await supabase.from("tenant_memberships").select("role").eq("tenant_id", tenant.id).eq("user_id", userId).single();
-      return { ...tenant, role: membership?.role ?? null };
+      const { data: membership } = await supabase
+        .from("tenant_memberships")
+        .select("role")
+        .eq("tenant_id", tenant.id)
+        .eq("user_id", userId)
+        .single();
+      const role = (membership?.role ?? null) as string | null;
+      // Both `role` (legacy callers) and `userRole` (TenantContext required by
+      // RolesGuard) are returned so we don't break either side.
+      return { ...tenant, role, userRole: role };
     }
-    const { data: membership } = await supabase.from("tenant_memberships").select("tenant_id, role, tenants(*)").eq("user_id", userId).single();
+    const { data: membership } = await supabase
+      .from("tenant_memberships")
+      .select("tenant_id, role, tenants(*)")
+      .eq("user_id", userId)
+      .single();
     if (!membership) return null;
-    return { ...(membership.tenants as any), role: membership.role };
+    const role = membership.role as string | null;
+    return { ...(membership.tenants as any), role, userRole: role };
   }
 
   async resolveForUser(slug: string, userId: string) {
@@ -25,7 +42,11 @@ export class TenantService {
 
   async getTenantById(tenantId: string) {
     const supabase = this.authService.getClient();
-    const { data } = await supabase.from("tenants").select("*").eq("id", tenantId).single();
+    const { data } = await supabase
+      .from("tenants")
+      .select("*")
+      .eq("id", tenantId)
+      .single();
     return data;
   }
 }
