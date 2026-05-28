@@ -10,10 +10,9 @@ import { SupabaseService } from '../../supabase/supabase.service';
 // MEDOS routes ALL video sessions through Liri (LiveService), not LiveKit
 // directly. This is the contract: one video authority for the whole
 // platform, so MEDOS / Mbolo / ISNA share recording, replay, billing
-// minutes, and any future provider swap. See docs/MEDOS_DEMO_ZAHIR_SCRIPT.md
-// and the handoff doc for the why.
+// minutes, and any future provider swap. After P5.4, MEDOS no longer
+// imports LiveKitService or LiveKitModule at all.
 import { LiveService } from '../../live/live.service';
-import { LiveKitService } from '../../livekit/livekit.service';
 import type { TenantContext } from '../../tenant/tenant.types';
 import {
   CreateTeleconsultDto,
@@ -26,12 +25,6 @@ export class TeleconsultService {
 
   constructor(
     private readonly supabase: SupabaseService,
-    /**
-     * Only used by `create()` to derive a deterministic room name during
-     * session insert (the row needs a `livekit_room_name` non-null at
-     * creation time). All token issuance goes through Liri below.
-     */
-    private readonly livekit: LiveKitService,
     private readonly liri: LiveService,
   ) {}
 
@@ -52,19 +45,11 @@ export class TeleconsultService {
       .single();
     if (patErr || !patient) throw new NotFoundException('Patient introuvable');
 
-    // Pré-créer un ID pour pouvoir générer le room name
+    // Pré-créer un ID pour pouvoir générer le room name. Liri.roomNameFor
+    // est une fonction pure — pas besoin de provisionner la room LiveKit
+    // à ce stade (Liri.issueTokenForSession s'en occupe au premier join).
     const tempSessionId = crypto.randomUUID();
-    const roomName = LiveKitService.scopedRoomName(tenant.slug, tempSessionId);
-
-    // Ensure la room LiveKit existe
-    try {
-      await this.livekit.ensureRoom(roomName, tempSessionId, practitionerId);
-    } catch (err: any) {
-      this.logger.error('ensureRoom failed', err?.message);
-      throw new InternalServerErrorException(
-        'Impossible de créer la room LiveKit (config manquante ?)',
-      );
-    }
+    const roomName = this.liri.roomNameFor(tenant.slug, tempSessionId);
 
     const { data, error } = await (this.supabase.client as any)
       .from('med_teleconsult_sessions')
@@ -143,14 +128,21 @@ export class TeleconsultService {
       actorRole === 'clinic_admin';
 
     // Delegate to Liri. The session.id is a stable, unique external_ref
-    // so re-joins reuse the same LiveKit room.
+    // so re-joins reuse the same LiveKit room. The metadata blob lets the
+    // billing UI link back to the medical appointment without re-querying
+    // the MEDOS-owned table.
     const result = await this.liri.issueTokenForSession({
+      tenantId: tenant.id,
       tenantSlug: tenant.slug,
       externalRef: sessionId,
       purpose: 'medical_teleconsult',
       userId: actorId,
       displayName,
       role: isHost ? 'host' : 'guest',
+      metadata: {
+        appointment_id: (session as any).appointment_id ?? null,
+        patient_id: (session as any).patient_id ?? null,
+      },
     });
 
     return {
@@ -299,6 +291,18 @@ export class TeleconsultService {
       .single();
     if (error || !data)
       throw new InternalServerErrorException('Fin de session impossible');
+
+    // Tell Liri the session ended so its ledger row gets a duration. Failing
+    // here would not invalidate the MEDOS-side end, so we swallow the error.
+    try {
+      await this.liri.endLiriSession(tenant.id, sessionId);
+    } catch (err) {
+      this.logger.warn(
+        'liri.endLiriSession failed (non-blocking): ' +
+          (err as Error).message,
+      );
+    }
+
     return data;
   }
 

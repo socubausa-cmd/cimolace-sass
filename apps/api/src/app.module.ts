@@ -12,6 +12,19 @@ import { CheckoutModule } from './checkout/checkout.module';
 import { LiveModule } from './live/live.module';
 import { MarketingModule } from './marketing/marketing.module';
 import { NotificationsModule } from './notifications/notifications.module';
+// ── LIRI School Engines ───────────────────────────────────────────────────────
+import { CourseBuilderModule } from './course-builder/course-builder.module';
+import { ReplayModule } from './replay/replay.module';
+import { SmartboardModule } from './smartboard/smartboard.module';
+import { StudioModule } from './studio/studio.module';
+import { NeuroRecallModule } from './neuro-recall/neuro-recall.module';
+import { PayEngineModule } from './pay-engine/pay-engine.module';
+import { ChatEngineModule } from './chat-engine/chat-engine.module';
+// ── LIRI Public API (Zoom-level — sites externes, API keys, webhooks) ────────
+import { LiriPublicModule } from './liri-public/liri-public.module';
+// ── AI Billing (crédits IA — quotas, top-up, usage tracking) ─────────────────
+import { AiBillingModule } from './ai-billing/ai-billing.module';
+// ── MedOS ─────────────────────────────────────────────────────────────────────
 import { MedEhrModule } from './med-ehr/med-ehr.module';
 import { MedNotesModule } from './med-notes/med-notes.module';
 import { MedFormsModule } from './med-forms/med-forms.module';
@@ -21,6 +34,8 @@ import { MedPrescriptionsModule } from './med-prescriptions/med-prescriptions.mo
 import { MedChartingModule } from './med-charting/med-charting.module';
 import { MedGdprModule } from './med-gdpr/med-gdpr.module';
 import { MedosModule } from './medos/medos.module';
+// ── Mbolo (e-commerce + live shopping via Liri) ───────────────────────────────
+import { MboloModule } from './mbolo/mbolo.module';
 
 @Module({
   controllers: [HealthController],
@@ -39,6 +54,19 @@ import { MedosModule } from './medos/medos.module';
     LiveModule,
     MarketingModule,
     NotificationsModule,
+    // ── LIRI School Engines (wired) ─────────────────────────────────────────
+    CourseBuilderModule,
+    ReplayModule,
+    SmartboardModule,
+    StudioModule,
+    NeuroRecallModule,
+    PayEngineModule,
+    ChatEngineModule,
+    // ── LIRI Public API ──────────────────────────────────────────────────────
+    LiriPublicModule,
+    // ── AI Billing (LIRI Credits) ────────────────────────────────────────────
+    AiBillingModule,
+    // ── MedOS ────────────────────────────────────────────────────────────────
     // Legacy MEDOS sub-modules (kept for backward compat, parallel to MedosModule)
     MedEhrModule,
     MedNotesModule,
@@ -50,6 +78,8 @@ import { MedosModule } from './medos/medos.module';
     MedGdprModule,
     // New unified MEDOS module (embedding + 8 wired modules)
     MedosModule,
+    // ── Mbolo (e-commerce + live shopping routed through Liri) ─────────────
+    MboloModule,
   ],
 })
 export class AppModule {}
