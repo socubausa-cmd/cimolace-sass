@@ -1,31 +1,34 @@
-import { Body, Controller, Headers, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Headers, Post, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import type { Request } from 'express';
+import { ApiKeyGuard } from '../../auth/api-key.guard';
+import type { TenantContext } from '../../tenant/tenant.types';
+import { ServerTokenDto } from './dto/server-token.dto';
 import { EmbedService } from './embed.service';
 
 type IssueEmbedTokenDto = {
   tenant_slug: string;
   mode: string;
-  /** Optionnel : pour les modes patient-portal, identifiant du patient à charger.
-   *  Si absent, le widget tombera sur un mode 'public' qui demande au patient
-   *  de s'identifier via magic link. */
   patient_user_id?: string;
 };
 
+type ApiKeyRequest = Request & {
+  tenant: TenantContext;
+  apiKeyId: string;
+};
+
 /**
- * Endpoint public (CORS dynamique) qui émet un JWT embed-token court-vivant.
+ * Endpoints d'émission de JWT embed-token.
  *
- * Appelé par embed.js depuis le navigateur du visiteur — pas de clé secrète,
- * la confiance vient du couple (Origin HTTP + tenant_slug + tenant_domains).
- *
- * Si tu veux un mode "patient connecté" (sub = patient_user_id), le client
- * DOIT relayer l'appel depuis son backend avec sa clé API tenant pour prouver
- * l'identité — voir POST /v1/medos/embed/server-token (à venir S2).
+ *  - POST /v1/medos/embed/token        (Niveau 1, anonyme, CORS Origin)
+ *  - POST /v1/medos/embed/server-token (Niveau 2, identifié, clé API tenant)
  */
 @ApiTags('MedOS — Embed')
 @Controller('v1/medos/embed')
 export class MedosEmbedController {
   constructor(private readonly embedService: EmbedService) {}
 
+  /** Niveau 1 — Token anonyme, validé par Origin whitelisté */
   @Post('token')
   async issue(
     @Body() dto: IssueEmbedTokenDto,
@@ -36,6 +39,34 @@ export class MedosEmbedController {
       mode: dto.mode,
       origin,
       requestedPatientUserId: dto.patient_user_id ?? null,
+    });
+  }
+
+  /**
+   * Niveau 2 — Token identifié, validé par clé API tenant (server-to-server).
+   *
+   * Appelé par le backend d'un site tenant (ex: zahirwellness.com) pour
+   * obtenir un JWT qui ouvre directement le dossier du patient passé en
+   * paramètre — sans login utilisateur dans le widget.
+   *
+   * Auth : `Authorization: Bearer mdk_<tenant>_<secret>` (clé API tenant).
+   * Crée automatiquement le user + dossier patient si n'existent pas.
+   */
+  @Post('server-token')
+  @UseGuards(ApiKeyGuard)
+  @ApiBearerAuth()
+  async issueServerToken(
+    @Body() dto: ServerTokenDto,
+    @Req() req: ApiKeyRequest,
+  ) {
+    return this.embedService.issueServerToken({
+      tenant: req.tenant,
+      apiKeyId: req.apiKeyId,
+      patient_email: dto.patient_email,
+      patient_first_name: dto.patient_first_name,
+      patient_last_name: dto.patient_last_name,
+      external_user_id: dto.external_user_id,
+      mode: dto.mode,
     });
   }
 }

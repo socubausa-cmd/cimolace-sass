@@ -43,6 +43,9 @@
     SCRIPT_TAG.getAttribute("data-target") || "#medos-portal";
   var PRIMARY_COLOR =
     SCRIPT_TAG.getAttribute("data-primary-color") || "#4f46e5";
+  // Niveau 2 SSO : si un token est déjà fourni par le backend tenant,
+  // on l'utilise directement au lieu d'appeler /v1/medos/embed/token.
+  var PRESET_TOKEN = SCRIPT_TAG.getAttribute("data-embed-token");
 
   var VALID_MODES = [
     "patient-portal",
@@ -86,7 +89,17 @@
 
     renderLoading(root);
 
-    fetchEmbedToken()
+    // Niveau 2 : token pré-délivré par le backend tenant → on l'utilise direct
+    var authPromise = PRESET_TOKEN
+      ? Promise.resolve({
+          token: PRESET_TOKEN,
+          api_base: API_BASE,
+          mode: MODE,
+          expires_in: 900,
+        })
+      : fetchEmbedToken();
+
+    authPromise
       .then(function (data) {
         renderMode(root, data);
       })
