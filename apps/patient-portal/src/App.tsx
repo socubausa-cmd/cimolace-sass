@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useAuth } from '@isna/ui/auth';
+import { useAuth } from './lib/auth';
 import { PatientLogin } from './pages/Login';
 import { PatientDashboard } from './pages/Dashboard';
 import { MyRecords } from './pages/MyRecords';

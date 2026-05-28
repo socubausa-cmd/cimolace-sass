@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '@isna/ui/auth';
+import { useAuth } from '../lib/auth';
 import { Heart, LogIn } from 'lucide-react';
 
 export function PatientLogin() {

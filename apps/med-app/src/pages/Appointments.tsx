@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@isna/ui/auth';
+import { useAuth } from '../lib/auth';
 import { Calendar, Plus, X, Clock, Trash2, CheckCircle, XCircle, AlertCircle, Video } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
