@@ -106,9 +106,15 @@
 
   <script>
     // Charge dynamiquement le widget avec le mode sélectionné
+    // Note : embed.js attache un Shadow DOM au mount initial. Pour switcher
+    // de mode, il faut RECRÉER le div #medos-portal (un Shadow DOM ne peut
+    // pas être ré-attaché à un élément existant).
     function loadWidget(mode) {
-      const target = document.getElementById('medos-portal');
-      target.innerHTML = ''; // reset
+      const oldTarget = document.getElementById('medos-portal');
+      const parent = oldTarget.parentNode;
+      const fresh = document.createElement('div');
+      fresh.id = 'medos-portal';
+      parent.replaceChild(fresh, oldTarget);
 
       // Supprime tout ancien script de widget
       document.querySelectorAll('script[data-medos-widget]').forEach((s) => s.remove());
