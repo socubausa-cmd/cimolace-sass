@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   Body,
   Controller,
@@ -19,6 +20,8 @@ import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
+import { CreateFormDto } from './dto/create-form.dto';
+import { AuditResource } from './decorators/audit-resource.decorator';
 import { MedosEnabledGuard } from './medos-enabled.guard';
 import { MedosService } from './medos.service';
 
@@ -30,12 +33,14 @@ interface AuthRequest extends Request {
 // Patients — RBAC: practitioner, clinic_admin, receptionist (CRUD with limits)
 // ---------------------------------------------------------------------------
 
+@ApiTags('MedOS — Patients')
+@ApiBearerAuth()
 @Controller('med/patients')
 @UseGuards(JwtAuthGuard, TenantGuard, MedosEnabledGuard)
 export class MedosPatientController {
   constructor(private readonly medosService: MedosService) {}
 
-  /** Créer un dossier patient */
+  /** Créer un dossier patient — audit géré au niveau service (med_patient/create) */
   @Post()
   @UseGuards(RolesGuard)
   @Roles('owner', 'practitioner', 'clinic_admin', 'receptionist')
@@ -47,15 +52,16 @@ export class MedosPatientController {
     return this.medosService.createPatient(tenant, req.user.id, dto);
   }
 
-  /** Lister tous les patients du tenant */
+  /** Lister tous les patients du tenant — pas d'audit service-level, on couvre via interceptor */
   @Get()
   @UseGuards(RolesGuard)
   @Roles('owner', 'practitioner', 'clinic_admin', 'receptionist')
+  @AuditResource({ resource: 'patient', action: 'list' })
   list(@CurrentTenant() tenant: TenantContext) {
     return this.medosService.listPatients(tenant);
   }
 
-  /** Voir un dossier patient */
+  /** Voir un dossier patient — audit géré au niveau service (med_patient/view) */
   @Get(':id')
   @UseGuards(RolesGuard)
   @Roles('owner', 'practitioner', 'clinic_admin', 'receptionist', 'patient')
@@ -67,7 +73,7 @@ export class MedosPatientController {
     return this.medosService.getPatient(tenant, req.user.id, id);
   }
 
-  /** Mettre à jour un dossier patient */
+  /** Mettre à jour un dossier patient — audit géré au niveau service (med_patient/update) */
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles('owner', 'practitioner', 'clinic_admin')
@@ -80,10 +86,11 @@ export class MedosPatientController {
     return this.medosService.updatePatient(tenant, req.user.id, id, dto);
   }
 
-  /** Lister les notes d'un patient */
+  /** Lister les notes d'un patient — pas d'audit service-level, on couvre via interceptor */
   @Get(':id/notes')
   @UseGuards(RolesGuard)
   @Roles('owner', 'practitioner', 'clinic_admin')
+  @AuditResource({ resource: 'note', action: 'list', idParam: 'id' })
   listNotes(
     @Param('id') patientId: string,
     @CurrentTenant() tenant: TenantContext,
@@ -91,7 +98,7 @@ export class MedosPatientController {
     return this.medosService.listNotes(tenant, patientId);
   }
 
-  /** Créer une note de consultation pour un patient */
+  /** Créer une note de consultation pour un patient — audit géré au niveau service */
   @Post(':id/notes')
   @UseGuards(RolesGuard)
   @Roles('owner', 'practitioner', 'clinic_admin')
@@ -109,12 +116,14 @@ export class MedosPatientController {
 // Notes — opérations sur une note existante (sign, share, update)
 // ---------------------------------------------------------------------------
 
+@ApiTags('MedOS — Notes')
+@ApiBearerAuth()
 @Controller('med/notes')
 @UseGuards(JwtAuthGuard, TenantGuard, MedosEnabledGuard, RolesGuard)
 export class MedosNoteController {
   constructor(private readonly medosService: MedosService) {}
 
-  /** Modifier une note non signée */
+  /** Modifier une note non signée — audit géré au niveau service */
   @Patch(':id')
   @Roles('owner', 'practitioner', 'clinic_admin')
   update(
@@ -126,7 +135,7 @@ export class MedosNoteController {
     return this.medosService.updateNote(tenant, req.user.id, id, dto);
   }
 
-  /** Signer une note (verrouillage) */
+  /** Signer une note — audit géré au niveau service */
   @Post(':id/sign')
   @Roles('owner', 'practitioner', 'clinic_admin')
   sign(
@@ -137,7 +146,7 @@ export class MedosNoteController {
     return this.medosService.signNote(tenant, req.user.id, id);
   }
 
-  /** Partager / dépublier une note au patient */
+  /** Partager / dépublier une note — audit géré au niveau service */
   @Post(':id/share')
   @Roles('owner', 'practitioner', 'clinic_admin')
   share(
@@ -162,6 +171,7 @@ export class MedosPatientMeController {
   /** Lister les notes partagées du patient connecté */
   @Get('notes')
   @Roles('patient')
+  @AuditResource({ resource: 'note', action: 'list' })
   listMySharedNotes(
     @CurrentTenant() tenant: TenantContext,
     @Req() req: AuthRequest,
@@ -169,7 +179,7 @@ export class MedosPatientMeController {
     return this.medosService.listPatientSharedNotes(tenant, req.user.id);
   }
 
-  /** Confirmer la lecture d'une note partagée */
+  /** Confirmer la lecture d'une note partagée — audit géré au niveau service */
   @Post('notes/:id/read')
   @Roles('patient')
   markSharedNoteRead(
@@ -185,6 +195,8 @@ export class MedosPatientMeController {
 // Forms — formulaires médicaux
 // ---------------------------------------------------------------------------
 
+@ApiTags('MedOS — Formulaires')
+@ApiBearerAuth()
 @Controller('med/forms')
 @UseGuards(JwtAuthGuard, TenantGuard, MedosEnabledGuard)
 export class MedosFormsController {
@@ -193,6 +205,7 @@ export class MedosFormsController {
   @Get()
   @UseGuards(RolesGuard)
   @Roles('owner', 'practitioner', 'clinic_admin', 'receptionist')
+  @AuditResource({ resource: 'form', action: 'list' })
   listForms(@CurrentTenant() tenant: TenantContext) {
     return this.medosService.listForms(tenant);
   }
@@ -200,6 +213,7 @@ export class MedosFormsController {
   @Get(':id')
   @UseGuards(RolesGuard)
   @Roles('owner', 'practitioner', 'clinic_admin', 'receptionist')
+  @AuditResource({ resource: 'form', action: 'read', idParam: 'id' })
   getForm(@Param('id') id: string, @CurrentTenant() tenant: TenantContext) {
     return this.medosService.getForm(tenant, id);
   }
@@ -208,7 +222,7 @@ export class MedosFormsController {
   @UseGuards(RolesGuard)
   @Roles('owner', 'practitioner', 'clinic_admin')
   createForm(
-    @Body() dto: Record<string, unknown>,
+    @Body() dto: CreateFormDto,
     @CurrentTenant() tenant: TenantContext,
     @Req() req: AuthRequest,
   ) {
@@ -224,12 +238,18 @@ export class MedosFormsController {
     @CurrentTenant() tenant: TenantContext,
     @Req() req: AuthRequest,
   ) {
-    return this.medosService.submitFormResponse(tenant, req.user.id, formId, dto);
+    return this.medosService.submitFormResponse(
+      tenant,
+      req.user.id,
+      formId,
+      dto,
+    );
   }
 
   @Get(':id/responses')
   @UseGuards(RolesGuard)
   @Roles('owner', 'practitioner', 'clinic_admin')
+  @AuditResource({ resource: 'form_response', action: 'list', idParam: 'id' })
   getResponses(
     @Param('id') formId: string,
     @CurrentTenant() tenant: TenantContext,
@@ -242,6 +262,8 @@ export class MedosFormsController {
 // Health — journal santé
 // ---------------------------------------------------------------------------
 
+@ApiTags('MedOS — Santé')
+@ApiBearerAuth()
 @Controller('med/health')
 @UseGuards(JwtAuthGuard, TenantGuard, MedosEnabledGuard)
 export class MedosHealthController {
@@ -261,10 +283,12 @@ export class MedosHealthController {
   @Get('patient/:patientId')
   @UseGuards(RolesGuard)
   @Roles('owner', 'practitioner', 'clinic_admin', 'patient')
+  @AuditResource({ resource: 'health_entry', action: 'list', idParam: 'patientId' })
   getEntries(
     @Param('patientId') patientId: string,
     @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
   ) {
-    return this.medosService.getHealthEntries(tenant, patientId);
+    return this.medosService.getHealthEntries(tenant, req.user.id, patientId);
   }
 }
