@@ -189,7 +189,7 @@
       '<p class="medos-foot">Sécurisé · Conforme RGPD · Propulsé par Cimolace</p>' +
       "</div>";
 
-    callApi("/med/me/notes", {}, auth.token)
+    callApi("/v1/medos/embed/me/notes", {}, auth.token)
       .then(function (notes) {
         var list = root.querySelector("#medos-notes-list");
         list.innerHTML = "";
@@ -281,7 +281,7 @@
         entry_type: "mood",
       };
       status.textContent = "Envoi...";
-      callApi("/med/health", { method: "POST", body: payload }, auth.token)
+      callApi("/v1/medos/embed/me/health", { method: "POST", body: payload }, auth.token)
         .then(function () {
           status.textContent = "Entrée enregistrée";
           form.reset();

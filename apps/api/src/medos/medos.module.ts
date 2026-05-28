@@ -18,6 +18,7 @@ import { MedAuditInterceptor } from './med-audit.interceptor';
 import { ApiKeysController } from './api-keys/api-keys.controller';
 import { ApiKeysService } from './api-keys/api-keys.service';
 import { MedosEmbedController } from './embed/embed.controller';
+import { MedosEmbedDataController } from './embed/embed-data.controller';
 import { EmbedService } from './embed/embed.service';
 import { EmbedTokenGuard } from './embed/embed-token.guard';
 import { ApiKeyGuard } from '../auth/api-key.guard';
@@ -113,6 +114,7 @@ import { InvitationsService } from './invitations/invitations.service';
     // Embedding & integration
     ApiKeysController,
     MedosEmbedController,
+    MedosEmbedDataController,
     TenantDomainsController,
     // Prescriptions
     PrescriptionsController,
