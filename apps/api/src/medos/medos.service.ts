@@ -908,4 +908,28 @@ export class MedosService {
     await this.writeAudit(tenant.id, userId, 'med_form_response', (data as any).id, 'submit');
     return data as unknown as Record<string, unknown>;
   }
+
+  /**
+   * List appointments belonging to the calling patient. Returns from the
+   * 30 days back up to 180 days forward, ordered by scheduled_at asc.
+   */
+  async listMyAppointments(tenant: TenantContext, userId: string) {
+    const patient = await this.findPatientByUser(tenant.id, userId);
+    if (!patient) return [] as Record<string, unknown>[];
+    const from = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+    const to = new Date(Date.now() + 180 * 24 * 3600 * 1000).toISOString();
+    const { data, error } = await this.supabase.client
+      .from('med_appointments')
+      .select('*')
+      .eq('tenant_id', tenant.id)
+      .eq('patient_id', patient.id)
+      .gte('scheduled_at', from)
+      .lte('scheduled_at', to)
+      .order('scheduled_at', { ascending: true });
+    if (error) {
+      this.logger.error('listMyAppointments', error.message);
+      throw new InternalServerErrorException('Erreur interne');
+    }
+    return (data ?? []) as unknown as Record<string, unknown>[];
+  }
 }

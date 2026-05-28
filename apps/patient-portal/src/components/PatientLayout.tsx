@@ -1,9 +1,10 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, ClipboardList, Heart, BookOpen, Pill, MessageCircle, User, Brain } from 'lucide-react';
+import { LayoutDashboard, FileText, ClipboardList, Heart, BookOpen, Pill, MessageCircle, User, Brain, Calendar } from 'lucide-react';
 
 const nav = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Accueil' },
   { to: '/records', icon: User, label: 'Mon dossier' },
+  { to: '/appointments', icon: Calendar, label: 'Rendez-vous' },
   { to: '/notes', icon: FileText, label: 'Notes' },
   { to: '/charting-notes', icon: Brain, label: 'Notes IA' },
   { to: '/prescriptions', icon: Pill, label: 'Ordonnances' },

@@ -10,7 +10,8 @@ export type AuditResourceType =
   | 'health_entry'
   | 'prescription'
   | 'program'
-  | 'charting_job';
+  | 'charting_job'
+  | 'appointment';
 
 export type AuditAction =
   | 'create'

@@ -12,6 +12,7 @@ import { HealthTracker } from './pages/HealthTracker';
 import { ProgramsList } from './pages/ProgramsList';
 import { ChartingPage } from './pages/ChartingPage';
 import { Threads } from './pages/Threads';
+import { Appointments } from './pages/Appointments';
 import { Layout } from './components/Layout';
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ function AppRoutes() {
         <Route path="/programs" element={<ProgramsList />} />
         <Route path="/charting" element={<ChartingPage />} />
         <Route path="/messages" element={<Threads />} />
+        <Route path="/appointments" element={<Appointments />} />
       </Route>
     </Routes>
   );

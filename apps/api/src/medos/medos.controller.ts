@@ -236,6 +236,17 @@ export class MedosPatientMeController {
       body?.responses ?? {},
     );
   }
+
+  /** Lister mes rendez-vous (patient self-service) */
+  @Get('appointments')
+  @Roles('patient')
+  @AuditResource({ resource: 'appointment', action: 'list' })
+  listMyAppointments(
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.medosService.listMyAppointments(tenant, req.user.id);
+  }
 }
 
 // ---------------------------------------------------------------------------
