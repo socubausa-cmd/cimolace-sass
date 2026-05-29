@@ -51,7 +51,7 @@ export class PrescriptionsPdfService {
           .maybeSingle(),
         this.supabase.client
           .from('tenants')
-          .select('name, slug, branding_metadata')
+          .select('name, slug, logo_url, brand_colors')
           .eq('id', tenant.id)
           .maybeSingle(),
       ]);
@@ -74,6 +74,9 @@ export class PrescriptionsPdfService {
 
     const tenantName: string =
       tenant?.name || tenant?.slug || 'Cabinet médical';
+    const tenantLogoUrl: string | null = tenant?.logo_url || null;
+    const tenantPrimaryColor: string =
+      (tenant?.brand_colors && tenant.brand_colors.primary) || '#0f172a';
     const practitionerName: string =
       practitioner?.raw_user_meta_data?.full_name ||
       practitioner?.email ||
@@ -143,8 +146,19 @@ export class PrescriptionsPdfService {
       justify-content: space-between;
       align-items: flex-start;
       padding-bottom: 16px;
-      border-bottom: 2px solid #0f172a;
+      border-bottom: 3px solid ${tenantPrimaryColor};
       margin-bottom: 24px;
+    }
+    header .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    header .brand img {
+      width: 56px;
+      height: 56px;
+      object-fit: contain;
+      border-radius: 8px;
     }
     header h1 {
       margin: 0;
@@ -286,9 +300,12 @@ export class PrescriptionsPdfService {
   </div>
   <div class="wrapper">
     <header>
-      <div>
-        <h1>${escape(tenantName)}</h1>
-        <div class="tagline">${escape(practitionerName)}</div>
+      <div class="brand">
+        ${tenantLogoUrl ? `<img src="${escape(tenantLogoUrl)}" alt="${escape(tenantName)}" />` : ''}
+        <div>
+          <h1 style="color: ${tenantPrimaryColor}">${escape(tenantName)}</h1>
+          <div class="tagline">${escape(practitionerName)}</div>
+        </div>
       </div>
       <div class="right">
         <div><strong>Ordonnance</strong></div>

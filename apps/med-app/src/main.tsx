@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { SupabaseProvider } from './lib/auth';
+import { BrandingProvider } from './lib/branding';
 import App from './App';
 import './index.css';
 
@@ -10,7 +11,9 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <SupabaseProvider url={supabaseUrl} anonKey={supabaseKey}>
-      <App />
+      <BrandingProvider>
+        <App />
+      </BrandingProvider>
     </SupabaseProvider>
   </StrictMode>
 );

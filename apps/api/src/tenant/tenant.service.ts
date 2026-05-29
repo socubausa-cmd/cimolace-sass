@@ -49,4 +49,36 @@ export class TenantService {
       .single();
     return data;
   }
+
+  /**
+   * Update branding columns on a tenant row. Only fields explicitly
+   * provided in the DTO are written so partial updates (color picker
+   * only, logo only) work as expected.
+   */
+  async updateBranding(
+    tenantId: string,
+    dto: {
+      name?: string;
+      logo_url?: string;
+      primary_domain?: string;
+      brand_colors?: { primary?: string; secondary?: string; accent?: string };
+    },
+  ) {
+    const supabase = this.authService.getClient();
+    const patch: Record<string, unknown> = {};
+    if (dto.name !== undefined) patch.name = dto.name;
+    if (dto.logo_url !== undefined) patch.logo_url = dto.logo_url;
+    if (dto.primary_domain !== undefined) patch.primary_domain = dto.primary_domain;
+    if (dto.brand_colors !== undefined) patch.brand_colors = dto.brand_colors;
+    if (Object.keys(patch).length === 0) {
+      return this.getTenantById(tenantId);
+    }
+    const { data } = await supabase
+      .from("tenants")
+      .update(patch)
+      .eq("id", tenantId)
+      .select("*")
+      .single();
+    return data;
+  }
 }

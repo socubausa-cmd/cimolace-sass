@@ -53,6 +53,17 @@ export class EmbedService {
     api_base: string;
     mode: EmbedMode;
     scope: string[];
+    /**
+     * Returned alongside the token so the widget can theme its Shadow DOM
+     * in a single round-trip. Mirrors the columns of `tenants` that drive
+     * white-label rendering. brand_colors keys are kept as-is (`primary`,
+     * `secondary`, `accent`) for the widget JS to map to CSS variables.
+     */
+    branding: {
+      name: string;
+      logo_url: string | null;
+      colors: Record<string, string>;
+    };
   }> {
     const { tenantSlug, mode, origin, requestedPatientUserId } = input;
 
@@ -68,10 +79,11 @@ export class EmbedService {
     const normalizedOrigin = origin.toLowerCase();
     const originHost = this.extractHost(normalizedOrigin);
 
-    // 1. Résoudre le tenant
+    // 1. Résoudre le tenant — incluant les colonnes de branding pour que
+    // la réponse embed-token puisse théme le widget en 1 round-trip.
     const { data: tenant, error: tErr } = await (this.supabase.client as any)
       .from('tenants')
-      .select('id, slug, status')
+      .select('id, slug, status, name, logo_url, brand_colors')
       .eq('slug', tenantSlug)
       .maybeSingle();
 
@@ -134,12 +146,23 @@ export class EmbedService {
     const apiBase =
       this.config.get<string>('MEDOS_API_BASE') ?? 'https://api.cimolace.com';
 
+    const t = tenant as {
+      name?: string;
+      logo_url?: string | null;
+      brand_colors?: Record<string, string> | null;
+    };
+
     return {
       token,
       expires_in: expiresInSec,
       api_base: apiBase,
       mode: mode as EmbedMode,
       scope,
+      branding: {
+        name: t.name ?? tenantSlug,
+        logo_url: t.logo_url ?? null,
+        colors: t.brand_colors ?? {},
+      },
     };
   }
 
