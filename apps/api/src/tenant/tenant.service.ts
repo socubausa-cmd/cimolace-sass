@@ -51,6 +51,39 @@ export class TenantService {
     return data;
   }
 
+  /**
+   * Resolve a tenant's public branding from a CUSTOM HOST (Enterprise
+   * white-label). The patient-portal served on a tenant's own domain
+   * (e.g. patient.zahirwellness.com) can't know its slug from the URL, so
+   * it resolves both branding AND its slug from the hostname.
+   *
+   * Looks up an ACTIVE `custom_host` row in tenant_domains matching the
+   * hostname, then returns the same public payload as getTenantBySlug.
+   * Returns null when the host isn't a registered active custom domain
+   * (or its tenant isn't active) — so an unknown host leaks nothing.
+   */
+  async getTenantByHost(host: string) {
+    const supabase = this.authService.getClient();
+    const normalized = (host ?? "").trim().toLowerCase();
+    if (!normalized) return null;
+    const { data: domainRow } = await supabase
+      .from("tenant_domains")
+      .select("tenant_id")
+      .eq("domain", normalized)
+      .eq("usage", "custom_host")
+      .eq("status", "active")
+      .maybeSingle();
+    const tenantId = (domainRow as any)?.tenant_id as string | undefined;
+    if (!tenantId) return null;
+    const { data } = await supabase
+      .from("tenants")
+      .select("slug, name, logo_url, brand_colors, status")
+      .eq("id", tenantId)
+      .single();
+    if (!data || (data as any).status !== "active") return null;
+    return data;
+  }
+
   async getTenantById(tenantId: string) {
     const supabase = this.authService.getClient();
     const { data } = await supabase

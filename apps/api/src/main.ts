@@ -48,7 +48,7 @@ async function loadTenantDomains(
   const { data } = await (supabase.client as any)
     .from('tenant_domains')
     .select('domain')
-    .eq('usage', 'embed_origin')
+    .in('usage', ['embed_origin', 'custom_host'])
     .eq('status', 'active');
 
   const set = new Set<string>(
@@ -93,7 +93,7 @@ async function bootstrap() {
     }),
   );
 
-  // ── CORS strict + dynamique pour les domaines tenant (embed_origin) ──────
+  // ── CORS strict + dynamique pour les domaines tenant (embed_origin + custom_host) ──
   // Logique :
   //   1. Origin dans STATIC_ORIGINS (Cimolace + dev) → autorisé
   //   2. Sinon : lookup `tenant_domains` (cache 60s)

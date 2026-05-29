@@ -63,6 +63,37 @@ export class TenantController {
   }
 
   /**
+   * Public endpoint — branding-only lookup by CUSTOM HOST (Enterprise
+   * white-label). When the patient-portal is served on a tenant's own
+   * domain (e.g. patient.zahirwellness.com), the URL carries no slug, so
+   * the app resolves BOTH its branding and its tenant slug from the
+   * hostname. The returned `slug` is what the client persists to send as
+   * `X-Tenant-Slug` on later authenticated calls.
+   *
+   * Returns null (→ { data: null }) if the host isn't a registered active
+   * custom domain — keeps the patient on engine defaults and leaks nothing.
+   */
+  @Get("by-host/:host/branding")
+  async brandingByHost(@Param("host") host: string) {
+    const tenant = await this.tenantService.getTenantByHost(host);
+    if (!tenant) {
+      return null;
+    }
+    const t = tenant as {
+      name?: string;
+      logo_url?: string | null;
+      brand_colors?: Record<string, string> | null;
+      slug: string;
+    };
+    return {
+      slug: t.slug,
+      name: t.name ?? t.slug,
+      logo_url: t.logo_url ?? null,
+      brand_colors: t.brand_colors ?? {},
+    };
+  }
+
+  /**
    * Self-serve branding update — a tenant owner / admin editing their own
    * tenant from within apps/app. The TenantGuard resolves the tenant from
    * `X-Tenant-Slug` and we trust the auth context.

@@ -73,6 +73,21 @@ function applyCssVars(b: Branding) {
 }
 
 /**
+ * Cimolace platform hosts — these serve the multi-tenant app generically,
+ * so they are NOT treated as a tenant's own white-label domain. Anything
+ * NOT in this set (and not a `*.patient.cimolace.space` subdomain) is
+ * considered an Enterprise custom host resolved server-side by hostname.
+ */
+const PLATFORM_HOSTS = new Set([
+  'patient.cimolace.space',
+  'med.cimolace.space',
+  'app.cimolace.space',
+  'cimolace.space',
+  'localhost',
+  '127.0.0.1',
+]);
+
+/**
  * Resolve the tenant slug from URL → subdomain → localStorage.
  * Returns null if no tenant context can be inferred (root URL on
  * patient.cimolace.space with no query param).
@@ -92,13 +107,6 @@ function resolveTenantSlug(): string | null {
   // 2. Subdomain — e.g. zahir.patient.cimolace.space → "zahir"
   // We ignore the generic ones used as platform infrastructure.
   const host = window.location.hostname.split(':')[0].toLowerCase();
-  const PLATFORM_HOSTS = new Set([
-    'patient.cimolace.space',
-    'med.cimolace.space',
-    'app.cimolace.space',
-    'cimolace.space',
-    'localhost',
-  ]);
   if (!PLATFORM_HOSTS.has(host)) {
     const parts = host.split('.');
     // {tenant}.patient.cimolace.space → tenant
@@ -121,6 +129,34 @@ function resolveTenantSlug(): string | null {
   return null;
 }
 
+/**
+ * Decide WHICH public branding endpoint to hit:
+ *   • by-slug  — when a slug is known from URL / subdomain / localStorage
+ *     (Cimolace-hosted tenants, invitation links).
+ *   • by-host  — Enterprise white-label: served on the tenant's own domain
+ *     (e.g. patient.zahirwellness.com) where the URL carries no slug, so the
+ *     tenant (and its slug) are resolved server-side from the hostname.
+ * Returns null when there's no tenant context at all (root platform host).
+ */
+function resolveBrandingSource(): { url: string; fromHost: boolean } | null {
+  if (typeof window === 'undefined') return null;
+  const slug = resolveTenantSlug();
+  if (slug) {
+    return {
+      url: `${API}/tenants/by-slug/${encodeURIComponent(slug)}/branding`,
+      fromHost: false,
+    };
+  }
+  const host = window.location.hostname.split(':')[0].toLowerCase();
+  if (!PLATFORM_HOSTS.has(host)) {
+    return {
+      url: `${API}/tenants/by-host/${encodeURIComponent(host)}/branding`,
+      fromHost: true,
+    };
+  }
+  return null;
+}
+
 export function BrandingProvider({ children }: { children: ReactNode }) {
   const [branding, setBranding] = useState<Branding>({
     ...ENGINE_DEFAULTS,
@@ -133,22 +169,32 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    const slug = resolveTenantSlug();
-    if (!slug) {
+    const source = resolveBrandingSource();
+    if (!source) {
       setBranding((b) => ({ ...b, loading: false }));
       return;
     }
     // PUBLIC endpoint — no Authorization header required. Works on the
     // login page before any auth.
-    fetch(`${API}/tenants/by-slug/${encodeURIComponent(slug)}/branding`)
+    fetch(source.url)
       .then((r) => (r.ok ? r.json() : null))
       .then((payload) => {
         if (cancelled || !payload) return;
         const t = payload?.data;
         if (!t) {
-          // Slug invalide : on garde engine defaults
+          // Slug / host inconnu : on garde engine defaults
           setBranding((b) => ({ ...b, loading: false }));
           return;
+        }
+        // White-label custom host: the slug was unknown from the URL, so
+        // persist the server-resolved one — authenticated API calls read
+        // localStorage.tenant_slug to send the X-Tenant-Slug header.
+        if (source.fromHost && t.slug) {
+          try {
+            localStorage.setItem('tenant_slug', t.slug);
+          } catch {
+            /* ignore */
+          }
         }
         const colors = (t.brand_colors || {}) as Record<string, string>;
         setBranding({
