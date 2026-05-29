@@ -28,11 +28,11 @@ const nav = [
   { to: '/privacy',       icon: Shield,          label: 'Confidentialité' },
 ];
 
-// Strategy B — 95% tenant, 5% Cimolace. Sidebar background takes the tenant
-// primary color directly. "MedOS" is no longer mentioned in the visible
-// header — patient sees "Mon Espace · Cabinet Zahir" and a discrete footer
-// "Sécurisé par Cimolace" at the very bottom (no logo, no link, just a
-// trust badge).
+// Strategy B — 100% tenant, ZERO Cimolace/MEDOS visible to the patient.
+// Sidebar background = tenant.brand_colors.primary. Header = "Mon espace"
+// + tenant name. Footer is a generic trust badge ("Sécurisé · Conforme
+// RGPD") with no attribution. The patient must believe they are on the
+// tenant's own portal — no leak of the underlying infrastructure.
 export function PatientLayout() {
   const loc = useLocation();
   const branding = useBranding();
@@ -109,7 +109,7 @@ export function PatientLayout() {
           })}
         </nav>
 
-        {/* Discrete trust footer — Cimolace name only, no logo, no link */}
+        {/* Generic trust footer — no Cimolace, no MEDOS, just a safety cue */}
         <div
           style={{
             padding: '12px 20px',

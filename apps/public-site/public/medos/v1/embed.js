@@ -179,7 +179,9 @@
 
   function renderFoot() {
     if (HIDE_BRAND_FOOTER) return "";
-    return '<p class="medos-foot">Sécurisé · Conforme RGPD · Propulsé par Cimolace</p>';
+    // No attribution to Cimolace in patient-facing surfaces — only a trust
+    // marker. The tenant is the brand the patient sees on the host site.
+    return '<p class="medos-foot">Sécurisé · Conforme RGPD</p>';
   }
 
   // ─── Auth ──────────────────────────────────────────────────────────────

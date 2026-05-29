@@ -39,10 +39,13 @@ function isValidMode(s: string): s is Mode {
   return (VALID_MODES as readonly string[]).includes(s);
 }
 
+// Title is intentionally generic — the iframe sits inside the tenant's
+// site and the parent page already carries the tenant brand in the
+// browser tab. No "Cimolace" / "MEDOS" mention here so an inspect-element
+// curious patient doesn't see infrastructure brand names.
 export const metadata: Metadata = {
-  title: "MEDOS — Cimolace",
-  description: "Portail patient embarqué",
-  // Empêche l'indexation par les moteurs de recherche
+  title: "Mon espace patient",
+  description: "Portail patient sécurisé",
   robots: { index: false, follow: false },
 };
 

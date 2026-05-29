@@ -42,10 +42,11 @@ export type Branding = {
 };
 
 const ENGINE_DEFAULTS = {
-  // Patient-portal engine identity — used until tenant branding loads. This
-  // app targets 95% tenant + 5% Cimolace (Strategy B). The teal default
-  // approximates a clinical, calm palette so the pre-branding flash looks
-  // intentional rather than broken.
+  // Patient-portal engine identity — used until tenant branding loads. The
+  // patient surface targets 100% tenant white-label (no Cimolace, no MEDOS
+  // visible to the patient). The teal default approximates a clinical,
+  // calm palette so the pre-branding flash looks intentional rather than
+  // broken — but it's overridden as soon as /tenants/current resolves.
   name: 'Mon espace',
   logoUrl: null as string | null,
   primary: '#0d9488',

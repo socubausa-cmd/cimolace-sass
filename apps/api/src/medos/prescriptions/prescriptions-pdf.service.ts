@@ -366,7 +366,7 @@ export class PrescriptionsPdfService {
     </div>
 
     <div class="footer">
-      Ce document est généré numériquement par MEDOS — Cimolace Platform.<br/>
+      Ce document est généré numériquement et signé électroniquement par ${escape(tenantName)}.<br/>
       Hash de signature : ${escape(prescription.signature_hash || '—')}
     </div>
   </div>
