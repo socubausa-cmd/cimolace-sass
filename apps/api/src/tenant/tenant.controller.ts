@@ -38,8 +38,10 @@ export class TenantController {
   async brandingBySlug(@Param("slug") slug: string) {
     const tenant = await this.tenantService.getTenantBySlug(slug);
     if (!tenant) {
-      // Don't leak which slugs exist — return 404 silently.
-      return { data: null };
+      // Don't leak which slugs exist — return null (interceptor wraps in
+      // { data: null } automatically). Frontend treats this as "no tenant
+      // found, keep engine defaults".
+      return null;
     }
     const t = tenant as {
       name?: string;
@@ -47,13 +49,16 @@ export class TenantController {
       brand_colors?: Record<string, string> | null;
       slug: string;
     };
+    // Return the bare payload — ResponseInterceptor wraps it in
+    // `{ data: ... }`. The pre-existing `/tenants/current` returns
+    // `{ data: req.tenant }` which double-wraps to
+    // `{ data: { data: req.tenant } }` but only the BrandingProvider
+    // frontends unwrap both layers — we don't replicate that quirk.
     return {
-      data: {
-        slug: t.slug,
-        name: t.name ?? slug,
-        logo_url: t.logo_url ?? null,
-        brand_colors: t.brand_colors ?? {},
-      },
+      slug: t.slug,
+      name: t.name ?? slug,
+      logo_url: t.logo_url ?? null,
+      brand_colors: t.brand_colors ?? {},
     };
   }
 
