@@ -2,42 +2,37 @@ import {
   createContext,
   useContext,
   useEffect,
-  useMemo,
   useState,
   type ReactNode,
 } from 'react';
 
 /**
- * Branding tenant — pulled from `GET /tenants/current` at mount.
+ * Branding tenant — résolu via 3 sources, dans cet ordre :
  *
- * Why a dedicated provider instead of just reading from useAuth: branding
- * needs to be available BEFORE auth completes (login page itself needs the
- * tenant logo). The provider falls back to MEDOS defaults until the API
- * call resolves.
+ *   1. `?tenant=<slug>` dans l'URL (lien d'invitation patient) → écrit dans
+ *      localStorage pour persister entre rechargements.
+ *   2. Sous-domaine du host (`zahir.patient.cimolace.space` → "zahir"). Le
+ *      slug "patient" est ignoré pour ne pas matcher l'URL racine
+ *      `patient.cimolace.space`.
+ *   3. `localStorage.tenant_slug` posé lors d'une session précédente.
  *
- * The provider injects 3 CSS variables on `:root` so any CSS module / inline
- * style can pick them up via `var(--brand-primary)`:
+ * Si l'un de ces 3 channels donne un slug, on fetch
+ * `GET /tenants/by-slug/{slug}/branding` (PUBLIC, sans token) et on
+ * applique. Sinon on garde les engine defaults.
  *
- *   --brand-primary       Main accent (sidebar, buttons, focus rings)
- *   --brand-primary-soft  Same color with low alpha (hover bg, focus ring)
- *   --brand-accent        Secondary accent if defined, falls back to primary
- *
- * Plus the metadata via the `useBranding()` hook for non-color rendering
- * (logo URL, tenant display name).
+ * Une fois le branding pris, on injecte 3 CSS variables sur :root :
+ *   --brand-primary       Main accent
+ *   --brand-primary-soft  Same color with low alpha
+ *   --brand-accent        Secondary accent or primary
  */
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
 export type Branding = {
-  /** Display name of the tenant (e.g. "Zahir Wellness") */
   name: string;
-  /** Logo URL or null — fall back to the engine's default icon */
   logoUrl: string | null;
-  /** Hex color string with leading # */
   primary: string;
-  /** Optional secondary accent — same shape as primary */
   accent: string;
-  /** True while the initial fetch is in flight */
   loading: boolean;
 };
 
@@ -46,7 +41,7 @@ const ENGINE_DEFAULTS = {
   // patient surface targets 100% tenant white-label (no Cimolace, no MEDOS
   // visible to the patient). The teal default approximates a clinical,
   // calm palette so the pre-branding flash looks intentional rather than
-  // broken — but it's overridden as soon as /tenants/current resolves.
+  // broken — but it's overridden as soon as the tenant lookup resolves.
   name: 'Mon espace',
   logoUrl: null as string | null,
   primary: '#0d9488',
@@ -59,7 +54,6 @@ const BrandingContext = createContext<Branding>({
 });
 
 function addAlpha(hex: string, alpha: string): string {
-  // Inputs like "#3b82f6" → "#3b82f633" for soft variants.
   if (!hex || hex[0] !== '#') return hex;
   if (hex.length === 7) return hex + alpha;
   if (hex.length === 4) {
@@ -78,18 +72,56 @@ function applyCssVars(b: Branding) {
   root.setProperty('--brand-accent', b.accent);
 }
 
-export function BrandingProvider({
-  children,
-  tenantSlug,
-}: {
-  children: ReactNode;
-  /**
-   * The tenant slug used as `X-Tenant-Slug` header. Read from localStorage
-   * by callers (set during login). When missing we keep engine defaults
-   * silently — no error.
-   */
-  tenantSlug?: string;
-}) {
+/**
+ * Resolve the tenant slug from URL → subdomain → localStorage.
+ * Returns null if no tenant context can be inferred (root URL on
+ * patient.cimolace.space with no query param).
+ */
+function resolveTenantSlug(): string | null {
+  if (typeof window === 'undefined') return null;
+  // 1. URL query param (priority — handles invitation links).
+  const qp = new URLSearchParams(window.location.search).get('tenant');
+  if (qp) {
+    try {
+      localStorage.setItem('tenant_slug', qp);
+    } catch {
+      /* ignore */
+    }
+    return qp;
+  }
+  // 2. Subdomain — e.g. zahir.patient.cimolace.space → "zahir"
+  // We ignore the generic ones used as platform infrastructure.
+  const host = window.location.hostname.split(':')[0].toLowerCase();
+  const PLATFORM_HOSTS = new Set([
+    'patient.cimolace.space',
+    'med.cimolace.space',
+    'app.cimolace.space',
+    'cimolace.space',
+    'localhost',
+  ]);
+  if (!PLATFORM_HOSTS.has(host)) {
+    const parts = host.split('.');
+    // {tenant}.patient.cimolace.space → tenant
+    if (parts.length >= 4 && parts[1] === 'patient') {
+      try {
+        localStorage.setItem('tenant_slug', parts[0]);
+      } catch {
+        /* ignore */
+      }
+      return parts[0];
+    }
+  }
+  // 3. localStorage (sticky from a previous visit / authenticated session).
+  try {
+    const stored = localStorage.getItem('tenant_slug');
+    if (stored) return stored;
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+export function BrandingProvider({ children }: { children: ReactNode }) {
   const [branding, setBranding] = useState<Branding>({
     ...ENGINE_DEFAULTS,
     loading: true,
@@ -101,23 +133,27 @@ export function BrandingProvider({
 
   useEffect(() => {
     let cancelled = false;
-    const token = localStorage.getItem('supabase_token');
-    const slug = tenantSlug || localStorage.getItem('tenant_slug') || '';
-    if (!token || !slug) {
+    const slug = resolveTenantSlug();
+    if (!slug) {
       setBranding((b) => ({ ...b, loading: false }));
       return;
     }
-    fetch(`${API}/tenants/current`, {
-      headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug },
-    })
+    // PUBLIC endpoint — no Authorization header required. Works on the
+    // login page before any auth.
+    fetch(`${API}/tenants/by-slug/${encodeURIComponent(slug)}/branding`)
       .then((r) => (r.ok ? r.json() : null))
       .then((payload) => {
         if (cancelled || !payload) return;
-        const t = payload?.data || payload;
-        const colors = (t?.brand_colors || {}) as Record<string, string>;
+        const t = payload?.data;
+        if (!t) {
+          // Slug invalide : on garde engine defaults
+          setBranding((b) => ({ ...b, loading: false }));
+          return;
+        }
+        const colors = (t.brand_colors || {}) as Record<string, string>;
         setBranding({
-          name: t?.name || ENGINE_DEFAULTS.name,
-          logoUrl: t?.logo_url || null,
+          name: t.name || ENGINE_DEFAULTS.name,
+          logoUrl: t.logo_url || null,
           primary: colors.primary || ENGINE_DEFAULTS.primary,
           accent:
             colors.accent || colors.secondary || ENGINE_DEFAULTS.accent,
@@ -132,7 +168,7 @@ export function BrandingProvider({
     return () => {
       cancelled = true;
     };
-  }, [tenantSlug]);
+  }, []);
 
   return (
     <BrandingContext.Provider value={branding}>
@@ -141,10 +177,7 @@ export function BrandingProvider({
   );
 }
 
-/**
- * Read the active branding. Falls back to engine defaults if no provider
- * (so legacy pages still render).
- */
+/** Read the active branding. */
 export function useBranding(): Branding {
   return useContext(BrandingContext);
 }

@@ -25,6 +25,39 @@ export class TenantController {
   }
 
   /**
+   * Public endpoint — branding-only lookup by tenant slug.
+   *
+   * Returns just the visible-to-public surface (name, logo_url, brand_colors).
+   * No auth required — so the login pages of patient-portal / med-app can
+   * theme themselves BEFORE the user is authenticated, when the URL carries
+   * a `?tenant=<slug>` query param or a subdomain.
+   *
+   * Returns 404 if the slug doesn't match an active tenant.
+   */
+  @Get("by-slug/:slug/branding")
+  async brandingBySlug(@Param("slug") slug: string) {
+    const tenant = await this.tenantService.getTenantBySlug(slug);
+    if (!tenant) {
+      // Don't leak which slugs exist — return 404 silently.
+      return { data: null };
+    }
+    const t = tenant as {
+      name?: string;
+      logo_url?: string | null;
+      brand_colors?: Record<string, string> | null;
+      slug: string;
+    };
+    return {
+      data: {
+        slug: t.slug,
+        name: t.name ?? slug,
+        logo_url: t.logo_url ?? null,
+        brand_colors: t.brand_colors ?? {},
+      },
+    };
+  }
+
+  /**
    * Self-serve branding update — a tenant owner / admin editing their own
    * tenant from within apps/app. The TenantGuard resolves the tenant from
    * `X-Tenant-Slug` and we trust the auth context.

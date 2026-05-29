@@ -40,6 +40,17 @@ export class TenantService {
     return this.resolveTenant(userId, slug);
   }
 
+  async getTenantBySlug(slug: string) {
+    const supabase = this.authService.getClient();
+    const { data } = await supabase
+      .from("tenants")
+      .select("slug, name, logo_url, brand_colors, status")
+      .eq("slug", slug)
+      .single();
+    if (!data || (data as any).status !== "active") return null;
+    return data;
+  }
+
   async getTenantById(tenantId: string) {
     const supabase = this.authService.getClient();
     const { data } = await supabase
