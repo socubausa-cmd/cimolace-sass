@@ -1,0 +1,74 @@
+{
+  "longia_guest_assistant": {
+    "id": "longia_guest_v1",
+    "enabled": true,
+    "role": "personal_live_learning_assistant",
+    "input_channels": {
+      "transcript_partial": true,
+      "transcript_final": true,
+      "teacher_notifications_shared": true,
+      "student_clicks": true,
+      "student_questions": true,
+      "course_context": true,
+      "student_profile": true
+    },
+    "student_modes": {
+      "discreet": {
+        "show_summary": true,
+        "show_help_buttons": true,
+        "auto_explanations": false,
+        "auto_notes": true
+      },
+      "assisted": {
+        "show_summary": true,
+        "show_help_buttons": true,
+        "auto_explanations": true,
+        "auto_notes": true
+      },
+      "coach": {
+        "show_summary": true,
+        "show_help_buttons": true,
+        "auto_explanations": true,
+        "auto_notes": true,
+        "adaptive_guidance": true
+      }
+    },
+    "core_modules": {
+      "live_summary_engine": {
+        "outputs": ["current_summary", "key_point", "definition_detected", "important_warning"]
+      },
+      "simplification_engine": {
+        "outputs": ["simplified_explanation", "analogy", "short_version", "example"]
+      },
+      "confusion_detector": {
+        "outputs": ["confusion_score", "topic_of_confusion", "needs_rephrase", "needs_example"]
+      },
+      "personal_notes_engine": {
+        "outputs": ["student_notes", "key_takeaways", "review_flags"]
+      },
+      "teacher_signal_bridge": {
+        "outputs": ["aggregated_confusion_signal", "priority_question_candidate"]
+      }
+    },
+    "ui_actions": [
+      "explain_again",
+      "simplify",
+      "give_example",
+      "what_to_remember",
+      "add_to_notes",
+      "ask_question",
+      "mark_confusing",
+      "show_definition",
+      "simplify_more"
+    ],
+    "response_schema_hint": {
+      "message": "string",
+      "summary": "string_optional",
+      "explanation": "string_optional",
+      "example": "string_optional",
+      "actions": [{ "label": "string", "action": "string", "payload": "object_optional" }],
+      "notes_update": { "enabled": "boolean", "content": "string_optional" },
+      "teacher_signal": { "send": "boolean", "type": "string_optional", "payload": "object_optional" }
+    }
+  }
+}

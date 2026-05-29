@@ -1,0 +1,152 @@
+:root {
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+  line-height: 1.5;
+  color: #0f172a;
+  background: #f8fafc;
+}
+
+#root {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  text-align: left;
+}
+
+.app-shell__header {
+  margin-bottom: 1.5rem;
+}
+
+.app-shell__header h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+}
+
+.app-shell__subtitle {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.debug-api {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 6%);
+}
+
+.debug-api h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.debug-api h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.debug-api__meta {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.debug-api__meta code {
+  background: #f1f5f9;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.debug-api__label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 1rem;
+}
+
+.debug-api__token {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  resize: vertical;
+  min-height: 4rem;
+}
+
+.debug-api__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.debug-api__actions button {
+  cursor: pointer;
+  border: 1px solid #94a3b8;
+  background: #f8fafc;
+  color: #0f172a;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.debug-api__actions button:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.debug-api__actions button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.debug-api__panels {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 720px) {
+  .debug-api__panels {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.debug-api__panel {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  background: #fafafa;
+}
+
+.debug-api__status {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: #15803d;
+}
+
+.debug-api__status--bad {
+  color: #b45309;
+}
+
+.debug-api__err {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: #b91c1c;
+}
+
+.debug-api__pre {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  font-size: 0.75rem;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -1,0 +1,409 @@
+/**
+ * LIRI — shell visuel pour l’APPLICATION WEB (desktop / navigateur)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * CHARTE GRAPHIQUE LIRI — référence produit (valeurs, logo, couleurs, typo)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * Typographie UI : **Inter** (weights chargées dans index.html).
+ *
+ * ── Valeurs visuelles (icônes / accents sémantiques) ───────────────────────
+ *   INTELLIGENCE    → violet   (#7C3AED) — cerveau, analyse
+ *   RAPIDITÉ        → cyan     (#00E5FF) — éclair, temps réel  (bleu électrique charte)
+ *   FIABILITÉ       → teal     (#14B8A6) — bouclier / confiance
+ *   COLLABORATION   → violet   (#7C3AED) — binôme / interaction
+ *   EXCELLENCE      → or       (#D4AF37) — étoile premium
+ *
+ * ── Palette principale (interfaces) ────────────────────────────────────────
+ *   Violet #7C3AED · Bleu #3B82F6 · Cyan #00E5FF · Or cosmique #D4AF37 · Nuit #0B1020
+ *
+ * ── Logo + baseline « INTELLIGENCE LIVE AUGMENTÉE » ─────────────────────────
+ *   Fond sombre / noir : mot « LIRI » en dégradé violet → cyan ; point du i violet +
+ *     halo lumineux ; baseline en blanc.
+ *   Fond dégradé bleu-violet : « LIRI » blanc ; point du i violet + halo léger ; baseline blanche.
+ *   Fond blanc : « LIRI » noir ; point du i violet plein (sans halo) ; baseline noire.
+ *
+ * Dégradé signature logo (fonds sombres) : `--liri-charte-logo-gradient`
+ *
+ * Les jetons `--liri-charte-*` matérialisent cette charte. Les `--liri-*` historiques
+ * (shell maquette, halos) restent pour compatibilité ; préférer `theme(liri.*)` Tailwind
+ * ou `var(--liri-charte-…)` pour tout écran neuf.
+ *
+ * Ne pas modifier les composants `eleve-mobile/*` pour ce thème : uniquement CSS global ici.
+ */
+
+:root {
+  /* ── Charte LIRI (identité visuelle — ne pas diverger sans mise à jour charte) ─ */
+  --liri-charte-violet: #7c3aed;
+  --liri-charte-blue: #3b82f6;
+  --liri-charte-cyan: #00e5ff;
+  --liri-charte-teal: #14b8a6;
+  --liri-charte-gold: #d4af37;
+  --liri-charte-night: #0b1020;
+  /** Encre logo sur fond clair (variante charte) */
+  --liri-charte-ink: #0a0a0a;
+  --liri-charte-logo-gradient: linear-gradient(90deg, var(--liri-charte-violet) 0%, var(--liri-charte-cyan) 100%);
+  /** Halo du point « i » sur fonds sombres (réglable par écran) */
+  --liri-charte-logo-dot-glow: 0 0 12px 2px rgba(124, 58, 237, 0.45);
+
+  /* Cœur “mobile maquette” */
+  --liri-bg: #0b0b0f;
+  --liri-bg-elevated: #0f1419;
+  --liri-surface: #16161e;
+  --liri-surface-2: #12121e;
+  --liri-surface-glass: rgba(22, 24, 32, 0.72);
+  --liri-primary: #7b61ff;
+  --liri-secondary: #6366f1;
+  --liri-accent: #7b61ff;
+  --liri-gold: var(--liri-charte-gold);
+  --liri-glow: 0 8px 28px -6px rgba(123, 97, 255, 0.35);
+  --liri-glow-hero: 0 24px 50px -20px rgba(40, 20, 80, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --liri-border: rgba(255, 255, 255, 0.08);
+  --liri-border-gold: rgba(212, 175, 55, 0.35);
+  --liri-text: #f5f5f7;
+  --liri-muted: #8e8e93;
+  /* Halos (empilés) — proches de `evHaloAtmosphere` */
+  --liri-ambient-hero: radial-gradient(ellipse 120% 70% at 50% -15%, rgba(99, 102, 241, 0.22) 0%, rgba(99, 102, 241, 0.06) 38%, transparent 58%);
+  --liri-ambient-side-l: radial-gradient(ellipse 90% 55% at -5% 18%, rgba(59, 130, 246, 0.16) 0%, transparent 52%);
+  --liri-ambient-side-r: radial-gradient(ellipse 85% 50% at 102% 22%, rgba(168, 85, 247, 0.14) 0%, transparent 52%);
+  --liri-ambient-bottom: radial-gradient(ellipse 100% 55% at 50% 108%, rgba(15, 15, 35, 0.55) 0%, rgba(0, 0, 0, 0.35) 40%, transparent 65%);
+  --liri-ambient-top-bar: radial-gradient(50% 32% at 50% 0%, rgba(123, 97, 255, 0.12), transparent 70%);
+
+  /* Raccords avec l’existant `index.css` / Tailwind arbitraires */
+  --primary-gold: var(--liri-gold);
+  --bg-navy: var(--liri-bg-elevated);
+  --text-white: var(--liri-text);
+  --accent-violet: var(--liri-primary);
+  --accent-blue: var(--liri-charte-blue);
+  --premium-surface: #121a25;
+  --premium-surface-2: #192734;
+  /* Typo charte : Inter en premier (weights 300–800 chargées dans index.html) */
+  --app-font-main: 'Inter', -apple-system, blinkmacsystemfont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+  --app-font-display: -apple-system, blinkmacsystemfont, 'SF Pro Display', 'Cinzel', 'Playfair Display', serif;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Document — même ADN que le fond élève (sans changer la structure du DOM)   */
+/* -------------------------------------------------------------------------- */
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--app-font-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--liri-bg-elevated);
+  background-image: var(--liri-ambient-hero), var(--liri-ambient-side-l), var(--liri-ambient-side-r), var(--liri-ambient-bottom), var(--liri-ambient-top-bar),
+    linear-gradient(180deg, #101018 0%, var(--liri-bg) 18%, var(--liri-bg) 82%, #040408 100%);
+  background-attachment: fixed;
+  color: var(--liri-text);
+  overflow-x: hidden;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Shells app & marketing (grilles / flex inchangés — seulement peinture)     */
+/* -------------------------------------------------------------------------- */
+
+.premium-app-shell,
+.premium-dashboard-shell,
+#root .premium-app-shell,
+#root .premium-dashboard-shell {
+  background-color: var(--liri-bg) !important;
+  background-image: var(--liri-ambient-top-bar), var(--liri-ambient-hero) !important;
+  background-attachment: fixed;
+  color: var(--liri-text) !important;
+}
+
+/* flex / min-h sur le même nœud que dans App.jsx — seulement couleurs ici */
+.marketing-public-shell {
+  background-color: var(--liri-bg) !important;
+  background-image: var(--liri-ambient-hero), var(--liri-ambient-side-l), var(--liri-ambient-side-r), var(--liri-ambient-bottom), var(--liri-ambient-top-bar),
+    linear-gradient(180deg, #0a0a12 0%, var(--liri-bg) 14%, var(--liri-bg) 86%, #050508 100%) !important;
+  background-attachment: fixed !important;
+  color: var(--liri-text) !important;
+}
+
+.premium-sidebar,
+#root .premium-sidebar,
+#root .premium-dashboard-shell .premium-sidebar {
+  border-right-width: 1px;
+  border-right-style: solid;
+  border-color: var(--liri-border) !important;
+  backdrop-filter: blur(20px) saturate(1.15);
+  -webkit-backdrop-filter: blur(20px) saturate(1.15);
+  /* repli solide si `color-mix` indisponible (évite sidebar « blanche ») */
+  background-color: rgba(22, 22, 30, 0.94) !important;
+  background: color-mix(in srgb, var(--liri-surface) 92%, transparent) !important;
+  color: var(--liri-text) !important;
+}
+
+.premium-topbar,
+#root .premium-topbar,
+#root .premium-dashboard-shell .premium-topbar {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-color: var(--liri-border) !important;
+  backdrop-filter: blur(20px) saturate(1.15);
+  -webkit-backdrop-filter: blur(20px) saturate(1.15);
+  background-color: rgba(22, 22, 30, 0.82) !important;
+  background: color-mix(in srgb, var(--liri-surface) 80%, transparent) !important;
+  color: var(--liri-text) !important;
+}
+
+.premium-panel {
+  border-radius: 1rem;
+  border: 1px solid var(--liri-border);
+  background: color-mix(in srgb, var(--liri-surface) 70%, transparent);
+  backdrop-filter: blur(18px) saturate(1.15);
+  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+  box-shadow: var(--liri-glow-hero);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Header global (routes avec barre site — pas /m/eleve)                      */
+/* -------------------------------------------------------------------------- */
+
+#root .premium-app-shell > header {
+  background: color-mix(in srgb, var(--liri-surface) 78%, rgba(0, 0, 0, 0.2)) !important;
+  border-bottom: 1px solid var(--liri-border) !important;
+  backdrop-filter: blur(20px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.2) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+#root .premium-app-shell > header nav a {
+  transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+#root .premium-app-shell > header nav a:hover {
+  color: var(--liri-gold) !important;
+  background: rgba(123, 97, 255, 0.1) !important;
+}
+
+#root .premium-app-shell > header [class*='border'][class*='D4AF37'] {
+  border-color: var(--liri-border-gold) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* main — léger rappel d’atmosphère (sans padding / grid)                      */
+/* -------------------------------------------------------------------------- */
+
+/* Sous le header fixe : pas de bande claire (ex. `bg-slate-50` / utilitaires) */
+#root .premium-app-shell > main,
+#root .marketing-public-shell > main,
+#root .premium-app-shell main {
+  background: transparent !important;
+}
+
+/* Colonne principale (flex-1) à droite de la sidebar — pas de fond clair résiduel */
+#root .premium-dashboard-shell > .flex-1 {
+  background-color: transparent !important;
+}
+#root .premium-app-shell .premium-dashboard-shell > main {
+  background-color: transparent !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Formulaires (zones app premium / marketing)                                 */
+/* -------------------------------------------------------------------------- */
+
+.premium-app-shell input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+.premium-app-shell textarea,
+.premium-app-shell select,
+.marketing-public-shell input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+.marketing-public-shell textarea,
+.marketing-public-shell select {
+  color: var(--liri-text);
+  caret-color: var(--liri-primary);
+}
+
+.premium-app-shell input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):focus-visible,
+.premium-app-shell textarea:focus-visible,
+.premium-app-shell select:focus-visible,
+.marketing-public-shell input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):focus-visible,
+.marketing-public-shell textarea:focus-visible,
+.marketing-public-shell select:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--liri-primary) 55%, transparent);
+  outline-offset: 1px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Liens seconde zone hero / sections (sans modifier les composants)          */
+/* -------------------------------------------------------------------------- */
+
+.marketing-public-shell a {
+  text-underline-offset: 3px;
+}
+
+.marketing-public-shell a:hover {
+  text-decoration-color: color-mix(in srgb, var(--liri-primary) 60%, transparent);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--liri-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--liri-muted) 45%, var(--liri-surface));
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--liri-gold) 45%, var(--liri-muted));
+}
+
+/* Sélection */
+::selection {
+  background: color-mix(in srgb, var(--liri-primary) 38%, transparent);
+  color: var(--liri-text);
+}
+
+/* -------------------------------------------------------------------------- */
+/* App mobile LIRI `/m/eleve` — cohérence avec l’accueil connexion (cartes, CTA) */
+/* -------------------------------------------------------------------------- */
+
+.eleve-mobile-root {
+  /* Réutilise les mêmes tokens que :root — les écrans Prorascience s’alignent sur EV_BG. */
+  --liri-headline-lavender: #c4b5fd;
+}
+
+/**
+ * Utilitaires optionnels (composant préféré : `LiriActionRow` dans `eleve-mobile/`).
+ * - `.liri-cta-pill` : dégradé violet type bouton « Rejoindre avec un lien »
+ */
+.liri-cta-pill {
+  background: linear-gradient(90deg, var(--liri-primary) 0%, #5b21b6 100%);
+  border-radius: 1.125rem;
+  box-shadow: var(--liri-glow);
+  color: var(--liri-text);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Live Studio Wizard — premium admin parity (Step1..Step8)                   */
+/* -------------------------------------------------------------------------- */
+
+.live-studio-premium h2 {
+  font-family: var(--app-font-main);
+  letter-spacing: -0.02em;
+}
+
+.live-studio-premium .rounded-2xl.border:not([class*='border-[#']),
+.live-studio-premium .rounded-xl.border:not([class*='border-[#']) {
+  border-color: var(--liri-border) !important;
+  background: color-mix(in srgb, var(--liri-surface) 72%, transparent) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Inputs : pas de !important sur bordures — les étapes utilisent Tailwind (#7B61FF, #2D3139) */
+.live-studio-premium input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+.live-studio-premium textarea,
+.live-studio-premium [role='combobox'],
+.live-studio-premium select {
+  color: var(--liri-text);
+  caret-color: #7b61ff;
+}
+
+.live-studio-premium input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):focus-visible,
+.live-studio-premium textarea:focus-visible,
+.live-studio-premium [role='combobox']:focus-visible,
+.live-studio-premium select:focus-visible {
+  outline: none;
+}
+
+
+.live-studio-frame {
+  border-top: 1px solid #2d3139;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* Colonnes plein écran — même langage visuel que la maquette (#0F1117, #2D3139, #7B61FF) */
+.live-studio-premium .live-studio-pane-head {
+  flex-shrink: 0;
+  border-bottom: 1px solid #2d3139;
+  background: linear-gradient(180deg, rgba(22, 26, 34, 0.98) 0%, rgba(15, 17, 23, 0.96) 100%);
+  padding: 0.625rem 0.75rem;
+}
+
+.live-studio-premium .live-studio-pane-head-title {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.live-studio-premium .live-studio-pane-left {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: linear-gradient(180deg, #161a22 0%, #0f1117 45%, #0c0e12 100%);
+  border-right: 1px solid #2d3139;
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.04);
+}
+
+.live-studio-premium .live-studio-pane-center {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -15%, rgba(123, 97, 255, 0.08), transparent 52%),
+    radial-gradient(ellipse 70% 40% at 80% 100%, rgba(59, 130, 246, 0.04), transparent 50%),
+    #0f1117;
+  border-right: 1px solid #2d3139;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.live-studio-premium .live-studio-pane-right {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  background: linear-gradient(180deg, #14161c 0%, #0f1117 55%, #0c0e12 100%);
+  border-left: 1px solid #2d3139;
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.03);
+}
+
+.live-studio-premium .live-studio-global-progress {
+  height: 3px;
+  flex-shrink: 0;
+  background: #1a1e28;
+}
+
+.live-studio-premium .live-studio-global-progress-fill {
+  height: 100%;
+  border-radius: 0 2px 2px 0;
+  background: linear-gradient(90deg, #4c1d95, #7b61ff 45%, #c4b5fd);
+  transition: width 0.35s ease;
+}
+
+.live-studio-premium .live-studio-stepper-track {
+  border-radius: 0.5rem;
+  border: 1px solid #2d3139;
+  background: rgba(18, 20, 26, 0.92);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.live-studio-premium .premium-topbar {
+  background: linear-gradient(180deg, rgba(20, 22, 28, 0.98) 0%, rgba(15, 17, 23, 0.99) 100%) !important;
+  box-shadow: inset 0 -1px 0 rgba(45, 49, 57, 0.9);
+}
+
+.live-studio-premium .premium-panel {
+  border-radius: 14px !important;
+  box-shadow: 0 10px 34px -24px rgba(123, 97, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}

@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: hsl(0, 0%, 100%);
+    --foreground: hsl(0, 0%, 0%);
+    --skeleton: hsl(0, 0%, 90%);
+    --border: hsl(220, 20%, 90%);
+    --btn-border: hsl(214deg, 31.8%, 91.4%);
+    --input: hsl(220, 20%, 90%);
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: hsl(222, 94%, 5%);
+    --foreground: hsl(0, 0%, 100%);
+    --skeleton: hsl(218, 36%, 16%);
+    --border: hsl(220, 20%, 90%);
+    --btn-border: hsl(217deg, 32.6%, 17.5%);
+    --input: hsl(219, 63%, 16%);
+    --radius: 0.5rem;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .g-button {
+    @apply rounded-[var(--radius)] border;
+    border-color: var(--btn-border)
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body,
+button,
+input,
+textarea,
+select {
+  font-family: var(--app-font-main);
+}
+
+h1, h2, h3, h4, h5, h6,
+.font-serif,
+.font-sans {
+  font-family: var(--app-font-main) !important;
+}
+
+.font-display {
+  font-family: var(--app-font-display);
+  letter-spacing: -0.02em;
+}
+
+/* Custom Utilities */
+.text-gold { color: var(--primary-gold); }
+.bg-gold { background-color: var(--primary-gold); }
+.border-gold { border-color: var(--primary-gold); }
+
+.glass-panel {
+  @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-xl;
+}
+
+.glass-card {
+  @apply bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl transition-all duration-300 hover:bg-white/10 hover:border-purple-500/30 hover:shadow-2xl hover:-translate-y-1;
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-600 text-black font-bold py-3 px-6 rounded-lg shadow-lg hover:shadow-yellow-500/20 hover:scale-105 transition-all duration-300;
+}
+
+.btn-secondary {
+  @apply bg-transparent border-2 border-yellow-500/50 text-yellow-500 font-semibold py-3 px-6 rounded-lg hover:bg-yellow-500/10 hover:border-yellow-500 transition-all duration-300;
+}
+
+.gradient-text-gold {
+  @apply text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-yellow-400 to-yellow-600;
+}
+
+/* Live-room full-screen mode (hide global header offset) */
+body.live-room-active header {
+  display: none !important;
+}
+
+body.live-room-active main {
+  padding-top: 0 !important;
+}
+
+/* Animations */
+.fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Alert Blinking Animation */
+@keyframes blink {
+  0%, 100% {
+    background-color: rgba(239, 68, 68, 0.1); /* Red-500 with low opacity */
+    border-color: #DC2626;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    background-color: rgba(249, 115, 22, 0.2); /* Orange-500 with low opacity */
+    border-color: #EA580C;
+    box-shadow: 0 0 30px rgba(249, 115, 22, 0.4);
+  }
+}
+
+@keyframes pulse-custom {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+.animate-blink-bg {
+  animation: blink 1.5s infinite ease-in-out;
+}
+
+.animate-pulse-custom {
+  animation: pulse-custom 1.5s infinite ease-in-out;
+}
+
+/* Bandeau Arena — cadre or qui respire sur les emplacements vides */
+@keyframes arenaSlotAwait {
+  0%,
+  100% {
+    opacity: 0.72;
+    box-shadow:
+      inset 0 0 0 1px rgba(212, 175, 55, 0.2),
+      0 0 10px -5px rgba(212, 175, 55, 0.25);
+  }
+  50% {
+    opacity: 1;
+    box-shadow:
+      inset 0 0 0 1px rgba(212, 175, 55, 0.42),
+      0 0 18px -4px rgba(212, 175, 55, 0.5);
+  }
+}
+
+.animate-arena-slot-await {
+  animation: arenaSlotAwait 1.85s ease-in-out infinite;
+}
+
+/* Active Class Gradient Badge */
+.badge-live-pulse {
+  @apply relative inline-flex;
+}
+.badge-live-pulse span:first-child {
+  @apply animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75;
+}
+.badge-live-pulse span:last-child {
+  @apply relative inline-flex rounded-full h-2 w-2 bg-red-500;
+}
+

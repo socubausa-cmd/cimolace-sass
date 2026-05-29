@@ -1,0 +1,320 @@
+/**
+ * ISNA Products Catalog — socles technologiques & pages produit
+ * Chaque produit regroupe un socle technologique, ses fonctionnalités publiques,
+ * la cible, la solution apportée, les problèmes résolus et la comparaison marché.
+ * 
+ * NOTE: Ce fichier sera progressivement migré pour utiliser le système de configuration tenant.
+ * Pour l'instant, il contient les données par défaut pour ISNA.
+ */
+
+import { getTenantConfig } from '../lib/tenant/getCurrentTenant.js';
+
+export const ISNA_TECH_STACKS = {
+  livekit: {
+    name: 'LiveKit Engine',
+    color: '#22D3EE',
+    description: 'Streaming vidéo/audio temps réel, tracks, screen share',
+  },
+  supabase: {
+    name: 'Supabase Realtime',
+    color: '#3ECF8E',
+    description: 'Base de données temps réel, auth, storage, edge functions',
+  },
+  openai: {
+    name: 'GPT-4o Brain',
+    color: '#AB68FF',
+    description: 'Moteur IA profond — analyse, génération, coaching',
+  },
+  konva: {
+    name: 'Konva Canvas',
+    color: '#F59E0B',
+    description: 'Moteur de rendu vectoriel 2D interactif',
+  },
+  mediarecorder: {
+    name: 'MediaRecorder API',
+    color: '#F43F5E',
+    description: 'Enregistrement natif navigateur — vidéo + audio',
+  },
+  liriAudio: {
+    name: 'LIRI Audio Engine',
+    color: '#8B5CF6',
+    description: 'Moteur audio scènes — ducking, sync smartboard, ambiance',
+  },
+  neuroRecall: {
+    name: 'NeuroRecall Engine',
+    color: '#10B981',
+    description: 'Flashcards IA post-session, progression mémorisation',
+  },
+  framerMotion: {
+    name: 'Framer Motion',
+    color: '#EC4899',
+    description: 'Animations fluides, transitions immersives',
+  },
+  multilang: {
+    name: 'LIRI Multilang',
+    color: '#6366F1',
+    description: 'Traduction live multilingue + export SRT/TXT',
+  },
+};
+
+export const ISNA_PRODUCTS = [
+  {
+    id: 'live-arena',
+    slug: 'live-arena',
+    name: 'Live Arena',
+    tagline: "La salle de cours en direct la plus immersive jamais conçue pour l'enseignement spirituel.",
+    heroGradient: 'from-[#0a0f1e] via-[#0d1b35] to-[#0a0f1e]',
+    accentColor: '#F59E0B',
+    accentGlow: 'rgba(245,158,11,0.25)',
+    category: 'Live',
+    icon: '🔴',
+    stacks: ['livekit', 'supabase', 'liriAudio', 'mediarecorder', 'framerMotion', 'multilang'],
+    audience: [
+      'Enseignants spirituels donnant cours à distance',
+      'Institutions pédagogiques avec élèves multi-pays',
+      'Formateurs cherchant une expérience premium immersive',
+    ],
+    story: {
+      problem: "Un professeur devait jongler entre Zoom, WhatsApp, Google Slides et un enregistreur séparé. Ses élèves étaient dispersés, le son coupait, il n'y avait aucune mémoire des sessions passées.",
+      revelation: "Et si la salle de cours était un studio de diffusion, un tableau vivant et une salle de concert — tout en un seul espace ?",
+      solution: "Live Arena est une salle immersive complète : vidéo HD multi-participants, SmartBoard synchronisé, audio scènes avec ambiance musicale, traduction simultanée, enregistrement automatique et replay intelligent.",
+    },
+    features: [
+      { icon: '🎥', title: 'Vidéo HD multi-participants', desc: 'Jusqu\'à 50 participants avec vidéo et audio LiveKit de qualité studio' },
+      { icon: '🎵', title: 'Audio Scènes LIRI', desc: 'Ambiances musicales synchronisées avec le tableau — intro, culte, méditation, masterclass' },
+      { icon: '🌐', title: 'Traduction live', desc: 'Captions traduites en temps réel, exportables en SRT après la session' },
+      { icon: '⏺️', title: 'Enregistrement automatique', desc: 'MediaRecorder → Supabase Storage — replay disponible immédiatement' },
+      { icon: '🙋', title: 'Gestion de salle intelligente', desc: 'Mains levées, permissions, sièges, files de questions publiques' },
+      { icon: '📱', title: 'Mode mobile natif', desc: 'Interface mobile optimisée avec gestes tactiles et layout adapté' },
+    ],
+    problems: [
+      'Fragmentation des outils (5 apps pour 1 cours)',
+      'Perte des enregistrements de sessions',
+      'Barrière de langue pour les élèves étrangers',
+      'Absence d\'ambiance et d\'immersion dans les cours digitaux',
+      'Impossible de partager un tableau en temps réel sur mobile',
+    ],
+    comparisons: [
+      { competitor: 'Zoom', them: 'Partage écran basique, pas de tableau IA, pas d\'audio scenes', us: 'SmartBoard synchronisé, LIRI Audio Engine, replay IA' },
+      { competitor: 'Google Meet', them: 'Aucun outil pédagogique intégré', us: 'MasterScript, NeuroRecall, agents IA live' },
+      { competitor: 'Teams', them: 'Lourd, corporate, sans pédagogie spirituelle', us: 'Conçu pour l\'enseignement ISNA — rôles, ambiance, rituel' },
+    ],
+  },
+  {
+    id: 'smartboard',
+    slug: 'smartboard',
+    name: 'SmartBoard LIRI',
+    tagline: "Un tableau blanc qui pense. Conçu pour transmettre, pas juste pour écrire.",
+    heroGradient: 'from-[#050e1a] via-[#0a1628] to-[#050e1a]',
+    accentColor: '#22D3EE',
+    accentGlow: 'rgba(34,211,238,0.2)',
+    category: 'Studio',
+    icon: '🧊',
+    stacks: ['konva', 'openai', 'supabase', 'framerMotion'],
+    audience: [
+      'Enseignants créant des supports visuels pour leurs cours',
+      'Formateurs voulant structurer un cours en scènes',
+      'Directeurs pédagogiques architecturant des programmes',
+    ],
+    story: {
+      problem: "Un enseignant passe 3 heures à faire des slides PowerPoint, les exporte en PDF, les partage par email, et pendant le cours il ne peut pas annoter en direct. Ses élèves suivent sur papier.",
+      revelation: "Et si le tableau savait déjà ce que tu veux enseigner — et construisait la scène avec toi ?",
+      solution: "SmartBoard LIRI est un éditeur Konva 1037×750 avec un copilote IA intégré : génération de scènes depuis un sujet, annotations en direct synchronisées avec tous les participants, export et workspaces cloud.",
+    },
+    features: [
+      { icon: '🎨', title: 'Canvas Konva 1037×750', desc: 'Moteur vectoriel professionnel — textes, formes, images, stylo libre' },
+      { icon: '🤖', title: 'Course Copilot IA', desc: 'Génère les blocs SmartBoard depuis un sujet ou une transcription' },
+      { icon: '✏️', title: 'Annotations live synchronisées', desc: 'Tous les participants voient les annotations en temps réel via Supabase Realtime' },
+      { icon: '📄', title: 'Multi-pages & scènes', desc: 'Naviguez entre scènes : intro, présentation, débat, conclusion' },
+      { icon: '☁️', title: 'Workspaces cloud', desc: 'Sauvegarde automatique, historique des versions, import Polotno' },
+      { icon: '📤', title: 'Export PNG / PDF', desc: 'Exportez chaque scène ou le tableau complet en haute résolution' },
+    ],
+    problems: [
+      'Slides statiques impossibles à modifier en live',
+      'Aucune synchronisation tableau → élèves à distance',
+      'Des heures de préparation pour 45 min de cours',
+      'Impossible de générer visuellement un plan de cours en IA',
+      'Annotations perdues après la session',
+    ],
+    comparisons: [
+      { competitor: 'PowerPoint / Keynote', them: 'Statique, aucun IA, aucun live sync', us: 'Canvas live + copilot IA + sync Realtime' },
+      { competitor: 'Miro', them: 'Tableau collaboratif sans pédagogie ni IA', us: 'Scènes pédagogiques, MasterScript intégré, export cours' },
+      { competitor: 'Canva', them: 'Design graphique, pas de live ni d\'IA pédagogique', us: 'Créé pour l\'enseignement — contexte ISNA, blocs cours auto' },
+    ],
+  },
+  {
+    id: 'neurorecall',
+    slug: 'neurorecall',
+    name: 'NeuroRecall',
+    tagline: "La mémoire de chaque session. Vos élèves n'oublient plus rien.",
+    heroGradient: 'from-[#040d0a] via-[#061812] to-[#040d0a]',
+    accentColor: '#10B981',
+    accentGlow: 'rgba(16,185,129,0.2)',
+    category: 'Intelligence',
+    icon: '🧠',
+    stacks: ['openai', 'neuroRecall', 'supabase'],
+    audience: [
+      'Élèves suivant des cours denses en contenu spirituel',
+      'Enseignants voulant mesurer la rétention des élèves',
+      'Institutions suivant la progression mémorielle de leurs membres',
+    ],
+    story: {
+      problem: "Après un cours de 2 heures sur la doctrine initiatique, l'élève rentre chez lui. 3 jours après il a oublié 70% du contenu. Il n'y a pas de système de révision, pas de flashcards, pas de suivi.",
+      revelation: "Et si chaque session générait automatiquement les outils de mémorisation adaptés — sans que l'enseignant ait à faire quoi que ce soit ?",
+      solution: "NeuroRecall analyse la transcription et le contenu de chaque session, génère automatiquement des flashcards ciblées, des rapports de compréhension et suit la progression mémorielle de chaque élève dans le temps.",
+    },
+    features: [
+      { icon: '🗃️', title: 'Flashcards automatiques', desc: 'Générées depuis la transcription live — concepts clés, définitions, révélations' },
+      { icon: '📊', title: 'Rapports de compréhension', desc: 'Analyse IA de ce qui a été retenu vs ce qui doit être révisé' },
+      { icon: '📈', title: 'Progression mémorielle', desc: 'Suivi par élève dans le temps — courbe d\'apprentissage visible' },
+      { icon: '🔁', title: 'Workflow de révision', desc: '5 étapes structurées : capture → organisation → révision → test → validation' },
+      { icon: '🎬', title: 'Post-Live Intelligence', desc: 'Replay vidéo + résumé + export participants + sous-titres multilingues' },
+      { icon: '⏱️', title: 'Horodatage précis', desc: 'Chaque flashcard est liée à un moment précis de la vidéo — clic = replay' },
+    ],
+    problems: [
+      'Oubli massif après chaque session (courbe d\'Ebbinghaus)',
+      'Aucun outil de révision automatique dans les LMS classiques',
+      'L\'enseignant doit créer manuellement les QCM et résumés',
+      'Impossible de savoir ce que chaque élève a vraiment retenu',
+      'Contenu dense sans structure de mémorisation = perte de valeur',
+    ],
+    comparisons: [
+      { competitor: 'Anki', them: 'Flashcards manuelles — l\'élève doit tout créer lui-même', us: 'Générées automatiquement depuis la transcription de la session' },
+      { competitor: 'Notion / Obsidian', them: 'Prise de notes manuelle, pas de suivi IA', us: 'Capture automatique, analyse de rétention, workflow guidé' },
+      { competitor: 'Moodle Quiz', them: 'QCM statiques créés par l\'enseignant', us: 'IA génère les questions depuis le contenu réel du cours' },
+    ],
+  },
+  {
+    id: 'debatecore',
+    slug: 'debatecore',
+    name: 'DebateCore',
+    tagline: "Le premier système de débat académique vivant — avec juge IA et vote du public en temps réel.",
+    heroGradient: 'from-[#120508] via-[#1e0810] to-[#120508]',
+    accentColor: '#F43F5E',
+    accentGlow: 'rgba(244,63,94,0.22)',
+    category: 'Live',
+    icon: '⚔️',
+    stacks: ['livekit', 'supabase', 'openai', 'framerMotion'],
+    audience: [
+      'Institutions organisant des débats publics ou académiques',
+      'Communautés philosophiques et spirituelles',
+      'Formateurs utilisant la confrontation d\'idées comme pédagogie',
+    ],
+    story: {
+      problem: "Un débat philosophique organisé en ligne : le modérateur doit gérer le temps à la main, les votes se font dans un sondage externe, les scores sont calculés dans Excel. Le résultat : chaos, perte d'énergie, aucune trace.",
+      revelation: "Et si le débat était un match vivant — avec un arbitre IA, des rounds précis, et le public qui vote en direct depuis son écran ?",
+      solution: "DebateCore est un système complet de débat en live : rounds configurables, chronomètre par tour, votes public en temps réel, juge IA avec pondération configurable, et NeuronQ pour la file de questions publiques.",
+    },
+    features: [
+      { icon: '⏱️', title: 'Rounds & chronomètre', desc: 'Rounds configurables (1–50), durée par tour en secondes, countdown visible par tous' },
+      { icon: '🗳️', title: 'Vote public live', desc: 'Le public vote pour camp A ou B — scores cumulés visibles en temps réel' },
+      { icon: '🤖', title: 'Juge IA intégré', desc: 'Score IA sur chaque round, pondération configurable (0–100%), blended avec votes humains' },
+      { icon: '🎙️', title: 'Parole alternée contrôlée', desc: 'Le modérateur donne la parole — micro activé uniquement pour le camp qui parle' },
+      { icon: '❓', title: 'NeuronQ — File Q&R', desc: 'Phase questions publiques structurée — le modérateur pilote la file depuis son panneau' },
+      { icon: '📋', title: 'Rôles structurés', desc: 'Modérateur, Débatteur camp A/B, Spectateur — avec permissions différenciées' },
+    ],
+    problems: [
+      'Débats en ligne sans structure = cacophonie',
+      'Aucun système d\'arbitrage automatique ni de vote intégré',
+      'Le modérateur doit gérer 5 outils en même temps',
+      'Impossible de mesurer objectivement quel camp a été plus convaincant',
+      'Questions du public non structurées — interruptions constantes',
+    ],
+    comparisons: [
+      { competitor: 'Zoom + Mentimeter', them: 'Sondage externe, pas de rounds, pas de juge IA', us: 'Système intégré — rounds, juge IA, votes natifs, NeuronQ' },
+      { competitor: 'Discord Stage', them: 'Parole libre, aucune structure de débat', us: 'Parole contrôlée par round, chrono, rôles imposés' },
+      { competitor: 'Slido', them: 'Questions uniquement, pas de débat ni de scoring', us: 'Système complet débat + questions + scoring + IA' },
+    ],
+  },
+  {
+    id: 'masterclass-engine',
+    slug: 'masterclass-engine',
+    name: 'Masterclass Engine',
+    tagline: "Un texte. Un sujet. Une masterclass complète — générée en 3 minutes.",
+    heroGradient: 'from-[#0a080f] via-[#100c1a] to-[#0a080f]',
+    accentColor: '#AB68FF',
+    accentGlow: 'rgba(171,104,255,0.22)',
+    category: 'Studio',
+    icon: '✨',
+    stacks: ['openai', 'supabase', 'konva', 'framerMotion'],
+    audience: [
+      'Enseignants voulant transformer un texte en cours structuré',
+      'Institutions créant des programmes pédagogiques certifiés',
+      'Formateurs produisant des masterclasses professionnelles',
+    ],
+    story: {
+      problem: "Un enseignant a un texte fondateur de 40 pages. Il sait qu'il contient des révélations majeures. Mais transformer ça en cours structuré avec exercices, analogies, tests et transitions lui prendrait 3 semaines.",
+      revelation: "Et si l'IA lisait ce texte, identifiait les tensions pédagogiques, construisait les chapitres et générait les exercices automatiquement ?",
+      solution: "Masterclass Engine prend n'importe quel texte source, l'analyse en 13 étapes, et génère une masterclass complète : chapitres structurés, analogies, exemples, workshops, dictées « je retiens », tests de compréhension et transitions.",
+    },
+    features: [
+      { icon: '📚', title: 'Pipeline 13 étapes', desc: 'De la lecture du texte à la masterclass complète — segmentation, tensions, révélations, chapitres' },
+      { icon: '🔍', title: 'Détection de tensions pédagogiques', desc: 'L\'IA identifie les contradictions et paradoxes porteurs d\'apprentissage' },
+      { icon: '🎯', title: 'Objectif + Compétence + Savoir', desc: 'Chaque chapitre a son objectif, sa compétence cible et son savoir à transmettre' },
+      { icon: '🏋️', title: 'Workshops & exercices', desc: 'Génération automatique d\'ateliers pratiques avec questions et réponses attendues' },
+      { icon: '✅', title: 'Quality check automatique', desc: '13 flags vérifiés — le moteur refuse de valider un chapitre incomplet' },
+      { icon: '🖼️', title: 'Blocs SmartBoard générés', desc: 'Chaque chapitre génère ses blocs visuels pour le tableau de la session live' },
+    ],
+    problems: [
+      'Des semaines de travail pour transformer un texte en cours',
+      'Cours sans structure pédagogique formelle — ni objectif, ni test',
+      'Aucun outil pour détecter ce qui est vraiment "enseignable" dans un texte',
+      'Les analogies et exemples doivent être inventés manuellement',
+      'Qualité variable selon l\'enseignant — aucun standard automatique',
+    ],
+    comparisons: [
+      { competitor: 'ChatGPT direct', them: 'Prompt unique, sortie non structurée, aucun standard pédagogique', us: 'Pipeline 13 étapes avec quality check, moteur dédié ISNA' },
+      { competitor: 'Teachable / Kajabi', them: 'Éditeur de cours manuel, aucune génération IA', us: 'Texte → Masterclass complète en 3 minutes, blocs SmartBoard inclus' },
+      { competitor: 'Notion AI', them: 'Résumé de texte sans structure pédagogique', us: 'Chapitres, tensions, révélations, workshops, tests — tout en un' },
+    ],
+  },
+  {
+    id: 'liri-brain',
+    slug: 'liri-brain',
+    name: 'LIRI Brain',
+    tagline: "Trois agents IA. Un routeur intelligent. Toujours le bon expert au bon moment.",
+    heroGradient: 'from-[#060510] via-[#0d0b1c] to-[#060510]',
+    accentColor: '#6366F1',
+    accentGlow: 'rgba(99,102,241,0.22)',
+    category: 'Intelligence',
+    icon: '🔮',
+    stacks: ['openai', 'supabase'],
+    audience: [
+      'Élèves posant des questions pendant ou après un cours',
+      'Enseignants utilisant l\'IA comme assistant pédagogique live',
+      'Institutions voulant un assistant IA contextuel à leur contenu',
+    ],
+    story: {
+      problem: "Un élève pose une question pendant un cours live. L'enseignant ne peut pas s'arrêter. Après le cours, il envoie un message vocal sur WhatsApp. La réponse arrive 3 jours plus tard, hors contexte.",
+      revelation: "Et si l'IA pouvait répondre immédiatement, avec la mémoire complète du cours, le titre de la session, la transcription et l'historique de conversation ?",
+      solution: "LIRI Brain route chaque question vers le bon agent en O(1) : Coach pour les questions courtes, Architecte pour les analyses profondes, Live pour les actions SmartBoard. GPT-4o-mini pour la rapidité, GPT-4o pour la profondeur.",
+    },
+    features: [
+      { icon: '🎓', title: 'Agent Coach', desc: 'Réponses rapides, reformulations, explications — GPT-4o-mini, réponse < 2s' },
+      { icon: '🏗️', title: 'Agent Architecte', desc: 'Analyse profonde, structure de cours, mindmaps, slides — GPT-4o' },
+      { icon: '📡', title: 'Agent Live', desc: 'Actions SmartBoard, moments importants, assistance en salle — GPT-4o-mini' },
+      { icon: '⚡', title: 'Routeur heuristique O(1)', desc: 'Classification instantanée sans LLM — confidence scoring 0.55–0.92' },
+      { icon: '🧩', title: 'Contexte injecté', desc: 'Titre séance, étape active, transcription (12K chars), chat (8K chars)' },
+      { icon: '🔒', title: 'Âge ontologique', desc: 'Réponses verrouillées selon le niveau initiatique de l\'élève dans ISNA' },
+    ],
+    problems: [
+      'Questions sans réponse immédiate = perte d\'engagement',
+      'Un seul modèle IA pour toutes les questions = lenteur ou coût excessif',
+      'L\'IA répond sans contexte — elle ne sait pas ce qui vient d\'être enseigné',
+      'Aucune notion de niveau initiatique dans les assistants IA classiques',
+      'Questions hors sujet polluent la session et distraient l\'enseignant',
+    ],
+    comparisons: [
+      { competitor: 'ChatGPT', them: 'Aucun contexte de cours, aucun niveau, réponse générique', us: 'Contexte injecté, niveau ontologique ISNA, 3 agents spécialisés' },
+      { competitor: 'Perplexity', them: 'Recherche web — pas de connaissance interne du cours', us: 'Connaissance de la transcription et du mindmap de la session' },
+      { competitor: 'Copilot Teams', them: 'IA corporate sans pédagogie ni spiritualité', us: 'Conçu pour ISNA — valeurs, rôles, rituels, doctrine intégrés' },
+    ],
+  },
+];
+
+export const ISNA_PRODUCT_CATEGORIES = [
+  { id: 'all', label: 'Tous les produits', icon: '🌐' },
+  { id: 'Live', label: 'Live & Débat', icon: '🔴' },
+  { id: 'Studio', label: 'Studio Créateur', icon: '🎨' },
+  { id: 'Intelligence', label: 'Intelligence IA', icon: '🧠' },
+];

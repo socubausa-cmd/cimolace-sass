@@ -1,0 +1,27 @@
+[
+  {
+    "id": "layout_text_image_left",
+    "label": "Texte gauche / image droite",
+    "recipe": ["text_08_title_with_kicker", "text_11_body_paragraph_pro", "elem_18_photo_placeholder_label", "elem_19_bottom_film_label"]
+  },
+  {
+    "id": "layout_quote_centered",
+    "label": "Citation centrée",
+    "recipe": ["elem_08_quote_mark_big", "text_05_quote_luxury", "elem_19_bottom_film_label"]
+  },
+  {
+    "id": "layout_kpi_business",
+    "label": "Slide business KPI",
+    "recipe": ["text_04_business_title_kpi", "elem_11_kpi_card_green", "elem_15_checklist_card", "elem_12_cta_button_dark"]
+  },
+  {
+    "id": "layout_cover_magazine",
+    "label": "Couverture magazine",
+    "recipe": ["text_20_cover_magazine_combo", "elem_06_image_frame_soft", "elem_17_abstract_glow_blob", "elem_19_bottom_film_label"]
+  },
+  {
+    "id": "layout_story_scene",
+    "label": "Scène de narration",
+    "recipe": ["text_17_story_chapter_card", "elem_18_photo_placeholder_label", "elem_13_cta_button_purple", "elem_19_bottom_film_label"]
+  }
+]

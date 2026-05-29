@@ -415,7 +415,7 @@ export function AdminTenantBrandingPage() {
                 color: "#9ca3af",
               }}
             >
-              Sécurisé · Conforme RGPD · Propulsé par Cimolace
+              Sécurisé · Conforme RGPD
             </p>
           </div>
         </section>
@@ -457,3 +457,5 @@ function Field({
     </label>
   );
 }
+
+export default AdminTenantBrandingPage;

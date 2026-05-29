@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>LIRI SDK v2 — Zoom-level Demo</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;padding:32px 24px;background:#090e18;color:#e1e7ef;font-family:'Inter',system-ui,sans-serif;min-height:100vh}
+    h1{font-size:28px;font-weight:700;margin:0 0 4px;background:linear-gradient(90deg,#a78bfa,#6d28d9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .sub{color:#8b949e;font-size:15px;margin:0 0 36px}
+    .badge{display:inline-block;background:#1a2332;border:1px solid #2d3748;border-radius:6px;padding:2px 10px;font-size:12px;color:#7c3aed;font-weight:600;margin-bottom:12px;letter-spacing:.05em;text-transform:uppercase}
+    .grid{display:grid;gap:24px;max-width:900px;margin:0 auto}
+    .card{background:#0d1117;border:1px solid #21262d;border-radius:16px;overflow:hidden}
+    .card-head{padding:18px 24px;border-bottom:1px solid #21262d;display:flex;align-items:center;gap:12px}
+    .card-head h2{margin:0;font-size:16px;font-weight:600}
+    .step{width:28px;height:28px;background:#7c3aed;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+    .card-body{padding:24px}
+    pre{background:#010409;border:1px solid #30363d;border-radius:10px;padding:18px;overflow-x:auto;font-size:12.5px;line-height:1.7;color:#e1e7ef;margin:0}
+    code{font-family:'Fira Code','Cascadia Code','Courier New',monospace}
+    .tag{color:#7ee787}.attr{color:#79c0ff}.val{color:#a5d6ff}.comment{color:#8b949e;font-style:italic}
+    .kw{color:#ff7b72}.fn{color:#d2a8ff}.str{color:#a5d6ff}.num{color:#79c0ff}.obj{color:#ffa657}
+    .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+    .btn{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:.15s}
+    .btn-viewer{background:#1e3a5f;color:#58a6ff}
+    .btn-cohost{background:#1a2e1a;color:#3fb950}
+    .btn-host{background:#3d1a5f;color:#a78bfa}
+    .btn-studio{background:#2d1f00;color:#e2a84b}
+    #live-container{margin-top:0}
+    .log-box{background:#010409;border:1px solid #30363d;border-radius:8px;padding:12px;font-family:monospace;font-size:12px;min-height:54px;color:#8b949e;margin-top:16px}
+    .ev-success{color:#7ee787}.ev-error{color:#f87171}.ev-info{color:#58a6ff}
+    .api-test{display:grid;gap:12px;margin-top:0}
+    .api-row{display:flex;gap:10px;align-items:center}
+    .method{font-family:monospace;font-size:12px;font-weight:700;padding:3px 8px;border-radius:4px;min-width:52px;text-align:center}
+    .get{background:#0d3321;color:#3fb950}.post{background:#2c1c00;color:#e2a84b}.del{background:#3d0c0c;color:#f87171}
+    .api-path{font-family:monospace;font-size:12px;color:#79c0ff;flex:1}
+    .api-result{font-family:monospace;font-size:11px;color:#8b949e;margin:0;padding:8px 12px;background:#010409;border:1px solid #30363d;border-radius:6px;margin-top:-2px;white-space:pre-wrap;word-break:break-all;display:none}
+    .run-btn{background:#21262d;color:#e1e7ef;border:none;border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer}
+    .run-btn:hover{background:#30363d}
+    .info-box{background:#0c1e38;border:1px solid #1d3f6b;border-radius:10px;padding:14px;font-size:13px;line-height:1.6;color:#58a6ff;margin-bottom:20px}
+    .info-box strong{color:#79c0ff}
+  </style>
+</head>
+<body>
+
+<div style="max-width:900px;margin:0 auto">
+  <div class="badge">LIRI SDK v2 — Concurrent Zoom</div>
+  <h1>LIRI Universal SDK</h1>
+  <p class="sub">Intégrez LIRI dans n'importe quel site — WordPress, Wix, React, Vue, HTML statique.</p>
+</div>
+
+<div class="grid">
+
+  <!-- Section 1 : Démonstration live -->
+  <div class="card">
+    <div class="card-head"><div class="step">1</div><h2>Démo interactive — Choisissez votre rôle</h2></div>
+    <div class="card-body">
+      <div class="info-box">
+        Session : <strong>Live test ISNA</strong> — tenant <strong>isna</strong><br>
+        Utilisez les boutons ci-dessous pour tester les 3 modes d'intégration.
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-viewer" onclick="launchRole('viewer')">👁️ Viewer (lecture)</button>
+        <button class="btn btn-cohost" onclick="launchRole('co_host')">🎙️ Co-hôte (cam/micro)</button>
+        <button class="btn btn-host" onclick="launchRole('host')">👑 HÔTE (full Zoom)</button>
+        <button class="btn btn-studio" onclick="openStudio()">🎬 Studio (créer session)</button>
+      </div>
+      <div id="live-container"></div>
+      <div class="log-box" id="event-log"><span class="ev-info">[init]</span> Cliquez un bouton pour démarrer…</div>
+    </div>
+  </div>
+
+  <!-- Section 2 : Code SDK -->
+  <div class="card">
+    <div class="card-head"><div class="step">2</div><h2>Code SDK — 3 lignes suffisent</h2></div>
+    <div class="card-body">
+      <pre><code><span class="comment">/* Installation : 1 script tag */</span>
+<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="val">"https://app.prorascience.org/liri-sdk.js"</span><span class="tag">&gt;&lt;/script&gt;</span>
+
+<span class="comment">/* Viewer public (via origin whitelist) */</span>
+<span class="kw">const</span> liri = <span class="fn">LiriSDK.init</span>({ tenant: <span class="str">'isna'</span> });
+liri.<span class="fn">viewer</span>(<span class="str">'#container'</span>, { session: <span class="str">'SESSION_ID'</span> });
+
+<span class="comment">/* Hôte (via API key — proxy serveur recommandé) */</span>
+<span class="kw">const</span> liri = <span class="fn">LiriSDK.init</span>({
+  tenant: <span class="str">'isna'</span>,
+  apiKey: <span class="str">'lk_live_xxxx'</span>,
+});
+liri.<span class="fn">host</span>(<span class="str">'#container'</span>, { session: <span class="str">'SESSION_ID'</span> });
+
+<span class="comment">/* Créer une session + lancer immédiatement */</span>
+<span class="kw">const</span> { data: session } = <span class="kw">await</span> liri.<span class="fn">createSession</span>({
+  title: <span class="str">'Mon Webinar'</span>,
+  session_type: <span class="str">'webinar'</span>,
+  scheduled_at: <span class="str">'2026-06-01T14:00:00Z'</span>,
+});
+liri.<span class="fn">host</span>(<span class="str">'#container'</span>, { session: session.<span class="obj">id</span> });
+
+<span class="comment">/* Écouter les événements */</span>
+liri.<span class="fn">on</span>(<span class="str">'session:started'</span>, (info) => {});
+liri.<span class="fn">on</span>(<span class="str">'participant:joined'</span>, (info) => {});
+liri.<span class="fn">on</span>(<span class="str">'session:ended'</span>, () => {});</code></pre>
+    </div>
+  </div>
+
+  <!-- Section 3 : Auto-mount -->
+  <div class="card">
+    <div class="card-head"><div class="step">3</div><h2>WordPress / Wix — méthode HTML (0 JavaScript)</h2></div>
+    <div class="card-body">
+      <pre><code><span class="comment">&lt;!-- Viewer (lecture seule) --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="val">"liri-live"</span> <span class="attr">data-tenant</span>=<span class="val">"isna"</span> <span class="attr">data-session</span>=<span class="val">"SESSION_ID"</span><span class="tag">&gt;&lt;/div&gt;</span>
+<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="val">"https://app.prorascience.org/liri-sdk.js"</span> <span class="attr">async</span><span class="tag">&gt;&lt;/script&gt;</span>
+
+<span class="comment">&lt;!-- Hôte (via API key exposée — idéal derrière un proxy) --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="val">"liri-live"</span>
+  <span class="attr">data-tenant</span>=<span class="val">"isna"</span>
+  <span class="attr">data-session</span>=<span class="val">"SESSION_ID"</span>
+  <span class="attr">data-role</span>=<span class="val">"host"</span>
+  <span class="attr">data-api-key</span>=<span class="val">"lk_live_xxxx"</span>
+<span class="tag">&gt;&lt;/div&gt;</span></code></pre>
+    </div>
+  </div>
+
+  <!-- Section 4 : API REST v1 -->
+  <div class="card">
+    <div class="card-head"><div class="step">4</div><h2>API REST v1 — Test en direct</h2></div>
+    <div class="card-body">
+      <div class="api-test" id="api-test-area">
+        <!-- rempli par JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 5 : Webhooks -->
+  <div class="card">
+    <div class="card-head"><div class="step">5</div><h2>Webhooks — Événements temps réel (Zapier, Make, etc.)</h2></div>
+    <div class="card-body">
+      <pre><code><span class="comment">/* Enregistrer un endpoint webhook */</span>
+<span class="kw">const</span> wh = <span class="kw">await</span> liri.<span class="fn">createWebhook</span>({
+  label: <span class="str">'My Zapier Zap'</span>,
+  url: <span class="str">'https://hooks.zapier.com/hooks/catch/xxx'</span>,
+  events: [<span class="str">'session.started'</span>, <span class="str">'session.ended'</span>, <span class="str">'recording.completed'</span>],
+});
+
+<span class="comment">/* Payload reçu sur votre endpoint */</span>
+{
+  event: <span class="str">'session.started'</span>,
+  tenant_id: <span class="str">'4f6faaa8-...'</span>,
+  session_id: <span class="str">'bb775442-...'</span>,
+  liri_delivery_id: <span class="str">'uuid'</span>,
+  timestamp: <span class="str">'2026-06-01T14:00:00.000Z'</span>,
+  data: { title: <span class="str">'Mon Webinar'</span> }
+}
+
+<span class="comment">/* Vérification HMAC-SHA256 (côté serveur webhook) */</span>
+<span class="kw">const</span> sig = req.headers[<span class="str">'x-liri-signature'</span>]; <span class="comment">// 'sha256=...'</span>
+<span class="kw">const</span> expected = <span class="str">'sha256='</span> + hmac(<span class="str">signingSecret</span>, rawBody);
+<span class="kw">if</span> (sig !== expected) <span class="kw">return</span> <span class="num">401</span>;</code></pre>
+    </div>
+  </div>
+
+  <!-- Section 6 : Comparaison Zoom -->
+  <div class="card">
+    <div class="card-head"><div class="step">6</div><h2>LIRI vs Zoom — Fonctionnalités</h2></div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:13px">
+        <div>
+          <p style="font-weight:700;color:#f0f6fc;margin:0 0 10px">✅ LIRI (disponible maintenant)</p>
+          <ul style="color:#8b949e;margin:0;padding-left:18px;line-height:2">
+            <li>Embed viewer / hôte / co-hôte</li>
+            <li>API REST v1 avec API keys</li>
+            <li>Sessions CRUD (créer, démarrer, terminer)</li>
+            <li>Webhooks (session.started, ended…)</li>
+            <li>Salle d'attente (admit/reject)</li>
+            <li>Enregistrement LiveKit R2</li>
+            <li>Replay recordings</li>
+            <li>Multi-tenant isolé</li>
+            <li>SDK JS universel</li>
+            <li>Studio embed (créer depuis iframe)</li>
+            <li>Types: class, webinar, workshop, consultation…</li>
+            <li>Screen sharing, cam, micro, chat</li>
+          </ul>
+        </div>
+        <div>
+          <p style="font-weight:700;color:#f0f6fc;margin:0 0 10px">🔜 Roadmap (prochaine version)</p>
+          <ul style="color:#8b949e;margin:0;padding-left:18px;line-height:2">
+            <li>OAuth / SSO participants</li>
+            <li>Polls & Q&A temps réel</li>
+            <li>Breakout rooms</li>
+            <li>Whiteboard collaboratif embed</li>
+            <li>Analytics dashboard</li>
+            <li>Live transcription IA</li>
+            <li>Invitations par email automatiques</li>
+            <li>Dashboard tenant embed</li>
+            <li>Mobile SDK (iOS/Android)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="/liri-sdk.js"></script>
+<script>
+var TENANT = 'isna';
+var SESSION_ID = 'bb775442-aa29-4feb-b7ad-ab2f8e80a3f0';
+var API_KEY = 'lk_live_isna_6cc23143ea62967bb6973e53d0243da2e5b76c06a095b365';
+var API_BASE = 'http://localhost:4002';
+var APP_BASE = 'http://localhost:5173';
+
+var currentWidget = null;
+var log = document.getElementById('event-log');
+
+function addLog(type, msg) {
+  var now = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  var d = document.createElement('div');
+  d.className = 'ev-' + type;
+  d.innerHTML = '[' + now + '] ' + msg;
+  log.appendChild(d);
+  log.scrollTop = log.scrollHeight;
+}
+
+function launchRole(role) {
+  if (currentWidget) currentWidget.unmount();
+  document.getElementById('live-container').innerHTML = '';
+
+  var liri = LiriSDK.init({ tenant: TENANT, apiKey: API_KEY, apiBase: API_BASE, appBase: APP_BASE });
+
+  currentWidget = liri.embed('#live-container', {
+    session: SESSION_ID,
+    role: role,
+    height: role === 'host' ? 720 : 560,
+    theme: 'dark',
+    onJoined: function(info) { addLog('success', '✅ Rejoint [' + role + '] — room: ' + info.room); },
+    onEnded: function() { addLog('info', '🔴 Session terminée'); },
+    onError: function(msg) { addLog('error', '❌ ' + msg); },
+  });
+  addLog('info', '🚀 Chargement mode ' + role.toUpperCase() + '…');
+}
+
+function openStudio() {
+  if (currentWidget) currentWidget.unmount();
+  var container = document.getElementById('live-container');
+  container.innerHTML = '';
+
+  var iframe = document.createElement('iframe');
+  iframe.src = APP_BASE + '/embed/studio?tenant=' + TENANT + '&api_key=' + API_KEY + '&api_base=' + API_BASE;
+  iframe.style.cssText = 'width:100%;height:560px;border:none;border-radius:12px;background:#090e18;display:block';
+  container.appendChild(iframe);
+
+  window.addEventListener('message', function(e) {
+    if (!e.data || typeof e.data !== 'object') return;
+    if (e.data.type === 'LIRI_SESSION_CREATED') {
+      addLog('success', '🎉 Session créée : ' + e.data.session.id);
+    }
+    if (e.data.type === 'LIRI_HOST_SESSION') {
+      addLog('info', '🚀 Lancement hôte pour : ' + e.data.session_id);
+      launchRole('host');
+    }
+  });
+  addLog('info', '🎬 Ouverture du studio LIRI…');
+}
+
+// Peupler les tests API
+var apiTests = [
+  { method:'GET', path:'/v1/liri/me', label:'Tenant info' },
+  { method:'GET', path:'/v1/liri/sessions?limit=3', label:'Lister sessions' },
+  { method:'POST', path:'/v1/liri/sessions/bb775442-aa29-4feb-b7ad-ab2f8e80a3f0/embed-token', body:{role:'host'}, label:'Token hôte' },
+  { method:'POST', path:'/v1/liri/sessions/bb775442-aa29-4feb-b7ad-ab2f8e80a3f0/embed-token', body:{role:'viewer'}, label:'Token viewer' },
+  { method:'GET', path:'/v1/liri/api-keys', label:'Clés API' },
+  { method:'GET', path:'/v1/liri/webhooks', label:'Webhooks' },
+];
+
+var area = document.getElementById('api-test-area');
+apiTests.forEach(function(t, i) {
+  var row = document.createElement('div');
+  row.style.marginBottom = '4px';
+  row.innerHTML = '<div class="api-row"><span class="method ' + t.method.toLowerCase() + '">' + t.method + '</span><span class="api-path">' + t.path + '</span><button class="run-btn" onclick="runTest('+i+')">Run</button></div><pre class="api-result" id="api-result-'+i+'"></pre>';
+  area.appendChild(row);
+});
+
+function runTest(i) {
+  var t = apiTests[i];
+  var result = document.getElementById('api-result-' + i);
+  result.textContent = 'En cours…';
+  result.style.display = 'block';
+
+  fetch(API_BASE + t.path, {
+    method: t.method,
+    headers: { 'Content-Type':'application/json', 'X-Liri-Api-Key': API_KEY },
+    body: t.body ? JSON.stringify(t.body) : undefined,
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) { result.textContent = JSON.stringify(d, null, 2).slice(0, 400) + (JSON.stringify(d).length > 400 ? '\n…' : ''); })
+  .catch(function(e) { result.textContent = 'Erreur: ' + e.message; });
+}
+</script>
+
+</body>
+</html>

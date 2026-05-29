@@ -1,0 +1,85 @@
+[
+  {
+    "id": "science_06_physics_forces_diagram",
+    "label": "Physique — schéma de forces",
+    "discipline": "physics",
+    "usage": "Gravité, frottement, tension, mouvement.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 72, "y": 72, "text": "Schéma de forces", "fontFamily": "Montserrat", "fontSize": 38, "fontStyle": "bold", "fill": "#0F172A"}},
+      {"type": "Rect", "attrs": {"x": 430, "y": 290, "width": 180, "height": 140, "cornerRadius": 20, "fill": "rgba(37,99,235,0.08)", "stroke": "rgba(37,99,235,0.28)", "strokeWidth": 3}},
+      {"type": "Arrow", "attrs": {"points": [520, 290, 520, 180], "stroke": "#2563EB", "fill": "#2563EB", "pointerLength": 12, "pointerWidth": 12, "strokeWidth": 5}},
+      {"type": "Arrow", "attrs": {"points": [520, 430, 520, 556], "stroke": "#2563EB", "fill": "#2563EB", "pointerLength": 12, "pointerWidth": 12, "strokeWidth": 5}},
+      {"type": "Arrow", "attrs": {"points": [430, 360, 318, 360], "stroke": "#2563EB", "fill": "#2563EB", "pointerLength": 12, "pointerWidth": 12, "strokeWidth": 5}},
+      {"type": "Arrow", "attrs": {"points": [610, 360, 724, 360], "stroke": "#2563EB", "fill": "#2563EB", "pointerLength": 12, "pointerWidth": 12, "strokeWidth": 5}},
+      {"type": "Text", "attrs": {"x": 470, "y": 146, "text": "Force 1", "fontFamily": "Inter", "fontSize": 22, "fontStyle": "bold", "fill": "#1D4ED8"}},
+      {"type": "Text", "attrs": {"x": 470, "y": 570, "text": "Force 2", "fontFamily": "Inter", "fontSize": 22, "fontStyle": "bold", "fill": "#1D4ED8"}},
+      {"type": "Text", "attrs": {"x": 216, "y": 346, "text": "Force 3", "fontFamily": "Inter", "fontSize": 22, "fontStyle": "bold", "fill": "#1D4ED8"}},
+      {"type": "Text", "attrs": {"x": 740, "y": 346, "text": "Force 4", "fontFamily": "Inter", "fontSize": 22, "fontStyle": "bold", "fill": "#1D4ED8"}}
+    ]
+  },
+  {
+    "id": "science_07_physics_before_after",
+    "label": "Physique — avant / après",
+    "discipline": "physics",
+    "usage": "Transformation, mouvement, état initial/final.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 120, "y": 88, "text": "Avant", "fontFamily": "Montserrat", "fontSize": 40, "fontStyle": "bold", "fill": "#1D4ED8"}},
+      {"type": "Text", "attrs": {"x": 738, "y": 88, "text": "Après", "fontFamily": "Montserrat", "fontSize": 40, "fontStyle": "bold", "fill": "#1D4ED8"}},
+      {"type": "Rect", "attrs": {"x": 72, "y": 170, "width": 310, "height": 280, "cornerRadius": 24, "fill": "rgba(37,99,235,0.08)", "stroke": "rgba(37,99,235,0.24)"}},
+      {"type": "Rect", "attrs": {"x": 656, "y": 170, "width": 310, "height": 280, "cornerRadius": 24, "fill": "rgba(37,99,235,0.08)", "stroke": "rgba(37,99,235,0.24)"}},
+      {"type": "Arrow", "attrs": {"points": [420, 310, 620, 310], "stroke": "#2563EB", "fill": "#2563EB", "pointerLength": 16, "pointerWidth": 16, "strokeWidth": 5}},
+      {"type": "Text", "attrs": {"x": 468, "y": 270, "width": 104, "text": "Transition", "fontFamily": "Inter", "fontSize": 22, "fontStyle": "bold", "fill": "#1D4ED8", "align": "center"}}
+    ]
+  },
+  {
+    "id": "science_08_physics_circuit_flow",
+    "label": "Physique — circuit / flux",
+    "discipline": "physics",
+    "usage": "Électricité, énergie, circulation.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 72, "y": 74, "text": "Circuit / flux", "fontFamily": "Montserrat", "fontSize": 36, "fontStyle": "bold", "fill": "#0F172A"}},
+      {"type": "Rect", "attrs": {"x": 130, "y": 290, "width": 140, "height": 100, "cornerRadius": 18, "fill": "rgba(37,99,235,0.10)", "stroke": "rgba(37,99,235,0.24)"}},
+      {"type": "Rect", "attrs": {"x": 448, "y": 290, "width": 140, "height": 100, "cornerRadius": 18, "fill": "rgba(37,99,235,0.10)", "stroke": "rgba(37,99,235,0.24)"}},
+      {"type": "Rect", "attrs": {"x": 766, "y": 290, "width": 140, "height": 100, "cornerRadius": 18, "fill": "rgba(37,99,235,0.10)", "stroke": "rgba(37,99,235,0.24)"}},
+      {"type": "Text", "attrs": {"x": 160, "y": 324, "width": 80, "text": "Source", "fontFamily": "Inter", "fontSize": 22, "fontStyle": "bold", "fill": "#1D4ED8", "align": "center"}},
+      {"type": "Text", "attrs": {"x": 474, "y": 324, "width": 88, "text": "Trajet", "fontFamily": "Inter", "fontSize": 22, "fontStyle": "bold", "fill": "#1D4ED8", "align": "center"}},
+      {"type": "Text", "attrs": {"x": 794, "y": 324, "width": 84, "text": "Récepteur", "fontFamily": "Inter", "fontSize": 22, "fontStyle": "bold", "fill": "#1D4ED8", "align": "center"}},
+      {"type": "Arrow", "attrs": {"points": [270, 340, 448, 340], "stroke": "#2563EB", "fill": "#2563EB", "pointerLength": 10, "pointerWidth": 10, "strokeWidth": 4}},
+      {"type": "Arrow", "attrs": {"points": [588, 340, 766, 340], "stroke": "#2563EB", "fill": "#2563EB", "pointerLength": 10, "pointerWidth": 10, "strokeWidth": 4}}
+    ]
+  },
+  {
+    "id": "science_09_physics_graph_curve",
+    "label": "Physique — courbe scientifique",
+    "discipline": "physics",
+    "usage": "Vitesse, temps, température, pression.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 72, "y": 70, "text": "Courbe scientifique", "fontFamily": "Montserrat", "fontSize": 36, "fontStyle": "bold", "fill": "#0F172A"}},
+      {"type": "Line", "attrs": {"points": [154, 566, 154, 160], "stroke": "#334155", "strokeWidth": 4}},
+      {"type": "Line", "attrs": {"points": [154, 566, 894, 566], "stroke": "#334155", "strokeWidth": 4}},
+      {"type": "Line", "attrs": {"points": [170, 522, 270, 480, 390, 430, 530, 332, 670, 268, 820, 196], "stroke": "#2563EB", "strokeWidth": 6, "lineCap": "round", "lineJoin": "round"}},
+      {"type": "Circle", "attrs": {"x": 530, "y": 332, "radius": 9, "fill": "#2563EB"}},
+      {"type": "Text", "attrs": {"x": 86, "y": 140, "text": "Y", "fontFamily": "Inter", "fontSize": 22, "fontStyle": "bold", "fill": "#334155"}},
+      {"type": "Text", "attrs": {"x": 908, "y": 580, "text": "X", "fontFamily": "Inter", "fontSize": 22, "fontStyle": "bold", "fill": "#334155"}}
+    ]
+  },
+  {
+    "id": "science_10_physics_factor_breakdown",
+    "label": "Physique — décomposition d’un phénomène",
+    "discipline": "physics",
+    "usage": "Facteurs d’un phénomène complexe.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 74, "y": 76, "text": "Phénomène = somme de facteurs", "fontFamily": "Montserrat", "fontSize": 36, "fontStyle": "bold", "fill": "#0F172A"}},
+      {"type": "Circle", "attrs": {"x": 520, "y": 320, "radius": 72, "fill": "rgba(37,99,235,0.12)", "stroke": "rgba(37,99,235,0.28)"}},
+      {"type": "Text", "attrs": {"x": 468, "y": 308, "width": 104, "text": "Phénomène", "fontFamily": "Inter", "fontSize": 22, "fontStyle": "bold", "fill": "#1D4ED8", "align": "center"}},
+      {"type": "Rect", "attrs": {"x": 166, "y": 176, "width": 170, "height": 84, "cornerRadius": 18, "fill": "rgba(37,99,235,0.08)", "stroke": "rgba(37,99,235,0.18)"}},
+      {"type": "Rect", "attrs": {"x": 706, "y": 176, "width": 170, "height": 84, "cornerRadius": 18, "fill": "rgba(37,99,235,0.08)", "stroke": "rgba(37,99,235,0.18)"}},
+      {"type": "Rect", "attrs": {"x": 166, "y": 450, "width": 170, "height": 84, "cornerRadius": 18, "fill": "rgba(37,99,235,0.08)", "stroke": "rgba(37,99,235,0.18)"}},
+      {"type": "Rect", "attrs": {"x": 706, "y": 450, "width": 170, "height": 84, "cornerRadius": 18, "fill": "rgba(37,99,235,0.08)", "stroke": "rgba(37,99,235,0.18)"}},
+      {"type": "Text", "attrs": {"x": 206, "y": 206, "width": 90, "text": "Facteur 1", "fontFamily": "Inter", "fontSize": 20, "fontStyle": "bold", "fill": "#1D4ED8", "align": "center"}},
+      {"type": "Text", "attrs": {"x": 746, "y": 206, "width": 90, "text": "Facteur 2", "fontFamily": "Inter", "fontSize": 20, "fontStyle": "bold", "fill": "#1D4ED8", "align": "center"}},
+      {"type": "Text", "attrs": {"x": 206, "y": 480, "width": 90, "text": "Facteur 3", "fontFamily": "Inter", "fontSize": 20, "fontStyle": "bold", "fill": "#1D4ED8", "align": "center"}},
+      {"type": "Text", "attrs": {"x": 746, "y": 480, "width": 90, "text": "Facteur 4", "fontFamily": "Inter", "fontSize": 20, "fontStyle": "bold", "fill": "#1D4ED8", "align": "center"}}
+    ]
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "name": "LIRI Text Design Pack V1",
+    "version": "1.0"
+  },
+  "textStyles": [
+    { "id": "title_hero", "label": "Titre Hero" },
+    { "id": "subtitle_clean", "label": "Sous-titre clean" },
+    { "id": "highlight_text", "label": "Texte surligné" },
+    { "id": "quote_style", "label": "Citation élégante" },
+    { "id": "boxed_text", "label": "Encadré texte" },
+    { "id": "gradient_title", "label": "Titre dégradé" },
+    { "id": "numbered_list", "label": "Liste numérotée stylée" },
+    { "id": "badge_text", "label": "Badge texte" },
+    { "id": "big_number", "label": "Chiffre impact" },
+    { "id": "callout_text", "label": "Callout" },
+    { "id": "dark_card", "label": "Carte sombre" },
+    { "id": "underline_title", "label": "Titre souligné" },
+    { "id": "side_bar_text", "label": "Texte avec barre" },
+    { "id": "boxed_number", "label": "Numéro encadré" },
+    { "id": "split_title", "label": "Titre split" }
+  ]
+}

@@ -1,0 +1,1092 @@
+[
+  {
+    "id": "sci_phy_forces",
+    "label": "Schéma de forces",
+    "family": "physics",
+    "familyLabel": "Physique",
+    "usage": "Vecteurs · équilibre",
+    "pedagogicalGoal": "Montrer équilibre ou déséquilibre de forces.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#3b82f618",
+          "stroke": "#3b82f655",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Schéma de forces",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Objet central · flèches · intensités",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 440,
+          "y": 260,
+          "width": 160,
+          "height": 120,
+          "cornerRadius": 10,
+          "fill": "rgba(59,130,246,0.12)",
+          "stroke": "#2563eb",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 470,
+          "y": 300,
+          "width": 100,
+          "text": "Objet",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            520,
+            200,
+            520,
+            260
+          ],
+          "stroke": "#ef4444",
+          "strokeWidth": 4,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 530,
+          "y": 170,
+          "width": 120,
+          "text": "P = mg",
+          "fontFamily": "Inter",
+          "fontSize": 14,
+          "fill": "#b91c1c",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            520,
+            380,
+            520,
+            440
+          ],
+          "stroke": "#22c55e",
+          "strokeWidth": 4,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 530,
+          "y": 448,
+          "width": 120,
+          "text": "N",
+          "fontFamily": "Inter",
+          "fontSize": 14,
+          "fill": "#15803d",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 500,
+          "width": 860,
+          "text": "Indiquez direction · sens · norme (N) sur chaque flèche",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_phy_mouvement",
+    "label": "Mouvement rectiligne",
+    "family": "physics",
+    "familyLabel": "Physique",
+    "usage": "MRU / MRUA",
+    "pedagogicalGoal": "Relier position, vitesse, accélération.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#3b82f618",
+          "stroke": "#3b82f655",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Mouvement rectiligne",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Axe · positions · vecteur vitesse",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            120,
+            320,
+            900,
+            320
+          ],
+          "stroke": "#64748b",
+          "strokeWidth": 2,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Circle",
+        "attrs": {
+          "x": 200,
+          "y": 320,
+          "radius": 12,
+          "fill": "#3b82f6",
+          "stroke": "#1d4ed8",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Circle",
+        "attrs": {
+          "x": 520,
+          "y": 320,
+          "radius": 12,
+          "fill": "#3b82f6",
+          "stroke": "#1d4ed8",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 220,
+          "y": 340,
+          "width": 600,
+          "text": "x(t) · v(t) · a : complétez les relations du cours",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fill": "#334155",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_phy_energie",
+    "label": "Énergie : transformations",
+    "family": "physics",
+    "familyLabel": "Physique",
+    "usage": "Conservation · transferts",
+    "pedagogicalGoal": "Visualiser avant → transition → après.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#eab30818",
+          "stroke": "#eab30855",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Transformation énergétique",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "État initial → mécanisme → état final",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 100,
+          "y": 240,
+          "width": 200,
+          "text": "E avant",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#a16207",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 420,
+          "y": 240,
+          "width": 120,
+          "text": "→",
+          "fontFamily": "Inter",
+          "fontSize": 32,
+          "fill": "#64748b",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 560,
+          "y": 240,
+          "width": 200,
+          "text": "E après",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#a16207",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 72,
+          "y": 360,
+          "width": 880,
+          "height": 80,
+          "cornerRadius": 12,
+          "fill": "rgba(234,179,8,0.12)",
+          "stroke": "rgba(202,138,4,0.35)",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 384,
+          "width": 820,
+          "text": "Précisez les pertes (chaleur, frottement…)",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fill": "#713f12",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_phy_circuit",
+    "label": "Circuit simple",
+    "family": "physics",
+    "familyLabel": "Physique",
+    "usage": "Électricité",
+    "pedagogicalGoal": "Source → trajet → récepteur.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#a855f718",
+          "stroke": "#a855f755",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Circuit électrique",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Générateur · conducteurs · dipôle",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 120,
+          "y": 260,
+          "width": 140,
+          "text": "(+)",
+          "fontFamily": "Inter",
+          "fontSize": 28,
+          "fill": "#7e22ce",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            200,
+            280,
+            400,
+            280
+          ],
+          "stroke": "#a855f7",
+          "strokeWidth": 3,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 400,
+          "y": 240,
+          "width": 200,
+          "height": 80,
+          "cornerRadius": 8,
+          "fill": "rgba(168,85,247,0.15)",
+          "stroke": "#9333ea",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 420,
+          "y": 260,
+          "width": 160,
+          "text": "Récepteur",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "center"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            600,
+            280,
+            820,
+            280
+          ],
+          "stroke": "#a855f7",
+          "strokeWidth": 3,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 100,
+          "y": 400,
+          "width": 800,
+          "text": "Retour au générateur · sens du courant conventionnel",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#6b21a8",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_phy_optique_rayon",
+    "label": "Optique — rayons",
+    "family": "physics",
+    "familyLabel": "Physique",
+    "usage": "Réflexion · réfraction",
+    "pedagogicalGoal": "Tracer incidents / réfléchis / réfractés.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#06b6d418",
+          "stroke": "#06b6d455",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Rayons lumineux",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Normale · angles",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            200,
+            400,
+            520,
+            200
+          ],
+          "stroke": "#f59e0b",
+          "strokeWidth": 3,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            520,
+            200,
+            840,
+            400
+          ],
+          "stroke": "#06b6d4",
+          "strokeWidth": 3,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 480,
+          "y": 420,
+          "width": 400,
+          "text": "Loi de Snell-Descartes : noter n₁, n₂, i, r",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#0e7490",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_phy_chaleur",
+    "label": "Chaleur — transfert",
+    "family": "physics",
+    "familyLabel": "Physique",
+    "usage": "Conduction · convection · rayonnement",
+    "pedagogicalGoal": "Identifier le mode de transfert.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#f9731618",
+          "stroke": "#f9731655",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Transferts thermiques",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Source chaude → milieu → récepteur",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 200,
+          "y": 220,
+          "width": 200,
+          "height": 100,
+          "cornerRadius": 10,
+          "fill": "rgba(249,115,22,0.25)",
+          "stroke": "#ea580c",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 240,
+          "y": 255,
+          "width": 120,
+          "text": "Chaud",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            400,
+            270,
+            580,
+            270
+          ],
+          "stroke": "#f97316",
+          "strokeWidth": 4,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 580,
+          "y": 220,
+          "width": 200,
+          "height": 100,
+          "cornerRadius": 10,
+          "fill": "rgba(59,130,246,0.2)",
+          "stroke": "#2563eb",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 620,
+          "y": 255,
+          "width": 120,
+          "text": "Froid",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "center"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_phy_courbe_vt",
+    "label": "Courbe vitesse / temps",
+    "family": "physics",
+    "familyLabel": "Physique",
+    "usage": "Cinématique",
+    "pedagogicalGoal": "Lier pente et variation de vitesse.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#3b82f618",
+          "stroke": "#3b82f655",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Graphique v(t)",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Axe temps · axe vitesse · points clés",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            120,
+            400,
+            900,
+            400
+          ],
+          "stroke": "#94a3b8",
+          "strokeWidth": 1,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            120,
+            400,
+            120,
+            180
+          ],
+          "stroke": "#94a3b8",
+          "strokeWidth": 1,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            120,
+            350,
+            400,
+            220,
+            700,
+            300,
+            900,
+            260
+          ],
+          "stroke": "#2563eb",
+          "strokeWidth": 3,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 480,
+          "width": 860,
+          "text": "Annoter : accélération = pente · aire = Δx (si applicable)",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_phy_onde",
+    "label": "Onde",
+    "family": "physics",
+    "familyLabel": "Physique",
+    "usage": "λ, T, v",
+    "pedagogicalGoal": "Représenter périodicité spatiale et temporelle.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#8b5cf618",
+          "stroke": "#8b5cf655",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Onde sinusoïdale",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "λ · T · v = λ/T",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 120,
+          "y": 260,
+          "width": 780,
+          "text": "~  ~  ~  ~  ~  (une longueur d’onde λ entre deux crêtes)",
+          "fontFamily": "Inter",
+          "fontSize": 18,
+          "fill": "#5b21b6",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 400,
+          "width": 860,
+          "text": "Reliez à la fréquence f = 1/T et à la célérité v",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fill": "#64748b",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_phy_avant_apres",
+    "label": "Avant / après (état)",
+    "family": "physics",
+    "familyLabel": "Physique",
+    "usage": "Collision · changement",
+    "pedagogicalGoal": "Deux états séparés par la transformation.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#3b82f618",
+          "stroke": "#3b82f655",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "État initial → état final",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Même système · bilan",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 100,
+          "y": 220,
+          "width": 320,
+          "height": 160,
+          "cornerRadius": 12,
+          "fill": "rgba(59,130,246,0.1)",
+          "stroke": "#3b82f6",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 140,
+          "y": 280,
+          "width": 240,
+          "text": "Avant",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 480,
+          "y": 280,
+          "width": 80,
+          "text": "⇒",
+          "fontFamily": "Inter",
+          "fontSize": 36,
+          "fill": "#64748b",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 600,
+          "y": 220,
+          "width": 320,
+          "height": 160,
+          "cornerRadius": 12,
+          "fill": "rgba(34,197,94,0.1)",
+          "stroke": "#22c55e",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 640,
+          "y": 280,
+          "width": 240,
+          "text": "Après",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_phy_equilibre",
+    "label": "Équilibre / déséquilibre",
+    "family": "physics",
+    "familyLabel": "Physique",
+    "usage": "Somme des forces",
+    "pedagogicalGoal": "ΣF = 0 ou mouvement.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#0ea5e918",
+          "stroke": "#0ea5e955",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Équilibre mécanique",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Somme des forces nulle = repos ou MRU",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 220,
+          "width": 860,
+          "text": "Si ΣF = 0 : PR ou repos. Sinon : accélération (2e loi de Newton).",
+          "fontFamily": "Inter",
+          "fontSize": 18,
+          "fill": "#0c4a6e",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 72,
+          "y": 320,
+          "width": 880,
+          "height": 100,
+          "cornerRadius": 12,
+          "fill": "rgba(14,165,233,0.1)",
+          "stroke": "#0284c7",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 348,
+          "width": 820,
+          "text": "Exemple : appliquer sur un bilan de forces dessiné au-dessus",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fill": "#0369a1",
+          "align": "left"
+        }
+      }
+    ]
+  }
+]

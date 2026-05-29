@@ -1,0 +1,40 @@
+[
+  {
+    "id": "elem_06_image_frame_soft",
+    "label": "Cadre image soft",
+    "category": "frames",
+    "nodes": [{"type": "Rect", "attrs": {"x": 600, "y": 138, "width": 310, "height": 240, "cornerRadius": 24, "fill": "rgba(255,255,255,0.04)", "stroke": "rgba(255,255,255,0.16)", "dash": [10, 8]}}]
+  },
+  {
+    "id": "elem_07_callout_left",
+    "label": "Callout gauche",
+    "category": "callouts",
+    "nodes": [
+      {"type": "Rect", "attrs": {"x": 80, "y": 430, "width": 300, "height": 116, "cornerRadius": 20, "fill": "rgba(255,255,255,0.92)", "stroke": "rgba(15,23,42,0.08)"}},
+      {"type": "Line", "attrs": {"points": [80, 476, 42, 476, 42, 514], "stroke": "rgba(15,23,42,0.20)", "strokeWidth": 3, "lineCap": "round"}}
+    ]
+  },
+  {
+    "id": "elem_08_quote_mark_big",
+    "label": "Guillemets géants",
+    "category": "decor",
+    "nodes": [{"type": "Text", "attrs": {"x": 76, "y": 182, "text": "\u201c", "fontFamily": "Playfair Display", "fontSize": 136, "fill": "rgba(139,92,246,0.18)"}}]
+  },
+  {
+    "id": "elem_09_timeline_base_3",
+    "label": "Timeline 3 points",
+    "category": "diagram",
+    "nodes": [
+      {"type": "Line", "attrs": {"points": [140, 378, 860, 378], "stroke": "#CBD5E1", "strokeWidth": 4, "lineCap": "round"}},
+      {"type": "Circle", "attrs": {"x": 220, "y": 378, "radius": 16, "fill": "#8B5CF6"}},
+      {"type": "Circle", "attrs": {"x": 500, "y": 378, "radius": 16, "fill": "#D4A017"}},
+      {"type": "Circle", "attrs": {"x": 780, "y": 378, "radius": 16, "fill": "#22C55E"}}
+    ]
+  },
+  {
+    "id": "elem_10_comparison_divider",
+    "label": "Séparation 2 colonnes",
+    "category": "layout",
+    "nodes": [{"type": "Line", "attrs": {"points": [518, 132, 518, 618], "stroke": "rgba(15,23,42,0.10)", "strokeWidth": 3}}]
+  }
+]

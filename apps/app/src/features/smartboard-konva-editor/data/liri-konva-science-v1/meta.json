@@ -1,0 +1,21 @@
+{
+  "name": "LIRI Konva Science Pack V1",
+  "version": "1.0.0",
+  "description": "20 presets science premium + 20 éléments scientifiques premium + 5 layouts starters pour Konva / SmartBoard Designer",
+  "canvas": {
+    "width": 1037,
+    "height": 750,
+    "safeZone": {
+      "x": 52,
+      "y": 38,
+      "width": 933,
+      "height": 674
+    }
+  },
+  "fonts": ["Inter", "Montserrat", "Libre Baskerville", "Poppins"],
+  "notes": [
+    "Pack conçu pour biologie, physique, chimie, sciences de la Terre et méthode scientifique.",
+    "Tous les blocs sont pensés pour une lisibilité forte en projection live.",
+    "Les presets sont réutilisables en version élève, prof et live progressif."
+  ]
+}

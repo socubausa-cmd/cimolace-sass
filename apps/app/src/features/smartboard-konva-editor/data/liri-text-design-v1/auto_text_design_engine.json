@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "name": "LIRI Auto Text Design Engine V1",
+    "version": "1.0.0"
+  },
+  "classification_types": [
+    "title",
+    "subtitle",
+    "definition",
+    "example",
+    "quote",
+    "list",
+    "number",
+    "cta",
+    "warning",
+    "summary",
+    "spiritual_revelation",
+    "business_pitch",
+    "academic_header",
+    "story_scene"
+  ],
+  "style_map": {
+    "title": ["title_hero", "underline_title", "gradient_title"],
+    "subtitle": ["subtitle_clean", "side_bar_text"],
+    "definition": ["boxed_text", "highlight_text"],
+    "example": ["callout_text", "boxed_text"],
+    "quote": ["quote_style", "dark_card"],
+    "list": ["numbered_list"],
+    "number": ["big_number", "boxed_number"],
+    "cta": ["badge_text", "callout_text", "dark_card"],
+    "warning": ["highlight_text", "boxed_text"],
+    "summary": ["boxed_text", "dark_card"],
+    "spiritual_revelation": ["quote_style", "dark_card", "gradient_title"],
+    "business_pitch": ["callout_text", "big_number", "dark_card"],
+    "academic_header": ["underline_title", "boxed_text"],
+    "story_scene": ["quote_style", "side_bar_text", "dark_card"]
+  },
+  "theme_overrides": {
+    "academic": { "effectLevel": "low" },
+    "business": { "effectLevel": "medium" },
+    "spiritual": { "effectLevel": "medium" },
+    "story": { "effectLevel": "medium" }
+  },
+  "placement_rules": {
+    "title": {
+      "zones": ["top-center", "top-left"],
+      "width_ratio": 0.72
+    },
+    "subtitle": {
+      "zones": ["below-title", "top-left-secondary"],
+      "width_ratio": 0.58
+    },
+    "quote": {
+      "zones": ["center", "center-wide"],
+      "width_ratio": 0.68
+    },
+    "cta": {
+      "zones": ["bottom-right", "bottom-center"],
+      "width_ratio": 0.24
+    },
+    "summary": {
+      "zones": ["center", "center-wide"],
+      "width_ratio": 0.7
+    },
+    "definition": {
+      "zones": ["top-left", "center"],
+      "width_ratio": 0.68
+    },
+    "number": {
+      "zones": ["center", "top-center"],
+      "width_ratio": 0.4
+    },
+    "spiritual_revelation": {
+      "zones": ["center", "center-wide"],
+      "width_ratio": 0.72
+    }
+  },
+  "ux_rules": {
+    "snap": { "enabled": true, "grid": 8, "center_guides": true },
+    "alignment": [
+      "align-left",
+      "align-center",
+      "align-right",
+      "align-top",
+      "align-middle",
+      "align-bottom",
+      "distribute-horizontal",
+      "distribute-vertical"
+    ],
+    "spacing": {
+      "minimum_to_canvas_edge": 48,
+      "minimum_between_text_blocks": 20
+    }
+  }
+}

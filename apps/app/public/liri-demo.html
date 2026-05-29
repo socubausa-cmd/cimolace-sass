@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LIRI Live Widget — Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px 24px;
+      background: #090e18;
+      color: #e1e7ef;
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+    .header {
+      max-width: 900px;
+      margin: 0 auto 36px;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0 0 8px;
+      background: linear-gradient(90deg, #a78bfa, #6d28d9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header p {
+      color: #8b949e;
+      font-size: 15px;
+      margin: 0;
+    }
+    .badge {
+      display: inline-block;
+      background: #1a2332;
+      border: 1px solid #2d3748;
+      border-radius: 6px;
+      padding: 2px 10px;
+      font-size: 12px;
+      color: #7c3aed;
+      font-weight: 600;
+      margin-bottom: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .demo-grid {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      gap: 40px;
+    }
+    .demo-block {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .demo-block-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #21262d;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .demo-block-header h2 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .demo-block-header .step {
+      width: 28px;
+      height: 28px;
+      background: #7c3aed;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .demo-block-body {
+      padding: 24px;
+    }
+    pre {
+      background: #010409;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #e1e7ef;
+      margin: 0;
+    }
+    code { font-family: 'Fira Code', 'Cascadia Code', 'Courier New', monospace; }
+    .tag { color: #7ee787; }
+    .attr { color: #79c0ff; }
+    .val { color: #a5d6ff; }
+    .comment { color: #8b949e; font-style: italic; }
+    .kw { color: #ff7b72; }
+    .fn { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .num { color: #79c0ff; }
+
+    /* Live widget container */
+    #live-embed-1 { min-height: 60px; }
+
+    /* Event log */
+    .event-log {
+      margin-top: 16px;
+      background: #010409;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 12px;
+      font-family: monospace;
+      min-height: 60px;
+      color: #7ee787;
+    }
+    .event-log .ev-item { margin: 2px 0; }
+    .event-log .ev-time { color: #8b949e; }
+    .event-log .ev-error { color: #f87171; }
+    .event-log .ev-info { color: #58a6ff; }
+    .event-log .ev-success { color: #7ee787; }
+
+    .status-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .status-badge {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-green { background: #3fb950; }
+    .dot-purple { background: #7c3aed; }
+    .dot-orange { background: #fb923c; }
+
+    .info-box {
+      background: #0c1e38;
+      border: 1px solid #1d3f6b;
+      border-radius: 10px;
+      padding: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #58a6ff;
+      margin-bottom: 20px;
+    }
+    .info-box strong { color: #79c0ff; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">LIRI Embed — Demo</div>
+  <h1>Widget LIRI Live</h1>
+  <p>Intégrez un live vidéo LIRI dans n'importe quel site — WordPress, Wix, HTML statique, ou votre propre app.</p>
+</div>
+
+<div class="demo-grid">
+
+  <!-- SECTION 1: Méthode balise data (auto-mount) -->
+  <div class="demo-block">
+    <div class="demo-block-header">
+      <div class="step">1</div>
+      <h2>Méthode auto-mount (recommandée) — Copier/coller</h2>
+    </div>
+    <div class="demo-block-body">
+      <div class="info-box">
+        Copiez ces 2 lignes dans n'importe quelle page HTML. Le widget se monte automatiquement sur chaque élément <strong>.liri-live</strong>.
+      </div>
+      <pre><code><span class="comment">&lt;!-- 1. Conteneur du live --&gt;</span>
+<span class="tag">&lt;div</span>
+  <span class="attr">class</span>=<span class="val">"liri-live"</span>
+  <span class="attr">data-tenant</span>=<span class="val">"isna"</span>
+  <span class="attr">data-session</span>=<span class="val">"bb775442-aa29-4feb-b7ad-ab2f8e80a3f0"</span>
+  <span class="attr">data-height</span>=<span class="val">"560"</span>
+  <span class="attr">data-theme</span>=<span class="val">"dark"</span>
+<span class="tag">&gt;&lt;/div&gt;</span>
+
+<span class="comment">&lt;!-- 2. Script widget (1 seule ligne) --&gt;</span>
+<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="val">"https://app.prorascience.org/liri-widget.js"</span> <span class="attr">async</span><span class="tag">&gt;&lt;/script&gt;</span></code></pre>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Live en direct -->
+  <div class="demo-block">
+    <div class="demo-block-header">
+      <div class="step">2</div>
+      <h2>Résultat — Session "Live test" (ISNA)</h2>
+    </div>
+    <div class="demo-block-body">
+      <div class="status-row">
+        <div class="status-badge"><div class="dot dot-green"></div> API: localhost:4002</div>
+        <div class="status-badge"><div class="dot dot-purple"></div> Tenant: ISNA</div>
+        <div class="status-badge"><div class="dot dot-orange"></div> Session: scheduled</div>
+      </div>
+
+      <!-- AUTO-MOUNT via data-* attributes -->
+      <div
+        class="liri-live"
+        data-tenant="isna"
+        data-session="bb775442-aa29-4feb-b7ad-ab2f8e80a3f0"
+        data-height="520"
+        data-theme="dark"
+        data-api-base="http://localhost:4002"
+        data-app-base="http://localhost:5173"
+        id="live-embed-1"
+      ></div>
+
+      <div class="event-log" id="event-log">
+        <div class="ev-item ev-info"><span class="ev-time">[init]</span> Widget en attente de montage…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: API JS manuelle -->
+  <div class="demo-block">
+    <div class="demo-block-header">
+      <div class="step">3</div>
+      <h2>Méthode API JS — Contrôle avancé</h2>
+    </div>
+    <div class="demo-block-body">
+      <pre><code><span class="tag">&lt;div</span> <span class="attr">id</span>=<span class="val">"mon-live"</span><span class="tag">&gt;&lt;/div&gt;</span>
+<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="val">"/liri-widget.js"</span><span class="tag">&gt;&lt;/script&gt;</span>
+<span class="tag">&lt;script&gt;</span>
+  <span class="kw">const</span> widget = <span class="fn">LiriWidget.mount</span>({
+    container: <span class="str">'#mon-live'</span>,
+    tenant:    <span class="str">'isna'</span>,
+    session:   <span class="str">'bb775442-aa29-4feb-b7ad-ab2f8e80a3f0'</span>,
+    height:    <span class="num">560</span>,
+    theme:     <span class="str">'dark'</span>,
+
+    <span class="comment">// Callbacks événements</span>
+    <span class="fn">onJoined</span>: (info) => {
+      console.<span class="fn">log</span>(<span class="str">'✅ Rejoint la salle :'</span>, info.room);
+    },
+    <span class="fn">onEnded</span>: () => {
+      console.<span class="fn">log</span>(<span class="str">'🔴 Session terminée'</span>);
+    },
+    <span class="fn">onError</span>: (msg) => {
+      console.<span class="fn">error</span>(<span class="str">'❌ Erreur LIRI :'</span>, msg);
+    },
+  });
+
+  <span class="comment">// Démonter proprement si besoin</span>
+  <span class="comment">// widget.unmount();</span>
+<span class="tag">&lt;/script&gt;</span></code></pre>
+    </div>
+  </div>
+
+  <!-- SECTION 4: WordPress shortcode -->
+  <div class="demo-block">
+    <div class="demo-block-header">
+      <div class="step">4</div>
+      <h2>WordPress — Bloc HTML / Shortcode</h2>
+    </div>
+    <div class="demo-block-body">
+      <div class="info-box">
+        Dans WordPress : <strong>Éditeur → Bloc HTML personnalisé</strong> → coller le code ci-dessous.
+      </div>
+      <pre><code><span class="comment">&lt;!-- Bloc HTML personnalisé WordPress --&gt;</span>
+<span class="tag">&lt;div</span>
+  <span class="attr">class</span>=<span class="val">"liri-live"</span>
+  <span class="attr">data-tenant</span>=<span class="val">"isna"</span>
+  <span class="attr">data-session</span>=<span class="val">"bb775442-aa29-4feb-b7ad-ab2f8e80a3f0"</span>
+  <span class="attr">data-height</span>=<span class="val">"560"</span>
+<span class="tag">&gt;&lt;/div&gt;</span>
+<span class="tag">&lt;script</span>
+  <span class="attr">src</span>=<span class="val">"https://app.prorascience.org/liri-widget.js"</span>
+  <span class="attr">async</span>
+<span class="tag">&gt;&lt;/script&gt;</span></code></pre>
+    </div>
+  </div>
+
+  <!-- SECTION 5: Sécurité -->
+  <div class="demo-block">
+    <div class="demo-block-header">
+      <div class="step">5</div>
+      <h2>Sécurité — Comment ça fonctionne</h2>
+    </div>
+    <div class="demo-block-body">
+      <div style="display:grid;gap:16px;font-size:14px;line-height:1.7;color:#8b949e;">
+        <div>
+          <strong style="color:#e1e7ef;">1. Vérification d'origine</strong><br>
+          Le widget envoie l'header <code style="color:#7c3aed;">Origin</code> automatiquement. L'API vérifie que ce domaine est dans la liste blanche du tenant (table <code>tenant_domains</code>).
+        </div>
+        <div>
+          <strong style="color:#e1e7ef;">2. Token embed JWT (30 min)</strong><br>
+          L'API émet un JWT signé avec <code style="color:#7c3aed;">LIRI_EMBED_JWT_SECRET</code> contenant <code>{tenant_id, session_id, role, origin, iss}</code>. Sans ce token, impossible de rejoindre la salle.
+        </div>
+        <div>
+          <strong style="color:#e1e7ef;">3. Token LiveKit (1h)</strong><br>
+          Après validation du JWT embed, l'API génère un token LiveKit <code>viewer</code> (canPublish: false, canSubscribe: true). Le viewer peut regarder mais pas prendre la parole.
+        </div>
+        <div>
+          <strong style="color:#e1e7ef;">4. Isolation multi-tenant</strong><br>
+          La room LiveKit est nommée <code style="color:#7c3aed;">isna_bb775442…</code> — prefixée par le slug tenant. Impossible d'accéder aux rooms d'un autre tenant même avec un token valide.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Widget JS - pointe vers le serveur local en dev -->
+<script src="/liri-widget.js"></script>
+
+<script>
+  // Enrichir le log d'événements
+  var log = document.getElementById('event-log');
+
+  function addLog(type, msg) {
+    var now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    var div = document.createElement('div');
+    div.className = 'ev-item ev-' + type;
+    div.innerHTML = '<span class="ev-time">[' + now + ']</span> ' + msg;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  // Écouter les postMessages de l'iframe LIRI
+  window.addEventListener('message', function(event) {
+    if (!event.data || typeof event.data !== 'object') return;
+    switch (event.data.type) {
+      case 'LIRI_SESSION_JOINED':
+        addLog('success', '✅ Rejoint la salle : ' + (event.data.room || ''));
+        break;
+      case 'LIRI_SESSION_ENDED':
+        addLog('info', '🔴 Session terminée');
+        break;
+      case 'LIRI_ERROR':
+        addLog('error', '❌ ' + (event.data.message || 'Erreur inconnue'));
+        break;
+    }
+  });
+
+  // Logger quand l'auto-mount démarre
+  document.addEventListener('DOMContentLoaded', function() {
+    addLog('info', '🔌 Auto-mount déclenché sur .liri-live');
+    addLog('info', '📡 Demande d\'embed token → api/lives/embed/token');
+  });
+</script>
+
+</body>
+</html>

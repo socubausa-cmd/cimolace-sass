@@ -1,0 +1,51 @@
+[
+  {
+    "id": "text_11_body_paragraph_pro",
+    "label": "Paragraphe pro",
+    "category": "body",
+    "usage": "Texte de développement lisible en projection.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 82, "y": 198, "width": 620, "text": "Ajoutez ici un paragraphe clair, aéré et structuré pour développer votre idée sans surcharger la slide. Préférez des phrases courtes et des blocs bien respirés.", "fontFamily": "Inter", "fontSize": 22, "fill": "#334155", "lineHeight": 1.6}}
+    ]
+  },
+  {
+    "id": "text_12_bullets_clean_3",
+    "label": "3 puces clean",
+    "category": "lists",
+    "usage": "Trois idées principales à retenir.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 82, "y": 212, "width": 720, "text": "• Premier point à retenir\n• Deuxième point à retenir\n• Troisième point à retenir", "fontFamily": "Inter", "fontSize": 24, "fill": "#0F172A", "lineHeight": 1.85}}
+    ]
+  },
+  {
+    "id": "text_13_numbered_list_4",
+    "label": "Liste numérotée 4",
+    "category": "lists",
+    "usage": "Étapes, séquences, logique méthodique.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 88, "y": 206, "width": 780, "text": "1. Première étape de votre méthode\n2. Deuxième étape structurante\n3. Troisième étape de validation\n4. Quatrième étape de conclusion", "fontFamily": "Inter", "fontSize": 22, "fill": "#111827", "lineHeight": 1.82}}
+    ]
+  },
+  {
+    "id": "text_14_price_offer",
+    "label": "Offre / prix premium",
+    "category": "marketing",
+    "usage": "Publicité, vente, conversion.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 78, "y": 104, "text": "OFFRE LIMITÉE", "fontFamily": "Inter", "fontSize": 18, "fontStyle": "bold", "fill": "#F43F5E", "letterSpacing": 2}},
+      {"type": "Text", "attrs": {"x": 76, "y": 142, "text": "49€", "fontFamily": "Montserrat", "fontSize": 72, "fontStyle": "bold", "fill": "#0F172A"}},
+      {"type": "Text", "attrs": {"x": 80, "y": 222, "width": 360, "text": "Ajoutez ici le bénéfice direct ou la promesse principale.", "fontFamily": "Inter", "fontSize": 22, "fill": "#475569"}}
+    ]
+  },
+  {
+    "id": "text_15_spiritual_heading",
+    "label": "Titre spirituel sacré",
+    "category": "spiritual",
+    "usage": "Culte, rituel, cours spirituel.",
+    "nodes": [
+      {"type": "Text", "attrs": {"x": 90, "y": 92, "width": 860, "text": "Titre sacré ou formule rituelle", "fontFamily": "Cinzel", "fontSize": 44, "fontStyle": "bold", "fill": "#F6E7B0", "align": "center"}},
+      {"type": "Line", "attrs": {"points": [316, 154, 720, 154], "stroke": "rgba(212,160,23,0.58)", "strokeWidth": 2, "lineCap": "round"}},
+      {"type": "Text", "attrs": {"x": 210, "y": 170, "width": 616, "text": "Ajoutez ici le sous-titre ou l'intention spirituelle", "fontFamily": "Libre Baskerville", "fontSize": 20, "fill": "#EADCA6", "align": "center"}}
+    ]
+  }
+]

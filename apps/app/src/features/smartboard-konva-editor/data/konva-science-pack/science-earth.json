@@ -1,0 +1,954 @@
+[
+  {
+    "id": "sci_terre_cycle_eau",
+    "label": "Cycle de l’eau",
+    "family": "earth",
+    "familyLabel": "Terre & environnement",
+    "usage": "Évaporation · précipitations",
+    "pedagogicalGoal": "Flux continus.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#0ea5e918",
+          "stroke": "#0ea5e955",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Cycle de l’eau",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Océan · atmosphère · continent",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 200,
+          "y": 260,
+          "width": 120,
+          "text": "Évaporation",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "center"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            320,
+            280,
+            480,
+            220
+          ],
+          "stroke": "#0ea5e9",
+          "strokeWidth": 3,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 500,
+          "y": 200,
+          "width": 120,
+          "text": "Nuages",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "center"
+        }
+      },
+      {
+        "type": "Line",
+        "attrs": {
+          "points": [
+            580,
+            240,
+            700,
+            320
+          ],
+          "stroke": "#0ea5e9",
+          "strokeWidth": 3,
+          "lineCap": "round"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 720,
+          "y": 340,
+          "width": 120,
+          "text": "Ruissellement",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "center"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_terre_couches",
+    "label": "Couches de la Terre",
+    "family": "earth",
+    "familyLabel": "Terre & environnement",
+    "usage": "Écorce · manteau · noyau",
+    "pedagogicalGoal": "Coupe schématique.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#78716c18",
+          "stroke": "#78716c55",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Coupe de la Terre",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Superposition des couches",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 380,
+          "y": 180,
+          "width": 280,
+          "height": 60,
+          "cornerRadius": 4,
+          "fill": "#fde68a",
+          "stroke": "#ca8a04",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 400,
+          "y": 198,
+          "width": 240,
+          "text": "Croûte",
+          "fontFamily": "Inter",
+          "fontSize": 14,
+          "fill": "#0f172a",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 360,
+          "y": 260,
+          "width": 320,
+          "height": 100,
+          "cornerRadius": 4,
+          "fill": "#fbbf24",
+          "stroke": "#d97706",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 400,
+          "y": 300,
+          "width": 240,
+          "text": "Manteau",
+          "fontFamily": "Inter",
+          "fontSize": 14,
+          "fill": "#0f172a",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 340,
+          "y": 380,
+          "width": 360,
+          "height": 120,
+          "cornerRadius": 4,
+          "fill": "#ea580c",
+          "stroke": "#c2410c",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 400,
+          "y": 430,
+          "width": 240,
+          "text": "Noyau",
+          "fontFamily": "Inter",
+          "fontSize": 14,
+          "fill": "#fff",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_terre_volcan",
+    "label": "Volcan (schéma)",
+    "family": "earth",
+    "familyLabel": "Terre & environnement",
+    "usage": "Magma · chambre · cheminée",
+    "pedagogicalGoal": "Relief et processus.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#dc262618",
+          "stroke": "#dc262655",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Volcan — schéma",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Chambre magmatique · cheminée · cratère",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 460,
+          "y": 200,
+          "width": 120,
+          "height": 200,
+          "cornerRadius": 8,
+          "fill": "rgba(220,38,38,0.25)",
+          "stroke": "#b91c1c",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 420,
+          "y": 380,
+          "width": 200,
+          "height": 80,
+          "cornerRadius": 4,
+          "fill": "rgba(120,113,108,0.4)",
+          "stroke": "#78716c",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 500,
+          "width": 860,
+          "text": "Annoter : points chauds · plaques (lien tectonique)",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#7f1d1d",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_terre_tectonique",
+    "label": "Plaques tectoniques",
+    "family": "earth",
+    "familyLabel": "Terre & environnement",
+    "usage": "Dorsales · fosses",
+    "pedagogicalGoal": "Carte simplifiée.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#57534e18",
+          "stroke": "#57534e55",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Tectonique des plaques",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Limites convergentes / divergentes",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 120,
+          "y": 220,
+          "width": 760,
+          "height": 140,
+          "cornerRadius": 10,
+          "fill": "rgba(87,83,78,0.15)",
+          "stroke": "#57534e",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 140,
+          "y": 270,
+          "width": 720,
+          "text": "Plaque A  |  Zone de subduction  |  Plaque B",
+          "fontFamily": "Inter",
+          "fontSize": 17,
+          "fill": "#44403c",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_terre_paysage_avant_apres",
+    "label": "Paysage avant / après",
+    "family": "earth",
+    "familyLabel": "Terre & environnement",
+    "usage": "Érosion · temps long",
+    "pedagogicalGoal": "Comparer deux états.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#78716c18",
+          "stroke": "#78716c55",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Évolution du paysage",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "T₀ → T₁",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 100,
+          "y": 220,
+          "width": 360,
+          "height": 180,
+          "cornerRadius": 12,
+          "fill": "rgba(120,113,108,0.15)",
+          "stroke": "#78716c",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 200,
+          "y": 300,
+          "width": 160,
+          "text": "Avant",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 500,
+          "y": 300,
+          "width": 40,
+          "text": "→",
+          "fontFamily": "Inter",
+          "fontSize": 32,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 560,
+          "y": 220,
+          "width": 360,
+          "height": 180,
+          "cornerRadius": 12,
+          "fill": "rgba(34,197,94,0.12)",
+          "stroke": "#22c55e",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 660,
+          "y": 300,
+          "width": 160,
+          "text": "Après",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_terre_climat",
+    "label": "Climat (zones)",
+    "family": "earth",
+    "familyLabel": "Terre & environnement",
+    "usage": "Latitude · circulation",
+    "pedagogicalGoal": "Situer un phénomène.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#0284c718",
+          "stroke": "#0284c755",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Zones climatiques (schéma)",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Équateur · tropiques · pôles",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 120,
+          "y": 220,
+          "width": 760,
+          "height": 100,
+          "cornerRadius": 8,
+          "fill": "rgba(2,132,199,0.15)",
+          "stroke": "#0284c7",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 140,
+          "y": 255,
+          "width": 720,
+          "text": "Chaud — tempéré — froid (simplifié)",
+          "fontFamily": "Inter",
+          "fontSize": 17,
+          "fill": "#0c4a6e",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_terre_biomes",
+    "label": "Biomes",
+    "family": "earth",
+    "familyLabel": "Terre & environnement",
+    "usage": "Forêt · désert · toundra",
+    "pedagogicalGoal": "Diversité des milieux.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#16a34a18",
+          "stroke": "#16a34a55",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Biomes",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Température / précipitations",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 220,
+          "width": 860,
+          "text": "Axe : précipitations · autre axe : température → placer les biomes",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fill": "#14532d",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_terre_chaine_env",
+    "label": "Chaîne environnementale",
+    "family": "earth",
+    "familyLabel": "Terre & environnement",
+    "usage": "Réseau trophique / flux",
+    "pedagogicalGoal": "Interactions.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#16a34a18",
+          "stroke": "#16a34a55",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Réseau simplifié",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Plusieurs maillons reliés",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 100,
+          "y": 280,
+          "width": 800,
+          "text": "A → B → C  et  A → D → C  (plusieurs chemins)",
+          "fontFamily": "Inter",
+          "fontSize": 18,
+          "fill": "#166534",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_terre_pollution",
+    "label": "Pollution : cause → effet",
+    "family": "earth",
+    "familyLabel": "Terre & environnement",
+    "usage": "Sources · impacts",
+    "pedagogicalGoal": "Chaîne causale environnementale.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#64748b18",
+          "stroke": "#64748b55",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Pollution",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Source → transport → récepteur",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 80,
+          "y": 240,
+          "width": 240,
+          "text": "Source",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 340,
+          "y": 240,
+          "width": 40,
+          "text": "→",
+          "fontFamily": "Inter",
+          "fontSize": 24,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 400,
+          "y": 240,
+          "width": 240,
+          "text": "Milieu",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 660,
+          "y": 240,
+          "width": 40,
+          "text": "→",
+          "fontFamily": "Inter",
+          "fontSize": 24,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 720,
+          "y": 240,
+          "width": 200,
+          "text": "Impact santé / éco",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_terre_carte_simple",
+    "label": "Carte scientifique simple",
+    "family": "earth",
+    "familyLabel": "Terre & environnement",
+    "usage": "Zones · légende",
+    "pedagogicalGoal": "Situer dans l’espace.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#0284c718",
+          "stroke": "#0284c755",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Carte + légende",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Zones colorées · échelle",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 120,
+          "y": 200,
+          "width": 760,
+          "height": 280,
+          "cornerRadius": 12,
+          "fill": "rgba(2,132,199,0.08)",
+          "stroke": "#0284c7",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 140,
+          "y": 340,
+          "width": 720,
+          "text": "Insérer carte / tracer zones",
+          "fontFamily": "Inter",
+          "fontSize": 18,
+          "fill": "#0c4a6e",
+          "align": "center"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 120,
+          "y": 520,
+          "width": 400,
+          "height": 64,
+          "cornerRadius": 8,
+          "fill": "rgba(15,23,42,0.06)",
+          "stroke": "#64748b",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 136,
+          "y": 540,
+          "width": 360,
+          "text": "Légende : symboles · couleurs",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      }
+    ]
+  }
+]

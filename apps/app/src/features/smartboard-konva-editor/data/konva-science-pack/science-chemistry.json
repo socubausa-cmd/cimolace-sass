@@ -1,0 +1,964 @@
+[
+  {
+    "id": "sci_chim_reaction",
+    "label": "Réaction simple",
+    "family": "chemistry",
+    "familyLabel": "Chimie",
+    "usage": "Réactifs → produits",
+    "pedagogicalGoal": "Matériau qui se transforme selon des conditions.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#a855f718",
+          "stroke": "#a855f755",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Réaction chimique",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Réactifs → milieu → produits",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 100,
+          "y": 240,
+          "width": 240,
+          "text": "Réactif A + Réactif B",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#6b21a8",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 400,
+          "y": 240,
+          "width": 80,
+          "text": "→",
+          "fontFamily": "Inter",
+          "fontSize": 32,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 500,
+          "y": 240,
+          "width": 280,
+          "text": "Produits",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#6b21a8",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 380,
+          "width": 860,
+          "text": "Ajoutez conditions : T, catalyseur, solvant…",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fill": "#64748b",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_chim_equation_visuelle",
+    "label": "Équation visuelle",
+    "family": "chemistry",
+    "familyLabel": "Chimie",
+    "usage": "Stœchiométrie",
+    "pedagogicalGoal": "Coefficients et conservation.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#a855f718",
+          "stroke": "#a855f755",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Équation équilibrée",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Atomes conservés",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 120,
+          "y": 260,
+          "width": 780,
+          "text": "___ A + ___ B  →  ___ C + ___ D",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#581c87",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 400,
+          "width": 860,
+          "text": "Vérifier atomes par élément · charges en solution",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fill": "#6b21a8",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_chim_molecule",
+    "label": "Molécule annotée",
+    "family": "chemistry",
+    "familyLabel": "Chimie",
+    "usage": "Liaisons",
+    "pedagogicalGoal": "Schéma de Lewis / simplifié.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#c026d318",
+          "stroke": "#c026d355",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Molécule",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Liaisons · paires · polarité",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Circle",
+        "attrs": {
+          "x": 520,
+          "y": 300,
+          "radius": 80,
+          "fill": "rgba(192,38,211,0.2)",
+          "stroke": "#a21caf",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 480,
+          "y": 400,
+          "width": 120,
+          "text": "Atome central",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#0f172a",
+          "align": "center"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 500,
+          "width": 860,
+          "text": "Étiqueter : liaisons σ / π · doublets non liants",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#86198f",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_chim_atome",
+    "label": "Atome simplifié",
+    "family": "chemistry",
+    "familyLabel": "Chimie",
+    "usage": "Z, A, électrons",
+    "pedagogicalGoal": "Noyau / couches.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#ec489918",
+          "stroke": "#ec489955",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Atome",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Z · A · électrons",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Circle",
+        "attrs": {
+          "x": 520,
+          "y": 280,
+          "radius": 50,
+          "fill": "rgba(236,72,153,0.3)",
+          "stroke": "#db2777",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 500,
+          "y": 350,
+          "width": 120,
+          "text": "Noyau",
+          "fontFamily": "Inter",
+          "fontSize": 14,
+          "fill": "#0f172a",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Circle",
+        "attrs": {
+          "x": 520,
+          "y": 420,
+          "radius": 120,
+          "fill": "rgba(236,72,153,0.08)",
+          "stroke": "#db2777",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 500,
+          "width": 860,
+          "text": "Placer Z, A et répartition électronique (simplifiée)",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#9d174d",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_chim_conditions",
+    "label": "Conditions de réaction",
+    "family": "chemistry",
+    "familyLabel": "Chimie",
+    "usage": "T, P, catalyseur",
+    "pedagogicalGoal": "Contexte détermine vitesse et sélectivité.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#a855f718",
+          "stroke": "#a855f755",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Paramètres",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Effet sur la réaction",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 220,
+          "width": 400,
+          "text": "• Température ↑ souvent vitesse ↑",
+          "fontFamily": "Inter",
+          "fontSize": 17,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 260,
+          "width": 400,
+          "text": "• Catalyseur : chemin réactionnel",
+          "fontFamily": "Inter",
+          "fontSize": 17,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 300,
+          "width": 400,
+          "text": "• Concentration / pression (gaz)",
+          "fontFamily": "Inter",
+          "fontSize": 17,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 520,
+          "y": 200,
+          "width": 420,
+          "height": 160,
+          "cornerRadius": 12,
+          "fill": "rgba(168,85,247,0.1)",
+          "stroke": "#9333ea",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 540,
+          "y": 240,
+          "width": 380,
+          "text": "Résultat attendu : rendement · cinétique",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fill": "#6b21a8",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_chim_acide_base",
+    "label": "Acide / base",
+    "family": "chemistry",
+    "familyLabel": "Chimie",
+    "usage": "pH · couples",
+    "pedagogicalGoal": "Échelle et réactions.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#14b8a618",
+          "stroke": "#14b8a655",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Acide — Base",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "pH · transfert de protons",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 220,
+          "width": 860,
+          "text": "0 ———— 7 ———— 14   (eau : pH 7)",
+          "fontFamily": "Inter",
+          "fontSize": 20,
+          "fill": "#0f766e",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 300,
+          "width": 860,
+          "text": "AH / A⁻ · notations du cours (Bronsted)",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fill": "#115e59",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_chim_melange",
+    "label": "Mélange / corps pur",
+    "family": "chemistry",
+    "familyLabel": "Chimie",
+    "usage": "Homogène / hétérogène",
+    "pedagogicalGoal": "Distinction et séparation.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#14b8a618",
+          "stroke": "#14b8a655",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Mélange vs corps pur",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Composition",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 100,
+          "y": 240,
+          "width": 380,
+          "text": "Corps pur : une espèce",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f766e",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 540,
+          "y": 240,
+          "width": 380,
+          "text": "Mélange : plusieurs espèces",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f766e",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 88,
+          "y": 400,
+          "width": 860,
+          "text": "Séparation : filtration, distillation, chromato…",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_chim_etat_matiere",
+    "label": "États de la matière",
+    "family": "chemistry",
+    "familyLabel": "Chimie",
+    "usage": "Solide / liquide / gaz",
+    "pedagogicalGoal": "Changements d’état.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#0ea5e918",
+          "stroke": "#0ea5e955",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "États et transitions",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Fusion · vaporisation · sublimation…",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 200,
+          "y": 260,
+          "width": 120,
+          "text": "Solide",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 400,
+          "y": 260,
+          "width": 40,
+          "text": "⇄",
+          "fontFamily": "Inter",
+          "fontSize": 24,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 480,
+          "y": 260,
+          "width": 120,
+          "text": "Liquide",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 680,
+          "y": 260,
+          "width": 40,
+          "text": "⇄",
+          "fontFamily": "Inter",
+          "fontSize": 24,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 760,
+          "y": 260,
+          "width": 120,
+          "text": "Gaz",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "center",
+          "fontStyle": "bold"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_chim_tableau_periodique",
+    "label": "Tableau périodique (aperçu)",
+    "family": "chemistry",
+    "familyLabel": "Chimie",
+    "usage": "Familles · périodes",
+    "pedagogicalGoal": "Vue d’ensemble.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#6366f118",
+          "stroke": "#6366f155",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Tableau périodique simplifié",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Métaux | métalloïdes | non-métaux",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 120,
+          "y": 220,
+          "width": 760,
+          "height": 120,
+          "cornerRadius": 8,
+          "fill": "rgba(99,102,241,0.12)",
+          "stroke": "#4f46e5",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 160,
+          "y": 260,
+          "width": 680,
+          "text": "Insérer une capture ou dessiner les zones clés (métaux à gauche…)",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#312e81",
+          "align": "left"
+        }
+      }
+    ]
+  },
+  {
+    "id": "sci_chim_transfo_utile",
+    "label": "Matière → produit utile",
+    "family": "chemistry",
+    "familyLabel": "Chimie",
+    "usage": "Industrie · labo",
+    "pedagogicalGoal": "Relier théorie et usage.",
+    "nodes": [
+      {
+        "type": "Rect",
+        "attrs": {
+          "x": 48,
+          "y": 36,
+          "width": 940,
+          "height": 56,
+          "cornerRadius": 14,
+          "fill": "#a855f718",
+          "stroke": "#a855f755",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 48,
+          "width": 860,
+          "text": "Chaîne matière → produit",
+          "fontFamily": "Inter",
+          "fontSize": 26,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 64,
+          "y": 92,
+          "width": 900,
+          "text": "Brut → transformation → usage",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fill": "#475569",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 80,
+          "y": 240,
+          "width": 280,
+          "text": "Matière brute",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 400,
+          "y": 240,
+          "width": 60,
+          "text": "→",
+          "fontFamily": "Inter",
+          "fontSize": 28,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 480,
+          "y": 240,
+          "width": 280,
+          "text": "Transformation",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#0f172a",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 780,
+          "y": 240,
+          "width": 60,
+          "text": "→",
+          "fontFamily": "Inter",
+          "fontSize": 28,
+          "fill": "#0f172a",
+          "align": "left"
+        }
+      },
+      {
+        "type": "Text",
+        "attrs": {
+          "x": 100,
+          "y": 320,
+          "width": 200,
+          "text": "Produit utile",
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fill": "#6b21a8",
+          "align": "left",
+          "fontStyle": "bold"
+        }
+      }
+    ]
+  }
+]

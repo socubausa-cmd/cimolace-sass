@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "name": "LIRI Konva Pro Presets Pack V1",
+    "version": "1.0.0",
+    "description": "20 presets texte premium + 20 éléments premium pour LIRI Event Designer / SmartBoard Designer",
+    "canvas": {
+      "width": 1037,
+      "height": 750,
+      "safeZone": { "x": 52, "y": 38, "width": 933, "height": 674 }
+    },
+    "notes": [
+      "Tous les presets sont pensés pour un rendu professionnel sur SmartBoard et projection live.",
+      "Les polices doivent être préchargées côté app : Inter, Montserrat, Cinzel, Playfair Display, Poppins, Bebas Neue, Libre Baskerville.",
+      "Les couleurs sont optimisées pour fond clair ou sombre avec fort contraste."
+    ]
+  },
+  "styleTokens": {
+    "colors": {
+      "ink": "#0F172A",
+      "paper": "#F8FAFC",
+      "muted": "#64748B",
+      "accentPurple": "#8B5CF6",
+      "accentGold": "#D4A017",
+      "accentBlue": "#38BDF8",
+      "accentGreen": "#22C55E",
+      "accentRose": "#F43F5E",
+      "panelDark": "rgba(15,23,42,0.72)",
+      "panelLight": "rgba(255,255,255,0.86)"
+    },
+    "shadows": {
+      "soft": {
+        "shadowColor": "rgba(15,23,42,0.16)",
+        "shadowBlur": 18,
+        "shadowOffsetX": 0,
+        "shadowOffsetY": 8,
+        "shadowOpacity": 1
+      },
+      "glowPurple": {
+        "shadowColor": "rgba(139,92,246,0.32)",
+        "shadowBlur": 22,
+        "shadowOffsetX": 0,
+        "shadowOffsetY": 0,
+        "shadowOpacity": 1
+      }
+    }
+  }
+}

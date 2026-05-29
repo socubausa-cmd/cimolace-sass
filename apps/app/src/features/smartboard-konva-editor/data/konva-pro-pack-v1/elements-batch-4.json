@@ -1,0 +1,46 @@
+[
+  {
+    "id": "elem_16_stat_circle",
+    "label": "Stat cercle",
+    "category": "business",
+    "nodes": [
+      {"type": "Circle", "attrs": {"x": 852, "y": 142, "radius": 56, "fill": "rgba(255,255,255,0.96)", "stroke": "rgba(15,23,42,0.06)"}},
+      {"type": "Text", "attrs": {"x": 810, "y": 126, "width": 84, "text": "87%", "fontFamily": "Montserrat", "fontSize": 28, "fontStyle": "bold", "fill": "#0F172A", "align": "center"}},
+      {"type": "Text", "attrs": {"x": 810, "y": 160, "width": 84, "text": "qualité", "fontFamily": "Inter", "fontSize": 14, "fill": "#64748B", "align": "center"}}
+    ]
+  },
+  {
+    "id": "elem_17_abstract_glow_blob",
+    "label": "Blob glow abstrait",
+    "category": "decor",
+    "nodes": [{"type": "Ellipse", "attrs": {"x": 770, "y": 250, "radiusX": 120, "radiusY": 74, "fill": "rgba(139,92,246,0.18)", "shadowColor": "rgba(139,92,246,0.42)", "shadowBlur": 36, "rotation": -18}}]
+  },
+  {
+    "id": "elem_18_photo_placeholder_label",
+    "label": "Zone photo annotée",
+    "category": "frames",
+    "nodes": [
+      {"type": "Rect", "attrs": {"x": 580, "y": 170, "width": 330, "height": 260, "cornerRadius": 24, "fill": "rgba(248,250,252,0.02)", "stroke": "rgba(148,163,184,0.40)", "dash": [12, 8]}},
+      {"type": "Text", "attrs": {"x": 650, "y": 280, "width": 190, "text": "Insérer une image", "fontFamily": "Inter", "fontSize": 24, "fontStyle": "bold", "fill": "#94A3B8", "align": "center"}}
+    ]
+  },
+  {
+    "id": "elem_19_bottom_film_label",
+    "label": "Légende basse",
+    "category": "footer",
+    "nodes": [
+      {"type": "Rect", "attrs": {"x": 70, "y": 650, "width": 240, "height": 44, "cornerRadius": 14, "fill": "rgba(15,23,42,0.72)"}},
+      {"type": "Text", "attrs": {"x": 96, "y": 664, "width": 188, "text": "Légende ou source", "fontFamily": "Inter", "fontSize": 18, "fill": "#E2E8F0", "align": "center"}}
+    ]
+  },
+  {
+    "id": "elem_20_grid_3_cards",
+    "label": "Grille 3 cartes",
+    "category": "layout",
+    "nodes": [
+      {"type": "Rect", "attrs": {"x": 72, "y": 388, "width": 270, "height": 184, "cornerRadius": 22, "fill": "rgba(255,255,255,0.92)", "stroke": "rgba(15,23,42,0.06)"}},
+      {"type": "Rect", "attrs": {"x": 384, "y": 388, "width": 270, "height": 184, "cornerRadius": 22, "fill": "rgba(255,255,255,0.92)", "stroke": "rgba(15,23,42,0.06)"}},
+      {"type": "Rect", "attrs": {"x": 696, "y": 388, "width": 270, "height": 184, "cornerRadius": 22, "fill": "rgba(255,255,255,0.92)", "stroke": "rgba(15,23,42,0.06)"}}
+    ]
+  }
+]

@@ -15,6 +15,8 @@ const TENANT_STUDENTS_PATH = `/t/${TENANT_SLUG}/admin/students`;
 const TENANT_SETTINGS_PATH = `/t/${TENANT_SLUG}/admin/settings`;
 /** Aligné sur les redirections sous-domaine ; toute variante `/t/:slug/admin/settings` est gérée par la Route SPA. */
 const TENANT_ADMIN_SETTINGS_PATH_RE = /^\/t\/[^/]+\/admin\/settings$/;
+/** Callback OAuth Google custom — route publique (unauthenticated redirect from edge function). */
+const TENANT_OAUTH_CALLBACK_PATH_RE = /^\/t\/[^/]+\/auth\/callback$/;
 import {
   BrowserRouter as Router,
   Routes,
@@ -268,6 +270,10 @@ const EleveNotificationsScreen = lazy(() => import('@/pages/eleve-mobile/EleveNo
 import EleveNoStudioGuard from '@/components/eleve-mobile/EleveNoStudioGuard';
 const EleveMobileRouteShell = lazy(() => import('@/components/eleve-mobile/EleveMobileRouteShell'));
 
+// ── LIRI Embed (iframe, pas de shell, pas d'auth) ─────────────────────────────
+const LiveEmbedPage = lazy(() => import('@/pages/embed/LiveEmbedPage'));
+const LiveEmbedStudioPage = lazy(() => import('@/pages/embed/LiveEmbedStudioPage'));
+
 // --- Other Pages ---
 const NotificationCenter = lazy(() => import('@/pages/NotificationCenter'));
 const NotificationSettings = lazy(() => import('@/pages/NotificationSettings'));
@@ -283,6 +289,7 @@ const SchoolVitrinePage = lazy(() => import('@/pages/SchoolVitrinePage'));
 const SchoolVitrineTenantPage = lazy(() => import('@/pages/school/SchoolVitrineTenantPage'));
 const SchoolBillingPage = lazy(() => import('@/pages/school/SchoolBillingPage'));
 const SchoolLoginPage = lazy(() => import('@/pages/school/SchoolLoginPage'));
+const SchoolGoogleCallback = lazy(() => import('@/pages/school/SchoolGoogleCallback'));
 const SchoolAdminDashboard = lazy(() => import('@/pages/school/SchoolAdminDashboard'));
 const SchoolSignupPage = lazy(() => import('@/pages/school/SchoolSignupPage'));
 const SchoolCoursesPage = lazy(() => import('@/pages/school/SchoolCoursesPage'));
@@ -291,6 +298,7 @@ const TenantAdminSmartboardPage = lazy(() => import('@/pages/tenant/TenantAdminS
 const TenantAdminMarketingPage = lazy(() => import('@/pages/tenant/TenantAdminMarketingPage'));
 const TenantAdminStudioPage = lazy(() => import('@/pages/tenant/TenantAdminStudioPage'));
 const TenantAdminNeuroRecallPage = lazy(() => import('@/pages/tenant/TenantAdminNeuroRecallPage'));
+const TenantAdminAiBillingPage = lazy(() => import('@/pages/tenant/TenantAdminAiBillingPage'));
 const TenantAdminCalendarPage = lazy(() => import('@/pages/tenant/TenantAdminCalendarPage'));
 const TenantAdminChatPage = lazy(() => import('@/pages/tenant/TenantAdminChatPage'));
 const TenantAdminNotificationsPage = lazy(() => import('@/pages/tenant/TenantAdminNotificationsPage'));
@@ -404,6 +412,7 @@ const IriPublicPage = lazy(() => import('@/pages/public/IriPublicPage'));
 const AdminCommunitiesPage = lazy(() => import('@/pages/admin/AdminCommunitiesPage'));
 const AdminMarketingPage = lazy(() => import('@/pages/admin/AdminMarketingPage'));
 const AdminTenantEmbedPage = lazy(() => import('@/pages/admin/AdminTenantEmbedPage'));
+const AdminTenantBrandingPage = lazy(() => import('@/pages/admin/AdminTenantBrandingPage'));
 const MarketingToolsSuitePage = lazy(() => import('@/pages/admin/MarketingToolsSuitePage'));
 const CommunityListPage = lazy(() => import('@/pages/CommunityListPage'));
 const CommunityChatPage = lazy(() => import('@/pages/CommunityChatPage'));
@@ -744,6 +753,7 @@ const AppContent = () => {
     || path === TENANT_STUDENTS_PATH // New tenant students route
     || path === TENANT_SETTINGS_PATH // New tenant settings route (/t/isna/...)
     || TENANT_ADMIN_SETTINGS_PATH_RE.test(path) // /t/:tenantSlug/admin/settings
+    || TENANT_OAUTH_CALLBACK_PATH_RE.test(path) // /t/:tenantSlug/auth/callback (OAuth Google custom)
     || [
         '/equipe',
         '/faq',
@@ -867,6 +877,7 @@ const AppContent = () => {
     '/companion-capture',
     '/live/',
     '/dev/masterclass-factory',
+    '/embed/',       // LIRI embed iframe — aucun shell
   ];
 
   // Routes live immersif — aucun shell app autour (plein écran total)
@@ -1016,6 +1027,35 @@ isLiriHostDevPreviewRoute;
         <LazyChunkErrorBoundary>
           <Suspense fallback={<PageLoader />}>
             <Routes>
+          {/*
+           * ── LIRI EMBED — iframe légère, aucun shell, aucune auth Supabase ────
+           * Montée EN PREMIER pour court-circuiter tout le reste du shell.
+           * Accessible depuis n'importe quel site via le widget liri-widget.js.
+           */}
+          <Route
+            path="/embed/live/:sessionId"
+            element={
+              <Suspense fallback={
+                <div style={{ minHeight: '100vh', background: '#0d1117', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 36, height: 36, border: '3px solid #21262d', borderTop: '3px solid #7c3aed', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                </div>
+              }>
+                <LiveEmbedPage />
+              </Suspense>
+            }
+          />
+          {/* LIRI Embed Studio — créer une session depuis n'importe quel site */}
+          <Route
+            path="/embed/studio"
+            element={
+              <Suspense fallback={
+                <div style={{ minHeight: '100vh', background: '#090e18' }} />
+              }>
+                <LiveEmbedStudioPage />
+              </Suspense>
+            }
+          />
+
           {/* CIMOLACE - SaaS complètement isolé - Router séparé, en dehors du main */}
           <Route path="/cimolace/*" element={<CimolaceRouter />} />
           {/* IRI — page dynamique par slug (tenant résolu par Host côté API) */}
@@ -1427,6 +1467,11 @@ isLiriHostDevPreviewRoute;
               <AdminTenantEmbedPage />
             </ProtectedRoleRoute>
           } />
+          <Route path="/admin/tenants/:tenantId/branding" element={
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+              <AdminTenantBrandingPage />
+            </ProtectedRoleRoute>
+          } />
           <Route path="/admin/marketing/tools" element={
             <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
               <MarketingToolsSuitePage />
@@ -1746,6 +1791,10 @@ isLiriHostDevPreviewRoute;
             element={<SchoolLoginPage />}
           />
           <Route
+            path="/t/:tenantSlug/auth/callback"
+            element={<SchoolGoogleCallback />}
+          />
+          <Route
             path="/t/:tenantSlug/signup"
             element={<SchoolSignupPage />}
           />
@@ -1860,6 +1909,14 @@ isLiriHostDevPreviewRoute;
             element={
               <TenantProtectedRoute>
                 <TenantAdminNeuroRecallPage />
+              </TenantProtectedRoute>
+            }
+          />
+          <Route
+            path="/t/:tenantSlug/admin/ai-billing"
+            element={
+              <TenantProtectedRoute>
+                <TenantAdminAiBillingPage />
               </TenantProtectedRoute>
             }
           />
