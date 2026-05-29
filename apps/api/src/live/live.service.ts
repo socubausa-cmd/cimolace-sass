@@ -281,6 +281,44 @@ export class LiveService {
   }
 
   /**
+   * Close any open Liri session matching the given LiveKit room_name. Called
+   * by the LiveKit webhook on `room_finished` so sessions don't leak when a
+   * user just closes the tab without clicking "End call". Idempotent — no-op
+   * if the row is already closed or doesn't exist (e.g. ISNA school sessions
+   * aren't yet in this ledger and stay handled by live_sessions).
+   */
+  async endLiriSessionByRoomName(
+    roomName: string,
+  ): Promise<{ session_id: string; duration_seconds: number } | null> {
+    const supabase = this.supabase;
+    const { data } = await supabase
+      .from('liri_sessions')
+      .select('id, tenant_id, external_ref, started_at, ended_at')
+      .eq('room_name', roomName)
+      .single();
+    if (!data) return null;
+    const row = data as any;
+    if (row.ended_at) {
+      return { session_id: row.id, duration_seconds: 0 };
+    }
+    const endedAt = new Date();
+    const durationSec = Math.max(
+      0,
+      Math.floor(
+        (endedAt.getTime() - new Date(row.started_at).getTime()) / 1000,
+      ),
+    );
+    await supabase
+      .from('liri_sessions')
+      .update({
+        ended_at: endedAt.toISOString(),
+        duration_seconds: durationSec,
+      })
+      .eq('id', row.id);
+    return { session_id: row.id, duration_seconds: durationSec };
+  }
+
+  /**
    * Aggregate consumption per purpose for a tenant inside [from, to].
    * Used by the admin UI to bill / show usage. Open sessions (no ended_at)
    * are excluded — only completed sessions count toward billing.

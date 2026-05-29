@@ -10,6 +10,9 @@ import { LiriAdminController } from "./liri-admin.controller";
 import { LiveEmbedService } from "./embed/live-embed.service";
 import { LiveEmbedController } from "./embed/live-embed.controller";
 import { LiveEmbedTokenGuard } from "./embed/live-embed-token.guard";
+// Webhook moved from LiveKitModule to here so it can dispatch to Liri.
+import { LiveKitWebhookController } from "../livekit/livekit-webhook.controller";
+import { LiveKitWebhookService } from "../livekit/livekit-webhook.service";
 
 @Module({
   imports: [
@@ -28,11 +31,13 @@ import { LiveEmbedTokenGuard } from "./embed/live-embed-token.guard";
     LiveEmbedController,
     LiveController,
     LiriAdminController,
+    LiveKitWebhookController,
   ],
   providers: [
     LiveService,
     LiveEmbedService,
     LiveEmbedTokenGuard,
+    LiveKitWebhookService,
   ],
   exports: [LiveService, LiveEmbedService],
 })

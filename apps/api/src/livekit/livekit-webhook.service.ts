@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { WebhookReceiver } from 'livekit-server-sdk';
 import { SupabaseService } from '../supabase/supabase.service';
 import type { Json } from '../supabase/supabase.service';
+import { LiveService } from '../live/live.service';
 
 type WebhookEvent = {
   event: string;
@@ -25,6 +26,7 @@ export class LiveKitWebhookService {
   constructor(
     config: ConfigService,
     private readonly supabase: SupabaseService,
+    private readonly liri: LiveService,
   ) {
     const apiKey = config.get<string>('LIVEKIT_API_KEY') ?? '';
     const apiSecret = config.get<string>('LIVEKIT_API_SECRET') ?? '';
@@ -68,7 +70,7 @@ export class LiveKitWebhookService {
     switch (event.event) {
       case 'room_finished':
       case 'room_stopped':
-        await this.handleRoomFinished(liveSessionId, now);
+        await this.handleRoomFinished(liveSessionId, now, roomName);
         break;
       case 'participant_joined':
         await this.handleParticipantJoined(event, liveSessionId, now);
@@ -91,13 +93,35 @@ export class LiveKitWebhookService {
   private async handleRoomFinished(
     liveSessionId: string | null,
     now: string,
+    roomName?: string,
   ): Promise<void> {
-    if (!liveSessionId) return;
-    await this.supabase.client
-      .from('live_sessions')
-      .update({ status: 'ended', ended_at: now })
-      .eq('id', liveSessionId);
-    this.logger.log(`Live ${liveSessionId} ended via webhook`);
+    // 1. ISNA school flow (legacy live_sessions table)
+    if (liveSessionId) {
+      await this.supabase.client
+        .from('live_sessions')
+        .update({ status: 'ended', ended_at: now })
+        .eq('id', liveSessionId);
+      this.logger.log(`Live ${liveSessionId} ended via webhook`);
+    }
+
+    // 2. Liri unified ledger (covers MEDOS teleconsult, Mbolo live shopping,
+    //    any future engine that called liri.issueTokenForSession). Without
+    //    this, sessions where the user closes the tab without clicking
+    //    "End call" stay open forever and skew billing.
+    if (roomName) {
+      try {
+        const result = await this.liri.endLiriSessionByRoomName(roomName);
+        if (result) {
+          this.logger.log(
+            `Liri session ${result.session_id} auto-ended via webhook (${result.duration_seconds}s)`,
+          );
+        }
+      } catch (err) {
+        this.logger.warn(
+          'liri.endLiriSessionByRoomName failed: ' + (err as Error).message,
+        );
+      }
+    }
   }
 
   private async handleParticipantJoined(
