@@ -1,7 +1,7 @@
 # MEDOS / Cimolace — Session Handoff
-**Date :** 2026-05-28 (mise à jour : Liri Sessions + Mbolo Live)
+**Date :** 2026-05-29 (mise à jour : Sprint P6 — Vercel deploys + seed + Liri auto-end + UI consumption)
 **Branche :** `main` (à jour avec `origin/main`)
-**Dernier commit :** `e4d82cbc` (P5.1 + P5.3 + P5.4 — Liri unification complète)
+**Dernier commit :** `7b23b1f4` (P6.3 + P6.4 — webhook auto-end + dashboard consumption card)
 
 Ce document est destiné à **l'agent qui reprend le projet**. Lis-le entièrement avant de toucher au code. Il décrit (a) ce qui a été livré, (b) ce qui marche et ce qui ne marche pas, (c) les décisions architecturales prises, (d) les pièges connus, (e) la roadmap suivante.
 
@@ -108,6 +108,14 @@ isna_platform_v2/
 | 70 | Persister `liri_sessions` (billing minutes) | `e4d82cbc` | Migration prod + endpoint `GET /liri/admin/consumption` |
 | 71 | Mbolo Live demo via Liri (preuve du pattern) | `e4d82cbc` | `POST /mbolo/products/:id/live/join?role=seller|viewer` |
 | 72 | Zero-LiveKit MEDOS (sortir scopedRoomName) | `e4d82cbc` | `LiveService.roomNameFor()` — MEDOS n'importe plus LiveKit |
+
+### Sprint P6 — Production-ready (déploiement + démo + auto-billing)
+| # | Tâche | Commit | Notes |
+|---|---|---|---|
+| 74 | Deploy med-app + patient-portal sur Vercel | `40ad5420` | Inline `@isna/ui` dans chaque app (Vercel ne résout pas les workspace deps). URLs : https://med-app-cimolace.vercel.app + https://patient-portal-cimolace.vercel.app |
+| 75 | Script seed démo Zahir | (pas en repo, `/tmp/medos-migrate/seed-zahir-demo.mjs`) | 4 patients fictifs avec notes signées, ordonnances, programme assigné, 14 jours santé, 7 RDV, conversation messagerie |
+| 76 | Webhook LiveKit auto-end Liri session | `7b23b1f4` | `LiveKitWebhookService` ferme `liri_sessions` sur `room_finished`. Module reshuffling : webhook déplacé de `LiveKitModule` vers `LiveModule` (évite cycle DI) |
+| 77 | UI consumption Liri dans dashboard MEDOS | `7b23b1f4` | Carte « Consommation vidéo » dans dashboard docteur. Total minutes + breakdown par moteur (teleconsult / shopping / classe) |
 
 ### Hors sprints — Bug fix critique pré-existant
 | Sujet | Commit |
