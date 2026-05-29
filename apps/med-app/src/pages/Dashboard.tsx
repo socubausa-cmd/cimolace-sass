@@ -49,7 +49,7 @@ export function MedOSDashboard() {
   }, []);
 
   const cards = [
-    { icon: Users, label: 'Patients', count: stats.patients, to: '/patients', color: '#3b82f6' },
+    { icon: Users, label: 'Patients', count: stats.patients, to: '/patients', color: 'var(--brand-primary)' },
     { icon: FileText, label: 'Notes SOAP', count: stats.notes, to: '/patients', color: '#10b981' },
     { icon: Pill, label: 'Ordonnances', count: stats.prescriptions, to: '/prescriptions', color: '#f59e0b' },
     { icon: ClipboardList, label: 'Formulaires', count: stats.forms, to: '/forms', color: '#8b5cf6' },
@@ -126,7 +126,7 @@ export function MedOSDashboard() {
       <div style={{ marginTop: 24, background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24 }}>
         <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Actions rapides</h3>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <Link to="/patients" style={{ padding: '10px 20px', background: '#3b82f6', color: '#fff', borderRadius: 8, fontSize: 14, fontWeight: 500 }}>
+          <Link to="/patients" style={{ padding: '10px 20px', background: 'var(--brand-primary)', color: '#fff', borderRadius: 8, fontSize: 14, fontWeight: 500 }}>
             + Nouveau patient
           </Link>
           <Link to="/charting" style={{ padding: '10px 20px', background: '#10b981', color: '#fff', borderRadius: 8, fontSize: 14, fontWeight: 500 }}>

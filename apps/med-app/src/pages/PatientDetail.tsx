@@ -257,7 +257,7 @@ export function PatientDetail() {
           {notes.length === 0 && <p style={{ color: '#94a3b8', fontSize: 14 }}>Aucune note</p>}
           {notes.map((n: any) => (
             <div key={n.id} style={{ padding: '10px 0', borderTop: '1px solid #f1f5f9' }}>
-              <Link to={'/notes/' + n.id} style={{ fontWeight: 500, color: '#3b82f6' }}>Note du {new Date(n.created_at).toLocaleDateString('fr')}</Link>
+              <Link to={'/notes/' + n.id} style={{ fontWeight: 500, color: 'var(--brand-primary)' }}>Note du {new Date(n.created_at).toLocaleDateString('fr')}</Link>
               <span style={{ marginLeft: 8, fontSize: 11, padding: '1px 6px', borderRadius: 8, background: n.is_signed ? '#dcfce7' : '#fef3c7', color: n.is_signed ? '#166534' : '#92400e' }}>{n.is_signed ? 'Signée' : 'Brouillon'}</span>
             </div>
           ))}
@@ -341,7 +341,7 @@ export function PatientDetail() {
               <button type="button" onClick={() => !savingEdit && setEditOpen(false)} disabled={savingEdit} style={{ padding: '10px 16px', background: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: savingEdit ? 'not-allowed' : 'pointer' }}>
                 Annuler
               </button>
-              <button type="submit" disabled={savingEdit} style={{ padding: '10px 18px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: savingEdit ? 'not-allowed' : 'pointer', opacity: savingEdit ? 0.7 : 1 }}>
+              <button type="submit" disabled={savingEdit} style={{ padding: '10px 18px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: savingEdit ? 'not-allowed' : 'pointer', opacity: savingEdit ? 0.7 : 1 }}>
                 {savingEdit ? 'Sauvegarde…' : 'Enregistrer'}
               </button>
             </div>
@@ -438,7 +438,7 @@ export function PatientDetail() {
                   <button
                     type="button"
                     onClick={copyLink}
-                    style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', background: copied ? '#10b981' : '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', background: copied ? '#10b981' : 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}
                   >
                     {copied ? <><Check size={14} /> Copié</> : <><Copy size={14} /> Copier</>}
                   </button>

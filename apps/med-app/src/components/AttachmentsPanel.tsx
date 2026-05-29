@@ -213,7 +213,7 @@ export function AttachmentsPanel({
         <label
           style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
-            background: uploading ? '#94a3b8' : '#3b82f6', color: '#fff',
+            background: uploading ? '#94a3b8' : 'var(--brand-primary)', color: '#fff',
             borderRadius: 6, fontSize: 13, fontWeight: 500, cursor: uploading ? 'wait' : 'pointer',
             whiteSpace: 'nowrap',
           }}
@@ -273,7 +273,7 @@ export function AttachmentsPanel({
                 <button
                   onClick={() => handleDownload(att)}
                   title="Telecharger"
-                  style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 4, padding: 4, cursor: 'pointer', color: '#3b82f6' }}
+                  style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 4, padding: 4, cursor: 'pointer', color: 'var(--brand-primary)' }}
                 >
                   <Download size={14} />
                 </button>

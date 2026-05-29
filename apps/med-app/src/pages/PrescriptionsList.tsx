@@ -289,7 +289,7 @@ export function PrescriptionsList() {
                   {selected.status === 'signed' && (
                     <button
                       onClick={() => openPdf(selected)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
                     >
                       <FileDown size={14} /> PDF
                     </button>

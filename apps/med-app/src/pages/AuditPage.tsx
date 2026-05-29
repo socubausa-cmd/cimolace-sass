@@ -127,7 +127,7 @@ export function AuditPage() {
         <button
           onClick={fetchEntries}
           disabled={loading}
-          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 500, cursor: loading ? 'wait' : 'pointer' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 500, cursor: loading ? 'wait' : 'pointer' }}
         >
           <RefreshCw size={14} className={loading ? 'spin' : ''} /> Rafraichir
         </button>

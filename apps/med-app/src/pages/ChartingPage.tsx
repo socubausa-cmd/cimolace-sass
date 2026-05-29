@@ -202,7 +202,7 @@ export function ChartingPage() {
       {/* Header */}
       <div style={{ marginBottom: 32 }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Mic size={26} color="#3b82f6" /> Consultation IA — Note SOAP
+          <Mic size={26} color="var(--brand-primary)" /> Consultation IA — Note SOAP
         </h1>
         <p style={{ color: '#64748b', marginTop: 6, fontSize: 14 }}>
           Transcription audio + génération automatique de note SOAP via Deepgram &amp; Claude
@@ -237,7 +237,7 @@ export function ChartingPage() {
               onClick={() => setMode(m)}
               style={{
                 padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                background: mode === m ? '#3b82f6' : '#f1f5f9',
+                background: mode === m ? 'var(--brand-primary)' : '#f1f5f9',
                 color: mode === m ? '#fff' : '#475569',
                 border: 'none',
                 display: 'flex', alignItems: 'center', gap: 6,
@@ -306,7 +306,7 @@ export function ChartingPage() {
           onClick={startCharting}
           disabled={loading}
           style={{
-            marginTop: 24, padding: '12px 28px', background: loading ? '#94a3b8' : '#3b82f6',
+            marginTop: 24, padding: '12px 28px', background: loading ? '#94a3b8' : 'var(--brand-primary)',
             color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600,
             cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8,
           }}
@@ -351,7 +351,7 @@ export function ChartingPage() {
                   <button onClick={copyNote} style={actionBtn('#f1f5f9', '#475569')}>
                     <Copy size={14} /> {copied ? 'Copié !' : 'Copier'}
                   </button>
-                  <button onClick={insertIntoPatientFile} style={actionBtn('#eff6ff', '#2563eb')}>
+                  <button onClick={insertIntoPatientFile} style={actionBtn('var(--brand-primary-soft)', 'var(--brand-primary)')}>
                     <ClipboardPlus size={14} /> Insérer dans le dossier
                   </button>
                 </div>

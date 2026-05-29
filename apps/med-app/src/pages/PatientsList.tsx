@@ -110,7 +110,7 @@ export function PatientsList() {
         <h2 style={{ fontSize: 24, fontWeight: 700 }}>Patients</h2>
         <button
           onClick={openModal}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
         >
           <Plus size={16} /> Nouveau patient
         </button>
@@ -145,7 +145,7 @@ export function PatientsList() {
             {filtered.map((p: any) => (
               <tr key={p.id} style={{ borderTop: '1px solid #e2e8f0' }}>
                 <td style={{ padding: 12 }}>
-                  <Link to={'/patients/' + p.id} style={{ color: '#3b82f6', fontWeight: 500 }}>
+                  <Link to={'/patients/' + p.id} style={{ color: 'var(--brand-primary)', fontWeight: 500 }}>
                     {(p.first_name || '') + ' ' + (p.last_name || '')}
                     {!p.first_name && !p.last_name && <span style={{ color: '#94a3b8' }}>(sans nom)</span>}
                   </Link>
@@ -312,7 +312,7 @@ export function PatientsList() {
                 disabled={saving}
                 style={{
                   padding: '10px 16px',
-                  background: '#3b82f6',
+                  background: 'var(--brand-primary)',
                   color: '#fff',
                   border: 'none',
                   borderRadius: 8,

@@ -206,7 +206,7 @@ export function Threads() {
             alignItems: 'center',
             gap: 6,
             padding: '10px 20px',
-            background: '#3b82f6',
+            background: 'var(--brand-primary)',
             color: '#fff',
             border: 'none',
             borderRadius: 8,
@@ -251,11 +251,11 @@ export function Threads() {
                   textAlign: 'left',
                   padding: '12px 14px',
                   marginBottom: 4,
-                  background: isActive ? '#eff6ff' : 'transparent',
+                  background: isActive ? 'var(--brand-primary-soft)' : 'transparent',
                   border: 'none',
                   borderRadius: 8,
                   cursor: 'pointer',
-                  borderLeft: isActive ? '3px solid #3b82f6' : '3px solid transparent',
+                  borderLeft: isActive ? '3px solid var(--brand-primary)' : '3px solid transparent',
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
@@ -341,7 +341,7 @@ export function Threads() {
                           maxWidth: '72%',
                           padding: '10px 14px',
                           borderRadius: 14,
-                          background: mine ? '#3b82f6' : '#f1f5f9',
+                          background: mine ? 'var(--brand-primary)' : '#f1f5f9',
                           color: mine ? '#fff' : '#0f172a',
                           fontSize: 14,
                           lineHeight: 1.4,
@@ -394,7 +394,7 @@ export function Threads() {
                     alignItems: 'center',
                     gap: 6,
                     padding: '10px 20px',
-                    background: input.trim() ? '#3b82f6' : '#94a3b8',
+                    background: input.trim() ? 'var(--brand-primary)' : '#94a3b8',
                     color: '#fff',
                     border: 'none',
                     borderRadius: 8,
@@ -553,7 +553,7 @@ export function Threads() {
                 disabled={creating}
                 style={{
                   padding: '10px 18px',
-                  background: '#3b82f6',
+                  background: 'var(--brand-primary)',
                   color: '#fff',
                   border: 'none',
                   borderRadius: 8,

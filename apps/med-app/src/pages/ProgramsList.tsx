@@ -329,7 +329,7 @@ export function ProgramsList() {
                 </div>
                 <button
                   onClick={() => { setError(null); setEnrollOpen(true); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
                 >
                   <UserPlus size={14} /> Inscrire un patient
                 </button>
@@ -452,7 +452,7 @@ export function ProgramsList() {
             <textarea rows={3} value={enrollNotes} onChange={(e) => setEnrollNotes(e.target.value)} style={{ ...inputStyle, fontFamily: 'inherit', resize: 'vertical' }} placeholder="Particularites pour ce patient..." />
           </Field>
           {error && <div style={errStyle}>{error}</div>}
-          <Actions onCancel={() => setEnrollOpen(false)} saving={saving} submitLabel="Inscrire le patient" submitColor="#3b82f6" />
+          <Actions onCancel={() => setEnrollOpen(false)} saving={saving} submitLabel="Inscrire le patient" submitColor="var(--brand-primary)" />
         </Modal>
       )}
     </div>
