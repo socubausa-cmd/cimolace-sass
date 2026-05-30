@@ -22,25 +22,27 @@ import {
  */
 export function Landing() {
   const branding = useBranding();
+  const site = branding.site;
   const year = '2026';
 
-  const services = [
-    {
-      icon: Video,
-      title: 'Téléconsultation',
-      desc: 'Consultez votre praticien à distance, en vidéo sécurisée, où que vous soyez.',
-    },
-    {
-      icon: HeartPulse,
-      title: 'Suivi personnalisé',
-      desc: 'Programmes, mesures et objectifs de santé suivis ensemble, dans la durée.',
-    },
-    {
-      icon: FileText,
-      title: 'Documents & ordonnances',
-      desc: 'Ordonnances, comptes-rendus et pièces accessibles à tout moment, en sécurité.',
-    },
+  // Contenu piloté par le tenant (metadata.site) avec repli sur des défauts
+  // santé génériques — chaque tenant a une vitrine crédible sans rien saisir.
+  const SERVICE_ICONS = [Video, HeartPulse, FileText];
+  const defaultServices = [
+    { title: 'Téléconsultation', desc: 'Consultez votre praticien à distance, en vidéo sécurisée, où que vous soyez.' },
+    { title: 'Suivi personnalisé', desc: 'Programmes, mesures et objectifs de santé suivis ensemble, dans la durée.' },
+    { title: 'Documents & ordonnances', desc: 'Ordonnances, comptes-rendus et pièces accessibles à tout moment, en sécurité.' },
   ];
+  const services = (site?.services?.length ? site.services : defaultServices).map(
+    (s, i) => ({ ...s, icon: SERVICE_ICONS[i % SERVICE_ICONS.length] }),
+  );
+
+  const heroTitle = site?.heroTitle ?? 'Votre santé,';
+  const heroAccent = site?.heroAccent ?? 'accompagnée au quotidien';
+  const heroSubtitle =
+    site?.heroSubtitle ??
+    `Prenez rendez-vous, échangez avec votre praticien et suivez votre santé — en toute simplicité et confidentialité, avec ${branding.name}.`;
+  const ctaPrimary = site?.ctaPrimary ?? 'Prendre rendez-vous';
 
   const steps = [
     { icon: CalendarCheck, title: 'Créez votre espace', desc: 'En quelques secondes, votre espace patient personnel et confidentiel.' },
@@ -95,17 +97,16 @@ export function Landing() {
       >
         <div style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center' }}>
           <h1 style={{ fontSize: 44, lineHeight: 1.1, fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
-            Votre santé,
+            {heroTitle}
             <br />
-            <span style={{ color: 'var(--brand-primary)' }}>accompagnée au quotidien</span>
+            <span style={{ color: 'var(--brand-primary)' }}>{heroAccent}</span>
           </h1>
           <p style={{ fontSize: 18, color: '#475569', maxWidth: 560, margin: '20px auto 0', lineHeight: 1.6 }}>
-            Prenez rendez-vous, échangez avec votre praticien et suivez votre santé —
-            en toute simplicité et confidentialité, avec {branding.name}.
+            {heroSubtitle}
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 32, flexWrap: 'wrap' }}>
             <Link to="/connexion" style={btnPrimary}>
-              Prendre rendez-vous <ArrowRight size={18} />
+              {ctaPrimary} <ArrowRight size={18} />
             </Link>
             <Link to="/connexion" style={btnGhost}>
               Accéder à mon espace

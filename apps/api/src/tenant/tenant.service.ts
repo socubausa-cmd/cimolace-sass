@@ -44,7 +44,7 @@ export class TenantService {
     const supabase = this.authService.getClient();
     const { data } = await supabase
       .from("tenants")
-      .select("slug, name, logo_url, brand_colors, status")
+      .select("slug, name, logo_url, brand_colors, status, metadata")
       .eq("slug", slug)
       .single();
     if (!data || (data as any).status !== "active") return null;
@@ -82,6 +82,34 @@ export class TenantService {
       .single();
     if (!data || (data as any).status !== "active") return null;
     return data;
+  }
+
+  /**
+   * Returns all tenants the given user is a member of, with their role.
+   * Used by the frontend TenantProtectedRoute to verify membership.
+   * Response shape mirrors the legacy Netlify tenant-context lambda so
+   * the frontend doesn't need changes.
+   */
+  async getMineForUser(userId: string) {
+    const supabase = this.authService.getClient();
+    const { data, error } = await supabase
+      .from("tenant_memberships")
+      .select("role, status, tenants(id, slug, name, infrastructure_type, status, logo_url)")
+      .eq("user_id", userId)
+      .eq("status", "active");
+
+    if (error || !data) return [];
+
+    return (data as any[]).map((row) => ({
+      role: row.role,
+      slug: row.tenants?.slug ?? null,
+      name: row.tenants?.name ?? null,
+      infrastructure_type: row.tenants?.infrastructure_type ?? null,
+      status: row.tenants?.status ?? null,
+      logo_url: row.tenants?.logo_url ?? null,
+      // Frontend also checks t.tenants?.slug shape:
+      tenants: row.tenants ?? null,
+    }));
   }
 
   async getTenantById(tenantId: string) {
