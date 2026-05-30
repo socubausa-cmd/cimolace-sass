@@ -123,7 +123,7 @@ export async function runLiveHostSessionAndLiveKitInit(ctx) {
           .from('live_sessions')
           .select(`
             id, title, teacher_id, formation_id, status, config, started_at, session_type, debate_id,
-            slides:live_scenes(id, name, order_index, content_payload_json)
+            slides:live_scenes(id, name, order_index, content_payload_json, is_active)
           `)
           .eq('id', sessionId)
           .maybeSingle();

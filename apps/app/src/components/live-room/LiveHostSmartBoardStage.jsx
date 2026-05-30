@@ -102,6 +102,8 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
 
   const slideIndexRef = useRef(0);
   const activeSceneRef = useRef('smartboard');
+  // Garde : l'auto-projection de la scène active ne s'exécute qu'une fois (issue #3).
+  const autoProjectedRef = useRef(false);
   const nativeSlideIndexRef = useRef(0);
   const importSlideIndexRef = useRef(0);
   const sharedImageIdxRef = useRef(0);
@@ -589,6 +591,35 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
     onSceneChange?.(scene);
     queueMicrotask(() => onBroadcast?.({ activeScene: scene }));
   }, [onBroadcast, onSceneChange]);
+
+  // ── Auto-projection de la scène active à l'ouverture (issue #3) ──────────────
+  // Hybride : si une scène `is_active=true` existe, on la projette d'emblée
+  // (mode smartboard si elle a `ia_data`, sinon mode diapo) et on diffuse aux
+  // invités. Sinon on laisse l'état au repos (projection manuelle par l'hôte).
+  // Ne s'exécute qu'une fois (autoProjectedRef) et jamais côté invité (viewerMode).
+  useEffect(() => {
+    if (viewerMode || autoProjectedRef.current) return;
+    const list = displaySlides || [];
+    if (list.length === 0) return;
+    const activeSlide = list.find((s) => s && s.is_active === true);
+    if (!activeSlide) { autoProjectedRef.current = true; return; }
+    autoProjectedRef.current = true;
+    if (activeSlide.ia_data) {
+      const idx = Math.max(0, nativeSlides.findIndex((s) => s.id === activeSlide.id));
+      activeSceneRef.current = 'smartboard';
+      nativeSlideIndexRef.current = idx;
+      setActiveScene('smartboard');
+      setNativeSlideIndex(idx);
+      queueMicrotask(() => onBroadcast?.({ activeScene: 'smartboard', nativeSlideIndex: idx }));
+    } else {
+      const idx = Math.max(0, importSlides.findIndex((s) => s.id === activeSlide.id));
+      activeSceneRef.current = 'diapo';
+      importSlideIndexRef.current = idx;
+      setActiveScene('diapo');
+      setImportSlideIndex(idx);
+      queueMicrotask(() => onBroadcast?.({ activeScene: 'diapo', importSlideIndex: idx }));
+    }
+  }, [viewerMode, displaySlides, nativeSlides, importSlides, onBroadcast]);
 
   const handleSbTacticalSync = useCallback((payload) => {
     sbTacticalSyncRef.current = payload;
