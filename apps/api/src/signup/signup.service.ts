@@ -52,6 +52,12 @@ export interface SignupTenantInput {
   kind: string;
   locale?: string;
   timezone?: string;
+  /** Marque générée par l'AI Brand-in-a-box (appliquée à la création). */
+  brand?: {
+    primary?: string;
+    accent?: string;
+    site?: Record<string, unknown>;
+  };
 }
 
 export interface SignupTenantResult {
@@ -122,6 +128,21 @@ export class SignupService {
     }
     const userId = created.user.id;
 
+    // Marque AI (optionnelle) appliquée dès la création : couleurs + vitrine.
+    const hexOk = (v?: string) => !!v && /^#[0-9a-fA-F]{6}$/.test(v);
+    const brandFields: Record<string, unknown> = {};
+    if (input.brand && (hexOk(input.brand.primary) || input.brand.site)) {
+      if (hexOk(input.brand.primary) || hexOk(input.brand.accent)) {
+        brandFields.brand_colors = {
+          ...(hexOk(input.brand.primary) ? { primary: input.brand.primary } : {}),
+          ...(hexOk(input.brand.accent) ? { accent: input.brand.accent } : {}),
+        };
+      }
+      if (input.brand.site && typeof input.brand.site === 'object') {
+        brandFields.metadata = { site: input.brand.site };
+      }
+    }
+
     // 3) Créer le tenant
     const { data: tenant, error: tenantErr } = await this.sb.client
       .from('tenants')
@@ -135,6 +156,7 @@ export class SignupService {
         billing_status: 'free',
         locale,
         timezone,
+        ...brandFields,
       })
       .select('id, slug, name, infrastructure_type')
       .single();
