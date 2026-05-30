@@ -25,6 +25,21 @@ export class TenantController {
   }
 
   /**
+   * GET /tenants/mine — returns all tenants the authenticated user belongs to.
+   *
+   * Used by the frontend TenantProtectedRoute (TenantProtectedRoute.jsx) to
+   * verify that a user is a member of the tenant in the URL before rendering
+   * the admin dashboard. No TenantGuard needed here because the query is
+   * scoped to req.user.id across all tenants.
+   */
+  @Get("mine")
+  @UseGuards(JwtAuthGuard)
+  async mine(@Req() req: any) {
+    const memberships = await this.tenantService.getMineForUser(req.user.id);
+    return { data: memberships };
+  }
+
+  /**
    * Public endpoint — branding-only lookup by tenant slug.
    *
    * Returns just the visible-to-public surface (name, logo_url, brand_colors).
@@ -48,17 +63,21 @@ export class TenantController {
       logo_url?: string | null;
       brand_colors?: Record<string, string> | null;
       slug: string;
+      metadata?: { site?: Record<string, unknown> | null } | null;
     };
     // Return the bare payload — ResponseInterceptor wraps it in
     // `{ data: ... }`. The pre-existing `/tenants/current` returns
     // `{ data: req.tenant }` which double-wraps to
     // `{ data: { data: req.tenant } }` but only the BrandingProvider
     // frontends unwrap both layers — we don't replicate that quirk.
+    // `site` = contenu éditable de la vitrine publique (stocké dans
+    // metadata.site) ; null => le portail utilise ses textes par défaut.
     return {
       slug: t.slug,
       name: t.name ?? slug,
       logo_url: t.logo_url ?? null,
       brand_colors: t.brand_colors ?? {},
+      site: t.metadata?.site ?? null,
     };
   }
 
