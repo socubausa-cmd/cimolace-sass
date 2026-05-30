@@ -280,10 +280,23 @@ export async function runLiveHostSessionAndLiveKitInit(ctx) {
           }
         }
 
+        // live_scenes : fetch DIRECT (l'embed `slides:live_scenes` de la requête
+        // session ne revient pas via supabaseCompat → API NestJS, qui ne renvoie
+        // pas les ressources embarquées Supabase). On lit donc la table directement.
+        let sceneRows = Array.isArray(sess.slides) ? sess.slides : [];
+        if (sceneRows.length === 0) {
+          const { data: directScenes } = await supabase
+            .from('live_scenes')
+            .select('id, name, order_index, content_payload_json, is_active')
+            .eq('live_session_id', sessionId)
+            .order('order_index', { ascending: true });
+          if (Array.isArray(directScenes) && directScenes.length > 0) sceneRows = directScenes;
+        }
+
         // live_scenes + brouillon wizard + diapos importées (aligné LiveArena)
         let initialSlides = [];
-        if (Array.isArray(sess.slides) && sess.slides.length > 0) {
-          initialSlides = [...sess.slides].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+        if (sceneRows.length > 0) {
+          initialSlides = [...sceneRows].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
         } else if (Array.isArray(cfg?.smartboard_element_scenes) && cfg.smartboard_element_scenes.length > 0) {
           initialSlides = [...cfg.smartboard_element_scenes].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
         }
