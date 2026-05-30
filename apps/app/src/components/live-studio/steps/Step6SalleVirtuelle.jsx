@@ -804,7 +804,10 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
         setSessionsError(error.message || 'Impossible de charger les sessions.');
         setRecentSessions([]);
       } else {
-        setRecentSessions(data || []);
+        // Défensif : l'API peut renvoyer une enveloppe { data: [...] } ou null —
+        // on garantit toujours un tableau pour éviter recentSessions.some/.map crash.
+        const rows = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+        setRecentSessions(rows);
       }
       setSessionsLoading(false);
     })();

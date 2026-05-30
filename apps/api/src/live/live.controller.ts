@@ -9,5 +9,6 @@ export class LiveController {
   constructor(private svc: LiveService) {}
   @Post() async create(@Req() req: any, @Body() b: any) { return { data: await this.svc.createSession(req.tenant.id, b) }; }
   @Get() async findAll(@Req() req: any) { return { data: await this.svc.findAll(req.tenant.id) }; }
+  @Get(":id") async findOne(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.findOne(req.tenant.id, id) }; }
   @Post(":id/token") async token(@Req() req: any, @Param("id") id: string, @Body() b: any) { return { data: await this.svc.generateToken(id, req.user.id, b.role) }; }
 }

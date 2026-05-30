@@ -227,9 +227,29 @@ class QueryBuilder<T = any> {
     onfulfilled?: ((value: SupabaseResult<T>) => TResult1 | PromiseLike<TResult1>) | undefined | null,
     onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null,
   ): Promise<TResult1 | TResult2> {
-    const result = await this.execute();
+    const result = this.normalizeResult(await this.execute());
     if (onfulfilled) return onfulfilled(result);
     return result as any;
+  }
+
+  /**
+   * Garantit la forme du `data` retourné, façon supabase-js :
+   * - requête « liste » (ni maybeSingle/single, ni insert/update/delete avec id) → toujours un tableau.
+   *   L'API NestJS renvoie parfois une enveloppe { data: [...] } ; on l'aplatit pour éviter
+   *   les crashes en aval (.map/.filter/.some is not a function) chez les consommateurs.
+   * Les requêtes single conservent leur objet/null inchangé.
+   */
+  private normalizeResult(result: SupabaseResult<T>): SupabaseResult<T> {
+    if (!result || result.error) return result;
+    const isListQuery =
+      !this.singleFlag && !this.insertData && !this.updateData && !this.upsertData && !this.isDelete;
+    if (!isListQuery) return result;
+    const d: any = result.data;
+    if (Array.isArray(d)) return result;
+    if (d && Array.isArray(d.data)) return { ...result, data: d.data as any };
+    if (d == null) return { ...result, data: [] as any };
+    // Objet inattendu pour une requête liste → on enveloppe défensivement.
+    return { ...result, data: [d] as any };
   }
 
   private async execute(): Promise<SupabaseResult<T>> {

@@ -42,7 +42,9 @@ const NotificationDropdown = ({ externalUnreadCount = 0, externalItems = [] }) =
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(20);
-    setNotifications(data || []);
+    // Défensif : l'API peut renvoyer une enveloppe { data: [...] } ou null —
+    // on garantit toujours un tableau pour éviter notifications.filter/.map/.slice crash.
+    setNotifications(Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []));
   }, [user?.id]);
 
   const fetchLiveNotifications = useCallback(async () => {
@@ -65,10 +67,10 @@ const NotificationDropdown = ({ externalUnreadCount = 0, externalItems = [] }) =
           .eq('channel', 'dashboard')
           .order('sent_at', { ascending: false })
           .limit(10);
-        setLiveNotifications(r2.error ? [] : (r2.data || []));
+        setLiveNotifications(r2.error || !Array.isArray(r2.data) ? [] : r2.data);
         return;
       }
-      const raw = data || [];
+      const raw = Array.isArray(data) ? data : [];
       setLiveNotifications(raw.filter((n) => !isStaleDashboardLiveNotification(n)).slice(0, 10));
     } catch {
       setLiveNotifications([]);
