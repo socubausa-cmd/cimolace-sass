@@ -3,8 +3,9 @@
  * Crée un compte Cimolace + un tenant + une membership owner.
  * Utilisé par /onboarding/create?kind=liri sur le public-site.
  */
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { SignupService, type SignupTenantInput, type SignupTenantResult } from './signup.service';
+import { AiBrandRateLimitGuard } from './ai-brand-rate-limit.guard';
 
 @Controller('signup')
 export class SignupController {
@@ -21,6 +22,7 @@ export class SignupController {
    * Génération pure (aucune écriture) ; le wizard applique ensuite.
    */
   @Post('ai-brand')
+  @UseGuards(AiBrandRateLimitGuard)
   async aiBrand(@Body() body: { description?: string }) {
     return this.svc.generateBrand(body?.description ?? '');
   }
