@@ -204,6 +204,96 @@ export class SignupService {
     };
   }
 
+  /**
+   * AI Brand-in-a-box — génère une identité de marque complète à partir d'une
+   * description en langage naturel. Retourne couleurs + nom + contenu de
+   * vitrine (hero, CTA, services) prêt à écrire dans brand_colors + metadata.site.
+   *
+   * Génération pure (aucune écriture DB) — le wizard d'onboarding ou l'admin
+   * applique ensuite. Public pour le pré-signup ; à protéger par rate-limit
+   * avant lancement grand public.
+   */
+  async generateBrand(description: string): Promise<{
+    name: string;
+    primary: string;
+    accent: string;
+    site: {
+      heroTitle: string;
+      heroAccent: string;
+      heroSubtitle: string;
+      ctaPrimary: string;
+      services: { title: string; desc: string }[];
+    };
+  }> {
+    const desc = (description || '').trim();
+    if (desc.length < 8) {
+      throw new BadRequestException('Décris ton activité en quelques mots (8 caractères min).');
+    }
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey || apiKey === 'replace_me') {
+      throw new InternalServerErrorException('OPENAI_API_KEY non configurée.');
+    }
+    const system = [
+      'Tu es directeur artistique de marque pour des praticiens santé & bien-être.',
+      "À partir d'une description, tu produis une identité de marque cohérente, élégante et professionnelle, en FRANÇAIS.",
+      'Réponds UNIQUEMENT en JSON valide avec EXACTEMENT ces clés :',
+      '{ "name": string (nom de marque court, 1-3 mots),',
+      '  "primary": string (couleur hex #RRGGBB, accessible, adaptée à l\'activité),',
+      '  "accent": string (hex #RRGGBB complémentaire),',
+      '  "heroTitle": string (accroche ligne 1, finit par une virgule),',
+      '  "heroAccent": string (ligne 2, la partie mise en couleur, 2-5 mots),',
+      '  "heroSubtitle": string (1-2 phrases chaleureuses et pro),',
+      '  "ctaPrimary": string (bouton, 2-3 mots, action),',
+      '  "services": [exactement 3 objets { "title": string court, "desc": string 1 phrase }] }',
+      'Pas de texte hors JSON.',
+    ].join('\n');
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        temperature: 0.7,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: desc },
+        ],
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      this.logger.warn(`OpenAI brand gen failed (${res.status}): ${body.slice(0, 200)}`);
+      throw new InternalServerErrorException('Génération IA indisponible, réessaie.');
+    }
+    const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(data.choices?.[0]?.message?.content ?? '{}');
+    } catch {
+      throw new InternalServerErrorException('Réponse IA invalide, réessaie.');
+    }
+    const hex = (v: unknown, fallback: string) =>
+      typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fallback;
+    const str = (v: unknown, fallback = '') => (typeof v === 'string' && v.trim() ? v.trim() : fallback);
+    const rawServices = Array.isArray(parsed.services) ? parsed.services : [];
+    const services = rawServices.slice(0, 3).map((s) => {
+      const o = (s ?? {}) as Record<string, unknown>;
+      return { title: str(o.title, 'Service'), desc: str(o.desc, '') };
+    });
+    return {
+      name: str(parsed.name, 'Mon espace').slice(0, 60),
+      primary: hex(parsed.primary, '#0d9488'),
+      accent: hex(parsed.accent, '#0f766e'),
+      site: {
+        heroTitle: str(parsed.heroTitle, 'Votre santé,'),
+        heroAccent: str(parsed.heroAccent, 'accompagnée au quotidien'),
+        heroSubtitle: str(parsed.heroSubtitle, ''),
+        ctaPrimary: str(parsed.ctaPrimary, 'Prendre rendez-vous'),
+        services: services.length ? services : [],
+      },
+    };
+  }
+
   /** Slug auto à partir du nom de la plateforme */
   private slugify(s: string): string {
     return s
