@@ -65,17 +65,19 @@ export function useTeacherAppointments(teacherId) {
         liveRes = await fetchTeacherLiveSessions(teacherId, LIVE_SELECT_MIN);
       }
 
-      const appts = apptRes.error ? [] : (apptRes.data || []);
+      // Défensif : l'API peut renvoyer une enveloppe { data: [...] } — on garantit des tableaux.
+      const asArray = (v) => (Array.isArray(v) ? v : (Array.isArray(v?.data) ? v.data : []));
+      const appts = apptRes.error ? [] : asArray(apptRes.data);
       const lives = liveRes.error
         ? []
-        : (liveRes.data || []).map((l) => ({
+        : asArray(liveRes.data).map((l) => ({
             ...l,
             video_room_url: l.video_room_url || null,
             visibility_mode: l.visibility_mode || 'secret',
             duration_minutes: l.duration_minutes ?? null,
             preparation_status: l.preparation_status || 'draft',
           }));
-      const slots = availRes.error ? [] : (availRes.data || []);
+      const slots = availRes.error ? [] : asArray(availRes.data);
 
       const studentIds = [...new Set(appts.map((a) => a.student_id))];
       const { data: profiles } = studentIds.length
