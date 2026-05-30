@@ -165,6 +165,10 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     applyCssVars(branding);
+    // White-label: l'onglet affiche le nom du tenant, jamais "MedOS".
+    if (branding.name) {
+      document.title = `${branding.name} — Espace patient`;
+    }
   }, [branding]);
 
   useEffect(() => {
