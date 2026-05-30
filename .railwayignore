@@ -1,0 +1,34 @@
+# Exclure tout sauf apps/api/src — Railway n'a besoin QUE du source NestJS
+# apps/public-site et apps/app sont sur Vercel
+apps/public-site/
+apps/app/
+apps/med-app/
+apps/patient-portal/
+apps/worker/
+# Tous les node_modules (root + nested — Dockerfile fait npm install)
+node_modules/
+apps/api/node_modules/
+apps/api/dist/
+# Gros dossiers inutiles
+.isna-opus-consolidated/
+.git/
+.vercel/
+dist/
+build/
+.next/
+.turbo/
+coverage/
+tests/
+# Root Supabase CLI dir only (migrations/config) — must NOT match apps/api/src/supabase/
+/supabase/
+docs/
+# Fichiers superflus
+*.log
+package-lock.json
+FUSION_LOG.md
+mockup-viewer.html
+cloudbuild.api.yaml
+.gcloudignore
+.env.staging.example
+.env.production.example
+.env.example
