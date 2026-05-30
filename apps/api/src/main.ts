@@ -112,6 +112,16 @@ async function bootstrap() {
       if (STATIC_ORIGINS.includes(normalizedOrigin)) {
         return callback(null, true);
       }
+      // Cimolace-hosted tenant spaces — {slug}.patient.cimolace.space (wildcard).
+      // Every tenant gets an instant branded portal here, so allow the whole
+      // subtree without needing a per-tenant tenant_domains row.
+      const cimolaceHostedHost = extractHost(normalizedOrigin);
+      if (
+        cimolaceHostedHost === 'patient.cimolace.space' ||
+        cimolaceHostedHost.endsWith('.patient.cimolace.space')
+      ) {
+        return callback(null, true);
+      }
       try {
         const host = extractHost(normalizedOrigin);
         const allowed = await loadTenantDomains(supabase);
