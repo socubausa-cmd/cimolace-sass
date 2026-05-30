@@ -229,9 +229,9 @@ export class SignupService {
     if (desc.length < 8) {
       throw new BadRequestException('Décris ton activité en quelques mots (8 caractères min).');
     }
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey || apiKey === 'replace_me') {
-      throw new InternalServerErrorException('OPENAI_API_KEY non configurée.');
+      throw new InternalServerErrorException('GROQ_API_KEY non configurée.');
     }
     const system = [
       'Tu es directeur artistique de marque pour des praticiens santé & bien-être.',
@@ -247,11 +247,11 @@ export class SignupService {
       '  "services": [exactement 3 objets { "title": string court, "desc": string 1 phrase }] }',
       'Pas de texte hors JSON.',
     ].join('\n');
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'llama-3.3-70b-versatile',
         temperature: 0.7,
         response_format: { type: 'json_object' },
         messages: [
@@ -262,7 +262,7 @@ export class SignupService {
     });
     if (!res.ok) {
       const body = await res.text().catch(() => '');
-      this.logger.warn(`OpenAI brand gen failed (${res.status}): ${body.slice(0, 200)}`);
+      this.logger.warn(`Groq brand gen failed (${res.status}): ${body.slice(0, 200)}`);
       throw new InternalServerErrorException('Génération IA indisponible, réessaie.');
     }
     const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
