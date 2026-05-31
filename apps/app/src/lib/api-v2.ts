@@ -516,6 +516,15 @@ export const aiWorkerApi = {
   getJob: (id: string) => apiV2.get<ApiEnvelope<any>>(`/ai-worker/jobs/${id}`).then(unwrap),
 };
 
+// ── AI Utils (programme annuel, reformulation, ad-copy) ──────────────────────
+
+export const aiUtilsApi = {
+  generateAnnualProgram: (body: Record<string, unknown>, config?: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/ai-utils/annual-program/generate', body, config).then(unwrap),
+  reformulate: (body: { text: string; context?: string }) =>
+    apiV2.post<ApiEnvelope<any>>('/ai-utils/reformulate', body).then(unwrap),
+};
+
 // ── Cimolace Backoffice ─────────────────────────────────────────────────────
 
 export const cimolaceBackofficeApi = {

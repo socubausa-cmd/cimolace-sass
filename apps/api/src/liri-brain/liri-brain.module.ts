@@ -1,13 +1,17 @@
 import { Module } from '@nestjs/common';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { TenantModule } from '../tenant/tenant.module';
+import { CoursesModule } from '../courses/courses.module';
+import { ForumModule } from '../forum/forum.module';
+import { SecretariatModule } from '../secretariat/secretariat.module';
 import { LiriBrainController } from './liri-brain.controller';
 import { LiriBrainService } from './liri-brain.service';
+import { BrainToolsService } from './brain-tools.service';
 
 @Module({
-  imports: [SupabaseModule, TenantModule],
-  providers: [LiriBrainService],
+  imports: [SupabaseModule, TenantModule, CoursesModule, ForumModule, SecretariatModule],
+  providers: [LiriBrainService, BrainToolsService],
   controllers: [LiriBrainController],
-  exports: [LiriBrainService],
+  exports: [LiriBrainService, BrainToolsService],
 })
 export class LiriBrainModule {}
