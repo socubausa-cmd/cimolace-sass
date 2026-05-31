@@ -13,6 +13,10 @@ import type { Request } from 'express';
 import { CurrentTenant } from '../../tenant/current-tenant.decorator';
 import type { TenantContext } from '../../tenant/tenant.types';
 import { MedosService } from '../medos.service';
+import { PrescriptionsService } from '../prescriptions/prescriptions.service';
+import { AppointmentsService } from '../appointments/appointments.service';
+import { MessagingService } from '../messaging/messaging.service';
+import { TeleconsultService } from '../teleconsult/teleconsult.service';
 import { EmbedTokenGuard, RequireEmbedScope } from './embed-token.guard';
 
 type EmbedRequest = Request & {
@@ -36,7 +40,19 @@ type EmbedRequest = Request & {
 @Controller('v1/medos/embed')
 @UseGuards(EmbedTokenGuard)
 export class MedosEmbedDataController {
-  constructor(private readonly medosService: MedosService) {}
+  constructor(
+    private readonly medosService: MedosService,
+    private readonly prescriptions: PrescriptionsService,
+    private readonly appointments: AppointmentsService,
+    private readonly messaging: MessagingService,
+    private readonly teleconsult: TeleconsultService,
+  ) {}
+
+  /** patient_user_id résolu depuis le token, ou null si anonyme. */
+  private patientId(req: EmbedRequest): string | null {
+    const id = req.user?.id;
+    return id && id !== 'embed-anonymous' ? id : null;
+  }
 
   // ─── Patient self-service via embed-token ──────────────────────────────
 
@@ -97,6 +113,87 @@ export class MedosEmbedDataController {
       throw new BadRequestException('Patient non identifié');
     }
     return this.medosService.createHealthEntry(req.tenant!, req.user.id, body);
+  }
+
+  // ─── Rendez-vous (RDV) via embed-token ────────────────────────────────
+
+  @Get('me/appointments')
+  @RequireEmbedScope('med:appointments:read')
+  async listMyAppointments(@Req() req: EmbedRequest) {
+    const pid = this.patientId(req);
+    if (!pid) return [];
+    return this.medosService.listMyAppointments(req.tenant!, pid);
+  }
+
+  @Post('me/appointments')
+  @RequireEmbedScope('med:appointments:write')
+  async bookAppointment(
+    @Body() dto: Record<string, unknown>,
+    @Req() req: EmbedRequest,
+  ) {
+    const pid = this.patientId(req);
+    if (!pid) throw new BadRequestException('Patient non identifié');
+    return this.appointments.create(req.tenant!, pid, 'patient', dto as never);
+  }
+
+  // ─── Ordonnances via embed-token ──────────────────────────────────────
+
+  @Get('me/prescriptions')
+  @RequireEmbedScope('med:prescriptions:read')
+  async listMyPrescriptions(@Req() req: EmbedRequest) {
+    const pid = this.patientId(req);
+    if (!pid) return [];
+    return this.prescriptions.listForCurrentPatient(req.tenant!, pid);
+  }
+
+  // ─── Messagerie via embed-token ───────────────────────────────────────
+
+  @Get('me/threads')
+  @RequireEmbedScope('med:messages:read')
+  async listMyThreads(@Req() req: EmbedRequest) {
+    const pid = this.patientId(req);
+    if (!pid) return [];
+    return this.messaging.listThreads(req.tenant!, pid, 'patient', {});
+  }
+
+  @Get('me/threads/:id/messages')
+  @RequireEmbedScope('med:messages:read')
+  async listThreadMessages(@Param('id') id: string, @Req() req: EmbedRequest) {
+    const pid = this.patientId(req);
+    if (!pid) throw new BadRequestException('Patient non identifié');
+    return this.messaging.listMessages(req.tenant!, pid, 'patient', id);
+  }
+
+  @Post('me/threads/:id/messages')
+  @RequireEmbedScope('med:messages:write')
+  async sendThreadMessage(
+    @Param('id') id: string,
+    @Body() dto: Record<string, unknown>,
+    @Req() req: EmbedRequest,
+  ) {
+    const pid = this.patientId(req);
+    if (!pid) throw new BadRequestException('Patient non identifié');
+    return this.messaging.send(req.tenant!, pid, 'patient', id, dto as never);
+  }
+
+  // ─── Téléconsultation via embed-token ─────────────────────────────────
+
+  @Post('me/teleconsult/appointment/:appointmentId/join')
+  @RequireEmbedScope('med:teleconsult:join')
+  async joinTeleconsult(
+    @Param('appointmentId') appointmentId: string,
+    @Body() body: { displayName?: string },
+    @Req() req: EmbedRequest,
+  ) {
+    const pid = this.patientId(req);
+    if (!pid) throw new BadRequestException('Patient non identifié');
+    return this.teleconsult.joinFromAppointment(
+      req.tenant!,
+      pid,
+      'patient',
+      appointmentId,
+      body?.displayName,
+    );
   }
 
   /**
