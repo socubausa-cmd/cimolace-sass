@@ -144,6 +144,67 @@ export class CourseBuilderService {
     return { ok: true, status, row: data ?? null };
   }
 
+  // ── Versions / snapshots post-production ───────────────────────────────────
+
+  /** Enregistre un snapshot de l'état post-prod. Remplace l'edge postprod-version-save (404). */
+  async saveVersion(
+    tenantId: string,
+    userId: string,
+    dto: { contentId: string; snapshotLabel?: string; snapshot?: any },
+  ) {
+    const { data } = await (this.supabase.client as any)
+      .from('course_postprod_versions')
+      .insert({
+        tenant_id: tenantId,
+        content_id: dto.contentId,
+        label: dto.snapshotLabel ?? null,
+        snapshot: dto.snapshot ?? {},
+        created_by: userId || null,
+      })
+      .select('*')
+      .single();
+    return { ok: true, version: data ?? null };
+  }
+
+  async listVersions(tenantId: string, contentId: string) {
+    const { data } = await (this.supabase.client as any)
+      .from('course_postprod_versions')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .eq('content_id', contentId)
+      .order('created_at', { ascending: false });
+    return { rows: data ?? [] };
+  }
+
+  /** Restaure un snapshot : réécrit formation_day_contents.data avec l'état sauvegardé. */
+  async restoreVersion(tenantId: string, dto: { versionId: string }) {
+    const { data: v } = await (this.supabase.client as any)
+      .from('course_postprod_versions')
+      .select('*')
+      .eq('id', dto.versionId)
+      .eq('tenant_id', tenantId)
+      .single();
+    if (!v) return { ok: false, error: 'Version introuvable' };
+    const snap = v.snapshot || {};
+    const { data: content } = await (this.supabase.client as any)
+      .from('formation_day_contents')
+      .select('data')
+      .eq('id', v.content_id)
+      .single();
+    const newData = {
+      ...((content && content.data) || {}),
+      ...(snap.transcript !== undefined ? { transcript: snap.transcript } : {}),
+      ...(snap.chapters !== undefined ? { chapters: snap.chapters } : {}),
+      ...(snap.timestamps !== undefined ? { timestamps: snap.timestamps } : {}),
+      ...(snap.dataPatch && typeof snap.dataPatch === 'object' ? snap.dataPatch : {}),
+    };
+    await (this.supabase.client as any)
+      .from('formation_day_contents')
+      .update({ data: newData })
+      .eq('id', v.content_id);
+    return { ok: true, contentId: v.content_id };
+  }
+
   private naiveSegment(text: string): { title: string; content: string; index: number }[] {
     const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
     return paragraphs.map((p, i) => ({ title: `Segment ${i + 1}`, content: p.trim(), index: i }));

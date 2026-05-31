@@ -362,7 +362,7 @@ const VideoPostProductionPage = ({
     if (!targetContentId) return;
     setVersionLoading(true);
     try {
-      const body = await invokeCourseBuilderFunctionGet('postprod-version-list', { contentId: targetContentId });
+      const body = await courseBuilderApi.postprodVersionList(targetContentId);
       setVersionRows(Array.isArray(body?.rows) ? body.rows : []);
     } catch {
       setVersionRows([]);
@@ -1177,7 +1177,7 @@ const VideoPostProductionPage = ({
     setError('');
     try {
       const payload = buildSavePayload({ validateMindmap: false, validateChapters: false });
-      await invokeCourseBuilderFunction('postprod-version-save', {
+      await courseBuilderApi.postprodVersionSave({
         contentId,
         snapshotLabel: `Snapshot ${new Date().toLocaleString()}`,
         snapshot: {
@@ -1219,7 +1219,7 @@ const VideoPostProductionPage = ({
     setVersionActionLoading(true);
     setError('');
     try {
-      await invokeCourseBuilderFunction('postprod-version-restore', { versionId });
+      await courseBuilderApi.postprodVersionRestore({ versionId });
       window.location.reload();
     } catch (e) {
       setError(String(e?.message || e));

@@ -24,4 +24,9 @@ export class CourseBuilderController {
   @Post('segment-ai-generate') generateSegmentAi(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.generateSegmentAi(t.id, ((r as any).user?.id as string) ?? '', d ?? {}); }
   @Get('segment-ai') listSegmentAi(@Query('contentId') contentId: string, @CurrentTenant() t: TenantContext) { return this.svc.listSegmentAi(t.id, contentId); }
   @Post('segment-ai-approve') approveSegmentAi(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.approveSegmentAi(t.id, d ?? {}); }
+
+  // ── Versions / snapshots post-production ──
+  @Post('postprod-version-save') saveVersion(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.saveVersion(t.id, ((r as any).user?.id as string) ?? '', d ?? {}); }
+  @Get('postprod-version-list') listVersions(@Query('contentId') contentId: string, @CurrentTenant() t: TenantContext) { return this.svc.listVersions(t.id, contentId); }
+  @Post('postprod-version-restore') restoreVersion(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.restoreVersion(t.id, d ?? {}); }
 }

@@ -269,6 +269,12 @@ export const courseBuilderApi = {
     apiV2.get<ApiEnvelope<any>>('/course-builder/segment-ai', { params: { contentId } }).then(unwrap),
   segmentAiApprove: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/course-builder/segment-ai-approve', body).then(unwrap),
+  postprodVersionSave: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/course-builder/postprod-version-save', body).then(unwrap),
+  postprodVersionList: (contentId: string) =>
+    apiV2.get<ApiEnvelope<any>>('/course-builder/postprod-version-list', { params: { contentId } }).then(unwrap),
+  postprodVersionRestore: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/course-builder/postprod-version-restore', body).then(unwrap),
 };
 
 // ── Courses ─────────────────────────────────────────────────────────────────
