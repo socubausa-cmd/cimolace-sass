@@ -1,10 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import { AiUtilsService } from '../ai-utils/ai-utils.service';
 
 @Injectable()
 export class CourseBuilderService {
   private readonly logger = new Logger(CourseBuilderService.name);
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly aiUtils: AiUtilsService,
+  ) {}
 
   async createPipeline(tenantId: string, name: string, sourceText: string) {
     const { data } = await (this.supabase.client as any).from('course_pipelines').insert({
@@ -48,6 +52,82 @@ export class CourseBuilderService {
   async getRenderStatus(tenantId: string, jobId: string) {
     const { data } = await (this.supabase.client as any).from('render_jobs').select('*').eq('id', jobId).eq('tenant_id', tenantId).single();
     return data ?? { status: 'unknown' };
+  }
+
+  // ── Segment AI (« tableau IA » par chapitre — classe numérique) ────────────
+
+  /**
+   * Génère le contenu IA d'un (ou tous les) chapitre(s) : découpe le transcript
+   * sur la fenêtre temporelle du chapitre, reformule via AiUtilsService, et
+   * upsert dans course_segment_ai_content. Renvoie { rows } (le front fusionne
+   * ces lignes même si la table manque — dégradation gracieuse).
+   * Remplace l'ancien edge /.netlify/functions/course-builder-segment-ai-generate (404).
+   */
+  async generateSegmentAi(
+    tenantId: string,
+    userId: string,
+    dto: { contentId: string; segmentIndex?: number; applyAll?: boolean; mode?: string; chapters?: any[]; transcript?: any[] },
+  ) {
+    const chapters: any[] = Array.isArray(dto.chapters) ? dto.chapters : [];
+    const transcript: any[] = Array.isArray(dto.transcript) ? dto.transcript : [];
+    const targets = dto.applyAll ? chapters.map((_c, i) => i) : [Number(dto.segmentIndex) || 0];
+    const rows: any[] = [];
+
+    for (const idx of targets) {
+      const ch = chapters[idx];
+      if (!ch) continue;
+      const start = Number(ch.startSeconds) || 0;
+      const end = Number(ch.endSeconds) || Number.MAX_SAFE_INTEGER;
+      const text = transcript
+        .filter((l) => { const t = Number(l?.timeSeconds); return t >= start && t < end; })
+        .map((l) => String(l?.text ?? ''))
+        .join(' ')
+        .trim()
+        .slice(0, 4000);
+
+      let reformulation = '';
+      if (text) {
+        try {
+          const r: any = await this.aiUtils.reformulate(tenantId, {
+            text,
+            context: 'Reformulation pédagogique synthétique pour le tableau d’un segment de cours (classe numérique).',
+          });
+          reformulation = String(r?.result ?? '').trim();
+        } catch (e) {
+          this.logger.warn(`reformulate échec (segment ${idx}): ${String(e)}`);
+        }
+      }
+
+      const row: Record<string, any> = {
+        tenant_id: tenantId,
+        content_id: dto.contentId,
+        segment_index: idx,
+        status: 'draft',
+        reformulation_text: reformulation || null,
+        created_by: userId || null,
+      };
+      try {
+        const { data } = await (this.supabase.client as any)
+          .from('course_segment_ai_content')
+          .upsert(row, { onConflict: 'content_id,segment_index' })
+          .select('*')
+          .single();
+        rows.push(data ?? row);
+      } catch {
+        rows.push(row);
+      }
+    }
+    return { rows };
+  }
+
+  async listSegmentAi(tenantId: string, contentId: string) {
+    const { data } = await (this.supabase.client as any)
+      .from('course_segment_ai_content')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .eq('content_id', contentId)
+      .order('segment_index');
+    return { rows: data ?? [] };
   }
 
   private naiveSegment(text: string): { title: string; content: string; index: number }[] {

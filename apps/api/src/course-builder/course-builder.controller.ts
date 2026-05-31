@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -18,4 +19,8 @@ export class CourseBuilderController {
   @Post('pipelines/:id/render') enqueueRender(@Param('id') id: string, @CurrentTenant() t: TenantContext) { return this.svc.enqueueRender(t.id, id); }
   @Get('render-jobs') getRenderJobs(@CurrentTenant() t: TenantContext) { return this.svc.getRenderJobs(t.id); }
   @Get('render-jobs/:id') getRenderStatus(@Param('id') id: string, @CurrentTenant() t: TenantContext) { return this.svc.getRenderStatus(t.id, id); }
+
+  // ── Segment AI (« tableau IA » par chapitre) ──
+  @Post('segment-ai-generate') generateSegmentAi(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.generateSegmentAi(t.id, ((r as any).user?.id as string) ?? '', d ?? {}); }
+  @Get('segment-ai') listSegmentAi(@Query('contentId') contentId: string, @CurrentTenant() t: TenantContext) { return this.svc.listSegmentAi(t.id, contentId); }
 }
