@@ -515,7 +515,16 @@ def medos_token(request):
           </section>
 
           <section id="endpoints-data">
-            <h2>Endpoints data — patient self-service</h2>
+            <h2>Endpoints data — votre app, votre UI</h2>
+            <p>
+              Vous avez <strong>déjà votre application</strong> ? C&apos;est le mode le plus
+              puissant : votre backend obtient un <code>embed-token</code> via
+              <code> /embed/server-token</code>, puis votre front appelle ces endpoints
+              avec <code>Authorization: Bearer &lt;token&gt;</code> et <strong>reconstruit
+              sa propre interface</strong> par-dessus MedOS. Toutes les réponses sont
+              enveloppées dans <code>{`{ "data": ... }`}</code>. Toutes les routes sont
+              scopées au <strong>seul patient du token</strong>.
+            </p>
             <div className="not-prose overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="border-b border-slate-200">
@@ -527,6 +536,13 @@ def medos_token(request):
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-mono text-xs">
                   <tr><td className="py-2 pr-4">/v1/medos/embed/me/whoami</td><td className="py-2 pr-4">GET</td><td className="py-2 text-slate-600">—</td></tr>
+                  <tr><td className="py-2 pr-4">/v1/medos/embed/me/appointments</td><td className="py-2 pr-4">GET</td><td className="py-2 text-slate-600">med:appointments:read</td></tr>
+                  <tr><td className="py-2 pr-4">/v1/medos/embed/me/appointments</td><td className="py-2 pr-4">POST</td><td className="py-2 text-slate-600">med:appointments:write</td></tr>
+                  <tr><td className="py-2 pr-4">/v1/medos/embed/me/prescriptions</td><td className="py-2 pr-4">GET</td><td className="py-2 text-slate-600">med:prescriptions:read</td></tr>
+                  <tr><td className="py-2 pr-4">/v1/medos/embed/me/threads</td><td className="py-2 pr-4">GET</td><td className="py-2 text-slate-600">med:messages:read</td></tr>
+                  <tr><td className="py-2 pr-4">/v1/medos/embed/me/threads/:id/messages</td><td className="py-2 pr-4">GET</td><td className="py-2 text-slate-600">med:messages:read</td></tr>
+                  <tr><td className="py-2 pr-4">/v1/medos/embed/me/threads/:id/messages</td><td className="py-2 pr-4">POST</td><td className="py-2 text-slate-600">med:messages:write</td></tr>
+                  <tr><td className="py-2 pr-4">/v1/medos/embed/me/teleconsult/appointment/:id/join</td><td className="py-2 pr-4">POST</td><td className="py-2 text-slate-600">med:teleconsult:join</td></tr>
                   <tr><td className="py-2 pr-4">/v1/medos/embed/me/notes</td><td className="py-2 pr-4">GET</td><td className="py-2 text-slate-600">med:notes:read</td></tr>
                   <tr><td className="py-2 pr-4">/v1/medos/embed/me/notes/:id/read</td><td className="py-2 pr-4">POST</td><td className="py-2 text-slate-600">med:notes:read</td></tr>
                   <tr><td className="py-2 pr-4">/v1/medos/embed/forms</td><td className="py-2 pr-4">GET</td><td className="py-2 text-slate-600">med:forms:read</td></tr>
@@ -535,6 +551,11 @@ def medos_token(request):
                 </tbody>
               </table>
             </div>
+            <p className="text-sm text-slate-600">
+              Le mode <code>patient-portal</code> couvre tous ces scopes. Les données médicales
+              restent chez Cimolace (multi-tenant + RLS) ; votre app n&apos;affiche que celles du
+              patient courant.
+            </p>
           </section>
 
           <section id="api-keys">
@@ -592,6 +613,7 @@ def medos_token(request):
           <section id="changelog">
             <h2>Changelog</h2>
             <ul>
+              <li><strong>2026-05-30 v1.2</strong> — API patient <strong>complète</strong> : rendez-vous, ordonnances, messagerie et téléconsultation exposés via <code>/embed/me/*</code> (scopes <code>appointments</code>, <code>prescriptions</code>, <code>messages</code>, <code>teleconsult</code>). Mode &ldquo;votre app, votre UI&rdquo;.</li>
               <li><strong>2026-05-28 v1.1</strong> — Niveau 2 SSO via <code>/embed/server-token</code>. Support <code>data-embed-token</code>. Endpoints data <code>/embed/me/*</code>.</li>
               <li><strong>2026-05-28 v1.0</strong> — Widget JS embed.js. Modes patient-portal, consent-form, health-tracker. Iframe <code>/embed/[mode]</code>. ApiKeyGuard.</li>
             </ul>
