@@ -424,14 +424,56 @@ def medos_token(request):
 
           <section id="iframe">
             <h2>Mode iframe (Mode C.2)</h2>
-            <p>Si votre CMS bloque les scripts tiers (Webflow strict, certains setups Squarespace), utilisez l&apos;iframe :</p>
+            <p>Si votre CMS bloque les scripts tiers (Webflow strict, certains setups Squarespace), utilisez l&apos;iframe — aucun JS à charger, juste une balise :</p>
             <CodeBlock lang="html" code={`<iframe
+  id="medos"
   src="https://cimolace.space/embed/patient-portal?tenant=votre-slug&primary=10b981"
   width="100%"
   height="600"
   frameborder="0"
+  style="border:0"
 ></iframe>`} />
-            <p className="text-sm text-slate-600">L&apos;iframe communique avec la page parente via <code>postMessage</code> pour signaler <code>ready</code>, <code>height</code> (auto-resize), et les events utilisateur.</p>
+
+            <h3>Paramètres d&apos;URL</h3>
+            <ul>
+              <li><code>/embed/&lt;mode&gt;</code> — <code>patient-portal</code>, <code>appointment-booker</code>, <code>health-tracker</code>, <code>consent-form</code>, <code>intake-form</code></li>
+              <li><code>?tenant=</code> — slug de votre tenant <span className="text-rose-600">(requis)</span></li>
+              <li><code>?primary=</code> — couleur hex <strong>sans</strong> <code>#</code> (ex&nbsp;: <code>10b981</code>)</li>
+            </ul>
+            <div className="not-prose my-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <p className="m-0 text-sm text-amber-900">⚠️ <strong>Aucun token dans l&apos;URL</strong> (évite les fuites dans les logs). L&apos;iframe s&apos;authentifie elle-même via <code>POST /embed/token</code>, validé par l&apos;<strong>Origin HTTP</strong> — votre domaine doit donc être whitelisté dans <code>tenant_domains</code>.</p>
+            </div>
+
+            <h3>Communication parent ↔ iframe (<code>postMessage</code>)</h3>
+            <div className="not-prose overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b border-slate-200">
+                  <tr className="text-left text-slate-500">
+                    <th className="py-2 pr-4 font-medium">Sens</th>
+                    <th className="py-2 pr-4 font-medium">Message</th>
+                    <th className="py-2 font-medium">Effet</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  <tr><td className="py-2 pr-4">iframe → parent</td><td className="py-2 pr-4 font-mono">{`{ type: 'medos:ready' }`}</td><td className="py-2 text-slate-600">l&apos;iframe est chargée et prête</td></tr>
+                  <tr><td className="py-2 pr-4">iframe → parent</td><td className="py-2 pr-4 font-mono">{`{ type: 'medos:height', height }`}</td><td className="py-2 text-slate-600">hauteur du contenu (auto-resize)</td></tr>
+                  <tr><td className="py-2 pr-4">iframe → parent</td><td className="py-2 pr-4 font-mono">{`{ type: 'medos:event', name, payload }`}</td><td className="py-2 text-slate-600">événement utilisateur (ex&nbsp;: <code>note-read</code>)</td></tr>
+                  <tr><td className="py-2 pr-4">parent → iframe</td><td className="py-2 pr-4 font-mono">{`{ type: 'medos:theme', primary }`}</td><td className="py-2 text-slate-600">changer la couleur à chaud</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3>Auto-resize (recommandé)</h3>
+            <p>L&apos;iframe émet sa hauteur en continu (via <code>ResizeObserver</code>). Ajustez-la côté parent pour éviter le double scroll :</p>
+            <CodeBlock lang="html" code={`<script>
+  window.addEventListener("message", (e) => {
+    if (e.origin !== "https://cimolace.space") return;   // sécurité : vérifier l'origine
+    const msg = e.data || {};
+    if (msg.type === "medos:height") {
+      document.getElementById("medos").style.height = msg.height + "px";
+    }
+  });
+</script>`} />
           </section>
 
           <section id="auth-api">
