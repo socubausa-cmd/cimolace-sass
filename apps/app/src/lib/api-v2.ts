@@ -263,6 +263,10 @@ export const courseBuilderApi = {
     apiV2.get<ApiEnvelope<any[]>>('/course-builder/render-jobs').then(unwrap),
   getRenderStatus: (id: string) =>
     apiV2.get<ApiEnvelope<any>>(`/course-builder/render-jobs/${id}`).then(unwrap),
+  segmentAiGenerate: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/course-builder/segment-ai-generate', body).then(unwrap),
+  listSegmentAi: (contentId: string) =>
+    apiV2.get<ApiEnvelope<any>>('/course-builder/segment-ai', { params: { contentId } }).then(unwrap),
 };
 
 // ── Courses ─────────────────────────────────────────────────────────────────

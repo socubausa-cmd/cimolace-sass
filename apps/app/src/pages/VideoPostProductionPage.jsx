@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
+import { courseBuilderApi } from '@/lib/api-v2';
 import { normalizeReturnTo, safeDesignerReturnPathForState } from '@/lib/returnToNavigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -271,28 +272,12 @@ const VideoPostProductionPage = ({
     if (!targetContentId) return;
     setSegmentAiSyncLoading(true);
     try {
-      const { data, error: aiErr } = await supabase
-        .from('course_segment_ai_content')
-        .select('*')
-        .eq('content_id', targetContentId)
-        .order('segment_index', { ascending: true });
-      if (aiErr) {
-        const code = String(aiErr.code || '');
-        const msg = String(aiErr.message || '').toLowerCase();
-        if (
-          code === '42P01'
-          || code === 'PGRST205'
-          || msg.includes('does not exist')
-          || msg.includes('schema cache')
-          || msg.includes('relation')
-        ) {
-          setSegmentAiMap({});
-          return;
-        }
-        throw aiErr;
-      }
+      // Rebranché sur NestJS (la RLS bloque l'accès direct Supabase ; le backend
+      // service-role renvoie { rows } scopé au tenant). Remplace l'ancien select direct.
+      const res = await courseBuilderApi.listSegmentAi(targetContentId);
+      const rows = Array.isArray(res?.rows) ? res.rows : [];
       const nextMap = {};
-      (data || []).forEach((item) => {
+      rows.forEach((item) => {
         nextMap[String(item.segment_index)] = item;
       });
       setSegmentAiMap(nextMap);
@@ -1086,7 +1071,7 @@ const VideoPostProductionPage = ({
         timeSeconds: parseTimestampToSeconds(l.timeText),
         text: l.text,
       }));
-      const result = await invokeCourseBuilderFunction('segment-ai-generate', {
+      const result = await courseBuilderApi.segmentAiGenerate({
         contentId,
         segmentIndex: activeChapterIdx,
         applyAll,
