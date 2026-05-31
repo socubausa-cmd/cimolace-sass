@@ -85,6 +85,86 @@ export class MboloService {
     return data;
   }
 
+  // ─── Storefront public (clé API, acheteur anonyme) ───────────────────────
+  /** Détail produit par slug (storefront public) — images + variantes imbriquées. */
+  async getProductBySlug(tenantId: string, slug: string) {
+    const { data } = await (this.supabase.client as any)
+      .from('mbolo_products')
+      .select('*, images:mbolo_product_images(url, alt, is_primary, sort_order)')
+      .eq('tenant_id', tenantId).eq('slug', slug).eq('is_active', true)
+      .maybeSingle();
+    if (!data) throw new NotFoundException('Produit introuvable');
+    const { data: variants } = await (this.supabase.client as any)
+      .from('mbolo_product_variants').select('*')
+      .eq('product_id', data.id).eq('is_active', true)
+      .order('sort_order', { ascending: true });
+    return { ...data, variants: variants ?? [] };
+  }
+
+  /**
+   * Checkout invité (storefront sur le site du client, sans compte Cimolace).
+   * Les prix sont TOUJOURS recalculés depuis la base — jamais ceux du client.
+   * dto = { customer: {email,name?,phone?,address?}, items: [{productId?|slug?, variantId?, quantity}] }
+   */
+  async createStorefrontOrder(tenantId: string, dto: any) {
+    const email = dto?.customer?.email?.trim();
+    if (!email) throw new BadRequestException('customer.email requis');
+    const items = Array.isArray(dto?.items) ? dto.items : [];
+    if (!items.length) throw new BadRequestException('items requis (panier vide)');
+
+    let totalCents = 0;
+    let currency = 'XAF';
+    const resolved: Array<{ product_id: string; variant_id: string | null; quantity: number; price_cents: number; product_name: string }> = [];
+
+    for (const it of items) {
+      const qty = Math.max(1, parseInt(it?.quantity ?? 1, 10) || 1);
+      // Résoudre le produit par id ou slug, scopé au tenant + actif
+      let q = (this.supabase.client as any).from('mbolo_products')
+        .select('id, name, price_cents, currency, is_active').eq('tenant_id', tenantId).eq('is_active', true);
+      q = it?.productId ? q.eq('id', it.productId) : it?.slug ? q.eq('slug', it.slug) : q.eq('id', '00000000-0000-0000-0000-000000000000');
+      const { data: product } = await q.maybeSingle();
+      if (!product) throw new BadRequestException(`Produit introuvable: ${it?.productId ?? it?.slug ?? '?'}`);
+
+      let unit = product.price_cents as number;
+      let variantId: string | null = null;
+      if (it?.variantId) {
+        const { data: variant } = await (this.supabase.client as any)
+          .from('mbolo_product_variants').select('id, price_delta_cents')
+          .eq('id', it.variantId).eq('product_id', product.id).eq('is_active', true).maybeSingle();
+        if (!variant) throw new BadRequestException(`Variante introuvable pour ${product.name}`);
+        unit += variant.price_delta_cents ?? 0;
+        variantId = variant.id;
+      }
+      currency = product.currency ?? currency;
+      totalCents += unit * qty;
+      resolved.push({ product_id: product.id, variant_id: variantId, quantity: qty, price_cents: unit, product_name: product.name });
+    }
+
+    const orderNumber = `MB-${tenantId.slice(0, 4).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+    const { data: order, error } = await (this.supabase.client as any).from('mbolo_orders').insert({
+      tenant_id: tenantId,
+      user_id: null,
+      total_cents: totalCents,
+      status: 'pending',
+      order_number: orderNumber,
+      customer_email: email,
+      customer_name: dto?.customer?.name ?? null,
+      customer_phone: dto?.customer?.phone ?? null,
+      shipping_address: dto?.customer?.address ?? {},
+      currency,
+      channel: 'storefront',
+    }).select('*').single();
+    if (error) throw new BadRequestException(error.message);
+
+    for (const r of resolved) {
+      await (this.supabase.client as any).from('mbolo_order_items').insert({
+        order_id: order.id, product_id: r.product_id, variant_id: r.variant_id,
+        quantity: r.quantity, price_cents: r.price_cents, product_name: r.product_name,
+      });
+    }
+    return { order, items: resolved, total_cents: totalCents, currency };
+  }
+
   async addToCart(tenantId: string, userId: string, productId: string, quantity = 1) {
     await (this.supabase.client as any).from('mbolo_cart_items').upsert({ tenant_id: tenantId, user_id: userId, product_id: productId, quantity }, { onConflict: 'user_id,product_id' });
     return this.getCart(tenantId, userId);

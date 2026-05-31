@@ -22,8 +22,9 @@ type ApiKeyRequest = Request & {
  *
  * - `cml_` : clé Cimolace générique (tous engines)
  * - `mdk_` : clé spécifique MEDOS (medical key)
+ * - `mbk_` : clé spécifique Mbolo (storefront e-commerce)
  */
-const VALID_PREFIXES = ['cml_', 'mdk_'];
+const VALID_PREFIXES = ['cml_', 'mdk_', 'mbk_'];
 
 /**
  * Guard d'authentification par clé API tenant.
@@ -65,7 +66,7 @@ export class ApiKeyGuard implements CanActivate {
     const raw = auth.slice(7).trim();
     if (!VALID_PREFIXES.some((p) => raw.startsWith(p))) {
       throw new UnauthorizedException(
-        'Format de clé API invalide (préfixe attendu: cml_ ou mdk_)',
+        'Format de clé API invalide (préfixe attendu: cml_, mdk_ ou mbk_)',
       );
     }
 
