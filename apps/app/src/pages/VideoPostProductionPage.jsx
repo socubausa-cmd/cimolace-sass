@@ -1148,7 +1148,7 @@ const VideoPostProductionPage = ({
     setSegmentAiLoading(true);
     setError('');
     try {
-      await invokeCourseBuilderFunction('segment-ai-approve', {
+      await courseBuilderApi.segmentAiApprove({
         contentId,
         segmentIndex: activeChapterIdx,
         approved,

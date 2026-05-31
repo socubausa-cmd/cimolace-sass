@@ -130,6 +130,20 @@ export class CourseBuilderService {
     return { rows: data ?? [] };
   }
 
+  /** Approuve / rejette le contenu IA d'un segment. Remplace l'edge course-builder-segment-ai-approve (404). */
+  async approveSegmentAi(tenantId: string, dto: { contentId: string; segmentIndex?: number; approved?: boolean }) {
+    const status = dto.approved === false ? 'rejected' : 'approved';
+    const { data } = await (this.supabase.client as any)
+      .from('course_segment_ai_content')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('tenant_id', tenantId)
+      .eq('content_id', dto.contentId)
+      .eq('segment_index', Number(dto.segmentIndex) || 0)
+      .select('*')
+      .single();
+    return { ok: true, status, row: data ?? null };
+  }
+
   private naiveSegment(text: string): { title: string; content: string; index: number }[] {
     const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
     return paragraphs.map((p, i) => ({ title: `Segment ${i + 1}`, content: p.trim(), index: i }));

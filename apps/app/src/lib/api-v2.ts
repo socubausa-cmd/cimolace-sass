@@ -267,6 +267,8 @@ export const courseBuilderApi = {
     apiV2.post<ApiEnvelope<any>>('/course-builder/segment-ai-generate', body).then(unwrap),
   listSegmentAi: (contentId: string) =>
     apiV2.get<ApiEnvelope<any>>('/course-builder/segment-ai', { params: { contentId } }).then(unwrap),
+  segmentAiApprove: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/course-builder/segment-ai-approve', body).then(unwrap),
 };
 
 // ── Courses ─────────────────────────────────────────────────────────────────

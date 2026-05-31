@@ -23,4 +23,5 @@ export class CourseBuilderController {
   // ── Segment AI (« tableau IA » par chapitre) ──
   @Post('segment-ai-generate') generateSegmentAi(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.generateSegmentAi(t.id, ((r as any).user?.id as string) ?? '', d ?? {}); }
   @Get('segment-ai') listSegmentAi(@Query('contentId') contentId: string, @CurrentTenant() t: TenantContext) { return this.svc.listSegmentAi(t.id, contentId); }
+  @Post('segment-ai-approve') approveSegmentAi(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.approveSegmentAi(t.id, d ?? {}); }
 }
