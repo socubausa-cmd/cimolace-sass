@@ -185,8 +185,7 @@ export class LiriBrainService {
       return;
     }
     if (info.provider === 'anthropic') {
-      // Outils non encore branchés côté Anthropic → streaming simple.
-      yield* this.streamChat(model, messages, ctx.tenant);
+      yield* this.anthropicWithTools(model, messages, ctx);
       return;
     }
 
@@ -265,6 +264,86 @@ export class LiriBrainService {
       // on reboucle : le modèle reçoit les résultats d'outils et continue
     }
 
+    yield { content: '⚠️ Trop d’étapes d’outils, arrêt.', done: true };
+  }
+
+  /**
+   * Boucle function-calling pour Anthropic (format Claude : blocs `tool_use` /
+   * `tool_result`). Même logique que la voie OpenAI-compatible : lecture=auto,
+   * écriture=confirmation. Non-streaming, réponse finale en un bloc.
+   */
+  private async *anthropicWithTools(
+    model: LiriModel,
+    messages: LiriMessage[],
+    ctx: BrainToolContext,
+  ): AsyncGenerator<{ content: string; done: boolean }> {
+    const key = this.config.get<string>('ANTHROPIC_API_KEY');
+    if (!key || key === 'replace_me') {
+      yield { content: '⚠️ ANTHROPIC_API_KEY non configurée.', done: true };
+      return;
+    }
+    const systemMsg = messages.find((m) => m.role === 'system');
+    const convo: any[] = messages
+      .filter((m) => m.role !== 'system')
+      .map((m) => ({ role: m.role, content: m.content }));
+    const tools = this.tools.getToolSpecs(ctx.role).map((t) => ({
+      name: t.name,
+      description: t.description,
+      input_schema: t.parameters,
+    }));
+    const MAX_STEPS = 5;
+
+    for (let step = 0; step < MAX_STEPS; step++) {
+      const body: Record<string, unknown> = {
+        model,
+        max_tokens: 4096,
+        messages: convo,
+        ...(tools.length ? { tools } : {}),
+      };
+      if (systemMsg) body['system'] = systemMsg.content;
+
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify(body),
+      });
+      if (!resp.ok) {
+        this.logger.error(`Anthropic tools error: ${await resp.text()}`);
+        yield { content: `⚠️ Erreur Anthropic: ${resp.status}`, done: true };
+        return;
+      }
+      const data: any = await resp.json();
+      const blocks: any[] = Array.isArray(data?.content) ? data.content : [];
+      const toolUses = blocks.filter((b) => b?.type === 'tool_use');
+
+      if (!toolUses.length) {
+        const text = blocks.filter((b) => b?.type === 'text').map((b) => b.text).join('');
+        yield { content: text, done: true };
+        return;
+      }
+
+      convo.push({ role: 'assistant', content: blocks });
+      const toolResults: any[] = [];
+      for (const tu of toolUses) {
+        const name: string = tu.name;
+        const args: Record<string, any> = (tu.input ?? {}) as Record<string, any>;
+        if (this.tools.requiresConfirmation(name)) {
+          yield { content: JSON.stringify({ type: 'tool_confirm', tool: name, args }), done: true };
+          return;
+        }
+        try {
+          const result = await this.tools.execute(name, args, ctx);
+          toolResults.push({ type: 'tool_result', tool_use_id: tu.id, content: JSON.stringify(result ?? null) });
+        } catch (e) {
+          toolResults.push({ type: 'tool_result', tool_use_id: tu.id, content: JSON.stringify({ error: String(e) }), is_error: true });
+        }
+      }
+      convo.push({ role: 'user', content: toolResults });
+    }
     yield { content: '⚠️ Trop d’étapes d’outils, arrêt.', done: true };
   }
 

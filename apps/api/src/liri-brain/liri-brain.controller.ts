@@ -67,6 +67,25 @@ export class LiriBrainController {
     return this.brainTools.getToolSpecs(tenant.userRole);
   }
 
+  /**
+   * Exécute un outil APRÈS confirmation utilisateur (pour les actions d'écriture
+   * que la boucle a mises en attente via `{type:'tool_confirm'}`). RBAC + tenant
+   * sont re-vérifiés dans BrainToolsService.execute().
+   */
+  @Post('tools/execute')
+  executeTool(
+    @Body() body: { name: string; args?: Record<string, any> },
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
+  ) {
+    const userId = ((req as any).user?.id as string) ?? '';
+    return this.brainTools.execute(body?.name, body?.args ?? {}, {
+      tenant,
+      userId,
+      role: tenant.userRole,
+    });
+  }
+
   // ── Conversations ─────────────────────────────────────────────────────────
 
   @Get('conversations')
