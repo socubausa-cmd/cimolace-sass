@@ -192,6 +192,21 @@ export function DashboardLiri() {
     }
   }, [input]);
 
+  const deleteConversation = useCallback(async (id: string) => {
+    if (!window.confirm('Supprimer cette conversation ?')) return;
+    try {
+      await fetch(`${base}/liri/brain/conversations/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug },
+      });
+    } catch { /* best-effort */ }
+    if (activeConvIdRef.current === id) {
+      setMessages([]); setActiveConvId(null);
+      activeConvIdRef.current = null; messagesRef.current = [];
+    }
+    refreshConversations();
+  }, [base, token, slug, refreshConversations]);
+
   const currentModel = MODEL_MAP[model];
 
   const sendMessage = async () => {
@@ -393,24 +408,41 @@ export function DashboardLiri() {
               <p style={{ fontSize: 11, color: '#4b5563', padding: '8px 8px' }}>Aucune conversation sauvegardée</p>
             ) : (
               conversations.map((conv) => (
-                <button
+                <div
                   key={conv.id}
-                  onClick={() => void loadConversation(conv.id)}
+                  className="liri-conv-item"
                   style={{
-                    width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8,
+                    display: 'flex', alignItems: 'center', gap: 2, marginBottom: 2, borderRadius: 8,
                     background: activeConvId === conv.id ? 'rgba(124,58,237,0.15)' : 'transparent',
                     border: activeConvId === conv.id ? '1px solid rgba(124,58,237,0.25)' : '1px solid transparent',
-                    color: '#d1d5db', fontSize: 12, cursor: 'pointer', marginBottom: 2,
-                    display: 'block',
                   }}
                 >
-                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>
-                    {conv.title}
-                  </div>
-                  <div style={{ color: '#6b7280', fontSize: 10, marginTop: 2 }}>
-                    {MODEL_MAP[conv.model]?.name ?? conv.model}
-                  </div>
-                </button>
+                  <button
+                    onClick={() => void loadConversation(conv.id)}
+                    style={{
+                      flex: 1, minWidth: 0, textAlign: 'left', padding: '8px 10px',
+                      background: 'transparent', border: 'none', color: '#d1d5db', fontSize: 12, cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>
+                      {conv.title}
+                    </div>
+                    <div style={{ color: '#6b7280', fontSize: 10, marginTop: 2 }}>
+                      {MODEL_MAP[conv.model]?.name ?? conv.model}
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => void deleteConversation(conv.id)}
+                    title="Supprimer la conversation"
+                    aria-label="Supprimer la conversation"
+                    style={{
+                      flexShrink: 0, padding: '4px 9px', marginRight: 4, background: 'transparent',
+                      border: 'none', color: '#6b7280', fontSize: 16, lineHeight: 1, cursor: 'pointer', borderRadius: 6,
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
               ))
             )}
           </div>

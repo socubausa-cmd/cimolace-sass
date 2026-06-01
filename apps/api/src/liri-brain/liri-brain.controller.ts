@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -128,6 +129,16 @@ export class LiriBrainController {
       Array.isArray(body?.messages) ? body.messages : [],
       body?.conversationId,
     );
+  }
+
+  @Delete('conversations/:id')
+  deleteConversation(
+    @Param('id') id: string,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
+  ) {
+    const userId = ((req as any).user?.id as string) ?? '';
+    return this.liriBrain.deleteConversation(tenant.id, userId, id);
   }
 
   // ── SSE Chat Stream ──────────────────────────────────────────────────────

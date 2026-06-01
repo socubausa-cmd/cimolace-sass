@@ -137,6 +137,22 @@ export class LiriBrainService {
     };
   }
 
+  /** Supprime une conversation de l'utilisateur courant (scopée tenant + user). */
+  async deleteConversation(
+    tenantId: string,
+    userId: string,
+    conversationId: string,
+  ): Promise<{ deleted: boolean }> {
+    const { error } = await this.supabase.client
+      .from('liri_conversations' as any)
+      .delete()
+      .eq('id', conversationId)
+      .eq('tenant_id', tenantId)
+      .eq('user_id', userId);
+    if (error) throw new Error(error.message);
+    return { deleted: true };
+  }
+
   // ── LLM Streaming ────────────────────────────────────────────────────────
 
   /**
@@ -187,12 +203,29 @@ export class LiriBrainService {
         // conversation introuvable / autre tenant → on continue sans historique
       }
     }
-    const messages: LiriMessage[] = [...history, { role: 'user', content: message }];
+    const messages: LiriMessage[] = [
+      { role: 'system', content: this.buildSystemPrompt(ctx) },
+      ...history,
+      { role: 'user', content: message },
+    ];
     if (opts.useTools) {
       yield* this.streamChatWithTools(model, messages, ctx);
     } else {
       yield* this.streamChat(model, messages, ctx.tenant);
     }
+  }
+
+  /** Prompt système : donne à LIRI son identité, sa langue et son cadre (outils, confirmation). */
+  private buildSystemPrompt(ctx: BrainToolContext): string {
+    const school = ctx.tenant?.name || 'votre école';
+    const role = ctx.role || 'membre';
+    return [
+      `Tu es LIRI, l'assistant IA de l'école « ${school} » sur la plateforme Cimolace.`,
+      'Réponds en français, de façon claire, concise et bienveillante.',
+      "Tu disposes d'outils pour consulter les données réelles de l'école (cours, forum, inscriptions) : utilise-les plutôt que de deviner, et n'invente jamais d'identifiants ni de chiffres.",
+      "Les actions qui modifient des données (ex. publier un sujet de forum) exigent une confirmation explicite de l'utilisateur avant exécution — propose-les, ne les force pas.",
+      `L'utilisateur courant a le rôle « ${role} ».`,
+    ].join('\n');
   }
 
   /**
