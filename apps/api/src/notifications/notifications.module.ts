@@ -4,5 +4,5 @@ import { TenantModule } from "../tenant/tenant.module";
 import { NotificationsService } from "./notifications.service";
 import { NotificationsController } from "./notifications.controller";
 
-@Module({ imports: [AuthModule, TenantModule], controllers: [NotificationsController], providers: [NotificationsService] })
+@Module({ imports: [AuthModule, TenantModule], controllers: [NotificationsController], providers: [NotificationsService], exports: [NotificationsService] })
 export class NotificationsModule {}

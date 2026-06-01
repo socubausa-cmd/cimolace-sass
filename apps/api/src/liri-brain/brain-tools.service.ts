@@ -3,6 +3,10 @@ import type { TenantContext } from '../tenant/tenant.types';
 import { CoursesService } from '../courses/courses.service';
 import { ForumService } from '../forum/forum.service';
 import { SecretariatService } from '../secretariat/secretariat.service';
+import { LiveService } from '../live/live.service';
+import { BookingService } from '../booking/booking.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { GrowthService } from '../growth/growth.service';
 
 /**
  * BrainToolsService — registre d'outils que LIRI Brain (le LLM) peut appeler
@@ -51,6 +55,10 @@ export class BrainToolsService {
     private readonly courses: CoursesService,
     private readonly forum: ForumService,
     private readonly secretariat: SecretariatService,
+    private readonly live: LiveService,
+    private readonly booking: BookingService,
+    private readonly notifications: NotificationsService,
+    private readonly growth: GrowthService,
   ) {
     this.tools = this.buildRegistry();
   }
@@ -172,6 +180,137 @@ export class BrainToolsService {
           this.secretariat.listEnrollments(ctx.tenant.id, a.status ? str(a.status) : undefined),
       },
 
+      // ── LIRI Live ────────────────────────────────────────────────────────
+      {
+        name: 'list_lives',
+        description: "Liste les sessions live de l'école (id, titre, statut, date).",
+        parameters: { type: 'object', properties: {}, required: [] },
+        allowedRoles: ANY,
+        requiresConfirmation: false,
+        handler: (_a, ctx) => this.live.findAll(ctx.tenant.id),
+      },
+      {
+        name: 'get_live',
+        description: "Détail d'une session live (par id).",
+        parameters: {
+          type: 'object',
+          properties: { live_id: { type: 'string', description: 'UUID de la session live' } },
+          required: ['live_id'],
+        },
+        allowedRoles: ANY,
+        requiresConfirmation: false,
+        handler: (a, ctx) => this.live.findOne(ctx.tenant.id, str(a.live_id)),
+      },
+
+      // ── Cours : détail (modules / leçons) ────────────────────────────────
+      {
+        name: 'list_modules',
+        description: "Liste les modules d'un cours.",
+        parameters: {
+          type: 'object',
+          properties: { course_id: { type: 'string' } },
+          required: ['course_id'],
+        },
+        allowedRoles: ANY,
+        requiresConfirmation: false,
+        handler: (a, ctx) => this.courses.listModules(ctx.tenant.id, str(a.course_id)),
+      },
+      {
+        name: 'list_lessons',
+        description: "Liste les leçons d'un module.",
+        parameters: {
+          type: 'object',
+          properties: { module_id: { type: 'string' } },
+          required: ['module_id'],
+        },
+        allowedRoles: ANY,
+        requiresConfirmation: false,
+        handler: (a, ctx) => this.courses.listLessons(ctx.tenant.id, str(a.module_id)),
+      },
+
+      // ── Forum : détail ───────────────────────────────────────────────────
+      {
+        name: 'list_forum_categories',
+        description: 'Liste les catégories du forum.',
+        parameters: { type: 'object', properties: {}, required: [] },
+        allowedRoles: ANY,
+        requiresConfirmation: false,
+        handler: (_a, ctx) => this.forum.listCategories(ctx.tenant.id),
+      },
+      {
+        name: 'get_forum_topic',
+        description: "Détail d'un sujet de forum (par id).",
+        parameters: {
+          type: 'object',
+          properties: { topic_id: { type: 'string' } },
+          required: ['topic_id'],
+        },
+        allowedRoles: ANY,
+        requiresConfirmation: false,
+        handler: (a, ctx) => this.forum.getTopic(ctx.tenant.id, str(a.topic_id)),
+      },
+      {
+        name: 'list_forum_posts',
+        description: "Liste les messages (réponses) d'un sujet de forum.",
+        parameters: {
+          type: 'object',
+          properties: { topic_id: { type: 'string' } },
+          required: ['topic_id'],
+        },
+        allowedRoles: ANY,
+        requiresConfirmation: false,
+        handler: (a, ctx) => this.forum.listPosts(ctx.tenant.id, str(a.topic_id)),
+      },
+
+      // ── Rendez-vous (booking) ────────────────────────────────────────────
+      {
+        name: 'list_booking_slots',
+        description:
+          'Liste les créneaux de rendez-vous disponibles. Filtres dates ISO 8601 optionnels (from / to).',
+        parameters: {
+          type: 'object',
+          properties: { from: { type: 'string' }, to: { type: 'string' } },
+          required: [],
+        },
+        allowedRoles: ANY,
+        requiresConfirmation: false,
+        handler: (a, ctx) =>
+          this.booking.listSlots(
+            ctx.tenant.id,
+            a.from ? str(a.from) : undefined,
+            a.to ? str(a.to) : undefined,
+          ),
+      },
+      {
+        name: 'list_my_appointments',
+        description: "Liste les rendez-vous (un élève ne voit que les siens).",
+        parameters: { type: 'object', properties: {}, required: [] },
+        allowedRoles: ANY,
+        requiresConfirmation: false,
+        handler: (_a, ctx) => this.booking.listAppointments(ctx.tenant.id, ctx.userId, ctx.role),
+      },
+
+      // ── Notifications ────────────────────────────────────────────────────
+      {
+        name: 'list_my_notifications',
+        description: "Liste les notifications de l'utilisateur courant.",
+        parameters: { type: 'object', properties: {}, required: [] },
+        allowedRoles: ANY,
+        requiresConfirmation: false,
+        handler: (_a, ctx) => this.notifications.getUserNotifications(ctx.tenant.id, ctx.userId),
+      },
+
+      // ── Statistiques école (growth) ──────────────────────────────────────
+      {
+        name: 'get_school_stats',
+        description:
+          "Statistiques de l'école : nombre de membres, de lives, de cours, et revenus encaissés. Réservé à la direction.",
+        parameters: { type: 'object', properties: {}, required: [] },
+        allowedRoles: ['owner', 'admin', 'secretariat'],
+        requiresConfirmation: false,
+        handler: (_a, ctx) => this.growth.getTenantStats(ctx.tenant.id),
+      },
+
       // ── ÉCRITURE (confirmation humaine obligatoire) ──────────────────────
       {
         name: 'create_forum_topic',
@@ -193,6 +332,25 @@ export class BrainToolsService {
             title: str(a.title),
             content: str(a.content),
             category: a.category ? str(a.category) : undefined,
+          }),
+      },
+      {
+        name: 'reply_forum_topic',
+        description:
+          "Publie une réponse dans un sujet de forum existant. Action d'écriture : nécessite confirmation.",
+        parameters: {
+          type: 'object',
+          properties: {
+            topic_id: { type: 'string', description: 'UUID du sujet' },
+            content: { type: 'string' },
+          },
+          required: ['topic_id', 'content'],
+        },
+        allowedRoles: ANY,
+        requiresConfirmation: true,
+        handler: (a, ctx) =>
+          this.forum.createPost(ctx.tenant, str(a.topic_id), ctx.userId, {
+            content: str(a.content),
           }),
       },
     ];
