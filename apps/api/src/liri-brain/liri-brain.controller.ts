@@ -102,6 +102,34 @@ export class LiriBrainController {
     return this.liriBrain.getConversation(tenant.id, id);
   }
 
+  /**
+   * Sauvegarde (création ou mise à jour) d'une conversation. Appelé par le front
+   * à la fin de chaque tour. `messages` = transcript complet ; sans conversationId
+   * → création. RBAC : JwtAuthGuard + TenantGuard (niveau contrôleur).
+   */
+  @Post('conversations')
+  saveConversation(
+    @Body()
+    body: {
+      conversationId?: string;
+      model?: LiriModel;
+      title?: string;
+      messages?: LiriMessage[];
+    },
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
+  ) {
+    const userId = ((req as any).user?.id as string) ?? '';
+    return this.liriBrain.saveConversation(
+      tenant.id,
+      userId,
+      (body?.model ?? 'deepseek-chat') as LiriModel,
+      body?.title ?? '',
+      Array.isArray(body?.messages) ? body.messages : [],
+      body?.conversationId,
+    );
+  }
+
   // ── SSE Chat Stream ──────────────────────────────────────────────────────
 
   // @SkipResponseWrapper : sans ça, le ResponseInterceptor global emballe chaque
@@ -128,19 +156,18 @@ export class LiriBrainController {
       });
     }
 
-    const messages: LiriMessage[] = [
-      { role: 'user', content: message },
-    ];
-
-    // ?tools=1 → boucle function-calling (lecture auto / écriture = confirmation)
-    const generator =
-      req.query.tools === '1'
-        ? this.liriBrain.streamChatWithTools(model, messages, {
-            tenant,
-            userId: ((req as any).user?.id as string) ?? '',
-            role: tenant.userRole,
-          })
-        : this.liriBrain.streamChat(model, messages, tenant);
+    // ?tools=1 → boucle function-calling (lecture auto / écriture = confirmation).
+    // streamConversation charge l'historique (conversationId) → mémoire du LLM.
+    const generator = this.liriBrain.streamConversation(
+      model,
+      message,
+      {
+        tenant,
+        userId: ((req as any).user?.id as string) ?? '',
+        role: tenant.userRole,
+      },
+      { conversationId, useTools: req.query.tools === '1' },
+    );
     return sseFromGenerator(generator);
   }
 }

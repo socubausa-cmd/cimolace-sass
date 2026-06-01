@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { authStore } from '../lib/auth-store';
 import { getApiBaseUrl } from '../lib/apiBase';
@@ -132,21 +132,52 @@ export function DashboardLiri() {
   const [pendingConfirm, setPendingConfirm]   = useState<{ tool: string; args: Record<string, unknown> } | null>(null);
   const bottomRef   = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Refs miroir : lus dans les callbacks SSE / persistance sans dépendre du timing de setState.
+  const messagesRef     = useRef<Message[]>([]);
+  const activeConvIdRef = useRef<string | null>(null);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+  useEffect(() => { activeConvIdRef.current = activeConvId; }, [activeConvId]);
 
   const base  = getApiBaseUrl();
   const token = authStore.getToken();
   const slug  = authStore.getTenantSlug();
 
-  // Load conversations
-  useEffect(() => {
+  // Rafraîchit la liste (défait l'enveloppe { data } du ResponseInterceptor — sinon liste toujours vide).
+  const refreshConversations = useCallback(() => {
     if (!token) return;
     fetch(`${base}/liri/brain/conversations`, {
       headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug },
     })
       .then((r) => r.json())
-      .then((data) => setConversations(Array.isArray(data) ? data : []))
+      .then((data) => {
+        const arr = data?.data ?? data;
+        setConversations(Array.isArray(arr) ? arr : []);
+      })
       .catch(() => {});
   }, [base, token, slug]);
+
+  useEffect(() => { refreshConversations(); }, [refreshConversations]);
+
+  // Persiste le transcript courant (création si pas d'activeConvId, sinon mise à jour) et rafraîchit la liste.
+  const persistConversation = useCallback(async (msgs: Message[]) => {
+    const clean = msgs
+      .filter((m) => m.content && !m.pending)
+      .map((m) => ({ role: m.role, content: m.content }));
+    if (clean.length < 2) return; // au moins un échange complet
+    try {
+      const r = await fetch(`${base}/liri/brain/conversations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug },
+        body: JSON.stringify({ conversationId: activeConvIdRef.current ?? undefined, model, messages: clean }),
+      });
+      const data = await r.json().catch(() => null);
+      const conv = data?.data ?? data;
+      if (conv?.id) {
+        if (!activeConvIdRef.current) { activeConvIdRef.current = conv.id; setActiveConvId(conv.id); }
+        refreshConversations();
+      }
+    } catch { /* persistance best-effort */ }
+  }, [base, token, slug, model, refreshConversations]);
 
   // Auto scroll
   useEffect(() => {
@@ -167,6 +198,9 @@ export function DashboardLiri() {
     const text = input.trim();
     if (!text || streaming) return;
 
+    const prior = messagesRef.current;   // tours précédents (déjà settlés)
+    let assistantText = '';
+
     setInput('');
     setMessages((prev) => [...prev, { role: 'user', content: text }]);
     setStreaming(true);
@@ -179,6 +213,7 @@ export function DashboardLiri() {
       model,
       activeConvId,
       (chunk) => {
+        assistantText += chunk;
         setMessages((prev) => {
           const updated = [...prev];
           const last = updated[updated.length - 1];
@@ -198,6 +233,15 @@ export function DashboardLiri() {
           }
           return updated;
         });
+        // Persiste le tour (création/maj) — uniquement s'il y a une vraie réponse texte
+        // (la voie tool_confirm n'a pas encore de réponse → sauvegardée après confirmation).
+        if (assistantText.trim()) {
+          void persistConversation([
+            ...prior,
+            { role: 'user', content: text },
+            { role: 'assistant', content: assistantText },
+          ]);
+        }
       },
       (err) => {
         setStreaming(false);
@@ -232,6 +276,7 @@ export function DashboardLiri() {
     const { tool, args } = pendingConfirm;
     setPendingConfirm(null);
     setStreaming(true);
+    let resultMsg: Message;
     try {
       const r = await fetch(`${base}/liri/brain/tools/execute`, {
         method: 'POST',
@@ -239,21 +284,24 @@ export function DashboardLiri() {
         body: JSON.stringify({ name: tool, args }),
       });
       const data = await r.json().catch(() => ({}));
-      setMessages((prev) => [...prev, {
+      resultMsg = {
         role: 'assistant',
-        content: r.ok ? `✓ Action « ${tool} » exécutée.` : `⚠️ Échec (${r.status}) : ${data?.message ?? ''}`,
+        content: r.ok ? `✓ Action « ${tool} » exécutée.` : `⚠️ Échec (${r.status}) : ${data?.error?.message ?? data?.message ?? ''}`,
         pending: false,
-      }]);
+      };
     } catch (e) {
-      setMessages((prev) => [...prev, { role: 'assistant', content: `⚠️ ${String(e)}`, pending: false }]);
-    } finally {
-      setStreaming(false);
+      resultMsg = { role: 'assistant', content: `⚠️ ${String(e)}`, pending: false };
     }
+    setMessages((prev) => [...prev, resultMsg]);
+    setStreaming(false);
+    void persistConversation([...messagesRef.current, resultMsg]);
   };
 
   const cancelTool = () => {
     setPendingConfirm(null);
-    setMessages((prev) => [...prev, { role: 'assistant', content: 'Action annulée.', pending: false }]);
+    const msg: Message = { role: 'assistant', content: 'Action annulée.', pending: false };
+    setMessages((prev) => [...prev, msg]);
+    void persistConversation([...messagesRef.current, msg]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -266,17 +314,21 @@ export function DashboardLiri() {
   const newConversation = () => {
     setMessages([]);
     setActiveConvId(null);
+    activeConvIdRef.current = null;   // évite d'appendre au thread précédent si on renvoie aussitôt
+    messagesRef.current = [];
   };
 
   const loadConversation = async (id: string) => {
     setActiveConvId(id);
+    activeConvIdRef.current = id;
     const r = await fetch(`${base}/liri/brain/conversations/${id}`, {
       headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug },
     });
-    const data = await r.json();
-    if (data?.messages) {
-      setMessages(data.messages as Message[]);
-      if (data.model) setModel(data.model as LiriModel);
+    const json = await r.json();
+    const conv = json?.data ?? json;          // défait l'enveloppe { data } du ResponseInterceptor
+    if (conv?.messages) {
+      setMessages(conv.messages as Message[]);
+      if (conv.model) setModel(conv.model as LiriModel);
     }
   };
 

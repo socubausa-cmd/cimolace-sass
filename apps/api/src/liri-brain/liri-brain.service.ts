@@ -167,6 +167,35 @@ export class LiriBrainService {
   }
 
   /**
+   * Point d'entrée du chat SSE : charge l'historique de la conversation (si
+   * `conversationId`) pour donner sa mémoire au LLM, puis diffuse la réponse —
+   * avec outils (`useTools`) ou en streaming simple. La persistance du tour est
+   * déclenchée côté front via POST /liri/brain/conversations.
+   */
+  async *streamConversation(
+    model: LiriModel,
+    message: string,
+    ctx: BrainToolContext,
+    opts: { conversationId?: string; useTools: boolean },
+  ): AsyncGenerator<{ content: string; done: boolean }> {
+    const history: LiriMessage[] = [];
+    if (opts.conversationId) {
+      try {
+        const conv = await this.getConversation(ctx.tenant.id, opts.conversationId);
+        if (Array.isArray(conv.messages)) history.push(...conv.messages);
+      } catch {
+        // conversation introuvable / autre tenant → on continue sans historique
+      }
+    }
+    const messages: LiriMessage[] = [...history, { role: 'user', content: message }];
+    if (opts.useTools) {
+      yield* this.streamChatWithTools(model, messages, ctx);
+    } else {
+      yield* this.streamChat(model, messages, ctx.tenant);
+    }
+  }
+
+  /**
    * Variante function-calling (chemin OpenAI-compatible : DeepSeek + GPT).
    * Boucle NON-streaming : le modèle peut appeler des outils LECTURE (exécutés
    * automatiquement via BrainToolsService) ; un outil ÉCRITURE stoppe la boucle et
