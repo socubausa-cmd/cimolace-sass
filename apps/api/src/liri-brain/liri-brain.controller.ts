@@ -14,7 +14,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentTenant } from '../tenant/current-tenant.decorator';
 import { TenantGuard } from '../tenant/tenant.guard';
 import type { TenantContext } from '../tenant/tenant.types';
-import { ChatDto } from './dto/chat.dto';
+import { SkipResponseWrapper } from '../common/decorators/skip-response-wrapper.decorator';
 import { LiriBrainService } from './liri-brain.service';
 import { BrainToolsService } from './brain-tools.service';
 import type { LiriMessage, LiriModel } from './liri-brain.types';
@@ -104,9 +104,15 @@ export class LiriBrainController {
 
   // ── SSE Chat Stream ──────────────────────────────────────────────────────
 
+  // @SkipResponseWrapper : sans ça, le ResponseInterceptor global emballe chaque
+  // MessageEvent SSE dans { data: … } → double encapsulation que le front ne sait
+  // pas défaire (il fait un seul JSON.parse). On laisse passer le flux brut.
   @Sse('chat')
+  @SkipResponseWrapper()
   chat(
-    @Body() _dto: ChatDto,
+    // ⚠️ NE PAS ajouter @Body() ici : @Sse() est un GET sans corps, et le
+    // ValidationPipe global rejetterait un body vide contre un DTO (message
+    // requis) → 400 avant le handler. Tous les paramètres viennent de la query.
     @Req() req: Request & { query: Record<string, string> },
     @CurrentTenant() tenant: TenantContext,
   ): Observable<MessageEvent> {
