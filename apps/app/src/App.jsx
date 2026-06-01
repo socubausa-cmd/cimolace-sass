@@ -378,6 +378,8 @@ const MedosDashboard = lazy(() => import('@/pages/MedosDashboard').then((m) => (
 const MedosPatients = lazy(() => import('@/pages/MedosPatients').then((m) => ({ default: m.MedosPatients })));
 const MedosPatientDetail = lazy(() => import('@/pages/MedosPatientDetail').then((m) => ({ default: m.MedosPatientDetail })));
 const MedosPatientPortal = lazy(() => import('@/pages/MedosPatientPortal').then((m) => ({ default: m.MedosPatientPortal })));
+const MboloCatalog = lazy(() => import('@/pages/MboloCatalog').then((m) => ({ default: m.MboloCatalog })));
+const MboloOrders = lazy(() => import('@/pages/MboloOrders').then((m) => ({ default: m.MboloOrders })));
 const AboutProrascience = lazy(() => import('@/pages/AboutProrascience'));
 const FounderAboutPage = lazy(() => import('@/pages/FounderAboutPage'));
 const TeamPage = lazy(() => import('@/pages/TeamPage'));
@@ -1264,6 +1266,16 @@ isLiriHostDevPreviewRoute;
           <Route path="/dashboard/medos/me/exams" element={<MedosPatientPortal />} />
           <Route path="/dashboard/medos/me/prescriptions" element={<MedosPatientPortal />} />
           <Route path="/dashboard/medos/me/messages" element={<MedosPatientPortal />} />
+          <Route path="/dashboard/mbolo" element={
+            <ProtectedRoleRoute allowedRoles={['owner', 'admin']}>
+              <MboloCatalog />
+            </ProtectedRoleRoute>
+          } />
+          <Route path="/dashboard/mbolo/orders" element={
+            <ProtectedRoleRoute allowedRoles={['owner', 'admin']}>
+              <MboloOrders />
+            </ProtectedRoleRoute>
+          } />
           <Route path="/dashboard/tools/masterclass-factory" element={
             <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
               <MasterclassFactoryPage />
