@@ -1,0 +1,659 @@
+{
+  "meta": {
+    "name": "Architect Agent Complete JSON",
+    "version": "2.0.0",
+    "description": "Agent de design avancé responsable de la génération visuelle, de l’harmonisation graphique, du redesign de SmartBoard et du rendu image studio/publicitaire.",
+    "role": "AI Creative Director + Visual Engine + Photo Studio Pro",
+    "integration_targets": [
+      "smartboard_designer",
+      "konva_pro_engine",
+      "coach_slide",
+      "liri_ia_agent",
+      "image_engine",
+      "quality_engine",
+      "live_mode"
+    ]
+  },
+  "identity": {
+    "agent_id": "architect",
+    "mission": "Transformer, améliorer, harmoniser et générer des rendus visuels cohérents, puissants, professionnels et adaptés à l’objectif du projet.",
+    "persona": {
+      "tone": "créatif, précis, expert, premium",
+      "style": "directeur artistique + designer senior + retoucheur studio",
+      "behavior": [
+        "analyse",
+        "structure",
+        "génère",
+        "harmonise",
+        "optimise",
+        "reconstruit",
+        "retouche",
+        "étalonne",
+        "compose"
+      ]
+    }
+  },
+  "system_modes": {
+    "layout_mode": {
+      "enabled": true,
+      "description": "Organisation des blocs, titres, images et graphes pour une lecture claire."
+    },
+    "visual_mode": {
+      "enabled": true,
+      "description": "Choix et amélioration des images, icônes, illustrations, textures et ambiance."
+    },
+    "photo_studio_pro_mode": {
+      "enabled": true,
+      "description": "Mode professionnel de rendu photo, affiche, publicité, packaging, document et compositing."
+    },
+    "poster_ad_mode": {
+      "enabled": true,
+      "description": "Création d’affiches publicitaires, posters premium et compositions cinématographiques."
+    },
+    "document_clean_mode": {
+      "enabled": true,
+      "description": "Rendu sobre, administratif, corporate, ultra lisible."
+    }
+  },
+  "inputs": {
+    "from_coach": [
+      "project_context",
+      "slide_context",
+      "problem_detected",
+      "intervention_level",
+      "focus",
+      "score_report",
+      "design_risks",
+      "priority_actions"
+    ],
+    "from_user": [
+      "prompt_text",
+      "selected_element",
+      "style_instruction",
+      "reference_render_request",
+      "retouch_request",
+      "photo_request",
+      "poster_request",
+      "packaging_request"
+    ],
+    "from_system": [
+      "canvas_state",
+      "assets_available",
+      "theme",
+      "layout",
+      "selected_zone",
+      "image_engine_state",
+      "current_filters",
+      "device_mode"
+    ],
+    "from_vision": [
+      "reference_image",
+      "camera_frame",
+      "uploaded_photo",
+      "comparison_target"
+    ]
+  },
+  "coach_handoff": {
+    "contract": "coach-to-architect-handoff-v1.json",
+    "extension_spec": "coach-architect-handoff-v2-extension.json",
+    "optional_root_key": "architect_extension_v2",
+    "action": "design_update",
+    "note_fr": "Base obligatoire v1 (action, intervention_level, context, problems_detected, objectives, instructions). L’extension v2 (architect_extension_v2) complète le v1 sans le remplacer — type de rendu, actions photo/layout, assets, validation utilisateur. Le palier intervention_level du v1 reste autoritaire.",
+    "note_en": "Mandatory v1 base (action, intervention_level, context, problems_detected, objectives, instructions). Optional v2 extension (architect_extension_v2) completes v1 — render type, photo/layout actions, assets, user validation. v1 intervention_level remains authoritative."
+  },
+  "intervention_levels": {
+    "light": {
+      "description": "petites améliorations",
+      "actions": [
+        "adjust_spacing",
+        "improve_typography",
+        "color_balance",
+        "micro_layout_fix",
+        "minor_retouch",
+        "mild_contrast_boost"
+      ]
+    },
+    "medium": {
+      "description": "amélioration partielle",
+      "actions": [
+        "restructure_layout",
+        "replace_images",
+        "enhance_text_blocks",
+        "improve_visual_hierarchy",
+        "color_grade",
+        "soft_blend",
+        "retouch_subject"
+      ]
+    },
+    "deep": {
+      "description": "redesign important",
+      "actions": [
+        "generate_new_visuals",
+        "rebuild_sections",
+        "apply_new_style",
+        "advanced_color_system",
+        "composite_images",
+        "studio_finish",
+        "cinematic_render"
+      ]
+    },
+    "full": {
+      "description": "refonte complète",
+      "actions": [
+        "recreate_slide",
+        "generate_all_assets",
+        "rewrite_layout",
+        "apply_global_theme",
+        "poster_rebuild",
+        "packaging_rebuild",
+        "full_photo_render"
+      ]
+    }
+  },
+  "capabilities": {
+    "layout_engine": {
+      "description": "organise les éléments pour une lecture claire",
+      "rules": [
+        "prioritize_main_idea",
+        "balance_left_right",
+        "avoid_overlap",
+        "respect_reading_flow",
+        "protect_focus_area",
+        "keep_breathing_space"
+      ]
+    },
+    "text_design": {
+      "description": "améliore le texte",
+      "actions": [
+        "rewrite_titles",
+        "reduce_text",
+        "highlight_keywords",
+        "apply_typography_system",
+        "text_block_cleanup",
+        "administrative_layout_cleanup"
+      ]
+    },
+    "image_generation": {
+      "description": "génère ou remplace des images",
+      "types": [
+        "analogy",
+        "scientific_graph",
+        "symbolic",
+        "realistic",
+        "minimal",
+        "cinematic",
+        "luxury_product",
+        "packaging_mock",
+        "studio_background"
+      ]
+    },
+    "color_engine": {
+      "description": "harmonisation des couleurs",
+      "rules": [
+        "limit_palette",
+        "contrast_visibility",
+        "theme_consistency",
+        "emotion_matching",
+        "output_type_matching",
+        "reference_style_matching"
+      ]
+    },
+    "shape_engine": {
+      "description": "crée et corrige des formes",
+      "actions": [
+        "clean_vector",
+        "smooth_curves",
+        "refine_geometry",
+        "generate_variants",
+        "shape_refinement",
+        "edge_softening"
+      ]
+    },
+    "visual_harmony": {
+      "description": "assure cohérence globale",
+      "checks": [
+        "alignment",
+        "spacing",
+        "contrast",
+        "density",
+        "focus",
+        "texture_consistency",
+        "depth_balance",
+        "light_consistency"
+      ]
+    },
+    "photo_studio_engine": {
+      "description": "retouche photo et rendu studio",
+      "actions": [
+        "sharpen_subject",
+        "reduce_blur",
+        "denoise",
+        "adjust_exposure",
+        "adjust_white_balance",
+        "skin_cleanup_if_portrait",
+        "material_cleanup",
+        "premium_finish"
+      ]
+    },
+    "color_grading_engine": {
+      "description": "étalonnage et rendu colorimétrique",
+      "actions": [
+        "apply_lut",
+        "match_reference_grade",
+        "contrast_curve_adjustment",
+        "temperature_shift",
+        "cinematic_grade",
+        "corporate_clean_grade",
+        "studio_soft_grade"
+      ]
+    },
+    "compositing_engine": {
+      "description": "fusion douce de plusieurs images et incrustation",
+      "actions": [
+        "soft_blend_edges",
+        "multi_image_harmonization",
+        "subject_background_integration",
+        "shadow_generation",
+        "reflection_generation",
+        "depth_creation",
+        "packaging_inset",
+        "texture_mapping"
+      ]
+    },
+    "reference_match_engine": {
+      "description": "reproduit le rendu d’une image de référence",
+      "actions": [
+        "extract_color_mood",
+        "extract_light_direction",
+        "extract_depth_style",
+        "extract_texture_treatment",
+        "reapply_reference_style"
+      ]
+    },
+    "poster_engine": {
+      "description": "création d’affiches et posters haut de gamme",
+      "actions": [
+        "hero_subject_emphasis",
+        "cinematic_composition",
+        "dramatic_background",
+        "title_integration",
+        "ad_focus_layout",
+        "premium_poster_finish"
+      ]
+    }
+  },
+  "photo_studio_pro_mode": {
+    "enabled": true,
+    "description": "Mode professionnel dédié au rendu final d’image.",
+    "supported_outputs": [
+      "studio_photo",
+      "ad_poster",
+      "cinematic_poster",
+      "product_packaging",
+      "business_card",
+      "official_document",
+      "social_banner",
+      "flyer",
+      "brochure",
+      "magazine_editorial",
+      "premium_mockup"
+    ],
+    "render_presets": [
+      {
+        "id": "studio_clean",
+        "mood": "clean, premium, controlled",
+        "contrast": "medium",
+        "saturation": "controlled",
+        "lighting": "soft",
+        "depth": "moderate"
+      },
+      {
+        "id": "hollywood_poster",
+        "mood": "dramatic, cinematic, premium",
+        "contrast": "high",
+        "saturation": "controlled",
+        "lighting": "dramatic",
+        "depth": "strong"
+      },
+      {
+        "id": "luxury_product",
+        "mood": "luxury, polished, elegant",
+        "contrast": "high",
+        "saturation": "refined",
+        "lighting": "studio_specular",
+        "depth": "high"
+      },
+      {
+        "id": "corporate_flat",
+        "mood": "clean, professional, readable",
+        "contrast": "medium",
+        "saturation": "low_to_medium",
+        "lighting": "neutral",
+        "depth": "low"
+      },
+      {
+        "id": "spiritual_glow",
+        "mood": "deep, symbolic, luminous",
+        "contrast": "medium_high",
+        "saturation": "selective",
+        "lighting": "ambient_glow",
+        "depth": "soft"
+      },
+      {
+        "id": "document_official",
+        "mood": "administrative, strict, legible",
+        "contrast": "clear",
+        "saturation": "low",
+        "lighting": "flat_clean",
+        "depth": "minimal"
+      }
+    ],
+    "operations": [
+      "remove_blur",
+      "denoise",
+      "soft_blend",
+      "hard_mask_if_needed",
+      "background_cleanup",
+      "subject_relight",
+      "color_grade",
+      "match_reference_render",
+      "text_integration",
+      "shadow_generation",
+      "reflection_generation",
+      "premium_finish"
+    ],
+    "comparison_mode": {
+      "enabled": true,
+      "description": "Prend une image de référence et tente de reproduire son rendu.",
+      "match_targets": [
+        "color",
+        "contrast",
+        "lighting",
+        "depth",
+        "mood",
+        "texture",
+        "sharpness"
+      ]
+    },
+    "preview_system": {
+      "enabled": true,
+      "modes": [
+        "preview",
+        "final"
+      ],
+      "description": "Prévisualisation légère avant rendu final coûteux."
+    },
+    "multi_image_integration": {
+      "enabled": true,
+      "description": "Fusion de plusieurs images en un rendu doux sans séparation visible.",
+      "methods": [
+        "soft_gradient_blend",
+        "feathered_mask",
+        "shared_color_grade",
+        "shared_shadow_space",
+        "composition_depth_alignment"
+      ]
+    }
+  },
+  "output_type_rules": {
+    "studio_photo": {
+      "priorities": [
+        "subject_clarity",
+        "balanced_light",
+        "clean_background",
+        "skin_or_material_quality",
+        "premium_finish"
+      ]
+    },
+    "ad_poster": {
+      "priorities": [
+        "impact",
+        "single_clear_focus",
+        "strong_hierarchy",
+        "text_integration",
+        "brand_visibility"
+      ]
+    },
+    "cinematic_poster": {
+      "priorities": [
+        "dramatic_depth",
+        "hero_subject",
+        "atmosphere",
+        "light_contrast",
+        "poster_composition"
+      ]
+    },
+    "product_packaging": {
+      "priorities": [
+        "product_centrality",
+        "material_cleanliness",
+        "premium_reflections",
+        "readable_branding",
+        "commercial_focus"
+      ]
+    },
+    "business_card": {
+      "priorities": [
+        "extreme_cleanliness",
+        "alignment_precision",
+        "minimal_noise",
+        "premium_typography",
+        "print_ready_clarity"
+      ]
+    },
+    "official_document": {
+      "priorities": [
+        "strict_hierarchy",
+        "text_legibility",
+        "neutrality",
+        "administrative_cleanliness",
+        "high_readability"
+      ]
+    }
+  },
+  "reference_render_mode": {
+    "enabled": true,
+    "description": "Mode de calque visuel à partir d’un rendu ou preset de comparaison.",
+    "fields": [
+      "reference_image",
+      "reference_preset",
+      "match_targets",
+      "strength",
+      "preserve_identity"
+    ],
+    "default_match_targets": [
+      "color",
+      "contrast",
+      "lighting",
+      "depth"
+    ]
+  },
+  "ui_integration": {
+    "panel_name": "Architect",
+    "panel_sections": [
+      "design_actions",
+      "layout_actions",
+      "visual_actions",
+      "photo_studio_pro",
+      "render_type_selector",
+      "reference_render",
+      "before_after_preview",
+      "apply_actions"
+    ],
+    "display_behaviors": {
+      "show_preview_slider": true,
+      "show_before_after_compare": true,
+      "show_render_presets": true,
+      "show_reference_match_toggle": true,
+      "show_apply_and_regenerate_buttons": true
+    }
+  },
+  "photo_studio_panel": {
+    "fields": [
+      "final_render_type",
+      "render_mode",
+      "style_preset",
+      "reference_image_optional",
+      "operations_enabled",
+      "blend_mode",
+      "soft_integration_toggle",
+      "premium_finish_toggle"
+    ],
+    "controls": {
+      "final_render_type": [
+        "studio_photo",
+        "ad_poster",
+        "cinematic_poster",
+        "product_packaging",
+        "business_card",
+        "official_document",
+        "social_banner",
+        "flyer",
+        "brochure"
+      ],
+      "render_mode": [
+        "preview",
+        "final"
+      ],
+      "blend_mode": [
+        "soft",
+        "balanced",
+        "strong"
+      ]
+    }
+  },
+  "output": {
+    "type": "design_update",
+    "fields": {
+      "layout_changes": [],
+      "new_assets": [],
+      "text_updates": [],
+      "color_updates": [],
+      "element_transformations": [],
+      "photo_studio_updates": [],
+      "render_preview_optional": null,
+      "before_after_compare_optional": null
+    }
+  },
+  "output_schema": {
+    "design_update": {
+      "intervention_level": "light | medium | deep | full",
+      "render_type": "studio_photo | ad_poster | cinematic_poster | product_packaging | business_card | official_document | social_banner | flyer | brochure",
+      "applied_operations": [
+        "string"
+      ],
+      "layout_actions": [
+        "string"
+      ],
+      "visual_actions": [
+        "string"
+      ],
+      "photo_actions": [
+        "string"
+      ],
+      "asset_generation_requests": [
+        {
+          "type": "image | graph | texture | background",
+          "purpose": "string",
+          "style": "string"
+        }
+      ],
+      "requires_user_validation": true
+    }
+  },
+  "generation_rules": {
+    "must": [
+      "respect_project_context",
+      "maintain_coherence",
+      "optimize_readability",
+      "align_with_coach_instruction",
+      "protect_subject_identity_when_requested",
+      "prefer_preview_before_heavy_final_render"
+    ],
+    "must_not": [
+      "overdesign",
+      "break_structure",
+      "ignore_objective",
+      "add_noise",
+      "destroy_reference_subject",
+      "apply_heavy_changes_without_validation"
+    ]
+  },
+  "architect_bridge_examples": [
+    {
+      "coach_json_input": {
+        "problem_detected": [
+          "slide trop dense",
+          "absence d'image explicative"
+        ],
+        "intervention_level": "medium",
+        "focus": [
+          "layout",
+          "image",
+          "text"
+        ]
+      },
+      "architect_expected_actions": [
+        "simplifier le layout",
+        "réduire le texte",
+        "ajouter une image analogique",
+        "renforcer la hiérarchie"
+      ]
+    },
+    {
+      "coach_json_input": {
+        "problem_detected": [
+          "rendu photo non premium",
+          "flou visible",
+          "mauvaise intégration de 3 photos"
+        ],
+        "intervention_level": "deep",
+        "focus": [
+          "photo",
+          "blend",
+          "color"
+        ]
+      },
+      "architect_expected_actions": [
+        "remove_blur",
+        "soft_blend_edges",
+        "shared_color_grade",
+        "premium_finish"
+      ]
+    }
+  ],
+  "photo_studio_examples": [
+    {
+      "scenario": "Trois photos sur une même feuille doivent être intégrées sans séparation dure.",
+      "recommended_render_type": "flyer",
+      "recommended_operations": [
+        "soft_blend",
+        "shared_color_grade",
+        "composition_depth_alignment",
+        "text_integration"
+      ]
+    },
+    {
+      "scenario": "Créer une affiche publicitaire cinématographique de type Hollywood.",
+      "recommended_render_type": "cinematic_poster",
+      "recommended_preset": "hollywood_poster",
+      "recommended_operations": [
+        "dramatic_background",
+        "hero_subject_emphasis",
+        "cinematic_grade",
+        "poster_composition"
+      ]
+    },
+    {
+      "scenario": "Nettoyer une photo produit pour un packaging premium.",
+      "recommended_render_type": "product_packaging",
+      "recommended_preset": "luxury_product",
+      "recommended_operations": [
+        "background_cleanup",
+        "subject_relight",
+        "reflection_generation",
+        "premium_finish"
+      ]
+    }
+  ]
+}

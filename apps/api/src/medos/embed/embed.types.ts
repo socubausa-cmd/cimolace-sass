@@ -29,6 +29,12 @@ export const EMBED_SCOPES_BY_MODE: Record<EmbedMode, EmbedScope[]> = {
     'med:forms:submit',
     'med:health:read',
     'med:health:write',
+    'med:appointments:read',
+    'med:appointments:write',
+    'med:prescriptions:read',
+    'med:messages:read',
+    'med:messages:write',
+    'med:teleconsult:join',
   ],
   'appointment-booker': [
     'med:me:read',

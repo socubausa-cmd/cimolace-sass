@@ -925,3 +925,130 @@ export const invitationsApi = {
   cancel: (id: string) =>
     api.delete<ApiEnvelope<{ id: string }>>(`/med/invitations/${id}`).then(unwrap),
 };
+
+// ─── Mbolo (e-commerce back-office) ───────────────────────────────────────────
+
+export interface MboloCategory {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  sort_order: number;
+  is_active: boolean;
+}
+
+export interface MboloProductImage {
+  url: string;
+  alt: string | null;
+  is_primary: boolean;
+  sort_order: number;
+}
+
+export interface MboloVariant {
+  id: string;
+  label: string;
+  sku_suffix: string | null;
+  price_delta_cents: number;
+  stock: number;
+  sort_order: number;
+}
+
+export interface MboloProduct {
+  id: string;
+  name: string;
+  slug: string | null;
+  sku: string | null;
+  description: string;
+  tagline: string | null;
+  price_cents: number;
+  compare_at_price_cents: number | null;
+  currency: string;
+  stock: number;
+  is_featured: boolean;
+  is_active: boolean;
+  image_url: string | null;
+  category_id: string | null;
+  benefits: string[];
+  ingredients: string[];
+  images?: MboloProductImage[];
+  variants?: MboloVariant[];
+  created_at?: string;
+}
+
+export interface MboloOrder {
+  id: string;
+  order_number: string | null;
+  status: string;
+  total_cents: number;
+  currency: string;
+  channel: string;
+  customer_email: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  user_id: string | null;
+  created_at: string;
+  items?: Array<{
+    id: string;
+    product_id: string | null;
+    product_name: string | null;
+    quantity: number;
+    price_cents: number;
+    variant_id: string | null;
+  }>;
+}
+
+export interface CreateMboloProduct {
+  name: string;
+  priceCents: number;
+  slug?: string;
+  sku?: string;
+  categoryId?: string;
+  description?: string;
+  tagline?: string;
+  compareAtPriceCents?: number;
+  currency?: string;
+  stock?: number;
+  isFeatured?: boolean;
+  imageUrl?: string;
+  benefits?: string[];
+  ingredients?: string[];
+  seoTitle?: string;
+  seoDescription?: string;
+}
+
+export interface MboloInstallResult {
+  api_key: string;
+  key_prefix: string;
+  storefront: { base_url: string; endpoints: Record<string, string> };
+  docs_url: string;
+  back_office_url: string;
+  category: MboloCategory | null;
+  sample_product: { id: string; name: string; slug: string } | null;
+}
+
+export const mboloApi = {
+  // Installation storefront (provisionne une clé API + catalogue de départ)
+  install: (withSample = false) =>
+    api.post<ApiEnvelope<MboloInstallResult>>("/mbolo/install", { withSample }).then(unwrap),
+  // Catalogue
+  listCategories: () =>
+    api.get<ApiEnvelope<MboloCategory[]>>("/mbolo/categories").then(unwrap),
+  createCategory: (body: { slug: string; name: string; description?: string; imageUrl?: string; sortOrder?: number }) =>
+    api.post<ApiEnvelope<MboloCategory>>("/mbolo/categories", body).then(unwrap),
+  listProducts: (category?: string) =>
+    api.get<ApiEnvelope<MboloProduct[]>>("/mbolo/products", { params: category ? { category } : undefined }).then(unwrap),
+  getProduct: (id: string) =>
+    api.get<ApiEnvelope<MboloProduct>>(`/mbolo/products/${id}`).then(unwrap),
+  createProduct: (body: CreateMboloProduct) =>
+    api.post<ApiEnvelope<MboloProduct>>("/mbolo/products", body).then(unwrap),
+  addImage: (productId: string, body: { url: string; alt?: string; isPrimary?: boolean; sortOrder?: number }) =>
+    api.post<ApiEnvelope<MboloProductImage>>(`/mbolo/products/${productId}/images`, body).then(unwrap),
+  addVariant: (productId: string, body: { label: string; skuSuffix?: string; priceDeltaCents?: number; stock?: number; sortOrder?: number }) =>
+    api.post<ApiEnvelope<MboloVariant>>(`/mbolo/products/${productId}/variants`, body).then(unwrap),
+  // Commandes
+  listOrders: () =>
+    api.get<ApiEnvelope<MboloOrder[]>>("/mbolo/orders").then(unwrap),
+  getOrder: (id: string) =>
+    api.get<ApiEnvelope<MboloOrder>>(`/mbolo/orders/${id}`).then(unwrap),
+};

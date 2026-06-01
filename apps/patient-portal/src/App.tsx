@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuth } from './lib/auth';
 import { PatientLogin } from './pages/Login';
+import { Landing } from './pages/Landing';
 import { PatientDashboard } from './pages/Dashboard';
 import { MyRecords } from './pages/MyRecords';
 import { MyNotes } from './pages/MyNotes';
@@ -19,7 +20,15 @@ const queryClient = new QueryClient();
 function AppRoutes() {
   const { isAuthenticated, loading } = useAuth();
   if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>;
-  if (!isAuthenticated) return <PatientLogin />;
+  if (!isAuthenticated) {
+    return (
+      <Routes>
+        <Route path="/connexion" element={<PatientLogin />} />
+        <Route path="/" element={<Landing />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    );
+  }
   return (
     <Routes>
       <Route element={<PatientLayout />}>

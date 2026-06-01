@@ -1,0 +1,12 @@
+{
+  "installCommand": "npm install --legacy-peer-deps && npm install @rollup/rollup-linux-x64-gnu@4.60.3 --no-save --legacy-peer-deps",
+  "buildCommand": "npm run build -w @isna/app",
+  "outputDirectory": "apps/app/dist",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+# false : sinon le preflight OPTIONS est rejeté par la passerelle (pas de JWT) → CORS bloqué depuis le navigateur.
+# L’auth Bearer est validée dans index.ts (createClient + getUser).
+verify_jwt = false

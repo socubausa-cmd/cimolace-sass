@@ -19,6 +19,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import { MboloService } from '../mbolo/mbolo.service';
 
 const VALID_KINDS = [
   'liri',
@@ -52,19 +53,36 @@ export interface SignupTenantInput {
   kind: string;
   locale?: string;
   timezone?: string;
+  /** Marque générée par l'AI Brand-in-a-box (appliquée à la création). */
+  brand?: {
+    primary?: string;
+    accent?: string;
+    site?: Record<string, unknown>;
+  };
 }
 
 export interface SignupTenantResult {
   tenant: { id: string; slug: string; name: string; infrastructure_type: string };
   user: { id: string; email: string };
   next_url: string;
+  /** Présent quand kind === 'mbolo' : clé storefront + liens (boutique auto-installée). */
+  mbolo?: {
+    api_key: string;
+    key_prefix: string;
+    storefront: { base_url: string; endpoints: Record<string, string> };
+    docs_url: string;
+    back_office_url: string;
+  };
 }
 
 @Injectable()
 export class SignupService {
   private readonly logger = new Logger(SignupService.name);
 
-  constructor(private readonly sb: SupabaseService) {}
+  constructor(
+    private readonly sb: SupabaseService,
+    private readonly mbolo: MboloService,
+  ) {}
 
   async signupTenant(input: SignupTenantInput): Promise<SignupTenantResult> {
     const { email, password, platformName, kind, locale = 'fr', timezone = 'Europe/Paris' } = input;
@@ -122,6 +140,21 @@ export class SignupService {
     }
     const userId = created.user.id;
 
+    // Marque AI (optionnelle) appliquée dès la création : couleurs + vitrine.
+    const hexOk = (v?: string) => !!v && /^#[0-9a-fA-F]{6}$/.test(v);
+    const brandFields: Record<string, unknown> = {};
+    if (input.brand && (hexOk(input.brand.primary) || input.brand.site)) {
+      if (hexOk(input.brand.primary) || hexOk(input.brand.accent)) {
+        brandFields.brand_colors = {
+          ...(hexOk(input.brand.primary) ? { primary: input.brand.primary } : {}),
+          ...(hexOk(input.brand.accent) ? { accent: input.brand.accent } : {}),
+        };
+      }
+      if (input.brand.site && typeof input.brand.site === 'object') {
+        brandFields.metadata = { site: input.brand.site };
+      }
+    }
+
     // 3) Créer le tenant
     const { data: tenant, error: tenantErr } = await this.sb.client
       .from('tenants')
@@ -135,6 +168,7 @@ export class SignupService {
         billing_status: 'free',
         locale,
         timezone,
+        ...brandFields,
       })
       .select('id, slug, name, infrastructure_type')
       .single();
@@ -185,6 +219,25 @@ export class SignupService {
       await this.provisionPatientSubdomain(tenant.slug);
     }
 
+    // 7) (Best-effort) « Installer Mbolo » : provisionne la boutique du tenant
+    //    e-commerce dès le signup — clé storefront + catégorie + produit exemple.
+    //    Non bloquant : un échec n'annule jamais le signup.
+    let mboloInstall: SignupTenantResult['mbolo'];
+    if (kind === 'mbolo') {
+      try {
+        const r = await this.mbolo.installStorefront(tenant.id, tenant.slug, userId, { withSample: true });
+        mboloInstall = {
+          api_key: r.api_key,
+          key_prefix: r.key_prefix,
+          storefront: r.storefront,
+          docs_url: r.docs_url,
+          back_office_url: r.back_office_url,
+        };
+      } catch (e) {
+        this.logger.warn(`Mbolo install échoué (non bloquant): ${(e as Error).message}`);
+      }
+    }
+
     this.logger.log(
       `✅ Tenant ${tenant.slug} (${kind}) créé pour ${email} (user ${userId})`,
     );
@@ -201,6 +254,97 @@ export class SignupService {
       },
       user: { id: userId, email },
       next_url,
+      ...(mboloInstall ? { mbolo: mboloInstall } : {}),
+    };
+  }
+
+  /**
+   * AI Brand-in-a-box — génère une identité de marque complète à partir d'une
+   * description en langage naturel. Retourne couleurs + nom + contenu de
+   * vitrine (hero, CTA, services) prêt à écrire dans brand_colors + metadata.site.
+   *
+   * Génération pure (aucune écriture DB) — le wizard d'onboarding ou l'admin
+   * applique ensuite. Public pour le pré-signup ; à protéger par rate-limit
+   * avant lancement grand public.
+   */
+  async generateBrand(description: string): Promise<{
+    name: string;
+    primary: string;
+    accent: string;
+    site: {
+      heroTitle: string;
+      heroAccent: string;
+      heroSubtitle: string;
+      ctaPrimary: string;
+      services: { title: string; desc: string }[];
+    };
+  }> {
+    const desc = (description || '').trim();
+    if (desc.length < 8) {
+      throw new BadRequestException('Décris ton activité en quelques mots (8 caractères min).');
+    }
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey || apiKey === 'replace_me') {
+      throw new InternalServerErrorException('GROQ_API_KEY non configurée.');
+    }
+    const system = [
+      'Tu es directeur artistique de marque pour des praticiens santé & bien-être.',
+      "À partir d'une description, tu produis une identité de marque cohérente, élégante et professionnelle, en FRANÇAIS.",
+      'Réponds UNIQUEMENT en JSON valide avec EXACTEMENT ces clés :',
+      '{ "name": string (nom de marque court, 1-3 mots),',
+      '  "primary": string (couleur hex #RRGGBB, accessible, adaptée à l\'activité),',
+      '  "accent": string (hex #RRGGBB complémentaire),',
+      '  "heroTitle": string (accroche ligne 1, finit par une virgule),',
+      '  "heroAccent": string (ligne 2, la partie mise en couleur, 2-5 mots),',
+      '  "heroSubtitle": string (1-2 phrases chaleureuses et pro),',
+      '  "ctaPrimary": string (bouton, 2-3 mots, action),',
+      '  "services": [exactement 3 objets { "title": string court, "desc": string 1 phrase }] }',
+      'Pas de texte hors JSON.',
+    ].join('\n');
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        temperature: 0.7,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: desc },
+        ],
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      this.logger.warn(`Groq brand gen failed (${res.status}): ${body.slice(0, 200)}`);
+      throw new InternalServerErrorException('Génération IA indisponible, réessaie.');
+    }
+    const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(data.choices?.[0]?.message?.content ?? '{}');
+    } catch {
+      throw new InternalServerErrorException('Réponse IA invalide, réessaie.');
+    }
+    const hex = (v: unknown, fallback: string) =>
+      typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fallback;
+    const str = (v: unknown, fallback = '') => (typeof v === 'string' && v.trim() ? v.trim() : fallback);
+    const rawServices = Array.isArray(parsed.services) ? parsed.services : [];
+    const services = rawServices.slice(0, 3).map((s) => {
+      const o = (s ?? {}) as Record<string, unknown>;
+      return { title: str(o.title, 'Service'), desc: str(o.desc, '') };
+    });
+    return {
+      name: str(parsed.name, 'Mon espace').slice(0, 60),
+      primary: hex(parsed.primary, '#0d9488'),
+      accent: hex(parsed.accent, '#0f766e'),
+      site: {
+        heroTitle: str(parsed.heroTitle, 'Votre santé,'),
+        heroAccent: str(parsed.heroAccent, 'accompagnée au quotidien'),
+        heroSubtitle: str(parsed.heroSubtitle, ''),
+        ctaPrimary: str(parsed.ctaPrimary, 'Prendre rendez-vous'),
+        services: services.length ? services : [],
+      },
     };
   }
 

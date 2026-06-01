@@ -28,11 +28,21 @@ import {
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
+/** Contenu éditable de la vitrine publique (metadata.site côté tenant). */
+export type SiteConfig = {
+  heroTitle?: string;
+  heroAccent?: string;
+  heroSubtitle?: string;
+  ctaPrimary?: string;
+  services?: { title: string; desc: string }[];
+} | null;
+
 export type Branding = {
   name: string;
   logoUrl: string | null;
   primary: string;
   accent: string;
+  site: SiteConfig;
   loading: boolean;
 };
 
@@ -46,6 +56,7 @@ const ENGINE_DEFAULTS = {
   logoUrl: null as string | null,
   primary: '#0d9488',
   accent: '#0f766e',
+  site: null as SiteConfig,
 };
 
 const BrandingContext = createContext<Branding>({
@@ -207,6 +218,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
           primary: colors.primary || ENGINE_DEFAULTS.primary,
           accent:
             colors.accent || colors.secondary || ENGINE_DEFAULTS.accent,
+          site: (t.site as SiteConfig) ?? null,
           loading: false,
         });
       })

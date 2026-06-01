@@ -1,13 +1,16 @@
 import { Module } from '@nestjs/common';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { TenantModule } from '../tenant/tenant.module';
+import { AuthModule } from '../auth/auth.module';
 import { BookingController } from './booking.controller';
 import { BookingService } from './booking.service';
+import { BookingAdvancedController } from './booking-advanced.controller';
+import { BookingAdvancedService } from './booking-advanced.service';
 
 @Module({
-  imports: [SupabaseModule, TenantModule],
-  providers: [BookingService],
-  controllers: [BookingController],
-  exports: [BookingService],
+  imports: [SupabaseModule, TenantModule, AuthModule],
+  providers: [BookingService, BookingAdvancedService],
+  controllers: [BookingController, BookingAdvancedController],
+  exports: [BookingService, BookingAdvancedService],
 })
 export class BookingModule {}

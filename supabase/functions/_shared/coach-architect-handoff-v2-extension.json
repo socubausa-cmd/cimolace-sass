@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "name": "coach_architect_handoff_v2_extension",
+    "version": "2.0.0",
+    "description_fr": "Extension optionnelle qui complète le handoff v1 (même racine JSON). Alignée sur output_schema.design_update de architect-agent-complete.json v2. Le palier d’intervention autoritaire reste intervention_level du v1.",
+    "description_en": "Optional extension completing the v1 handoff (same JSON root). Aligned with output_schema.design_update in architect-agent-complete v2. Authoritative intervention tier remains v1 intervention_level.",
+    "root_key": "architect_extension_v2",
+    "extends": "coach-to-architect-handoff-v1.json"
+  },
+  "optional_fields": {
+    "render_type": "studio_photo | ad_poster | cinematic_poster | product_packaging | business_card | official_document | social_banner | flyer | brochure | string libre",
+    "applied_operations": "liste d’identifiants d’opérations (photo, layout, grade, etc.)",
+    "layout_actions": "liste de chaînes",
+    "visual_actions": "liste de chaînes",
+    "photo_actions": "liste de chaînes",
+    "asset_generation_requests": "tableau d’objets { type, purpose, style, … }",
+    "requires_user_validation": "boolean — preview avant rendu lourd"
+  },
+  "example": {
+    "render_type": "cinematic_poster",
+    "applied_operations": ["shared_color_grade", "hero_subject_emphasis"],
+    "layout_actions": ["renforcer la hiérarchie du titre"],
+    "visual_actions": ["dramatic_background"],
+    "photo_actions": ["soft_blend", "premium_finish"],
+    "asset_generation_requests": [
+      {
+        "type": "image",
+        "purpose": "arrière-plan atmosphère",
+        "style": "cinematic, contraste maîtrisé"
+      }
+    ],
+    "requires_user_validation": true
+  }
+}

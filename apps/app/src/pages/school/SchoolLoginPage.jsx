@@ -53,7 +53,10 @@ export default function SchoolLoginPage() {
   const [error, setError] = useState('');
 
   const accent = branding?.accentColor ?? '#7c3aed';
-  const schoolName = branding?.name ?? tenantSlug ?? 'Mon École';
+  // Prefer branding.name from DB; if still the generic FALLBACK, use URL slug
+  const brandingName = branding?.name;
+  const isFallback = !brandingName || brandingName === 'Mon École';
+  const schoolName = isFallback ? (tenantSlug ?? 'Mon École') : brandingName;
   const logo = branding?.logo ?? null;
 
   const handleLogin = async (e) => {
