@@ -8,6 +8,7 @@ import { LiveModule } from '../live/live.module';
 import { BookingModule } from '../booking/booking.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { GrowthModule } from '../growth/growth.module';
+import { AiBillingModule } from '../ai-billing/ai-billing.module';
 import { LiriBrainController } from './liri-brain.controller';
 import { LiriBrainService } from './liri-brain.service';
 import { BrainToolsService } from './brain-tools.service';
@@ -23,6 +24,7 @@ import { BrainToolsService } from './brain-tools.service';
     BookingModule,
     NotificationsModule,
     GrowthModule,
+    AiBillingModule,
   ],
   providers: [LiriBrainService, BrainToolsService],
   controllers: [LiriBrainController],

@@ -4,6 +4,10 @@ import { SupabaseService } from '../supabase/supabase.service';
 import type { TenantContext } from '../tenant/tenant.types';
 import { LIRI_MODELS, type LiriConversation, type LiriMessage, type LiriModel } from './liri-brain.types';
 import { BrainToolsService, type BrainToolContext } from './brain-tools.service';
+import { AiBillingService } from '../ai-billing/ai-billing.service';
+
+/** Borne du contexte : nb max de messages d'historique réinjectés au LLM (coût/contexte). */
+const MAX_HISTORY_MESSAGES = 20;
 
 type ConversationRow = {
   id: string;
@@ -24,6 +28,7 @@ export class LiriBrainService {
     private readonly supabase: SupabaseService,
     private readonly config: ConfigService,
     private readonly tools: BrainToolsService,
+    private readonly billing: AiBillingService,
   ) {}
 
   // ── Model Catalog ────────────────────────────────────────────────────────
@@ -194,6 +199,21 @@ export class LiriBrainService {
     ctx: BrainToolContext,
     opts: { conversationId?: string; useTools: boolean },
   ): AsyncGenerator<{ content: string; done: boolean }> {
+    // Garde-quota IA (fail-open : si la facturation est indisponible, on n'empêche pas l'usage).
+    try {
+      const bal: any = await this.billing.getBalance(ctx.tenant.id);
+      if (bal?.is_blocked || (bal?.balance_credits ?? 1) <= 0) {
+        yield {
+          content:
+            "⚠️ Les crédits IA de l'école sont épuisés. Contactez l'administration pour recharger.",
+          done: true,
+        };
+        return;
+      }
+    } catch {
+      // facturation indisponible → on continue
+    }
+
     const history: LiriMessage[] = [];
     if (opts.conversationId) {
       try {
@@ -205,7 +225,8 @@ export class LiriBrainService {
     }
     const messages: LiriMessage[] = [
       { role: 'system', content: this.buildSystemPrompt(ctx) },
-      ...history,
+      // borne le contexte : seuls les N derniers messages d'historique (coût + dépassement de contexte).
+      ...history.slice(-MAX_HISTORY_MESSAGES),
       { role: 'user', content: message },
     ];
     if (opts.useTools) {
@@ -226,6 +247,46 @@ export class LiriBrainService {
       "Pour une action d'écriture (créer un live, publier au forum, réserver un créneau…), APPELLE directement l'outil correspondant : le système affichera alors une carte de confirmation à l'utilisateur avant toute exécution. Ne te contente pas de décrire l'action en texte — c'est l'appel d'outil qui déclenche la confirmation.",
       `L'utilisateur courant a le rôle « ${role} ».`,
     ].join('\n');
+  }
+
+  /**
+   * Comptabilise l'usage LLM d'un appel sur les crédits IA du tenant (best-effort).
+   * Gère les deux formats : OpenAI/DeepSeek (prompt/completion_tokens) et Anthropic
+   * (input/output_tokens). N'interrompt jamais le flux si la facturation échoue.
+   */
+  private async chargeLlm(
+    ctx: BrainToolContext,
+    provider: string,
+    model: string,
+    usage: any,
+  ): Promise<void> {
+    if (!usage) return;
+    const tokensIn = Number(usage.prompt_tokens ?? usage.input_tokens ?? 0);
+    const tokensOut = Number(usage.completion_tokens ?? usage.output_tokens ?? 0);
+    try {
+      if (tokensIn > 0) {
+        await this.billing.chargeUsage(ctx.tenant.id, {
+          function_name: 'liri-brain.chat',
+          provider,
+          model,
+          unit_type: 'tokens_in',
+          unit_amount: tokensIn,
+          user_id: ctx.userId,
+        });
+      }
+      if (tokensOut > 0) {
+        await this.billing.chargeUsage(ctx.tenant.id, {
+          function_name: 'liri-brain.chat',
+          provider,
+          model,
+          unit_type: 'tokens_out',
+          unit_amount: tokensOut,
+          user_id: ctx.userId,
+        });
+      }
+    } catch (e) {
+      this.logger.warn(`facturation liri-brain ignorée: ${(e as Error).message}`);
+    }
   }
 
   /**
@@ -293,6 +354,7 @@ export class LiriBrainService {
         return;
       }
       const data: any = await resp.json();
+      await this.chargeLlm(ctx, info.provider, apiModel, data?.usage);
       const msg = data?.choices?.[0]?.message;
       const toolCalls: any[] | undefined = msg?.tool_calls;
 
@@ -379,6 +441,7 @@ export class LiriBrainService {
         return;
       }
       const data: any = await resp.json();
+      await this.chargeLlm(ctx, 'anthropic', model, data?.usage);
       const blocks: any[] = Array.isArray(data?.content) ? data.content : [];
       const toolUses = blocks.filter((b) => b?.type === 'tool_use');
 
