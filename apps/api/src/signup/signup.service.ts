@@ -19,6 +19,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import { MboloService } from '../mbolo/mbolo.service';
 
 const VALID_KINDS = [
   'liri',
@@ -64,13 +65,24 @@ export interface SignupTenantResult {
   tenant: { id: string; slug: string; name: string; infrastructure_type: string };
   user: { id: string; email: string };
   next_url: string;
+  /** Présent quand kind === 'mbolo' : clé storefront + liens (boutique auto-installée). */
+  mbolo?: {
+    api_key: string;
+    key_prefix: string;
+    storefront: { base_url: string; endpoints: Record<string, string> };
+    docs_url: string;
+    back_office_url: string;
+  };
 }
 
 @Injectable()
 export class SignupService {
   private readonly logger = new Logger(SignupService.name);
 
-  constructor(private readonly sb: SupabaseService) {}
+  constructor(
+    private readonly sb: SupabaseService,
+    private readonly mbolo: MboloService,
+  ) {}
 
   async signupTenant(input: SignupTenantInput): Promise<SignupTenantResult> {
     const { email, password, platformName, kind, locale = 'fr', timezone = 'Europe/Paris' } = input;
@@ -207,6 +219,25 @@ export class SignupService {
       await this.provisionPatientSubdomain(tenant.slug);
     }
 
+    // 7) (Best-effort) « Installer Mbolo » : provisionne la boutique du tenant
+    //    e-commerce dès le signup — clé storefront + catégorie + produit exemple.
+    //    Non bloquant : un échec n'annule jamais le signup.
+    let mboloInstall: SignupTenantResult['mbolo'];
+    if (kind === 'mbolo') {
+      try {
+        const r = await this.mbolo.installStorefront(tenant.id, tenant.slug, userId, { withSample: true });
+        mboloInstall = {
+          api_key: r.api_key,
+          key_prefix: r.key_prefix,
+          storefront: r.storefront,
+          docs_url: r.docs_url,
+          back_office_url: r.back_office_url,
+        };
+      } catch (e) {
+        this.logger.warn(`Mbolo install échoué (non bloquant): ${(e as Error).message}`);
+      }
+    }
+
     this.logger.log(
       `✅ Tenant ${tenant.slug} (${kind}) créé pour ${email} (user ${userId})`,
     );
@@ -223,6 +254,7 @@ export class SignupService {
       },
       user: { id: userId, email },
       next_url,
+      ...(mboloInstall ? { mbolo: mboloInstall } : {}),
     };
   }
 

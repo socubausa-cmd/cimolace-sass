@@ -12,6 +12,11 @@ import { MboloService } from './mbolo.service';
 @UseGuards(JwtAuthGuard, TenantGuard)
 export class MboloController {
   constructor(private readonly svc: MboloService) {}
+  // ─── Installer Mbolo (provisionne clé storefront + catalogue de départ) ───
+  @Post('install') @UseGuards(RolesGuard) @Roles('owner','admin')
+  install(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) {
+    return this.svc.installStorefront(t.id, (t as any).slug, (r as any).user?.id ?? null, { withSample: d?.withSample === true });
+  }
   // ─── Catégories ───
   @Get('categories') listCategories(@CurrentTenant() t: TenantContext) { return this.svc.listCategories(t.id); }
   @Post('categories') @UseGuards(RolesGuard) @Roles('owner','admin') createCategory(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.createCategory(t.id, d); }
