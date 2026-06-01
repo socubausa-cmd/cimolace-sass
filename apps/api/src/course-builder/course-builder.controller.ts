@@ -33,4 +33,5 @@ export class CourseBuilderController {
   // ── Pipeline (segmentation + master script) ──
   @Post('pipeline-auto-segment') pipelineAutoSegment(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.pipelineAutoSegment(t.id, d ?? {}); }
   @Post('pipeline-master-script') pipelineMasterScript(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.pipelineMasterScript(t.id, d ?? {}); }
+  @Post('segment-illustration-regenerate') segmentIllustration(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.segmentIllustrationRegenerate(t.id, ((r as any).user?.id as string) ?? '', d ?? {}); }
 }

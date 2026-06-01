@@ -279,6 +279,8 @@ export const courseBuilderApi = {
     apiV2.post<ApiEnvelope<any>>('/course-builder/pipeline-auto-segment', body).then(unwrap),
   pipelineMasterScript: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/course-builder/pipeline-master-script', body).then(unwrap),
+  segmentIllustrationRegenerate: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/course-builder/segment-illustration-regenerate', body).then(unwrap),
 };
 
 // ── Courses ─────────────────────────────────────────────────────────────────

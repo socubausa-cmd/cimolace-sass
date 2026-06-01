@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
 import { AiUtilsService } from '../ai-utils/ai-utils.service';
 
@@ -8,6 +9,7 @@ export class CourseBuilderService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly aiUtils: AiUtilsService,
+    private readonly config: ConfigService,
   ) {}
 
   async createPipeline(tenantId: string, name: string, sourceText: string) {
@@ -239,6 +241,68 @@ export class CourseBuilderService {
       sections.push({ title: s?.title ?? '', discourse });
     }
     return { sections };
+  }
+
+  // ── Illustration d'un segment (réutilise l'edge generate-visual-image) ─────
+
+  /** (Re)génère l'illustration d'un segment. Remplace l'edge course-builder-segment-illustration-regenerate (404). */
+  async segmentIllustrationRegenerate(
+    tenantId: string,
+    userId: string,
+    dto: { contentId: string; segmentIndex?: number; prompt?: string },
+  ) {
+    const segIndex = Number(dto.segmentIndex) || 0;
+    let prompt = String(dto.prompt ?? '').trim();
+    if (!prompt) {
+      const { data: row } = await (this.supabase.client as any)
+        .from('course_segment_ai_content')
+        .select('reformulation_text,summary_text')
+        .eq('tenant_id', tenantId)
+        .eq('content_id', dto.contentId)
+        .eq('segment_index', segIndex)
+        .single();
+      prompt =
+        String(row?.summary_text || row?.reformulation_text || '').slice(0, 500).trim() ||
+        `Illustration pédagogique claire, chapitre ${segIndex + 1}`;
+    }
+
+    const supaUrl = this.config.get<string>('SUPABASE_URL') ?? '';
+    const key = this.config.get<string>('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    let imageUrl: string | null = null;
+    if (supaUrl && key) {
+      try {
+        const r = await fetch(`${supaUrl}/functions/v1/generate-visual-image`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: key, Authorization: `Bearer ${key}` },
+          body: JSON.stringify({ prompt, size: '1792x1024' }),
+        });
+        const j: any = await r.json().catch(() => ({}));
+        imageUrl = j?.imageUrl ?? j?.url ?? null;
+      } catch (e) {
+        this.logger.warn(`illustration edge échec: ${String(e)}`);
+      }
+    }
+
+    if (imageUrl) {
+      try {
+        await (this.supabase.client as any)
+          .from('course_segment_ai_content')
+          .upsert(
+            {
+              tenant_id: tenantId,
+              content_id: dto.contentId,
+              segment_index: segIndex,
+              illustration_url: imageUrl,
+              illustration_prompt: prompt,
+              created_by: userId || null,
+            },
+            { onConflict: 'content_id,segment_index' },
+          );
+      } catch {
+        /* dégradation gracieuse si table absente */
+      }
+    }
+    return { illustration_url: imageUrl, prompt };
   }
 
   private naiveSegment(text: string): { title: string; content: string; index: number }[] {
