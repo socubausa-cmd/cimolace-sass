@@ -8,8 +8,9 @@ import { getApiBaseUrl } from '../lib/apiBase';
 type LiriModel =
   | 'deepseek-chat'
   | 'deepseek-reasoner'
-  | 'claude-sonnet-4-20250514'
-  | 'claude-opus-4-20250514'
+  | 'claude-sonnet-4-6'
+  | 'claude-opus-4-8'
+  | 'claude-haiku-4-5-20251001'
   | 'gpt-4o'
   | 'gpt-4o-mini';
 
@@ -40,8 +41,9 @@ interface Conversation {
 const MODELS: ModelInfo[] = [
   { key: 'deepseek-chat',         name: 'DeepSeek V4',        provider: 'deepseek',   description: 'Généraliste · 1M tokens',         color: '#4f8ef7', icon: '🔷' },
   { key: 'deepseek-reasoner',     name: 'DeepSeek Reasoner',  provider: 'deepseek',   description: 'Raisonnement profond',              color: '#2dd4bf', icon: '🧠' },
-  { key: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', provider: 'anthropic',  description: 'Équilibré · rapide',                color: '#c084fc', icon: '⚡' },
-  { key: 'claude-opus-4-20250514',   name: 'Claude Opus 4',   provider: 'anthropic',  description: 'Le plus puissant',                  color: '#f472b6', icon: '👑' },
+  { key: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'anthropic',  description: 'Équilibré · rapide',                color: '#c084fc', icon: '⚡' },
+  { key: 'claude-opus-4-8',   name: 'Claude Opus 4.8',   provider: 'anthropic',  description: 'Le plus puissant',                  color: '#f472b6', icon: '👑' },
+  { key: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5', provider: 'anthropic', description: 'Léger · économique',           color: '#a78bfa', icon: '🍃' },
   { key: 'gpt-4o',                name: 'GPT-4o',             provider: 'openai',     description: 'Multimodal · polyvalent',           color: '#34d399', icon: '🌐' },
   { key: 'gpt-4o-mini',           name: 'GPT-4o Mini',        provider: 'openai',     description: 'Léger · économique',                color: '#86efac', icon: '⚡' },
 ];
@@ -121,7 +123,7 @@ async function streamLiriBrain(
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function DashboardLiri() {
-  const [model, setModel]                   = useState<LiriModel>('claude-sonnet-4-20250514');
+  const [model, setModel]                   = useState<LiriModel>('claude-sonnet-4-6');
   const [messages, setMessages]             = useState<Message[]>([]);
   const [input, setInput]                   = useState('');
   const [streaming, setStreaming]           = useState(false);

@@ -1,6 +1,6 @@
 // LIRI Brain — Types for multi-model AI conversations
 
-export type LiriModel = 'deepseek-chat' | 'deepseek-reasoner' | 'claude-sonnet-4-20250514' | 'claude-opus-4-20250514' | 'gpt-4o' | 'gpt-4o-mini';
+export type LiriModel = 'deepseek-chat' | 'deepseek-reasoner' | 'claude-sonnet-4-6' | 'claude-opus-4-8' | 'claude-haiku-4-5-20251001' | 'gpt-4o' | 'gpt-4o-mini';
 
 export type LiriMessageRole = 'user' | 'assistant' | 'system';
 
@@ -47,18 +47,26 @@ export const LIRI_MODELS: LiriModelInfo[] = [
     streaming: true,
   },
   {
-    key: 'claude-sonnet-4-20250514',
-    name: 'Claude Sonnet 4',
+    key: 'claude-sonnet-4-6',
+    name: 'Claude Sonnet 4.6',
     provider: 'anthropic',
     description: 'Équilibré, rapide et puissant',
     maxTokens: 4096,
     streaming: true,
   },
   {
-    key: 'claude-opus-4-20250514',
-    name: 'Claude Opus 4',
+    key: 'claude-opus-4-8',
+    name: 'Claude Opus 4.8',
     provider: 'anthropic',
     description: 'Le plus puissant pour les tâches complexes',
+    maxTokens: 4096,
+    streaming: true,
+  },
+  {
+    key: 'claude-haiku-4-5-20251001',
+    name: 'Claude Haiku 4.5',
+    provider: 'anthropic',
+    description: 'Léger, rapide et économique',
     maxTokens: 4096,
     streaming: true,
   },
