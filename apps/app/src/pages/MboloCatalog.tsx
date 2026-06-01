@@ -6,6 +6,7 @@ import {
   tenantsApi,
   type CreateMboloProduct,
   type MboloProduct,
+  type MboloInstallResult,
 } from '../lib/api';
 
 /** Affiche un montant stocké en centimes dans la devise du produit. */
@@ -41,6 +42,29 @@ export function MboloCatalog() {
   const [form, setForm] = useState({ ...EMPTY_PRODUCT });
   const [cat, setCat] = useState({ slug: '', name: '', description: '' });
   const [error, setError] = useState('');
+  const [install, setInstall] = useState<MboloInstallResult | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const installMut = useMutation({
+    mutationFn: () => mboloApi.install(false),
+    onSuccess: (r) => {
+      setInstall(r);
+      qc.invalidateQueries({ queryKey: ['mbolo-categories'] });
+      setError('');
+    },
+    onError: (e: Error) => setError(e.message),
+  });
+
+  async function copyKey() {
+    if (!install) return;
+    try {
+      await navigator.clipboard.writeText(install.api_key);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  }
 
   const createProduct = useMutation({
     mutationFn: (body: CreateMboloProduct) => mboloApi.createProduct(body),
@@ -124,6 +148,14 @@ export function MboloCatalog() {
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={() => installMut.mutate()}
+              disabled={installMut.isPending}
+              className="rounded-lg border border-indigo-300 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 transition-colors"
+            >
+              {installMut.isPending ? 'Génération…' : 'Connecter mon site'}
+            </button>
+            <button
+              type="button"
               onClick={() => setShowCategoryPanel(!showCategoryPanel)}
               className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
@@ -141,6 +173,33 @@ export function MboloCatalog() {
 
         {products.isError && <p className="text-red-600 text-sm mb-4">{(products.error as Error).message}</p>}
         {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+
+        {install && (
+          <section className="rounded-lg border border-indigo-200 bg-indigo-50 p-6 shadow-sm mb-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="font-bold text-indigo-900">Votre boutique est connectable 🎉</h3>
+                <p className="mt-1 text-sm text-indigo-800">
+                  Copiez cette clé API maintenant — elle ne sera plus jamais affichée. Utilisez-la côté serveur pour brancher votre site.
+                </p>
+              </div>
+              <button type="button" onClick={() => setInstall(null)} className="text-indigo-400 hover:text-indigo-600 text-sm">Fermer</button>
+            </div>
+            <div className="mt-4 flex items-center gap-2">
+              <code className="flex-1 break-all rounded-lg border border-indigo-200 bg-white px-3 py-2 font-mono text-xs text-indigo-900">{install.api_key}</code>
+              <button type="button" onClick={copyKey} className="shrink-0 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+                {copied ? '✓ Copié' : 'Copier'}
+              </button>
+            </div>
+            <div className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+              <p className="text-indigo-800"><span className="text-indigo-500">Base API&nbsp;:</span> <code className="text-xs">{install.storefront.base_url}</code></p>
+              <p className="text-indigo-800"><span className="text-indigo-500">Documentation&nbsp;:</span> <a href={install.docs_url} target="_blank" rel="noreferrer" className="underline">{install.docs_url.replace('https://', '')}</a></p>
+            </div>
+            <p className="mt-3 text-xs text-indigo-700">
+              ⚠️ Gardez la clé côté serveur (jamais dans le JS du navigateur). En cas de fuite, regénérez-en une via « Connecter mon site ».
+            </p>
+          </section>
+        )}
 
         {showCategoryPanel && (
           <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm mb-6">

@@ -1017,7 +1017,20 @@ export interface CreateMboloProduct {
   seoDescription?: string;
 }
 
+export interface MboloInstallResult {
+  api_key: string;
+  key_prefix: string;
+  storefront: { base_url: string; endpoints: Record<string, string> };
+  docs_url: string;
+  back_office_url: string;
+  category: MboloCategory | null;
+  sample_product: { id: string; name: string; slug: string } | null;
+}
+
 export const mboloApi = {
+  // Installation storefront (provisionne une clé API + catalogue de départ)
+  install: (withSample = false) =>
+    api.post<ApiEnvelope<MboloInstallResult>>("/mbolo/install", { withSample }).then(unwrap),
   // Catalogue
   listCategories: () =>
     api.get<ApiEnvelope<MboloCategory[]>>("/mbolo/categories").then(unwrap),
