@@ -16,6 +16,7 @@ import { TenantGuard } from '../tenant/tenant.guard';
 import type { TenantContext } from '../tenant/tenant.types';
 import { ChatDto } from './dto/chat.dto';
 import { LiriBrainService } from './liri-brain.service';
+import { BrainToolsService } from './brain-tools.service';
 import type { LiriMessage, LiriModel } from './liri-brain.types';
 
 /**
@@ -47,13 +48,42 @@ function sseFromGenerator(
 @Controller('liri/brain')
 @UseGuards(JwtAuthGuard, TenantGuard)
 export class LiriBrainController {
-  constructor(private readonly liriBrain: LiriBrainService) {}
+  constructor(
+    private readonly liriBrain: LiriBrainService,
+    private readonly brainTools: BrainToolsService,
+  ) {}
 
   // ── Models ───────────────────────────────────────────────────────────────
 
   @Get('models')
   getModels() {
     return this.liriBrain.getModels();
+  }
+
+  // ── Tools (registre function-calling, filtré par rôle de l'appelant) ───────
+
+  @Get('tools')
+  getTools(@CurrentTenant() tenant: TenantContext) {
+    return this.brainTools.getToolSpecs(tenant.userRole);
+  }
+
+  /**
+   * Exécute un outil APRÈS confirmation utilisateur (pour les actions d'écriture
+   * que la boucle a mises en attente via `{type:'tool_confirm'}`). RBAC + tenant
+   * sont re-vérifiés dans BrainToolsService.execute().
+   */
+  @Post('tools/execute')
+  executeTool(
+    @Body() body: { name: string; args?: Record<string, any> },
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
+  ) {
+    const userId = ((req as any).user?.id as string) ?? '';
+    return this.brainTools.execute(body?.name, body?.args ?? {}, {
+      tenant,
+      userId,
+      role: tenant.userRole,
+    });
   }
 
   // ── Conversations ─────────────────────────────────────────────────────────
@@ -96,7 +126,15 @@ export class LiriBrainController {
       { role: 'user', content: message },
     ];
 
-    const generator = this.liriBrain.streamChat(model, messages, tenant);
+    // ?tools=1 → boucle function-calling (lecture auto / écriture = confirmation)
+    const generator =
+      req.query.tools === '1'
+        ? this.liriBrain.streamChatWithTools(model, messages, {
+            tenant,
+            userId: ((req as any).user?.id as string) ?? '',
+            role: tenant.userRole,
+          })
+        : this.liriBrain.streamChat(model, messages, tenant);
     return sseFromGenerator(generator);
   }
 }

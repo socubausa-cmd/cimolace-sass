@@ -263,6 +263,24 @@ export const courseBuilderApi = {
     apiV2.get<ApiEnvelope<any[]>>('/course-builder/render-jobs').then(unwrap),
   getRenderStatus: (id: string) =>
     apiV2.get<ApiEnvelope<any>>(`/course-builder/render-jobs/${id}`).then(unwrap),
+  segmentAiGenerate: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/course-builder/segment-ai-generate', body).then(unwrap),
+  listSegmentAi: (contentId: string) =>
+    apiV2.get<ApiEnvelope<any>>('/course-builder/segment-ai', { params: { contentId } }).then(unwrap),
+  segmentAiApprove: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/course-builder/segment-ai-approve', body).then(unwrap),
+  postprodVersionSave: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/course-builder/postprod-version-save', body).then(unwrap),
+  postprodVersionList: (contentId: string) =>
+    apiV2.get<ApiEnvelope<any>>('/course-builder/postprod-version-list', { params: { contentId } }).then(unwrap),
+  postprodVersionRestore: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/course-builder/postprod-version-restore', body).then(unwrap),
+  pipelineAutoSegment: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/course-builder/pipeline-auto-segment', body).then(unwrap),
+  pipelineMasterScript: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/course-builder/pipeline-master-script', body).then(unwrap),
+  segmentIllustrationRegenerate: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/course-builder/segment-illustration-regenerate', body).then(unwrap),
 };
 
 // ── Courses ─────────────────────────────────────────────────────────────────
@@ -514,6 +532,15 @@ export const aiWorkerApi = {
     apiV2.post<ApiEnvelope<any>>('/ai-worker/jobs', body).then(unwrap),
   listJobs: () => apiV2.get<ApiEnvelope<any[]>>('/ai-worker/jobs').then(unwrap),
   getJob: (id: string) => apiV2.get<ApiEnvelope<any>>(`/ai-worker/jobs/${id}`).then(unwrap),
+};
+
+// ── AI Utils (programme annuel, reformulation, ad-copy) ──────────────────────
+
+export const aiUtilsApi = {
+  generateAnnualProgram: (body: Record<string, unknown>, config?: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/ai-utils/annual-program/generate', body, config).then(unwrap),
+  reformulate: (body: { text: string; context?: string }) =>
+    apiV2.post<ApiEnvelope<any>>('/ai-utils/reformulate', body).then(unwrap),
 };
 
 // ── Cimolace Backoffice ─────────────────────────────────────────────────────

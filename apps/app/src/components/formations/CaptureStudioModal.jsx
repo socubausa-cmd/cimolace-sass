@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
+import { courseBuilderApi } from '@/lib/api-v2';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -161,34 +162,20 @@ function PipelinePanel({ segments, formTitle, recordingTime, onClose }) {
     setStatus('running');
     setError('');
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token || '';
-
       setStep('Segmentation automatique…');
       const transcript = segments
         .map((s) => `${s.title}:\n${(s.points || []).join('. ')}`)
         .join('\n\n');
 
-      const segRes = await fetch('/.netlify/functions/course-builder-pipeline-auto-segment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ contentId: 'draft', transcriptText: transcript }),
-      });
-      const segData = await segRes.json();
-      if (!segRes.ok) throw new Error(segData.error || 'Segmentation échouée');
+      // Rebranché sur NestJS (les edges course-builder-pipeline-* n'existent pas → 404).
+      const segData = await courseBuilderApi.pipelineAutoSegment({ contentId: 'draft', transcriptText: transcript });
 
       setStep('Génération du Master Script…');
-      const scriptRes = await fetch('/.netlify/functions/course-builder-pipeline-master-script', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          segments: segData.segments,
-          transcript: segData.transcript,
-          courseTitle: formTitle || 'Cours',
-        }),
+      const scriptData = await courseBuilderApi.pipelineMasterScript({
+        segments: segData.segments,
+        transcript: segData.transcript,
+        courseTitle: formTitle || 'Cours',
       });
-      const scriptData = await scriptRes.json();
-      if (!scriptRes.ok) throw new Error(scriptData.error || 'Script échoué');
 
       setResult({ ...segData, scriptSections: scriptData.sections });
       setStatus('done');

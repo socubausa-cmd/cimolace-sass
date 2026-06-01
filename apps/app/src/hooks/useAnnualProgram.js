@@ -2,15 +2,15 @@
  * useAnnualProgram — Hook partagé Teacher ↔ Élève
  *
  * - Charge le programme annuel depuis Supabase (school_year_calendars + annual_program_weeks)
- * - Expose une action generate() qui appelle la fonction Netlify
+ * - Expose une action generate() qui appelle l'API NestJS /ai-utils/annual-program/generate
  * - Expose publish() pour passer draft → published
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
-import { resolveCimolaceTenantIdForInsert } from '@/lib/tenant/fetchTenantContext';
+import { aiUtilsApi } from '@/lib/api-v2';
 import { holidaysForSchoolYearAndCountry } from '@/lib/schoolYearHolidays';
 
-const API_BASE = import.meta.env.VITE_NETLIFY_API_URL ?? '';
+// API_BASE Netlify retiré — la génération passe désormais par api-v2 → NestJS /ai-utils
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
 
@@ -107,18 +107,11 @@ export function useAnnualProgram({
     setError(null);
 
     try {
-      const [{ data: sessionData }, tenantId] = await Promise.all([
-        supabase.auth.getSession(),
-        resolveCimolaceTenantIdForInsert(),
-      ]);
-      const token = sessionData?.session?.access_token;
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) headers.Authorization = `Bearer ${token}`;
-
-      const res = await fetch(`${API_BASE}/.netlify/functions/annual-program-generate`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
+      // P1 — rebranché sur l'API NestJS via api-v2 : auth (token Supabase) + X-Tenant-Slug
+      // injectés par l'intercepteur, tenant résolu côté serveur (TenantGuard), enveloppe {data}
+      // dépliée par unwrap. Remplace l'ancien /.netlify/functions/* (404, fonction inexistante).
+      const data = await aiUtilsApi.generateAnnualProgram(
+        {
           school_year:        schoolYear,
           cycle,
           start_date:         startDate,
@@ -127,15 +120,11 @@ export function useAnnualProgram({
           holiday_country,
           modules,
           pedagogical_notes:  pedagogicalNotes,
-          ...(tenantId ? { cimolace_tenant_id: tenantId } : {}),
-        }),
-        signal: ctrl.signal,
-      });
+        },
+        { signal: ctrl.signal },
+      );
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-
-      if (data.weeks?.length > 0) {
+      if (data?.weeks?.length > 0) {
         // Reload from DB to get persisted IDs
         await load();
       }

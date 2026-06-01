@@ -728,17 +728,7 @@ class ChannelStub {
   send(_payload: any) { return this; }
 }
 
-// ── Storage stub ────────────────────────────────────────────────────────────
-
-const storageStub = {
-  from: (_bucket: string) => ({
-    upload: async (_path: string, _file: any) => ok({ path: _path }),
-    download: async (_path: string) => ok(null),
-    getPublicUrl: (_path: string) => ({ data: { publicUrl: '' } }),
-    remove: async (_paths: string[]) => ok(null),
-    list: async (_prefix?: string) => ok([]),
-  }),
-};
+// ── Storage : délégué au vrai client Supabase (voir l'objet exporté) ─────────
 
 // ── RPC stub ────────────────────────────────────────────────────────────────
 
@@ -758,8 +748,12 @@ export const supabase = {
   // Realtime — stub for now (V1 live uses LiveKit, not Supabase Realtime)
   channel: (_name: string) => new ChannelStub(),
 
-  // Storage — stub
-  storage: storageStub,
+  // Edge functions — déléguées au vrai client (le JWT de la session est attaché automatiquement).
+  // Débloque generate-transcript (ASR), generate-mindmap, et toutes les edge functions LIRI.
+  functions: realSupabase.functions,
+
+  // Storage — vrai client (createSignedUrl / getPublicUrl / upload réels) au lieu du stub vide.
+  storage: realSupabase.storage,
 
   // RPC
   rpc: rpcStub,

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
+import { courseBuilderApi } from '@/lib/api-v2';
 import { normalizeReturnTo, safeDesignerReturnPathForState } from '@/lib/returnToNavigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -271,28 +272,12 @@ const VideoPostProductionPage = ({
     if (!targetContentId) return;
     setSegmentAiSyncLoading(true);
     try {
-      const { data, error: aiErr } = await supabase
-        .from('course_segment_ai_content')
-        .select('*')
-        .eq('content_id', targetContentId)
-        .order('segment_index', { ascending: true });
-      if (aiErr) {
-        const code = String(aiErr.code || '');
-        const msg = String(aiErr.message || '').toLowerCase();
-        if (
-          code === '42P01'
-          || code === 'PGRST205'
-          || msg.includes('does not exist')
-          || msg.includes('schema cache')
-          || msg.includes('relation')
-        ) {
-          setSegmentAiMap({});
-          return;
-        }
-        throw aiErr;
-      }
+      // Rebranché sur NestJS (la RLS bloque l'accès direct Supabase ; le backend
+      // service-role renvoie { rows } scopé au tenant). Remplace l'ancien select direct.
+      const res = await courseBuilderApi.listSegmentAi(targetContentId);
+      const rows = Array.isArray(res?.rows) ? res.rows : [];
       const nextMap = {};
-      (data || []).forEach((item) => {
+      rows.forEach((item) => {
         nextMap[String(item.segment_index)] = item;
       });
       setSegmentAiMap(nextMap);
@@ -377,7 +362,7 @@ const VideoPostProductionPage = ({
     if (!targetContentId) return;
     setVersionLoading(true);
     try {
-      const body = await invokeCourseBuilderFunctionGet('postprod-version-list', { contentId: targetContentId });
+      const body = await courseBuilderApi.postprodVersionList(targetContentId);
       setVersionRows(Array.isArray(body?.rows) ? body.rows : []);
     } catch {
       setVersionRows([]);
@@ -1086,7 +1071,7 @@ const VideoPostProductionPage = ({
         timeSeconds: parseTimestampToSeconds(l.timeText),
         text: l.text,
       }));
-      const result = await invokeCourseBuilderFunction('segment-ai-generate', {
+      const result = await courseBuilderApi.segmentAiGenerate({
         contentId,
         segmentIndex: activeChapterIdx,
         applyAll,
@@ -1163,7 +1148,7 @@ const VideoPostProductionPage = ({
     setSegmentAiLoading(true);
     setError('');
     try {
-      await invokeCourseBuilderFunction('segment-ai-approve', {
+      await courseBuilderApi.segmentAiApprove({
         contentId,
         segmentIndex: activeChapterIdx,
         approved,
@@ -1192,7 +1177,7 @@ const VideoPostProductionPage = ({
     setError('');
     try {
       const payload = buildSavePayload({ validateMindmap: false, validateChapters: false });
-      await invokeCourseBuilderFunction('postprod-version-save', {
+      await courseBuilderApi.postprodVersionSave({
         contentId,
         snapshotLabel: `Snapshot ${new Date().toLocaleString()}`,
         snapshot: {
@@ -1234,7 +1219,7 @@ const VideoPostProductionPage = ({
     setVersionActionLoading(true);
     setError('');
     try {
-      await invokeCourseBuilderFunction('postprod-version-restore', { versionId });
+      await courseBuilderApi.postprodVersionRestore({ versionId });
       window.location.reload();
     } catch (e) {
       setError(String(e?.message || e));

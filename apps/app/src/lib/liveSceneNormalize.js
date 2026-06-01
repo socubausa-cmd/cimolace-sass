@@ -137,6 +137,9 @@ export function normalizeLiveSceneToSlide(scene) {
   // Brouillon wizard / réponse IA : ia_data à la racine (pas dans content_payload_json)
   const iaRaw = scene.ia_data ?? payload.ia_data;
   const fe = pickImmersiveEdgeFeatherExtras(scene, payload, slideContent, iaRaw);
+  // Propage is_active (le spread `...fe` est présent dans toutes les branches de retour) →
+  // permet l'auto-projection de la scène active à l'ouverture de l'arène (issue #3).
+  if (scene?.is_active === true) fe.is_active = true;
 
   if (iaRaw && typeof iaRaw === 'object' && (iaRaw.title || iaRaw.subtitle || iaRaw.core_idea || (iaRaw.development && iaRaw.development.length))) {
     return {

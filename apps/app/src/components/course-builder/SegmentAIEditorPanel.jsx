@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Sparkles, Image, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
-import { supabase } from '@/lib/customSupabaseClient';
+import { courseBuilderApi } from '@/lib/api-v2';
 
 function toTextArea(value) {
   if (Array.isArray(value)) return value.join('\n');
@@ -12,27 +12,8 @@ function toTextArea(value) {
 }
 
 async function invokeIllustrationRegenerate({ contentId, segmentIndex, prompt }) {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const token = sessionData?.session?.access_token;
-  const paths = [
-    '/.netlify/functions/course-builder-segment-illustration-regenerate',
-    '/.netlify/functions/course-builder/segment-illustration-regenerate',
-  ];
-  let lastErr = null;
-  for (const p of paths) {
-    try {
-      const res = await fetch(p, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ contentId, segmentIndex, prompt }),
-      });
-      if (res.status === 404) { lastErr = new Error('Endpoint non trouvé'); continue; }
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error || `Erreur (${res.status})`);
-      return body;
-    } catch (e) { lastErr = e; }
-  }
-  throw lastErr || new Error('Impossible de regénérer l\'illustration');
+  // Rebranché sur NestJS (l'edge course-builder-segment-illustration-regenerate n'existe pas → 404).
+  return courseBuilderApi.segmentIllustrationRegenerate({ contentId, segmentIndex, prompt });
 }
 
 export default function SegmentAIEditorPanel({

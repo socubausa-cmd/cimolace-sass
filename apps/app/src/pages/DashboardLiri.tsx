@@ -57,12 +57,14 @@ async function streamLiriBrain(
   onChunk: (text: string) => void,
   onDone: () => void,
   onError: (e: string) => void,
+  onToolConfirm: (c: { tool: string; args: Record<string, unknown> }) => void,
 ): Promise<void> {
   const base = getApiBaseUrl();
   const token = authStore.getToken();
   const slug = authStore.getTenantSlug();
 
   const params = new URLSearchParams({ message, model });
+  params.set('tools', '1'); // active la boucle function-calling (outils École/LIRI)
   if (conversationId) params.set('conversationId', conversationId);
 
   const url = `${base}/liri/brain/chat?${params.toString()}`;
@@ -100,7 +102,12 @@ async function streamLiriBrain(
         if (!trimmed.startsWith('data: ')) continue;
         try {
           const parsed: { content: string; done: boolean } = JSON.parse(trimmed.slice(6));
-          if (parsed.content) onChunk(parsed.content);
+          if (parsed.content) {
+            let tc: { type?: string; tool?: string; args?: Record<string, unknown> } | null = null;
+            try { const o = JSON.parse(parsed.content); if (o && o.type === 'tool_confirm') tc = o; } catch { /* texte normal */ }
+            if (tc?.tool) onToolConfirm({ tool: tc.tool, args: tc.args ?? {} });
+            else onChunk(parsed.content);
+          }
           if (parsed.done) { onDone(); return; }
         } catch { /* skip */ }
       }
@@ -122,6 +129,7 @@ export function DashboardLiri() {
   const [activeConvId, setActiveConvId]     = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen]       = useState(true);
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
+  const [pendingConfirm, setPendingConfirm]   = useState<{ tool: string; args: Record<string, unknown> } | null>(null);
   const bottomRef   = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -199,7 +207,53 @@ export function DashboardLiri() {
           return updated;
         });
       },
+      (confirm) => {
+        // Action d'écriture proposée par l'IA → on attend la confirmation utilisateur.
+        setStreaming(false);
+        setPendingConfirm(confirm);
+        setMessages((prev) => {
+          const updated = [...prev];
+          const last = updated[updated.length - 1];
+          if (last?.role === 'assistant') {
+            updated[updated.length - 1] = {
+              ...last,
+              content: last.content || 'Action prête — confirmation requise ci-dessous.',
+              pending: false,
+            };
+          }
+          return updated;
+        });
+      },
     );
+  };
+
+  const confirmTool = async () => {
+    if (!pendingConfirm) return;
+    const { tool, args } = pendingConfirm;
+    setPendingConfirm(null);
+    setStreaming(true);
+    try {
+      const r = await fetch(`${base}/liri/brain/tools/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug },
+        body: JSON.stringify({ name: tool, args }),
+      });
+      const data = await r.json().catch(() => ({}));
+      setMessages((prev) => [...prev, {
+        role: 'assistant',
+        content: r.ok ? `✓ Action « ${tool} » exécutée.` : `⚠️ Échec (${r.status}) : ${data?.message ?? ''}`,
+        pending: false,
+      }]);
+    } catch (e) {
+      setMessages((prev) => [...prev, { role: 'assistant', content: `⚠️ ${String(e)}`, pending: false }]);
+    } finally {
+      setStreaming(false);
+    }
+  };
+
+  const cancelTool = () => {
+    setPendingConfirm(null);
+    setMessages((prev) => [...prev, { role: 'assistant', content: 'Action annulée.', pending: false }]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -480,6 +534,23 @@ export function DashboardLiri() {
             </div>
           )}
         </div>
+
+        {/* Confirmation d'action (tool_confirm de la boucle function-calling) */}
+        {pendingConfirm && (
+          <div style={{ padding: '0 20px 12px' }}>
+            <div style={{ maxWidth: 800, margin: '0 auto', borderRadius: 14, border: '1px solid rgba(217,119,87,0.4)', background: 'rgba(217,119,87,0.10)', padding: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#e0795f' }}>Action à confirmer</div>
+              <div style={{ marginTop: 6, fontSize: 13.5, color: '#e5e7eb' }}>
+                Outil <code style={{ color: '#e0795f' }}>{pendingConfirm.tool}</code>
+                <span style={{ color: '#9ca3af' }}> · {JSON.stringify(pendingConfirm.args)}</span>
+              </div>
+              <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+                <button onClick={() => void confirmTool()} disabled={streaming} style={{ padding: '6px 14px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: '#fff', background: 'linear-gradient(135deg,#d97757,#c2683f)' }}>Confirmer &amp; exécuter</button>
+                <button onClick={cancelTool} style={{ padding: '6px 14px', borderRadius: 9, cursor: 'pointer', fontSize: 12, fontWeight: 500, color: '#9ca3af', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>Annuler</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Input */}
         <div style={{
