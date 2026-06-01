@@ -62,9 +62,11 @@ export async function fetchTenantContext(options = {}) {
 
   const fetchApiTenant = async () => {
     if (!pathSlug) return null;
-    // base peut être vide → URL relative (ex: /tenants/public/isna via proxy local)
+    // base peut être vide → URL relative (ex: via proxy local)
     const base = apiBaseUrl();
-    const res = await fetch(`${base}/tenants/public/${encodeURIComponent(pathSlug)}`);
+    // /tenants/by-slug/:slug/branding est public (no auth required) et retourne
+    // { data: { slug, name, logo_url, brand_colors } } — wrapped by NestJS interceptor
+    const res = await fetch(`${base}/tenants/by-slug/${encodeURIComponent(pathSlug)}/branding`);
     const body = await res.json().catch(() => ({}));
     const tenant = body?.data ?? body;
     return res.ok && tenant?.slug ? tenant : null;

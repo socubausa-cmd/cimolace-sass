@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "name": "coach_to_architect_handoff",
+    "version": "1.0.0",
+    "description_fr": "Format unique d’échange quand le Coach Slide transmet une intention structurée à l’Agent Architect (alternative au seul prompt texte). La base obligatoire est v1 ; une extension v2 optionnelle complète ce socle (voir coach-architect-handoff-v2-extension.json).",
+    "description_en": "Single structured handoff from Coach Slide to the Architect. The mandatory base is v1; an optional v2 extension completes it (see coach-architect-handoff-v2-extension.json).",
+    "extension_v2": {
+      "spec": "coach-architect-handoff-v2-extension.json",
+      "root_key": "architect_extension_v2",
+      "role_fr": "Optionnel : précise rendu type studio/affiche, opérations photo, actions layout/visual/photo, demandes d’assets, validation utilisateur. Ne remplace pas les clés v1.",
+      "role_en": "Optional: studio/poster render type, photo ops, layout/visual/photo actions, asset requests, user validation. Does not replace v1 keys."
+    }
+  },
+  "example": {
+    "action": "design_update",
+    "intervention_level": "medium",
+    "context": {
+      "project_type": "pedagogical_slide",
+      "slide_goal": "expliquer la reincarnation",
+      "active_segment": "origine",
+      "audience": "debutant"
+    },
+    "problems_detected": [
+      "texte trop dense",
+      "absence d'image explicative",
+      "hiérarchie visuelle faible"
+    ],
+    "objectives": [
+      "clarifier l'idée centrale",
+      "améliorer lisibilité",
+      "ajouter support visuel"
+    ],
+    "instructions": {
+      "layout": {
+        "type": "restructure",
+        "rules": [
+          "mettre titre en haut",
+          "séparer texte en blocs",
+          "créer espace pour image"
+        ]
+      },
+      "text": {
+        "action": "optimize",
+        "rules": [
+          "réduire longueur",
+          "mettre mots clés en évidence",
+          "ajouter sous-titres"
+        ]
+      },
+      "image": {
+        "action": "generate",
+        "type": "analogy",
+        "description": "cycle de renaissance symbolique"
+      },
+      "color": {
+        "action": "harmonize",
+        "style": "spiritual_soft",
+        "contrast": "medium"
+      }
+    },
+    "architect_extension_v2": {
+      "render_type": "cinematic_poster",
+      "photo_actions": ["soft_blend", "premium_finish"],
+      "requires_user_validation": true
+    }
+  },
+  "required_root_keys": [
+    "action",
+    "intervention_level",
+    "context",
+    "problems_detected",
+    "objectives",
+    "instructions"
+  ],
+  "optional_root_keys": ["architect_extension_v2"],
+  "action_value": "design_update",
+  "intervention_levels": ["light", "medium", "deep", "full"]
+}

@@ -1,0 +1,169 @@
+name: CI — MedOS / ISNA Platform V2
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ─────────────────────────────────────────────
+  # 1. Build & Lint — API NestJS
+  # ─────────────────────────────────────────────
+  api:
+    name: API (NestJS) — Build & Lint & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: apps/api/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript — check (no emit)
+        run: npx tsc --noEmit
+
+      - name: Lint (ESLint)
+        run: npm run lint -- --max-warnings=0
+        continue-on-error: true   # lint warnings ne bloquent pas en attendant le nettoyage progressif
+
+      - name: Build NestJS
+        run: npm run build
+
+      - name: Tests unitaires (Jest)
+        run: npx jest --passWithNoTests --forceExit --ci
+        env:
+          # Secrets injectés depuis GitHub Secrets (aucune valeur réelle ici)
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          LIVEKIT_URL: ${{ secrets.LIVEKIT_URL }}
+          LIVEKIT_API_KEY: ${{ secrets.LIVEKIT_API_KEY }}
+          LIVEKIT_API_SECRET: ${{ secrets.LIVEKIT_API_SECRET }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_BILLING_WEBHOOK_SECRET: ${{ secrets.STRIPE_BILLING_WEBHOOK_SECRET }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          PORT: 4000
+
+      - name: Upload coverage (optionnel)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api-coverage
+          path: apps/api/coverage/
+          retention-days: 7
+
+  # ─────────────────────────────────────────────
+  # 2. Build — App praticien (med-app)
+  # ─────────────────────────────────────────────
+  med-app:
+    name: med-app (React/Vite) — TypeScript & Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/med-app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: apps/med-app/package.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: TypeScript — check
+        run: npx tsc --noEmit
+        continue-on-error: true
+
+      - name: Build Vite
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_API_URL: http://localhost:4000
+
+  # ─────────────────────────────────────────────
+  # 3. Build — Portail patient
+  # ─────────────────────────────────────────────
+  patient-portal:
+    name: patient-portal (React/Vite) — TypeScript & Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/patient-portal
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: apps/patient-portal/package.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: TypeScript — check
+        run: npx tsc --noEmit
+        continue-on-error: true
+
+      - name: Build Vite
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_API_URL: http://localhost:4000
+
+  # ─────────────────────────────────────────────
+  # 4. Secrets scan — aucune clé dans le repo
+  # ─────────────────────────────────────────────
+  secrets-scan:
+    name: Vérification absence de secrets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Vérifier l'absence de fichiers .env commités
+        run: |
+          if git ls-files | grep -E '\.env$' | grep -v '\.env\.example'; then
+            echo "❌ Un fichier .env est tracké par Git. Retirez-le immédiatement."
+            exit 1
+          fi
+          echo "✅ Aucun fichier .env trouvé dans le repo."
+
+      - name: Vérifier l'absence de node_modules commités
+        run: |
+          if git ls-files | grep 'node_modules/' | head -5 | grep -q .; then
+            echo "❌ node_modules est tracké par Git."
+            exit 1
+          fi
+          echo "✅ Pas de node_modules tracké."

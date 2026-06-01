@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LIRI — Accueil (maquette)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { base: '#0a0a0f', surface: '#101018', violet: '#6d5dfc', coral: '#ff6b4a', moss: '#2cc275' },
+        fontFamily: { sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<style>
+  html { font-family: '"Plus Jakarta Sans"', system-ui, sans-serif; }
+  body { font-family: '"Plus Jakarta Sans"', system-ui, sans-serif; }
+  ::-webkit-scrollbar { width: 9px; height: 9px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.10); border-radius: 9px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  [data-lucide] { width: 1em; height: 1em; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  .card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); }
+  .card-hover { transition: background-color .2s ease, border-color .2s ease; }
+  .card-hover:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); }
+  .nav-item { transition: background-color .2s ease, color .2s ease; }
+  :focus-visible { outline: 2px solid #6d5dfc; outline-offset: 2px; border-radius: 10px; }
+</style>
+</head>
+<body class="bg-base text-white antialiased selection:bg-violet/40">
+
+  <!-- glows -->
+  <div class="pointer-events-none fixed inset-0 -z-10">
+    <div class="absolute -top-32 -left-24 h-[460px] w-[460px] rounded-full blur-[120px]" style="background:rgba(255,107,74,.16)"></div>
+    <div class="absolute top-1/3 right-0 h-[420px] w-[420px] rounded-full blur-[130px]" style="background:rgba(109,93,252,.16)"></div>
+  </div>
+
+  <div class="grid h-screen grid-rows-[64px_1fr]">
+
+    <!-- ───────────── TOPBAR ───────────── -->
+    <header class="z-30 flex items-center gap-4 border-b border-white/8 bg-base/70 px-4 backdrop-blur-xl">
+      <div class="flex w-[232px] items-center gap-2.5 pl-1">
+        <button class="grid h-9 w-9 place-items-center rounded-xl text-white/55 hover:bg-white/5 nav-item" aria-label="Menu">
+          <i data-lucide="panel-left" class="text-[18px]"></i>
+        </button>
+        <div class="flex items-center gap-2">
+          <span class="grid h-8 w-8 place-items-center rounded-xl text-white" style="background:linear-gradient(135deg,#ff6b4a,#ff8a5c)">
+            <i data-lucide="radio" class="text-[17px]"></i>
+          </span>
+          <span class="text-[19px] font-extrabold tracking-tight">LIRI</span>
+        </div>
+      </div>
+
+      <div class="flex flex-1 justify-center">
+        <button class="group flex h-10 w-full max-w-[520px] items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 text-left text-white/45 card-hover">
+          <i data-lucide="search" class="text-[16px]"></i>
+          <span class="flex-1 text-sm">Rechercher ou lancer une action…</span>
+          <kbd class="rounded-md border border-white/10 bg-white/5 px-1.5 py-0.5 text-[11px] font-semibold text-white/50">⌘K</kbd>
+        </button>
+      </div>
+
+      <div class="flex w-[232px] items-center justify-end gap-1.5 pr-1">
+        <button class="relative grid h-9 w-9 place-items-center rounded-xl text-white/55 hover:bg-white/5 nav-item" aria-label="Notifications">
+          <i data-lucide="bell" class="text-[18px]"></i>
+          <span class="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-coral"></span>
+        </button>
+        <button class="grid h-9 w-9 place-items-center rounded-xl text-white/55 hover:bg-white/5 nav-item" aria-label="Paramètres">
+          <i data-lucide="settings" class="text-[18px]"></i>
+        </button>
+        <button class="ml-1 grid h-9 w-9 place-items-center rounded-full text-[13px] font-bold text-white" style="background:linear-gradient(135deg,#6d5dfc,#8b5cf6)" aria-label="Profil">MK</button>
+      </div>
+    </header>
+
+    <!-- ───────────── BODY ───────────── -->
+    <div class="grid min-h-0 grid-cols-[232px_1fr_336px]">
+
+      <!-- ───── SIDEBAR ───── -->
+      <aside class="flex min-h-0 flex-col border-r border-white/8 bg-[#08080c] px-3 py-4">
+        <p class="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.22em] text-white/30">Espace de travail</p>
+        <nav class="space-y-1">
+          <a href="#" class="nav-item flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-white" style="background:rgba(109,93,252,.14)">
+            <i data-lucide="layout-dashboard" class="text-[18px] text-violet"></i> Accueil
+            <span class="ml-auto h-1.5 w-1.5 rounded-full bg-violet"></span>
+          </a>
+          <a href="#" class="nav-item flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/55 hover:bg-white/5 hover:text-white">
+            <i data-lucide="video" class="text-[18px]"></i> Lives
+            <span class="ml-auto rounded-full bg-coral/15 px-1.5 py-0.5 text-[10px] font-bold text-coral">2</span>
+          </a>
+          <a href="#" class="nav-item flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/55 hover:bg-white/5 hover:text-white">
+            <i data-lucide="wand-sparkles" class="text-[18px]"></i> Studio
+          </a>
+          <a href="#" class="nav-item flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/55 hover:bg-white/5 hover:text-white">
+            <i data-lucide="library" class="text-[18px]"></i> Bibliothèque
+          </a>
+          <a href="#" class="nav-item flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/55 hover:bg-white/5 hover:text-white">
+            <i data-lucide="sparkles" class="text-[18px]"></i> LIRI Brain
+          </a>
+        </nav>
+
+        <div class="my-4 h-px bg-white/8"></div>
+        <p class="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.22em] text-white/30">Gérer</p>
+        <nav class="space-y-1">
+          <a href="#" class="nav-item flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/55 hover:bg-white/5 hover:text-white">
+            <i data-lucide="blocks" class="text-[18px]"></i> Intégrations
+          </a>
+          <a href="#" class="nav-item flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/55 hover:bg-white/5 hover:text-white">
+            <i data-lucide="settings-2" class="text-[18px]"></i> Paramètres
+          </a>
+        </nav>
+
+        <!-- tenant + usage -->
+        <div class="mt-auto space-y-3">
+          <div class="rounded-xl border border-white/8 bg-white/[0.03] p-3">
+            <div class="mb-2 flex items-center justify-between text-[11px] text-white/45">
+              <span>Minutes live · mai</span><span class="font-semibold text-white/70">847 / 2 000</span>
+            </div>
+            <div class="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+              <div class="h-full rounded-full" style="width:42%;background:linear-gradient(90deg,#6d5dfc,#ff6b4a)"></div>
+            </div>
+          </div>
+          <button class="nav-item flex w-full items-center gap-2.5 rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2.5 text-left hover:bg-white/[0.06]">
+            <span class="grid h-7 w-7 place-items-center rounded-lg bg-emerald-400/15 text-[12px] font-bold text-emerald-300">PA</span>
+            <span class="min-w-0 flex-1">
+              <span class="block truncate text-[13px] font-semibold">Prorascience</span>
+              <span class="block text-[11px] text-white/40">Plan Pro · isna</span>
+            </span>
+            <i data-lucide="chevrons-up-down" class="text-[15px] text-white/35"></i>
+          </button>
+        </div>
+      </aside>
+
+      <!-- ───── MAIN ───── -->
+      <main class="min-h-0 overflow-y-auto px-8 py-7">
+        <!-- greeting -->
+        <div class="mb-6 flex items-end justify-between">
+          <div>
+            <h1 class="text-[26px] font-extrabold tracking-tight">Bonsoir, Manikongo</h1>
+            <p class="mt-1 text-sm text-white/45">Votre espace LIRI · <span class="text-white/60">isna.cimolace.space</span></p>
+          </div>
+          <span class="flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1.5 text-[12px] font-semibold text-emerald-300">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Tous les moteurs actifs
+          </span>
+        </div>
+
+        <!-- quick actions (VERBES) -->
+        <div class="grid grid-cols-6 gap-3">
+          <button class="card-hover col-span-2 flex flex-col justify-between rounded-2xl p-5 text-left text-white" style="background:linear-gradient(135deg,#ff6b4a,#ff8053)">
+            <span class="grid h-11 w-11 place-items-center rounded-xl bg-white/20"><i data-lucide="video" class="text-[22px]"></i></span>
+            <span class="mt-8 block">
+              <span class="block text-[17px] font-extrabold tracking-tight">Démarrer un live</span>
+              <span class="block text-[12px] font-medium text-white/80">Session instantanée</span>
+            </span>
+          </button>
+
+          <button class="card card-hover flex flex-col justify-between rounded-2xl p-4 text-left">
+            <span class="grid h-10 w-10 place-items-center rounded-xl bg-violet/15 text-violet"><i data-lucide="log-in" class="text-[19px]"></i></span>
+            <span class="mt-6 block text-[14px] font-bold tracking-tight">Rejoindre</span>
+          </button>
+          <button class="card card-hover flex flex-col justify-between rounded-2xl p-4 text-left">
+            <span class="grid h-10 w-10 place-items-center rounded-xl bg-violet/15 text-violet"><i data-lucide="calendar-plus" class="text-[19px]"></i></span>
+            <span class="mt-6 block text-[14px] font-bold tracking-tight">Programmer</span>
+          </button>
+          <button class="card card-hover flex flex-col justify-between rounded-2xl p-4 text-left">
+            <span class="grid h-10 w-10 place-items-center rounded-xl bg-violet/15 text-violet"><i data-lucide="pen-tool" class="text-[19px]"></i></span>
+            <span class="mt-6 block text-[14px] font-bold tracking-tight">SmartBoard</span>
+          </button>
+          <button class="card card-hover flex flex-col justify-between rounded-2xl p-4 text-left">
+            <span class="grid h-10 w-10 place-items-center rounded-xl bg-violet/15 text-violet"><i data-lucide="sparkles" class="text-[19px]"></i></span>
+            <span class="mt-6 block text-[14px] font-bold tracking-tight">LIRI Brain</span>
+          </button>
+        </div>
+
+        <!-- reprendre -->
+        <h2 class="mb-3 mt-8 text-[13px] font-bold uppercase tracking-[0.16em] text-white/40">Reprendre</h2>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="card card-hover flex items-center gap-4 rounded-2xl p-4">
+            <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-coral/15 text-coral"><i data-lucide="clock" class="text-[20px]"></i></span>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-[14px] font-semibold">Masterclass React — dans 1 h 53</p>
+              <p class="text-[12px] text-white/45">Salle d'attente ouverte · 48 inscrits</p>
+            </div>
+            <button class="rounded-lg bg-white/10 px-3 py-1.5 text-[12px] font-semibold hover:bg-white/15 nav-item">Préparer</button>
+          </div>
+          <div class="card card-hover flex items-center gap-4 rounded-2xl p-4">
+            <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-violet/15 text-violet"><i data-lucide="file-pen-line" class="text-[20px]"></i></span>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-[14px] font-semibold">Brouillon — « Les portes du monde »</p>
+              <div class="mt-1.5 flex items-center gap-2">
+                <div class="h-1.5 w-24 overflow-hidden rounded-full bg-white/10"><div class="h-full w-[35%] rounded-full bg-violet"></div></div>
+                <span class="text-[11px] text-white/45">35 %</span>
+              </div>
+            </div>
+            <button class="rounded-lg bg-white/10 px-3 py-1.5 text-[12px] font-semibold hover:bg-white/15 nav-item">Continuer</button>
+          </div>
+        </div>
+
+        <!-- activité récente -->
+        <h2 class="mb-3 mt-8 text-[13px] font-bold uppercase tracking-[0.16em] text-white/40">Activité récente</h2>
+        <div class="card divide-y divide-white/8 overflow-hidden rounded-2xl">
+          <div class="flex items-center gap-3.5 px-4 py-3.5">
+            <span class="grid h-9 w-9 place-items-center rounded-lg bg-coral/15 text-coral"><i data-lucide="film" class="text-[17px]"></i></span>
+            <div class="flex-1"><p class="text-[13.5px] font-medium">Replay <span class="font-semibold">« Chapitre 3 — Katiokeni »</span> prêt</p><p class="text-[12px] text-white/40">Post-production disponible</p></div>
+            <span class="text-[11px] text-white/35">il y a 12 min</span>
+            <button class="ml-1 rounded-lg px-2.5 py-1 text-[12px] font-semibold text-violet hover:bg-violet/10 nav-item">Ouvrir</button>
+          </div>
+          <div class="flex items-center gap-3.5 px-4 py-3.5">
+            <span class="grid h-9 w-9 place-items-center rounded-lg bg-violet/15 text-violet"><i data-lucide="wand-sparkles" class="text-[17px]"></i></span>
+            <div class="flex-1"><p class="text-[13.5px] font-medium">Masterclass #4 générée — 19 slides</p><p class="text-[12px] text-white/40">via Orchestrateur Live</p></div>
+            <span class="text-[11px] text-white/35">il y a 1 h</span>
+          </div>
+          <div class="flex items-center gap-3.5 px-4 py-3.5">
+            <span class="grid h-9 w-9 place-items-center rounded-lg bg-emerald-400/15 text-emerald-300"><i data-lucide="badge-dollar-sign" class="text-[17px]"></i></span>
+            <div class="flex-1"><p class="text-[13.5px] font-medium">Nouvelle inscription payante — <span class="font-semibold">25 €</span></p><p class="text-[12px] text-white/40">Masterclass React</p></div>
+            <span class="text-[11px] text-white/35">il y a 2 h</span>
+          </div>
+          <div class="flex items-center gap-3.5 px-4 py-3.5">
+            <span class="grid h-9 w-9 place-items-center rounded-lg bg-white/8 text-white/60"><i data-lucide="webhook" class="text-[17px]"></i></span>
+            <div class="flex-1"><p class="text-[13.5px] font-medium">2 webhooks livrés à isna.app</p><p class="text-[12px] text-white/40">événement session:ended</p></div>
+            <span class="text-[11px] text-white/35">il y a 3 h</span>
+          </div>
+        </div>
+      </main>
+
+      <!-- ───── RIGHT RAIL ───── -->
+      <aside class="min-h-0 overflow-y-auto border-l border-white/8 px-4 py-5">
+        <!-- clock -->
+        <div class="overflow-hidden rounded-2xl border border-white/8" style="background:linear-gradient(160deg,#1a1a2e,#12121c)">
+          <div class="px-5 py-5">
+            <p class="text-[40px] font-extrabold leading-none tracking-tight">22:07</p>
+            <p class="mt-1.5 text-[13px] font-medium text-white/50">Samedi 30 mai</p>
+          </div>
+          <div class="flex items-center justify-between border-t border-white/8 px-4 py-2.5 text-white/45">
+            <button class="grid h-7 w-7 place-items-center rounded-lg hover:bg-white/8 nav-item"><i data-lucide="plus" class="text-[16px]"></i></button>
+            <span class="text-[12px] font-semibold text-white/70">Aujourd'hui</span>
+            <div class="flex gap-1">
+              <button class="grid h-7 w-7 place-items-center rounded-lg hover:bg-white/8 nav-item"><i data-lucide="chevron-left" class="text-[16px]"></i></button>
+              <button class="grid h-7 w-7 place-items-center rounded-lg hover:bg-white/8 nav-item"><i data-lucide="chevron-right" class="text-[16px]"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- à venir -->
+        <h3 class="mb-2 mt-6 text-[11px] font-bold uppercase tracking-[0.18em] text-white/35">À venir</h3>
+        <div class="space-y-2">
+          <div class="card card-hover rounded-xl p-3.5">
+            <div class="flex items-center justify-between">
+              <span class="flex items-center gap-2 text-[13px] font-bold"><span class="h-2 w-2 rounded-full bg-coral"></span>14:00</span>
+              <span class="rounded-md bg-emerald-400/15 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300">25 €</span>
+            </div>
+            <p class="mt-1.5 text-[13px] font-semibold">Masterclass React avancé</p>
+            <p class="mt-0.5 flex items-center gap-1 text-[11px] text-white/40"><i data-lucide="users" class="text-[12px]"></i> 48 / 50 places</p>
+          </div>
+          <div class="card card-hover rounded-xl p-3.5">
+            <div class="flex items-center justify-between">
+              <span class="flex items-center gap-2 text-[13px] font-bold"><span class="h-2 w-2 rounded-full bg-violet"></span>18:00</span>
+              <span class="rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-white/55">Gratuit</span>
+            </div>
+            <p class="mt-1.5 text-[13px] font-semibold">Arena — Débat ouvert</p>
+            <p class="mt-0.5 flex items-center gap-1 text-[11px] text-white/40"><i data-lucide="swords" class="text-[12px]"></i> Mode débat · 2 équipes</p>
+          </div>
+        </div>
+
+        <!-- stats -->
+        <h3 class="mb-2 mt-6 text-[11px] font-bold uppercase tracking-[0.18em] text-white/35">Ce mois</h3>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="card rounded-xl p-3"><p class="text-[20px] font-extrabold tracking-tight">12</p><p class="text-[11px] text-white/40">sessions</p></div>
+          <div class="card rounded-xl p-3"><p class="text-[20px] font-extrabold tracking-tight">847<span class="text-[12px] font-semibold text-white/40"> min</span></p><p class="text-[11px] text-white/40">en live</p></div>
+          <div class="card rounded-xl p-3"><p class="text-[20px] font-extrabold tracking-tight">1.2k</p><p class="text-[11px] text-white/40">participants</p></div>
+          <div class="card rounded-xl p-3"><p class="text-[20px] font-extrabold tracking-tight text-emerald-300">3 420<span class="text-[12px] font-semibold"> €</span></p><p class="text-[11px] text-white/40">revenus</p></div>
+        </div>
+
+        <!-- à traiter -->
+        <button class="card-hover mt-4 flex w-full items-center gap-3 rounded-xl border border-coral/25 bg-coral/10 px-4 py-3 text-left">
+          <span class="grid h-9 w-9 place-items-center rounded-lg bg-coral/20 text-coral"><i data-lucide="clapperboard" class="text-[18px]"></i></span>
+          <span class="flex-1"><span class="block text-[13px] font-semibold">3 replays à traiter</span><span class="block text-[11px] text-white/45">post-production en attente</span></span>
+          <i data-lucide="chevron-right" class="text-[18px] text-white/40"></i>
+        </button>
+      </aside>
+
+    </div>
+  </div>
+
+  <script>lucide.createIcons();</script>
+</body>
+</html>

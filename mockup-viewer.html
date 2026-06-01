@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>LiveHostMobile — Maquette Layout</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #111;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 32px;
+    padding: 24px;
+    min-height: 100vh;
+    font-family: system-ui, -apple-system, sans-serif;
+    flex-wrap: wrap;
+  }
+
+  .label-col {
+    color: rgba(255,255,255,0.5);
+    font-size: 12px;
+    text-align: center;
+    margin-bottom: 8px;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  /* ── TÉLÉPHONE ───────────────────────────────────────────────── */
+  .phone {
+    width: 375px;
+    height: 780px;
+    border-radius: 40px;
+    background: #0f1117;
+    border: 2px solid rgba(255,255,255,0.12);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.8);
+    flex-shrink: 0;
+  }
+
+  /* ── LAYER 0 : ViewerPipeline ────────────────────────────────── */
+  .layer-video {
+    position: absolute;
+    inset: 0;
+    /* Simule le fond vidéo hôte */
+    background:
+      radial-gradient(ellipse at 40% 35%, rgba(167,139,250,0.18) 0%, transparent 55%),
+      linear-gradient(160deg, #1e2235 0%, #0d0f1a 100%);
+    overflow: hidden;
+  }
+
+  /* faux "grain" caméra */
+  .layer-video::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 40%, rgba(140,120,200,0.12) 0%, transparent 70%);
+    animation: camPulse 4s ease-in-out infinite;
+  }
+  @keyframes camPulse {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.6; }
+  }
+
+  /* Gradient top vignette */
+  .vignette-top {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 28%;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, transparent 100%);
+    pointer-events: none;
+  }
+
+  /* Gradient bottom vignette */
+  .vignette-bottom {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 55%;
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 60%, transparent 100%);
+    pointer-events: none;
+  }
+
+  /* Avatar "hôte" centré (simule le professeur) */
+  .host-avatar-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -52%);
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: rgba(167,139,250,0.18);
+    border: 2.5px solid rgba(167,139,250,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    box-shadow: 0 0 50px rgba(167,139,250,0.2);
+    color: #c4b5fd;
+    font-weight: 800;
+  }
+
+  /* ── BADGES TOP-DROITE ──────────────────────────────────────── */
+  .badges-top {
+    position: absolute;
+    top: 58px;
+    right: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    z-index: 10;
+  }
+
+  .badge-live {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 11px;
+    border-radius: 7px;
+    background: rgba(229,62,62,0.92);
+    box-shadow: 0 2px 12px rgba(229,62,62,0.5);
+    font-size: 11px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.10em;
+  }
+  .badge-live .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #fff;
+    animation: dotPulse 0.9s ease-in-out infinite;
+  }
+  @keyframes dotPulse {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.25; }
+  }
+
+  .badge-pill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 9px;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(8px);
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+  }
+
+  /* ── INFO PROF — bas gauche ─────────────────────────────────── */
+  .info-prof {
+    position: absolute;
+    left: 14px;
+    bottom: 116px;
+    right: 72px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .step-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(167,139,250,0.15);
+    border: 1px solid rgba(167,139,250,0.3);
+    margin-bottom: 8px;
+    align-self: flex-start;
+  }
+  .step-bars {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+  }
+  .step-bar {
+    height: 5px;
+    border-radius: 3px;
+    background: rgba(167,139,250,0.35);
+  }
+  .step-bar.active {
+    width: 14px;
+    background: #a78bfa;
+  }
+  .step-bar:not(.active) {
+    width: 5px;
+  }
+  .step-label {
+    color: #a78bfa;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .prof-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+  }
+  .prof-avatar {
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    background: rgba(167,139,250,0.22);
+    border: 2px solid rgba(167,139,250,0.5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 800; color: #c4b5fd;
+    flex-shrink: 0;
+    box-shadow: 0 0 16px rgba(167,139,250,0.25), 0 2px 10px rgba(0,0,0,0.5);
+  }
+  .prof-texts p { margin: 0; }
+  .prof-school {
+    color: rgba(167,139,250,0.75);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+  }
+  .prof-name {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.9);
+    margin-top: 2px !important;
+  }
+  .prof-course {
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+    font-weight: 500;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+    margin-top: 3px !important;
+    line-height: 1.3;
+  }
+
+  /* ── CHAT OVERLAY (flottant gauche) ─────────────────────────── */
+  .chat-overlay {
+    position: absolute;
+    left: 10px;
+    bottom: 200px;
+    width: 68%;
+    z-index: 22;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .chat-msg {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    animation: slideIn 0.35s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .chat-bubble {
+    background: rgba(0,0,0,0.52);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 5px 9px;
+    max-width: 200px;
+  }
+  .chat-sender { color: rgba(255,255,255,0.5); font-size: 9px; display: block; }
+  .chat-text   { color: #fff; font-size: 11px; line-height: 1.3; }
+  .chat-avatar-mini {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: rgba(96,165,250,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700; color: #93c5fd;
+    flex-shrink: 0;
+  }
+
+  /* ── FAB STACK — droite ──────────────────────────────────────── */
+  .fab-stack {
+    position: absolute;
+    right: 8px;
+    bottom: 100px;
+    z-index: 26;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .fab-btn {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.52);
+    border: 1px solid rgba(255,255,255,0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    position: relative;
+  }
+  .fab-label {
+    font-size: 9px;
+    font-weight: 700;
+    margin-top: 3px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+  }
+
+  /* ── TIROIR GAUCHE — handle ──────────────────────────────────── */
+  .left-handle {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 68px;
+    border-radius: 0 12px 12px 0;
+    background: rgba(0,0,0,0.48);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-left: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 45;
+    box-shadow: 3px 0 16px rgba(0,0,0,0.5);
+  }
+  .left-handle-pill {
+    width: 4px; height: 30px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.25);
+  }
+  .handle-badge {
+    position: absolute;
+    top: 7px; right: 3px;
+    width: 14px; height: 14px;
+    border-radius: 7px;
+    background: #e53e3e;
+    color: #fff; font-size: 7px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    border: 1.5px solid rgba(0,0,0,0.5);
+  }
+
+  /* ── TOPBAR ──────────────────────────────────────────────────── */
+  .topbar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 52px;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%);
+  }
+  .topbar-left { display: flex; flex-direction: column; }
+  .topbar-title { color: #fff; font-size: 13px; font-weight: 700; }
+  .topbar-sub { color: rgba(255,255,255,0.5); font-size: 10px; }
+  .topbar-stop {
+    background: rgba(229,62,62,0.85);
+    border: none;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  /* ── DRAWER BAS — handle only ────────────────────────────────── */
+  .bottom-drawer-handle {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 80px;
+    height: 28px;
+    z-index: 35;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: rgba(28,31,46,0.92);
+    border-radius: 18px 18px 0 0;
+    border-top: 1px solid rgba(255,255,255,0.10);
+  }
+  .drawer-pill {
+    width: 36px; height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.2);
+  }
+
+  /* ── BOTTOMBAR ───────────────────────────────────────────────── */
+  .bottombar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 80px;
+    background: rgba(13,15,25,0.97);
+    border-top: 1px solid rgba(255,255,255,0.07);
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding-bottom: 8px;
+  }
+  .bb-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    cursor: pointer;
+    min-width: 52px;
+  }
+  .bb-icon { font-size: 18px; }
+  .bb-label { color: rgba(255,255,255,0.55); font-size: 9px; font-weight: 600; }
+
+  /* ── ANNOTATIONS / LÉGENDE ───────────────────────────────────── */
+  .annotations {
+    color: rgba(255,255,255,0.85);
+    font-size: 13px;
+    max-width: 300px;
+    flex-shrink: 0;
+    padding-top: 36px;
+  }
+  .ann-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 18px;
+    line-height: 1.5;
+  }
+  .ann-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+  .ann-title { font-weight: 700; font-size: 13px; }
+  .ann-sub { color: rgba(255,255,255,0.45); font-size: 11px; margin-top: 1px; }
+
+  /* ── DEUXIÈME PHONE : SmartBoard actif ───────────────────────── */
+  .smartboard-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #0f2040 0%, #0a1628 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+  .slide-mock {
+    width: 85%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+  .slide-mock h3 { color: #fff; font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .slide-mock p  { color: rgba(255,255,255,0.4); font-size: 11px; }
+
+  /* PiP actif (SmartBoard mode) */
+  .pip-cam {
+    position: absolute;
+    bottom: 92px;
+    right: 68px;
+    width: 64px; height: 86px;
+    border-radius: 10px;
+    background: rgba(167,139,250,0.15);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    z-index: 10;
+    overflow: hidden;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCÉNARIO 1 : Pas de SmartBoard → ViewerPipeline               -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div>
+  <p class="label-col">① Pas de SmartBoard actif<br><span style="color:rgba(255,255,255,0.3);font-size:10px">ViewerPipeline plein écran</span></p>
+  <div class="phone">
+
+    <!-- LAYER 0 : ViewerPipeline -->
+    <div class="layer-video">
+      <div class="vignette-top"></div>
+      <div class="vignette-bottom"></div>
+
+      <!-- avatar centré faux-caméra -->
+      <div class="host-avatar-center">N</div>
+    </div>
+
+    <!-- BADGES TOP-DROITE -->
+    <div class="badges-top">
+      <div class="badge-live">
+        <div class="dot"></div>
+        EN DIRECT
+      </div>
+      <div class="badge-pill">⏱ 00:12:34</div>
+      <div class="badge-pill">👁 42</div>
+    </div>
+
+    <!-- INFO PROF + COURS — bas-gauche -->
+    <div class="info-prof">
+      <!-- Indicateur étapes -->
+      <div class="step-pill">
+        <div class="step-bars">
+          <div class="step-bar"></div>
+          <div class="step-bar active"></div>
+          <div class="step-bar"></div>
+          <div class="step-bar"></div>
+          <div class="step-bar"></div>
+        </div>
+        <span class="step-label">Introduction React</span>
+      </div>
+      <!-- Prof row -->
+      <div class="prof-row">
+        <div class="prof-avatar">N</div>
+        <div class="prof-texts">
+          <p class="prof-school">École ISNA</p>
+          <p class="prof-name">Prof. Ngowazulu</p>
+          <p class="prof-course">Développement Web Avancé — Module 3</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT OVERLAY -->
+    <div class="chat-overlay">
+      <div class="chat-msg">
+        <div class="chat-avatar-mini">A</div>
+        <div class="chat-bubble">
+          <span class="chat-sender">Amara</span>
+          <span class="chat-text">Super intéressant ! 🔥</span>
+        </div>
+      </div>
+      <div class="chat-msg">
+        <div class="chat-avatar-mini">K</div>
+        <div class="chat-bubble">
+          <span class="chat-sender">Karim</span>
+          <span class="chat-text">Je comprends maintenant 👍</span>
+        </div>
+      </div>
+      <div class="chat-msg">
+        <div class="chat-avatar-mini">S</div>
+        <div class="chat-bubble">
+          <span class="chat-sender">Safia</span>
+          <span class="chat-text">Question sur le useEffect ?</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAB STACK droite -->
+    <div class="fab-stack">
+      <div>
+        <div class="fab-btn">🎮</div>
+        <div class="fab-label" style="color:#a78bfa">JoyKit</div>
+      </div>
+      <div>
+        <div class="fab-btn">🎭</div>
+        <div class="fab-label" style="color:#c084fc">Scènes</div>
+      </div>
+      <div>
+        <div class="fab-btn">💡</div>
+        <div class="fab-label" style="color:rgba(255,255,255,0.6)">Focus</div>
+      </div>
+      <div>
+        <div class="fab-btn">🔗</div>
+        <div class="fab-label" style="color:#38bdf8">Inviter</div>
+      </div>
+    </div>
+
+    <!-- HANDLE TIROIR GAUCHE -->
+    <div class="left-handle">
+      <div class="left-handle-pill"></div>
+      <div class="handle-badge">2</div>
+    </div>
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div style="width:30px"></div><!-- espace handle gauche -->
+      <div class="topbar-left">
+        <span class="topbar-title">Cours React Avancé</span>
+        <span class="topbar-sub">Étape 2 / 5 · 42 en ligne</span>
+      </div>
+      <button class="topbar-stop">⏹ Stop</button>
+    </div>
+
+    <!-- DRAWER BAS handle -->
+    <div class="bottom-drawer-handle">
+      <div class="drawer-pill"></div>
+    </div>
+
+    <!-- BOTTOMBAR -->
+    <div class="bottombar">
+      <div class="bb-btn">
+        <span class="bb-icon">🎤</span>
+        <span class="bb-label">Micro</span>
+      </div>
+      <div class="bb-btn">
+        <span class="bb-icon">📷</span>
+        <span class="bb-label">Caméra</span>
+      </div>
+      <div class="bb-btn" style="background:rgba(96,165,250,0.15);border-color:rgba(96,165,250,0.3)">
+        <span class="bb-icon">◀</span>
+        <span class="bb-label" style="color:#93c5fd">Préc.</span>
+      </div>
+      <div class="bb-btn" style="background:rgba(96,165,250,0.15);border-color:rgba(96,165,250,0.3)">
+        <span class="bb-icon">▶</span>
+        <span class="bb-label" style="color:#93c5fd">Suiv.</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- LÉGENDE                                                         -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="annotations">
+  <div class="ann-item">
+    <div class="ann-dot" style="background:#e53e3e"></div>
+    <div>
+      <div class="ann-title">🔴 Badge LIVE + durée + spectateurs</div>
+      <div class="ann-sub">Coin top-droit · toujours visible<br>Dot rouge qui pulse (animation JS)</div>
+    </div>
+  </div>
+  <div class="ann-item">
+    <div class="ann-dot" style="background:#a78bfa"></div>
+    <div>
+      <div class="ann-title">🎓 Info Professeur</div>
+      <div class="ann-sub">Bas-gauche · bottom: 116px<br>Avatar + École + Nom + Titre du cours</div>
+    </div>
+  </div>
+  <div class="ann-item">
+    <div class="ann-dot" style="background:#a78bfa;opacity:0.5"></div>
+    <div>
+      <div class="ann-title">●─●●●● Indicateur d'étapes</div>
+      <div class="ann-sub">Pill coloré avec barres progressives<br>Étape active = barre longue</div>
+    </div>
+  </div>
+  <div class="ann-item">
+    <div class="ann-dot" style="background:#60a5fa"></div>
+    <div>
+      <div class="ann-title">💬 Chat overlay</div>
+      <div class="ann-sub">Messages flottants bas-gauche<br>zIndex 22 · passe au-dessus du viewer</div>
+    </div>
+  </div>
+  <div class="ann-item">
+    <div class="ann-dot" style="background:rgba(255,255,255,0.3)"></div>
+    <div>
+      <div class="ann-title">▌ Handle tiroir gauche</div>
+      <div class="ann-sub">Languette 20px · toujours visible<br>Badge rouge si signaux en attente</div>
+    </div>
+  </div>
+  <div class="ann-item">
+    <div class="ann-dot" style="background:rgba(255,255,255,0.2)"></div>
+    <div>
+      <div class="ann-title">━ Handle tiroir bas</div>
+      <div class="ann-sub">Pill horizontal · tap → Chat/Q&R/Script…</div>
+    </div>
+  </div>
+
+  <hr style="border-color:rgba(255,255,255,0.08);margin:20px 0">
+
+  <!-- SCÉNARIO 2 -->
+  <p class="label-col" style="text-align:left;margin-bottom:14px">② SmartBoard actif<br><span style="font-weight:400;color:rgba(255,255,255,0.3)">ViewerPipeline masqué → PiP caméra</span></p>
+
+  <div class="phone" style="width:220px;height:456px;border-radius:24px;margin-bottom:0">
+
+    <!-- SmartBoard fond -->
+    <div class="smartboard-bg">
+      <div class="slide-mock">
+        <h3>useState & useEffect</h3>
+        <p>Les hooks fondamentaux de React</p>
+        <div style="margin-top:14px;display:flex;gap:6px;justify-content:center">
+          <div style="width:60px;height:8px;border-radius:4px;background:rgba(167,139,250,0.3)"></div>
+          <div style="width:40px;height:8px;border-radius:4px;background:rgba(255,255,255,0.08)"></div>
+          <div style="width:40px;height:8px;border-radius:4px;background:rgba(255,255,255,0.08)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PiP caméra hôte (bas-droite) -->
+    <div class="pip-cam" style="bottom:54px;right:40px;width:52px;height:70px">
+      <div style="font-size:24px">N</div>
+    </div>
+
+    <!-- Badges LIVE -->
+    <div class="badges-top" style="top:36px;right:10px">
+      <div class="badge-live"><div class="dot"></div>LIVE</div>
+    </div>
+
+    <!-- Handle gauche -->
+    <div class="left-handle" style="height:50px;width:16px">
+      <div class="left-handle-pill" style="height:22px"></div>
+    </div>
+
+    <!-- Drawer handle bas -->
+    <div class="bottom-drawer-handle" style="bottom:48px">
+      <div class="drawer-pill"></div>
+    </div>
+
+    <!-- Bottombar mini -->
+    <div class="bottombar" style="height:48px;padding-bottom:0">
+      <div class="bb-btn" style="min-width:36px;padding:4px 8px"><span class="bb-icon" style="font-size:14px">🎤</span></div>
+      <div class="bb-btn" style="min-width:36px;padding:4px 8px"><span class="bb-icon" style="font-size:14px">📷</span></div>
+      <div class="bb-btn" style="min-width:36px;padding:4px 8px"><span class="bb-icon" style="font-size:14px">◀</span></div>
+      <div class="bb-btn" style="min-width:36px;padding:4px 8px"><span class="bb-icon" style="font-size:14px">▶</span></div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
