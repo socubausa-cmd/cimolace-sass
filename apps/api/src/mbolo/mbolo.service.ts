@@ -1,9 +1,96 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { createHash, randomBytes } from 'crypto';
 import { SupabaseService } from '../supabase/supabase.service';
+
+const STOREFRONT_BASE = 'https://api.cimolace.space/v1/mbolo/storefront';
+const MBOLO_DOCS_URL = 'https://cimolace.space/mbolo/integration';
 
 @Injectable()
 export class MboloService {
   constructor(private readonly supabase: SupabaseService) {}
+
+  /**
+   * « Installer Mbolo » — provisionne tout ce qu'il faut pour connecter un site
+   * client : une clé API storefront (mbk_…, brute retournée UNE SEULE FOIS),
+   * une catégorie par défaut, et (optionnel) un produit exemple si le catalogue
+   * est vide. Idempotent sur la catégorie ; la clé est régénérée à chaque appel.
+   * Appelé au signup (kind=mbolo) et via POST /mbolo/install (owner/admin).
+   */
+  async installStorefront(
+    tenantId: string,
+    tenantSlug: string,
+    createdBy: string | null,
+    opts: { withSample?: boolean } = {},
+  ) {
+    if (!/^[a-z0-9-]{1,40}$/.test(tenantSlug || '')) {
+      throw new BadRequestException('Slug tenant invalide pour la génération de clé');
+    }
+    const client = this.supabase.client as any;
+
+    // 1) Clé API storefront (mbk_<slug>_<hex>), hashée SHA-256 (brut non stocké)
+    const random = randomBytes(24).toString('hex'); // 48 hex
+    const rawKey = `mbk_${tenantSlug}_${random}`;
+    const keyPrefix = `mbk_${tenantSlug}_${random.slice(0, 4)}…`;
+    const keyHash = createHash('sha256').update(rawKey).digest('hex');
+    const { data: keyRow, error: keyErr } = await client
+      .from('tenant_api_keys')
+      .insert({ tenant_id: tenantId, label: 'Mbolo Storefront', key_prefix: keyPrefix, key_hash: keyHash, created_by: createdBy })
+      .select('id, key_prefix, created_at')
+      .single();
+    if (keyErr || !keyRow) {
+      throw new InternalServerErrorException(`Création de la clé storefront impossible : ${keyErr?.message ?? 'inconnue'}`);
+    }
+
+    // 2) Catégorie par défaut (idempotent sur (tenant_id, slug))
+    const { data: category } = await client
+      .from('mbolo_categories')
+      .upsert({ tenant_id: tenantId, slug: 'boutique', name: 'Boutique', sort_order: 0 }, { onConflict: 'tenant_id,slug' })
+      .select('id, slug, name')
+      .single();
+
+    // 3) Produit exemple (seulement si demandé ET catalogue vide)
+    let sampleProduct: any = null;
+    if (opts.withSample) {
+      const { count } = await client
+        .from('mbolo_products')
+        .select('id', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId);
+      if (!count) {
+        const { data } = await client.from('mbolo_products').insert({
+          tenant_id: tenantId,
+          name: 'Produit exemple',
+          slug: 'produit-exemple',
+          price_cents: 1000000,
+          currency: 'XAF',
+          stock: 10,
+          is_featured: true,
+          is_active: true,
+          category_id: category?.id ?? null,
+          tagline: 'Exemple — modifiez ou supprimez',
+          description: "Produit de démonstration créé à l'installation de Mbolo.",
+        }).select('id, name, slug').maybeSingle();
+        sampleProduct = data ?? null;
+      }
+    }
+
+    return {
+      api_key: rawKey, // ⚠️ retourné une seule fois
+      key_prefix: keyRow.key_prefix,
+      storefront: {
+        base_url: STOREFRONT_BASE,
+        endpoints: {
+          categories: `GET ${STOREFRONT_BASE}/categories`,
+          products: `GET ${STOREFRONT_BASE}/products`,
+          product: `GET ${STOREFRONT_BASE}/products/:slug`,
+          checkout: `POST ${STOREFRONT_BASE}/orders`,
+        },
+      },
+      docs_url: MBOLO_DOCS_URL,
+      back_office_url: '/dashboard/mbolo',
+      category: category ?? null,
+      sample_product: sampleProduct,
+    };
+  }
 
   // ─── Catalogue : catégories ──────────────────────────────────────────────
   async listCategories(tenantId: string) {
