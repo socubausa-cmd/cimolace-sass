@@ -353,6 +353,53 @@ export class BrainToolsService {
             content: str(a.content),
           }),
       },
+      {
+        name: 'create_live',
+        description:
+          "Crée une session live (cours en direct). Réservé enseignant/direction. Action d'écriture : nécessite confirmation.",
+        parameters: {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            scheduled_at: { type: 'string', description: 'Date/heure ISO 8601 (ex. 2026-06-10T18:00:00Z)' },
+            description: { type: 'string' },
+          },
+          required: ['title', 'scheduled_at'],
+        },
+        allowedRoles: ['owner', 'admin', 'teacher'],
+        requiresConfirmation: true,
+        handler: (a, ctx) => {
+          const data: Record<string, unknown> = {
+            title: str(a.title),
+            scheduled_at: str(a.scheduled_at),
+            price_cents: 0,
+            host_user_id: ctx.userId,
+            teacher_id: ctx.userId,
+          };
+          if (a.description) data.description = str(a.description);
+          return this.live.createSession(ctx.tenant.id, data);
+        },
+      },
+      {
+        name: 'request_appointment',
+        description:
+          "Réserve un créneau de rendez-vous pour l'utilisateur courant (le créneau doit être disponible). Action d'écriture : nécessite confirmation.",
+        parameters: {
+          type: 'object',
+          properties: {
+            slot_id: { type: 'string', description: 'UUID du créneau (cf. list_booking_slots)' },
+            notes: { type: 'string' },
+          },
+          required: ['slot_id'],
+        },
+        allowedRoles: ANY,
+        requiresConfirmation: true,
+        handler: (a, ctx) =>
+          this.booking.requestAppointment(ctx.tenant, ctx.userId, {
+            slotId: str(a.slot_id),
+            notes: a.notes ? str(a.notes) : undefined,
+          }),
+      },
     ];
   }
 }
