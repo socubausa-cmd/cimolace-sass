@@ -205,6 +205,42 @@ export class CourseBuilderService {
     return { ok: true, contentId: v.content_id };
   }
 
+  // ── Pipeline (segmentation + master script) ────────────────────────────────
+
+  /** Segmentation auto depuis un texte. Remplace l'edge course-builder-pipeline-auto-segment (404). */
+  async pipelineAutoSegment(_tenantId: string, dto: { contentId?: string; transcriptText?: string }) {
+    const text = String(dto.transcriptText ?? '');
+    return { segments: this.naiveSegment(text), transcript: text };
+  }
+
+  /** Master script : reformule chaque segment en discours pédagogique. Remplace l'edge ...-master-script (404). */
+  async pipelineMasterScript(
+    tenantId: string,
+    dto: { segments?: any[]; transcript?: string; courseTitle?: string },
+  ) {
+    const segs = Array.isArray(dto.segments) ? dto.segments.slice(0, 12) : [];
+    const sections: any[] = [];
+    for (const s of segs) {
+      const content = String(
+        s?.content ?? (Array.isArray(s?.points) ? s.points.join('. ') : '') ?? '',
+      ).slice(0, 4000);
+      let discourse = content;
+      if (content) {
+        try {
+          const r: any = await this.aiUtils.reformulate(tenantId, {
+            text: content,
+            context: `Discours pédagogique de présentation pour le cours « ${dto.courseTitle ?? 'Cours'} ».`,
+          });
+          discourse = String(r?.result ?? content).trim();
+        } catch (e) {
+          this.logger.warn(`master-script reformulate échec: ${String(e)}`);
+        }
+      }
+      sections.push({ title: s?.title ?? '', discourse });
+    }
+    return { sections };
+  }
+
   private naiveSegment(text: string): { title: string; content: string; index: number }[] {
     const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
     return paragraphs.map((p, i) => ({ title: `Segment ${i + 1}`, content: p.trim(), index: i }));

@@ -29,4 +29,8 @@ export class CourseBuilderController {
   @Post('postprod-version-save') saveVersion(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.saveVersion(t.id, ((r as any).user?.id as string) ?? '', d ?? {}); }
   @Get('postprod-version-list') listVersions(@Query('contentId') contentId: string, @CurrentTenant() t: TenantContext) { return this.svc.listVersions(t.id, contentId); }
   @Post('postprod-version-restore') restoreVersion(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.restoreVersion(t.id, d ?? {}); }
+
+  // ── Pipeline (segmentation + master script) ──
+  @Post('pipeline-auto-segment') pipelineAutoSegment(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.pipelineAutoSegment(t.id, d ?? {}); }
+  @Post('pipeline-master-script') pipelineMasterScript(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.pipelineMasterScript(t.id, d ?? {}); }
 }

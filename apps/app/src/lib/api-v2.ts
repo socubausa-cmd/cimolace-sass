@@ -275,6 +275,10 @@ export const courseBuilderApi = {
     apiV2.get<ApiEnvelope<any>>('/course-builder/postprod-version-list', { params: { contentId } }).then(unwrap),
   postprodVersionRestore: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/course-builder/postprod-version-restore', body).then(unwrap),
+  pipelineAutoSegment: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/course-builder/pipeline-auto-segment', body).then(unwrap),
+  pipelineMasterScript: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/course-builder/pipeline-master-script', body).then(unwrap),
 };
 
 // ── Courses ─────────────────────────────────────────────────────────────────
