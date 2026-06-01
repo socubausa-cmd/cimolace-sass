@@ -281,6 +281,10 @@ export const courseBuilderApi = {
     apiV2.post<ApiEnvelope<any>>('/course-builder/pipeline-master-script', body).then(unwrap),
   segmentIllustrationRegenerate: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/course-builder/segment-illustration-regenerate', body).then(unwrap),
+  renderEnqueue: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/course-builder/render-enqueue', body).then(unwrap),
+  renderStatus: (contentId: string) =>
+    apiV2.get<ApiEnvelope<any>>('/course-builder/render-status', { params: { contentId } }).then(unwrap),
 };
 
 // ── Courses ─────────────────────────────────────────────────────────────────
