@@ -319,13 +319,33 @@ export class CourseBuilderService {
       .eq('id', dto.contentId)
       .single();
     const d = (content && content.data) || {};
-    const sourceVideoUrl = String(d.videoUrl || Object.values(d.sourceVideoUrlsByRef || {})[0] || '');
+
+    // Source vidéo : signer le chemin de stockage CÔTÉ SERVEUR (URL fraîche ~2h) —
+    // robuste vs l'URL signée client (qui n'est pas persistée et expire).
+    let sourceVideoUrl = '';
+    const storagePath = String(d.storagePath || '');
+    if (storagePath) {
+      try {
+        const { data: signed } = await (this.supabase.client as any).storage
+          .from('videos')
+          .createSignedUrl(storagePath, 7200);
+        sourceVideoUrl = String(signed?.signedUrl || '');
+      } catch (e) {
+        this.logger.warn(`createSignedUrl (videos/${storagePath}) échec: ${String(e)}`);
+      }
+    }
+    if (!sourceVideoUrl) {
+      sourceVideoUrl = String(d.url || d.videoUrl || Object.values(d.sourceVideoUrlsByRef || {})[0] || '');
+    }
+
+    // Slides = data: URLs (PNG canvas), mappés au chapitre via slideIndex.
     const frames: any[] = Array.isArray(d.renderSlideFrames) ? d.renderSlideFrames : [];
     const chapters: any[] = Array.isArray(d.chapters) ? d.chapters : [];
     const slides = frames
       .map((f, i) => {
         const url = typeof f === 'string' ? f : String(f?.url || f?.dataUrl || f?.image || '');
-        const ch = chapters[i] || {};
+        const idx = Number.isFinite(Number(f?.slideIndex)) ? Number(f.slideIndex) : i;
+        const ch = chapters[idx] || chapters[i] || {};
         const dur = Math.max(1, Math.round(Number(ch.endSeconds || 0) - Number(ch.startSeconds || 0))) || 4;
         return { url, durationSeconds: dur };
       })
