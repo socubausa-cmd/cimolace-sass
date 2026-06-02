@@ -289,13 +289,31 @@ export class LiriBrainService {
     }
   }
 
+  /** Lit un flux SSE et émet le contenu de chaque ligne `data:` (préfixe retiré). */
+  private async *readSseData(resp: Response): AsyncGenerator<string> {
+    const reader = resp.body?.getReader();
+    if (!reader) return;
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+      for (const line of lines) {
+        const t = line.trim();
+        if (t.startsWith('data:')) yield t.slice(5).trim();
+      }
+    }
+  }
+
   /**
    * Variante function-calling (chemin OpenAI-compatible : DeepSeek + GPT).
-   * Boucle NON-streaming : le modèle peut appeler des outils LECTURE (exécutés
-   * automatiquement via BrainToolsService) ; un outil ÉCRITURE stoppe la boucle et
-   * émet une demande de confirmation (human-in-the-loop) au lieu d'agir. Réponse
-   * finale renvoyée en un bloc. Anthropic : outils pas encore branchés → repli streamChat.
-   * ⚠️ Type-checké ; à VALIDER en exécution (API lancée + clés LLM).
+   * Boucle EN STREAMING : le texte de la réponse est émis token par token ; le
+   * modèle peut appeler des outils LECTURE (exécutés automatiquement via
+   * BrainToolsService) ; un outil ÉCRITURE stoppe la boucle et émet une demande
+   * de confirmation (human-in-the-loop) au lieu d'agir. Anthropic → anthropicWithTools.
    */
   async *streamChatWithTools(
     model: LiriModel,
@@ -346,6 +364,8 @@ export class LiriBrainService {
           messages: convo,
           ...(tools.length ? { tools, tool_choice: 'auto' } : {}),
           max_tokens: 4096,
+          stream: true,
+          stream_options: { include_usage: true },
         }),
       });
       if (!resp.ok) {
@@ -353,33 +373,68 @@ export class LiriBrainService {
         yield { content: `⚠️ Erreur ${info.provider}: ${resp.status}`, done: true };
         return;
       }
-      const data: any = await resp.json();
-      await this.chargeLlm(ctx, info.provider, apiModel, data?.usage);
-      const msg = data?.choices?.[0]?.message;
-      const toolCalls: any[] | undefined = msg?.tool_calls;
 
-      if (!toolCalls?.length) {
-        yield { content: String(msg?.content ?? ''), done: true };
+      // Flux : on émet le texte au fil de l'eau ; on accumule les tool_calls (deltas par index).
+      let assistantText = '';
+      const toolAcc: Record<number, { id: string; name: string; arguments: string }> = {};
+      let usage: any = null;
+      for await (const dataStr of this.readSseData(resp)) {
+        if (dataStr === '[DONE]') break;
+        let parsed: any;
+        try {
+          parsed = JSON.parse(dataStr);
+        } catch {
+          continue;
+        }
+        if (parsed.usage) usage = parsed.usage;
+        const delta = parsed.choices?.[0]?.delta;
+        if (!delta) continue;
+        if (delta.content) {
+          assistantText += delta.content;
+          yield { content: delta.content, done: false };
+        }
+        if (Array.isArray(delta.tool_calls)) {
+          for (const tc of delta.tool_calls) {
+            const i: number = tc.index ?? 0;
+            const acc = (toolAcc[i] ??= { id: '', name: '', arguments: '' });
+            if (tc.id) acc.id = tc.id;
+            if (tc.function?.name) acc.name = tc.function.name;
+            if (tc.function?.arguments) acc.arguments += tc.function.arguments;
+          }
+        }
+      }
+      await this.chargeLlm(ctx, info.provider, apiModel, usage);
+
+      const toolCalls = Object.values(toolAcc);
+      if (!toolCalls.length) {
+        // réponse finale : déjà streamée token par token
+        yield { content: '', done: true };
         return;
       }
 
-      convo.push(msg);
+      convo.push({
+        role: 'assistant',
+        content: assistantText || null,
+        tool_calls: toolCalls.map((t) => ({
+          id: t.id,
+          type: 'function',
+          function: { name: t.name, arguments: t.arguments },
+        })),
+      });
       for (const tc of toolCalls) {
-        const name: string = tc?.function?.name;
         let args: Record<string, any> = {};
         try {
-          args = JSON.parse(tc?.function?.arguments || '{}');
+          args = JSON.parse(tc.arguments || '{}');
         } catch {
           args = {};
         }
-
-        if (this.tools.requiresConfirmation(name)) {
+        if (this.tools.requiresConfirmation(tc.name)) {
           // Action d'écriture → on N'EXÉCUTE PAS : on demande confirmation à l'utilisateur.
-          yield { content: JSON.stringify({ type: 'tool_confirm', tool: name, args }), done: true };
+          yield { content: JSON.stringify({ type: 'tool_confirm', tool: tc.name, args }), done: true };
           return;
         }
         try {
-          const result = await this.tools.execute(name, args, ctx);
+          const result = await this.tools.execute(tc.name, args, ctx);
           convo.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(result ?? null) });
         } catch (e) {
           convo.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify({ error: String(e) }) });
@@ -394,7 +449,7 @@ export class LiriBrainService {
   /**
    * Boucle function-calling pour Anthropic (format Claude : blocs `tool_use` /
    * `tool_result`). Même logique que la voie OpenAI-compatible : lecture=auto,
-   * écriture=confirmation. Non-streaming, réponse finale en un bloc.
+   * écriture=confirmation. EN STREAMING (text_delta émis au fil de l'eau).
    */
   private async *anthropicWithTools(
     model: LiriModel,
@@ -422,6 +477,7 @@ export class LiriBrainService {
         model,
         max_tokens: 4096,
         messages: convo,
+        stream: true,
         ...(tools.length ? { tools } : {}),
       };
       if (systemMsg) body['system'] = systemMsg.content;
@@ -440,28 +496,72 @@ export class LiriBrainService {
         yield { content: `⚠️ Erreur Anthropic: ${resp.status}`, done: true };
         return;
       }
-      const data: any = await resp.json();
-      await this.chargeLlm(ctx, 'anthropic', model, data?.usage);
-      const blocks: any[] = Array.isArray(data?.content) ? data.content : [];
-      const toolUses = blocks.filter((b) => b?.type === 'tool_use');
 
+      // Flux Anthropic : text_delta émis au fil de l'eau ; blocs tool_use accumulés
+      // depuis input_json_delta ; usage agrégé (input au message_start, output au message_delta).
+      const blocks: any[] = [];
+      let cur: any = null;
+      let curJson = '';
+      let usage: any = null;
+      for await (const dataStr of this.readSseData(resp)) {
+        let ev: any;
+        try {
+          ev = JSON.parse(dataStr);
+        } catch {
+          continue;
+        }
+        switch (ev.type) {
+          case 'message_start':
+            if (ev.message?.usage) usage = { ...(usage ?? {}), ...ev.message.usage };
+            break;
+          case 'content_block_start':
+            cur = ev.content_block;
+            curJson = '';
+            break;
+          case 'content_block_delta':
+            if (ev.delta?.type === 'text_delta' && ev.delta.text) {
+              if (cur?.type === 'text') cur.text = (cur.text ?? '') + ev.delta.text;
+              yield { content: ev.delta.text, done: false };
+            } else if (ev.delta?.type === 'input_json_delta') {
+              curJson += ev.delta.partial_json ?? '';
+            }
+            break;
+          case 'content_block_stop':
+            if (cur) {
+              if (cur.type === 'tool_use') {
+                try {
+                  cur.input = JSON.parse(curJson || '{}');
+                } catch {
+                  cur.input = {};
+                }
+              }
+              blocks.push(cur);
+              cur = null;
+            }
+            break;
+          case 'message_delta':
+            if (ev.usage) usage = { ...(usage ?? {}), ...ev.usage };
+            break;
+        }
+      }
+      await this.chargeLlm(ctx, 'anthropic', model, usage);
+
+      const toolUses = blocks.filter((b) => b?.type === 'tool_use');
       if (!toolUses.length) {
-        const text = blocks.filter((b) => b?.type === 'text').map((b) => b.text).join('');
-        yield { content: text, done: true };
+        // réponse finale : déjà streamée token par token
+        yield { content: '', done: true };
         return;
       }
 
       convo.push({ role: 'assistant', content: blocks });
       const toolResults: any[] = [];
       for (const tu of toolUses) {
-        const name: string = tu.name;
-        const args: Record<string, any> = (tu.input ?? {}) as Record<string, any>;
-        if (this.tools.requiresConfirmation(name)) {
-          yield { content: JSON.stringify({ type: 'tool_confirm', tool: name, args }), done: true };
+        if (this.tools.requiresConfirmation(tu.name)) {
+          yield { content: JSON.stringify({ type: 'tool_confirm', tool: tu.name, args: tu.input ?? {} }), done: true };
           return;
         }
         try {
-          const result = await this.tools.execute(name, args, ctx);
+          const result = await this.tools.execute(tu.name, tu.input ?? {}, ctx);
           toolResults.push({ type: 'tool_result', tool_use_id: tu.id, content: JSON.stringify(result ?? null) });
         } catch (e) {
           toolResults.push({ type: 'tool_result', tool_use_id: tu.id, content: JSON.stringify({ error: String(e) }), is_error: true });
