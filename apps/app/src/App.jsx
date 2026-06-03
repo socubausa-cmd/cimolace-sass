@@ -287,6 +287,7 @@ const StudentCertificatesPage = lazy(() => import('@/pages/StudentCertificatesPa
 const SecretariatPage = lazy(() => import('@/pages/SecretariatPage'));
 const SchoolVitrinePage = lazy(() => import('@/pages/SchoolVitrinePage'));
 const SchoolVitrineTenantPage = lazy(() => import('@/pages/school/SchoolVitrineTenantPage'));
+const PaiementPage = lazy(() => import('@/pages/school/PaiementPage'));
 const SchoolBillingPage = lazy(() => import('@/pages/school/SchoolBillingPage'));
 const SchoolLoginPage = lazy(() => import('@/pages/school/SchoolLoginPage'));
 const SchoolGoogleCallback = lazy(() => import('@/pages/school/SchoolGoogleCallback'));
@@ -1801,6 +1802,8 @@ isLiriHostDevPreviewRoute;
           } />
 
           {/* ── Routes publiques tenant ─────────────────────────────────── */}
+          {/* Landing dédiée ISNA / PRORASCIENCE — l'apex prorascience.org redirige vers /t/isna */}
+          <Route path="/t/isna" element={<LandingPage />} />
           <Route
             path="/t/:tenantSlug"
             element={<SchoolVitrineTenantPage />}
@@ -1820,6 +1823,10 @@ isLiriHostDevPreviewRoute;
           <Route
             path="/t/:tenantSlug/courses"
             element={<SchoolCoursesPage />}
+          />
+          <Route
+            path="/t/:tenantSlug/paiement"
+            element={<PaiementPage />}
           />
 
           {/* ── Dashboard admin école (route principale) ─────────────────── */}

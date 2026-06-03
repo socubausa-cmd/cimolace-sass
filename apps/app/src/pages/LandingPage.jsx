@@ -3,6 +3,8 @@ import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { ngowazuluMentoratOffers } from '@/config/ngowazuluMentoratOffers';
+import { NGOWAZULU_CONSULTATION_NEXT_PATH } from '@/config/ngowazuluConsultation';
 
 const commercialMenu = [
   { href: '#hero', label: 'Accueil' },
@@ -958,51 +960,93 @@ const LandingPage = () => {
 
       <section id="offres" className="px-4 py-20 sm:px-6">
       <div className="mx-auto max-w-6xl">
-        <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Offres & conversion</p>
-        <h2 className="mt-4 text-3xl font-semibold sm:text-5xl">Deux portes d'entrée selon votre objectif</h2>
-        <div className="mt-6 inline-flex rounded-full border border-white/20 bg-white/5 p-1 text-sm">
-          <button
-            type="button"
-            onClick={() => setBillingCycle('monthly')}
-            className={`rounded-full px-4 py-1.5 transition-colors ${billingCycle === 'monthly' ? 'bg-[#D4AF37] text-black' : 'text-gray-300 hover:text-white'}`}
-          >
-            Mensuel
-          </button>
-          <button
-            type="button"
-            onClick={() => setBillingCycle('annual')}
-            className={`rounded-full px-4 py-1.5 transition-colors ${billingCycle === 'annual' ? 'bg-[#D4AF37] text-black' : 'text-gray-300 hover:text-white'}`}
-          >
-            Annuel
-          </button>
-        </div>
-        <div className="mt-8 grid gap-5 md:grid-cols-2">
-          <article className="rounded-3xl border border-white/10 bg-white/5 p-7">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]">ISNA</p>
-            <h3 className="mt-2 text-2xl font-semibold">Comprendre, structurer, maîtriser</h3>
-            <p className="mt-3 text-sm text-gray-300">Programmes, modules, progression encadrée et accompagnement pédagogique.</p>
+        <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Tarifs & accès</p>
+        <h2 className="mt-4 text-3xl font-semibold sm:text-5xl">Choisissez votre accompagnement</h2>
+        <p className="mt-4 max-w-3xl text-gray-300">
+          ISNA pour apprendre et structurer, Ngowazulu pour être accompagné et transformer.
+          Paiement sécurisé par Mobile Money (PawaPay) ou carte.
+        </p>
+
+        {/* Pôle École — ISNA + Consultation Ngowazulu */}
+        <div className="mt-10 grid gap-5 md:grid-cols-2">
+          <article className="flex flex-col rounded-3xl border border-white/10 bg-white/5 p-7">
+            <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]">Pôle École — ISNA</p>
+            <h3 className="mt-2 text-2xl font-semibold">Académie ISNA</h3>
+            <p className="mt-3 text-sm text-gray-300">Programmes structurés, modules, progression encadrée et accompagnement pédagogique.</p>
             <p className="mt-4 text-3xl font-semibold text-white">
               {billingCycle === 'monthly' ? '49€' : '39€'}
               <span className="ml-1 text-sm font-normal text-gray-400">/ mois</span>
             </p>
-            <Link to="/isna" className="mt-5 inline-block rounded-lg bg-[#D4AF37] px-5 py-2.5 font-semibold text-black hover:bg-[#e5c04a]">
-              Voir l'offre ISNA
-            </Link>
+            <div className="mt-4 inline-flex w-fit rounded-full border border-white/20 bg-white/5 p-1 text-xs">
+              <button
+                type="button"
+                onClick={() => setBillingCycle('monthly')}
+                className={`rounded-full px-3 py-1 transition-colors ${billingCycle === 'monthly' ? 'bg-[#D4AF37] text-black' : 'text-gray-300 hover:text-white'}`}
+              >
+                Mensuel
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillingCycle('annual')}
+                className={`rounded-full px-3 py-1 transition-colors ${billingCycle === 'annual' ? 'bg-[#D4AF37] text-black' : 'text-gray-300 hover:text-white'}`}
+              >
+                Annuel
+              </button>
+            </div>
+            <div className="mt-auto pt-6">
+              <Link to="/t/isna/signup" className="inline-block rounded-lg bg-[#D4AF37] px-5 py-2.5 font-semibold text-black hover:bg-[#e5c04a]">
+                Rejoindre l'académie
+              </Link>
+            </div>
           </article>
-          <article className="rounded-3xl border border-[#D4AF37]/35 bg-[#D4AF37]/10 p-7">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]">Ngowazulu</p>
-            <h3 className="mt-2 text-2xl font-semibold">Intervenir, libérer, transformer</h3>
-            <p className="mt-3 text-sm text-gray-200">Consultations à partir de 15€, interventions spécialisées, suivi de dossiers et communauté.</p>
-            <p className="mt-4 text-3xl font-semibold text-white">
-              {billingCycle === 'monthly' ? '15€+' : '12€+'}
-              <span className="ml-1 text-sm font-normal text-gray-300">/ accès</span>
-            </p>
-            <Link to="/temple-ngowazulu" className="mt-5 inline-block rounded-lg bg-black/60 px-5 py-2.5 font-semibold hover:bg-black/80">
-              Voir l'offre Ngowazulu
-            </Link>
+          <article className="flex flex-col rounded-3xl border border-[#D4AF37]/35 bg-[#D4AF37]/10 p-7">
+            <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]">Pôle Temple — Ngowazulu</p>
+            <h3 className="mt-2 text-2xl font-semibold">Consultation individuelle</h3>
+            <p className="mt-3 text-sm text-gray-200">Séance de 90 minutes : diagnostic des blocages, priorisation des urgences et plan d'action personnalisé.</p>
+            <p className="mt-4 text-3xl font-semibold text-white">90 min<span className="ml-1 text-sm font-normal text-gray-300"> · sur rendez-vous</span></p>
+            <div className="mt-auto flex flex-wrap gap-3 pt-6">
+              <Link to={NGOWAZULU_CONSULTATION_NEXT_PATH} className="inline-block rounded-lg bg-[#D4AF37] px-5 py-2.5 font-semibold text-black hover:bg-[#e5c04a]">
+                Réserver une consultation
+              </Link>
+              <Link to="/t/isna/paiement?type=don" className="inline-block rounded-lg border border-white/20 px-5 py-2.5 font-semibold hover:bg-white/10">
+                Faire une offrande
+              </Link>
+            </div>
           </article>
         </div>
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-gray-300">
+
+        {/* Pôle Temple — Mentorat Ngowazulu (abonnement mensuel) */}
+        <div className="mt-12">
+          <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]">Mentorat Ngowazulu — abonnement mensuel</p>
+          <h3 className="mt-2 text-2xl font-semibold sm:text-3xl">Quatre paliers d'accompagnement</h3>
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {ngowazuluMentoratOffers.map((offer) => (
+              <article
+                key={offer.slug}
+                className={`flex flex-col rounded-3xl border bg-gradient-to-b p-6 ${offer.accent}`}
+              >
+                <span className={`self-start rounded-full border px-3 py-1 text-xs font-semibold ${offer.badgeClass}`}>
+                  {offer.commercialName}
+                </span>
+                <h4 className="mt-3 text-lg font-semibold text-white">{offer.subtitle}</h4>
+                <p className="mt-3 text-2xl font-semibold text-white">{offer.priceLabel}</p>
+                <p className="mt-1 text-sm text-gray-300">{offer.frequencyShort}</p>
+                <p className="mt-3 flex-1 text-xs leading-relaxed text-gray-400">{offer.detailIntro}</p>
+                <Link
+                  to={`/t/isna/paiement?plan=${offer.slug}`}
+                  className="mt-5 inline-block rounded-lg bg-[#D4AF37] px-4 py-2.5 text-center text-sm font-semibold text-black hover:bg-[#e5c04a]"
+                >
+                  S'abonner
+                </Link>
+              </article>
+            ))}
+          </div>
+          <p className="mt-4 text-xs text-gray-500">
+            Contrat mensuel renouvelable. La fréquence des rencontres correspond au palier choisi ; le calendrier précis se valide avec le temple.
+          </p>
+        </div>
+
+        <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-gray-300">
           <p className="font-semibold text-white">Important</p>
           <p className="mt-2">
             Le site public présente la solution et ses offres. L'application complète (cours, outils internes,
