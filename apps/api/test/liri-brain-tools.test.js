@@ -20,14 +20,14 @@ const { LIRI_MODELS } = require('../dist/liri-brain/liri-brain.types.js');
 const makeSvc = (overrides = {}) => {
   const empty = {};
   const courses = { listCourses: (tid) => ({ ok: 'courses', tid }), ...(overrides.courses || {}) };
-  return new BrainToolsService(courses, empty, empty, empty, empty, empty, empty);
+  return new BrainToolsService(courses, empty, empty, empty, empty, empty, empty, empty);
 };
 
 const WRITE_TOOLS = ['create_forum_topic', 'reply_forum_topic', 'create_live', 'request_appointment'];
 const ownerCtx = (role) => ({ tenant: { id: 'T1' }, userId: 'U1', role });
 
-test('getToolSpecs : owner voit les 21 outils', () => {
-  assert.strictEqual(makeSvc().getToolSpecs('owner').length, 21);
+test('getToolSpecs : owner voit les 22 outils', () => {
+  assert.strictEqual(makeSvc().getToolSpecs('owner').length, 22);
 });
 
 test('getToolSpecs : student est privé des outils réservés à la direction', () => {
@@ -38,7 +38,8 @@ test('getToolSpecs : student est privé des outils réservés à la direction', 
   // … mais conserve les outils ANY (lecture + écriture forum + réservation)
   assert.ok(student.includes('list_courses'));
   assert.ok(student.includes('request_appointment'));
-  assert.strictEqual(student.length, 18);
+  assert.ok(student.includes('search_knowledge'));
+  assert.strictEqual(student.length, 19);
 });
 
 test('getToolSpecs : les specs exposées ne fuient pas le handler', () => {

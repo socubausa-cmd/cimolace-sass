@@ -7,6 +7,7 @@ import { LiveService } from '../live/live.service';
 import { BookingService } from '../booking/booking.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { GrowthService } from '../growth/growth.service';
+import { KnowledgeService } from '../knowledge/knowledge.service';
 
 /**
  * BrainToolsService — registre d'outils que LIRI Brain (le LLM) peut appeler
@@ -59,6 +60,7 @@ export class BrainToolsService {
     private readonly booking: BookingService,
     private readonly notifications: NotificationsService,
     private readonly growth: GrowthService,
+    private readonly knowledge: KnowledgeService,
   ) {
     this.tools = this.buildRegistry();
   }
@@ -309,6 +311,22 @@ export class BrainToolsService {
         allowedRoles: ['owner', 'admin', 'secretariat'],
         requiresConfirmation: false,
         handler: (_a, ctx) => this.growth.getTenantStats(ctx.tenant.id),
+      },
+
+      // ── Base de connaissances (RAG sémantique) ───────────────────────────
+      {
+        name: 'search_knowledge',
+        description:
+          "Recherche sémantique dans la base de connaissances de l'école (règlement, procédures, FAQ, annonces…). Renvoie les extraits les plus pertinents avec leur score de similarité. À utiliser pour répondre à une question dont la réponse pourrait y figurer.",
+        parameters: {
+          type: 'object',
+          properties: { query: { type: 'string', description: 'La question ou les mots-clés à rechercher' } },
+          required: ['query'],
+        },
+        allowedRoles: ANY,
+        requiresConfirmation: false,
+        handler: (a, ctx) =>
+          this.knowledge.search(ctx.tenant.id, str(a.query), { matchCount: 5, threshold: 0.3 }),
       },
 
       // ── ÉCRITURE (confirmation humaine obligatoire) ──────────────────────
