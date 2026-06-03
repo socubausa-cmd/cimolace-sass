@@ -206,3 +206,29 @@ Date : 2026-05-14
 - Course Builder avec pipeline IA
 - Live immersif complet
 - Tests TypeScript 0 erreurs
+
+---
+
+## 🔄 MISE À JOUR 2026-06-03 — recoupée avec le code réel
+
+⚠️ **L'audit ci-dessus (2026-05-14) est périmé** (~124 commits depuis). Couverture réelle aujourd'hui : **~85-90%** (vs 42%). Vérifié au niveau contrôleurs + tailles de services (vrais appels OpenAI/Whisper, Claude, DeepSeek, Groq, Stripe, TikTok, FFmpeg).
+
+### Paquets désormais FAITS (l'audit les disait « non couverts »)
+- **Email/Messaging** ✅ — `email-engine`, `email-imap` (+cron), `smart-response` (488 LOC = tout le response-engine + response-kb), `messaging`, `chat-engine`, `notifications`, `social-publisher`.
+- **Booking avancé** ✅ — `booking-advanced` : rappels/cron, satisfaction, reschedule ×4, invitations, ICS.
+- **Marketing orchestration** ✅ — `marketing-advanced` (869 LOC) : les 12 fonctions.
+- **Workers lourds** ✅ — `apps/worker` : FFmpeg réel (courseRender split-screen VALIDÉ, transcode, shorts+Whisper), renewal cron, DLQ retry (backoff exponentiel).
+- **Admin/Teams/Reviews/IRI** ✅ — `team-invites`, `public-reviews` (+privileged-links), `iri`.
+- **Billing avancé** ✅ — `billing-advanced` : renewal/expire cron, DLQ process, backfill/resend invoices, license activate, NOWPayments + PayPal.
+- **Edge Functions LIRI** (l'audit disait 0% !) — majorité migrée : smartboard vision describe/segment, coach-slide, konva-scene, formation-engine, longia chat/realtime/cover, multilang live/video, translate-transcript, transcription Whisper.
+
+### Ce qui manque VRAIMENT encore (priorisé)
+1. **RAG / embeddings** — `embed-knowledge` + `answer-question` (vectoriel). Bloque l'analyse doc de masterclass-factory (TODO explicite `masterclass-factory.service.ts:316`). 🔴 priorité haute.
+2. **TTS / voix temps réel** — `liri-tts`, `liri-designer-voice-realtime-session`, voix Longia (STT/Whisper fait, pas l'inverse).
+3. **Mindmap** — `generate-mindmap` / `smartboard-mindmap-course` (zéro occurrence dans le code).
+4. **Annonces école** — `school-announcement-ai-polish` + `-broadcast`.
+5. **Pont Booking → Immersif** — `booking-start-immersive-chat` / `-live`.
+6. **`auth-logout`** — pas de route de déconnexion (révocation token).
+7. **SmartBoard designer-chat structuré** — `liri-smartboard-designer-chat` / `architect-structured` (vision OK, chat itératif non).
+8. **Workers de niche** — `replay-augmentation-worker`, `liri-vision-temp-sweep`.
+9. **Reset password owner** — `reset-owner-password` (création owner via signup OK, reset dédié absent).
