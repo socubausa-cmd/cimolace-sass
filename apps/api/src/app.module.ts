@@ -31,6 +31,7 @@ import { MasterclassFactoryModule } from './masterclass-factory/masterclass-fact
 import { VideoEngineModule } from './video-engine/video-engine.module';
 // ── LIRI IA & Communication ──────────────────────────────────────────────────
 import { LiriBrainModule } from './liri-brain/liri-brain.module';
+import { KnowledgeModule } from './knowledge/knowledge.module';
 import { LongiaModule } from './longia/longia.module';
 import { MultilangModule } from './multilang/multilang.module';
 import { AiWorkerModule } from './ai-worker/ai-worker.module';
@@ -96,6 +97,7 @@ import { SocialPublisherModule } from './social-publisher/social-publisher.modul
     VideoEngineModule,        // ← FIX : 6 endpoints gestion assets vidéo
     // ── LIRI IA & Communication (FIX wiring) ─────────────────────────────────
     LiriBrainModule,       // ← FIX : 3 endpoints IA assistant
+    KnowledgeModule,       // RAG (gte-small + pgvector) — migration embed-knowledge V1
     LongiaModule,          // ← FIX : 5 endpoints IA temps réel live
     MultilangModule,       // ← FIX : 3 endpoints traduction
     AiWorkerModule,        // ← FIX : 3 endpoints worker IA générique
