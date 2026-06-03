@@ -1052,3 +1052,44 @@ export const mboloApi = {
   getOrder: (id: string) =>
     api.get<ApiEnvelope<MboloOrder>>(`/mbolo/orders/${id}`).then(unwrap),
 };
+
+// ─── Billing plateforme (abonnement tenant → Cimolace, collecte PawaPay) ──────
+
+export interface BillingSubscription {
+  id: string;
+  plan_id: string;
+  provider: string;
+  status: string;
+  amount_cents: number;
+  currency: string;
+  current_period_end: string | null;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface BillingInvoice {
+  id: string;
+  subscription_id: string | null;
+  provider: string;
+  status: string;
+  amount_cents: number;
+  currency: string;
+  invoice_number: string | null;
+  description: string | null;
+  due_date: string | null;
+  paid_at: string | null;
+}
+
+export interface BillingCollectResult {
+  deposit_id: string;
+  status: string;
+  invoice_number: string | null;
+  amount: number;
+  currency: string;
+}
+
+export const billingApi = {
+  getPlan: () =>
+    api.get<ApiEnvelope<{ subscriptions: BillingSubscription[]; invoices: BillingInvoice[] }>>("/billing/plan").then(unwrap),
+  collect: (subscriptionId: string, body: { phoneNumber: string; provider: string; country?: string }) =>
+    api.post<ApiEnvelope<BillingCollectResult>>(`/billing/subscriptions/${subscriptionId}/collect`, body).then(unwrap),
+};
