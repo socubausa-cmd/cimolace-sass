@@ -166,9 +166,18 @@ export class KnowledgeService {
     };
   }
 
+  /** Génère la réponse RAG. Repli Groq → Anthropic (résilience aux clés HS). */
   private async callLlm(system: string, user: string): Promise<string> {
+    return (
+      (await this.tryGroq(system, user)) ??
+      (await this.tryAnthropic(system, user)) ??
+      '⚠️ Aucun fournisseur LLM disponible (vérifier GROQ_API_KEY / ANTHROPIC_API_KEY).'
+    );
+  }
+
+  private async tryGroq(system: string, user: string): Promise<string | null> {
     const key = this.config.get<string>('GROQ_API_KEY');
-    if (!key || key === 'replace_me') return '⚠️ Aucun fournisseur LLM configuré (GROQ_API_KEY).';
+    if (!key || key === 'replace_me') return null;
     try {
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
@@ -184,11 +193,49 @@ export class KnowledgeService {
         }),
         signal: AbortSignal.timeout(45000),
       });
-      if (!res.ok) return `⚠️ Erreur LLM: ${res.status}`;
+      if (!res.ok) {
+        this.logger.warn(`Groq ${res.status} — repli`);
+        return null;
+      }
       const json: any = await res.json();
-      return json?.choices?.[0]?.message?.content?.trim() ?? '';
+      return json?.choices?.[0]?.message?.content?.trim() || null;
     } catch (e) {
-      return `⚠️ ${String(e)}`;
+      this.logger.warn(`Groq: ${(e as Error).message}`);
+      return null;
+    }
+  }
+
+  private async tryAnthropic(system: string, user: string): Promise<string | null> {
+    const key = this.config.get<string>('ANTHROPIC_API_KEY');
+    if (!key || key === 'replace_me') return null;
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 800,
+          system,
+          messages: [{ role: 'user', content: user }],
+        }),
+        signal: AbortSignal.timeout(45000),
+      });
+      if (!res.ok) {
+        this.logger.warn(`Anthropic ${res.status}`);
+        return null;
+      }
+      const json: any = await res.json();
+      const text = Array.isArray(json?.content)
+        ? json.content.filter((b: any) => b?.type === 'text').map((b: any) => b.text).join('')
+        : '';
+      return text.trim() || null;
+    } catch (e) {
+      this.logger.warn(`Anthropic: ${(e as Error).message}`);
+      return null;
     }
   }
 }
