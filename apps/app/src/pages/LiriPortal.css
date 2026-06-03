@@ -1,0 +1,55 @@
+/* Portail LIRI — accueil/hub sombre chaleureux (Zoom × Claude). Palette + effets
+   repris de la maquette validée. Classes préfixées lp-* (zéro collision). */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap');
+
+.lp-root {
+  --base:#262624; --rail:#1f1e1c; --panel:#30302e; --panel2:#3a3a37;
+  --coral:#d97757; --clay:#c2683f; --live:#e2553f;
+  --ink:#f5f4ee; --muted:#b0ada3; --faint:#82807a; --line:rgba(245,244,238,.09);
+  background:var(--base); color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased;
+}
+.lp-serif { font-family:'Source Serif 4',Georgia,serif; }
+
+.lp-rail-bg { background:var(--rail); }
+.lp-panel { background:var(--panel); }
+.lp-panel70 { background:rgba(48,48,46,.70); }
+.lp-rightbg { background:#2b2926; }
+.lp-ink { color:var(--ink); } .lp-muted { color:var(--muted); } .lp-faint { color:var(--faint); }
+.lp-coral { color:var(--coral); }
+.lp-line { border:1px solid var(--line); }
+.lp-soft { box-shadow:0 1px 0 rgba(245,244,238,.03) inset, 0 8px 24px -16px rgba(0,0,0,.6); }
+.lp-ember { background:linear-gradient(135deg,#d97757,#c2683f); }
+.lp-coral-tint { background:rgba(217,119,87,.13); }
+
+.lp-tr { transition:background-color .2s ease, color .2s ease, border-color .2s ease, transform .2s ease, box-shadow .2s ease; }
+.lp-railbtn:hover { background:rgba(245,244,238,.05); }
+.lp-hovbtn:hover { background:var(--panel2); }
+.lp-panelhov:hover { background:var(--panel); }
+.lp-lift:hover { transform:translateY(-2px); }
+
+.lp-nav .lp-ni, .lp-nav .lp-nl { color:var(--muted); transition:color .2s ease; }
+.lp-nav:hover { background:rgba(245,244,238,.05); }
+.lp-nav-active { background:rgba(217,119,87,.13); }
+.lp-nav-active .lp-ni, .lp-nav-active .lp-nl { color:var(--coral); }
+
+/* glow ambiant chaleureux */
+.lp-glow { position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.lp-glow span { position:absolute; border-radius:9999px; filter:blur(140px); }
+
+/* égaliseur "en direct" */
+.lp-eq { width:2px; border-radius:9px; animation:lp-eq 1.1s ease-in-out infinite; }
+@keyframes lp-eq { 0%,100%{height:5px} 50%{height:16px} }
+.lp-ping { animation:lp-ping 1.6s cubic-bezier(0,0,.2,1) infinite; }
+@keyframes lp-ping { 75%,100%{transform:scale(2);opacity:0} }
+
+.lp-rise { animation:lp-rise .55s cubic-bezier(.16,1,.3,1) both; }
+@keyframes lp-rise { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+
+.lp-scroll::-webkit-scrollbar { width:8px;height:8px }
+.lp-scroll::-webkit-scrollbar-thumb { background:rgba(245,244,238,.10); border-radius:8px }
+.lp-scroll::-webkit-scrollbar-track { background:transparent }
+
+[data-lucide] { width:1em;height:1em; }
+.lp-root :focus-visible { outline:2px solid var(--coral); outline-offset:2px; border-radius:12px }
+@media (prefers-reduced-motion: reduce){ .lp-eq,.lp-ping,.lp-rise,.lp-tr,.lp-lift{ animation:none!important; transition:none!important } }

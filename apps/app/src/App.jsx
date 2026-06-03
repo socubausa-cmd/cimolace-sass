@@ -381,7 +381,7 @@ const MedosPatientDetail = lazy(() => import('@/pages/MedosPatientDetail').then(
 const MedosPatientPortal = lazy(() => import('@/pages/MedosPatientPortal').then((m) => ({ default: m.MedosPatientPortal })));
 const MboloCatalog = lazy(() => import('@/pages/MboloCatalog').then((m) => ({ default: m.MboloCatalog })));
 const MboloOrders = lazy(() => import('@/pages/MboloOrders').then((m) => ({ default: m.MboloOrders })));
-const BillingPage = lazy(() => import('@/pages/BillingPage').then((m) => ({ default: m.BillingPage })));
+const TenantBillingPage = lazy(() => import('@/pages/TenantBillingPage').then((m) => ({ default: m.TenantBillingPage })));
 const AboutProrascience = lazy(() => import('@/pages/AboutProrascience'));
 const FounderAboutPage = lazy(() => import('@/pages/FounderAboutPage'));
 const TeamPage = lazy(() => import('@/pages/TeamPage'));
@@ -438,6 +438,8 @@ const OrchestratorLiveDashboardPage = lazy(() => import('@/app/dashboard/liri/or
 const SmartboardStreamingPage = lazy(() => import('@/app/dashboard/liri/smartboard-stream/page'));
 // Chat LIRI Brain (multi-modèles + outils + conversations persistées). Export nommé → default pour lazy().
 const DashboardLiri = lazy(() => import('@/pages/DashboardLiri').then((m) => ({ default: m.DashboardLiri })));
+// Portail LIRI — accueil/hub (rail Accueil/Lives/Forum/Studio/Biblio/Brain + stats live)
+const LiriPortalPage = lazy(() => import('@/pages/LiriPortalPage').then((m) => ({ default: m.LiriPortalPage })));
 const LiriStudioHub = lazy(() => import('@/pages/dev/LiriStudioHub'));
 const MasterclassFactoryV2 = lazy(() => import('@/pages/dev/MasterclassFactoryV2'));
 const OrchestratorLiveV2 = lazy(() => import('@/pages/dev/OrchestratorLiveV2'));
@@ -1282,7 +1284,7 @@ isLiriHostDevPreviewRoute;
           } />
           <Route path="/dashboard/billing" element={
             <ProtectedRoleRoute allowedRoles={['owner', 'admin']}>
-              <BillingPage />
+              <TenantBillingPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/dashboard/tools/masterclass-factory" element={
@@ -1313,6 +1315,11 @@ isLiriHostDevPreviewRoute;
           <Route path="/dashboard/liri" element={
             <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
               <DashboardLiri />
+            </ProtectedRoleRoute>
+          } />
+          <Route path="/liri" element={
+            <ProtectedRoleRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student']}>
+              <LiriPortalPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/choose-account-type" element={
