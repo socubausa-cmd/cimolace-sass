@@ -35,6 +35,8 @@ export class BillingWebhookController {
   @Post('webhook/pawapay')
   @SkipResponseWrapper()
   async pawapayWebhook(@Body() body: any) {
+    // PawaPay envoie payoutId pour un retrait, depositId pour un encaissement.
+    if (body?.payoutId) return this.billingService.applyPayoutCallback(body);
     return this.billingService.applyPawaPayDeposit(body);
   }
 }

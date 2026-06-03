@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Body, Param, Req, UseGuards } from "@nestjs/common";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { TenantGuard } from "../common/guards/tenant.guard";
+import { RolesGuard } from "../common/guards/roles.guard";
+import { Roles } from "../common/decorators/roles.decorator";
 import { BillingService } from "./billing.service";
 
 @Controller("billing")
@@ -25,5 +27,11 @@ export class BillingController {
   }
   @Post("subscriptions/:id/card-confirm") async cardConfirm(@Req() req: any, @Param("id") id: string) {
     return this.svc.confirmCardPayment(req.tenant.id, id);
+  }
+
+  // Retraits / versements mobile money (PawaPay payouts) — owner/admin
+  @Get("payouts") async listPayouts(@Req() req: any) { return this.svc.listPayouts(req.tenant.id); }
+  @Post("payouts") @UseGuards(RolesGuard) @Roles("owner", "admin") async createPayout(@Req() req: any, @Body() b: any) {
+    return this.svc.createPayout(req.tenant.id, req.user?.id ?? null, b);
   }
 }

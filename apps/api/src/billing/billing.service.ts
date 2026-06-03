@@ -188,6 +188,73 @@ export class BillingService {
     return { paid, status: paid ? "active" : (sub as any).status };
   }
 
+  // ─── Retraits / versements mobile money (payouts PawaPay) ─────────────────
+  private static ZERO_DECIMAL = new Set(["XAF", "XOF", "XPF", "BIF", "CLP", "DJF", "GNF", "JPY", "KMF", "KRW", "MGA", "PYG", "RWF", "UGX", "VND", "VUV"]);
+
+  /**
+   * Initie un retrait : ENVOIE de l'argent sur un mobile money (marchand,
+   * remboursement, reversement…). Le montant est en unité majeure pour les
+   * devises sans décimale (XAF). Enregistre le payout puis appelle PawaPay.
+   */
+  async createPayout(
+    tenantId: string,
+    createdBy: string | null,
+    dto: { amountCents?: number; currency?: string; phoneNumber?: string; mno?: string; recipientName?: string; reason?: string },
+  ) {
+    const amountCents = Math.round(Number(dto?.amountCents) || 0);
+    if (amountCents <= 0) throw new BadRequestException("amountCents (> 0) requis");
+    if (!dto?.phoneNumber || !dto?.mno) throw new BadRequestException("phoneNumber et mno (opérateur, ex: MTN_MOMO_CMR) requis");
+    const currency = (dto.currency || "XAF").toUpperCase();
+    const sb = this.supabase;
+    const payoutId = randomUUID();
+
+    // 1) tracer d'abord (même si l'appel PawaPay échoue ensuite)
+    await sb.from("billing_payouts").insert({
+      tenant_id: tenantId, payout_id: payoutId, provider: "pawapay", status: "pending",
+      amount_cents: amountCents, currency, phone_number: dto.phoneNumber, mno: dto.mno,
+      recipient_name: dto.recipientName ?? null, reason: dto.reason ?? null, created_by: createdBy,
+    });
+
+    // 2) montant string : XAF & co sans décimale → valeur entière directe
+    const amount = BillingService.ZERO_DECIMAL.has(currency) ? String(amountCents) : (amountCents / 100).toFixed(2);
+    let initStatus = "pending";
+    try {
+      const init = await this.pawapay.initiatePayout({
+        payoutId, amount, currency,
+        recipient: { type: "MMO", accountDetails: { phoneNumber: dto.phoneNumber, provider: dto.mno } },
+        customerMessage: (dto.reason ?? "Cimolace payout").slice(0, 22),
+        metadata: { tenant: tenantId },
+      });
+      initStatus = (init.status || "ACCEPTED").toLowerCase();
+      await sb.from("billing_payouts").update({ status: initStatus, updated_at: new Date().toISOString() }).eq("payout_id", payoutId);
+    } catch (e) {
+      await sb.from("billing_payouts").update({ status: "failed", failure_message: (e as Error).message, updated_at: new Date().toISOString() }).eq("payout_id", payoutId);
+      throw e;
+    }
+    return { payout_id: payoutId, status: initStatus, amount_cents: amountCents, currency };
+  }
+
+  async listPayouts(tenantId: string) {
+    const { data } = await this.supabase.from("billing_payouts").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false });
+    return data ?? [];
+  }
+
+  /** Callback PawaPay payout : met à jour le statut du retrait. */
+  async applyPayoutCallback(cb: { payoutId?: string; status?: string; providerTransactionId?: string; failureReason?: { failureCode?: string; failureMessage?: string } }) {
+    if (!cb?.payoutId) return { received: true, matched: false };
+    const sb = this.supabase;
+    const { data: row } = await sb.from("billing_payouts").select("id").eq("payout_id", cb.payoutId).maybeSingle();
+    if (!row) return { received: true, matched: false };
+    const status = (cb.status || "").toUpperCase();
+    const mapped = status === "COMPLETED" ? "completed" : (status === "FAILED" || status === "REJECTED") ? "failed" : status.toLowerCase() || "pending";
+    await sb.from("billing_payouts").update({
+      status: mapped, provider_tx_id: cb.providerTransactionId ?? null,
+      failure_code: cb.failureReason?.failureCode ?? null, failure_message: cb.failureReason?.failureMessage ?? null,
+      updated_at: new Date().toISOString(),
+    }).eq("payout_id", cb.payoutId);
+    return { received: true, matched: true, status: mapped };
+  }
+
   async handleWebhook(payload: Buffer, signature: string) {
     // Stripe webhook handler stub
     console.log("Webhook received", { sig: signature?.slice(0, 10), len: payload.length });
