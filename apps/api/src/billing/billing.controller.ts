@@ -12,8 +12,10 @@ export class BillingController {
   @Get("invoices") async getInvoices(@Req() req: any) { return { data: await this.svc.getInvoices(req.tenant.id) }; }
 
   // Abonnement plateforme (billing_*) + collecte mobile money PawaPay
-  @Get("plan") async plan(@Req() req: any) { return { data: await this.svc.getTenantSubscription(req.tenant.id) }; }
+  // Valeur brute renvoyée : le ResponseInterceptor global emballe en { data: ... }
+  // (renvoyer { data } ici produirait un double-emballage).
+  @Get("plan") async plan(@Req() req: any) { return this.svc.getTenantSubscription(req.tenant.id); }
   @Post("subscriptions/:id/collect") async collect(@Req() req: any, @Param("id") id: string, @Body() b: any) {
-    return { data: await this.svc.collectSubscriptionViaPawaPay(req.tenant.id, id, b) };
+    return this.svc.collectSubscriptionViaPawaPay(req.tenant.id, id, b);
   }
 }
