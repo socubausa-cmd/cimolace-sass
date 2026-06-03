@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Headers,
   Post,
@@ -24,5 +25,16 @@ export class BillingWebhookController {
       sig,
     );
     return { received: true };
+  }
+
+  /**
+   * Callback PawaPay (dépôt mobile money). Marque la facture payée/échouée et
+   * prolonge l'abonnement à la confirmation. Public (appelé par pawaPay) ;
+   * vérif de signature à brancher via PAWAPAY_SIGNING_SECRET.
+   */
+  @Post('webhook/pawapay')
+  @SkipResponseWrapper()
+  async pawapayWebhook(@Body() body: any) {
+    return this.billingService.applyPawaPayDeposit(body);
   }
 }
