@@ -1090,6 +1090,12 @@ export interface BillingCollectResult {
 export const billingApi = {
   getPlan: () =>
     api.get<ApiEnvelope<{ subscriptions: BillingSubscription[]; invoices: BillingInvoice[] }>>("/billing/plan").then(unwrap),
+  // Mobile money (PawaPay — Afrique)
   collect: (subscriptionId: string, body: { phoneNumber: string; provider: string; country?: string }) =>
     api.post<ApiEnvelope<BillingCollectResult>>(`/billing/subscriptions/${subscriptionId}/collect`, body).then(unwrap),
+  // Carte bancaire (Stripe — Europe / international)
+  cardCheckout: (subscriptionId: string) =>
+    api.post<ApiEnvelope<{ url: string; session_id: string; amount_cents: number; currency: string }>>(`/billing/subscriptions/${subscriptionId}/card-checkout`).then(unwrap),
+  cardConfirm: (subscriptionId: string) =>
+    api.post<ApiEnvelope<{ paid: boolean; status: string }>>(`/billing/subscriptions/${subscriptionId}/card-confirm`).then(unwrap),
 };

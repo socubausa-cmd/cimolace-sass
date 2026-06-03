@@ -117,6 +117,77 @@ export class BillingService {
     return { received: true, matched: true, status: cb.status };
   }
 
+  // ─── Paiement carte (Stripe) — pour les clients hors mobile money (Europe) ─
+  private stripeAuth() {
+    const secret = process.env.STRIPE_SECRET_KEY;
+    if (!secret) throw new BadRequestException("Paiement carte indisponible (STRIPE_SECRET_KEY non configurée)");
+    return `Basic ${Buffer.from(secret + ":").toString("base64")}`;
+  }
+
+  /**
+   * Crée une session Stripe Checkout (abonnement récurrent par carte) pour un
+   * abonnement plateforme. Renvoie l'URL hébergée. Le prix vient du plan
+   * (billing_plans.stripe_price_id), jamais du client.
+   */
+  async createCardCheckout(tenantId: string, subscriptionId: string) {
+    const auth = this.stripeAuth();
+    const sb = this.supabase;
+    const { data: sub } = await sb.from("billing_subscriptions").select("*").eq("id", subscriptionId).eq("tenant_id", tenantId).maybeSingle();
+    if (!sub) throw new NotFoundException("Abonnement introuvable");
+    const { data: plan } = await sb.from("billing_plans").select("stripe_price_id, label").eq("key", (sub as any).plan_id).maybeSingle();
+    const priceId = (plan as any)?.stripe_price_id;
+    if (!priceId) throw new BadRequestException("Aucun prix Stripe configuré pour ce plan (carte indisponible)");
+
+    const frontend = process.env.FRONTEND_URL || "https://cimolace.space";
+    const params = new URLSearchParams();
+    params.append("mode", "subscription");
+    params.append("line_items[0][price]", priceId);
+    params.append("line_items[0][quantity]", "1");
+    params.append("success_url", `${frontend}/dashboard/billing?card=success&session_id={CHECKOUT_SESSION_ID}`);
+    params.append("cancel_url", `${frontend}/dashboard/billing?card=cancel`);
+    params.append("client_reference_id", subscriptionId);
+    params.append("metadata[tenant_id]", tenantId);
+    params.append("metadata[subscription_id]", subscriptionId);
+    if ((sub as any).customer_email) params.append("customer_email", (sub as any).customer_email);
+
+    const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+      method: "POST",
+      headers: { Authorization: auth, "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
+    });
+    if (!res.ok) {
+      const t = await res.text().catch(() => "");
+      throw new BadRequestException(`Stripe Checkout error ${res.status}: ${t.slice(0, 300)}`);
+    }
+    const session = (await res.json()) as { id: string; url: string };
+    await sb.from("billing_subscriptions").update({ provider: "stripe", provider_checkout_id: session.id, updated_at: new Date().toISOString() }).eq("id", subscriptionId);
+    return { url: session.url, session_id: session.id, amount_cents: (sub as any).amount_cents, currency: (sub as any).currency };
+  }
+
+  /**
+   * Confirmation au retour : interroge Stripe pour l'état de la session carte ;
+   * si payée, bascule la facture en payée + prolonge l'abonnement. Idempotent.
+   */
+  async confirmCardPayment(tenantId: string, subscriptionId: string) {
+    const auth = this.stripeAuth();
+    const sb = this.supabase;
+    const { data: sub } = await sb.from("billing_subscriptions").select("*").eq("id", subscriptionId).eq("tenant_id", tenantId).maybeSingle();
+    if (!sub) throw new NotFoundException("Abonnement introuvable");
+    const sessionId = (sub as any).provider_checkout_id;
+    if (!sessionId) return { paid: false, status: (sub as any).status };
+
+    const res = await fetch(`https://api.stripe.com/v1/checkout/sessions/${sessionId}`, { headers: { Authorization: auth } });
+    if (!res.ok) throw new BadRequestException(`Stripe session lookup ${res.status}`);
+    const s = (await res.json()) as { payment_status?: string; status?: string; subscription?: string; customer?: string };
+    const paid = s.payment_status === "paid" || s.status === "complete";
+    if (paid) {
+      const end = new Date(); end.setMonth(end.getMonth() + 1);
+      await sb.from("billing_subscriptions").update({ status: "active", provider_subscription_id: s.subscription ?? null, provider_customer_id: s.customer ?? null, current_period_end: end.toISOString(), updated_at: new Date().toISOString() }).eq("id", subscriptionId);
+      await sb.from("billing_invoices").update({ status: "paid", provider: "stripe", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("subscription_id", subscriptionId).in("status", ["pending", "processing", "failed"]);
+    }
+    return { paid, status: paid ? "active" : (sub as any).status };
+  }
+
   async handleWebhook(payload: Buffer, signature: string) {
     // Stripe webhook handler stub
     console.log("Webhook received", { sig: signature?.slice(0, 10), len: payload.length });

@@ -15,7 +15,15 @@ export class BillingController {
   // Valeur brute renvoyée : le ResponseInterceptor global emballe en { data: ... }
   // (renvoyer { data } ici produirait un double-emballage).
   @Get("plan") async plan(@Req() req: any) { return this.svc.getTenantSubscription(req.tenant.id); }
+  // Mobile money (PawaPay — Afrique)
   @Post("subscriptions/:id/collect") async collect(@Req() req: any, @Param("id") id: string, @Body() b: any) {
     return this.svc.collectSubscriptionViaPawaPay(req.tenant.id, id, b);
+  }
+  // Carte bancaire (Stripe — Europe / international)
+  @Post("subscriptions/:id/card-checkout") async cardCheckout(@Req() req: any, @Param("id") id: string) {
+    return this.svc.createCardCheckout(req.tenant.id, id);
+  }
+  @Post("subscriptions/:id/card-confirm") async cardConfirm(@Req() req: any, @Param("id") id: string) {
+    return this.svc.confirmCardPayment(req.tenant.id, id);
   }
 }

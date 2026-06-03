@@ -26,7 +26,7 @@ const PROVIDERS = [
   { code: 'MOOV_GAB', label: 'Moov Money — Gabon' },
 ];
 
-export function BillingPage() {
+export function TenantBillingPage() {
   const qc = useQueryClient();
   const tenant = useQuery({ queryKey: ['tenant'], queryFn: tenantsApi.current });
   const plan = useQuery({ queryKey: ['billing-plan'], queryFn: billingApi.getPlan });
@@ -45,6 +45,13 @@ export function BillingPage() {
       qc.invalidateQueries({ queryKey: ['billing-plan'] });
     },
     onError: (e: Error) => { setError(e.message); setDone(null); },
+  });
+
+  // Carte bancaire (Stripe — Europe / international) : ouvre la page de paiement Stripe
+  const card = useMutation({
+    mutationFn: (sub: string) => billingApi.cardCheckout(sub),
+    onSuccess: (r) => { setError(''); if (r.url) window.open(r.url, '_blank', 'noopener'); },
+    onError: (e: Error) => setError(e.message),
   });
 
   const subs = plan.data?.subscriptions ?? [];
@@ -144,9 +151,20 @@ export function BillingPage() {
                             <button type="button" onClick={() => { setPayFor(null); setDone(null); setError(''); }} className="mt-2 text-xs text-indigo-500 hover:underline">Fermer</button>
                           </div>
                         ) : (
-                          <button type="button" onClick={() => { setPayFor(inv); setDone(null); setError(''); }} className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800">
-                            Payer mon abonnement
-                          </button>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button type="button" onClick={() => { setPayFor(inv); setDone(null); setError(''); }} className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800">
+                              📱 Mobile money <span className="opacity-70">(Afrique)</span>
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!inv.subscription_id || card.isPending}
+                              onClick={() => { if (inv.subscription_id) card.mutate(inv.subscription_id); }}
+                              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50"
+                            >
+                              {card.isPending ? 'Redirection…' : '💳 Carte bancaire'} <span className="opacity-60">(Europe)</span>
+                            </button>
+                            {error && <span className="text-sm text-red-600 w-full">{error}</span>}
+                          </div>
                         )}
                       </div>
                     )}
