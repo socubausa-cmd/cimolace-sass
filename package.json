@@ -2,7 +2,12 @@
   "name": "isna-platform-v2",
   "private": true,
   "workspaces": [
-    "apps/*",
+    "apps/api",
+    "apps/app",
+    "apps/med-app",
+    "apps/patient-portal",
+    "apps/public-site",
+    "apps/worker",
     "packages/*"
   ],
   "scripts": {
