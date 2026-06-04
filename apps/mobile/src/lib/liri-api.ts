@@ -202,6 +202,10 @@ async function getJson<T>(path: string): Promise<T | null> {
 export const fetchStats = () => getJson<Stats>('/growth/stats');
 
 export async function fetchLives(): Promise<Live[]> {
-  const data = await getJson<Live[]>('/lives');
-  return Array.isArray(data) ? data : [];
+  // L'API renvoie {data:{data:[...]}} (ResponseInterceptor + pagination du contrôleur).
+  // getJson déballe un niveau → il reste {data:[...]} ; on déballe le second.
+  const raw = await getJson<{ data?: Live[] } | Live[]>('/lives');
+  if (Array.isArray(raw)) return raw;
+  const inner = (raw as { data?: Live[] } | null)?.data;
+  return Array.isArray(inner) ? inner : [];
 }
