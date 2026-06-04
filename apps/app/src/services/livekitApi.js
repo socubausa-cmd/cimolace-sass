@@ -4,65 +4,35 @@
  */
 import { resolveApiOrigin } from '@/lib/androidApiHost';
 import { supabase } from '@/lib/customSupabaseClient';
+import { apiV2 } from '@/lib/api-v2';
 
 const getOrigin = () => resolveApiOrigin();
+// V2 : le token LiveKit vient de l'API NestJS (POST /lives/:id/token via apiV2,
+// qui ajoute Authorization + X-Tenant-Slug). L'URL publique vient du .env client.
+const LIVEKIT_URL = import.meta.env.VITE_LIVEKIT_URL || '';
+
+/** Mappe la réponse API { token, room } → forme attendue par le host { token, livekitUrl, roomName }. */
+async function fetchLiveKitTokenV2(liveSessionId, role) {
+  const res = await apiV2.post(`/lives/${liveSessionId}/token`, { role });
+  const d = res?.data?.data ?? res?.data ?? {};
+  if (!d.token) throw new Error('Token LiveKit indisponible (API)');
+  if (!LIVEKIT_URL) throw new Error('VITE_LIVEKIT_URL manquant côté client');
+  return { token: d.token, livekitUrl: LIVEKIT_URL, roomName: d.room, room: d.room };
+}
 
 export async function createLiveRoom(liveSessionId) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  if (!token) throw new Error('Non authentifié');
-
-  const res = await fetch(`${getOrigin()}/.netlify/functions/livekit-create-room`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ liveSessionId }),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.error || 'Erreur création room');
-  return data;
+  // V2 : l'endpoint token de l'API (POST /lives/:id/token → ensureRoom) crée la
+  // room à la volée. Plus d'appel séparé — no-op compatible avec les appelants.
+  return { ensured: true, liveSessionId };
 }
 
 export async function getLiveKitToken(liveSessionId) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  if (!token) throw new Error('Non authentifié');
-
-  const res = await fetch(`${getOrigin()}/.netlify/functions/livekit-get-token`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ liveSessionId }),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.error || 'Erreur obtention token');
-  return data;
+  return fetchLiveKitTokenV2(liveSessionId, 'host');
 }
 
-/** Token subscribe-only, courte durée : aperçu vidéo muet depuis la salle d'attente. */
+/** Token subscribe-only (aperçu salle d'attente) — rôle student côté API V2. */
 export async function getLiveKitWaitingPreviewToken(liveSessionId) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  if (!token) throw new Error('Non authentifié');
-
-  const res = await fetch(`${getOrigin()}/.netlify/functions/livekit-get-token`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ liveSessionId, waitingRoomPreview: true }),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.error || 'Erreur obtention token aperçu');
-  return data;
+  return fetchLiveKitTokenV2(liveSessionId, 'student');
 }
 
 export async function createImmersiveLiveRoom(liveSessionId) {
