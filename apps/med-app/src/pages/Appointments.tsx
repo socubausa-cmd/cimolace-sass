@@ -237,13 +237,20 @@ export function Appointments() {
         setError(b?.message || `Erreur ${res.status}`);
         return;
       }
-      const { url, token } = await res.json();
-      if (!url || !token) {
-        setError('Reponse LiveKit invalide');
+      const d = await res.json();
+      const payload = d?.data || d; // API peut emballer en { data: ... }
+      const sessionId = payload?.session_id;
+      if (!sessionId) {
+        setError('Réponse téléconsultation invalide');
         return;
       }
-      const meetUrl = `https://meet.livekit.io/custom?liveKitUrl=${encodeURIComponent(url)}&token=${encodeURIComponent(token)}`;
-      window.open(meetUrl, '_blank', 'noopener,noreferrer');
+      // Liri complet : on ouvre la VRAIE salle immersive (grille vidéo +
+      // SmartBoard pour présenter des images / faire des croquis), pas une
+      // page LiveKit externe. La salle live_sessions porte le même id que la
+      // session téléconsult → le praticien (host) et le patient (peer) sont
+      // dans la même room. Le studio (apps/app) héberge la LiveHostPage.
+      const studio = (import.meta.env.VITE_STUDIO_URL as string) || 'https://app.cimolace.space';
+      window.open(`${studio}/studio/live-arena/${sessionId}`, '_blank', 'noopener,noreferrer');
     } catch (err: any) {
       setError(err?.message || 'Echec');
     }

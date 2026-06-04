@@ -127,6 +127,21 @@ export class TeleconsultService {
       actorRole === 'owner' ||
       actorRole === 'clinic_admin';
 
+    // Bridge → full immersive Liri room. When the practitioner (host) starts
+    // the call, mirror this teleconsult into a `live_sessions` row whose id
+    // EQUALS the teleconsult session id. Because the LiveKit room name is
+    // derived from that id (scopedRoomName(slug, id)), the immersive
+    // LiveHostPage (which the practitioner opens at /studio/live-arena/:id)
+    // and the patient (whose token is derived from the same id) land in the
+    // SAME room — with zero change to the shared live-class token path.
+    if (isHost) {
+      await this.ensureImmersiveLiveSession(
+        tenant,
+        session as any,
+        actorId,
+      );
+    }
+
     // Delegate to Liri. The session.id is a stable, unique external_ref
     // so re-joins reuse the same LiveKit room. The metadata blob lets the
     // billing UI link back to the medical appointment without re-querying
@@ -139,6 +154,10 @@ export class TeleconsultService {
       userId: actorId,
       displayName,
       role: isHost ? 'host' : 'guest',
+      // A teleconsultation is a two-way call: the PATIENT (guest) must be
+      // able to publish their camera + mic. Without this they'd get a
+      // subscribe-only token and stay invisible to the practitioner.
+      guestCanPublish: true,
       metadata: {
         appointment_id: (session as any).appointment_id ?? null,
         patient_id: (session as any).patient_id ?? null,
@@ -151,6 +170,68 @@ export class TeleconsultService {
       url: result.url,
       ttl: result.ttl,
     };
+  }
+
+  /**
+   * Mirror a teleconsult session into a `live_sessions` row so the FULL
+   * immersive Liri room (LiveHostPage — video grid + SmartBoard for the
+   * practitioner to present images / sketch) can mount on it. Idempotent:
+   * the row id == the teleconsult session id, so re-calls are no-ops.
+   *
+   * Additive by design — `kind='teleconsult'` keeps these rows out of the
+   * live-class listings, and nothing in the class path is touched.
+   */
+  private async ensureImmersiveLiveSession(
+    tenant: TenantContext,
+    session: {
+      id: string;
+      patient_id: string;
+      livekit_room_name: string;
+    },
+    hostUserId: string,
+  ): Promise<void> {
+    try {
+      const { data: existing } = await this.supabase.client
+        .from('live_sessions')
+        .select('id')
+        .eq('id', session.id)
+        .maybeSingle();
+      if (existing) return;
+
+      // Nice human title from the patient name (best-effort).
+      let title = 'Téléconsultation';
+      const { data: pat } = await this.supabase.client
+        .from('med_patients')
+        .select('first_name, last_name')
+        .eq('id', session.patient_id)
+        .maybeSingle();
+      const name = `${(pat as any)?.first_name ?? ''} ${(pat as any)?.last_name ?? ''}`.trim();
+      if (name) title = `Téléconsultation — ${name}`;
+
+      const { error } = await (this.supabase.client as any)
+        .from('live_sessions')
+        .insert({
+          id: session.id,
+          tenant_id: tenant.id,
+          host_user_id: hostUserId,
+          title,
+          scheduled_at: new Date().toISOString(),
+          status: 'scheduled',
+          kind: 'teleconsult',
+          livekit_room_name: session.livekit_room_name,
+        });
+      if (error && !String(error.message).includes('duplicate')) {
+        this.logger.warn(
+          'ensureImmersiveLiveSession insert failed (non-blocking): ' +
+            error.message,
+        );
+      }
+    } catch (err) {
+      this.logger.warn(
+        'ensureImmersiveLiveSession failed (non-blocking): ' +
+          (err as Error).message,
+      );
+    }
   }
 
   async markJoined(

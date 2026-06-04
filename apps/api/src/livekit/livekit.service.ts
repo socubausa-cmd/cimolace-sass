@@ -77,6 +77,37 @@ export class LiveKitService {
     return at.toJwt();
   }
 
+  /**
+   * "Peer" token — a guest who CAN publish (camera + mic) but is NOT a room
+   * admin. This is the right profile for a teleconsultation PATIENT: a live
+   * two-way call where the patient must show their camera, while the
+   * practitioner keeps control of the room (roomAdmin stays host-only).
+   *
+   * Distinct from generateParticipantToken (subscribe-only, for a class
+   * viewer who only watches) — DO NOT change that one: live classes rely on
+   * students being publish-disabled by default.
+   */
+  async generatePeerToken(
+    roomName: string,
+    userId: string,
+    displayName?: string,
+  ): Promise<string> {
+    this.assertConfigured();
+    const at = new AccessToken(this.apiKey, this.apiSecret, {
+      identity: userId,
+      name: displayName,
+      ttl: '2h',
+    });
+    at.addGrant({
+      roomJoin: true,
+      room: roomName,
+      canPublish: true,
+      canSubscribe: true,
+      canPublishData: true,
+    });
+    return at.toJwt();
+  }
+
   async ensureRoom(
     roomName: string,
     liveSessionId: string,

@@ -137,6 +137,14 @@ export class LiveService {
      */
     role: "host" | "guest";
     /**
+     * When true, a `guest` is issued a PEER token (canPublish camera + mic,
+     * but no roomAdmin) instead of the subscribe-only viewer token. Required
+     * for two-way calls like a medical teleconsultation where the patient
+     * must show their camera. Defaults to false so live-class viewers stay
+     * publish-disabled. Ignored for `host` (always full publish).
+     */
+    guestCanPublish?: boolean;
+    /**
      * Optional caller context (e.g. { appointment_id }, { product_id }).
      * Persisted on the liri_sessions row for later analytics.
      */
@@ -163,11 +171,17 @@ export class LiveService {
             input.userId,
             input.displayName,
           )
-        : await this.liveKit.generateParticipantToken(
-            roomName,
-            input.userId,
-            input.displayName,
-          );
+        : input.guestCanPublish
+          ? await this.liveKit.generatePeerToken(
+              roomName,
+              input.userId,
+              input.displayName,
+            )
+          : await this.liveKit.generateParticipantToken(
+              roomName,
+              input.userId,
+              input.displayName,
+            );
 
     // Persist (or fetch) the Liri session row. The UNIQUE INDEX on
     // (tenant_id, external_ref) gives us upsert-semantics: the FIRST caller
@@ -187,7 +201,8 @@ export class LiveService {
       room: roomName,
       token,
       url: this.liveKit.getUrl(),
-      ttl: input.role === "host" ? "4h" : "1h",
+      ttl:
+        input.role === "host" ? "4h" : input.guestCanPublish ? "2h" : "1h",
       purpose: input.purpose,
     };
   }
