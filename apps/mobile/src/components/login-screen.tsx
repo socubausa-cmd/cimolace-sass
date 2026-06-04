@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Ember } from '@/components/ember';
 import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
 import { useAuth } from '@/lib/auth';
 
@@ -42,7 +43,7 @@ export function LoginScreen() {
       <SafeAreaView style={styles.safe}>
         <KeyboardAvoidingView style={styles.center} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={styles.brand}>
-            <View style={styles.mark}><Feather name="zap" size={26} color="#fff" /></View>
+            <Ember style={styles.mark}><Feather name="zap" size={26} color="#fff" /></Ember>
             <Text style={styles.brandName}>LIRI</Text>
           </View>
 

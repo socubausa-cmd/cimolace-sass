@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Ember } from '@/components/ember';
 import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
 import { hasToken, streamBrain } from '@/lib/liri-api';
 
@@ -110,7 +111,7 @@ export default function BrainScreen() {
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.hLeft}>
-            <View style={styles.brandMark}><Feather name="zap" size={16} color="#fff" /></View>
+            <Ember style={styles.brandMark}><Feather name="zap" size={16} color="#fff" /></Ember>
             <View>
               <Text style={styles.hTitle}>LIRI Brain</Text>
               <Text style={styles.hSub}>Assistant · Haiku · Isna</Text>

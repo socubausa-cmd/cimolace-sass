@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Ember } from '@/components/ember';
 import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
 import { fetchLives, fetchStats, type Live, type Stats } from '@/lib/liri-api';
 
@@ -86,7 +87,7 @@ export default function HomeScreen() {
         {/* ── HEADER ── */}
         <View style={styles.header}>
           <View style={styles.row}>
-            <View style={styles.logoMark}><Feather name="zap" size={15} color="#fff" /></View>
+            <Ember style={styles.logoMark}><Feather name="zap" size={15} color="#fff" /></Ember>
             <Text style={styles.logoText}>LIRI</Text>
           </View>
           <View style={styles.row}>
@@ -94,7 +95,7 @@ export default function HomeScreen() {
               <Feather name="bell" size={18} color={C.muted} />
               <View style={styles.bellDot} />
             </Pressable>
-            <View style={styles.avatar}><Text style={styles.avatarTxt}>IS</Text></View>
+            <Ember style={styles.avatar}><Text style={styles.avatarTxt}>IS</Text></Ember>
           </View>
         </View>
 
@@ -109,17 +110,23 @@ export default function HomeScreen() {
             <View style={styles.cmdSpark}><Feather name="zap" size={17} color={C.coral} /></View>
             <Text style={styles.cmdText}>Demandez à LIRI ou lancez une action…</Text>
             <Feather name="mic" size={16} color={C.faint} style={{ marginRight: 6 }} />
-            <View style={styles.cmdSend}><Feather name="arrow-up" size={17} color="#fff" /></View>
+            <Ember style={styles.cmdSend}><Feather name="arrow-up" size={17} color="#fff" /></Ember>
           </Pressable>
 
           {/* ── ACTIONS RAPIDES ── */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickRow} contentContainerStyle={styles.quickContent}>
             {QUICK.map((q) => (
               <Pressable key={q.label} style={styles.quickItem} onPress={() => router.push(q.to as never)}>
-                <View style={[styles.quickIcon, q.hero ? styles.quickHero : styles.quickPanel]}>
-                  <Feather name={q.icon} size={q.hero ? 26 : 24} color={q.hero ? '#fff' : C.coral} />
-                  {q.badge ? <View style={styles.quickBadge}><Text style={styles.quickBadgeTxt}>{q.badge}</Text></View> : null}
-                </View>
+                {q.hero ? (
+                  <Ember style={[styles.quickIcon, styles.quickHero]}>
+                    <Feather name={q.icon} size={26} color="#fff" />
+                  </Ember>
+                ) : (
+                  <View style={[styles.quickIcon, styles.quickPanel]}>
+                    <Feather name={q.icon} size={24} color={C.coral} />
+                    {q.badge ? <View style={styles.quickBadge}><Text style={styles.quickBadgeTxt}>{q.badge}</Text></View> : null}
+                  </View>
+                )}
                 <Text style={[styles.quickLabel, q.hero && { color: C.ink }]}>{q.label}</Text>
               </Pressable>
             ))}
