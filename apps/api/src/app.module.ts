@@ -51,6 +51,8 @@ import { SignupModule } from './signup/signup.module';
 import { MedosModule } from './medos/medos.module';
 // ── Mbolo (e-commerce + live shopping via Liri) ───────────────────────────────
 import { MboloModule } from './mbolo/mbolo.module';
+// ── Cross-app SSO handoff (med-app → studio immersive room) ───────────────────
+import { AuthHandoffModule } from './auth-handoff/auth-handoff.module';
 // ── Small ports (4 new modules) ──────────────────────────────────────────────
 import { AiUtilsModule } from './ai-utils/ai-utils.module';
 import { EmailImapModule } from './email-imap/email-imap.module';
@@ -114,6 +116,8 @@ import { SocialPublisherModule } from './social-publisher/social-publisher.modul
     SignupModule,
     // ── MedOS (unified module — EHR, forms, health, prescriptions, programs, charting, gdpr, embedding) ──
     MedosModule,
+    // ── Cross-app SSO handoff (one-time code: med-app → studio) ──────────────
+    AuthHandoffModule,
     // ── Mbolo (e-commerce + live shopping routed through Liri) ─────────────
     MboloModule,
     // ── Small ports (ai-utils, email-imap, team-invites, public-reviews) ──

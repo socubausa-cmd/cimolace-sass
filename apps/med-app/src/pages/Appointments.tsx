@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../lib/auth';
+import { useAuth, useSupabase } from '../lib/auth';
 import { Calendar, Plus, X, Clock, Trash2, CheckCircle, XCircle, AlertCircle, Video } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
@@ -64,6 +64,7 @@ function formatDateTime(iso: string) {
 
 export function Appointments() {
   const { user } = useAuth();
+  const { supabase } = useSupabase();
   const practitionerId = (user as any)?.id || '';
 
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
@@ -245,12 +246,41 @@ export function Appointments() {
         return;
       }
       // Liri complet : on ouvre la VRAIE salle immersive (grille vidéo +
-      // SmartBoard pour présenter des images / faire des croquis), pas une
-      // page LiveKit externe. La salle live_sessions porte le même id que la
-      // session téléconsult → le praticien (host) et le patient (peer) sont
-      // dans la même room. Le studio (apps/app) héberge la LiveHostPage.
+      // SmartBoard), hébergée par le studio (app.cimolace.space). La salle
+      // live_sessions porte le même id que la session téléconsult → praticien
+      // (host) et patient (peer) sont dans la même room.
       const studio = (import.meta.env.VITE_STUDIO_URL as string) || 'https://app.cimolace.space';
-      window.open(`${studio}/studio/live-arena/${sessionId}`, '_blank', 'noopener,noreferrer');
+      const slug = localStorage.getItem('tenant_slug') || '';
+      const next = `/studio/live-arena/${sessionId}?tenant=${encodeURIComponent(slug)}`;
+      let url = `${studio}${next}`;
+
+      // SSO handoff : le studio est une autre origine. On crée un code à usage
+      // unique (TTL 2 min, jamais de token dans l'URL) pour que le praticien y
+      // soit authentifié sans second login. En cas d'échec → on ouvre la salle
+      // directement (le studio demandera la connexion).
+      try {
+        if (supabase) {
+          const { data: sess } = await supabase.auth.getSession();
+          const refresh = sess?.session?.refresh_token;
+          if (refresh) {
+            const hr = await fetch(API + '/auth/handoff', {
+              method: 'POST',
+              headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+              body: JSON.stringify({ refresh_token: refresh }),
+            });
+            if (hr.ok) {
+              const hd = await hr.json();
+              const code = (hd?.data || hd)?.code;
+              if (code) {
+                url = `${studio}/handoff?code=${encodeURIComponent(code)}&next=${encodeURIComponent(next)}`;
+              }
+            }
+          }
+        }
+      } catch {
+        /* fallback: ouvrir la salle directement */
+      }
+      window.open(url, '_blank', 'noopener,noreferrer');
     } catch (err: any) {
       setError(err?.message || 'Echec');
     }
