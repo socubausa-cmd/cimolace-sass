@@ -7,3 +7,20 @@
   --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
   --font-serif: Georgia, 'Times New Roman', serif;
 }
+
+/* Web : le root doit remplir le viewport (sinon la tab bar « flotte » sur
+   les écrans à contenu court). No-op sur natif. */
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background-color: #262624;
+}
+/* RN-web : #root doit être un conteneur flex pour que le flex:1 de l'app s'étire. */
+#root {
+  display: flex;
+  flex-direction: column;
+}
