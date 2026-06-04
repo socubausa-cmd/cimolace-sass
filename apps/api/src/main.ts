@@ -112,13 +112,15 @@ async function bootstrap() {
       if (STATIC_ORIGINS.includes(normalizedOrigin)) {
         return callback(null, true);
       }
-      // Cimolace-hosted tenant spaces — {slug}.patient.cimolace.space (wildcard).
-      // Every tenant gets an instant branded portal here, so allow the whole
-      // subtree without needing a per-tenant tenant_domains row.
+      // First-party Cimolace apps — the whole `*.cimolace.space` subtree
+      // (app, med, patient, {slug}.patient, public-site, …) plus the apex.
+      // All these hosts are controlled by us, so allow them without needing a
+      // per-tenant tenant_domains row. (Tenant custom domains still go through
+      // the tenant_domains lookup below.)
       const cimolaceHostedHost = extractHost(normalizedOrigin);
       if (
-        cimolaceHostedHost === 'patient.cimolace.space' ||
-        cimolaceHostedHost.endsWith('.patient.cimolace.space')
+        cimolaceHostedHost === 'cimolace.space' ||
+        cimolaceHostedHost.endsWith('.cimolace.space')
       ) {
         return callback(null, true);
       }
