@@ -53,3 +53,264 @@
 [data-lucide] { width:1em;height:1em; }
 .lp-root :focus-visible { outline:2px solid var(--coral); outline-offset:2px; border-radius:12px }
 @media (prefers-reduced-motion: reduce){ .lp-eq,.lp-ping,.lp-rise,.lp-tr,.lp-lift{ animation:none!important; transition:none!important } }
+
+/* ── Page enveloppée dans le <main> du shell (ex. LiveHostPage) ───────────────
+   La chrome de la console hôte/invité est dimensionnée `height:100dvh` (plein
+   écran). Dans le main du shell portail (.lp-shell-main, déjà borné par
+   topbar/footer/rail), on la force à remplir le conteneur au lieu du viewport. */
+.lp-shell-main { display:flex; flex-direction:column; min-height:0; }
+.lp-shell-main > * { flex:1 1 auto; min-height:0; min-width:0; }
+.lp-shell-main .liri-live-shell--host,
+.lp-shell-main .liri-live-shell--guest {
+  height:100% !important;
+  /* La chrome root peint `var(--school-background,#0F1117)` (branding tenant bleu).
+     On force la base + le mesh coral du portail. `!important` bat le style inline. */
+  --school-background: #262624 !important;
+  --school-primary: #d97757 !important;
+  --school-primary-rgb: 217 119 87 !important;
+  --school-secondary: #c2683f !important;
+  --school-secondary-rgb: 194 104 63 !important;
+  --school-accent: #d97757 !important;
+  --school-accent-rgb: 217 119 87 !important;          /* glows dorés (212 175 55) → coral */
+  --school-shell-surface: rgba(43,41,38,0.98) !important;
+  --school-shell-panel: rgba(48,48,46,0.92) !important;
+  --school-shell-border: rgba(245,244,238,0.09) !important;
+  background-color: #262624 !important;
+  background-image:
+    radial-gradient(ellipse 85% 55% at 50% -15%, rgba(217,119,87,0.06), transparent 58%),
+    radial-gradient(ellipse 55% 40% at 100% 85%, rgba(226,85,63,0.05), transparent 52%),
+    radial-gradient(ellipse 45% 32% at 0% 75%, rgba(194,104,63,0.04), transparent 48%) !important;
+}
+/* La console hôte construit ses panneaux en `position:fixed` (ancrés viewport).
+   Un `transform` sur le main en fait le bloc conteneur de ces descendants fixes
+   (spec CSS) : ils sont alors confinés au <main> au lieu de couvrir tout l'écran
+   (rail/topbar inclus). Aucune modif de la host page nécessaire. */
+.lp-shell-main { transform: translateZ(0); }
+
+/* ── Re-thème « portail chaud » de la console live (dans le shell uniquement) ──
+   La host page partage les classes `.live-studio-premium` + les vars `--liri-*`
+   avec le Studio (palette bleu #0F1117 / violet #7B61FF). On ne re-thème QUE
+   l'instance in-portail (sous .lp-shell-main) → le Studio garde son thème. */
+.lp-shell-main {
+  --liri-primary: #d97757;
+  --liri-surface: #30302e;
+  --liri-border: rgba(245,244,238,.09);
+  --liri-text: #f5f4ee;
+  --liri-glow: 0 8px 28px -6px rgba(217,119,87,.35);
+}
+.lp-shell-main .live-studio-pane-left {
+  background: linear-gradient(180deg,#2b2926 0%,#262624 45%,#211f1d 100%) !important;
+  border-right-color: rgba(245,244,238,.09) !important;
+}
+.lp-shell-main .live-studio-pane-center {
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -15%, rgba(217,119,87,.08), transparent 52%),
+    radial-gradient(ellipse 70% 40% at 80% 100%, rgba(226,85,63,.04), transparent 50%),
+    #262624 !important;
+  border-right-color: rgba(245,244,238,.09) !important;
+}
+.lp-shell-main .live-studio-pane-right {
+  background: linear-gradient(180deg,#2b2926 0%,#262624 55%,#211f1d 100%) !important;
+  border-left-color: rgba(245,244,238,.09) !important;
+}
+.lp-shell-main .live-studio-pane-head {
+  background: linear-gradient(180deg, rgba(43,41,38,.98), rgba(38,38,36,.96)) !important;
+  border-bottom-color: rgba(245,244,238,.09) !important;
+}
+.lp-shell-main .live-studio-global-progress-fill {
+  background: linear-gradient(90deg,#c2683f,#d97757 45%,#e8a98e) !important;
+}
+.lp-shell-main .live-studio-frame { border-top-color: rgba(245,244,238,.09) !important; }
+/* En-tête sticky des colonnes de la console (était #12111a violet) */
+.lp-shell-main .lh-side-head { background:#2b2926 !important; border-color:rgba(245,244,238,.09) !important; }
+
+/* ── Accents VIOLETS de la console → CORAL (scope portail uniquement) ──────────
+   La console pique des dizaines de classes Tailwind `violet-*` (text/bg/border/
+   from/to/ring) + quelques hex #7B61FF/#c4b5fd. On les neutralise en coral via
+   sélecteurs sous-chaîne, scoppés sous .lp-shell-main → le Studio garde son violet.
+   (L'ambre est conservé : chaud, il s'harmonise avec le portail.) */
+.lp-shell-main [class*="text-violet-1"],
+.lp-shell-main [class*="text-violet-2"],
+.lp-shell-main [class*="text-violet-3"] { color:#f0d8cc !important; }       /* texte clair violet → coral très clair */
+.lp-shell-main [class*="text-violet-4"],
+.lp-shell-main [class*="text-violet-5"],
+.lp-shell-main [class*="text-violet-6"] { color:#d97757 !important; }       /* icônes/labels → coral */
+.lp-shell-main [class*="bg-violet-3"],
+.lp-shell-main [class*="bg-violet-4"] { background-color:#d97757 !important; }            /* pastilles pleines → coral plein */
+.lp-shell-main [class*="bg-violet-5"],
+.lp-shell-main [class*="bg-violet-6"],
+.lp-shell-main [class*="bg-violet-9"] { background-color:rgba(217,119,87,.14) !important; } /* fonds doux → tint coral */
+.lp-shell-main [class*="border-violet-"] { border-color:rgba(217,119,87,.36) !important; }
+.lp-shell-main [class*="ring-violet-"] { --tw-ring-color:rgba(217,119,87,.42) !important; }
+.lp-shell-main [class*="from-violet-"] { --tw-gradient-from:rgba(217,119,87,.24) !important; }
+.lp-shell-main [class*="to-violet-"] { --tw-gradient-to:rgba(194,104,63,.5) !important; }
+/* Hex violets arbitraires (#c4b5fd labels, #7B61FF focus) */
+.lp-shell-main [class*="c4b5fd"],
+.lp-shell-main [class*="ddd6fe"] { color:#e8b6a3 !important; }
+.lp-shell-main [class*="7B61FF"],
+.lp-shell-main [class*="7b61ff"] { border-color:rgba(217,119,87,.45) !important; }
+
+/* Boutons "scènes" SmartBoard (.lh-scene-btn, GLOBAL_CSS hardcodé violet) → coral */
+.lp-shell-main .lh-scene-btn { color:rgba(217,119,87,.5) !important; }
+.lp-shell-main .lh-scene-btn[data-active="true"] {
+  border-color:rgba(217,119,87,.55) !important;
+  background:rgba(194,104,63,.28) !important;
+  color:#e8b6a3 !important;
+}
+.lp-shell-main .lh-scene-btn:hover {
+  border-color:rgba(217,119,87,.6) !important;
+  background:linear-gradient(160deg,rgba(217,119,87,.22),rgba(194,104,63,.34)) !important;
+  color:#f0d0c2 !important;
+  box-shadow:0 8px 24px rgba(194,104,63,.3) !important;
+}
+/* Modales de la console (.lh-mbox/.lh-ov violet-bleu) → chaud */
+.lp-shell-main .lh-mbox { background:linear-gradient(165deg,rgba(43,41,38,.97),rgba(38,38,36,.99)) !important; }
+
+/* ── Styles INLINE hardcodés violet/cyan (éléments sans classe) → coral ────────
+   Beaucoup de boutons/pastilles de la console portent leurs couleurs en
+   `style="...rgb(...)..."` (insaisissables par classe). On cible l'attribut style
+   par triplet RGB. Mapping par rôle dominant (clair=texte, foncé=fond, mi=bordure). */
+.lp-shell-main [style*="196, 181, 253"],   /* violet-300 */
+.lp-shell-main [style*="221, 214, 254"],   /* violet-200 */
+.lp-shell-main [style*="237, 233, 254"],   /* violet-100 */
+.lp-shell-main [style*="199, 210, 254"] { color:#ecc6b6 !important; }  /* indigo-200 clair */
+.lp-shell-main [style*="167, 139, 250"] { border-color:rgba(217,119,87,.40) !important; }  /* violet-400 */
+.lp-shell-main [style*="139, 92, 246"] { border-color:rgba(217,119,87,.34) !important; }   /* violet-500 */
+.lp-shell-main [style*="109, 40, 217"] { background-color:rgba(217,119,87,.13) !important; } /* violet-700 */
+.lp-shell-main [style*="124, 58, 237"],    /* violet-600 */
+.lp-shell-main [style*="123, 97, 255"] { background-color:rgba(217,119,87,.16) !important; } /* #7b61ff */
+/* Cyan / sky résiduels (lh-premium-btn, mesh) → coral (fond+bordure+texte) */
+.lp-shell-main [style*="56, 189, 248"],
+.lp-shell-main [style*="34, 211, 238"],
+.lp-shell-main [style*="125, 211, 252"],
+.lp-shell-main [style*="14, 165, 233"] {
+  color:#d97757 !important;
+  border-color:rgba(217,119,87,.5) !important;
+  background-color:rgba(217,119,87,.16) !important;
+}
+
+/* ── Accents CYAN / SKY Tailwind → CORAL (la console les emploie aussi) ────────
+   Miroir du bloc violet : text/bg/border/ring/gradient, scope portail. */
+.lp-shell-main [class*="text-sky-"],
+.lp-shell-main [class*="text-cyan-"] { color:#d97757 !important; }
+.lp-shell-main [class*="bg-sky-"],
+.lp-shell-main [class*="bg-cyan-"] { background-color:rgba(217,119,87,.14) !important; }
+.lp-shell-main [class*="border-sky-"],
+.lp-shell-main [class*="border-cyan-"] { border-color:rgba(217,119,87,.36) !important; }
+.lp-shell-main [class*="ring-sky-"],
+.lp-shell-main [class*="ring-cyan-"] { --tw-ring-color:rgba(217,119,87,.42) !important; }
+.lp-shell-main [class*="from-sky-"],
+.lp-shell-main [class*="from-cyan-"] { --tw-gradient-from:rgba(217,119,87,.22) !important; }
+.lp-shell-main [class*="to-sky-"],
+.lp-shell-main [class*="to-cyan-"] { --tw-gradient-to:rgba(194,104,63,.45) !important; }
+
+/* ── 100% PORTAIL : VERT (emerald/green/teal/lime) + AMBRE (amber/yellow) → CORAL ─
+   Choix utilisateur : palette mono-accent coral, on neutralise aussi les couleurs
+   sémantiques (cartes ambre/vert/violet du coach, statuts connecté/en ligne).
+   Scope .lp-shell-main → le rail/footer/Studio (hors scope) gardent leur vert. */
+/* Vert — classes Tailwind */
+.lp-shell-main [class*="text-emerald-"],
+.lp-shell-main [class*="text-green-"],
+.lp-shell-main [class*="text-teal-"],
+.lp-shell-main [class*="text-lime-"],
+.lp-shell-main [class*="text-amber-"],
+.lp-shell-main [class*="text-yellow-"] { color:#d97757 !important; }
+.lp-shell-main [class*="bg-emerald-"],
+.lp-shell-main [class*="bg-green-"],
+.lp-shell-main [class*="bg-teal-"],
+.lp-shell-main [class*="bg-lime-"],
+.lp-shell-main [class*="bg-amber-"],
+.lp-shell-main [class*="bg-yellow-"] { background-color:rgba(217,119,87,.14) !important; }
+.lp-shell-main [class*="border-emerald-"],
+.lp-shell-main [class*="border-green-"],
+.lp-shell-main [class*="border-teal-"],
+.lp-shell-main [class*="border-lime-"],
+.lp-shell-main [class*="border-amber-"],
+.lp-shell-main [class*="border-yellow-"] { border-color:rgba(217,119,87,.36) !important; }
+.lp-shell-main [class*="ring-emerald-"],
+.lp-shell-main [class*="ring-green-"],
+.lp-shell-main [class*="ring-amber-"] { --tw-ring-color:rgba(217,119,87,.42) !important; }
+.lp-shell-main [class*="from-emerald-"],
+.lp-shell-main [class*="from-green-"],
+.lp-shell-main [class*="from-teal-"],
+.lp-shell-main [class*="from-amber-"],
+.lp-shell-main [class*="from-yellow-"] { --tw-gradient-from:rgba(217,119,87,.22) !important; }
+.lp-shell-main [class*="to-emerald-"],
+.lp-shell-main [class*="to-green-"],
+.lp-shell-main [class*="to-teal-"],
+.lp-shell-main [class*="to-amber-"],
+.lp-shell-main [class*="to-yellow-"] { --tw-gradient-to:rgba(194,104,63,.45) !important; }
+/* Vert + ambre — styles inline (triplets RGB) : clair → texte, foncé → fond/bordure */
+.lp-shell-main [style*="110, 231, 183"],  /* emerald-300 */
+.lp-shell-main [style*="52, 211, 153"],   /* emerald-400 */
+.lp-shell-main [style*="134, 239, 172"],  /* green-300 */
+.lp-shell-main [style*="74, 222, 128"],   /* green-400 */
+.lp-shell-main [style*="45, 212, 191"],   /* teal-400 */
+.lp-shell-main [style*="253, 230, 138"],  /* amber-200 */
+.lp-shell-main [style*="252, 211, 77"],   /* amber-300 */
+.lp-shell-main [style*="251, 191, 36"] { color:#d97757 !important; } /* amber-400 */
+.lp-shell-main [style*="16, 185, 129"],   /* emerald-500 */
+.lp-shell-main [style*="34, 197, 94"],    /* green-500 */
+.lp-shell-main [style*="5, 150, 105"],    /* emerald-600 */
+.lp-shell-main [style*="245, 158, 11"],   /* amber-500 */
+.lp-shell-main [style*="217, 119, 6"] { border-color:rgba(217,119,87,.4) !important; background-color:rgba(217,119,87,.14) !important; } /* amber-600 */
+/* Ambre — classes GLOBAL_CSS de la console (titres, onglets, glow) */
+.lp-shell-main .lh-side-head-title,
+.lp-shell-main .liri-live-shell--host .lh-side-head-title,
+.lp-shell-main .lh-tbtn.on { color:#e0a48f !important; }
+.lp-shell-main .lh-tbtn.on { border-bottom-color:rgba(217,119,87,.6) !important; }
+
+/* Orange — classes Tailwind (chaud mais ≠ coral portail) */
+.lp-shell-main [class*="text-orange-"] { color:#d97757 !important; }
+.lp-shell-main [class*="bg-orange-"] { background-color:rgba(217,119,87,.14) !important; }
+.lp-shell-main [class*="border-orange-"] { border-color:rgba(217,119,87,.36) !important; }
+.lp-shell-main [class*="from-orange-"] { --tw-gradient-from:rgba(217,119,87,.22) !important; }
+.lp-shell-main [class*="to-orange-"] { --tw-gradient-to:rgba(194,104,63,.45) !important; }
+/* Dorés / orange en inline (glows ambiants, badges) → coral */
+.lp-shell-main [style*="251, 146, 60"],   /* orange-400 */
+.lp-shell-main [style*="249, 115, 22"],   /* orange-500 */
+.lp-shell-main [style*="234, 179, 8"],    /* yellow-500 */
+.lp-shell-main [style*="201, 169, 98"],   /* gold tan */
+.lp-shell-main [style*="200, 150, 12"] { color:#d97757 !important; }       /* gold foncé (texte) */
+.lp-shell-main [style*="212, 175, 55"] { background-color:rgba(217,119,87,.30) !important; border-color:rgba(217,119,87,.4) !important; } /* goldenrod (glows/halos) */
+
+/* ── Classes Tailwind à HEX ARBITRAIRE (or / violet / indigo / navy) → coral ───
+   La console code énormément en `bg-[#D4AF37]` (or, 454×), `text-[#7B61FF]`
+   (violet, 263×), etc. On mappe par préfixe+hex (sélecteur sous-chaîne, casse
+   confirmée majuscule). Scope .lp-shell-main → Studio/rail intacts. */
+/* NB : flag `i` (insensible casse) — les hex sont tantôt MAJ (D4AF37) tantôt min (c9a962). */
+/* Texte : or + violet/indigo → coral */
+.lp-shell-main [class*="text-[#d4af37]" i],.lp-shell-main [class*="text-[#c9a962]" i],.lp-shell-main [class*="text-[#f5dd8a]" i],.lp-shell-main [class*="text-[#c8960c]" i],.lp-shell-main [class*="text-[#e9bf72]" i],.lp-shell-main [class*="text-[#f5e6a8]" i],.lp-shell-main [class*="text-[#e8c76b]" i],.lp-shell-main [class*="text-[#e5c04a]" i],.lp-shell-main [class*="text-[#fdf6dd]" i],.lp-shell-main [class*="text-[#7b61ff]" i],.lp-shell-main [class*="text-[#c4b5fd]" i],.lp-shell-main [class*="text-[#8b7cff]" i],.lp-shell-main [class*="text-[#8d79ff]" i],.lp-shell-main [class*="text-[#6d5acf]" i],.lp-shell-main [class*="text-[#6366f1]" i],.lp-shell-main [class*="text-[#c9d3f2]" i] { color:#d97757 !important; }
+/* Fonds : or + violet → tint coral */
+.lp-shell-main [class*="bg-[#d4af37]" i],.lp-shell-main [class*="bg-[#c9a962]" i],.lp-shell-main [class*="bg-[#f5dd8a]" i],.lp-shell-main [class*="bg-[#c8960c]" i],.lp-shell-main [class*="bg-[#e9bf72]" i],.lp-shell-main [class*="bg-[#7b61ff]" i],.lp-shell-main [class*="bg-[#c4b5fd]" i],.lp-shell-main [class*="bg-[#8b7cff]" i],.lp-shell-main [class*="bg-[#6d5acf]" i],.lp-shell-main [class*="bg-[#6366f1]" i] { background-color:rgba(217,119,87,.15) !important; }
+/* Fonds : navy / indigo foncé → brun chaud */
+.lp-shell-main [class*="bg-[#1a2540]" i],.lp-shell-main [class*="bg-[#1f2d41]" i],.lp-shell-main [class*="bg-[#312e81]" i],.lp-shell-main [class*="bg-[#16122a]" i],.lp-shell-main [class*="bg-[#1a1028]" i],.lp-shell-main [class*="bg-[#0c0a18]" i],.lp-shell-main [class*="bg-[#0a0814]" i],.lp-shell-main [class*="bg-[#0d0814]" i],.lp-shell-main [class*="bg-[#0c0820]" i],.lp-shell-main [class*="bg-[#0a0612]" i],.lp-shell-main [class*="bg-[#0a101d]" i],.lp-shell-main [class*="bg-[#0c1425]" i],.lp-shell-main [class*="bg-[#0c1225]" i],.lp-shell-main [class*="bg-[#0d1420]" i],.lp-shell-main [class*="bg-[#0c1018]" i],.lp-shell-main [class*="bg-[#0a0f18]" i] { background-color:#2b2926 !important; }
+/* Bordures : or + violet → coral ; slate/navy → ligne ivoire */
+.lp-shell-main [class*="border-[#d4af37]" i],.lp-shell-main [class*="border-[#c9a962]" i],.lp-shell-main [class*="border-[#c8960c]" i],.lp-shell-main [class*="border-[#e9bf72]" i],.lp-shell-main [class*="border-[#7b61ff]" i],.lp-shell-main [class*="border-[#c4b5fd]" i],.lp-shell-main [class*="border-[#8b7cff]" i],.lp-shell-main [class*="border-[#6366f1]" i] { border-color:rgba(217,119,87,.4) !important; }
+.lp-shell-main [class*="border-[#2d3139]" i],.lp-shell-main [class*="border-[#1a2540]" i],.lp-shell-main [class*="border-[#1f2d41]" i],.lp-shell-main [class*="border-[#312e81]" i],.lp-shell-main [class*="border-[#3d424c]" i],.lp-shell-main [class*="border-[#2a2f38]" i] { border-color:rgba(245,244,238,.09) !important; }
+/* Dégradés : or + violet → coral/clay */
+.lp-shell-main [class*="from-[#d4af37]" i],.lp-shell-main [class*="from-[#c9a962]" i],.lp-shell-main [class*="from-[#f5dd8a]" i],.lp-shell-main [class*="from-[#e9bf72]" i],.lp-shell-main [class*="from-[#7b61ff]" i],.lp-shell-main [class*="from-[#c4b5fd]" i],.lp-shell-main [class*="from-[#8b7cff]" i],.lp-shell-main [class*="from-[#6366f1]" i] { --tw-gradient-from:rgba(217,119,87,.24) !important; }
+.lp-shell-main [class*="to-[#d4af37]" i],.lp-shell-main [class*="to-[#c9a962]" i],.lp-shell-main [class*="to-[#f5dd8a]" i],.lp-shell-main [class*="to-[#e9bf72]" i],.lp-shell-main [class*="to-[#7b61ff]" i],.lp-shell-main [class*="to-[#c4b5fd]" i],.lp-shell-main [class*="to-[#8b7cff]" i],.lp-shell-main [class*="to-[#6366f1]" i] { --tw-gradient-to:rgba(194,104,63,.5) !important; }
+/* Ring : or + violet → coral */
+.lp-shell-main [class*="ring-[#d4af37]" i],.lp-shell-main [class*="ring-[#7b61ff]" i],.lp-shell-main [class*="ring-[#c4b5fd]" i],.lp-shell-main [class*="ring-[#6366f1]" i] { --tw-ring-color:rgba(217,119,87,.45) !important; }
+
+/* ── Familles cousines restantes (blue/indigo/purple/fuchsia) + hex épars → coral ─ */
+.lp-shell-main [class*="text-blue-"],.lp-shell-main [class*="text-indigo-"],.lp-shell-main [class*="text-purple-"],.lp-shell-main [class*="text-fuchsia-"] { color:#d97757 !important; }
+.lp-shell-main [class*="bg-blue-"],.lp-shell-main [class*="bg-indigo-"],.lp-shell-main [class*="bg-purple-"],.lp-shell-main [class*="bg-fuchsia-"] { background-color:rgba(217,119,87,.14) !important; }
+.lp-shell-main [class*="border-blue-"],.lp-shell-main [class*="border-indigo-"],.lp-shell-main [class*="border-purple-"],.lp-shell-main [class*="border-fuchsia-"] { border-color:rgba(217,119,87,.36) !important; }
+.lp-shell-main [class*="from-blue-"],.lp-shell-main [class*="from-indigo-"],.lp-shell-main [class*="from-purple-"] { --tw-gradient-from:rgba(217,119,87,.22) !important; }
+.lp-shell-main [class*="to-blue-"],.lp-shell-main [class*="to-indigo-"],.lp-shell-main [class*="to-purple-"] { --tw-gradient-to:rgba(194,104,63,.45) !important; }
+.lp-shell-main [class*="ring-blue-"],.lp-shell-main [class*="ring-indigo-"],.lp-shell-main [class*="ring-purple-"] { --tw-ring-color:rgba(217,119,87,.42) !important; }
+/* Hex épars (amber/violet/blue shades) — texte+bordure */
+.lp-shell-main [class*="text-[#fbbf24]" i],.lp-shell-main [class*="text-[#fcd34d]" i],.lp-shell-main [class*="text-[#fb923c]" i],.lp-shell-main [class*="text-[#a78bfa]" i],.lp-shell-main [class*="text-[#c084fc]" i],.lp-shell-main [class*="text-[#93c5fd]" i],.lp-shell-main [class*="text-[#60a5fa]" i] { color:#d97757 !important; }
+.lp-shell-main [class*="bg-[#fbbf24]" i],.lp-shell-main [class*="bg-[#fcd34d]" i],.lp-shell-main [class*="bg-[#fb923c]" i],.lp-shell-main [class*="bg-[#a78bfa]" i],.lp-shell-main [class*="bg-[#93c5fd]" i] { background-color:rgba(217,119,87,.15) !important; }
+.lp-shell-main [class*="border-[#fbbf24]" i],.lp-shell-main [class*="border-[#a78bfa]" i],.lp-shell-main [class*="border-[#93c5fd]" i] { border-color:rgba(217,119,87,.4) !important; }
+/* Inline gold/violet restants sur petits boutons (bg/bordure) */
+.lp-shell-main [style*="251, 191, 36"],.lp-shell-main [style*="200, 150, 12"] { background-color:rgba(217,119,87,.16) !important; border-color:rgba(217,119,87,.4) !important; }
+.lp-shell-main [style*="167, 139, 250"] { background-color:rgba(217,119,87,.5) !important; }
+
+/* ── GARDE-FOU : le fond RACINE de la console garde la base portail solide ─────
+   Spécificité 0,3,0 — bat les règles accent `[style*=...]` (0,2,0) qui matchaient
+   par erreur le style inline de la chrome (vars --school-*-rgb) et tintaient le fond. */
+.lp-root .lp-shell-main .liri-live-shell--host,
+.lp-root .lp-shell-main .liri-live-shell--guest { background-color:#262624 !important; }
