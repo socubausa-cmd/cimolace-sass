@@ -181,6 +181,7 @@ const ProspectInterviewLoungePage = lazy(() => import('@/pages/ProspectInterview
 const FormationsPage = lazy(() => import('@/pages/FormationsPage')); // New Page
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
+const MaquetteAccueil = lazy(() => import('@/pages/MaquetteAccueil'));
 const PublicHomePage = lazy(() => import('@/pages/PublicHomePage'));
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 const PublicIsnaPage = lazy(() => import('@/pages/PublicIsnaPage'));
@@ -1229,6 +1230,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/app" element={<AppMemberAccessPage />} />
           <Route path="/home" element={<Navigate to="/app" replace />} />
           <Route path="/landing" element={<LandingPage />} />
+          <Route path="/maquette" element={<MaquetteAccueil />} />
           <Route path="/isna" element={<Navigate to={TENANT_ADMIN_PATH} replace />} /> {/* Legacy ISNA route - redirects to tenant system */}
           <Route path="/temple-ngowazulu" element={<PublicNgowazuluPage />} />
           <Route path="/vitrine" element={<SchoolVitrinePage />} />
@@ -1701,9 +1703,12 @@ isLiriHostDevPreviewRoute;
             </ProtectedRoleRoute>
           } />
 
-          {/* Studio de création de contenu — Hub central */}
+          {/* Studio de création de contenu — Hub central.
+              `practitioner` / `clinic_admin` ajoutés pour la téléconsultation MEDOS :
+              le praticien ouvre la salle immersive Liri (/studio/live-arena/:id) avec
+              SmartBoard. Additif — n'enlève l'accès à personne. */}
           <Route path="/studio/*" element={
-            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
+            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat', 'practitioner', 'clinic_admin']}>
               <StudioRouter />
             </ProtectedRoleRoute>
           } />
