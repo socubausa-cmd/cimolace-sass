@@ -22,18 +22,6 @@ interface Msg {
   pending?: boolean;
 }
 
-// Conversation de démo on-brand (illustre les bulles + l'usage des outils) —
-// l'envoi réel ci-dessous streame contre l'API LIRI Brain.
-const DEMO_SEED: Msg[] = [
-  { id: 'd1', role: 'user', content: 'Combien de membres ce mois, et quels lives arrivent aujourd’hui ?' },
-  {
-    id: 'd2',
-    role: 'assistant',
-    content:
-      'L’Isna compte 248 membres ce mois (+12 cette semaine).\n\nDeux lives sont programmés aujourd’hui :\n•  Sciences du Hadith — Niveau 2, à 14:30 (gratuit)\n•  Mémorisation du Coran (Hifz), à 18:00 (15 €)\n\nVoulez-vous que je vous inscrive, ou que je prévienne les membres ?',
-  },
-];
-
 const SUGGESTIONS = [
   'Quels lives cette semaine ?',
   'Combien de membres actifs ?',
@@ -44,7 +32,7 @@ let seq = 0;
 const nextId = () => `m${seq++}`;
 
 export default function BrainScreen() {
-  const [messages, setMessages] = useState<Msg[]>(DEMO_SEED);
+  const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [pending, setPending] = useState(false);
   const scrollRef = useRef<ScrollView>(null);

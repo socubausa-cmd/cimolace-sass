@@ -14,7 +14,14 @@ export const TENANT_SLUG = process.env.EXPO_PUBLIC_TENANT_SLUG ?? 'isna';
 export const DEV_TOKEN = process.env.EXPO_PUBLIC_DEV_TOKEN ?? '';
 export const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
 
-export const hasToken = () => DEV_TOKEN.length > 0;
+// Token de session — mis à jour par AuthProvider à chaque changement de session.
+let sessionToken: string | null = null;
+export function setAuthToken(token: string | null) {
+  sessionToken = token;
+}
+/** Token courant : session Supabase si connectée, sinon DEV_TOKEN (test). */
+export const currentToken = () => sessionToken ?? DEV_TOKEN;
+export const hasToken = () => currentToken().length > 0;
 
 const authHeaders = (token: string): Record<string, string> => ({
   Authorization: `Bearer ${token}`,
@@ -38,7 +45,7 @@ export function streamBrain(
   opts: { message: string; conversationId?: string; model?: string; token?: string },
   h: BrainHandlers,
 ): () => void {
-  const token = opts.token ?? DEV_TOKEN;
+  const token = opts.token ?? currentToken();
   const model = opts.model ?? DEFAULT_MODEL;
   const qs = new URLSearchParams({ message: opts.message, model, tools: '1' });
   if (opts.conversationId) qs.set('conversationId', opts.conversationId);
@@ -141,7 +148,7 @@ export async function saveConversation(opts: {
   messages: ChatMsg[];
   token?: string;
 }): Promise<string | undefined> {
-  const token = opts.token ?? DEV_TOKEN;
+  const token = opts.token ?? currentToken();
   try {
     const res = await fetch(`${API_BASE}/liri/brain/conversations`, {
       method: 'POST',
@@ -160,4 +167,41 @@ export async function saveConversation(opts: {
   } catch {
     return opts.conversationId;
   }
+}
+
+// ── Données Accueil ─────────────────────────────────────────────────────────
+export interface Stats {
+  totalMembers: number;
+  totalLives: number;
+  totalCourses: number;
+  totalRevenueCents: number;
+}
+export interface Live {
+  id: string;
+  title?: string;
+  status?: string;
+  scheduled_at?: string;
+  started_at?: string | null;
+  ended_at?: string | null;
+  price_cents?: number;
+}
+
+async function getJson<T>(path: string): Promise<T | null> {
+  const token = currentToken();
+  if (!token) return null;
+  try {
+    const res = await fetch(`${API_BASE}${path}`, { headers: authHeaders(token) });
+    if (!res.ok) return null;
+    const json: unknown = await res.json();
+    return ((json as { data?: T })?.data ?? (json as T)) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export const fetchStats = () => getJson<Stats>('/growth/stats');
+
+export async function fetchLives(): Promise<Live[]> {
+  const data = await getJson<Live[]>('/lives');
+  return Array.isArray(data) ? data : [];
 }

@@ -5,29 +5,20 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+import { fetchLives, fetchStats, type Live, type Stats } from '@/lib/liri-api';
 
 const JOURS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const pad = (n: number) => String(n).padStart(2, '0');
 
-// ── Données de démo on-brand (remplacées par GET /lives + /growth/stats une fois l'auth branchée) ──
 const TENANT = 'Isna';
-const LIVE_NOW = { title: 'Tafsir — Sourate Al-Baqara', watching: 42 };
-const UPCOMING = [
-  { id: '1', title: 'Sciences du Hadith — Niveau 2', when: "aujourd'hui · 14:30", price: 'gratuit', tag: '14:30' },
-  { id: '2', title: 'Mémorisation du Coran (Hifz)', when: "aujourd'hui · 18:00", price: '15 €', tag: '18:00' },
-  { id: '3', title: 'Langue arabe — Conversation', when: 'demain · 10:00', price: 'gratuit', tag: 'Demain' },
-];
-const STATS: { v: string; l: string; coral?: boolean }[] = [
-  { v: '32', l: 'lives' },
-  { v: '248', l: 'membres' },
-  { v: '18', l: 'cours' },
-  { v: '14 500 €', l: 'revenus', coral: true },
-];
+const euros = (cents?: number) =>
+  `${Math.round((cents ?? 0) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} €`;
+
 const QUICK: { label: string; icon: React.ComponentProps<typeof Feather>['name']; hero?: boolean; badge?: number; to: string }[] = [
   { label: 'Démarrer', icon: 'video', hero: true, to: '/lives' },
   { label: 'Rejoindre', icon: 'log-in', to: '/lives' },
-  { label: 'Converser', icon: 'message-square', badge: 1, to: '/brain' },
+  { label: 'Converser', icon: 'message-square', to: '/brain' },
   { label: 'Programmer', icon: 'calendar', to: '/lives' },
   { label: 'SmartBoard', icon: 'pen-tool', to: '/studio' },
   { label: 'Acheter', icon: 'shopping-bag', to: '/reglages' },
@@ -45,6 +36,49 @@ export default function HomeScreen() {
   const greet = h < 6 ? 'Bonne nuit' : h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir';
   const timeStr = `${pad(h)}:${pad(now.getMinutes())}`;
   const dateLabel = useMemo(() => `${JOURS[now.getDay()]} ${now.getDate()} ${MOIS[now.getMonth()]}`, [now]);
+
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [lives, setLives] = useState<Live[]>([]);
+  useEffect(() => {
+    let active = true;
+    fetchStats().then((s) => active && setStats(s));
+    fetchLives().then((l) => active && setLives(l));
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const liveNow = useMemo(() => lives.find((l) => l.started_at && !l.ended_at) ?? null, [lives]);
+  const upcoming = useMemo(
+    () =>
+      lives
+        .filter((l) => !l.started_at && l.scheduled_at && new Date(l.scheduled_at) > now)
+        .sort((a, b) => +new Date(a.scheduled_at as string) - +new Date(b.scheduled_at as string))
+        .slice(0, 4),
+    [lives, now],
+  );
+  const whenLabel = (iso?: string) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const t = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return d.toDateString() === now.toDateString()
+      ? `aujourd'hui · ${t}`
+      : `${d.getDate()} ${MOIS[d.getMonth()].slice(0, 4)}. · ${t}`;
+  };
+  const tagLabel = (iso?: string) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (d.toDateString() === now.toDateString()) return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const tmr = new Date(now);
+    tmr.setDate(now.getDate() + 1);
+    return d.toDateString() === tmr.toDateString() ? 'Demain' : `${d.getDate()}/${pad(d.getMonth() + 1)}`;
+  };
+  const statCards: { v: string; l: string; coral?: boolean }[] = [
+    { v: stats ? String(stats.totalLives) : '—', l: 'lives' },
+    { v: stats ? String(stats.totalMembers) : '—', l: 'membres' },
+    { v: stats ? String(stats.totalCourses) : '—', l: 'cours' },
+    { v: stats ? euros(stats.totalRevenueCents) : '—', l: 'revenus', coral: true },
+  ];
 
   return (
     <View style={styles.root}>
@@ -92,39 +126,47 @@ export default function HomeScreen() {
           </ScrollView>
 
           {/* ── EN DIRECT ── */}
-          <Text style={styles.section}>EN DIRECT</Text>
-          <Pressable style={({ pressed }) => [styles.liveCard, pressed && styles.pressed]} onPress={() => router.push('/lives')}>
-            <View style={styles.liveDotWrap}>
-              <View style={styles.liveDotRing} />
-              <View style={styles.liveDot} />
-            </View>
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={styles.liveTitle} numberOfLines={1}>{LIVE_NOW.title}</Text>
-              <Text style={styles.liveMeta}>{LIVE_NOW.watching} personnes connectées</Text>
-            </View>
-            <View style={styles.liveJoin}><Text style={styles.liveJoinTxt}>Rejoindre</Text></View>
-          </Pressable>
+          {liveNow ? (
+            <>
+              <Text style={styles.section}>EN DIRECT</Text>
+              <Pressable style={({ pressed }) => [styles.liveCard, pressed && styles.pressed]} onPress={() => router.push('/lives')}>
+                <View style={styles.liveDotWrap}>
+                  <View style={styles.liveDotRing} />
+                  <View style={styles.liveDot} />
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={styles.liveTitle} numberOfLines={1}>{liveNow.title || 'Session live'}</Text>
+                  <Text style={styles.liveMeta}>en cours maintenant</Text>
+                </View>
+                <View style={styles.liveJoin}><Text style={styles.liveJoinTxt}>Rejoindre</Text></View>
+              </Pressable>
+            </>
+          ) : null}
 
           {/* ── À VENIR ── */}
           <Text style={styles.section}>À VENIR</Text>
-          <View style={{ gap: 8 }}>
-            {UPCOMING.map((l) => (
-              <Pressable key={l.id} style={({ pressed }) => [styles.upCard, pressed && styles.pressed]} onPress={() => router.push('/lives')}>
-                <View style={styles.upIcon}><Feather name="clock" size={16} color={C.coral} /></View>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={styles.upTitle} numberOfLines={1}>{l.title}</Text>
-                  <Text style={styles.upMeta}>{l.when} · {l.price}</Text>
-                </View>
-                <View style={styles.upTag}><Text style={styles.upTagTxt}>{l.tag}</Text></View>
-                <Feather name="chevron-right" size={18} color={C.faint} />
-              </Pressable>
-            ))}
-          </View>
+          {upcoming.length > 0 ? (
+            <View style={{ gap: 8 }}>
+              {upcoming.map((l) => (
+                <Pressable key={l.id} style={({ pressed }) => [styles.upCard, pressed && styles.pressed]} onPress={() => router.push('/lives')}>
+                  <View style={styles.upIcon}><Feather name="clock" size={16} color={C.coral} /></View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={styles.upTitle} numberOfLines={1}>{l.title || 'Session live'}</Text>
+                    <Text style={styles.upMeta}>{whenLabel(l.scheduled_at)} · {l.price_cents ? euros(l.price_cents) : 'gratuit'}</Text>
+                  </View>
+                  <View style={styles.upTag}><Text style={styles.upTagTxt}>{tagLabel(l.scheduled_at)}</Text></View>
+                  <Feather name="chevron-right" size={18} color={C.faint} />
+                </Pressable>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyCard}><Text style={styles.emptyTxt}>Aucun live programmé pour le moment.</Text></View>
+          )}
 
           {/* ── CE MOIS ── */}
           <Text style={styles.section}>CE MOIS</Text>
           <View style={styles.statGrid}>
-            {STATS.map((s) => (
+            {statCards.map((s) => (
               <View key={s.l} style={styles.statCard}>
                 <Text style={[styles.statValue, s.coral && { color: C.coral }]}>{s.v}</Text>
                 <Text style={styles.statLabel}>{s.l}</Text>
@@ -224,6 +266,10 @@ const styles = StyleSheet.create({
   upMeta: { color: C.faint, fontSize: 12, marginTop: 2, fontFamily: F.sans },
   upTag: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
   upTagTxt: { color: C.muted, fontSize: 10.5, fontWeight: '700', fontFamily: F.sans },
+
+  // empty state
+  emptyCard: { padding: 16, borderRadius: 18, backgroundColor: C.panelTint, borderWidth: 1, borderColor: C.line },
+  emptyTxt: { color: C.faint, fontSize: 13, fontFamily: F.sans },
 
   // stats grid
   statGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
