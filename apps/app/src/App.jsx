@@ -182,6 +182,7 @@ const FormationsPage = lazy(() => import('@/pages/FormationsPage')); // New Page
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
 const MaquetteAccueil = lazy(() => import('@/pages/MaquetteAccueil'));
+const MaquetteHero04 = lazy(() => import('@/pages/MaquetteHero04'));
 const PublicHomePage = lazy(() => import('@/pages/PublicHomePage'));
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 const PublicIsnaPage = lazy(() => import('@/pages/PublicIsnaPage'));
@@ -328,6 +329,7 @@ const ProrascienceAppleStoryLandingLazy = lazy(() => import('@/pages/Prorascienc
 const ProrascienceAppleStoryV3Lazy = lazy(() => import('@/pages/ProrascienceAppleStoryV3'));
 const IsnaProPage = lazy(() => import('@/pages/IsnaProPage'));
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
+const HandoffPage = lazy(() => import('@/pages/HandoffPage'));
 const SignupPage = lazy(() => import('@/pages/SignupPage'));
 const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
 const UpdatePasswordPage = lazy(() => import('@/pages/UpdatePasswordPage'));
@@ -1238,6 +1240,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/home" element={<Navigate to="/app" replace />} />
           <Route path="/landing" element={<LandingPage />} />
           <Route path="/maquette" element={<MaquetteAccueil />} />
+          <Route path="/maquette-b" element={<MaquetteHero04 />} />
           <Route path="/isna" element={<Navigate to={TENANT_ADMIN_PATH} replace />} /> {/* Legacy ISNA route - redirects to tenant system */}
           <Route path="/temple-ngowazulu" element={<PublicNgowazuluPage />} />
           <Route path="/vitrine" element={<SchoolVitrinePage />} />
@@ -1409,6 +1412,8 @@ isLiriHostDevPreviewRoute;
           <Route path="/paiement" element={<Navigate to="/paiements/tarifs" replace />} />
 
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          {/* Cross-app SSO landing (med-app → immersive room, no second login) */}
+          <Route path="/handoff" element={<HandoffPage />} />
           <Route path="/update-password" element={<UpdatePasswordPage />} />
           <Route path="/cart" element={<PlaceholderPage title="Panier" />} />
           <Route path="/consultations" element={<Navigate to="/appointment/request?flow=ngowazulu-consultation" replace />} />
