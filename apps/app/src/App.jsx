@@ -382,6 +382,7 @@ const MedosPatientPortal = lazy(() => import('@/pages/MedosPatientPortal').then(
 const MboloCatalog = lazy(() => import('@/pages/MboloCatalog').then((m) => ({ default: m.MboloCatalog })));
 const MboloOrders = lazy(() => import('@/pages/MboloOrders').then((m) => ({ default: m.MboloOrders })));
 const TenantBillingPage = lazy(() => import('@/pages/TenantBillingPage').then((m) => ({ default: m.TenantBillingPage })));
+const TenantPayoutsPage = lazy(() => import('@/pages/TenantPayoutsPage').then((m) => ({ default: m.TenantPayoutsPage })));
 const AboutProrascience = lazy(() => import('@/pages/AboutProrascience'));
 const FounderAboutPage = lazy(() => import('@/pages/FounderAboutPage'));
 const TeamPage = lazy(() => import('@/pages/TeamPage'));
@@ -1285,6 +1286,11 @@ isLiriHostDevPreviewRoute;
           <Route path="/dashboard/billing" element={
             <ProtectedRoleRoute allowedRoles={['owner', 'admin']}>
               <TenantBillingPage />
+            </ProtectedRoleRoute>
+          } />
+          <Route path="/dashboard/payouts" element={
+            <ProtectedRoleRoute allowedRoles={['owner', 'admin']}>
+              <TenantPayoutsPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/dashboard/tools/masterclass-factory" element={
