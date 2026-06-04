@@ -29,7 +29,7 @@ export function EmbedClient({
   const ref = useRef<HTMLDivElement>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const apiBase =
-    process.env.NEXT_PUBLIC_API_URL ?? "https://api.cimolace.com";
+    process.env.NEXT_PUBLIC_API_URL ?? "https://api.cimolace.space";
 
   useEffect(() => {
     if (!ref.current || scriptLoaded) return;
