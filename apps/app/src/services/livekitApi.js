@@ -36,140 +36,44 @@ export async function getLiveKitWaitingPreviewToken(liveSessionId) {
 }
 
 export async function createImmersiveLiveRoom(liveSessionId) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  if (!token) throw new Error('Non authentifié');
-
-  const res = await fetch(`${getOrigin()}/.netlify/functions/immersive-livekit-create-room`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ liveSessionId }),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.error || 'Erreur création room immersive');
-
-  /** Enregistrer le nom de room côté Supabase (debug / admin / cohérence) */
-  if (data?.roomName && liveSessionId) {
-    const { error: upErr } = await supabase
-      .from('immersive_live_sessions')
-      .update({ room_name: data.roomName })
-      .eq('id', liveSessionId);
-    if (upErr && typeof console !== 'undefined' && console.debug) {
-      console.debug('[livekit] room_name non enregistré (RLS?):', upErr.message);
-    }
-  }
-
-  return data;
+  const res = await apiV2.post('/immersive-live/livekit/create-room', { liveSessionId });
+  return res?.data?.data ?? res?.data ?? {};
 }
 
-/** Lien + QR : téléphone rejoint le live (hôte ou invité authentifié). */
+/** Lien + QR : téléphone rejoint le live immersif (hôte/invité authentifié). */
 export async function createImmersiveCompanionLink(liveSessionId) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  if (!token) throw new Error('Non authentifié');
-
-  const res = await fetch(`${getOrigin()}/.netlify/functions/immersive-livekit-create-companion-link`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ liveSessionId }),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.error || 'Impossible de créer le lien téléphone');
-  return data;
+  const res = await apiV2.post('/immersive-live/livekit/create-companion-link', { liveSessionId });
+  return res?.data?.data ?? res?.data ?? {};
 }
 
-/** Sans login — page /live/phone uniquement. */
+/** Sans login — page /live/phone uniquement (le token opaque sert d'auth). */
 export async function exchangeImmersiveCompanionToken(companionOpaqueToken) {
-  const res = await fetch(`${getOrigin()}/.netlify/functions/immersive-livekit-companion-exchange`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token: companionOpaqueToken }),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.error || 'Lien invalide ou expiré');
-  return data;
+  const res = await apiV2.post('/immersive-live/livekit/companion-exchange', { token: companionOpaqueToken });
+  return res?.data?.data ?? res?.data ?? {};
 }
 
-/** Classroom LIRI — hôte authentifié génère un QR pour /live/mobile-camera */
+/** Classroom LIRI — formateur génère un QR "téléphone = caméra" pour /live/mobile-camera. */
 export async function createLiveMobileCameraLink(liveSessionId) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  if (!token) throw new Error('Non authentifié');
-
-  const res = await fetch(`${getOrigin()}/.netlify/functions/livekit-mobile-camera-create-link`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ liveSessionId }),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.error || 'Impossible de créer le lien caméra mobile');
-  return data;
+  const res = await apiV2.post('/immersive-live/livekit/mobile-camera-link', { liveSessionId });
+  return res?.data?.data ?? res?.data ?? {};
 }
 
-/** Sans login — page /live/mobile-camera uniquement. */
+/** Sans login — page /live/mobile-camera uniquement (le token opaque sert d'auth). */
 export async function exchangeLiveMobileCameraToken(opaqueToken) {
-  const res = await fetch(`${getOrigin()}/.netlify/functions/livekit-mobile-camera-exchange`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token: opaqueToken }),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.error || 'Lien invalide ou expiré');
-  return data;
+  const res = await apiV2.post('/immersive-live/livekit/mobile-camera-exchange', { token: opaqueToken });
+  return res?.data?.data ?? res?.data ?? {};
 }
 
 export async function getImmersiveLiveKitToken(liveSessionId) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  if (!token) throw new Error('Non authentifié');
-
-  const res = await fetch(`${getOrigin()}/.netlify/functions/immersive-livekit-get-token`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ liveSessionId }),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.error || 'Erreur token room immersive');
-  return data;
+  const res = await apiV2.post('/immersive-live/livekit/get-token', { liveSessionId });
+  return res?.data?.data ?? res?.data ?? {};
 }
 
-/**
- * Enregistre la sortie du participant (left_at) — appeler à la déconnexion LiveKit.
- */
+/** Enregistre la sortie du participant (left_at) — appelé à la déconnexion LiveKit. */
 export async function reportImmersiveParticipantLeave(liveSessionId) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  if (!token || !liveSessionId) return;
-
-  const url = `${getOrigin()}/.netlify/functions/immersive-livekit-participant-leave`;
+  if (!liveSessionId) return;
   try {
-    await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ liveSessionId }),
-      keepalive: true,
-    });
+    await apiV2.post('/immersive-live/livekit/participant-leave', { liveSessionId });
   } catch {
     // ignore (navigate away / offline)
   }

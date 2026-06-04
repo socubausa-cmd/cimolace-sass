@@ -81,6 +81,30 @@ export class ImmersiveLiveController {
     return this.svc.companionExchange(body);
   }
 
+  /** Caméra mobile — le formateur génère un magic-link "téléphone = caméra" (live classique). */
+  @Post('livekit/mobile-camera-link')
+  @UseGuards(JwtAuthGuard, TenantGuard)
+  async mobileCameraLink(
+    @CurrentTenant() t: TenantContext,
+    @Req() req: Request,
+    @Headers('origin') origin: string,
+    @Body() body: { liveSessionId?: string; live_session_id?: string },
+  ) {
+    return this.svc.mobileCameraLink({
+      tenantId: t.id,
+      tenantSlug: t.slug,
+      userId: (req as any).user.id,
+      liveSessionId: body.liveSessionId ?? body.live_session_id ?? '',
+      origin,
+    });
+  }
+
+  /** Public — pas d'auth (token opaque sert d'auth) */
+  @Post('livekit/mobile-camera-exchange')
+  async mobileCameraExchange(@Body() body: { token: string }) {
+    return this.svc.mobileCameraExchange(body);
+  }
+
   @Post('livekit/participant-leave')
   @UseGuards(JwtAuthGuard, TenantGuard)
   async participantLeave(
