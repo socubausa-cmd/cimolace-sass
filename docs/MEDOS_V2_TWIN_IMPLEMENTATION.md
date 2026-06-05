@@ -129,9 +129,10 @@ Tant que la migration n'est pas appliquée, les endpoints `/med/twin/*` renvoien
 erreur (tables absentes) — **l'API démarre normalement** (requêtes paresseuses), et
 l'UI affiche un bandeau d'erreur sans planter.
 
-### 7.3 Déploiement code
-- **med-app** (Vercel) : `cd apps/med-app && npx vercel deploy --prod --yes` → `med.cimolace.space`.
-- **API** (Railway) : `railway up --ci --service isna-api` (retenter en cas de timeout d'upload).
+### 7.3 Déploiement code — **FAIT (2026-06-05)**
+- **med-app** (Vercel) : ✅ déployé → `med.cimolace.space` (route `/twin/:patientId` + chunk 3D code-splitté en ligne).
+- **API** (Railway) : ✅ déployé → `api.cimolace.space` (routes `/med/twin/*` actives — `401` sans auth). NB : le CLI `railway up` perd la connexion en streamant les logs (instable), mais le build aboutit server-side ; vérifier via `curl -o /dev/null -w "%{http_code}" https://api.cimolace.space/med/twin/referential` (401 = déployé).
+- **Reste** : appliquer la migration DB (§7.2) — sans elle, les endpoints renvoient une erreur (tables absentes) ; l'API démarre normalement et l'UI ne plante pas.
 
 ### 7.4 Variables d'environnement
 - `ANTHROPIC_API_KEY` (déjà configuré) — analyses IA.
