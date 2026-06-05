@@ -69,4 +69,23 @@ export class MedosEmbedController {
       mode: dto.mode,
     });
   }
+
+  /**
+   * Niveau 2 — SSO PRATICIEN. Le backend du tenant (clé API) demande un code
+   * à usage unique pour le praticien connecté chez lui. Le tenant charge
+   * ensuite `med.cimolace.space/handoff?code=…` dans une iframe → le dashboard
+   * MEDOS s'ouvre déjà authentifié, sans que le praticien quitte son site.
+   */
+  @Post('practitioner-token')
+  @UseGuards(ApiKeyGuard)
+  @ApiBearerAuth()
+  async issuePractitionerToken(
+    @Body() dto: { practitioner_email: string },
+    @Req() req: ApiKeyRequest,
+  ) {
+    return this.embedService.mintPractitionerHandoff(
+      req.tenant,
+      dto.practitioner_email,
+    );
+  }
 }
