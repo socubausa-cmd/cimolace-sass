@@ -199,10 +199,10 @@ export function FormsList() {
             }}
           >
             <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0, color: '#0f172a' }}>{f.title}</h3>
-            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{f.description || 'Formulaire medical'}</p>
+            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{f.description || 'Formulaire médical'}</p>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
               <span style={{ display: 'inline-block', fontSize: 11, padding: '2px 8px', borderRadius: 8, background: '#ede9fe', color: '#7c3aed' }}>
-                {CATEGORIES.find((c) => c.value === f.category)?.label || f.category || 'Personnalise'}
+                {CATEGORIES.find((c) => c.value === f.category)?.label || f.category || 'Personnalisé'}
               </span>
               <span style={{ fontSize: 11, color: '#94a3b8' }}>
                 {(f.fields || []).length} champ{(f.fields || []).length > 1 ? 's' : ''}
@@ -210,7 +210,7 @@ export function FormsList() {
             </div>
             {f.is_template && (
               <span style={{ display: 'inline-block', marginTop: 8, fontSize: 10, padding: '1px 6px', background: '#fef3c7', color: '#92400e', borderRadius: 4, fontWeight: 600 }}>
-                TEMPLATE
+                MODÈLE
               </span>
             )}
           </button>
@@ -240,7 +240,7 @@ export function FormsList() {
               <Field label="Titre *">
                 <input required value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} placeholder="Ex: Anamnese ostepathie" />
               </Field>
-              <Field label="Categorie">
+              <Field label="Catégorie">
                 <select value={category} onChange={(e) => setCategory(e.target.value)} style={inputStyle}>
                   {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>

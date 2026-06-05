@@ -170,7 +170,7 @@ export function PatientsList() {
               <tr key={p.id} style={{ borderTop: '1px solid #e2e8f0' }}>
                 <td style={{ padding: 12 }}>
                   <Link to={'/patients/' + p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--brand-primary)', fontWeight: 500, textDecoration: 'none' }}>
-                    <span style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(99,110,150,0.14)', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                    <span style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--brand-primary-soft)', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
                       {initials(p)}
                     </span>
                     {fullName(p) || <span style={{ color: '#94a3b8' }}>(sans nom)</span>}

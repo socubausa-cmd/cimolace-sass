@@ -192,6 +192,13 @@ export function Threads() {
     normal: '#0d9488',
     low: '#64748b',
   };
+  const priorityLabel: Record<string, string> = {
+    urgent: 'Urgente', high: 'Haute', normal: 'Normale', low: 'Basse',
+  };
+  const statusLabel: Record<string, string> = {
+    open: 'Ouvert', awaiting_staff: 'À répondre', awaiting_patient: 'En attente patient',
+    closed: 'Fermé', resolved: 'Résolu',
+  };
 
   return (
     <div>
@@ -273,7 +280,7 @@ export function Threads() {
                       fontWeight: 600,
                     }}
                   >
-                    {t.priority}
+                    {priorityLabel[t.priority] || t.priority}
                   </span>
                 </div>
                 <div style={{ fontSize: 12, color: '#64748b', marginBottom: 2 }}>
@@ -316,7 +323,7 @@ export function Threads() {
                   {patientName(activePatient)} — {activeThread.subject || 'Conversation'}
                 </div>
                 <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
-                  Statut : {activeThread.status} · Priorité : {activeThread.priority}
+                  Statut : {statusLabel[activeThread.status] || activeThread.status} · Priorité : {priorityLabel[activeThread.priority] || activeThread.priority}
                 </div>
               </div>
               <div ref={scrollRef} style={{ flex: 1, padding: 20, overflowY: 'auto', maxHeight: 460 }}>

@@ -92,7 +92,7 @@ export function MedOSDashboard() {
     .slice(0, 5);
 
   const kpis = [
-    { icon: Users, label: 'Patients', value: patients.length, to: '/patients', color: 'var(--brand-primary)', tint: 'rgba(99,110,150,0.12)' },
+    { icon: Users, label: 'Patients', value: patients.length, to: '/patients', color: 'var(--brand-primary)', tint: 'var(--brand-primary-soft)' },
     { icon: CalendarDays, label: 'RDV à venir', value: upcomingCount, to: '/appointments', color: '#0ea5e9', tint: '#0ea5e918' },
     { icon: Clock, label: "RDV aujourd'hui", value: todayAppts.length, to: '/appointments', color: '#10b981', tint: '#10b98118' },
     { icon: Pill, label: 'Ordonnances', value: prescriptions, to: '/prescriptions', color: '#f59e0b', tint: '#f59e0b18' },
@@ -165,7 +165,7 @@ export function MedOSDashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {recentPatients.map((p) => (
                 <Link key={p.id} to={`/patients/${p.id}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px', borderRadius: 10, textDecoration: 'none' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(99,110,150,0.14)', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12.5, fontWeight: 700, flexShrink: 0 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--brand-primary-soft)', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12.5, fontWeight: 700, flexShrink: 0 }}>
                     {initials(p)}
                   </div>
                   <div style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fullName(p)}</div>
