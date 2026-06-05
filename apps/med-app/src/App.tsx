@@ -29,7 +29,7 @@ function AppRoutes() {
         <Route path="/dashboard" element={<MedOSDashboard />} />
         <Route path="/patients" element={<PatientsList />} />
         <Route path="/patients/:id" element={<PatientDetail />} />
-        <Route path="/patients/:id/notes/new" element={<NotesEditor />} />
+        <Route path="/patients/:patientId/notes/new" element={<NotesEditor />} />
         <Route path="/notes/:id" element={<NotesEditor />} />
         <Route path="/prescriptions" element={<PrescriptionsList />} />
         <Route path="/forms" element={<FormsList />} />
