@@ -5,10 +5,25 @@ import {
   ChevronLeft, Plus, Check, X, Loader2,
 } from 'lucide-react';
 import { twinApi, COLOR_HEX, COLOR_LABEL, type OrganColor } from './api';
+import {
+  WheelPanel, MindmapPanel, TimelinePanel, LongitudinalPanel,
+  SimulatorPanel, LabReaderPanel, MetabolicMapPanel, CopilotPanel,
+} from './panels';
 
 const BodyViewer = lazy(() =>
   import('./BodyViewer').then((m) => ({ default: m.BodyViewer })),
 );
+
+const TABS: Array<{ key: string; label: string }> = [
+  { key: 'body', label: 'Corps 3D' },
+  { key: 'wheel', label: 'Roue' },
+  { key: 'lab', label: 'Laboratoire' },
+  { key: 'correlations', label: 'Corrélations' },
+  { key: 'timeline', label: 'Timeline' },
+  { key: 'longitudinal', label: 'Évolution' },
+  { key: 'simulator', label: 'Simulateur' },
+  { key: 'copilot', label: 'Copilote IA' },
+];
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
@@ -39,6 +54,7 @@ export function TwinPage() {
   const [pickCode, setPickCode] = useState('');
   const [pickValue, setPickValue] = useState('');
   const [err, setErr] = useState<string | null>(null);
+  const [tab, setTab] = useState('body');
 
   const load = useCallback(async () => {
     try {
@@ -157,8 +173,31 @@ export function TwinPage() {
         <ShieldCheck size={15} /> Aide à la décision clinique — copilote, jamais diagnostic. Le thérapeute reste 100 % décisionnaire.
       </div>
 
+      {/* Navigation interne (centre de commande — Module 35) */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16, flexWrap: 'wrap', background: '#f1f5f9', padding: 4, borderRadius: 10 }}>
+        {TABS.map((t) => (
+          <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: tab === t.key ? '#fff' : 'transparent', color: tab === t.key ? 'var(--brand-primary)' : '#64748b', boxShadow: tab === t.key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none' }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       {err && <div style={{ marginBottom: 14, padding: 10, background: '#fef2f2', color: '#991b1b', borderRadius: 8, fontSize: 13 }}>{err}</div>}
 
+      {tab === 'wheel' && <WheelPanel patientId={patientId} />}
+      {tab === 'correlations' && <MindmapPanel patientId={patientId} />}
+      {tab === 'timeline' && <TimelinePanel patientId={patientId} />}
+      {tab === 'longitudinal' && <LongitudinalPanel patientId={patientId} />}
+      {tab === 'simulator' && <SimulatorPanel patientId={patientId} />}
+      {tab === 'copilot' && <CopilotPanel patientId={patientId} />}
+      {tab === 'lab' && (
+        <div style={{ display: 'grid', gap: 16 }}>
+          <LabReaderPanel patientId={patientId} onChange={load} />
+          <MetabolicMapPanel state={state} refs={refs} />
+        </div>
+      )}
+
+      {tab === 'body' && <>
       {/* Corps 3D + Organe sélectionné */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16, marginBottom: 16 }}>
         <div style={{ ...panel, padding: 0, overflow: 'hidden', minHeight: 480 }}>
@@ -304,6 +343,8 @@ export function TwinPage() {
           </div>
         </div>
       </div>
+
+      </>}
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
     </div>

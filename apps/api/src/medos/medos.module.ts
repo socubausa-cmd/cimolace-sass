@@ -67,6 +67,7 @@ import { TwinController } from './twin/twin.controller';
 import { TwinService } from './twin/twin.service';
 import { TwinScoringService } from './twin/twin-scoring.service';
 import { TwinAiService } from './twin/twin-ai.service';
+import { TwinSimulationService } from './twin/twin-simulation.service';
 // MEDOS routes all video through Liri (LiveModule). We don't import
 // LiveKitModule directly anymore — that would re-introduce the bypass
 // the P5 refactor specifically eliminated.
@@ -113,6 +114,7 @@ import { LiveModule } from '../live/live.module';
     TwinService,
     TwinScoringService,
     TwinAiService,
+    TwinSimulationService,
     // Global audit interceptor (court-circuite hors MEDOS)
     {
       provide: APP_INTERCEPTOR,

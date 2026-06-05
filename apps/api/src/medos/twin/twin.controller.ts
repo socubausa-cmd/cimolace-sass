@@ -145,4 +145,95 @@ export class TwinController {
   ) {
     return this.service.analyze(tenant, req.user.id, patientId);
   }
+
+  // ── Roue de transformation (Module 2) ─────────────────────────────────
+  @Get(':patientId/wheel')
+  @Roles(...STAFF)
+  getWheel(@Param('patientId') patientId: string, @CurrentTenant() tenant: TenantContext) {
+    return this.service.getWheel(tenant, patientId);
+  }
+
+  @Post(':patientId/wheel')
+  @Roles(...STAFF)
+  saveWheel(
+    @Param('patientId') patientId: string,
+    @Body() body: { scores: Array<{ domain: string; score: number }> },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.service.saveWheel(tenant, patientId, body.scores || []);
+  }
+
+  // ── Timeline santé 360 (Module 21) ────────────────────────────────────
+  @Get(':patientId/events')
+  @Roles(...STAFF)
+  listEvents(@Param('patientId') patientId: string, @CurrentTenant() tenant: TenantContext) {
+    return this.service.listEvents(tenant, patientId);
+  }
+
+  @Post(':patientId/events')
+  @Roles(...STAFF)
+  createEvent(
+    @Param('patientId') patientId: string,
+    @Body() body: { event_type: string; title: string; occurred_at: string; payload?: any },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.service.createEvent(tenant, patientId, body);
+  }
+
+  // ── Analyse longitudinale (Module 26) ─────────────────────────────────
+  @Get(':patientId/history')
+  @Roles(...STAFF)
+  history(@Param('patientId') patientId: string, @CurrentTenant() tenant: TenantContext) {
+    return this.service.getHistory(tenant, patientId);
+  }
+
+  // ── Moteur de corrélations (Modules 9/17) ─────────────────────────────
+  @Get(':patientId/correlations')
+  @Roles(...STAFF)
+  correlations(@Param('patientId') patientId: string, @CurrentTenant() tenant: TenantContext) {
+    return this.service.getCorrelations(tenant, patientId);
+  }
+
+  // ── Simulateur d'intervention (Module 23) — déterministe ──────────────
+  @Post(':patientId/simulate')
+  @Roles(...STAFF)
+  @AuditResource({ resource: 'twin_analysis', action: 'create', idParam: 'patientId' })
+  simulate(
+    @Param('patientId') patientId: string,
+    @Body() body: { interventions: string[] },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.service.simulate(tenant, patientId, body.interventions || []);
+  }
+
+  // ── Root Cause Explorer (Module 16) — IA ──────────────────────────────
+  @Post(':patientId/root-cause')
+  @Roles(...STAFF)
+  @AuditResource({ resource: 'twin_analysis', action: 'create', idParam: 'patientId' })
+  rootCause(
+    @Param('patientId') patientId: string,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.service.rootCause(tenant, req.user.id, patientId);
+  }
+
+  // ── Conseil multi-agents (Module 33) — IA ─────────────────────────────
+  @Post(':patientId/council')
+  @Roles(...STAFF)
+  @AuditResource({ resource: 'twin_analysis', action: 'create', idParam: 'patientId' })
+  council(
+    @Param('patientId') patientId: string,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.service.council(tenant, req.user.id, patientId);
+  }
+
+  // ── Moteur scientifique (Module 15) — PubMed ──────────────────────────
+  @Post('scientific')
+  @Roles(...STAFF)
+  scientific(@Body() body: { query: string }) {
+    return this.service.scientificSearch(body.query || '');
+  }
 }

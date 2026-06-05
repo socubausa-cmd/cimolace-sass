@@ -153,6 +153,43 @@ export class TwinAiService {
     return this.callClaude(system, user, 2000);
   }
 
+  /** Root Cause Explorer (M16) : causes racines classées par probabilité. */
+  async rootCause(
+    ctx: PatientAiContext,
+  ): Promise<AiResult<{
+    root_causes: Array<{ label_fr: string; probability: number; confidence: number; reasoning_fr: string; supporting_data: string[] }>;
+  }>> {
+    const system =
+      DISCLAIMER +
+      ' Identifie les CAUSES RACINES probables derrière le tableau du patient (pas les symptômes). ' +
+      'Schéma JSON: {"root_causes": [{"label_fr": string, "probability": number, "confidence": number, ' +
+      '"reasoning_fr": string, "supporting_data": string[]}]}. Classe par probabilité décroissante (3 à 5).';
+    const user =
+      this.contextBlock(ctx) +
+      `\n\nRemonte aux causes racines les plus probables (ex: dysbiose, stress chronique, résistance insulinique…), avec les données qui les soutiennent.`;
+    return this.callClaude(system, user, 2000);
+  }
+
+  /** Conseil de biologie multi-agents (M33) : 5 lentilles d'experts + consensus. */
+  async council(
+    ctx: PatientAiContext,
+  ): Promise<AiResult<{
+    experts: Array<{ specialty_fr: string; analysis_fr: string; key_recommendation_fr: string; confidence: number }>;
+    consensus_fr: string;
+    confidence: number;
+  }>> {
+    const system =
+      DISCLAIMER +
+      ' Tu simules un CONSEIL de 5 experts (endocrinologue, gastro-entérologue, nutritionniste fonctionnel, ' +
+      'immunologiste, cardiologue). Chacun analyse le cas sous SA lentille, puis tu produis un consensus. ' +
+      'Schéma JSON: {"experts": [{"specialty_fr": string, "analysis_fr": string, "key_recommendation_fr": string, ' +
+      '"confidence": number}], "consensus_fr": string, "confidence": number}.';
+    const user =
+      this.contextBlock(ctx) +
+      `\n\nFais délibérer le conseil et dégage un consensus clinique prudent (jamais un diagnostic).`;
+    return this.callClaude(system, user, 2500);
+  }
+
   /** Extraction de biomarqueurs depuis un texte de bilan (M3). */
   async extractBiomarkers(
     rawText: string,

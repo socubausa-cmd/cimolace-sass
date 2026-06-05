@@ -12,6 +12,7 @@ import {
   type BiomarkerValue,
 } from './twin-scoring.service';
 import { TwinAiService, type PatientAiContext } from './twin-ai.service';
+import { TwinSimulationService, INTERVENTIONS } from './twin-simulation.service';
 import type {
   AddBiomarkersDto,
   CreateLabDocumentDto,
@@ -30,6 +31,7 @@ export class TwinService {
     private readonly supabase: SupabaseService,
     private readonly scoring: TwinScoringService,
     private readonly ai: TwinAiService,
+    private readonly simulation: TwinSimulationService,
   ) {}
 
   /** Client Supabase non typé (tables twin hors du type Database de base). */
@@ -561,5 +563,189 @@ export class TwinService {
       .single();
     if (error) throw new NotFoundException(error.message);
     return data;
+  }
+
+  // ── Roue de transformation (Module 2) ─────────────────────────────────
+  private static WHEEL_DOMAINS = [
+    'digestion', 'sleep', 'stress', 'energy', 'inflammation', 'immunity',
+    'metabolism', 'hormones', 'physical_activity', 'cognition', 'environment', 'emotions',
+  ];
+
+  async getWheel(tenant: TenantContext, patientId: string): Promise<any> {
+    await this.assertPatient(tenant, patientId);
+    const { data } = await this.db
+      .from('med_transformation_wheel')
+      .select('domain,score,measured_at')
+      .eq('patient_id', patientId)
+      .order('measured_at', { ascending: false });
+    const latest = new Map<string, any>();
+    for (const r of data ?? []) if (!latest.has(r.domain)) latest.set(r.domain, r);
+    return {
+      domains: TwinService.WHEEL_DOMAINS.map((d) => ({ domain: d, score: latest.get(d)?.score ?? null })),
+    };
+  }
+
+  async saveWheel(
+    tenant: TenantContext,
+    patientId: string,
+    scores: Array<{ domain: string; score: number }>,
+  ): Promise<any> {
+    await this.assertPatient(tenant, patientId);
+    const rows = scores
+      .filter((s) => TwinService.WHEEL_DOMAINS.includes(s.domain) && s.score >= 0 && s.score <= 100)
+      .map((s) => ({ tenant_id: tenant.id, patient_id: patientId, domain: s.domain, score: Math.round(s.score), source: 'questionnaire' }));
+    if (rows.length > 0) await this.db.from('med_transformation_wheel').insert(rows);
+    return this.getWheel(tenant, patientId);
+  }
+
+  // ── Timeline santé 360 (Module 21) ────────────────────────────────────
+  async listEvents(tenant: TenantContext, patientId: string): Promise<any> {
+    await this.assertPatient(tenant, patientId);
+    const { data } = await this.db
+      .from('med_health_events')
+      .select('*')
+      .eq('patient_id', patientId)
+      .order('occurred_at', { ascending: false });
+    return data ?? [];
+  }
+
+  async createEvent(
+    tenant: TenantContext,
+    patientId: string,
+    body: { event_type: string; title: string; occurred_at: string; payload?: any },
+  ): Promise<any> {
+    await this.assertPatient(tenant, patientId);
+    const { data, error } = await this.db
+      .from('med_health_events')
+      .insert({
+        tenant_id: tenant.id,
+        patient_id: patientId,
+        event_type: body.event_type,
+        title: body.title,
+        occurred_at: body.occurred_at,
+        payload: body.payload ?? {},
+      })
+      .select('*')
+      .single();
+    if (error) throw new NotFoundException(error.message);
+    return data;
+  }
+
+  // ── Analyse longitudinale (Module 26) ─────────────────────────────────
+  async getHistory(tenant: TenantContext, patientId: string): Promise<any> {
+    await this.assertPatient(tenant, patientId);
+    const [scores, biomarkers] = await Promise.all([
+      this.db.from('med_organ_scores').select('organ_code,score,color,computed_at').eq('patient_id', patientId).order('computed_at', { ascending: true }),
+      this.db.from('med_patient_biomarkers').select('biomarker_code,value,measured_at,flag').eq('patient_id', patientId).order('measured_at', { ascending: true }),
+    ]);
+    // Séries temporelles par organe.
+    const organSeries: Record<string, Array<{ t: string; score: number }>> = {};
+    for (const s of scores.data ?? []) {
+      (organSeries[s.organ_code] = organSeries[s.organ_code] || []).push({ t: s.computed_at, score: s.score });
+    }
+    const biomarkerSeries: Record<string, Array<{ t: string; value: number }>> = {};
+    for (const b of biomarkers.data ?? []) {
+      (biomarkerSeries[b.biomarker_code] = biomarkerSeries[b.biomarker_code] || []).push({ t: b.measured_at, value: Number(b.value) });
+    }
+    return { organSeries, biomarkerSeries };
+  }
+
+  // ── Moteur de corrélations (Modules 9/17) — déterministe, graphe ──────
+  async getCorrelations(tenant: TenantContext, patientId: string): Promise<any> {
+    await this.assertPatient(tenant, patientId);
+    const { biomarkers: refs } = await this.getReferential();
+    const values = await this.listLatestBiomarkers(tenant, patientId);
+    const flags = this.scoring.flagMap(refs, values);
+    const abnormal = Object.entries(flags).filter(([, f]) => f !== 'normal').map(([c]) => c);
+    const refByCode = new Map(refs.map((r) => [r.code, r]));
+
+    // Corrélations biomarqueur anormal → organes impactés (depuis le référentiel).
+    const bmOrgan = abnormal.flatMap((code) => {
+      const ref = refByCode.get(code);
+      return (ref?.organs ?? []).map((organ: string) => ({
+        from: code, from_label: ref?.name_fr, to: organ, type: 'biomarker_organ', flag: flags[code],
+      }));
+    });
+
+    // Chaînes du knowledge graph touchant les conditions/organes en jeu.
+    const { edges } = await this.getGraph();
+    const involvedOrgans = new Set(bmOrgan.map((x) => x.to));
+    const graphChains = edges.filter((e: any) => involvedOrgans.has(e.from_code) || involvedOrgans.has(e.to_code));
+
+    return { abnormal, biomarker_organ: bmOrgan, graph_chains: graphChains };
+  }
+
+  // ── Simulateur d'intervention (Module 23) — déterministe ──────────────
+  async simulate(tenant: TenantContext, patientId: string, interventionKeys: string[]): Promise<any> {
+    await this.assertPatient(tenant, patientId);
+    const { organs, biomarkers } = await this.getReferential();
+    const values = await this.listLatestBiomarkers(tenant, patientId);
+    const result = this.simulation.simulate(organs.map((o) => o.code), biomarkers, values, interventionKeys);
+    return { interventions: INTERVENTIONS, applied: interventionKeys, ...result };
+  }
+
+  // ── Root Cause Explorer (Module 16) — IA ──────────────────────────────
+  async rootCause(tenant: TenantContext, userId: string, patientId: string): Promise<any> {
+    const ctx = await this.buildAiContext(tenant, patientId);
+    const started = Date.now();
+    const { data: analysis } = await this.db
+      .from('med_ai_analyses')
+      .insert({ tenant_id: tenant.id, patient_id: patientId, kind: 'root_cause', status: 'generating', created_by: userId })
+      .select('*')
+      .single();
+    try {
+      const res = await this.ai.rootCause(ctx);
+      await this.logAgentRun(tenant, patientId, analysis?.id ?? null, 'hypotheses', { model: res.model, tokens: res.tokens, latency_ms: Date.now() - started, output: res.data });
+      await this.db.from('med_ai_analyses').update({ status: 'ready', output: res.data, models: { root_cause: res.model } }).eq('id', analysis.id);
+      return { analysis_id: analysis.id, root_causes: res.data.root_causes ?? [] };
+    } catch (e: any) {
+      await this.db.from('med_ai_analyses').update({ status: 'failed', output: { error: e?.message } }).eq('id', analysis.id);
+      throw e;
+    }
+  }
+
+  // ── Conseil multi-agents (Module 33) — IA ─────────────────────────────
+  async council(tenant: TenantContext, userId: string, patientId: string): Promise<any> {
+    const ctx = await this.buildAiContext(tenant, patientId);
+    const started = Date.now();
+    const { data: analysis } = await this.db
+      .from('med_ai_analyses')
+      .insert({ tenant_id: tenant.id, patient_id: patientId, kind: 'council', status: 'generating', created_by: userId })
+      .select('*')
+      .single();
+    try {
+      const res = await this.ai.council(ctx);
+      await this.logAgentRun(tenant, patientId, analysis?.id ?? null, 'consensus', { model: res.model, tokens: res.tokens, latency_ms: Date.now() - started, output: res.data });
+      await this.db.from('med_ai_analyses').update({ status: 'ready', output: res.data, confidence: res.data.confidence ?? null, models: { council: res.model } }).eq('id', analysis.id);
+      return { analysis_id: analysis.id, ...res.data };
+    } catch (e: any) {
+      await this.db.from('med_ai_analyses').update({ status: 'failed', output: { error: e?.message } }).eq('id', analysis.id);
+      throw e;
+    }
+  }
+
+  // ── Moteur scientifique (Module 15) — PubMed E-utilities ──────────────
+  async scientificSearch(query: string): Promise<any> {
+    const q = encodeURIComponent(query.slice(0, 200));
+    try {
+      const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=6&sort=relevance&term=${q}`;
+      const sr = await fetch(searchUrl);
+      if (!sr.ok) return { query, results: [], error: `PubMed ${sr.status}` };
+      const sj: any = await sr.json();
+      const ids: string[] = sj?.esearchresult?.idlist ?? [];
+      if (ids.length === 0) return { query, results: [] };
+      const sumUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=${ids.join(',')}`;
+      const mr = await fetch(sumUrl);
+      const mj: any = await mr.json();
+      const results = ids.map((id) => {
+        const r = mj?.result?.[id];
+        return r
+          ? { pmid: id, title: r.title, source: r.fulljournalname || r.source, year: (r.pubdate || '').slice(0, 4), url: `https://pubmed.ncbi.nlm.nih.gov/${id}/` }
+          : null;
+      }).filter(Boolean);
+      return { query, results };
+    } catch (e: any) {
+      return { query, results: [], error: e?.message };
+    }
   }
 }

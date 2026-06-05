@@ -57,6 +57,31 @@ export const twinApi = {
   analyze: (pid: string) => post(`/med/twin/${pid}/analyze`),
   setHypothesis: (id: string, status: 'validated' | 'rejected') =>
     patch(`/med/twin/hypotheses/${id}`, { status }),
+  // Vague 2
+  getWheel: (pid: string) => get(`/med/twin/${pid}/wheel`),
+  saveWheel: (pid: string, scores: Array<{ domain: string; score: number }>) =>
+    post(`/med/twin/${pid}/wheel`, { scores }),
+  listEvents: (pid: string) => get(`/med/twin/${pid}/events`),
+  createEvent: (pid: string, e: { event_type: string; title: string; occurred_at: string }) =>
+    post(`/med/twin/${pid}/events`, e),
+  history: (pid: string) => get(`/med/twin/${pid}/history`),
+  correlations: (pid: string) => get(`/med/twin/${pid}/correlations`),
+  simulate: (pid: string, interventions: string[]) =>
+    post(`/med/twin/${pid}/simulate`, { interventions }),
+  rootCause: (pid: string) => post(`/med/twin/${pid}/root-cause`),
+  council: (pid: string) => post(`/med/twin/${pid}/council`),
+  scientific: (query: string) => post('/med/twin/scientific', { query }),
+  createDocument: (pid: string, raw_text: string, lab_name?: string) =>
+    post(`/med/twin/${pid}/documents`, { raw_text, lab_name, source_type: 'blood' }),
+  extractDocument: (pid: string, docId: string) =>
+    post(`/med/twin/${pid}/documents/${docId}/extract`),
+};
+
+export const WHEEL_LABELS: Record<string, string> = {
+  digestion: 'Digestion', sleep: 'Sommeil', stress: 'Stress', energy: 'Énergie',
+  inflammation: 'Inflammation', immunity: 'Immunité', metabolism: 'Métabolisme',
+  hormones: 'Hormones', physical_activity: 'Activité physique', cognition: 'Cognition',
+  environment: 'Environnement', emotions: 'Émotions',
 };
 
 export const COLOR_HEX: Record<OrganColor, string> = {
