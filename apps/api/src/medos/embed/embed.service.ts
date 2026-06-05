@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { createHash, randomBytes } from 'crypto';
 import { SupabaseService } from '../../supabase/supabase.service';
 import type { TenantContext } from '../../tenant/tenant.types';
 import {
@@ -383,5 +384,100 @@ export class EmbedService {
       );
     }
     return { patientId: (created as any).id, created: true };
+  }
+
+  /**
+   * Niveau 2 — SSO praticien pour embarquer le DASHBOARD admin MEDOS dans le
+   * site d'un tenant (iframe). Appelé server-to-server par le backend du
+   * tenant (clé API), qui sait quel praticien est connecté chez lui.
+   *
+   * Frappe une vraie session Supabase pour ce praticien (sans mot de passe),
+   * la stocke comme un code à usage unique (auth_handoff_codes, TTL 2 min),
+   * et renvoie le code. Le site charge alors
+   * `med.cimolace.space/handoff?code=…` dans l'iframe → med-app échange le
+   * code (POST /auth/handoff/exchange) et fait setSession → dashboard, zéro
+   * relogin. Le praticien ne quitte jamais le site du tenant.
+   */
+  async mintPractitionerHandoff(
+    tenant: TenantContext,
+    practitionerEmail: string,
+  ): Promise<{ code: string; expires_in: number }> {
+    const email = (practitionerEmail || '').trim().toLowerCase();
+    if (!email) throw new BadRequestException('practitioner_email requis');
+    const supaUrl = this.config.get<string>('SUPABASE_URL');
+    const srk = this.config.get<string>('SUPABASE_SERVICE_ROLE_KEY');
+    if (!supaUrl || !srk) {
+      throw new InternalServerErrorException('Supabase admin non configuré');
+    }
+    const adminHeaders = {
+      apikey: srk,
+      Authorization: `Bearer ${srk}`,
+      'Content-Type': 'application/json',
+    };
+
+    // 1. generate_link valide que l'utilisateur existe + donne son id + le hash.
+    const genRes = await fetch(`${supaUrl}/auth/v1/admin/generate_link`, {
+      method: 'POST',
+      headers: adminHeaders,
+      body: JSON.stringify({ type: 'magiclink', email }),
+    });
+    if (!genRes.ok) throw new NotFoundException('Praticien introuvable');
+    const gen = (await genRes.json()) as any;
+    const props = gen.properties ?? gen;
+    const userId: string | undefined = gen.user?.id ?? gen.id;
+    const hashedToken: string | undefined = props?.hashed_token;
+    if (!userId || !hashedToken) {
+      throw new InternalServerErrorException('Émission de session impossible');
+    }
+
+    // 2. Ce praticien appartient-il bien À CE tenant, avec un rôle staff ?
+    const { data: membership } = await (this.supabase.client as any)
+      .from('tenant_memberships')
+      .select('role')
+      .eq('tenant_id', tenant.id)
+      .eq('user_id', userId)
+      .in('role', ['practitioner', 'owner', 'clinic_admin', 'admin'])
+      .maybeSingle();
+    if (!membership) {
+      throw new ForbiddenException(
+        "Ce praticien n'appartient pas à ce tenant",
+      );
+    }
+
+    // 3. token_hash → vraie session (access + refresh).
+    const vRes = await fetch(`${supaUrl}/auth/v1/verify`, {
+      method: 'POST',
+      headers: adminHeaders,
+      body: JSON.stringify({ type: 'magiclink', token_hash: hashedToken }),
+    });
+    if (!vRes.ok) {
+      throw new InternalServerErrorException('Validation de session échouée');
+    }
+    const sess = (await vRes.json()) as any;
+    const accessToken: string | undefined = sess.access_token;
+    const refreshToken: string | undefined = sess.refresh_token;
+    if (!accessToken || !refreshToken) {
+      throw new InternalServerErrorException('Session invalide');
+    }
+
+    // 4. Stocke un code à usage unique (échangé par med-app/handoff).
+    const code = randomBytes(32).toString('hex');
+    const ttl = 120;
+    const codeHash = createHash('sha256').update(code).digest('hex');
+    const { error } = await (this.supabase.client as any)
+      .from('auth_handoff_codes')
+      .insert({
+        code_hash: codeHash,
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        user_id: userId,
+        expires_at: new Date(Date.now() + ttl * 1000).toISOString(),
+      });
+    if (error) {
+      throw new InternalServerErrorException(
+        'Stockage du handoff impossible : ' + error.message,
+      );
+    }
+    return { code, expires_in: ttl };
   }
 }
