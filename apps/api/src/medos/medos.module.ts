@@ -62,6 +62,11 @@ import {
   InvitationsPublicController,
 } from './invitations/invitations.controller';
 import { InvitationsService } from './invitations/invitations.service';
+// MEDOS v2 — Bio Digital Twin
+import { TwinController } from './twin/twin.controller';
+import { TwinService } from './twin/twin.service';
+import { TwinScoringService } from './twin/twin-scoring.service';
+import { TwinAiService } from './twin/twin-ai.service';
 // MEDOS routes all video through Liri (LiveModule). We don't import
 // LiveKitModule directly anymore — that would re-introduce the bypass
 // the P5 refactor specifically eliminated.
@@ -104,6 +109,10 @@ import { LiveModule } from '../live/live.module';
     AttachmentsService,
     GdprService,
     InvitationsService,
+    // Bio Digital Twin (v2)
+    TwinService,
+    TwinScoringService,
+    TwinAiService,
     // Global audit interceptor (court-circuite hors MEDOS)
     {
       provide: APP_INTERCEPTOR,
@@ -149,6 +158,8 @@ import { LiveModule } from '../live/live.module';
     // Invitations
     InvitationsController,
     InvitationsPublicController,
+    // Bio Digital Twin (v2)
+    TwinController,
   ],
   exports: [
     ApiKeyGuard,

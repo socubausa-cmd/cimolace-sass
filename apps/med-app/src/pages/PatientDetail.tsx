@@ -208,6 +208,13 @@ export function PatientDetail() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <h2 style={{ fontSize: 22, fontWeight: 700 }}>{patient.first_name} {patient.last_name}</h2>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <Link
+              to={'/twin/' + id}
+              title="Ouvrir le jumeau numérique (Bio Digital Twin)"
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'linear-gradient(135deg, var(--brand-primary), #7c3aed)', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}
+            >
+              <Activity size={14} /> Jumeau numérique
+            </Link>
             {!patient.patient_user_id && (
               <button
                 onClick={openInvite}

@@ -11,7 +11,14 @@ export type AuditResourceType =
   | 'prescription'
   | 'program'
   | 'charting_job'
-  | 'appointment';
+  | 'appointment'
+  // Bio Digital Twin (v2)
+  | 'twin_state'
+  | 'twin_biomarkers'
+  | 'twin_lab_document'
+  | 'twin_extraction'
+  | 'twin_organ_assistant'
+  | 'twin_analysis';
 
 export type AuditAction =
   | 'create'
