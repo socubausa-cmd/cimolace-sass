@@ -402,7 +402,7 @@ const sectionTitle: React.CSSProperties = {
 };
 
 const soapColors: Record<string, string> = {
-  subjective: '#6366f1',
+  subjective: 'var(--brand-primary)',
   objective:  '#0ea5e9',
   assessment: '#f59e0b',
   plan:       '#22c55e',

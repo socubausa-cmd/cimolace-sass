@@ -337,13 +337,13 @@ export function Appointments() {
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             onClick={() => { setError(null); setAvailOpen(true); }}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: '#fff', color: '#6366f1', border: '1px solid #6366f1', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: '#fff', color: 'var(--brand-primary)', border: '1px solid var(--brand-primary)', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
           >
             <Clock size={14} /> + Disponibilite
           </button>
           <button
             onClick={() => { setError(null); setApptOpen(true); }}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
           >
             <Plus size={16} /> Nouveau RDV
           </button>
@@ -359,7 +359,7 @@ export function Appointments() {
         <div>
           {/* KPI strip */}
           <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-            <KpiCard label="A venir" value={upcoming.length} color="#6366f1" />
+            <KpiCard label="A venir" value={upcoming.length} color="var(--brand-primary)" />
             <KpiCard label="Cette semaine" value={appointments.filter((a) => {
               const d = new Date(a.scheduled_at).getTime();
               return d >= now && d < now + 7 * 24 * 3600 * 1000 && a.status !== 'cancelled';
@@ -378,12 +378,12 @@ export function Appointments() {
                   display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 8, border: 'none',
                   cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.15s',
                   background: tab === key ? '#fff' : 'transparent',
-                  color: tab === key ? '#6366f1' : '#64748b',
+                  color: tab === key ? 'var(--brand-primary)' : '#64748b',
                   boxShadow: tab === key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
                 }}
               >
                 {label}
-                <span style={{ fontSize: 11, fontWeight: 700, minWidth: 16, textAlign: 'center', padding: '1px 6px', borderRadius: 10, background: tab === key ? '#eef2ff' : '#e2e8f0', color: tab === key ? '#6366f1' : '#64748b' }}>{count}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, minWidth: 16, textAlign: 'center', padding: '1px 6px', borderRadius: 10, background: tab === key ? '#f1f5f9' : '#e2e8f0', color: tab === key ? 'var(--brand-primary)' : '#64748b' }}>{count}</span>
               </button>
             ))}
           </div>
@@ -504,7 +504,7 @@ export function Appointments() {
             </Field>
           </div>
           {error && <div style={errStyle}>{error}</div>}
-          <Actions onCancel={() => setAvailOpen(false)} saving={saving} submitLabel="Creer la disponibilite" submitColor="#6366f1" />
+          <Actions onCancel={() => setAvailOpen(false)} saving={saving} submitLabel="Creer la disponibilite" submitColor="var(--brand-primary)" />
         </Modal>
       )}
 
@@ -534,7 +534,7 @@ export function Appointments() {
             <textarea rows={2} value={apptForm.reason} onChange={(e) => setApptForm({ ...apptForm, reason: e.target.value })} style={{ ...inputStyle, fontFamily: 'inherit', resize: 'vertical' }} placeholder="Première consultation, suivi, douleur cervicale…" />
           </Field>
           {error && <div style={errStyle}>{error}</div>}
-          <Actions onCancel={() => setApptOpen(false)} saving={saving} submitLabel="Planifier le RDV" submitColor="#6366f1" />
+          <Actions onCancel={() => setApptOpen(false)} saving={saving} submitLabel="Planifier le RDV" submitColor="var(--brand-primary)" />
         </Modal>
       )}
     </div>
