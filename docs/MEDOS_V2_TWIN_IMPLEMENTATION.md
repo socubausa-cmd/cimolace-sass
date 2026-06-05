@@ -28,9 +28,28 @@
 | M20 Audit / M32 confiance | ✅ `med_ai_agent_runs` + confidence partout | transverse |
 | M35 Centre de commande | ✅ page unifiée | `twin/TwinPage.tsx` |
 
-Modules Phase B+ (corrélations visuelles, projection temporelle M13, simulateur M23,
-microbiote M27, génomique M28, conseil multi-agents M33) : **fondations en place**
-(tables, graphe, orchestrateur), UI/agents dédiés à construire.
+### Vague 2 — couverture étendue (livrée le même jour)
+| Module(s) | Livré | Où |
+|---|---|---|
+| M2 Roue de transformation | ✅ radar éditable + persistance | `panels.WheelPanel`, `GET/POST /wheel` |
+| M3 Lecteur bilan/ordonnance | ✅ coller texte → extraction IA → biomarqueurs | `panels.LabReaderPanel` |
+| M8 Carte métabolique | ✅ regroupement par système | `panels.MetabolicMapPanel` |
+| M8/M17/M22 Mindmap & réseau | ✅ graphe SVG nœuds-arêtes | `panels.MindmapPanel`, `GET /graph` |
+| M9/M17 Moteur de corrélations | ✅ **déterministe** (graphe + données) | `GET /:id/correlations` |
+| M16 Root Cause Explorer | ✅ causes racines classées (IA) | `POST /:id/root-cause` |
+| M21 Timeline santé 360 | ✅ événements + ajout | `panels.TimelinePanel`, `GET/POST /events` |
+| M23 Simulateur d'intervention | ✅ **déterministe + 4 tests** | `TwinSimulationService`, `POST /:id/simulate` |
+| M26 Analyse longitudinale | ✅ sparklines historisées | `panels.LongitudinalPanel`, `GET /:id/history` |
+| M33 Conseil multi-agents | ✅ 5 experts + consensus (IA) | `POST /:id/council` |
+| M15 Moteur scientifique | ✅ PubMed E-utilities | `POST /scientific` |
+| M35 Centre de commande | ✅ **8 onglets** | `TwinPage` |
+
+**Agents IA livrés** : extraction (biomarqueurs), assistant organe (organes), corrélations
+(déterministe), hypothèses différentielles, root cause, recherche scientifique (PubMed),
+détection de risque (alertes), simulation (déterministe), consensus (conseil multi-agents).
+
+Modules restants (Phase E) : microbiote M27, génomique M28, intelligence collective M31 —
+fondations DB en place, parsers dédiés à construire.
 
 ---
 
