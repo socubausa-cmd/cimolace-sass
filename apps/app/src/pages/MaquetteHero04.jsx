@@ -9,6 +9,7 @@ import { MaqNav } from '@/components/maquette/MaqNav';
 import { CTAQuestionsMarquee } from '@/components/ui/cta-with-text-marquee';
 import { FeaturesAtouts } from '@/components/ui/features-8';
 import { TempleServices } from '@/components/ui/feature-sections';
+import DeuxUnivers from '@/components/ui/spatial-product-showcase';
 
 // Variante B — hero éditorial/brutaliste (d'après hero-04), adapté PRORASCIENCE + charte Tangerine (Fraunces/or, sombre).
 const TEMPLE = (n) => `/ngowazulu/temple-${String(n).padStart(2, '0')}.jpg`;
@@ -229,6 +230,9 @@ export default function MaquetteHero04() {
           </div>
         </div>
       </section>
+
+      {/* ===== Deux univers — switcher École ⟷ Temple (choisis ta porte) ===== */}
+      <DeuxUnivers />
 
       {/* ===== L'univers École — pédagogie high-tech (accordéon d'images) ===== */}
       <section id="ecole" className="relative border-t py-24" style={{ borderColor: 'var(--border)' }}>
