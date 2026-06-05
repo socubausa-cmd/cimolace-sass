@@ -42,7 +42,7 @@ const AccordionItem = ({ item, isActive, onMouseEnter }) => (
       className={`
         absolute text-white font-bold whitespace-nowrap transition-all duration-500 ease-in-out
         ${isActive
-          ? 'text-xl bottom-8 left-6 rotate-0 opacity-100'
+          ? 'text-xl bottom-20 left-6 rotate-0 opacity-100'
           : 'text-sm bottom-28 left-1/2 -translate-x-1/2 rotate-90 opacity-70'}
       `}
     >
@@ -51,7 +51,7 @@ const AccordionItem = ({ item, isActive, onMouseEnter }) => (
 
     {/* Sub-text (active only) */}
     {isActive && (
-      <p className="absolute bottom-8 left-6 right-6 mt-1 text-sm text-white/60 leading-snug" style={{ top: 'auto', marginTop: '2rem' }}>
+      <p className="absolute bottom-6 left-6 right-6 text-sm text-white/65 leading-snug">
         {item.description}
       </p>
     )}
@@ -81,7 +81,7 @@ export function InteractiveImageAccordion({
         <div className="mt-8">
           <a
             href={ctaHref}
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 text-white font-semibold text-sm shadow-lg shadow-violet-500/20 hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-[#bf9a4f] text-[#0d0b09] font-semibold text-sm shadow-lg shadow-black/30 hover:brightness-110 transition"
           >
             {ctaLabel} →
           </a>

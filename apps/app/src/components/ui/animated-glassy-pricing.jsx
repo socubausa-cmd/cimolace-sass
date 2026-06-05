@@ -45,8 +45,8 @@ const ShaderCanvas = () => {
         mask+=paintCircle(uv,center,radius+.018,.005).r;
         vec2 v=rotate2d(iTime)*uv;
         /* CIMOLACE palette: violet → cyan */
-        vec3 fg=vec3(0.42+v.x*0.3, 0.15+v.y*0.3, 0.85-v.y*v.x*0.4);
-        vec3 bg=vec3(0.039,0.039,0.059); /* #0a0a0f */
+        vec3 fg=vec3(0.80+v.x*0.15, 0.64+v.y*0.15, 0.34-v.y*v.x*0.15);
+        vec3 bg=vec3(0.051,0.043,0.035); /* #0d0b09 — fond chaud du thème */
         vec3 color=mix(bg,fg,mask);
         color=mix(color,vec3(1.),paintCircle(uv,center,radius,.003).r);
         gl_FragColor=vec4(color,1.);
@@ -122,21 +122,21 @@ export const PricingCard = ({
     'backdrop-blur-[14px] rounded-2xl shadow-xl flex-1 px-7 py-8 flex flex-col transition-all duration-300',
     'bg-gradient-to-br from-white/[0.06] to-white/[0.02] border',
     isPopular
-      ? 'border-violet-500/40 ring-2 ring-violet-500/20 scale-105 relative shadow-2xl shadow-violet-500/10'
+      ? 'border-[#bf9a4f]/50 ring-2 ring-[#bf9a4f]/25 scale-105 relative shadow-2xl shadow-[#bf9a4f]/10'
       : 'border-white/[0.08] hover:border-white/20',
   ].join(' ');
 
   const btnBase = [
     'mt-auto w-full py-2.5 rounded-xl font-semibold text-sm transition-all',
     buttonVariant === 'primary'
-      ? 'bg-gradient-to-r from-violet-500 to-cyan-500 text-white hover:opacity-90 shadow-lg shadow-violet-500/20'
+      ? 'bg-[#bf9a4f] text-[#0d0b09] hover:brightness-110 shadow-lg shadow-black/30'
       : 'bg-white/5 border border-white/10 text-white hover:bg-white/10',
   ].join(' ');
 
   return (
     <div className={cardBase}>
       {isPopular && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 text-xs font-semibold rounded-full bg-gradient-to-r from-violet-500 to-cyan-500 text-white shadow-lg whitespace-nowrap">
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 text-xs font-semibold rounded-full bg-[#bf9a4f] text-[#0d0b09] shadow-lg whitespace-nowrap">
           Plus populaire
         </div>
       )}
@@ -166,7 +166,7 @@ export const PricingCard = ({
       <ul className="flex flex-col gap-2.5 text-sm text-white/80 mb-6 flex-1">
         {features.map((f, i) => (
           <li key={i} className="flex items-center gap-2.5">
-            <CheckIcon className="text-cyan-400 w-4 h-4 flex-shrink-0" />
+            <CheckIcon className="text-[#bf9a4f] w-4 h-4 flex-shrink-0" />
             {f}
           </li>
         ))}
@@ -174,7 +174,7 @@ export const PricingCard = ({
 
       <RippleButton
         className={btnBase}
-        rippleColor="rgba(139,92,246,0.3)"
+        rippleColor="rgba(191,154,79,0.35)"
         onClick={onCtaClick}
       >
         {buttonText}
@@ -190,11 +190,11 @@ export const ModernPricingPage = ({
   plans,
   showAnimatedBackground = true,
 }) => (
-  <div className="relative w-full overflow-hidden bg-[#0a0a0f] text-white">
+  <div className="relative w-full overflow-hidden bg-[#0d0b09] text-white">
     {showAnimatedBackground && <ShaderCanvas />}
     <div className="relative z-10 w-full flex flex-col items-center justify-center px-4 py-8">
       <div className="w-full max-w-5xl mx-auto text-center mb-14">
-        <h1 className="text-5xl md:text-6xl font-extralight leading-tight tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-violet-300 to-cyan-300">
+        <h1 className="text-5xl md:text-6xl font-extralight leading-tight tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-[#e7cd8f] to-[#bf9a4f]">
           {title}
         </h1>
         <p className="mt-4 text-lg md:text-xl text-white/70 max-w-2xl mx-auto">

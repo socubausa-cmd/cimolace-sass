@@ -181,8 +181,13 @@ const ProspectInterviewLoungePage = lazy(() => import('@/pages/ProspectInterview
 const FormationsPage = lazy(() => import('@/pages/FormationsPage')); // New Page
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
-const MaquetteAccueil = lazy(() => import('@/pages/MaquetteAccueil'));
 const MaquetteHero04 = lazy(() => import('@/pages/MaquetteHero04'));
+const MaquetteCosmos = lazy(() => import('@/pages/MaquetteCosmos'));
+const MaquetteFondateur = lazy(() => import('@/pages/MaquetteFondateur'));
+const MaquetteMission = lazy(() => import('@/pages/MaquetteMission'));
+const MaquetteProgramme = lazy(() => import('@/pages/MaquetteProgramme'));
+const MaquetteTemple = lazy(() => import('@/pages/MaquetteTemple'));
+const MaquetteEcole = lazy(() => import('@/pages/MaquetteEcole'));
 const PublicHomePage = lazy(() => import('@/pages/PublicHomePage'));
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 const PublicIsnaPage = lazy(() => import('@/pages/PublicIsnaPage'));
@@ -1239,8 +1244,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/app" element={<AppMemberAccessPage />} />
           <Route path="/home" element={<Navigate to="/app" replace />} />
           <Route path="/landing" element={<LandingPage />} />
-          <Route path="/maquette" element={<MaquetteAccueil />} />
-          <Route path="/maquette-b" element={<MaquetteHero04 />} />
+          {/* Maquettes portées en production : voir /t/isna et /t/isna/{ecole,temple,programme,mission,fondateur,doctrine} */}
           <Route path="/isna" element={<Navigate to={TENANT_ADMIN_PATH} replace />} /> {/* Legacy ISNA route - redirects to tenant system */}
           <Route path="/temple-ngowazulu" element={<PublicNgowazuluPage />} />
           <Route path="/vitrine" element={<SchoolVitrinePage />} />
@@ -1831,8 +1835,14 @@ isLiriHostDevPreviewRoute;
           } />
 
           {/* ── Routes publiques tenant ─────────────────────────────────── */}
-          {/* Landing dédiée ISNA / PRORASCIENCE — l'apex prorascience.org redirige vers /t/isna */}
-          <Route path="/t/isna" element={<LandingPage />} />
+          {/* Landing dédiée ISNA / PRORASCIENCE — nouveau design narratif (maquette portée). L'apex prorascience.org redirige vers /t/isna */}
+          <Route path="/t/isna" element={<MaquetteHero04 />} />
+          <Route path="/t/isna/ecole" element={<MaquetteEcole />} />
+          <Route path="/t/isna/temple" element={<MaquetteTemple />} />
+          <Route path="/t/isna/programme" element={<MaquetteProgramme />} />
+          <Route path="/t/isna/mission" element={<MaquetteMission />} />
+          <Route path="/t/isna/fondateur" element={<MaquetteFondateur />} />
+          <Route path="/t/isna/doctrine" element={<MaquetteCosmos />} />
           <Route
             path="/t/:tenantSlug"
             element={<SchoolVitrineTenantPage />}
