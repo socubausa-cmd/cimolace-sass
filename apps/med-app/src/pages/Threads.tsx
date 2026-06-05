@@ -413,7 +413,7 @@ export function Threads() {
             </>
           ) : (
             <p style={{ color: '#94a3b8', textAlign: 'center', marginTop: 200 }}>
-              Selectionnez une conversation ou demarrez-en une nouvelle.
+              Sélectionnez une conversation ou démarrez-en une nouvelle.
             </p>
           )}
         </div>
@@ -473,7 +473,7 @@ export function Threads() {
                   boxSizing: 'border-box',
                 }}
               >
-                <option value="">— Selectionnez —</option>
+                <option value="">— Sélectionnez —</option>
                 {Object.values(patients).map((p) => (
                   <option key={p.id} value={p.id}>
                     {patientName(p)}

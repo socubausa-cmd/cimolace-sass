@@ -114,7 +114,7 @@ export function AttachmentsPanel({
         body: file,
       });
       if (!putRes.ok) {
-        throw new Error(`Upload echoue (${putRes.status})`);
+        throw new Error(`Upload échoué (${putRes.status})`);
       }
 
       // 3. Register metadata
@@ -144,7 +144,7 @@ export function AttachmentsPanel({
       if (fileInputRef.current) fileInputRef.current.value = '';
       await fetchItems();
     } catch (err: any) {
-      setError(err?.message || 'Echec');
+      setError(err?.message || 'Échec');
     } finally {
       setUploading(false);
     }
@@ -161,7 +161,7 @@ export function AttachmentsPanel({
       const { download_url } = await res.json();
       if (download_url) window.open(download_url, '_blank', 'noopener,noreferrer');
     } catch (err: any) {
-      setError(err?.message || 'Echec');
+      setError(err?.message || 'Échec');
     }
   }
 

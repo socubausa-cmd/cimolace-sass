@@ -168,7 +168,7 @@ export function FormsList() {
       setNewOpen(false);
       await fetchForms();
     } catch (err: any) {
-      setError(err?.message || 'Echec');
+      setError(err?.message || 'Échec');
     } finally {
       setSaving(false);
     }
@@ -320,7 +320,7 @@ export function FormsList() {
                 Annuler
               </button>
               <button type="submit" disabled={saving} style={submitBtn('#8b5cf6', saving)}>
-                {saving ? 'Creation…' : 'Creer le formulaire'}
+                {saving ? 'Création…' : 'Créer le formulaire'}
               </button>
             </div>
           </form>

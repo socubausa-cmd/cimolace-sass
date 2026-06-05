@@ -75,7 +75,7 @@ export function PatientDetail() {
       setPatient(body.data || body);
       setEditOpen(false);
     } catch (err: any) {
-      setEditError(err?.message || 'Echec');
+      setEditError(err?.message || 'Échec');
     } finally {
       setSavingEdit(false);
     }
@@ -122,7 +122,7 @@ export function PatientDetail() {
       const body = await res.json();
       setInviteResult({ accept_url: body?.accept_url || body?.data?.accept_url || '' });
     } catch (err: any) {
-      setInviteError(err?.message || 'Echec');
+      setInviteError(err?.message || 'Échec');
     } finally {
       setInviting(false);
     }
@@ -141,7 +141,7 @@ export function PatientDetail() {
 
   async function handleExport() {
     if (!id) return;
-    if (!confirm("Generer un export RGPD complet du dossier patient ?\n\nL'export sera disponible dans 'Audit & RGPD' une fois pret.")) return;
+    if (!confirm("Générer un export RGPD complet du dossier patient ?\n\nL'export sera disponible dans 'Audit & RGPD' une fois prêt.")) return;
     try {
       const token = localStorage.getItem('supabase_token');
       const res = await fetch(API + '/med/gdpr/exports', {
@@ -158,9 +158,9 @@ export function PatientDetail() {
         alert(b?.message || `Erreur ${res.status}`);
         return;
       }
-      alert('✓ Export demande. Disponible dans Audit & RGPD une fois pret.');
+      alert('✓ Export demande. Disponible dans Audit & RGPD une fois prêt.');
     } catch (err: any) {
-      alert(err?.message || 'Echec');
+      alert(err?.message || 'Échec');
     }
   }
 
@@ -193,7 +193,7 @@ export function PatientDetail() {
       }
       alert('✓ Demande d\'anonymisation enregistree.');
     } catch (err: any) {
-      alert(err?.message || 'Echec');
+      alert(err?.message || 'Échec');
     }
   }
 
@@ -326,7 +326,7 @@ export function PatientDetail() {
                 </select>
               </label>
               <label>
-                <span style={editLabel}>Telephone</span>
+                <span style={editLabel}>Téléphone</span>
                 <input type="tel" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} style={inputStyle} />
               </label>
               <label style={{ gridColumn: '1 / -1' }}>
@@ -419,7 +419,7 @@ export function PatientDetail() {
                     disabled={inviting}
                     style={{ padding: '10px 18px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: inviting ? 'not-allowed' : 'pointer', opacity: inviting ? 0.7 : 1 }}
                   >
-                    {inviting ? 'Generation…' : 'Generer le lien'}
+                    {inviting ? 'Génération…' : 'Générer le lien'}
                   </button>
                 </div>
               </>

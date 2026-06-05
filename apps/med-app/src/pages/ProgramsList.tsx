@@ -165,7 +165,7 @@ export function ProgramsList() {
       await fetchPrograms();
       if (id) setSelectedId(id);
     } catch (err: any) {
-      setError(err?.message || 'Echec');
+      setError(err?.message || 'Échec');
     } finally {
       setSaving(false);
     }
@@ -201,7 +201,7 @@ export function ProgramsList() {
       setNewStep({ title: '', description: '', step_type: 'task', due_after_days: '0' });
       await fetchSteps(selectedId);
     } catch (err: any) {
-      setError(err?.message || 'Echec');
+      setError(err?.message || 'Échec');
     } finally {
       setSaving(false);
     }
@@ -225,7 +225,7 @@ export function ProgramsList() {
   async function handleEnroll(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedId || !enrollPatientId) {
-      setError('Selectionnez un patient');
+      setError('Sélectionnez un patient');
       return;
     }
     setSaving(true);
@@ -248,7 +248,7 @@ export function ProgramsList() {
       setEnrollNotes('');
       await fetchPrograms();
     } catch (err: any) {
-      setError(err?.message || 'Echec');
+      setError(err?.message || 'Échec');
     } finally {
       setSaving(false);
     }
@@ -314,7 +314,7 @@ export function ProgramsList() {
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, minHeight: 500 }}>
           {!selected ? (
             <p style={{ color: '#94a3b8', textAlign: 'center', marginTop: 200 }}>
-              Selectionnez un programme pour voir ses etapes
+              Sélectionnez un programme pour voir ses étapes
             </p>
           ) : (
             <>
@@ -411,7 +411,7 @@ export function ProgramsList() {
             </Field>
           </div>
           {error && <div style={errStyle}>{error}</div>}
-          <Actions onCancel={() => setNewProgramOpen(false)} saving={saving} submitLabel="Creer le programme" submitColor="#10b981" />
+          <Actions onCancel={() => setNewProgramOpen(false)} saving={saving} submitLabel="Créer le programme" submitColor="#10b981" />
         </Modal>
       )}
 
@@ -444,7 +444,7 @@ export function ProgramsList() {
         <Modal title={`Inscrire un patient — ${selected?.title || ''}`} onClose={() => !saving && setEnrollOpen(false)} onSubmit={handleEnroll}>
           <Field label="Patient *">
             <select required value={enrollPatientId} onChange={(e) => setEnrollPatientId(e.target.value)} style={inputStyle}>
-              <option value="">— Selectionnez —</option>
+              <option value="">— Sélectionnez —</option>
               {Object.values(patients).map((p) => <option key={p.id} value={p.id}>{patientName(p)}</option>)}
             </select>
           </Field>

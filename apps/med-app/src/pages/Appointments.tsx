@@ -144,7 +144,7 @@ export function Appointments() {
   async function handleCreateAvailability(e: React.FormEvent) {
     e.preventDefault();
     if (!practitionerId) {
-      setError('Pas de praticien connecte');
+      setError('Pas de praticien connecté');
       return;
     }
     setSaving(true);
@@ -168,14 +168,14 @@ export function Appointments() {
       setAvailOpen(false);
       await fetchAvailabilities();
     } catch (err: any) {
-      setError(err?.message || 'Echec');
+      setError(err?.message || 'Échec');
     } finally {
       setSaving(false);
     }
   }
 
   async function handleDeleteAvailability(id: string) {
-    if (!confirm('Supprimer cette disponibilite recurrente ?')) return;
+    if (!confirm('Supprimer cette disponibilité récurrente ?')) return;
     try {
       const res = await fetch(API + '/med/availability/' + id, {
         method: 'DELETE',
@@ -192,7 +192,7 @@ export function Appointments() {
   async function handleCreateAppointment(e: React.FormEvent) {
     e.preventDefault();
     if (!practitionerId) {
-      setError('Pas de praticien connecte');
+      setError('Pas de praticien connecté');
       return;
     }
     if (!apptForm.patient_id || !apptForm.scheduled_at) {
@@ -222,7 +222,7 @@ export function Appointments() {
       setApptForm({ patient_id: '', scheduled_at: '', duration_minutes: '30', appointment_type: 'in_person', reason: '' });
       await fetchAppointments();
     } catch (err: any) {
-      setError(err?.message || 'Echec');
+      setError(err?.message || 'Échec');
     } finally {
       setSaving(false);
     }
@@ -283,7 +283,7 @@ export function Appointments() {
       }
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (err: any) {
-      setError(err?.message || 'Echec');
+      setError(err?.message || 'Échec');
     }
   }
 
@@ -302,7 +302,7 @@ export function Appointments() {
       }
       await fetchAppointments();
     } catch (err: any) {
-      setError(err?.message || 'Echec');
+      setError(err?.message || 'Échec');
     }
   }
 
@@ -339,7 +339,7 @@ export function Appointments() {
             onClick={() => { setError(null); setAvailOpen(true); }}
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: '#fff', color: 'var(--brand-primary)', border: '1px solid var(--brand-primary)', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
           >
-            <Clock size={14} /> + Disponibilite
+            <Clock size={14} /> + Disponibilité
           </button>
           <button
             onClick={() => { setError(null); setApptOpen(true); }}
@@ -448,12 +448,12 @@ export function Appointments() {
         {/* Availability sidebar */}
         <aside style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 16, alignSelf: 'flex-start' }}>
           <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Clock size={14} /> Disponibilites recurrentes
+            <Clock size={14} /> Disponibilités récurrentes
           </h3>
           {availabilities.length === 0 && (
             <p style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', padding: 12 }}>
-              Aucune disponibilite definie.<br/>
-              Cliquez sur "+ Disponibilite" pour configurer vos creneaux hebdomadaires.
+              Aucune disponibilité définie.<br/>
+              Cliquez sur "+ Disponibilité" pour configurer vos créneaux hebdomadaires.
             </p>
           )}
           {availabilities.map((a) => (
@@ -504,7 +504,7 @@ export function Appointments() {
             </Field>
           </div>
           {error && <div style={errStyle}>{error}</div>}
-          <Actions onCancel={() => setAvailOpen(false)} saving={saving} submitLabel="Creer la disponibilite" submitColor="var(--brand-primary)" />
+          <Actions onCancel={() => setAvailOpen(false)} saving={saving} submitLabel="Créer la disponibilité" submitColor="var(--brand-primary)" />
         </Modal>
       )}
 
@@ -513,7 +513,7 @@ export function Appointments() {
         <Modal title="Nouveau rendez-vous" onClose={() => !saving && setApptOpen(false)} onSubmit={handleCreateAppointment}>
           <Field label="Patient *">
             <select required value={apptForm.patient_id} onChange={(e) => setApptForm({ ...apptForm, patient_id: e.target.value })} style={inputStyle}>
-              <option value="">— Selectionnez —</option>
+              <option value="">— Sélectionnez —</option>
               {Object.values(patients).map((p) => <option key={p.id} value={p.id}>{patientName(p)}</option>)}
             </select>
           </Field>
@@ -554,11 +554,13 @@ function KpiCard({ label, value, color }: { label: string; value: number; color:
 
 function ApptStatusBadge({ status }: { status: string }) {
   const config: Record<string, { bg: string; fg: string; label: string }> = {
-    pending: { bg: '#fef3c7', fg: '#92400e', label: 'A confirmer' },
-    confirmed: { bg: '#dbeafe', fg: '#1e40af', label: 'Confirme' },
-    completed: { bg: '#dcfce7', fg: '#166534', label: 'Termine' },
-    cancelled: { bg: '#fecaca', fg: '#991b1b', label: 'Annule' },
-    no_show: { bg: '#f1f5f9', fg: '#475569', label: 'No-show' },
+    pending: { bg: '#fef3c7', fg: '#92400e', label: 'À confirmer' },
+    requested: { bg: '#fef3c7', fg: '#92400e', label: 'Demandé' },
+    confirmed: { bg: '#dbeafe', fg: '#1e40af', label: 'Confirmé' },
+    completed: { bg: '#dcfce7', fg: '#166534', label: 'Terminé' },
+    cancelled: { bg: '#fecaca', fg: '#991b1b', label: 'Annulé' },
+    refused: { bg: '#fecaca', fg: '#991b1b', label: 'Refusé' },
+    no_show: { bg: '#f1f5f9', fg: '#475569', label: 'Absent' },
   };
   const c = config[status] || { bg: '#f1f5f9', fg: '#475569', label: status };
   return (
@@ -580,8 +582,8 @@ function ApptActions({ status, onAction }: { status: string; onAction: (a: 'conf
   if (status === 'confirmed') {
     return (
       <div style={{ display: 'flex', gap: 4 }}>
-        <ActionBtn icon={<CheckCircle size={14} />} title="Termine" color="#10b981" onClick={() => onAction('complete')} />
-        <ActionBtn icon={<AlertCircle size={14} />} title="No-show" color="#f59e0b" onClick={() => onAction('no-show')} />
+        <ActionBtn icon={<CheckCircle size={14} />} title="Terminé" color="#10b981" onClick={() => onAction('complete')} />
+        <ActionBtn icon={<AlertCircle size={14} />} title="Absent" color="#f59e0b" onClick={() => onAction('no-show')} />
         <ActionBtn icon={<XCircle size={14} />} title="Annuler" color="#dc2626" onClick={() => onAction('cancel')} />
       </div>
     );
