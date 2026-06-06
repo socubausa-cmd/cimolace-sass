@@ -38,7 +38,7 @@ export class TwinAiService {
   constructor(private readonly config: ConfigService) {}
 
   private get model(): string {
-    return this.config.get<string>('TWIN_AI_MODEL') || 'claude-3-5-sonnet-20241022';
+    return this.config.get<string>('TWIN_AI_MODEL') || 'claude-sonnet-4-6';
   }
 
   private async callClaude<T>(system: string, user: string, maxTokens = 1500): Promise<AiResult<T>> {
