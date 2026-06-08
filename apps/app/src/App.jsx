@@ -1,5 +1,14 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import ErrorBoundary from '@/components/ErrorBoundary';
+
+/** Redirige la racine "/" vers /auth/callback si un access_token est présent dans le hash
+ *  (magic link / recovery), sinon vers /login. Évite la perte du hash lors du Navigate initial. */
+function RootRedirect() {
+  const hash = typeof window !== 'undefined' ? window.location.hash : '';
+  const hasToken = hash.includes('access_token');
+  return <Navigate to={hasToken ? '/auth/callback' : '/login'} replace />;
+}
+
 // DEV PREVIEW — composant sans auth
 const SmartboardKonvaEditorV1 = lazy(() => import('@/features/smartboard-konva-editor/SmartboardKonvaEditorV1'));
 function DevSmartboardPreview() {
@@ -1098,7 +1107,7 @@ isLiriHostDevPreviewRoute;
             (ProrascienceCommercialPage) reste accessible via /ecoles/prorascience
             tant qu'ISNA n'a pas migré son Netlify vers Cimolace.
           */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<RootRedirect />} />
           <Route path="/version" element={<VersionPage />} />
           <Route path="/dev" element={<Navigate to="/dev/liri-host-ui" replace />} />
           {/* DEV PREVIEW — routes sans auth AVANT le catch-all /dev/* */}
