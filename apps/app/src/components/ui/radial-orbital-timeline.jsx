@@ -103,16 +103,16 @@ export default function RadialOrbitalTimeline({ timelineData = FOUNDER_THESES, c
       <div className="relative flex h-full w-full max-w-4xl items-center justify-center">
         <div className="absolute flex h-full w-full items-center justify-center" ref={orbitRef} style={{ perspective: '1000px' }}>
           {/* Cœur : portrait ou orbe doré */}
-          <div className="absolute z-10 flex h-16 w-16 items-center justify-center rounded-full">
-            <div className="absolute h-24 w-24 animate-ping rounded-full border opacity-60" style={{ borderColor: 'rgba(216,180,104,0.35)' }} />
-            <div className="absolute h-32 w-32 animate-ping rounded-full border opacity-40" style={{ borderColor: 'rgba(216,180,104,0.18)', animationDelay: '0.6s' }} />
+          <div className="absolute z-10 flex h-32 w-32 items-center justify-center rounded-full">
+            <div className="absolute h-40 w-40 animate-ping rounded-full border opacity-60" style={{ borderColor: 'rgba(216,180,104,0.35)' }} />
+            <div className="absolute h-48 w-48 animate-ping rounded-full border opacity-40" style={{ borderColor: 'rgba(216,180,104,0.18)', animationDelay: '0.6s' }} />
             {centerImage ? (
-              <div className="h-16 w-16 overflow-hidden rounded-full border-2 shadow-lg" style={{ borderColor: 'var(--gold)', boxShadow: '0 0 30px rgba(216,180,104,0.45)' }}>
+              <div className="h-32 w-32 overflow-hidden rounded-full border-2 shadow-lg" style={{ borderColor: 'var(--gold)', boxShadow: '0 0 45px rgba(216,180,104,0.5)' }}>
                 <img src={centerImage} alt="Le Manikongo" className="h-full w-full object-cover object-top" />
               </div>
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-full" style={{ background: 'radial-gradient(circle at 30% 30%, #e7cd8f, #bf9a4f 70%)', boxShadow: '0 0 30px rgba(216,180,104,0.5)' }}>
-                <div className="h-7 w-7 rounded-full" style={{ background: 'rgba(255,255,255,0.85)' }} />
+              <div className="flex h-32 w-32 items-center justify-center rounded-full" style={{ background: 'radial-gradient(circle at 30% 30%, #e7cd8f, #bf9a4f 70%)', boxShadow: '0 0 45px rgba(216,180,104,0.5)' }}>
+                <div className="h-12 w-12 rounded-full" style={{ background: 'rgba(255,255,255,0.85)' }} />
               </div>
             )}
           </div>

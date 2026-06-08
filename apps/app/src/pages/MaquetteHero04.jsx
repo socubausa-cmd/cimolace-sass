@@ -98,7 +98,7 @@ export default function MaquetteHero04() {
             <p className="absolute -top-2 left-4 text-xs font-semibold tracking-[0.3em] sm:left-16" style={gold}>
               SCIENCE AFRICAINE TOTALE
             </p>
-            <h1 className="mq-display relative z-20 text-center font-semibold leading-[0.9] tracking-tight text-6xl sm:text-8xl xl:text-[9.5rem]">
+            <h1 className="mq-display relative z-20 text-center font-semibold leading-[0.9] tracking-tight text-[clamp(2.25rem,11vw,3.875rem)] sm:text-8xl xl:text-[9.5rem]">
               PROR<span style={gold}>A</span>SCIENCE
             </h1>
             <p className="absolute -bottom-9 right-6 hidden text-3xl font-light tracking-[0.18em] xl:block" style={{ color: 'var(--muted)' }}>
