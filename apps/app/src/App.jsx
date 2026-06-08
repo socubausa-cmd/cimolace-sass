@@ -1,12 +1,17 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
-/** Redirige la racine "/" vers /auth/callback si un access_token est présent dans le hash
- *  (magic link / recovery), sinon vers /login. Évite la perte du hash lors du Navigate initial. */
+/** Redirige "/" vers la bonne destination selon le contexte :
+ *  1. access_token dans le hash (magic link / recovery) → /auth/callback
+ *  2. prorascience.org apex → vitrine publique ISNA /t/isna
+ *  3. tout autre host → /login
+ */
 function RootRedirect() {
   const hash = typeof window !== 'undefined' ? window.location.hash : '';
-  const hasToken = hash.includes('access_token');
-  return <Navigate to={hasToken ? '/auth/callback' : '/login'} replace />;
+  const host = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
+  if (hash.includes('access_token')) return <Navigate to="/auth/callback" replace />;
+  if (host === 'prorascience.org' || host === 'www.prorascience.org') return <Navigate to="/t/isna" replace />;
+  return <Navigate to="/login" replace />;
 }
 
 // DEV PREVIEW — composant sans auth
