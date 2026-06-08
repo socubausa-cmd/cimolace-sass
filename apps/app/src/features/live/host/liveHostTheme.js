@@ -67,19 +67,20 @@ body.lh-sp-on .lh-sp-glow{box-shadow:0 0 0 1px rgba(200,150,12,.22),0 0 28px rgb
 .lh-side-head-sub{margin-top:4px;font-size:9px;line-height:1.45;color:rgba(255,255,255,.38)}
 `;
 
-/** Shell visuel aligné sur Studio Smartboard Designer (#0F1117, panneaux respirants, rayons généreux). */
+/** Shell visuel aligné sur le **portail LIRI** (Zoom × Claude) : base chaude #262624,
+ *  glow coral, panneaux #30302e, lignes ivoire discrètes. (était #0F1117 bleu-Studio). */
 export const LH_DESIGN = {
-  pageBg: '#0F1117',
+  pageBg: '#262624',
   pageMesh:
-    'radial-gradient(ellipse 85% 55% at 50% -15%, rgba(34,211,238,0.055), transparent 58%), radial-gradient(ellipse 55% 40% at 100% 85%, rgba(167,139,250,0.045), transparent 52%), radial-gradient(ellipse 45% 32% at 0% 75%, rgba(245,158,11,0.035), transparent 48%)',
-  panelBg: 'rgba(20,19,28,0.97)',
-  panelBorder: '1px solid rgba(255,255,255,0.09)',
+    'radial-gradient(ellipse 85% 55% at 50% -15%, rgba(217,119,87,0.06), transparent 58%), radial-gradient(ellipse 55% 40% at 100% 85%, rgba(226,85,63,0.05), transparent 52%), radial-gradient(ellipse 45% 32% at 0% 75%, rgba(194,104,63,0.04), transparent 48%)',
+  panelBg: 'rgba(48,48,46,0.97)',
+  panelBorder: '1px solid rgba(245,244,238,0.09)',
   panelRadius: 16,
   innerRadius: 12,
   gap: 12,
-  stripBg: 'rgba(20,19,28,0.96)',
-  stripBorder: '1px solid rgba(255,255,255,0.09)',
-  canvasChromeBg: 'rgba(10,11,15,0.92)',
+  stripBg: 'rgba(43,41,38,0.96)',
+  stripBorder: '1px solid rgba(245,244,238,0.09)',
+  canvasChromeBg: 'rgba(31,30,28,0.92)',
 };
 
 /** Invité — même shell que l'hôte (LH_DESIGN) pour cohérence visuelle ; garder un objet vide pour overrides ciblés futurs. */
@@ -87,8 +88,8 @@ export const LH_GUEST_OVERRIDES = {};
 
 /** Cartes premium du panneau latéral droit (hôte/guest). */
 export const LH_SIDEBAR_CARD = {
-  border: '1px solid rgba(255,255,255,.09)',
-  background: 'rgba(20,19,28,0.95)',
+  border: '1px solid rgba(245,244,238,.09)',
+  background: 'rgba(48,48,46,0.95)',
   borderRadius: '14px',
   padding: '12px',
   boxShadow: 'inset 0 1px 0 rgba(255,255,255,.04), 0 10px 28px rgba(0,0,0,.24), 0 0 0 1px rgba(255,255,255,.02) inset',
@@ -97,11 +98,11 @@ export const LH_SIDEBAR_CARD = {
 
 export const LH_SIDEBAR_CARD_GLOW = {
   ...LH_SIDEBAR_CARD,
-  border: '1px solid rgba(245,158,11,.2)',
+  border: '1px solid rgba(217,119,87,.22)',
   background:
-    'radial-gradient(120% 90% at 12% -8%, rgba(245,158,11,.09), transparent 52%), #12111a',
+    'radial-gradient(120% 90% at 12% -8%, rgba(217,119,87,.10), transparent 52%), #2b2926',
   boxShadow:
-    'inset 0 1px 0 rgba(255,255,255,.05), 0 0 0 1px rgba(245,158,11,.08), 0 14px 36px rgba(0,0,0,.3)',
+    'inset 0 1px 0 rgba(255,255,255,.05), 0 0 0 1px rgba(217,119,87,.10), 0 14px 36px rgba(0,0,0,.3)',
 };
 
 /** Nom produit par rôle : pilote (lancement live) vs lien d'invitation. */

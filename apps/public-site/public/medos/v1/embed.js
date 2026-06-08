@@ -4,10 +4,10 @@
  *
  *   <div id="medos-portal"></div>
  *   <script
- *     src="https://cdn.cimolace.com/medos/v1/embed.js"
+ *     src="https://cimolace.space/medos/v1/embed.js"
  *     data-tenant="zahirwellness"
  *     data-mode="patient-portal"
- *     data-api-base="https://api.cimolace.com"
+ *     data-api-base="https://api.cimolace.space"
  *     async></script>
  *
  * Branding : depuis P8.3 le widget pull automatiquement le nom + logo +
@@ -35,7 +35,7 @@
   var TENANT_SLUG = SCRIPT_TAG.getAttribute("data-tenant");
   var MODE = SCRIPT_TAG.getAttribute("data-mode") || "patient-portal";
   var API_BASE =
-    SCRIPT_TAG.getAttribute("data-api-base") || "https://api.cimolace.com";
+    SCRIPT_TAG.getAttribute("data-api-base") || "https://api.cimolace.space";
   var TARGET_SELECTOR =
     SCRIPT_TAG.getAttribute("data-target") || "#medos-portal";
   // Override manuel : si le tenant a poste data-primary-color sur la balise,

@@ -144,7 +144,7 @@ export class EmbedService {
     });
 
     const apiBase =
-      this.config.get<string>('MEDOS_API_BASE') ?? 'https://api.cimolace.com';
+      this.config.get<string>('MEDOS_API_BASE') ?? 'https://api.cimolace.space';
 
     const t = tenant as {
       name?: string;
