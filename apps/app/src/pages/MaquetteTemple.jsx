@@ -11,10 +11,10 @@ const gold = { color: 'var(--gold)' };
 export const TEMPLE_SERVICES = [
   { title: 'Consultation', desc: 'Diagnostic des blocages, lecture énergétique et karmique, orientation. 50 € · 1h30.', img: TEMPLE(2), href: '/t/isna#offres' },
   { title: 'Culte & communion', desc: 'Le rythme communautaire en live : ouverture du mois, prière, enseignement. Dès 15 €/mois.', img: TEMPLE(6), href: '/t/isna#offres' },
-  { title: 'Interventions', desc: 'Exorcisme, rééquilibrage, hospitalisation spirituelle — selon la gravité du cas.', img: TEMPLE(3), href: '#' },
-  { title: 'Voyages initiatiques', desc: 'Rites de passage, sortie des anciens pactes, progression de conscience.', img: TEMPLE(8), href: '#' },
+  { title: 'Interventions', desc: 'Exorcisme, rééquilibrage, hospitalisation spirituelle — selon la gravité du cas.', img: TEMPLE(3), href: '/t/isna#offres' },
+  { title: 'Voyages initiatiques', desc: 'Rites de passage, sortie des anciens pactes, progression de conscience.', img: TEMPLE(8), href: '/t/isna#offres' },
   { title: 'Mentorat spirituel', desc: 'Un Moniteur dédié : protection, guérison, élévation. De 55 à 500 €/mois.', img: TEMPLE(5), href: '/t/isna#offres' },
-  { title: 'NZO-WA-NKSKI', desc: 'La maison des remèdes : pharmacie spirituelle et éléments rituels validés.', img: TEMPLE(7), href: '#' },
+  { title: 'NZO-WA-NKSKI', desc: 'La maison des remèdes : pharmacie spirituelle et éléments rituels validés.', img: TEMPLE(7), href: '/t/isna#offres' },
 ];
 
 const PARCOURS = [
