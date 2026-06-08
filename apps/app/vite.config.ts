@@ -4,6 +4,38 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        // Isole les vendors lourds de node_modules en chunks séparés (cache long-terme,
+        // sous-pages /t/isna plus légères). On ne regroupe QUE du node_modules — jamais
+        // de code app — sinon le lazy-loading des routes /t/isna serait cassé.
+        manualChunks(id: string) {
+          if (!id.includes('node_modules/')) return undefined;
+          const inMod = (name: string) => id.includes('node_modules/' + name);
+
+          if (inMod('three/')) return 'vendor-three';
+          if (inMod('@react-three/') || inMod('@splinetool/')) return 'vendor-react-three';
+          if (inMod('framer-motion/')) return 'vendor-framer-motion';
+          if (inMod('gsap/') || inMod('@gsap/')) return 'vendor-gsap';
+          // recharts, reactflow et d3-* partagent d3 → même chunk (sinon cycle reactflow↔charts).
+          if (inMod('recharts/') || inMod('victory-vendor/') || inMod('d3-') || inMod('reactflow/') || inMod('@reactflow/')) return 'vendor-charts';
+          if (inMod('mermaid/') || inMod('katex/') || inMod('cytoscape') || inMod('dagre')) return 'vendor-mermaid';
+          if (inMod('konva/') || inMod('react-konva/')) return 'vendor-konva';
+          if (inMod('pdfjs-dist/')) return 'vendor-pdfjs';
+          if (inMod('jspdf')) return 'vendor-jspdf';
+          if (inMod('@react-pdf/') || inMod('react-pdf/')) return 'vendor-react-pdf';
+          if (inMod('pdfmake/')) return 'vendor-pdfmake';
+          if (inMod('pptxgenjs/')) return 'vendor-pptxgenjs';
+          if (inMod('xlsx/')) return 'vendor-xlsx';
+          if (inMod('livekit-client/') || inMod('@livekit/')) return 'vendor-livekit';
+          if (inMod('react-dom/') || inMod('scheduler/') || inMod('react/')) return 'vendor-react';
+
+          return undefined;
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

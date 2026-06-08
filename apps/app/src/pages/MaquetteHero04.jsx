@@ -43,12 +43,28 @@ const OFFRES = [
     onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-consultation-90min'; },
   },
   {
+    planName: 'Mentorat Essentiel',
+    description: 'Rythme patrimonial',
+    price: '55', priceSuffix: '/mois', currency: '€',
+    features: ['1 rencontre / mois', 'Suivi de fond espacé', 'Accès cours & lives LIRI', 'Stabilisation, budget maîtrisé'],
+    buttonText: 'Choisir ce parcours', buttonVariant: 'secondary',
+    onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-mentorat-1x-month'; },
+  },
+  {
     planName: 'Mentorat Confort',
     description: 'Accompagnement régulier',
     price: '180', priceSuffix: '/mois', currency: '€', isPopular: true,
     features: ['1 rencontre / semaine', 'Suivi continu personnalisé', 'Accès cours & lives LIRI', 'Communauté encadrée'],
     buttonText: 'Choisir ce parcours', buttonVariant: 'primary',
     onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-mentorat-1x-week'; },
+  },
+  {
+    planName: 'Mentorat Intensif',
+    description: 'Veille renforcée',
+    price: '300', priceSuffix: '/mois', currency: '€',
+    features: ['2 rencontres / semaine', 'Lecture fine (songes, aura)', 'Dynamiques lourdes & transitions', 'Accompagnement rapproché'],
+    buttonText: 'Choisir ce parcours', buttonVariant: 'secondary',
+    onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-mentorat-2x-week'; },
   },
   {
     planName: 'Mentorat Souverain',
@@ -98,7 +114,7 @@ export default function MaquetteHero04() {
             <p className="absolute -top-2 left-4 text-xs font-semibold tracking-[0.3em] sm:left-16" style={gold}>
               SCIENCE AFRICAINE TOTALE
             </p>
-            <h1 className="mq-display relative z-20 text-center font-semibold leading-[0.9] tracking-tight text-6xl sm:text-8xl xl:text-[9.5rem]">
+            <h1 className="mq-display relative z-20 text-center font-semibold leading-[0.9] tracking-tight text-[clamp(2.25rem,11vw,3.875rem)] sm:text-8xl xl:text-[9.5rem]">
               PROR<span style={gold}>A</span>SCIENCE
             </h1>
             <p className="absolute -bottom-9 right-6 hidden text-3xl font-light tracking-[0.18em] xl:block" style={{ color: 'var(--muted)' }}>
