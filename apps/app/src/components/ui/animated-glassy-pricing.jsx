@@ -122,7 +122,7 @@ export const PricingCard = ({
     'backdrop-blur-[14px] rounded-2xl shadow-xl flex-1 px-7 py-8 flex flex-col transition-all duration-300',
     'bg-gradient-to-br from-white/[0.06] to-white/[0.02] border',
     isPopular
-      ? 'border-[#bf9a4f]/50 ring-2 ring-[#bf9a4f]/25 md:scale-105 relative shadow-2xl shadow-[#bf9a4f]/10'
+      ? 'border-[#bf9a4f]/50 ring-2 ring-[#bf9a4f]/25 lg:scale-105 relative shadow-2xl shadow-[#bf9a4f]/10'
       : 'border-white/[0.08] hover:border-white/20',
   ].join(' ');
 
@@ -201,7 +201,7 @@ export const ModernPricingPage = ({
           {subtitle}
         </p>
       </div>
-      <div className="flex flex-col md:flex-row gap-8 md:gap-6 justify-center items-stretch w-full max-w-5xl">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-5 justify-center items-stretch w-full max-w-7xl">
         {plans.map((plan) => (
           <PricingCard key={plan.planName} {...plan} />
         ))}

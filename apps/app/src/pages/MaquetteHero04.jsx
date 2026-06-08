@@ -43,12 +43,28 @@ const OFFRES = [
     onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-consultation-90min'; },
   },
   {
+    planName: 'Mentorat Essentiel',
+    description: 'Rythme patrimonial',
+    price: '55', priceSuffix: '/mois', currency: '€',
+    features: ['1 rencontre / mois', 'Suivi de fond espacé', 'Accès cours & lives LIRI', 'Stabilisation, budget maîtrisé'],
+    buttonText: 'Choisir ce parcours', buttonVariant: 'secondary',
+    onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-mentorat-1x-month'; },
+  },
+  {
     planName: 'Mentorat Confort',
     description: 'Accompagnement régulier',
     price: '180', priceSuffix: '/mois', currency: '€', isPopular: true,
     features: ['1 rencontre / semaine', 'Suivi continu personnalisé', 'Accès cours & lives LIRI', 'Communauté encadrée'],
     buttonText: 'Choisir ce parcours', buttonVariant: 'primary',
     onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-mentorat-1x-week'; },
+  },
+  {
+    planName: 'Mentorat Intensif',
+    description: 'Veille renforcée',
+    price: '300', priceSuffix: '/mois', currency: '€',
+    features: ['2 rencontres / semaine', 'Lecture fine (songes, aura)', 'Dynamiques lourdes & transitions', 'Accompagnement rapproché'],
+    buttonText: 'Choisir ce parcours', buttonVariant: 'secondary',
+    onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-mentorat-2x-week'; },
   },
   {
     planName: 'Mentorat Souverain',
