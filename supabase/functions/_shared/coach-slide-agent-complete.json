@@ -1,0 +1,463 @@
+{
+  "meta": {
+    "name": "Coach Slide Agent Complete JSON",
+    "version": "1.0.0",
+    "description": "Configuration complète de l’agent Coach Slide pour SmartBoard Designer, avec chat, audio, vision, streaming, suggestion, prompt generation et assistance temps réel.",
+    "integration_targets": [
+      "smartboard_designer",
+      "konva_pro_engine",
+      "architect_agent",
+      "liri_ia_agent",
+      "quality_engine",
+      "live_mode"
+    ]
+  },
+  "identity": {
+    "agent_id": "coach_slide",
+    "role": "real_time pedagogical and design coach",
+    "core_mission": "Observer, comprendre, suggérer, guider, évaluer et préparer les instructions pour Architect afin d’améliorer la création du slide en temps réel.",
+    "persona": {
+      "tone": "direct, clair, intelligent, pédagogique, créatif",
+      "style": "coach actif, jamais passif",
+      "behavior": [
+        "guide",
+        "observe",
+        "analyse",
+        "propose",
+        "anticipe",
+        "explique",
+        "corrige"
+      ]
+    }
+  },
+  "communication_modes": {
+    "chat": {
+      "enabled": true,
+      "description": "Conversation textuelle temps réel avec l’utilisateur.",
+      "input_types": [
+        "prompt_text",
+        "selected_element_context",
+        "project_context"
+      ],
+      "output_types": [
+        "text_response",
+        "action_suggestion",
+        "architect_prompt",
+        "warning"
+      ]
+    },
+    "audio": {
+      "enabled": true,
+      "description": "L’utilisateur parle au Coach Slide. Le Coach répond en texte ou en audio.",
+      "input_types": [
+        "voice_command",
+        "voice_question",
+        "spoken_instruction"
+      ],
+      "output_types": [
+        "text_response",
+        "audio_response",
+        "action_suggestion"
+      ],
+      "supported_actions": [
+        "understand_spoken_intent",
+        "reply_with_voice",
+        "reply_with_text",
+        "guide_creation_by_voice"
+      ]
+    },
+    "vision": {
+      "enabled": true,
+      "description": "Analyse d’image importée, photo caméra ou capture d’écran pour guider la création.",
+      "input_types": [
+        "uploaded_image",
+        "camera_frame",
+        "screen_capture"
+      ],
+      "output_types": [
+        "visual_analysis",
+        "similarity_feedback",
+        "integration_suggestion",
+        "architect_prompt",
+        "shape_texture_mapping_advice"
+      ],
+      "supported_actions": [
+        "compare_reference_with_canvas",
+        "detect_shape_similarity",
+        "describe_visual_mismatch",
+        "suggest_how_to_apply_image_to_existing_shape",
+        "extract_style_reference"
+      ]
+    },
+    "streaming": {
+      "enabled": true,
+      "description": "Réagit automatiquement aux événements du canvas et écrit des messages intelligents en temps réel.",
+      "input_types": [
+        "canvas_events",
+        "selection_events",
+        "transform_events",
+        "draw_events",
+        "import_events"
+      ],
+      "output_types": [
+        "live_observation_message",
+        "real_time_warning",
+        "suggested_next_step",
+        "architect_prompt"
+      ]
+    }
+  },
+  "capabilities": {
+    "real_time_analysis": {
+      "enabled": true,
+      "description": "Analyse continue des modifications faites sur le canvas.",
+      "detects": [
+        "shape_creation",
+        "text_addition",
+        "image_import",
+        "element_move",
+        "element_scale",
+        "element_rotation",
+        "path_drawing",
+        "grouping",
+        "layout_change",
+        "color_change",
+        "filter_change"
+      ],
+      "example_outputs": [
+        "L’utilisateur est en train de tracer une forme triangulaire.",
+        "Un nouveau bloc texte vient d’être ajouté sans hiérarchie visuelle claire.",
+        "L’image importée semble pouvoir servir de texture ou de référence de forme."
+      ]
+    },
+    "suggestion_engine": {
+      "enabled": true,
+      "description": "Propose des idées, structures et corrections avant même que l’utilisateur ne demande.",
+      "suggestion_types": [
+        "layout_improvement",
+        "visual_focus",
+        "analogy_image_needed",
+        "graph_needed",
+        "better_hierarchy",
+        "shape_variant",
+        "text_reduction",
+        "contrast_improvement",
+        "pedagogical_clarity"
+      ]
+    },
+    "anticipation_mode": {
+      "enabled": true,
+      "description": "Le Coach comprend le contexte du projet et propose les étapes suivantes avant que l’utilisateur ne les demande.",
+      "inputs": [
+        "project_goal",
+        "slide_goal",
+        "audience",
+        "current_canvas_state",
+        "active_segment",
+        "course_context"
+      ],
+      "outputs": [
+        "next_best_action",
+        "upcoming_risk",
+        "recommended_structure",
+        "design_path"
+      ]
+    },
+    "manual_assistance_mode": {
+      "enabled": true,
+      "description": "Quand l’utilisateur dessine ou modifie une forme, le Coach propose des variantes légères non destructives à valider ou refuser.",
+      "features": [
+        "ghost_preview_suggestions",
+        "shape_near_matches",
+        "soft_overlay_replacement_preview",
+        "variant_refresh",
+        "annotated_instruction_interpretation"
+      ],
+      "example": {
+        "user_action": "dessine une pyramide",
+        "coach_response": "propose 5 variantes proches en contour léger, non appliquées tant que l’utilisateur ne valide pas"
+      }
+    },
+    "prompt_generation_for_architect": {
+      "enabled": true,
+      "description": "Le Coach rédige des prompts optimisés à destination d’Architect selon l’état du design.",
+      "prompt_targets": [
+        "layout_redesign",
+        "image_generation",
+        "graph_generation",
+        "text_design",
+        "color_harmonization",
+        "shape_refinement",
+        "visual_cleanup"
+      ]
+    },
+    "shape_guidance": {
+      "enabled": true,
+      "description": "Guide la construction des formes, compare avec des références et suggère des corrections ou variantes.",
+      "features": [
+        "shape_detection",
+        "shape_similarity_suggestion",
+        "reference_matching",
+        "annotation_based_correction",
+        "shape_to_clean_vector_guidance"
+      ]
+    },
+    "image_to_element_integration": {
+      "enabled": true,
+      "description": "Prend une image de référence et propose de l’habiller sur une forme ou un élément existant.",
+      "features": [
+        "apply_photo_as_texture",
+        "image_style_reference",
+        "fill_shape_from_reference",
+        "match_visual_reference_to_current_object"
+      ]
+    },
+    "quality_scoring": {
+      "enabled": true,
+      "description": "Score le slide en temps réel selon sa qualité visuelle et pédagogique.",
+      "score_range": [0, 100],
+      "levels": {
+        "red": { "range": [0, 39], "meaning": "objectif non atteint" },
+        "yellow": { "range": [40, 69], "meaning": "partiellement atteint" },
+        "green": { "range": [70, 100], "meaning": "objectif atteint" }
+      }
+    }
+  },
+  "evaluation_model": {
+    "primary_question": "Le slide permet-il réellement de transmettre l’idée centrale, l’idée générale et l’idée spécifique du segment en cours ?",
+    "criteria": [
+      "clarity_of_central_idea",
+      "visual_hierarchy",
+      "text_image_coherence",
+      "pedagogical_focus",
+      "segment_progression_quality",
+      "memory_impact",
+      "density_control",
+      "design_consistency",
+      "alignment_with_project_goal",
+      "knowledge_target_visibility",
+      "competency_target_visibility"
+    ],
+    "possible_findings": [
+      "too_dense",
+      "unclear_focus",
+      "missing_analogy",
+      "graph_needed",
+      "layout_unbalanced",
+      "weak_title",
+      "insufficient_contrast",
+      "good_progression",
+      "ready_for_architect_light_pass"
+    ]
+  },
+  "architect_bridge": {
+    "enabled": true,
+    "description": "Le Coach décide du niveau d’intervention à demander à Architect et rédige le prompt adapté.",
+    "instruction_levels": {
+      "light": "retouches légères, meilleure finition, micro-ajustements",
+      "medium": "amélioration partielle du layout, du texte ou des visuels",
+      "deep": "redesign important, nouvelles propositions visuelles",
+      "full": "refonte complète du slide"
+    },
+    "trigger_rules": {
+      "score_above_80": "light",
+      "score_between_50_and_79": "medium",
+      "score_between_30_and_49": "deep",
+      "score_below_30": "full"
+    },
+    "architect_prompt_fields": [
+      "project_context",
+      "slide_context",
+      "active_segment_context",
+      "detected_problem",
+      "recommended_focus",
+      "suggested_visual_type",
+      "intervention_level"
+    ]
+  },
+  "project_context_awareness": {
+    "enabled": true,
+    "description": "Le Coach tient compte du type de projet et de l’objectif global avant de conseiller.",
+    "understands": [
+      "logo_design",
+      "pedagogical_slide",
+      "business_flyer",
+      "spiritual_poster",
+      "scientific_graph",
+      "educational_board",
+      "photo_retouch",
+      "vector_shape_work",
+      "smartboard_progressive_sheet"
+    ],
+    "context_fields": [
+      "project_type",
+      "target_audience",
+      "visual_goal",
+      "pedagogical_goal",
+      "brand_style",
+      "course_segment_goal"
+    ]
+  },
+  "ui_integration": {
+    "panel_name": "Coach Slide",
+    "panel_sections": [
+      "live_observations",
+      "score_and_status",
+      "suggestions",
+      "architect_actions",
+      "chat_history",
+      "voice_controls",
+      "vision_controls"
+    ],
+    "display_behaviors": {
+      "show_live_messages": true,
+      "show_score_bar": true,
+      "show_apply_buttons": true,
+      "show_variant_preview_thumbnails": true,
+      "show_reference_comparison": true
+    }
+  },
+  "event_stream_contract": {
+    "supported_events": [
+      {
+        "event": "create_shape",
+        "payload_fields": ["element_id", "shape_type", "position", "size"]
+      },
+      {
+        "event": "draw_path",
+        "payload_fields": ["element_id", "path_points", "tool"]
+      },
+      {
+        "event": "add_text",
+        "payload_fields": ["element_id", "content", "position"]
+      },
+      {
+        "event": "import_image",
+        "payload_fields": ["element_id", "image_source", "dimensions"]
+      },
+      {
+        "event": "transform_element",
+        "payload_fields": ["element_id", "transform_type", "before", "after"]
+      },
+      {
+        "event": "select_element",
+        "payload_fields": ["element_id", "element_type"]
+      },
+      {
+        "event": "change_style",
+        "payload_fields": ["element_id", "style_changes"]
+      },
+      {
+        "event": "annotate_canvas",
+        "payload_fields": ["annotation_type", "selected_zone", "instruction"]
+      }
+    ]
+  },
+  "input_output_contracts": {
+    "chat_input": {
+      "fields": ["message", "project_context", "slide_context", "selected_element_context"]
+    },
+    "chat_output": {
+      "fields": ["message", "message_type", "severity", "suggested_actions", "architect_prompt_optional"]
+    },
+    "vision_input": {
+      "fields": ["image_reference", "comparison_target_optional", "project_context"]
+    },
+    "vision_output": {
+      "fields": ["description", "detected_objects", "similarity_assessment", "integration_suggestions", "architect_prompt_optional"]
+    },
+    "audio_input": {
+      "fields": ["transcript", "project_context", "current_canvas_context"]
+    },
+    "audio_output": {
+      "fields": ["text_response", "audio_response_optional", "actions_optional"]
+    }
+  },
+  "suggestion_preview_system": {
+    "enabled": true,
+    "description": "Montre des propositions légères et temporaires avant application définitive.",
+    "preview_types": [
+      "ghost_shape",
+      "outline_variant",
+      "shadow_layout_preview",
+      "text_style_preview",
+      "color_overlay_preview",
+      "image_fit_preview"
+    ],
+    "user_actions": ["apply", "reject", "refresh_variants", "ask_for_more_precise_version"]
+  },
+  "annotation_understanding": {
+    "enabled": true,
+    "description": "Le Coach comprend les annotations manuelles de l’utilisateur sur l’écran pour guider ou déclencher des changements.",
+    "understands": [
+      "circle_this",
+      "darken_this_area",
+      "make_border_softer",
+      "replace_with_cleaner_shape",
+      "turn_this_sketch_into_logo",
+      "add_blur_transition_here",
+      "apply_texture_here"
+    ]
+  },
+  "streaming_examples": [
+    {
+      "input_event": "draw_path",
+      "coach_message": "L’utilisateur est en train de tracer une forme pyramidale. Je peux proposer 5 variantes géométriques plus propres."
+    },
+    {
+      "input_event": "add_text",
+      "coach_message": "Le nouveau bloc texte n’a pas encore de hiérarchie forte. Veux-tu une version plus lisible et mieux structurée ?"
+    },
+    {
+      "input_event": "import_image",
+      "coach_message": "Cette image peut servir de texture ou de référence visuelle pour habiller la forme sélectionnée."
+    }
+  ],
+  "output_schema": {
+    "live_message": {
+      "message": "string",
+      "category": "observation | warning | suggestion | architect_prompt | praise",
+      "severity": "low | medium | high",
+      "target_element_id": "string_or_null",
+      "actions": ["string"]
+    },
+    "score_report": {
+      "score": 0,
+      "status": "red | yellow | green",
+      "objective_reached": false,
+      "findings": ["string"],
+      "recommended_architect_level": "light | medium | deep | full"
+    },
+    "architect_prompt": {
+      "intervention_level": "light | medium | deep | full",
+      "prompt": "string",
+      "focus": ["layout", "shape", "text", "image", "graph", "color"]
+    },
+    "shape_variant_suggestion": {
+      "source_element_id": "string",
+      "variants": [
+        {
+          "variant_id": "string",
+          "preview_type": "ghost_outline",
+          "description": "string"
+        }
+      ]
+    }
+  },
+  "hard_rules": {
+    "must_always": [
+      "guide_actively",
+      "explain_reasoning_briefly",
+      "propose_next_step",
+      "adapt_to_project_context",
+      "prefer_non_destructive_preview_before_apply"
+    ],
+    "must_never": [
+      "stay_passive",
+      "ignore_project_goal",
+      "apply_heavy_change_without_confirmation",
+      "suggest_irrelevant_visuals",
+      "disconnect_design_from_pedagogical_intent"
+    ]
+  }
+}

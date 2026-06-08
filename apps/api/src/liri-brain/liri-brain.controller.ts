@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -14,7 +15,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentTenant } from '../tenant/current-tenant.decorator';
 import { TenantGuard } from '../tenant/tenant.guard';
 import type { TenantContext } from '../tenant/tenant.types';
-import { ChatDto } from './dto/chat.dto';
+import { SkipResponseWrapper } from '../common/decorators/skip-response-wrapper.decorator';
 import { LiriBrainService } from './liri-brain.service';
 import { BrainToolsService } from './brain-tools.service';
 import type { LiriMessage, LiriModel } from './liri-brain.types';
@@ -102,11 +103,55 @@ export class LiriBrainController {
     return this.liriBrain.getConversation(tenant.id, id);
   }
 
+  /**
+   * Sauvegarde (création ou mise à jour) d'une conversation. Appelé par le front
+   * à la fin de chaque tour. `messages` = transcript complet ; sans conversationId
+   * → création. RBAC : JwtAuthGuard + TenantGuard (niveau contrôleur).
+   */
+  @Post('conversations')
+  saveConversation(
+    @Body()
+    body: {
+      conversationId?: string;
+      model?: LiriModel;
+      title?: string;
+      messages?: LiriMessage[];
+    },
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
+  ) {
+    const userId = ((req as any).user?.id as string) ?? '';
+    return this.liriBrain.saveConversation(
+      tenant.id,
+      userId,
+      (body?.model ?? 'deepseek-chat') as LiriModel,
+      body?.title ?? '',
+      Array.isArray(body?.messages) ? body.messages : [],
+      body?.conversationId,
+    );
+  }
+
+  @Delete('conversations/:id')
+  deleteConversation(
+    @Param('id') id: string,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
+  ) {
+    const userId = ((req as any).user?.id as string) ?? '';
+    return this.liriBrain.deleteConversation(tenant.id, userId, id);
+  }
+
   // ── SSE Chat Stream ──────────────────────────────────────────────────────
 
+  // @SkipResponseWrapper : sans ça, le ResponseInterceptor global emballe chaque
+  // MessageEvent SSE dans { data: … } → double encapsulation que le front ne sait
+  // pas défaire (il fait un seul JSON.parse). On laisse passer le flux brut.
   @Sse('chat')
+  @SkipResponseWrapper()
   chat(
-    @Body() _dto: ChatDto,
+    // ⚠️ NE PAS ajouter @Body() ici : @Sse() est un GET sans corps, et le
+    // ValidationPipe global rejetterait un body vide contre un DTO (message
+    // requis) → 400 avant le handler. Tous les paramètres viennent de la query.
     @Req() req: Request & { query: Record<string, string> },
     @CurrentTenant() tenant: TenantContext,
   ): Observable<MessageEvent> {
@@ -122,19 +167,18 @@ export class LiriBrainController {
       });
     }
 
-    const messages: LiriMessage[] = [
-      { role: 'user', content: message },
-    ];
-
-    // ?tools=1 → boucle function-calling (lecture auto / écriture = confirmation)
-    const generator =
-      req.query.tools === '1'
-        ? this.liriBrain.streamChatWithTools(model, messages, {
-            tenant,
-            userId: ((req as any).user?.id as string) ?? '',
-            role: tenant.userRole,
-          })
-        : this.liriBrain.streamChat(model, messages, tenant);
+    // ?tools=1 → boucle function-calling (lecture auto / écriture = confirmation).
+    // streamConversation charge l'historique (conversationId) → mémoire du LLM.
+    const generator = this.liriBrain.streamConversation(
+      model,
+      message,
+      {
+        tenant,
+        userId: ((req as any).user?.id as string) ?? '',
+        role: tenant.userRole,
+      },
+      { conversationId, useTools: req.query.tools === '1' },
+    );
     return sseFromGenerator(generator);
   }
 }

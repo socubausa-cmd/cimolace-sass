@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "isna-app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:app"],
+      "port": 5200
+    },
+    {
+      "name": "public-site",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:public-site"],
+      "port": 3000
+    }
+  ]
+}

@@ -305,6 +305,73 @@ export class CourseBuilderService {
     return { illustration_url: imageUrl, prompt };
   }
 
+  // ── Rendu MP4 split-screen (file course_render_jobs, worker FFmpeg) ────────
+
+  /** Enqueue un rendu : construit la spec depuis formation_day_contents.data. Remplace l'edge render-enqueue (404). */
+  async enqueuePostprodRender(
+    tenantId: string,
+    _userId: string,
+    dto: { contentId: string; renderMode?: string; exportResolution?: string },
+  ) {
+    const { data: content } = await (this.supabase.client as any)
+      .from('formation_day_contents')
+      .select('data')
+      .eq('id', dto.contentId)
+      .single();
+    const d = (content && content.data) || {};
+
+    // Source vidéo : signer le chemin de stockage CÔTÉ SERVEUR (URL fraîche ~2h) —
+    // robuste vs l'URL signée client (qui n'est pas persistée et expire).
+    let sourceVideoUrl = '';
+    const storagePath = String(d.storagePath || '');
+    if (storagePath) {
+      try {
+        const { data: signed } = await (this.supabase.client as any).storage
+          .from('videos')
+          .createSignedUrl(storagePath, 7200);
+        sourceVideoUrl = String(signed?.signedUrl || '');
+      } catch (e) {
+        this.logger.warn(`createSignedUrl (videos/${storagePath}) échec: ${String(e)}`);
+      }
+    }
+    if (!sourceVideoUrl) {
+      sourceVideoUrl = String(d.url || d.videoUrl || Object.values(d.sourceVideoUrlsByRef || {})[0] || '');
+    }
+
+    // Slides = data: URLs (PNG canvas), mappés au chapitre via slideIndex.
+    const frames: any[] = Array.isArray(d.renderSlideFrames) ? d.renderSlideFrames : [];
+    const chapters: any[] = Array.isArray(d.chapters) ? d.chapters : [];
+    const slides = frames
+      .map((f, i) => {
+        const url = typeof f === 'string' ? f : String(f?.url || f?.dataUrl || f?.image || '');
+        const idx = Number.isFinite(Number(f?.slideIndex)) ? Number(f.slideIndex) : i;
+        const ch = chapters[idx] || chapters[i] || {};
+        const dur = Math.max(1, Math.round(Number(ch.endSeconds || 0) - Number(ch.startSeconds || 0))) || 4;
+        return { url, durationSeconds: dur };
+      })
+      .filter((s) => s.url);
+    const [w, h] = String(dto.exportResolution || '1280x720').split('x').map((n) => parseInt(n, 10));
+    const payload = { sourceVideoUrl, slides, width: w || 1280, height: h || 720, renderMode: dto.renderMode ?? 'pedagogical' };
+
+    const { data: job } = await (this.supabase.client as any)
+      .from('course_render_jobs')
+      .insert({ tenant_id: tenantId, content_id: dto.contentId, status: 'queued', payload })
+      .select('*')
+      .single();
+    return { ok: true, jobId: job?.id ?? null, status: 'queued', slides: slides.length, hasSource: Boolean(sourceVideoUrl) };
+  }
+
+  async getPostprodRenderStatus(tenantId: string, contentId: string) {
+    const { data } = await (this.supabase.client as any)
+      .from('course_render_jobs')
+      .select('id,status,output_url,error,created_at,updated_at')
+      .eq('tenant_id', tenantId)
+      .eq('content_id', contentId)
+      .order('created_at', { ascending: false })
+      .limit(10);
+    return { jobs: data ?? [] };
+  }
+
   private naiveSegment(text: string): { title: string; content: string; index: number }[] {
     const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
     return paragraphs.map((p, i) => ({ title: `Segment ${i + 1}`, content: p.trim(), index: i }));

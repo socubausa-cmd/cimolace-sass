@@ -2298,7 +2298,7 @@ function RenderExportPanel({
     if (!contentId) return;
     setJobsLoading(true);
     try {
-      const body = await invokeFnGet('render-status', { contentId });
+      const body = await courseBuilderApi.renderStatus(contentId);
       setJobs(Array.isArray(body?.jobs) ? body.jobs : []);
     } catch {
       // silent
@@ -2330,7 +2330,7 @@ function RenderExportPanel({
     setEnqueueLoading(true);
     setRenderError('');
     try {
-      await invokeFn('render-enqueue', { contentId, renderMode, exportResolution });
+      await courseBuilderApi.renderEnqueue({ contentId, renderMode, exportResolution });
       await fetchJobs();
     } catch (e) {
       setRenderError(String(e?.message || e));

@@ -1,0 +1,4 @@
+# Sans ça (ou sans `supabase functions deploy … --no-verify-jwt`), la passerelle renvoie
+# 401 {"message":"Invalid JWT"} AVANT index.ts — le front ne peut pas corriger ça seul.
+# Déploiement : npm run deploy:edge:liri-smartboard-designer-chat
+verify_jwt = false

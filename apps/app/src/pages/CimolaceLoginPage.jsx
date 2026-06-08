@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import {
-  GraduationCap, Stethoscope, ShoppingBag, Zap,
+  GraduationCap, Stethoscope, ShoppingBag, Zap, Sparkles,
   ArrowRight, Shield, Globe,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -13,10 +13,11 @@ const DEV_CIMOLACE_EMAIL    = 'cimolace-admin@prorascience.local';
 const DEV_CIMOLACE_PASSWORD = 'CimolaceDev2026';
 
 const PRODUCTS = [
-  { icon: GraduationCap, label: 'École',     desc: 'ISNA · 11 moteurs · Live, cours, IA',   color: '#10b981' },
-  { icon: Stethoscope,   label: 'MedOS',     desc: 'EHR · praticiens · patients · prescriptions', color: '#3b82f6' },
-  { icon: ShoppingBag,   label: 'Mbolo',     desc: 'Commerce · catalogue · paiements',      color: '#f59e0b' },
-  { icon: Zap,           label: 'Community', desc: 'Forum · messagerie · événements',       color: '#8b5cf6' },
+  { icon: Sparkles,      label: 'LIRI Studio', desc: 'Live + IA · Studio · Masterclass · SmartBoard', color: '#6366f1' },
+  { icon: GraduationCap, label: 'École',       desc: 'ISNA · 11 moteurs · Live, cours, IA',           color: '#10b981' },
+  { icon: Stethoscope,   label: 'MedOS',       desc: 'EHR · praticiens · patients · prescriptions',   color: '#3b82f6' },
+  { icon: ShoppingBag,   label: 'Mbolo',       desc: 'Commerce · catalogue · paiements',              color: '#f59e0b' },
+  { icon: Zap,           label: 'Community',   desc: 'Forum · messagerie · événements',               color: '#8b5cf6' },
 ];
 
 export default function CimolaceLoginPage() {

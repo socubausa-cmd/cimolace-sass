@@ -181,8 +181,13 @@ const ProspectInterviewLoungePage = lazy(() => import('@/pages/ProspectInterview
 const FormationsPage = lazy(() => import('@/pages/FormationsPage')); // New Page
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
-const MaquetteAccueil = lazy(() => import('@/pages/MaquetteAccueil'));
 const MaquetteHero04 = lazy(() => import('@/pages/MaquetteHero04'));
+const MaquetteCosmos = lazy(() => import('@/pages/MaquetteCosmos'));
+const MaquetteFondateur = lazy(() => import('@/pages/MaquetteFondateur'));
+const MaquetteMission = lazy(() => import('@/pages/MaquetteMission'));
+const MaquetteProgramme = lazy(() => import('@/pages/MaquetteProgramme'));
+const MaquetteTemple = lazy(() => import('@/pages/MaquetteTemple'));
+const MaquetteEcole = lazy(() => import('@/pages/MaquetteEcole'));
 const PublicHomePage = lazy(() => import('@/pages/PublicHomePage'));
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 const PublicIsnaPage = lazy(() => import('@/pages/PublicIsnaPage'));
@@ -289,6 +294,7 @@ const StudentCertificatesPage = lazy(() => import('@/pages/StudentCertificatesPa
 const SecretariatPage = lazy(() => import('@/pages/SecretariatPage'));
 const SchoolVitrinePage = lazy(() => import('@/pages/SchoolVitrinePage'));
 const SchoolVitrineTenantPage = lazy(() => import('@/pages/school/SchoolVitrineTenantPage'));
+const PaiementPage = lazy(() => import('@/pages/school/PaiementPage'));
 const SchoolBillingPage = lazy(() => import('@/pages/school/SchoolBillingPage'));
 const SchoolLoginPage = lazy(() => import('@/pages/school/SchoolLoginPage'));
 const SchoolGoogleCallback = lazy(() => import('@/pages/school/SchoolGoogleCallback'));
@@ -383,6 +389,8 @@ const MedosPatientDetail = lazy(() => import('@/pages/MedosPatientDetail').then(
 const MedosPatientPortal = lazy(() => import('@/pages/MedosPatientPortal').then((m) => ({ default: m.MedosPatientPortal })));
 const MboloCatalog = lazy(() => import('@/pages/MboloCatalog').then((m) => ({ default: m.MboloCatalog })));
 const MboloOrders = lazy(() => import('@/pages/MboloOrders').then((m) => ({ default: m.MboloOrders })));
+const TenantBillingPage = lazy(() => import('@/pages/TenantBillingPage').then((m) => ({ default: m.TenantBillingPage })));
+const TenantPayoutsPage = lazy(() => import('@/pages/TenantPayoutsPage').then((m) => ({ default: m.TenantPayoutsPage })));
 const AboutProrascience = lazy(() => import('@/pages/AboutProrascience'));
 const FounderAboutPage = lazy(() => import('@/pages/FounderAboutPage'));
 const TeamPage = lazy(() => import('@/pages/TeamPage'));
@@ -437,6 +445,10 @@ const MasterclassFactoryPage = lazy(() => import('@/pages/tools/MasterclassFacto
 const MasterclassFactoryAnalysePage = lazy(() => import('@/pages/tools/MasterclassFactoryAnalysePage'));
 const OrchestratorLiveDashboardPage = lazy(() => import('@/app/dashboard/liri/orchestrator-live/page'));
 const SmartboardStreamingPage = lazy(() => import('@/app/dashboard/liri/smartboard-stream/page'));
+// Chat LIRI Brain (multi-modèles + outils + conversations persistées). Export nommé → default pour lazy().
+const DashboardLiri = lazy(() => import('@/pages/DashboardLiri').then((m) => ({ default: m.DashboardLiri })));
+// Portail LIRI — accueil/hub (rail Accueil/Lives/Forum/Studio/Biblio/Brain + stats live)
+const LiriPortalPage = lazy(() => import('@/pages/LiriPortalPage').then((m) => ({ default: m.LiriPortalPage })));
 const LiriStudioHub = lazy(() => import('@/pages/dev/LiriStudioHub'));
 const MasterclassFactoryV2 = lazy(() => import('@/pages/dev/MasterclassFactoryV2'));
 const OrchestratorLiveV2 = lazy(() => import('@/pages/dev/OrchestratorLiveV2'));
@@ -1232,8 +1244,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/app" element={<AppMemberAccessPage />} />
           <Route path="/home" element={<Navigate to="/app" replace />} />
           <Route path="/landing" element={<LandingPage />} />
-          <Route path="/maquette" element={<MaquetteAccueil />} />
-          <Route path="/maquette-b" element={<MaquetteHero04 />} />
+          {/* Maquettes portées en production : voir /t/isna et /t/isna/{ecole,temple,programme,mission,fondateur,doctrine} */}
           <Route path="/isna" element={<Navigate to={TENANT_ADMIN_PATH} replace />} /> {/* Legacy ISNA route - redirects to tenant system */}
           <Route path="/temple-ngowazulu" element={<PublicNgowazuluPage />} />
           <Route path="/vitrine" element={<SchoolVitrinePage />} />
@@ -1281,6 +1292,16 @@ isLiriHostDevPreviewRoute;
               <MboloOrders />
             </ProtectedRoleRoute>
           } />
+          <Route path="/dashboard/billing" element={
+            <ProtectedRoleRoute allowedRoles={['owner', 'admin']}>
+              <TenantBillingPage />
+            </ProtectedRoleRoute>
+          } />
+          <Route path="/dashboard/payouts" element={
+            <ProtectedRoleRoute allowedRoles={['owner', 'admin']}>
+              <TenantPayoutsPage />
+            </ProtectedRoleRoute>
+          } />
           <Route path="/dashboard/tools/masterclass-factory" element={
             <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
               <MasterclassFactoryPage />
@@ -1304,6 +1325,16 @@ isLiriHostDevPreviewRoute;
           <Route path="/dashboard/liri/smartboard-stream" element={
             <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
               <SmartboardStreamingPage />
+            </ProtectedRoleRoute>
+          } />
+          <Route path="/dashboard/liri" element={
+            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
+              <DashboardLiri />
+            </ProtectedRoleRoute>
+          } />
+          <Route path="/liri" element={
+            <ProtectedRoleRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student']}>
+              <LiriPortalPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/choose-account-type" element={
@@ -1804,6 +1835,14 @@ isLiriHostDevPreviewRoute;
           } />
 
           {/* ── Routes publiques tenant ─────────────────────────────────── */}
+          {/* Landing dédiée ISNA / PRORASCIENCE — nouveau design narratif (maquette portée). L'apex prorascience.org redirige vers /t/isna */}
+          <Route path="/t/isna" element={<MaquetteHero04 />} />
+          <Route path="/t/isna/ecole" element={<MaquetteEcole />} />
+          <Route path="/t/isna/temple" element={<MaquetteTemple />} />
+          <Route path="/t/isna/programme" element={<MaquetteProgramme />} />
+          <Route path="/t/isna/mission" element={<MaquetteMission />} />
+          <Route path="/t/isna/fondateur" element={<MaquetteFondateur />} />
+          <Route path="/t/isna/doctrine" element={<MaquetteCosmos />} />
           <Route
             path="/t/:tenantSlug"
             element={<SchoolVitrineTenantPage />}
@@ -1823,6 +1862,10 @@ isLiriHostDevPreviewRoute;
           <Route
             path="/t/:tenantSlug/courses"
             element={<SchoolCoursesPage />}
+          />
+          <Route
+            path="/t/:tenantSlug/paiement"
+            element={<PaiementPage />}
           />
 
           {/* ── Dashboard admin école (route principale) ─────────────────── */}

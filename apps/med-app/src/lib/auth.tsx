@@ -22,12 +22,23 @@ export function SupabaseProvider({ children, url, anonKey }: { children: ReactNo
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // Persist the access token under the key every page reads for its API
+  // calls (`localStorage.getItem('supabase_token')`). Without this, a logged-in
+  // user still sends an empty Bearer → every MEDOS API call 401s. Works for
+  // ALL sign-in paths (password, magic link, refresh) because it hooks the
+  // session, not the login form.
+  const syncToken = (s: any) => {
+    const tok = s?.access_token;
+    if (tok) localStorage.setItem('supabase_token', tok);
+    else localStorage.removeItem('supabase_token');
+  };
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s); setUser(s?.user ?? null); setLoading(false);
+      syncToken(s); setSession(s); setUser(s?.user ?? null); setLoading(false);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s); setUser(s?.user ?? null);
+      syncToken(s); setSession(s); setUser(s?.user ?? null);
     });
     return () => subscription.unsubscribe();
   }, [supabase]);

@@ -8,12 +8,15 @@ const footerLinks = {
   Produit: [
     { label: "Infrastructures", href: "/#infrastructures" },
     { label: "Moteurs", href: "/#engines" },
+    { label: "LIRI", href: "/liri" },
     { label: "MedOS", href: "/medos" },
     { label: "Tarifs", href: "/pricing" },
   ],
   Ressources: [
     { label: "Blog", href: "/blog" },
     { label: "Documentation", href: "/docs" },
+    { label: "Doc LIRI", href: "/liri/integration" },
+    { label: "Doc MedOS", href: "/medos/integration" },
     { label: "API Reference", href: "/docs/api" },
     { label: "Statut", href: "/status" },
   ],

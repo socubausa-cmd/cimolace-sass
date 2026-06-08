@@ -30,8 +30,14 @@ export class ReplayService {
   }
 
   async listReplays(tenantId: string) {
-    const { data } = await (this.supabase.client as any).from('live_recordings').select('*')
-      .filter('status', 'eq', 'completed').order('completed_at', { ascending: false });
+    // IMPORTANT : filtrer par tenant_id pour éviter les fuites cross-tenant.
+    // On rejoint live_sessions pour récupérer le tenant_id via session_id.
+    const { data } = await (this.supabase.client as any)
+      .from('live_recordings')
+      .select('*, live_sessions!inner(tenant_id)')
+      .eq('live_sessions.tenant_id', tenantId)
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: false });
     return data ?? [];
   }
 }

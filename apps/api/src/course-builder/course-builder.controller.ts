@@ -34,4 +34,8 @@ export class CourseBuilderController {
   @Post('pipeline-auto-segment') pipelineAutoSegment(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.pipelineAutoSegment(t.id, d ?? {}); }
   @Post('pipeline-master-script') pipelineMasterScript(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.pipelineMasterScript(t.id, d ?? {}); }
   @Post('segment-illustration-regenerate') segmentIllustration(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.segmentIllustrationRegenerate(t.id, ((r as any).user?.id as string) ?? '', d ?? {}); }
+
+  // ── Rendu MP4 split-screen ──
+  @Post('render-enqueue') enqueueRender2(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.enqueuePostprodRender(t.id, ((r as any).user?.id as string) ?? '', d ?? {}); }
+  @Get('render-status') renderStatus(@Query('contentId') contentId: string, @CurrentTenant() t: TenantContext) { return this.svc.getPostprodRenderStatus(t.id, contentId); }
 }

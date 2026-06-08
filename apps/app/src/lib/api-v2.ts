@@ -134,6 +134,16 @@ export const checkoutApi = {
     apiV2.post<ApiEnvelope<{ url: string; accountId: string }>>('/checkout/stripe-connect/onboarding', { return_url: returnUrl }).then(unwrap),
 };
 
+// ── Offering checkout (PawaPay) — abonnement mentorat / consultation / offrande ──
+export const offeringCheckoutApi = {
+  createMobileMoney: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/offering-checkout/mobile-money', body).then(unwrap),
+  getStatus: (depositId: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/offering-checkout/mobile-money/${depositId}/status`).then(unwrap),
+  getProviders: (country?: string) =>
+    apiV2.get<ApiEnvelope<any[]>>(`/offering-checkout/providers${country ? `?country=${encodeURIComponent(country)}` : ''}`).then(unwrap),
+};
+
 // ── Marketing ───────────────────────────────────────────────────────────────
 
 export const marketingApi = {
@@ -281,6 +291,10 @@ export const courseBuilderApi = {
     apiV2.post<ApiEnvelope<any>>('/course-builder/pipeline-master-script', body).then(unwrap),
   segmentIllustrationRegenerate: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/course-builder/segment-illustration-regenerate', body).then(unwrap),
+  renderEnqueue: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/course-builder/render-enqueue', body).then(unwrap),
+  renderStatus: (contentId: string) =>
+    apiV2.get<ApiEnvelope<any>>('/course-builder/render-status', { params: { contentId } }).then(unwrap),
 };
 
 // ── Courses ─────────────────────────────────────────────────────────────────
