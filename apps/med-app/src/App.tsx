@@ -14,12 +14,16 @@ import { ChartingPage } from './pages/ChartingPage';
 import { Threads } from './pages/Threads';
 import { Appointments } from './pages/Appointments';
 import { AuditPage } from './pages/AuditPage';
+import { HandoffPage } from './pages/HandoffPage';
 import { Layout } from './components/Layout';
 
 const queryClient = new QueryClient();
 
 function AppRoutes() {
   const { isAuthenticated, loading } = useAuth();
+  // SSO handoff landing (embedded dashboard) — must run before the auth gate,
+  // since it's what establishes the session.
+  if (typeof window !== 'undefined' && window.location.pathname === '/handoff') return <HandoffPage />;
   if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>;
   if (!isAuthenticated) return <LoginPage />;
   return (

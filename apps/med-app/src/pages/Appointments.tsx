@@ -66,6 +66,7 @@ export function Appointments() {
   const { user } = useAuth();
   const { supabase } = useSupabase();
   const practitionerId = (user as any)?.id || '';
+  const [tab, setTab] = useState<'upcoming' | 'past' | 'all'>('upcoming');
 
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -305,16 +306,27 @@ export function Appointments() {
     }
   }
 
-  // -- Group appointments by day ----------------------------------------
-  const grouped = appointments.reduce<Record<string, Appointment[]>>((acc, a) => {
+  // -- Tabs : on ne mélange JAMAIS les RDV passés et à venir -------------
+  const now = Date.now();
+  const isPastAppt = (a: Appointment) =>
+    new Date(a.scheduled_at).getTime() < now ||
+    a.status === 'completed' ||
+    a.status === 'cancelled' ||
+    a.status === 'no_show';
+  const upcoming = appointments.filter((a) => !isPastAppt(a));
+  const past = appointments.filter((a) => isPastAppt(a));
+  const tabAppts = tab === 'upcoming' ? upcoming : tab === 'past' ? past : appointments;
+
+  // Grouper les RDV de l'onglet courant par jour.
+  const grouped = tabAppts.reduce<Record<string, Appointment[]>>((acc, a) => {
     const dayKey = new Date(a.scheduled_at).toISOString().slice(0, 10);
     (acc[dayKey] = acc[dayKey] || []).push(a);
     return acc;
   }, {});
-  const sortedDays = Object.keys(grouped).sort();
-
-  const now = Date.now();
-  const upcoming = appointments.filter((a) => new Date(a.scheduled_at).getTime() >= now && a.status !== 'cancelled');
+  // À venir : le plus proche d'abord. Passés / Tous : le plus récent d'abord.
+  const sortedDays = Object.keys(grouped).sort((a, b) =>
+    tab === 'upcoming' ? a.localeCompare(b) : b.localeCompare(a),
+  );
 
   return (
     <div>
@@ -355,17 +367,41 @@ export function Appointments() {
             <KpiCard label="A confirmer" value={appointments.filter((a) => a.status === 'pending').length} color="#f59e0b" />
           </div>
 
-          {appointments.length === 0 && (
+          {/* Nav interne — sépare clairement à venir / passés */}
+          <div style={{ display: 'inline-flex', gap: 4, marginBottom: 16, background: '#f1f5f9', padding: 4, borderRadius: 10 }}>
+            {([['upcoming', 'À venir', upcoming.length], ['past', 'Passés', past.length], ['all', 'Tous', appointments.length]] as const).map(([key, label, count]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setTab(key)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 8, border: 'none',
+                  cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.15s',
+                  background: tab === key ? '#fff' : 'transparent',
+                  color: tab === key ? '#6366f1' : '#64748b',
+                  boxShadow: tab === key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
+                }}
+              >
+                {label}
+                <span style={{ fontSize: 11, fontWeight: 700, minWidth: 16, textAlign: 'center', padding: '1px 6px', borderRadius: 10, background: tab === key ? '#eef2ff' : '#e2e8f0', color: tab === key ? '#6366f1' : '#64748b' }}>{count}</span>
+              </button>
+            ))}
+          </div>
+
+          {tabAppts.length === 0 && (
             <p style={{ background: '#fff', padding: 24, borderRadius: 12, border: '1px solid #e2e8f0', color: '#94a3b8', textAlign: 'center' }}>
-              Aucun rendez-vous. Cliquez sur "Nouveau RDV" pour en planifier un.
+              {tab === 'upcoming'
+                ? 'Aucun rendez-vous à venir.'
+                : tab === 'past'
+                  ? 'Aucun rendez-vous passé.'
+                  : 'Aucun rendez-vous. Cliquez sur « Nouveau RDV » pour en planifier un.'}
             </p>
           )}
 
           {sortedDays.map((day) => {
             const dayDate = new Date(day + 'T12:00:00');
-            const isPast = dayDate.getTime() < now - 24 * 3600 * 1000;
             return (
-              <div key={day} style={{ marginBottom: 16, opacity: isPast ? 0.7 : 1 }}>
+              <div key={day} style={{ marginBottom: 16 }}>
                 <h3 style={{ fontSize: 13, fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
                   {dayDate.toLocaleDateString('fr', { weekday: 'long', day: '2-digit', month: 'long' })}
                 </h3>
