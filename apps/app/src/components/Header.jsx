@@ -63,7 +63,6 @@ const Header = () => {
   const isMultiRoleUser = hasMultiRoleAccess(user);
   const effectiveRole = getEffectiveRole(user);
   const dashboardPath = resolveDashboardPath(user);
-  const navVersion = 'NAV-PREMIUM-V2-FIX';
   const { slug: resolvedTenantSlug } = useResolvedTenantSlug();
   const tenantSlugLc = String(resolvedTenantSlug || '').trim().toLowerCase();
   const pathnameLc = String(location.pathname || '').toLowerCase();
@@ -382,10 +381,6 @@ const Header = () => {
             {/* LEFT: Logo */}
             <div className="flex-shrink-0 flex items-center gap-4 mr-2 lg:mr-8 z-[101]">
               <Logo size={isScrolled ? "small" : "medium"} variant="dark" hideWordmarkImage={hideLiriWordmarkImage} />
-              {/* Badge de version nav — utile en QA desktop, masqué en mobile (place / lisibilité). */}
-              <span className="hidden lg:inline-flex rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#D4AF37]">
-                {navVersion}
-              </span>
             </div>
 
             {/* CENTER: Navigation (Desktop) */}
