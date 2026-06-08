@@ -1,15 +1,22 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  Sparkles, Plus, ArrowUpRight, ArrowUp, Search, MessageSquareText, Trash2,
+  PanelLeft, ShieldCheck, ShieldAlert, Check, ChevronDown, Zap, Paperclip,
+  BookOpen, BarChart3, Calendar,
+} from 'lucide-react';
 import { authStore } from '../lib/auth-store';
 import { getApiBaseUrl } from '../lib/apiBase';
+import './DashboardLiri.css';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 type LiriModel =
   | 'deepseek-chat'
   | 'deepseek-reasoner'
-  | 'claude-sonnet-4-20250514'
-  | 'claude-opus-4-20250514'
+  | 'claude-sonnet-4-6'
+  | 'claude-opus-4-8'
+  | 'claude-haiku-4-5-20251001'
   | 'gpt-4o'
   | 'gpt-4o-mini';
 
@@ -40,8 +47,9 @@ interface Conversation {
 const MODELS: ModelInfo[] = [
   { key: 'deepseek-chat',         name: 'DeepSeek V4',        provider: 'deepseek',   description: 'Généraliste · 1M tokens',         color: '#4f8ef7', icon: '🔷' },
   { key: 'deepseek-reasoner',     name: 'DeepSeek Reasoner',  provider: 'deepseek',   description: 'Raisonnement profond',              color: '#2dd4bf', icon: '🧠' },
-  { key: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', provider: 'anthropic',  description: 'Équilibré · rapide',                color: '#c084fc', icon: '⚡' },
-  { key: 'claude-opus-4-20250514',   name: 'Claude Opus 4',   provider: 'anthropic',  description: 'Le plus puissant',                  color: '#f472b6', icon: '👑' },
+  { key: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'anthropic',  description: 'Équilibré · rapide',                color: '#c084fc', icon: '⚡' },
+  { key: 'claude-opus-4-8',   name: 'Claude Opus 4.8',   provider: 'anthropic',  description: 'Le plus puissant',                  color: '#f472b6', icon: '👑' },
+  { key: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5', provider: 'anthropic', description: 'Léger · économique',           color: '#a78bfa', icon: '🍃' },
   { key: 'gpt-4o',                name: 'GPT-4o',             provider: 'openai',     description: 'Multimodal · polyvalent',           color: '#34d399', icon: '🌐' },
   { key: 'gpt-4o-mini',           name: 'GPT-4o Mini',        provider: 'openai',     description: 'Léger · économique',                color: '#86efac', icon: '⚡' },
 ];
@@ -121,7 +129,7 @@ async function streamLiriBrain(
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function DashboardLiri() {
-  const [model, setModel]                   = useState<LiriModel>('claude-sonnet-4-20250514');
+  const [model, setModel]                   = useState<LiriModel>('claude-sonnet-4-6');
   const [messages, setMessages]             = useState<Message[]>([]);
   const [input, setInput]                   = useState('');
   const [streaming, setStreaming]           = useState(false);
@@ -132,21 +140,52 @@ export function DashboardLiri() {
   const [pendingConfirm, setPendingConfirm]   = useState<{ tool: string; args: Record<string, unknown> } | null>(null);
   const bottomRef   = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Refs miroir : lus dans les callbacks SSE / persistance sans dépendre du timing de setState.
+  const messagesRef     = useRef<Message[]>([]);
+  const activeConvIdRef = useRef<string | null>(null);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+  useEffect(() => { activeConvIdRef.current = activeConvId; }, [activeConvId]);
 
   const base  = getApiBaseUrl();
   const token = authStore.getToken();
   const slug  = authStore.getTenantSlug();
 
-  // Load conversations
-  useEffect(() => {
+  // Rafraîchit la liste (défait l'enveloppe { data } du ResponseInterceptor — sinon liste toujours vide).
+  const refreshConversations = useCallback(() => {
     if (!token) return;
     fetch(`${base}/liri/brain/conversations`, {
       headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug },
     })
       .then((r) => r.json())
-      .then((data) => setConversations(Array.isArray(data) ? data : []))
+      .then((data) => {
+        const arr = data?.data ?? data;
+        setConversations(Array.isArray(arr) ? arr : []);
+      })
       .catch(() => {});
   }, [base, token, slug]);
+
+  useEffect(() => { refreshConversations(); }, [refreshConversations]);
+
+  // Persiste le transcript courant (création si pas d'activeConvId, sinon mise à jour) et rafraîchit la liste.
+  const persistConversation = useCallback(async (msgs: Message[]) => {
+    const clean = msgs
+      .filter((m) => m.content && !m.pending)
+      .map((m) => ({ role: m.role, content: m.content }));
+    if (clean.length < 2) return; // au moins un échange complet
+    try {
+      const r = await fetch(`${base}/liri/brain/conversations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug },
+        body: JSON.stringify({ conversationId: activeConvIdRef.current ?? undefined, model, messages: clean }),
+      });
+      const data = await r.json().catch(() => null);
+      const conv = data?.data ?? data;
+      if (conv?.id) {
+        if (!activeConvIdRef.current) { activeConvIdRef.current = conv.id; setActiveConvId(conv.id); }
+        refreshConversations();
+      }
+    } catch { /* persistance best-effort */ }
+  }, [base, token, slug, model, refreshConversations]);
 
   // Auto scroll
   useEffect(() => {
@@ -161,11 +200,29 @@ export function DashboardLiri() {
     }
   }, [input]);
 
+  const deleteConversation = useCallback(async (id: string) => {
+    if (!window.confirm('Supprimer cette conversation ?')) return;
+    try {
+      await fetch(`${base}/liri/brain/conversations/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug },
+      });
+    } catch { /* best-effort */ }
+    if (activeConvIdRef.current === id) {
+      setMessages([]); setActiveConvId(null);
+      activeConvIdRef.current = null; messagesRef.current = [];
+    }
+    refreshConversations();
+  }, [base, token, slug, refreshConversations]);
+
   const currentModel = MODEL_MAP[model];
 
   const sendMessage = async () => {
     const text = input.trim();
     if (!text || streaming) return;
+
+    const prior = messagesRef.current;   // tours précédents (déjà settlés)
+    let assistantText = '';
 
     setInput('');
     setMessages((prev) => [...prev, { role: 'user', content: text }]);
@@ -179,6 +236,7 @@ export function DashboardLiri() {
       model,
       activeConvId,
       (chunk) => {
+        assistantText += chunk;
         setMessages((prev) => {
           const updated = [...prev];
           const last = updated[updated.length - 1];
@@ -198,6 +256,15 @@ export function DashboardLiri() {
           }
           return updated;
         });
+        // Persiste le tour (création/maj) — uniquement s'il y a une vraie réponse texte
+        // (la voie tool_confirm n'a pas encore de réponse → sauvegardée après confirmation).
+        if (assistantText.trim()) {
+          void persistConversation([
+            ...prior,
+            { role: 'user', content: text },
+            { role: 'assistant', content: assistantText },
+          ]);
+        }
       },
       (err) => {
         setStreaming(false);
@@ -232,6 +299,7 @@ export function DashboardLiri() {
     const { tool, args } = pendingConfirm;
     setPendingConfirm(null);
     setStreaming(true);
+    let resultMsg: Message;
     try {
       const r = await fetch(`${base}/liri/brain/tools/execute`, {
         method: 'POST',
@@ -239,21 +307,24 @@ export function DashboardLiri() {
         body: JSON.stringify({ name: tool, args }),
       });
       const data = await r.json().catch(() => ({}));
-      setMessages((prev) => [...prev, {
+      resultMsg = {
         role: 'assistant',
-        content: r.ok ? `✓ Action « ${tool} » exécutée.` : `⚠️ Échec (${r.status}) : ${data?.message ?? ''}`,
+        content: r.ok ? `✓ Action « ${tool} » exécutée.` : `⚠️ Échec (${r.status}) : ${data?.error?.message ?? data?.message ?? ''}`,
         pending: false,
-      }]);
+      };
     } catch (e) {
-      setMessages((prev) => [...prev, { role: 'assistant', content: `⚠️ ${String(e)}`, pending: false }]);
-    } finally {
-      setStreaming(false);
+      resultMsg = { role: 'assistant', content: `⚠️ ${String(e)}`, pending: false };
     }
+    setMessages((prev) => [...prev, resultMsg]);
+    setStreaming(false);
+    void persistConversation([...messagesRef.current, resultMsg]);
   };
 
   const cancelTool = () => {
     setPendingConfirm(null);
-    setMessages((prev) => [...prev, { role: 'assistant', content: 'Action annulée.', pending: false }]);
+    const msg: Message = { role: 'assistant', content: 'Action annulée.', pending: false };
+    setMessages((prev) => [...prev, msg]);
+    void persistConversation([...messagesRef.current, msg]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -266,17 +337,21 @@ export function DashboardLiri() {
   const newConversation = () => {
     setMessages([]);
     setActiveConvId(null);
+    activeConvIdRef.current = null;   // évite d'appendre au thread précédent si on renvoie aussitôt
+    messagesRef.current = [];
   };
 
   const loadConversation = async (id: string) => {
     setActiveConvId(id);
+    activeConvIdRef.current = id;
     const r = await fetch(`${base}/liri/brain/conversations/${id}`, {
       headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug },
     });
-    const data = await r.json();
-    if (data?.messages) {
-      setMessages(data.messages as Message[]);
-      if (data.model) setModel(data.model as LiriModel);
+    const json = await r.json();
+    const conv = json?.data ?? json;          // défait l'enveloppe { data } du ResponseInterceptor
+    if (conv?.messages) {
+      setMessages(conv.messages as Message[]);
+      if (conv.model) setModel(conv.model as LiriModel);
     }
   };
 
@@ -288,329 +363,215 @@ export function DashboardLiri() {
     };
     const p = map[provider] ?? { label: provider, bg: '#1f2937' };
     return (
-      <span style={{ background: p.bg, color: '#d1d5db', fontSize: 10, padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>
+      <span style={{ background: p.bg, color: '#f1eee9', fontSize: 9.5, padding: '2px 7px', borderRadius: 999, fontWeight: 600 }}>
         {p.label}
       </span>
     );
   };
 
+  const activeTitle = conversations.find((c) => c.id === activeConvId)?.title ?? 'Nouvelle conversation';
+  const tenantLabel = (slug || 'École').replace(/-/g, ' ');
+
+  const SUGGESTIONS = [
+    { icon: Calendar,   text: 'Quels sont les prochains lives ?' },
+    { icon: BarChart3,  text: "Donne les statistiques de l'école" },
+    { icon: BookOpen,   text: 'Liste les cours disponibles' },
+    { icon: Search,     text: 'Cherche dans la base de connaissances' },
+  ];
+
   return (
-    <div style={{
-      display: 'flex', height: '100dvh', background: '#030711', color: '#e5e7eb',
-      fontFamily: "'Inter', -apple-system, sans-serif",
-    }}>
-
-      {/* ── Sidebar ── */}
-      {sidebarOpen && (
-        <aside style={{
-          width: 240, minWidth: 240, background: '#050a16', borderRight: '1px solid rgba(255,255,255,0.07)',
-          display: 'flex', flexDirection: 'column', overflow: 'hidden',
-        }}>
-          {/* Logo */}
-          <div style={{ padding: '18px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: 10,
-                background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
-                boxShadow: '0 0 20px -6px rgba(124,58,237,0.8)',
-              }}>✦</div>
-              <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em' }}>LIRI</span>
-            </div>
-            <p style={{ marginTop: 4, fontSize: 11, color: '#6b7280' }}>Assistant IA multi-modèles</p>
-          </div>
-
-          {/* New chat button */}
-          <div style={{ padding: '12px 12px 8px' }}>
-            <button
-              onClick={newConversation}
-              style={{
-                width: '100%', padding: '8px 12px', borderRadius: 8,
-                background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)',
-                color: '#a78bfa', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}
-            >
-              <span style={{ fontSize: 16 }}>+</span> Nouvelle conversation
-            </button>
-          </div>
-
-          {/* Conversation history */}
-          <div style={{ flex: 1, overflow: 'auto', padding: '4px 8px' }}>
-            {conversations.length === 0 ? (
-              <p style={{ fontSize: 11, color: '#4b5563', padding: '8px 8px' }}>Aucune conversation sauvegardée</p>
-            ) : (
-              conversations.map((conv) => (
-                <button
-                  key={conv.id}
-                  onClick={() => void loadConversation(conv.id)}
-                  style={{
-                    width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8,
-                    background: activeConvId === conv.id ? 'rgba(124,58,237,0.15)' : 'transparent',
-                    border: activeConvId === conv.id ? '1px solid rgba(124,58,237,0.25)' : '1px solid transparent',
-                    color: '#d1d5db', fontSize: 12, cursor: 'pointer', marginBottom: 2,
-                    display: 'block',
-                  }}
-                >
-                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>
-                    {conv.title}
-                  </div>
-                  <div style={{ color: '#6b7280', fontSize: 10, marginTop: 2 }}>
-                    {MODEL_MAP[conv.model]?.name ?? conv.model}
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
-
-          {/* Back link */}
-          <div style={{ padding: 12, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-            <Link to="/dashboard" style={{ color: '#6b7280', fontSize: 12, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
-              ← Retour au dashboard
-            </Link>
-          </div>
-        </aside>
-      )}
-
-      {/* ── Main ── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
-
-        {/* Header */}
-        <header style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)',
-          background: 'rgba(5,10,22,0.6)', backdropFilter: 'blur(12px)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button
-              onClick={() => setSidebarOpen((v) => !v)}
-              style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: 18, padding: 4 }}
-            >☰</button>
-            <h1 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>LIRI Brain</h1>
-          </div>
-
-          {/* Model selector */}
-          <div style={{ position: 'relative' }}>
-            <button
-              onClick={() => setModelPickerOpen((v) => !v)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px',
-                borderRadius: 8, background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.12)', color: '#e5e7eb',
-                fontSize: 13, fontWeight: 600, cursor: 'pointer',
-              }}
-            >
-              <span style={{ color: currentModel.color }}>{currentModel.icon}</span>
-              {currentModel.name}
-              {providerBadge(currentModel.provider)}
-              <span style={{ color: '#6b7280', fontSize: 10 }}>▼</span>
-            </button>
-
-            {modelPickerOpen && (
-              <div style={{
-                position: 'absolute', right: 0, top: '110%', zIndex: 50,
-                background: '#0d1526', border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 12, padding: 8, width: 280,
-                boxShadow: '0 20px 60px -10px rgba(0,0,0,0.8)',
-              }}>
-                {MODELS.map((m) => (
-                  <button
-                    key={m.key}
-                    onClick={() => { setModel(m.key); setModelPickerOpen(false); }}
-                    style={{
-                      width: '100%', textAlign: 'left', padding: '10px 12px',
-                      borderRadius: 8,
-                      background: model === m.key ? 'rgba(124,58,237,0.15)' : 'transparent',
-                      border: model === m.key ? '1px solid rgba(124,58,237,0.3)' : '1px solid transparent',
-                      color: '#e5e7eb', cursor: 'pointer', marginBottom: 2,
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ color: m.color, fontSize: 16 }}>{m.icon}</span>
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: 13 }}>{m.name}</div>
-                        <div style={{ color: '#6b7280', fontSize: 11 }}>{m.description}</div>
-                      </div>
-                      {providerBadge(m.provider)}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </header>
-
-        {/* Messages */}
-        <div style={{ flex: 1, overflow: 'auto', padding: '24px 20px' }} onClick={() => setModelPickerOpen(false)}>
-          {messages.length === 0 ? (
-            <div style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              height: '100%', gap: 16,
-            }}>
-              <div style={{
-                width: 72, height: 72, borderRadius: 20,
-                background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36,
-                boxShadow: '0 0 40px -10px rgba(124,58,237,0.6)',
-              }}>✦</div>
-              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em' }}>
-                Bonjour, je suis LIRI
-              </h2>
-              <p style={{ color: '#6b7280', fontSize: 14, textAlign: 'center', maxWidth: 400, margin: 0 }}>
-                Votre assistant IA multi-modèles. Posez-moi une question, demandez une analyse,
-                créez du contenu pédagogique, ou explorez vos données.
-              </p>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 }}>
-                {[
-                  '📚 Crée un plan de cours',
-                  '🔬 Analyse ce texte',
-                  '✍️ Rédige une introduction',
-                  '🧠 Explique ce concept',
-                ].map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    onClick={() => { setInput(suggestion.slice(3)); textareaRef.current?.focus(); }}
-                    style={{
-                      padding: '8px 14px', borderRadius: 20,
-                      background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                      color: '#d1d5db', fontSize: 13, cursor: 'pointer',
-                    }}
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div style={{ maxWidth: 800, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: 'flex',
-                    flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
-                    gap: 12, alignItems: 'flex-start',
-                  }}
-                >
-                  {/* Avatar */}
-                  <div style={{
-                    width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-                    background: msg.role === 'user'
-                      ? 'linear-gradient(135deg, #4f46e5, #7c3aed)'
-                      : 'linear-gradient(135deg, #7c3aed, #c084fc)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 14, fontWeight: 700,
-                  }}>
-                    {msg.role === 'user' ? 'U' : '✦'}
-                  </div>
-
-                  {/* Bubble */}
-                  <div style={{
-                    maxWidth: '75%',
-                    padding: '12px 16px',
-                    borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                    background: msg.role === 'user'
-                      ? 'linear-gradient(135deg, #4f46e5, #7c3aed)'
-                      : 'rgba(255,255,255,0.05)',
-                    border: msg.role === 'user' ? 'none' : '1px solid rgba(255,255,255,0.08)',
-                    fontSize: 14, lineHeight: 1.6,
-                    whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                  }}>
-                    {msg.content}
-                    {msg.pending && (
-                      <span style={{ display: 'inline-flex', gap: 3, marginLeft: 4 }}>
-                        {[0, 1, 2].map((j) => (
-                          <span key={j} style={{
-                            width: 4, height: 4, borderRadius: '50%', background: '#9ca3af',
-                            animation: `pulse 1.2s ease-in-out ${j * 0.2}s infinite`,
-                          }}/>
-                        ))}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-              <div ref={bottomRef} />
-            </div>
-          )}
-        </div>
-
-        {/* Confirmation d'action (tool_confirm de la boucle function-calling) */}
-        {pendingConfirm && (
-          <div style={{ padding: '0 20px 12px' }}>
-            <div style={{ maxWidth: 800, margin: '0 auto', borderRadius: 14, border: '1px solid rgba(217,119,87,0.4)', background: 'rgba(217,119,87,0.10)', padding: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#e0795f' }}>Action à confirmer</div>
-              <div style={{ marginTop: 6, fontSize: 13.5, color: '#e5e7eb' }}>
-                Outil <code style={{ color: '#e0795f' }}>{pendingConfirm.tool}</code>
-                <span style={{ color: '#9ca3af' }}> · {JSON.stringify(pendingConfirm.args)}</span>
-              </div>
-              <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
-                <button onClick={() => void confirmTool()} disabled={streaming} style={{ padding: '6px 14px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: '#fff', background: 'linear-gradient(135deg,#d97757,#c2683f)' }}>Confirmer &amp; exécuter</button>
-                <button onClick={cancelTool} style={{ padding: '6px 14px', borderRadius: 9, cursor: 'pointer', fontSize: 12, fontWeight: 500, color: '#9ca3af', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>Annuler</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Input */}
-        <div style={{
-          padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.07)',
-          background: 'rgba(5,10,22,0.8)', backdropFilter: 'blur(12px)',
-        }}>
-          <div style={{ maxWidth: 800, margin: '0 auto' }}>
-            <div style={{
-              display: 'flex', gap: 10, alignItems: 'flex-end',
-              background: 'rgba(255,255,255,0.05)', borderRadius: 16,
-              border: '1px solid rgba(255,255,255,0.1)', padding: '10px 14px',
-            }}>
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Écris ton message... (Entrée pour envoyer, Shift+Entrée pour retour à la ligne)"
-                disabled={streaming}
-                style={{
-                  flex: 1, background: 'none', border: 'none', outline: 'none',
-                  color: '#e5e7eb', fontSize: 14, lineHeight: 1.6, resize: 'none',
-                  minHeight: 24, maxHeight: 200, overflow: 'auto',
-                  fontFamily: 'inherit',
-                }}
-                rows={1}
-              />
-              <button
-                onClick={() => void sendMessage()}
-                disabled={!input.trim() || streaming}
-                style={{
-                  width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                  background: input.trim() && !streaming
-                    ? 'linear-gradient(135deg, #7c3aed, #4f46e5)'
-                    : 'rgba(255,255,255,0.08)',
-                  border: 'none', cursor: input.trim() && !streaming ? 'pointer' : 'default',
-                  color: 'white', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.2s',
-                }}
-              >
-                {streaming ? '⏳' : '↑'}
-              </button>
-            </div>
-            <p style={{ margin: '6px 0 0', fontSize: 11, color: '#4b5563', textAlign: 'center' }}>
-              Modèle actif : <strong style={{ color: currentModel.color }}>{currentModel.name}</strong> · {currentModel.description}
-            </p>
-          </div>
-        </div>
+    <div className="lq-root relative h-[100dvh] w-full overflow-hidden bg-stone-50 text-stone-900">
+      {/* fond vivant */}
+      <div className="lq-aurora">
+        <div className="lq-blob" style={{ width: '46vw', height: '46vw', left: '-8vw', top: '-6vw', background: 'radial-gradient(circle at 30% 30%, #FFD8A8, #FF8A4C 60%, transparent 72%)' }} />
+        <div className="lq-blob" style={{ width: '40vw', height: '40vw', right: '-6vw', top: '8vh', background: 'radial-gradient(circle at 50% 50%, #FFC9C9, #F2622E 55%, transparent 70%)', animationDelay: '-8s' }} />
+        <div className="lq-blob" style={{ width: '38vw', height: '38vw', left: '30vw', bottom: '-14vw', background: 'radial-gradient(circle at 50% 50%, #E5D4FF, #7C5CFF 55%, transparent 72%)', opacity: .5, animationDelay: '-15s' }} />
       </div>
 
-      <style>{`
-        @keyframes pulse {
-          0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
-          40% { opacity: 1; transform: scale(1); }
-        }
-        * { box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-      `}</style>
+      <div className="relative z-10 h-full p-3 flex gap-3">
+
+        {/* ───────── SIDEBAR ───────── */}
+        {sidebarOpen && (
+          <aside className="w-[284px] shrink-0 rounded-[26px] lq-glass lq-hair lq-shadow-glass flex flex-col overflow-hidden">
+            <div className="px-5 pt-5 pb-4 flex items-center gap-3">
+              <div className="lq-pulse relative grid place-items-center h-11 w-11 rounded-2xl lq-ember lq-iris text-white"><Sparkles size={20} /></div>
+              <div>
+                <div className="lq-display text-[23px] leading-none font-semibold tracking-tight">LIRI <span className="lq-ember-text">Brain</span></div>
+                <div className="text-[11.5px] text-stone-500 mt-1 flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> assistant de l'école</div>
+              </div>
+            </div>
+
+            <div className="px-3.5">
+              <button onClick={newConversation} className="lq-lift-hov group w-full flex items-center justify-between rounded-2xl px-4 py-3 text-white lq-ember lq-shadow-lift cursor-pointer">
+                <span className="flex items-center gap-2.5 font-medium text-[14px]"><Plus size={17} /> Nouvelle conversation</span>
+                <ArrowUpRight size={16} className="opacity-80" />
+              </button>
+            </div>
+
+            <div className="px-3.5 mt-5 mb-2 flex items-center justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Récentes</span>
+              <Search size={14} className="text-stone-400" />
+            </div>
+            <nav className="lq-scroll flex-1 overflow-y-auto px-2.5 space-y-1">
+              {conversations.length === 0 ? (
+                <p className="text-[12px] text-stone-400 px-3 py-2">Aucune conversation pour l'instant</p>
+              ) : conversations.map((conv) => {
+                const active = activeConvId === conv.id;
+                return (
+                  <div key={conv.id} className={`group flex items-center gap-1 rounded-2xl transition ${active ? 'bg-white/70 lq-hair lq-shadow-glass' : 'hover:bg-white/60'}`}>
+                    <button onClick={() => void loadConversation(conv.id)} className="flex-1 min-w-0 text-left px-3.5 py-2.5 flex items-center gap-2.5 cursor-pointer">
+                      <span className={`grid place-items-center h-7 w-7 rounded-xl shrink-0 ${active ? 'lq-ember text-white' : 'bg-stone-100 text-stone-500'}`}><MessageSquareText size={13} /></span>
+                      <div className="min-w-0">
+                        <div className="text-[13.5px] font-medium truncate text-stone-800">{conv.title}</div>
+                        <div className="text-[11px] text-stone-400 truncate">{MODEL_MAP[conv.model]?.name ?? conv.model}</div>
+                      </div>
+                    </button>
+                    <button onClick={() => void deleteConversation(conv.id)} title="Supprimer la conversation" aria-label="Supprimer" className="opacity-0 group-hover:opacity-100 transition grid place-items-center h-7 w-7 mr-2 rounded-lg text-stone-400 hover:text-red-500 hover:bg-white/70 cursor-pointer"><Trash2 size={14} /></button>
+                  </div>
+                );
+              })}
+            </nav>
+
+            <div className="m-2.5 rounded-2xl lq-glass-soft lq-hair p-3.5">
+              <div className="flex items-center gap-2.5">
+                <span className="grid place-items-center h-8 w-8 rounded-xl text-white text-[12px] font-bold shrink-0" style={{ background: 'linear-gradient(135deg,#5b7a52,#6d8f60)' }}>{tenantLabel.slice(0, 2).toUpperCase()}</span>
+                <div className="min-w-0 flex-1"><div className="text-[12.5px] font-semibold truncate capitalize">{tenantLabel}</div><div className="text-[10.5px] text-stone-400">espace assistant LIRI</div></div>
+              </div>
+              <Link to="/dashboard" className="mt-3 flex items-center gap-1.5 text-[12px] text-stone-500 hover:text-stone-800 transition"><ArrowUpRight size={13} className="rotate-180" /> Retour au dashboard</Link>
+            </div>
+          </aside>
+        )}
+
+        {/* ───────── MAIN ───────── */}
+        <main className="flex-1 min-w-0 rounded-[26px] lq-glass lq-hair lq-shadow-glass flex flex-col overflow-hidden relative">
+
+          {/* header */}
+          <header className="shrink-0 px-4 sm:px-5 h-[68px] flex items-center justify-between border-b lq-hair">
+            <div className="flex items-center gap-2 min-w-0">
+              <button onClick={() => setSidebarOpen((v) => !v)} aria-label="Basculer le panneau" className="grid place-items-center h-9 w-9 rounded-xl text-stone-400 hover:text-stone-800 hover:bg-white/60 transition cursor-pointer"><PanelLeft size={18} /></button>
+              <div className="min-w-0">
+                <h1 className="lq-display text-[18px] font-semibold leading-none truncate">{activeTitle}</h1>
+                <div className="text-[11px] text-stone-400 mt-1 flex items-center gap-1.5"><ShieldCheck size={13} className="text-emerald-500" /> tenant isolé · données réelles de l'école</div>
+              </div>
+            </div>
+
+            <div className="relative shrink-0">
+              <button onClick={() => setModelPickerOpen((v) => !v)} className="lq-hov group flex items-center gap-2.5 rounded-2xl lq-glass-soft lq-hair pl-2 pr-3 py-2 cursor-pointer">
+                <span className="grid place-items-center h-7 w-7 rounded-xl text-white" style={{ background: `linear-gradient(135deg, ${currentModel.color}, #7C5CFF)` }}><Zap size={14} /></span>
+                <span className="text-left leading-tight hidden sm:block"><span className="block text-[13px] font-semibold">{currentModel.name}</span><span className="block text-[10px] text-stone-400">{currentModel.description}</span></span>
+                <ChevronDown size={15} className="text-stone-400" />
+              </button>
+              {modelPickerOpen && (
+                <div className="absolute right-0 top-[112%] z-50 w-[300px] rounded-2xl lq-glass lq-hair lq-shadow-lift p-2">
+                  {MODELS.map((m) => (
+                    <button key={m.key} onClick={() => { setModel(m.key); setModelPickerOpen(false); }} className={`w-full text-left rounded-xl px-3 py-2.5 flex items-center gap-2.5 transition cursor-pointer ${model === m.key ? 'bg-stone-900/[0.05]' : 'hover:bg-white/70'}`}>
+                      <span className="grid place-items-center h-7 w-7 rounded-lg text-white shrink-0" style={{ background: `linear-gradient(135deg, ${m.color}, #7C5CFF)` }}><Zap size={13} /></span>
+                      <div className="min-w-0 flex-1"><div className="text-[13px] font-semibold truncate">{m.name}</div><div className="text-[11px] text-stone-400 truncate">{m.description}</div></div>
+                      {providerBadge(m.provider)}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </header>
+
+          {/* thread */}
+          <div className="lq-scroll flex-1 overflow-y-auto px-4 sm:px-5 py-7" onClick={() => setModelPickerOpen(false)}>
+            {messages.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center gap-4">
+                <div className="lq-pulse relative grid place-items-center h-[72px] w-[72px] rounded-[22px] lq-ember lq-iris text-white"><Sparkles size={32} /></div>
+                <h2 className="lq-display text-[30px] font-semibold tracking-tight">Bonjour, je suis <span className="lq-ember-text">LIRI</span></h2>
+                <p className="text-stone-500 text-[14.5px] leading-relaxed max-w-[440px]">Ton copilote pour l'école : pose une question, explore tes cours, lives, rendez-vous, le forum ou la base de connaissances. Je peux aussi agir — toujours avec ta confirmation.</p>
+                <div className="flex flex-wrap gap-2 justify-center mt-2 max-w-[540px]">
+                  {SUGGESTIONS.map(({ icon: Icon, text }) => (
+                    <button key={text} onClick={() => { setInput(text); textareaRef.current?.focus(); }} className="lq-hov flex items-center gap-2 rounded-full lq-glass-soft lq-hair px-3.5 py-2 text-[12.5px] text-stone-600 cursor-pointer">
+                      <Icon size={14} style={{ color: '#F2622E' }} /> {text}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="mx-auto max-w-[760px] space-y-6">
+                {messages.map((msg, i) => (
+                  msg.role === 'user' ? (
+                    <div key={i} className="lq-rise flex justify-end">
+                      <div className="max-w-[80%] rounded-[22px] rounded-tr-lg bg-stone-900 text-stone-50 px-5 py-3.5 lq-shadow-lift">
+                        <p className="text-[14.5px] leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div key={i} className="lq-rise flex gap-3.5">
+                      <div className="shrink-0 grid place-items-center h-10 w-10 rounded-2xl lq-ember lq-iris text-white"><Sparkles size={18} /></div>
+                      <div className="min-w-0 flex-1">
+                        <div className="rounded-[22px] rounded-tl-lg bg-white/80 lq-hair lq-shadow-glass px-5 py-4">
+                          {msg.content && <p className="text-[14.5px] leading-[1.75] text-stone-700 whitespace-pre-wrap break-words">{msg.content}</p>}
+                          {msg.pending && (
+                            <div className="inline-flex items-center gap-2 text-[13px] text-stone-500">
+                              <span className="lq-dot" /><span className="lq-dot" /><span className="lq-dot" /><span className="ml-1">LIRI réfléchit…</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                ))}
+                <div ref={bottomRef} />
+              </div>
+            )}
+          </div>
+
+          {/* carte de confirmation (tool_confirm) */}
+          {pendingConfirm && (
+            <div className="px-4 sm:px-5 pb-3">
+              <div className="mx-auto max-w-[760px] rounded-2xl p-4" style={{ border: '1px solid rgba(242,98,46,.3)', background: 'linear-gradient(180deg, rgba(242,98,46,.08), transparent)' }}>
+                <div className="flex items-center gap-2 text-[12px] font-semibold mb-2.5" style={{ color: '#C2410C' }}><ShieldAlert size={15} /> Action à confirmer · {pendingConfirm.tool}</div>
+                <pre className="lq-scroll rounded-xl bg-white/80 lq-hair p-3 text-[12px] text-stone-600 overflow-x-auto mb-3.5 whitespace-pre-wrap break-words" style={{ fontFamily: 'ui-monospace, monospace' }}>{JSON.stringify(pendingConfirm.args, null, 2)}</pre>
+                <div className="flex items-center gap-2.5">
+                  <button onClick={() => void confirmTool()} disabled={streaming} className="lq-lift-hov flex items-center gap-2 rounded-xl lq-ember text-white px-4 py-2 text-[13px] font-medium lq-shadow-lift disabled:opacity-60 cursor-pointer"><Check size={15} /> Confirmer &amp; exécuter</button>
+                  <button onClick={cancelTool} className="rounded-xl px-4 py-2 text-[13px] text-stone-500 hover:text-stone-900 transition cursor-pointer">Annuler</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* composer */}
+          <div className="shrink-0 px-4 sm:px-5 pb-5 pt-1">
+            <div className="mx-auto max-w-[760px]">
+              {messages.length > 0 && (
+                <div className="lq-scroll flex items-center gap-2 mb-2.5 overflow-x-auto pb-0.5">
+                  {SUGGESTIONS.slice(0, 3).map(({ icon: Icon, text }) => (
+                    <button key={text} onClick={() => { setInput(text); textareaRef.current?.focus(); }} className="lq-hov shrink-0 flex items-center gap-1.5 rounded-full lq-glass-soft lq-hair px-3 py-1.5 text-[12.5px] text-stone-600 cursor-pointer"><Icon size={13} style={{ color: '#F2622E' }} /> {text}</button>
+                  ))}
+                </div>
+              )}
+              <div className="lq-input rounded-[24px] lq-glass lq-hair lq-shadow-glass p-2 pl-3.5 flex items-end gap-2">
+                <button aria-label="Joindre un fichier" className="grid place-items-center h-10 w-10 rounded-2xl text-stone-400 hover:bg-white/70 transition cursor-pointer" style={{ }}><Paperclip size={19} /></button>
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Pose ta question à LIRI…  (Entrée pour envoyer · Maj+Entrée = nouvelle ligne)"
+                  disabled={streaming}
+                  rows={1}
+                  className="flex-1 resize-none bg-transparent py-2.5 text-[15px] leading-relaxed text-stone-900 placeholder:text-stone-400 focus:outline-none max-h-[200px] overflow-auto"
+                />
+                <button
+                  onClick={() => void sendMessage()}
+                  disabled={!input.trim() || streaming}
+                  aria-label="Envoyer"
+                  className={`grid place-items-center h-11 w-11 rounded-2xl text-white transition shrink-0 ${input.trim() && !streaming ? 'lq-ember lq-shadow-lift lq-lift-hov cursor-pointer' : 'bg-stone-300 cursor-default'}`}
+                >
+                  {streaming ? <span className="lq-dot" style={{ background: '#fff' }} /> : <ArrowUp size={20} />}
+                </button>
+              </div>
+              <p className="mt-2 text-center text-[11px] text-stone-400">
+                Modèle : <strong className="text-stone-600">{currentModel.name}</strong> · LIRI consulte cours, forum, lives, RDV et la base de connaissances · les écritures demandent confirmation
+              </p>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

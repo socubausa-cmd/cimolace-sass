@@ -252,6 +252,101 @@ export class MboloService {
     return { order, items: resolved, total_cents: totalCents, currency };
   }
 
+  // ─── Paiement en ligne (Stripe Checkout, via l'API Cimolace) ─────────────
+  // Devises « zéro décimale » Stripe : le montant est en unité majeure (pas ×100).
+  // Nos price_cents stockent toujours montant×100 → on divise pour ces devises.
+  private static ZERO_DECIMAL = new Set(['XAF','XOF','XPF','BIF','CLP','DJF','GNF','JPY','KMF','KRW','MGA','PYG','RWF','UGX','VND','VUV']);
+  private stripeAmount(priceCents: number, currency: string): number {
+    return MboloService.ZERO_DECIMAL.has((currency || '').toUpperCase())
+      ? Math.round(priceCents / 100)
+      : Math.round(priceCents);
+  }
+
+  /**
+   * Crée une session Stripe Checkout pour une commande Mbolo et renvoie l'URL
+   * de paiement hébergée. Le paiement est porté par l'API Cimolace (clé Stripe
+   * plateforme). Persiste payment_session_id + provider sur la commande.
+   */
+  async createOrderCheckoutSession(
+    tenantId: string,
+    orderId: string,
+    opts: { successUrl?: string; cancelUrl?: string } = {},
+  ) {
+    const secret = process.env.STRIPE_SECRET_KEY;
+    if (!secret) throw new BadRequestException('Paiement indisponible (STRIPE_SECRET_KEY non configurée)');
+
+    const order = await this.getOrder(tenantId, orderId);
+    if (!order?.id) throw new NotFoundException('Commande introuvable');
+    if (order.payment_status === 'paid') throw new BadRequestException('Commande déjà payée');
+
+    const currency = (order.currency || 'XAF').toLowerCase();
+    const items: any[] = Array.isArray(order.items) ? order.items : [];
+    const frontend = process.env.FRONTEND_URL || 'https://cimolace.space';
+    const successUrl = opts.successUrl || `${frontend}/success?order=${encodeURIComponent(order.order_number ?? order.id)}&session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = opts.cancelUrl || `${frontend}/cart`;
+
+    const params = new URLSearchParams();
+    params.append('mode', 'payment');
+    params.append('success_url', successUrl);
+    params.append('cancel_url', cancelUrl);
+    params.append('client_reference_id', order.id);
+    params.append('metadata[mbolo_order_id]', order.id);
+    params.append('metadata[tenant_id]', tenantId);
+    if (order.customer_email) params.append('customer_email', order.customer_email);
+    const lines = items.length ? items : [{ product_name: `Commande ${order.order_number ?? order.id}`, price_cents: order.total_cents, quantity: 1 }];
+    lines.forEach((it: any, i: number) => {
+      params.append(`line_items[${i}][price_data][currency]`, currency);
+      params.append(`line_items[${i}][price_data][product_data][name]`, it.product_name || 'Article');
+      params.append(`line_items[${i}][price_data][unit_amount]`, String(this.stripeAmount(it.price_cents ?? 0, currency)));
+      params.append(`line_items[${i}][quantity]`, String(it.quantity ?? 1));
+    });
+
+    const res = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${Buffer.from(secret + ':').toString('base64')}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      throw new BadRequestException(`Stripe Checkout error ${res.status}: ${errText.slice(0, 300)}`);
+    }
+    const session = (await res.json()) as { id: string; url: string };
+    await (this.supabase.client as any).from('mbolo_orders')
+      .update({ payment_provider: 'stripe', payment_session_id: session.id })
+      .eq('id', order.id).eq('tenant_id', tenantId);
+    return { url: session.url, session_id: session.id, order_number: order.order_number, total_cents: order.total_cents, currency: order.currency };
+  }
+
+  /**
+   * Confirmation au retour : interroge Stripe pour l'état du paiement de la
+   * session liée à la commande ; si payé, bascule la commande en paid/confirmed.
+   * Idempotent. Ne marque JAMAIS payé sans confirmation Stripe.
+   */
+  async confirmOrderPayment(tenantId: string, orderId: string) {
+    const order = await this.getOrder(tenantId, orderId);
+    if (!order?.id) throw new NotFoundException('Commande introuvable');
+    if (order.payment_status === 'paid') return { paid: true, status: order.status, payment_status: 'paid' };
+    if (!order.payment_session_id) return { paid: false, status: order.status, payment_status: order.payment_status ?? 'unpaid' };
+
+    const secret = process.env.STRIPE_SECRET_KEY;
+    if (!secret) throw new BadRequestException('Paiement indisponible');
+    const res = await fetch(`https://api.stripe.com/v1/checkout/sessions/${order.payment_session_id}`, {
+      headers: { Authorization: `Basic ${Buffer.from(secret + ':').toString('base64')}` },
+    });
+    if (!res.ok) throw new BadRequestException(`Stripe session lookup ${res.status}`);
+    const session = (await res.json()) as { payment_status?: string };
+    const paid = session.payment_status === 'paid';
+    if (paid) {
+      await (this.supabase.client as any).from('mbolo_orders')
+        .update({ payment_status: 'paid', status: 'confirmed', paid_at: new Date().toISOString() })
+        .eq('id', order.id).eq('tenant_id', tenantId);
+    }
+    return { paid, status: paid ? 'confirmed' : order.status, payment_status: paid ? 'paid' : (order.payment_status ?? 'unpaid') };
+  }
+
   async addToCart(tenantId: string, userId: string, productId: string, quantity = 1) {
     await (this.supabase.client as any).from('mbolo_cart_items').upsert({ tenant_id: tenantId, user_id: userId, product_id: productId, quantity }, { onConflict: 'user_id,product_id' });
     return this.getCart(tenantId, userId);

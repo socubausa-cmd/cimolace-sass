@@ -36,7 +36,7 @@ export class LiriVisionService {
       try {
         const model =
           this.config.get<string>('SMARTBOARD_VISION_CLAUDE_MODEL') ||
-          'claude-3-5-haiku-20241022';
+          'claude-haiku-4-5-20251001';
         const res = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {

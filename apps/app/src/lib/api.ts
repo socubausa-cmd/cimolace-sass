@@ -1052,3 +1052,70 @@ export const mboloApi = {
   getOrder: (id: string) =>
     api.get<ApiEnvelope<MboloOrder>>(`/mbolo/orders/${id}`).then(unwrap),
 };
+
+// ─── Billing plateforme (abonnement tenant → Cimolace, collecte PawaPay) ──────
+
+export interface BillingSubscription {
+  id: string;
+  plan_id: string;
+  provider: string;
+  status: string;
+  amount_cents: number;
+  currency: string;
+  current_period_end: string | null;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface BillingInvoice {
+  id: string;
+  subscription_id: string | null;
+  provider: string;
+  status: string;
+  amount_cents: number;
+  currency: string;
+  invoice_number: string | null;
+  description: string | null;
+  due_date: string | null;
+  paid_at: string | null;
+}
+
+export interface BillingCollectResult {
+  deposit_id: string;
+  status: string;
+  invoice_number: string | null;
+  amount: number;
+  currency: string;
+}
+
+export const billingApi = {
+  getPlan: () =>
+    api.get<ApiEnvelope<{ subscriptions: BillingSubscription[]; invoices: BillingInvoice[] }>>("/billing/plan").then(unwrap),
+  // Mobile money (PawaPay — Afrique)
+  collect: (subscriptionId: string, body: { phoneNumber: string; provider: string; country?: string }) =>
+    api.post<ApiEnvelope<BillingCollectResult>>(`/billing/subscriptions/${subscriptionId}/collect`, body).then(unwrap),
+  // Carte bancaire (Stripe — Europe / international)
+  cardCheckout: (subscriptionId: string) =>
+    api.post<ApiEnvelope<{ url: string; session_id: string; amount_cents: number; currency: string }>>(`/billing/subscriptions/${subscriptionId}/card-checkout`).then(unwrap),
+  cardConfirm: (subscriptionId: string) =>
+    api.post<ApiEnvelope<{ paid: boolean; status: string }>>(`/billing/subscriptions/${subscriptionId}/card-confirm`).then(unwrap),
+  // Retraits / versements mobile money (PawaPay payouts)
+  listPayouts: () =>
+    api.get<ApiEnvelope<BillingPayout[]>>("/billing/payouts").then(unwrap),
+  createPayout: (body: { amountCents: number; currency?: string; phoneNumber: string; mno: string; recipientName?: string; reason?: string }) =>
+    api.post<ApiEnvelope<{ payout_id: string; status: string; amount_cents: number; currency: string }>>("/billing/payouts", body).then(unwrap),
+};
+
+export interface BillingPayout {
+  id: string;
+  payout_id: string;
+  status: string;
+  amount_cents: number;
+  currency: string;
+  phone_number: string;
+  mno: string;
+  recipient_name: string | null;
+  reason: string | null;
+  provider_tx_id: string | null;
+  failure_message: string | null;
+  created_at: string;
+}

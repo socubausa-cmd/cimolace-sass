@@ -102,7 +102,7 @@ export function AuditPage() {
           {anonymizations.filter((a) => a.status === 'pending').map((a) => (
             <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: '1px solid #fecaca', fontSize: 13 }}>
               <div>
-                <div style={{ fontWeight: 600, color: '#7f1d1d' }}>Patient {a.patient_id.slice(0, 8)}…</div>
+                <div style={{ fontWeight: 600, color: '#7f1d1d' }}>Patient {(a.patient_id || '').slice(0, 8)}…</div>
                 <div style={{ fontSize: 12, color: '#991b1b', marginTop: 2 }}>
                   {new Date(a.requested_at).toLocaleString('fr')} · {a.method} · {a.scope}
                 </div>
@@ -162,7 +162,7 @@ export function AuditPage() {
                   <div style={{ fontSize: 10, color: '#94a3b8' }}>{new Date(e.created_at).toLocaleTimeString('fr')}</div>
                 </td>
                 <td style={td}>
-                  <code style={{ fontSize: 11, color: '#475569' }}>{e.actor_id.slice(0, 8)}…</code>
+                  <code style={{ fontSize: 11, color: '#475569' }}>{e.actor_id ? e.actor_id.slice(0, 8) + '…' : 'système'}</code>
                 </td>
                 <td style={td}>
                   <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: 10, fontWeight: 600, background: (actionColor[e.action] || '#64748b') + '22', color: actionColor[e.action] || '#64748b', textTransform: 'uppercase' }}>
@@ -171,7 +171,7 @@ export function AuditPage() {
                 </td>
                 <td style={td}>
                   <div style={{ fontWeight: 500 }}>{e.resource}</div>
-                  <code style={{ fontSize: 10, color: '#94a3b8' }}>{e.resource_id.slice(0, 8)}…</code>
+                  <code style={{ fontSize: 10, color: '#94a3b8' }}>{e.resource_id ? e.resource_id.slice(0, 8) + '…' : '—'}</code>
                 </td>
                 <td style={td}>
                   <code style={{ fontSize: 11, color: '#64748b' }}>{e.ip_address || '—'}</code>

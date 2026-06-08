@@ -54,6 +54,35 @@ export interface PawaPayDepositCallback {
   failureReason?: { failureCode: string; failureMessage?: string };
 }
 
+/** ─── Payouts : retraits / versements vers un mobile money (disbursement) ─── */
+export interface PawaPayRecipient {
+  type: 'MMO';
+  accountDetails: PawaPayAccountDetails;
+}
+export interface PawaPayPayoutRequest {
+  payoutId: string; // UUIDv4 généré par nous
+  amount: string;
+  currency: string;
+  recipient: PawaPayRecipient;
+  customerMessage?: string; // max 22 chars
+  metadata?: Record<string, string>;
+}
+export interface PawaPayPayoutInitResponse {
+  payoutId: string;
+  status: PawaPayDepositStatus;
+  created?: string;
+}
+export interface PawaPayPayoutCallback {
+  payoutId: string;
+  status: PawaPayDepositStatus;
+  amount?: string;
+  currency?: string;
+  recipient?: PawaPayRecipient;
+  providerTransactionId?: string;
+  metadata?: Record<string, string>;
+  failureReason?: { failureCode: string; failureMessage?: string };
+}
+
 /** Config active (GET /v2/active-conf) */
 export interface PawaPayActiveConfigProvider {
   provider: string;

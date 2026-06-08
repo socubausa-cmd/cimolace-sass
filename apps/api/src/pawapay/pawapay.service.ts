@@ -11,6 +11,9 @@ import type {
   PawaPayDepositCallback,
   PawaPayDepositInitResponse,
   PawaPayDepositRequest,
+  PawaPayPayoutRequest,
+  PawaPayPayoutInitResponse,
+  PawaPayPayoutCallback,
 } from './pawapay.types';
 
 @Injectable()
@@ -101,6 +104,51 @@ export class PawaPayService {
     }
 
     return (await response.json()) as PawaPayDepositCallback;
+  }
+
+  /**
+   * Initie un PAYOUT (retrait / versement vers un mobile money). C'est l'inverse
+   * d'un dépôt : on ENVOIE de l'argent au destinataire. Nécessite la permission
+   * payouts (PAF) sur le token. Retourne { payoutId, status }.
+   */
+  async initiatePayout(
+    payload: PawaPayPayoutRequest,
+  ): Promise<PawaPayPayoutInitResponse> {
+    this.assertConfigured();
+
+    const response = await fetch(`${this.baseUrl}/v2/payouts`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.apiToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      this.logger.error(`pawaPay initiatePayout ${response.status}: ${text}`);
+      throw new BadRequestException(
+        `Erreur pawaPay payout (${response.status}): ${text || 'inconnu'}`,
+      );
+    }
+
+    return (await response.json()) as PawaPayPayoutInitResponse;
+  }
+
+  /** Statut d'un payout par polling (si pas de callback). */
+  async getPayoutStatus(
+    payoutId: string,
+  ): Promise<PawaPayPayoutCallback | null> {
+    this.assertConfigured();
+    const response = await fetch(`${this.baseUrl}/v2/payouts/${payoutId}`, {
+      headers: { Authorization: `Bearer ${this.apiToken}` },
+    });
+    if (!response.ok) {
+      this.logger.warn(`pawaPay getPayoutStatus ${response.status} pour ${payoutId}`);
+      return null;
+    }
+    return (await response.json()) as PawaPayPayoutCallback;
   }
 
   /**

@@ -37,4 +37,15 @@ export class MboloStorefrontController {
   createOrder(@Body() body: any, @CurrentTenant() t: TenantContext) {
     return this.svc.createStorefrontOrder(t.id, body);
   }
+
+  // ─── Paiement en ligne (Stripe Checkout) ───
+  @Post('orders/:id/checkout-session')
+  checkoutSession(@Param('id') id: string, @Body() body: any, @CurrentTenant() t: TenantContext) {
+    return this.svc.createOrderCheckoutSession(t.id, id, { successUrl: body?.successUrl, cancelUrl: body?.cancelUrl });
+  }
+
+  @Post('orders/:id/confirm')
+  confirm(@Param('id') id: string, @CurrentTenant() t: TenantContext) {
+    return this.svc.confirmOrderPayment(t.id, id);
+  }
 }

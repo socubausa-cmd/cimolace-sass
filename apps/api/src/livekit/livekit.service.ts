@@ -77,6 +77,68 @@ export class LiveKitService {
     return at.toJwt();
   }
 
+  /**
+   * "Peer" token — a guest who CAN publish (camera + mic) but is NOT a room
+   * admin. This is the right profile for a teleconsultation PATIENT: a live
+   * two-way call where the patient must show their camera, while the
+   * practitioner keeps control of the room (roomAdmin stays host-only).
+   *
+   * Distinct from generateParticipantToken (subscribe-only, for a class
+   * viewer who only watches) — DO NOT change that one: live classes rely on
+   * students being publish-disabled by default.
+   */
+  async generatePeerToken(
+    roomName: string,
+    userId: string,
+    displayName?: string,
+  ): Promise<string> {
+    this.assertConfigured();
+    const at = new AccessToken(this.apiKey, this.apiSecret, {
+      identity: userId,
+      name: displayName,
+      ttl: '2h',
+    });
+    at.addGrant({
+      roomJoin: true,
+      room: roomName,
+      canPublish: true,
+      canSubscribe: true,
+      canPublishData: true,
+    });
+    return at.toJwt();
+  }
+
+  /**
+   * Raw token with custom identity + metadata — for opaque companion / mobile-
+   * camera joins (identity like `companion_<rowId>` / `liri_mobile_<rowId>`) and
+   * immersive guests. Publish-enabled (camera) by default, subscribe always on,
+   * NOT room admin. Used by ImmersiveLiveService (ports the v1 Netlify lambdas).
+   */
+  async generateRawToken(opts: {
+    roomName: string;
+    identity: string;
+    name?: string;
+    metadata?: Record<string, unknown>;
+    ttl?: string;
+    canPublish?: boolean;
+  }): Promise<string> {
+    this.assertConfigured();
+    const at = new AccessToken(this.apiKey, this.apiSecret, {
+      identity: opts.identity,
+      name: opts.name,
+      ttl: opts.ttl ?? '30m',
+      metadata: opts.metadata ? JSON.stringify(opts.metadata) : undefined,
+    });
+    at.addGrant({
+      roomJoin: true,
+      room: opts.roomName,
+      canPublish: opts.canPublish ?? true,
+      canSubscribe: true,
+      canPublishData: true,
+    });
+    return at.toJwt();
+  }
+
   async ensureRoom(
     roomName: string,
     liveSessionId: string,

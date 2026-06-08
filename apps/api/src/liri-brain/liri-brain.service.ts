@@ -4,6 +4,10 @@ import { SupabaseService } from '../supabase/supabase.service';
 import type { TenantContext } from '../tenant/tenant.types';
 import { LIRI_MODELS, type LiriConversation, type LiriMessage, type LiriModel } from './liri-brain.types';
 import { BrainToolsService, type BrainToolContext } from './brain-tools.service';
+import { AiBillingService } from '../ai-billing/ai-billing.service';
+
+/** Borne du contexte : nb max de messages d'historique réinjectés au LLM (coût/contexte). */
+const MAX_HISTORY_MESSAGES = 20;
 
 type ConversationRow = {
   id: string;
@@ -24,6 +28,7 @@ export class LiriBrainService {
     private readonly supabase: SupabaseService,
     private readonly config: ConfigService,
     private readonly tools: BrainToolsService,
+    private readonly billing: AiBillingService,
   ) {}
 
   // ── Model Catalog ────────────────────────────────────────────────────────
@@ -137,6 +142,22 @@ export class LiriBrainService {
     };
   }
 
+  /** Supprime une conversation de l'utilisateur courant (scopée tenant + user). */
+  async deleteConversation(
+    tenantId: string,
+    userId: string,
+    conversationId: string,
+  ): Promise<{ deleted: boolean }> {
+    const { error } = await this.supabase.client
+      .from('liri_conversations' as any)
+      .delete()
+      .eq('id', conversationId)
+      .eq('tenant_id', tenantId)
+      .eq('user_id', userId);
+    if (error) throw new Error(error.message);
+    return { deleted: true };
+  }
+
   // ── LLM Streaming ────────────────────────────────────────────────────────
 
   /**
@@ -167,12 +188,132 @@ export class LiriBrainService {
   }
 
   /**
+   * Point d'entrée du chat SSE : charge l'historique de la conversation (si
+   * `conversationId`) pour donner sa mémoire au LLM, puis diffuse la réponse —
+   * avec outils (`useTools`) ou en streaming simple. La persistance du tour est
+   * déclenchée côté front via POST /liri/brain/conversations.
+   */
+  async *streamConversation(
+    model: LiriModel,
+    message: string,
+    ctx: BrainToolContext,
+    opts: { conversationId?: string; useTools: boolean },
+  ): AsyncGenerator<{ content: string; done: boolean }> {
+    // Garde-quota IA (fail-open : si la facturation est indisponible, on n'empêche pas l'usage).
+    try {
+      const bal: any = await this.billing.getBalance(ctx.tenant.id);
+      if (bal?.is_blocked || (bal?.balance_credits ?? 1) <= 0) {
+        yield {
+          content:
+            "⚠️ Les crédits IA de l'école sont épuisés. Contactez l'administration pour recharger.",
+          done: true,
+        };
+        return;
+      }
+    } catch {
+      // facturation indisponible → on continue
+    }
+
+    const history: LiriMessage[] = [];
+    if (opts.conversationId) {
+      try {
+        const conv = await this.getConversation(ctx.tenant.id, opts.conversationId);
+        if (Array.isArray(conv.messages)) history.push(...conv.messages);
+      } catch {
+        // conversation introuvable / autre tenant → on continue sans historique
+      }
+    }
+    const messages: LiriMessage[] = [
+      { role: 'system', content: this.buildSystemPrompt(ctx) },
+      // borne le contexte : seuls les N derniers messages d'historique (coût + dépassement de contexte).
+      ...history.slice(-MAX_HISTORY_MESSAGES),
+      { role: 'user', content: message },
+    ];
+    if (opts.useTools) {
+      yield* this.streamChatWithTools(model, messages, ctx);
+    } else {
+      yield* this.streamChat(model, messages, ctx.tenant);
+    }
+  }
+
+  /** Prompt système : donne à LIRI son identité, sa langue et son cadre (outils, confirmation). */
+  private buildSystemPrompt(ctx: BrainToolContext): string {
+    const school = ctx.tenant?.name || 'votre école';
+    const role = ctx.role || 'membre';
+    return [
+      `Tu es LIRI, l'assistant IA de l'école « ${school} » sur la plateforme Cimolace.`,
+      'Réponds en français, de façon claire, concise et bienveillante.',
+      "Tu disposes d'outils pour consulter les données réelles de l'école (cours, forum, inscriptions) : utilise-les plutôt que de deviner, et n'invente jamais d'identifiants ni de chiffres.",
+      "Pour une action d'écriture (créer un live, publier au forum, réserver un créneau…), APPELLE directement l'outil correspondant : le système affichera alors une carte de confirmation à l'utilisateur avant toute exécution. Ne te contente pas de décrire l'action en texte — c'est l'appel d'outil qui déclenche la confirmation.",
+      `L'utilisateur courant a le rôle « ${role} ».`,
+    ].join('\n');
+  }
+
+  /**
+   * Comptabilise l'usage LLM d'un appel sur les crédits IA du tenant (best-effort).
+   * Gère les deux formats : OpenAI/DeepSeek (prompt/completion_tokens) et Anthropic
+   * (input/output_tokens). N'interrompt jamais le flux si la facturation échoue.
+   */
+  private async chargeLlm(
+    ctx: BrainToolContext,
+    provider: string,
+    model: string,
+    usage: any,
+  ): Promise<void> {
+    if (!usage) return;
+    const tokensIn = Number(usage.prompt_tokens ?? usage.input_tokens ?? 0);
+    const tokensOut = Number(usage.completion_tokens ?? usage.output_tokens ?? 0);
+    try {
+      if (tokensIn > 0) {
+        await this.billing.chargeUsage(ctx.tenant.id, {
+          function_name: 'liri-brain.chat',
+          provider,
+          model,
+          unit_type: 'tokens_in',
+          unit_amount: tokensIn,
+          user_id: ctx.userId,
+        });
+      }
+      if (tokensOut > 0) {
+        await this.billing.chargeUsage(ctx.tenant.id, {
+          function_name: 'liri-brain.chat',
+          provider,
+          model,
+          unit_type: 'tokens_out',
+          unit_amount: tokensOut,
+          user_id: ctx.userId,
+        });
+      }
+    } catch (e) {
+      this.logger.warn(`facturation liri-brain ignorée: ${(e as Error).message}`);
+    }
+  }
+
+  /** Lit un flux SSE et émet le contenu de chaque ligne `data:` (préfixe retiré). */
+  private async *readSseData(resp: Response): AsyncGenerator<string> {
+    const reader = resp.body?.getReader();
+    if (!reader) return;
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+      for (const line of lines) {
+        const t = line.trim();
+        if (t.startsWith('data:')) yield t.slice(5).trim();
+      }
+    }
+  }
+
+  /**
    * Variante function-calling (chemin OpenAI-compatible : DeepSeek + GPT).
-   * Boucle NON-streaming : le modèle peut appeler des outils LECTURE (exécutés
-   * automatiquement via BrainToolsService) ; un outil ÉCRITURE stoppe la boucle et
-   * émet une demande de confirmation (human-in-the-loop) au lieu d'agir. Réponse
-   * finale renvoyée en un bloc. Anthropic : outils pas encore branchés → repli streamChat.
-   * ⚠️ Type-checké ; à VALIDER en exécution (API lancée + clés LLM).
+   * Boucle EN STREAMING : le texte de la réponse est émis token par token ; le
+   * modèle peut appeler des outils LECTURE (exécutés automatiquement via
+   * BrainToolsService) ; un outil ÉCRITURE stoppe la boucle et émet une demande
+   * de confirmation (human-in-the-loop) au lieu d'agir. Anthropic → anthropicWithTools.
    */
   async *streamChatWithTools(
     model: LiriModel,
@@ -223,6 +364,8 @@ export class LiriBrainService {
           messages: convo,
           ...(tools.length ? { tools, tool_choice: 'auto' } : {}),
           max_tokens: 4096,
+          stream: true,
+          stream_options: { include_usage: true },
         }),
       });
       if (!resp.ok) {
@@ -230,32 +373,68 @@ export class LiriBrainService {
         yield { content: `⚠️ Erreur ${info.provider}: ${resp.status}`, done: true };
         return;
       }
-      const data: any = await resp.json();
-      const msg = data?.choices?.[0]?.message;
-      const toolCalls: any[] | undefined = msg?.tool_calls;
 
-      if (!toolCalls?.length) {
-        yield { content: String(msg?.content ?? ''), done: true };
+      // Flux : on émet le texte au fil de l'eau ; on accumule les tool_calls (deltas par index).
+      let assistantText = '';
+      const toolAcc: Record<number, { id: string; name: string; arguments: string }> = {};
+      let usage: any = null;
+      for await (const dataStr of this.readSseData(resp)) {
+        if (dataStr === '[DONE]') break;
+        let parsed: any;
+        try {
+          parsed = JSON.parse(dataStr);
+        } catch {
+          continue;
+        }
+        if (parsed.usage) usage = parsed.usage;
+        const delta = parsed.choices?.[0]?.delta;
+        if (!delta) continue;
+        if (delta.content) {
+          assistantText += delta.content;
+          yield { content: delta.content, done: false };
+        }
+        if (Array.isArray(delta.tool_calls)) {
+          for (const tc of delta.tool_calls) {
+            const i: number = tc.index ?? 0;
+            const acc = (toolAcc[i] ??= { id: '', name: '', arguments: '' });
+            if (tc.id) acc.id = tc.id;
+            if (tc.function?.name) acc.name = tc.function.name;
+            if (tc.function?.arguments) acc.arguments += tc.function.arguments;
+          }
+        }
+      }
+      await this.chargeLlm(ctx, info.provider, apiModel, usage);
+
+      const toolCalls = Object.values(toolAcc);
+      if (!toolCalls.length) {
+        // réponse finale : déjà streamée token par token
+        yield { content: '', done: true };
         return;
       }
 
-      convo.push(msg);
+      convo.push({
+        role: 'assistant',
+        content: assistantText || null,
+        tool_calls: toolCalls.map((t) => ({
+          id: t.id,
+          type: 'function',
+          function: { name: t.name, arguments: t.arguments },
+        })),
+      });
       for (const tc of toolCalls) {
-        const name: string = tc?.function?.name;
         let args: Record<string, any> = {};
         try {
-          args = JSON.parse(tc?.function?.arguments || '{}');
+          args = JSON.parse(tc.arguments || '{}');
         } catch {
           args = {};
         }
-
-        if (this.tools.requiresConfirmation(name)) {
+        if (this.tools.requiresConfirmation(tc.name)) {
           // Action d'écriture → on N'EXÉCUTE PAS : on demande confirmation à l'utilisateur.
-          yield { content: JSON.stringify({ type: 'tool_confirm', tool: name, args }), done: true };
+          yield { content: JSON.stringify({ type: 'tool_confirm', tool: tc.name, args }), done: true };
           return;
         }
         try {
-          const result = await this.tools.execute(name, args, ctx);
+          const result = await this.tools.execute(tc.name, args, ctx);
           convo.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(result ?? null) });
         } catch (e) {
           convo.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify({ error: String(e) }) });
@@ -270,7 +449,7 @@ export class LiriBrainService {
   /**
    * Boucle function-calling pour Anthropic (format Claude : blocs `tool_use` /
    * `tool_result`). Même logique que la voie OpenAI-compatible : lecture=auto,
-   * écriture=confirmation. Non-streaming, réponse finale en un bloc.
+   * écriture=confirmation. EN STREAMING (text_delta émis au fil de l'eau).
    */
   private async *anthropicWithTools(
     model: LiriModel,
@@ -298,6 +477,7 @@ export class LiriBrainService {
         model,
         max_tokens: 4096,
         messages: convo,
+        stream: true,
         ...(tools.length ? { tools } : {}),
       };
       if (systemMsg) body['system'] = systemMsg.content;
@@ -316,27 +496,72 @@ export class LiriBrainService {
         yield { content: `⚠️ Erreur Anthropic: ${resp.status}`, done: true };
         return;
       }
-      const data: any = await resp.json();
-      const blocks: any[] = Array.isArray(data?.content) ? data.content : [];
-      const toolUses = blocks.filter((b) => b?.type === 'tool_use');
 
+      // Flux Anthropic : text_delta émis au fil de l'eau ; blocs tool_use accumulés
+      // depuis input_json_delta ; usage agrégé (input au message_start, output au message_delta).
+      const blocks: any[] = [];
+      let cur: any = null;
+      let curJson = '';
+      let usage: any = null;
+      for await (const dataStr of this.readSseData(resp)) {
+        let ev: any;
+        try {
+          ev = JSON.parse(dataStr);
+        } catch {
+          continue;
+        }
+        switch (ev.type) {
+          case 'message_start':
+            if (ev.message?.usage) usage = { ...(usage ?? {}), ...ev.message.usage };
+            break;
+          case 'content_block_start':
+            cur = ev.content_block;
+            curJson = '';
+            break;
+          case 'content_block_delta':
+            if (ev.delta?.type === 'text_delta' && ev.delta.text) {
+              if (cur?.type === 'text') cur.text = (cur.text ?? '') + ev.delta.text;
+              yield { content: ev.delta.text, done: false };
+            } else if (ev.delta?.type === 'input_json_delta') {
+              curJson += ev.delta.partial_json ?? '';
+            }
+            break;
+          case 'content_block_stop':
+            if (cur) {
+              if (cur.type === 'tool_use') {
+                try {
+                  cur.input = JSON.parse(curJson || '{}');
+                } catch {
+                  cur.input = {};
+                }
+              }
+              blocks.push(cur);
+              cur = null;
+            }
+            break;
+          case 'message_delta':
+            if (ev.usage) usage = { ...(usage ?? {}), ...ev.usage };
+            break;
+        }
+      }
+      await this.chargeLlm(ctx, 'anthropic', model, usage);
+
+      const toolUses = blocks.filter((b) => b?.type === 'tool_use');
       if (!toolUses.length) {
-        const text = blocks.filter((b) => b?.type === 'text').map((b) => b.text).join('');
-        yield { content: text, done: true };
+        // réponse finale : déjà streamée token par token
+        yield { content: '', done: true };
         return;
       }
 
       convo.push({ role: 'assistant', content: blocks });
       const toolResults: any[] = [];
       for (const tu of toolUses) {
-        const name: string = tu.name;
-        const args: Record<string, any> = (tu.input ?? {}) as Record<string, any>;
-        if (this.tools.requiresConfirmation(name)) {
-          yield { content: JSON.stringify({ type: 'tool_confirm', tool: name, args }), done: true };
+        if (this.tools.requiresConfirmation(tu.name)) {
+          yield { content: JSON.stringify({ type: 'tool_confirm', tool: tu.name, args: tu.input ?? {} }), done: true };
           return;
         }
         try {
-          const result = await this.tools.execute(name, args, ctx);
+          const result = await this.tools.execute(tu.name, tu.input ?? {}, ctx);
           toolResults.push({ type: 'tool_result', tool_use_id: tu.id, content: JSON.stringify(result ?? null) });
         } catch (e) {
           toolResults.push({ type: 'tool_result', tool_use_id: tu.id, content: JSON.stringify({ error: String(e) }), is_error: true });

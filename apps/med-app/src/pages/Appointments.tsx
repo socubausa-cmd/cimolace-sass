@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../lib/auth';
+import { useAuth, useSupabase } from '../lib/auth';
 import { Calendar, Plus, X, Clock, Trash2, CheckCircle, XCircle, AlertCircle, Video } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
@@ -64,7 +64,9 @@ function formatDateTime(iso: string) {
 
 export function Appointments() {
   const { user } = useAuth();
+  const { supabase } = useSupabase();
   const practitionerId = (user as any)?.id || '';
+  const [tab, setTab] = useState<'upcoming' | 'past' | 'all'>('upcoming');
 
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -237,13 +239,49 @@ export function Appointments() {
         setError(b?.message || `Erreur ${res.status}`);
         return;
       }
-      const { url, token } = await res.json();
-      if (!url || !token) {
-        setError('Reponse LiveKit invalide');
+      const d = await res.json();
+      const payload = d?.data || d; // API peut emballer en { data: ... }
+      const sessionId = payload?.session_id;
+      if (!sessionId) {
+        setError('Réponse téléconsultation invalide');
         return;
       }
-      const meetUrl = `https://meet.livekit.io/custom?liveKitUrl=${encodeURIComponent(url)}&token=${encodeURIComponent(token)}`;
-      window.open(meetUrl, '_blank', 'noopener,noreferrer');
+      // Liri complet : on ouvre la VRAIE salle immersive (grille vidéo +
+      // SmartBoard), hébergée par le studio (app.cimolace.space). La salle
+      // live_sessions porte le même id que la session téléconsult → praticien
+      // (host) et patient (peer) sont dans la même room.
+      const studio = (import.meta.env.VITE_STUDIO_URL as string) || 'https://app.cimolace.space';
+      const slug = localStorage.getItem('tenant_slug') || '';
+      const next = `/studio/live-arena/${sessionId}?tenant=${encodeURIComponent(slug)}`;
+      let url = `${studio}${next}`;
+
+      // SSO handoff : le studio est une autre origine. On crée un code à usage
+      // unique (TTL 2 min, jamais de token dans l'URL) pour que le praticien y
+      // soit authentifié sans second login. En cas d'échec → on ouvre la salle
+      // directement (le studio demandera la connexion).
+      try {
+        if (supabase) {
+          const { data: sess } = await supabase.auth.getSession();
+          const refresh = sess?.session?.refresh_token;
+          if (refresh) {
+            const hr = await fetch(API + '/auth/handoff', {
+              method: 'POST',
+              headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+              body: JSON.stringify({ refresh_token: refresh }),
+            });
+            if (hr.ok) {
+              const hd = await hr.json();
+              const code = (hd?.data || hd)?.code;
+              if (code) {
+                url = `${studio}/handoff?code=${encodeURIComponent(code)}&next=${encodeURIComponent(next)}`;
+              }
+            }
+          }
+        }
+      } catch {
+        /* fallback: ouvrir la salle directement */
+      }
+      window.open(url, '_blank', 'noopener,noreferrer');
     } catch (err: any) {
       setError(err?.message || 'Echec');
     }
@@ -268,16 +306,27 @@ export function Appointments() {
     }
   }
 
-  // -- Group appointments by day ----------------------------------------
-  const grouped = appointments.reduce<Record<string, Appointment[]>>((acc, a) => {
+  // -- Tabs : on ne mélange JAMAIS les RDV passés et à venir -------------
+  const now = Date.now();
+  const isPastAppt = (a: Appointment) =>
+    new Date(a.scheduled_at).getTime() < now ||
+    a.status === 'completed' ||
+    a.status === 'cancelled' ||
+    a.status === 'no_show';
+  const upcoming = appointments.filter((a) => !isPastAppt(a));
+  const past = appointments.filter((a) => isPastAppt(a));
+  const tabAppts = tab === 'upcoming' ? upcoming : tab === 'past' ? past : appointments;
+
+  // Grouper les RDV de l'onglet courant par jour.
+  const grouped = tabAppts.reduce<Record<string, Appointment[]>>((acc, a) => {
     const dayKey = new Date(a.scheduled_at).toISOString().slice(0, 10);
     (acc[dayKey] = acc[dayKey] || []).push(a);
     return acc;
   }, {});
-  const sortedDays = Object.keys(grouped).sort();
-
-  const now = Date.now();
-  const upcoming = appointments.filter((a) => new Date(a.scheduled_at).getTime() >= now && a.status !== 'cancelled');
+  // À venir : le plus proche d'abord. Passés / Tous : le plus récent d'abord.
+  const sortedDays = Object.keys(grouped).sort((a, b) =>
+    tab === 'upcoming' ? a.localeCompare(b) : b.localeCompare(a),
+  );
 
   return (
     <div>
@@ -318,17 +367,41 @@ export function Appointments() {
             <KpiCard label="A confirmer" value={appointments.filter((a) => a.status === 'pending').length} color="#f59e0b" />
           </div>
 
-          {appointments.length === 0 && (
+          {/* Nav interne — sépare clairement à venir / passés */}
+          <div style={{ display: 'inline-flex', gap: 4, marginBottom: 16, background: '#f1f5f9', padding: 4, borderRadius: 10 }}>
+            {([['upcoming', 'À venir', upcoming.length], ['past', 'Passés', past.length], ['all', 'Tous', appointments.length]] as const).map(([key, label, count]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setTab(key)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 8, border: 'none',
+                  cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.15s',
+                  background: tab === key ? '#fff' : 'transparent',
+                  color: tab === key ? '#6366f1' : '#64748b',
+                  boxShadow: tab === key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
+                }}
+              >
+                {label}
+                <span style={{ fontSize: 11, fontWeight: 700, minWidth: 16, textAlign: 'center', padding: '1px 6px', borderRadius: 10, background: tab === key ? '#eef2ff' : '#e2e8f0', color: tab === key ? '#6366f1' : '#64748b' }}>{count}</span>
+              </button>
+            ))}
+          </div>
+
+          {tabAppts.length === 0 && (
             <p style={{ background: '#fff', padding: 24, borderRadius: 12, border: '1px solid #e2e8f0', color: '#94a3b8', textAlign: 'center' }}>
-              Aucun rendez-vous. Cliquez sur "Nouveau RDV" pour en planifier un.
+              {tab === 'upcoming'
+                ? 'Aucun rendez-vous à venir.'
+                : tab === 'past'
+                  ? 'Aucun rendez-vous passé.'
+                  : 'Aucun rendez-vous. Cliquez sur « Nouveau RDV » pour en planifier un.'}
             </p>
           )}
 
           {sortedDays.map((day) => {
             const dayDate = new Date(day + 'T12:00:00');
-            const isPast = dayDate.getTime() < now - 24 * 3600 * 1000;
             return (
-              <div key={day} style={{ marginBottom: 16, opacity: isPast ? 0.7 : 1 }}>
+              <div key={day} style={{ marginBottom: 16 }}>
                 <h3 style={{ fontSize: 13, fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
                   {dayDate.toLocaleDateString('fr', { weekday: 'long', day: '2-digit', month: 'long' })}
                 </h3>
