@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   CreditCard, CheckCircle, Clock, FileText, RefreshCw,
-  AlertCircle, Zap, ChevronLeft, Loader2,
+  AlertCircle, Zap, Loader2, Building2,
 } from 'lucide-react';
 import { billingApi, tenantMembersApi } from '@/lib/api';
 import { authStore } from '@/lib/auth-store';
@@ -31,8 +31,12 @@ const STATUS = {
   failed: { label: 'Échoué', cls: 'bg-red-500/20 border-red-500/30 text-red-400' },
 };
 const badge = (s) => STATUS[String(s)] || { label: String(s || '—'), cls: 'bg-white/10 border-white/20 text-white/60' };
+const tslug = (t) => t?.slug || t?.tenant?.slug || '';
+const tname = (t) => t?.name || t?.tenant?.name || tslug(t);
 
 export default function CimolaceBillingDashboardPage() {
+  const [tenants, setTenants] = useState([]);
+  const [activeSlug, setActiveSlug] = useState('');
   const [subs, setSubs] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,21 +45,11 @@ export default function CimolaceBillingDashboardPage() {
   const [payingId, setPayingId] = useState(null);
   const [params, setParams] = useSearchParams();
 
-  // Pose X-Tenant-Slug (sinon l'API billing ignore quel tenant interroger).
-  const ensureTenant = useCallback(async () => {
-    // Toujours résoudre le tenant réel de l'utilisateur (évite un slug obsolète type 'isna').
-    const mine = await tenantMembersApi.getMyTenants().catch(() => []);
-    let slug = (Array.isArray(mine) && mine[0] && (mine[0].slug || mine[0].tenant?.slug)) || '';
-    if (!slug && authStore.getTenantSlug) slug = authStore.getTenantSlug();
-    if (slug && authStore.setTenantSlug) authStore.setTenantSlug(slug);
-    return slug;
-  }, []);
-
-  const load = useCallback(async () => {
+  const loadPlan = useCallback(async (slug) => {
     setLoading(true);
     setError(null);
     try {
-      await ensureTenant();
+      if (slug && authStore.setTenantSlug) authStore.setTenantSlug(slug);
       const data = await billingApi.getPlan();
       setSubs(Array.isArray(data?.subscriptions) ? data.subscriptions : []);
       setInvoices(Array.isArray(data?.invoices) ? data.invoices : []);
@@ -64,44 +58,56 @@ export default function CimolaceBillingDashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [ensureTenant]);
+  }, []);
 
-  // Retour depuis Stripe Checkout (success/cancel), puis chargement.
+  // Init : liste des tenants de l'utilisateur + tenant actif + gestion retour Stripe.
   useEffect(() => {
-    const card = params.get('card');
-    const subId = params.get('sub');
-    const clean = () => {
-      ['card', 'sub', 'session_id'].forEach((k) => params.delete(k));
-      setParams(params, { replace: true });
-    };
-    if (card === 'success' && subId) {
-      (async () => {
+    (async () => {
+      const mine = await tenantMembersApi.getMyTenants().catch(() => []);
+      const list = (Array.isArray(mine) ? mine : [])
+        .map((t) => ({ slug: tslug(t), name: tname(t) }))
+        .filter((t) => t.slug);
+      setTenants(list);
+
+      const stored = authStore.getTenantSlug ? authStore.getTenantSlug() : '';
+      const initial = list.find((t) => t.slug === stored)?.slug || list[0]?.slug || stored || '';
+      setActiveSlug(initial);
+
+      const card = params.get('card');
+      const subId = params.get('sub');
+      const clean = () => {
+        ['card', 'sub', 'session_id'].forEach((k) => params.delete(k));
+        setParams(params, { replace: true });
+      };
+      if (card === 'success' && subId) {
         try {
-          await ensureTenant();
+          if (initial && authStore.setTenantSlug) authStore.setTenantSlug(initial);
           const r = await billingApi.cardConfirm(subId);
           setNotice(r?.paid ? '✅ Paiement confirmé — votre forfait est actif.' : 'Paiement reçu, confirmation en cours…');
         } catch {
           setNotice('Paiement reçu, confirmation en cours…');
-        } finally {
-          clean();
-          load();
         }
-      })();
-    } else if (card === 'cancel') {
-      setNotice('Paiement annulé.');
-      clean();
-      load();
-    } else {
-      load();
-    }
+        clean();
+      } else if (card === 'cancel') {
+        setNotice('Paiement annulé.');
+        clean();
+      }
+      await loadPlan(initial);
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const switchTenant = (slug) => {
+    setActiveSlug(slug);
+    setNotice(null);
+    loadPlan(slug);
+  };
 
   const pay = async (sub) => {
     setPayingId(sub.id);
     setError(null);
     try {
-      await ensureTenant();
+      if (activeSlug && authStore.setTenantSlug) authStore.setTenantSlug(activeSlug);
       const { url } = await billingApi.cardCheckout(sub.id);
       if (url) window.location.href = url;
       else throw new Error('Lien de paiement indisponible');
@@ -111,16 +117,7 @@ export default function CimolaceBillingDashboardPage() {
     }
   };
 
-  const planName = (s) =>
-    s?.metadata?.label || s?.plan_id || 'Abonnement';
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#050507] text-white flex items-center justify-center">
-        <RefreshCw className="w-8 h-8 animate-spin text-violet-400" />
-      </div>
-    );
-  }
+  const planName = (s) => s?.metadata?.label || s?.plan_id || 'Abonnement';
 
   return (
     <>
@@ -137,20 +134,39 @@ export default function CimolaceBillingDashboardPage() {
             </div>
             <span className="text-sm font-black tracking-tight">CIMOLACE</span>
           </Link>
-          <button
-            onClick={load}
-            className="text-xs text-white/40 hover:text-white/80 transition-colors flex items-center gap-1"
-          >
+          <button onClick={() => loadPlan(activeSlug)} className="text-xs text-white/40 hover:text-white/80 transition-colors flex items-center gap-1">
             <RefreshCw className="w-3 h-3" /> Rafraîchir
           </button>
         </nav>
 
         <div className="pt-24 pb-12 px-6">
           <div className="max-w-4xl mx-auto">
-            <div className="mb-8">
+            <div className="mb-6">
               <h1 className="text-3xl font-black mb-2">Facturation & Abonnement</h1>
               <p className="text-white/60">Payez et activez vos services Cimolace par carte.</p>
             </div>
+
+            {/* Sélecteur de tenant (si l'utilisateur appartient à plusieurs espaces) */}
+            {tenants.length > 1 && (
+              <div className="mb-6 flex items-center gap-3 flex-wrap">
+                <span className="text-sm text-white/50 flex items-center gap-2"><Building2 className="w-4 h-4" /> Espace :</span>
+                <div className="flex gap-2 flex-wrap">
+                  {tenants.map((t) => (
+                    <button
+                      key={t.slug}
+                      onClick={() => switchTenant(t.slug)}
+                      className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
+                        t.slug === activeSlug
+                          ? 'bg-violet-500/25 border-violet-500/40 text-white'
+                          : 'bg-white/[0.03] border-white/[0.08] text-white/60 hover:text-white'
+                      }`}
+                    >
+                      {t.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {notice && (
               <div className="mb-6 rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-200 flex items-center gap-2">
@@ -163,11 +179,14 @@ export default function CimolaceBillingDashboardPage() {
               </div>
             )}
 
-            {/* Abonnements */}
             <h2 className="text-lg font-bold mb-3">Vos abonnements</h2>
-            {subs.length === 0 ? (
+            {loading ? (
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 flex items-center gap-2 text-white/60">
+                <RefreshCw className="w-4 h-4 animate-spin" /> Chargement…
+              </div>
+            ) : subs.length === 0 ? (
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 text-white/60">
-                Aucun abonnement pour le moment.
+                Aucun abonnement pour cet espace.
               </div>
             ) : (
               <div className="space-y-4 mb-8">
@@ -193,7 +212,7 @@ export default function CimolaceBillingDashboardPage() {
                             {s.provider ? ` · ${s.provider}` : ''}
                           </div>
                         </div>
-                        {payable && (
+                        {payable ? (
                           <button
                             onClick={() => pay(s)}
                             disabled={payingId === s.id}
@@ -202,12 +221,11 @@ export default function CimolaceBillingDashboardPage() {
                             {payingId === s.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
                             Payer par carte
                           </button>
-                        )}
-                        {s.status === 'active' && (
+                        ) : s.status === 'active' ? (
                           <span className="flex items-center gap-1 text-green-400 text-sm font-medium">
                             <CheckCircle className="w-4 h-4" /> Service actif
                           </span>
-                        )}
+                        ) : null}
                       </div>
                     </motion.div>
                   );
@@ -215,30 +233,22 @@ export default function CimolaceBillingDashboardPage() {
               </div>
             )}
 
-            {/* Factures */}
             <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
               <FileText className="w-5 h-5" /> Factures
             </h2>
             {invoices.length === 0 ? (
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 text-white/60">
-                Aucune facture.
-              </div>
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 text-white/60">Aucune facture.</div>
             ) : (
               <div className="space-y-3">
                 {invoices.map((inv) => {
                   const b = badge(inv.status);
                   return (
-                    <div
-                      key={inv.id}
-                      className="flex items-center justify-between p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] gap-3 flex-wrap"
-                    >
+                    <div key={inv.id} className="flex items-center justify-between p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] gap-3 flex-wrap">
                       <div className="flex items-center gap-3">
                         {inv.status === 'paid' ? <CheckCircle className="w-5 h-5 text-green-400" /> : <Clock className="w-5 h-5 text-amber-400" />}
                         <div>
                           <p className="font-medium">{inv.invoice_number || inv.description || 'Facture'}</p>
-                          <p className="text-xs text-white/50">
-                            {inv.paid_at ? `Payée le ${fmtDate(inv.paid_at)}` : `Échéance ${fmtDate(inv.due_date)}`}
-                          </p>
+                          <p className="text-xs text-white/50">{inv.paid_at ? `Payée le ${fmtDate(inv.paid_at)}` : `Échéance ${fmtDate(inv.due_date)}`}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
