@@ -475,15 +475,24 @@ export class BillingService {
     if (sub?.current_period_start) patch.current_period_start = this.unixToIso(sub.current_period_start);
     if (sub?.current_period_end) patch.current_period_end = this.unixToIso(sub.current_period_end);
 
+    const matchCol = rowId ? "id" : "provider_checkout_id";
+    const matchVal = rowId || session.id;
+    await sb.from("billing_subscriptions").update(patch).eq(matchCol, matchVal);
     if (rowId) {
-      await sb.from("billing_subscriptions").update(patch).eq("id", rowId);
       await sb
         .from("billing_invoices")
         .update({ status: "paid", provider: "stripe", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() })
         .eq("subscription_id", rowId)
         .in("status", ["pending", "processing", "failed"]);
-    } else {
-      await sb.from("billing_subscriptions").update(patch).eq("provider_checkout_id", session.id);
+    }
+    // Si l'abo devient actif, il remplace les autres abos actifs du tenant (essai).
+    if (patch.status === "active") {
+      const { data: row } = await sb
+        .from("billing_subscriptions")
+        .select("id, tenant_id")
+        .eq(matchCol, matchVal)
+        .maybeSingle();
+      if ((row as any)?.tenant_id) await this.supersedeOtherActiveSubscriptions((row as any).tenant_id, (row as any).id);
     }
   }
 
@@ -497,6 +506,13 @@ export class BillingService {
     else if (invoice?.lines?.data?.[0]?.period?.end)
       patch.current_period_end = this.unixToIso(invoice.lines.data[0].period.end);
     await this.supabase.from("billing_subscriptions").update(patch).eq("provider_subscription_id", subId);
+    // L'abo renouvelé/actif remplace les autres abos actifs du tenant (essai).
+    const { data: row } = await this.supabase
+      .from("billing_subscriptions")
+      .select("id, tenant_id")
+      .eq("provider_subscription_id", subId)
+      .maybeSingle();
+    if ((row as any)?.tenant_id) await this.supersedeOtherActiveSubscriptions((row as any).tenant_id, (row as any).id);
     // facture interne (si suivie) → payée
     await this.supabase
       .from("billing_invoices")
