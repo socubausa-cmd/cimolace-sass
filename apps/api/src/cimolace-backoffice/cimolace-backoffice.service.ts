@@ -72,7 +72,7 @@ export class CimolaceBackofficeService {
     const tenantId: string | null = client.tenant_id ?? null;
     const db = this.supabase.client as any;
 
-    const [tenantRes, subsRes, invoicesRes, servicesRes, sitesRes, plansRes] = await Promise.all([
+    const [tenantRes, subsRes, invoicesRes, servicesRes, sitesRes, plansRes, ticketsRes] = await Promise.all([
       tenantId
         ? db.from('tenants').select('*').eq('id', tenantId).maybeSingle()
         : Promise.resolve({ data: null }),
@@ -87,6 +87,9 @@ export class CimolaceBackofficeService {
         : Promise.resolve({ data: [] }),
       db.from('cimolace_sites').select('*').eq('client_id', clientId),
       db.from('billing_plans').select('key, label, price_cents, currency'),
+      client.email
+        ? db.from('cimolace_tickets').select('*').eq('contact_email', client.email).order('created_at', { ascending: false })
+        : Promise.resolve({ data: [] }),
     ]);
 
     const appTenant = tenantRes.data ?? null;
@@ -109,12 +112,16 @@ export class CimolaceBackofficeService {
       activated_at: s.activated_at ?? s.created_at ?? null,
     }));
     const sites = sitesRes.data ?? [];
+    const tickets = ticketsRes.data ?? [];
 
     const activeSubscriptionCount = subscriptions.filter((s: any) =>
       ['active', 'trialing', 'past_due'].includes(s.status),
     ).length;
     const unpaidInvoiceCount = invoices.filter(
       (i: any) => i.status && !['paid', 'void', 'canceled', 'refunded'].includes(i.status),
+    ).length;
+    const openTicketCount = tickets.filter(
+      (t: any) => t.status && !['closed', 'resolved'].includes(t.status),
     ).length;
 
     const summary = {
@@ -127,7 +134,7 @@ export class CimolaceBackofficeService {
       activeEngineCount: services.filter((s: any) => s.active).length,
       activeSubscriptionCount,
       credentialCount: 0,
-      openTicketCount: 0,
+      openTicketCount,
       unpaidInvoiceCount,
       missingRecommendedEngines: [] as string[],
     };
@@ -148,7 +155,7 @@ export class CimolaceBackofficeService {
       deployments: [],
       configurationSteps: [],
       changeHistory: [],
-      tickets: [],
+      tickets,
       usageLogs: [],
     };
   }
@@ -277,5 +284,112 @@ export class CimolaceBackofficeService {
       config: data.settings ?? {},
       activated_at: data.activated_at ?? data.created_at ?? null,
     };
+  }
+
+  /**
+   * Multiplexeur des commandes opérateur du control plane (POST .../operations).
+   * Selon les champs du body : `maintenance` (tenants.metadata.maintenance),
+   * `status` (cimolace_clients.status — Suspendre/Réactiver),
+   * `ensure_owner_membership` (tenant_memberships owner via owner_email),
+   * `record_readiness_check` (journal dans tenants.metadata.readiness).
+   * Ne renvoie PAS `controlPlane` → le frontend recharge l'état après coup.
+   */
+  async runTenantOperation(clientId: string, dto: any) {
+    const client = await this.getClientOrThrow(clientId);
+    const tenantId: string | null = client.tenant_id ?? null;
+    const db = this.supabase.client as any;
+    const now = new Date().toISOString();
+    const done: string[] = [];
+
+    let tenantMeta: any = null;
+    if (tenantId) {
+      const { data: t } = await db.from('tenants').select('metadata').eq('id', tenantId).maybeSingle();
+      tenantMeta = { ...(t?.metadata || {}) };
+    }
+
+    if (typeof dto?.maintenance === 'boolean') {
+      if (!tenantMeta) throw new BadRequestException('Tenant applicatif requis pour la maintenance.');
+      tenantMeta.maintenance = dto.maintenance;
+      done.push(dto.maintenance ? 'maintenance_on' : 'maintenance_off');
+    }
+
+    if (dto?.status) {
+      await db.from('cimolace_clients').update({ status: dto.status, updated_at: now }).eq('id', clientId);
+      done.push(`client_${dto.status}`);
+    }
+
+    if (dto?.ensure_owner_membership) {
+      const email = String(dto.owner_email || client.email || '').toLowerCase().trim();
+      if (!tenantId) throw new BadRequestException('Tenant applicatif requis pour préparer le owner.');
+      if (!email) throw new BadRequestException('Email owner requis.');
+      const { data: prof } = await db.from('profiles').select('id').eq('email', email).maybeSingle();
+      if (prof?.id) {
+        const { data: existing } = await db
+          .from('tenant_memberships')
+          .select('id, role')
+          .eq('tenant_id', tenantId)
+          .eq('user_id', prof.id)
+          .maybeSingle();
+        if (existing?.id) {
+          if (existing.role !== 'owner') {
+            await db.from('tenant_memberships').update({ role: 'owner', status: 'active' }).eq('id', existing.id);
+          }
+        } else {
+          await db.from('tenant_memberships').insert({ tenant_id: tenantId, user_id: prof.id, role: 'owner', status: 'active' });
+        }
+        done.push('owner_membership');
+      } else {
+        done.push('owner_membership_skipped_no_profile');
+      }
+    }
+
+    if (dto?.record_readiness_check && tenantMeta) {
+      const readiness = { ...(tenantMeta.readiness || {}) };
+      readiness[dto.readiness_key] = {
+        status: dto.readiness_status ?? 'verified',
+        note: dto.readiness_note ?? null,
+        evidence: dto.readiness_evidence ?? null,
+        at: now,
+      };
+      tenantMeta.readiness = readiness;
+      done.push('readiness_recorded');
+    }
+
+    if (tenantId && tenantMeta) {
+      tenantMeta.operations = { last: done[0] ?? 'noop', reason: dto?.reason ?? null, at: now };
+      await db.from('tenants').update({ metadata: tenantMeta, updated_at: now }).eq('id', tenantId);
+    }
+
+    return { ok: true, operations: done, reason: dto?.reason ?? null, at: now };
+  }
+
+  /**
+   * Crée un ticket support (cimolace_tickets) rattaché au client via
+   * `contact_email` (le control plane relit les tickets par cet email).
+   */
+  async createTenantTicket(clientId: string, dto: any) {
+    const client = await this.getClientOrThrow(clientId);
+    const db = this.supabase.client as any;
+    const { data: sites } = await db.from('cimolace_sites').select('id').eq('client_id', clientId).limit(1);
+    const siteId = sites?.[0]?.id ?? null;
+    const ticketNumber = `OPS-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Date.now().toString(36).toUpperCase().slice(-5)}`;
+
+    const { data, error } = await db
+      .from('cimolace_tickets')
+      .insert({
+        site_id: siteId,
+        ticket_number: dto?.ticket_number ?? ticketNumber,
+        subject: dto?.subject ?? 'Ticket Cimolace',
+        description: dto?.description ?? null,
+        category: dto?.category ?? 'general',
+        priority: dto?.priority ?? 'medium',
+        status: dto?.status ?? 'open',
+        assignee: dto?.assignee ?? null,
+        contact_email: dto?.contact_email ?? client.email ?? null,
+      })
+      .select('*')
+      .single();
+    if (error) throw new BadRequestException(error.message);
+    return data;
   }
 }

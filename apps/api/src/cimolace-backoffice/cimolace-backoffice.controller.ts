@@ -20,4 +20,6 @@ export class CimolaceBackofficeController {
   @Get('clients/:id/diagnostics') getDiagnostics(@Param('id') id: string) { return this.svc.getClientDiagnostics(id); }
   @Post('clients/:id/invoices') createInvoice(@Param('id') id: string, @Body() body: any) { return this.svc.createTenantInvoice(id, body); }
   @Patch('clients/:clientId/services/:serviceId') updateService(@Param('clientId') cid: string, @Param('serviceId') sid: string, @Body() body: any) { return this.svc.updateTenantService(cid, sid, body); }
+  @Post('clients/:id/operations') runOperation(@Param('id') id: string, @Body() body: any) { return this.svc.runTenantOperation(id, body); }
+  @Post('clients/:id/tickets') createTicket(@Param('id') id: string, @Body() body: any) { return this.svc.createTenantTicket(id, body); }
 }
