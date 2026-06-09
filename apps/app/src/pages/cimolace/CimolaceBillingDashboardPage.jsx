@@ -43,12 +43,11 @@ export default function CimolaceBillingDashboardPage() {
 
   // Pose X-Tenant-Slug (sinon l'API billing ignore quel tenant interroger).
   const ensureTenant = useCallback(async () => {
-    let slug = authStore.getTenantSlug ? authStore.getTenantSlug() : '';
-    if (!slug) {
-      const mine = await tenantMembersApi.getMyTenants().catch(() => []);
-      slug = (Array.isArray(mine) && mine[0] && (mine[0].slug || mine[0].tenant?.slug)) || '';
-      if (slug && authStore.setTenantSlug) authStore.setTenantSlug(slug);
-    }
+    // Toujours résoudre le tenant réel de l'utilisateur (évite un slug obsolète type 'isna').
+    const mine = await tenantMembersApi.getMyTenants().catch(() => []);
+    let slug = (Array.isArray(mine) && mine[0] && (mine[0].slug || mine[0].tenant?.slug)) || '';
+    if (!slug && authStore.getTenantSlug) slug = authStore.getTenantSlug();
+    if (slug && authStore.setTenantSlug) authStore.setTenantSlug(slug);
     return slug;
   }, []);
 

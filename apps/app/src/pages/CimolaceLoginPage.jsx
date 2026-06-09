@@ -39,8 +39,24 @@ export default function CimolaceLoginPage() {
     try {
       const { error: authError } = await login(email, password);
       if (authError) throw authError;
-      authStore.setTenantSlug('isna');
-      navigate(redirect, { replace: true });
+      // Router selon le rôle : opérateur Cimolace → back-office admin ; tenant → son espace facturation.
+      let isOperator = false;
+      try {
+        const { data: u } = await supabase.auth.getUser();
+        const meta = u?.user?.user_metadata || {};
+        isOperator =
+          meta.cimolace_staff === true ||
+          ['owner', 'admin'].includes(String(meta.role || '').toLowerCase());
+      } catch { /* défaut : tenant */ }
+      const explicit = sp.get('redirect') || sp.get('next');
+      if (isOperator) {
+        authStore.setTenantSlug('isna');
+        navigate(explicit || '/cimolace/admin', { replace: true });
+      } else {
+        authStore.setTenantSlug(''); // tenant : pas de slug forcé, son espace résout le sien
+        const dest = explicit && !explicit.startsWith('/cimolace/admin') ? explicit : '/cimolace/billing';
+        navigate(dest, { replace: true });
+      }
     } catch (err) {
       const raw  = err?.msg || err?.message || err?.error_description || (typeof err === 'string' ? err : null);
       const code = err?.code ?? err?.status;
