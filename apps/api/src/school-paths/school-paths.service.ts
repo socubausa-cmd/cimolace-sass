@@ -245,7 +245,7 @@ export class SchoolPathsService {
       .eq("id", studentId)
       .single();
     const existing = (profile as any)?.metadata || {};
-    await this.supabase.client
+    await (this.supabase.client as any)
       .from("profiles")
       .update({ metadata: { ...existing, school_path_id: pathId } })
       .eq("id", studentId);

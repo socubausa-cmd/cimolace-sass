@@ -12,9 +12,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BillingController = void 0;
+exports.AdminBillingController = exports.BillingController = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
+const cimolace_staff_guard_1 = require("../cimolace-backoffice/cimolace-staff.guard");
 const tenant_guard_1 = require("../common/guards/tenant.guard");
 const roles_guard_1 = require("../common/guards/roles.guard");
 const roles_decorator_1 = require("../common/decorators/roles.decorator");
@@ -118,4 +119,26 @@ exports.BillingController = BillingController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard),
     __metadata("design:paramtypes", [billing_service_1.BillingService])
 ], BillingController);
+let AdminBillingController = class AdminBillingController {
+    constructor(svc) {
+        this.svc = svc;
+    }
+    async activate(tenantId, body) {
+        return { data: await this.svc.activateTenantSubscription(tenantId, body?.plan || "zahir-forfait") };
+    }
+};
+exports.AdminBillingController = AdminBillingController;
+__decorate([
+    (0, common_1.Post)("tenants/:tenantId/activate"),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, cimolace_staff_guard_1.CimolaceStaffGuard),
+    __param(0, (0, common_1.Param)("tenantId")),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], AdminBillingController.prototype, "activate", null);
+exports.AdminBillingController = AdminBillingController = __decorate([
+    (0, common_1.Controller)("admin/billing"),
+    __metadata("design:paramtypes", [billing_service_1.BillingService])
+], AdminBillingController);
 //# sourceMappingURL=billing.controller.js.map

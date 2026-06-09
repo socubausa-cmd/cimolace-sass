@@ -27,6 +27,8 @@ let LiveController = class LiveController {
     async token(req, id, b) { return { data: await this.svc.generateToken(id, req.user.id, b.role) }; }
     async start(req, id) { return { data: await this.svc.startSession(req.tenant.id, id) }; }
     async end(req, id) { return { data: await this.svc.endSession(req.tenant.id, id) }; }
+    async recStart(req, id) { return { data: await this.svc.startRecording(req.tenant.id, id) }; }
+    async recStop(req, id) { return { data: await this.svc.stopRecording(req.tenant.id, id) }; }
 };
 exports.LiveController = LiveController;
 __decorate([
@@ -77,6 +79,22 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], LiveController.prototype, "end", null);
+__decorate([
+    (0, common_1.Post)(":id/recording/start"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], LiveController.prototype, "recStart", null);
+__decorate([
+    (0, common_1.Post)(":id/recording/stop"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], LiveController.prototype, "recStop", null);
 exports.LiveController = LiveController = __decorate([
     (0, common_1.Controller)("lives"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard),

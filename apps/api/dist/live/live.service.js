@@ -63,6 +63,11 @@ let LiveService = class LiveService {
         return data;
     }
     async endSession(tenantId, sessionId) {
+        try {
+            await this.stopRecording(tenantId, sessionId);
+        }
+        catch {
+        }
         const { data } = await this.supabase
             .from("live_sessions")
             .update({ status: "ended", ended_at: new Date().toISOString() })
@@ -73,6 +78,52 @@ let LiveService = class LiveService {
         if (!data)
             throw new common_1.NotFoundException("Session introuvable");
         return data;
+    }
+    async startRecording(tenantId, sessionId) {
+        const session = await this.findOne(tenantId, sessionId);
+        const slug = session.tenant_slug ?? "";
+        const roomName = livekit_service_1.LiveKitService.scopedRoomName(slug, sessionId);
+        const { egressId, filepath } = await this.liveKit.startRecording(roomName, sessionId, slug);
+        const { data } = await this.supabase
+            .from("live_recordings")
+            .insert({
+            live_session_id: sessionId,
+            egress_id: egressId,
+            status: egressId ? "recording" : "failed",
+            started_at: new Date().toISOString(),
+            tenant_slug: slug,
+            storage_filepath: filepath,
+        })
+            .select("*")
+            .single();
+        if (egressId) {
+            await this.supabase
+                .from("live_sessions")
+                .update({ replay_enabled: true })
+                .eq("id", sessionId)
+                .eq("tenant_id", tenantId);
+        }
+        return { recording: data, egressId, recording_active: Boolean(egressId) };
+    }
+    async stopRecording(tenantId, sessionId) {
+        await this.findOne(tenantId, sessionId);
+        const { data: rec } = await this.supabase
+            .from("live_recordings")
+            .select("*")
+            .eq("live_session_id", sessionId)
+            .eq("status", "recording")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        if (rec?.egress_id)
+            await this.liveKit.stopRecording(rec.egress_id);
+        if (rec?.id) {
+            await this.supabase
+                .from("live_recordings")
+                .update({ status: "stopped", completed_at: new Date().toISOString() })
+                .eq("id", rec.id);
+        }
+        return { stopped: Boolean(rec), recordingId: rec?.id ?? null, recording_active: false };
     }
     async generateToken(sessionId, userId, role, tenantSlug) {
         let slug = tenantSlug ?? "";

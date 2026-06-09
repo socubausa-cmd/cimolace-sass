@@ -12,6 +12,15 @@ export declare class BillingService {
         subscriptions: any[];
         invoices: any[];
     }>;
+    activateTenantSubscription(tenantId: string, planKey?: string): Promise<{
+        subscription: {
+            id: any;
+            status: any;
+            plan_id: any;
+        } | null;
+        gating_enabled: boolean;
+        plan: any;
+    }>;
     collectSubscriptionViaPawaPay(tenantId: string, subscriptionId: string, dto: {
         phoneNumber?: string;
         provider?: string;
@@ -47,6 +56,7 @@ export declare class BillingService {
         paid: boolean;
         status: any;
     }>;
+    private supersedeOtherActiveSubscriptions;
     private static ZERO_DECIMAL;
     createPayout(tenantId: string, createdBy: string | null, dto: {
         amountCents?: number;
@@ -81,5 +91,27 @@ export declare class BillingService {
     }>;
     handleWebhook(payload: Buffer, signature: string): Promise<{
         received: boolean;
+        ignored: string;
+        type?: undefined;
+        error?: undefined;
+    } | {
+        received: boolean;
+        type: string;
+        error: string;
+        ignored?: undefined;
+    } | {
+        received: boolean;
+        type: "checkout.session.completed" | "invoice.paid" | "invoice.payment_succeeded" | "invoice.payment_failed" | "customer.subscription.updated" | "customer.subscription.deleted";
+        ignored?: undefined;
+        error?: undefined;
     }>;
+    private verifyStripeSignature;
+    private fetchStripeSubscription;
+    private unixToIso;
+    private mapStripeStatus;
+    private onCheckoutCompleted;
+    private onInvoicePaid;
+    private onInvoiceFailed;
+    private onSubscriptionUpdated;
+    private onSubscriptionCanceled;
 }

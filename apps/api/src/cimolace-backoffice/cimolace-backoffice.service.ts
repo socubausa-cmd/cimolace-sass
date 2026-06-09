@@ -51,4 +51,187 @@ export class CimolaceBackofficeService {
     const { data } = await (this.supabase.client as any).from('cimolace_sites').select('*').eq('client_id', clientId);
     return data ?? [];
   }
+
+  private async getClientOrThrow(clientId: string) {
+    const { data, error } = await (this.supabase.client as any)
+      .from('cimolace_clients').select('*').eq('id', clientId).maybeSingle();
+    if (error) throw new BadRequestException(error.message);
+    if (!data) throw new NotFoundException('Client introuvable');
+    return data;
+  }
+
+  /**
+   * Control plane d'un client : agrège la fiche client Cimolace, son tenant
+   * applicatif (table `tenants`, relié via cimolace_clients.tenant_id), ses
+   * abonnements / factures / services / sites, plus un `summary` de compteurs.
+   * Toutes les clés attendues par la page détail sont présentes (tableaux vides
+   * par défaut) pour éviter tout undefined côté frontend.
+   */
+  async getClientControlPlane(clientId: string) {
+    const client = await this.getClientOrThrow(clientId);
+    const tenantId: string | null = client.tenant_id ?? null;
+    const db = this.supabase.client as any;
+
+    const [tenantRes, subsRes, invoicesRes, servicesRes, sitesRes, plansRes] = await Promise.all([
+      tenantId
+        ? db.from('tenants').select('*').eq('id', tenantId).maybeSingle()
+        : Promise.resolve({ data: null }),
+      tenantId
+        ? db.from('billing_subscriptions').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false })
+        : Promise.resolve({ data: [] }),
+      tenantId
+        ? db.from('billing_invoices').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false })
+        : Promise.resolve({ data: [] }),
+      tenantId
+        ? db.from('tenant_services').select('*').eq('tenant_id', tenantId)
+        : Promise.resolve({ data: [] }),
+      db.from('cimolace_sites').select('*').eq('client_id', clientId),
+      db.from('billing_plans').select('key, label, price_cents, currency'),
+    ]);
+
+    const appTenant = tenantRes.data ?? null;
+    const planByKey: Record<string, any> = Object.fromEntries(
+      (plansRes.data ?? []).map((p: any) => [p.key, p]),
+    );
+
+    const subscriptions = (subsRes.data ?? []).map((s: any) => ({
+      ...s,
+      plan: planByKey[s.plan_id]?.label || s.plan_id || '-',
+      amount: (s.amount_cents ?? planByKey[s.plan_id]?.price_cents ?? 0) / 100,
+    }));
+    const invoices = invoicesRes.data ?? [];
+    const services = servicesRes.data ?? [];
+    const sites = sitesRes.data ?? [];
+
+    const activeSubscriptionCount = subscriptions.filter((s: any) =>
+      ['active', 'trialing', 'past_due'].includes(s.status),
+    ).length;
+    const unpaidInvoiceCount = invoices.filter(
+      (i: any) => i.status && !['paid', 'void', 'canceled', 'refunded'].includes(i.status),
+    ).length;
+
+    const summary = {
+      appTenantStatus: appTenant?.status ?? null,
+      lastTenantOperation: appTenant?.metadata?.operations ?? null,
+      maintenance: Boolean(appTenant?.metadata?.maintenance),
+      siteCount: sites.length,
+      activeSiteCount: sites.filter((s: any) => s.status === 'active').length,
+      engineCount: services.length,
+      activeEngineCount: services.filter((s: any) => s.active).length,
+      activeSubscriptionCount,
+      credentialCount: 0,
+      openTicketCount: 0,
+      unpaidInvoiceCount,
+      missingRecommendedEngines: [] as string[],
+    };
+
+    return {
+      client,
+      summary,
+      tenants: { app: appTenant ? [appTenant] : [], cimolace: [] },
+      sites,
+      services,
+      subscriptions,
+      invoices,
+      appBilling: { invoices: [] },
+      warnings: [],
+      schoolModel: null,
+      schoolProviders: [],
+      credentials: [],
+      deployments: [],
+      configurationSteps: [],
+      changeHistory: [],
+      tickets: [],
+      usageLogs: [],
+    };
+  }
+
+  /**
+   * Diagnostic léger d'un client : vérifie la fiche + le lien au tenant
+   * applicatif et expose la forme `readiness`/`checks` attendue par l'onglet
+   * Diagnostic. Volontairement minimal — extensible plus tard.
+   */
+  async getClientDiagnostics(clientId: string) {
+    const client = await this.getClientOrThrow(clientId);
+    const tenantId: string | null = client.tenant_id ?? null;
+    let appTenant: any = null;
+    if (tenantId) {
+      const { data } = await (this.supabase.client as any)
+        .from('tenants').select('id, slug, status, plan').eq('id', tenantId).maybeSingle();
+      appTenant = data ?? null;
+    }
+
+    const checks = [
+      { key: 'client', label: 'Fiche client Cimolace', status: 'pass', detail: client.name },
+      {
+        key: 'app-tenant',
+        label: 'Tenant applicatif lié',
+        status: appTenant ? 'pass' : 'block',
+        detail: appTenant?.slug ?? 'Aucun tenant applicatif rattaché (cimolace_clients.tenant_id).',
+      },
+      {
+        key: 'tenant-active',
+        label: 'Tenant actif',
+        status: appTenant ? (appTenant.status === 'active' ? 'pass' : 'warn') : 'block',
+        detail: appTenant ? `statut: ${appTenant.status}` : '—',
+      },
+    ];
+
+    const blockers = checks.filter((c) => c.status === 'block');
+    const warnings = checks.filter((c) => c.status === 'warn');
+    const passCount = checks.filter((c) => c.status === 'pass').length;
+    const percent = checks.length ? Math.round((passCount / checks.length) * 100) : 0;
+
+    return {
+      generatedAt: new Date().toISOString(),
+      overall: blockers.length ? 'block' : warnings.length ? 'warn' : 'ok',
+      score: passCount,
+      maxScore: checks.length,
+      readiness: {
+        percent,
+        passCount,
+        warningCount: warnings.length,
+        blockingCount: blockers.length,
+        blockers,
+        warnings,
+      },
+      checks,
+      proof: { clientId, tenantId },
+      providers: [],
+      schoolProviders: [],
+    };
+  }
+
+  /**
+   * Crée une facture manuelle billing_invoices pour le tenant applicatif du
+   * client. Accepte `amount` (unités) ou `amount_cents`.
+   */
+  async createTenantInvoice(clientId: string, dto: any) {
+    const client = await this.getClientOrThrow(clientId);
+    if (!client.tenant_id) {
+      throw new BadRequestException('Tenant applicatif requis pour créer une facture.');
+    }
+    const amountCents =
+      dto?.amount_cents != null
+        ? Math.round(Number(dto.amount_cents))
+        : Math.round(Number(dto?.amount || 0) * 100);
+
+    const { data, error } = await (this.supabase.client as any)
+      .from('billing_invoices')
+      .insert({
+        tenant_id: client.tenant_id,
+        invoice_number: dto?.invoice_number ?? null,
+        amount_cents: amountCents,
+        currency: dto?.currency ?? 'EUR',
+        status: dto?.status ?? 'pending',
+        provider: dto?.provider ?? 'manual',
+        description: dto?.description ?? dto?.type ?? null,
+        due_date: dto?.due_date ?? null,
+        metadata: dto?.metadata ?? {},
+      })
+      .select('*')
+      .single();
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
 }

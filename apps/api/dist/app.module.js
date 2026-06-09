@@ -59,6 +59,7 @@ const team_invites_module_1 = require("./team-invites/team-invites.module");
 const public_reviews_module_1 = require("./public-reviews/public-reviews.module");
 const zoom_engine_module_1 = require("./zoom-engine/zoom-engine.module");
 const social_publisher_module_1 = require("./social-publisher/social-publisher.module");
+const school_paths_module_1 = require("./school-paths/school-paths.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -116,6 +117,7 @@ exports.AppModule = AppModule = __decorate([
             public_reviews_module_1.PublicReviewsModule,
             zoom_engine_module_1.ZoomEngineModule,
             social_publisher_module_1.SocialPublisherModule,
+            school_paths_module_1.SchoolPathsModule,
         ],
     })
 ], AppModule);

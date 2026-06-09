@@ -25,4 +25,18 @@ export declare class LiveController {
     end(req: any, id: string): Promise<{
         data: any;
     }>;
+    recStart(req: any, id: string): Promise<{
+        data: {
+            recording: any;
+            egressId: string | null;
+            recording_active: boolean;
+        };
+    }>;
+    recStop(req: any, id: string): Promise<{
+        data: {
+            stopped: boolean;
+            recordingId: any;
+            recording_active: boolean;
+        };
+    }>;
 }

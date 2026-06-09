@@ -10,6 +10,16 @@ export declare class LiveService {
     findOne(tenantId: string, sessionId: string): Promise<any>;
     startSession(tenantId: string, sessionId: string): Promise<any>;
     endSession(tenantId: string, sessionId: string): Promise<any>;
+    startRecording(tenantId: string, sessionId: string): Promise<{
+        recording: any;
+        egressId: string | null;
+        recording_active: boolean;
+    }>;
+    stopRecording(tenantId: string, sessionId: string): Promise<{
+        stopped: boolean;
+        recordingId: any;
+        recording_active: boolean;
+    }>;
     generateToken(sessionId: string, userId: string, role: "host" | "student", tenantSlug?: string): Promise<{
         token: string;
         room: string;

@@ -40,3 +40,20 @@ export declare class BillingController {
         currency: string;
     }>;
 }
+export declare class AdminBillingController {
+    private svc;
+    constructor(svc: BillingService);
+    activate(tenantId: string, body: {
+        plan?: string;
+    }): Promise<{
+        data: {
+            subscription: {
+                id: any;
+                status: any;
+                plan_id: any;
+            } | null;
+            gating_enabled: boolean;
+            plan: any;
+        };
+    }>;
+}

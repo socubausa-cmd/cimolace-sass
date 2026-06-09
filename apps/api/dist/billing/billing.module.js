@@ -23,7 +23,7 @@ exports.BillingModule = BillingModule;
 exports.BillingModule = BillingModule = __decorate([
     (0, common_1.Module)({
         imports: [auth_module_1.AuthModule, tenant_module_1.TenantModule, supabase_module_1.SupabaseModule, pawapay_module_1.PawaPayModule],
-        controllers: [billing_controller_1.BillingController, billing_webhook_controller_1.BillingWebhookController, billing_advanced_controller_1.BillingAdvancedController],
+        controllers: [billing_controller_1.BillingController, billing_controller_1.AdminBillingController, billing_webhook_controller_1.BillingWebhookController, billing_advanced_controller_1.BillingAdvancedController],
         providers: [billing_service_1.BillingService, billing_advanced_service_1.BillingAdvancedService],
         exports: [billing_service_1.BillingService, billing_advanced_service_1.BillingAdvancedService],
     })
