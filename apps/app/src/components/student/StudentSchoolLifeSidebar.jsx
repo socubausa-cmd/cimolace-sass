@@ -31,6 +31,7 @@ const T = {
 
 /* ─── Nav items (flat, no sections) ─── */
 const NAV = [
+  { key: 'semaine-courante',    label: 'Ma semaine',        icon: '◫', path: 'semaine-courante' },
   { key: 'dashboard',           label: 'Tableau de bord',  icon: '◈', path: 'dashboard'  },
   { key: 'formations',          label: 'Mes Formations',   icon: '✦', path: 'formations' },
   { key: 'vie-scolaire',        label: 'Vie Scolaire',     icon: '◎', path: 'vie-scolaire' },

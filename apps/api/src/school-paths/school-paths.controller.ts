@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SchoolPathsService } from './school-paths.service';
@@ -140,5 +140,19 @@ export class SchoolPathsController {
   @Post('weeks/:weekId/apply-grammar')
   applyGrammar(@Param('weekId') weekId: string, @Body('grammarKey') grammarKey: string) {
     return this.svc.applyGrammar(weekId, grammarKey);
+  }
+
+  // ── Student assignment ────────────────────────────────────────────────────────
+
+  @Post('assign')
+  @UseGuards(JwtAuthGuard)
+  assignPath(@Body() body: { studentId: string; pathId: string | null }) {
+    return this.svc.assignPathToStudent(body.studentId, body.pathId);
+  }
+
+  @Get('students')
+  @UseGuards(JwtAuthGuard)
+  getStudents(@Query('tenantId') tenantId: string) {
+    return this.svc.getStudentsByTenant(tenantId);
   }
 }

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import PedagogicalBlockRenderer from "@/components/liri-ecosystem/PedagogicalBlockRenderer";
 import {
   Calendar,
   ChevronLeft,
@@ -681,7 +682,7 @@ function BlockCard({ block, onNavigate, onOpenVideo, onOpenQuiz }) {
 
 // ── Day column ────────────────────────────────────────────────────────────────
 
-function DayColumn({ dayLabel, dayDate, dayData, isMobile, onNavigate, onOpenVideo, onOpenQuiz }) {
+function DayColumn({ dayLabel, dayDate, dayData, isMobile, onNavigate, onOpenVideo, onOpenQuiz, completedBlocks, onBlockComplete }) {
   const today    = isToday(dayDate);
   const dayTitle = dayData?.title || null;
   const pedagogy = dayData?.pedagogy_type || 'generic';
@@ -748,12 +749,13 @@ function DayColumn({ dayLabel, dayDate, dayData, isMobile, onNavigate, onOpenVid
           </p>
         )}
         {sortedBlocks.map((block) => (
-          <BlockCard
+          <PedagogicalBlockRenderer
             key={block.id}
             block={block}
-            onNavigate={onNavigate}
-            onOpenVideo={onOpenVideo}
-            onOpenQuiz={onOpenQuiz}
+            isActive={false}
+            isCompleted={completedBlocks ? completedBlocks.has(block.id) : false}
+            onComplete={(score) => onBlockComplete && onBlockComplete(block.id, score)}
+            onNavigate={(path) => onNavigate(path)}
           />
         ))}
       </div>
@@ -810,6 +812,27 @@ export default function StudentWeeklySchedulePage() {
   // UI state
   const [videoModal, setVideoModal] = useState(null); // { block }
   const [quizModal,  setQuizModal]  = useState(null); // { block }
+
+  // Completed blocks tracking
+  const [completedBlocks, setCompletedBlocks] = useState(new Set());
+
+  const markBlockCompleted = (blockId, score) => {
+    setCompletedBlocks(prev => {
+      const next = new Set([...prev, blockId]);
+      // Task A: persist to localStorage (learning_analytics table has no block_id/week_id columns)
+      try {
+        const weekId = currentWeek?.id;
+        const userId = user?.id;
+        if (userId && weekId) {
+          const storageKey = 'progress_' + userId + '_' + weekId;
+          localStorage.setItem(storageKey, JSON.stringify([...next]));
+        }
+      } catch (_) {
+        // silent fail
+      }
+      return next;
+    });
+  };
 
   const [mobile, setMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
@@ -904,6 +927,24 @@ export default function StudentWeeklySchedulePage() {
         if (idx >= 0 && idx < 5) mapped[idx] = d;
       });
       setDays(mapped);
+
+      // Task B: load persisted progress for this week from localStorage
+      try {
+        const userId = (await supabase.auth.getUser()).data?.user?.id;
+        if (userId && week?.id) {
+          const storageKey = 'progress_' + userId + '_' + week.id;
+          const stored = localStorage.getItem(storageKey);
+          if (stored) {
+            setCompletedBlocks(new Set(JSON.parse(stored)));
+          } else {
+            setCompletedBlocks(new Set());
+          }
+        } else {
+          setCompletedBlocks(new Set());
+        }
+      } catch (_) {
+        setCompletedBlocks(new Set());
+      }
     } catch (err) {
       console.error('[StudentWeeklySchedulePage] load error', err);
       setError(err?.message || 'Erreur de chargement');
@@ -1164,6 +1205,8 @@ export default function StudentWeeklySchedulePage() {
                   onNavigate={(path) => navigate(path)}
                   onOpenVideo={(block) => setVideoModal({ block })}
                   onOpenQuiz={(block) => setQuizModal({ block })}
+                  completedBlocks={completedBlocks}
+                  onBlockComplete={markBlockCompleted}
                 />
               );
             })}

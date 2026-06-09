@@ -9,6 +9,7 @@ import TenantAdminShell from '@/components/admin/TenantAdminShell';
 import { ADMIN_T as T } from '@/lib/tenantAdminTheme';
 import SchoolPathsParcoursPanel from '@/components/liri-ecosystem/SchoolPathsParcoursPanel';
 import { supabase } from '@/lib/supabase';
+import { getApiBaseUrl } from '@/lib/apiBase';
 
 const TABS = [
   { id: 'parcours',    label: 'Parcours',           icon: BookOpen },
@@ -28,48 +29,58 @@ function AssignationTab({ tenantSlug }) {
     if (!tenantSlug) return;
     setLoading(true);
 
-    Promise.all([
-      // Élèves du tenant
-      supabase
-        .from('tenant_memberships')
-        .select('user_id, profiles:user_id(id, full_name, email, metadata)')
-        .eq('tenant_slug', tenantSlug)
-        .eq('role', 'student'),
-      // Parcours du tenant
-      supabase
-        .from('school_paths')
-        .select('id, title')
-        .eq('tenant_slug', tenantSlug)
-        .order('title'),
-    ])
-      .then(([membersRes, pathsRes]) => {
-        if (membersRes.error) throw membersRes.error;
-        if (pathsRes.error)   throw pathsRes.error;
+    async function load() {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
 
-        setStudents(
-          (membersRes.data ?? []).map((m) => ({
-            id:               m.profiles?.id ?? m.user_id,
-            full_name:        m.profiles?.full_name ?? '—',
-            email:            m.profiles?.email ?? '—',
-            school_path_id:   m.profiles?.metadata?.school_path_id ?? '',
-            metadata:         m.profiles?.metadata ?? {},
-          }))
-        );
-        setPaths(pathsRes.data ?? []);
-      })
+      const [studentsRes, pathsRes] = await Promise.all([
+        // Élèves du tenant via API
+        fetch(getApiBaseUrl() + '/school-paths/students?tenantId=' + tenantSlug, {
+          headers: { Authorization: 'Bearer ' + token },
+        }),
+        // Parcours du tenant (Supabase direct — lecture simple)
+        supabase
+          .from('school_paths')
+          .select('id, title')
+          .eq('tenant_slug', tenantSlug)
+          .order('title'),
+      ]);
+
+      if (!studentsRes.ok) throw new Error('Erreur chargement élèves : ' + studentsRes.status);
+      if (pathsRes.error) throw pathsRes.error;
+
+      const studentsData = await studentsRes.json();
+      setStudents(
+        (studentsData ?? []).map((m) => ({
+          id:             m.profiles?.id ?? m.user_id ?? m.id,
+          full_name:      m.profiles?.full_name ?? m.full_name ?? '—',
+          email:          m.profiles?.email ?? m.email ?? '—',
+          school_path_id: m.profiles?.metadata?.school_path_id ?? m.school_path_id ?? '',
+          metadata:       m.profiles?.metadata ?? m.metadata ?? {},
+        }))
+      );
+      setPaths(pathsRes.data ?? []);
+    }
+
+    load()
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [tenantSlug]);
 
   async function handleAssign(student, selectedPathId) {
     setSaving((s) => ({ ...s, [student.id]: true }));
-    const { error: upErr } = await supabase
-      .from('profiles')
-      .update({ metadata: { ...student.metadata, school_path_id: selectedPathId || null } })
-      .eq('id', student.id);
-    if (upErr) {
-      alert('Erreur : ' + upErr.message);
-    } else {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const res = await fetch(getApiBaseUrl() + '/school-paths/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ studentId: student.id, pathId: selectedPathId || null }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.message ?? 'Erreur ' + res.status);
+      }
       setStudents((prev) =>
         prev.map((st) =>
           st.id === student.id
@@ -77,8 +88,11 @@ function AssignationTab({ tenantSlug }) {
             : st
         )
       );
+    } catch (e) {
+      alert('Erreur : ' + e.message);
+    } finally {
+      setSaving((s) => ({ ...s, [student.id]: false }));
     }
-    setSaving((s) => ({ ...s, [student.id]: false }));
   }
 
   if (loading) return (

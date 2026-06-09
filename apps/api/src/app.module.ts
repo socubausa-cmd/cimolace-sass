@@ -61,6 +61,8 @@ import { TeamInvitesModule } from './team-invites/team-invites.module';
 import { PublicReviewsModule } from './public-reviews/public-reviews.module';
 import { ZoomEngineModule } from './zoom-engine/zoom-engine.module';
 import { SocialPublisherModule } from './social-publisher/social-publisher.module';
+// ── School Paths (parcours, cours, modules, semaines, jours, blocs) ───────────
+import { SchoolPathsModule } from './school-paths/school-paths.module';
 
 @Module({
   controllers: [HealthController],
@@ -130,6 +132,8 @@ import { SocialPublisherModule } from './social-publisher/social-publisher.modul
     // ── Zoom Engine (cloud recordings → shorts → social) ──────────────────────
     ZoomEngineModule,
     SocialPublisherModule,
+    // ── School Paths (parcours pédagogiques + grammaire semaine) ─────────────
+    SchoolPathsModule,
   ],
 })
 export class AppModule {}

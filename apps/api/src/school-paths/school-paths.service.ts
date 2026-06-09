@@ -235,4 +235,33 @@ export class SchoolPathsService {
 
     return { weekId, grammarKey, daysCreated: createdDays.length };
   }
+
+  // ── Student assignment ────────────────────────────────────────────────────────
+
+  async assignPathToStudent(studentId: string, pathId: string | null) {
+    const { data: profile } = await this.supabase.client
+      .from("profiles")
+      .select("metadata")
+      .eq("id", studentId)
+      .single();
+    const existing = (profile as any)?.metadata || {};
+    await this.supabase.client
+      .from("profiles")
+      .update({ metadata: { ...existing, school_path_id: pathId } })
+      .eq("id", studentId);
+    return { success: true };
+  }
+
+  async getStudentsByTenant(tenantId: string) {
+    const { data } = await this.supabase.client
+      .from("tenant_memberships")
+      .select("user_id, profiles(id, full_name, email, metadata)")
+      .eq("tenant_id", tenantId)
+      .eq("role", "student")
+      .eq("status", "active");
+    return (data || []).map((m: any) => ({
+      ...m.profiles,
+      school_path_id: m.profiles?.metadata?.school_path_id || null,
+    }));
+  }
 }
