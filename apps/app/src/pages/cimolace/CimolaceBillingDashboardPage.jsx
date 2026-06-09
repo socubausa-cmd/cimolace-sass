@@ -6,9 +6,11 @@ import {
   CreditCard, CheckCircle, Clock, FileText, RefreshCw, AlertCircle,
   Zap, Loader2, Building2, Boxes, Power, LayoutGrid, ArrowRight, ExternalLink,
   KeyRound, ShoppingBag, LifeBuoy, Settings, Plus, Trash2, Copy, Check, Send,
+  Package, Users, Activity, UserCircle, ShieldAlert, Mail, XCircle,
 } from 'lucide-react';
-import { billingApi, tenantMembersApi, catalogApi, tenantApiKeysApi, tenantPortalApi, tenantsApi } from '@/lib/api';
+import { billingApi, tenantMembersApi, catalogApi, tenantApiKeysApi, tenantPortalApi, tenantsApi, mboloApi } from '@/lib/api';
 import { authStore } from '@/lib/auth-store';
+import { supabase } from '@/lib/supabase';
 
 const eur = (cents, cur = 'EUR') => {
   try { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: cur }).format((Number(cents) || 0) / 100); }
@@ -41,13 +43,18 @@ const serviceName = (k) => SERVICE_LABELS[k] || String(k || '').replace(/_/g, ' 
 
 const TABS = [
   { id: 'apercu', label: "Vue d'ensemble", icon: LayoutGrid },
+  { id: 'monitoring', label: 'Monitoring', icon: Activity },
   { id: 'abonnement', label: 'Abonnement', icon: CreditCard },
-  { id: 'moteurs', label: 'Moteurs', icon: Boxes },
   { id: 'marketplace', label: 'Marketplace', icon: ShoppingBag },
   { id: 'factures', label: 'Factures', icon: FileText },
+  { id: 'moteurs', label: 'Moteurs', icon: Boxes },
+  { id: 'produits', label: 'Produits', icon: Package },
+  { id: 'equipe', label: 'Équipe', icon: Users },
   { id: 'cles', label: 'API & clés', icon: KeyRound },
   { id: 'support', label: 'Support', icon: LifeBuoy },
+  { id: 'profil', label: 'Profil', icon: UserCircle },
   { id: 'parametres', label: 'Paramètres', icon: Settings },
+  { id: 'compte', label: 'Compte', icon: ShieldAlert },
 ];
 
 // Familles de moteurs → produit Cimolace + lien d'accès.
@@ -81,24 +88,42 @@ export default function CimolaceBillingDashboardPage() {
   const [keyLabel, setKeyLabel] = useState('');
   const [ticketForm, setTicketForm] = useState({ subject: '', description: '' });
   const [brandForm, setBrandForm] = useState({ name: '', logo_url: '', primary_domain: '', primary: '' });
+  // Monitoring / Produits / Équipe / Profil / Compte
+  const [usage, setUsage] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [inviteForm, setInviteForm] = useState({ email: '', role: 'member' });
+  const [prodForm, setProdForm] = useState({ name: '', priceEur: '' });
+  const [pwd, setPwd] = useState('');
+  const [delConfirm, setDelConfirm] = useState('');
 
   const loadAll = useCallback(async (slug) => {
     setLoading(true); setError(null);
     try {
       if (slug && authStore.setTenantSlug) authStore.setTenantSlug(slug);
-      const [plan, svc, ks, mk, tk] = await Promise.all([
+      const arr = (x) => (Array.isArray(x) ? x : Array.isArray(x?.data) ? x.data : []);
+      const [plan, svc, ks, mk, tk, us, pr, mb, pd] = await Promise.all([
         billingApi.getPlan().catch(() => ({ subscriptions: [], invoices: [] })),
         catalogApi.tenantServices().catch(() => []),
         tenantApiKeysApi.list().catch(() => []),
         tenantPortalApi.marketplace().catch(() => []),
         tenantPortalApi.tickets().catch(() => []),
+        tenantPortalApi.usage().catch(() => null),
+        tenantPortalApi.profile().catch(() => null),
+        tenantMembersApi.listMembers().catch(() => []),
+        mboloApi.listProducts().catch(() => []),
       ]);
       setSubs(Array.isArray(plan?.subscriptions) ? plan.subscriptions : []);
       setInvoices(Array.isArray(plan?.invoices) ? plan.invoices : []);
       setServices(Array.isArray(svc) ? svc : []);
-      setKeys(Array.isArray(ks) ? ks : []);
-      setMarket(Array.isArray(mk) ? mk : []);
-      setTickets(Array.isArray(tk) ? tk : []);
+      setKeys(arr(ks));
+      setMarket(arr(mk));
+      setTickets(arr(tk));
+      setUsage(us && us.data ? us.data : us);
+      setProfile(pr && pr.data ? pr.data : pr);
+      setMembers(arr(mb));
+      setProducts(arr(pd));
     } catch (e) {
       setError(e?.message || 'Chargement impossible');
     } finally { setLoading(false); }
@@ -190,6 +215,57 @@ export default function CimolaceBillingDashboardPage() {
   };
   const copyKey = () => { if (newKey && navigator.clipboard) { navigator.clipboard.writeText(newKey); setCopied(true); setTimeout(() => setCopied(false), 1500); } };
   const keyFamily = (p) => { const s = String(p || ''); return s.startsWith('mdk_') ? 'MEDOS' : s.startsWith('mbk_') ? 'Mbolo' : s.startsWith('cml_') ? 'Cimolace' : 'Tenant'; };
+  const arr = (x) => (Array.isArray(x) ? x : Array.isArray(x?.data) ? x.data : []);
+
+  const createProduct = async () => {
+    if (!prodForm.name.trim()) return;
+    setBusy('new-prod'); setError(null);
+    try {
+      withSlug();
+      await mboloApi.createProduct({ name: prodForm.name.trim(), price_cents: Math.round((parseFloat(prodForm.priceEur) || 0) * 100), currency: 'EUR' });
+      setProdForm({ name: '', priceEur: '' });
+      setProducts(arr(await mboloApi.listProducts().catch(() => products)));
+      setNotice('Produit ajouté à votre boutique Mbolo.');
+    } catch (e) { setError(e?.message || "Création produit impossible (boutique Mbolo activée ?)"); }
+    finally { setBusy(null); }
+  };
+  const invite = async () => {
+    if (!inviteForm.email.trim()) return;
+    setBusy('invite'); setError(null);
+    try {
+      withSlug();
+      await tenantMembersApi.inviteMember(inviteForm.email.trim(), inviteForm.role);
+      setInviteForm({ email: '', role: 'member' });
+      setMembers(arr(await tenantMembersApi.listMembers().catch(() => members)));
+      setNotice('Invitation envoyée.');
+    } catch (e) { setError(e?.message || 'Invitation impossible (rôle owner/admin requis ?)'); }
+    finally { setBusy(null); }
+  };
+  const kickMember = async (uid) => {
+    setBusy(`rm-${uid}`); setError(null);
+    try { withSlug(); await tenantMembersApi.removeMember(uid); setMembers((m) => m.filter((x) => (x.user_id || x.id) !== uid)); }
+    catch (e) { setError(e?.message || 'Retrait impossible'); }
+    finally { setBusy(null); }
+  };
+  const changePassword = async () => {
+    if ((pwd || '').length < 8) { setError('Mot de passe : 8 caractères minimum.'); return; }
+    setBusy('pwd'); setError(null);
+    try { const { error: e } = await supabase.auth.updateUser({ password: pwd }); if (e) throw e; setPwd(''); setNotice('Mot de passe mis à jour.'); }
+    catch (e) { setError(e?.message || 'Changement de mot de passe impossible'); }
+    finally { setBusy(null); }
+  };
+  const deleteAccount = async () => {
+    setBusy('del'); setError(null);
+    try { withSlug(); await tenantPortalApi.requestDeletion('Demande depuis le portail tenant'); setDelConfirm(''); setNotice('Demande de suppression enregistrée — notre équipe vous recontacte sous 48 h.'); }
+    catch (e) { setError(e?.message || 'Demande impossible (seul le owner peut supprimer le compte)'); }
+    finally { setBusy(null); }
+  };
+  const cancelSub = async (id) => {
+    setBusy(`cancel-${id}`); setError(null);
+    try { withSlug(); await tenantPortalApi.cancelSubscription(id); await loadAll(activeSlug); setNotice('Abonnement annulé.'); }
+    catch (e) { setError(e?.message || 'Annulation impossible'); }
+    finally { setBusy(null); }
+  };
 
   const planName = (s) => s?.metadata?.label || s?.plan_id || 'Abonnement';
   const activeName = tenants.find((t) => t.slug === activeSlug)?.name || activeSlug || '—';
@@ -463,6 +539,104 @@ export default function CimolaceBillingDashboardPage() {
                     <p className="text-xs text-white/40">Espace : <code className="text-white/60">{activeSlug || '—'}</code>. Modifications réservées au rôle owner du tenant.</p>
                   </div>
                 )}
+
+                {/* MONITORING */}
+                {tab === 'monitoring' && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      <StatCard label="Moteurs actifs" value={`${usage?.engines?.active ?? activeServices.length}/${usage?.engines?.total ?? services.length}`} sub="services" />
+                      <StatCard label="Clés API" value={`${usage?.apiKeys ?? keys.length}`} sub="actives" />
+                      <StatCard label="Membres" value={`${usage?.members ?? members.length}`} sub="équipe" />
+                      <StatCard label="Abonnement" value={usage?.subscription ? badge(usage.subscription.status).label : (primarySub ? badge(primarySub.status).label : '—')} sub={usage?.subscription?.plan || ''} />
+                    </div>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      <StatCard label="Factures" value={`${usage?.invoices?.total ?? invoices.length}`} sub="total" />
+                      <StatCard label="Payées" value={`${usage?.invoices?.paid ?? paidCount}`} sub="historique" />
+                      <StatCard label="En attente" value={`${usage?.invoices?.unpaid ?? 0}`} sub="à régler" />
+                      <StatCard label="Renouvellement" value={usage?.subscription?.renews ? fmtDate(usage.subscription.renews) : '—'} sub="échéance" />
+                    </div>
+                    <p className="text-xs text-white/40">Synthèse d'usage de votre infrastructure Cimolace. Détail moteur par moteur dans l'onglet Moteurs.</p>
+                  </div>
+                )}
+
+                {/* PRODUITS (Mbolo) */}
+                {tab === 'produits' && (
+                  <div className="space-y-4">
+                    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
+                      <div className="text-sm font-semibold mb-2">Ajouter un produit (boutique Mbolo)</div>
+                      <div className="flex items-end gap-2 flex-wrap">
+                        <div className="flex-1 min-w-[160px]"><label className="text-xs text-white/40">Nom</label><input value={prodForm.name} onChange={(e) => setProdForm((f) => ({ ...f, name: e.target.value }))} placeholder="ex. Consultation bien-être" className="mt-1 w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" /></div>
+                        <div className="w-28"><label className="text-xs text-white/40">Prix (€)</label><input value={prodForm.priceEur} onChange={(e) => setProdForm((f) => ({ ...f, priceEur: e.target.value }))} placeholder="49" className="mt-1 w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" /></div>
+                        <button disabled={!prodForm.name.trim() || busy === 'new-prod'} onClick={createProduct} className="px-4 py-2 rounded-lg bg-violet-500/80 hover:bg-violet-500 text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'new-prod' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Ajouter</button>
+                      </div>
+                    </div>
+                    {products.length === 0 ? <Empty>Aucun produit. Si votre boutique Mbolo est activée, ajoutez-en un ci-dessus.</Empty> : (
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        {products.map((p) => (
+                          <div key={p.id} className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3"><div className="w-9 h-9 rounded-xl bg-white/[0.05] flex items-center justify-center"><Package className="w-4 h-4 text-violet-300" /></div><div><p className="font-medium text-sm">{p.name}</p><p className="text-xs text-white/40">{p.slug || p.category || '—'}</p></div></div>
+                            <span className="font-medium text-sm">{eur(p.price_cents ?? p.priceCents, p.currency)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ÉQUIPE */}
+                {tab === 'equipe' && (
+                  <div className="space-y-4">
+                    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
+                      <div className="text-sm font-semibold mb-2">Inviter un membre</div>
+                      <div className="flex items-end gap-2 flex-wrap">
+                        <div className="flex-1 min-w-[180px]"><label className="text-xs text-white/40">Email</label><input value={inviteForm.email} onChange={(e) => setInviteForm((f) => ({ ...f, email: e.target.value }))} placeholder="collaborateur@exemple.com" className="mt-1 w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" /></div>
+                        <div className="w-32"><label className="text-xs text-white/40">Rôle</label><select value={inviteForm.role} onChange={(e) => setInviteForm((f) => ({ ...f, role: e.target.value }))} className="mt-1 w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm"><option value="member">Membre</option><option value="admin">Admin</option><option value="owner">Owner</option></select></div>
+                        <button disabled={!inviteForm.email.trim() || busy === 'invite'} onClick={invite} className="px-4 py-2 rounded-lg bg-violet-500/80 hover:bg-violet-500 text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'invite' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />} Inviter</button>
+                      </div>
+                    </div>
+                    {members.length === 0 ? <Empty>Aucun membre listé (rôle owner/admin requis pour gérer l'équipe).</Empty> : (
+                      <div className="space-y-2">
+                        {members.map((m) => { const uid = m.user_id || m.id; return (
+                          <div key={uid} className="flex items-center justify-between p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] gap-3 flex-wrap">
+                            <div className="flex items-center gap-3"><div className="w-9 h-9 rounded-xl bg-white/[0.05] flex items-center justify-center"><UserCircle className="w-4 h-4 text-white/60" /></div><div><p className="font-medium text-sm">{m.email || m.full_name || uid}</p><p className="text-xs text-white/40">{m.role || 'member'}{m.status ? ` · ${m.status}` : ''}</p></div></div>
+                            <button disabled={busy === `rm-${uid}`} onClick={() => kickMember(uid)} className="px-3 py-1.5 rounded-lg border border-red-500/20 text-red-300/80 hover:bg-red-500/10 text-xs flex items-center gap-1 disabled:opacity-40">{busy === `rm-${uid}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />} Retirer</button>
+                          </div>
+                        ); })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* PROFIL */}
+                {tab === 'profil' && (
+                  <div className="space-y-4 max-w-xl">
+                    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 space-y-2">
+                      <div className="text-sm font-semibold mb-1">Mon profil</div>
+                      <InfoRow label="Email" value={profile?.email || '—'} />
+                      <InfoRow label="Rôle dans l'espace" value={profile?.role || '—'} />
+                      <InfoRow label="Espace" value={profile?.tenant?.slug || activeSlug || '—'} />
+                      <InfoRow label="ID utilisateur" value={profile?.id ? `${String(profile.id).slice(0, 8)}…` : '—'} />
+                    </div>
+                    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 space-y-3">
+                      <div className="text-sm font-semibold">Changer mon mot de passe</div>
+                      <input type="password" value={pwd} onChange={(e) => setPwd(e.target.value)} placeholder="Nouveau mot de passe (8 car. min)" className="w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" />
+                      <button disabled={busy === 'pwd'} onClick={changePassword} className="px-4 py-2 rounded-lg bg-violet-500/80 hover:bg-violet-500 text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'pwd' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} Mettre à jour</button>
+                    </div>
+                  </div>
+                )}
+
+                {/* COMPTE (danger zone) */}
+                {tab === 'compte' && (
+                  <div className="space-y-4 max-w-xl">
+                    <div className="rounded-2xl border border-red-500/30 bg-red-500/[0.06] p-5 space-y-3">
+                      <div className="flex items-center gap-2 text-red-300"><ShieldAlert className="w-5 h-5" /><span className="text-sm font-semibold">Zone sensible — Supprimer le compte</span></div>
+                      <p className="text-sm text-white/60">La suppression désactive votre espace et planifie l'effacement de vos données. Action réservée au owner. Pour confirmer, tapez <code className="text-white/80">SUPPRIMER</code>.</p>
+                      <input value={delConfirm} onChange={(e) => setDelConfirm(e.target.value)} placeholder="SUPPRIMER" className="w-full bg-black/30 border border-red-500/20 rounded-lg px-3 py-2 text-sm" />
+                      <button disabled={delConfirm !== 'SUPPRIMER' || busy === 'del'} onClick={deleteAccount} className="px-4 py-2 rounded-lg bg-red-500/80 hover:bg-red-500 text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed">{busy === 'del' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />} Demander la suppression</button>
+                    </div>
+                    <p className="text-xs text-white/40">Votre demande ouvre un ticket prioritaire ; l'équipe Cimolace traite la suppression définitive (réversible sous 48 h).</p>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -493,5 +667,14 @@ function Field({ label, value, onChange, placeholder }) {
       <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
         className="mt-1 w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" />
     </label>
+  );
+}
+
+function InfoRow({ label, value }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-1.5 border-b border-white/[0.04] last:border-0">
+      <span className="text-xs text-white/40">{label}</span>
+      <span className="text-sm font-medium">{value}</span>
+    </div>
   );
 }

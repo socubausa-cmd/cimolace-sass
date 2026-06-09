@@ -112,14 +112,16 @@ export interface TenantService {
 
 
 export const tenantMembersApi = {
+  // Servi par TenantPortalController (/tenant-portal/members) — l'ancien
+  // /tenants/current/members n'était pas implémenté côté backend.
   listMembers: () =>
-    api.get<ApiEnvelope<any[]>>("/tenants/current/members").then(unwrap),
+    api.get<ApiEnvelope<any>>("/tenant-portal/members").then(unwrap),
   inviteMember: (email: string, role: string) =>
-    api.post<ApiEnvelope<any>>("/tenants/current/members", { email, role }).then(unwrap),
+    api.post<ApiEnvelope<any>>("/tenant-portal/members", { email, role }).then(unwrap),
   updateMemberRole: (userId: string, role: string) =>
-    api.patch<ApiEnvelope<any>>(`/tenants/current/members/${userId}`, { role }).then(unwrap),
+    api.patch<ApiEnvelope<any>>(`/tenant-portal/members/${userId}`, { role }).then(unwrap),
   removeMember: (userId: string) =>
-    api.delete<ApiEnvelope<any>>(`/tenants/current/members/${userId}`).then(unwrap),
+    api.delete<ApiEnvelope<any>>(`/tenant-portal/members/${userId}`).then(unwrap),
   getDashboard: () =>
     api.get<ApiEnvelope<any>>("/tenants/current/dashboard").then(unwrap),
   getMyTenants: () =>
@@ -148,6 +150,12 @@ export const tenantPortalApi = {
   tickets: () => api.get<ApiEnvelope<any>>("/tenant-portal/support/tickets").then(unwrap).then(peel),
   createTicket: (body: { subject: string; description?: string; category?: string; priority?: string }) =>
     api.post<ApiEnvelope<any>>("/tenant-portal/support/tickets", body).then(unwrap).then(peel),
+  usage: () => api.get<ApiEnvelope<any>>("/tenant-portal/usage").then(unwrap).then(peel),
+  profile: () => api.get<ApiEnvelope<any>>("/tenant-portal/profile").then(unwrap).then(peel),
+  cancelSubscription: (id: string) =>
+    api.post<ApiEnvelope<any>>(`/tenant-portal/subscriptions/${id}/cancel`).then(unwrap).then(peel),
+  requestDeletion: (reason?: string) =>
+    api.post<ApiEnvelope<any>>("/tenant-portal/account/request-deletion", { reason }).then(unwrap).then(peel),
 };
 
 export const catalogApi = {
