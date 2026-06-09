@@ -197,40 +197,89 @@ export class CimolaceBackofficeService {
   async getClientDiagnostics(clientId: string) {
     const client = await this.getClientOrThrow(clientId);
     const tenantId: string | null = client.tenant_id ?? null;
-    let appTenant: any = null;
-    if (tenantId) {
-      const { data } = await (this.supabase.client as any)
-        .from('tenants').select('id, slug, status, plan').eq('id', tenantId).maybeSingle();
-      appTenant = data ?? null;
-    }
+    const db = this.supabase.client as any;
+
+    const [tenantRes, subsRes, keysRes, servicesRes, invoicesRes] = await Promise.all([
+      tenantId ? db.from('tenants').select('id, slug, status, metadata').eq('id', tenantId).maybeSingle() : Promise.resolve({ data: null }),
+      tenantId ? db.from('billing_subscriptions').select('status').eq('tenant_id', tenantId) : Promise.resolve({ data: [] }),
+      tenantId ? db.from('tenant_api_keys').select('revoked_at').eq('tenant_id', tenantId) : Promise.resolve({ data: [] }),
+      tenantId ? db.from('tenant_services').select('active').eq('tenant_id', tenantId) : Promise.resolve({ data: [] }),
+      tenantId ? db.from('billing_invoices').select('status').eq('tenant_id', tenantId) : Promise.resolve({ data: [] }),
+    ]);
+
+    const appTenant = tenantRes.data ?? null;
+    const subs = subsRes.data ?? [];
+    const keys = (keysRes.data ?? []).filter((k: any) => !k.revoked_at);
+    const activeEngines = (servicesRes.data ?? []).filter((s: any) => s.active);
+    const unpaid = (invoicesRes.data ?? []).filter((i: any) => i.status && !['paid', 'void', 'canceled', 'refunded'].includes(i.status));
+    const activeSub = subs.some((s: any) => ['active', 'trialing', 'past_due'].includes(s.status));
+    const gating = appTenant?.metadata?.billing?.api_gating === true;
 
     const checks = [
-      { key: 'client', label: 'Fiche client Cimolace', status: 'pass', detail: client.name },
       {
-        key: 'app-tenant',
+        key: 'app_tenant',
         label: 'Tenant applicatif lié',
-        status: appTenant ? 'pass' : 'block',
-        detail: appTenant?.slug ?? 'Aucun tenant applicatif rattaché (cimolace_clients.tenant_id).',
+        status: appTenant ? 'pass' : 'fail',
+        message: appTenant ? `Lié à « ${appTenant.slug} ».` : 'Aucun tenant applicatif rattaché (cimolace_clients.tenant_id).',
+        remediation: appTenant ? null : 'Rattacher le client à un tenant via cimolace_clients.tenant_id.',
       },
       {
-        key: 'tenant-active',
+        key: 'tenant_active',
         label: 'Tenant actif',
-        status: appTenant ? (appTenant.status === 'active' ? 'pass' : 'warn') : 'block',
-        detail: appTenant ? `statut: ${appTenant.status}` : '—',
+        status: appTenant ? (appTenant.status === 'active' ? 'pass' : 'warn') : 'fail',
+        message: appTenant ? `Statut : ${appTenant.status}.` : '—',
+        remediation: appTenant && appTenant.status !== 'active' ? 'Réactiver le tenant depuis Maintenance.' : null,
+      },
+      {
+        key: 'subscription',
+        label: 'Abonnement Cimolace actif',
+        status: activeSub ? 'pass' : 'warn',
+        message: activeSub ? 'Un abonnement actif couvre le tenant.' : 'Aucun abonnement actif.',
+        remediation: activeSub ? null : 'Activer le forfait depuis l’onglet Facturation.',
+      },
+      {
+        key: 'api_key',
+        label: 'Clé API tenant',
+        status: keys.length ? 'pass' : 'warn',
+        message: `${keys.length} clé(s) API active(s).`,
+        remediation: keys.length ? null : 'Générer une clé API pour le tenant.',
+      },
+      {
+        key: 'engines',
+        label: 'Moteurs actifs',
+        status: activeEngines.length ? 'pass' : 'warn',
+        message: `${activeEngines.length} moteur(s) actif(s) (tenant_services).`,
+        remediation: activeEngines.length ? null : 'Activer les moteurs depuis l’onglet Moteurs.',
+      },
+      {
+        key: 'api_gating',
+        label: 'Gating d’abonnement armé',
+        status: gating ? 'pass' : 'warn',
+        message: gating ? 'metadata.billing.api_gating = true : la clé exige un abonnement.' : 'Gating non armé : la clé API n’exige pas d’abonnement.',
+        remediation: gating ? null : 'Armer le gating (tenants.metadata.billing.api_gating).',
+      },
+      {
+        key: 'invoices',
+        label: 'Factures',
+        status: unpaid.length ? 'warn' : 'pass',
+        message: unpaid.length ? `${unpaid.length} facture(s) à surveiller.` : 'Aucune facture en souffrance.',
+        remediation: unpaid.length ? 'Vérifier les factures dans l’onglet Facturation.' : null,
       },
     ];
 
-    const blockers = checks.filter((c) => c.status === 'block');
-    const warnings = checks.filter((c) => c.status === 'warn');
+    const blockers = checks.filter((c) => c.status === 'fail').map((c) => ({ key: c.key, label: c.label, message: c.message, remediation: c.remediation }));
+    const warnings = checks.filter((c) => c.status === 'warn').map((c) => ({ key: c.key, label: c.label, message: c.message, remediation: c.remediation }));
     const passCount = checks.filter((c) => c.status === 'pass').length;
     const percent = checks.length ? Math.round((passCount / checks.length) * 100) : 0;
+    const overall = blockers.length ? 'fail' : warnings.length ? 'warn' : 'pass';
 
     return {
       generatedAt: new Date().toISOString(),
-      overall: blockers.length ? 'block' : warnings.length ? 'warn' : 'ok',
+      overall,
       score: passCount,
       maxScore: checks.length,
       readiness: {
+        label: overall === 'pass' ? 'Prêt' : overall === 'warn' ? 'À compléter' : 'Bloqué',
         percent,
         passCount,
         warningCount: warnings.length,
@@ -240,8 +289,8 @@ export class CimolaceBackofficeService {
       },
       checks,
       proof: { clientId, tenantId },
-      providers: [],
-      schoolProviders: [],
+      providers: null,
+      schoolProviders: null,
     };
   }
 
