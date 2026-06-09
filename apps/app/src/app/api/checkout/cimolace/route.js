@@ -27,7 +27,7 @@
  *
  *   # Chariow
  *   CHARIOW_API_KEY=sk_live_...
- *   CHARIOW_PRODUCT_SETUP=prd_...          # product_id boutique création 850€
+ *   CHARIOW_PRODUCT_SETUP=prd_...          # product_id boutique création 500€
  *   CHARIOW_PRODUCT_START=prd_...
  *   CHARIOW_PRODUCT_BUSINESS=prd_...
  *   CHARIOW_PRODUCT_ENTREPRISE=prd_...
@@ -55,7 +55,7 @@ const CHARIOW_PRODUCTS = {
 };
 
 const PAYPAL_AMOUNTS = {
-  setup:      { value: "850.00", currency: "EUR" },
+  setup:      { value: "500.00", currency: "EUR" },
   Start:      { value: "150.00", currency: "EUR" },
   Business:   { value: "200.00", currency: "EUR" },
   Entreprise: { value: "300.00", currency: "EUR" },
@@ -133,7 +133,7 @@ async function paypalCheckout({ type, plan, customer, successUrl, cancelUrl }) {
   const amount = PAYPAL_AMOUNTS[productKey(type, plan)];
   const description =
     type === "setup"
-      ? "CIMOLACE — Pack création boutique 850€"
+      ? "CIMOLACE — Pack création boutique 500€"
       : `CIMOLACE — Abonnement ${plan}`;
 
   const order = await fetch(`${base}/v2/checkout/orders`, {

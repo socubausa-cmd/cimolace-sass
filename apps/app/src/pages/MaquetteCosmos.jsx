@@ -12,7 +12,7 @@ const PILIERS = [
     icon: Eye,
     titre: 'Le Visible',
     sous: 'Maîtriser le monde matériel',
-    texte: 'Lois de cause à effet, cycles naturels, corps physique, espace-temps. La science africaine ancre d'abord le pied dans le réel avant toute élévation.',
+    texte: "Lois de cause à effet, cycles naturels, corps physique, espace-temps. La science africaine ancre d'abord le pied dans le réel avant toute élévation.",
   },
   {
     n: '02',
@@ -25,14 +25,14 @@ const PILIERS = [
     n: '03',
     icon: Brain,
     titre: 'La Transmission',
-    sous: 'De la connaissance à l'action',
+    sous: "De la connaissance à l'action",
     texte: 'Savoir sans transmettre est stérile. La doctrine PRORASCIENCE exige que chaque initié devienne lui-même un vecteur : comprendre, appliquer, enseigner.',
   },
 ];
 
 const LOIS = [
   { titre: 'Loi de correspondance', texte: 'Ce qui est en haut est comme ce qui est en bas. Chaque phénomène visible a sa contrepartie invisible.' },
-  { titre: 'Loi de causalité', texte: 'Rien n'arrive sans cause. Le diagnostic précède l'intervention — toujours.' },
+  { titre: 'Loi de causalité', texte: "Rien n'arrive sans cause. Le diagnostic précède l'intervention — toujours." },
   { titre: 'Loi de vibration', texte: 'Tout vibre. La fréquence de votre état intérieur détermine ce que vous attirez et traversez.' },
   { titre: 'Loi de polarité', texte: 'Chaque chose a son opposé. La guérison commence quand on cesse de fuir le pôle négatif.' },
 ];
@@ -40,8 +40,8 @@ const LOIS = [
 const ETAPES = [
   { n: '01', t: 'Écoute & observation', d: 'Aucun jugement, aucune projection. On part des faits bruts du demandeur.' },
   { n: '02', t: 'Diagnostic', d: 'Croisement des données visibles et invisibles pour identifier la cause racine.' },
-  { n: '03', t: 'Prescription', d: 'Un plan d'action précis : cours, rites, accompagnement ou intervention selon le niveau.' },
-  { n: '04', t: 'Validation', d: 'Le résultat se mesure. La doctrine refuse l'ésotérisme flou : ce qui fonctionne, se prouve.' },
+  { n: '03', t: 'Prescription', d: "Un plan d'action précis : cours, rites, accompagnement ou intervention selon le niveau." },
+  { n: '04', t: 'Validation', d: "Le résultat se mesure. La doctrine refuse l'ésotérisme flou : ce qui fonctionne, se prouve." },
 ];
 
 export default function MaquetteCosmos() {

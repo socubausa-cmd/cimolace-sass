@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, NotFoundException } from "@nestjs/common";
-import { randomUUID } from "crypto";
+import { randomUUID, createHmac, timingSafeEqual } from "crypto";
 import { AuthService } from "../auth/auth.service";
 import { PawaPayService } from "../pawapay/pawapay.service";
 
@@ -30,6 +30,64 @@ export class BillingService {
       .from("billing_invoices").select("*")
       .eq("tenant_id", tenantId).order("created_at", { ascending: false });
     return { subscriptions: subs ?? [], invoices: invoices ?? [] };
+  }
+
+  /**
+   * Active (depuis le back-office Cimolace) un abonnement plateforme forfaitaire
+   * pour un tenant, à partir du catalogue Cimolace (`billing_plans`), et **arme le
+   * gating** de la clé tenant (`metadata.billing.api_gating = true`). Le produit
+   * est défini chez nous (pas dans Stripe) ; Stripe ne sert qu'à encaisser ensuite.
+   * Idempotent : ne recrée pas si un abonnement actif existe déjà.
+   * `current_period_end = null` = actif sans échéance (bootstrap) jusqu'à ce que
+   * le paiement Stripe prenne le relais et pose les vraies dates de période.
+   */
+  async activateTenantSubscription(tenantId: string, planKey = "zahir-forfait") {
+    const sb = this.supabase;
+    const { data: plan } = await sb
+      .from("billing_plans")
+      .select("key, label, price_cents, currency")
+      .eq("key", planKey)
+      .maybeSingle();
+    if (!plan) throw new NotFoundException(`Plan "${planKey}" introuvable dans billing_plans`);
+
+    const { data: existing } = await sb
+      .from("billing_subscriptions")
+      .select("id, status, plan_id")
+      .eq("tenant_id", tenantId)
+      .eq("status", "active")
+      .maybeSingle();
+
+    let subscription = existing;
+    if (!existing) {
+      const { data: created, error } = await sb
+        .from("billing_subscriptions")
+        .insert({
+          tenant_id: tenantId,
+          plan_id: (plan as any).key,
+          provider: "stripe",
+          status: "active",
+          amount_cents: (plan as any).price_cents ?? 0,
+          currency: (plan as any).currency ?? "EUR",
+          current_period_start: new Date().toISOString(),
+          current_period_end: null,
+          metadata: { activated_from: "backoffice", forfait: true },
+        })
+        .select()
+        .single();
+      if (error) throw new BadRequestException(`Création abonnement impossible: ${error.message}`);
+      subscription = created;
+    }
+
+    // Armer le gating de la clé tenant (deep-merge metadata, préserve le reste)
+    const { data: t } = await sb.from("tenants").select("metadata").eq("id", tenantId).maybeSingle();
+    const meta = ((t as any)?.metadata as Record<string, any>) ?? {};
+    const merged = { ...meta, billing: { ...(meta.billing ?? {}), api_gating: true } };
+    await sb
+      .from("tenants")
+      .update({ metadata: merged, updated_at: new Date().toISOString() })
+      .eq("id", tenantId);
+
+    return { subscription, gating_enabled: true, plan: (plan as any).key };
   }
 
   /**
@@ -255,9 +313,205 @@ export class BillingService {
     return { received: true, matched: true, status: mapped };
   }
 
+  // ─── Webhook Stripe (abonnements plateforme) ──────────────────────────────
+  // Source de vérité du cycle de vie d'un abonnement : Stripe pousse les
+  // événements, on synchronise billing_subscriptions. La signature est vérifiée
+  // manuellement en HMAC-SHA256 (pas de dépendance au SDK Stripe).
   async handleWebhook(payload: Buffer, signature: string) {
-    // Stripe webhook handler stub
-    console.log("Webhook received", { sig: signature?.slice(0, 10), len: payload.length });
-    return { received: true };
+    // Secret dédié à CET endpoint billing en priorité, fallback sur le générique.
+    const secret =
+      process.env.STRIPE_BILLING_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET;
+    if (!secret) {
+      // Pas de secret configuré : on ACK (évite les retries en boucle) mais on
+      // NE traite RIEN (on ne peut pas faire confiance à un événement non signé).
+      console.warn(
+        "[billing webhook] STRIPE_BILLING_WEBHOOK_SECRET / STRIPE_WEBHOOK_SECRET absent — événement ignoré",
+      );
+      return { received: true, ignored: "no_secret" };
+    }
+
+    const event = this.verifyStripeSignature(payload, signature, secret);
+    if (!event) throw new BadRequestException("Signature Stripe invalide");
+
+    const type: string = event.type;
+    const obj = event.data?.object ?? {};
+    try {
+      switch (type) {
+        case "checkout.session.completed":
+          await this.onCheckoutCompleted(obj);
+          break;
+        case "invoice.paid":
+        case "invoice.payment_succeeded":
+          await this.onInvoicePaid(obj);
+          break;
+        case "invoice.payment_failed":
+          await this.onInvoiceFailed(obj);
+          break;
+        case "customer.subscription.updated":
+          await this.onSubscriptionUpdated(obj);
+          break;
+        case "customer.subscription.deleted":
+          await this.onSubscriptionCanceled(obj);
+          break;
+        default:
+          return { received: true, ignored: type };
+      }
+    } catch (e) {
+      // Erreur applicative : on loggue et on ACK pour ne pas boucler ; à monitorer.
+      console.error(`[billing webhook] échec traitement ${type}:`, (e as Error).message);
+      return { received: true, type, error: (e as Error).message };
+    }
+    return { received: true, type };
+  }
+
+  /**
+   * Vérifie la signature Stripe (`stripe-signature: t=…,v1=…`) en HMAC-SHA256
+   * sur `${t}.${raw}`, avec tolérance anti-rejeu de 5 min. Renvoie l'événement
+   * parsé si valide, sinon null.
+   */
+  private verifyStripeSignature(payload: Buffer, header: string | undefined, secret: string): any | null {
+    if (!header) return null;
+    const parts = header.split(",").map((p) => p.trim());
+    const t = parts.find((p) => p.startsWith("t="))?.slice(2);
+    const v1 = parts.filter((p) => p.startsWith("v1=")).map((p) => p.slice(3));
+    if (!t || v1.length === 0) return null;
+
+    const ts = parseInt(t, 10);
+    if (!Number.isFinite(ts) || Math.abs(Date.now() / 1000 - ts) > 300) {
+      console.warn("[billing webhook] timestamp hors tolérance ou invalide");
+      return null;
+    }
+
+    const expected = createHmac("sha256", secret)
+      .update(`${t}.${payload.toString("utf8")}`, "utf8")
+      .digest("hex");
+    const expectedBuf = Buffer.from(expected, "hex");
+    const ok = v1.some((sig) => {
+      let buf: Buffer;
+      try {
+        buf = Buffer.from(sig, "hex");
+      } catch {
+        return false;
+      }
+      return buf.length === expectedBuf.length && timingSafeEqual(buf, expectedBuf);
+    });
+    if (!ok) return null;
+
+    try {
+      return JSON.parse(payload.toString("utf8"));
+    } catch {
+      return null;
+    }
+  }
+
+  /** GET /v1/subscriptions/{id} → récupère statut + dates de période faisant foi. */
+  private async fetchStripeSubscription(subId: string): Promise<any | null> {
+    if (!subId) return null;
+    const res = await fetch(`https://api.stripe.com/v1/subscriptions/${subId}`, {
+      headers: { Authorization: this.stripeAuth() },
+    });
+    if (!res.ok) {
+      console.error(`[billing webhook] fetch subscription ${subId} → ${res.status}`);
+      return null;
+    }
+    return res.json();
+  }
+
+  private unixToIso(unix?: number | null): string | null {
+    return unix ? new Date(unix * 1000).toISOString() : null;
+  }
+
+  /** Mappe le statut Stripe vers l'enum billing_subscriptions. */
+  private mapStripeStatus(s?: string): string {
+    switch (s) {
+      case "active":
+      case "trialing":
+        return "active";
+      case "past_due":
+      case "unpaid":
+        return "past_due";
+      case "canceled":
+        return "canceled";
+      case "paused":
+        return "paused";
+      case "incomplete_expired":
+        return "expired";
+      default:
+        return "pending";
+    }
+  }
+
+  /** checkout.session.completed (mode subscription) → lie l'abo au sub Stripe + active. */
+  private async onCheckoutCompleted(session: any) {
+    if (session?.mode && session.mode !== "subscription") return; // ignore le setup one-off
+    const sb = this.supabase;
+    const rowId = session.client_reference_id || session?.metadata?.subscription_id || null;
+    const stripeSubId = session.subscription || null;
+    const sub = stripeSubId ? await this.fetchStripeSubscription(stripeSubId) : null;
+
+    const patch: any = {
+      status: sub ? this.mapStripeStatus(sub.status) : "active",
+      provider: "stripe",
+      updated_at: new Date().toISOString(),
+    };
+    if (stripeSubId) patch.provider_subscription_id = stripeSubId;
+    const customer = session.customer ?? sub?.customer ?? null;
+    if (customer) patch.provider_customer_id = customer;
+    if (sub?.current_period_start) patch.current_period_start = this.unixToIso(sub.current_period_start);
+    if (sub?.current_period_end) patch.current_period_end = this.unixToIso(sub.current_period_end);
+
+    if (rowId) {
+      await sb.from("billing_subscriptions").update(patch).eq("id", rowId);
+      await sb
+        .from("billing_invoices")
+        .update({ status: "paid", provider: "stripe", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .eq("subscription_id", rowId)
+        .in("status", ["pending", "processing", "failed"]);
+    } else {
+      await sb.from("billing_subscriptions").update(patch).eq("provider_checkout_id", session.id);
+    }
+  }
+
+  /** invoice.paid / payment_succeeded → renouvellement : prolonge la période + active. */
+  private async onInvoicePaid(invoice: any) {
+    const subId = invoice.subscription;
+    if (!subId) return;
+    const sub = await this.fetchStripeSubscription(subId);
+    const patch: any = { status: "active", updated_at: new Date().toISOString() };
+    if (sub?.current_period_end) patch.current_period_end = this.unixToIso(sub.current_period_end);
+    else if (invoice?.lines?.data?.[0]?.period?.end)
+      patch.current_period_end = this.unixToIso(invoice.lines.data[0].period.end);
+    await this.supabase.from("billing_subscriptions").update(patch).eq("provider_subscription_id", subId);
+    // facture interne (si suivie) → payée
+    await this.supabase
+      .from("billing_invoices")
+      .update({ status: "paid", provider: "stripe", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq("provider_transaction_id", invoice.id);
+  }
+
+  /** invoice.payment_failed → past_due (déclenche la relance / fenêtre de grâce). */
+  private async onInvoiceFailed(invoice: any) {
+    const subId = invoice.subscription;
+    if (!subId) return;
+    await this.supabase
+      .from("billing_subscriptions")
+      .update({ status: "past_due", updated_at: new Date().toISOString() })
+      .eq("provider_subscription_id", subId);
+  }
+
+  /** customer.subscription.updated → resynchronise statut + période. */
+  private async onSubscriptionUpdated(sub: any) {
+    const patch: any = { status: this.mapStripeStatus(sub.status), updated_at: new Date().toISOString() };
+    if (sub?.current_period_end) patch.current_period_end = this.unixToIso(sub.current_period_end);
+    if (sub?.canceled_at) patch.canceled_at = this.unixToIso(sub.canceled_at);
+    await this.supabase.from("billing_subscriptions").update(patch).eq("provider_subscription_id", sub.id);
+  }
+
+  /** customer.subscription.deleted → canceled → le gating coupe l'accès aux clés. */
+  private async onSubscriptionCanceled(sub: any) {
+    await this.supabase
+      .from("billing_subscriptions")
+      .update({ status: "canceled", canceled_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq("provider_subscription_id", sub.id);
   }
 }
