@@ -14,6 +14,7 @@ const cimolace_staff_guard_1 = require("../cimolace-backoffice/cimolace-staff.gu
 const tenant_service_1 = require("./tenant.service");
 const tenant_controller_1 = require("./tenant.controller");
 const tenant_api_key_controller_1 = require("./tenant-api-key.controller");
+const tenant_portal_controller_1 = require("./tenant-portal.controller");
 let TenantModule = class TenantModule {
 };
 exports.TenantModule = TenantModule;
@@ -23,6 +24,7 @@ exports.TenantModule = TenantModule = __decorate([
         controllers: [
             tenant_controller_1.TenantController,
             tenant_api_key_controller_1.TenantApiKeyController,
+            tenant_portal_controller_1.TenantPortalController,
             tenant_controller_1.AdminTenantServicesController,
         ],
         providers: [tenant_service_1.TenantService, cimolace_staff_guard_1.CimolaceStaffGuard],

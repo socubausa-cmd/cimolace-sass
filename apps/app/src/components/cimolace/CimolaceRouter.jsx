@@ -136,8 +136,8 @@ export default function CimolaceRouter() {
           {/* Self-service school creation */}
           <Route path="create-school" element={<CimolaceProtectedRoute><CreateSchoolPage /></CimolaceProtectedRoute>} />
 
-          {/* Client Dashboard */}
-          <Route path="client/:clientSlug" element={<CimolaceProtectedRoute><CimolaceClientDashboard /></CimolaceProtectedRoute>} />
+          {/* Ancien portail client (Supabase direct, RLS-staff → cassé pour les tenants) : redirigé vers le dashboard tenant unifié */}
+          <Route path="client/:clientSlug" element={<Navigate to="/cimolace/billing" replace />} />
         </Routes>
       </Suspense>
   );

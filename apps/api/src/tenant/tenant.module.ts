@@ -8,6 +8,7 @@ import {
   AdminTenantServicesController,
 } from './tenant.controller';
 import { TenantApiKeyController } from './tenant-api-key.controller';
+import { TenantPortalController } from './tenant-portal.controller';
 
 @Module({
   // SupabaseModule is needed because CimolaceStaffGuard injects SupabaseService
@@ -17,6 +18,7 @@ import { TenantApiKeyController } from './tenant-api-key.controller';
   controllers: [
     TenantController,
     TenantApiKeyController,
+    TenantPortalController,
     AdminTenantServicesController,
   ],
   providers: [TenantService, CimolaceStaffGuard],

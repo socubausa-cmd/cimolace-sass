@@ -126,6 +126,30 @@ export const tenantMembersApi = {
     api.get<ApiEnvelope<any[]>>("/tenants/mine").then(unwrap),
 };
 
+// Certains contrôleurs renvoient déjà `{ data }`, re-emballé par l'intercepteur
+// global → `unwrap` laisse une couche `{ data }`. `peel` la retire si présente.
+const peel = (r: any): any =>
+  r && !Array.isArray(r) && typeof r === "object" && "data" in r ? r.data : r;
+
+// ── Back-office tenant : clés API (rôle owner/admin) ────────────────────────
+export const tenantApiKeysApi = {
+  list: () => api.get<ApiEnvelope<any>>("/tenants/api-keys").then(unwrap).then(peel),
+  create: (label: string) =>
+    api.post<ApiEnvelope<any>>("/tenants/api-keys", { label }).then(unwrap).then(peel),
+  revoke: (keyId: string) =>
+    api.delete<ApiEnvelope<any>>(`/tenants/api-keys/${keyId}`).then(unwrap).then(peel),
+};
+
+// ── Back-office tenant : marketplace + support ──────────────────────────────
+export const tenantPortalApi = {
+  marketplace: () => api.get<ApiEnvelope<any>>("/tenant-portal/marketplace").then(unwrap).then(peel),
+  subscribe: (plan: string) =>
+    api.post<ApiEnvelope<any>>("/tenant-portal/marketplace/subscribe", { plan }).then(unwrap).then(peel),
+  tickets: () => api.get<ApiEnvelope<any>>("/tenant-portal/support/tickets").then(unwrap).then(peel),
+  createTicket: (body: { subject: string; description?: string; category?: string; priority?: string }) =>
+    api.post<ApiEnvelope<any>>("/tenant-portal/support/tickets", body).then(unwrap).then(peel),
+};
+
 export const catalogApi = {
   applyTemplate: (infrastructure_type: InfrastructureType) =>
     api
