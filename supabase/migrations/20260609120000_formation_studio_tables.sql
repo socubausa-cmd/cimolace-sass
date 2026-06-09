@@ -1,7 +1,7 @@
 -- Migration: formation studio tables (modules, formation_weeks, formation_days, formation_day_contents)
 -- Used by useFormationStructure.js (buildDbInserts), VideoPostProductionPage.jsx,
 -- and OwnerDashboardOverview.jsx in the LIRI formation studio.
--- Dependency order: liri_formations → modules → formation_weeks → formation_days → formation_day_contents
+-- Dependency order: courses → modules → formation_weeks → formation_days → formation_day_contents
 --
 -- Also patches annual_program_weeks with three columns consumed by ai-utils.service.ts
 -- (theme, pedagogical_objective, liri_segments, cimolace_tenant_id).
@@ -12,13 +12,9 @@
 CREATE EXTENSION IF NOT EXISTS moddatetime SCHEMA extensions;
 
 -- ─── 1. public.modules ────────────────────────────────────────────────────────
-COMMENT ON TABLE public.modules IS
-  'Modules belonging to a LIRI formation. '
-  'Each module groups one or more formation_weeks.';
-
 CREATE TABLE IF NOT EXISTS public.modules (
   id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  formation_id UUID       NOT NULL REFERENCES public.liri_formations(id) ON DELETE CASCADE,
+  formation_id UUID       NOT NULL REFERENCES public.courses(id) ON DELETE CASCADE,
   title       TEXT        NOT NULL DEFAULT '',
   description TEXT,
   sort_order  INTEGER     NOT NULL DEFAULT 0,
@@ -49,7 +45,7 @@ CREATE POLICY modules_manage_staff ON public.modules
     EXISTS (
       SELECT 1
       FROM public.tenant_memberships tm
-      JOIN public.liri_formations lf ON lf.id = public.modules.formation_id
+      JOIN public.courses lf ON lf.id = public.modules.formation_id
       WHERE tm.user_id = auth.uid()
         AND tm.tenant_id = lf.tenant_id
         AND tm.status    = 'active'
@@ -60,7 +56,7 @@ CREATE POLICY modules_manage_staff ON public.modules
     EXISTS (
       SELECT 1
       FROM public.tenant_memberships tm
-      JOIN public.liri_formations lf ON lf.id = public.modules.formation_id
+      JOIN public.courses lf ON lf.id = public.modules.formation_id
       WHERE tm.user_id = auth.uid()
         AND tm.tenant_id = lf.tenant_id
         AND tm.status    = 'active'
@@ -69,9 +65,6 @@ CREATE POLICY modules_manage_staff ON public.modules
   );
 
 -- ─── 2. public.formation_weeks ────────────────────────────────────────────────
-COMMENT ON TABLE public.formation_weeks IS
-  'Weeks within a module, ordered by sort_order.';
-
 CREATE TABLE IF NOT EXISTS public.formation_weeks (
   id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   module_id  UUID        NOT NULL REFERENCES public.modules(id) ON DELETE CASCADE,
@@ -98,7 +91,7 @@ CREATE POLICY formation_weeks_manage_staff ON public.formation_weeks
       SELECT 1
       FROM public.tenant_memberships tm
       JOIN public.modules            m  ON m.id  = public.formation_weeks.module_id
-      JOIN public.liri_formations    lf ON lf.id = m.formation_id
+      JOIN public.courses    lf ON lf.id = m.formation_id
       WHERE tm.user_id = auth.uid()
         AND tm.tenant_id = lf.tenant_id
         AND tm.status    = 'active'
@@ -110,7 +103,7 @@ CREATE POLICY formation_weeks_manage_staff ON public.formation_weeks
       SELECT 1
       FROM public.tenant_memberships tm
       JOIN public.modules            m  ON m.id  = public.formation_weeks.module_id
-      JOIN public.liri_formations    lf ON lf.id = m.formation_id
+      JOIN public.courses    lf ON lf.id = m.formation_id
       WHERE tm.user_id = auth.uid()
         AND tm.tenant_id = lf.tenant_id
         AND tm.status    = 'active'
@@ -119,9 +112,6 @@ CREATE POLICY formation_weeks_manage_staff ON public.formation_weeks
   );
 
 -- ─── 3. public.formation_days ─────────────────────────────────────────────────
-COMMENT ON TABLE public.formation_days IS
-  'Days within a formation week, ordered by sort_order.';
-
 CREATE TABLE IF NOT EXISTS public.formation_days (
   id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   week_id    UUID        NOT NULL REFERENCES public.formation_weeks(id) ON DELETE CASCADE,
@@ -149,7 +139,7 @@ CREATE POLICY formation_days_manage_staff ON public.formation_days
       FROM public.tenant_memberships tm
       JOIN public.formation_weeks    fw ON fw.id  = public.formation_days.week_id
       JOIN public.modules            m  ON m.id   = fw.module_id
-      JOIN public.liri_formations    lf ON lf.id  = m.formation_id
+      JOIN public.courses    lf ON lf.id  = m.formation_id
       WHERE tm.user_id = auth.uid()
         AND tm.tenant_id = lf.tenant_id
         AND tm.status    = 'active'
@@ -162,7 +152,7 @@ CREATE POLICY formation_days_manage_staff ON public.formation_days
       FROM public.tenant_memberships tm
       JOIN public.formation_weeks    fw ON fw.id  = public.formation_days.week_id
       JOIN public.modules            m  ON m.id   = fw.module_id
-      JOIN public.liri_formations    lf ON lf.id  = m.formation_id
+      JOIN public.courses    lf ON lf.id  = m.formation_id
       WHERE tm.user_id = auth.uid()
         AND tm.tenant_id = lf.tenant_id
         AND tm.status    = 'active'
@@ -173,10 +163,6 @@ CREATE POLICY formation_days_manage_staff ON public.formation_days
 -- ─── 4. public.formation_day_contents ─────────────────────────────────────────
 -- day_id is nullable: some content rows are standalone and referenced only by
 -- UUID from tables such as neuro_recall_cards and course_postprod_versions.
-COMMENT ON TABLE public.formation_day_contents IS
-  'Content items (video, powerpoint, quiz, …) attached to a formation day. '
-  'day_id is nullable to allow standalone content referenced by UUID from other tables.';
-
 CREATE TABLE IF NOT EXISTS public.formation_day_contents (
   id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   day_id     UUID        REFERENCES public.formation_days(id) ON DELETE CASCADE,
@@ -210,7 +196,7 @@ CREATE POLICY formation_day_contents_manage_staff ON public.formation_day_conten
       JOIN public.formation_days     fd ON fd.id  = public.formation_day_contents.day_id
       JOIN public.formation_weeks    fw ON fw.id  = fd.week_id
       JOIN public.modules            m  ON m.id   = fw.module_id
-      JOIN public.liri_formations    lf ON lf.id  = m.formation_id
+      JOIN public.courses    lf ON lf.id  = m.formation_id
       WHERE tm.user_id = auth.uid()
         AND tm.tenant_id = lf.tenant_id
         AND tm.status    = 'active'
@@ -225,7 +211,7 @@ CREATE POLICY formation_day_contents_manage_staff ON public.formation_day_conten
       JOIN public.formation_days     fd ON fd.id  = public.formation_day_contents.day_id
       JOIN public.formation_weeks    fw ON fw.id  = fd.week_id
       JOIN public.modules            m  ON m.id   = fw.module_id
-      JOIN public.liri_formations    lf ON lf.id  = m.formation_id
+      JOIN public.courses    lf ON lf.id  = m.formation_id
       WHERE tm.user_id = auth.uid()
         AND tm.tenant_id = lf.tenant_id
         AND tm.status    = 'active'
