@@ -100,7 +100,14 @@ export class CimolaceBackofficeService {
       amount: (s.amount_cents ?? planByKey[s.plan_id]?.price_cents ?? 0) / 100,
     }));
     const invoices = invoicesRes.data ?? [];
-    const services = servicesRes.data ?? [];
+    // tenant_services porte `active`/`settings` ; la page détail lit
+    // `status`/`config` → on mappe pour l'onglet Moteurs + le toggle Twin.
+    const services = (servicesRes.data ?? []).map((s: any) => ({
+      ...s,
+      status: s.status ?? (s.active ? 'active' : 'suspended'),
+      config: s.config ?? s.settings ?? {},
+      activated_at: s.activated_at ?? s.created_at ?? null,
+    }));
     const sites = sitesRes.data ?? [];
 
     const activeSubscriptionCount = subscriptions.filter((s: any) =>
@@ -233,5 +240,42 @@ export class CimolaceBackofficeService {
       .single();
     if (error) throw new BadRequestException(error.message);
     return data;
+  }
+
+  /**
+   * Active/coupe un moteur (tenant_services) du tenant applicatif du client.
+   * Accepte `{ status: 'active' | 'suspended' }` (onglet Moteurs) ou
+   * `{ active: boolean }`. Renvoie la ligne mappée (status/config) comme
+   * dans le control plane.
+   */
+  async updateTenantService(clientId: string, serviceId: string, dto: any) {
+    const client = await this.getClientOrThrow(clientId);
+    if (!client.tenant_id) {
+      throw new BadRequestException('Tenant applicatif requis pour gérer les moteurs.');
+    }
+    const patch: any = { updated_at: new Date().toISOString() };
+    if (typeof dto?.active === 'boolean') {
+      patch.active = dto.active;
+    } else if (dto?.status) {
+      patch.active = dto.status === 'active';
+    } else {
+      throw new BadRequestException('Champ `status` ou `active` requis.');
+    }
+
+    const { data, error } = await (this.supabase.client as any)
+      .from('tenant_services')
+      .update(patch)
+      .eq('id', serviceId)
+      .eq('tenant_id', client.tenant_id)
+      .select('*')
+      .maybeSingle();
+    if (error) throw new BadRequestException(error.message);
+    if (!data) throw new NotFoundException('Moteur introuvable pour ce tenant');
+    return {
+      ...data,
+      status: data.active ? 'active' : 'suspended',
+      config: data.settings ?? {},
+      activated_at: data.activated_at ?? data.created_at ?? null,
+    };
   }
 }
