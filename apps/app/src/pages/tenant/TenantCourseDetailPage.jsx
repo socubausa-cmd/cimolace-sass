@@ -1,15 +1,33 @@
 /**
  * TenantCourseDetailPage — /t/:tenantSlug/admin/courses/:courseId
  * Vue détail d'un cours : modules + leçons + player intégré.
- * Utilisé aussi depuis /student-school-life/formations/:courseId via redirect.
+ * Utilisé aussi depuis /student-school-life/cours/:courseId (route élève).
+ * PARTAGÉE admin + élève → reskin du CONTENU uniquement (pas de shell).
  */
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Play, CheckCircle, Lock, Loader2, BookOpen, ChevronDown, ChevronRight } from 'lucide-react';
 import { coursesApi } from '@/lib/api-v2';
+import TenantAdminShell from '@/components/admin/TenantAdminShell';
 
-const BTN_PRIMARY = 'inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50';
-const BTN_GHOST = 'inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50';
+// ── Design tokens navy + or ─────────────────────────────────────────────────────
+const T = {
+  surface: '#12111a',
+  surface2: 'rgba(25,39,52,0.5)',
+  border: 'rgba(255,255,255,0.07)',
+  borderMid: 'rgba(255,255,255,0.12)',
+  gold: '#D4AF37',
+  goldDim: 'rgba(212,175,55,0.12)',
+  goldMid: 'rgba(212,175,55,0.28)',
+  success: '#22C55E',
+  warning: '#F59E0B',
+  danger: '#EF4444',
+  t1: '#F5F5F7',
+  t2: 'rgba(245,245,247,0.65)',
+  t3: 'rgba(245,245,247,0.38)',
+  t4: 'rgba(245,245,247,0.16)',
+  mono: "'JetBrains Mono','Fira Code',monospace",
+};
 
 // ── Lecteur leçon ─────────────────────────────────────────────────────────────
 function LessonPlayer({ lesson, onComplete, onClose }) {
@@ -27,15 +45,27 @@ function LessonPlayer({ lesson, onComplete, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-gray-950">
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#0a0910' }}>
       {/* Top bar */}
-      <div className="flex items-center justify-between border-b border-white/10 px-5 py-3">
-        <button onClick={onClose} className="flex items-center gap-2 text-sm text-gray-300 hover:text-white">
+      <div
+        className="flex items-center justify-between px-5 py-3"
+        style={{ borderBottom: `1px solid ${T.border}` }}
+      >
+        <button
+          onClick={onClose}
+          className="flex items-center gap-2 text-sm transition-colors"
+          style={{ color: T.t2 }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = T.t1; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = T.t2; }}
+        >
           <ArrowLeft className="h-4 w-4" /> Retour
         </button>
-        <h2 className="text-sm font-medium text-white">{lesson.title}</h2>
+        <h2 className="text-sm font-medium" style={{ color: T.t1 }}>{lesson.title}</h2>
         <button
-          className={`rounded-lg px-3 py-1.5 text-xs font-medium ${completed ? 'bg-green-600 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'} disabled:opacity-50`}
+          className="rounded-lg px-3 py-1.5 text-xs font-semibold transition-opacity disabled:opacity-50"
+          style={completed
+            ? { background: T.goldDim, color: T.gold, border: `1px solid ${T.goldMid}` }
+            : { background: T.gold, color: '#0a0910' }}
           onClick={markDone}
           disabled={marking || completed}
         >
@@ -56,11 +86,12 @@ function LessonPlayer({ lesson, onComplete, onClose }) {
             />
           ) : lesson.content ? (
             <div
-              className="max-w-2xl rounded-xl bg-white/5 p-8 text-gray-100 prose prose-invert"
+              className="max-w-2xl rounded-xl p-8 prose prose-invert"
+              style={{ background: T.surface2, color: T.t1, border: `1px solid ${T.border}` }}
               dangerouslySetInnerHTML={{ __html: lesson.content }}
             />
           ) : (
-            <div className="flex flex-col items-center gap-3 text-gray-400">
+            <div className="flex flex-col items-center gap-3" style={{ color: T.t3 }}>
               <BookOpen className="h-12 w-12" />
               <p>Aucun contenu disponible pour cette leçon.</p>
             </div>
@@ -144,42 +175,61 @@ export default function TenantCourseDetailPage() {
   const completedCount = progress.filter(p => p.status === 'completed').length;
   const progressPct = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
 
-  const backPath = tenantSlug ? `/t/${tenantSlug}/admin/courses` : '/student-school-life/formations';
+  const backPath = tenantSlug ? `/t/${tenantSlug}/admin/courses` : '/student-school-life/cours';
 
   if (loading) return (
-    <div className="flex min-h-screen items-center justify-center">
-      <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-    </div>
+    <TenantAdminShell>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" style={{ color: T.gold }} />
+      </div>
+    </TenantAdminShell>
   );
   if (error) return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-      <p className="text-red-600">{error}</p>
-      <button className={BTN_GHOST} onClick={() => navigate(-1)}><ArrowLeft className="h-4 w-4" /> Retour</button>
-    </div>
+    <TenantAdminShell>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+        <p style={{ color: T.danger }}>{error}</p>
+        <button
+          className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm transition-colors"
+          style={{ border: `1px solid ${T.border}`, color: T.t2 }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = T.surface2; e.currentTarget.style.color = T.t1; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = T.t2; }}
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-4 w-4" /> Retour
+        </button>
+      </div>
+    </TenantAdminShell>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <TenantAdminShell>
+    <div className="rounded-2xl overflow-hidden" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
       {/* Header */}
-      <div className="border-b bg-white px-6 py-5">
+      <div className="px-6 py-5" style={{ borderBottom: `1px solid ${T.border}`, background: T.surface2 }}>
         <div className="mx-auto max-w-4xl">
-          <button className="mb-3 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800" onClick={() => navigate(backPath)}>
+          <button
+            className="mb-3 flex items-center gap-1.5 text-sm transition-colors"
+            style={{ color: T.t3 }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = T.gold; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = T.t3; }}
+            onClick={() => navigate(backPath)}
+          >
             <ArrowLeft className="h-4 w-4" /> Retour aux cours
           </button>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-xl font-bold text-gray-900">{course?.title}</h1>
-              {course?.description && <p className="mt-1 text-sm text-gray-500">{course.description}</p>}
+              <h1 className="text-xl font-bold" style={{ color: T.t1 }}>{course?.title}</h1>
+              {course?.description && <p className="mt-1 text-sm" style={{ color: T.t2 }}>{course.description}</p>}
             </div>
             {totalLessons > 0 && (
               <div className="flex items-center gap-3">
                 <div className="text-right">
-                  <p className="text-xs text-gray-500">{completedCount}/{totalLessons} leçons</p>
-                  <div className="mt-1 h-2 w-32 overflow-hidden rounded-full bg-gray-200">
-                    <div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${progressPct}%` }} />
+                  <p className="text-xs" style={{ color: T.t3 }}>{completedCount}/{totalLessons} leçons</p>
+                  <div className="mt-1 h-2 w-32 overflow-hidden rounded-full" style={{ background: T.borderMid }}>
+                    <div className="h-full rounded-full transition-all" style={{ width: `${progressPct}%`, background: T.gold }} />
                   </div>
                 </div>
-                <span className="text-sm font-semibold text-blue-600">{progressPct}%</span>
+                <span className="text-sm font-semibold" style={{ color: T.gold }}>{progressPct}%</span>
               </div>
             )}
           </div>
@@ -189,9 +239,12 @@ export default function TenantCourseDetailPage() {
       {/* Modules list */}
       <div className="mx-auto max-w-4xl px-6 py-6 space-y-3">
         {modules.length === 0 && (
-          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-white py-16 text-center">
-            <BookOpen className="mb-3 h-10 w-10 text-gray-300" />
-            <p className="text-sm text-gray-500">Ce cours n'a pas encore de modules.</p>
+          <div
+            className="flex flex-col items-center justify-center rounded-2xl py-16 text-center"
+            style={{ border: `2px dashed ${T.borderMid}`, background: T.surface2 }}
+          >
+            <BookOpen className="mb-3 h-10 w-10" style={{ color: T.t4 }} />
+            <p className="text-sm" style={{ color: T.t3 }}>Ce cours n'a pas encore de modules.</p>
           </div>
         )}
 
@@ -201,52 +254,69 @@ export default function TenantCourseDetailPage() {
           const modCompleted = modLessons.length > 0 && modLessons.every(l => isCompleted(l.id));
 
           return (
-            <div key={mod.id} className="overflow-hidden rounded-xl border bg-white shadow-sm">
+            <div
+              key={mod.id}
+              className="overflow-hidden rounded-xl"
+              style={{ border: `1px solid ${T.border}`, background: T.surface2 }}
+            >
               {/* Module header */}
               <button
-                className="flex w-full items-center gap-3 px-5 py-4 text-left hover:bg-gray-50"
+                className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors"
                 onClick={() => toggleModule(mod.id)}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
               >
-                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${modCompleted ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                <span
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                  style={modCompleted
+                    ? { background: 'rgba(34,197,94,0.15)', color: T.success }
+                    : { background: T.goldDim, color: T.gold }}
+                >
                   {modCompleted ? <CheckCircle className="h-4 w-4" /> : i + 1}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900">{mod.title}</p>
-                  {mod.description && <p className="text-xs text-gray-400 truncate">{mod.description}</p>}
+                  <p className="font-semibold" style={{ color: T.t1 }}>{mod.title}</p>
+                  {mod.description && <p className="text-xs truncate" style={{ color: T.t3 }}>{mod.description}</p>}
                 </div>
-                <span className="shrink-0 text-xs text-gray-400">{modLessons.length} leçon(s)</span>
+                <span className="shrink-0 text-xs" style={{ color: T.t3 }}>{modLessons.length} leçon(s)</span>
                 {expanded
-                  ? <ChevronDown className="h-4 w-4 shrink-0 text-gray-400" />
-                  : <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" />}
+                  ? <ChevronDown className="h-4 w-4 shrink-0" style={{ color: T.t3 }} />
+                  : <ChevronRight className="h-4 w-4 shrink-0" style={{ color: T.t3 }} />}
               </button>
 
               {/* Lessons */}
               {expanded && (
-                <div className="divide-y border-t">
+                <div style={{ borderTop: `1px solid ${T.border}` }}>
                   {modLessons.length === 0 && (
-                    <p className="px-5 py-4 text-sm text-gray-400">Aucune leçon dans ce module.</p>
+                    <p className="px-5 py-4 text-sm" style={{ color: T.t3 }}>Aucune leçon dans ce module.</p>
                   )}
                   {modLessons.map((lesson, j) => {
                     const done = isCompleted(lesson.id);
                     return (
                       <div
                         key={lesson.id}
-                        className="flex cursor-pointer items-center gap-3 px-5 py-3 hover:bg-blue-50 transition-colors"
+                        className="flex cursor-pointer items-center gap-3 px-5 py-3 transition-colors"
+                        style={{ borderTop: j === 0 ? 'none' : `1px solid ${T.border}` }}
                         onClick={() => setActiveLesson(lesson)}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = T.goldDim; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                       >
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center">
                           {done
-                            ? <CheckCircle className="h-5 w-5 text-green-500" />
-                            : <Play className="h-4 w-4 text-blue-500" />}
+                            ? <CheckCircle className="h-5 w-5" style={{ color: T.success }} />
+                            : <Play className="h-4 w-4" style={{ color: T.gold }} />}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-medium ${done ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+                          <p
+                            className={`text-sm font-medium ${done ? 'line-through' : ''}`}
+                            style={{ color: done ? T.t3 : T.t1 }}
+                          >
                             {j + 1}. {lesson.title}
                           </p>
-                          {lesson.video_url && <p className="text-[10px] text-blue-400">Vidéo</p>}
-                          {lesson.content && !lesson.video_url && <p className="text-[10px] text-gray-400">Texte</p>}
+                          {lesson.video_url && <p className="text-[10px]" style={{ color: T.gold }}>Vidéo</p>}
+                          {lesson.content && !lesson.video_url && <p className="text-[10px]" style={{ color: T.t3 }}>Texte</p>}
                         </div>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+                        <ChevronRight className="h-4 w-4 shrink-0" style={{ color: T.t4 }} />
                       </div>
                     );
                   })}
@@ -266,5 +336,6 @@ export default function TenantCourseDetailPage() {
         />
       )}
     </div>
+    </TenantAdminShell>
   );
 }

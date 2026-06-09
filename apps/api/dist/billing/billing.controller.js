@@ -16,6 +16,8 @@ exports.BillingController = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const tenant_guard_1 = require("../common/guards/tenant.guard");
+const roles_guard_1 = require("../common/guards/roles.guard");
+const roles_decorator_1 = require("../common/decorators/roles.decorator");
 const billing_service_1 = require("./billing.service");
 let BillingController = class BillingController {
     constructor(svc) {
@@ -24,6 +26,20 @@ let BillingController = class BillingController {
     async getSubscription(req) { return { data: await this.svc.getSubscription(req.tenant.id) }; }
     async create(req, b) { return { data: await this.svc.createSubscription(req.tenant.id, b.plan, b.provider) }; }
     async getInvoices(req) { return { data: await this.svc.getInvoices(req.tenant.id) }; }
+    async plan(req) { return this.svc.getTenantSubscription(req.tenant.id); }
+    async collect(req, id, b) {
+        return this.svc.collectSubscriptionViaPawaPay(req.tenant.id, id, b);
+    }
+    async cardCheckout(req, id) {
+        return this.svc.createCardCheckout(req.tenant.id, id);
+    }
+    async cardConfirm(req, id) {
+        return this.svc.confirmCardPayment(req.tenant.id, id);
+    }
+    async listPayouts(req) { return this.svc.listPayouts(req.tenant.id); }
+    async createPayout(req, b) {
+        return this.svc.createPayout(req.tenant.id, req.user?.id ?? null, b);
+    }
 };
 exports.BillingController = BillingController;
 __decorate([
@@ -48,6 +64,55 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], BillingController.prototype, "getInvoices", null);
+__decorate([
+    (0, common_1.Get)("plan"),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], BillingController.prototype, "plan", null);
+__decorate([
+    (0, common_1.Post)("subscriptions/:id/collect"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", Promise)
+], BillingController.prototype, "collect", null);
+__decorate([
+    (0, common_1.Post)("subscriptions/:id/card-checkout"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], BillingController.prototype, "cardCheckout", null);
+__decorate([
+    (0, common_1.Post)("subscriptions/:id/card-confirm"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], BillingController.prototype, "cardConfirm", null);
+__decorate([
+    (0, common_1.Get)("payouts"),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], BillingController.prototype, "listPayouts", null);
+__decorate([
+    (0, common_1.Post)("payouts"),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], BillingController.prototype, "createPayout", null);
 exports.BillingController = BillingController = __decorate([
     (0, common_1.Controller)("billing"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard),

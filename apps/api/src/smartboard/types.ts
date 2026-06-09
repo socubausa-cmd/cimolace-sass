@@ -70,6 +70,16 @@ export interface SmartboardLayout {
   type: string;
   safe_zone: SmartboardLayoutZone;
   zones: Record<string, SmartboardLayoutZone>;
+  /**
+   * Gabarit live immersif (version mobile, cf. docs/SMARTBOARD_LIVE_IMMERSIF.md) :
+   * - `background: 'transparent'` → le smartboard se fond dans la scène live sombre
+   *   (pas de carte blanche/opaque).
+   * - `camera_zone` → emplacement RÉSERVÉ pour le flux vidéo du présentateur
+   *   (vignette « Flux vidéo prof »), autour duquel le contenu s'organise.
+   * Renseignés par le constructeur (Architect IA / Masterclass) à la génération.
+   */
+  background?: 'transparent' | string;
+  camera_zone?: SmartboardLayoutZone & { corner?: 'top-right' | 'bottom-right' };
 }
 
 export interface SmartboardMasterScript {
@@ -192,8 +202,11 @@ export const DEFAULT_GLOBAL_RULES: SmartboardGlobalRules = {
 export const DEFAULT_LAYOUT: SmartboardLayout = {
   type: 'horizontal_split',
   safe_zone: { x: 36, y: 28, width: 965, height: 694 },
+  // Gabarit live immersif : fond transparent + zone caméra réservée (haut-droite).
+  background: 'transparent',
+  camera_zone: { x: 760, y: 40, width: 217, height: 150, corner: 'top-right' },
   zones: {
-    header: { x: 60, y: 40, width: 917, height: 110 },
+    header: { x: 60, y: 40, width: 697, height: 110 }, // réduit pour libérer la place de camera_zone
     core_idea: { x: 120, y: 160, width: 797, height: 90 },
     development_left: { x: 70, y: 280, width: 360, height: 300 },
     visual_right: { x: 455, y: 280, width: 500, height: 300 },

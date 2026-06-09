@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { Plus, Search, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Plus, Search, X, Sparkles } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
@@ -46,6 +46,7 @@ function ageFromDob(dob?: string | null): string {
 }
 
 export function PatientsList() {
+  const navigate = useNavigate();
   const [patients, setPatients] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -132,12 +133,21 @@ export function PatientsList() {
           Patients
           <span style={{ fontSize: 15, fontWeight: 600, color: '#94a3b8' }}>{patients.length}</span>
         </h2>
-        <button
-          onClick={openModal}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
-        >
-          <Plus size={16} /> Nouveau patient
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            id="twin-cta-onboarding"
+            onClick={() => navigate('/twin/new')}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+          >
+            <Sparkles size={16} /> Onboarding Twin
+          </button>
+          <button
+            onClick={openModal}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+          >
+            <Plus size={16} /> Nouveau patient
+          </button>
+        </div>
       </div>
       <div style={{ position: 'relative', marginBottom: 16 }}>
         <Search size={16} style={{ position: 'absolute', left: 12, top: 12, color: '#94a3b8' }} />

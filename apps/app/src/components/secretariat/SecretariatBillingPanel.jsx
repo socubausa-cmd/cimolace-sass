@@ -88,27 +88,36 @@ export default function SecretariatBillingPanel() {
       // 2. Latest subscription per student
       const { data: subs } = await supabase
         .from('billing_subscriptions')
-        .select('id,user_id,status,expires_at,started_at,billing_plans(name,price_amount,price_currency,interval_type)')
+        .select('id,user_id,plan_id,status,current_period_start,current_period_end')
         .in('user_id', ids)
         .order('created_at', { ascending: false })
         .limit(2000);
 
-      // 3. Latest confirmed payment per student
-      const { data: payments } = await supabase
-        .from('billing_invoices')
-        .select('id,tenant_id,status,amount_cents,currency,created_at')
-        .in('tenant_id', ids)
-        .order('created_at', { ascending: false })
-        .limit(2000);
-
-      // Build maps: keep only the latest subscription and payment per user
+      // Build subMap and prepare sub→user reverse mapping for invoice lookup
       const subMap = {};
+      const subIdToUserId = {};
       (subs || []).forEach((s) => {
         if (!subMap[s.user_id]) subMap[s.user_id] = s;
+        if (s.id) subIdToUserId[s.id] = s.user_id;
       });
+
+      // 3. Latest confirmed payment per student via subscription_id
+      // billing_invoices.tenant_id → tenants.id (platform UUID), not profile IDs.
+      // We must join through billing_subscriptions.id instead.
+      const allSubIds = Object.keys(subIdToUserId);
+      const { data: payments } = allSubIds.length > 0
+        ? await supabase
+            .from('billing_invoices')
+            .select('id,subscription_id,status,amount_cents,currency,created_at')
+            .in('subscription_id', allSubIds)
+            .order('created_at', { ascending: false })
+            .limit(2000)
+        : { data: [] };
+
       const payMap = {};
       (payments || []).forEach((p) => {
-        if (!payMap[p.tenant_id]) payMap[p.tenant_id] = p;
+        const uid = subIdToUserId[p.subscription_id];
+        if (uid && !payMap[uid]) payMap[uid] = p;
       });
 
       const merged = profiles.map((p) => ({
@@ -131,14 +140,19 @@ export default function SecretariatBillingPanel() {
   const openDetail = async (student) => {
     setSelected(student);
     setDetailLoading(true);
-    const { data } = await supabase
-      .from('billing_invoices')
-      .select(
-        'id,status,amount_cents,currency,created_at,provider,invoice_number,provider_invoice_id,paid_at'
-      )
-      .eq('tenant_id', student.id)
-      .order('created_at', { ascending: false })
-      .limit(20);
+    // Resolve all subscription IDs for this student, then fetch invoices by subscription_id.
+    // billing_invoices.tenant_id → tenants.id (platform UUID), not student profile IDs.
+    const { data: studentSubs } = await supabase
+      .from('billing_subscriptions').select('id').eq('user_id', student.id);
+    const studentSubIds = (studentSubs || []).map(s => s.id);
+    const { data } = studentSubIds.length > 0
+      ? await supabase
+          .from('billing_invoices')
+          .select('id,status,amount_cents,currency,created_at,provider,invoice_number,provider_invoice_id,paid_at')
+          .in('subscription_id', studentSubIds)
+          .order('created_at', { ascending: false })
+          .limit(20)
+      : { data: [] };
     setStudentPayments(data || []);
     setDetailLoading(false);
   };
@@ -198,11 +212,11 @@ export default function SecretariatBillingPanel() {
         s.name || '',
         s.email || '',
         STATUS_CONFIG[s.subStatus]?.label || s.subStatus,
-        s.subscription?.billing_plans?.name || '—',
-        s.subscription?.expires_at ? format(new Date(s.subscription.expires_at), 'dd/MM/yyyy') : '—',
+        s.subscription?.plan_id || '—',
+        s.subscription?.current_period_end ? format(new Date(s.subscription.current_period_end), 'dd/MM/yyyy') : '—',
         s.lastPayment?.created_at ? format(new Date(s.lastPayment.created_at), 'dd/MM/yyyy') : '—',
-        s.lastPayment ? `${s.lastPayment.price_amount} ${s.lastPayment.price_currency}` : '—',
-        s.lastPayment ? (PAYMENT_STATUS_CONFIG[s.lastPayment.payment_status]?.label || s.lastPayment.payment_status) : '—',
+        s.lastPayment ? `${(s.lastPayment.amount_cents / 100).toFixed(0)} ${s.lastPayment.currency || ''}` : '—',
+        s.lastPayment ? (PAYMENT_STATUS_CONFIG[s.lastPayment.status]?.label || s.lastPayment.status) : '—',
       ]),
     ];
     const csv = rows.map((r) => r.map((c) => `"${c}"`).join(',')).join('\n');
@@ -308,8 +322,8 @@ export default function SecretariatBillingPanel() {
               {filtered.map((student) => {
                 const sc = STATUS_CONFIG[student.subStatus] || STATUS_CONFIG.no_sub;
                 const Icon = sc.icon;
-                const pc = student.lastPayment ? (PAYMENT_STATUS_CONFIG[student.lastPayment.payment_status] || {}) : null;
-                const expAt = student.subscription?.expires_at;
+                const pc = student.lastPayment ? (PAYMENT_STATUS_CONFIG[student.lastPayment.status] || {}) : null;
+                const expAt = student.subscription?.current_period_end;
                 return (
                   <button
                     key={student.id}
@@ -335,7 +349,7 @@ export default function SecretariatBillingPanel() {
                         </Badge>
                         <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-400">
                           <span className="truncate max-w-full">
-                            Plan : {student.subscription?.billing_plans?.name || '—'}
+                            Plan : {student.subscription?.plan_id || '—'}
                           </span>
                           {expAt ? (
                             <span>{format(new Date(expAt), 'dd/MM/yyyy')}</span>
@@ -372,8 +386,8 @@ export default function SecretariatBillingPanel() {
                   {filtered.map((student) => {
                     const sc    = STATUS_CONFIG[student.subStatus] || STATUS_CONFIG.no_sub;
                     const Icon  = sc.icon;
-                    const pc    = student.lastPayment ? (PAYMENT_STATUS_CONFIG[student.lastPayment.payment_status] || {}) : null;
-                    const expAt = student.subscription?.expires_at;
+                    const pc    = student.lastPayment ? (PAYMENT_STATUS_CONFIG[student.lastPayment.status] || {}) : null;
+                    const expAt = student.subscription?.current_period_end;
                     const isExpiringSoon = expAt && new Date(expAt) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) && new Date(expAt) > new Date();
 
                     return (
@@ -403,7 +417,7 @@ export default function SecretariatBillingPanel() {
                           </Badge>
                         </td>
                         <td className="px-4 py-3 text-gray-300">
-                          {student.subscription?.billing_plans?.name || '—'}
+                          {student.subscription?.plan_id || '—'}
                         </td>
                         <td className="px-4 py-3">
                           {expAt ? (
@@ -424,7 +438,7 @@ export default function SecretariatBillingPanel() {
                           {student.lastPayment ? (
                             <div>
                               <span className="text-white font-medium">
-                                {student.lastPayment.price_amount} {student.lastPayment.price_currency}
+                                  {(student.lastPayment.amount_cents / 100).toFixed(0)} {student.lastPayment.currency || ''}
                               </span>
                               {pc && <p className={`text-xs ${pc.color}`}>{pc.label}</p>}
                             </div>
@@ -493,26 +507,23 @@ export default function SecretariatBillingPanel() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-gray-400 text-sm">Plan</span>
-                    <span className="text-white text-sm font-medium">{selected.subscription.billing_plans?.name || '—'}</span>
+                    <span className="text-white text-sm font-medium">{selected.subscription.plan_id || '—'}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-gray-400 text-sm">Prix</span>
-                    <span className="text-white text-sm">
-                      {selected.subscription.billing_plans?.price_amount} {selected.subscription.billing_plans?.price_currency}
-                      <span className="text-gray-500 text-xs ml-1">/ {selected.subscription.billing_plans?.interval_type === 'monthly' ? 'mois' : selected.subscription.billing_plans?.interval_type === 'yearly' ? 'an' : selected.subscription.billing_plans?.interval_type}</span>
-                    </span>
+                    <span className="text-white text-sm text-gray-400">—</span>
                   </div>
-                  {selected.subscription.started_at && (
+                  {selected.subscription.current_period_start && (
                     <div className="flex items-center justify-between">
                       <span className="text-gray-400 text-sm">Démarré le</span>
-                      <span className="text-gray-300 text-sm">{format(new Date(selected.subscription.started_at), 'dd MMM yyyy', { locale: fr })}</span>
+                      <span className="text-gray-300 text-sm">{format(new Date(selected.subscription.current_period_start), 'dd MMM yyyy', { locale: fr })}</span>
                     </div>
                   )}
-                  {selected.subscription.expires_at && (
+                  {selected.subscription.current_period_end && (
                     <div className="flex items-center justify-between">
                       <span className="text-gray-400 text-sm">Expire le</span>
-                      <span className={`text-sm font-medium ${new Date(selected.subscription.expires_at) < new Date() ? 'text-red-400' : 'text-emerald-400'}`}>
-                        {format(new Date(selected.subscription.expires_at), 'dd MMM yyyy', { locale: fr })}
+                      <span className={`text-sm font-medium ${new Date(selected.subscription.current_period_end) < new Date() ? 'text-red-400' : 'text-emerald-400'}`}>
+                        {format(new Date(selected.subscription.current_period_end), 'dd MMM yyyy', { locale: fr })}
                       </span>
                     </div>
                   )}
@@ -550,10 +561,10 @@ export default function SecretariatBillingPanel() {
                             <div className="flex items-start justify-between gap-2">
                               <div>
                                 <p className="text-white text-sm font-medium">
-                                  {pay.price_amount} {pay.price_currency}
+                                  {(Number(pay.amount_cents || 0) / 100).toFixed(0)} {pay.currency || 'XAF'}
                                 </p>
                                 <p className="text-gray-500 text-xs">
-                                  {pay.billing_plans?.name || '—'} · {pay.provider} · {pay.payment_method}
+                                  {pay.provider || '—'}
                                 </p>
                                 <p className="text-gray-600 text-xs">
                                   {format(new Date(pay.created_at), 'dd MMM yyyy HH:mm', { locale: fr })}

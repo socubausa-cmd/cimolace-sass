@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -21,6 +21,9 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { cn } from '@/lib/utils';
+import './forum-dark.css';
+import ForumSommaire, { takeForumPreview } from './ForumSommaire';
+import ForumConvNav from './ForumConvNav';
 
 /**
  * Page détail d'un thread forum avec réponses
@@ -35,10 +38,15 @@ import { cn } from '@/lib/utils';
 export default function ForumThreadPage() {
   const { threadId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const forumBase = (location.pathname.split('/forum')[0] || '') + '/forum';
+  const preview = location.state?.preview;
 
   // Data states
   const [thread, setThread] = useState(null);
   const [replies, setReplies] = useState([]);
+  const [repliesLoading, setRepliesLoading] = useState(false);
+  const [liriLoading, setLiriLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [formation, setFormation] = useState(null);
@@ -58,6 +66,10 @@ export default function ForumThreadPage() {
   const [editContent, setEditContent] = useState('');
 
   const replyTextareaRef = useRef(null);
+  const paneRef = useRef(null);
+
+  // Volet messages : remonter en haut au changement de conversation (switch instantané).
+  useEffect(() => { if (paneRef.current) paneRef.current.scrollTop = 0; }, [threadId]);
 
   // Load thread + user
   useEffect(() => {
@@ -86,73 +98,45 @@ export default function ForumThreadPage() {
     let alive = true;
 
     const load = async () => {
-      setLoading(true);
+      // Affichage OPTIMISTE : la question connue (sommaire) s'affiche instantanément.
+      const pv = takeForumPreview(threadId);
+      if (pv) {
+        setThread(pv);
+        setReplies([]);
+        setRepliesLoading(true);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
       try {
-        // Load question with accepted answer
-        const { data: question } = await supabase
-          .from('formation_student_questions')
-          .select('*, accepted_answer:accepted_answer_id(*)')
-          .eq('id', threadId)
-          .single();
-
+        // Round 1 : question + réponses EN PARALLÈLE.
+        const [qRes, aRes] = await Promise.all([
+          supabase.from('formation_student_questions').select('*').eq('id', threadId).single(),
+          supabase.from('formation_question_answers').select('*').eq('question_id', threadId).eq('is_public', true).order('created_at', { ascending: true }),
+        ]);
+        const question = qRes.data;
         if (!alive || !question) return;
         setThread(question);
+        const list = (aRes.data || []).map((a) => ({ ...a, is_solution: a.id === question.accepted_answer_id }));
+        setReplies(list);
+        setRepliesLoading(false);
 
-        // Load formation
-        if (question.formation_id) {
-          const { data: form } = await supabase
-            .from('courses')
-            .select('title, color')
-            .eq('id', question.formation_id)
-            .single();
-          if (alive) setFormation(form);
+        // Round 2 : formation + votes + favori EN PARALLÈLE.
+        const [fRes, vRes, favRes] = await Promise.all([
+          question.formation_id ? supabase.from('courses').select('title, color').eq('id', question.formation_id).single() : Promise.resolve({ data: null }),
+          currentUser ? supabase.from('forum_votes').select('post_id, value').eq('user_id', currentUser.id).in('post_id', [threadId, ...list.map((a) => a.id)]) : Promise.resolve({ data: null }),
+          currentUser ? supabase.from('forum_favorites').select('question_id').eq('question_id', threadId).eq('user_id', currentUser.id).maybeSingle() : Promise.resolve({ data: null }),
+        ]);
+        if (!alive) return;
+        if (fRes.data) setFormation(fRes.data);
+        if (vRes.data) {
+          const voteMap = {};
+          vRes.data.forEach((v) => { voteMap[v.post_id] = v.value; });
+          setUserVotes(voteMap);
         }
-
-        // Load replies
-        const { data: answers } = await supabase
-          .from('formation_question_answers')
-          .select('*')
-          .eq('question_id', threadId)
-          .eq('is_public', true)
-          .order('created_at', { ascending: true });
-
-        if (alive) {
-          // Mark accepted answer
-          const processed = (answers || []).map(a => ({
-            ...a,
-            is_solution: a.id === question.accepted_answer_id
-          }));
-          setReplies(processed);
-        }
-
-        // Load user votes
-        if (currentUser) {
-          const { data: votes } = await supabase
-            .from('forum_votes')
-            .select('post_id, value')
-            .eq('user_id', currentUser.id)
-            .in('post_id', [threadId, ...(answers || []).map(a => a.id)]);
-
-          if (alive && votes) {
-            const voteMap = {};
-            votes.forEach(v => voteMap[v.post_id] = v.value);
-            setUserVotes(voteMap);
-          }
-        }
-
-        // Check favorite from DB
-        if (currentUser) {
-          const { data: fav } = await supabase
-            .from('forum_favorites')
-            .select('question_id')
-            .eq('question_id', threadId)
-            .eq('user_id', currentUser.id)
-            .single();
-          setIsFav(!!fav);
-        }
-
+        setIsFav(!!favRes.data);
       } finally {
-        if (alive) setLoading(false);
+        if (alive) { setLoading(false); setRepliesLoading(false); }
       }
     };
 
@@ -235,6 +219,41 @@ export default function ForumThreadPage() {
       alert('Erreur lors de l\'envoi : ' + err.message);
     } finally {
       setReplying(false);
+    }
+  };
+
+  // Demander une réponse à LIRI Brain (RAG ancré sur la base de connaissances).
+  const askLiri = async () => {
+    if (!thread || liriLoading) return;
+    setLiriLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const slug = localStorage.getItem('isna-v2-tenant-slug') || localStorage.getItem('tenantSlug') || 'isna';
+      const base = (import.meta.env.VITE_API_URL || 'http://localhost:4002').replace(/\/+$/, '');
+      const res = await fetch(`${base}/knowledge/answer`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: thread.question, matchCount: 4 }),
+      });
+      const j = await res.json();
+      const answer = j?.data?.answer;
+      const ragSources = Array.isArray(j?.data?.sources) ? j.data.sources : [];
+      if (!answer) throw new Error('Réponse indisponible');
+      const cited = new Set((answer.match(/\[(\d+)\]/g) || []).map((m) => parseInt(m.replace(/[^\d]/g, ''), 10)));
+      let sources = ragSources.filter((s) => cited.has(s.n)).map((s) => ({ type: 'kb', label: s.title }));
+      if (!sources.length && ragSources[0]) sources = [{ type: 'kb', label: ragSources[0].title }];
+      const { data: inserted, error } = await supabase
+        .from('formation_question_answers')
+        .insert({ question_id: threadId, student_id: currentUser?.id || null, author_name: 'LIRI Brain', answer, is_ai: true, is_public: true, sources })
+        .select()
+        .single();
+      if (error) throw error;
+      setReplies((prev) => [...prev, { ...inserted, is_solution: false }]);
+    } catch (e) {
+      alert('LIRI : ' + (e?.message || e));
+    } finally {
+      setLiriLoading(false);
     }
   };
 
@@ -367,9 +386,9 @@ export default function ForumThreadPage() {
     return 0;
   };
 
-  if (loading) {
+  if (loading && !thread) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="forum-dark min-h-[60vh] flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
       </div>
     );
@@ -377,12 +396,12 @@ export default function ForumThreadPage() {
 
   if (!thread) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center">
+      <div className="forum-dark min-h-[60vh] flex flex-col items-center justify-center text-center">
         <MessageSquare className="w-16 h-16 text-gray-300 mb-4" />
         <h2 className="text-xl font-semibold text-gray-900 mb-2">Question introuvable</h2>
         <p className="text-gray-600 mb-4">Cette question n'existe pas ou a été supprimée.</p>
         <Link
-          to="/student-school-life/forum"
+          to={forumBase}
           className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
         >
           Retour au forum
@@ -394,26 +413,58 @@ export default function ForumThreadPage() {
   const isAuthor = currentUser?.id === thread.student_id;
   const solutionReply = replies.find(r => r.is_solution);
 
+  // Navigation intelligente dans la conversation (minimap façon Claude).
+  const navItems = [
+    { key: 'question', type: 'question', author: thread.author_name || 'Anonyme', snippet: thread.question },
+    ...replies.map((r) => ({
+      key: r.id,
+      type: r.is_solution ? 'solution' : (r.is_instructor_answer ? 'instructor' : 'reply'),
+      author: r.author_name || (r.student_id === thread.student_id ? 'Auteur' : 'Réponse'),
+      snippet: r.answer,
+    })),
+  ];
+
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-        <Link to="/student-school-life/forum" className="hover:text-gray-900">
-          Forum
-        </Link>
-        <span>/</span>
-        {formation && (
-          <>
-            <span className="text-indigo-600">{formation.title}</span>
-            <span>/</span>
-          </>
-        )}
-        <span className="text-gray-900 truncate max-w-[200px]">{thread.question}</span>
+    <div className="forum-dark forum-immersive" style={{ position: 'relative', height: 'calc(100dvh - 150px)', overflow: 'hidden' }}>
+      {/* Fond immersif (aurore) */}
+      <div aria-hidden style={{ position: 'absolute', inset: '-28px -24px -48px -24px', zIndex: 0, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, #0a0b12 0%, #08090f 58%, #060709 100%)' }}>
+          <div style={{ position:'absolute', width:'70vw', height:'70vw', top:'-24%', right:'-14%', borderRadius:'50%', background:'radial-gradient(circle, rgba(212,175,55,0.20), transparent 60%)', filter:'blur(34px)', animation:'forumAurora1 26s ease-in-out infinite' }}/>
+          <div style={{ position:'absolute', width:'64vw', height:'64vw', bottom:'-28%', left:'-18%', borderRadius:'50%', background:'radial-gradient(circle, rgba(46,66,112,0.62), transparent 60%)', filter:'blur(34px)', animation:'forumAurora2 33s ease-in-out infinite' }}/>
+          <div style={{ position:'absolute', width:'48vw', height:'48vw', top:'34%', left:'44%', borderRadius:'50%', background:'radial-gradient(circle, rgba(212,175,55,0.09), transparent 60%)', filter:'blur(42px)', animation:'forumAurora3 23s ease-in-out infinite' }}/>
+          <div style={{ position:'absolute', inset:0, background:'radial-gradient(135% 100% at 50% 22%, transparent 50%, rgba(0,0,0,0.55) 100%)' }}/>
+        </div>
+      </div>
+
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 0, alignItems: 'flex-start', height: '100%' }}>
+        <ForumSommaire currentId={threadId} basePath={forumBase} />
+        <div style={{ width: 1, alignSelf: 'stretch', background: 'rgba(255,255,255,0.06)', margin: '0 30px', flexShrink: 0 }} />
+        <div ref={paneRef} style={{ flex: 1, minWidth: 0, height: '100%', overflowY: 'auto', padding: '0 24px' }}>
+        <div style={{ maxWidth: 760, margin: '0 auto' }}>
+      {/* En-tête conversation : retour + titre élégant (sticky) */}
+      <div style={{ position: 'sticky', top: 0, zIndex: 5, display: 'flex', alignItems: 'center', gap: 14, padding: '16px 0 14px', marginBottom: 20, borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'linear-gradient(180deg, #0a0b12 72%, rgba(10,11,18,0))' }}>
+        <button
+          onClick={() => navigate(forumBase)}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 11, background: 'rgba(212,175,55,0.10)', border: '1px solid rgba(212,175,55,0.28)', color: '#D4AF37', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
+        >
+          <span style={{ fontSize: 16, lineHeight: 1 }}>←</span> Forum
+        </button>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          {formation && (
+            <div style={{ fontFamily: "'JetBrains Mono','Fira Code',monospace", fontSize: 9.5, fontWeight: 600, color: '#D4AF37', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 3 }}>
+              {formation.title}
+            </div>
+          )}
+          <div style={{ fontSize: 16.5, fontWeight: 700, color: '#F5F5F7', lineHeight: 1.35, letterSpacing: '-0.01em', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            {thread.question}
+          </div>
+        </div>
       </div>
 
       {/* Question Card */}
       <motion.article
-        initial={{ opacity: 0, y: 20 }}
+        id="fmsg-question"
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         className="bg-white border border-gray-200 rounded-xl p-6 mb-6"
       >
@@ -444,8 +495,7 @@ export default function ForumThreadPage() {
           </div>
         </div>
 
-        {/* Title & Content */}
-        <h1 className="text-xl font-bold text-gray-900 mb-3">{thread.question}</h1>
+        {/* Content (le titre est dans l'en-tête de conversation) */}
         {thread.content && (
           <p className="text-gray-700 leading-relaxed mb-4 whitespace-pre-wrap">
             {thread.content}
@@ -521,7 +571,7 @@ export default function ForumThreadPage() {
       {/* Solution banner */}
       {solutionReply && (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={false}
           animate={{ opacity: 1 }}
           className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl"
         >
@@ -537,21 +587,36 @@ export default function ForumThreadPage() {
 
       {/* Replies */}
       <div className="space-y-4 mb-8">
-        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-          <MessageSquare className="w-5 h-5" />
-          Réponses ({replies.length})
-        </h3>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+            <MessageSquare className="w-5 h-5" />
+            Réponses ({replies.length})
+          </h3>
+          <button
+            type="button"
+            onClick={askLiri}
+            disabled={liriLoading}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 15px', borderRadius: 11, background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.3)', color: '#D4AF37', fontSize: 12.5, fontWeight: 600, cursor: liriLoading ? 'wait' : 'pointer', opacity: liriLoading ? 0.7 : 1 }}
+          >
+            <span style={{ fontSize: 14, lineHeight: 1 }}>✦</span>{liriLoading ? 'LIRI réfléchit…' : 'Demander à LIRI'}
+          </button>
+        </div>
 
         {replies.length === 0 ? (
+          repliesLoading ? (
+            <div className="text-center py-8 text-gray-500 text-sm">Chargement des réponses…</div>
+          ) : (
           <div className="text-center py-8 bg-gray-50 rounded-xl">
             <p className="text-gray-500">Aucune réponse pour l'instant.</p>
             <p className="text-sm text-gray-400">Soyez le premier à répondre !</p>
           </div>
+          )
         ) : (
           replies.map((reply, index) => (
             <motion.div
               key={reply.id}
-              initial={{ opacity: 0, y: 10 }}
+              id={`fmsg-${reply.id}`}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
               className={cn(
@@ -561,22 +626,30 @@ export default function ForumThreadPage() {
             >
               {/* Reply header */}
               <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white text-sm font-medium">
-                    {(reply.student_id || 'A').slice(0, 1).toUpperCase()}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold" style={{ background: reply.is_ai ? 'linear-gradient(135deg,#D4AF37,#7a5c12)' : 'linear-gradient(135deg,#1e2840,#D4AF37)', flexShrink: 0 }}>
+                    {reply.is_ai ? '✦' : (reply.author_name || reply.student_id || 'A').slice(0, 1).toUpperCase()}
                   </div>
                   <span className="text-sm font-medium text-gray-900">
-                    {reply.student_id === thread.student_id ? 'Auteur' : 'Réponse'}
+                    {reply.is_ai ? 'LIRI Brain' : (reply.author_name || (reply.student_id === thread.student_id ? 'Auteur' : 'Réponse'))}
                   </span>
-                  {reply.is_instructor_answer && (
-                    <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs rounded-full">
-                      Instructeur
-                    </span>
-                  )}
+                  {(() => {
+                    const b = reply.is_ai
+                      ? { t: 'IA · à vérifier', c: '#F59E0B', bg: 'rgba(245,158,11,0.14)', bd: 'rgba(245,158,11,0.32)' }
+                      : reply.is_instructor_answer
+                      ? { t: 'Formateur', c: '#D4AF37', bg: 'rgba(212,175,55,0.14)', bd: 'rgba(212,175,55,0.32)', check: true }
+                      : reply.validated_at
+                      ? { t: 'Validé formateur', c: '#4ade80', bg: 'rgba(34,197,94,0.14)', bd: 'rgba(34,197,94,0.32)', check: true }
+                      : { t: 'Élève', c: 'rgba(245,245,247,0.6)', bg: 'rgba(255,255,255,0.05)', bd: 'rgba(255,255,255,0.12)' };
+                    return (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, padding: '2px 9px', borderRadius: 20, color: b.c, background: b.bg, border: `1px solid ${b.bd}` }}>
+                        {b.check && <CheckCircle2 className="w-3 h-3" />}{b.t}
+                      </span>
+                    );
+                  })()}
                   {reply.is_solution && (
-                    <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Solution
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, padding: '2px 9px', borderRadius: 20, color: '#0b0b0f', background: '#22C55E' }}>
+                      <CheckCircle2 className="w-3 h-3" />Solution
                     </span>
                   )}
                 </div>
@@ -607,7 +680,21 @@ export default function ForumThreadPage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-700 whitespace-pre-wrap mb-3">{reply.answer}</p>
+                <>
+                  <p className="text-gray-700 whitespace-pre-wrap mb-3">{reply.answer}</p>
+                  {Array.isArray(reply.sources) && reply.sources.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 12 }}>
+                      {reply.sources.map((src, i) => (
+                        <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, padding: '4px 10px', borderRadius: 20, background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.22)', color: '#D4AF37' }}>
+                          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                            <path d="M4 2.5h6.5A1.5 1.5 0 0112 4v9.5l-2.75-1.6-2.75 1.6V4A1.5 1.5 0 005 2.5z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+                          </svg>
+                          {src.label}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Reply actions */}
@@ -670,7 +757,7 @@ export default function ForumThreadPage() {
       {/* Reply form */}
       {currentUser ? (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={false}
           animate={{ opacity: 1 }}
           className="bg-gray-50 rounded-xl p-4"
         >
@@ -726,6 +813,11 @@ export default function ForumThreadPage() {
           <p className="text-gray-600">Connectez-vous pour répondre</p>
         </div>
       )}
+        </div>
+        </div>
+        <div style={{ width: 1, alignSelf: 'stretch', background: 'rgba(255,255,255,0.06)', margin: '0 30px', flexShrink: 0 }} />
+        <ForumConvNav items={navItems} />
+      </div>
     </div>
   );
 }

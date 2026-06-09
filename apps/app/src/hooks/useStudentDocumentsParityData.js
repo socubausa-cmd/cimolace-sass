@@ -61,14 +61,22 @@ export function useStudentDocumentsParityData(userId) {
       return;
     }
     setLoading(true);
+    // billing_invoices.tenant_id → tenants.id (platform UUID), not profile IDs.
+    // Resolve subscription IDs first, then filter invoices by subscription_id.
+    const { data: userSubs } = await supabase
+      .from('billing_subscriptions').select('id').eq('user_id', userId);
+    const subIds = (userSubs || []).map(s => s.id);
+    const invoicesQuery = subIds.length > 0
+      ? supabase
+          .from('billing_invoices')
+          .select(PAYMENT_SELECT)
+          .in('subscription_id', subIds)
+          .in('status', ['paid', 'confirmed'])
+          .order('created_at', { ascending: false })
+          .limit(100)
+      : Promise.resolve({ data: [], error: null });
     const [paymentsRes, reportsRes, certsRes] = await Promise.all([
-      supabase
-        .from('billing_invoices')
-        .select(PAYMENT_SELECT)
-        .eq('tenant_id', userId)
-        .in('status', ['paid', 'confirmed'])
-        .order('created_at', { ascending: false })
-        .limit(100),
+      invoicesQuery,
       supabase
         .from('student_live_reports')
         .select('id,live_session_id,report_text,created_at')
@@ -93,13 +101,18 @@ export function useStudentDocumentsParityData(userId) {
 
   const refreshInvoices = useCallback(async () => {
     if (!userId) return;
-    const paymentsRes = await supabase
-      .from('billing_invoices')
-      .select(PAYMENT_SELECT)
-      .eq('tenant_id', userId)
-      .in('status', ['paid', 'confirmed'])
-      .order('created_at', { ascending: false })
-      .limit(100);
+    const { data: userSubs } = await supabase
+      .from('billing_subscriptions').select('id').eq('user_id', userId);
+    const subIds = (userSubs || []).map(s => s.id);
+    const paymentsRes = subIds.length > 0
+      ? await supabase
+          .from('billing_invoices')
+          .select(PAYMENT_SELECT)
+          .in('subscription_id', subIds)
+          .in('status', ['paid', 'confirmed'])
+          .order('created_at', { ascending: false })
+          .limit(100)
+      : { data: [], error: null };
     setDocs((prev) => ({
       ...prev,
       admin: mapPaymentRows(paymentsRes.error ? [] : paymentsRes.data),

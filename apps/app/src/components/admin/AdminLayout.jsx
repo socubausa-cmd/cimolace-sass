@@ -11,7 +11,9 @@ import {
   X,
   Bell,
   FileText,
-  Settings
+  Settings,
+  ShieldCheck,
+  Activity
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -32,6 +34,8 @@ const AdminLayout = ({ children }) => {
     { label: 'Étudiants', path: '/admin/students', icon: GraduationCap },
     { label: 'Paiements', path: '/admin/payments', icon: CreditCard },
     { label: 'Audit Logs', path: '/admin/logs', icon: FileText },
+    { label: 'Audit MedOS', path: '/admin/med-audit', icon: ShieldCheck },
+    { label: 'MEDOS > Consommation IA', path: '/admin/med-ai-usage', icon: Activity },
     { label: 'Paramètres', path: '/admin/settings', icon: Settings },
   ];
 

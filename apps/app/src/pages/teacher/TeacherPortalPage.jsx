@@ -19,7 +19,9 @@ import TeacherCorrectionPanel from '@/components/teacher/TeacherCorrectionPanel'
 import LiveSessionManager from '@/components/lives/LiveSessionManager';
 import LiveStudioPage from '@/pages/LiveStudioPage';
 import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
-import StudentForumCommunityPage from '@/pages/student-school-life/StudentForumCommunityPage';
+import StudentForumRedesign from '@/pages/student-school-life/StudentForumRedesign';
+import ForumNewQuestionPage from '@/pages/student-school-life/ForumNewQuestionPage';
+import ForumThreadPage from '@/pages/student-school-life/ForumThreadPage';
 import { FormationForumContent } from '@/pages/FormationForumPage';
 import { FORUM_COMMUNITY_PATH } from '@/lib/forumDashboardPaths';
 
@@ -38,15 +40,19 @@ function TeacherFormationForumRoute() {
 const TeacherPortalPage = () => {
   const schoolBrand = isnaTenantConfig?.branding?.name || 'LIRI';
   return (
-    <div className="min-h-screen bg-[#0F1419] flex">
+    <div style={{ minHeight: '100dvh', background: '#0B0B0F', display: 'flex' }}>
       <Helmet>
         <title>{`Espace Professeur | ${schoolBrand}`}</title>
       </Helmet>
 
       <TeacherSchoolLifeSidebar />
 
-      <main className="flex-1 lg:pl-72 w-full pt-20 px-4 md:px-8 pb-12 overflow-x-hidden">
-        <div className="max-w-7xl mx-auto">
+      {/* Main Content Area — lg:pl-[250px] offsets content past the fixed sidebar */}
+      <main
+        style={{ flex: 1, overflowX: 'hidden', minHeight: '100dvh' }}
+        className="lg:pl-[250px]"
+      >
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 24px 48px' }}>
           <Routes>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<StudentDashboardPage />} />
@@ -58,10 +64,9 @@ const TeacherPortalPage = () => {
             <Route path="absences" element={<StudentAbsencesPage />} />
             <Route path="documents" element={<StudentDocumentsPage />} />
             <Route path="forum/formation/:formationId" element={<TeacherFormationForumRoute />} />
-            <Route
-              path="forum"
-              element={<StudentForumCommunityPage forumBasePath={FORUM_COMMUNITY_PATH.teacher} />}
-            />
+            <Route path="forum/new" element={<ForumNewQuestionPage />} />
+            <Route path="forum/thread/:threadId" element={<ForumThreadPage />} />
+            <Route path="forum" element={<StudentForumRedesign forumBasePath={FORUM_COMMUNITY_PATH.teacher} />} />
             <Route path="vie-scolaire" element={<SchoolLifePage embedded />} />
             <Route path="bibliotheque" element={<BibliothequePage embedded />} />
             <Route path="bibliotheque-ressources" element={<LibraryPage embedded />} />

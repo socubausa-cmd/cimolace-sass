@@ -8,7 +8,7 @@ export default function GraceBanner() {
   const { status, inGrace, subscription, activeRenewalLink } = useBilling();
   if (!(status === 'past_due' && inGrace)) return null;
 
-  const expiresAt = subscription?.expires_at ? new Date(subscription.expires_at) : null;
+  const expiresAt = subscription?.current_period_end ? new Date(subscription.current_period_end) : null;
   const label = expiresAt ? expiresAt.toLocaleString() : null;
   const renewalPath =
     subscription?.id && subscription?.plan_id

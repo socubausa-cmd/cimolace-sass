@@ -20,6 +20,8 @@ import { Layout } from './components/Layout';
 
 // Bio Digital Twin (v2) — lazy : isole three.js / 3D du bundle principal.
 const TwinPage = lazy(() => import('./twin/TwinPage').then((m) => ({ default: m.TwinPage })));
+// Wizard onboarding patient (Chantier 3) — lazy aussi (allège le bundle initial).
+const PatientWizard = lazy(() => import('./twin/PatientWizard').then((m) => ({ default: m.PatientWizard })));
 
 const queryClient = new QueryClient();
 
@@ -47,6 +49,14 @@ function AppRoutes() {
         <Route path="/messages" element={<Threads />} />
         <Route path="/appointments" element={<Appointments />} />
         <Route path="/audit" element={<AuditPage />} />
+        <Route
+          path="/twin/new"
+          element={
+            <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Chargement du wizard…</div>}>
+              <PatientWizard />
+            </Suspense>
+          }
+        />
         <Route
           path="/twin/:patientId"
           element={

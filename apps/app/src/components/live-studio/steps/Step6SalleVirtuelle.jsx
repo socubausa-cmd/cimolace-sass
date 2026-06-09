@@ -3130,29 +3130,29 @@ function ShopProductsConfig({ draft, updateDraft }) {
   const loadPlans = async () => {
     setLoadingPlans(true);
     try {
-      const { data } = await supabase.from('billing_plans').select('*').eq('active', true).order('name');
+      const { data } = await supabase.from('billing_plans').select('*').eq('is_active', true).order('label');
       setDbPlans(data || []);
     } catch { /* ignore */ }
     finally { setLoadingPlans(false); }
   };
 
   const addFromPlan = (plan) => {
-    if (products.some((p) => p.planSlug === plan.slug)) return;
-    const cat = plan.slug.includes('mentorat') ? 'mentorat'
-      : plan.slug.includes('consultation') ? 'consultation'
-      : plan.slug.includes('autonome') ? 'formation'
+    if (products.some((p) => p.planSlug === plan.key)) return;
+    const cat = String(plan.key || '').includes('mentorat') ? 'mentorat'
+      : String(plan.key || '').includes('consultation') ? 'consultation'
+      : String(plan.key || '').includes('autonome') ? 'formation'
       : 'service';
     const product = {
       id: plan.id,
-      planSlug: plan.slug,
-      name: plan.name,
+      planSlug: plan.key,
+      name: plan.label,
       description: plan.meta?.description || '',
-      price: plan.price_amount,
-      currency: plan.price_currency || 'EUR',
-      interval: plan.interval_type,
+      price: Math.round(Number(plan.price_cents || 0) / 100),
+      currency: plan.currency || 'EUR',
+      interval: plan.billing_cycle,
       category: cat,
-      payUrl: `/paiements/payer?plan=${plan.slug}&interval=${plan.interval_type}`,
-      badge: plan.interval_type === 'one_time' ? 'Paiement unique' : '',
+      payUrl: `/paiements/payer?plan=${plan.key}&interval=${plan.billing_cycle}`,
+      badge: plan.billing_cycle === 'one_time' ? 'Paiement unique' : '',
       cta: 'Souscrire',
       image: plan.meta?.image || '',
     };
@@ -3213,7 +3213,7 @@ function ShopProductsConfig({ draft, updateDraft }) {
             <p className="text-[10px] text-gray-500">Plans actifs — cliquez pour ajouter</p>
             <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
               {dbPlans.map((plan) => {
-                const added = products.some((p) => p.planSlug === plan.slug);
+                const added = products.some((p) => p.planSlug === plan.key);
                 return (
                   <button
                     key={plan.id}
@@ -3228,11 +3228,11 @@ function ShopProductsConfig({ draft, updateDraft }) {
                     )}
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-white truncate">{plan.name}</p>
-                      <p className="text-[10px] text-gray-500">{plan.slug} · {plan.interval_type}</p>
+                      <p className="text-xs text-white truncate">{plan.label}</p>
+                      <p className="text-[10px] text-gray-500">{plan.key} · {plan.billing_cycle}</p>
                     </div>
                     <span className="text-xs font-semibold text-[#7B61FF] ml-2">
-                      {added ? '✓' : `${plan.price_amount} ${plan.price_currency}`}
+                      {added ? '✓' : `${Math.round(Number(plan.price_cents || 0) / 100)} ${plan.currency || 'EUR'}`}
                     </span>
                   </button>
                 );

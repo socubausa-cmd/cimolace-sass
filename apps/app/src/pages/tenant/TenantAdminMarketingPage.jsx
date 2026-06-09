@@ -1,7 +1,9 @@
 import { useParams, Link } from 'react-router-dom';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
+import TenantAdminShell from '@/components/admin/TenantAdminShell';
+import { ADMIN_T } from '@/lib/tenantAdminTheme';
 
-const C = { bg: '#0d1117', panel: '#161b22', border: '#21262d', text: '#f0f6fc', muted: '#8b949e', violet: '#7c3aed', green: '#10b981' };
+const C = { bg: ADMIN_T.bg, panel: ADMIN_T.surface, border: ADMIN_T.border, text: ADMIN_T.t1, muted: ADMIN_T.t2, violet: ADMIN_T.gold, green: ADMIN_T.success };
 
 const TOOLS = [
   { icon: '🎯', title: 'Bannières', desc: 'Bannières promotionnelles pour votre vitrine et emails.' },
@@ -16,11 +18,8 @@ export default function TenantAdminMarketingPage() {
   const accent = branding?.accentColor ?? C.violet;
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, padding: '32px 24px', fontFamily: "'Inter', system-ui, sans-serif" }}>
-      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
-          <Link to={`/t/${tenantSlug}/admin`} style={{ color: C.muted, textDecoration: 'none', fontSize: '13px' }}>← Tableau de bord</Link>
-        </div>
+    <TenantAdminShell>
+      <div style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
           <span style={{ fontSize: '28px' }}>📣</span>
           <h1 style={{ color: C.text, fontSize: '22px', fontWeight: 800, margin: 0 }}>Marketing Creator</h1>
@@ -33,8 +32,8 @@ export default function TenantAdminMarketingPage() {
             <div
               key={tool.title}
               style={{
-                background: C.panel, border: `1px solid ${C.border}`,
-                borderRadius: '10px', padding: '24px',
+                background: ADMIN_T.surfaceCard, border: `1px solid ${C.border}`,
+                borderRadius: '14px', padding: '24px',
               }}
             >
               <div style={{ fontSize: '28px', marginBottom: '12px' }}>{tool.icon}</div>
@@ -51,8 +50,8 @@ export default function TenantAdminMarketingPage() {
           ))}
         </div>
         <div style={{
-          marginTop: '32px', background: C.panel, border: `1px solid ${accent}40`,
-          borderRadius: '12px', padding: '24px', textAlign: 'center',
+          marginTop: '32px', background: ADMIN_T.surfaceCard, border: `1px solid ${accent}40`,
+          borderRadius: '14px', padding: '24px', textAlign: 'center',
         }}>
           <p style={{ color: C.muted, fontSize: '13px', margin: '0 0 16px' }}>
             L'interface Marketing Creator complète est disponible dans la prochaine mise à jour.
@@ -62,7 +61,7 @@ export default function TenantAdminMarketingPage() {
             to={`/t/${tenantSlug}/admin`}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: '6px',
-              padding: '10px 20px', background: accent, color: '#fff',
+              padding: '10px 20px', background: accent, color: '#000',
               borderRadius: '8px', textDecoration: 'none', fontWeight: 700, fontSize: '14px',
             }}
           >
@@ -70,6 +69,6 @@ export default function TenantAdminMarketingPage() {
           </Link>
         </div>
       </div>
-    </div>
+    </TenantAdminShell>
   );
 }

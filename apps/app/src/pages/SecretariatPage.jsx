@@ -66,7 +66,7 @@ const SecretariatPage = () => {
             .eq('status', 'published'),
           supabase
             .from('billing_subscriptions')
-            .select('id,user_id,status,expires_at')
+            .select('id,user_id,status,current_period_end')
             .in('status', ['past_due', 'expired'])
             .limit(50),
           supabase
@@ -147,7 +147,7 @@ const SecretariatPage = () => {
             title: 'Abonnement à régulariser',
             subject: profileMap[row.user_id] || 'Client',
             status: row.status || 'past_due',
-            date: row.expires_at || new Date().toISOString(),
+            date: row.current_period_end || new Date().toISOString(),
             actionLabel: 'Relancer',
           })),
         ]

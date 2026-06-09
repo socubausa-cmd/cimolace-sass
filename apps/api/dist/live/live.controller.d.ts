@@ -8,6 +8,9 @@ export declare class LiveController {
     findAll(req: any): Promise<{
         data: any[];
     }>;
+    findOne(req: any, id: string): Promise<{
+        data: any;
+    }>;
     token(req: any, id: string, b: any): Promise<{
         data: {
             token: string;
@@ -15,5 +18,11 @@ export declare class LiveController {
             role: "host" | "student";
             userId: string;
         };
+    }>;
+    start(req: any, id: string): Promise<{
+        data: any;
+    }>;
+    end(req: any, id: string): Promise<{
+        data: any;
     }>;
 }

@@ -143,3 +143,120 @@ test('detectAlerts — healthy profile => none', () => {
   ]);
   assert.equal(alerts.length, 0);
 });
+
+// ─── Règles étendues (référentiel v2 — 144 codes additionnels) ─────────────
+
+test('detectAlerts — cardiac_risk (NT_PROBNP critique)', () => {
+  const r = [ref({ code: 'NT_PROBNP', optimal_low: 0, optimal_high: 125, lab_low: 0, lab_high: 300 })];
+  const alerts = svc.detectAlerts(r, [{ biomarker_code: 'NT_PROBNP', value: 800 }]);
+  const a = alerts.find((x) => x.kind === 'cardiac_risk');
+  assert.ok(a, 'cardiac_risk alert missing');
+  assert.equal(a.severity, 'critical');
+});
+
+test('detectAlerts — methylation_block (homocystéine + MMA)', () => {
+  const r = [
+    ref({ code: 'HOMOCYSTEINE', optimal_low: 5, optimal_high: 7, lab_low: 5, lab_high: 15 }),
+    ref({ code: 'MMA', optimal_low: 0, optimal_high: 250, lab_low: 0, lab_high: 400 }),
+  ];
+  const alerts = svc.detectAlerts(r, [
+    { biomarker_code: 'HOMOCYSTEINE', value: 12 },
+    { biomarker_code: 'MMA', value: 350 },
+  ]);
+  assert.ok(alerts.some((a) => a.kind === 'methylation_block'));
+});
+
+test('detectAlerts — gut_permeability (zonuline + calprotectine)', () => {
+  const r = [
+    ref({ code: 'ZONULIN', optimal_low: 0, optimal_high: 50, lab_low: 0, lab_high: 100 }),
+    ref({ code: 'CALPROTECTIN', optimal_low: 0, optimal_high: 50, lab_low: 0, lab_high: 150 }),
+  ];
+  const alerts = svc.detectAlerts(r, [
+    { biomarker_code: 'ZONULIN', value: 80 },
+    { biomarker_code: 'CALPROTECTIN', value: 120 },
+  ]);
+  assert.ok(alerts.some((a) => a.kind === 'gut_permeability'));
+});
+
+test('detectAlerts — oxidative_stress_high (attaque + défenses)', () => {
+  const r = [
+    ref({ code: 'MDA', optimal_low: 0, optimal_high: 1, lab_low: 0, lab_high: 2 }),
+    ref({ code: 'GSH', optimal_low: 600, optimal_high: 900, lab_low: 500, lab_high: 1200, higher_is_worse: false }),
+  ];
+  const alerts = svc.detectAlerts(r, [
+    { biomarker_code: 'MDA', value: 1.5 },
+    { biomarker_code: 'GSH', value: 400 },
+  ]);
+  assert.ok(alerts.some((a) => a.kind === 'oxidative_stress_high'));
+});
+
+test('detectAlerts — thyroid_autoimmune (Hashimoto pattern)', () => {
+  const r = [
+    ref({ code: 'ANTI_TPO', optimal_low: 0, optimal_high: 15, lab_low: 0, lab_high: 34 }),
+    ref({ code: 'TSH', optimal_low: 1, optimal_high: 2, lab_low: 0.4, lab_high: 4 }),
+  ];
+  const alerts = svc.detectAlerts(r, [
+    { biomarker_code: 'ANTI_TPO', value: 80 },
+    { biomarker_code: 'TSH', value: 5.5 },
+  ]);
+  const a = alerts.find((x) => x.kind === 'thyroid_autoimmune');
+  assert.ok(a, 'thyroid_autoimmune alert missing');
+  assert.equal(a.severity, 'critical');
+});
+
+test('detectAlerts — cortisol_dysregulation (pattern inversé)', () => {
+  const r = [
+    ref({ code: 'CORTISOL_AM', optimal_low: 10, optimal_high: 18, lab_low: 6, lab_high: 23 }),
+    ref({ code: 'CORTISOL_PM', optimal_low: 0, optimal_high: 5, lab_low: 0, lab_high: 8 }),
+  ];
+  // AM 12 (normal) + PM 10 (haut, ratio 0.83 > 0.6) => alerte
+  const alerts = svc.detectAlerts(r, [
+    { biomarker_code: 'CORTISOL_AM', value: 12 },
+    { biomarker_code: 'CORTISOL_PM', value: 10 },
+  ]);
+  assert.ok(alerts.some((a) => a.kind === 'cortisol_dysregulation'));
+});
+
+test('detectAlerts — insulin_resistance_advanced (HOMA-IR + adipocytokines)', () => {
+  const r = [
+    ref({ code: 'HOMA_IR', optimal_low: 0.5, optimal_high: 1.5, lab_low: 0, lab_high: 2.5 }),
+    ref({ code: 'LEPTIN', optimal_low: 2, optimal_high: 10, lab_low: 1, lab_high: 25 }),
+    ref({ code: 'ADIPONECTIN', optimal_low: 10, optimal_high: 25, lab_low: 4, lab_high: 30, higher_is_worse: false }),
+  ];
+  const alerts = svc.detectAlerts(r, [
+    { biomarker_code: 'HOMA_IR', value: 3.5 },
+    { biomarker_code: 'LEPTIN', value: 30 },
+    { biomarker_code: 'ADIPONECTIN', value: 3 },
+  ]);
+  assert.ok(alerts.some((a) => a.kind === 'insulin_resistance_advanced'));
+});
+
+test('detectAlerts — electrolyte_imbalance (2+ ions hors plage)', () => {
+  const r = [
+    ref({ code: 'POTASSIUM', optimal_low: 3.5, optimal_high: 4.5, lab_low: 3, lab_high: 5 }),
+    ref({ code: 'SODIUM', optimal_low: 138, optimal_high: 142, lab_low: 132, lab_high: 148 }),
+  ];
+  const alerts = svc.detectAlerts(r, [
+    { biomarker_code: 'POTASSIUM', value: 2.5 },
+    { biomarker_code: 'SODIUM', value: 150 },
+  ]);
+  const a = alerts.find((x) => x.kind === 'electrolyte_imbalance');
+  assert.ok(a);
+  assert.equal(a.severity, 'critical');
+});
+
+test('detectAlerts — liver_strain (3 enzymes hépatiques ↑)', () => {
+  const r = [
+    ref({ code: 'ALT', optimal_low: 10, optimal_high: 25, lab_low: 7, lab_high: 56 }),
+    ref({ code: 'AST', optimal_low: 10, optimal_high: 25, lab_low: 8, lab_high: 40 }),
+    ref({ code: 'GGT', optimal_low: 10, optimal_high: 25, lab_low: 8, lab_high: 61 }),
+  ];
+  const alerts = svc.detectAlerts(r, [
+    { biomarker_code: 'ALT', value: 45 },
+    { biomarker_code: 'AST', value: 35 },
+    { biomarker_code: 'GGT', value: 50 },
+  ]);
+  const a = alerts.find((x) => x.kind === 'liver_strain');
+  assert.ok(a);
+  assert.equal(a.severity, 'warning');
+});

@@ -127,6 +127,38 @@ export class TenantService {
    * provided in the DTO are written so partial updates (color picker
    * only, logo only) work as expected.
    */
+  /**
+   * Activate/désactiver un service Cimolace (ex: 'twin') pour un tenant donné.
+   * Endpoint Cimolace staff. Upsert sur (tenant_id, service_key) — crée la
+   * ligne si elle n'existe pas encore. Renvoie la ligne tenant_services
+   * mise à jour.
+   */
+  async updateTenantService(
+    tenantId: string,
+    serviceKey: string,
+    active: boolean,
+  ) {
+    const supabase = this.authService.getClient();
+    const { data, error } = await supabase
+      .from("tenant_services")
+      .upsert(
+        {
+          tenant_id: tenantId,
+          service_key: serviceKey,
+          active,
+        },
+        { onConflict: "tenant_id,service_key" },
+      )
+      .select("*")
+      .single();
+    if (error) {
+      throw new Error(
+        `Mise à jour service ${serviceKey} impossible pour tenant ${tenantId}: ${error.message}`,
+      );
+    }
+    return data;
+  }
+
   async updateBranding(
     tenantId: string,
     dto: {

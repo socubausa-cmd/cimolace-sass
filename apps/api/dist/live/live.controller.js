@@ -23,7 +23,10 @@ let LiveController = class LiveController {
     }
     async create(req, b) { return { data: await this.svc.createSession(req.tenant.id, b) }; }
     async findAll(req) { return { data: await this.svc.findAll(req.tenant.id) }; }
+    async findOne(req, id) { return { data: await this.svc.findOne(req.tenant.id, id) }; }
     async token(req, id, b) { return { data: await this.svc.generateToken(id, req.user.id, b.role) }; }
+    async start(req, id) { return { data: await this.svc.startSession(req.tenant.id, id) }; }
+    async end(req, id) { return { data: await this.svc.endSession(req.tenant.id, id) }; }
 };
 exports.LiveController = LiveController;
 __decorate([
@@ -42,6 +45,14 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], LiveController.prototype, "findAll", null);
 __decorate([
+    (0, common_1.Get)(":id"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], LiveController.prototype, "findOne", null);
+__decorate([
     (0, common_1.Post)(":id/token"),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)("id")),
@@ -50,6 +61,22 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", Promise)
 ], LiveController.prototype, "token", null);
+__decorate([
+    (0, common_1.Post)(":id/start"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], LiveController.prototype, "start", null);
+__decorate([
+    (0, common_1.Post)(":id/end"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], LiveController.prototype, "end", null);
 exports.LiveController = LiveController = __decorate([
     (0, common_1.Controller)("lives"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard),

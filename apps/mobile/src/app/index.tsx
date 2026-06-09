@@ -1,12 +1,12 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Ember } from '@/components/ember';
 import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
-import { fetchLives, fetchStats, type Live, type Stats } from '@/lib/liri-api';
+import { fetchLives, fetchStats, quickStartLive, type Live, type Stats } from '@/lib/liri-api';
 
 const JOURS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
@@ -16,12 +16,14 @@ const TENANT = 'Isna';
 const euros = (cents?: number) =>
   `${Math.round((cents ?? 0) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} €`;
 
-const QUICK: { label: string; icon: React.ComponentProps<typeof Feather>['name']; hero?: boolean; badge?: number; to: string }[] = [
-  { label: 'Démarrer', icon: 'video', hero: true, to: '/lives' },
-  { label: 'Rejoindre', icon: 'log-in', to: '/lives' },
+type QuickAction = 'start' | 'join';
+const QUICK: { label: string; icon: React.ComponentProps<typeof Feather>['name']; hero?: boolean; badge?: number; to?: string; action?: QuickAction }[] = [
+  { label: 'Démarrer', icon: 'video', hero: true, action: 'start' },
+  { label: 'Rejoindre', icon: 'log-in', action: 'join' },
   { label: 'Converser', icon: 'message-square', to: '/brain' },
   { label: 'Programmer', icon: 'calendar', to: '/lives' },
-  { label: 'SmartBoard', icon: 'pen-tool', to: '/studio' },
+  { label: 'SmartBoard', icon: 'pen-tool', to: '/smartboard' },
+  { label: 'Réviser', icon: 'layers', to: '/neuro-recall' },
   { label: 'Acheter', icon: 'shopping-bag', to: '/reglages' },
 ];
 
@@ -40,6 +42,7 @@ export default function HomeScreen() {
 
   const [stats, setStats] = useState<Stats | null>(null);
   const [lives, setLives] = useState<Live[]>([]);
+  const [launching, setLaunching] = useState(false);
   useEffect(() => {
     let active = true;
     fetchStats().then((s) => active && setStats(s));
@@ -74,6 +77,37 @@ export default function HomeScreen() {
     tmr.setDate(now.getDate() + 1);
     return d.toDateString() === tmr.toDateString() ? 'Demain' : `${d.getDate()}/${pad(d.getMonth() + 1)}`;
   };
+  // Crée + passe en direct une session, puis ouvre la salle de diffusion (host).
+  const launchLive = useCallback(async () => {
+    if (launching) return;
+    setLaunching(true);
+    const live = await quickStartLive();
+    setLaunching(false);
+    if (live?.id) {
+      router.push({ pathname: '/live-room', params: { id: live.id, role: 'host', title: live.title ?? 'Mon live' } });
+    } else {
+      Alert.alert('Live', "Impossible de démarrer le live. Vérifiez votre connexion et réessayez.");
+    }
+  }, [launching, router]);
+
+  // Rejoint en spectateur le live en cours (ou redirige vers la liste).
+  const joinLive = useCallback(
+    (live: Live | null) => {
+      if (live?.id) router.push({ pathname: '/live-room', params: { id: live.id, role: 'student', title: live.title ?? 'Session live' } });
+      else router.push('/lives');
+    },
+    [router],
+  );
+
+  const onQuick = useCallback(
+    (q: (typeof QUICK)[number]) => {
+      if (q.action === 'start') return launchLive();
+      if (q.action === 'join') return joinLive(liveNow);
+      if (q.to) router.push(q.to as never);
+    },
+    [launchLive, joinLive, liveNow, router],
+  );
+
   const statCards: { v: string; l: string; coral?: boolean }[] = [
     { v: stats ? String(stats.totalLives) : '—', l: 'lives' },
     { v: stats ? String(stats.totalMembers) : '—', l: 'membres' },
@@ -91,11 +125,13 @@ export default function HomeScreen() {
             <Text style={styles.logoText}>LIRI</Text>
           </View>
           <View style={styles.row}>
-            <Pressable style={styles.iconBtn} hitSlop={8}>
+            <Pressable style={styles.iconBtn} hitSlop={8} onPress={() => router.push('/notifications')}>
               <Feather name="bell" size={18} color={C.muted} />
               <View style={styles.bellDot} />
             </Pressable>
-            <Ember style={styles.avatar}><Text style={styles.avatarTxt}>IS</Text></Ember>
+            <Pressable onPress={() => router.push('/profil')} hitSlop={6}>
+              <Ember style={styles.avatar}><Text style={styles.avatarTxt}>IS</Text></Ember>
+            </Pressable>
           </View>
         </View>
 
@@ -116,10 +152,14 @@ export default function HomeScreen() {
           {/* ── ACTIONS RAPIDES ── */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickRow} contentContainerStyle={styles.quickContent}>
             {QUICK.map((q) => (
-              <Pressable key={q.label} style={styles.quickItem} onPress={() => router.push(q.to as never)}>
+              <Pressable key={q.label} style={styles.quickItem} onPress={() => onQuick(q)} disabled={q.action === 'start' && launching}>
                 {q.hero ? (
                   <Ember style={[styles.quickIcon, styles.quickHero]}>
-                    <Feather name={q.icon} size={26} color="#fff" />
+                    {q.action === 'start' && launching ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Feather name={q.icon} size={26} color="#fff" />
+                    )}
                   </Ember>
                 ) : (
                   <View style={[styles.quickIcon, styles.quickPanel]}>
@@ -136,7 +176,7 @@ export default function HomeScreen() {
           {liveNow ? (
             <>
               <Text style={styles.section}>EN DIRECT</Text>
-              <Pressable style={({ pressed }) => [styles.liveCard, pressed && styles.pressed]} onPress={() => router.push('/lives')}>
+              <Pressable style={({ pressed }) => [styles.liveCard, pressed && styles.pressed]} onPress={() => joinLive(liveNow)}>
                 <View style={styles.liveDotWrap}>
                   <View style={styles.liveDotRing} />
                   <View style={styles.liveDot} />

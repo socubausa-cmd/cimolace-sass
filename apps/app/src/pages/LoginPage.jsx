@@ -20,6 +20,7 @@ import { LiriPageFooterLine } from '@/components/brand/LiriWordmark';
 import { InstallAppGate } from '@/components/eleve-mobile/InstallAppGate';
 import { EV_ACCENT, EV_MUTED, EV_LINE, EV_CARD, EV_CARD_INNER, EV_R, EV_SH } from '@/pages/eleve-mobile/eleveMobileScreensShared';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
+import { Ripple, AnimatedForm } from '@/components/ui/animated-sign-in';
 
 const STATS = [
   { icon: GraduationCap, value: '21', label: 'Modules' },
@@ -46,8 +47,11 @@ const LoginPage = () => {
   const { branding } = useTenantBranding();
   const schoolBrand = branding.name || 'École';
   const schoolAcademyTitle = `${schoolBrand} Academy`;
-  const accentColor = branding.accentColor || '#D4AF37';
-  const logo = branding.logo || '/logo.png';
+  // ISNA = pôle école de PRORASCIENCE → thème de la landing officielle : navy + OR.
+  // (on n'utilise pas le violet du branding tenant ici : la vitrine ISNA est or #D4AF37.)
+  const accentColor = '#D4AF37';
+  // Logo ISNA / Prorascience : Œil d'Horus + Oreille (voir & entendre) — blanc sur fond noir.
+  const logo = '/prorascience-logo-2.jpeg';
 
   const { login, loginWithOAuth } = useAuth();
   const navigate = useNavigate();
@@ -437,16 +441,16 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#0F1419]">
+    <div className="flex min-h-screen bg-[#070b14]">
       <Helmet>
         <title>{`Connexion | ${schoolAcademyTitle}`}</title>
       </Helmet>
 
       {/* ── PANNEAU GAUCHE – branding ── */}
       <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden p-12 lg:flex">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0F1419] via-[#192734] to-[#0F1419]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#070b14] via-[#192734] to-[#070b14]" />
         <div className="absolute left-1/4 top-1/4 h-[500px] w-[500px] rounded-full blur-[150px]" style={{ backgroundColor: `${accentColor}0d` }} />
-        <div className="absolute bottom-1/4 right-1/4 h-[300px] w-[300px] rounded-full bg-violet-900/10 blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 h-[300px] w-[300px] rounded-full blur-[120px]" style={{ backgroundColor: 'rgba(212,175,55,0.07)' }} />
         <div
           className="absolute inset-0 opacity-40"
           style={{
@@ -459,18 +463,19 @@ const LoginPage = () => {
         <div className="relative z-10">
           <Link to="/">
             <span className="font-serif text-2xl font-bold tracking-wider text-white">{schoolBrand}</span>
-            <span className="mt-0.5 block text-[0.65rem] uppercase tracking-[0.4em]" style={{ color: accentColor }}>Academy</span>
+            <span className="mt-0.5 block text-[0.65rem] uppercase tracking-[0.4em]" style={{ color: accentColor }}>Institut Nocturne</span>
           </Link>
         </div>
 
-        {/* Logo centré — entre le titre et la citation */}
+        {/* Logo centré + anneaux ripple dorés (science nocturne) */}
         <div className="relative z-10 flex flex-col items-center">
-          <div className="relative">
-            <div className="absolute inset-0 scale-110 rounded-full blur-2xl" style={{ backgroundColor: `${accentColor}33` }} />
+          <div className="relative grid h-72 w-72 place-items-center">
+            <Ripple mainCircleSize={118} numCircles={7} />
+            <div className="absolute h-40 w-40 scale-110 rounded-full blur-2xl" style={{ backgroundColor: `${accentColor}33` }} />
             <img
               src={logo}
               alt={schoolBrand}
-              className="relative h-36 w-36 rounded-full border-2 shadow-2xl"
+              className="relative z-10 h-44 w-44 rounded-full border-2 bg-black object-contain shadow-2xl"
               style={{ borderColor: `${accentColor}80` }}
             />
           </div>
@@ -506,8 +511,8 @@ const LoginPage = () => {
         </div>
       </div>
 
-      {/* ── PANNEAU DROIT – formulaire ── */}
-      <div className="flex flex-1 items-center justify-center p-6 lg:p-16">
+      {/* ── PANNEAU DROIT – formulaire animé ── */}
+      <div className="relative z-10 flex flex-1 items-center justify-center p-6 lg:p-16">
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -517,13 +522,29 @@ const LoginPage = () => {
           {/* Logo mobile uniquement */}
           <div className="mb-8 flex flex-col items-center text-center lg:hidden">
             <Link to="/" className="inline-flex flex-col items-center gap-2">
-              <img src={logo} alt={schoolBrand} className="h-16 w-16 rounded-full border" style={{ borderColor: `${accentColor}4d` }} />
+              <img src={logo} alt={schoolBrand} className="h-20 w-20 rounded-full border-2 bg-black object-contain" style={{ borderColor: `${accentColor}80` }} />
               <span className="font-serif text-2xl font-bold tracking-wider text-white">{schoolBrand}</span>
-              <span className="text-[0.6rem] uppercase tracking-[0.3em]" style={{ color: accentColor }}>Academy</span>
+              <span className="text-[0.6rem] uppercase tracking-[0.3em]" style={{ color: accentColor }}>Institut Nocturne</span>
             </Link>
           </div>
 
-          {formBlock}
+          <AnimatedForm
+            header="Bon retour"
+            subHeader={<><strong className="font-semibold text-white/90">LIRI</strong> héberge l&apos;espace membre de votre école. Le site public ({schoolBrand}), c&apos;est la vitrine — pas l&apos;application.</>}
+            fields={[
+              { label: 'Email', name: 'email', type: 'email', placeholder: 'exemple@email.com', value: formData.email, onChange: handleChange },
+              { label: 'Mot de passe', name: 'password', type: 'password', placeholder: '••••••••', value: formData.password, onChange: handleChange },
+            ]}
+            submitButton="Se connecter"
+            submitting={isLoading}
+            errorField={submitError}
+            onSubmit={handleSubmit}
+            googleLogin={isSupabaseConfigured ? 'Continuer avec Google' : undefined}
+            onGoogle={handleGoogleLogin}
+            forgotLabel="Oublié ?"
+            onForgot={() => navigate('/forgot-password')}
+            footer={<>Pas encore inscrit ?{' '}<Link to="/signup" className="font-medium text-[#D4AF37] hover:underline">Créer un compte</Link></>}
+          />
         </motion.div>
       </div>
     </div>

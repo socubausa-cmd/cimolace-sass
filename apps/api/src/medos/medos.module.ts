@@ -57,6 +57,8 @@ import { AttachmentsController } from './attachments/attachments.controller';
 import { AttachmentsService } from './attachments/attachments.service';
 import { GdprController } from './gdpr/gdpr.controller';
 import { GdprService } from './gdpr/gdpr.service';
+import { MedAuditController } from './audit/med-audit.controller';
+import { MedAuditService } from './audit/med-audit.service';
 import {
   InvitationsController,
   InvitationsPublicController,
@@ -64,10 +66,16 @@ import {
 import { InvitationsService } from './invitations/invitations.service';
 // MEDOS v2 — Bio Digital Twin
 import { TwinController } from './twin/twin.controller';
+import { TwinMeController } from './twin/twin-me.controller';
+import { TwinUsageController } from './twin/twin-usage.controller';
 import { TwinService } from './twin/twin.service';
 import { TwinScoringService } from './twin/twin-scoring.service';
 import { TwinAiService } from './twin/twin-ai.service';
 import { TwinSimulationService } from './twin/twin-simulation.service';
+import { TwinGenomicsService } from './twin/twin-genomics.service';
+import { TwinMicrobiomeService } from './twin/twin-microbiome.service';
+import { TwinMetabolomicsService } from './twin/twin-metabolomics.service';
+import { TwinEnabledGuard } from './twin/twin-enabled.guard';
 // MEDOS routes all video through Liri (LiveModule). We don't import
 // LiveKitModule directly anymore — that would re-introduce the bypass
 // the P5 refactor specifically eliminated.
@@ -110,11 +118,17 @@ import { LiveModule } from '../live/live.module';
     AttachmentsService,
     GdprService,
     InvitationsService,
+    // Audit log viewer (admin)
+    MedAuditService,
     // Bio Digital Twin (v2)
     TwinService,
     TwinScoringService,
     TwinAiService,
     TwinSimulationService,
+    TwinGenomicsService,
+    TwinMicrobiomeService,
+    TwinMetabolomicsService,
+    TwinEnabledGuard,
     // Global audit interceptor (court-circuite hors MEDOS)
     {
       provide: APP_INTERCEPTOR,
@@ -157,11 +171,15 @@ import { LiveModule } from '../live/live.module';
     AttachmentsController,
     // GDPR
     GdprController,
+    // Audit log viewer (admin)
+    MedAuditController,
     // Invitations
     InvitationsController,
     InvitationsPublicController,
     // Bio Digital Twin (v2)
     TwinController,
+    TwinMeController,
+    TwinUsageController,
   ],
   exports: [
     ApiKeyGuard,

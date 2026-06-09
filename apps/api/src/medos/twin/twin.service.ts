@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   Logger,
   NotFoundException,
@@ -17,7 +18,27 @@ import type {
   AddBiomarkersDto,
   CreateLabDocumentDto,
   OrganAssistantDto,
+  StructuredBiomarkerItemDto,
 } from './dto/twin.dto';
+
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 Mo (cf. cahier des charges M3).
+const SUPPORTED_IMAGE_MIMES = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+]);
+const SUPPORTED_PDF_MIMES = new Set([
+  'application/pdf',
+  'application/x-pdf',
+]);
+type UploadedLabFile = {
+  buffer: Buffer;
+  mimetype: string;
+  originalname?: string;
+  size?: number;
+};
 
 const ENGINE_VERSION = 'v1';
 const GRAPH_VERSION = 'v1';
@@ -25,7 +46,13 @@ const GRAPH_VERSION = 'v1';
 @Injectable()
 export class TwinService {
   private readonly logger = new Logger(TwinService.name);
-  private refCache: { organs: any[]; biomarkers: BiomarkerRef[] } | null = null;
+  // Cache memoire par langue. Le scoring/IA continue de lire la version 'fr'
+  // (le contenu clinique source — function_fr, message_fr — reste FR).
+  // Les variantes localisees exposent seulement name/description traduits.
+  private refCacheByLang: Map<
+    'fr' | 'en',
+    { organs: any[]; biomarkers: BiomarkerRef[] }
+  > = new Map();
 
   constructor(
     private readonly supabase: SupabaseService,
@@ -39,18 +66,50 @@ export class TwinService {
     return this.supabase.client as any;
   }
 
-  // ── Référentiels (cache mémoire) ──────────────────────────────────────
-  async getReferential(): Promise<{ organs: any[]; biomarkers: BiomarkerRef[] }> {
-    if (this.refCache) return this.refCache;
+  // ── Référentiels (cache mémoire, multi-langue) ────────────────────────
+  /**
+   * Renvoie le referentiel organes + biomarqueurs.
+   *
+   * Quand `lang='en'` (defaut 'fr'), les champs `name_fr` / `description_fr`
+   * sont remappes vers les colonnes anglaises (`name_en`, `description_en`)
+   * pour exposition cote client. Si une traduction est absente en DB,
+   * fallback transparent sur la version francaise. Les autres champs
+   * (codes, plages, unites, function_fr, associated_symptoms) sont
+   * conserves tels quels — le moteur de scoring et l'IA continuent de
+   * consommer le contenu source FR.
+   *
+   * Note pour les devs : pour activer EN cote front, passer `?lang=en` a
+   * GET /med/twin/referential. Aucun switcher UI n'est livre ici
+   * (fondation Chantier 5 uniquement) — c'est a l'appelant d'exposer le
+   * choix de langue (ex. localStorage, profil utilisateur).
+   */
+  async getReferential(
+    lang: 'fr' | 'en' = 'fr',
+  ): Promise<{ organs: any[]; biomarkers: BiomarkerRef[] }> {
+    const cached = this.refCacheByLang.get(lang);
+    if (cached) return cached;
     const [organsRes, bmRes] = await Promise.all([
       this.db.from('med_organs').select('*').order('sort_order', { ascending: true }),
       this.db.from('med_biomarker_refs').select('*').order('category', { ascending: true }),
     ]);
-    this.refCache = {
-      organs: organsRes.data ?? [],
-      biomarkers: (bmRes.data ?? []) as BiomarkerRef[],
-    };
-    return this.refCache;
+    let organs: any[] = organsRes.data ?? [];
+    let biomarkers: BiomarkerRef[] = (bmRes.data ?? []) as BiomarkerRef[];
+
+    if (lang === 'en') {
+      organs = organs.map((o: any) => ({
+        ...o,
+        name_fr: o.name_en ?? o.name_fr,
+        description_fr: o.description_en ?? o.description_fr,
+      }));
+      biomarkers = biomarkers.map((b: any) => ({
+        ...b,
+        name_fr: b.name_en ?? b.name_fr,
+      })) as BiomarkerRef[];
+    }
+
+    const result = { organs, biomarkers };
+    this.refCacheByLang.set(lang, result);
+    return result;
   }
 
   async getGraph(): Promise<{ nodes: any[]; edges: any[] }> {
@@ -59,6 +118,105 @@ export class TwinService {
       this.db.from('med_bio_edges').select('*').eq('graph_version', GRAPH_VERSION),
     ]);
     return { nodes: nodes.data ?? [], edges: edges.data ?? [] };
+  }
+
+  // ── Versioning moteur + graphe (P2 C1) ────────────────────────────────
+  /**
+   * Liste les versions du moteur deterministe + du knowledge graph.
+   * Retourne les versions actives ET deprecated (utile pour comparer dans
+   * le temps). Triees par kind puis released_at desc.
+   */
+  async listEngineVersions(): Promise<
+    Array<{
+      id: string;
+      code: string;
+      version: string;
+      kind: 'engine' | 'graph';
+      description_fr: string | null;
+      released_at: string;
+      deprecated_at: string | null;
+      change_notes: string | null;
+      is_active: boolean;
+    }>
+  > {
+    const { data, error } = await this.db
+      .from('med_engine_versions')
+      .select(
+        'id, code, version, kind, description_fr, released_at, deprecated_at, change_notes, is_active',
+      )
+      .order('kind', { ascending: true })
+      .order('released_at', { ascending: false });
+    if (error) {
+      this.logger.error(`list engine versions: ${error.message}`);
+      return [];
+    }
+    return data ?? [];
+  }
+
+  /**
+   * Timeline complete des scores d'organes pour un patient.
+   *
+   * S'appuie sur med_organ_scores qui est deja historise (INSERT non
+   * ecrasant a chaque computeScores). Retourne un dictionnaire
+   * { organ_code: [{ score, color, created_at, engine_version, graph_version }] }
+   * ordonne par computed_at ASC pour faciliter l'affichage chronologique.
+   *
+   * Si `organCode` est fourni, ne retourne que cet organe.
+   */
+  async getOrganScoresTimeline(
+    tenant: TenantContext,
+    patientId: string,
+    organCode?: string,
+  ): Promise<
+    Record<
+      string,
+      Array<{
+        score: number;
+        color: string;
+        created_at: string;
+        engine_version: string;
+        graph_version: string;
+      }>
+    >
+  > {
+    await this.assertPatient(tenant, patientId);
+    let q = this.db
+      .from('med_organ_scores')
+      .select('organ_code, score, color, computed_at, engine_version, graph_version')
+      .eq('tenant_id', tenant.id)
+      .eq('patient_id', patientId)
+      .order('computed_at', { ascending: true });
+    if (organCode) q = q.eq('organ_code', organCode);
+
+    const { data, error } = await q;
+    if (error) {
+      this.logger.error(`organ scores timeline: ${error.message}`);
+      return {};
+    }
+    const timeline: Record<
+      string,
+      Array<{
+        score: number;
+        color: string;
+        created_at: string;
+        engine_version: string;
+        graph_version: string;
+      }>
+    > = {};
+    for (const row of data ?? []) {
+      const arr = timeline[row.organ_code] ?? (timeline[row.organ_code] = []);
+      arr.push({
+        score: row.score,
+        color: row.color,
+        // On expose le champ sous le nom `created_at` cote API (champ
+        // metier "quand ce snapshot a-t-il ete cree"), meme si en DB la
+        // colonne s'appelle computed_at.
+        created_at: row.computed_at,
+        engine_version: row.engine_version,
+        graph_version: row.graph_version,
+      });
+    }
+    return timeline;
   }
 
   // ── Garde tenant/patient ──────────────────────────────────────────────
@@ -134,6 +292,110 @@ export class TwinService {
 
     const scores = await this.computeScores(tenant, patientId);
     return { inserted: rows.length, scores };
+  }
+
+  /**
+   * Import structuré (CSV/JSON) — zéro IA pour le mapping.
+   *
+   * Chaque item est validé contre le référentiel (code connu + valeur numérique
+   * finie). Un document `med_lab_documents` est créé avec
+   * source_type='structured_import', status='extracted', extraction_path
+   * 'csv_deterministic' et extraction_model='none' afin de tracer l'origine
+   * sans passer par le pipeline IA. Les valeurs valides sont ensuite poussées
+   * via addBiomarkers qui réutilise tout l'aval (flag, scoring, alertes).
+   */
+  async importStructuredBiomarkers(
+    tenant: TenantContext,
+    userId: string,
+    patientId: string,
+    items: StructuredBiomarkerItemDto[],
+    meta: { lab_name?: string } = {},
+  ): Promise<{
+    imported_count: number;
+    skipped: Array<{ code: string; reason: string }>;
+    document_id: string;
+    scores: any;
+  }> {
+    await this.assertPatient(tenant, patientId);
+
+    if (!Array.isArray(items) || items.length === 0) {
+      throw new BadRequestException('Aucun item à importer.');
+    }
+
+    const { biomarkers: refs } = await this.getReferential();
+    const refByCode = new Map(refs.map((r) => [r.code, r]));
+
+    const valid: StructuredBiomarkerItemDto[] = [];
+    const skipped: Array<{ code: string; reason: string }> = [];
+
+    for (const raw of items) {
+      const code = String(raw?.code ?? '').trim();
+      if (!code) {
+        skipped.push({ code: '', reason: 'code manquant' });
+        continue;
+      }
+      if (!refByCode.has(code)) {
+        skipped.push({ code, reason: 'code inconnu dans le référentiel' });
+        continue;
+      }
+      const value = Number(raw?.value);
+      if (!Number.isFinite(value)) {
+        skipped.push({ code, reason: 'valeur non numérique' });
+        continue;
+      }
+      valid.push({
+        code,
+        value,
+        unit: raw.unit,
+        measured_at: raw.measured_at,
+      });
+    }
+
+    // Trace du document même si tout est invalide (audit). status='extracted'
+    // car l'extraction déterministe a fonctionné — un code skipped n'est pas
+    // un échec d'extraction, juste un mapping manquant côté client.
+    const { data: doc, error: docErr } = await this.db
+      .from('med_lab_documents')
+      .insert({
+        tenant_id: tenant.id,
+        patient_id: patientId,
+        attachment_id: null,
+        source_type: 'structured_import',
+        lab_name: meta.lab_name ?? null,
+        raw_text: null,
+        status: 'extracted',
+        extraction_path: 'csv_deterministic',
+        extraction_model: 'none',
+        extraction_confidence: valid.length > 0 ? 1.0 : 0,
+        uploaded_by: userId,
+      })
+      .select('*')
+      .single();
+    if (docErr) throw new BadRequestException(docErr.message);
+    const docId: string = doc.id;
+
+    let scores: any = null;
+    if (valid.length > 0) {
+      const res = await this.addBiomarkers(tenant, userId, patientId, {
+        biomarkers: valid.map((v) => ({
+          biomarker_code: v.code,
+          value: v.value,
+          unit: v.unit,
+          measured_at: v.measured_at,
+        })),
+        lab_document_id: docId,
+      } as AddBiomarkersDto);
+      scores = res.scores;
+    } else {
+      scores = await this.computeScores(tenant, patientId);
+    }
+
+    return {
+      imported_count: valid.length,
+      skipped,
+      document_id: docId,
+      scores,
+    };
   }
 
   // ── Scoring (déterministe) + alertes ──────────────────────────────────
@@ -252,6 +514,86 @@ export class TwinService {
     };
   }
 
+  // ── Vue patient (lecture seule — Chantier 4) ─────────────────────────
+  /**
+   * État du jumeau pour le patient connecté (lecture seule).
+   * Résout le patient via med_patients.patient_user_id = userId,
+   * puis projette une vue réduite : organes (scores), roue,
+   * timeline events, alertes ouvertes. PAS de biomarkers bruts,
+   * PAS d'hypothèses, PAS de documents labo.
+   */
+  async getMyTwinState(tenant: TenantContext, userId: string): Promise<any> {
+    const { data: patient } = await this.db
+      .from('med_patients')
+      .select('id')
+      .eq('tenant_id', tenant.id)
+      .eq('patient_user_id', userId)
+      .maybeSingle();
+    if (!patient) throw new NotFoundException('Aucun dossier patient lié à ce compte');
+
+    const patientId = patient.id;
+    const { organs } = await this.getReferential();
+
+    const [scoresRes, wheelRes, eventsRes, alertsRes] = await Promise.all([
+      this.db
+        .from('med_organ_scores')
+        .select('organ_code,score,color,computed_at')
+        .eq('patient_id', patientId)
+        .order('computed_at', { ascending: false }),
+      this.db
+        .from('med_transformation_wheel')
+        .select('domain,score,measured_at')
+        .eq('patient_id', patientId)
+        .order('measured_at', { ascending: false }),
+      this.db
+        .from('med_health_events')
+        .select('id,event_type,title,occurred_at')
+        .eq('patient_id', patientId)
+        .order('occurred_at', { ascending: false })
+        .limit(50),
+      this.db
+        .from('med_alerts')
+        .select('id,severity,message,created_at')
+        .eq('patient_id', patientId)
+        .eq('status', 'open')
+        .order('created_at', { ascending: false }),
+    ]);
+
+    // Dernier score par organe.
+    const latestScore = new Map<string, any>();
+    for (const s of scoresRes.data ?? []) {
+      if (!latestScore.has(s.organ_code)) latestScore.set(s.organ_code, s);
+    }
+    const organs_scores = organs.map((o: any) => {
+      const s = latestScore.get(o.code);
+      return {
+        organ_code: o.code,
+        label: o.label ?? o.name ?? o.code,
+        score: s?.score ?? null,
+        color: s?.color ?? null,
+      };
+    });
+
+    // Roue : dernière valeur par domaine.
+    const latestWheel = new Map<string, any>();
+    for (const r of wheelRes.data ?? []) {
+      if (!latestWheel.has(r.domain)) latestWheel.set(r.domain, r);
+    }
+    const wheel = TwinService.WHEEL_DOMAINS.map((d) => ({
+      domain: d,
+      score: latestWheel.get(d)?.score ?? null,
+    }));
+
+    return {
+      organs_scores,
+      wheel,
+      events: eventsRes.data ?? [],
+      alerts: alertsRes.data ?? [],
+      disclaimer:
+        "Ces données sont indicatives, à des fins de suivi pédagogique. Elles ne constituent pas un diagnostic médical et ne remplacent pas l'avis d'un professionnel de santé.",
+    };
+  }
+
   // ── Documents labo (Module 3) ─────────────────────────────────────────
   async createLabDocument(
     tenant: TenantContext,
@@ -344,6 +686,441 @@ export class TwinService {
       lab_document_id: docId,
     } as AddBiomarkersDto);
     return { extracted: values.length, ...result };
+  }
+
+  /**
+   * Upload + extraction d'un bilan en un seul appel (M3 — multipart).
+   *
+   * - PDF → texte natif via pdf-parse, puis pipeline texte habituel.
+   * - JPG/PNG/WebP/GIF → Claude Vision (base64) avec mêmes contraintes JSON.
+   *
+   * Le fichier lui-même n'est PAS conservé en DB ici (le buffer reste en
+   * mémoire le temps de l'extraction). La table med_lab_documents reçoit une
+   * trace (filename, mime, status, extracted_count, raw_text si PDF natif).
+   */
+  async extractFromUploadedFile(
+    tenant: TenantContext,
+    userId: string,
+    patientId: string,
+    file: UploadedLabFile,
+    meta: { source_type?: string; lab_name?: string } = {},
+  ): Promise<any> {
+    await this.assertPatient(tenant, patientId);
+    if (!file?.buffer || !file?.mimetype) {
+      throw new BadRequestException('Fichier manquant ou invalide.');
+    }
+    const size = file.size ?? file.buffer.length;
+    if (size > MAX_UPLOAD_BYTES) {
+      throw new BadRequestException(
+        `Fichier trop volumineux (${Math.round(size / 1024)} Ko). Limite : 10 Mo.`,
+      );
+    }
+
+    const mime = file.mimetype.toLowerCase();
+    const isPdf = SUPPORTED_PDF_MIMES.has(mime);
+    const isImage = SUPPORTED_IMAGE_MIMES.has(mime);
+    if (!isPdf && !isImage) {
+      throw new BadRequestException(
+        `Type non supporté (${mime}). Acceptés : PDF, JPG, PNG, WebP, GIF.`,
+      );
+    }
+
+    // 1) Pré-extraction du texte si PDF (pdf-parse) — fallback Vision si vide.
+    let rawText: string | null = null;
+    if (isPdf) {
+      try {
+        rawText = await this.extractPdfText(file.buffer);
+      } catch (e: any) {
+        this.logger.warn(`pdf-parse a échoué : ${e?.message ?? e}`);
+        rawText = null;
+      }
+    }
+
+    // 2) Trace en DB (état initial : uploaded). Métadonnées fichier capturées.
+    const { data: doc, error: docErr } = await this.db
+      .from('med_lab_documents')
+      .insert({
+        tenant_id: tenant.id,
+        patient_id: patientId,
+        attachment_id: null,
+        source_type: meta.source_type ?? 'blood',
+        lab_name: meta.lab_name ?? null,
+        raw_text: rawText,
+        status: 'uploaded',
+        mime_type: mime,
+        file_size_bytes: size,
+        original_filename: file.originalname ?? null,
+        uploaded_by: userId,
+      })
+      .select('*')
+      .single();
+    if (docErr) throw new BadRequestException(docErr.message);
+    const docId: string = doc.id;
+
+    // 2bis) Upload du buffer vers Supabase Storage (audit trail GDPR).
+    // Chemin : twin-lab/{tenant_id}/{patient_id}/{doc_id}.{ext}
+    // Si l'upload échoue (rare — réseau), l'extraction continue sans bloquer
+    // mais le document n'aura pas de storage_path (visible côté frontend).
+    let storagePath: string | null = null;
+    try {
+      const ext =
+        mime === 'application/pdf' || mime === 'application/x-pdf'
+          ? 'pdf'
+          : (mime.split('/')[1] || 'bin').replace('jpg', 'jpeg');
+      const candidate = `twin-lab/${tenant.id}/${patientId}/${docId}.${ext}`;
+      const { error: upErr } = await this.supabase.client.storage
+        .from('medos')
+        .upload(candidate, file.buffer, {
+          contentType: mime,
+          upsert: false,
+        });
+      if (upErr) throw upErr;
+      storagePath = candidate;
+      await this.db
+        .from('med_lab_documents')
+        .update({ storage_path: storagePath, status: 'extracting' })
+        .eq('id', docId);
+    } catch (e: any) {
+      this.logger.warn(
+        `Storage upload échoué pour doc ${docId}: ${e?.message ?? e} (extraction continue)`,
+      );
+      await this.db
+        .from('med_lab_documents')
+        .update({ status: 'extracting' })
+        .eq('id', docId);
+    }
+
+    const { biomarkers: refs } = await this.getReferential();
+    const knownCodes = refs.map((r) => ({ code: r.code, name_fr: r.name_fr }));
+    const started = Date.now();
+    let extracted: any = { values: [] };
+    let model = '';
+    let tokens = 0;
+    let extractionPath: 'pdf_text' | 'image_vision' | 'pdf_scanned_vision' =
+      'pdf_text';
+    let inputHash = '';
+    let error: string | null = null;
+
+    try {
+      const hasUsableText =
+        isPdf && rawText !== null && rawText.trim().length >= 100;
+      if (isPdf && hasUsableText) {
+        extractionPath = 'pdf_text';
+        inputHash = createHash('sha256')
+          .update(rawText!)
+          .digest('hex')
+          .slice(0, 16);
+        const res = await this.ai.extractBiomarkers(rawText!, knownCodes);
+        extracted = res.data;
+        model = res.model;
+        tokens = res.tokens;
+      } else if (isImage) {
+        extractionPath = 'image_vision';
+        const base64 = file.buffer.toString('base64');
+        inputHash = createHash('sha256')
+          .update(file.buffer)
+          .digest('hex')
+          .slice(0, 16);
+        // image/jpg → image/jpeg (Anthropic n'accepte que les media types standards).
+        const mediaType = (mime === 'image/jpg' ? 'image/jpeg' : mime) as
+          | 'image/jpeg'
+          | 'image/png'
+          | 'image/webp'
+          | 'image/gif';
+        const res = await this.ai.extractBiomarkersFromImage(
+          base64,
+          mediaType,
+          knownCodes,
+        );
+        extracted = res.data;
+        model = res.model;
+        tokens = res.tokens;
+      } else if (isPdf) {
+        // PDF sans texte natif exploitable (scan d'image embarquée) — on
+        // rasterise les premières pages et on les passe à Claude Vision page
+        // par page, puis on déduplique les valeurs (garder confidence max).
+        extractionPath = 'pdf_scanned_vision';
+        inputHash = createHash('sha256')
+          .update(file.buffer)
+          .digest('hex')
+          .slice(0, 16);
+        const pages = await this.rasterizePdf(file.buffer, 3);
+        if (pages.length === 0) {
+          throw new BadRequestException(
+            'PDF scanné illisible : aucune page n\'a pu être rasterisée.',
+          );
+        }
+        const byCode = new Map<
+          string,
+          { code: string; value: number; unit: string; confidence: number }
+        >();
+        let lastModel = '';
+        let totalTokens = 0;
+        for (const png of pages) {
+          const b64 = png.toString('base64');
+          const res = await this.ai.extractBiomarkersFromImage(
+            b64,
+            'image/png',
+            knownCodes,
+          );
+          lastModel = res.model;
+          totalTokens += res.tokens ?? 0;
+          for (const v of res.data?.values ?? []) {
+            if (!v?.code) continue;
+            const incoming = {
+              code: v.code,
+              value: Number(v.value),
+              unit: v.unit,
+              confidence:
+                typeof v.confidence === 'number' ? v.confidence : 0,
+            };
+            const prev = byCode.get(v.code);
+            if (!prev || incoming.confidence > prev.confidence) {
+              byCode.set(v.code, incoming);
+            }
+          }
+        }
+        extracted = { values: Array.from(byCode.values()) };
+        model = lastModel;
+        tokens = totalTokens;
+      } else {
+        throw new BadRequestException(
+          `Type non supporté pour extraction (${mime}).`,
+        );
+      }
+    } catch (e: any) {
+      error = e?.message ?? 'extraction failed';
+    }
+
+    await this.logAgentRun(tenant, patientId, null, 'extraction', {
+      input_hash: inputHash || undefined,
+      model,
+      tokens,
+      latency_ms: Date.now() - started,
+      output: { ...extracted, _path: extractionPath, _mime: mime },
+      error,
+    });
+
+    if (error) {
+      await this.db
+        .from('med_lab_documents')
+        .update({ status: 'failed' })
+        .eq('id', docId);
+      throw new BadRequestException(`Extraction échouée : ${error}`);
+    }
+
+    const values = (extracted.values ?? []).map((v: any) => ({
+      biomarker_code: v.code,
+      value: Number(v.value),
+      unit: v.unit,
+      confidence:
+        typeof v.confidence === 'number' ? v.confidence : null,
+    }));
+    const avgConf = values.length
+      ? values
+          .map((v: any) => (typeof v.confidence === 'number' ? v.confidence : 0))
+          .reduce((a: number, b: number) => a + b, 0) / values.length
+      : null;
+
+    await this.db
+      .from('med_lab_documents')
+      .update({
+        status: 'extracted',
+        extraction_model: model,
+        extraction_confidence: avgConf,
+        extraction_path: extractionPath,
+      })
+      .eq('id', docId);
+
+    const insertResult = await this.addBiomarkers(tenant, userId, patientId, {
+      biomarkers: values.map(({ biomarker_code, value, unit }: any) => ({
+        biomarker_code,
+        value,
+        unit,
+      })),
+      lab_document_id: docId,
+    } as AddBiomarkersDto);
+
+    return {
+      document_id: docId,
+      filename: file.originalname ?? null,
+      mime,
+      path: extractionPath,
+      storage_path: storagePath,
+      has_file: !!storagePath,
+      extracted_count: values.length,
+      values,
+      ...insertResult,
+    };
+  }
+
+  // ── Liste + Signed URLs des bilans uploadés (audit trail) ────────────
+  /**
+   * Liste les documents de bilan d'un patient avec leur métadonnée fichier.
+   * N'expose JAMAIS le storage_path directement (utilise has_file flag).
+   */
+  async listLabDocuments(tenant: TenantContext, patientId: string): Promise<any[]> {
+    await this.assertPatient(tenant, patientId);
+    const { data, error } = await this.db
+      .from('med_lab_documents')
+      .select(
+        'id, source_type, lab_name, status, mime_type, file_size_bytes, original_filename, page_count, extraction_model, extraction_confidence, extraction_path, created_at, storage_path',
+      )
+      .eq('tenant_id', tenant.id)
+      .eq('patient_id', patientId)
+      .order('created_at', { ascending: false });
+    if (error) throw new BadRequestException(error.message);
+    return (data ?? []).map((d: any) => ({
+      id: d.id,
+      source_type: d.source_type,
+      lab_name: d.lab_name,
+      status: d.status,
+      mime_type: d.mime_type,
+      file_size_bytes: d.file_size_bytes,
+      original_filename: d.original_filename,
+      page_count: d.page_count,
+      extraction_model: d.extraction_model,
+      extraction_confidence: d.extraction_confidence,
+      extraction_path: d.extraction_path,
+      created_at: d.created_at,
+      has_file: !!d.storage_path,
+    }));
+  }
+
+  /**
+   * Génère une URL signée à durée de vie courte (5 min) pour servir le
+   * fichier original du bilan (PDF/image). Strictement scopée au tenant
+   * + patient via assertPatient.
+   */
+  async getDocumentSignedUrl(
+    tenant: TenantContext,
+    patientId: string,
+    docId: string,
+  ): Promise<{
+    url: string;
+    mime_type: string | null;
+    original_filename: string | null;
+    expires_at: string;
+  }> {
+    await this.assertPatient(tenant, patientId);
+    const { data: doc } = await this.db
+      .from('med_lab_documents')
+      .select('storage_path, mime_type, original_filename')
+      .eq('tenant_id', tenant.id)
+      .eq('patient_id', patientId)
+      .eq('id', docId)
+      .maybeSingle();
+    if (!doc) {
+      throw new NotFoundException('Document introuvable.');
+    }
+    if (!doc.storage_path) {
+      throw new NotFoundException(
+        'Aucun fichier source associé (document ancien ou texte collé).',
+      );
+    }
+    const ttlSec = 300;
+    const { data, error } = await this.supabase.client.storage
+      .from('medos')
+      .createSignedUrl(doc.storage_path, ttlSec);
+    if (error || !data?.signedUrl) {
+      throw new BadRequestException(
+        `Erreur signature URL : ${error?.message ?? 'inconnue'}`,
+      );
+    }
+    return {
+      url: data.signedUrl,
+      mime_type: doc.mime_type ?? null,
+      original_filename: doc.original_filename ?? null,
+      expires_at: new Date(Date.now() + ttlSec * 1000).toISOString(),
+    };
+  }
+
+  /**
+   * Suppression GDPR d'un document de bilan : retire le fichier du Storage
+   * et marque le document comme deleted (conserve la trace audit).
+   */
+  async deleteLabDocument(
+    tenant: TenantContext,
+    patientId: string,
+    docId: string,
+  ): Promise<{ deleted: boolean }> {
+    await this.assertPatient(tenant, patientId);
+    const { data: doc } = await this.db
+      .from('med_lab_documents')
+      .select('storage_path')
+      .eq('tenant_id', tenant.id)
+      .eq('patient_id', patientId)
+      .eq('id', docId)
+      .maybeSingle();
+    if (!doc) {
+      throw new NotFoundException('Document introuvable.');
+    }
+    if (doc.storage_path) {
+      try {
+        await this.supabase.client.storage
+          .from('medos')
+          .remove([doc.storage_path]);
+      } catch (e: any) {
+        this.logger.warn(
+          `Suppression Storage échouée pour doc ${docId}: ${e?.message ?? e}`,
+        );
+      }
+    }
+    await this.db
+      .from('med_lab_documents')
+      .update({ status: 'deleted', storage_path: null })
+      .eq('id', docId);
+    return { deleted: true };
+  }
+
+  /**
+   * Extraction texte natif d'un PDF via pdf-parse (chargement dynamique pour
+   * éviter les soucis ESM/CJS au démarrage Nest).
+   */
+  private async extractPdfText(buffer: Buffer): Promise<string> {
+    // Import dynamique : pdf-parse est ESM, et Nest compile en CJS.
+    const mod: any = await import('pdf-parse');
+    const PDFParse = mod?.PDFParse ?? mod?.default?.PDFParse ?? mod?.default;
+    if (!PDFParse) {
+      throw new Error('pdf-parse: PDFParse introuvable dans le module');
+    }
+    const parser = new PDFParse({ data: new Uint8Array(buffer) });
+    try {
+      const res = await parser.getText();
+      const text: string =
+        (res && (res.text ?? res?.pages?.map((p: any) => p.text).join('\n'))) ??
+        '';
+      return text.trim();
+    } finally {
+      try {
+        await parser.destroy?.();
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  /**
+   * Rasterise un PDF scanné (sans texte natif) en PNG page par page.
+   * Limité à `maxPages` (par défaut 3) pour borner coûts/latence Vision.
+   * DPI 150 = bon compromis lisibilité OCR / taille image.
+   */
+  private async rasterizePdf(
+    buffer: Buffer,
+    maxPages = 3,
+  ): Promise<Buffer[]> {
+    const mod: any = await import('pdf-to-png-converter');
+    const pdfToPng = mod?.pdfToPng ?? mod?.default?.pdfToPng ?? mod?.default;
+    if (typeof pdfToPng !== 'function') {
+      throw new Error(
+        'pdf-to-png-converter: fonction pdfToPng introuvable dans le module',
+      );
+    }
+    const pages: Array<{ content: Buffer }> = await pdfToPng(buffer, {
+      viewportScale: 150 / 72, // 150 DPI (PDF base = 72 DPI).
+      pagesToProcess: Array.from({ length: maxPages }, (_, i) => i + 1),
+    });
+    return (pages ?? []).map((p) => p.content).filter((b) => b && b.length > 0);
   }
 
   // ── Contexte IA pseudonymisé ──────────────────────────────────────────

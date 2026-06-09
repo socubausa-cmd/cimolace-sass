@@ -439,7 +439,7 @@ export function MedosPatientPortal() {
               items={[
                 { title: 'Profil medical', detail: 'Identite, date de naissance, groupe sanguin, allergies, traitements courants', status: 'A brancher' },
                 { title: 'Consentements', detail: 'Consentement explicite, date, finalite et historique', status: 'Prioritaire' },
-                { title: 'Export dossier', detail: 'Demande export RGPD JSON/PDF avec audit', status: 'Plus tard' },
+                { title: 'Export dossier', detail: 'Demande export RGPD JSON avec audit, incluant les donnees Bio Digital Twin (biomarqueurs, scores d\'organes, roue de transformation, evenements sante, alertes, hypotheses, runs IA pseudonymises, metadonnees bilans avec liens signes 24h)', status: 'Plus tard' },
               ]}
             />
           )}

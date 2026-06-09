@@ -30,7 +30,7 @@ function computePipelineStage(enrollment, billing, absencesCount, lastActivity) 
   const billingStatus = billing?.status || 'none';
   const now = new Date();
   const enrolledAt = new Date(enrollment?.enrolled_at || now);
-  const expiresAt = billing?.expires_at ? new Date(billing.expires_at) : null;
+  const expiresAt = billing?.current_period_end ? new Date(billing.current_period_end) : null;
   const daysSinceEnrollment = (now - enrolledAt) / (24 * 60 * 60 * 1000);
   const daysToExpiry = expiresAt ? (expiresAt - now) / (24 * 60 * 60 * 1000) : null;
 
@@ -50,7 +50,7 @@ function computePipelineStage(enrollment, billing, absencesCount, lastActivity) 
 function computeDynamicStatus(enrollment, billing, absencesCount, lastActivity) {
   const billingStatus = billing?.status || 'none';
   const now = new Date();
-  const expiresAt = billing?.expires_at ? new Date(billing.expires_at) : null;
+  const expiresAt = billing?.current_period_end ? new Date(billing.current_period_end) : null;
   const daysToExpiry = expiresAt ? (expiresAt - now) / (24 * 60 * 60 * 1000) : null;
 
   if (billingStatus === 'expired' || (daysToExpiry !== null && daysToExpiry < 0)) return 'expire';
@@ -99,7 +99,7 @@ export function useSecretariatWorkflow() {
           .limit(500),
         supabase
           .from('billing_subscriptions')
-          .select('id,user_id,status,expires_at,created_at')
+          .select('id,user_id,status,current_period_end,created_at')
           .in('status', ['pending', 'active', 'past_due', 'expired']),
         supabase.from('profiles').select('id,name,email,role').in('role', ['student', 'visitor']),
         supabase.from('courses').select('id,title,status'),
@@ -186,7 +186,7 @@ export function useSecretariatWorkflow() {
         if (absCount >= ABSENCE_THRESHOLD) absences.push(item);
         if (pipelineStage === 'renouvellement') renouvellements.push(item);
 
-        const expiresAt = billing?.expires_at ? new Date(billing.expires_at) : null;
+        const expiresAt = billing?.current_period_end ? new Date(billing.current_period_end) : null;
         const daysToExpiry = expiresAt ? (expiresAt - now) / (24 * 60 * 60 * 1000) : null;
         const daysSinceEnrollment = (now - new Date(enr.enrolled_at)) / (24 * 60 * 60 * 1000);
 

@@ -7,12 +7,16 @@
     "icon": "./assets/images/icon.png",
     "scheme": "liri",
     "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "supportsTablet": true,
+      "bundleIdentifier": "org.prorascience.liri"
     },
     "android": {
+      "package": "org.prorascience.liri",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#262624",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -34,11 +38,26 @@
             "imageWidth": 76
           }
         }
+      ],
+      "@livekit/react-native-expo-plugin",
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "LIRI utilise la caméra pour diffuser vos lives.",
+          "microphonePermission": "LIRI utilise le micro pour diffuser vos lives."
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c706a25c-bd5c-4b33-836c-8a54d424c9ec"
+      }
+    },
+    "owner": "cimolace"
   }
 }

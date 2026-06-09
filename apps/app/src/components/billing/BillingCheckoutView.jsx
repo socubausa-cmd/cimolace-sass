@@ -185,9 +185,9 @@ export default function BillingCheckoutView({ variant = 'web' }) {
         if (alive) setPaymentPlanSlug('');
         return;
       }
-      const { data } = await supabase.from('billing_plans').select('slug').eq('id', planId).maybeSingle();
+      const { data } = await supabase.from('billing_plans').select('key').eq('id', planId).maybeSingle();
       if (!alive) return;
-      setPaymentPlanSlug(String(data?.slug || '').toLowerCase());
+      setPaymentPlanSlug(String(data?.key || '').toLowerCase());
     };
     run();
     return () => {

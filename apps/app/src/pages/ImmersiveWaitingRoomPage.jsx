@@ -312,6 +312,10 @@ const ImmersiveWaitingRoomPage = () => {
           .ilike('booking_reference', reference)
           .maybeSingle();
         appointment = appt || null;
+        // Normalise scheduled_at depuis booking_slots si absent (booking API shape)
+        if (appointment && !appointment.scheduled_at && appointment.booking_slots?.start_at) {
+          appointment = { ...appointment, scheduled_at: appointment.booking_slots.start_at };
+        }
 
         if (appointment?.request_id) {
           const { data: req } = await supabase
@@ -366,6 +370,10 @@ const ImmersiveWaitingRoomPage = () => {
         }
         const { data: appt } = await q.maybeSingle();
         appointment = appt || null;
+        // Normalise scheduled_at depuis booking_slots si absent (booking API shape)
+        if (appointment && !appointment.scheduled_at && appointment.booking_slots?.start_at) {
+          appointment = { ...appointment, scheduled_at: appointment.booking_slots.start_at };
+        }
 
         if (!request && appointment?.request_id) {
           const { data: req } = await supabase

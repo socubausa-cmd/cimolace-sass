@@ -1,6 +1,6 @@
 // LIRI Brain — Types for multi-model AI conversations
 
-export type LiriModel = 'deepseek-chat' | 'deepseek-reasoner' | 'claude-sonnet-4-6' | 'claude-opus-4-8' | 'claude-haiku-4-5-20251001' | 'gpt-4o' | 'gpt-4o-mini';
+export type LiriModel = 'deepseek-chat' | 'deepseek-reasoner' | 'claude-sonnet-4-6' | 'claude-opus-4-8' | 'claude-haiku-4-5-20251001' | 'gpt-4o' | 'gpt-4o-mini' | 'mistral-large-latest' | 'mistral-small-latest';
 
 export type LiriMessageRole = 'user' | 'assistant' | 'system';
 
@@ -23,7 +23,7 @@ export type LiriConversation = {
 export type LiriModelInfo = {
   key: LiriModel;
   name: string;
-  provider: 'deepseek' | 'anthropic' | 'openai';
+  provider: 'deepseek' | 'anthropic' | 'openai' | 'mistral';
   description: string;
   maxTokens: number;
   streaming: boolean;
@@ -83,6 +83,22 @@ export const LIRI_MODELS: LiriModelInfo[] = [
     name: 'GPT-4o Mini',
     provider: 'openai',
     description: 'Léger et économique',
+    maxTokens: 4096,
+    streaming: true,
+  },
+  {
+    key: 'mistral-large-latest',
+    name: 'Mistral Large',
+    provider: 'mistral',
+    description: 'Modèle phare Mistral (FR), puissant',
+    maxTokens: 4096,
+    streaming: true,
+  },
+  {
+    key: 'mistral-small-latest',
+    name: 'Mistral Small',
+    provider: 'mistral',
+    description: 'Léger, rapide et économique (FR)',
     maxTokens: 4096,
     streaming: true,
   },

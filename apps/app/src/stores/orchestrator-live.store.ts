@@ -11,6 +11,7 @@
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { getApiBaseUrl } from '@/lib/apiBase';
 
 // ─── Helpers internes ─────────────────────────────────────────────────────────
 
@@ -105,15 +106,16 @@ export const useOrchestratorLiveStore = create(
         if (!rawText?.trim()) return;
         set({ status: 'running', projectId: `proj_${Date.now()}`, logs: [], chapters: [], slides: [] });
         try {
-          const res = await fetch('/.netlify/functions/liri-orchestrator-start', {
+          const res = await fetch(`${getApiBaseUrl()}/smartboard/formation-engine`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rawText }),
+            body: JSON.stringify({ topic: rawText, duration: 90, level: 'intermediate' }),
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
-          set({ projectId: data.projectId ?? get().projectId });
-          get()._startPolling(data.projectId ?? get().projectId);
+          const resolvedProjectId = data.id ?? data.projectId ?? get().projectId;
+          set({ projectId: resolvedProjectId });
+          get()._startPolling(resolvedProjectId);
         } catch (err) {
           get()._addLog({ agent: 'system', level: 'error', message: `Erreur démarrage : ${err.message}` });
           set({ status: 'error' });
@@ -142,16 +144,16 @@ export const useOrchestratorLiveStore = create(
             return;
           }
           try {
-            const res = await fetch(`/.netlify/functions/liri-orchestrator-status?projectId=${projectId}`);
+            const res = await fetch(`${getApiBaseUrl()}/masterclass-factory/${projectId}`);
             if (!res.ok) return;
             const data = await res.json();
             set({
-              status:   data.status   ?? get().status,
+              status:   data.status   ?? 'running',
               agents:   data.agents   ?? get().agents,
-              chapters: data.chapters ?? get().chapters,
-              slides:   data.slides   ?? get().slides,
+              chapters: data.chapters ?? [],
+              slides:   data.slides   ?? [],
               queue:    data.queue    ?? get().queue,
-              logs:     data.logs     ?? get().logs,
+              logs:     data.logs     ?? [],
             });
             if (data.status === 'completed' || data.status === 'error') {
               clearInterval(interval);
@@ -185,7 +187,7 @@ export const useOrchestratorLiveStore = create(
           : { projectId, chapterId: selectedChapterId, step: selectedStep, ...chapterCtx };
 
         try {
-          const res = await fetch('/.netlify/functions/liri-slide-generate', {
+          const res = await fetch(`${getApiBaseUrl()}/smartboard/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),

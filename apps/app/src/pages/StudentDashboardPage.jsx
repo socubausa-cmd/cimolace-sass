@@ -440,15 +440,15 @@ const StudentDashboardPage = () => {
       </div>
 
       {/* ── Main 2-col grid ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20 }}>
+      <div className="ssl-dash-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: 20 }}>
 
         {/* ── Left col ── */}
-        <div>
-          <SectionLabel label="MES FORMATIONS" color={T.gold} actionLabel="VOIR TOUT" onAction={() => navigate('formations')}/>
+        <div style={{ minWidth: 0 }}>
+          <SectionLabel label="MES FORMATIONS" color={T.gold} actionLabel="VOIR TOUT" onAction={() => navigate('../formations')}/>
           {formationsRich.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {formationsRich.map((f, i) => (
-                <FormationRow key={f.id} f={f} index={i} delay={300 + i * 60} onClick={() => navigate('formations')}/>
+                <FormationRow key={f.id} f={f} index={i} delay={300 + i * 60} onClick={() => navigate('../formations')}/>
               ))}
             </div>
           ) : (
@@ -457,10 +457,10 @@ const StudentDashboardPage = () => {
 
           {/* Forum activity */}
           <div style={{ marginTop: 28 }}>
-            <SectionLabel label="ACTIVITÉ FORUM" color={T.violet} actionLabel="VOIR TOUT" onAction={() => navigate('forum')}/>
+            <SectionLabel label="ACTIVITÉ FORUM" color={T.violet} actionLabel="VOIR TOUT" onAction={() => navigate('../forum')}/>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {recentPosts.length === 0 ? (
-                <EmptyState icon="◷" text="Aucune activité forum récente" action="Aller au forum →" onAction={() => navigate('forum')}/>
+                <EmptyState icon="◷" text="Aucune activité forum récente" action="Aller au forum →" onAction={() => navigate('../forum')}/>
               ) : recentPosts.map((p, i) => {
                 const fTitle = formationTitleMap[p.formation_id] || 'Forum';
                 const relDate = (() => {
@@ -473,7 +473,7 @@ const StudentDashboardPage = () => {
                 })();
                 return (
                   <motion.div key={p.id} {...fadeUp(600 + i * 60)}
-                    onClick={() => navigate(`forum/thread/${p.id}`)}
+                    onClick={() => navigate(`../forum/thread/${p.id}`)}
                     style={{
                       display: 'flex', alignItems: 'flex-start', gap: 10,
                       padding: '10px 14px', borderRadius: 10,
@@ -510,7 +510,7 @@ const StudentDashboardPage = () => {
                 <IconCalendar col={T.gold} size={14}/>
                 <span style={{ fontWeight: 700, fontSize: 13, color: T.t1 }}>Agenda</span>
               </div>
-              <button onClick={() => navigate('agenda')} style={{ fontFamily: T.mono, fontSize: 8, color: T.gold, background: 'none', border: 'none', letterSpacing: '0.06em', cursor: 'pointer' }}>
+              <button onClick={() => navigate('../agenda')} style={{ fontFamily: T.mono, fontSize: 8, color: T.gold, background: 'none', border: 'none', letterSpacing: '0.06em', cursor: 'pointer' }}>
                 VOIR TOUT
               </button>
             </div>
@@ -565,7 +565,7 @@ const StudentDashboardPage = () => {
               { label: 'Absences',    icon: '!',  path: 'absences',    color: T.danger },
               { label: 'Documents',   icon: '⊡', path: 'documents',   color: T.teal   },
             ].map(item => (
-              <button key={item.label} onClick={() => navigate(item.path)}
+              <button key={item.label} onClick={() => navigate('../' + item.path)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 8,
                   padding: '10px 12px', borderRadius: 8,

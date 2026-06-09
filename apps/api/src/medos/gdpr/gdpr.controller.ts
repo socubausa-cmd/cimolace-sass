@@ -108,6 +108,35 @@ export class GdprController {
     );
   }
 
+  /**
+   * Récupère le payload complet d'un export RGPD (Art. 20 — portabilité).
+   * Inclut le bloc twin : biomarqueurs, scores d'organes, roue de
+   * transformation, événements santé, alertes, hypothèses, runs IA
+   * (pseudonymisés), métadonnées des bilans (storage_path jamais exposé).
+   *
+   * Query param `include_signed_urls=1` génère des URLs signées 24h pour
+   * télécharger les fichiers source des bilans (PDF/image).
+   */
+  @Get('exports/:id/payload')
+  @Roles('owner', 'practitioner', 'clinic_admin', 'patient')
+  getExportPayload(
+    @Param('id') id: string,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+    @Query('include_signed_urls') includeSignedUrls?: string,
+  ) {
+    return this.service.getExportPayload(
+      tenant,
+      req.user.id,
+      tenant.userRole,
+      id,
+      {
+        includeSignedUrls:
+          includeSignedUrls === '1' || includeSignedUrls === 'true',
+      },
+    );
+  }
+
   // ── Anonymizations ─────────────────────────────────────────────────────
 
   @Post('anonymizations')

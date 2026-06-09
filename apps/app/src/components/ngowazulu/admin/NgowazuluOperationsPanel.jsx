@@ -88,7 +88,7 @@ export default function NgowazuluOperationsPanel() {
           .in('role', ['admin', 'owner']),
         supabase
           .from('billing_subscriptions')
-          .select('id,status,billing_plans(slug)')
+          .select('id,status,plan_id')
           .in('status', ['active', 'past_due', 'pending'])
           .limit(500),
       ]);
@@ -99,8 +99,8 @@ export default function NgowazuluOperationsPanel() {
       const uniqStaff = mergedStaff.filter((row, idx, arr) => arr.findIndex((x) => x.id === row.id) === idx);
       setNgowStaff(uniqStaff);
       const subs = activeSubs || [];
-      const membersNgowazulu = subs.filter((s) => String(s?.billing_plans?.slug || '').startsWith('ngowazulu-')).length;
-      const membersIsna = subs.filter((s) => !String(s?.billing_plans?.slug || '').startsWith('ngowazulu-')).length;
+      const membersNgowazulu = subs.filter((s) => String(s?.plan_id || '').startsWith('ngowazulu-')).length;
+      const membersIsna = subs.filter((s) => !String(s?.plan_id || '').startsWith('ngowazulu-')).length;
       setKpiSplit({
         bookingNgowazuluOpen: Number(bookingNgowazuluOpen || 0),
         bookingProrascienceOpen: Number(bookingProrascienceOpen || 0),

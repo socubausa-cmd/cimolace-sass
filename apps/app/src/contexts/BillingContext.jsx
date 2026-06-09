@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
-import { resolveApiOrigin } from '@/lib/androidApiHost';
 import { useAuth } from '@/hooks/useAuth';
+import { getApiBaseUrl } from '@/lib/apiBase';
 import { authRefreshIsBlocked, getFreshAccessToken } from '@/lib/authToken';
 
 const BillingContext = createContext(null);
@@ -14,19 +14,16 @@ export const useBilling = () => {
 
 const GRACE_DAYS_DEFAULT = 3;
 
-/** Vite proxifie vers `netlify dev` ; sans lui → 500. Mettre `VITE_USE_NETLIFY_BILLING_IN_DEV=1` dans `.env` pour appeler la fonction en local. */
-const useNetlifyBillingInDev =
-  import.meta.env.DEV && String(import.meta.env.VITE_USE_NETLIFY_BILLING_IN_DEV || '').trim() === '1';
 
 function computeStatus(sub, graceDays) {
   if (!sub) return { status: 'none', inGrace: false };
   const rawStatus = String(sub.status || '').toLowerCase();
-  const expiresAt = sub.expires_at ? new Date(sub.expires_at).getTime() : null;
+  const expiresAt = sub.current_period_end ? new Date(sub.current_period_end).getTime() : null;
   const now = Date.now();
 
   if (rawStatus === 'canceled') return { status: 'expired', inGrace: false };
   if (!expiresAt) {
-    // If missing expires_at, fallback to status field.
+    // If missing current_period_end, fallback to status field.
     if (rawStatus === 'active') return { status: 'active', inGrace: false };
     if (rawStatus === 'past_due') return { status: 'past_due', inGrace: true };
     return { status: rawStatus || 'none', inGrace: false };
@@ -75,18 +72,18 @@ export const BillingProvider = ({ children, graceDays = GRACE_DAYS_DEFAULT }) =>
 
     const promise = (async () => {
     try {
-      const apiOrigin = resolveApiOrigin();
+      const apiBase = getApiBaseUrl();
       const token = await getFreshAccessToken();
+      // Always try the NestJS billing endpoint (it's available in all environments).
       const tryNetlifyBilling =
         token &&
-        Date.now() >= endpointBlockedUntilRef.current &&
-        (!import.meta.env.DEV || useNetlifyBillingInDev);
+        Date.now() >= endpointBlockedUntilRef.current;
 
       if (tryNetlifyBilling) {
         const readSubscriptionStatus = async (accessToken, { hasRetried401 = false } = {}) => {
           let res;
           try {
-            res = await fetch(`${apiOrigin}/.netlify/functions/billing-subscription-status`, {
+            res = await fetch(`${apiBase}/billing/subscriptions/status`, {
               headers: { Authorization: `Bearer ${accessToken}` },
             });
           } catch {
@@ -107,20 +104,20 @@ export const BillingProvider = ({ children, graceDays = GRACE_DAYS_DEFAULT }) =>
             const now = Date.now();
             if (now - last401WarnAtRef.current > 30_000) {
               last401WarnAtRef.current = now;
-              console.warn('[billing] billing-subscription-status returned 401, switching to DB fallback for 3 min');
+              console.warn('[billing] /billing/subscriptions/status returned 401, switching to DB fallback for 3 min');
             }
             return null;
           }
-          // 5xx / proxy : en local, Vite envoie vers `netlify dev` — sans serveur ou sans env admin → erreur répétée en console.
+          // 5xx : erreur NestJS ou serveur indisponible — repli Supabase pour 3 min.
           if (res.status >= 500) {
             endpointBlockedUntilRef.current = Date.now() + 3 * 60 * 1000;
             const now = Date.now();
             if (now - last5xxWarnAtRef.current > 45_000) {
               last5xxWarnAtRef.current = now;
               console.warn(
-                '[billing] billing-subscription-status HTTP',
+                '[billing] /billing/subscriptions/status HTTP',
                 res.status,
-                '— repli Supabase côté client pour 3 min. En dev : lancer `netlify dev` (port 8888) et définir SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY dans .env à la racine, ou ignorer si le repli DB suffit.',
+                '— repli Supabase côté client pour 3 min. Vérifier que VITE_API_URL pointe vers le NestJS (apps/api).',
               );
             }
             return null;
@@ -137,7 +134,7 @@ export const BillingProvider = ({ children, graceDays = GRACE_DAYS_DEFAULT }) =>
           });
           if (pendingPayment?.id) {
             const paymentToken = await getFreshAccessToken();
-            await fetch(`${apiOrigin}/.netlify/functions/billing-payment-status?id=${encodeURIComponent(pendingPayment.id)}`, {
+            await fetch(`${apiBase}/billing/payments/status?id=${encodeURIComponent(pendingPayment.id)}`, {
               headers: paymentToken ? { Authorization: `Bearer ${paymentToken}` } : undefined,
             }).catch(() => null);
             const tokenAfterPaymentCheck = await getFreshAccessToken();
@@ -158,7 +155,7 @@ export const BillingProvider = ({ children, graceDays = GRACE_DAYS_DEFAULT }) =>
       }
 
       // Fallback on direct read if endpoint not available.
-      const fallbackSelect = 'id,user_id,plan_id,status,provider,payment_method,started_at,expires_at,created_at';
+      const fallbackSelect = 'id,user_id,plan_id,status,provider,current_period_start,current_period_end,created_at';
       let fallbackSubscription = null;
       {
         const { data: prioritized, error: prioErr } = await supabase
@@ -166,7 +163,7 @@ export const BillingProvider = ({ children, graceDays = GRACE_DAYS_DEFAULT }) =>
           .select(fallbackSelect)
           .eq('user_id', user.id)
           .in('status', ['active', 'past_due'])
-          .order('expires_at', { ascending: false, nullsFirst: false })
+          .order('current_period_end', { ascending: false, nullsFirst: false })
           .order('created_at', { ascending: false })
           .limit(1);
         if (prioErr) throw prioErr;

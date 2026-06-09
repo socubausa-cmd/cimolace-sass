@@ -170,15 +170,24 @@ const ForfaitsPage = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('billing_plans')
-        .select('id,slug,name,interval_type,price_amount,price_currency,active')
-        .eq('active', true)
-        .order('price_amount', { ascending: true });
+        .select('id,key,label,billing_cycle,price_cents,currency,is_active')
+        .eq('is_active', true)
+        .order('price_cents', { ascending: true });
 
       if (!alive) return;
       if (error || !Array.isArray(data) || data.length === 0) {
         setPlans(fallbackPlans);
       } else {
-        setPlans(data.filter((plan) => !String(plan?.slug || '').toLowerCase().startsWith('ngowazulu-')));
+        // Compat shims: downstream code uses legacy field names (slug/name/price_amount etc.)
+        setPlans(data
+          .filter((p) => !String(p?.key || '').toLowerCase().startsWith('ngowazulu-'))
+          .map((p) => ({
+            ...p,
+            slug: p.key, name: p.label,
+            price_amount: Math.round(Number(p.price_cents || 0) / 100),
+            price_currency: p.currency, interval_type: p.billing_cycle, active: p.is_active,
+          }))
+        );
       }
       setLoading(false);
     };

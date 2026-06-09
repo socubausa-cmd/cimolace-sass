@@ -4,22 +4,38 @@
  * Connecté à PATCH /tenants/current/branding et GET /tenants/current.
  */
 import { useEffect, useState } from 'react';
-import { NavLink, useParams } from 'react-router-dom';
-import { Settings, GraduationCap, Users, Save, Loader2, Check, AlertCircle, Globe, Palette, School, KeyRound, CreditCard } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { Settings, Save, Loader2, Check, AlertCircle, Globe, Palette, School, KeyRound, CreditCard } from 'lucide-react';
 import { tenantsApi } from '@/lib/api-v2';
+import TenantAdminShell from '@/components/admin/TenantAdminShell';
+import { ADMIN_T as T } from '@/lib/tenantAdminTheme';
 import TenantOAuthSettings from '@/components/admin/TenantOAuthSettings';
 import TenantStripeSettings from '@/components/admin/TenantStripeSettings';
 import TenantPayPalSettings from '@/components/admin/TenantPayPalSettings';
 
-const INPUT = 'w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none disabled:bg-gray-50 disabled:text-gray-400';
-const BTN_PRIMARY = 'inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50';
-const BTN_GHOST = 'inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50';
+const inputStyle = {
+  width: '100%', borderRadius: 8, border: `1px solid ${T.border}`,
+  background: T.surface, color: T.t1, padding: '8px 12px', fontSize: 13, outline: 'none',
+};
+const onInputFocus = (e) => { e.target.style.borderColor = T.goldMid; };
+const onInputBlur = (e) => { e.target.style.borderColor = T.border; };
+
+const btnPrimary = {
+  display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 8,
+  background: T.gold, color: '#000', padding: '8px 16px', fontSize: 13, fontWeight: 600,
+  border: 'none', cursor: 'pointer',
+};
+const btnGhost = {
+  display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 8,
+  background: 'transparent', color: T.t2, padding: '8px 16px', fontSize: 13,
+  border: `1px solid ${T.border}`, cursor: 'pointer',
+};
 
 function Field({ label, hint, children }) {
   return (
-    <div className="space-y-1">
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
-      {hint && <p className="text-xs text-gray-400">{hint}</p>}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <label style={{ fontSize: 13, fontWeight: 500, color: T.t2 }}>{label}</label>
+      {hint && <p style={{ fontSize: 11, color: T.t3, margin: 0 }}>{hint}</p>}
       {children}
     </div>
   );
@@ -27,12 +43,12 @@ function Field({ label, hint, children }) {
 
 function Section({ title, icon: Icon, children }) {
   return (
-    <div className="rounded-xl border bg-white p-6 shadow-sm">
-      <div className="mb-5 flex items-center gap-2 border-b pb-4">
-        <Icon className="h-4 w-4 text-blue-600" />
-        <h2 className="text-sm font-semibold text-gray-800">{title}</h2>
+    <div style={{ borderRadius: 14, border: `1px solid ${T.border}`, background: T.surfaceCard, padding: 24 }}>
+      <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8, borderBottom: `1px solid ${T.border}`, paddingBottom: 16 }}>
+        <Icon style={{ width: 16, height: 16, color: T.gold }} />
+        <h2 style={{ fontSize: 13, fontWeight: 600, color: T.t1, margin: 0 }}>{title}</h2>
       </div>
-      <div className="space-y-4">{children}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>{children}</div>
     </div>
   );
 }
@@ -86,231 +102,207 @@ export default function TenantAdminSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top nav */}
-      <div className="border-b bg-white px-6 py-2">
-        <div className="mx-auto flex max-w-3xl items-center gap-1">
-          <span className="mr-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{tenantSlug}</span>
-          <NavLink
-            to={`/t/${tenantSlug}/admin/courses`}
-            className={({ isActive }) =>
-              `rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`
-            }
-          >
-            <span className="flex items-center gap-1.5"><GraduationCap className="h-3.5 w-3.5" /> Formations</span>
-          </NavLink>
-          <NavLink
-            to={`/t/${tenantSlug}/admin/students`}
-            className={({ isActive }) =>
-              `rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`
-            }
-          >
-            <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> Étudiants</span>
-          </NavLink>
-          <NavLink
-            to={`/t/${tenantSlug}/admin/members`}
-            className={({ isActive }) =>
-              `rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`
-            }
-          >
-            <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> Équipe</span>
-          </NavLink>
-          <NavLink
-            to={`/t/${tenantSlug}/admin/settings`}
-            className={({ isActive }) =>
-              `rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`
-            }
-          >
-            <span className="flex items-center gap-1.5"><Settings className="h-3.5 w-3.5" /> Paramètres</span>
-          </NavLink>
-        </div>
-      </div>
-
+    <TenantAdminShell>
       {/* Header */}
-      <div className="border-b bg-white px-6 py-5">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <Settings className="h-5 w-5 text-blue-600" />
-              <h1 className="text-lg font-bold text-gray-900">Paramètres de l'école</h1>
-            </div>
-            <p className="mt-0.5 text-sm text-gray-500">Branding, identité et configuration</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Settings style={{ width: 20, height: 20, color: T.gold }} />
+            <h1 style={{ fontSize: 19, fontWeight: 700, color: T.t1, margin: 0 }}>Paramètres de l'école</h1>
           </div>
-          {tenant && (
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-              Plan : <strong>{tenant.plan ?? 'school'}</strong>
-            </span>
-          )}
+          <p style={{ marginTop: 2, fontSize: 13, color: T.t2 }}>Branding, identité et configuration</p>
         </div>
+        {tenant && (
+          <span style={{
+            borderRadius: 999, background: T.surface2, border: `1px solid ${T.border}`,
+            padding: '4px 12px', fontSize: 12, fontWeight: 500, color: T.t2,
+          }}>
+            Plan : <strong style={{ color: T.t1 }}>{tenant.plan ?? 'school'}</strong>
+          </span>
+        )}
       </div>
 
       {/* Body */}
-      <div className="mx-auto max-w-3xl px-6 py-6">
-        {loading && (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-          </div>
-        )}
+      {loading && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
+          <Loader2 className="animate-spin" style={{ width: 24, height: 24, color: T.t3 }} />
+        </div>
+      )}
 
-        {!loading && (
-          <form onSubmit={handleSave} className="space-y-5">
-            {error && (
-              <div className="flex items-center gap-2 rounded-lg bg-red-50 p-4 text-sm text-red-700">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                {error}
-              </div>
-            )}
+      {!loading && (
+        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {error && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8, borderRadius: 10,
+              background: 'rgba(239,68,68,0.12)', border: `1px solid rgba(239,68,68,0.28)`,
+              padding: 16, fontSize: 13, color: T.danger,
+            }}>
+              <AlertCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
+              {error}
+            </div>
+          )}
 
-            {/* Identité */}
-            <Section title="Identité de l'école" icon={School}>
-              <Field label="Nom de l'école" hint="Affiché dans l'interface et les emails">
+          {/* Identité */}
+          <Section title="Identité de l'école" icon={School}>
+            <Field label="Nom de l'école" hint="Affiché dans l'interface et les emails">
+              <input
+                style={inputStyle}
+                onFocus={onInputFocus}
+                onBlur={onInputBlur}
+                value={branding.name}
+                onChange={e => setBranding(b => ({ ...b, name: e.target.value }))}
+                placeholder="Ex : ISNA — Institut Supérieur du Numérique"
+              />
+            </Field>
+            <Field label="Description" hint="Courte présentation affichée sur la vitrine">
+              <textarea
+                style={inputStyle}
+                onFocus={onInputFocus}
+                onBlur={onInputBlur}
+                rows={3}
+                value={branding.description}
+                onChange={e => setBranding(b => ({ ...b, description: e.target.value }))}
+                placeholder="Notre école forme les professionnels du numérique de demain…"
+              />
+            </Field>
+            <Field label="Site web" hint="URL complète (optionnel)">
+              <div style={{ position: 'relative' }}>
+                <Globe style={{ position: 'absolute', left: 12, top: '50%', width: 14, height: 14, transform: 'translateY(-50%)', color: T.t3 }} />
                 <input
-                  className={INPUT}
-                  value={branding.name}
-                  onChange={e => setBranding(b => ({ ...b, name: e.target.value }))}
-                  placeholder="Ex : ISNA — Institut Supérieur du Numérique"
-                />
-              </Field>
-              <Field label="Description" hint="Courte présentation affichée sur la vitrine">
-                <textarea
-                  className={INPUT}
-                  rows={3}
-                  value={branding.description}
-                  onChange={e => setBranding(b => ({ ...b, description: e.target.value }))}
-                  placeholder="Notre école forme les professionnels du numérique de demain…"
-                />
-              </Field>
-              <Field label="Site web" hint="URL complète (optionnel)">
-                <div className="relative">
-                  <Globe className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
-                  <input
-                    className={INPUT + ' pl-8'}
-                    value={branding.website}
-                    onChange={e => setBranding(b => ({ ...b, website: e.target.value }))}
-                    placeholder="https://isna.school"
-                    type="url"
-                  />
-                </div>
-              </Field>
-            </Section>
-
-            {/* Branding visuel */}
-            <Section title="Branding visuel" icon={Palette}>
-              <Field label="Couleur d'accentuation" hint="Utilisée dans les boutons et badges">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={branding.accentColor}
-                    onChange={e => setBranding(b => ({ ...b, accentColor: e.target.value }))}
-                    className="h-9 w-16 cursor-pointer rounded border border-gray-200"
-                  />
-                  <input
-                    className={INPUT + ' font-mono'}
-                    value={branding.accentColor}
-                    onChange={e => setBranding(b => ({ ...b, accentColor: e.target.value }))}
-                    placeholder="#3B82F6"
-                    maxLength={7}
-                  />
-                  <div
-                    className="h-9 w-9 shrink-0 rounded-lg border"
-                    style={{ backgroundColor: branding.accentColor }}
-                  />
-                </div>
-              </Field>
-              <Field label="URL du logo" hint="Lien vers une image hébergée (PNG/SVG recommandé)">
-                <input
-                  className={INPUT}
-                  value={branding.logoUrl}
-                  onChange={e => setBranding(b => ({ ...b, logoUrl: e.target.value }))}
-                  placeholder="https://cdn.example.com/logo.svg"
+                  style={{ ...inputStyle, paddingLeft: 32 }}
+                  onFocus={onInputFocus}
+                  onBlur={onInputBlur}
+                  value={branding.website}
+                  onChange={e => setBranding(b => ({ ...b, website: e.target.value }))}
+                  placeholder="https://isna.school"
                   type="url"
                 />
-              </Field>
-              {branding.logoUrl && (
-                <div className="rounded-lg border bg-gray-50 p-4">
-                  <p className="mb-2 text-xs text-gray-500">Aperçu du logo :</p>
-                  <img
-                    src={branding.logoUrl}
-                    alt="Logo école"
-                    className="max-h-16 max-w-xs object-contain"
-                    onError={e => { e.target.style.display = 'none'; }}
-                  />
-                </div>
-              )}
-            </Section>
+              </div>
+            </Field>
+          </Section>
 
-            {/* Connexion Google — branding custom */}
-            {tenant && (
-              <Section title="Connexion Google personnalisée" icon={KeyRound}>
-                <TenantOAuthSettings
-                  tenantId={tenant.id}
-                  tenantSlug={tenantSlug}
+          {/* Branding visuel */}
+          <Section title="Branding visuel" icon={Palette}>
+            <Field label="Couleur d'accentuation" hint="Utilisée dans les boutons et badges">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <input
+                  type="color"
+                  value={branding.accentColor}
+                  onChange={e => setBranding(b => ({ ...b, accentColor: e.target.value }))}
+                  style={{ height: 36, width: 64, cursor: 'pointer', borderRadius: 6, border: `1px solid ${T.border}`, background: T.surface }}
                 />
-              </Section>
+                <input
+                  style={{ ...inputStyle, fontFamily: T.mono }}
+                  onFocus={onInputFocus}
+                  onBlur={onInputBlur}
+                  value={branding.accentColor}
+                  onChange={e => setBranding(b => ({ ...b, accentColor: e.target.value }))}
+                  placeholder="#3B82F6"
+                  maxLength={7}
+                />
+                <div
+                  style={{ height: 36, width: 36, flexShrink: 0, borderRadius: 8, border: `1px solid ${T.border}`, backgroundColor: branding.accentColor }}
+                />
+              </div>
+            </Field>
+            <Field label="URL du logo" hint="Lien vers une image hébergée (PNG/SVG recommandé)">
+              <input
+                style={inputStyle}
+                onFocus={onInputFocus}
+                onBlur={onInputBlur}
+                value={branding.logoUrl}
+                onChange={e => setBranding(b => ({ ...b, logoUrl: e.target.value }))}
+                placeholder="https://cdn.example.com/logo.svg"
+                type="url"
+              />
+            </Field>
+            {branding.logoUrl && (
+              <div style={{ borderRadius: 10, border: `1px solid ${T.border}`, background: T.surface2, padding: 16 }}>
+                <p style={{ marginBottom: 8, fontSize: 11, color: T.t3 }}>Aperçu du logo :</p>
+                <img
+                  src={branding.logoUrl}
+                  alt="Logo école"
+                  style={{ maxHeight: 64, maxWidth: 320, objectFit: 'contain' }}
+                  onError={e => { e.target.style.display = 'none'; }}
+                />
+              </div>
             )}
+          </Section>
 
-            {/* Stripe — paiements par tenant */}
-            {tenant && (
-              <Section title="Stripe — paiements personnalisés" icon={CreditCard}>
-                <TenantStripeSettings tenantId={tenant.id} />
-              </Section>
-            )}
+          {/* Connexion Google — branding custom */}
+          {tenant && (
+            <Section title="Connexion Google personnalisée" icon={KeyRound}>
+              <TenantOAuthSettings
+                tenantId={tenant.id}
+                tenantSlug={tenantSlug}
+              />
+            </Section>
+          )}
 
-            {/* PayPal — paiements par tenant */}
-            {tenant && (
-              <Section title="PayPal — paiements personnalisés" icon={CreditCard}>
-                <TenantPayPalSettings tenantId={tenant.id} />
-              </Section>
-            )}
+          {/* Stripe — paiements par tenant */}
+          {tenant && (
+            <Section title="Stripe — paiements personnalisés" icon={CreditCard}>
+              <TenantStripeSettings tenantId={tenant.id} />
+            </Section>
+          )}
 
-            {/* Infos tenant (lecture seule) */}
-            {tenant && (
-              <Section title="Informations techniques" icon={Settings}>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Slug</p>
-                    <code className="rounded bg-gray-100 px-2 py-1 text-xs font-mono text-gray-700">{tenant.slug}</code>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Tenant ID</p>
-                    <code className="rounded bg-gray-100 px-2 py-1 text-xs font-mono text-gray-700">{tenant.id?.slice(0, 12)}…</code>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Statut</p>
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                      tenant.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                    }`}>
-                      {tenant.status ?? 'active'}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Plan</p>
-                    <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
-                      {tenant.plan ?? 'school'}
-                    </span>
-                  </div>
+          {/* PayPal — paiements par tenant */}
+          {tenant && (
+            <Section title="PayPal — paiements personnalisés" icon={CreditCard}>
+              <TenantPayPalSettings tenantId={tenant.id} />
+            </Section>
+          )}
+
+          {/* Infos tenant (lecture seule) */}
+          {tenant && (
+            <Section title="Informations techniques" icon={Settings}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, fontSize: 13 }}>
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 500, color: T.t3, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Slug</p>
+                  <code style={{ borderRadius: 4, background: T.surface2, padding: '4px 8px', fontSize: 11, fontFamily: T.mono, color: T.t2 }}>{tenant.slug}</code>
                 </div>
-              </Section>
-            )}
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 500, color: T.t3, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Tenant ID</p>
+                  <code style={{ borderRadius: 4, background: T.surface2, padding: '4px 8px', fontSize: 11, fontFamily: T.mono, color: T.t2 }}>{tenant.id?.slice(0, 12)}…</code>
+                </div>
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 500, color: T.t3, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Statut</p>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', borderRadius: 999, padding: '2px 8px', fontSize: 11, fontWeight: 500,
+                    ...(tenant.status === 'active'
+                      ? { background: 'rgba(34,197,94,0.14)', color: T.success }
+                      : { background: 'rgba(245,158,11,0.14)', color: T.warning }),
+                  }}>
+                    {tenant.status ?? 'active'}
+                  </span>
+                </div>
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 500, color: T.t3, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Plan</p>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', borderRadius: 999, background: T.goldDim, border: `1px solid ${T.goldMid}`, padding: '2px 8px', fontSize: 11, fontWeight: 500, color: T.gold }}>
+                    {tenant.plan ?? 'school'}
+                  </span>
+                </div>
+              </div>
+            </Section>
+          )}
 
-            {/* Boutons save */}
-            <div className="flex items-center justify-end gap-3 pt-2">
-              {saved && (
-                <span className="flex items-center gap-1 text-sm text-green-600">
-                  <Check className="h-4 w-4" /> Sauvegardé
-                </span>
-              )}
-              <button type="button" className={BTN_GHOST} onClick={() => window.history.back()}>
-                Annuler
-              </button>
-              <button type="submit" className={BTN_PRIMARY} disabled={saving}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                Sauvegarder
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
-    </div>
+          {/* Boutons save */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, paddingTop: 8 }}>
+            {saved && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: T.success }}>
+                <Check style={{ width: 16, height: 16 }} /> Sauvegardé
+              </span>
+            )}
+            <button type="button" style={btnGhost} onClick={() => window.history.back()}>
+              Annuler
+            </button>
+            <button type="submit" style={{ ...btnPrimary, opacity: saving ? 0.5 : 1 }} disabled={saving}>
+              {saving ? <Loader2 className="animate-spin" style={{ width: 16, height: 16 }} /> : <Save style={{ width: 16, height: 16 }} />}
+              Sauvegarder
+            </button>
+          </div>
+        </form>
+      )}
+    </TenantAdminShell>
   );
 }

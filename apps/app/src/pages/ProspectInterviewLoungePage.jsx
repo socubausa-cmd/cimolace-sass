@@ -88,6 +88,10 @@ const ProspectInterviewLoungePage = () => {
           .limit(1)
           .maybeSingle();
         appointment = appt || null;
+        // Normalise scheduled_at depuis booking_slots si absent (booking API shape)
+        if (appointment && !appointment.scheduled_at && appointment.booking_slots?.start_at) {
+          appointment = { ...appointment, scheduled_at: appointment.booking_slots.start_at };
+        }
       } catch {
         appointment = null;
       }

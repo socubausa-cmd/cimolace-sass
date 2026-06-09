@@ -555,15 +555,21 @@ class QueryBuilder<T = any> {
       case 'liri_models':
         return apiCall(liriApi.getModels());
 
-      // ── Tables that don't exist yet — return empty to stop 404 floods ───
+      // ── Billing — route to real Supabase (tables exist, RLS-protected) ────
+      case 'billing_subscriptions':
+      case 'billing_payments':
+        return this.executeRealSupabase();
+
+      // ── Live-room tables — exist in DB, route to real Supabase ───────────
       case 'live_visibility_rules':
-      case 'live_notifications':
       case 'live_chat_invites':
       case 'live_waiting_room_entries':
       case 'live_invitations':
+        return this.executeRealSupabase();
+
+      // ── Tables that don't exist in DB — return empty to stop 404 floods ──
+      case 'live_notifications':
       case 'appointment_requests':
-      case 'billing_payments':
-      case 'billing_subscriptions':
       case 'formations':
       case 'formation_day_contents':
       case 'app_settings':
@@ -730,12 +736,6 @@ class ChannelStub {
 
 // ── Storage : délégué au vrai client Supabase (voir l'objet exporté) ─────────
 
-// ── RPC stub ────────────────────────────────────────────────────────────────
-
-const rpcStub = async (_fn: string, _params?: any) => {
-  return { data: null, error: new Error('RPC non supporté via API — utiliser Supabase direct') };
-};
-
 // ── Exported adapter ────────────────────────────────────────────────────────
 
 export const supabase = {
@@ -755,8 +755,8 @@ export const supabase = {
   // Storage — vrai client (createSignedUrl / getPublicUrl / upload réels) au lieu du stub vide.
   storage: realSupabase.storage,
 
-  // RPC
-  rpc: rpcStub,
+  // RPC — vrai client (les fonctions SECURITY DEFINER vérifient auth.uid() côté DB).
+  rpc: realSupabase.rpc.bind(realSupabase),
 
   // Utility
   removeChannel: (_channel: any) => {},

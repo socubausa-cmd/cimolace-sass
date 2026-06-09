@@ -1,5 +1,19 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import ErrorBoundary from '@/components/ErrorBoundary';
+
+/** Redirige "/" vers la bonne destination selon le contexte :
+ *  1. access_token dans le hash (magic link / recovery) → /auth/callback
+ *  2. prorascience.org apex → vitrine publique ISNA /t/isna
+ *  3. tout autre host → /login
+ */
+function RootRedirect() {
+  const hash = typeof window !== 'undefined' ? window.location.hash : '';
+  const host = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
+  if (hash.includes('access_token')) return <Navigate to="/auth/callback" replace />;
+  if (host === 'prorascience.org' || host === 'www.prorascience.org') return <Navigate to="/t/isna" replace />;
+  return <Navigate to="/login" replace />;
+}
+
 // DEV PREVIEW — composant sans auth
 const SmartboardKonvaEditorV1 = lazy(() => import('@/features/smartboard-konva-editor/SmartboardKonvaEditorV1'));
 function DevSmartboardPreview() {
@@ -1086,7 +1100,7 @@ isLiriHostDevPreviewRoute;
             (ProrascienceCommercialPage) reste accessible via /ecoles/prorascience
             tant qu'ISNA n'a pas migré son Netlify vers Cimolace.
           */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<RootRedirect />} />
           <Route path="/version" element={<VersionPage />} />
           <Route path="/dev" element={<Navigate to="/dev/liri-host-ui" replace />} />
           {/* DEV PREVIEW — routes sans auth AVANT le catch-all /dev/* */}

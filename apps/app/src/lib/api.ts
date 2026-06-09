@@ -902,6 +902,77 @@ export const gdprApi = {
     api.get<ApiEnvelope<GdprAnonymization[]>>("/med/gdpr/anonymizations").then(unwrap),
 };
 
+// ─── Admin: MedOS audit log + AI runs ──────────────────────────────────────
+
+export interface MedAuditLogRow {
+  id: string;
+  tenant_id: string;
+  actor_id: string;
+  resource: string;
+  resource_id: string;
+  action: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  metadata: Record<string, any> | null;
+  created_at: string;
+}
+
+export interface MedAiRunRow {
+  id: string;
+  analysis_id: string | null;
+  patient_id: string;
+  agent: string;
+  prompt_version: string | null;
+  model: string | null;
+  tokens: number | null;
+  latency_ms: number | null;
+  error: string | null;
+  created_at: string;
+}
+
+export interface MedAuditPaged<T> {
+  data: T[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface MedAuditListParams {
+  limit?: number;
+  offset?: number;
+  resource?: string;
+  action?: string;
+  actor_id?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface MedAiRunsParams {
+  limit?: number;
+  offset?: number;
+  agent?: string;
+  patient_id?: string;
+  from?: string;
+  to?: string;
+}
+
+export const adminMedAudit = {
+  list: (params: MedAuditListParams = {}) =>
+    api
+      .get<ApiEnvelope<MedAuditPaged<MedAuditLogRow>>>(
+        "/med/admin/audit/log",
+        { params },
+      )
+      .then(unwrap),
+  aiRuns: (params: MedAiRunsParams = {}) =>
+    api
+      .get<ApiEnvelope<MedAuditPaged<MedAiRunRow>>>(
+        "/med/admin/audit/ai-runs",
+        { params },
+      )
+      .then(unwrap),
+};
+
 // ─── Invitations ────────────────────────────────────────────────────────────
 
 export interface PatientInvitation {
@@ -1119,3 +1190,38 @@ export interface BillingPayout {
   failure_message: string | null;
   created_at: string;
 }
+
+// ─── Admin Twin — métering IA par tenant ────────────────────────────────────
+
+export interface MedAiUsageByDay {
+  date: string;
+  tokens: number;
+  cost_usd: number;
+}
+
+export interface MedAiUsageByAgent {
+  agent: string;
+  tokens: number;
+  runs: number;
+  cost_usd: number;
+}
+
+export interface MedAiUsageReport {
+  period: { from: string; to: string };
+  total_tokens: number;
+  total_runs: number;
+  total_cost_usd: number;
+  by_day: MedAiUsageByDay[];
+  by_agent: MedAiUsageByAgent[];
+}
+
+export const adminTwin = {
+  usage: (from?: string, to?: string) => {
+    const params: Record<string, string> = {};
+    if (from) params.from = from;
+    if (to) params.to = to;
+    return api
+      .get<ApiEnvelope<MedAiUsageReport>>("/med/twin/admin/usage", { params })
+      .then(unwrap);
+  },
+};

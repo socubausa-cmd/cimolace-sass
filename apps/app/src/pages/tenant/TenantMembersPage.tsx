@@ -5,6 +5,8 @@ import {
   Users, UserPlus, Trash2, RefreshCw, Shield, ChevronDown,
   CheckCircle2, Clock, AlertCircle, Mail,
 } from 'lucide-react';
+import TenantAdminShell from '@/components/admin/TenantAdminShell';
+import { ADMIN_T as T } from '@/lib/tenantAdminTheme';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -69,22 +71,22 @@ function InviteForm({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <div style={{
-      background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12,
+      background: T.surfaceCard, border: `1px solid ${T.border}`, borderRadius: 14,
       padding: 20, marginBottom: 24,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-        <UserPlus size={16} color="#0d9488" />
-        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#0f172a' }}>Inviter un membre</h3>
+        <UserPlus size={16} color={T.gold} />
+        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: T.t1 }}>Inviter un membre</h3>
       </div>
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         {/* Email */}
         <div style={{ flex: '1 1 260px' }}>
-          <label style={{ fontSize: 12, fontWeight: 500, color: '#64748b', display: 'block', marginBottom: 4 }}>
+          <label style={{ fontSize: 12, fontWeight: 500, color: T.t2, display: 'block', marginBottom: 4 }}>
             Adresse email
           </label>
           <div style={{ position: 'relative' }}>
-            <Mail size={14} color="#94a3b8" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
+            <Mail size={14} color={T.t3} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="email"
               value={email}
@@ -92,17 +94,19 @@ function InviteForm({ onSuccess }: { onSuccess: () => void }) {
               placeholder="prenom@exemple.com"
               style={{
                 width: '100%', boxSizing: 'border-box',
-                padding: '9px 12px 9px 32px', border: '1px solid #cbd5e1',
-                borderRadius: 8, fontSize: 14, color: '#0f172a',
-                background: '#fff', outline: 'none',
+                padding: '9px 12px 9px 32px', border: `1px solid ${T.border}`,
+                borderRadius: 8, fontSize: 14, color: T.t1,
+                background: T.surface, outline: 'none',
               }}
+              onFocus={e => (e.currentTarget.style.borderColor = T.gold)}
+              onBlur={e => (e.currentTarget.style.borderColor = T.border)}
             />
           </div>
         </div>
 
         {/* Role */}
         <div style={{ flex: '0 1 180px' }}>
-          <label style={{ fontSize: 12, fontWeight: 500, color: '#64748b', display: 'block', marginBottom: 4 }}>
+          <label style={{ fontSize: 12, fontWeight: 500, color: T.t2, display: 'block', marginBottom: 4 }}>
             Rôle
           </label>
           <div style={{ position: 'relative' }}>
@@ -111,8 +115,8 @@ function InviteForm({ onSuccess }: { onSuccess: () => void }) {
               onChange={e => setRole(e.target.value)}
               style={{
                 width: '100%', padding: '9px 32px 9px 12px',
-                border: '1px solid #cbd5e1', borderRadius: 8,
-                fontSize: 14, color: '#0f172a', background: '#fff',
+                border: `1px solid ${T.border}`, borderRadius: 8,
+                fontSize: 14, color: T.t1, background: T.surface,
                 appearance: 'none', outline: 'none', cursor: 'pointer',
               }}
             >
@@ -120,7 +124,7 @@ function InviteForm({ onSuccess }: { onSuccess: () => void }) {
                 <option key={r.value} value={r.value}>{r.label}</option>
               ))}
             </select>
-            <ChevronDown size={14} color="#94a3b8" style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            <ChevronDown size={14} color={T.t3} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           </div>
         </div>
 
@@ -131,7 +135,7 @@ function InviteForm({ onSuccess }: { onSuccess: () => void }) {
             disabled={!email.trim() || mutation.isPending}
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
-              padding: '9px 18px', background: '#0d9488', color: '#fff',
+              padding: '9px 18px', background: T.gold, color: '#000',
               border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600,
               cursor: email.trim() ? 'pointer' : 'not-allowed',
               opacity: !email.trim() || mutation.isPending ? 0.7 : 1,
@@ -147,12 +151,12 @@ function InviteForm({ onSuccess }: { onSuccess: () => void }) {
 
       {/* Feedback */}
       {error && (
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 10, color: '#dc2626', fontSize: 13 }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 10, color: T.danger, fontSize: 13 }}>
           <AlertCircle size={14} />{error}
         </div>
       )}
       {mutation.isSuccess && (
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 10, color: '#059669', fontSize: 13 }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 10, color: T.success, fontSize: 13 }}>
           <CheckCircle2 size={14} />Invitation envoyée avec succès.
         </div>
       )}
@@ -182,9 +186,9 @@ function MemberRow({
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px',
-      borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s',
+      borderBottom: `1px solid ${T.border}`, transition: 'background 0.15s',
     }}
-      onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
+      onMouseEnter={e => (e.currentTarget.style.background = T.surfaceSoft)}
       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
     >
       {/* Avatar */}
@@ -199,10 +203,10 @@ function MemberRow({
 
       {/* Identity */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 500, fontSize: 14, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div style={{ fontWeight: 500, fontSize: 14, color: T.t1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {member.email ?? member.user_id}
         </div>
-        <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
+        <div style={{ fontSize: 12, color: T.t3, marginTop: 2 }}>
           Ajouté le {new Date(member.created_at).toLocaleDateString('fr-FR')}
         </div>
       </div>
@@ -210,8 +214,8 @@ function MemberRow({
       {/* Status */}
       <div style={{ flexShrink: 0 }}>
         {member.status === 'active'
-          ? <CheckCircle2 size={14} color="#10b981" />
-          : <Clock size={14} color="#f59e0b" />}
+          ? <CheckCircle2 size={14} color={T.success} />
+          : <Clock size={14} color={T.warning} />}
       </div>
 
       {/* Role — editable */}
@@ -220,7 +224,7 @@ function MemberRow({
           <select
             value={newRole}
             onChange={e => setNewRole(e.target.value)}
-            style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
+            style={{ padding: '4px 8px', borderRadius: 6, border: `1px solid ${T.border}`, background: T.surface, color: T.t1, fontSize: 13 }}
           >
             {ROLES.filter(r => r.value !== 'owner').map(r => (
               <option key={r.value} value={r.value}>{r.label}</option>
@@ -228,11 +232,11 @@ function MemberRow({
           </select>
           <button
             onClick={() => { onRoleChange(member.user_id, newRole); setEditing(false); }}
-            style={{ padding: '4px 10px', background: '#0d9488', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}
+            style={{ padding: '4px 10px', background: T.gold, color: '#000', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
           >OK</button>
           <button
             onClick={() => setEditing(false)}
-            style={{ padding: '4px 10px', background: '#f1f5f9', color: '#64748b', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}
+            style={{ padding: '4px 10px', background: T.surface2, color: T.t2, border: `1px solid ${T.border}`, borderRadius: 6, fontSize: 12, cursor: 'pointer' }}
           >Annuler</button>
         </div>
       ) : (
@@ -252,11 +256,11 @@ function MemberRow({
           title="Retirer ce membre"
           style={{
             padding: 6, background: 'none', border: 'none', borderRadius: 6,
-            cursor: 'pointer', color: '#94a3b8', flexShrink: 0,
+            cursor: 'pointer', color: T.t3, flexShrink: 0,
             display: 'flex', alignItems: 'center',
           }}
-          onMouseEnter={e => (e.currentTarget.style.color = '#dc2626')}
-          onMouseLeave={e => (e.currentTarget.style.color = '#94a3b8')}
+          onMouseEnter={e => (e.currentTarget.style.color = T.danger)}
+          onMouseLeave={e => (e.currentTarget.style.color = T.t3)}
         >
           <Trash2 size={15} />
         </button>
@@ -307,16 +311,16 @@ export default function TenantMembersPage() {
   }, {});
 
   return (
-    <div style={{ maxWidth: 860, margin: '0 auto', padding: '24px 0' }}>
+    <TenantAdminShell>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Shield size={22} color="#0d9488" />
+          <Shield size={22} color={T.gold} />
           <div>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#0f172a' }}>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: T.t1 }}>
               Membres du tenant
             </h1>
-            <p style={{ margin: '2px 0 0', fontSize: 13, color: '#64748b' }}>
+            <p style={{ margin: '2px 0 0', fontSize: 13, color: T.t2 }}>
               {members.length} membre{members.length > 1 ? 's' : ''}
             </p>
           </div>
@@ -325,8 +329,8 @@ export default function TenantMembersPage() {
           onClick={refetch}
           style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
-            background: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: 8,
-            color: '#0d9488', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+            background: T.goldDim, border: `1px solid ${T.goldMid}`, borderRadius: 8,
+            color: T.gold, fontSize: 13, fontWeight: 500, cursor: 'pointer',
           }}
         >
           <RefreshCw size={14} />Actualiser
@@ -355,35 +359,35 @@ export default function TenantMembersPage() {
 
       {/* Member list */}
       <div style={{
-        background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12,
+        background: T.surfaceCard, border: `1px solid ${T.border}`, borderRadius: 14,
         overflow: 'hidden',
       }}>
         {/* List header */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8, padding: '12px 20px',
-          background: '#f8fafc', borderBottom: '1px solid #e2e8f0',
+          background: T.surfaceSoft, borderBottom: `1px solid ${T.border}`,
         }}>
-          <Users size={15} color="#64748b" />
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          <Users size={15} color={T.t3} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: T.t3, textTransform: 'uppercase', letterSpacing: 0.5 }}>
             Membres actifs
           </span>
         </div>
 
         {isLoading && (
-          <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>
+          <div style={{ padding: '40px', textAlign: 'center', color: T.t3 }}>
             <RefreshCw size={22} style={{ animation: 'spin 1s linear infinite', marginBottom: 8 }} />
             <p style={{ margin: 0 }}>Chargement…</p>
           </div>
         )}
 
         {error && (
-          <div style={{ padding: 20, display: 'flex', gap: 8, color: '#dc2626', fontSize: 14 }}>
+          <div style={{ padding: 20, display: 'flex', gap: 8, color: T.danger, fontSize: 14 }}>
             <AlertCircle size={16} />Impossible de charger les membres.
           </div>
         )}
 
         {!isLoading && members.length === 0 && (
-          <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>
+          <div style={{ padding: '40px', textAlign: 'center', color: T.t3 }}>
             <Users size={32} style={{ marginBottom: 10, opacity: 0.4 }} />
             <p style={{ margin: 0 }}>Aucun membre pour le moment. Invitez le premier ci-dessus.</p>
           </div>
@@ -401,6 +405,6 @@ export default function TenantMembersPage() {
       </div>
 
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-    </div>
+    </TenantAdminShell>
   );
 }

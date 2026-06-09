@@ -305,24 +305,23 @@ const RequestAppointmentPage = () => {
       setCheckingGate(true);
       setGateError('');
       try {
-        const { data: consultationPlan, error: planError } = await supabase
-          .from('billing_plans')
+        // Check via subscriptions: billing_invoices.tenant_id → tenants.id (not profile IDs).
+        // billing_subscriptions.plan_id is text matching the plan slug constant directly.
+        const { data: consultSubs, error: subError } = await supabase
+          .from('billing_subscriptions')
           .select('id')
-          .eq('slug', NGOWAZULU_CONSULTATION_PLAN_SLUG)
-          .maybeSingle();
-        if (planError) throw planError;
+          .eq('user_id', user.id)
+          .eq('plan_id', NGOWAZULU_CONSULTATION_PLAN_SLUG);
+        if (subError) throw subError;
 
-        const planId = consultationPlan?.id;
-        if (!planId) {
-          throw new Error('Plan de consultation introuvable.');
-        }
-
-        const { count, error: paymentError } = await supabase
-          .from('billing_invoices')
-          .select('id', { count: 'exact', head: true })
-          .eq('tenant_id', user.id)
-          .eq('subscription_id', planId)
-          .eq('status', 'paid');
+        const consultSubIds = (consultSubs || []).map(s => s.id);
+        const { count, error: paymentError } = consultSubIds.length > 0
+          ? await supabase
+              .from('billing_invoices')
+              .select('id', { count: 'exact', head: true })
+              .in('subscription_id', consultSubIds)
+              .eq('status', 'paid')
+          : { count: 0, error: null };
         if (paymentError) throw paymentError;
 
         if (!alive) return;

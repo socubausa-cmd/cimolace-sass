@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { cn } from '@/lib/utils';
+import './forum-dark.css';
 
 /**
  * Page création de nouvelle question forum
@@ -26,6 +27,8 @@ import { cn } from '@/lib/utils';
  */
 export default function ForumNewQuestionPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const forumBase = (location.pathname.split('/forum')[0] || '') + '/forum';
   const [loading, setLoading] = useState(false);
   const [formations, setFormations] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -57,33 +60,23 @@ export default function ForumNewQuestionPage() {
 
       if (!user) return;
 
-      // Load formations where user is enrolled
-      const { data: enrollments } = await supabase
-        .from('formation_enrollments')
-        .select('formation_id')
-        .eq('student_id', user.id)
-        .eq('status', 'active');
-
-      const formationIds = enrollments?.map(e => e.formation_id) || [];
-
-      if (formationIds.length > 0) {
-        const { data: forms } = await supabase
-          .from('courses')
-          .select('id, title, color')
-          .in('id', formationIds);
-        setFormations(forms || []);
-        if (forms?.[0]) setSelectedFormation(forms[0].id);
-      }
+      // Formations visibles par l'élève (RLS) depuis "courses".
+      const { data: forms } = await supabase
+        .from('courses')
+        .select('id, title, color')
+        .order('title', { ascending: true });
+      setFormations(forms || []);
+      if (forms?.[0]) setSelectedFormation(forms[0].id);
     };
     load();
   }, []);
 
   // Suggested tags
   const suggestedTags = [
-    'mécanique', 'électricité', 'chimie', 'physique', 'math',
-    'programmation', 'design', 'marketing', 'gestion', 'comptabilité',
-    'examen', 'concours', 'projet', 'stage', 'mémoire',
-    'aide', 'urgent', 'question', 'clarification', 'astuce'
+    'fiqh', 'aqida', 'tawhid', 'tajwid', 'coran',
+    'hadith', 'sira', 'langue arabe', 'grammaire', 'conjugaison',
+    'prononciation', 'mémorisation', 'révisions', 'examen', 'méthode',
+    'aide', 'urgent', 'clarification', 'astuce', 'organisation'
   ];
 
   const addTag = (tag) => {
@@ -168,6 +161,10 @@ export default function ForumNewQuestionPage() {
         .insert({
           formation_id: selectedFormation,
           student_id: currentUser.id,
+          author_name:
+            currentUser.user_metadata?.full_name ||
+            currentUser.user_metadata?.name ||
+            (currentUser.email ? currentUser.email.split('@')[0] : 'Élève'),
           question: title,
           content: content,
           tags: tags,
@@ -183,7 +180,7 @@ export default function ForumNewQuestionPage() {
 
       setSuccess(true);
       setTimeout(() => {
-        navigate(`/student-school-life/forum/thread/${question.id}`);
+        navigate(`${forumBase}/thread/${question.id}`);
       }, 1500);
 
     } catch (err) {
@@ -195,7 +192,7 @@ export default function ForumNewQuestionPage() {
 
   if (success) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="forum-dark min-h-[60vh] flex items-center justify-center">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -210,11 +207,11 @@ export default function ForumNewQuestionPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="forum-dark max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <button
-          onClick={() => navigate('/student-school-life/forum')}
+          onClick={() => navigate(forumBase)}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -265,7 +262,7 @@ export default function ForumNewQuestionPage() {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Ex: Comment résoudre une équation du second degré ?"
+            placeholder="Ex: Quelle est la différence entre le Fiqh et l'Aqida ?"
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             required
             minLength={10}
@@ -443,7 +440,7 @@ export default function ForumNewQuestionPage() {
         <div className="flex items-center justify-between pt-4 border-t">
           <button
             type="button"
-            onClick={() => navigate('/student-school-life/forum')}
+            onClick={() => navigate(forumBase)}
             className="px-6 py-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             Annuler

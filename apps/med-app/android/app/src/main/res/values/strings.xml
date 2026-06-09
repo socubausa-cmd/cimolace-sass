@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ISNA Med</string>
+    <string name="title_activity_main">ISNA Med</string>
+    <string name="package_name">space.cimolace.med</string>
+    <string name="custom_url_scheme">space.cimolace.med</string>
+</resources>

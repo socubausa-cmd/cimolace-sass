@@ -19,7 +19,12 @@ const EVENT_COLORS = {
   'Évaluation': { bg: 'bg-orange-500/20', text: 'text-orange-400', border: 'border-orange-500/30', dot: 'bg-orange-500' },
   'Examen': { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30', dot: 'bg-red-500' },
   'Cérémonie': { bg: 'bg-purple-500/20', text: 'text-purple-400', border: 'border-purple-500/30', dot: 'bg-purple-500' },
-  'Assemblée': { bg: 'bg-gray-400/20', text: 'text-gray-300', border: 'border-gray-400/30', dot: 'bg-gray-400' }
+  'Assemblée': { bg: 'bg-gray-400/20', text: 'text-gray-300', border: 'border-gray-400/30', dot: 'bg-gray-400' },
+  // Types institutionnels (données réelles côté admin, en anglais)
+  'period': { bg: 'bg-indigo-500/20', text: 'text-indigo-300', border: 'border-indigo-500/30', dot: 'bg-indigo-400' },
+  'holiday': { bg: 'bg-emerald-500/20', text: 'text-emerald-300', border: 'border-emerald-500/30', dot: 'bg-emerald-400' },
+  'exam': { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30', dot: 'bg-red-500' },
+  'event': { bg: 'bg-[#D4AF37]/20', text: 'text-[#D4AF37]', border: 'border-[#D4AF37]/30', dot: 'bg-[#D4AF37]' }
 };
 
 const EVENT_ICONS = {

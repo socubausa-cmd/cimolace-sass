@@ -130,57 +130,85 @@ export default function SecretariatAppointmentsPage() {
     }
   }, [searchParams, appointments]);
 
+  /* ── Normalise les champs de l'API booking vers le schéma attendu ── */
+  const normalizeAppt = useCallback((raw, profileMap = {}) => {
+    if (!raw) return raw;
+    const slot = raw.booking_slots || {};
+    const profile = profileMap[raw.student_id] || {};
+    return {
+      ...raw,
+      // Champ temporel unifié
+      scheduled_at: slot.start_at || raw.created_at,
+      // Référence lisible
+      booking_reference: raw.booking_reference || raw.id?.slice(0, 8).toUpperCase(),
+      // Sujet / raison
+      reason: raw.notes || slot.title || '',
+      // Canal (source → booking_channel)
+      booking_channel: raw.booking_channel || raw.source || '',
+      // Profil étudiant synthétique
+      student_profile: raw.student_profile || (profile.id ? profile : null),
+      // Compatibilité champ "request" utilisé dans la recherche / l'affichage
+      request: raw.request || {
+        subject: slot.title || raw.notes || '',
+        reason: raw.notes || '',
+        visitor_name: profile.name || profile.email || '',
+        visitor_email: profile.email || '',
+      },
+    };
+  }, []);
+
   /* ── Chargement ── */
   const load = useCallback(async () => {
     setLoading(true);
     setLoadError('');
     try {
-      let q = supabase
+      // L'adaptateur route appointments → bookingApi.listAppointments()
+      // qui retourne : *, booking_slots(start_at, end_at, title, type)
+      const { data, error } = await supabase
         .from('appointments')
-        .select(`
-          id, status, scheduled_at, booking_reference, reason,
-          booking_channel,
-          student_id, immersive_chat_id, immersive_live_id,
-          request_id, assigned_teacher_id,
-          student_profile:profiles!appointments_student_id_fkey(name, email),
-          request:appointment_requests!appointments_request_id_fkey(subject, reason, visitor_name, visitor_email, visitor_timezone)
-        `)
-        .eq('booking_channel', bookingChannel)
-        .order('scheduled_at', { ascending: true })
+        .select('*')
+        .order('created_at', { ascending: false })
         .limit(100);
 
-      const { data, error } = await q;
       if (error) {
         setAppointments([]);
         setSelected(null);
         setLoadError(error.message || 'Impossible de charger les rendez-vous.');
         return;
       }
-      setAppointments(data || []);
+
+      const raw = data || [];
+
+      // Chargement des profils pour les student_ids uniques
+      let profileMap = {};
+      const studentIds = [...new Set(raw.map(a => a.student_id).filter(Boolean))];
+      if (studentIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id,name,email')
+          .in('id', studentIds);
+        profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
+      }
+
+      const normalized = raw.map(a => normalizeAppt(a, profileMap));
+      setAppointments(normalized);
 
       /* Si un appointmentId est dans l'URL, on le sélectionne */
-      const id = searchParams.get('appointmentId');
-      if (id && data) {
-        const found = data.find(a => a.id === id);
+      const targetId = searchParams.get('appointmentId');
+      if (targetId) {
+        const found = normalized.find(a => a.id === targetId);
         if (found) {
           setSelected(found);
         } else {
-          // Le lien de notification peut pointer vers un RDV hors des 100 lignes chargées.
           const { data: one, error: oneErr } = await supabase
             .from('appointments')
-            .select(`
-              id, status, scheduled_at, booking_reference, reason,
-              booking_channel,
-              student_id, immersive_chat_id, immersive_live_id,
-              request_id, assigned_teacher_id,
-              student_profile:profiles!appointments_student_id_fkey(name, email),
-              request:appointment_requests!appointments_request_id_fkey(subject, reason, visitor_name, visitor_email, visitor_timezone)
-            `)
-            .eq('id', id)
+            .select('*')
+            .eq('id', targetId)
             .maybeSingle();
           if (!oneErr && one?.id) {
-            setSelected(one);
-            setAppointments((prev) => (prev.some((a) => a.id === one.id) ? prev : [one, ...prev]));
+            const norm = normalizeAppt(one, profileMap);
+            setSelected(norm);
+            setAppointments((prev) => (prev.some((a) => a.id === norm.id) ? prev : [norm, ...prev]));
           }
         }
       }

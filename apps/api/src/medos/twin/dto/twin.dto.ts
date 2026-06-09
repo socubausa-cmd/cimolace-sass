@@ -84,3 +84,62 @@ export class CreateLabDocumentDto {
   @MaxLength(50000)
   raw_text?: string;
 }
+
+/**
+ * Item structuré pour import CSV/JSON déterministe (Chantier CSV labo).
+ * Aucune IA — le mapping est fait par le client/laboratoire.
+ */
+export class StructuredBiomarkerItemDto {
+  @ApiProperty({ example: 'CRP_HS' })
+  @IsString()
+  @MaxLength(40)
+  code!: string;
+
+  @ApiProperty({ example: 3.2 })
+  @IsNumber()
+  value!: number;
+
+  @ApiPropertyOptional({ example: 'mg/L' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  unit?: string;
+
+  @ApiPropertyOptional({ example: '2026-06-01' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(10)
+  measured_at?: string;
+}
+
+export class ImportStructuredBiomarkersDto {
+  @ApiProperty({ type: [StructuredBiomarkerItemDto] })
+  @IsArray()
+  @ArrayMaxSize(500)
+  @ValidateNested({ each: true })
+  @Type(() => StructuredBiomarkerItemDto)
+  items!: StructuredBiomarkerItemDto[];
+
+  @ApiPropertyOptional({ example: 'Cerba' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  lab_name?: string;
+}
+
+/**
+ * Métadonnées d'un upload de bilan (multipart). Le binaire arrive via
+ * @UploadedFile() — ce DTO porte uniquement les champs textuels du formulaire.
+ */
+export class UploadLabDocumentDto {
+  @ApiPropertyOptional({ example: 'blood' })
+  @IsOptional()
+  @IsIn(['blood', 'imaging', 'prescription', 'specialist', 'microbiome', 'dna', 'other'])
+  source_type?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  lab_name?: string;
+}

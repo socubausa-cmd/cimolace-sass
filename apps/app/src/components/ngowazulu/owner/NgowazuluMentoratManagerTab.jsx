@@ -60,11 +60,11 @@ export default function NgowazuluMentoratManagerTab() {
     try {
       const { data: subs, error } = await supabase
         .from('billing_subscriptions')
-        .select('id,user_id,status,expires_at,billing_plans(slug,name)')
+        .select('id,user_id,plan_id,status,current_period_end')
         .in('status', ['active', 'past_due'])
         .order('updated_at', { ascending: false });
       if (error) throw error;
-      const rows = (subs || []).filter((s) => String(s.billing_plans?.slug || '').startsWith('ngowazulu-mentorat'));
+      const rows = (subs || []).filter((s) => String(s.plan_id || '').startsWith('ngowazulu-mentorat'));
       const ids = [...new Set(rows.map((r) => r.user_id).filter(Boolean))];
       let profileMap = {};
       if (ids.length) {
@@ -132,7 +132,7 @@ export default function NgowazuluMentoratManagerTab() {
     if (selected) loadDetail(selected);
   }, [selected, loadDetail]);
 
-  const planSlug = selected?.billing_plans?.slug || '';
+  const planSlug = selected?.plan_id || '';
   const offer = useMemo(() => getNgowazuluMentoratOffer(planSlug), [planSlug]);
   const defaultQuota = useMemo(() => getSessionsQuotaForSlug(planSlug) || 4, [planSlug]);
 
@@ -312,7 +312,7 @@ export default function NgowazuluMentoratManagerTab() {
                   }`}
                 >
                   <p className="text-white font-medium text-sm">{s.profile?.name || s.profile?.email || s.user_id}</p>
-                  <p className="text-xs text-gray-500">{s.billing_plans?.name || s.billing_plans?.slug}</p>
+                  <p className="text-xs text-gray-500">{s.plan_id}</p>
                   <Badge className="mt-1 text-[10px] bg-white/10 text-gray-300">{s.status}</Badge>
                 </button>
               ))

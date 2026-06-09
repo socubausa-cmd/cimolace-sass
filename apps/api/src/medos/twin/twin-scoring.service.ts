@@ -243,6 +243,148 @@ export class TwinScoringService {
       });
     }
 
+    // ─── Patterns étendus (référentiel v2 — 144 codes additionnels) ─────────
+
+    // Risque cardiaque (NT-proBNP / BNP / troponine HS hauts)
+    const cardiacSignals = ['NT_PROBNP', 'BNP', 'TROPONIN_HS'].filter((c) => high(c));
+    if (cardiacSignals.length >= 1) {
+      const isCritical = cardiacSignals.some(
+        (c) => flags[c] === 'critical',
+      );
+      alerts.push({
+        kind: 'cardiac_risk',
+        severity: isCritical ? 'critical' : 'warning',
+        message_fr: `Signal cardiaque (${cardiacSignals.join(', ')}). Évaluation cardiologique recommandée.`,
+        evidence: cardiacSignals.map(ev),
+      });
+    }
+
+    // Blocage méthylation : HOMOCYSTEINE haute + (MMA haut OU B9/B12 bas)
+    if (
+      high('HOMOCYSTEINE') &&
+      (high('MMA') || low('VIT_B9_FOLATE') || low('FOLATE_RBC') || low('B12') || low('HOLOTC'))
+    ) {
+      alerts.push({
+        kind: 'methylation_block',
+        severity: 'warning',
+        message_fr:
+          'Faisceau évocateur d\'un blocage du cycle de méthylation (homocystéine ± MMA, déficit B9/B12). À explorer avec un test génétique MTHFR.',
+        evidence: ['HOMOCYSTEINE', 'MMA', 'VIT_B9_FOLATE', 'FOLATE_RBC', 'B12', 'HOLOTC']
+          .filter((c) => valByCode.has(c))
+          .map(ev),
+      });
+    }
+
+    // Hyperperméabilité intestinale (leaky gut) : zonuline + calprotectine
+    if (
+      (high('ZONULIN') && high('CALPROTECTIN')) ||
+      high('LACTOFERRIN') ||
+      low('SECRETORY_IGA')
+    ) {
+      alerts.push({
+        kind: 'gut_permeability',
+        severity: 'warning',
+        message_fr:
+          'Signaux d\'hyperperméabilité intestinale / dysbiose (zonuline, calprotectine, lactoferrine, sIgA). Investiguer la barrière intestinale.',
+        evidence: ['ZONULIN', 'CALPROTECTIN', 'LACTOFERRIN', 'SECRETORY_IGA']
+          .filter((c) => valByCode.has(c))
+          .map(ev),
+      });
+    }
+
+    // Stress oxydatif élevé : marqueurs hauts + défenses basses
+    const oxidativeHigh = ['MDA', 'F2_ISOPROSTANES', 'OHDG_8', 'TBARS', 'ROS', 'OXYLDL']
+      .filter((c) => high(c));
+    const antioxidantLow = ['GSH', 'GPX', 'SOD', 'CATALASE', 'TAC'].filter((c) => low(c));
+    if (oxidativeHigh.length >= 1 && antioxidantLow.length >= 1) {
+      alerts.push({
+        kind: 'oxidative_stress_high',
+        severity: 'warning',
+        message_fr: `Stress oxydatif marqué (${oxidativeHigh.length} marqueur(s) d'attaque + ${antioxidantLow.length} défense(s) abaissée(s)). Soutien antioxydant à considérer.`,
+        evidence: [...oxidativeHigh, ...antioxidantLow].map(ev),
+      });
+    }
+
+    // Auto-immunité thyroïdienne (Hashimoto / Basedow)
+    if (high('ANTI_TPO') || high('ANTI_TG')) {
+      const tshAbnormal = high('TSH') || low('TSH');
+      const severity: 'info' | 'warning' | 'critical' =
+        flags['ANTI_TPO'] === 'critical' || flags['ANTI_TG'] === 'critical'
+          ? 'critical'
+          : tshAbnormal
+          ? 'warning'
+          : 'info';
+      alerts.push({
+        kind: 'thyroid_autoimmune',
+        severity,
+        message_fr:
+          'Anticorps thyroïdiens positifs (TPO/TG). Évoque une thyroïdite auto-immune (Hashimoto si TSH↑, Basedow si TSH↓). À confirmer en consultation endocrinologique.',
+        evidence: ['ANTI_TPO', 'ANTI_TG', 'TSH', 'FT4', 'FT3']
+          .filter((c) => valByCode.has(c))
+          .map(ev),
+      });
+    }
+
+    // Dysrégulation du cortisol (pattern inversé ou aplati)
+    const cortisolAM = valByCode.get('CORTISOL_AM') ?? null;
+    const cortisolPM = valByCode.get('CORTISOL_PM') ?? null;
+    if (cortisolAM !== null && cortisolPM !== null) {
+      // Pattern inversé : PM proche ou supérieur à AM (devrait être bien inférieur)
+      const ratio = cortisolPM / cortisolAM;
+      if (ratio > 0.6 || low('CORTISOL_AM') || high('CORTISOL_PM')) {
+        alerts.push({
+          kind: 'cortisol_dysregulation',
+          severity: ratio > 0.8 ? 'warning' : 'info',
+          message_fr: `Pattern de cortisol atypique (rapport PM/AM = ${ratio.toFixed(2)}, attendu < 0.5). Évoque une fatigue surrénalienne ou un stress chronique.`,
+          evidence: ['CORTISOL_AM', 'CORTISOL_PM', 'ACTH', 'DHEA_S']
+            .filter((c) => valByCode.has(c))
+            .map(ev),
+        });
+      }
+    }
+
+    // Résistance insulinique avancée : HOMA-IR + adipocytokines
+    if (
+      high('HOMA_IR') &&
+      (high('LEPTIN') || high('C_PEPTIDE') || low('ADIPONECTIN') || high('FRUCTOSAMINE'))
+    ) {
+      alerts.push({
+        kind: 'insulin_resistance_advanced',
+        severity: 'warning',
+        message_fr:
+          'Résistance insulinique avec déséquilibre adipocytokines (leptine ↑, adiponectine ↓ ou C-peptide ↑). Profil métabolique avancé à corriger.',
+        evidence: ['HOMA_IR', 'LEPTIN', 'C_PEPTIDE', 'ADIPONECTIN', 'FRUCTOSAMINE']
+          .filter((c) => valByCode.has(c))
+          .map(ev),
+      });
+    }
+
+    // Déséquilibre électrolytique (potentiellement critique pour le cœur)
+    const electrolytesAbnormal = ['SODIUM', 'POTASSIUM', 'CALCIUM', 'MAGNESIUM', 'PHOSPHORUS', 'BICARBONATE']
+      .filter((c) => high(c) || low(c));
+    if (electrolytesAbnormal.length >= 2) {
+      const isCritical = electrolytesAbnormal.some(
+        (c) => flags[c] === 'critical',
+      );
+      alerts.push({
+        kind: 'electrolyte_imbalance',
+        severity: isCritical ? 'critical' : 'warning',
+        message_fr: `Déséquilibre électrolytique sur ${electrolytesAbnormal.length} marqueur(s) (${electrolytesAbnormal.join(', ')}). Vigilance cardiaque/rénale.`,
+        evidence: electrolytesAbnormal.map(ev),
+      });
+    }
+
+    // Atteinte hépatique multifactorielle (NAFLD probable)
+    const liverHigh = ['ALT', 'AST', 'GGT', 'ALP', 'BILIRUBIN_TOTAL'].filter((c) => high(c));
+    if (liverHigh.length >= 2) {
+      alerts.push({
+        kind: 'liver_strain',
+        severity: liverHigh.length >= 3 ? 'warning' : 'info',
+        message_fr: `Atteinte hépatique multiple (${liverHigh.join(', ')} ↑). Évoquer NAFLD, hépatite ou surcharge toxique selon contexte.`,
+        evidence: liverHigh.map(ev),
+      });
+    }
+
     return alerts;
   }
 }

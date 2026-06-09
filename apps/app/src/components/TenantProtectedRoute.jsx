@@ -34,7 +34,9 @@ async function fetchTenantMemberships() {
   });
   if (!response.ok) return [];
   const body = await response.json().catch(() => ({}));
-  return Array.isArray(body?.data) ? body.data : Array.isArray(body) ? body : [];
+  // L'API enveloppe la liste : { data: { data: [...] } } (double), ou { data: [...] }, ou [...].
+  const payload = body?.data?.data ?? body?.data ?? body;
+  return Array.isArray(payload) ? payload : [];
 }
 
 export default function TenantProtectedRoute({ children }) {

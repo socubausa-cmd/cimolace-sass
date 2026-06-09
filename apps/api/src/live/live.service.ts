@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { AuthService } from "../auth/auth.service";
 import { LiveKitService } from "../livekit/livekit.service";
 
@@ -38,6 +38,105 @@ export class LiveService {
       .single();
     if (error || !data) throw new NotFoundException("Session introuvable");
     return data;
+  }
+
+  /**
+   * Passe une session "en direct" : status = 'live' + started_at = now.
+   * Idempotent (no-op si déjà live), refuse de relancer une session terminée.
+   * Surface JWT (host mobile/web) — équivalent du startSession côté API publique
+   * (liri-public), mais scopé par le tenant du JWT appelant.
+   */
+  async startSession(tenantId: string, sessionId: string) {
+    const session = await this.findOne(tenantId, sessionId);
+    if ((session as any).status === "live") return session;
+    if ((session as any).status === "ended") {
+      throw new BadRequestException("La session est déjà terminée");
+    }
+    const { data } = await this.supabase
+      .from("live_sessions")
+      .update({ status: "live", started_at: new Date().toISOString() })
+      .eq("id", sessionId)
+      .eq("tenant_id", tenantId)
+      .select("*")
+      .single();
+    return data;
+  }
+
+  /**
+   * Termine une session : status = 'ended' + ended_at = now. Idempotent.
+   */
+  async endSession(tenantId: string, sessionId: string) {
+    // Arrête un éventuel enregistrement en cours avant de clore la session.
+    try {
+      await this.stopRecording(tenantId, sessionId);
+    } catch {
+      /* pas d'enregistrement actif → on continue */
+    }
+    const { data } = await this.supabase
+      .from("live_sessions")
+      .update({ status: "ended", ended_at: new Date().toISOString() })
+      .eq("id", sessionId)
+      .eq("tenant_id", tenantId)
+      .select("*")
+      .single();
+    if (!data) throw new NotFoundException("Session introuvable");
+    return data;
+  }
+
+  /**
+   * Démarre l'enregistrement (LiveKit Egress → MP4) de la room de la session,
+   * enregistre la ligne live_recordings et active le replay. Si l'egress n'est
+   * pas configuré (clés manquantes), renvoie egressId null sans casser le live.
+   */
+  async startRecording(tenantId: string, sessionId: string) {
+    const session: any = await this.findOne(tenantId, sessionId);
+    const slug = session.tenant_slug ?? "";
+    const roomName = LiveKitService.scopedRoomName(slug, sessionId);
+    const { egressId, filepath } = await this.liveKit.startRecording(roomName, sessionId, slug);
+    const { data } = await this.supabase
+      .from("live_recordings")
+      .insert({
+        live_session_id: sessionId,
+        egress_id: egressId,
+        status: egressId ? "recording" : "failed",
+        started_at: new Date().toISOString(),
+        tenant_slug: slug,
+        storage_filepath: filepath,
+      })
+      .select("*")
+      .single();
+    if (egressId) {
+      await this.supabase
+        .from("live_sessions")
+        .update({ replay_enabled: true })
+        .eq("id", sessionId)
+        .eq("tenant_id", tenantId);
+    }
+    return { recording: data, egressId, recording_active: Boolean(egressId) };
+  }
+
+  /**
+   * Arrête l'enregistrement actif de la session (stop egress + clôture de la
+   * ligne live_recordings). No-op si aucun enregistrement en cours.
+   */
+  async stopRecording(tenantId: string, sessionId: string) {
+    await this.findOne(tenantId, sessionId); // autorise (scopé tenant)
+    const { data: rec } = await this.supabase
+      .from("live_recordings")
+      .select("*")
+      .eq("live_session_id", sessionId)
+      .eq("status", "recording")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (rec?.egress_id) await this.liveKit.stopRecording(rec.egress_id);
+    if (rec?.id) {
+      await this.supabase
+        .from("live_recordings")
+        .update({ status: "stopped", completed_at: new Date().toISOString() })
+        .eq("id", rec.id);
+    }
+    return { stopped: Boolean(rec), recordingId: rec?.id ?? null, recording_active: false };
   }
 
   /**

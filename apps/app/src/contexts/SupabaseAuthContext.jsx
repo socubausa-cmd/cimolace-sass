@@ -19,7 +19,7 @@ const fetchProfile = async (userId) => {
   return data;
 };
 
-const withTimeout = (promise, timeoutMs = 2500, fallback = null) => {
+const withTimeout = (promise, timeoutMs = 7000, fallback = null) => {
   let timeoutId;
   return Promise.race([
     promise,
@@ -67,9 +67,30 @@ const ensureVisitorProfile = async (authUser) => {
   return fetchProfile(authUser.id);
 };
 
+/**
+ * Cache du dernier rôle FIABLE résolu par id utilisateur (rempli uniquement quand
+ * un profil a réellement été chargé). Sert de filet anti-régression : si une relecture
+ * du profil échoue/expire (Supabase froid, réseau lent → profile === null), on ne
+ * rétrograde PAS un formateur/admin/owner/secretariat déjà connu vers 'visitor'.
+ * Sécurité : un prospect sans rôle antérieur fiable reste 'visitor' (aucun gain d'accès).
+ */
+const lastKnownRoleById = new Map();
+
 const buildUser = (authUser, profile) => {
   if (!authUser) return null;
   const meta = authUser.user_metadata || {};
+  const profileRole = String(profile?.role || '').toLowerCase();
+  if (profile?.id && profileRole) {
+    lastKnownRoleById.set(authUser.id, profileRole);
+  }
+  // Repli quand le profil n'a pas pu être (re)chargé (timeout/erreur → profile null) :
+  // réutiliser le dernier rôle fiable connu pour CE même utilisateur, sinon métadonnées,
+  // sinon 'visitor'. Évite la redirection /prospect/entretien des formateurs sur fetch lent.
+  const resolvedRole =
+    profileRole ||
+    lastKnownRoleById.get(authUser.id) ||
+    String(meta.role || '').toLowerCase() ||
+    (isDevCimolaceAdmin(authUser.email) ? 'admin' : 'visitor');
   return {
     id: authUser.id,
     email: authUser.email,
@@ -80,7 +101,7 @@ const buildUser = (authUser, profile) => {
       meta.full_name ||
       authUser.email?.split('@')[0] ||
       '',
-    role: profile?.role || meta.role || (isDevCimolaceAdmin(authUser.email) ? 'admin' : 'visitor'),
+    role: resolvedRole,
     metadata: profile?.metadata || {},
     cimolace_staff: Boolean(profile?.metadata?.cimolace_staff || meta.cimolace_staff || isDevCimolaceAdmin(authUser.email)),
     avatar_url: profile?.avatar_url || null,

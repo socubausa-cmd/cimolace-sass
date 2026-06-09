@@ -1,28 +1,31 @@
 import { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Activity, Sparkles, AlertTriangle, FlaskConical, Brain, ShieldCheck,
-  ChevronLeft, Plus, Check, X, Loader2,
+  ChevronLeft, Plus, Check, X, Loader2, HelpCircle,
 } from 'lucide-react';
 import { twinApi, COLOR_HEX, COLOR_LABEL, type OrganColor } from './api';
 import {
   WheelPanel, MindmapPanel, TimelinePanel, LongitudinalPanel,
   SimulatorPanel, LabReaderPanel, MetabolicMapPanel, CopilotPanel,
 } from './panels';
+import { OnboardingTour } from './OnboardingTour';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 
 const BodyViewer = lazy(() =>
   import('./BodyViewer').then((m) => ({ default: m.BodyViewer })),
 );
 
-const TABS: Array<{ key: string; label: string }> = [
-  { key: 'body', label: 'Corps 3D' },
-  { key: 'wheel', label: 'Roue' },
-  { key: 'lab', label: 'Laboratoire' },
-  { key: 'correlations', label: 'Corrélations' },
-  { key: 'timeline', label: 'Timeline' },
-  { key: 'longitudinal', label: 'Évolution' },
-  { key: 'simulator', label: 'Simulateur' },
-  { key: 'copilot', label: 'Copilote IA' },
+const TABS: Array<{ key: string; i18nKey: string }> = [
+  { key: 'body', i18nKey: 'twin:tabs.body3d' },
+  { key: 'wheel', i18nKey: 'twin:tabs.wheel' },
+  { key: 'lab', i18nKey: 'twin:tabs.lab' },
+  { key: 'correlations', i18nKey: 'twin:tabs.correlations' },
+  { key: 'timeline', i18nKey: 'twin:tabs.timeline' },
+  { key: 'longitudinal', i18nKey: 'twin:tabs.longitudinal' },
+  { key: 'simulator', i18nKey: 'twin:tabs.simulator' },
+  { key: 'copilot', i18nKey: 'twin:tabs.copilot' },
 ];
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
@@ -42,6 +45,7 @@ const panel: React.CSSProperties = { background: '#fff', borderRadius: 14, borde
 const head: React.CSSProperties = { fontSize: 14, fontWeight: 700, margin: 0, marginBottom: 12, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 7 };
 
 export function TwinPage() {
+  const { t } = useTranslation();
   const { patientId = '' } = useParams();
   const [state, setState] = useState<any>(null);
   const [refs, setRefs] = useState<any>({ organs: [], biomarkers: [] });
@@ -142,13 +146,14 @@ export function TwinPage() {
   }
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Chargement du jumeau numérique…</div>;
+    return <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>{t('common:loading')}</div>;
   }
 
   const scoredCount = organs.filter((o: any) => o.score).length;
 
   return (
     <div>
+      <OnboardingTour />
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 12 }}>
         <div>
@@ -159,13 +164,26 @@ export function TwinPage() {
             <Activity size={22} color="var(--brand-primary)" /> Jumeau numérique {patientName && `· ${patientName}`}
           </h2>
         </div>
-        <button
-          onClick={runAnalyze}
-          disabled={!!busy}
-          style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13.5, fontWeight: 600, cursor: busy ? 'wait' : 'pointer' }}
-        >
-          {busy === 'analyze' ? <Loader2 size={15} className="spin" /> : <Brain size={15} />} Analyse IA — hypothèses
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <LanguageSwitcher />
+          <button
+            type="button"
+            onClick={() => { try { localStorage.removeItem('twin_onboarding_done'); } catch { /* noop */ } window.location.reload(); }}
+            title="Relancer la visite guidée"
+            aria-label="Relancer la visite guidée"
+            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, background: '#fff', color: 'var(--brand-primary)', border: '1px solid #e2e8f0', borderRadius: 10, cursor: 'pointer' }}
+          >
+            <HelpCircle size={16} />
+          </button>
+          <button
+            onClick={runAnalyze}
+            disabled={!!busy}
+            className="twin-analyze-btn"
+            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13.5, fontWeight: 600, cursor: busy ? 'wait' : 'pointer' }}
+          >
+            {busy === 'analyze' ? <Loader2 size={15} className="spin" /> : <Brain size={15} />} Analyse IA — hypothèses
+          </button>
+        </div>
       </div>
 
       {/* Disclaimer permanent (sécurité clinique) */}
@@ -174,12 +192,15 @@ export function TwinPage() {
       </div>
 
       {/* Navigation interne (centre de commande — Module 35) */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, flexWrap: 'wrap', background: '#f1f5f9', padding: 4, borderRadius: 10 }}>
-        {TABS.map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: tab === t.key ? '#fff' : 'transparent', color: tab === t.key ? 'var(--brand-primary)' : '#64748b', boxShadow: tab === t.key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none' }}>
-            {t.label}
-          </button>
-        ))}
+      <div className="twin-tabs" style={{ display: 'flex', gap: 4, marginBottom: 16, flexWrap: 'wrap', background: '#f1f5f9', padding: 4, borderRadius: 10 }}>
+        {TABS.map((tabItem) => {
+          const tourId = tabItem.key === 'body' ? 'corps-3d' : tabItem.key === 'lab' ? 'laboratoire' : tabItem.key === 'copilot' ? 'copilote' : undefined;
+          return (
+            <button key={tabItem.key} className="twin-tab" data-tour-id={tourId} onClick={() => setTab(tabItem.key)} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: tab === tabItem.key ? '#fff' : 'transparent', color: tab === tabItem.key ? 'var(--brand-primary)' : '#64748b', boxShadow: tab === tabItem.key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none', whiteSpace: 'nowrap' }}>
+              {t(tabItem.i18nKey)}
+            </button>
+          );
+        })}
       </div>
 
       {err && <div style={{ marginBottom: 14, padding: 10, background: '#fef2f2', color: '#991b1b', borderRadius: 8, fontSize: 13 }}>{err}</div>}
@@ -199,8 +220,8 @@ export function TwinPage() {
 
       {tab === 'body' && <>
       {/* Corps 3D + Organe sélectionné */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16, marginBottom: 16 }}>
-        <div style={{ ...panel, padding: 0, overflow: 'hidden', minHeight: 480 }}>
+      <div className="twin-grid-2col" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16, marginBottom: 16 }}>
+        <div className="twin-body-panel twin-body-canvas" style={{ ...panel, padding: 0, overflow: 'hidden', minHeight: 480 }}>
           <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Chargement du corps 3D…</div>}>
             <BodyViewer organs={organs} selected={selected} onSelect={(c) => { setSelected(c); setAssistant(null); }} />
           </Suspense>
@@ -251,7 +272,7 @@ export function TwinPage() {
       </div>
 
       {/* Alertes · Hypothèses · Laboratoire */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+      <div className="twin-grid-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
         {/* Alertes */}
         <div style={panel}>
           <h3 style={head}><AlertTriangle size={15} color="#f59e0b" /> Alertes cliniques</h3>
@@ -294,8 +315,8 @@ export function TwinPage() {
         {/* Laboratoire virtuel + saisie */}
         <div style={panel}>
           <h3 style={head}><FlaskConical size={15} color="#0ea5e9" /> Laboratoire</h3>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-            <select value={pickCode} onChange={(e) => setPickCode(e.target.value)} style={{ flex: 1, padding: '7px 8px', border: '1px solid #e2e8f0', borderRadius: 7, fontSize: 12.5 }}>
+          <div className="twin-lab-row" style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+            <select value={pickCode} onChange={(e) => setPickCode(e.target.value)} style={{ flex: 1, padding: '7px 8px', border: '1px solid #e2e8f0', borderRadius: 7, fontSize: 12.5, minWidth: 0 }}>
               <option value="">— Biomarqueur —</option>
               {(refs.biomarkers || []).map((b: any) => <option key={b.code} value={b.code}>{b.name_fr} ({b.unit})</option>)}
             </select>
@@ -363,8 +384,8 @@ function OrganDetail({ organ, onAsk, busy, assistant, onClose }: { organ: any; o
         <p style={{ fontSize: 13, color: '#94a3b8' }}>Pas encore de données pour cet organe.</p>
       ) : (
         <>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 12 }}>
-            <span style={{ fontSize: 40, fontWeight: 800, color: COLOR_HEX[score.color as OrganColor], lineHeight: 1 }}>{score.score}</span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+            <span className="twin-organ-score" style={{ fontSize: 40, fontWeight: 800, color: COLOR_HEX[score.color as OrganColor], lineHeight: 1 }}>{score.score}</span>
             <span style={{ fontSize: 13, color: '#64748b' }}>/100 · {COLOR_LABEL[score.color as OrganColor]}</span>
           </div>
           {score.dimensions && Object.keys(score.dimensions).length > 0 && (

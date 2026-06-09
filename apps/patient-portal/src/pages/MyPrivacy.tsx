@@ -280,9 +280,23 @@ export function MyPrivacy() {
         <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0, marginBottom: 4 }}>
           Telecharger mes donnees <span style={{ fontSize: 11, color: '#64748b', fontWeight: 400 }}>· Article 20 RGPD</span>
         </h3>
-        <p style={{ fontSize: 13, color: '#64748b', margin: 0, marginBottom: 16 }}>
+        <p style={{ fontSize: 13, color: '#64748b', margin: 0, marginBottom: 12 }}>
           Vous pouvez exporter une copie complete de votre dossier au format JSON (consultations, ordonnances, formulaires, pieces jointes).
         </p>
+        <ul style={{ fontSize: 12, color: '#475569', margin: '0 0 16px 0', paddingLeft: 18, lineHeight: 1.6 }}>
+          <li>Identite et informations administratives</li>
+          <li>Consultations, notes praticien et ordonnances</li>
+          <li>Programmes de soin et rendez-vous</li>
+          <li>Formulaires remplis et pieces jointes (metadonnees)</li>
+          <li>Consentements et journal d'audit</li>
+          <li>
+            <strong>Donnees Bio Digital Twin</strong> : biomarqueurs, scores
+            d'organes, historique de la roue de transformation, evenements
+            sante, alertes, hypotheses cliniques, runs et analyses IA
+            (anonymises cote prompt), metadonnees des bilans avec liens
+            signes 24h pour le telechargement des PDF/images.
+          </li>
+        </ul>
         <button
           onClick={handleExport}
           disabled={!patientId || working === 'export'}

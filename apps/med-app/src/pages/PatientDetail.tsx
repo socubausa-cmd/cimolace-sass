@@ -141,7 +141,21 @@ export function PatientDetail() {
 
   async function handleExport() {
     if (!id) return;
-    if (!confirm("Générer un export RGPD complet du dossier patient ?\n\nL'export sera disponible dans 'Audit & RGPD' une fois prêt.")) return;
+    if (
+      !confirm(
+        "Générer un export RGPD complet du dossier patient ?\n\n" +
+          "Sections incluses :\n" +
+          "• Identité, consentements et journal d'audit\n" +
+          "• Consultations, ordonnances, programmes, RDV, formulaires\n" +
+          "• Pièces jointes (métadonnées)\n" +
+          "• Données Bio Digital Twin : biomarqueurs, scores d'organes,\n" +
+          "  roue de transformation, événements santé, alertes, hypothèses,\n" +
+          "  runs et analyses IA (anonymisés côté prompt), métadonnées des\n" +
+          "  bilans avec liens signés 24h pour les PDF/images.\n\n" +
+          "L'export sera disponible dans 'Audit & RGPD' une fois prêt.",
+      )
+    )
+      return;
     try {
       const token = localStorage.getItem('supabase_token');
       const res = await fetch(API + '/med/gdpr/exports', {

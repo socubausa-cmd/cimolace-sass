@@ -1,346 +1,534 @@
-import React, { useMemo, useState } from 'react';
-import { Download, FileText, Mail, Search, Share2, AlertCircle } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { useDemoMode } from '@/contexts/DemoModeContext';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
-import { useStudentDocumentsParityData } from '@/hooks/useStudentDocumentsParityData';
-import { supabase } from '@/lib/customSupabaseClient';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  FolderOpen, Search, X, ScrollText, Award, FileText,
+  Download, ChevronDown, RefreshCw, FileWarning,
+} from 'lucide-react';
 import { format, isValid } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import PremiumSegmentedSelector from '@/components/ui/premium-segmented-selector';
-import { useToast } from '@/components/ui/use-toast';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/lib/customSupabaseClient';
 
-const DocumentCard = ({ doc, restrictedAction, isDemoMode, onDownload }) => (
-  <div className="flex items-center justify-between p-4 bg-black/20 rounded-lg hover:bg-black/30 transition-colors border border-white/5">
-    <div className="flex items-center gap-4">
-      <div className="p-3 bg-[#D4AF37]/10 rounded text-[#D4AF37]">
-        <FileText className="w-6 h-6" />
-      </div>
-      <div>
-        <h4 className="text-white font-medium">{doc.name}</h4>
-        <p className="text-sm text-gray-500">Ajouté le {doc.date} • {doc.size}</p>
-      </div>
-    </div>
-    <div className="flex gap-2">
-      <Button 
-        variant="ghost" size="icon" 
-        className="text-gray-400 hover:text-white hover:bg-white/10"
-        onClick={() => (isDemoMode ? restrictedAction('Partager le document') : navigator?.clipboard?.writeText?.(doc.url || ''))}
-      >
-        <Share2 className="w-4 h-4" />
-      </Button>
-      <Button 
-        variant="outline" size="sm" 
-        className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black"
-        onClick={() => (isDemoMode ? restrictedAction('Télécharger le document') : onDownload?.(doc))}
-      >
-        <Download className="w-4 h-4 mr-2" /> Télécharger
-      </Button>
-    </div>
-  </div>
+/* ─── Thème ISNA (navy + or) ─── */
+const T = {
+  surface:   '#12111a',
+  surface2:  'rgba(25,39,52,0.5)',
+  border:    'rgba(255,255,255,0.07)',
+  borderMid: 'rgba(255,255,255,0.12)',
+  gold:      '#D4AF37',
+  goldDim:   'rgba(212,175,55,0.12)',
+  goldMid:   'rgba(212,175,55,0.28)',
+  success:   '#22C55E',
+  warning:   '#F59E0B',
+  danger:    '#EF4444',
+  t1: '#F5F5F7',
+  t2: 'rgba(245,245,247,0.65)',
+  t3: 'rgba(245,245,247,0.38)',
+  t4: 'rgba(245,245,247,0.16)',
+  mono: "'JetBrains Mono','Fira Code',monospace",
+};
+
+/* ─── Utilitaires ─── */
+const norm = (s) =>
+  String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+const safeFormat = (input, fmt) => {
+  if (!input) return '';
+  const d = new Date(input);
+  return isValid(d) ? format(d, fmt, { locale: fr }) : '';
+};
+
+const FILTERS = [
+  { key: 'all',   label: 'Tous' },
+  { key: 'admin', label: 'Administratifs' },
+  { key: 'edu',   label: 'Pédagogiques' },
+];
+
+/* ─── Boutons ─── */
+const Btn = ({ children, onClick, variant = 'ghost', disabled, title, style: extra }) => {
+  const [hov, setHov] = useState(false);
+  const gold = variant === 'gold';
+  const style = {
+    display: 'inline-flex', alignItems: 'center', gap: 7, borderRadius: 10,
+    padding: '8px 14px', fontSize: 12.5, fontWeight: 600, fontFamily: 'inherit',
+    cursor: disabled ? 'default' : 'pointer', textDecoration: 'none',
+    transition: 'all 150ms ease', whiteSpace: 'nowrap',
+    background: gold ? (hov && !disabled ? '#E5C66B' : T.gold) : (hov && !disabled ? T.surface2 : 'transparent'),
+    color: gold ? '#000' : (hov && !disabled ? T.t1 : T.t2),
+    border: gold ? '1px solid transparent' : `1px solid ${hov && !disabled ? T.borderMid : T.border}`,
+    opacity: disabled ? 0.5 : 1, ...extra,
+  };
+  return (
+    <button
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      style={style}
+      title={title}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+    >
+      {children}
+    </button>
+  );
+};
+
+const FilterPill = ({ active, label, count, onClick }) => {
+  const [hov, setHov] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 7,
+        background: active ? T.gold : hov ? T.surface2 : 'transparent',
+        border: `1px solid ${active ? 'transparent' : hov ? T.goldMid : T.border}`,
+        borderRadius: 999, padding: '7px 14px', fontSize: 12.5, fontWeight: 600, fontFamily: 'inherit',
+        color: active ? '#000' : hov ? T.gold : T.t2, cursor: 'pointer', transition: 'all 160ms ease', whiteSpace: 'nowrap',
+      }}
+    >
+      {label}
+      {count != null && count > 0 && (
+        <span style={{
+          fontFamily: T.mono, fontSize: 10, fontWeight: 700,
+          color: active ? '#000' : T.gold, background: active ? 'rgba(0,0,0,0.14)' : T.goldDim,
+          borderRadius: 999, padding: '0 6px', minWidth: 16, textAlign: 'center',
+        }}>{count}</span>
+      )}
+    </button>
+  );
+};
+
+const TypeBadge = ({ label, col }) => (
+  <span style={{
+    fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.05em',
+    color: col, background: 'rgba(255,255,255,0.04)', border: `1px solid ${T.border}`,
+    borderRadius: 6, padding: '2px 8px', textTransform: 'uppercase', whiteSpace: 'nowrap',
+  }}>{label}</span>
 );
 
-function InvoiceDocumentRow({
-  doc,
-  isDemoMode,
-  restrictedAction,
-  onDownload,
-  onReportNotReceived,
-  onResendEmail,
-  reportLoading,
-  resendLoading,
-}) {
-  const sentBySchool = Boolean(doc.invoiceSentAt);
-  const studentReported = Boolean(doc.invoiceStudentNotReceivedAt);
-  const lastMail = doc.invoiceLastEmailedAt || doc.invoiceSentAt;
-  const lastMailLabel =
-    lastMail && isValid(new Date(lastMail))
-      ? format(new Date(lastMail), "d MMM yyyy 'à' HH:mm", { locale: fr })
-      : null;
-
+/* ─── Ligne document (certificat / administratif / démo) ─── */
+const DocRow = ({ icon: Icon, iconCol, title, subtitle, badgeLabel, badgeCol, actionLabel, actionDisabled, actionTitle, onAction, delay }) => {
+  const [hov, setHov] = useState(false);
   return (
-    <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-3">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-[#D4AF37]/10 rounded text-[#D4AF37] shrink-0">
-            <FileText className="w-6 h-6" />
-          </div>
-          <div className="min-w-0">
-            <h4 className="text-white font-medium">{doc.name}</h4>
-            <p className="text-sm text-gray-500">Paiement du {doc.date} • {doc.size}</p>
-            {lastMailLabel ? (
-              <p className="text-xs text-gray-500 mt-1">Dernier envoi e-mail : {lastMailLabel}</p>
-            ) : null}
-            <div className="flex flex-wrap gap-2 mt-2">
-              {!sentBySchool ? (
-                <Badge className="bg-amber-500/15 text-amber-200 border-amber-500/30 text-xs">
-                  <AlertCircle className="w-3 h-3 mr-1" />
-                  Facture pas encore envoyée par l&apos;école
-                </Badge>
-              ) : (
-                <Badge className="bg-emerald-500/15 text-emerald-200 border-emerald-500/30 text-xs">
-                  Envoyée par l&apos;école
-                </Badge>
-              )}
-              {studentReported ? (
-                <Badge className="bg-orange-500/15 text-orange-200 border-orange-500/30 text-xs">
-                  Signalement : pas reçue (le secrétariat est informé)
-                </Badge>
-              ) : null}
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2 shrink-0">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-white/20 text-gray-200 hover:bg-white/10"
-            disabled={isDemoMode || reportLoading}
-            onClick={() =>
-              isDemoMode ? restrictedAction('Signaler facture non reçue') : onReportNotReceived?.(doc)
-            }
-          >
-            <AlertCircle className="w-4 h-4 mr-2" />
-            Je n&apos;ai pas reçu
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black"
-            disabled={isDemoMode || resendLoading}
-            onClick={() => (isDemoMode ? restrictedAction('Renvoyer la facture') : onResendEmail?.(doc))}
-          >
-            <Mail className="w-4 h-4 mr-2" />
-            Renvoyer par e-mail
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-[#D4AF37]/60 text-[#D4AF37] hover:bg-[#D4AF37]/10"
-            onClick={() => (isDemoMode ? restrictedAction('Télécharger') : onDownload?.(doc))}
-          >
-            <Download className="w-4 h-4 mr-2" /> Télécharger
-          </Button>
-        </div>
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
+        background: hov ? 'rgba(25,39,52,0.6)' : 'rgba(25,39,52,0.34)',
+        border: `1px solid ${hov ? T.goldMid : T.border}`, borderRadius: 14,
+        transition: 'all 160ms ease', transform: hov ? 'translateY(-1px)' : 'none',
+        animation: `docFade .4s ease ${delay}ms both`,
+      }}
+    >
+      <div style={{
+        width: 44, height: 44, borderRadius: 12, background: 'rgba(0,0,0,0.28)',
+        border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+      }}>
+        <Icon size={20} color={iconCol} />
       </div>
-      <p className="text-xs text-gray-500 pl-[3.25rem]">
-        Le renvoi par e-mail est limité à une fois toutes les 24 h. En cas d&apos;urgence, contactez le secrétariat.
-      </p>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 14.5, fontWeight: 600, color: T.t1 }}>{title}</span>
+          {badgeLabel && <TypeBadge label={badgeLabel} col={badgeCol} />}
+        </div>
+        <div style={{ fontSize: 12, color: T.t3 }}>{subtitle}</div>
+      </div>
+
+      <Btn variant="gold" disabled={actionDisabled} title={actionTitle} onClick={onAction} style={{ flexShrink: 0 }}>
+        <Download size={14} /> {actionLabel}
+      </Btn>
     </div>
   );
-}
+};
 
+/* ─── Ligne compte-rendu (pédagogique, expansible) ─── */
+const ReportRow = ({ title, subtitle, text, delay }) => {
+  const [hov, setHov] = useState(false);
+  const [open, setOpen] = useState(false);
+  const hasText = !!String(text || '').trim();
+  return (
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        padding: '14px 16px',
+        background: hov || open ? 'rgba(25,39,52,0.6)' : 'rgba(25,39,52,0.34)',
+        border: `1px solid ${hov || open ? T.goldMid : T.border}`, borderRadius: 14,
+        transition: 'all 160ms ease', animation: `docFade .4s ease ${delay}ms both`,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{
+          width: 44, height: 44, borderRadius: 12, background: 'rgba(0,0,0,0.28)',
+          border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <FileText size={20} color="#8B9CFF" />
+        </div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 14.5, fontWeight: 600, color: T.t1 }}>{title}</span>
+            <TypeBadge label="Compte-rendu" col="#8B9CFF" />
+          </div>
+          <div style={{ fontSize: 12, color: T.t3 }}>{subtitle}</div>
+        </div>
+
+        <Btn
+          onClick={() => setOpen((o) => !o)}
+          disabled={!hasText}
+          title={hasText ? undefined : 'Aucun contenu disponible'}
+          style={{ flexShrink: 0 }}
+        >
+          {open ? 'Masquer' : 'Voir le compte-rendu'}
+          <ChevronDown size={14} style={{ transition: 'transform 180ms ease', transform: open ? 'rotate(180deg)' : 'none' }} />
+        </Btn>
+      </div>
+
+      {open && hasText && (
+        <div style={{
+          marginTop: 12, padding: '12px 14px', background: 'rgba(0,0,0,0.26)',
+          border: `1px solid ${T.border}`, borderRadius: 11,
+          fontSize: 13, lineHeight: 1.6, color: T.t2, whiteSpace: 'pre-wrap',
+          animation: 'docFade .3s ease both',
+        }}>
+          {text}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const EmptyState = ({ children }) => (
+  <div style={{
+    textAlign: 'center', padding: '44px 24px', color: T.t3, fontSize: 13,
+    background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14,
+  }}>{children}</div>
+);
+
+/* ═══════════════════════ PAGE ═══════════════════════ */
 const StudentDocumentsPage = () => {
   const { isDemoMode, demoData, restrictedAction } = useDemoMode();
-  const { user, session } = useAuth();
-  const { toast } = useToast();
-  const { docs: realDocs, refreshInvoices } = useStudentDocumentsParityData(isDemoMode ? null : user?.id);
+  const { user } = useAuth();
+
   const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
-  const [reportLoadingId, setReportLoadingId] = useState(null);
-  const [resendLoadingId, setResendLoadingId] = useState(null);
+  const [focused, setFocused] = useState(false);
+  const [tab, setTab] = useState('all');
 
-  const handleReportNotReceived = async (doc) => {
-    if (!doc?.paymentId) return;
-    setReportLoadingId(doc.paymentId);
-    try {
-      const { data, error } = await supabase.rpc('report_invoice_not_received', {
-        p_payment_id: doc.paymentId,
-      });
-      if (error) throw error;
-      if (!data?.ok) {
-        toast({
-          title: 'Action impossible',
-          description: data?.error === 'not_found_or_forbidden' ? 'Facture introuvable.' : 'Réessaie plus tard.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      toast({
-        title: 'Signalement enregistré',
-        description: 'Le secrétariat peut voir que tu n\'as pas reçu la facture. Tu peux aussi demander un renvoi par e-mail.',
-      });
-      await refreshInvoices();
-    } catch (e) {
-      toast({
-        title: 'Erreur',
-        description: e?.message || 'Impossible d\'enregistrer le signalement.',
-        variant: 'destructive',
-      });
-    } finally {
-      setReportLoadingId(null);
-    }
-  };
+  const [certificates, setCertificates] = useState([]);
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(!isDemoMode);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const handleResendEmail = async (doc) => {
-    if (!doc?.paymentId || !session?.access_token) return;
-    setResendLoadingId(doc.paymentId);
-    try {
-      const res = await fetch('/.netlify/functions/billing-resend-invoice', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ paymentId: doc.paymentId }),
-      });
-      const body = await res.json().catch(() => ({}));
-      if (res.status === 429) {
-        toast({
-          title: 'Patience',
-          description: `Tu pourras redemander un renvoi dans environ ${body.retryAfterHours || 24} h.`,
-          variant: 'destructive',
-        });
-        return;
-      }
-      if (!res.ok) {
-        toast({
-          title: 'Renvoi impossible',
-          description: body.error || res.statusText,
-          variant: 'destructive',
-        });
-        return;
-      }
-      toast({
-        title: 'Facture renvoyée',
-        description: body.invoiceNumber ? `Facture ${body.invoiceNumber} envoyée à ton e-mail.` : 'Vérifie ta boîte mail.',
-      });
-      await refreshInvoices();
-    } catch (e) {
-      toast({
-        title: 'Erreur réseau',
-        description: e?.message || 'Réessaie plus tard.',
-        variant: 'destructive',
-      });
-    } finally {
-      setResendLoadingId(null);
-    }
-  };
-
-  const documents = isDemoMode ? demoData.documents : realDocs;
-  const allDocs = useMemo(
-    () => [...(documents.admin || []), ...(documents.academic || []), ...(documents.resources || [])],
-    [documents.academic, documents.admin, documents.resources]
-  );
-  const filterList = (arr) =>
-    (arr || []).filter((d) => !search || String(d.name || '').toLowerCase().includes(search.toLowerCase()));
-
-  const downloadDocument = async (doc) => {
-    if (!doc) return;
-    if (doc.kind === 'invoice') {
-      if (doc.url) {
-        window.open(doc.url, '_blank');
-        return;
-      }
-      if (!session?.access_token || !doc.paymentId) return;
-      const res = await fetch(`/.netlify/functions/billing-invoice-download?paymentId=${encodeURIComponent(doc.paymentId)}`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      if (!res.ok) return;
-      const html = await res.text();
-      const blob = new Blob([html], { type: 'text/html' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `facture-${String(doc.paymentId).slice(0, 8)}.html`;
-      link.click();
-      URL.revokeObjectURL(link.href);
+  /* ─── Chargement (tables lisibles par l'élève) ─── */
+  useEffect(() => {
+    if (isDemoMode || !user?.id) {
+      setLoading(false);
       return;
     }
-    if (doc.url) window.open(doc.url, '_blank');
+    let alive = true;
+    setLoading(true);
+    (async () => {
+      const [certRes, repRes] = await Promise.all([
+        supabase
+          .from('certificates')
+          .select('id,title,file_url,issued_at')
+          .eq('student_id', user.id)
+          .order('issued_at', { ascending: false }),
+        supabase
+          .from('student_live_reports')
+          .select('id,report_text,created_at')
+          .eq('student_id', user.id)
+          .order('created_at', { ascending: false }),
+      ]);
+      if (!alive) return;
+      setCertificates(Array.isArray(certRes.data) ? certRes.data : []);
+      setReports(Array.isArray(repRes.data) ? repRes.data : []);
+      setLoading(false);
+    })();
+    return () => { alive = false; };
+  }, [isDemoMode, user?.id, reloadKey]);
+
+  /* ─── Normalisation en items uniformes ─── */
+  const adminItems = useMemo(() => {
+    if (isDemoMode) {
+      return (demoData?.documents?.admin || []).map((d, i) => ({
+        id: `demo-admin-${d.id ?? i}`,
+        kind: 'demo',
+        cat: 'admin',
+        title: d.name || 'Document',
+        date: d.date || '',
+        size: d.size || '',
+        searchText: d.name || '',
+      }));
+    }
+    return certificates.map((c) => ({
+      id: `cert-${c.id}`,
+      kind: 'certificate',
+      cat: 'admin',
+      title: c.title || 'Document administratif',
+      issuedAt: c.issued_at,
+      fileUrl: c.file_url || null,
+      searchText: c.title || '',
+    }));
+  }, [isDemoMode, demoData, certificates]);
+
+  const eduItems = useMemo(() => {
+    if (isDemoMode) {
+      return (demoData?.documents?.academic || []).map((d, i) => ({
+        id: `demo-edu-${d.id ?? i}`,
+        kind: 'demo',
+        cat: 'edu',
+        title: d.name || 'Document',
+        date: d.date || '',
+        size: d.size || '',
+        searchText: d.name || '',
+      }));
+    }
+    return reports.map((r) => ({
+      id: `rep-${r.id}`,
+      kind: 'report',
+      cat: 'edu',
+      title: 'Compte-rendu de session',
+      createdAt: r.created_at,
+      text: r.report_text || '',
+      searchText: `compte-rendu session ${r.report_text || ''}`,
+    }));
+  }, [isDemoMode, demoData, reports]);
+
+  const counts = {
+    admin: adminItems.length,
+    edu: eduItems.length,
+    all: adminItems.length + eduItems.length,
   };
 
-  const renderDocRow = (doc) => {
-    if (doc.kind === 'invoice') {
+  const q = norm(search);
+  const matches = (it) => !q || norm(it.searchText).includes(q);
+  const visibleAdmin = adminItems.filter(matches);
+  const visibleEdu = eduItems.filter(matches);
+
+  const showAdmin = tab === 'all' || tab === 'admin';
+  const showEdu = tab === 'all' || tab === 'edu';
+  const totalVisible =
+    (showAdmin ? visibleAdmin.length : 0) + (showEdu ? visibleEdu.length : 0);
+
+  /* ─── Téléchargements ─── */
+  const downloadCertificate = (it) => {
+    if (it.fileUrl) {
+      window.open(it.fileUrl, '_blank', 'noopener');
+    } else {
+      restrictedAction('Téléchargement');
+    }
+  };
+  const downloadDemo = () => restrictedAction('Téléchargement du document');
+
+  /* ─── Rendu d'un item administratif ─── */
+  const renderAdmin = (it, idx) => {
+    if (it.kind === 'demo') {
       return (
-        <InvoiceDocumentRow
-          key={doc.id}
-          doc={doc}
-          isDemoMode={isDemoMode}
-          restrictedAction={restrictedAction}
-          onDownload={downloadDocument}
-          onReportNotReceived={handleReportNotReceived}
-          onResendEmail={handleResendEmail}
-          reportLoading={reportLoadingId === doc.paymentId}
-          resendLoading={resendLoadingId === doc.paymentId}
+        <DocRow
+          key={it.id}
+          icon={ScrollText}
+          iconCol={T.gold}
+          title={it.title}
+          subtitle={[it.date && `Ajouté le ${it.date}`, it.size].filter(Boolean).join(' • ') || 'Document administratif'}
+          badgeLabel="PDF"
+          badgeCol="#E0795F"
+          actionLabel="Télécharger"
+          onAction={downloadDemo}
+          delay={idx * 40}
+        />
+      );
+    }
+    const dateLabel = safeFormat(it.issuedAt, 'd MMMM yyyy');
+    const hasFile = !!it.fileUrl;
+    return (
+      <DocRow
+        key={it.id}
+        icon={hasFile ? Award : FileWarning}
+        iconCol={hasFile ? T.gold : T.t3}
+        title={it.title}
+        subtitle={
+          hasFile
+            ? `Délivré le ${dateLabel || '—'}`
+            : `Délivré le ${dateLabel || '—'} • fichier bientôt disponible`
+        }
+        badgeLabel="PDF"
+        badgeCol="#E0795F"
+        actionLabel={hasFile ? 'Télécharger' : 'Bientôt'}
+        actionDisabled={!hasFile}
+        actionTitle={hasFile ? undefined : 'Le fichier sera disponible prochainement'}
+        onAction={() => downloadCertificate(it)}
+        delay={idx * 40}
+      />
+    );
+  };
+
+  /* ─── Rendu d'un item pédagogique ─── */
+  const renderEdu = (it, idx) => {
+    if (it.kind === 'demo') {
+      return (
+        <DocRow
+          key={it.id}
+          icon={FileText}
+          iconCol="#8B9CFF"
+          title={it.title}
+          subtitle={[it.date && `Ajouté le ${it.date}`, it.size].filter(Boolean).join(' • ') || 'Document pédagogique'}
+          badgeLabel="PDF"
+          badgeCol="#8B9CFF"
+          actionLabel="Télécharger"
+          onAction={downloadDemo}
+          delay={idx * 40}
         />
       );
     }
     return (
-      <DocumentCard
-        key={doc.id}
-        doc={doc}
-        restrictedAction={restrictedAction}
-        isDemoMode={isDemoMode}
-        onDownload={downloadDocument}
+      <ReportRow
+        key={it.id}
+        title={it.title}
+        subtitle={`Disponible le ${safeFormat(it.createdAt, 'd MMMM yyyy') || '—'}`}
+        text={it.text}
+        delay={idx * 40}
       />
     );
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-serif font-bold text-white">Mes Documents</h1>
-          <p className="text-gray-400">Accédez à tous vos documents administratifs et pédagogiques.</p>
+    <div style={{ paddingBottom: 16 }}>
+      <style>{`
+        @keyframes docFade { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: translateY(0) } }
+        @keyframes docSpin { to { transform: rotate(360deg) } }
+        @keyframes docPulse { 0%,100% { opacity: .45 } 50% { opacity: .8 } }
+      `}</style>
+
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 14, background: T.goldDim, border: `1px solid ${T.goldMid}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <FolderOpen size={22} color={T.gold} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: T.t1, letterSpacing: '-0.02em', lineHeight: 1.15, margin: 0 }}>Documents</h1>
+            <p style={{ fontSize: 13, color: T.t3, marginTop: 3 }}>Tes attestations, relevés et comptes-rendus.</p>
+          </div>
         </div>
-        <div className="relative w-full md:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-          <Input placeholder="Rechercher..." className="pl-9 bg-[#192734] border-white/10 text-white" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          {!isDemoMode && (
+            <Btn onClick={() => setReloadKey((k) => k + 1)} disabled={loading} title="Actualiser">
+              <RefreshCw size={14} style={loading ? { animation: 'docSpin 1s linear infinite' } : undefined} /> Actualiser
+            </Btn>
+          )}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20,
+            padding: '5px 12px', fontFamily: T.mono, fontSize: 11, color: T.t2,
+            flexShrink: 0, whiteSpace: 'nowrap',
+          }}>
+            <span style={{ color: T.gold }}>◎</span>
+            {counts.all} document{counts.all !== 1 ? 's' : ''}
+          </div>
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <PremiumSegmentedSelector
-          value={activeTab}
-          onChange={setActiveTab}
-          options={[
-            { value: 'all', label: 'Tous', badge: `${allDocs.length}` },
-            { value: 'admin', label: 'Administratifs', badge: `${(documents.admin || []).length}` },
-            { value: 'academic', label: 'Pédagogiques', badge: `${(documents.academic || []).length}` },
-            { value: 'resources', label: 'Ressources', badge: `${(documents.resources || []).length}` },
-          ]}
-          layoutId="student-documents-tab-segment-pill"
-          className="mb-6"
-          compact
-          showChevron={false}
-        />
+      {/* Filtres + recherche */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 22 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {FILTERS.map((f) => (
+            <FilterPill key={f.key} active={tab === f.key} label={f.label} count={counts[f.key]} onClick={() => setTab(f.key)} />
+          ))}
+        </div>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto', minWidth: 220, flex: '1 1 240px', maxWidth: 360,
+          background: T.surface, border: `1px solid ${focused ? T.goldMid : T.border}`, borderRadius: 11, padding: '8px 12px', transition: 'border-color 150ms ease',
+        }}>
+          <Search size={15} color={T.t3} />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            placeholder="Rechercher un document…"
+            style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: T.t1, fontSize: 13, fontFamily: 'inherit' }}
+          />
+          {search && (
+            <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.t3, display: 'flex', padding: 0 }}>
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      </div>
 
-        <TabsContent value="all" className="space-y-4">
-          <Card className="bg-[#192734] border-white/10">
-            <CardContent className="pt-6 space-y-4">
-              {filterList(allDocs).length > 0 ? filterList(allDocs).map((doc) => renderDocRow(doc)) : <p className="text-gray-500 text-center">Aucun document.</p>}
-            </CardContent>
-          </Card>
-        </TabsContent>
+      {/* Chargement */}
+      {loading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} style={{
+              height: 74, borderRadius: 14, background: 'rgba(25,39,52,0.34)',
+              border: `1px solid ${T.border}`, animation: 'docPulse 1.4s ease-in-out infinite',
+              animationDelay: `${i * 90}ms`,
+            }} />
+          ))}
+        </div>
+      ) : totalVisible === 0 ? (
+        <EmptyState>
+          {search
+            ? `Aucun document pour « ${search} ».`
+            : tab === 'admin'
+              ? 'Aucun document administratif pour le moment.'
+              : tab === 'edu'
+                ? 'Aucun compte-rendu pédagogique pour le moment.'
+                : 'Aucun document disponible pour le moment.'}
+        </EmptyState>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
+          {/* Section Administratifs */}
+          {showAdmin && (
+            <section>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', margin: '0 0 12px' }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: T.t1, margin: 0 }}>Administratifs</h2>
+                <span style={{ fontFamily: T.mono, fontSize: 11, color: T.t3 }}>
+                  {visibleAdmin.length} document{visibleAdmin.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+              {visibleAdmin.length === 0 ? (
+                <EmptyState>
+                  {search ? `Aucun document administratif pour « ${search} ».` : 'Aucun document administratif pour le moment.'}
+                </EmptyState>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {visibleAdmin.map((it, i) => renderAdmin(it, i))}
+                </div>
+              )}
+            </section>
+          )}
 
-        <TabsContent value="admin" className="space-y-4">
-          <Card className="bg-[#192734] border-white/10">
-             <CardContent className="pt-6 space-y-4">
-                {filterList(documents.admin).map((doc) => renderDocRow(doc))}
-             </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="academic" className="space-y-4">
-          <Card className="bg-[#192734] border-white/10">
-             <CardContent className="pt-6 space-y-4">
-                {filterList(documents.academic).map((doc) => renderDocRow(doc))}
-             </CardContent>
-          </Card>
-        </TabsContent>
-        
-         <TabsContent value="resources" className="space-y-4">
-          <Card className="bg-[#192734] border-white/10">
-             <CardContent className="pt-6 space-y-4">
-                {filterList(documents.resources).map((doc) => renderDocRow(doc))}
-             </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          {/* Section Pédagogiques */}
+          {showEdu && (
+            <section>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', margin: '0 0 12px' }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: T.t1, margin: 0 }}>Pédagogiques</h2>
+                <span style={{ fontFamily: T.mono, fontSize: 11, color: T.t3 }}>
+                  {visibleEdu.length} document{visibleEdu.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+              {visibleEdu.length === 0 ? (
+                <EmptyState>
+                  {search ? `Aucun compte-rendu pour « ${search} ».` : 'Aucun compte-rendu pédagogique pour le moment.'}
+                </EmptyState>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {visibleEdu.map((it, i) => renderEdu(it, i))}
+                </div>
+              )}
+            </section>
+          )}
+        </div>
+      )}
     </div>
   );
 };

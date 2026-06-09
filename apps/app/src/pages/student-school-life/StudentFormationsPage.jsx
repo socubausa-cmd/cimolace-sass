@@ -22,7 +22,7 @@ const FormationCard = ({ formation, type, index = 0 }) => (
     className="h-full"
   >
     <Card className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#151a21]/80 backdrop-blur-xl hover:border-[#D4AF37]/40 transition-all duration-300 group h-full flex flex-col">
-      <div className="relative h-48 overflow-hidden">
+      <div className="relative h-40 overflow-hidden">
         <motion.img
           src={formation.thumbnail || "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=1000&auto=format&fit=crop"}
           alt={formation.title}
@@ -57,22 +57,28 @@ const FormationCard = ({ formation, type, index = 0 }) => (
               <span className="text-[#D4AF37] font-medium">{formation.progress || 0}%</span>
             </div>
             <Progress value={formation.progress || 0} className="h-2" indicatorClassName="bg-[#D4AF37]" />
-            <div className="flex justify-between text-sm text-gray-500 mt-2">
-              <span>{formation.completedModules || 2}/{formation.totalModules || 8} Modules</span>
-              <span>{formation.completedWeeks || 8}/{formation.totalWeeks || 32} Semaines</span>
-            </div>
+            {(formation.totalModules || formation.totalWeeks) ? (
+              <div className="flex justify-between text-sm text-gray-500 mt-2">
+                {formation.totalModules ? <span>{formation.completedModules || 0}/{formation.totalModules} Modules</span> : <span />}
+                {formation.totalWeeks ? <span>{formation.completedWeeks || 0}/{formation.totalWeeks} Semaines</span> : null}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1">Cours non démarré</p>
+            )}
           </div>
         )}
 
         {type === 'completed' && (
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-emerald-400 text-sm font-medium">
-              <CheckCircle className="w-4 h-4" /> Complété le {formation.completionDate || '20/01/2026'}
+              <CheckCircle className="w-4 h-4" /> Formation complétée{formation.completionDate ? ` le ${formation.completionDate}` : ''}
             </div>
-            <div className="flex items-center justify-between p-3 rounded-xl bg-green-500/10 border border-green-500/20">
-              <span className="text-sm text-gray-400">Note Finale</span>
-              <span className="text-[#D4AF37] font-bold">{formation.finalScore || '18/20'}</span>
-            </div>
+            {formation.finalScore ? (
+              <div className="flex items-center justify-between p-3 rounded-xl bg-green-500/10 border border-green-500/20">
+                <span className="text-sm text-gray-400">Note Finale</span>
+                <span className="text-[#D4AF37] font-bold">{formation.finalScore}</span>
+              </div>
+            ) : null}
           </div>
         )}
 
@@ -267,7 +273,7 @@ const StudentFormationsPage = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="mb-8"
+                className="mb-8 flex justify-center"
               >
                 <PremiumSegmentedSelector
                   value={activeTab}
@@ -278,12 +284,12 @@ const StudentFormationsPage = () => {
                     { value: 'available', label: `Disponibles (${available.length})`, badge: 'Catalogue', icon: BookOpen },
                   ]}
                   layoutId="student-formations-segment-pill"
-                  className="max-w-xl"
+                  className="w-fit max-w-full"
                 />
               </motion.div>
 
               {activeTab === 'in_progress' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-0">
+                <div className="grid [grid-template-columns:repeat(auto-fit,minmax(280px,360px))] justify-center gap-6 mt-0">
                   {inProgress.length > 0 ? (
                     inProgress.map((f, i) => (
                       <FormationCard key={f.id} formation={f} type="in_progress" index={i} />
@@ -301,7 +307,7 @@ const StudentFormationsPage = () => {
               ) : null}
 
               {activeTab === 'completed' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-0">
+                <div className="grid [grid-template-columns:repeat(auto-fit,minmax(280px,360px))] justify-center gap-6 mt-0">
                   {completed.length > 0 ? (
                     completed.map((f, i) => (
                       <FormationCard key={f.id} formation={f} type="completed" index={i} />
@@ -319,7 +325,7 @@ const StudentFormationsPage = () => {
               ) : null}
 
               {activeTab === 'available' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-0">
+                <div className="grid [grid-template-columns:repeat(auto-fit,minmax(280px,360px))] justify-center gap-6 mt-0">
                   {available.length > 0 ? (
                     available.map((f, i) => (
                       <motion.div

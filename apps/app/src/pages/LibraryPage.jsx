@@ -1,27 +1,299 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { 
-  Search, 
-  BookOpen, 
-  Download, 
-  Bookmark, 
-  FileText, 
-  Video, 
-  Mic, 
+import {
+  Search,
+  BookOpen,
+  Download,
+  Bookmark,
+  FileText,
+  Video,
+  Mic,
   Lock,
   ScrollText,
   ClipboardList,
   FolderOpen,
   Film,
   BookMarked,
-  Filter
+  Filter,
+  X,
+  LayoutGrid
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import ExpandableCard from '@/components/ui/ExpandableCard';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import PremiumSegmentedSelector from '@/components/ui/premium-segmented-selector';
+import { supabase } from '@/lib/customSupabaseClient';
+
+/* ─── Thème ISNA (navy + or) — vue "Ressources" élève ─── */
+const T = {
+  surface:  '#12111a',
+  surface2: 'rgba(25,39,52,0.5)',
+  border:   'rgba(255,255,255,0.07)',
+  gold:     '#D4AF37',
+  goldDim:  'rgba(212,175,55,0.12)',
+  goldMid:  'rgba(212,175,55,0.28)',
+  t1: '#F5F5F7',
+  t2: 'rgba(245,245,247,0.65)',
+  t3: 'rgba(245,245,247,0.38)',
+  t4: 'rgba(245,245,247,0.16)',
+  mono: "'JetBrains Mono','Fira Code',monospace",
+};
+
+const CAT_ORDER = ['cours', 'documents', 'audio', 'glossaire', 'officiels', 'rapports'];
+const CAT_META = {
+  cours:     { label: 'Cours vidéo',         Icon: Film },
+  documents: { label: 'Documents & guides',  Icon: FileText },
+  audio:     { label: 'Audio & récitations', Icon: Mic },
+  glossaire: { label: 'Glossaire',           Icon: BookMarked },
+  officiels: { label: 'Documents officiels', Icon: FolderOpen },
+  rapports:  { label: 'Synthèses de cours',  Icon: ClipboardList },
+};
+const TYPE_META = {
+  video:   { label: 'Vidéo',   col: '#D4AF37', Icon: Video },
+  pdf:     { label: 'PDF',     col: '#E0795F', Icon: FileText },
+  audio:   { label: 'Audio',   col: '#8B9CFF', Icon: Mic },
+  article: { label: 'Article', col: '#7FD1C0', Icon: BookOpen },
+  link:    { label: 'Lien',    col: '#9AA4B2', Icon: BookOpen },
+};
+
+const ResCatPill = ({ active, label, count, Icon, onClick }) => {
+  const [hov, setHov] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 7,
+        background: active ? T.gold : hov ? T.surface2 : 'transparent',
+        border: `1px solid ${active ? 'transparent' : hov ? T.goldMid : T.border}`,
+        borderRadius: 999, padding: '7px 13px',
+        fontSize: 12.5, fontWeight: 600, fontFamily: 'inherit',
+        color: active ? '#000' : hov ? T.gold : T.t2,
+        cursor: 'pointer', transition: 'all 160ms ease', whiteSpace: 'nowrap',
+      }}
+    >
+      <Icon size={13} color={active ? '#000' : hov ? T.gold : T.t3} />
+      {label}
+      {count != null && (
+        <span style={{
+          fontFamily: T.mono, fontSize: 10, fontWeight: 700,
+          color: active ? '#000' : T.gold,
+          background: active ? 'rgba(0,0,0,0.14)' : T.goldDim,
+          borderRadius: 999, padding: '0 6px', minWidth: 16, textAlign: 'center',
+        }}>{count}</span>
+      )}
+    </button>
+  );
+};
+
+const ResCard = ({ r, delay }) => {
+  const [hov, setHov] = useState(false);
+  const tm = TYPE_META[r.resource_type] || TYPE_META.pdf;
+  const meta = r.duration_label || r.size_label;
+  const premium = r.access_level === 'academique_plus';
+  const TypeIcon = tm.Icon;
+  const open = () => { if (r.url && r.url !== '#') window.open(r.url, '_blank', 'noopener'); };
+  return (
+    <article
+      onClick={open}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        background: hov ? 'rgba(25,39,52,0.65)' : 'rgba(25,39,52,0.36)',
+        border: `1px solid ${hov ? T.goldMid : T.border}`,
+        borderRadius: 14, padding: 16, cursor: 'pointer',
+        transition: 'all 180ms ease', transform: hov ? 'translateY(-2px)' : 'none',
+        animation: `resFade .4s ease ${delay}ms both`,
+        display: 'flex', flexDirection: 'column', gap: 10, minHeight: 134,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+        <div style={{
+          width: 38, height: 38, borderRadius: 10,
+          background: 'rgba(0,0,0,0.28)', border: `1px solid ${T.border}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <TypeIcon size={18} color={tm.col} />
+        </div>
+        {premium ? (
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.04em',
+            color: T.gold, background: T.goldDim, border: `1px solid ${T.goldMid}`,
+            borderRadius: 20, padding: '2px 8px',
+          }}>
+            <Lock size={10} /> Académique+
+          </span>
+        ) : (
+          <Download size={15} color={hov ? T.t2 : T.t4} style={{ transition: 'color 180ms', marginTop: 4 }} />
+        )}
+      </div>
+      <h4 style={{
+        fontSize: 14, fontWeight: 600, color: hov ? T.gold : T.t1,
+        lineHeight: 1.35, transition: 'color 180ms', margin: 0,
+        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+      }}>{r.title}</h4>
+      {r.description && (
+        <p style={{
+          fontSize: 12, color: T.t3, lineHeight: 1.5, margin: 0,
+          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+        }}>{r.description}</p>
+      )}
+      <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 8, paddingTop: 4 }}>
+        <span style={{
+          fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, color: tm.col,
+          background: 'rgba(255,255,255,0.04)', border: `1px solid ${T.border}`,
+          borderRadius: 6, padding: '2px 7px', letterSpacing: '0.05em', textTransform: 'uppercase',
+        }}>{tm.label}</span>
+        {meta && <span style={{ fontFamily: T.mono, fontSize: 10.5, color: T.t3 }}>{meta}</span>}
+      </div>
+    </article>
+  );
+};
+
+const ResEmpty = ({ search }) => (
+  <div style={{
+    textAlign: 'center', padding: '48px 24px', color: T.t3, fontSize: 13,
+    background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14,
+  }}>
+    {search ? `Aucune ressource pour « ${search} »` : 'Aucune ressource disponible pour le moment.'}
+  </div>
+);
+
+const ResLoading = () => (
+  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+    {Array.from({ length: 6 }).map((_, i) => (
+      <div key={i} style={{
+        height: 134, borderRadius: 14, background: 'rgba(25,39,52,0.36)',
+        border: `1px solid ${T.border}`, animation: 'resPulse 1.4s ease-in-out infinite',
+        animationDelay: `${i * 90}ms`,
+      }} />
+    ))}
+  </div>
+);
+
+function EmbeddedResources() {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [cat, setCat] = useState('tous');
+  const [focused, setFocused] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from('resources')
+        .select('id,title,description,category,resource_type,url,duration_label,size_label,access_level,order_index')
+        .eq('is_published', true)
+        .order('category', { ascending: true })
+        .order('order_index', { ascending: true });
+      if (!alive) return;
+      setItems(Array.isArray(data) ? data : []);
+      setLoading(false);
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  const counts = useMemo(() => {
+    const m = { tous: items.length };
+    items.forEach((r) => { m[r.category] = (m[r.category] || 0) + 1; });
+    return m;
+  }, [items]);
+
+  const presentCats = CAT_ORDER.filter((c) => counts[c]);
+
+  const q = search.trim().toLowerCase();
+  const filtered = items.filter((r) =>
+    (cat === 'tous' || r.category === cat) &&
+    (!q || (r.title || '').toLowerCase().includes(q) || (r.description || '').toLowerCase().includes(q))
+  );
+
+  return (
+    <div style={{ paddingBottom: 32 }}>
+      <Helmet><title>Ressources | ISNA</title></Helmet>
+      <style>{`
+        @keyframes resFade { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: translateY(0) } }
+        @keyframes resPulse { 0%,100% { opacity: .45 } 50% { opacity: .8 } }
+      `}</style>
+
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 14,
+            background: T.goldDim, border: `1px solid ${T.goldMid}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <BookOpen size={22} color={T.gold} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: T.t1, letterSpacing: '-0.02em', lineHeight: 1.15, margin: 0 }}>
+              Ressources
+            </h1>
+            <p style={{ fontSize: 13, color: T.t3, marginTop: 3 }}>
+              Cours, documents, audios et supports officiels de l&apos;institut.
+            </p>
+          </div>
+        </div>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20,
+          padding: '5px 12px', fontFamily: T.mono, fontSize: 11, color: T.t2,
+          flexShrink: 0, whiteSpace: 'nowrap',
+        }}>
+          <span style={{ color: T.gold }}>◎</span>
+          {items.length} ressources
+        </div>
+      </div>
+
+      {/* Recherche */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8, maxWidth: 420,
+        background: T.surface, border: `1px solid ${focused ? T.goldMid : T.border}`,
+        borderRadius: 11, padding: '9px 12px', transition: 'border-color 150ms ease',
+      }}>
+        <Search size={15} color={T.t3} />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder="Rechercher une ressource…"
+          style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: T.t1, fontSize: 13, fontFamily: 'inherit' }}
+        />
+        {search && (
+          <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.t3, display: 'flex', padding: 0 }}>
+            <X size={14} />
+          </button>
+        )}
+      </div>
+
+      {/* Catégories */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '16px 0 22px' }}>
+        <ResCatPill active={cat === 'tous'} label="Tous" count={counts.tous} Icon={LayoutGrid} onClick={() => setCat('tous')} />
+        {presentCats.map((c) => (
+          <ResCatPill key={c} active={cat === c} label={CAT_META[c]?.label || c} count={counts[c]} Icon={CAT_META[c]?.Icon || FileText} onClick={() => setCat(c)} />
+        ))}
+      </div>
+
+      {/* Grille */}
+      {loading ? (
+        <ResLoading />
+      ) : filtered.length === 0 ? (
+        <ResEmpty search={q} />
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+          {filtered.map((r, i) => <ResCard key={r.id} r={r} delay={i * 40} />)}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const LibraryPage = ({ embedded = false }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -137,83 +409,7 @@ const LibraryPage = ({ embedded = false }) => {
   };
 
   if (embedded) {
-    return (
-      <div className="space-y-8 pb-8">
-        <Helmet><title>Ressources | PRORASCIENCE</title></Helmet>
-
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-[#D4AF37]/10 rounded-xl border border-[#D4AF37]/20">
-            <BookOpen className="w-6 h-6 text-[#D4AF37]" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-serif font-bold text-white">Bibliothèque du Savoir</h1>
-            <p className="text-gray-400 text-sm">Ressources et documents numérisés de l&apos;Ordre</p>
-          </div>
-        </div>
-
-        {/* Search */}
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
-          <Input
-            placeholder="Rechercher une ressource..."
-            className="pl-10 bg-[#192734] border-white/10 text-white focus:border-[#D4AF37]/50"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        {/* Tabs par catégorie */}
-        <Tabs value={activeEmbeddedCategory} onValueChange={setActiveEmbeddedCategory} className="space-y-6">
-          <PremiumSegmentedSelector
-            value={activeEmbeddedCategory}
-            onChange={setActiveEmbeddedCategory}
-            options={categories.map((cat) => ({
-              value: cat.id,
-              label: cat.title.split(' ').slice(0, 2).join(' '),
-              badge: `${cat.resources.length}`,
-              icon: cat.icon,
-            }))}
-            layoutId="library-embedded-category-segment-pill"
-            compact
-            showChevron={false}
-          />
-
-          {categories.map((cat) => {
-            const filtered = cat.resources.filter(r =>
-              !searchTerm || r.title.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-            return (
-              <TabsContent key={cat.id} value={cat.id} className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-bold text-white">{cat.title}</h2>
-                    <span className="text-xs text-[#D4AF37] font-semibold uppercase tracking-wider">Accès : {cat.access}</span>
-                  </div>
-                  <span className="text-sm text-gray-500">{filtered.length} ressource{filtered.length > 1 ? 's' : ''}</span>
-                </div>
-                {filtered.length === 0 ? (
-                  <p className="text-gray-500 text-sm py-6 text-center">Aucune ressource ne correspond.</p>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filtered.map((res, idx) => (
-                      <div key={idx} className="bg-[#192734]/60 border border-white/5 p-4 rounded-xl hover:border-[#D4AF37]/30 hover:bg-[#192734] transition-all cursor-pointer group flex items-start gap-3">
-                        <div className="mt-0.5 p-2 rounded-lg bg-black/30 shrink-0">{getIcon(res.type)}</div>
-                        <div className="min-w-0">
-                          <h4 className="font-semibold text-white group-hover:text-[#D4AF37] transition-colors text-sm truncate">{res.title}</h4>
-                          <p className="text-xs text-gray-500 mt-1">{res.date}</p>
-                          <span className="inline-block mt-2 text-xs px-2 py-0.5 rounded bg-white/5 text-gray-400 uppercase tracking-wider">{res.type}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-            );
-          })}
-        </Tabs>
-      </div>
-    );
+    return <EmbeddedResources />;
   }
 
   return (

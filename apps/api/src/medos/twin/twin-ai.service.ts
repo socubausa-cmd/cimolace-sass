@@ -42,6 +42,18 @@ export class TwinAiService {
   }
 
   private async callClaude<T>(system: string, user: string, maxTokens = 1500): Promise<AiResult<T>> {
+    return this.callClaudeRaw<T>(system, [{ type: 'text', text: user }], maxTokens);
+  }
+
+  /**
+   * Variante bas-niveau acceptant un tableau de content blocks (texte + image
+   * base64). Sert pour la vision (M3 — OCR bilans image).
+   */
+  private async callClaudeRaw<T>(
+    system: string,
+    content: Array<Record<string, any>>,
+    maxTokens = 1500,
+  ): Promise<AiResult<T>> {
     const apiKey = this.config.get<string>('ANTHROPIC_API_KEY');
     if (!apiKey) {
       throw new ServiceUnavailableException(
@@ -59,7 +71,7 @@ export class TwinAiService {
         model: this.model,
         max_tokens: maxTokens,
         system,
-        messages: [{ role: 'user', content: user }],
+        messages: [{ role: 'user', content }],
       }),
     });
     if (!response.ok) {
@@ -68,7 +80,13 @@ export class TwinAiService {
       throw new ServiceUnavailableException(`Échec de l'analyse IA (${response.status})`);
     }
     const result: any = await response.json();
-    const rawText: string = result?.content?.[0]?.text ?? '';
+    // Concatène tous les blocs texte renvoyés (Claude peut splitter la réponse).
+    const rawText: string = Array.isArray(result?.content)
+      ? result.content
+          .filter((c: any) => c?.type === 'text' && typeof c.text === 'string')
+          .map((c: any) => c.text)
+          .join('')
+      : (result?.content?.[0]?.text ?? '');
     const tokens: number = result?.usage?.output_tokens ?? 0;
     const cleaned = rawText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
     let data: T;
@@ -203,5 +221,35 @@ export class TwinAiService {
       'Schéma JSON attendu: {"values": [{"code": string, "value": number, "unit": string, "confidence": number}]}.';
     const user = `Codes canoniques disponibles: ${dict}\n\nTexte du bilan:\n"""\n${rawText.slice(0, 12000)}\n"""`;
     return this.callClaude(system, user, 1500);
+  }
+
+  /**
+   * Extraction de biomarqueurs depuis une IMAGE de bilan (M3 — Claude Vision).
+   * Le buffer est encodé en base64 et envoyé comme content block image.
+   * Mêmes contraintes de sortie que extractBiomarkers (codes canoniques, JSON strict).
+   */
+  async extractBiomarkersFromImage(
+    base64Image: string,
+    mediaType: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif',
+    knownCodes: Array<{ code: string; name_fr: string }>,
+  ): Promise<AiResult<{ values: Array<{ code: string; value: number; unit: string; confidence: number }> }>> {
+    const dict = knownCodes.map((k) => `${k.code} = ${k.name_fr}`).join('; ');
+    const system =
+      DISCLAIMER +
+      ' Tu extrais des valeurs de biomarqueurs depuis l\'IMAGE d\'un compte-rendu de laboratoire. ' +
+      'Lis attentivement le tableau, identifie chaque ligne (nom du test, valeur, unité), puis mappe au code canonique. ' +
+      'Si une valeur est illisible ou ambiguë, baisse la confidence. Ignore ce que tu ne reconnais pas. ' +
+      'Schéma JSON attendu: {"values": [{"code": string, "value": number, "unit": string, "confidence": number}]}.';
+    const userText =
+      `Codes canoniques disponibles: ${dict}\n\n` +
+      `Analyse l'image ci-jointe : extrait UNIQUEMENT les biomarqueurs reconnaissables et renvoie le JSON.`;
+    const content: Array<Record<string, any>> = [
+      {
+        type: 'image',
+        source: { type: 'base64', media_type: mediaType, data: base64Image },
+      },
+      { type: 'text', text: userText },
+    ];
+    return this.callClaudeRaw(system, content, 1800);
   }
 }
