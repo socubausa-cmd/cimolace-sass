@@ -276,4 +276,41 @@ export class TenantPortalController {
     await this.db.from('tenant_memberships').update({ role }).eq('tenant_id', req.tenant.id).eq('user_id', userId);
     return { data: { ok: true, role } };
   }
+
+  /**
+   * Ouvre le portail de facturation Stripe (gérer carte, factures, annulation)
+   * pour le client Stripe du tenant. Renvoie l'URL de la session.
+   */
+  @Post('billing-portal')
+  async billingPortal(@Req() req: any) {
+    const { data: sub } = await this.db
+      .from('billing_subscriptions')
+      .select('provider_customer_id')
+      .eq('tenant_id', req.tenant.id)
+      .not('provider_customer_id', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const customer = sub?.provider_customer_id;
+    if (!customer) {
+      throw new BadRequestException("Aucun client Stripe — effectuez d'abord un paiement par carte.");
+    }
+    const secret = process.env.STRIPE_SECRET_KEY;
+    if (!secret) throw new BadRequestException('Paiement carte non configuré (STRIPE_SECRET_KEY).');
+    const frontend = process.env.FRONTEND_URL || 'https://app.cimolace.space';
+    const params = new URLSearchParams();
+    params.append('customer', String(customer));
+    params.append('return_url', `${frontend}/cimolace/billing`);
+    const res = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${Buffer.from(secret + ':').toString('base64')}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
+    });
+    const session: any = await res.json();
+    if (!res.ok) throw new BadRequestException(session?.error?.message || 'Portail Stripe indisponible');
+    return { url: session.url };
+  }
 }

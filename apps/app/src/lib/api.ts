@@ -156,6 +156,8 @@ export const tenantPortalApi = {
     api.post<ApiEnvelope<any>>(`/tenant-portal/subscriptions/${id}/cancel`).then(unwrap).then(peel),
   requestDeletion: (reason?: string) =>
     api.post<ApiEnvelope<any>>("/tenant-portal/account/request-deletion", { reason }).then(unwrap).then(peel),
+  billingPortal: () =>
+    api.post<ApiEnvelope<any>>("/tenant-portal/billing-portal").then(unwrap).then(peel),
 };
 
 export const catalogApi = {

@@ -57,6 +57,15 @@ const TABS = [
   { id: 'compte', label: 'Compte', icon: ShieldAlert },
 ];
 
+// Regroupement des sections dans la sidebar (style SaaS).
+const NAV_GROUPS = [
+  { label: 'Tableau de bord', ids: ['apercu', 'monitoring'] },
+  { label: 'Facturation', ids: ['abonnement', 'marketplace', 'factures'] },
+  { label: 'Services', ids: ['moteurs', 'produits'] },
+  { label: 'Organisation', ids: ['equipe', 'cles', 'support'] },
+  { label: 'Mon compte', ids: ['profil', 'parametres', 'compte'] },
+];
+
 // Familles de moteurs → produit Cimolace + lien d'accès.
 const ENGINE_FAMILIES = [
   { key: 'med', label: 'MEDOS', desc: 'Dossiers patients, notes SOAP, prescriptions, téléconsultation.', match: (k) => k.startsWith('med_') || k === 'twin' || k === 'wellness_engine' },
@@ -266,6 +275,11 @@ export default function CimolaceBillingDashboardPage() {
     catch (e) { setError(e?.message || 'Annulation impossible'); }
     finally { setBusy(null); }
   };
+  const openBillingPortal = async () => {
+    setBusy('portal'); setError(null);
+    try { withSlug(); const r = await tenantPortalApi.billingPortal(); if (r?.url) { window.location.href = r.url; return; } throw new Error('Portail indisponible'); }
+    catch (e) { setError(e?.message || 'Portail de facturation indisponible (paiement carte réel requis).'); setBusy(null); }
+  };
 
   const planName = (s) => s?.metadata?.label || s?.plan_id || 'Abonnement';
   const activeName = tenants.find((t) => t.slug === activeSlug)?.name || activeSlug || '—';
@@ -282,45 +296,52 @@ export default function CimolaceBillingDashboardPage() {
   return (
     <>
       <Helmet><title>Espace {activeName} | CIMOLACE</title></Helmet>
-      <div className="min-h-screen bg-[#050507] text-white">
-        <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 backdrop-blur-xl bg-[#050507]/80 border-b border-white/[0.04]">
-          <Link to="/cimolace" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center"><Zap className="w-3.5 h-3.5 text-white" /></div>
-            <span className="text-sm font-black tracking-tight">CIMOLACE</span>
-          </Link>
-          <button onClick={() => loadAll(activeSlug)} className="text-xs text-white/40 hover:text-white/80 flex items-center gap-1"><RefreshCw className="w-3 h-3" /> Rafraîchir</button>
-        </nav>
+      <div className="min-h-screen bg-[#08080c] text-white flex">
+        {/* Sidebar */}
+        <aside className="w-64 shrink-0 border-r border-white/[0.06] bg-[#0b0b11] sticky top-0 h-screen self-start flex flex-col">
+          <div className="px-5 pt-5 pb-4 border-b border-white/[0.06]">
+            <Link to="/cimolace" className="flex items-center gap-2 mb-4">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center"><Zap className="w-3.5 h-3.5 text-white" /></div>
+              <span className="text-sm font-black tracking-tight">CIMOLACE</span>
+            </Link>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-violet-300/70 flex items-center gap-1"><Building2 className="w-3 h-3" /> Espace tenant</div>
+            <div className="text-base font-bold truncate mt-0.5">{activeName}</div>
+            {tenants.length > 1 && (
+              <select value={activeSlug} onChange={(e) => switchTenant(e.target.value)} className="mt-2 w-full bg-black/30 border border-white/[0.1] rounded-lg px-2 py-1.5 text-xs text-white/80">
+                {tenants.map((t) => <option key={t.slug} value={t.slug} className="bg-[#0b0b11]">{t.name}</option>)}
+              </select>
+            )}
+          </div>
+          <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+            {NAV_GROUPS.map((g) => (
+              <div key={g.label}>
+                <div className="px-2 mb-1 text-[10px] uppercase tracking-wide text-white/30">{g.label}</div>
+                {g.ids.map((id) => {
+                  const t = TABS.find((x) => x.id === id); if (!t) return null;
+                  const Icon = t.icon; const danger = id === 'compte';
+                  return (
+                    <button key={id} onClick={() => setTab(id)}
+                      className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm mb-0.5 transition ${tab === id ? 'bg-violet-500/20 text-white' : danger ? 'text-red-300/70 hover:bg-red-500/10' : 'text-white/55 hover:bg-white/[0.05] hover:text-white'}`}>
+                      <Icon className="w-4 h-4 shrink-0" /> <span className="truncate">{t.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+          </nav>
+          <div className="px-4 py-3 border-t border-white/[0.06] text-[11px] text-white/30 truncate">{profile?.email || 'Espace tenant'}</div>
+        </aside>
 
-        <div className="pt-24 pb-12 px-6">
-          <div className="max-w-4xl mx-auto">
-            {/* En-tête espace */}
-            <div className="mb-6">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-violet-300/80 mb-1"><Building2 className="w-3.5 h-3.5" /> Espace tenant</div>
-              <h1 className="text-3xl font-black">{activeName}</h1>
-              <p className="text-white/50 text-sm mt-1">Back-office Cimolace · abonnement, moteurs et factures de votre infrastructure.</p>
-              {tenants.length > 1 && (
-                <div className="mt-3 flex items-center gap-2 flex-wrap">
-                  <span className="text-xs text-white/40">Changer d'espace :</span>
-                  {tenants.map((t) => (
-                    <button key={t.slug} onClick={() => switchTenant(t.slug)}
-                      className={`px-3 py-1.5 rounded-lg border text-sm font-medium ${t.slug === activeSlug ? 'bg-violet-500/25 border-violet-500/40 text-white' : 'bg-white/[0.03] border-white/[0.08] text-white/60 hover:text-white'}`}>{t.name}</button>
-                  ))}
-                </div>
-              )}
+        {/* Contenu */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          <header className="sticky top-0 z-40 flex items-center justify-between gap-3 px-6 lg:px-8 py-4 border-b border-white/[0.06] bg-[#08080c]/90 backdrop-blur-xl">
+            <div className="min-w-0">
+              <h1 className="text-lg font-bold truncate">{TABS.find((t) => t.id === tab)?.label || 'Espace'}</h1>
+              <p className="text-xs text-white/40 truncate">{activeName} · {activeSlug || '—'}</p>
             </div>
-
-            {/* Onglets */}
-            <div className="flex gap-2 border-b border-white/[0.06] mb-6">
-              {TABS.map((t) => {
-                const Icon = t.icon;
-                return (
-                  <button key={t.id} onClick={() => setTab(t.id)}
-                    className={`px-4 py-2.5 text-sm font-semibold flex items-center gap-2 border-b-2 -mb-px ${tab === t.id ? 'border-violet-500 text-white' : 'border-transparent text-white/45 hover:text-white/80'}`}>
-                    <Icon className="w-4 h-4" /> {t.label}
-                  </button>
-                );
-              })}
-            </div>
+            <button onClick={() => loadAll(activeSlug)} className="shrink-0 text-xs text-white/50 hover:text-white flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/[0.08] hover:bg-white/[0.04]"><RefreshCw className="w-3.5 h-3.5" /> Rafraîchir</button>
+          </header>
+          <main className="px-6 lg:px-8 py-6 w-full max-w-5xl">
 
             {notice && <div className="mb-6 rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-200 flex items-center gap-2"><CheckCircle className="w-4 h-4" /> {notice}</div>}
             {error && <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200 flex items-center gap-2"><AlertCircle className="w-4 h-4" /> {error}</div>}
@@ -402,6 +423,9 @@ export default function CimolaceBillingDashboardPage() {
                           </motion.div>
                         );
                       })}
+                      <div className="pt-2">
+                        <button onClick={openBillingPortal} disabled={busy === 'portal'} className="text-sm px-4 py-2.5 rounded-xl border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] flex items-center gap-2 disabled:opacity-40">{busy === 'portal' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />} Gérer ma facturation (moyen de paiement, reçus) — portail Stripe</button>
+                      </div>
                       <p className="text-xs text-white/40 pt-1">Paiement sécurisé par Stripe. En mode test : carte <code className="text-white/60">4242 4242 4242 4242</code>, date future, CVC quelconque.</p>
                     </div>
                   )
@@ -594,16 +618,16 @@ export default function CimolaceBillingDashboardPage() {
                         <button disabled={!inviteForm.email.trim() || busy === 'invite'} onClick={invite} className="px-4 py-2 rounded-lg bg-violet-500/80 hover:bg-violet-500 text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'invite' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />} Inviter</button>
                       </div>
                     </div>
-                    {members.length === 0 ? <Empty>Aucun membre listé (rôle owner/admin requis pour gérer l'équipe).</Empty> : (
+                    {(() => { const team = members.filter((m) => !['patient', 'student', 'eleve'].includes(String(m.role || '').toLowerCase())); return team.length === 0 ? <Empty>Aucun membre d'équipe (les clients/patients ne sont pas comptés ici). Invitez un collaborateur ci-dessus.</Empty> : (
                       <div className="space-y-2">
-                        {members.map((m) => { const uid = m.user_id || m.id; return (
+                        {team.map((m) => { const uid = m.user_id || m.id; return (
                           <div key={uid} className="flex items-center justify-between p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] gap-3 flex-wrap">
                             <div className="flex items-center gap-3"><div className="w-9 h-9 rounded-xl bg-white/[0.05] flex items-center justify-center"><UserCircle className="w-4 h-4 text-white/60" /></div><div><p className="font-medium text-sm">{m.email || m.full_name || uid}</p><p className="text-xs text-white/40">{m.role || 'member'}{m.status ? ` · ${m.status}` : ''}</p></div></div>
                             <button disabled={busy === `rm-${uid}`} onClick={() => kickMember(uid)} className="px-3 py-1.5 rounded-lg border border-red-500/20 text-red-300/80 hover:bg-red-500/10 text-xs flex items-center gap-1 disabled:opacity-40">{busy === `rm-${uid}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />} Retirer</button>
                           </div>
                         ); })}
                       </div>
-                    )}
+                    ); })()}
                   </div>
                 )}
 
@@ -639,7 +663,7 @@ export default function CimolaceBillingDashboardPage() {
                 )}
               </>
             )}
-          </div>
+          </main>
         </div>
       </div>
     </>
