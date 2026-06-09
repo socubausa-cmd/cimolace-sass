@@ -855,28 +855,38 @@ export default function StudentWeeklySchedulePage() {
       setWeekIndex(targetWeekIdx);
 
       // Fetch ALL module_weeks for this path in sorted order
-      // Walk school_paths → path_courses → course_modules → module_weeks
-      const { data: courses, error: ce } = await supabase
+      // Walk school_paths → path_courses (course_id) → course_modules → module_weeks
+      const { data: pathCourses, error: ce } = await supabase
         .from('path_courses')
-        .select('id')
+        .select('id, course_id')
         .eq('path_id', pathId)
         .order('created_at', { ascending: true });
       if (ce) throw ce;
 
-      if (!courses || courses.length === 0) {
+      if (!pathCourses || pathCourses.length === 0) {
         setCurrentWeek(null);
         setDays(Array(5).fill(null));
         setLoading(false);
         return;
       }
 
-      const courseIds = courses.map((c) => c.id);
+      // Use course_id (FK to courses table) — filter out rows without course_id
+      const courseIds = pathCourses
+        .map((c) => c.course_id)
+        .filter(Boolean);
+
+      if (courseIds.length === 0) {
+        setCurrentWeek(null);
+        setDays(Array(5).fill(null));
+        setLoading(false);
+        return;
+      }
 
       const { data: modules, error: me } = await supabase
         .from('course_modules')
         .select('id')
         .in('course_id', courseIds)
-        .order('sort_order', { ascending: true });
+        .order('order_index', { ascending: true });
       if (me) throw me;
 
       if (!modules || modules.length === 0) {
@@ -978,7 +988,7 @@ export default function StudentWeeklySchedulePage() {
 
         const { data: path, error: spErr } = await supabase
           .from('school_paths')
-          .select('id, title, starts_on')
+          .select('id, title')
           .eq('id', pathId)
           .maybeSingle();
         if (spErr) throw spErr;
@@ -989,8 +999,9 @@ export default function StudentWeeklySchedulePage() {
         }
 
         if (!cancelled) {
-          setSchoolPath(path);
-          await loadWeekData(path.id, path.starts_on, 0);
+          // starts_on not in schema — use null (page falls back to current Monday)
+          setSchoolPath({ ...path, starts_on: null });
+          await loadWeekData(path.id, null, 0);
         }
       } catch (err) {
         if (!cancelled) {
@@ -1008,12 +1019,12 @@ export default function StudentWeeklySchedulePage() {
   function handlePrevWeek() {
     const next = weekOffset - 1;
     setWeekOffset(next);
-    if (schoolPath) loadWeekData(schoolPath.id, schoolPath.starts_on, next);
+    if (schoolPath) loadWeekData(schoolPath.id, null, next);
   }
   function handleNextWeek() {
     const next = weekOffset + 1;
     setWeekOffset(next);
-    if (schoolPath) loadWeekData(schoolPath.id, schoolPath.starts_on, next);
+    if (schoolPath) loadWeekData(schoolPath.id, null, next);
   }
 
   // Current week Monday
