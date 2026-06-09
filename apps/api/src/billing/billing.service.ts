@@ -196,13 +196,13 @@ export class BillingService {
     const priceId = (plan as any)?.stripe_price_id;
     if (!priceId) throw new BadRequestException("Aucun prix Stripe configuré pour ce plan (carte indisponible)");
 
-    const frontend = process.env.FRONTEND_URL || "https://cimolace.space";
+    const frontend = process.env.FRONTEND_URL || "https://app.cimolace.space";
     const params = new URLSearchParams();
     params.append("mode", "subscription");
     params.append("line_items[0][price]", priceId);
     params.append("line_items[0][quantity]", "1");
-    params.append("success_url", `${frontend}/dashboard/billing?card=success&session_id={CHECKOUT_SESSION_ID}`);
-    params.append("cancel_url", `${frontend}/dashboard/billing?card=cancel`);
+    params.append("success_url", `${frontend}/cimolace/billing?card=success&session_id={CHECKOUT_SESSION_ID}&sub=${subscriptionId}`);
+    params.append("cancel_url", `${frontend}/cimolace/billing?card=cancel`);
     params.append("client_reference_id", subscriptionId);
     params.append("metadata[tenant_id]", tenantId);
     params.append("metadata[subscription_id]", subscriptionId);
@@ -242,8 +242,23 @@ export class BillingService {
       const end = new Date(); end.setMonth(end.getMonth() + 1);
       await sb.from("billing_subscriptions").update({ status: "active", provider_subscription_id: s.subscription ?? null, provider_customer_id: s.customer ?? null, current_period_end: end.toISOString(), updated_at: new Date().toISOString() }).eq("id", subscriptionId);
       await sb.from("billing_invoices").update({ status: "paid", provider: "stripe", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("subscription_id", subscriptionId).in("status", ["pending", "processing", "failed"]);
+      // Le forfait payé remplace les autres abonnements actifs (ex: l'essai medos_standard).
+      await this.supersedeOtherActiveSubscriptions(tenantId, subscriptionId);
     }
     return { paid, status: paid ? "active" : (sub as any).status };
+  }
+
+  /**
+   * Quand un abonnement devient actif, annule les AUTRES abonnements actifs du
+   * même tenant — le forfait payé remplace l'essai (ex: medos_standard 35€).
+   */
+  private async supersedeOtherActiveSubscriptions(tenantId: string, keepSubscriptionId: string) {
+    await this.supabase
+      .from("billing_subscriptions")
+      .update({ status: "canceled", canceled_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq("tenant_id", tenantId)
+      .eq("status", "active")
+      .neq("id", keepSubscriptionId);
   }
 
   // ─── Retraits / versements mobile money (payouts PawaPay) ─────────────────
