@@ -1,6 +1,15 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { CreateClientDto, UpdateClientDto } from './dto/backoffice.dto';
+import {
+  SCHOOL_ENGINE_MANIFEST,
+  SCHOOL_BASE_ENGINES,
+  SCHOOL_RECOMMENDED_ENGINES,
+  SCHOOL_PLAN_LIMITS,
+} from './school-engine-manifest';
+
+const SCHOOL_CONFIGURED_PROVIDERS = new Set(['supabase', 'supabase_realtime', 'supabase_storage']);
+const provConfigured = (p: string) => SCHOOL_CONFIGURED_PROVIDERS.has(p) || p.endsWith('_optional');
 
 @Injectable()
 export class CimolaceBackofficeService {
@@ -58,6 +67,114 @@ export class CimolaceBackofficeService {
     if (error) throw new BadRequestException(error.message);
     if (!data) throw new NotFoundException('Client introuvable');
     return data;
+  }
+
+  /**
+   * Construit le `schoolModel` (onglet Modèle école) à partir du manifeste
+   * SCHOOL_ENGINE_MANIFEST et de l'état réel du tenant (tenant_services +
+   * branding). Renvoie null si le client n'est pas de type 'school'.
+   */
+  private buildSchoolModel(client: any, appTenant: any, services: any[]) {
+    if (client?.client_type !== 'school') return null;
+
+    const byKey = new Map(services.map((s: any) => [s.service_key, s]));
+    const isActive = (k: string) => byKey.get(k)?.active === true || byKey.get(k)?.status === 'active';
+    const branding = appTenant?.metadata?.branding || {};
+    const plan = appTenant?.plan || 'school';
+    const limits = SCHOOL_PLAN_LIMITS[plan] || SCHOOL_PLAN_LIMITS.school;
+
+    const productEngines = SCHOOL_ENGINE_MANIFEST.map((m) => {
+      const svc = byKey.get(m.key);
+      const active = isActive(m.key);
+      const providers = m.requiredProviders.map((p) => ({ provider: p, configured: provConfigured(p) }));
+      const providersReady = providers.every((p) => p.configured);
+      const quota = svc?.settings?.quota ?? null;
+      const checks = {
+        engine: active ? 'ready' : 'missing',
+        shell: m.readiness === 'needs_shell' ? 'partial' : 'ready',
+        providers: providersReady ? 'ready' : providers.some((p) => p.configured) ? 'partial' : 'missing',
+        branding: branding?.logo_url ? 'ready' : 'partial',
+        quotas: quota != null ? 'ready' : 'missing',
+        billing: 'ready',
+      };
+      const readyCount = Object.values(checks).filter((c) => c === 'ready').length;
+      const score = Math.round((readyCount / Object.keys(checks).length) * 100);
+      return {
+        key: m.key,
+        label: m.label,
+        role: m.role,
+        routes: m.routes,
+        requiredForBase: m.tier === 'core',
+        requiredProviders: m.requiredProviders,
+        brandingZones: m.brandingZones,
+        shell: m.shell,
+        readiness: m.readiness,
+        readinessNotes: m.readinessNotes,
+        active,
+        status: active ? 'active' : 'missing',
+        quota_used: svc?.settings?.quota_used ?? null,
+        quota_limit: quota,
+        coverage: {
+          status: score >= 80 ? 'ready' : score >= 40 ? 'partial' : 'missing',
+          score,
+          checks,
+          operations: {
+            providers,
+            quota: { limit: quota, recommendedDefault: limits.maxStudents, unit: '' },
+          },
+        },
+      };
+    });
+
+    const baseActiveCount = SCHOOL_BASE_ENGINES.filter((k) => isActive(k)).length;
+    const recommendedActiveCount = SCHOOL_RECOMMENDED_ENGINES.filter((k) => isActive(k)).length;
+    const missingRecommendedEngines = SCHOOL_RECOMMENDED_ENGINES.filter((k) => !isActive(k));
+
+    const categories = [...new Set(SCHOOL_ENGINE_MANIFEST.map((m) => m.category))];
+    const capabilities = categories.map((cat) => {
+      const engines = SCHOOL_ENGINE_MANIFEST.filter((m) => m.category === cat);
+      const activeEngines = engines.filter((m) => isActive(m.key));
+      return {
+        label: cat,
+        category: cat,
+        status: activeEngines.length === engines.length ? 'active' : activeEngines.length ? 'partial' : 'missing',
+        serviceKeys: engines.map((m) => m.key),
+        detail: `${activeEngines.length}/${engines.length} moteur(s) actif(s)`,
+      };
+    });
+
+    const brandingRequirements = [
+      { label: 'Logo', key: 'logo_url', configured: !!branding.logo_url, value: branding.logo_url || '', detail: 'Logo du tenant école.' },
+      { label: 'Domaine', key: 'primary_domain', configured: !!(branding.primary_domain || appTenant?.metadata?.primary_domain), value: branding.primary_domain || appTenant?.metadata?.primary_domain || '', detail: 'Domaine principal du portail école.' },
+      { label: 'Couleur primaire', key: 'brand_colors', configured: !!branding.brand_colors?.primary, value: branding.brand_colors?.primary || '', detail: 'Charte couleur du tenant.' },
+      { label: 'Zones de marque', key: 'zones', configured: !!branding.zones, value: branding.zones ? 'configurées' : '', detail: 'Zones de branding (member app, live studio, vitrine).' },
+    ];
+    const brandingConfiguredCount = brandingRequirements.filter((b) => b.configured).length;
+    const missingBranding = brandingRequirements.filter((b) => !b.configured).map((b) => b.label);
+
+    return {
+      summary: {
+        baseCount: SCHOOL_BASE_ENGINES.length,
+        baseActiveCount,
+        recommendedCount: SCHOOL_RECOMMENDED_ENGINES.length,
+        recommendedActiveCount,
+        capabilityCount: capabilities.length,
+        capabilityActiveCount: capabilities.filter((c) => c.status === 'active').length,
+        brandingRequirementCount: brandingRequirements.length,
+        brandingConfiguredCount,
+        missingRecommendedEngines,
+        missingBranding,
+      },
+      productEngines,
+      capabilities,
+      branding: {
+        logo_url: branding.logo_url || null,
+        primary_domain: branding.primary_domain || appTenant?.metadata?.primary_domain || null,
+        brand_colors: branding.brand_colors || {},
+        metadata: branding,
+      },
+      brandingRequirements,
+    };
   }
 
   /**
@@ -178,7 +295,7 @@ export class CimolaceBackofficeService {
       invoices,
       appBilling: { invoices: [] },
       warnings: [],
-      schoolModel: null,
+      schoolModel: this.buildSchoolModel(client, appTenant, services),
       schoolProviders: [],
       credentials,
       deployments: [],
@@ -534,5 +651,108 @@ export class CimolaceBackofficeService {
       note: 'Clé API tenant : la régénération se fait via la gestion des clés API (non modifiée ici).',
       reason: dto?.reason ?? null,
     };
+  }
+
+  // ── Modèle école : provisioning ────────────────────────────────────────────
+
+  private async getSchoolTenantId(clientId: string): Promise<string> {
+    const client = await this.getClientOrThrow(clientId);
+    if (client.client_type !== 'school') {
+      throw new BadRequestException("Ce client n'est pas une infrastructure école.");
+    }
+    if (!client.tenant_id) {
+      throw new BadRequestException('Tenant applicatif requis (cimolace_clients.tenant_id).');
+    }
+    return client.tenant_id;
+  }
+
+  /** Active (upsert) les moteurs école recommandés dans tenant_services. */
+  async activateSchoolModelEngines(clientId: string, _dto: any) {
+    const tenantId = await this.getSchoolTenantId(clientId);
+    const db = this.supabase.client as any;
+    const now = new Date().toISOString();
+    const { data: existing } = await db.from('tenant_services').select('id, service_key').eq('tenant_id', tenantId);
+    const byKey = new Map((existing ?? []).map((s: any) => [s.service_key, s]));
+    const activated: string[] = [];
+    for (const key of SCHOOL_RECOMMENDED_ENGINES) {
+      const ex: any = byKey.get(key);
+      if (ex) {
+        await db.from('tenant_services').update({ active: true, updated_at: now }).eq('id', ex.id);
+      } else {
+        await db.from('tenant_services').insert({ tenant_id: tenantId, service_key: key, active: true });
+      }
+      activated.push(key);
+    }
+    return { ok: true, activated };
+  }
+
+  /** Prépare le tenant école : active les moteurs + pose des zones de branding par défaut. */
+  async prepareSchoolModel(clientId: string, dto: any) {
+    const tenantId = await this.getSchoolTenantId(clientId);
+    await this.activateSchoolModelEngines(clientId, dto);
+    const db = this.supabase.client as any;
+    const { data: t } = await db.from('tenants').select('metadata').eq('id', tenantId).maybeSingle();
+    const meta = t?.metadata || {};
+    const branding = meta.branding || {};
+    if (!branding.zones) {
+      branding.zones = { memberApp: true, adminBackoffice: true, liveStudio: true, publicVitrine: true };
+    }
+    await db.from('tenants').update({ metadata: { ...meta, branding }, updated_at: new Date().toISOString() }).eq('id', tenantId);
+    return { ok: true, prepared: true };
+  }
+
+  /** Pose les quotas recommandés sur les moteurs qui n'en ont pas (sans écraser). */
+  async applySchoolModelQuotas(clientId: string, _dto: any) {
+    const tenantId = await this.getSchoolTenantId(clientId);
+    const db = this.supabase.client as any;
+    const { data: t } = await db.from('tenants').select('plan').eq('id', tenantId).maybeSingle();
+    const limits = SCHOOL_PLAN_LIMITS[t?.plan || 'school'] || SCHOOL_PLAN_LIMITS.school;
+    const quotaFor = (key: string): number => {
+      if (key.includes('live')) return limits.maxLivesPerMonth;
+      if (key.includes('course') || key.includes('masterclass')) return limits.maxCourses;
+      if (key.includes('replay') || key.includes('video') || key.includes('studio')) return limits.maxStorageGb;
+      return limits.maxStudents;
+    };
+    const { data: svcs } = await db.from('tenant_services').select('id, service_key, settings').eq('tenant_id', tenantId);
+    const now = new Date().toISOString();
+    const applied: string[] = [];
+    for (const s of svcs ?? []) {
+      const settings = s.settings || {};
+      if (settings.quota == null) {
+        await db.from('tenant_services').update({ settings: { ...settings, quota: quotaFor(s.service_key) }, updated_at: now }).eq('id', s.id);
+        applied.push(s.service_key);
+      }
+    }
+    return { ok: true, applied };
+  }
+
+  /** Crée les références providers manquantes (cimolace_credentials) — nécessite un site. */
+  async prepareSchoolModelProviders(clientId: string, _dto: any) {
+    await this.getSchoolTenantId(clientId);
+    const db = this.supabase.client as any;
+    const { data: sites } = await db.from('cimolace_sites').select('id').eq('client_id', clientId).limit(1);
+    const siteId = sites?.[0]?.id;
+    if (!siteId) {
+      throw new BadRequestException('Aucun site Cimolace pour ce client — les références providers nécessitent un site.');
+    }
+    const required = [...new Set(SCHOOL_ENGINE_MANIFEST.flatMap((m) => m.requiredProviders))].filter((p) => !provConfigured(p));
+    const { data: existing } = await db.from('cimolace_credentials').select('key_name').eq('site_id', siteId);
+    const existingNames = new Set((existing ?? []).map((c: any) => c.key_name));
+    const now = new Date().toISOString();
+    const created: string[] = [];
+    for (const p of required) {
+      if (!existingNames.has(p)) {
+        await db.from('cimolace_credentials').insert({
+          site_id: siteId,
+          key_name: p,
+          key_type: 'provider_reference',
+          description: `Référence provider ${p} (à configurer)`,
+          encrypted_value: 'pending',
+          last_rotated_at: now,
+        });
+        created.push(p);
+      }
+    }
+    return { ok: true, created };
   }
 }

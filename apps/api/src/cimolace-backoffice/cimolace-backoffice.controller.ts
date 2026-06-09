@@ -24,4 +24,8 @@ export class CimolaceBackofficeController {
   @Post('clients/:id/tickets') createTicket(@Param('id') id: string, @Body() body: any) { return this.svc.createTenantTicket(id, body); }
   @Post('clients/:id/credentials') createCredential(@Param('id') id: string, @Body() body: any) { return this.svc.createCredentialReference(id, body); }
   @Post('clients/:clientId/credentials/:credentialId/rotate') rotateCredential(@Param('clientId') cid: string, @Param('credentialId') credId: string, @Body() body: any) { return this.svc.rotateCredential(cid, credId, body); }
+  @Post('clients/:id/school-model/activate-engines') smEngines(@Param('id') id: string, @Body() body: any) { return this.svc.activateSchoolModelEngines(id, body); }
+  @Post('clients/:id/school-model/prepare') smPrepare(@Param('id') id: string, @Body() body: any) { return this.svc.prepareSchoolModel(id, body); }
+  @Post('clients/:id/school-model/apply-quotas') smQuotas(@Param('id') id: string, @Body() body: any) { return this.svc.applySchoolModelQuotas(id, body); }
+  @Post('clients/:id/school-model/prepare-providers') smProviders(@Param('id') id: string, @Body() body: any) { return this.svc.prepareSchoolModelProviders(id, body); }
 }
