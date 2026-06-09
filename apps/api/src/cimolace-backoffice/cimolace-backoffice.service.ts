@@ -48,6 +48,7 @@ export class CimolaceBackofficeService {
     if (dto.status) patch.status = dto.status;
     const { data, error } = await (this.supabase.client as any).from('cimolace_clients').update(patch).eq('id', clientId).select('*').single();
     if (error || !data) throw new NotFoundException('Client introuvable');
+    await this.logChange(clientId, 'client:update', `Fiche client mise à jour (${Object.keys(patch).join(', ') || '—'})`);
     return data;
   }
 
@@ -67,6 +68,21 @@ export class CimolaceBackofficeService {
     if (error) throw new BadRequestException(error.message);
     if (!data) throw new NotFoundException('Client introuvable');
     return data;
+  }
+
+  /** Journalise une action opérateur dans cimolace_change_history (best-effort). */
+  private async logChange(clientId: string, action: string, description: string, changedBy = 'Cimolace Ops') {
+    try {
+      await (this.supabase.client as any).from('cimolace_change_history').insert({
+        action,
+        entity_type: 'cimolace_client',
+        entity_id: clientId,
+        description,
+        changed_by: changedBy,
+      });
+    } catch {
+      /* journalisation best-effort : ne bloque jamais l'opération */
+    }
   }
 
   /**
@@ -270,6 +286,19 @@ export class CimolaceBackofficeService {
       (t: any) => t.status && !['closed', 'resolved'].includes(t.status),
     ).length;
 
+    // Onglets Données tenant / Logs / (Maintenance déploiements, API étapes).
+    const siteIds = sites.map((s: any) => s.id);
+    const [changeHistRes, deploysRes, configRes, usageRes] = await Promise.all([
+      db.from('cimolace_change_history').select('*').eq('entity_id', clientId).order('created_at', { ascending: false }).limit(50),
+      siteIds.length ? db.from('cimolace_deployments').select('*').in('site_id', siteIds).order('created_at', { ascending: false }) : Promise.resolve({ data: [] }),
+      siteIds.length ? db.from('cimolace_configuration_steps').select('*').in('site_id', siteIds).order('step_number', { ascending: true }) : Promise.resolve({ data: [] }),
+      siteIds.length ? db.from('cimolace_usage_logs').select('*').in('site_id', siteIds).order('created_at', { ascending: false }).limit(50) : Promise.resolve({ data: [] }),
+    ]);
+    const changeHistory = changeHistRes.data ?? [];
+    const deployments = deploysRes.data ?? [];
+    const configurationSteps = configRes.data ?? [];
+    const usageLogs = usageRes.data ?? [];
+
     const summary = {
       appTenantStatus: appTenant?.status ?? null,
       lastTenantOperation: appTenant?.metadata?.operations ?? null,
@@ -298,11 +327,11 @@ export class CimolaceBackofficeService {
       schoolModel: this.buildSchoolModel(client, appTenant, services),
       schoolProviders: [],
       credentials,
-      deployments: [],
-      configurationSteps: [],
-      changeHistory: [],
+      deployments,
+      configurationSteps,
+      changeHistory,
       tickets,
-      usageLogs: [],
+      usageLogs,
     };
   }
 
@@ -441,6 +470,7 @@ export class CimolaceBackofficeService {
       .select('*')
       .single();
     if (error) throw new BadRequestException(error.message);
+    await this.logChange(clientId, 'invoice:create', `Facture ${data.invoice_number ?? data.id} créée`);
     return data;
   }
 
@@ -473,6 +503,7 @@ export class CimolaceBackofficeService {
       .maybeSingle();
     if (error) throw new BadRequestException(error.message);
     if (!data) throw new NotFoundException('Moteur introuvable pour ce tenant');
+    await this.logChange(clientId, `service:${data.active ? 'active' : 'suspended'}`, `Moteur ${data.service_key} → ${data.active ? 'actif' : 'suspendu'}`);
     return {
       ...data,
       status: data.active ? 'active' : 'suspended',
@@ -555,6 +586,9 @@ export class CimolaceBackofficeService {
       await db.from('tenants').update({ metadata: tenantMeta, updated_at: now }).eq('id', tenantId);
     }
 
+    if (done.length) {
+      await this.logChange(clientId, `operation:${done[0]}`, `Opération(s): ${done.join(', ')}${dto?.reason ? ` — ${dto.reason}` : ''}`);
+    }
     return { ok: true, operations: done, reason: dto?.reason ?? null, at: now };
   }
 
@@ -585,6 +619,7 @@ export class CimolaceBackofficeService {
       .select('*')
       .single();
     if (error) throw new BadRequestException(error.message);
+    await this.logChange(clientId, 'ticket:create', `Ticket ${data.ticket_number ?? data.id} créé : ${data.subject ?? ''}`);
     return data;
   }
 
@@ -683,6 +718,7 @@ export class CimolaceBackofficeService {
       }
       activated.push(key);
     }
+    await this.logChange(clientId, 'school:activate-engines', `Moteurs école activés (${activated.length})`);
     return { ok: true, activated };
   }
 
@@ -698,6 +734,7 @@ export class CimolaceBackofficeService {
       branding.zones = { memberApp: true, adminBackoffice: true, liveStudio: true, publicVitrine: true };
     }
     await db.from('tenants').update({ metadata: { ...meta, branding }, updated_at: new Date().toISOString() }).eq('id', tenantId);
+    await this.logChange(clientId, 'school:prepare', 'Tenant école préparé (moteurs + branding par défaut)');
     return { ok: true, prepared: true };
   }
 
@@ -723,6 +760,7 @@ export class CimolaceBackofficeService {
         applied.push(s.service_key);
       }
     }
+    await this.logChange(clientId, 'school:apply-quotas', `Quotas posés sur ${applied.length} moteur(s)`);
     return { ok: true, applied };
   }
 
@@ -753,6 +791,64 @@ export class CimolaceBackofficeService {
         created.push(p);
       }
     }
+    await this.logChange(clientId, 'school:prepare-providers', `Références providers créées (${created.length})`);
     return { ok: true, created };
+  }
+
+  // ── Monitoring (page /cimolace/admin/monitoring) ───────────────────────────
+
+  /** Vue d'ensemble santé de tous les clients : {summary, clients[]}. */
+  async getMonitoringOverview() {
+    const db = this.supabase.client as any;
+    const [clientsRes, tenantsRes, subsRes] = await Promise.all([
+      db.from('cimolace_clients').select('id, name, status, client_type, tenant_id, portal_slug').order('created_at', { ascending: false }),
+      db.from('tenants').select('id, status, slug'),
+      db.from('billing_subscriptions').select('tenant_id, status'),
+    ]);
+    const clients = clientsRes.data ?? [];
+    const tenantsById = new Map((tenantsRes.data ?? []).map((t: any) => [t.id, t]));
+    const activeSubTenants = new Set(
+      (subsRes.data ?? [])
+        .filter((s: any) => ['active', 'trialing', 'past_due'].includes(s.status))
+        .map((s: any) => s.tenant_id),
+    );
+
+    const enriched = clients.map((c: any) => {
+      const tenant: any = tenantsById.get(c.tenant_id);
+      const hasSub = activeSubTenants.has(c.tenant_id);
+      let overallStatus: string;
+      if (!c.tenant_id || !tenant) overallStatus = 'fail';
+      else if (tenant.status !== 'active' || !hasSub) overallStatus = 'warn';
+      else overallStatus = 'ok';
+      return {
+        id: c.id,
+        name: c.name,
+        slug: c.portal_slug || tenant?.slug || '',
+        overallStatus,
+        providers: [
+          { key: 'supabase', status: tenant ? 'ok' : 'unknown' },
+          { key: 'livekit', status: 'unknown' },
+          { key: 'ai', status: 'unknown' },
+          { key: 'payment', status: hasSub ? 'ok' : 'unknown' },
+          { key: 'email_sms_optional', status: 'unknown' },
+        ],
+      };
+    });
+
+    return {
+      summary: {
+        total: enriched.length,
+        ok: enriched.filter((c: any) => c.overallStatus === 'ok').length,
+        warn: enriched.filter((c: any) => c.overallStatus === 'warn').length,
+        fail: enriched.filter((c: any) => c.overallStatus === 'fail').length,
+      },
+      clients: enriched,
+    };
+  }
+
+  /** Relance les health checks (recalcul léger de l'overview). */
+  async runAllHealthChecks() {
+    const overview = await this.getMonitoringOverview();
+    return { ok: true, ...overview };
   }
 }

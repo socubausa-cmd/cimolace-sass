@@ -28,4 +28,6 @@ export class CimolaceBackofficeController {
   @Post('clients/:id/school-model/prepare') smPrepare(@Param('id') id: string, @Body() body: any) { return this.svc.prepareSchoolModel(id, body); }
   @Post('clients/:id/school-model/apply-quotas') smQuotas(@Param('id') id: string, @Body() body: any) { return this.svc.applySchoolModelQuotas(id, body); }
   @Post('clients/:id/school-model/prepare-providers') smProviders(@Param('id') id: string, @Body() body: any) { return this.svc.prepareSchoolModelProviders(id, body); }
+  @Get('monitoring/overview') monitoringOverview() { return this.svc.getMonitoringOverview(); }
+  @Post('monitoring/run-all') monitoringRunAll() { return this.svc.runAllHealthChecks(); }
 }
