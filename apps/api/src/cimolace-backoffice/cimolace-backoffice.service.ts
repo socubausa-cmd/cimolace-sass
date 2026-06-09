@@ -72,7 +72,7 @@ export class CimolaceBackofficeService {
     const tenantId: string | null = client.tenant_id ?? null;
     const db = this.supabase.client as any;
 
-    const [tenantRes, subsRes, invoicesRes, servicesRes, sitesRes, plansRes, ticketsRes] = await Promise.all([
+    const [tenantRes, subsRes, invoicesRes, servicesRes, sitesRes, plansRes, ticketsRes, apiKeysRes] = await Promise.all([
       tenantId
         ? db.from('tenants').select('*').eq('id', tenantId).maybeSingle()
         : Promise.resolve({ data: null }),
@@ -89,6 +89,9 @@ export class CimolaceBackofficeService {
       db.from('billing_plans').select('key, label, price_cents, currency'),
       client.email
         ? db.from('cimolace_tickets').select('*').eq('contact_email', client.email).order('created_at', { ascending: false })
+        : Promise.resolve({ data: [] }),
+      tenantId
+        ? db.from('tenant_api_keys').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false })
         : Promise.resolve({ data: [] }),
     ]);
 
@@ -114,6 +117,32 @@ export class CimolaceBackofficeService {
     const sites = sitesRes.data ?? [];
     const tickets = ticketsRes.data ?? [];
 
+    // Credentials = références cimolace_credentials (par site, ex. ISNA) +
+    // clés API du tenant (tenant_api_keys, ex. Zahir mdk_/mbk_) en lecture.
+    const apiKeys = apiKeysRes.data ?? [];
+    const siteCreds = sites.length
+      ? (await db.from('cimolace_credentials').select('*').in('site_id', sites.map((s: any) => s.id))).data ?? []
+      : [];
+    const credentials = [
+      ...siteCreds,
+      ...apiKeys.map((k: any) => ({
+        id: k.id,
+        key_name: k.label || k.key_prefix,
+        key_type: k.key_prefix?.startsWith('mdk_')
+          ? 'medos_api_key'
+          : k.key_prefix?.startsWith('mbk_')
+            ? 'mbolo_api_key'
+            : k.key_prefix?.startsWith('cml_')
+              ? 'cimolace_api_key'
+              : 'tenant_api_key',
+        description: k.key_prefix,
+        last_rotated_at: k.created_at,
+        expires_at: null,
+        status: k.revoked_at ? 'revoked' : 'active',
+        source: 'tenant_api_key',
+      })),
+    ];
+
     const activeSubscriptionCount = subscriptions.filter((s: any) =>
       ['active', 'trialing', 'past_due'].includes(s.status),
     ).length;
@@ -133,7 +162,7 @@ export class CimolaceBackofficeService {
       engineCount: services.length,
       activeEngineCount: services.filter((s: any) => s.active).length,
       activeSubscriptionCount,
-      credentialCount: 0,
+      credentialCount: credentials.length,
       openTicketCount,
       unpaidInvoiceCount,
       missingRecommendedEngines: [] as string[],
@@ -151,7 +180,7 @@ export class CimolaceBackofficeService {
       warnings: [],
       schoolModel: null,
       schoolProviders: [],
-      credentials: [],
+      credentials,
       deployments: [],
       configurationSteps: [],
       changeHistory: [],
@@ -391,5 +420,70 @@ export class CimolaceBackofficeService {
       .single();
     if (error) throw new BadRequestException(error.message);
     return data;
+  }
+
+  /**
+   * Crée une référence de secret (cimolace_credentials) — modèle lié à un SITE.
+   * Pour un client sans site (ex. tenant SaaS pur comme Zahir), renvoie une
+   * erreur explicite : ses vraies clés sont les tenant_api_keys, listées en
+   * lecture seule dans `control-plane.credentials`.
+   */
+  async createCredentialReference(clientId: string, dto: any) {
+    const client = await this.getClientOrThrow(clientId);
+    const db = this.supabase.client as any;
+    const { data: sites } = await db.from('cimolace_sites').select('id').eq('client_id', clientId).limit(1);
+    const siteId = sites?.[0]?.id;
+    if (!siteId) {
+      throw new BadRequestException(
+        "Ce client n'a pas de site Cimolace : une référence credential (LiveKit/Stripe/…) requiert un site. Les clés API du tenant sont déjà listées en lecture seule.",
+      );
+    }
+    const { data, error } = await db
+      .from('cimolace_credentials')
+      .insert({
+        site_id: siteId,
+        key_name: dto?.key_name ?? 'credential',
+        key_type: dto?.key_type ?? 'api_key',
+        description: dto?.description ?? null,
+        encrypted_value: dto?.reference ?? dto?.encrypted_value ?? 'pending',
+        last_rotated_at: new Date().toISOString(),
+      })
+      .select('*')
+      .single();
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  /**
+   * Rotation d'une référence credential. Pour une ligne cimolace_credentials :
+   * met à jour `last_rotated_at`. Pour une clé API tenant (tenant_api_keys),
+   * la régénération se fait via la gestion des clés — soft no-op acquitté ici
+   * pour ne pas casser une intégration par mégarde.
+   */
+  async rotateCredential(clientId: string, credentialId: string, dto: any) {
+    await this.getClientOrThrow(clientId);
+    const db = this.supabase.client as any;
+    const { data: cred } = await db
+      .from('cimolace_credentials')
+      .select('id')
+      .eq('id', credentialId)
+      .maybeSingle();
+    if (cred?.id) {
+      const now = new Date().toISOString();
+      const { data, error } = await db
+        .from('cimolace_credentials')
+        .update({ last_rotated_at: now, updated_at: now })
+        .eq('id', credentialId)
+        .select('*')
+        .single();
+      if (error) throw new BadRequestException(error.message);
+      return data;
+    }
+    return {
+      ok: true,
+      credential_id: credentialId,
+      note: 'Clé API tenant : la régénération se fait via la gestion des clés API (non modifiée ici).',
+      reason: dto?.reason ?? null,
+    };
   }
 }

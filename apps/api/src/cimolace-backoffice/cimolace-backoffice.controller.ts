@@ -22,4 +22,6 @@ export class CimolaceBackofficeController {
   @Patch('clients/:clientId/services/:serviceId') updateService(@Param('clientId') cid: string, @Param('serviceId') sid: string, @Body() body: any) { return this.svc.updateTenantService(cid, sid, body); }
   @Post('clients/:id/operations') runOperation(@Param('id') id: string, @Body() body: any) { return this.svc.runTenantOperation(id, body); }
   @Post('clients/:id/tickets') createTicket(@Param('id') id: string, @Body() body: any) { return this.svc.createTenantTicket(id, body); }
+  @Post('clients/:id/credentials') createCredential(@Param('id') id: string, @Body() body: any) { return this.svc.createCredentialReference(id, body); }
+  @Post('clients/:clientId/credentials/:credentialId/rotate') rotateCredential(@Param('clientId') cid: string, @Param('credentialId') credId: string, @Body() body: any) { return this.svc.rotateCredential(cid, credId, body); }
 }
