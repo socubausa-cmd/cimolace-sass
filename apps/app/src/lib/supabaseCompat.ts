@@ -346,6 +346,9 @@ class QueryBuilder<T = any> {
       case 'modules': {
         const courseFilter = this.filters.find(f => f.field === 'course_id');
         if (courseFilter) return apiCall(coursesApi.listModules(String(courseFilter.value)));
+        // .in('course_id', [...]) usage (e.g. StudentWeeklySchedulePage) → fallback to real Supabase
+        const courseInFilter = this.inFilters.find(f => f.field === 'course_id');
+        if (courseInFilter) return this.executeRealSupabase();
         return ok([]);
       }
       case 'course_lessons':
