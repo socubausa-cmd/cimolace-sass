@@ -158,6 +158,19 @@ export const tenantPortalApi = {
     api.post<ApiEnvelope<any>>("/tenant-portal/account/request-deletion", { reason }).then(unwrap).then(peel),
   billingPortal: () =>
     api.post<ApiEnvelope<any>>("/tenant-portal/billing-portal").then(unwrap).then(peel),
+  webhooks: () => api.get<ApiEnvelope<any>>("/tenant-portal/webhooks").then(unwrap).then(peel),
+  createWebhook: (body: { label: string; url: string; events?: string[] }) =>
+    api.post<ApiEnvelope<any>>("/tenant-portal/webhooks", body).then(unwrap).then(peel),
+  toggleWebhook: (id: string, is_active: boolean) =>
+    api.patch<ApiEnvelope<any>>(`/tenant-portal/webhooks/${id}`, { is_active }).then(unwrap).then(peel),
+  deleteWebhook: (id: string) =>
+    api.delete<ApiEnvelope<any>>(`/tenant-portal/webhooks/${id}`).then(unwrap).then(peel),
+};
+
+// Invitations d'équipe par email (envoie un vrai lien d'invitation Supabase).
+export const teamInvitesApi = {
+  send: (email: string, role: string) =>
+    api.post<ApiEnvelope<any>>("/team-invites/send", { email, role }).then(unwrap).then(peel),
 };
 
 export const catalogApi = {

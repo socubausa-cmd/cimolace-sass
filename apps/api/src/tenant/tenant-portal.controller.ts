@@ -1,4 +1,5 @@
 import { BadRequestException, Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { randomBytes } from 'crypto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../common/guards/tenant.guard';
 import { SupabaseService } from '../supabase/supabase.service';
@@ -312,5 +313,65 @@ export class TenantPortalController {
     const session: any = await res.json();
     if (!res.ok) throw new BadRequestException(session?.error?.message || 'Portail Stripe indisponible');
     return { url: session.url };
+  }
+
+  // ── Webhooks tenant (tenant_webhooks) ──────────────────────────────────────
+
+  /** Liste les webhooks du tenant (sans le secret). */
+  @Get('webhooks')
+  async webhooks(@Req() req: any) {
+    const { data } = await this.db
+      .from('tenant_webhooks')
+      .select('id, label, url, events, is_active, failure_count, created_at')
+      .eq('tenant_id', req.tenant.id)
+      .order('created_at', { ascending: false });
+    return { data: data ?? [] };
+  }
+
+  /** Crée un webhook (secret HMAC généré + renvoyé une fois). Owner/admin. */
+  @Post('webhooks')
+  async createWebhook(@Req() req: any, @Body() body: { label?: string; url?: string; events?: string[] }) {
+    if (!['owner', 'admin'].includes(req.tenant?.userRole)) throw new BadRequestException('Rôle owner/admin requis.');
+    const url = String(body?.url || '').trim();
+    if (!/^https:\/\//i.test(url)) throw new BadRequestException('URL HTTPS requise.');
+    const secret = `whsec_${randomBytes(24).toString('hex')}`;
+    const { data, error } = await this.db
+      .from('tenant_webhooks')
+      .insert({
+        tenant_id: req.tenant.id,
+        label: body?.label || 'Webhook',
+        url,
+        secret,
+        events: Array.isArray(body?.events) && body.events.length ? body.events : ['*'],
+        is_active: true,
+      })
+      .select('id, label, url, events, is_active')
+      .single();
+    if (error) throw new BadRequestException(error.message);
+    return { data: { ...data, secret } };
+  }
+
+  /** Active/désactive un webhook. Owner/admin. */
+  @Patch('webhooks/:id')
+  async toggleWebhook(@Req() req: any, @Param('id') id: string, @Body() body: { is_active?: boolean }) {
+    if (!['owner', 'admin'].includes(req.tenant?.userRole)) throw new BadRequestException('Rôle owner/admin requis.');
+    const { data, error } = await this.db
+      .from('tenant_webhooks')
+      .update({ is_active: !!body?.is_active })
+      .eq('id', id)
+      .eq('tenant_id', req.tenant.id)
+      .select('id, is_active')
+      .maybeSingle();
+    if (error) throw new BadRequestException(error.message);
+    if (!data) throw new NotFoundException('Webhook introuvable');
+    return { data };
+  }
+
+  /** Supprime un webhook. Owner/admin. */
+  @Delete('webhooks/:id')
+  async deleteWebhook(@Req() req: any, @Param('id') id: string) {
+    if (!['owner', 'admin'].includes(req.tenant?.userRole)) throw new BadRequestException('Rôle owner/admin requis.');
+    await this.db.from('tenant_webhooks').delete().eq('id', id).eq('tenant_id', req.tenant.id);
+    return { data: { ok: true } };
   }
 }

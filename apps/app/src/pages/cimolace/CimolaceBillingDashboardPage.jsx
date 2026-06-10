@@ -7,8 +7,10 @@ import {
   Zap, Loader2, Building2, Boxes, Power, LayoutGrid, ArrowRight, ExternalLink,
   KeyRound, ShoppingBag, LifeBuoy, Settings, Plus, Trash2, Copy, Check, Send,
   Package, Users, Activity, UserCircle, ShieldAlert, Mail, XCircle,
+  Webhook, ShieldCheck, LogOut, Image as ImageIcon, Printer, Globe,
 } from 'lucide-react';
-import { billingApi, tenantMembersApi, catalogApi, tenantApiKeysApi, tenantPortalApi, tenantsApi, mboloApi } from '@/lib/api';
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { billingApi, tenantMembersApi, catalogApi, tenantApiKeysApi, tenantPortalApi, tenantsApi, mboloApi, teamInvitesApi } from '@/lib/api';
 import { authStore } from '@/lib/auth-store';
 import { supabase } from '@/lib/supabase';
 
@@ -55,6 +57,7 @@ const TABS = [
   { id: 'profil', label: 'Profil', icon: UserCircle },
   { id: 'parametres', label: 'Paramètres', icon: Settings },
   { id: 'compte', label: 'Compte', icon: ShieldAlert },
+  { id: 'webhooks', label: 'Webhooks', icon: Webhook },
 ];
 
 // Regroupement des sections dans la sidebar (style SaaS).
@@ -62,7 +65,8 @@ const NAV_GROUPS = [
   { label: 'Tableau de bord', ids: ['apercu', 'monitoring'] },
   { label: 'Facturation', ids: ['abonnement', 'marketplace', 'factures'] },
   { label: 'Services', ids: ['moteurs', 'produits'] },
-  { label: 'Organisation', ids: ['equipe', 'cles', 'support'] },
+  { label: 'Organisation', ids: ['equipe', 'support'] },
+  { label: 'Développeurs', ids: ['cles', 'webhooks'] },
   { label: 'Mon compte', ids: ['profil', 'parametres', 'compte'] },
 ];
 
@@ -106,13 +110,20 @@ export default function CimolaceBillingDashboardPage() {
   const [prodForm, setProdForm] = useState({ name: '', priceEur: '' });
   const [pwd, setPwd] = useState('');
   const [delConfirm, setDelConfirm] = useState('');
+  // Webhooks / 2FA / images produit
+  const [webhooks, setWebhooks] = useState([]);
+  const [whForm, setWhForm] = useState({ label: '', url: '' });
+  const [whSecret, setWhSecret] = useState(null);
+  const [mfa, setMfa] = useState(null);
+  const [mfaCode, setMfaCode] = useState('');
+  const [imgForm, setImgForm] = useState({});
 
   const loadAll = useCallback(async (slug) => {
     setLoading(true); setError(null);
     try {
       if (slug && authStore.setTenantSlug) authStore.setTenantSlug(slug);
       const arr = (x) => (Array.isArray(x) ? x : Array.isArray(x?.data) ? x.data : []);
-      const [plan, svc, ks, mk, tk, us, pr, mb, pd] = await Promise.all([
+      const [plan, svc, ks, mk, tk, us, pr, mb, pd, wh] = await Promise.all([
         billingApi.getPlan().catch(() => ({ subscriptions: [], invoices: [] })),
         catalogApi.tenantServices().catch(() => []),
         tenantApiKeysApi.list().catch(() => []),
@@ -122,6 +133,7 @@ export default function CimolaceBillingDashboardPage() {
         tenantPortalApi.profile().catch(() => null),
         tenantMembersApi.listMembers().catch(() => []),
         mboloApi.listProducts().catch(() => []),
+        tenantPortalApi.webhooks().catch(() => []),
       ]);
       setSubs(Array.isArray(plan?.subscriptions) ? plan.subscriptions : []);
       setInvoices(Array.isArray(plan?.invoices) ? plan.invoices : []);
@@ -133,6 +145,7 @@ export default function CimolaceBillingDashboardPage() {
       setProfile(pr && pr.data ? pr.data : pr);
       setMembers(arr(mb));
       setProducts(arr(pd));
+      setWebhooks(arr(wh));
     } catch (e) {
       setError(e?.message || 'Chargement impossible');
     } finally { setLoading(false); }
@@ -279,6 +292,72 @@ export default function CimolaceBillingDashboardPage() {
     setBusy('portal'); setError(null);
     try { withSlug(); const r = await tenantPortalApi.billingPortal(); if (r?.url) { window.location.href = r.url; return; } throw new Error('Portail indisponible'); }
     catch (e) { setError(e?.message || 'Portail de facturation indisponible (paiement carte réel requis).'); setBusy(null); }
+  };
+  const createWh = async () => {
+    if (!whForm.url.trim()) return;
+    setBusy('new-wh'); setError(null); setWhSecret(null);
+    try { withSlug(); const r = await tenantPortalApi.createWebhook({ label: whForm.label || 'Webhook', url: whForm.url.trim() }); setWhSecret(r?.secret || null); setWhForm({ label: '', url: '' }); setWebhooks(arr(await tenantPortalApi.webhooks().catch(() => webhooks))); }
+    catch (e) { setError(e?.message || 'Création webhook impossible (URL HTTPS + rôle owner/admin)'); }
+    finally { setBusy(null); }
+  };
+  const delWh = async (id) => {
+    setBusy(`wh-${id}`); setError(null);
+    try { withSlug(); await tenantPortalApi.deleteWebhook(id); setWebhooks((w) => w.filter((x) => x.id !== id)); }
+    catch (e) { setError(e?.message || 'Suppression impossible'); }
+    finally { setBusy(null); }
+  };
+  const toggleWh = async (w) => {
+    setBusy(`wht-${w.id}`); setError(null);
+    try { withSlug(); await tenantPortalApi.toggleWebhook(w.id, !w.is_active); setWebhooks((list) => list.map((x) => (x.id === w.id ? { ...x, is_active: !w.is_active } : x))); }
+    catch (e) { setError(e?.message || 'Mise à jour impossible'); }
+    finally { setBusy(null); }
+  };
+  const enroll2FA = async () => {
+    setBusy('mfa'); setError(null);
+    try { const { data, error: e } = await supabase.auth.mfa.enroll({ factorType: 'totp' }); if (e) throw e; setMfa({ id: data.id, qr: data.totp?.qr_code, secret: data.totp?.secret }); }
+    catch (e) { setError(e?.message || '2FA indisponible sur ce compte'); }
+    finally { setBusy(null); }
+  };
+  const verify2FA = async () => {
+    if (!mfa?.id || (mfaCode || '').length < 6) return;
+    setBusy('mfa-v'); setError(null);
+    try {
+      const { data: ch, error: e1 } = await supabase.auth.mfa.challenge({ factorId: mfa.id }); if (e1) throw e1;
+      const { error: e2 } = await supabase.auth.mfa.verify({ factorId: mfa.id, challengeId: ch.id, code: mfaCode }); if (e2) throw e2;
+      setMfa(null); setMfaCode(''); setNotice('Authentification à deux facteurs activée.');
+    } catch (e) { setError(e?.message || 'Code 2FA invalide'); }
+    finally { setBusy(null); }
+  };
+  const signOutEverywhere = async () => {
+    setBusy('signout'); setError(null);
+    try { await supabase.auth.signOut({ scope: 'global' }); window.location.href = '/cimolace/login'; }
+    catch (e) { setError(e?.message || 'Déconnexion impossible'); setBusy(null); }
+  };
+  const addImage = async (productId) => {
+    const url = String(imgForm[productId] || '').trim(); if (!url) return;
+    setBusy(`img-${productId}`); setError(null);
+    try { withSlug(); await mboloApi.addImage(productId, { url, isPrimary: true }); setImgForm((f) => ({ ...f, [productId]: '' })); setProducts(arr(await mboloApi.listProducts().catch(() => products))); setNotice('Image ajoutée au produit.'); }
+    catch (e) { setError(e?.message || 'Ajout image impossible'); }
+    finally { setBusy(null); }
+  };
+  const emailInvite = async () => {
+    if (!inviteForm.email.trim()) return;
+    setBusy('invite'); setError(null);
+    try { withSlug(); await teamInvitesApi.send(inviteForm.email.trim(), inviteForm.role); setInviteForm({ email: '', role: 'member' }); setMembers(arr(await tenantMembersApi.listMembers().catch(() => members))); setNotice('Invitation envoyée par email.'); }
+    catch (e) { setError(e?.message || 'Invitation impossible (rôle/permission)'); }
+    finally { setBusy(null); }
+  };
+  const printReceipt = (inv) => {
+    const w = window.open('', '_blank', 'width=620,height=760');
+    if (!w) { setError('Autorisez les pop-ups pour imprimer le reçu.'); return; }
+    const rows = [
+      ['Facture', inv.invoice_number || inv.id],
+      ['Montant', eur(inv.amount_cents, inv.currency)],
+      ['Statut', badge(inv.status).label],
+      [inv.paid_at ? 'Payée le' : 'Échéance', fmtDate(inv.paid_at || inv.due_date)],
+    ].map(([k, v]) => `<tr><td>${k}</td><td style="text-align:right">${v}</td></tr>`).join('');
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Reçu ${inv.invoice_number || inv.id}</title><style>body{font-family:system-ui,-apple-system,sans-serif;padding:44px;color:#111}h1{font-size:20px;margin:0}.muted{color:#888;font-size:12px}table{width:100%;border-collapse:collapse;margin-top:22px;font-size:14px}td{padding:9px 0;border-bottom:1px solid #eee}</style></head><body><h1>CIMOLACE — Reçu</h1><div class="muted">${activeName} · ${activeSlug || ''}</div><table>${rows}</table><p class="muted" style="margin-top:28px">Merci pour votre confiance — Cimolace, infrastructure SaaS.</p></body></html>`);
+    w.document.close(); w.focus(); setTimeout(() => { try { w.print(); } catch { /* noop */ } }, 350);
   };
 
   const planName = (s) => s?.metadata?.label || s?.plan_id || 'Abonnement';
@@ -463,7 +542,7 @@ export default function CimolaceBillingDashboardPage() {
                             <div className="flex items-center gap-3">{inv.status === 'paid' ? <CheckCircle className="w-5 h-5 text-green-400" /> : <Clock className="w-5 h-5 text-amber-400" />}
                               <div><p className="font-medium">{inv.invoice_number || inv.description || 'Facture'}</p><p className="text-xs text-white/50">{inv.paid_at ? `Payée le ${fmtDate(inv.paid_at)}` : `Échéance ${fmtDate(inv.due_date)}`}</p></div>
                             </div>
-                            <div className="flex items-center gap-3"><span className="font-medium">{eur(inv.amount_cents, inv.currency)}</span><span className={`px-2 py-0.5 rounded-full border text-[11px] font-medium ${b.cls}`}>{b.label}</span></div>
+                            <div className="flex items-center gap-3"><span className="font-medium">{eur(inv.amount_cents, inv.currency)}</span><span className={`px-2 py-0.5 rounded-full border text-[11px] font-medium ${b.cls}`}>{b.label}</span><button onClick={() => printReceipt(inv)} title="Imprimer le reçu" className="p-1.5 rounded-lg border border-white/[0.08] hover:bg-white/[0.06]"><Printer className="w-3.5 h-3.5 text-white/50" /></button></div>
                           </div>
                         );
                       })}
@@ -579,6 +658,22 @@ export default function CimolaceBillingDashboardPage() {
                       <StatCard label="En attente" value={`${usage?.invoices?.unpaid ?? 0}`} sub="à régler" />
                       <StatCard label="Renouvellement" value={usage?.subscription?.renews ? fmtDate(usage.subscription.renews) : '—'} sub="échéance" />
                     </div>
+                    {familyCounts.length > 0 && (
+                      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
+                        <div className="text-sm font-semibold mb-3">Répartition de vos moteurs</div>
+                        <div style={{ width: '100%', height: 220 }}>
+                          <ResponsiveContainer>
+                            <BarChart data={familyCounts.map((f) => ({ name: f.label, moteurs: f.count }))}>
+                              <XAxis dataKey="name" tick={{ fill: '#ffffff66', fontSize: 12 }} axisLine={{ stroke: '#ffffff14' }} tickLine={false} />
+                              <Tooltip cursor={{ fill: '#ffffff08' }} contentStyle={{ background: '#0b0b11', border: '1px solid #ffffff1a', borderRadius: 8, fontSize: 12 }} labelStyle={{ color: '#fff' }} />
+                              <Bar dataKey="moteurs" radius={[6, 6, 0, 0]}>
+                                {familyCounts.map((_, i) => <Cell key={i} fill={['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'][i % 4]} />)}
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    )}
                     <p className="text-xs text-white/40">Synthèse d'usage de votre infrastructure Cimolace. Détail moteur par moteur dans l'onglet Moteurs.</p>
                   </div>
                 )}
@@ -597,9 +692,15 @@ export default function CimolaceBillingDashboardPage() {
                     {products.length === 0 ? <Empty>Aucun produit. Si votre boutique Mbolo est activée, ajoutez-en un ci-dessus.</Empty> : (
                       <div className="grid sm:grid-cols-2 gap-3">
                         {products.map((p) => (
-                          <div key={p.id} className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3"><div className="w-9 h-9 rounded-xl bg-white/[0.05] flex items-center justify-center"><Package className="w-4 h-4 text-violet-300" /></div><div><p className="font-medium text-sm">{p.name}</p><p className="text-xs text-white/40">{p.slug || p.category || '—'}</p></div></div>
-                            <span className="font-medium text-sm">{eur(p.price_cents ?? p.priceCents, p.currency)}</span>
+                          <div key={p.id} className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 space-y-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-3"><div className="w-9 h-9 rounded-xl bg-white/[0.05] flex items-center justify-center overflow-hidden shrink-0">{p.primary_image_url || p.image_url ? <img src={p.primary_image_url || p.image_url} alt="" className="w-full h-full object-cover" /> : <Package className="w-4 h-4 text-violet-300" />}</div><div className="min-w-0"><p className="font-medium text-sm truncate">{p.name}</p><p className="text-xs text-white/40 truncate">{p.slug || p.category || '—'}</p></div></div>
+                              <span className="font-medium text-sm shrink-0">{eur(p.price_cents ?? p.priceCents, p.currency)}</span>
+                            </div>
+                            <div className="flex items-end gap-2">
+                              <input value={imgForm[p.id] || ''} onChange={(e) => setImgForm((f) => ({ ...f, [p.id]: e.target.value }))} placeholder="URL d'image du produit…" className="flex-1 bg-black/30 border border-white/[0.1] rounded-lg px-3 py-1.5 text-xs" />
+                              <button disabled={!imgForm[p.id] || busy === `img-${p.id}`} onClick={() => addImage(p.id)} className="px-3 py-1.5 rounded-lg border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] text-xs flex items-center gap-1 disabled:opacity-40">{busy === `img-${p.id}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <ImageIcon className="w-3 h-3" />} Image</button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -615,7 +716,7 @@ export default function CimolaceBillingDashboardPage() {
                       <div className="flex items-end gap-2 flex-wrap">
                         <div className="flex-1 min-w-[180px]"><label className="text-xs text-white/40">Email</label><input value={inviteForm.email} onChange={(e) => setInviteForm((f) => ({ ...f, email: e.target.value }))} placeholder="collaborateur@exemple.com" className="mt-1 w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" /></div>
                         <div className="w-32"><label className="text-xs text-white/40">Rôle</label><select value={inviteForm.role} onChange={(e) => setInviteForm((f) => ({ ...f, role: e.target.value }))} className="mt-1 w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm"><option value="member">Membre</option><option value="admin">Admin</option><option value="owner">Owner</option></select></div>
-                        <button disabled={!inviteForm.email.trim() || busy === 'invite'} onClick={invite} className="px-4 py-2 rounded-lg bg-violet-500/80 hover:bg-violet-500 text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'invite' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />} Inviter</button>
+                        <button disabled={!inviteForm.email.trim() || busy === 'invite'} onClick={emailInvite} className="px-4 py-2 rounded-lg bg-violet-500/80 hover:bg-violet-500 text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'invite' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />} Inviter par email</button>
                       </div>
                     </div>
                     {(() => { const team = members.filter((m) => !['patient', 'student', 'eleve'].includes(String(m.role || '').toLowerCase())); return team.length === 0 ? <Empty>Aucun membre d'équipe (les clients/patients ne sont pas comptés ici). Invitez un collaborateur ci-dessus.</Empty> : (
@@ -646,6 +747,24 @@ export default function CimolaceBillingDashboardPage() {
                       <input type="password" value={pwd} onChange={(e) => setPwd(e.target.value)} placeholder="Nouveau mot de passe (8 car. min)" className="w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" />
                       <button disabled={busy === 'pwd'} onClick={changePassword} className="px-4 py-2 rounded-lg bg-violet-500/80 hover:bg-violet-500 text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'pwd' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} Mettre à jour</button>
                     </div>
+                    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 space-y-3">
+                      <div className="flex items-center gap-2 text-sm font-semibold"><ShieldCheck className="w-4 h-4 text-green-400" /> Sécurité</div>
+                      {mfa ? (
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/50">Scannez ce QR avec votre app d'authentification (Google Authenticator, 1Password…), puis entrez le code à 6 chiffres.</p>
+                          {mfa.qr && <img src={mfa.qr} alt="QR 2FA" className="w-40 h-40 rounded-lg bg-white p-1" />}
+                          <div className="flex items-end gap-2">
+                            <input value={mfaCode} onChange={(e) => setMfaCode(e.target.value)} placeholder="123456" maxLength={6} className="w-32 bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" />
+                            <button disabled={busy === 'mfa-v'} onClick={verify2FA} className="px-4 py-2 rounded-lg bg-green-500/80 hover:bg-green-500 text-white text-sm font-medium disabled:opacity-40">{busy === 'mfa-v' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Activer'}</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button disabled={busy === 'mfa'} onClick={enroll2FA} className="px-4 py-2 rounded-lg border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] text-sm flex items-center gap-2 disabled:opacity-40">{busy === 'mfa' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />} Activer la 2FA (TOTP)</button>
+                      )}
+                      <div className="pt-3 border-t border-white/[0.06]">
+                        <button disabled={busy === 'signout'} onClick={signOutEverywhere} className="px-4 py-2 rounded-lg border border-red-500/20 text-red-300/80 hover:bg-red-500/10 text-sm flex items-center gap-2 disabled:opacity-40">{busy === 'signout' ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />} Déconnexion sur tous les appareils</button>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -659,6 +778,40 @@ export default function CimolaceBillingDashboardPage() {
                       <button disabled={delConfirm !== 'SUPPRIMER' || busy === 'del'} onClick={deleteAccount} className="px-4 py-2 rounded-lg bg-red-500/80 hover:bg-red-500 text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed">{busy === 'del' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />} Demander la suppression</button>
                     </div>
                     <p className="text-xs text-white/40">Votre demande ouvre un ticket prioritaire ; l'équipe Cimolace traite la suppression définitive (réversible sous 48 h).</p>
+                  </div>
+                )}
+
+                {/* WEBHOOKS */}
+                {tab === 'webhooks' && (
+                  <div className="space-y-4">
+                    {whSecret && (
+                      <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.08] p-4">
+                        <p className="text-sm text-amber-200 mb-2">⚠️ Secret de signature (HMAC) — copiez-le, il ne sera plus affiché :</p>
+                        <code className="text-xs bg-black/40 rounded px-2 py-1.5 break-all block">{whSecret}</code>
+                      </div>
+                    )}
+                    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
+                      <div className="text-sm font-semibold mb-2">Ajouter un endpoint webhook</div>
+                      <div className="flex items-end gap-2 flex-wrap">
+                        <div className="w-40"><label className="text-xs text-white/40">Libellé</label><input value={whForm.label} onChange={(e) => setWhForm((f) => ({ ...f, label: e.target.value }))} placeholder="Mon serveur" className="mt-1 w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" /></div>
+                        <div className="flex-1 min-w-[200px]"><label className="text-xs text-white/40">URL HTTPS</label><input value={whForm.url} onChange={(e) => setWhForm((f) => ({ ...f, url: e.target.value }))} placeholder="https://votre-site.com/webhooks/cimolace" className="mt-1 w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" /></div>
+                        <button disabled={!whForm.url.trim() || busy === 'new-wh'} onClick={createWh} className="px-4 py-2 rounded-lg bg-violet-500/80 hover:bg-violet-500 text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'new-wh' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Créer</button>
+                      </div>
+                    </div>
+                    {webhooks.length === 0 ? <Empty>Aucun webhook. Créez-en un pour recevoir les événements Cimolace (paiements, abonnements…) sur votre serveur.</Empty> : (
+                      <div className="space-y-2">
+                        {webhooks.map((w) => (
+                          <div key={w.id} className="flex items-center justify-between p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] gap-3 flex-wrap">
+                            <div className="flex items-center gap-3 min-w-0"><div className="w-9 h-9 rounded-xl bg-white/[0.05] flex items-center justify-center shrink-0"><Globe className="w-4 h-4 text-violet-300" /></div><div className="min-w-0"><p className="font-medium text-sm truncate">{w.label}</p><p className="text-xs text-white/40 font-mono truncate">{w.url}</p></div></div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button onClick={() => toggleWh(w)} disabled={busy === `wht-${w.id}`} className={`px-2 py-1 rounded-lg text-[11px] border ${w.is_active ? 'border-green-500/30 bg-green-500/15 text-green-400' : 'border-white/10 text-white/40'}`}>{w.is_active ? 'Actif' : 'Inactif'}</button>
+                              <button disabled={busy === `wh-${w.id}`} onClick={() => delWh(w.id)} className="px-2.5 py-1.5 rounded-lg border border-red-500/20 text-red-300/80 hover:bg-red-500/10 text-xs"><Trash2 className="w-3 h-3" /></button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-xs text-white/40">Chaque requête est signée (HMAC-SHA256, en-tête <code className="text-white/60">X-Cimolace-Signature</code>) avec le secret du webhook.</p>
                   </div>
                 )}
               </>
