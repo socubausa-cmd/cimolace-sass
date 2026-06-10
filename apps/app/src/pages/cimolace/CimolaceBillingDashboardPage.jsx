@@ -9,7 +9,6 @@ import {
   Package, Users, Activity, UserCircle, ShieldAlert, Mail, XCircle,
   Webhook, ShieldCheck, LogOut, Image as ImageIcon, Printer, Globe,
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { billingApi, tenantMembersApi, catalogApi, tenantApiKeysApi, tenantPortalApi, tenantsApi, mboloApi, teamInvitesApi } from '@/lib/api';
 import { authStore } from '@/lib/auth-store';
 import { supabase } from '@/lib/supabase';
@@ -660,17 +659,24 @@ export default function CimolaceBillingDashboardPage() {
                     </div>
                     {familyCounts.length > 0 && (
                       <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
-                        <div className="text-sm font-semibold mb-3">Répartition de vos moteurs</div>
-                        <div style={{ width: '100%', height: 220 }}>
-                          <ResponsiveContainer>
-                            <BarChart data={familyCounts.map((f) => ({ name: f.label, moteurs: f.count }))}>
-                              <XAxis dataKey="name" tick={{ fill: '#ffffff66', fontSize: 12 }} axisLine={{ stroke: '#ffffff14' }} tickLine={false} />
-                              <Tooltip cursor={{ fill: '#ffffff08' }} contentStyle={{ background: '#0b0b11', border: '1px solid #ffffff1a', borderRadius: 8, fontSize: 12 }} labelStyle={{ color: '#fff' }} />
-                              <Bar dataKey="moteurs" radius={[6, 6, 0, 0]}>
-                                {familyCounts.map((_, i) => <Cell key={i} fill={['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'][i % 4]} />)}
-                              </Bar>
-                            </BarChart>
-                          </ResponsiveContainer>
+                        <div className="text-sm font-semibold mb-4">Répartition de vos moteurs</div>
+                        <div className="space-y-3">
+                          {(() => {
+                            const maxCount = Math.max(...familyCounts.map((x) => x.count), 1);
+                            const total = familyCounts.reduce((s, x) => s + x.count, 0) || 1;
+                            const colors = ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'];
+                            return familyCounts.map((f, i) => (
+                              <div key={f.key} className="flex items-center gap-3">
+                                <div className="w-28 shrink-0 text-xs text-white/60 truncate" title={f.label}>{f.label}</div>
+                                <div className="flex-1 h-7 rounded-lg bg-white/[0.04] overflow-hidden">
+                                  <div className="h-full rounded-lg flex items-center justify-end pr-2 min-w-[30px] transition-all duration-700" style={{ width: `${Math.max((f.count / maxCount) * 100, 9)}%`, background: colors[i % 4] }}>
+                                    <span className="text-[11px] font-bold text-white">{f.count}</span>
+                                  </div>
+                                </div>
+                                <div className="w-12 shrink-0 text-right text-[11px] text-white/40">{Math.round((f.count / total) * 100)}%</div>
+                              </div>
+                            ));
+                          })()}
                         </div>
                       </div>
                     )}
