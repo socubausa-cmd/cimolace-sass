@@ -739,7 +739,7 @@ function QuizBlock({ block, isActive, isCompleted, onComplete }) {
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {q.answers.map((answer, ai) => {
+            {(q.answers || q.options || []).map((answer, ai) => {
               const isSelected = selected === ai;
               const isCorrectAnswer = ai === q.correct_index;
               let bg = T.surface2;
