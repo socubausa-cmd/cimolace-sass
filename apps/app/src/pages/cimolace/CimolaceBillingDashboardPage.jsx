@@ -7,7 +7,7 @@ import {
   Zap, Loader2, Building2, Boxes, Power, LayoutGrid, ArrowRight, ExternalLink,
   KeyRound, ShoppingBag, LifeBuoy, Settings, Plus, Trash2, Copy, Check, Send,
   Package, Users, Activity, UserCircle, ShieldAlert, Mail, XCircle,
-  Webhook, ShieldCheck, LogOut, Image as ImageIcon, Printer, Globe,
+  Webhook, ShieldCheck, LogOut, Image as ImageIcon, Printer, Globe, Lock, Sparkles,
 } from 'lucide-react';
 import { billingApi, tenantMembersApi, catalogApi, tenantApiKeysApi, tenantPortalApi, tenantsApi, mboloApi, teamInvitesApi } from '@/lib/api';
 import { authStore } from '@/lib/auth-store';
@@ -18,6 +18,41 @@ const eur = (cents, cur = 'EUR') => {
   catch { return `${((Number(cents) || 0) / 100).toFixed(2)} ${cur}`; }
 };
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+
+// ─── Marketplace : humanisation des features (3 formes réelles en DB :
+// objet de limites {max_courses:10,…}, tableau de strings, booléens {medos:true}) ───
+const FEATURE_FMT = {
+  max_courses: (v) => (v === -1 ? 'Cours illimités' : `${v} cours`),
+  max_students: (v) => (v === -1 ? 'Élèves illimités' : `${v} élèves`),
+  liri_credits: (v) => (v === -1 ? 'Crédits LIRI illimités' : `${Number(v).toLocaleString('fr-FR')} crédits LIRI`),
+  max_storage_gb: (v) => (v === -1 ? 'Stockage illimité' : `${v} Go de stockage`),
+  max_lives_per_month: (v) => (v === -1 ? 'Lives illimités' : `${v} lives / mois`),
+  white_label: (v) => (v ? 'Marque blanche' : null),
+  medos: (v) => (v ? 'MEDOS — dossiers patients, RDV, téléconsultation' : null),
+  mbolo: (v) => (v ? 'Mbolo — boutique e-commerce' : null),
+  forfait: () => null,
+};
+function humanizeFeatures(features) {
+  if (!features) return [];
+  if (Array.isArray(features)) return features.filter(Boolean).map(String);
+  if (typeof features === 'object') {
+    return Object.entries(features).map(([k, v]) => {
+      const f = FEATURE_FMT[k];
+      if (f) return f(v);
+      if (typeof v === 'boolean') return v ? k.replace(/_/g, ' ') : null;
+      return `${k.replace(/_/g, ' ')} : ${v === -1 ? 'illimité' : v}`;
+    }).filter(Boolean);
+  }
+  return [];
+}
+// Indices de présentation par plan (badge / mise en avant / accroche). Clés inconnues → rendu nu.
+const PLAN_HINTS = {
+  starter: { tagline: 'Démarrer une école en ligne' },
+  pro: { badge: 'Populaire', highlight: true, tagline: "Pour les écoles qui passent à l'échelle" },
+  business: { tagline: 'Marque blanche & gros volumes' },
+  medos_standard: { tagline: 'Cabinet médical clé en main' },
+  'zahir-forfait': { badge: 'Tout-en-un', tagline: 'MEDOS + boutique Mbolo réunis' },
+};
 
 const STATUS = {
   active: { label: 'Actif', cls: 'bg-green-500/20 border-green-500/30 text-green-400' },
@@ -93,6 +128,7 @@ export default function CimolaceBillingDashboardPage() {
   // Onglets API & clés / Marketplace / Support / Paramètres
   const [keys, setKeys] = useState([]);
   const [market, setMarket] = useState([]);
+  const [mktCycle, setMktCycle] = useState('monthly'); // 'monthly' | 'yearly' (annuel = ancrage + demande, pas de prix annuel en DB)
   const [tickets, setTickets] = useState([]);
   const [busy, setBusy] = useState(null);
   const [newKey, setNewKey] = useState(null);
@@ -211,6 +247,19 @@ export default function CimolaceBillingDashboardPage() {
       if (url) { window.location.href = url; return; }
       setNotice('Abonnement créé — payez-le dans l’onglet Abonnement.'); await loadAll(activeSlug); setTab('abonnement');
     } catch (e) { setError(e?.message || 'Souscription impossible'); }
+    finally { setBusy(null); }
+  };
+  // Annuel non câblé en DB (plans monthly only) → on enregistre une demande via ticket plutôt qu'un checkout factice.
+  const requestAnnual = async (plan) => {
+    setBusy(`annual-${plan.key}`); setError(null);
+    try {
+      withSlug();
+      await tenantPortalApi.createTicket({
+        subject: `Facturation annuelle — ${plan.label || plan.key}`,
+        description: `Le tenant souhaite la facturation annuelle du plan « ${plan.label || plan.key} » (2 mois offerts). Merci de générer le devis / lien de paiement annuel.`,
+      });
+      setNotice('Demande envoyée — l’équipe Cimolace vous contacte pour la facturation annuelle.');
+    } catch (e) { setError(e?.message || 'Demande impossible'); }
     finally { setBusy(null); }
   };
   const submitTicket = async () => {
@@ -424,6 +473,18 @@ export default function CimolaceBillingDashboardPage() {
             {notice && <div className="mb-6 rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-200 flex items-center gap-2"><CheckCircle className="w-4 h-4" /> {notice}</div>}
             {error && <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200 flex items-center gap-2"><AlertCircle className="w-4 h-4" /> {error}</div>}
 
+            {primarySub && (primarySub.status === 'past_due' || primarySub.status === 'pending') && tab !== 'abonnement' && (
+              <div className="mb-6 rounded-xl border border-amber-500/40 bg-amber-500/[0.12] px-4 py-3.5 flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-start gap-2 text-sm text-amber-100">
+                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span><strong>Paiement en attente</strong> pour « {planName(primarySub)} ». Réactivez pour éviter la coupure de vos moteurs et de votre API.</span>
+                </div>
+                <button onClick={() => pay(primarySub)} disabled={payingId === primarySub.id} className="shrink-0 px-4 py-2 rounded-lg bg-amber-500 text-black font-bold text-sm hover:bg-amber-400 flex items-center gap-1.5 disabled:opacity-50">
+                  {payingId === primarySub.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />} Réactiver
+                </button>
+              </div>
+            )}
+
             {loading ? (
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 flex items-center gap-2 text-white/60"><RefreshCw className="w-4 h-4 animate-spin" /> Chargement…</div>
             ) : (
@@ -511,7 +572,15 @@ export default function CimolaceBillingDashboardPage() {
 
                 {/* MOTEURS */}
                 {tab === 'moteurs' && (
-                  services.length === 0 ? <Empty>Aucun moteur activé pour cet espace.</Empty> : (
+                  <div className="space-y-4">
+                    {!activeSubs.length && (
+                      <div className="rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-500/10 to-cyan-500/[0.04] p-5">
+                        <div className="flex items-center gap-2 mb-1"><Lock className="w-4 h-4 text-violet-300" /> <span className="font-bold">Vos moteurs sont en pause</span></div>
+                        <p className="text-sm text-white/60 mb-3">Activez un forfait pour débloquer {services.length ? `vos ${services.length} moteur(s)` : 'vos moteurs'}{familyCounts.length ? ` : ${familyCounts.map((f) => f.label).join(', ')}` : ''}.</p>
+                        <button onClick={() => setTab('marketplace')} className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 text-white font-bold text-sm hover:shadow-lg flex items-center gap-2 w-fit"><ShoppingBag className="w-4 h-4" /> Voir les forfaits <ArrowRight className="w-4 h-4" /></button>
+                      </div>
+                    )}
+                    {services.length === 0 ? (activeSubs.length ? <Empty>Aucun moteur activé pour cet espace.</Empty> : null) : (
                     <div className="grid sm:grid-cols-2 gap-3">
                       {services.map((sv) => {
                         const on = sv.active === true || sv.status === 'active';
@@ -525,9 +594,10 @@ export default function CimolaceBillingDashboardPage() {
                           </div>
                         );
                       })}
-                      <p className="sm:col-span-2 text-xs text-white/40">{activeSubs.length ? 'Moteurs inclus dans votre forfait actif.' : 'Activez un abonnement pour débloquer vos moteurs.'}</p>
+                      {activeSubs.length > 0 && <p className="sm:col-span-2 text-xs text-white/40">Moteurs inclus dans votre forfait actif.</p>}
                     </div>
-                  )
+                    )}
+                  </div>
                 )}
 
                 {/* FACTURES */}
@@ -552,21 +622,62 @@ export default function CimolaceBillingDashboardPage() {
                 {/* MARKETPLACE */}
                 {tab === 'marketplace' && (
                   market.length === 0 ? <Empty>Catalogue Cimolace indisponible pour le moment.</Empty> : (
-                    <div className="grid sm:grid-cols-2 gap-3">
-                      {market.map((p) => (
-                        <div key={p.key} className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 flex flex-col">
-                          <div className="flex items-start justify-between gap-2">
-                            <div><p className="font-bold">{p.label || p.key}</p><p className="text-xs text-white/50 mt-0.5">{p.description || '—'}</p></div>
-                            {p.subscribed && <span className="px-2 py-0.5 rounded-full border border-green-500/30 bg-green-500/15 text-green-400 text-[11px] whitespace-nowrap">Souscrit</span>}
-                          </div>
-                          <div className="mt-3 text-lg font-black">{eur(p.price_cents, p.currency)}<span className="text-xs font-normal text-white/40"> / {p.billing_cycle || 'mois'}</span></div>
-                          <button disabled={p.subscribed || busy === `sub-${p.key}`} onClick={() => subscribe(p.key)}
-                            className="mt-3 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 text-white font-bold text-sm hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                            {busy === `sub-${p.key}` ? <Loader2 className="w-4 h-4 animate-spin" /> : p.subscribed ? <Check className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />} {p.subscribed ? 'Déjà actif' : 'Souscrire'}
-                          </button>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-center">
+                        <div className="inline-flex items-center gap-1 p-1 rounded-xl border border-white/[0.08] bg-white/[0.03]">
+                          {['monthly', 'yearly'].map((c) => (
+                            <button key={c} onClick={() => setMktCycle(c)} className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${mktCycle === c ? 'bg-violet-500/80 text-white' : 'text-white/50 hover:text-white'}`}>
+                              {c === 'monthly' ? 'Mensuel' : 'Annuel'}{c === 'yearly' && <span className="ml-1.5 text-[10px] text-green-400">2 mois offerts</span>}
+                            </button>
+                          ))}
                         </div>
-                      ))}
-                      <p className="sm:col-span-2 text-xs text-white/40">« Souscrire » crée l'abonnement puis ouvre le paiement carte sécurisé (Stripe).</p>
+                      </div>
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {market.map((p) => {
+                          const hint = PLAN_HINTS[p.key] || {};
+                          const feats = humanizeFeatures(p.features);
+                          const oneTime = (p.billing_cycle || 'monthly') === 'one_time';
+                          const yearly = mktCycle === 'yearly' && !oneTime;
+                          const displayCents = yearly ? (p.price_cents || 0) * 10 : (p.price_cents || 0);
+                          const anchorCents = yearly ? (p.price_cents || 0) * 12 : null;
+                          const per = oneTime ? 'paiement unique' : yearly ? 'an' : 'mois';
+                          return (
+                            <div key={p.key} className={`relative rounded-2xl border p-5 flex flex-col ${hint.highlight ? 'border-violet-500/50 bg-gradient-to-b from-violet-500/[0.08] to-white/[0.02] ring-1 ring-violet-500/20' : 'border-white/[0.08] bg-white/[0.03]'}`}>
+                              {hint.badge && <span className="absolute -top-2 left-4 px-2 py-0.5 rounded-full bg-violet-500 text-white text-[10px] font-bold uppercase tracking-wide flex items-center gap-1"><Sparkles className="w-3 h-3" />{hint.badge}</span>}
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <p className="font-bold truncate">{p.label || p.key}</p>
+                                  {hint.tagline && <p className="text-[11px] text-violet-300/80 mt-0.5">{hint.tagline}</p>}
+                                </div>
+                                {p.subscribed && <span className="px-2 py-0.5 rounded-full border border-green-500/30 bg-green-500/15 text-green-400 text-[11px] whitespace-nowrap shrink-0">Souscrit</span>}
+                              </div>
+                              {p.description && <p className="text-xs text-white/50 mt-1.5">{p.description}</p>}
+                              <div className="mt-3 flex items-end gap-2 flex-wrap">
+                                <div className="text-2xl font-black">{eur(displayCents, p.currency)}</div>
+                                <div className="text-xs text-white/40 mb-1">/ {per}</div>
+                                {anchorCents && <div className="text-xs text-white/30 line-through mb-1">{eur(anchorCents, p.currency)}</div>}
+                              </div>
+                              {feats.length > 0 && (
+                                <ul className="mt-3 space-y-1.5 flex-1">
+                                  {feats.slice(0, 6).map((f, i) => (
+                                    <li key={i} className="flex items-start gap-2 text-xs text-white/70"><Check className="w-3.5 h-3.5 text-green-400 shrink-0 mt-0.5" /> {f}</li>
+                                  ))}
+                                </ul>
+                              )}
+                              {yearly ? (
+                                <button disabled={p.subscribed || busy === `annual-${p.key}`} onClick={() => requestAnnual(p)} className="mt-4 px-4 py-2.5 rounded-xl border border-violet-500/40 bg-violet-500/10 text-white font-bold text-sm hover:bg-violet-500/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                                  {busy === `annual-${p.key}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />} {p.subscribed ? 'Déjà actif' : "Demander l'annuel"}
+                                </button>
+                              ) : (
+                                <button disabled={p.subscribed || busy === `sub-${p.key}`} onClick={() => subscribe(p.key)} className="mt-4 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 text-white font-bold text-sm hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                                  {busy === `sub-${p.key}` ? <Loader2 className="w-4 h-4 animate-spin" /> : p.subscribed ? <Check className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />} {p.subscribed ? 'Déjà actif' : (oneTime ? 'Commander' : 'Activer ce forfait')}
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <p className="text-xs text-white/40 flex items-center gap-1.5 flex-wrap"><ShieldCheck className="w-3.5 h-3.5 text-green-400 shrink-0" /> Paiement sécurisé Stripe · Conforme RGPD · Selon le service, des frais d'activation uniques peuvent s'appliquer (forfait boutique : 500 €), détaillés avant paiement.</p>
                     </div>
                   )
                 )}
