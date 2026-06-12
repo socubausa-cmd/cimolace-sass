@@ -2,11 +2,28 @@ import { Injectable, BadRequestException, NotFoundException } from "@nestjs/comm
 import { randomUUID, createHmac, timingSafeEqual } from "crypto";
 import { AuthService } from "../auth/auth.service";
 import { PawaPayService } from "../pawapay/pawapay.service";
+import { WebhookService } from "../liri-public/webhook.service";
 
 @Injectable()
 export class BillingService {
-  constructor(private auth: AuthService, private pawapay: PawaPayService) {}
+  constructor(
+    private auth: AuthService,
+    private pawapay: PawaPayService,
+    private tenantWebhooks: WebhookService,
+  ) {}
   private get supabase() { return this.auth.getClient(); }
+
+  /**
+   * Notifie les endpoints webhook du tenant (tenant_webhooks, HMAC
+   * X-Cimolace-Signature). Fire-and-forget : ne bloque jamais le traitement
+   * du webhook Stripe entrant.
+   */
+  private notifyTenant(tenantId: string | null | undefined, event: any, data: Record<string, unknown>) {
+    if (!tenantId) return;
+    this.tenantWebhooks
+      .emit(tenantId, event, data)
+      .catch((e) => console.warn(`[billing webhook] émission tenant_webhooks échouée: ${(e as Error).message}`));
+  }
 
   async getSubscription(tenantId: string) {
     const { data } = await this.supabase.from("subscriptions").select("*").eq("tenant_id", tenantId).single();
@@ -489,10 +506,19 @@ export class BillingService {
     if (patch.status === "active") {
       const { data: row } = await sb
         .from("billing_subscriptions")
-        .select("id, tenant_id")
+        .select("id, tenant_id, plan_id, amount_cents, currency")
         .eq(matchCol, matchVal)
         .maybeSingle();
-      if ((row as any)?.tenant_id) await this.supersedeOtherActiveSubscriptions((row as any).tenant_id, (row as any).id);
+      if ((row as any)?.tenant_id) {
+        await this.supersedeOtherActiveSubscriptions((row as any).tenant_id, (row as any).id);
+        this.notifyTenant((row as any).tenant_id, "billing.subscription.activated", {
+          subscription_id: (row as any).id,
+          plan_id: (row as any).plan_id,
+          amount_cents: (row as any).amount_cents,
+          currency: (row as any).currency,
+          current_period_end: patch.current_period_end ?? null,
+        });
+      }
     }
   }
 
@@ -509,10 +535,20 @@ export class BillingService {
     // L'abo renouvelé/actif remplace les autres abos actifs du tenant (essai).
     const { data: row } = await this.supabase
       .from("billing_subscriptions")
-      .select("id, tenant_id")
+      .select("id, tenant_id, plan_id")
       .eq("provider_subscription_id", subId)
       .maybeSingle();
-    if ((row as any)?.tenant_id) await this.supersedeOtherActiveSubscriptions((row as any).tenant_id, (row as any).id);
+    if ((row as any)?.tenant_id) {
+      await this.supersedeOtherActiveSubscriptions((row as any).tenant_id, (row as any).id);
+      this.notifyTenant((row as any).tenant_id, "billing.invoice.paid", {
+        subscription_id: (row as any).id,
+        plan_id: (row as any).plan_id,
+        amount_cents: invoice.amount_paid ?? null,
+        currency: invoice.currency ?? null,
+        provider_invoice_id: invoice.id ?? null,
+        current_period_end: patch.current_period_end ?? null,
+      });
+    }
     // facture interne (si suivie) → payée
     await this.supabase
       .from("billing_invoices")
@@ -528,6 +564,18 @@ export class BillingService {
       .from("billing_subscriptions")
       .update({ status: "past_due", updated_at: new Date().toISOString() })
       .eq("provider_subscription_id", subId);
+    const { data: row } = await this.supabase
+      .from("billing_subscriptions")
+      .select("id, tenant_id, plan_id")
+      .eq("provider_subscription_id", subId)
+      .maybeSingle();
+    this.notifyTenant((row as any)?.tenant_id, "billing.subscription.past_due", {
+      subscription_id: (row as any)?.id ?? null,
+      plan_id: (row as any)?.plan_id ?? null,
+      amount_cents: invoice.amount_due ?? null,
+      currency: invoice.currency ?? null,
+      provider_invoice_id: invoice.id ?? null,
+    });
   }
 
   /** customer.subscription.updated → resynchronise statut + période. */
@@ -544,5 +592,14 @@ export class BillingService {
       .from("billing_subscriptions")
       .update({ status: "canceled", canceled_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq("provider_subscription_id", sub.id);
+    const { data: row } = await this.supabase
+      .from("billing_subscriptions")
+      .select("id, tenant_id, plan_id")
+      .eq("provider_subscription_id", sub.id)
+      .maybeSingle();
+    this.notifyTenant((row as any)?.tenant_id, "billing.subscription.canceled", {
+      subscription_id: (row as any)?.id ?? null,
+      plan_id: (row as any)?.plan_id ?? null,
+    });
   }
 }

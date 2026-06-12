@@ -8,11 +8,12 @@ import { BillingController, AdminBillingController } from "./billing.controller"
 import { BillingWebhookController } from "./billing-webhook.controller";
 import { BillingAdvancedController } from "./billing-advanced.controller";
 import { BillingAdvancedService } from "./billing-advanced.service";
+import { WebhookService } from "../liri-public/webhook.service";
 
 @Module({
   imports: [AuthModule, TenantModule, SupabaseModule, PawaPayModule],
   controllers: [BillingController, AdminBillingController, BillingWebhookController, BillingAdvancedController],
-  providers: [BillingService, BillingAdvancedService],
+  providers: [BillingService, BillingAdvancedService, WebhookService],
   exports: [BillingService, BillingAdvancedService],
 })
 export class BillingModule {}

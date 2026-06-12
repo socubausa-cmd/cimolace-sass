@@ -485,6 +485,18 @@ export default function CimolaceBillingDashboardPage() {
               </div>
             )}
 
+            {!activeSubs.length && primarySub && ['expired', 'canceled', 'paused'].includes(primarySub.status) && tab !== 'marketplace' && (
+              <div className="mb-6 rounded-xl border border-red-500/40 bg-red-500/[0.12] px-4 py-3.5 flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-start gap-2 text-sm text-red-100">
+                  <XCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span><strong>Forfait {badge(primarySub.status).label.toLowerCase()}</strong> — vos moteurs sont en pause et vos clés API renvoient <code className="text-red-200">402 subscription_inactive</code> aux intégrations.</span>
+                </div>
+                <button onClick={() => setTab('marketplace')} className="shrink-0 px-4 py-2 rounded-lg bg-gradient-to-r from-violet-500 to-cyan-500 text-white font-bold text-sm hover:shadow-lg flex items-center gap-1.5">
+                  <ShoppingBag className="w-4 h-4" /> Choisir un forfait
+                </button>
+              </div>
+            )}
+
             {loading ? (
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 flex items-center gap-2 text-white/60"><RefreshCw className="w-4 h-4 animate-spin" /> Chargement…</div>
             ) : (
@@ -685,6 +697,11 @@ export default function CimolaceBillingDashboardPage() {
                 {/* API & CLÉS */}
                 {tab === 'cles' && (
                   <div className="space-y-4">
+                    {!activeSubs.length && (
+                      <div className="rounded-xl border border-red-500/30 bg-red-500/[0.08] px-4 py-3 text-sm text-red-200 flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /> <span>Sans forfait actif, vos clés peuvent renvoyer <code className="text-red-100">402 subscription_inactive</code> aux intégrations (si le gating est armé sur votre espace).</span>
+                      </div>
+                    )}
                     {newKey && (
                       <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.08] p-4">
                         <p className="text-sm text-amber-200 mb-2">⚠️ Copiez cette clé maintenant — elle ne sera plus jamais affichée.</p>
@@ -928,7 +945,10 @@ export default function CimolaceBillingDashboardPage() {
                         ))}
                       </div>
                     )}
-                    <p className="text-xs text-white/40">Chaque requête est signée (HMAC-SHA256, en-tête <code className="text-white/60">X-Cimolace-Signature</code>) avec le secret du webhook.</p>
+                    <div className="text-xs text-white/40 space-y-1.5">
+                      <p>Chaque requête est signée (HMAC-SHA256, en-tête <code className="text-white/60">X-Cimolace-Signature</code>) avec le secret du webhook.</p>
+                      <p>Événements émis : <code className="text-white/60">billing.subscription.activated</code> · <code className="text-white/60">billing.invoice.paid</code> · <code className="text-white/60">billing.subscription.past_due</code> · <code className="text-white/60">billing.subscription.canceled</code> · <code className="text-white/60">session.started</code> · <code className="text-white/60">session.ended</code></p>
+                    </div>
                   </div>
                 )}
               </>
