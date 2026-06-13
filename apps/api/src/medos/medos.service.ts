@@ -7,6 +7,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
 import type { TenantContext } from '../tenant/tenant.types';
 import type { CreatePatientDto } from './dto/create-patient.dto';
@@ -77,7 +78,88 @@ const PATIENT_LIST_ROLES = [
 export class MedosService {
   private readonly logger = new Logger(MedosService.name);
 
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly config: ConfigService,
+  ) {}
+
+  /**
+   * 2026-06 — Provisionne (ou retrouve) le compte patient à partir d'un email,
+   * puis garantit son membership 'patient' sur le tenant. Renvoie l'UUID du
+   * user. Réplique la logique éprouvée de EmbedService.findOrCreateUser (le
+   * même flux qui a créé les patients existants via le sync intake), pour que
+   * le modal "Nouveau patient" et le wizard Onboarding Twin puissent créer un
+   * patient sans connaître son UUID à l'avance.
+   */
+  private async ensurePatientUser(
+    tenantId: string,
+    email: string,
+    firstName?: string,
+    lastName?: string,
+  ): Promise<string> {
+    const supabaseUrl = this.config.get<string>('SUPABASE_URL');
+    const serviceKey = this.config.get<string>('SUPABASE_SERVICE_ROLE_KEY');
+    if (!supabaseUrl || !serviceKey) {
+      throw new InternalServerErrorException(
+        'Supabase non configuré pour la création de patients',
+      );
+    }
+    const adminHeaders = {
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+      'Content-Type': 'application/json',
+    };
+
+    // 1. User existant ? (filtre admin par email)
+    let userId: string | undefined;
+    const listRes = await fetch(
+      `${supabaseUrl}/auth/v1/admin/users?email=${encodeURIComponent(email)}`,
+      { headers: adminHeaders },
+    );
+    if (listRes.ok) {
+      const data = (await listRes.json()) as { users?: { id: string; email?: string }[] };
+      const existing = (data?.users || []).find(
+        (u) => u.email?.toLowerCase() === email.toLowerCase(),
+      );
+      if (existing) userId = existing.id;
+    }
+
+    // 2. Sinon, créer le user
+    if (!userId) {
+      const createRes = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
+        method: 'POST',
+        headers: adminHeaders,
+        body: JSON.stringify({
+          email,
+          email_confirm: true,
+          user_metadata: {
+            first_name: firstName ?? null,
+            last_name: lastName ?? null,
+            created_via: 'medos-patient-create',
+          },
+        }),
+      });
+      if (!createRes.ok) {
+        const body = await createRes.text();
+        this.logger.error(`ensurePatientUser create failed: ${createRes.status} ${body}`);
+        throw new InternalServerErrorException(
+          `Création du compte patient impossible : ${createRes.status}`,
+        );
+      }
+      const created = (await createRes.json()) as { id: string };
+      userId = created.id;
+    }
+
+    // 3. Garantir le membership 'patient' sur ce tenant (idempotent)
+    await (this.supabase.client as any)
+      .from('tenant_memberships')
+      .upsert(
+        { tenant_id: tenantId, user_id: userId, role: 'patient', status: 'active' },
+        { onConflict: 'tenant_id,user_id' },
+      );
+
+    return userId;
+  }
 
   // -----------------------------------------------------------------------
   // Audit helper — log obligatoire sur chaque mutation
@@ -120,11 +202,31 @@ export class MedosService {
     actorId: string,
     dto: CreatePatientDto,
   ): Promise<MedPatientRow> {
+    // 2026-06 — Résolution de l'identité patient. Trois cas :
+    //   a) patient_user_id fourni → on l'utilise tel quel (flux SSO/embed).
+    //   b) email fourni → on provisionne/retrouve le compte + membership.
+    //   c) ni l'un ni l'autre → 400 explicite (plutôt que le cryptique
+    //      "patient_user_id must be a UUID" renvoyé par le validateur).
+    let patientUserId = dto.patient_user_id;
+    if (!patientUserId) {
+      if (!dto.email) {
+        throw new BadRequestException(
+          'Email du patient requis pour créer un dossier (ou fournir patient_user_id).',
+        );
+      }
+      patientUserId = await this.ensurePatientUser(
+        tenant.id,
+        dto.email.trim().toLowerCase(),
+        dto.first_name,
+        dto.last_name,
+      );
+    }
+
     const { data, error } = await this.supabase.client
       .from('med_patients')
       .insert({
         tenant_id: tenant.id,
-        patient_user_id: dto.patient_user_id,
+        patient_user_id: patientUserId,
         first_name: dto.first_name,
         last_name: dto.last_name,
         date_of_birth: dto.date_of_birth ?? null,

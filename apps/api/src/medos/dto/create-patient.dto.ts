@@ -2,6 +2,7 @@ import {
   IsArray,
   IsBoolean,
   IsDateString,
+  IsEmail,
   IsIn,
   IsObject,
   IsOptional,
@@ -11,8 +12,23 @@ import {
 } from 'class-validator';
 
 export class CreatePatientDto {
+  /**
+   * Optionnel depuis 2026-06 : si absent, l'API provisionne (ou retrouve) le
+   * compte patient à partir de `email` — c'est ce que fait le modal
+   * "Nouveau patient" et le wizard Onboarding Twin qui n'ont pas d'UUID sous
+   * la main. Si fourni, on lie directement à ce user existant.
+   */
+  @IsOptional()
   @IsUUID()
-  patient_user_id: string;
+  patient_user_id?: string;
+
+  /**
+   * Requis SEULEMENT si `patient_user_id` est absent. Sert à créer/retrouver
+   * le compte Supabase du patient + son membership tenant (rôle patient).
+   */
+  @IsOptional()
+  @IsEmail()
+  email?: string;
 
   @IsString()
   @MinLength(1)
