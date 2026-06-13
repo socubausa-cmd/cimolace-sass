@@ -97,7 +97,7 @@ export default function AdminBillingPage() {
           .limit(200),
         supabase
           .from('billing_subscriptions')
-          .select('id,created_at,user_id,provider,payment_method,status,started_at,expires_at,provider_license_key,provider_license_expires_at,plan_id')
+          .select('id,created_at,user_id,provider,status,plan_id,current_period_start,current_period_end,metadata')
           .order('created_at', { ascending: false })
           .limit(200),
         supabase
@@ -185,7 +185,7 @@ export default function AdminBillingPage() {
     { key: 'provider', label: 'Provider' },
     { key: 'payment_method', label: 'Méthode' },
     { key: 'started_at', label: 'Début', render: (v) => v ? new Date(v).toLocaleString() : '—' },
-    { key: 'expires_at', label: 'Fin', render: (v) => v ? new Date(v).toLocaleString() : '—' },
+    { key: 'current_period_end', label: 'Fin', render: (v) => v ? new Date(v).toLocaleString() : '—' },
     { key: 'provider_license_key', label: 'Licence', render: (v) => v ? `${String(v).slice(0, 10)}…` : '—' },
     { key: 'provider_license_expires_at', label: 'Fin licence', render: (v) => v ? new Date(v).toLocaleString() : '—' },
     { key: 'user_id', label: 'User', render: (v) => String(v || '').slice(0, 8) + '…' },

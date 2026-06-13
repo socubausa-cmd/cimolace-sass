@@ -1,11 +1,11 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
-import { fetchLives, type Live } from '@/lib/liri-api';
+import { fetchLives, quickStartLive, type Live } from '@/lib/liri-api';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 const MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
@@ -29,6 +29,8 @@ export default function LivesScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [now] = useState(() => new Date());
 
+  const [launching, setLaunching] = useState(false);
+
   const load = useCallback(async () => {
     setLives(await fetchLives());
   }, []);
@@ -40,6 +42,34 @@ export default function LivesScreen() {
     await load();
     setRefreshing(false);
   };
+
+  // Crée + passe en direct, puis ouvre la salle de diffusion (host).
+  const launchLive = useCallback(async () => {
+    if (launching) return;
+    setLaunching(true);
+    const live = await quickStartLive();
+    setLaunching(false);
+    if (live?.id) {
+      router.push({ pathname: '/live-room', params: { id: live.id, role: 'host', title: live.title ?? 'Mon live' } });
+    } else {
+      Alert.alert('Live', "Impossible de démarrer le live. Vérifiez votre connexion et réessayez.");
+    }
+  }, [launching, router]);
+
+  // Un live « Arena · … » est un débat structuré → salle de débat dédiée.
+  const isArena = (l: Live) => /^arena\b/i.test((l.title ?? '').trim());
+
+  // Rejoint un live en cours : arène → /arena/[id], sinon salle spectateur.
+  const joinLive = useCallback(
+    (live: Live) => {
+      if (isArena(live)) {
+        router.push({ pathname: '/arena/[sessionId]', params: { sessionId: live.id } });
+        return;
+      }
+      router.push({ pathname: '/live-room', params: { id: live.id, role: 'student', title: live.title ?? 'Session live' } });
+    },
+    [router],
+  );
 
   const liveNow = useMemo(() => (lives ?? []).filter((l) => l.started_at && !l.ended_at), [lives]);
   const upcoming = useMemo(
@@ -69,9 +99,19 @@ export default function LivesScreen() {
             <Text style={styles.h1}>Lives</Text>
             <Text style={styles.h1sub}>Sessions en direct & replays</Text>
           </View>
-          <Pressable style={({ pressed }) => [styles.newBtn, pressed && styles.pressed]} onPress={() => router.push('/brain')}>
-            <Feather name="plus" size={16} color="#fff" />
-            <Text style={styles.newBtnTxt}>Programmer</Text>
+          <Pressable
+            style={({ pressed }) => [styles.newBtn, pressed && styles.pressed]}
+            onPress={launchLive}
+            disabled={launching}
+          >
+            {launching ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <>
+                <Feather name="video" size={16} color="#fff" />
+                <Text style={styles.newBtnTxt}>Démarrer</Text>
+              </>
+            )}
           </Pressable>
         </View>
 
@@ -94,13 +134,16 @@ export default function LivesScreen() {
               <>
                 <Text style={styles.section}>EN DIRECT</Text>
                 {liveNow.map((l) => (
-                  <Pressable key={l.id} style={({ pressed }) => [styles.liveCard, pressed && styles.pressed]}>
+                  <Pressable key={l.id} style={({ pressed }) => [styles.liveCard, pressed && styles.pressed]} onPress={() => joinLive(l)}>
                     <View style={styles.liveDotWrap}><View style={styles.liveDotRing} /><View style={styles.liveDot} /></View>
                     <View style={{ flex: 1, minWidth: 0 }}>
                       <Text style={styles.cardTitle} numberOfLines={1}>{l.title || 'Session live'}</Text>
-                      <Text style={styles.liveMeta}>en cours maintenant</Text>
+                      <View style={styles.liveMetaRow}>
+                        {isArena(l) && <View style={styles.arenaTag}><Feather name="flag" size={9} color="#fff" /><Text style={styles.arenaTagTxt}>DÉBAT</Text></View>}
+                        <Text style={styles.liveMeta}>en cours maintenant</Text>
+                      </View>
                     </View>
-                    <View style={styles.joinBtn}><Text style={styles.joinTxt}>Rejoindre</Text></View>
+                    <View style={styles.joinBtn}><Text style={styles.joinTxt}>{isArena(l) ? 'Entrer' : 'Rejoindre'}</Text></View>
                   </Pressable>
                 ))}
               </>
@@ -169,7 +212,10 @@ const styles = StyleSheet.create({
   liveDotWrap: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   liveDotRing: { position: 'absolute', width: 22, height: 22, borderRadius: 11, backgroundColor: C.live, opacity: 0.25 },
   liveDot: { width: 11, height: 11, borderRadius: 6, backgroundColor: C.live },
-  liveMeta: { color: C.liveSoft, fontSize: 12.5, fontWeight: '600', marginTop: 2, fontFamily: F.sans },
+  liveMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3 },
+  liveMeta: { color: C.liveSoft, fontSize: 12.5, fontWeight: '600', fontFamily: F.sans },
+  arenaTag: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: C.coral, borderRadius: 5, paddingHorizontal: 5, paddingVertical: 2 },
+  arenaTagTxt: { color: '#fff', fontSize: 8.5, fontWeight: '800', letterSpacing: 0.5, fontFamily: F.sans },
   joinBtn: { backgroundColor: C.live, borderRadius: 11, paddingHorizontal: 14, paddingVertical: 9 },
   joinTxt: { color: '#fff', fontSize: 13, fontWeight: '700', fontFamily: F.sans },
   watchBtn: { backgroundColor: C.panel, borderWidth: 1, borderColor: C.line, borderRadius: 11, paddingHorizontal: 14, paddingVertical: 8 },

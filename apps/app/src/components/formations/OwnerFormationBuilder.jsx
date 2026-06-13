@@ -123,8 +123,8 @@ const StepGeneral = ({ data, update, billingPlans = [] }) => {
               <SelectContent>
                 <SelectItem value="__none__">— Aucun (à définir) —</SelectItem>
                 {billingPlans.map((plan) => (
-                  <SelectItem key={plan.slug} value={plan.slug}>
-                    {plan.name || plan.slug}
+                  <SelectItem key={plan.key} value={plan.key}>
+                    {plan.label || plan.key}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -555,8 +555,8 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
       try {
         const { data, error } = await supabase
           .from('billing_plans')
-          .select('slug, name')
-          .order('name', { ascending: true });
+          .select('key, label')
+          .order('label', { ascending: true });
         if (!alive || error) return;
         setBillingPlans(Array.isArray(data) ? data : []);
       } catch {

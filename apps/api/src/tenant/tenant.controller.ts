@@ -1,9 +1,11 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
   Param,
   Patch,
+  Post,
   Req,
   UseGuards,
 } from "@nestjs/common";
@@ -143,6 +145,37 @@ export class TenantController {
   ) {
     return {
       data: await this.tenantService.updateBranding(tenantId, dto),
+    };
+  }
+}
+
+/**
+ * Admin marketplace — toggle d'un service Cimolace (ex: 'twin') sur un
+ * tenant. Réservé au staff Cimolace. Endpoint séparé sous `/admin/tenants/...`
+ * pour ne pas mélanger avec les routes self-serve.
+ *
+ * Body : { active: boolean }
+ */
+@Controller("admin/tenants")
+export class AdminTenantServicesController {
+  constructor(private tenantService: TenantService) {}
+
+  @Post(":tenantId/services/:serviceKey/toggle")
+  @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
+  async toggleService(
+    @Param("tenantId") tenantId: string,
+    @Param("serviceKey") serviceKey: string,
+    @Body() body: { active?: boolean },
+  ) {
+    if (typeof body?.active !== "boolean") {
+      throw new BadRequestException("Body { active: boolean } requis");
+    }
+    return {
+      data: await this.tenantService.updateTenantService(
+        tenantId,
+        serviceKey,
+        body.active,
+      ),
     };
   }
 }

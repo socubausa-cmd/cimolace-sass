@@ -1,48 +1,56 @@
 import { useParams, Link } from 'react-router-dom';
-import { useTenantBranding } from '@/hooks/useTenantBranding';
-
-const C = { bg: '#0d1117', panel: '#161b22', border: '#21262d', text: '#f0f6fc', muted: '#8b949e', violet: '#7c3aed' };
+import { MonitorPlay, Palette, ArrowRight } from 'lucide-react';
+import TenantAdminShell from '@/components/admin/TenantAdminShell';
+import { ADMIN_T as T } from '@/lib/tenantAdminTheme';
 
 export default function TenantAdminSmartboardPage() {
   const { tenantSlug } = useParams();
-  const { branding } = useTenantBranding();
-  const accent = branding?.accentColor ?? C.violet;
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, padding: '32px 24px', fontFamily: "'Inter', system-ui, sans-serif" }}>
-      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
-          <Link to={`/t/${tenantSlug}/admin`} style={{ color: C.muted, textDecoration: 'none', fontSize: '13px' }}>← Tableau de bord</Link>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-          <span style={{ fontSize: '28px' }}>🧠</span>
-          <h1 style={{ color: C.text, fontSize: '22px', fontWeight: 800, margin: 0 }}>SmartBoard Designer</h1>
-        </div>
-        <p style={{ color: C.muted, fontSize: '14px', marginBottom: '32px' }}>
-          Tableau pédagogique interactif — créez des slides, scènes et supports visuels IA.
-        </p>
+    <TenantAdminShell>
+      <Link to={`/t/${tenantSlug}/admin`} style={{ color: T.t3, textDecoration: 'none', fontSize: 13 }}>← Tableau de bord</Link>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0 8px' }}>
         <div style={{
-          background: C.panel, border: `1px solid ${C.border}`, borderRadius: '12px',
-          padding: '48px', textAlign: 'center',
+          width: 40, height: 40, borderRadius: 11, flexShrink: 0,
+          background: T.goldDim, border: `1px solid ${T.goldMid}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎨</div>
-          <h2 style={{ color: C.text, fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>SmartBoard est actif</h2>
-          <p style={{ color: C.muted, fontSize: '14px', marginBottom: '24px', maxWidth: '480px', margin: '0 auto 24px' }}>
-            L'éditeur SmartBoard est disponible depuis l\'interface de cours et la session live.
-            Accédez-y via un cours ou une session live active.
-          </p>
-          <Link
-            to={`/t/${tenantSlug}/admin/courses`}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: '6px',
-              padding: '10px 20px', background: accent, color: '#fff',
-              borderRadius: '8px', textDecoration: 'none', fontWeight: 700, fontSize: '14px',
-            }}
-          >
-            Ouvrir depuis un cours →
-          </Link>
+          <MonitorPlay size={20} style={{ color: T.gold }} />
         </div>
+        <h1 style={{ color: T.t1, fontSize: 22, fontWeight: 800, margin: 0 }}>SmartBoard Designer</h1>
       </div>
-    </div>
+      <p style={{ color: T.t2, fontSize: 14, marginBottom: 32 }}>
+        Tableau pédagogique interactif — créez des slides, scènes et supports visuels IA.
+      </p>
+
+      <div style={{
+        background: T.surfaceCard, border: `1px solid ${T.border}`, borderRadius: 14,
+        padding: 48, textAlign: 'center',
+      }}>
+        <div style={{
+          width: 64, height: 64, borderRadius: 16, margin: '0 auto 18px',
+          background: T.goldDim, border: `1px solid ${T.goldMid}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Palette size={30} style={{ color: T.gold }} />
+        </div>
+        <h2 style={{ color: T.t1, fontSize: 18, fontWeight: 700, marginBottom: 8 }}>SmartBoard est actif</h2>
+        <p style={{ color: T.t2, fontSize: 14, maxWidth: 480, margin: '0 auto 24px' }}>
+          L'éditeur SmartBoard est disponible depuis l'interface de cours et la session live.
+          Accédez-y via un cours ou une session live active.
+        </p>
+        <Link
+          to={`/t/${tenantSlug}/admin/courses`}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '10px 20px', background: T.gold, color: '#000',
+            borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: 14,
+          }}
+        >
+          Ouvrir depuis un cours <ArrowRight size={16} />
+        </Link>
+      </div>
+    </TenantAdminShell>
   );
 }

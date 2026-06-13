@@ -48,14 +48,15 @@ export class LiriAdminController {
     const breakdown = await this.live.getLiriConsumption(tenantId, from, to);
 
     const totalSeconds = breakdown.reduce((s, b) => s + b.total_seconds, 0);
+    // Return the raw payload — the global ResponseInterceptor wraps every
+    // non-@SkipResponseWrapper response in { data: … }. Wrapping here too
+    // would double-encapsulate (the bug this endpoint had).
     return {
-      data: {
-        tenant_id: tenantId,
-        window: { from, to },
-        total_minutes: Math.round(totalSeconds / 60),
-        total_seconds: totalSeconds,
-        breakdown,
-      },
+      tenant_id: tenantId,
+      window: { from, to },
+      total_minutes: Math.round(totalSeconds / 60),
+      total_seconds: totalSeconds,
+      breakdown,
     };
   }
 }

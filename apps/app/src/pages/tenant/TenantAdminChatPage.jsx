@@ -1,51 +1,60 @@
 import { useParams, Link } from 'react-router-dom';
-import { useTenantBranding } from '@/hooks/useTenantBranding';
+import { MessageCircle } from 'lucide-react';
+import TenantAdminShell from '@/components/admin/TenantAdminShell';
+import { ADMIN_T as T } from '@/lib/tenantAdminTheme';
 
-const C = { bg: '#0d1117', panel: '#161b22', border: '#21262d', text: '#f0f6fc', muted: '#8b949e', violet: '#7c3aed', green: '#10b981' };
+const CHANNELS = ['# général', '# annonces', '# questions', '# ressources'];
 
 export default function TenantAdminChatPage() {
   const { tenantSlug } = useParams();
-  const { branding } = useTenantBranding();
-  const accent = branding?.accentColor ?? C.violet;
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, padding: '32px 24px', fontFamily: "'Inter', system-ui, sans-serif" }}>
-      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
-          <Link to={`/t/${tenantSlug}/admin`} style={{ color: C.muted, textDecoration: 'none', fontSize: '13px' }}>← Tableau de bord</Link>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-          <span style={{ fontSize: '28px' }}>💬</span>
-          <h1 style={{ color: C.text, fontSize: '22px', fontWeight: 800, margin: 0 }}>Chat Engine</h1>
-        </div>
-        <p style={{ color: C.muted, fontSize: '14px', marginBottom: '32px' }}>
-          Messagerie en temps réel — classes, groupes et conversations directes.
-        </p>
+    <TenantAdminShell>
+      <Link to={`/t/${tenantSlug}/admin`} style={{ color: T.t3, textDecoration: 'none', fontSize: 13 }}>← Tableau de bord</Link>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '16px', minHeight: '400px' }}>
-          {/* Sidebar canaux */}
-          <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: '10px', overflow: 'hidden' }}>
-            <div style={{ padding: '16px', borderBottom: `1px solid ${C.border}` }}>
-              <span style={{ color: C.muted, fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Canaux</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0 8px' }}>
+        <div style={{
+          width: 40, height: 40, borderRadius: 11, flexShrink: 0,
+          background: T.goldDim, border: `1px solid ${T.goldMid}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <MessageCircle size={20} style={{ color: T.gold }} />
+        </div>
+        <h1 style={{ color: T.t1, fontSize: 22, fontWeight: 800, margin: 0 }}>Chat Engine</h1>
+      </div>
+      <p style={{ color: T.t2, fontSize: 14, marginBottom: 32 }}>
+        Messagerie en temps réel — classes, groupes et conversations directes.
+      </p>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16, minHeight: 400 }}>
+        {/* Sidebar canaux */}
+        <div style={{ background: T.surfaceCard, border: `1px solid ${T.border}`, borderRadius: 14, overflow: 'hidden' }}>
+          <div style={{ padding: 16, borderBottom: `1px solid ${T.border}` }}>
+            <span style={{ color: T.t3, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Canaux</span>
+          </div>
+          {CHANNELS.map((ch) => (
+            <div key={ch} style={{ padding: '12px 16px', color: T.t2, fontSize: 13, borderBottom: `1px solid ${T.border}`, cursor: 'pointer' }}>
+              {ch}
             </div>
-            {['# général', '# annonces', '# questions', '# ressources'].map((ch) => (
-              <div key={ch} style={{ padding: '12px 16px', color: C.muted, fontSize: '13px', borderBottom: `1px solid ${C.border}20`, cursor: 'pointer' }}>
-                {ch}
-              </div>
-            ))}
-          </div>
+          ))}
+        </div>
 
-          {/* Zone message */}
-          <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px', padding: '40px' }}>
-            <div style={{ fontSize: '40px' }}>💬</div>
-            <h2 style={{ color: C.text, fontSize: '16px', fontWeight: 700, margin: 0 }}>Chat Engine actif</h2>
-            <p style={{ color: C.muted, fontSize: '13px', textAlign: 'center', maxWidth: '360px', margin: 0 }}>
-              Les étudiants et enseignants utilisent le chat en temps réel depuis leur espace.
-              L'interface de modération complète arrive dans la prochaine mise à jour.
-            </p>
+        {/* Zone message */}
+        <div style={{ background: T.surfaceCard, border: `1px solid ${T.border}`, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 14, padding: 40 }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: 14,
+            background: T.goldDim, border: `1px solid ${T.goldMid}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <MessageCircle size={26} style={{ color: T.gold }} />
           </div>
+          <h2 style={{ color: T.t1, fontSize: 16, fontWeight: 700, margin: 0 }}>Chat Engine actif</h2>
+          <p style={{ color: T.t2, fontSize: 13, textAlign: 'center', maxWidth: 360, margin: 0 }}>
+            Les étudiants et enseignants utilisent le chat en temps réel depuis leur espace.
+            L'interface de modération complète arrive dans la prochaine mise à jour.
+          </p>
         </div>
       </div>
-    </div>
+    </TenantAdminShell>
   );
 }

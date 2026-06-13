@@ -112,18 +112,65 @@ export interface TenantService {
 
 
 export const tenantMembersApi = {
+  // Servi par TenantPortalController (/tenant-portal/members) — l'ancien
+  // /tenants/current/members n'était pas implémenté côté backend.
   listMembers: () =>
-    api.get<ApiEnvelope<any[]>>("/tenants/current/members").then(unwrap),
+    api.get<ApiEnvelope<any>>("/tenant-portal/members").then(unwrap),
   inviteMember: (email: string, role: string) =>
-    api.post<ApiEnvelope<any>>("/tenants/current/members", { email, role }).then(unwrap),
+    api.post<ApiEnvelope<any>>("/tenant-portal/members", { email, role }).then(unwrap),
   updateMemberRole: (userId: string, role: string) =>
-    api.patch<ApiEnvelope<any>>(`/tenants/current/members/${userId}`, { role }).then(unwrap),
+    api.patch<ApiEnvelope<any>>(`/tenant-portal/members/${userId}`, { role }).then(unwrap),
   removeMember: (userId: string) =>
-    api.delete<ApiEnvelope<any>>(`/tenants/current/members/${userId}`).then(unwrap),
+    api.delete<ApiEnvelope<any>>(`/tenant-portal/members/${userId}`).then(unwrap),
   getDashboard: () =>
     api.get<ApiEnvelope<any>>("/tenants/current/dashboard").then(unwrap),
   getMyTenants: () =>
     api.get<ApiEnvelope<any[]>>("/tenants/mine").then(unwrap),
+};
+
+// Certains contrôleurs renvoient déjà `{ data }`, re-emballé par l'intercepteur
+// global → `unwrap` laisse une couche `{ data }`. `peel` la retire si présente.
+const peel = (r: any): any =>
+  r && !Array.isArray(r) && typeof r === "object" && "data" in r ? r.data : r;
+
+// ── Back-office tenant : clés API (rôle owner/admin) ────────────────────────
+export const tenantApiKeysApi = {
+  list: () => api.get<ApiEnvelope<any>>("/tenants/api-keys").then(unwrap).then(peel),
+  create: (label: string) =>
+    api.post<ApiEnvelope<any>>("/tenants/api-keys", { label }).then(unwrap).then(peel),
+  revoke: (keyId: string) =>
+    api.delete<ApiEnvelope<any>>(`/tenants/api-keys/${keyId}`).then(unwrap).then(peel),
+};
+
+// ── Back-office tenant : marketplace + support ──────────────────────────────
+export const tenantPortalApi = {
+  marketplace: () => api.get<ApiEnvelope<any>>("/tenant-portal/marketplace").then(unwrap).then(peel),
+  subscribe: (plan: string) =>
+    api.post<ApiEnvelope<any>>("/tenant-portal/marketplace/subscribe", { plan }).then(unwrap).then(peel),
+  tickets: () => api.get<ApiEnvelope<any>>("/tenant-portal/support/tickets").then(unwrap).then(peel),
+  createTicket: (body: { subject: string; description?: string; category?: string; priority?: string }) =>
+    api.post<ApiEnvelope<any>>("/tenant-portal/support/tickets", body).then(unwrap).then(peel),
+  usage: () => api.get<ApiEnvelope<any>>("/tenant-portal/usage").then(unwrap).then(peel),
+  profile: () => api.get<ApiEnvelope<any>>("/tenant-portal/profile").then(unwrap).then(peel),
+  cancelSubscription: (id: string) =>
+    api.post<ApiEnvelope<any>>(`/tenant-portal/subscriptions/${id}/cancel`).then(unwrap).then(peel),
+  requestDeletion: (reason?: string) =>
+    api.post<ApiEnvelope<any>>("/tenant-portal/account/request-deletion", { reason }).then(unwrap).then(peel),
+  billingPortal: () =>
+    api.post<ApiEnvelope<any>>("/tenant-portal/billing-portal").then(unwrap).then(peel),
+  webhooks: () => api.get<ApiEnvelope<any>>("/tenant-portal/webhooks").then(unwrap).then(peel),
+  createWebhook: (body: { label: string; url: string; events?: string[] }) =>
+    api.post<ApiEnvelope<any>>("/tenant-portal/webhooks", body).then(unwrap).then(peel),
+  toggleWebhook: (id: string, is_active: boolean) =>
+    api.patch<ApiEnvelope<any>>(`/tenant-portal/webhooks/${id}`, { is_active }).then(unwrap).then(peel),
+  deleteWebhook: (id: string) =>
+    api.delete<ApiEnvelope<any>>(`/tenant-portal/webhooks/${id}`).then(unwrap).then(peel),
+};
+
+// Invitations d'équipe par email (envoie un vrai lien d'invitation Supabase).
+export const teamInvitesApi = {
+  send: (email: string, role: string) =>
+    api.post<ApiEnvelope<any>>("/team-invites/send", { email, role }).then(unwrap).then(peel),
 };
 
 export const catalogApi = {
@@ -902,6 +949,77 @@ export const gdprApi = {
     api.get<ApiEnvelope<GdprAnonymization[]>>("/med/gdpr/anonymizations").then(unwrap),
 };
 
+// ─── Admin: MedOS audit log + AI runs ──────────────────────────────────────
+
+export interface MedAuditLogRow {
+  id: string;
+  tenant_id: string;
+  actor_id: string;
+  resource: string;
+  resource_id: string;
+  action: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  metadata: Record<string, any> | null;
+  created_at: string;
+}
+
+export interface MedAiRunRow {
+  id: string;
+  analysis_id: string | null;
+  patient_id: string;
+  agent: string;
+  prompt_version: string | null;
+  model: string | null;
+  tokens: number | null;
+  latency_ms: number | null;
+  error: string | null;
+  created_at: string;
+}
+
+export interface MedAuditPaged<T> {
+  data: T[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface MedAuditListParams {
+  limit?: number;
+  offset?: number;
+  resource?: string;
+  action?: string;
+  actor_id?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface MedAiRunsParams {
+  limit?: number;
+  offset?: number;
+  agent?: string;
+  patient_id?: string;
+  from?: string;
+  to?: string;
+}
+
+export const adminMedAudit = {
+  list: (params: MedAuditListParams = {}) =>
+    api
+      .get<ApiEnvelope<MedAuditPaged<MedAuditLogRow>>>(
+        "/med/admin/audit/log",
+        { params },
+      )
+      .then(unwrap),
+  aiRuns: (params: MedAiRunsParams = {}) =>
+    api
+      .get<ApiEnvelope<MedAuditPaged<MedAiRunRow>>>(
+        "/med/admin/audit/ai-runs",
+        { params },
+      )
+      .then(unwrap),
+};
+
 // ─── Invitations ────────────────────────────────────────────────────────────
 
 export interface PatientInvitation {
@@ -1119,3 +1237,38 @@ export interface BillingPayout {
   failure_message: string | null;
   created_at: string;
 }
+
+// ─── Admin Twin — métering IA par tenant ────────────────────────────────────
+
+export interface MedAiUsageByDay {
+  date: string;
+  tokens: number;
+  cost_usd: number;
+}
+
+export interface MedAiUsageByAgent {
+  agent: string;
+  tokens: number;
+  runs: number;
+  cost_usd: number;
+}
+
+export interface MedAiUsageReport {
+  period: { from: string; to: string };
+  total_tokens: number;
+  total_runs: number;
+  total_cost_usd: number;
+  by_day: MedAiUsageByDay[];
+  by_agent: MedAiUsageByAgent[];
+}
+
+export const adminTwin = {
+  usage: (from?: string, to?: string) => {
+    const params: Record<string, string> = {};
+    if (from) params.from = from;
+    if (to) params.to = to;
+    return api
+      .get<ApiEnvelope<MedAiUsageReport>>("/med/twin/admin/usage", { params })
+      .then(unwrap);
+  },
+};

@@ -1,0 +1,43 @@
+{
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "loading": "Chargement…",
+    "error": "Erreur"
+  },
+  "twin": {
+    "tabs": {
+      "body3d": "Corps 3D",
+      "wheel": "Roue",
+      "lab": "Laboratoire",
+      "correlations": "Corrélations",
+      "timeline": "Timeline",
+      "longitudinal": "Évolution",
+      "simulator": "Simulateur",
+      "copilot": "Copilote IA"
+    },
+    "organs": {
+      "optimal": "Optimal",
+      "surveillance": "À surveiller",
+      "suboptimal": "Sub-optimal",
+      "critical": "Critique"
+    },
+    "actions": {
+      "upload": "Uploader bilan",
+      "importCsv": "Importer CSV",
+      "takePhoto": "Prendre une photo",
+      "newPatient": "Nouveau patient"
+    },
+    "wizard": {
+      "step1": "Identité",
+      "step2": "Symptômes",
+      "step3": "Biomarqueurs",
+      "step4": "Roue"
+    },
+    "copilot": {
+      "rootCause": "Causes racines",
+      "council": "Conseil multi-agents",
+      "pubmed": "Recherche scientifique"
+    }
+  }
+}

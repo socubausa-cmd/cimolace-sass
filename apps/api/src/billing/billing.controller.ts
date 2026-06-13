@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Param, Req, UseGuards } from "@nestjs/common";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
+import { CimolaceStaffGuard } from "../cimolace-backoffice/cimolace-staff.guard";
 import { TenantGuard } from "../common/guards/tenant.guard";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
@@ -33,5 +34,25 @@ export class BillingController {
   @Get("payouts") async listPayouts(@Req() req: any) { return this.svc.listPayouts(req.tenant.id); }
   @Post("payouts") @UseGuards(RolesGuard) @Roles("owner", "admin") async createPayout(@Req() req: any, @Body() b: any) {
     return this.svc.createPayout(req.tenant.id, req.user?.id ?? null, b);
+  }
+}
+
+/**
+ * Back-office Cimolace (staff) — activation d'un abonnement forfaitaire pour un
+ * tenant donné. Séparé de BillingController (self-serve, tenant-scoped) : ici on
+ * agit sur un tenant arbitraire via son id, réservé au staff Cimolace.
+ */
+@Controller("admin/billing")
+export class AdminBillingController {
+  constructor(private svc: BillingService) {}
+
+  /**
+   * Active le forfait d'un tenant (crée billing_subscriptions actif + arme le
+   * gating). Body optionnel : { plan?: string } (défaut "zahir-forfait").
+   */
+  @Post("tenants/:tenantId/activate")
+  @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
+  async activate(@Param("tenantId") tenantId: string, @Body() body: { plan?: string }) {
+    return { data: await this.svc.activateTenantSubscription(tenantId, body?.plan || "zahir-forfait") };
   }
 }

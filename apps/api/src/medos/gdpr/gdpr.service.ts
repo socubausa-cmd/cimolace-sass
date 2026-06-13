@@ -174,6 +174,383 @@ export class GdprService {
     return data;
   }
 
+  /**
+   * Génère immédiatement un payload d'export RGPD complet pour le patient
+   * (Article 20 — droit à la portabilité).
+   *
+   * Tables incluses :
+   *  • Identité — med_patients (PII complète : nom, email, naissance, etc.)
+   *  • Médical — med_notes, med_prescriptions, med_programs,
+   *    med_appointments, med_form_responses, med_attachments (métadonnées),
+   *    med_consent_records, med_audit_log (filtré au patient).
+   *  • Bio Digital Twin — bloc dédié :
+   *      - med_patient_biomarkers   (toutes les mesures du patient)
+   *      - med_organ_scores         (historique complet des scores d'organes)
+   *      - med_transformation_wheel (roue de transformation 12 domaines)
+   *      - med_health_events        (timeline santé 360)
+   *      - med_alerts               (alertes, status != 'deleted')
+   *      - med_hypotheses           (hypothèses cliniques générées)
+   *      - med_ai_analyses          (analyses IA — output complet)
+   *      - med_ai_agent_runs        (runs IA — model/tokens/latency/output,
+   *        input_hash MASQUÉ pour préserver pseudonymisation des prompts)
+   *      - med_lab_documents        (métadonnées + URL signées 24h si bonus
+   *        activé. storage_path JAMAIS exposé.)
+   *
+   * Le payload est généré à la demande (pas de stockage persistant côté
+   * med_gdpr_exports.result_jsonb : la colonne n'existe pas en MVP).
+   *
+   * Tenant-scoping : toutes les requêtes filtrent par tenant_id + patient_id.
+   * RLS Supabase applique également la vérification côté DB.
+   *
+   * @param tenant    contexte tenant courant
+   * @param patientId UUID du patient (med_patients.id)
+   * @param scope     full | medical_only | administrative_only
+   * @param opts.includeSignedUrls si true, génère des URLs signées 24h pour
+   *                  les lab_documents avec storage_path non null.
+   */
+  async exportPatient(
+    tenant: TenantContext,
+    patientId: string,
+    scope: 'full' | 'medical_only' | 'administrative_only' | 'custom' = 'full',
+    opts: { includeSignedUrls?: boolean } = {},
+  ): Promise<Record<string, unknown>> {
+    const db: any = this.supabase.client;
+
+    // ─── Identité (toujours incluse) ──────────────────────────────────
+    const { data: patient, error: patientErr } = await db
+      .from('med_patients')
+      .select('*')
+      .eq('tenant_id', tenant.id)
+      .eq('id', patientId)
+      .maybeSingle();
+    if (patientErr || !patient) {
+      throw new NotFoundException('Patient introuvable pour ce tenant');
+    }
+
+    const includeMedical = scope === 'full' || scope === 'medical_only';
+    const includeAdmin = scope === 'full' || scope === 'administrative_only';
+
+    // ─── Médical (notes, prescriptions, programmes, RDV, formulaires) ─
+    const medical: Record<string, any[]> = {
+      notes: [],
+      prescriptions: [],
+      programs: [],
+      appointments: [],
+      form_responses: [],
+      attachments: [],
+    };
+    if (includeMedical) {
+      const [notes, prescriptions, programs, appts, formResponses, attachments] =
+        await Promise.all([
+          db
+            .from('med_notes')
+            .select('*')
+            .eq('tenant_id', tenant.id)
+            .eq('patient_id', patientId)
+            .order('created_at', { ascending: false }),
+          db
+            .from('med_prescriptions')
+            .select('*')
+            .eq('tenant_id', tenant.id)
+            .eq('patient_id', patientId)
+            .order('created_at', { ascending: false }),
+          db
+            .from('med_programs')
+            .select('*')
+            .eq('tenant_id', tenant.id)
+            .eq('patient_id', patientId)
+            .order('created_at', { ascending: false }),
+          db
+            .from('med_appointments')
+            .select('*')
+            .eq('tenant_id', tenant.id)
+            .eq('patient_id', patientId)
+            .order('scheduled_at', { ascending: false }),
+          db
+            .from('med_form_responses')
+            .select('*')
+            .eq('tenant_id', tenant.id)
+            .eq('patient_id', patientId)
+            .order('submitted_at', { ascending: false }),
+          db
+            .from('med_attachments')
+            .select(
+              'id, file_name, mime_type, file_size_bytes, kind, created_at, uploaded_by',
+            )
+            .eq('tenant_id', tenant.id)
+            .eq('patient_id', patientId)
+            .order('created_at', { ascending: false }),
+        ]);
+      medical.notes = notes.data ?? [];
+      medical.prescriptions = prescriptions.data ?? [];
+      medical.programs = programs.data ?? [];
+      medical.appointments = appts.data ?? [];
+      medical.form_responses = formResponses.data ?? [];
+      medical.attachments = attachments.data ?? [];
+    }
+
+    // ─── Administratif (consentements, audit log) ─────────────────────
+    const administrative: Record<string, any[]> = {
+      consents: [],
+      audit_log: [],
+    };
+    if (includeAdmin) {
+      const [consents, audit] = await Promise.all([
+        db
+          .from('med_consent_records')
+          .select('*')
+          .eq('tenant_id', tenant.id)
+          .eq('patient_id', patientId)
+          .order('granted_at', { ascending: false }),
+        db
+          .from('med_audit_log')
+          .select('*')
+          .eq('tenant_id', tenant.id)
+          .eq('resource_id', patientId)
+          .order('created_at', { ascending: false })
+          .limit(1000),
+      ]);
+      administrative.consents = consents.data ?? [];
+      administrative.audit_log = audit.data ?? [];
+    }
+
+    // ─── Bio Digital Twin (bloc dédié — toujours présent en full) ─────
+    const twin: Record<string, any> = {
+      biomarkers: [],
+      organ_scores: [],
+      transformation_wheel: [],
+      health_events: [],
+      alerts: [],
+      hypotheses: [],
+      ai_analyses: [],
+      ai_runs: [],
+      lab_documents: [],
+    };
+    if (includeMedical) {
+      const [
+        biomarkers,
+        organScores,
+        wheel,
+        events,
+        alerts,
+        hypotheses,
+        aiAnalyses,
+        aiRuns,
+        labDocs,
+      ] = await Promise.all([
+        db
+          .from('med_patient_biomarkers')
+          .select(
+            'id, biomarker_code, value, unit_raw, value_canonical, flag, measured_at, confidence, source, lab_document_id, created_at',
+          )
+          .eq('tenant_id', tenant.id)
+          .eq('patient_id', patientId)
+          .order('measured_at', { ascending: false }),
+        db
+          .from('med_organ_scores')
+          .select('*')
+          .eq('tenant_id', tenant.id)
+          .eq('patient_id', patientId)
+          .order('computed_at', { ascending: false }),
+        db
+          .from('med_transformation_wheel')
+          .select('*')
+          .eq('tenant_id', tenant.id)
+          .eq('patient_id', patientId)
+          .order('measured_at', { ascending: false }),
+        db
+          .from('med_health_events')
+          .select('*')
+          .eq('tenant_id', tenant.id)
+          .eq('patient_id', patientId)
+          .order('occurred_at', { ascending: false }),
+        db
+          .from('med_alerts')
+          .select('*')
+          .eq('tenant_id', tenant.id)
+          .eq('patient_id', patientId)
+          .neq('status', 'deleted')
+          .order('created_at', { ascending: false }),
+        db
+          .from('med_hypotheses')
+          .select('*')
+          .eq('tenant_id', tenant.id)
+          .eq('patient_id', patientId)
+          .order('created_at', { ascending: false }),
+        db
+          .from('med_ai_analyses')
+          .select(
+            'id, kind, status, output, confidence, models, created_at, created_by',
+          )
+          .eq('tenant_id', tenant.id)
+          .eq('patient_id', patientId)
+          .order('created_at', { ascending: false }),
+        db
+          .from('med_ai_agent_runs')
+          .select(
+            'id, analysis_id, agent, prompt_version, model, tokens, latency_ms, error, created_at',
+          )
+          .eq('tenant_id', tenant.id)
+          .eq('patient_id', patientId)
+          .order('created_at', { ascending: false }),
+        db
+          .from('med_lab_documents')
+          .select(
+            'id, source_type, lab_name, status, mime_type, file_size_bytes, original_filename, page_count, extraction_model, extraction_confidence, extraction_path, created_at, storage_path',
+          )
+          .eq('tenant_id', tenant.id)
+          .eq('patient_id', patientId)
+          .order('created_at', { ascending: false }),
+      ]);
+
+      twin.biomarkers = biomarkers.data ?? [];
+      twin.organ_scores = organScores.data ?? [];
+      twin.transformation_wheel = wheel.data ?? [];
+      twin.health_events = events.data ?? [];
+      twin.alerts = alerts.data ?? [];
+      twin.hypotheses = hypotheses.data ?? [];
+      twin.ai_analyses = aiAnalyses.data ?? [];
+
+      // ai_runs : on conserve model/tokens/latency/error mais on MASQUE
+      // input_hash (pseudonymisation des prompts envoyés au LLM — ne doit
+      // pas révéler le contenu original). prompt_version reste, c'est une
+      // métadonnée de version, pas du PII.
+      twin.ai_runs = (aiRuns.data ?? []).map((r: any) => ({
+        id: r.id,
+        analysis_id: r.analysis_id,
+        agent: r.agent,
+        prompt_version: r.prompt_version,
+        model: r.model,
+        tokens: r.tokens,
+        latency_ms: r.latency_ms,
+        error: r.error,
+        created_at: r.created_at,
+        // input_hash volontairement omis (anonymisation prompts IA).
+      }));
+
+      // lab_documents : on N'EXPOSE JAMAIS storage_path. À la place :
+      //   - has_file (booléen)
+      //   - signed_url + signed_url_expires_at (TTL 24h) si demandé.
+      const TTL_24H = 60 * 60 * 24;
+      const wantSigned = !!opts.includeSignedUrls;
+      twin.lab_documents = await Promise.all(
+        (labDocs.data ?? []).map(async (d: any) => {
+          const base: Record<string, unknown> = {
+            id: d.id,
+            source_type: d.source_type,
+            lab_name: d.lab_name,
+            status: d.status,
+            mime_type: d.mime_type,
+            file_size_bytes: d.file_size_bytes,
+            original_filename: d.original_filename,
+            page_count: d.page_count,
+            extraction_model: d.extraction_model,
+            extraction_confidence: d.extraction_confidence,
+            extraction_path: d.extraction_path,
+            created_at: d.created_at,
+            has_file: !!d.storage_path,
+            signed_url: null as string | null,
+            signed_url_expires_at: null as string | null,
+          };
+          if (wantSigned && d.storage_path) {
+            try {
+              const { data: signed, error: signedErr } =
+                await this.supabase.client.storage
+                  .from('medos')
+                  .createSignedUrl(d.storage_path, TTL_24H);
+              if (!signedErr && signed?.signedUrl) {
+                base.signed_url = signed.signedUrl;
+                base.signed_url_expires_at = new Date(
+                  Date.now() + TTL_24H * 1000,
+                ).toISOString();
+              }
+            } catch (e: any) {
+              this.logger.warn(
+                `signedUrl failed for lab_doc ${d.id}: ${e?.message ?? e}`,
+              );
+            }
+          }
+          return base;
+        }),
+      );
+    }
+
+    return {
+      meta: {
+        tenant_id: tenant.id,
+        tenant_slug: tenant.slug,
+        patient_id: patientId,
+        scope,
+        generated_at: new Date().toISOString(),
+        article: 'RGPD Art. 20 — Droit à la portabilité',
+        twin_included: includeMedical,
+        notes: [
+          "Les analyses IA sont anonymisées côté prompt (input_hash masqué).",
+          "Les chemins de stockage internes (storage_path) ne sont jamais exposés.",
+        ],
+      },
+      patient,
+      medical,
+      administrative,
+      twin: includeMedical ? twin : null,
+    };
+  }
+
+  /**
+   * Récupère le payload assemblé d'un export RGPD (Article 20). À la
+   * différence de listExports, ce endpoint reconstruit dynamiquement les
+   * données à partir des tables courantes (snapshot au moment de l'appel).
+   *
+   * Met également à jour le record med_gdpr_exports : status='ready',
+   * processed_at=now() — pour traçabilité de l'export effectivement réalisé.
+   */
+  async getExportPayload(
+    tenant: TenantContext,
+    actorId: string,
+    actorRole: TenantContext['userRole'],
+    exportId: string,
+    opts: { includeSignedUrls?: boolean } = {},
+  ): Promise<{ export: any; payload: Record<string, unknown> }> {
+    const { data: exportRow } = await this.supabase.client
+      .from('med_gdpr_exports')
+      .select('*')
+      .eq('tenant_id', tenant.id)
+      .eq('id', exportId)
+      .maybeSingle();
+    if (!exportRow) {
+      throw new NotFoundException("Export introuvable");
+    }
+
+    if (actorRole === 'patient') {
+      const owns = await this.checkPatientOwnership(
+        (exportRow as any).patient_id,
+        actorId,
+      );
+      if (!owns) throw new ForbiddenException();
+    }
+
+    const payload = await this.exportPatient(
+      tenant,
+      (exportRow as any).patient_id,
+      (exportRow as any).scope,
+      opts,
+    );
+
+    // Mise à jour du record : on marque ready + processed_at, sans toucher
+    // au file_url (les données sont retournées inline, pas via fichier).
+    await (this.supabase.client as any)
+      .from('med_gdpr_exports')
+      .update({
+        status: 'ready',
+        processed_at: new Date().toISOString(),
+        processed_by: actorId,
+      })
+      .eq('tenant_id', tenant.id)
+      .eq('id', exportId);
+
+    return { export: exportRow, payload };
+  }
+
   async listExports(
     tenant: TenantContext,
     actorId: string,

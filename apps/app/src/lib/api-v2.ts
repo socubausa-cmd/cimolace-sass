@@ -598,6 +598,23 @@ export const cimolaceBackofficeApi = {
     apiV2.post<ApiEnvelope<any>>('/cimolace-backoffice/provision-school', body).then(unwrap),
   updateTenantService: (clientId: string, serviceId: string, body: Record<string, unknown>) =>
     apiV2.patch<ApiEnvelope<any>>(`/cimolace-backoffice/clients/${clientId}/services/${serviceId}`, body).then(unwrap),
+  /**
+   * Admin marketplace — toggle on/off d'un service Cimolace (ex: 'twin')
+   * sur un tenant. Réservé au staff Cimolace côté backend.
+   */
+  toggleTenantService: (tenantId: string, serviceKey: string, active: boolean) =>
+    apiV2
+      .post<ApiEnvelope<any>>(`/admin/tenants/${tenantId}/services/${serviceKey}/toggle`, { active })
+      .then(unwrap),
+  /**
+   * Active l'abonnement forfaitaire d'un tenant : crée la ligne
+   * billing_subscriptions active (depuis billing_plans) et arme le gating de la
+   * clé tenant. Réservé au staff Cimolace côté backend.
+   */
+  activateTenantForfait: (tenantId: string, plan = 'zahir-forfait') =>
+    apiV2
+      .post<ApiEnvelope<any>>(`/admin/billing/tenants/${tenantId}/activate`, { plan })
+      .then(unwrap),
   createCredentialReference: (clientId: string, body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>(`/cimolace-backoffice/clients/${clientId}/credentials`, body).then(unwrap),
   rotateCredential: (clientId: string, credentialId: string, body: Record<string, unknown> = {}) =>

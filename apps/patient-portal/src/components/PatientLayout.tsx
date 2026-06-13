@@ -11,6 +11,7 @@ import {
   Brain,
   Calendar,
   Shield,
+  Activity,
 } from 'lucide-react';
 import { useBranding } from '../lib/branding';
 
@@ -23,6 +24,7 @@ const nav = [
   { to: '/prescriptions', icon: Pill,            label: 'Ordonnances' },
   { to: '/forms',         icon: ClipboardList,   label: 'Formulaires' },
   { to: '/health',        icon: Heart,           label: 'Suivi santé' },
+  { to: '/sante/mon-corps', icon: Activity,      label: 'Mon corps' },
   { to: '/programs',      icon: BookOpen,        label: 'Programmes' },
   { to: '/messages',      icon: MessageCircle,   label: 'Messages' },
   { to: '/privacy',       icon: Shield,          label: 'Confidentialité' },

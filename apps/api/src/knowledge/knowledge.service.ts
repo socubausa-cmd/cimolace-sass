@@ -169,10 +169,43 @@ export class KnowledgeService {
   /** Génère la réponse RAG. Repli Groq → Anthropic (résilience aux clés HS). */
   private async callLlm(system: string, user: string): Promise<string> {
     return (
+      (await this.tryMistral(system, user)) ??
       (await this.tryGroq(system, user)) ??
+      (await this.tryDeepSeek(system, user)) ??
       (await this.tryAnthropic(system, user)) ??
-      '⚠️ Aucun fournisseur LLM disponible (vérifier GROQ_API_KEY / ANTHROPIC_API_KEY).'
+      '⚠️ Aucun fournisseur LLM disponible (vérifier MISTRAL_API_KEY / GROQ_API_KEY / DEEPSEEK_API_KEY / ANTHROPIC_API_KEY).'
     );
+  }
+
+  /** Mistral (FR) — OpenAI-compatible. Priorité dans la chaîne RAG. */
+  private async tryMistral(system: string, user: string): Promise<string | null> {
+    const key = this.config.get<string>('MISTRAL_API_KEY');
+    if (!key || key === 'replace_me') return null;
+    try {
+      const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'mistral-large-latest',
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: user },
+          ],
+          temperature: 0.2,
+          max_tokens: 800,
+        }),
+        signal: AbortSignal.timeout(45000),
+      });
+      if (!res.ok) {
+        this.logger.warn(`Mistral ${res.status} — repli`);
+        return null;
+      }
+      const json: any = await res.json();
+      return json?.choices?.[0]?.message?.content?.trim() || null;
+    } catch (e) {
+      this.logger.warn(`Mistral: ${(e as Error).message}`);
+      return null;
+    }
   }
 
   private async tryGroq(system: string, user: string): Promise<string | null> {
@@ -201,6 +234,37 @@ export class KnowledgeService {
       return json?.choices?.[0]?.message?.content?.trim() || null;
     } catch (e) {
       this.logger.warn(`Groq: ${(e as Error).message}`);
+      return null;
+    }
+  }
+
+  /** DeepSeek (FR/EN) — OpenAI-compatible. Repli supplémentaire avant Anthropic. */
+  private async tryDeepSeek(system: string, user: string): Promise<string | null> {
+    const key = this.config.get<string>('DEEPSEEK_API_KEY');
+    if (!key || key === 'replace_me') return null;
+    try {
+      const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: user },
+          ],
+          temperature: 0.2,
+          max_tokens: 800,
+        }),
+        signal: AbortSignal.timeout(45000),
+      });
+      if (!res.ok) {
+        this.logger.warn(`DeepSeek ${res.status} — repli`);
+        return null;
+      }
+      const json: any = await res.json();
+      return json?.choices?.[0]?.message?.content?.trim() || null;
+    } catch (e) {
+      this.logger.warn(`DeepSeek: ${(e as Error).message}`);
       return null;
     }
   }

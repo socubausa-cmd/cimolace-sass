@@ -1,0 +1,34 @@
+{
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": { "buildType": "apk" },
+      "ios": { "simulator": true }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": { "buildType": "apk" },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.cimolace.space",
+        "EXPO_PUBLIC_TENANT_SLUG": "isna",
+        "EXPO_PUBLIC_LIVEKIT_URL": "wss://prorascience-pswodwud.livekit.cloud"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.cimolace.space",
+        "EXPO_PUBLIC_TENANT_SLUG": "isna",
+        "EXPO_PUBLIC_LIVEKIT_URL": "wss://prorascience-pswodwud.livekit.cloud"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

@@ -5,6 +5,30 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
 import { ngowazuluMentoratOffers } from '@/config/ngowazuluMentoratOffers';
 import { NGOWAZULU_CONSULTATION_NEXT_PATH } from '@/config/ngowazuluConsultation';
+import { HeroParallax } from '@/components/ui/hero-parallax';
+import InfiniteGallery from '@/components/ui/3d-gallery-photography';
+
+// Cartes du hero parallaxe — vraies photos du Temple Ngowazulu (apps/app/public/ngowazulu/).
+const TEMPLE_IMG = (n) => `/ngowazulu/temple-${String(n).padStart(2, '0')}.jpg`;
+// Galerie 3D immersive — mêmes photos du temple.
+const TEMPLE_GALLERY = Array.from({ length: 9 }, (_, i) => ({ src: TEMPLE_IMG(i + 1), alt: 'Temple Ngowazulu' }));
+const PARALLAX_PRODUCTS = [
+  { title: 'Communauté Ngowazulu', link: '#ngowazulu', thumbnail: TEMPLE_IMG(1) },
+  { title: 'Cérémonie initiatique', link: '#ngowazulu', thumbnail: TEMPLE_IMG(2) },
+  { title: 'Rite de purification', link: '#ngowazulu', thumbnail: TEMPLE_IMG(3) },
+  { title: 'Tambour sacré', link: '#ngowazulu', thumbnail: TEMPLE_IMG(4) },
+  { title: 'Voyage initiatique', link: '#ngowazulu', thumbnail: TEMPLE_IMG(5) },
+  { title: 'Procession rituelle', link: '#ngowazulu', thumbnail: TEMPLE_IMG(6) },
+  { title: 'Immersion spirituelle', link: '#ngowazulu', thumbnail: TEMPLE_IMG(7) },
+  { title: 'Bénédiction des eaux', link: '#ngowazulu', thumbnail: TEMPLE_IMG(8) },
+  { title: 'Culte communautaire', link: '#ngowazulu', thumbnail: TEMPLE_IMG(9) },
+  { title: 'Consultations', link: '#ngowazulu-side', thumbnail: TEMPLE_IMG(1) },
+  { title: 'Interventions mystiques', link: '#ngowazulu-side', thumbnail: TEMPLE_IMG(7) },
+  { title: 'Temple moderne', link: '#ngowazulu', thumbnail: TEMPLE_IMG(2) },
+  { title: 'Hôpital traditionnel', link: '#ngowazulu-side', thumbnail: TEMPLE_IMG(4) },
+  { title: 'Accompagnement', link: '#institution', thumbnail: TEMPLE_IMG(5) },
+  { title: 'Transmission', link: '#produits', thumbnail: TEMPLE_IMG(6) },
+];
 
 const commercialMenu = [
   { href: '#hero', label: 'Accueil' },
@@ -335,45 +359,41 @@ const LandingPage = () => {
         </div>
       </header>
 
-      <section id="hero" className="relative overflow-hidden border-b border-white/10">
-        <img
-          src="https://images.unsplash.com/photo-1545235617-9465d2a55698?auto=format&fit=crop&w=2200&q=80"
-          alt="Communauté africaine moderne PRORASCIENCE"
-          className="absolute inset-0 w-full h-full object-cover opacity-30"
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(212,175,55,0.22),transparent_35%),radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.22),transparent_45%),linear-gradient(180deg,#060910_0%,#060910f0_100%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:py-32">
-          <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Plateforme africaine premium</p>
-          <h1 className="mt-5 max-w-6xl text-4xl font-semibold leading-tight sm:text-6xl lg:text-7xl">
-            Recevez les yeux pour voir et les oreilles pour comprendre.
-          </h1>
-          <p className="mt-6 max-w-3xl text-base text-gray-200 sm:text-xl">
-            PRORASCIENCE redéfinit l&apos;initiation en ligne et l&apos;accompagnement de transformation: Smartboard initiatique,
-            classes LIRI, chat immersif, certification et temple moderne Ngowazulu dans une expérience digitale afro-futuriste.
-          </p>
-          <div className="mt-10 flex flex-wrap gap-3">
-            <a href="#produits" className="rounded-xl bg-[#D4AF37] px-6 py-3 font-semibold text-black hover:bg-[#e5c04a] inline-flex items-center gap-2">
-              Découvrir la plateforme <ArrowRight className="w-4 h-4" />
-            </a>
-            <Link to="/app" className="rounded-xl border border-white/20 px-6 py-3 hover:bg-white/10">
-              Entrer dans l'espace membre
-            </Link>
-            <Link to="/nous-contacter" className="rounded-xl border border-white/20 px-6 py-3 hover:bg-white/10">
-              Parler à un conseiller
-            </Link>
-          </div>
-          <p className="mt-4 text-xs text-gray-400">
-            L'application complète est réservée aux membres connectés.
-          </p>
-          <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {TRUST_METRICS.map((item) => (
-              <div key={item.label} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                <p className="text-2xl font-semibold text-[#D4AF37]">{item.value}</p>
-                <p className="text-xs uppercase tracking-wider text-gray-400">{item.label}</p>
+      <section id="hero" className="relative overflow-hidden border-b border-white/10 bg-[#060910]">
+        <HeroParallax
+          products={PARALLAX_PRODUCTS}
+          header={
+            <div className="relative z-10 mx-auto max-w-7xl px-4 w-full">
+              <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Plateforme africaine premium</p>
+              <h1 className="mt-5 max-w-5xl text-4xl font-semibold leading-tight text-white sm:text-6xl lg:text-7xl">
+                Recevez les yeux pour voir et les oreilles pour comprendre.
+              </h1>
+              <p className="mt-6 max-w-3xl text-base text-gray-200 sm:text-xl">
+                PRORASCIENCE redéfinit l&apos;initiation en ligne et l&apos;accompagnement de transformation: Smartboard initiatique,
+                classes LIRI, chat immersif, certification et temple moderne Ngowazulu dans une expérience digitale afro-futuriste.
+              </p>
+              <div className="mt-10 flex flex-wrap gap-3">
+                <a href="#produits" className="rounded-xl bg-[#D4AF37] px-6 py-3 font-semibold text-black hover:bg-[#e5c04a] inline-flex items-center gap-2">
+                  Découvrir la plateforme <ArrowRight className="w-4 h-4" />
+                </a>
+                <Link to="/app" className="rounded-xl border border-white/20 px-6 py-3 hover:bg-white/10">
+                  Entrer dans l&apos;espace membre
+                </Link>
+                <Link to="/nous-contacter" className="rounded-xl border border-white/20 px-6 py-3 hover:bg-white/10">
+                  Parler à un conseiller
+                </Link>
               </div>
-            ))}
-          </div>
-        </div>
+              <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {TRUST_METRICS.map((item) => (
+                  <div key={item.label} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                    <p className="text-2xl font-semibold text-[#D4AF37]">{item.value}</p>
+                    <p className="text-xs uppercase tracking-wider text-gray-400">{item.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          }
+        />
       </section>
 
       <section id="univers" className="border-b border-white/10 bg-[#070d18] px-4 py-20 sm:px-6">
@@ -701,6 +721,22 @@ const LandingPage = () => {
               Voir toute l'offre Ngowazulu
             </Link>
           </div>
+        </div>
+      </section>
+
+      <section id="temple-galerie" className="relative h-[88vh] w-full overflow-hidden border-b border-white/10 bg-black">
+        <InfiniteGallery
+          images={TEMPLE_GALLERY}
+          speed={1.2}
+          visibleCount={9}
+          className="h-full w-full"
+        />
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-4 text-center mix-blend-exclusion">
+          <p className="text-xs uppercase tracking-[0.3em] text-white/90">Temple Ngowazulu</p>
+          <h2 className="mt-3 font-semibold text-4xl text-white sm:text-6xl">Entrez dans le temple</h2>
+        </div>
+        <div className="pointer-events-none absolute bottom-6 left-0 right-0 text-center font-mono text-[11px] uppercase tracking-wider text-white/60">
+          Molette, flèches ou tactile pour naviguer · défilement auto après 3s
         </div>
       </section>
 

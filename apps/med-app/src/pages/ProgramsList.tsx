@@ -37,15 +37,15 @@ const CATEGORIES = [
   { value: 'stress', label: 'Gestion du stress' },
   { value: 'post_op', label: 'Post-operatoire' },
   { value: 'chronic_disease', label: 'Maladie chronique' },
-  { value: 'fertility', label: 'Fertilite' },
+  { value: 'fertility', label: 'Fertilité' },
   { value: 'pregnancy', label: 'Grossesse' },
   { value: 'nutrition', label: 'Nutrition' },
-  { value: 'rehab', label: 'Reeducation' },
-  { value: 'custom', label: 'Personnalise' },
+  { value: 'rehab', label: 'Rééducation' },
+  { value: 'custom', label: 'Personnalisé' },
 ];
 
 const STEP_TYPES = [
-  { value: 'task', label: 'Tache' },
+  { value: 'task', label: 'Tâche' },
   { value: 'form', label: 'Formulaire' },
   { value: 'measurement', label: 'Mesure' },
   { value: 'content', label: 'Contenu' },
@@ -165,7 +165,7 @@ export function ProgramsList() {
       await fetchPrograms();
       if (id) setSelectedId(id);
     } catch (err: any) {
-      setError(err?.message || 'Echec');
+      setError(err?.message || 'Échec');
     } finally {
       setSaving(false);
     }
@@ -201,7 +201,7 @@ export function ProgramsList() {
       setNewStep({ title: '', description: '', step_type: 'task', due_after_days: '0' });
       await fetchSteps(selectedId);
     } catch (err: any) {
-      setError(err?.message || 'Echec');
+      setError(err?.message || 'Échec');
     } finally {
       setSaving(false);
     }
@@ -209,7 +209,7 @@ export function ProgramsList() {
 
   async function handleDeleteStep(stepId: string) {
     if (!selectedId) return;
-    if (!confirm('Supprimer cette etape ?')) return;
+    if (!confirm('Supprimer cette étape ?')) return;
     try {
       const res = await fetch(API + '/med/programs/' + selectedId + '/steps/' + stepId, {
         method: 'DELETE',
@@ -225,7 +225,7 @@ export function ProgramsList() {
   async function handleEnroll(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedId || !enrollPatientId) {
-      setError('Selectionnez un patient');
+      setError('Sélectionnez un patient');
       return;
     }
     setSaving(true);
@@ -248,14 +248,15 @@ export function ProgramsList() {
       setEnrollNotes('');
       await fetchPrograms();
     } catch (err: any) {
-      setError(err?.message || 'Echec');
+      setError(err?.message || 'Échec');
     } finally {
       setSaving(false);
     }
   }
 
   const selected = programs.find((p) => p.id === selectedId);
-  const categoryLabel = (v?: string) => CATEGORIES.find((c) => c.value === v)?.label || v || 'Personnalise';
+  const categoryLabel = (v?: string) => CATEGORIES.find((c) => c.value === v)?.label || v || 'Personnalisé';
+  const stepTypeLabel = (v?: string) => STEP_TYPES.find((t) => t.value === v)?.label || v || '—';
 
   return (
     <div>
@@ -314,7 +315,7 @@ export function ProgramsList() {
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, minHeight: 500 }}>
           {!selected ? (
             <p style={{ color: '#94a3b8', textAlign: 'center', marginTop: 200 }}>
-              Selectionnez un programme pour voir ses etapes
+              Sélectionnez un programme pour voir ses étapes
             </p>
           ) : (
             <>
@@ -323,7 +324,7 @@ export function ProgramsList() {
                   <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{selected.title}</h3>
                   {selected.description && <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0' }}>{selected.description}</p>}
                   <div style={{ marginTop: 6, fontSize: 12, color: '#64748b' }}>
-                    Categorie : <strong>{categoryLabel(selected.category)}</strong>
+                    Catégorie : <strong>{categoryLabel(selected.category)}</strong>
                     {selected.duration_days && ` · ${selected.duration_days}j`}
                   </div>
                 </div>
@@ -337,18 +338,18 @@ export function ProgramsList() {
 
               <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 16, marginTop: 16 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <h4 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>Etapes ({steps.length})</h4>
+                  <h4 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>Étapes ({steps.length})</h4>
                   <button
                     onClick={() => { setError(null); setNewStepOpen(true); }}
                     style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', background: '#fff', color: '#10b981', border: '1px solid #10b981', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
                   >
-                    <Plus size={12} /> Ajouter etape
+                    <Plus size={12} /> Ajouter étape
                   </button>
                 </div>
 
                 {steps.length === 0 ? (
                   <p style={{ color: '#94a3b8', fontSize: 13, padding: 20, textAlign: 'center', background: '#f8fafc', borderRadius: 8 }}>
-                    Aucune etape. Ajoutez la premiere pour construire le programme.
+                    Aucune étape. Ajoutez la première pour construire le programme.
                   </p>
                 ) : (
                   <ol style={{ paddingLeft: 0, listStyle: 'none', margin: 0 }}>
@@ -364,7 +365,7 @@ export function ProgramsList() {
                           <div style={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>{s.title}</div>
                           {s.description && <div style={{ fontSize: 12, color: '#64748b' }}>{s.description}</div>}
                           <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
-                            {s.step_type} · J+{s.due_after_days ?? 0}
+                            {stepTypeLabel(s.step_type)} · J+{s.due_after_days ?? 0}
                             {s.is_required === false && ' · optionnel'}
                           </div>
                         </div>
@@ -401,7 +402,7 @@ export function ProgramsList() {
             <textarea rows={3} value={newProg.description} onChange={(e) => setNewProg({ ...newProg, description: e.target.value })} style={{ ...inputStyle, fontFamily: 'inherit', resize: 'vertical' }} />
           </Field>
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
-            <Field label="Categorie">
+            <Field label="Catégorie">
               <select value={newProg.category} onChange={(e) => setNewProg({ ...newProg, category: e.target.value })} style={inputStyle}>
                 {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
@@ -411,13 +412,13 @@ export function ProgramsList() {
             </Field>
           </div>
           {error && <div style={errStyle}>{error}</div>}
-          <Actions onCancel={() => setNewProgramOpen(false)} saving={saving} submitLabel="Creer le programme" submitColor="#10b981" />
+          <Actions onCancel={() => setNewProgramOpen(false)} saving={saving} submitLabel="Créer le programme" submitColor="#10b981" />
         </Modal>
       )}
 
       {/* New Step Modal */}
       {newStepOpen && (
-        <Modal title="Ajouter une etape" onClose={() => !saving && setNewStepOpen(false)} onSubmit={handleAddStep}>
+        <Modal title="Ajouter une étape" onClose={() => !saving && setNewStepOpen(false)} onSubmit={handleAddStep}>
           <Field label="Titre *">
             <input required value={newStep.title} onChange={(e) => setNewStep({ ...newStep, title: e.target.value })} style={inputStyle} placeholder="Ex: Boire 1,5L d'eau" />
           </Field>
@@ -435,7 +436,7 @@ export function ProgramsList() {
             </Field>
           </div>
           {error && <div style={errStyle}>{error}</div>}
-          <Actions onCancel={() => setNewStepOpen(false)} saving={saving} submitLabel="Ajouter l'etape" submitColor="#10b981" />
+          <Actions onCancel={() => setNewStepOpen(false)} saving={saving} submitLabel="Ajouter l'étape" submitColor="#10b981" />
         </Modal>
       )}
 
@@ -444,7 +445,7 @@ export function ProgramsList() {
         <Modal title={`Inscrire un patient — ${selected?.title || ''}`} onClose={() => !saving && setEnrollOpen(false)} onSubmit={handleEnroll}>
           <Field label="Patient *">
             <select required value={enrollPatientId} onChange={(e) => setEnrollPatientId(e.target.value)} style={inputStyle}>
-              <option value="">— Selectionnez —</option>
+              <option value="">— Sélectionnez —</option>
               {Object.values(patients).map((p) => <option key={p.id} value={p.id}>{patientName(p)}</option>)}
             </select>
           </Field>

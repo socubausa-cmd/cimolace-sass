@@ -31,6 +31,7 @@ const T = {
 
 /* ─── Nav items (flat, no sections) ─── */
 const NAV = [
+  { key: 'semaine-courante',    label: 'Ma semaine',        icon: '◫', path: 'semaine-courante' },
   { key: 'dashboard',           label: 'Tableau de bord',  icon: '◈', path: 'dashboard'  },
   { key: 'formations',          label: 'Mes Formations',   icon: '✦', path: 'formations' },
   { key: 'vie-scolaire',        label: 'Vie Scolaire',     icon: '◎', path: 'vie-scolaire' },
@@ -123,7 +124,9 @@ const SidebarContent = ({ onNavClick }) => {
   const initials = fullName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   const handleNav = (item) => {
-    navigate(item.path);
+    // Chemins ABSOLUS : `navigate('dashboard')` relatif s'empilait sur l'URL courante
+    // (→ /student-school-life/dashboard/formations/dashboard → aucune route → page vide).
+    navigate(`/student-school-life/${item.path}`);
     onNavClick?.();
   };
 
@@ -218,14 +221,17 @@ const StudentSchoolLifeSidebar = () => {
     <aside
       className="hidden lg:flex"
       style={{
-        position: 'fixed', top: 0, left: 0, bottom: 0,
+        // Panneau flottant arrondi (façon Claude) : descend sous le header (89px), marges, arrondis.
+        position: 'fixed', top: 100, left: 14, bottom: 14,
         width: 220, zIndex: 50,
         flexDirection: 'column',
         background: 'rgba(18,17,26,0.97)',
-        borderRight: `1px solid ${T.border}`,
+        border: `1px solid ${T.border}`,
+        borderRadius: 18,
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         overflow: 'hidden',
+        boxShadow: '0 16px 48px -16px rgba(0,0,0,0.55)',
       }}
     >
       {/* LIRI logo strip */}

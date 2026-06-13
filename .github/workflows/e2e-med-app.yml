@@ -1,0 +1,74 @@
+name: E2E — MedOS (@isna/med-app)
+
+# Lance les smoke tests Playwright contre le déploiement med-app
+# (par défaut https://med.cimolace.space) à chaque PR sur main + manuellement.
+#
+# Pré-requis côté GitHub:
+#   - Secret  E2E_HANDOFF_URL   : URL signée Supabase pour l'auth (voir e2e/auth.setup.ts)
+#   - Variable E2E_BASE_URL     : URL de base de l'app (défaut: https://med.cimolace.space)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/med-app/**'
+      - '.github/workflows/e2e-med-app.yml'
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Override E2E_BASE_URL (e.g. preview deploy URL)'
+        required: false
+        default: ''
+
+concurrency:
+  group: e2e-med-app-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-smoke:
+    name: Playwright smoke (chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      E2E_BASE_URL: ${{ github.event.inputs.base_url != '' && github.event.inputs.base_url || vars.E2E_BASE_URL || 'https://med.cimolace.space' }}
+      E2E_HANDOFF_URL: ${{ secrets.E2E_HANDOFF_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: apps/med-app/pnpm-lock.yaml
+
+      - name: Install dependencies (med-app)
+        working-directory: apps/med-app
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browser (chromium)
+        working-directory: apps/med-app
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run Playwright smoke suite
+        working-directory: apps/med-app
+        run: pnpm test:e2e
+
+      - name: Upload Playwright artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results-${{ github.run_id }}
+          path: |
+            apps/med-app/e2e-results/
+            apps/med-app/playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore

@@ -186,6 +186,7 @@ const LessonPlayerPage = lazy(() => import('@/pages/LessonPlayerPage'));
 const VideoPostProductionPage = lazy(() => import('@/pages/VideoPostProductionPage'));
 const KnowledgeBaseManager = lazy(() => import('@/pages/KnowledgeBaseManager')); // --- Student School Life (NEW) ---
 const StudentSchoolLifePage = lazy(() => import('@/pages/student-school-life/StudentSchoolLifePage'));
+const StudentWeeklySchedulePage = lazy(() => import('@/pages/student-school-life/StudentWeeklySchedulePage'));
 const StudentDashboardPage = lazy(() => import('@/pages/StudentDashboardPage'));
 const StudentEnrollmentOnboardingPage = lazy(() => import('@/pages/student-school-life/StudentEnrollmentOnboardingPage'));
 const OnboardingPage = lazy(() => import('@/pages/OnboardingPage'));
@@ -426,6 +427,8 @@ const AdminDashboardPage = lazy(() => import('@/pages/admin/AdminDashboard'));
 const UsersAdminPage = lazy(() => import('@/pages/admin/UsersPage'));
 const TenantAdminCoursesPage = lazy(() => import('@/pages/tenant/TenantAdminCoursesPage'));
 const TenantAdminStudentsPage = lazy(() => import('@/pages/tenant/TenantAdminStudentsPage'));
+const TenantAdminSchoolPathsPage = lazy(() => import('@/pages/tenant/TenantAdminSchoolPathsPage'));
+const TenantAdminWeeklyProgramPage = lazy(() => import('@/pages/tenant/TenantAdminWeeklyProgramPage'));
 const TenantCourseDetailPage = lazy(() => import('@/pages/tenant/TenantCourseDetailPage'));
 const TenantAdminSettingsPage = lazy(() => import('@/pages/tenant/TenantAdminSettingsPage'));
 const AuditLogsPage = lazy(() => import('@/pages/admin/AuditLogsPage'));
@@ -1615,6 +1618,7 @@ isLiriHostDevPreviewRoute;
 
           {/* Main Dashboard entry point */}
           {/* 🎨 DESIGN PREVIEW — guards désactivés temporairement */}
+          <Route path="/student-school-life/semaine-courante" element={<StudentWeeklySchedulePage />} />
           <Route path="/student-school-life/*" element={<StudentSchoolLifePage />} />
 
           {/* === CLASSROOM ROUTES (PROTECTED) === */}
@@ -1959,6 +1963,26 @@ isLiriHostDevPreviewRoute;
               <TenantProtectedRoute>
                 <ErrorBoundary>
                   <TenantAdminStudentsPage />
+                </ErrorBoundary>
+              </TenantProtectedRoute>
+            }
+          />
+          <Route
+            path="/t/:tenantSlug/admin/parcours-scolaires"
+            element={
+              <TenantProtectedRoute>
+                <ErrorBoundary>
+                  <TenantAdminSchoolPathsPage />
+                </ErrorBoundary>
+              </TenantProtectedRoute>
+            }
+          />
+          <Route
+            path="/t/:tenantSlug/admin/parcours-scolaires/:pathId/semaines"
+            element={
+              <TenantProtectedRoute>
+                <ErrorBoundary>
+                  <TenantAdminWeeklyProgramPage />
                 </ErrorBoundary>
               </TenantProtectedRoute>
             }

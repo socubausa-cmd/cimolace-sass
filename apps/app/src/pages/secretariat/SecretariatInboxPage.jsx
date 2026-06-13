@@ -251,14 +251,11 @@ const SecretariatInboxPage = () => {
           .in('status', OPEN_APPOINTMENT_REQUEST_STATUSES)
           .order('created_at', { ascending: false })
           .limit(80),
+        // appointments → bookingApi via supabaseCompat (ignore .gte/.order côté adapter)
         supabase
           .from('appointments')
-          .select(
-            'id, appointment_request_id, student_id, teacher_id, type, scheduled_at, duration_minutes, status, video_meeting_url, notes, booking_reference, created_at'
-          )
-          .gte('scheduled_at', nowIso)
-          .in('status', UPCOMING_APPOINTMENT_STATUSES)
-          .order('scheduled_at', { ascending: true })
+          .select('*')
+          .order('created_at', { ascending: false })
           .limit(80),
         supabase
           .from('emails')
@@ -388,14 +385,22 @@ const SecretariatInboxPage = () => {
       const aptReqRows = aptReqRowsRaw.map(withStudent);
 
       const appointmentsRows = appointmentsRowsRaw.map((a) => {
+        const slot = a.booking_slots || {};
         const st = a.student_id ? profileMap[a.student_id] : null;
         const th = a.teacher_id ? profileMap[a.teacher_id] : null;
+        // Normalise booking API → champs attendus par l'UI
+        const scheduledAt = slot.start_at || a.scheduled_at || a.created_at;
+        const apptType = a.type || slot.type || 'entretien';
         return {
           ...a,
+          scheduled_at: scheduledAt,
+          booking_reference: a.booking_reference || (a.id ? a.id.slice(0, 8).toUpperCase() : null),
+          type: apptType,
+          notes: a.notes || slot.title || '',
           _student_name: st?.name || null,
           _teacher_name: th?.name || null,
-          title: `${APPOINTMENT_TYPE_LABEL[a.type] || a.type || 'RDV'}${st?.name ? ` — ${st.name}` : ''}`,
-          session_type: a.type,
+          title: `${APPOINTMENT_TYPE_LABEL[apptType] || apptType || 'RDV'}${st?.name ? ` — ${st.name}` : ''}`,
+          session_type: apptType,
         };
       });
 

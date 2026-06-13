@@ -23,8 +23,8 @@ const InventoryTab = () => {
     const [{ data: plans }, { data: subs }] = await Promise.all([
       supabase
         .from('billing_plans')
-        .select('id,slug,name,price_amount,active')
-        .order('price_amount', { ascending: true }),
+        .select('id,key,label,price_cents,is_active')
+        .order('price_cents', { ascending: true }),
       supabase
         .from('billing_subscriptions')
         .select('id,plan_id,status')
@@ -39,12 +39,12 @@ const InventoryTab = () => {
 
     const rows = (plans || []).map((p) => ({
       id: p.id,
-      name: p.name || p.slug || 'Plan',
+      name: p.label || p.key || 'Plan',
       category: 'forfait',
       quantity: Number(countsByPlan[String(p.id || '')] || 0),
       minQuantity: 1,
-      unitPrice: Number(p.price_amount || 0),
-      active: Boolean(p.active),
+      unitPrice: Math.round(Number(p.price_cents || 0) / 100),
+      active: Boolean(p.is_active),
     }));
     setInventory(rows);
     setLoading(false);

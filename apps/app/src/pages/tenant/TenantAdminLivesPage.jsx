@@ -6,11 +6,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { livesApi } from '@/lib/api-v2';
+import TenantAdminShell from '@/components/admin/TenantAdminShell';
+import { ADMIN_T } from '@/lib/tenantAdminTheme';
 
 const C = {
-  bg: '#0d1117', panel: '#161b22', border: '#21262d',
-  violet: '#7c3aed', green: '#10b981', orange: '#f59e0b',
-  red: '#ef4444', text: '#f0f6fc', muted: '#8b949e',
+  bg: ADMIN_T.bg, panel: ADMIN_T.surface, border: ADMIN_T.border,
+  violet: ADMIN_T.gold, green: ADMIN_T.success, orange: ADMIN_T.warning,
+  red: ADMIN_T.danger, text: ADMIN_T.t1, muted: ADMIN_T.t2,
 };
 
 const STATUS_CONFIG = {
@@ -118,7 +120,7 @@ function CreateLiveModal({ onClose, onCreated, tenantSlug }) {
             <button type="button" onClick={onClose} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}>
               Annuler
             </button>
-            <button type="submit" disabled={loading} style={{ flex: 2, padding: '10px', borderRadius: '8px', border: 'none', background: loading ? C.violet + '60' : C.violet, color: '#fff', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: 700 }}>
+            <button type="submit" disabled={loading} style={{ flex: 2, padding: '10px', borderRadius: '8px', border: 'none', background: loading ? C.violet + '60' : C.violet, color: '#000', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: 700 }}>
               {loading ? 'Création…' : 'Créer le live'}
             </button>
           </div>
@@ -151,11 +153,11 @@ export default function TenantAdminLivesPage() {
   const formatPrice = (cents, currency) => cents > 0 ? `${(cents / 100).toFixed(0)} ${currency?.toUpperCase() ?? '€'}` : 'Gratuit';
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, padding: '32px 24px', fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <TenantAdminShell>
       {showCreate && <CreateLiveModal onClose={() => setShowCreate(false)} onCreated={handleCreated} tenantSlug={tenantSlug} />}
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
-      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+      <div style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
           <div>
@@ -164,16 +166,16 @@ export default function TenantAdminLivesPage() {
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', background: C.violet, color: '#fff', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}
+            style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', background: C.violet, color: '#000', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}
           >
             + Nouveau live
           </button>
         </div>
 
         {/* Table */}
-        <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: '12px', overflow: 'hidden' }}>
+        <div style={{ background: ADMIN_T.surfaceCard, border: `1px solid ${C.border}`, borderRadius: '14px', overflow: 'hidden' }}>
           {/* Header row */}
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 120px', gap: '12px', padding: '10px 20px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 120px', gap: '12px', padding: '10px 20px', background: ADMIN_T.surfaceSoft, borderBottom: `1px solid ${C.border}` }}>
             {['Titre', 'Date', 'Durée', 'Prix', 'Actions'].map((h) => (
               <div key={h} style={{ color: C.muted, fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</div>
             ))}
@@ -198,7 +200,7 @@ export default function TenantAdminLivesPage() {
                     gap: '12px', padding: '14px 20px', borderBottom: `1px solid ${C.border}`,
                     alignItems: 'center', transition: 'background 0.15s',
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = '#1c2128'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = ADMIN_T.surface2; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                 >
                   <div>
@@ -240,6 +242,6 @@ export default function TenantAdminLivesPage() {
           )}
         </div>
       </div>
-    </div>
+    </TenantAdminShell>
   );
 }

@@ -14,6 +14,7 @@ import { Messages } from './pages/Messages';
 import { MyChartingNotes } from './pages/MyChartingNotes';
 import { MyAppointments } from './pages/MyAppointments';
 import { MyPrivacy } from './pages/MyPrivacy';
+import { HealthTwinPage } from './pages/HealthTwinPage';
 import { PatientLayout } from './components/PatientLayout';
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ function AppRoutes() {
         <Route path="/notes" element={<MyNotes />} />
         <Route path="/forms" element={<MyForms />} />
         <Route path="/health" element={<MyHealth />} />
+        <Route path="/sante/mon-corps" element={<HealthTwinPage />} />
         <Route path="/programs" element={<MyPrograms />} />
         <Route path="/prescriptions" element={<MyPrescriptions />} />
         <Route path="/messages" element={<Messages />} />

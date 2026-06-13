@@ -33,16 +33,18 @@ export function useSecretariatAppointments() {
     setError(null);
     try {
       const [reqRes, apptRes, sessRes] = await Promise.all([
+        // appointment_requests n'existe plus — le stub supabaseCompat retourne [] sans erreur.
+        // On reste resilient : si le stub est retiré un jour, on ne crash pas.
         supabase
           .from('appointment_requests')
           .select('id, student_id, reason, status, scheduled_at, video_meeting_url, assigned_teacher_id, created_at, queue_position, visitor_region, requester_timezone, booking_reference')
           .order('created_at', { ascending: false })
           .limit(200),
+        // appointments → routing via bookingApi (supabaseCompat), ignore .gte/.order côté adapter
         supabase
           .from('appointments')
-          .select('id, student_id, teacher_id, type, scheduled_at, status, video_meeting_url, duration_minutes')
-          .gte('scheduled_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-          .order('scheduled_at', { ascending: true })
+          .select('*')
+          .order('created_at', { ascending: false })
           .limit(200),
         supabase
           .from('coaching_sessions')
@@ -61,9 +63,20 @@ export function useSecretariatAppointments() {
         );
       }
 
-      if (reqRes.error) throw reqRes.error;
-      const reqs = reqRes.data || [];
-      const appts = apptRes.error ? [] : (apptRes.data || []);
+      // appointment_requests : erreur tolérée (table absente ou stub retiré)
+      const reqs = reqRes.error ? [] : (reqRes.data || []);
+
+      // Normalise les appointments du booking API : booking_slots.start_at → scheduled_at
+      const normalizeBookingAppt = (a) => {
+        const slot = a.booking_slots || {};
+        return {
+          ...a,
+          scheduled_at: slot.start_at || a.scheduled_at || a.created_at,
+          booking_reference: a.booking_reference || (a.id ? a.id.slice(0, 8).toUpperCase() : null),
+          type: a.type || slot.type || 'entretien',
+        };
+      };
+      const appts = apptRes.error ? [] : (apptRes.data || []).map(normalizeBookingAppt);
       const sess = sessRes.error ? [] : (sessRes.data || []);
       const lives = liveRes.error
         ? []

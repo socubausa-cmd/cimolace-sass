@@ -11,4 +11,8 @@ export class LiveController {
   @Get() async findAll(@Req() req: any) { return { data: await this.svc.findAll(req.tenant.id) }; }
   @Get(":id") async findOne(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.findOne(req.tenant.id, id) }; }
   @Post(":id/token") async token(@Req() req: any, @Param("id") id: string, @Body() b: any) { return { data: await this.svc.generateToken(id, req.user.id, b.role) }; }
+  @Post(":id/start") async start(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.startSession(req.tenant.id, id) }; }
+  @Post(":id/end") async end(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.endSession(req.tenant.id, id) }; }
+  @Post(":id/recording/start") async recStart(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.startRecording(req.tenant.id, id) }; }
+  @Post(":id/recording/stop") async recStop(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.stopRecording(req.tenant.id, id) }; }
 }

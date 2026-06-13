@@ -28,7 +28,7 @@ function countCourses(row) {
   return Array.isArray(pc) ? pc.length : 0;
 }
 
-export default function SchoolPathsParcoursPanel({ userId }) {
+export default function SchoolPathsParcoursPanel({ userId, onWeekClick }) {
   const [paths, setPaths] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -468,6 +468,7 @@ export default function SchoolPathsParcoursPanel({ userId }) {
           setBusy={setBusy}
           setError={setError}
           inputCls={inputCls}
+          onWeekClick={onWeekClick}
         />
       </div>
     ) : null}

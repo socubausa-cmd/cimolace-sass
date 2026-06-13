@@ -51,7 +51,17 @@ export function useStudentAppointments(userId) {
 
       // appointment_requests can be absent from the schema — treat as non-critical
       const reqs = reqRes.error ? [] : (reqRes.data || []);
-      const appts = apptRes.error ? [] : (apptRes.data || []);
+
+      // Normalise booking API response: booking_slots.start_at → scheduled_at
+      const rawAppts = apptRes.error ? [] : (apptRes.data || []);
+      const appts = rawAppts.map((a) => {
+        const slot = a.booking_slots || {};
+        return {
+          ...a,
+          scheduled_at: slot.start_at || a.scheduled_at || a.created_at,
+          type: a.type || slot.type || 'entretien',
+        };
+      });
       const parts = partRes.error ? [] : (partRes.data || []);
       const reports = reportRes.error ? [] : (reportRes.data || []);
 

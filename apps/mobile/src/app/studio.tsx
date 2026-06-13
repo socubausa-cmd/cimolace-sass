@@ -14,13 +14,18 @@ interface Tool {
   soon?: boolean;
 }
 
+/** Studio — porté du portail web (vue Studio) : les 9 outils de création. */
 const TOOLS: Tool[] = [
-  { icon: 'pen-tool', title: 'SmartBoard', sub: 'Tableau blanc interactif', soon: true },
-  { icon: 'zap', title: 'Masterclass IA', sub: 'Un cours depuis un document', to: '/brain' },
-  { icon: 'book-open', title: 'Créer un cours', sub: 'Modules, leçons, quiz', soon: true },
-  { icon: 'play', title: 'Replays', sub: 'Vos enregistrements', to: '/lives' },
-  { icon: 'book', title: 'Bibliothèque', sub: 'Ressources de l’école', soon: true },
-  { icon: 'image', title: 'Visuels', sub: 'Affiches & vignettes', soon: true },
+  { icon: 'book-open', title: 'Créer une formation', sub: 'Titre, description, catégorie', to: '/creer-formation' },
+  { icon: 'zap', title: 'Masterclass IA', sub: 'Génère une masterclass depuis un texte', to: '/creer-masterclass' },
+  { icon: 'flag', title: 'Arena — Débat', sub: 'Lance un débat structuré en direct', to: '/creer-arena' },
+  { icon: 'film', title: 'Live Immersif', sub: 'Démarre une session live', to: '/lives' },
+  { icon: 'pen-tool', title: 'SmartBoard', sub: 'Tableau interactif, croquis & formules IA', to: '/smartboard' },
+  { icon: 'layers', title: 'Neuro Recall', sub: 'Révision espacée — cartes mémoire IA', to: '/neuro-recall' },
+  { icon: 'file-text', title: 'MasterScript', sub: 'Lecteur de masterclass chapitré', to: '/masterscript' },
+  { icon: 'image', title: 'Studio Image', sub: 'Génération visuelle & couvertures IA', soon: true },
+  { icon: 'upload', title: 'Import IA', sub: 'PDF, vidéo, doc → contenu structuré', soon: true },
+  { icon: 'download', title: 'Export Center', sub: '5 formats — PDF, SCORM, vidéo…', soon: true },
 ];
 
 export default function StudioScreen() {
@@ -31,7 +36,7 @@ export default function StudioScreen() {
       <SafeAreaView edges={['top']} style={styles.safe}>
         <ScrollView style={styles.flex1} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <Text style={styles.h1}>Studio</Text>
-          <Text style={styles.h1sub}>Créez, animez et publiez votre contenu pédagogique.</Text>
+          <Text style={styles.h1sub}>Préparez et créez vos contenus — propulsé par l&apos;IA.</Text>
 
           {/* Hero — démarrer un live */}
           <Pressable style={({ pressed }) => [styles.hero, pressed && styles.pressed]} onPress={() => router.push('/lives')}>
@@ -84,7 +89,7 @@ const styles = StyleSheet.create({
   heroSub: { color: 'rgba(255,255,255,0.82)', fontSize: 12.5, marginTop: 3, fontFamily: F.sans },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 11 },
-  tool: { width: '47.7%', flexGrow: 1, minHeight: 138, padding: 15, borderRadius: 20, backgroundColor: C.panel, borderWidth: 1, borderColor: C.line, ...softShadow },
+  tool: { width: '47.7%', flexGrow: 1, minHeight: 142, padding: 15, borderRadius: 20, backgroundColor: C.panel, borderWidth: 1, borderColor: C.line, ...softShadow },
   toolIcon: { width: 42, height: 42, borderRadius: 13, backgroundColor: C.coralTint, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   toolTitle: { color: C.ink, fontSize: 15, fontWeight: '600', fontFamily: F.sans },
   toolSub: { color: C.faint, fontSize: 12, lineHeight: 16, marginTop: 3, fontFamily: F.sans },

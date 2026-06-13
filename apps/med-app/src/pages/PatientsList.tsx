@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { Plus, Search, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Plus, Search, X, Sparkles } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
@@ -24,7 +24,29 @@ const emptyForm: PatientForm = {
   phone: '',
 };
 
+const GENDER_LABEL: Record<string, string> = { male: 'Homme', female: 'Femme', other: 'Autre' };
+const STATUS_LABEL: Record<string, string> = { active: 'Actif', inactive: 'Inactif', archived: 'Archivé' };
+
+function fullName(p: any): string {
+  return ((p.first_name || '') + ' ' + (p.last_name || '')).trim();
+}
+function initials(p: any): string {
+  const n = fullName(p);
+  return n.split(/\s+/).map((w: string) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '?';
+}
+function ageFromDob(dob?: string | null): string {
+  if (!dob) return '';
+  const d = new Date(dob);
+  if (isNaN(d.getTime())) return '';
+  const now = new Date();
+  let a = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) a--;
+  return a >= 0 && a < 130 ? `${a} ans` : '';
+}
+
 export function PatientsList() {
+  const navigate = useNavigate();
   const [patients, setPatients] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -107,13 +129,25 @@ export function PatientsList() {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h2 style={{ fontSize: 24, fontWeight: 700 }}>Patients</h2>
-        <button
-          onClick={openModal}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
-        >
-          <Plus size={16} /> Nouveau patient
-        </button>
+        <h2 style={{ fontSize: 24, fontWeight: 700, display: 'flex', alignItems: 'baseline', gap: 10 }}>
+          Patients
+          <span style={{ fontSize: 15, fontWeight: 600, color: '#94a3b8' }}>{patients.length}</span>
+        </h2>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            id="twin-cta-onboarding"
+            onClick={() => navigate('/twin/new')}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+          >
+            <Sparkles size={16} /> Onboarding Twin
+          </button>
+          <button
+            onClick={openModal}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+          >
+            <Plus size={16} /> Nouveau patient
+          </button>
+        </div>
       </div>
       <div style={{ position: 'relative', marginBottom: 16 }}>
         <Search size={16} style={{ position: 'absolute', left: 12, top: 12, color: '#94a3b8' }} />
@@ -145,26 +179,34 @@ export function PatientsList() {
             {filtered.map((p: any) => (
               <tr key={p.id} style={{ borderTop: '1px solid #e2e8f0' }}>
                 <td style={{ padding: 12 }}>
-                  <Link to={'/patients/' + p.id} style={{ color: 'var(--brand-primary)', fontWeight: 500 }}>
-                    {(p.first_name || '') + ' ' + (p.last_name || '')}
-                    {!p.first_name && !p.last_name && <span style={{ color: '#94a3b8' }}>(sans nom)</span>}
+                  <Link to={'/patients/' + p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--brand-primary)', fontWeight: 500, textDecoration: 'none' }}>
+                    <span style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--brand-primary-soft)', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                      {initials(p)}
+                    </span>
+                    {fullName(p) || <span style={{ color: '#94a3b8' }}>(sans nom)</span>}
                   </Link>
                 </td>
                 <td style={{ padding: 12, color: '#64748b' }}>
-                  {p.date_of_birth ? new Date(p.date_of_birth).toLocaleDateString('fr') : '-'}
+                  {p.date_of_birth ? (
+                    <>
+                      {new Date(p.date_of_birth).toLocaleDateString('fr')}
+                      {ageFromDob(p.date_of_birth) && <span style={{ color: '#94a3b8' }}> · {ageFromDob(p.date_of_birth)}</span>}
+                    </>
+                  ) : '—'}
                 </td>
-                <td style={{ padding: 12 }}>{p.gender || '-'}</td>
+                <td style={{ padding: 12, color: '#64748b' }}>{GENDER_LABEL[p.gender] || '—'}</td>
                 <td style={{ padding: 12 }}>
                   <span
                     style={{
-                      padding: '2px 8px',
+                      padding: '2px 10px',
                       borderRadius: 12,
                       fontSize: 12,
-                      background: p.status === 'active' ? '#dcfce7' : '#fef3c7',
-                      color: p.status === 'active' ? '#166534' : '#92400e',
+                      fontWeight: 500,
+                      background: (p.status || 'active') === 'active' ? '#dcfce7' : '#fef3c7',
+                      color: (p.status || 'active') === 'active' ? '#166534' : '#92400e',
                     }}
                   >
-                    {p.status || 'actif'}
+                    {STATUS_LABEL[p.status] || 'Actif'}
                   </span>
                 </td>
               </tr>

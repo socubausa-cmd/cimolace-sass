@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { CheckCircle2, ArrowRight, Zap, Lock } from 'lucide-react';
 import { schoolOnboardingApi } from '@/lib/api-v2';
+import TenantAdminShell from '@/components/admin/TenantAdminShell';
+import { ADMIN_T } from '@/lib/tenantAdminTheme';
 
 const PLANS = [
   {
@@ -34,8 +36,8 @@ const PLANS = [
 ];
 
 const C = {
-  bg: '#0d1117', panel: '#161b22', border: '#21262d',
-  violet: '#7c3aed', green: '#10b981', text: '#f0f6fc', muted: '#8b949e',
+  bg: ADMIN_T.bg, panel: ADMIN_T.surface, border: ADMIN_T.border,
+  violet: ADMIN_T.gold, green: ADMIN_T.success, text: ADMIN_T.t1, muted: ADMIN_T.t2,
 };
 
 export default function SchoolBillingPage() {
@@ -66,10 +68,10 @@ export default function SchoolBillingPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, padding: '40px 24px' }}>
+    <TenantAdminShell>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
-      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+      <div>
         <div style={{ marginBottom: '40px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
             <Zap size={18} color={C.violet} />
@@ -94,10 +96,10 @@ export default function SchoolBillingPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
           {PLANS.map(plan => (
             <div key={plan.key} style={{
-              background: plan.highlight ? 'rgba(124,58,237,0.08)' : C.panel,
+              background: plan.highlight ? ADMIN_T.goldDim : ADMIN_T.surfaceCard,
               border: `1px solid ${plan.highlight ? C.violet : C.border}`,
               borderTop: `3px solid ${plan.highlight ? C.violet : C.border}`,
-              borderRadius: '12px',
+              borderRadius: '14px',
               padding: '24px',
               display: 'flex', flexDirection: 'column', gap: '20px',
               position: 'relative',
@@ -106,7 +108,7 @@ export default function SchoolBillingPage() {
                 <div style={{
                   position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
                   padding: '3px 14px', borderRadius: '999px',
-                  background: C.violet, color: '#fff', fontSize: '11px', fontWeight: 700,
+                  background: C.violet, color: '#000', fontSize: '11px', fontWeight: 700,
                 }}>Recommandé</div>
               )}
 
@@ -137,7 +139,7 @@ export default function SchoolBillingPage() {
                   borderRadius: '8px',
                   border: 'none',
                   background: loading === plan.key ? C.violet + '99' : plan.highlight ? C.violet : 'rgba(255,255,255,0.06)',
-                  color: plan.highlight ? '#fff' : C.text,
+                  color: plan.highlight ? '#000' : C.text,
                   fontSize: '14px', fontWeight: 700,
                   cursor: loading ? 'not-allowed' : 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
@@ -146,7 +148,7 @@ export default function SchoolBillingPage() {
               >
                 {loading === plan.key ? (
                   <>
-                    <div style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                    <div style={{ width: '14px', height: '14px', border: '2px solid rgba(0,0,0,0.3)', borderTopColor: '#000', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
                     Redirection…
                   </>
                 ) : (
@@ -157,13 +159,13 @@ export default function SchoolBillingPage() {
           ))}
         </div>
 
-        <div style={{ marginTop: '32px', padding: '16px 20px', background: C.panel, border: `1px solid ${C.border}`, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ marginTop: '32px', padding: '16px 20px', background: ADMIN_T.surfaceCard, border: `1px solid ${C.border}`, borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Lock size={14} color={C.muted} />
           <span style={{ color: C.muted, fontSize: '12px' }}>
             Paiement sécurisé via Stripe · Annulation à tout moment · Données hébergées en Afrique
           </span>
         </div>
       </div>
-    </div>
+    </TenantAdminShell>
   );
 }

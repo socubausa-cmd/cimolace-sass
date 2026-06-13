@@ -541,7 +541,7 @@ export default function CimolaPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-white/50">Pack création</p>
-                    <p className="mt-1 text-5xl font-black">850€</p>
+                    <p className="mt-1 text-5xl font-black">500€</p>
                     <p className="mt-1 text-xs text-white/40">paiement unique</p>
                   </div>
                   <Globe2 className="h-12 w-12 text-cyan-300 opacity-80" />
@@ -568,7 +568,7 @@ export default function CimolaPage() {
                   href="#paiement"
                   className="mt-5 w-full rounded-2xl bg-cyan-300 py-3.5 text-base font-bold text-slate-950 hover:bg-cyan-200 transition-colors flex items-center justify-center gap-2"
                 >
-                  Payer la création 850€ <ArrowRight className="h-4 w-4" />
+                  Payer la création 500€ <ArrowRight className="h-4 w-4" />
                 </a>
               </div>
             </div>
@@ -665,7 +665,7 @@ export default function CimolaPage() {
               <span className="text-cyan-300">{selected?.name}</span>
             </h2>
             <p className="mt-2 text-sm text-white/55">
-              Pack création <strong className="text-white/80">850€</strong> +
+              Pack création <strong className="text-white/80">500€</strong> +
               abonnement{" "}
               <strong className="text-white/80">
                 {selected?.price}
@@ -700,7 +700,7 @@ export default function CimolaPage() {
                   {loading === "setup" ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : null}
-                  Payer la création 850€
+                  Payer la création 500€
                 </button>
                 <button
                   onClick={() => checkout("subscription")}

@@ -89,7 +89,7 @@ export const RegulationsSection = () => {
                 className="mt-1"
               />
               <p className="text-xs text-blue-200">
-                Je reconnais avoir lu et accepté le règlement intérieur de l'établissement pour l\'année 2024-2025.
+                Je reconnais avoir lu et accepté le règlement intérieur de l'établissement pour l'année 2025-2026.
               </p>
             </div>
           </div>
@@ -255,6 +255,11 @@ export const AnnouncementsSection = () => {
     [rows, user]
   );
 
+  const featured = useMemo(() => {
+    const rank = (p) => (/urgent|high/i.test(String(p)) ? 0 : 1);
+    return [...visible].sort((a, b) => rank(a.priority) - rank(b.priority)).slice(0, 2);
+  }, [visible]);
+
   const openAnn = openId ? visible.find((a) => a.id === openId) : null;
 
   useEffect(() => {
@@ -386,21 +391,31 @@ export const AnnouncementsSection = () => {
       <div className="space-y-6">
         <div className="bg-[#192734] border border-white/10 rounded-xl p-6">
           <h3 className="text-lg font-bold text-white mb-4">À la Une</h3>
-          <div className="space-y-4">
-             <div className="p-4 bg-white/5 rounded-lg border border-white/5">
-                <div className="flex items-center gap-2 mb-2">
-                   <Star className="w-4 h-4 text-[#D4AF37]" />
-                   <span className="font-bold text-white text-sm">Témoignage</span>
-                </div>
-                <p className="text-sm text-gray-400 italic">"Une année transformative qui a changé ma vision du monde." - Marc D.</p>
-             </div>
-             <div className="p-4 bg-white/5 rounded-lg border border-white/5">
-                <div className="flex items-center gap-2 mb-2">
-                   <Award className="w-4 h-4 text-[#D4AF37]" />
-                   <span className="font-bold text-white text-sm">Réussite</span>
-                </div>
-                <p className="text-sm text-gray-400 italic">Félicitations à la promotion 2024 pour leur 100% de réussite.</p>
-             </div>
+          <div className="space-y-3">
+            {featured.length === 0 ? (
+              <p className="text-sm text-gray-500 italic">Aucune annonce en vedette pour le moment.</p>
+            ) : (
+              featured.map((a) => {
+                const urgent = /urgent|high/i.test(String(a.priority));
+                return (
+                  <button
+                    key={a.id}
+                    onClick={() => openDialog(a.id)}
+                    className="w-full text-left p-4 bg-white/5 rounded-lg border border-white/5 hover:border-[#D4AF37]/30 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      {urgent ? (
+                        <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                      ) : (
+                        <Star className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                      )}
+                      <span className="font-bold text-white text-sm line-clamp-1">{a.title}</span>
+                    </div>
+                    <p className="text-sm text-gray-400 line-clamp-2">{listPreview(a)}</p>
+                  </button>
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -408,7 +423,9 @@ export const AnnouncementsSection = () => {
            <h3 className="text-lg font-bold text-white mb-4">Contact Rapide</h3>
            <Input placeholder="Sujet" className="mb-3 bg-[#0F1419] border-white/10" />
            <textarea className="w-full bg-[#0F1419] border border-white/10 rounded-lg p-3 text-sm text-white mb-3" rows={3} placeholder="Votre message..."></textarea>
-           <Button className="w-full bg-white/10 hover:bg-white/20">Envoyer au Secrétariat</Button>
+           <Button className="w-full bg-[#D4AF37] text-black hover:bg-[#b5952f]" asChild>
+             <a href="/messages">Contacter le secrétariat</a>
+           </Button>
         </div>
       </div>
     </div>
@@ -479,14 +496,12 @@ export const AttendanceSection = () => {
           .from('attendance_records')
           .select('id,status,attendance_date,note')
           .eq('student_id', user.id)
-          .is('deleted_at', null)
           .order('attendance_date', { ascending: false })
           .limit(200),
         supabase
           .from('attendance_records')
           .select('*', { count: 'exact', head: true })
-          .eq('student_id', user.id)
-          .is('deleted_at', null),
+          .eq('student_id', user.id),
       ]);
       if (cancelled) return;
       setRows(all || []);
@@ -640,7 +655,6 @@ export const DisciplineSection = () => {
         .select('id,status,attendance_date,note')
         .eq('student_id', user.id)
         .eq('status', 'late')
-        .is('deleted_at', null)
         .order('attendance_date', { ascending: false })
         .limit(50);
       if (!cancelled) {

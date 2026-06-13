@@ -182,6 +182,9 @@ export class LiriBrainService {
       case 'openai':
         yield* this.streamOpenAI(model, messages);
         break;
+      case 'mistral':
+        yield* this.streamMistral(model, messages);
+        break;
       default:
         yield { content: `Provider ${info.provider} non supporté.`, done: true };
     }
@@ -337,6 +340,10 @@ export class LiriBrainService {
       url = 'https://api.deepseek.com/v1/chat/completions';
       key = this.config.get<string>('DEEPSEEK_API_KEY');
       apiModel = model === 'deepseek-reasoner' ? 'deepseek-reasoner' : 'deepseek-chat';
+    } else if (info.provider === 'mistral') {
+      url = 'https://api.mistral.ai/v1/chat/completions';
+      key = this.config.get<string>('MISTRAL_API_KEY');
+      apiModel = model;
     } else {
       url = 'https://api.openai.com/v1/chat/completions';
       key = this.config.get<string>('OPENAI_API_KEY');
@@ -733,6 +740,71 @@ export class LiriBrainService {
       const err = await response.text();
       this.logger.error(`OpenAI API error: ${err}`);
       yield { content: `⚠️ Erreur OpenAI: ${response.status}`, done: true };
+      return;
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      yield { content: '⚠️ Pas de réponse streaming.', done: true };
+      return;
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('data: ')) continue;
+        const data = trimmed.slice(6);
+        if (data === '[DONE]') {
+          yield { content: '', done: true };
+          return;
+        }
+        try {
+          const parsed = JSON.parse(data);
+          const content = parsed.choices?.[0]?.delta?.content;
+          if (content) yield { content, done: false };
+        } catch {
+          // skip
+        }
+      }
+    }
+    yield { content: '', done: true };
+  }
+
+  /** Mistral (FR) — API OpenAI-compatible (mêmes SSE). */
+  private async *streamMistral(_model: LiriModel, messages: LiriMessage[]): AsyncGenerator<{ content: string; done: boolean }> {
+    const apiKey = this.config.get<string>('MISTRAL_API_KEY');
+    if (!apiKey || apiKey === 'replace_me') {
+      yield { content: '⚠️ MISTRAL_API_KEY non configurée.', done: true };
+      return;
+    }
+
+    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: _model,
+        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+        stream: true,
+        max_tokens: 4096,
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      this.logger.error(`Mistral API error: ${err}`);
+      yield { content: `⚠️ Erreur Mistral: ${response.status}`, done: true };
       return;
     }
 

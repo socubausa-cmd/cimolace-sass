@@ -70,38 +70,48 @@ export default function NgowazuluIntakePage() {
     const run = async () => {
       if (!user?.id) return;
       try {
-        const { data: openingPlan } = await supabase
-          .from('billing_plans')
-          .select('id')
-          .eq('slug', OPENING_PLAN_SLUG)
-          .maybeSingle();
-        if (!openingPlan?.id) {
-          if (alive) {
-            setHasAccess(false);
-            setLoadingGate(false);
-          }
-          return;
-        }
-        const { data: openingPay } = await supabase
-          .from('billing_invoices')
-          .select('id,status')
-          .eq('tenant_id', user.id)
-          .eq('subscription_id', openingPlan.id)
-          .eq('status', 'paid')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        // billing_invoices.tenant_id → tenants.id (platform UUID), not profile IDs.
+        // billing_subscriptions.plan_id is text matching the plan slug constants directly.
+        // No FK from billing_subscriptions.plan_id → billing_plans.id, so skip billing_plans lookup.
 
-        const { data: mentoratRows } = await supabase
-          .from('billing_invoices')
-          .select('id, meta, subscription_id')
-          .eq('tenant_id', user.id)
-          .eq('status', 'paid');
+        // Check opening plan access via subscriptions
+        const { data: openingSubs } = await supabase
+          .from('billing_subscriptions')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('plan_id', OPENING_PLAN_SLUG);
+        const openingSubIds = (openingSubs || []).map(s => s.id);
+        if (openingSubIds.length === 0) {
+          // No subscription at all — check bundled mentorat before concluding no access
+        }
+
+        const openingPay = openingSubIds.length > 0
+          ? (await supabase
+              .from('billing_invoices')
+              .select('id,status')
+              .in('subscription_id', openingSubIds)
+              .eq('status', 'paid')
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle()).data
+          : null;
+
+        // Check bundled opening inside mentorat subscriptions
+        const { data: mentoratSubs } = await supabase
+          .from('billing_subscriptions')
+          .select('id')
+          .eq('user_id', user.id)
+          .like('plan_id', 'ngowazulu-mentorat%');
+        const mentoratSubIds = (mentoratSubs || []).map(s => s.id);
+        const { data: mentoratRows } = mentoratSubIds.length > 0
+          ? await supabase
+              .from('billing_invoices')
+              .select('id, meta, ipn_payload, subscription_id')
+              .in('subscription_id', mentoratSubIds)
+              .eq('status', 'paid')
+          : { data: [] };
         const bundledOpening = (mentoratRows || []).find(
-          (row) =>
-            String(row?.billing_plans?.slug || '').startsWith('ngowazulu-mentorat') &&
-            row?.ipn_payload &&
-            row.ipn_payload.ngowazulu_opening_included === true
+          (row) => row?.ipn_payload?.ngowazulu_opening_included === true
         );
 
         if (!alive) return;

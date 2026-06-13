@@ -6,19 +6,21 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { tenantsApi } from '@/lib/api-v2';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
+import TenantAdminShell from '@/components/admin/TenantAdminShell';
+import { ADMIN_T } from '@/lib/tenantAdminTheme';
 
 const C = {
-  bg: '#0d1117', panel: '#161b22', border: '#21262d',
-  violet: '#7c3aed', green: '#10b981', orange: '#f59e0b',
-  text: '#f0f6fc', muted: '#8b949e',
+  bg: ADMIN_T.bg, panel: ADMIN_T.surface, border: ADMIN_T.border,
+  violet: ADMIN_T.gold, green: ADMIN_T.success, orange: ADMIN_T.warning,
+  text: ADMIN_T.t1, muted: ADMIN_T.t2,
 };
 
 function StatCard({ label, value, color, icon }) {
   return (
     <div style={{
-      background: C.panel, border: `1px solid ${C.border}`,
+      background: ADMIN_T.surfaceCard, border: `1px solid ${C.border}`,
       borderLeft: `3px solid ${color ?? C.violet}`,
-      borderRadius: '10px', padding: '16px 20px',
+      borderRadius: '14px', padding: '16px 20px',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
         <span style={{ fontSize: '16px' }}>{icon}</span>
@@ -74,10 +76,10 @@ export default function SchoolAdminDashboard() {
   const stats = dashboard?.stats ?? {};
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, padding: '32px 24px', fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <TenantAdminShell>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
-      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+      <div style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
 
         {/* Header */}
         <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -110,7 +112,7 @@ export default function SchoolAdminDashboard() {
               to={`/t/${tenantSlug}/admin/courses`}
               style={{
                 padding: '8px 16px', borderRadius: '8px', border: 'none',
-                background: accent, color: '#fff', fontSize: '13px', fontWeight: 700,
+                background: accent, color: '#000', fontSize: '13px', fontWeight: 700,
                 textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px',
               }}
             >
@@ -138,8 +140,8 @@ export default function SchoolAdminDashboard() {
                 key={action.key}
                 to={`/t/${tenantSlug}${action.path}`}
                 style={{
-                  background: C.panel, border: `1px solid ${C.border}`,
-                  borderRadius: '10px', padding: '16px',
+                  background: ADMIN_T.surfaceCard, border: `1px solid ${C.border}`,
+                  borderRadius: '14px', padding: '16px',
                   textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '6px',
                   cursor: 'pointer', transition: 'border-color 0.15s',
                 }}
@@ -167,11 +169,11 @@ export default function SchoolAdminDashboard() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: '10px',
                   padding: '12px 14px', borderRadius: '8px',
-                  background: C.panel, border: `1px solid ${C.border}`,
+                  background: ADMIN_T.surfaceCard, border: `1px solid ${C.border}`,
                   textDecoration: 'none', transition: 'background 0.15s',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#1c2128'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = C.panel; }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = ADMIN_T.surface2; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = ADMIN_T.surfaceCard; }}
               >
                 <span style={{ fontSize: '16px' }}>{engine.icon}</span>
                 <div>
@@ -187,6 +189,6 @@ export default function SchoolAdminDashboard() {
         </div>
 
       </div>
-    </div>
+    </TenantAdminShell>
   );
 }

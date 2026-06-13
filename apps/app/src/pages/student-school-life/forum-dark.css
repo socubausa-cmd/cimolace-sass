@@ -1,0 +1,87 @@
+/* Re-thème ISNA navy/or pour les pages Forum (thread + nouvelle question),
+   construites à l'origine en thème clair (bg-white / text-gray-900 / indigo).
+   Scope : .forum-dark — remappe les utilitaires Tailwind clairs vers le sombre. */
+
+.forum-dark { color: #F5F5F7; }
+
+/* ── Surfaces ── */
+.forum-dark .bg-white { background-color: #192734 !important; }
+.forum-dark .bg-gray-50 { background-color: rgba(255,255,255,0.03) !important; }
+.forum-dark .bg-gray-100 { background-color: rgba(255,255,255,0.06) !important; }
+.forum-dark .hover\:bg-gray-100:hover { background-color: rgba(255,255,255,0.08) !important; }
+.forum-dark .hover\:bg-gray-200:hover { background-color: rgba(255,255,255,0.12) !important; }
+.forum-dark .bg-green-50 { background-color: rgba(34,197,94,0.10) !important; }
+.forum-dark .bg-green-100, .forum-dark .hover\:bg-green-100:hover { background-color: rgba(34,197,94,0.18) !important; }
+.forum-dark .bg-red-50 { background-color: rgba(239,68,68,0.10) !important; }
+.forum-dark .bg-red-100, .forum-dark .hover\:bg-red-100:hover { background-color: rgba(239,68,68,0.18) !important; }
+.forum-dark .bg-indigo-50 { background-color: rgba(212,175,55,0.10) !important; }
+.forum-dark .bg-indigo-100 { background-color: rgba(212,175,55,0.16) !important; }
+.forum-dark .bg-indigo-600 { background-color: #D4AF37 !important; }
+.forum-dark .hover\:bg-indigo-700:hover { background-color: #b8902b !important; }
+/* Boutons CTA "presque noir" -> or avec texte sombre */
+.forum-dark .bg-\[\#0a0a0f\] { background-color: #D4AF37 !important; color: #0b0b0f !important; }
+.forum-dark .hover\:bg-\[\#5b3df5\]:hover { background-color: #b8902b !important; }
+
+/* ── Texte ── */
+.forum-dark .text-gray-900 { color: #F5F5F7 !important; }
+.forum-dark .text-gray-700 { color: rgba(245,245,247,0.80) !important; }
+.forum-dark .text-gray-600 { color: rgba(245,245,247,0.62) !important; }
+.forum-dark .text-gray-500 { color: rgba(245,245,247,0.45) !important; }
+.forum-dark .text-gray-400 { color: rgba(245,245,247,0.35) !important; }
+.forum-dark .text-gray-300 { color: rgba(245,245,247,0.30) !important; }
+.forum-dark .text-indigo-600, .forum-dark .text-indigo-700, .forum-dark .text-indigo-500 { color: #D4AF37 !important; }
+.forum-dark .hover\:text-gray-900:hover { color: #F5F5F7 !important; }
+.forum-dark .hover\:text-gray-700:hover { color: rgba(245,245,247,0.85) !important; }
+.forum-dark .hover\:text-indigo-700:hover { color: #E5C66B !important; }
+.forum-dark .hover\:text-red-600:hover { color: #EF4444 !important; }
+.forum-dark .text-green-600 { color: #22C55E !important; }
+.forum-dark .text-green-700 { color: #4ade80 !important; }
+
+/* ── Bordures ── */
+.forum-dark .border-gray-200 { border-color: rgba(255,255,255,0.10) !important; }
+.forum-dark .border-gray-300 { border-color: rgba(255,255,255,0.14) !important; }
+.forum-dark .border-green-200, .forum-dark .border-green-300 { border-color: rgba(34,197,94,0.30) !important; }
+.forum-dark .border-red-200 { border-color: rgba(239,68,68,0.30) !important; }
+.forum-dark .border-t { border-top-color: rgba(255,255,255,0.10) !important; }
+.forum-dark .border-b { border-bottom-color: rgba(255,255,255,0.10) !important; }
+
+/* ── Champs ── */
+.forum-dark select,
+.forum-dark input[type="text"],
+.forum-dark input[type="number"],
+.forum-dark textarea {
+  background-color: #12111a !important;
+  color: #F5F5F7 !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+.forum-dark textarea::placeholder,
+.forum-dark input::placeholder { color: rgba(245,245,247,0.30) !important; }
+.forum-dark .focus\:ring-indigo-500:focus { --tw-ring-color: rgba(212,175,55,0.55) !important; }
+.forum-dark option { background-color: #12111a; color: #F5F5F7; }
+
+/* ── Avatars (dégradés) → navy→or ── */
+.forum-dark .from-indigo-500 {
+  --tw-gradient-from: #1e2840 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(30,40,64,0)) !important;
+}
+.forum-dark .to-purple-600 { --tw-gradient-to: #D4AF37 !important; }
+.forum-dark .from-gray-400 {
+  --tw-gradient-from: #1e2840 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(30,40,64,0)) !important;
+}
+.forum-dark .to-gray-600 { --tw-gradient-to: #b8902b !important; }
+
+/* ── Fond immersif animé (aurore) — keyframes partagés ── */
+@keyframes forumAurora1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-6vw,5vh)} }
+@keyframes forumAurora2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(7vw,-4vh)} }
+@keyframes forumAurora3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(5vw,-7vh)} }
+
+/* ── Mode immersif (page conversation) : cartes fondues dans le fond ── */
+.forum-immersive .bg-white:not(textarea):not(input),
+.forum-immersive .bg-gray-50:not(textarea):not(input) { background-color: transparent !important; }
+.forum-immersive .border:not(textarea):not(input) { border-width: 0 0 1px 0 !important; }
+.forum-immersive .border-gray-200,
+.forum-immersive .border-green-200,
+.forum-immersive .border-green-300 { border-color: rgba(255,255,255,0.06) !important; }
+.forum-immersive .rounded-xl:not(textarea):not(input) { border-radius: 0 !important; }
+.forum-immersive .shadow, .forum-immersive .shadow-sm { box-shadow: none !important; }

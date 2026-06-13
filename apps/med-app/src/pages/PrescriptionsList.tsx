@@ -114,14 +114,14 @@ export function PrescriptionsList() {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!newPatientId) {
-      setError('Selectionnez un patient');
+      setError('Sélectionnez un patient');
       return;
     }
     const validItems = newItems.filter(
       (it) => it.drug_name.trim() && it.dosage.trim() && it.frequency.trim() && it.duration.trim(),
     );
     if (validItems.length === 0) {
-      setError('Au moins une ligne avec medicament/dosage/frequence/duree');
+      setError('Au moins une ligne avec médicament/dosage/fréquence/durée');
       return;
     }
     setSaving(true);
@@ -161,14 +161,14 @@ export function PrescriptionsList() {
       await fetchPrescriptions();
       if (id) fetchOne(id);
     } catch (err: any) {
-      setError(err?.message || 'Echec');
+      setError(err?.message || 'Échec');
     } finally {
       setSaving(false);
     }
   }
 
   async function handleSign(p: Prescription) {
-    if (!confirm(`Signer cette ordonnance ?\n\nUne fois signee, elle ne pourra plus etre modifiee.`)) return;
+    if (!confirm(`Signer cette ordonnance ?\n\nUne fois signée, elle ne pourra plus être modifiée.`)) return;
     try {
       const res = await fetch(API + '/med/prescriptions/' + p.id + '/sign', {
         method: 'POST',
@@ -182,7 +182,7 @@ export function PrescriptionsList() {
       await fetchPrescriptions();
       fetchOne(p.id);
     } catch (err: any) {
-      setError(err?.message || 'Echec');
+      setError(err?.message || 'Échec');
     }
   }
 
@@ -262,7 +262,7 @@ export function PrescriptionsList() {
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, minHeight: 500 }}>
           {!selected ? (
             <p style={{ color: '#94a3b8', textAlign: 'center', marginTop: 200 }}>
-              Selectionnez une ordonnance pour voir son contenu
+              Sélectionnez une ordonnance pour voir son contenu
             </p>
           ) : (
             <>
@@ -274,7 +274,7 @@ export function PrescriptionsList() {
                   <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
                     {selected.prescription_number ? `Ordonnance #${selected.prescription_number}` : 'Brouillon'} ·{' '}
                     {new Date(selected.created_at).toLocaleDateString('fr')}
-                    {selected.signed_at && ` · Signee le ${new Date(selected.signed_at).toLocaleDateString('fr')}`}
+                    {selected.signed_at && ` · Signée le ${new Date(selected.signed_at).toLocaleDateString('fr')}`}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -378,7 +378,7 @@ export function PrescriptionsList() {
               <label>
                 <span style={fieldLabel}>Patient *</span>
                 <select required value={newPatientId} onChange={(e) => setNewPatientId(e.target.value)} style={inputStyle}>
-                  <option value="">— Selectionnez —</option>
+                  <option value="">— Sélectionnez —</option>
                   {Object.values(patients).map((p) => <option key={p.id} value={p.id}>{patientName(p)}</option>)}
                 </select>
               </label>
@@ -491,7 +491,7 @@ export function PrescriptionsList() {
                 disabled={saving}
                 style={{ padding: '10px 18px', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}
               >
-                {saving ? 'Creation…' : 'Creer l\'ordonnance (brouillon)'}
+                {saving ? 'Création…' : 'Créer l\'ordonnance (brouillon)'}
               </button>
             </div>
           </form>

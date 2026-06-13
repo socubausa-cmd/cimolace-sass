@@ -284,6 +284,31 @@ export default function CimolaceAdminClientDetail() {
     );
   }
 
+  /**
+   * Marketplace tenant — toggle on/off du module 'twin' (Bio Digital Twin)
+   * via /admin/tenants/:tenantId/services/twin/toggle. Cible le tenant
+   * applicatif lié (appTenant), pas l'identifiant client Cimolace.
+   */
+  function toggleTwinService(active) {
+    if (!appTenant?.id) return Promise.resolve();
+    return runControlAction(`twin-toggle-${active ? 'on' : 'off'}`, () =>
+      cimolaceBackofficeApi.toggleTenantService(appTenant.id, 'twin', active),
+    );
+  }
+
+  /**
+   * Active l'abonnement forfaitaire 150 €/mois (MEDOS + Mbolo) du tenant
+   * applicatif : crée billing_subscriptions actif + arme le gating de la clé
+   * (metadata.billing.api_gating). Cible appTenant.id (table `tenants`), pas
+   * l'id client Cimolace.
+   */
+  function activateForfait() {
+    if (!appTenant?.id) return Promise.resolve();
+    return runControlAction('activate-forfait', () =>
+      cimolaceBackofficeApi.activateTenantForfait(appTenant.id, 'zahir-forfait'),
+    );
+  }
+
   function addCredentialReference(kind) {
     const presets = {
       supabase: {
@@ -804,26 +829,34 @@ export default function CimolaceAdminClientDetail() {
         )}
 
         {activeTab === 'engines' && (
-          <Panel title="Moteurs activés">
-            <DataTable
-              empty="Aucun moteur enregistré pour ce tenant."
-              columns={['Moteur', 'Statut', 'Quota', 'Utilisation', 'Config', 'Activé le']}
-              rows={(control.services || []).map((service) => [
-                <strong>{service.service_key}</strong>,
-                <StatusPill status={service.status} />,
-                formatQuota(service.quota_limit),
-                formatQuota(service.quota_used),
-                Object.keys(service.config || {}).length ? 'configuré' : 'par défaut',
-                <div className="space-y-2">
-                  <div>{formatDate(service.activated_at || service.created_at)}</div>
-                  <div className="flex flex-wrap gap-2">
-                    <ActionButton compact busy={actionBusy === `service-${service.id}-active`} onClick={() => setServiceStatus(service, 'active')}>Activer</ActionButton>
-                    <ActionButton compact busy={actionBusy === `service-${service.id}-suspended`} onClick={() => setServiceStatus(service, 'suspended')}>Couper</ActionButton>
-                  </div>
-                </div>,
-              ])}
+          <div className="space-y-6">
+            <TwinModuleToggle
+              appTenant={appTenant}
+              services={control.services || []}
+              actionBusy={actionBusy}
+              onToggle={toggleTwinService}
             />
-          </Panel>
+            <Panel title="Moteurs activés">
+              <DataTable
+                empty="Aucun moteur enregistré pour ce tenant."
+                columns={['Moteur', 'Statut', 'Quota', 'Utilisation', 'Config', 'Activé le']}
+                rows={(control.services || []).map((service) => [
+                  <strong>{service.service_key}</strong>,
+                  <StatusPill status={service.status} />,
+                  formatQuota(service.quota_limit),
+                  formatQuota(service.quota_used),
+                  Object.keys(service.config || {}).length ? 'configuré' : 'par défaut',
+                  <div className="space-y-2">
+                    <div>{formatDate(service.activated_at || service.created_at)}</div>
+                    <div className="flex flex-wrap gap-2">
+                      <ActionButton compact busy={actionBusy === `service-${service.id}-active`} onClick={() => setServiceStatus(service, 'active')}>Activer</ActionButton>
+                      <ActionButton compact busy={actionBusy === `service-${service.id}-suspended`} onClick={() => setServiceStatus(service, 'suspended')}>Couper</ActionButton>
+                    </div>
+                  </div>,
+                ])}
+              />
+            </Panel>
+          </div>
         )}
 
         {activeTab === 'data' && (
@@ -910,6 +943,15 @@ export default function CimolaceAdminClientDetail() {
         {activeTab === 'billing' && (
           <div className="space-y-6">
             <Panel title="Abonnements Cimolace">
+              <div className="mb-4 flex flex-wrap items-center gap-3">
+                <ActionButton busy={actionBusy === 'activate-forfait'} onClick={activateForfait}>
+                  Activer le forfait 150 €/mois
+                </ActionButton>
+                <span className="text-xs text-gray-500">
+                  Crée l'abonnement forfaitaire (MEDOS + Mbolo) et arme le gating de la clé tenant.
+                  {appTenant?.id ? '' : ' — tenant applicatif requis.'}
+                </span>
+              </div>
               <DataTable
                 empty="Aucun abonnement Cimolace."
                 columns={['Plan', 'Statut', 'Montant', 'Période', 'Metadata']}
@@ -1203,6 +1245,62 @@ function Panel({ title, children }) {
     <section className="rounded-lg border bg-white p-6">
       <h2 className="mb-4 text-lg font-semibold text-gray-950">{title}</h2>
       {children}
+    </section>
+  );
+}
+
+/**
+ * Toggle marketplace "Module Twin" — pilote l'activation du Bio Digital
+ * Twin pour ce tenant via /admin/tenants/:tenantId/services/twin/toggle.
+ * Lit l'état courant depuis control.services (statut 'active' = ON).
+ */
+function TwinModuleToggle({ appTenant, services, actionBusy, onToggle }) {
+  const twinService = (services || []).find((s) => s.service_key === 'twin');
+  const enabled = twinService ? twinService.status === 'active' : true;
+  const disabled = !appTenant?.id;
+  const busyOn = actionBusy === 'twin-toggle-on';
+  const busyOff = actionBusy === 'twin-toggle-off';
+  return (
+    <section className="rounded-lg border border-blue-100 bg-blue-50/40 p-5">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-gray-950">Module Twin</h2>
+            <span
+              className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                enabled
+                  ? 'bg-emerald-100 text-emerald-800'
+                  : 'bg-gray-200 text-gray-700'
+              }`}
+            >
+              {enabled ? 'Actif' : 'Désactivé'}
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-gray-600">
+            Bio Digital Twin MedOS. Couper désactive immédiatement les routes
+            /med/twin pour ce tenant (guard TwinEnabledGuard).
+          </p>
+          {disabled ? (
+            <p className="mt-1 text-xs text-amber-700">
+              Aucun tenant applicatif lié — toggle indisponible.
+            </p>
+          ) : null}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <ActionButton
+            busy={busyOn}
+            onClick={() => onToggle(true)}
+          >
+            Activer Twin
+          </ActionButton>
+          <ActionButton
+            busy={busyOff}
+            onClick={() => onToggle(false)}
+          >
+            Couper Twin
+          </ActionButton>
+        </div>
+      </div>
     </section>
   );
 }

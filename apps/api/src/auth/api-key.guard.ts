@@ -1,6 +1,8 @@
 import {
   CanActivate,
   ExecutionContext,
+  HttpException,
+  HttpStatus,
   Injectable,
   Logger,
   UnauthorizedException,
@@ -105,6 +107,39 @@ export class ApiKeyGuard implements CanActivate {
       throw new UnauthorizedException('Tenant lié à la clé introuvable');
     }
 
+    // ─── Gating abonnement plateforme ─────────────────────────────────────────
+    // Opt-in PAR TENANT : seuls les tenants marqués
+    // `metadata.billing.api_gating = true` sont soumis à la vérification d'un
+    // abonnement Cimolace actif. Tous les autres (intégrations historiques,
+    // MEDOS non facturé…) passent comme avant → aucune régression au déploiement.
+    // Quand l'abonnement lapse, la clé `mbk_/mdk_/cml_` cesse de servir l'API.
+    if ((tenant as any)?.metadata?.billing?.api_gating === true) {
+      const { data: subs, error: subErr } = await (this.supabase.client as any)
+        .from('billing_subscriptions')
+        .select('status, current_period_end')
+        .eq('tenant_id', key.tenant_id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (subErr) {
+        // Erreur DB transitoire : on NE coupe PAS le service du tenant (fail-open),
+        // on loggue pour alerte. Seul un abonnement réellement inactif → 402.
+        this.logger.error(
+          `billing_subscriptions lookup error (tenant ${key.tenant_id}): ${subErr.message}`,
+        );
+      } else if (!(subs ?? []).some((s: any) => this.isSubscriptionUsable(s))) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.PAYMENT_REQUIRED,
+            error: 'Payment Required',
+            code: 'subscription_inactive',
+            message: 'Abonnement Cimolace inactif ou expiré pour ce tenant.',
+          },
+          HttpStatus.PAYMENT_REQUIRED,
+        );
+      }
+    }
+
     req.tenant = {
       ...(tenant as any),
       userRole: 'clinic_admin', // role par défaut pour les clés API server-to-server
@@ -124,5 +159,32 @@ export class ApiKeyGuard implements CanActivate {
       );
 
     return true;
+  }
+
+  /**
+   * Un abonnement est exploitable si :
+   *  - status `active` ET la période courante n'est pas dépassée (ou illimitée) ;
+   *  - status `past_due` toléré pendant une fenêtre de grâce de 7 jours après
+   *    `current_period_end` (le temps que la relance de paiement aboutisse).
+   * Tout le reste (`pending`, `canceled`, `expired`, `paused`) → non exploitable.
+   */
+  private isSubscriptionUsable(s: {
+    status?: string | null;
+    current_period_end?: string | null;
+  }): boolean {
+    if (!s?.status) return false;
+    const periodEnd = s.current_period_end
+      ? new Date(s.current_period_end).getTime()
+      : null;
+    const now = Date.now();
+
+    if (s.status === 'active') {
+      return periodEnd === null || periodEnd >= now;
+    }
+    if (s.status === 'past_due') {
+      const graceMs = 7 * 24 * 60 * 60 * 1000;
+      return periodEnd === null || periodEnd + graceMs >= now;
+    }
+    return false;
   }
 }

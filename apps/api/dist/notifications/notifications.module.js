@@ -16,6 +16,6 @@ let NotificationsModule = class NotificationsModule {
 };
 exports.NotificationsModule = NotificationsModule;
 exports.NotificationsModule = NotificationsModule = __decorate([
-    (0, common_1.Module)({ imports: [auth_module_1.AuthModule, tenant_module_1.TenantModule], controllers: [notifications_controller_1.NotificationsController], providers: [notifications_service_1.NotificationsService] })
+    (0, common_1.Module)({ imports: [auth_module_1.AuthModule, tenant_module_1.TenantModule], controllers: [notifications_controller_1.NotificationsController], providers: [notifications_service_1.NotificationsService], exports: [notifications_service_1.NotificationsService] })
 ], NotificationsModule);
 //# sourceMappingURL=notifications.module.js.map

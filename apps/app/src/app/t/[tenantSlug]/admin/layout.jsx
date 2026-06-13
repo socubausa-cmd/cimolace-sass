@@ -61,6 +61,9 @@ export default async function TenantAdminLayout({ children, params }) {
             <a href={`/t/${tenantSlug}/admin/courses`} className="text-white hover:underline">
               Formations
             </a>
+            <a href={`/t/${tenantSlug}/admin/parcours-scolaires`} className="text-white hover:underline">
+              Parcours scolaires
+            </a>
             <a href={`/t/${tenantSlug}/admin/students`} className="text-white hover:underline">
               Étudiants
             </a>

@@ -280,11 +280,16 @@ export default function PaymentActionPage({ layout = 'web' }) {
       }
       const { data } = await supabase
         .from('billing_plans')
-        .select('slug,name,price_amount,price_currency,interval_type')
-        .eq('slug', planId)
+        .select('key,label,price_cents,currency,billing_cycle')
+        .eq('key', planId)
         .maybeSingle();
       if (!alive) return;
-      setPlanPreview(data || null);
+      setPlanPreview(data ? {
+        ...data,
+        slug: data.key, name: data.label,
+        price_amount: Math.round(Number(data.price_cents || 0) / 100),
+        price_currency: data.currency, interval_type: data.billing_cycle,
+      } : null);
     };
     loadPlan();
     return () => {
@@ -307,21 +312,36 @@ export default function PaymentActionPage({ layout = 'web' }) {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        const { data: openingPlan } = await supabase
+        const { data: openingRaw } = await supabase
           .from('billing_plans')
-          .select('id,slug,name,price_amount,price_currency,interval_type')
-          .eq('slug', NGOWAZULU_OPENING_PLAN_SLUG)
+          .select('id,key,label,price_cents,currency,billing_cycle')
+          .eq('key', NGOWAZULU_OPENING_PLAN_SLUG)
           .maybeSingle();
+        const openingPlan = openingRaw ? {
+          ...openingRaw,
+          slug: openingRaw.key, name: openingRaw.label,
+          price_amount: Math.round(Number(openingRaw.price_cents || 0) / 100),
+          price_currency: openingRaw.currency, interval_type: openingRaw.billing_cycle,
+        } : null;
 
+        // billing_invoices.tenant_id → tenants.id (platform UUID), not profile IDs.
+        // billing_subscriptions.plan_id is text matching plan key directly.
         let hasOpening = false;
-        if (user?.id && openingPlan?.id) {
-          const { count } = await supabase
-            .from('billing_invoices')
-            .select('id', { count: 'exact', head: true })
-            .eq('tenant_id', user.id)
-            .eq('subscription_id', openingPlan.id)
-            .eq('status', 'paid');
-          hasOpening = (count || 0) > 0;
+        if (user?.id) {
+          const { data: openingSubs } = await supabase
+            .from('billing_subscriptions')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('plan_id', NGOWAZULU_OPENING_PLAN_SLUG);
+          const openingSubIds = (openingSubs || []).map(s => s.id);
+          if (openingSubIds.length > 0) {
+            const { count } = await supabase
+              .from('billing_invoices')
+              .select('id', { count: 'exact', head: true })
+              .in('subscription_id', openingSubIds)
+              .eq('status', 'paid');
+            hasOpening = (count || 0) > 0;
+          }
         }
 
         if (!alive) return;

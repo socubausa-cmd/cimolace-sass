@@ -13,7 +13,13 @@ import { LiriWordmark } from '@/components/brand/LiriWordmark';
 import { cn } from '@/lib/utils';
 import StudioDesignerLikeShell from '@/components/liri-ecosystem/StudioDesignerLikeShell';
 import SchoolPathsParcoursPanel from '@/components/liri-ecosystem/SchoolPathsParcoursPanel';
+import WeekGrammarTemplateSelector from '@/components/liri-ecosystem/WeekGrammarTemplateSelector';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
+
+// WeekDayEditorPanel — à créer ; lazy pour ne pas bloquer le build tant que le fichier est absent
+const WeekDayEditorPanel = React.lazy(() =>
+  import('@/components/liri-ecosystem/WeekDayEditorPanel').catch(() => ({ default: () => null }))
+);
 
 function assetUrl(filename) {
   const base = import.meta.env.BASE_URL || '/';
@@ -141,6 +147,7 @@ export default function StudioLiriPedagogieFuturPage() {
   const { user } = useAuth();
   const [blockTypes, setBlockTypes] = useState([]);
   const [weeklyGrammar, setWeeklyGrammar] = useState(null);
+  const [selectedWeekId, setSelectedWeekId] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -213,7 +220,10 @@ export default function StudioLiriPedagogieFuturPage() {
             Créez des parcours <code className="rounded bg-white/[0.06] px-1 text-[10px]">school_paths</code>, des{' '}
             <code className="rounded bg-white/[0.06] px-1 text-[10px]">path_courses</code>, puis ouvrez la structure : modules, semaines, jours typés et blocs pédagogiques (données JSON par bloc).
           </p>
-          <SchoolPathsParcoursPanel userId={user?.id ?? null} />
+          <SchoolPathsParcoursPanel
+            userId={user?.id ?? null}
+            onWeekClick={(weekId) => setSelectedWeekId(weekId)}
+          />
         </section>
 
         <section className="mb-10" id="pedago-atelier">
@@ -259,6 +269,30 @@ export default function StudioLiriPedagogieFuturPage() {
                 </div>
               ))}
             </div>
+
+            {weeklyGrammar && (
+              <div className="mt-6">
+                <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.12em] text-teal-400/80">
+                  Appliquer un template à la semaine sélectionnée
+                </p>
+                <WeekGrammarTemplateSelector
+                  weekId={selectedWeekId}
+                  onApplied={() => setSelectedWeekId(null)}
+                />
+              </div>
+            )}
+          </section>
+        )}
+
+        {selectedWeekId && (
+          <section className="mb-10" id="pedago-edition-semaine">
+            <SectionTitle icon={Calendar}>Edition semaine</SectionTitle>
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-[12px] text-amber-300/70">
+              Semaine sélectionnée : <code className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[11px] text-white/60">{selectedWeekId}</code>
+            </div>
+            <React.Suspense fallback={null}>
+              <WeekDayEditorPanel weekId={selectedWeekId} />
+            </React.Suspense>
           </section>
         )}
 

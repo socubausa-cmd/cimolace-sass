@@ -10,12 +10,20 @@ exports.CheckoutModule = void 0;
 const common_1 = require("@nestjs/common");
 const auth_module_1 = require("../auth/auth.module");
 const tenant_module_1 = require("../tenant/tenant.module");
+const pawapay_module_1 = require("../pawapay/pawapay.module");
 const checkout_service_1 = require("./checkout.service");
 const checkout_controller_1 = require("./checkout.controller");
+const offering_checkout_service_1 = require("./offering-checkout.service");
+const offering_checkout_controller_1 = require("./offering-checkout.controller");
+const subscription_renewal_service_1 = require("./subscription-renewal.service");
 let CheckoutModule = class CheckoutModule {
 };
 exports.CheckoutModule = CheckoutModule;
 exports.CheckoutModule = CheckoutModule = __decorate([
-    (0, common_1.Module)({ imports: [auth_module_1.AuthModule, tenant_module_1.TenantModule], controllers: [checkout_controller_1.CheckoutController], providers: [checkout_service_1.CheckoutService] })
+    (0, common_1.Module)({
+        imports: [auth_module_1.AuthModule, tenant_module_1.TenantModule, pawapay_module_1.PawaPayModule],
+        controllers: [checkout_controller_1.CheckoutController, offering_checkout_controller_1.OfferingCheckoutController],
+        providers: [checkout_service_1.CheckoutService, offering_checkout_service_1.OfferingCheckoutService, subscription_renewal_service_1.SubscriptionRenewalService],
+    })
 ], CheckoutModule);
 //# sourceMappingURL=checkout.module.js.map

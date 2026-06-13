@@ -48,7 +48,7 @@ function MiniColumn({ title, icon: Icon, accent, children }) {
   );
 }
 
-export default function SchoolPathCourseStructurePanel({ courseId, courseTitle, busy, setBusy, setError, inputCls }) {
+export default function SchoolPathCourseStructurePanel({ courseId, courseTitle, busy, setBusy, setError, inputCls, onWeekClick }) {
   const [modules, setModules] = useState([]);
   const [weeks, setWeeks] = useState([]);
   const [days, setDays] = useState([]);
@@ -351,7 +351,7 @@ export default function SchoolPathCourseStructurePanel({ courseId, courseTitle, 
                               selWeekId === w.id ? 'bg-amber-500/12' : '',
                             )}
                           >
-                            <button type="button" className="min-w-0 flex-1 truncate text-left text-white/75" onClick={() => setSelWeekId(w.id)}>
+                            <button type="button" className="min-w-0 flex-1 truncate text-left text-white/75" onClick={() => { setSelWeekId(w.id); if (typeof onWeekClick === 'function') onWeekClick(w.id, w); }}>
                               {w.title}
                             </button>
                             <button type="button" className="p-0.5 text-white/35 hover:text-white/70" onClick={() => { setEditWeekId(w.id); setEditScratch({ t: w.title, g: w.grammar_key || '' }); }}>

@@ -365,17 +365,17 @@ export const useContent = (type) => {
       if (type === 'modules') {
         const { data: plans, error: plansErr } = await supabase
           .from('billing_plans')
-          .select('id,slug,name,active,updated_at,created_at,interval_type,price_amount,price_currency')
+          .select('id,key,label,is_active,updated_at,created_at,billing_cycle,price_cents,currency')
           .order('updated_at', { ascending: false });
 
         if (plansErr && !isMissingRelationError(plansErr)) throw plansErr;
 
         const rows = (plans || []).map((row) => ({
           id: row.id,
-          title: row.name || row.slug || 'Sans nom',
+          title: row.label || row.key || 'Sans nom',
           page_slug: null,
-          module_slug: row.slug,
-          published: !!row.active,
+          module_slug: row.key,
+          published: !!row.is_active,
           updated_at: row.updated_at || row.created_at || new Date().toISOString(),
           raw: row,
         }));

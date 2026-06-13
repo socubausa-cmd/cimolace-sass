@@ -1,0 +1,368 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Activity, AlertTriangle, Info } from 'lucide-react';
+import { patientApi, type MyTwinState } from '../lib/api';
+
+// Couleurs par sévérité (badges d'alerte).
+const SEVERITY_COLORS: Record<string, { bg: string; fg: string; border: string }> = {
+  low:      { bg: '#f0fdf4', fg: '#166534', border: '#bbf7d0' },
+  medium:   { bg: '#fefce8', fg: '#854d0e', border: '#fef08a' },
+  high:     { bg: '#fff7ed', fg: '#9a3412', border: '#fed7aa' },
+  critical: { bg: '#fef2f2', fg: '#991b1b', border: '#fecaca' },
+};
+
+// Couleur d'organe : on respecte ce que le serveur renvoie ; sinon palette
+// par fourchette de score (vert > 70, jaune 40-70, rouge < 40).
+function organColor(score: number | null, hint: string | null): string {
+  if (hint) return hint;
+  if (score == null) return '#cbd5e1';
+  if (score >= 70) return '#10b981';
+  if (score >= 40) return '#f59e0b';
+  return '#ef4444';
+}
+
+const WHEEL_LABELS: Record<string, string> = {
+  digestion: 'Digestion',
+  sleep: 'Sommeil',
+  stress: 'Stress',
+  energy: 'Énergie',
+  inflammation: 'Inflammation',
+  immunity: 'Immunité',
+  metabolism: 'Métabolisme',
+  hormones: 'Hormones',
+  physical_activity: 'Activité',
+  cognition: 'Cognition',
+  environment: 'Environnement',
+  emotions: 'Émotions',
+};
+
+export function HealthTwinPage() {
+  const [state, setState] = useState<MyTwinState | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    patientApi
+      .getMyTwin()
+      .then((d) => {
+        if (!cancelled) setState(d);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e?.message || 'Erreur de chargement');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (loading) {
+    return <div style={{ padding: 24, color: '#64748b' }}>Chargement de votre jumeau santé…</div>;
+  }
+  if (error) {
+    return (
+      <div style={{ padding: 16, background: '#fef2f2', color: '#991b1b', borderRadius: 8 }}>
+        {error}
+      </div>
+    );
+  }
+  if (!state) return null;
+
+  return (
+    <div>
+      <div style={{ marginBottom: 20 }}>
+        <h2 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>Mon corps</h2>
+        <p style={{ color: '#64748b', marginTop: 6 }}>
+          Vue d'ensemble de votre santé : organes, équilibres, événements et alertes.
+        </p>
+      </div>
+
+      <OrgansSection organs={state.organs_scores} />
+      <WheelSection wheel={state.wheel} />
+      <TimelineSection events={state.events} />
+      <AlertsSection alerts={state.alerts} />
+      <Disclaimer text={state.disclaimer} />
+    </div>
+  );
+}
+
+// ── Section organes ───────────────────────────────────────────────────
+function OrgansSection({ organs }: { organs: MyTwinState['organs_scores'] }) {
+  return (
+    <section style={sectionStyle}>
+      <h3 style={sectionTitle}>Mes organes</h3>
+      {organs.length === 0 ? (
+        <p style={{ color: '#94a3b8', fontSize: 13 }}>
+          Aucun score d'organe enregistré pour l'instant.
+        </p>
+      ) : (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+            gap: 12,
+          }}
+        >
+          {organs.map((o) => {
+            const color = organColor(o.score, o.color);
+            return (
+              <div
+                key={o.organ_code}
+                style={{
+                  background: '#fff',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: 12,
+                  padding: 16,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                }}
+              >
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 10,
+                    background: color,
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: 14,
+                  }}
+                >
+                  {o.score != null ? Math.round(o.score) : '—'}
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
+                    {o.label}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase' }}>
+                    {o.organ_code}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ── Section roue (SVG radar simple) ───────────────────────────────────
+function WheelSection({ wheel }: { wheel: MyTwinState['wheel'] }) {
+  const size = 320;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = size / 2 - 40;
+
+  const points = useMemo(() => {
+    if (wheel.length === 0) return '';
+    return wheel
+      .map((d, i) => {
+        const angle = (i / wheel.length) * Math.PI * 2 - Math.PI / 2;
+        const score = d.score ?? 0;
+        const ratio = Math.max(0, Math.min(1, score / 100));
+        const x = cx + Math.cos(angle) * r * ratio;
+        const y = cy + Math.sin(angle) * r * ratio;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      })
+      .join(' ');
+  }, [wheel, cx, cy, r]);
+
+  return (
+    <section style={sectionStyle}>
+      <h3 style={sectionTitle}>Ma roue d'équilibre</h3>
+      {wheel.every((d) => d.score == null) ? (
+        <p style={{ color: '#94a3b8', fontSize: 13 }}>
+          Aucune mesure enregistrée. Votre praticien pourra remplir votre roue lors d'une consultation.
+        </p>
+      ) : (
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <svg width={size} height={size} role="img" aria-label="Roue d'équilibre">
+            {/* Cercles de référence */}
+            {[0.25, 0.5, 0.75, 1].map((f) => (
+              <circle
+                key={f}
+                cx={cx}
+                cy={cy}
+                r={r * f}
+                fill="none"
+                stroke="#e2e8f0"
+                strokeWidth={1}
+              />
+            ))}
+            {/* Axes */}
+            {wheel.map((d, i) => {
+              const angle = (i / wheel.length) * Math.PI * 2 - Math.PI / 2;
+              const x = cx + Math.cos(angle) * r;
+              const y = cy + Math.sin(angle) * r;
+              return (
+                <line
+                  key={d.domain}
+                  x1={cx}
+                  y1={cy}
+                  x2={x}
+                  y2={y}
+                  stroke="#e2e8f0"
+                  strokeWidth={1}
+                />
+              );
+            })}
+            {/* Polygone des scores */}
+            <polygon
+              points={points}
+              fill="rgba(13, 148, 136, 0.25)"
+              stroke="#0d9488"
+              strokeWidth={2}
+            />
+            {/* Labels */}
+            {wheel.map((d, i) => {
+              const angle = (i / wheel.length) * Math.PI * 2 - Math.PI / 2;
+              const lx = cx + Math.cos(angle) * (r + 16);
+              const ly = cy + Math.sin(angle) * (r + 16);
+              return (
+                <text
+                  key={`l-${d.domain}`}
+                  x={lx}
+                  y={ly}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize={10}
+                  fill="#475569"
+                >
+                  {WHEEL_LABELS[d.domain] || d.domain}
+                </text>
+              );
+            })}
+          </svg>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ── Section timeline ──────────────────────────────────────────────────
+function TimelineSection({ events }: { events: MyTwinState['events'] }) {
+  return (
+    <section style={sectionStyle}>
+      <h3 style={sectionTitle}>Ma timeline santé</h3>
+      {events.length === 0 ? (
+        <p style={{ color: '#94a3b8', fontSize: 13 }}>Aucun événement enregistré.</p>
+      ) : (
+        <ol style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          {events.map((e) => (
+            <li
+              key={e.id}
+              style={{
+                display: 'flex',
+                gap: 12,
+                padding: '10px 0',
+                borderBottom: '1px solid #f1f5f9',
+              }}
+            >
+              <div style={{ marginTop: 4 }}>
+                <Activity size={16} color="#0d9488" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{e.title}</div>
+                <div style={{ fontSize: 12, color: '#64748b' }}>
+                  {new Date(e.occurred_at).toLocaleDateString('fr')} · {e.event_type}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  );
+}
+
+// ── Section alertes ───────────────────────────────────────────────────
+function AlertsSection({ alerts }: { alerts: MyTwinState['alerts'] }) {
+  return (
+    <section style={sectionStyle}>
+      <h3 style={sectionTitle}>Mes alertes</h3>
+      {alerts.length === 0 ? (
+        <p style={{ color: '#94a3b8', fontSize: 13 }}>Aucune alerte en cours.</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {alerts.map((a) => {
+            const palette = SEVERITY_COLORS[a.severity] || SEVERITY_COLORS.medium;
+            return (
+              <div
+                key={a.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 10,
+                  padding: 12,
+                  background: palette.bg,
+                  color: palette.fg,
+                  border: `1px solid ${palette.border}`,
+                  borderRadius: 10,
+                }}
+              >
+                <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+                <div style={{ fontSize: 13 }}>
+                  <div style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: 11 }}>
+                    {a.severity}
+                  </div>
+                  <div>{a.message}</div>
+                  <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>
+                    {new Date(a.created_at).toLocaleDateString('fr')}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function Disclaimer({ text }: { text: string }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: 10,
+        padding: 12,
+        background: '#f8fafc',
+        border: '1px solid #e2e8f0',
+        borderRadius: 10,
+        color: '#475569',
+        fontSize: 12,
+        marginTop: 12,
+      }}
+    >
+      <Info size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+      <div>
+        {text ||
+          "Ces données sont indicatives. Elles ne constituent pas un diagnostic et ne remplacent pas l'avis d'un professionnel de santé."}
+      </div>
+    </div>
+  );
+}
+
+const sectionStyle: React.CSSProperties = {
+  background: '#fff',
+  borderRadius: 12,
+  border: '1px solid #e2e8f0',
+  padding: 20,
+  marginBottom: 16,
+};
+
+const sectionTitle: React.CSSProperties = {
+  fontSize: 16,
+  fontWeight: 600,
+  marginTop: 0,
+  marginBottom: 12,
+  color: '#0f172a',
+};

@@ -81,8 +81,8 @@ const FORM_FIELDS: Record<Tab, FieldSpec[]> = {
   immunizations: [
     { key: 'vaccine_name', label: 'Vaccin', type: 'text', required: true },
     { key: 'administered_on', label: 'Date administre', type: 'date', required: true },
-    { key: 'dose_number', label: 'Numero de dose', type: 'number' },
-    { key: 'lot_number', label: 'Numero de lot', type: 'text' },
+    { key: 'dose_number', label: 'Numéro de dose', type: 'number' },
+    { key: 'lot_number', label: 'Numéro de lot', type: 'text' },
     { key: 'site', label: 'Site d\'injection', type: 'text' },
     { key: 'notes', label: 'Notes', type: 'textarea' },
   ],
@@ -168,7 +168,7 @@ export function ClinicalListsPanel({ patientId }: { patientId: string }) {
       setModalOpen(false);
       await fetchTab(tab);
     } catch (err: any) {
-      setError(err?.message || 'Echec');
+      setError(err?.message || 'Échec');
     } finally {
       setSaving(false);
     }

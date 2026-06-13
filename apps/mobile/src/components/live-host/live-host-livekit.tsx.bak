@@ -1,0 +1,533 @@
+/**
+ * Écran natif « Régie Live Host » (LiveKit réel).
+ *
+ * Flux fidèle au web (LiveHostPage + liveHostSessionAndLiveKitInit) :
+ *  1. Charge la session Supabase (titre + statut).
+ *  2. POST /lives/:id/start (idempotent) puis POST /lives/:id/token role=host.
+ *  3. Connexion à la Room LiveKit (caméra + micro hôte).
+ *  4. Régie : toggle caméra/micro (LocalParticipant.set{Camera,Microphone}Enabled),
+ *     grille participants (useTracks → FlatList), timer durée, badge LIVE.
+ *  5. STOP : POST /lives/:id/end + PATCH Supabase status=ended, puis on quitte.
+ *  6. Realtime : si un autre dispositif termine la session → on sort proprement.
+ *
+ * Modules natifs (@livekit/react-native) → ce fichier n'est JAMAIS bundlé côté
+ * web (Metro résout live-host-screen.web.tsx). Voir la route app/live-host.tsx.
+ */
+import { Feather } from '@expo/vector-icons';
+import {
+  AudioSession,
+  LiveKitRoom,
+  VideoTrack,
+  isTrackReference,
+  useLocalParticipant,
+  useTracks,
+  type TrackReferenceOrPlaceholder,
+} from '@livekit/react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Track } from 'livekit-client';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+
+import {
+  LIVEKIT_URL,
+  endHostLive,
+  fetchHostToken,
+  fetchLiveSession,
+  markHostLeft,
+  registerHostParticipant,
+  startHostLive,
+  subscribeSessionStatus,
+} from './data';
+
+/** Formatte une durée en secondes → MM:SS ou H:MM:SS. */
+function formatDuration(totalSeconds: number): string {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  const mm = String(m).padStart(2, '0');
+  const ss = String(s).padStart(2, '0');
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
+export default function LiveHostScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams<{ id?: string; title?: string }>();
+  const sessionId = typeof params.id === 'string' ? params.id : '';
+  const paramTitle =
+    typeof params.title === 'string' && params.title ? params.title : '';
+
+  const [token, setToken] = useState<string | null>(null);
+  const [title, setTitle] = useState(paramTitle || 'Session live');
+  const [error, setError] = useState<string | null>(null);
+
+  const goBack = useCallback(() => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/lives');
+  }, [router]);
+
+  // ── Préparation : session DB + start + token hôte ──────────────────────────
+  useEffect(() => {
+    let mounted = true;
+    void AudioSession.startAudioSession();
+
+    (async () => {
+      if (!sessionId) {
+        if (mounted) setError('Session introuvable.');
+        return;
+      }
+
+      const session = await fetchLiveSession(sessionId);
+      if (!mounted) return;
+      if (session?.title) setTitle(session.title);
+      if (session?.status === 'ended' || session?.status === 'cancelled') {
+        setError('Cette session est déjà terminée.');
+        return;
+      }
+
+      // Idempotent : aligne started_at si la session n'était pas encore live.
+      await startHostLive(sessionId);
+      if (!mounted) return;
+
+      const res = await fetchHostToken(sessionId);
+      if (!mounted) return;
+      if (!res?.token) {
+        setError(
+          "Impossible d'obtenir l'accès régie. Connecte-toi en tant qu'hôte.",
+        );
+        return;
+      }
+      setToken(res.token);
+    })();
+
+    return () => {
+      mounted = false;
+      void AudioSession.stopAudioSession();
+    };
+  }, [sessionId]);
+
+  // ── Realtime : la session terminée ailleurs → on sort ──────────────────────
+  useEffect(() => {
+    if (!sessionId) return;
+    return subscribeSessionStatus(sessionId, () => {
+      setError('La session a été terminée.');
+    });
+  }, [sessionId]);
+
+  if (error) {
+    return (
+      <View style={styles.fill}>
+        <View style={styles.errMark}>
+          <Feather name="alert-triangle" size={26} color={C.live} />
+        </View>
+        <Text style={styles.errTitle}>{error}</Text>
+        <Pressable
+          style={({ pressed }) => [styles.backBtn, pressed && styles.pressed]}
+          onPress={goBack}
+        >
+          <Text style={styles.backTxt}>Retour</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (!token) {
+    return (
+      <View style={styles.fill}>
+        <ActivityIndicator color={C.coral} />
+        <Text style={styles.loadingTxt}>Ouverture de la régie…</Text>
+      </View>
+    );
+  }
+
+  return (
+    <LiveKitRoom
+      serverUrl={LIVEKIT_URL}
+      token={token}
+      connect
+      audio
+      video
+      onConnected={() => void registerHostParticipant(sessionId)}
+      onError={(e) => setError(e.message)}
+      onDisconnected={goBack}
+    >
+      <HostStage sessionId={sessionId} title={title} onLeave={goBack} />
+    </LiveKitRoom>
+  );
+}
+
+// ── Régie (dans la Room connectée) ───────────────────────────────────────────
+
+function HostStage({
+  sessionId,
+  title,
+  onLeave,
+}: {
+  sessionId: string;
+  title: string;
+  onLeave: () => void;
+}) {
+  const { localParticipant } = useLocalParticipant();
+  // Caméra + micro de TOUS les participants (hôte + invités) → grille.
+  const tracks = useTracks([Track.Source.Camera]);
+
+  const [micOn, setMicOn] = useState(true);
+  const [camOn, setCamOn] = useState(true);
+  const [seconds, setSeconds] = useState(0);
+  const [ending, setEnding] = useState(false);
+  const endingRef = useRef(false);
+
+  // Timer durée live (setInterval, comme useLiveDuration côté web).
+  useEffect(() => {
+    const t = setInterval(() => setSeconds((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const toggleMic = useCallback(async () => {
+    const next = !micOn;
+    await localParticipant.setMicrophoneEnabled(next);
+    setMicOn(next);
+  }, [micOn, localParticipant]);
+
+  const toggleCam = useCallback(async () => {
+    const next = !camOn;
+    await localParticipant.setCameraEnabled(next);
+    setCamOn(next);
+  }, [camOn, localParticipant]);
+
+  const stop = useCallback(async () => {
+    if (endingRef.current) return;
+    endingRef.current = true;
+    setEnding(true);
+    // POST /lives/:id/end + PATCH Supabase status=ended (filet de sécurité web).
+    await endHostLive(sessionId);
+    await markHostLeft(sessionId);
+    onLeave();
+  }, [sessionId, onLeave]);
+
+  // Caméra hôte (locale) mise en avant ; invités dans la grille.
+  const localTrack = tracks.find((t) => t.participant.isLocal);
+  const remoteTracks = tracks.filter((t) => !t.participant.isLocal);
+  const heroRef =
+    localTrack && isTrackReference(localTrack) ? localTrack : undefined;
+
+  const participantCount = 1 + remoteTracks.length;
+
+  return (
+    <View style={styles.root}>
+      {/* Scène principale : caméra hôte */}
+      {heroRef && camOn ? (
+        <VideoTrack trackRef={heroRef} style={styles.hero} objectFit="cover" mirror />
+      ) : (
+        <View style={[styles.hero, styles.heroOff]}>
+          <Feather name="video-off" size={36} color={C.faint} />
+          <Text style={styles.heroOffTxt}>
+            {camOn ? 'Activation de la caméra…' : 'Caméra coupée'}
+          </Text>
+        </View>
+      )}
+
+      {/* Barre haute : badge LIVE + titre + timer + nb participants */}
+      <SafeAreaView edges={['top']} style={styles.topBar} pointerEvents="box-none">
+        <View style={styles.topRow}>
+          <View style={styles.liveBadge}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveBadgeTxt}>EN DIRECT</Text>
+          </View>
+          <View style={styles.timerPill}>
+            <Feather name="clock" size={12} color={C.ink} />
+            <Text style={styles.timerTxt}>{formatDuration(seconds)}</Text>
+          </View>
+          <View style={styles.timerPill}>
+            <Feather name="users" size={12} color={C.ink} />
+            <Text style={styles.timerTxt}>{participantCount}</Text>
+          </View>
+        </View>
+        <Text style={styles.topTitle} numberOfLines={1}>
+          {title}
+        </Text>
+      </SafeAreaView>
+
+      {/* Grille participants distants (FlatList horizontale) */}
+      {remoteTracks.length > 0 && (
+        <View style={styles.gridWrap} pointerEvents="box-none">
+          <FlatList
+            horizontal
+            data={remoteTracks}
+            keyExtractor={(item) =>
+              `${item.participant.identity}:${item.source}`
+            }
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.gridContent}
+            renderItem={({ item }) => <ParticipantTile track={item} />}
+          />
+        </View>
+      )}
+
+      {/* Contrôles régie */}
+      <SafeAreaView edges={['bottom']} style={styles.controls} pointerEvents="box-none">
+        <CtrlButton
+          icon={micOn ? 'mic' : 'mic-off'}
+          active={micOn}
+          label={micOn ? 'Micro' : 'Muet'}
+          onPress={toggleMic}
+        />
+        <CtrlButton
+          icon={camOn ? 'video' : 'video-off'}
+          active={camOn}
+          label={camOn ? 'Caméra' : 'Off'}
+          onPress={toggleCam}
+        />
+        <Pressable
+          style={({ pressed }) => [styles.stopBtn, pressed && styles.pressed]}
+          onPress={stop}
+          disabled={ending}
+        >
+          {ending ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <Feather name="square" size={16} color="#fff" />
+              <Text style={styles.stopTxt}>STOP</Text>
+            </>
+          )}
+        </Pressable>
+      </SafeAreaView>
+    </View>
+  );
+}
+
+function ParticipantTile({ track }: { track: TrackReferenceOrPlaceholder }) {
+  const name = track.participant.name || track.participant.identity || 'Invité';
+  const ref = isTrackReference(track) ? track : undefined;
+  const muted = track.participant.isMicrophoneEnabled === false;
+
+  return (
+    <View style={styles.tile}>
+      {ref ? (
+        <VideoTrack trackRef={ref} style={styles.tileVideo} objectFit="cover" />
+      ) : (
+        <View style={[styles.tileVideo, styles.tileOff]}>
+          <Feather name="user" size={22} color={C.faint} />
+        </View>
+      )}
+      <View style={styles.tileFooter}>
+        {muted && <Feather name="mic-off" size={11} color={C.live} />}
+        <Text style={styles.tileName} numberOfLines={1}>
+          {name}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function CtrlButton({
+  icon,
+  active,
+  label,
+  onPress,
+}: {
+  icon: React.ComponentProps<typeof Feather>['name'];
+  active: boolean;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.ctrl,
+        !active && styles.ctrlOff,
+        pressed && styles.pressed,
+      ]}
+      onPress={onPress}
+    >
+      <Feather name={icon} size={20} color={active ? C.ink : C.live} />
+      <Text style={[styles.ctrlLabel, !active && { color: C.live }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#000' },
+
+  fill: {
+    flex: 1,
+    backgroundColor: C.base,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 36,
+  },
+  loadingTxt: { color: C.muted, fontSize: 14, marginTop: 14, fontFamily: F.sans },
+
+  hero: { ...StyleSheet.absoluteFillObject },
+  heroOff: {
+    backgroundColor: C.rail,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  heroOffTxt: { color: C.faint, fontSize: 14, fontFamily: F.sans },
+
+  topBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    gap: 8,
+  },
+  topRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: C.live,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#fff' },
+  liveBadgeTxt: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+    fontFamily: F.sans,
+  },
+  timerPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(31,30,28,0.78)',
+    borderRadius: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+  },
+  timerTxt: {
+    color: C.ink,
+    fontSize: 12.5,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+    fontFamily: F.sans,
+  },
+  topTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: F.serif,
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+
+  gridWrap: { position: 'absolute', left: 0, right: 0, bottom: 116 },
+  gridContent: { paddingHorizontal: 14, gap: 10 },
+  tile: {
+    width: 108,
+    height: 144,
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: C.rail,
+    borderWidth: 1,
+    borderColor: C.line,
+    ...softShadow,
+  },
+  tileVideo: { ...StyleSheet.absoluteFillObject },
+  tileOff: { alignItems: 'center', justifyContent: 'center', backgroundColor: C.panel },
+  tileFooter: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 5,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  tileName: { flex: 1, color: C.ink, fontSize: 11.5, fontWeight: '600', fontFamily: F.sans },
+
+  controls: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 14,
+    paddingHorizontal: 18,
+    paddingBottom: 14,
+    paddingTop: 16,
+  },
+  ctrl: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(48,48,46,0.85)',
+    borderRadius: 16,
+    paddingVertical: 11,
+    width: 76,
+  },
+  ctrlOff: { backgroundColor: C.liveTint, borderWidth: 1, borderColor: C.liveBorder },
+  ctrlLabel: { color: C.ink, fontSize: 11.5, fontWeight: '600', fontFamily: F.sans },
+
+  stopBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: C.live,
+    borderRadius: 16,
+    paddingVertical: 13,
+    paddingHorizontal: 24,
+    minWidth: 116,
+  },
+  stopTxt: {
+    color: '#fff',
+    fontSize: 14.5,
+    fontWeight: '800',
+    letterSpacing: 1,
+    fontFamily: F.sans,
+  },
+
+  pressed: { opacity: 0.7 },
+
+  errMark: {
+    width: 60,
+    height: 60,
+    borderRadius: 20,
+    backgroundColor: C.liveTint,
+    borderWidth: 1,
+    borderColor: C.liveBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errTitle: {
+    color: C.ink,
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 16,
+    fontFamily: F.sans,
+  },
+  backBtn: {
+    marginTop: 20,
+    backgroundColor: C.panel,
+    borderRadius: 13,
+    paddingHorizontal: 22,
+    paddingVertical: 11,
+  },
+  backTxt: { color: C.ink, fontSize: 14, fontWeight: '600', fontFamily: F.sans },
+});

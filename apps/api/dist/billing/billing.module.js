@@ -10,12 +10,22 @@ exports.BillingModule = void 0;
 const common_1 = require("@nestjs/common");
 const auth_module_1 = require("../auth/auth.module");
 const tenant_module_1 = require("../tenant/tenant.module");
+const supabase_module_1 = require("../supabase/supabase.module");
+const pawapay_module_1 = require("../pawapay/pawapay.module");
 const billing_service_1 = require("./billing.service");
 const billing_controller_1 = require("./billing.controller");
+const billing_webhook_controller_1 = require("./billing-webhook.controller");
+const billing_advanced_controller_1 = require("./billing-advanced.controller");
+const billing_advanced_service_1 = require("./billing-advanced.service");
 let BillingModule = class BillingModule {
 };
 exports.BillingModule = BillingModule;
 exports.BillingModule = BillingModule = __decorate([
-    (0, common_1.Module)({ imports: [auth_module_1.AuthModule, tenant_module_1.TenantModule], controllers: [billing_controller_1.BillingController], providers: [billing_service_1.BillingService] })
+    (0, common_1.Module)({
+        imports: [auth_module_1.AuthModule, tenant_module_1.TenantModule, supabase_module_1.SupabaseModule, pawapay_module_1.PawaPayModule],
+        controllers: [billing_controller_1.BillingController, billing_controller_1.AdminBillingController, billing_webhook_controller_1.BillingWebhookController, billing_advanced_controller_1.BillingAdvancedController],
+        providers: [billing_service_1.BillingService, billing_advanced_service_1.BillingAdvancedService],
+        exports: [billing_service_1.BillingService, billing_advanced_service_1.BillingAdvancedService],
+    })
 ], BillingModule);
 //# sourceMappingURL=billing.module.js.map

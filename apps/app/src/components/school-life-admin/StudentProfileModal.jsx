@@ -42,8 +42,8 @@ function summarizeSubscription(row) {
   return {
     kind: 'sub',
     status: String(row.status || '').toLowerCase(),
-    expiresAt: row.expires_at || null,
-    planName: row.billing_plans?.name || null,
+    expiresAt: row.current_period_end || null,
+    planName: row.plan_id || null,
   };
 }
 
@@ -120,7 +120,7 @@ const StudentProfileModal = ({ student, isOpen, onClose, dataSync }) => {
       const [subRes, profileRes] = await Promise.all([
         supabase
           .from('billing_subscriptions')
-          .select('id,status,expires_at,started_at,billing_plans(name,slug)')
+          .select('id,status,plan_id,current_period_start,current_period_end')
           .eq('user_id', student.id)
           .order('created_at', { ascending: false })
           .limit(1)

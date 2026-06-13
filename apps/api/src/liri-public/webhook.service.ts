@@ -1,11 +1,12 @@
 /**
- * WebhookService — Envoi HMAC-signé des événements LIRI vers les endpoints clients.
+ * WebhookService — Envoi HMAC-signé des événements Cimolace vers les endpoints clients.
  *
  * Événements disponibles :
- *   session.started | session.ended | session.cancelled
- *   participant.joined | participant.left
- *   recording.started | recording.completed
- *   waiting_room.knock
+ *   LIRI    : session.started | session.ended | session.cancelled
+ *             participant.joined | participant.left
+ *             recording.started | recording.completed | waiting_room.knock
+ *   Billing : billing.subscription.activated | billing.invoice.paid
+ *             billing.subscription.past_due | billing.subscription.canceled
  */
 
 import { Injectable, Logger } from '@nestjs/common';
@@ -20,7 +21,11 @@ export type LiriWebhookEvent =
   | 'participant.left'
   | 'recording.started'
   | 'recording.completed'
-  | 'waiting_room.knock';
+  | 'waiting_room.knock'
+  | 'billing.subscription.activated'
+  | 'billing.invoice.paid'
+  | 'billing.subscription.past_due'
+  | 'billing.subscription.canceled';
 
 export interface WebhookPayload {
   event: LiriWebhookEvent;
@@ -48,7 +53,7 @@ export class WebhookService {
   ): Promise<void> {
     const { data: hooks } = await (this.supabase.client as any)
       .from('tenant_webhooks')
-      .select('id, url, secret, events')
+      .select('id, url, secret, events, failure_count')
       .eq('tenant_id', tenantId)
       .eq('is_active', true);
 
@@ -65,15 +70,15 @@ export class WebhookService {
 
     const body = JSON.stringify(payload);
 
-    const fires = ((hooks ?? []) as Array<{ id: string; url: string; secret: string; events: string[] }>)
-      .filter((h) => h.events.includes(event) || h.events.includes('*'))
+    const fires = ((hooks ?? []) as Array<{ id: string; url: string; secret: string; events: string[]; failure_count?: number }>)
+      .filter((h) => (h.events ?? []).includes(event) || (h.events ?? []).includes('*'))
       .map((hook) => this.deliverOne(hook, body, payload.liri_delivery_id));
 
     await Promise.allSettled(fires);
   }
 
   private async deliverOne(
-    hook: { id: string; url: string; secret: string },
+    hook: { id: string; url: string; secret: string; failure_count?: number },
     body: string,
     deliveryId: string,
   ): Promise<void> {
@@ -85,6 +90,9 @@ export class WebhookService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // En-tête canonique documenté dans le portail tenant + alias LIRI historique.
+          'X-Cimolace-Signature': `sha256=${sig}`,
+          'X-Cimolace-Delivery': deliveryId,
           'X-Liri-Signature': `sha256=${sig}`,
           'X-Liri-Delivery': deliveryId,
         },
@@ -101,19 +109,16 @@ export class WebhookService {
 
     // Mise à jour des stats non-bloquante
     const isFailure = status === null || status >= 400;
-    await (this.supabase.client as any)
-      .from('tenant_webhooks')
-      .update({
-        last_fired_at: new Date().toISOString(),
-        last_status: status,
-        failure_count: isFailure
-          ? (this.supabase.client as any).rpc !== undefined
-            ? undefined  // fallback
-            : 0
-          : 0,
-      })
-      .eq('id', hook.id)
-      .catch(() => {});
+    try {
+      await (this.supabase.client as any)
+        .from('tenant_webhooks')
+        .update({
+          last_fired_at: new Date().toISOString(),
+          last_status: status,
+          failure_count: isFailure ? (hook.failure_count ?? 0) + 1 : 0,
+        })
+        .eq('id', hook.id);
+    } catch { /* stats best-effort */ }
   }
 
   // ─── CRUD webhooks ────────────────────────────────────────────────────────

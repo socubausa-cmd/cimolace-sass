@@ -1,0 +1,86 @@
+{
+  "version": "1.0.0",
+  "weekly_grammar": {
+    "standard_5j": {
+      "label": "Semaine standard 5 jours",
+      "description": "Grammaire hebdomadaire complete sur 5 jours : ouverture, contenu doctrinal, pratique, rappel et cloture",
+      "days": {
+        "lundi": {
+          "day_number": 1,
+          "label": "Lundi",
+          "pedagogy_type": "opening_live",
+          "blocks": ["previsualisation_video", "opening_live"],
+          "duration_minutes": 45
+        },
+        "mardi": {
+          "day_number": 2,
+          "label": "Mardi",
+          "pedagogy_type": "smartboard_session",
+          "blocks": ["smartboard_session", "doctrinal_video"],
+          "duration_minutes": 120
+        },
+        "mercredi": {
+          "day_number": 3,
+          "label": "Mercredi",
+          "pedagogy_type": "friction_block",
+          "blocks": ["friction_block", "experiment_block"],
+          "duration_minutes": 90
+        },
+        "jeudi": {
+          "day_number": 4,
+          "label": "Jeudi",
+          "pedagogy_type": "recall_block",
+          "blocks": ["recall_block", "quiz_block"],
+          "duration_minutes": 45
+        },
+        "vendredi": {
+          "day_number": 5,
+          "label": "Vendredi",
+          "pedagogy_type": "closure_live",
+          "blocks": ["mindmap_block", "summary_block", "closure_live"],
+          "duration_minutes": 75
+        }
+      }
+    },
+    "intensive_3j": {
+      "label": "Intensif 3 jours",
+      "description": "Format condense sur 3 jours non consecutifs : ouverture lundi, pratique mercredi, cloture vendredi",
+      "days": {
+        "lundi": {
+          "day_number": 1,
+          "label": "Lundi",
+          "pedagogy_type": "opening_live",
+          "blocks": ["previsualisation_video", "opening_live", "doctrinal_video"],
+          "duration_minutes": 90
+        },
+        "mercredi": {
+          "day_number": 2,
+          "label": "Mercredi",
+          "pedagogy_type": "friction_block",
+          "blocks": ["smartboard_session", "friction_block", "experiment_block", "recall_block"],
+          "duration_minutes": 150
+        },
+        "vendredi": {
+          "day_number": 3,
+          "label": "Vendredi",
+          "pedagogy_type": "closure_live",
+          "blocks": ["quiz_block", "mindmap_block", "summary_block", "closure_live"],
+          "duration_minutes": 120
+        }
+      }
+    },
+    "decouverte_1j": {
+      "label": "Decouverte 1 jour",
+      "description": "Format decouverte sur une seule journee : teaser et ouverture live pour une premiere immersion",
+      "days": {
+        "lundi": {
+          "day_number": 1,
+          "label": "Lundi",
+          "pedagogy_type": "opening_live",
+          "blocks": ["previsualisation_video", "opening_live"],
+          "duration_minutes": 45
+        }
+      }
+    }
+  }
+}

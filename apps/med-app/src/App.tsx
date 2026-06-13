@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuth } from './lib/auth';
@@ -16,6 +17,11 @@ import { Appointments } from './pages/Appointments';
 import { AuditPage } from './pages/AuditPage';
 import { HandoffPage } from './pages/HandoffPage';
 import { Layout } from './components/Layout';
+
+// Bio Digital Twin (v2) — lazy : isole three.js / 3D du bundle principal.
+const TwinPage = lazy(() => import('./twin/TwinPage').then((m) => ({ default: m.TwinPage })));
+// Wizard onboarding patient (Chantier 3) — lazy aussi (allège le bundle initial).
+const PatientWizard = lazy(() => import('./twin/PatientWizard').then((m) => ({ default: m.PatientWizard })));
 
 const queryClient = new QueryClient();
 
@@ -43,6 +49,22 @@ function AppRoutes() {
         <Route path="/messages" element={<Threads />} />
         <Route path="/appointments" element={<Appointments />} />
         <Route path="/audit" element={<AuditPage />} />
+        <Route
+          path="/twin/new"
+          element={
+            <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Chargement du wizard…</div>}>
+              <PatientWizard />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/twin/:patientId"
+          element={
+            <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Chargement du jumeau numérique…</div>}>
+              <TwinPage />
+            </Suspense>
+          }
+        />
       </Route>
     </Routes>
   );

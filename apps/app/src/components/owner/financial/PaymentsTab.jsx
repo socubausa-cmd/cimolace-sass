@@ -243,16 +243,16 @@ const PaymentsTab = () => {
                       <TableRow key={pay.id} className="border-white/5 hover:bg-white/5">
                         <TableCell className="font-mono text-white text-xs">{pay.reference}</TableCell>
                         <TableCell className="text-gray-300 font-medium">{pay.studentName}</TableCell>
-                        <TableCell className="text-[#D4AF37] font-bold">{pay.amount} {pay.price_currency || 'EUR'}</TableCell>
-                        <TableCell className="text-gray-400 text-xs">{pay.payment_method || pay.provider}</TableCell>
+                        <TableCell className="text-[#D4AF37] font-bold">{pay.amount} {pay.currency || 'EUR'}</TableCell>
+                        <TableCell className="text-gray-400 text-xs">{pay.provider}</TableCell>
                         <TableCell className="text-gray-400 text-xs">{format(new Date(pay.created_at), 'dd/MM/yyyy')}</TableCell>
                         <TableCell>
-                          {String(pay.payment_status || '').toLowerCase() === 'confirmed' && <Badge className="bg-green-500">Confirmé</Badge>}
-                          {['pending', 'confirming'].includes(String(pay.payment_status || '').toLowerCase()) && <Badge className="bg-yellow-500 text-black">En attente</Badge>}
-                          {['failed', 'expired'].includes(String(pay.payment_status || '').toLowerCase()) && <Badge variant="destructive">Échoué</Badge>}
+                          {String(pay.status || '').toLowerCase() === 'confirmed' && <Badge className="bg-green-500">Confirmé</Badge>}
+                          {['pending', 'confirming'].includes(String(pay.status || '').toLowerCase()) && <Badge className="bg-yellow-500 text-black">En attente</Badge>}
+                          {['failed', 'expired'].includes(String(pay.status || '').toLowerCase()) && <Badge variant="destructive">Échoué</Badge>}
                         </TableCell>
                         <TableCell className="text-right space-x-2">
-                          {['pending', 'confirming'].includes(String(pay.payment_status || '').toLowerCase()) && (
+                          {['pending', 'confirming'].includes(String(pay.status || '').toLowerCase()) && (
                             <>
                               <Button size="icon" variant="ghost" className="h-7 w-7 text-green-400 hover:bg-green-500/20" onClick={() => void updatePaymentStatus(pay.id, 'confirmed')} title="Confirmer">
                                 <Check className="w-4 h-4" />
