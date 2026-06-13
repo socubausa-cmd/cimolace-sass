@@ -230,7 +230,7 @@ export default function ForumThreadPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      const slug = localStorage.getItem('isna-v2-tenant-slug') || localStorage.getItem('tenantSlug') || DEFAULT_TENANT_SLUG;
+      const slug = localStorage.getItem('cimolace-v2-tenant-slug') || localStorage.getItem('isna-v2-tenant-slug') || localStorage.getItem('tenantSlug') || DEFAULT_TENANT_SLUG;
       const base = (import.meta.env.VITE_API_URL || 'http://localhost:4002').replace(/\/+$/, '');
       const res = await fetch(`${base}/knowledge/answer`, {
         method: 'POST',

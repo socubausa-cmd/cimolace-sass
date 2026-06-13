@@ -3,7 +3,8 @@ import { getApiBaseUrl } from '../lib/apiBase';
 
 type LoadState = 'idle' | 'loading' | 'done';
 
-const TOKEN_STORAGE_KEY = 'isna-v2-debug-api-bearer';
+const TOKEN_STORAGE_KEY = 'cimolace-v2-api-bearer';
+const LEGACY_TOKEN_STORAGE_KEY = 'isna-v2-debug-api-bearer';
 
 function formatBody(text: string): string {
   try {
@@ -17,7 +18,9 @@ function formatBody(text: string): string {
 export function DebugApiSection() {
   const apiBase = useMemo(() => getApiBaseUrl(), []);
   const [token, setToken] = useState(() =>
-    typeof window !== 'undefined' ? localStorage.getItem(TOKEN_STORAGE_KEY) ?? '' : '',
+    typeof window !== 'undefined'
+      ? localStorage.getItem(TOKEN_STORAGE_KEY) ?? localStorage.getItem(LEGACY_TOKEN_STORAGE_KEY) ?? ''
+      : '',
   );
 
   const [healthState, setHealthState] = useState<LoadState>('idle');
@@ -35,8 +38,10 @@ export function DebugApiSection() {
     if (typeof window !== 'undefined') {
       if (value.trim()) {
         localStorage.setItem(TOKEN_STORAGE_KEY, value.trim());
+        localStorage.removeItem(LEGACY_TOKEN_STORAGE_KEY);
       } else {
         localStorage.removeItem(TOKEN_STORAGE_KEY);
+        localStorage.removeItem(LEGACY_TOKEN_STORAGE_KEY);
       }
     }
   }, []);
