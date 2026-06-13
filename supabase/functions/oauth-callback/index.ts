@@ -17,8 +17,10 @@
  *   https://<project-ref>.supabase.co/functions/v1/oauth-callback
  */
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+// Boot fix : `Deno.serve` natif (comme les autres edge functions). L'ancien
+// `import { serve } from 'deno.land/std@0.168.0/http/server.ts'` crashait au
+// démarrage (503 BOOT_ERROR) sur le runtime Edge actuel.
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -149,7 +151,7 @@ async function createUserSession(
   return null;
 }
 
-serve(async (req: Request): Promise<Response> => {
+Deno.serve(async (req: Request): Promise<Response> => {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
@@ -298,9 +300,35 @@ serve(async (req: Request): Promise<Response> => {
     return redirectError(tenantSlug, 'session_failed');
   }
 
-  // ── 7. Rediriger le frontend avec les tokens dans le hash ─────────────────
+  // ── 7. Rediriger le frontend (SUR LE DOMAINE DU TENANT) avec les tokens ────
+  // Multi-tenant : chaque tenant revient sur SON propre domaine personnalisé
+  // (table tenant_domains, usage='custom_host', status='active'), sinon le
+  // domaine plateforme Cimolace par défaut (APP_BASE_URL).
+  // → ZÉRO config manuelle par tenant : il suffit que son domaine custom soit
+  //   provisionné dans tenant_domains (ce que Cimolace fait déjà à la création
+  //   de l'école). Google ne connaît qu'UNE seule URI fixe (cette fonction).
+  let returnBase = APP_BASE_URL;
+  try {
+    const { data: customDomains } = await supabase
+      .from('tenant_domains')
+      .select('domain')
+      .eq('tenant_id', oauthState.tenant_id)
+      .eq('usage', 'custom_host')
+      .eq('status', 'active');
+    if (customDomains && customDomains.length) {
+      // Préférer l'apex (le plus court) : ex. prorascience.org plutôt que www./isna.
+      const primary = customDomains
+        .map((d: { domain: string }) => String(d.domain || '').replace(/^https?:\/\//, '').replace(/\/+$/, ''))
+        .filter(Boolean)
+        .sort((a: string, b: string) => a.length - b.length)[0];
+      if (primary) returnBase = `https://${primary}`;
+    }
+  } catch (e) {
+    console.warn('[oauth-callback] tenant_domains lookup failed, fallback plateforme:', (e as Error).message);
+  }
+
   // Le frontend (/t/:slug/auth/callback) lit le hash et appelle supabase.auth.setSession()
-  const callbackUrl = new URL(`${APP_BASE_URL}/t/${tenantSlug}/auth/callback`);
+  const callbackUrl = new URL(`${returnBase}/t/${tenantSlug}/auth/callback`);
 
   const hashParts = [
     `access_token=${encodeURIComponent(session.access_token)}`,
