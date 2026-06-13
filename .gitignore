@@ -1,6 +1,12 @@
 # Dependencies
 node_modules/
 
+# Lockfiles : déploiements (Railway/Docker + Vercel) installent en `npm install
+# --legacy-peer-deps` frais SANS lock. Un lock généré hors-CI n'est pas universel
+# (binaires natifs rollup/napi par plateforme) et désynchronise le `npm ci` du CI.
+# On ne versionne donc aucun lock — le CI installe frais comme la prod.
+package-lock.json
+
 # Build outputs
 dist/
 build/
