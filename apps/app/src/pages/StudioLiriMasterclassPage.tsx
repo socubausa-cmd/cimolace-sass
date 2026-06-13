@@ -5,6 +5,7 @@
  * V2 port from isna_app V1
  */
 import React, { useState, useCallback } from 'react';
+import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { Link } from 'react-router-dom';
 import {
   Sparkles, FileText, ArrowLeft, Loader2, CheckCircle2,
@@ -39,7 +40,7 @@ export default function StudioLiriMasterclassPage() {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'X-Tenant-Slug': localStorage.getItem('tenantSlug') || 'isna',
+          'X-Tenant-Slug': localStorage.getItem('tenantSlug') || DEFAULT_TENANT_SLUG,
         },
         body: JSON.stringify({ sourceText, pedagogicalModel: model }),
       });
@@ -64,7 +65,7 @@ export default function StudioLiriMasterclassPage() {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'X-Tenant-Slug': localStorage.getItem('tenantSlug') || 'isna',
+          'X-Tenant-Slug': localStorage.getItem('tenantSlug') || DEFAULT_TENANT_SLUG,
         },
         body: JSON.stringify({ sourceText, pedagogicalModel: model, title: 'Projet Masterclass' }),
       });

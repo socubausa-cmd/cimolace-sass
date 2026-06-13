@@ -6,6 +6,7 @@
  * V2 port from isna_app V1
  */
 import React, { useCallback, useState } from 'react';
+import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Brain, ChevronDown, ChevronRight, Sparkles, CheckCircle2,
@@ -156,7 +157,7 @@ export default function StudioLiriCourseBuilderPage() {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'X-Tenant-Slug': localStorage.getItem('tenantSlug') || 'isna',
+          'X-Tenant-Slug': localStorage.getItem('tenantSlug') || DEFAULT_TENANT_SLUG,
         },
         body: JSON.stringify({ sourceText, pedagogicalModel: 'liri-v1' }),
       });

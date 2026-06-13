@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 
 /** Redirige "/" vers la bonne destination selon le contexte :
  *  1. access_token dans le hash (magic link / recovery) → /auth/callback
@@ -21,8 +22,9 @@ function DevSmartboardPreview() {
 }
 const StudioSmartboardKonvaPageLazy = lazy(() => import('@/pages/studio/StudioSmartboardKonvaPage'));
 
-// Tenant routing constants - will be replaced with tenant config in future
-const TENANT_SLUG = 'isna';
+// Tenant routing — défaut tenant CENTRALISÉ (config/platform, VITE_DEFAULT_TENANT_SLUG).
+// Cimolace est multi-tenant ; isna n'est qu'un tenant. Voir docs/CIMOLACE_ARCHITECTURE.md §7.
+const TENANT_SLUG = DEFAULT_TENANT_SLUG;
 const TENANT_ADMIN_PATH = `/t/${TENANT_SLUG}/admin`;
 const TENANT_COURSES_PATH = `/t/${TENANT_SLUG}/admin/courses`;
 const TENANT_STUDENTS_PATH = `/t/${TENANT_SLUG}/admin/students`;

@@ -5,6 +5,7 @@
  * V2 port from isna_app V1 (simplifié)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft, Save, Sparkles, Loader2, Plus, Trash2,
@@ -246,7 +247,7 @@ export default function StudioSmartboardDesignerPage() {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'X-Tenant-Slug': localStorage.getItem('tenantSlug') || 'isna',
+          'X-Tenant-Slug': localStorage.getItem('tenantSlug') || DEFAULT_TENANT_SLUG,
         },
         body: JSON.stringify({ title: deckTitle }),
       });
@@ -257,7 +258,7 @@ export default function StudioSmartboardDesignerPage() {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-            'X-Tenant-Slug': localStorage.getItem('tenantSlug') || 'isna',
+            'X-Tenant-Slug': localStorage.getItem('tenantSlug') || DEFAULT_TENANT_SLUG,
           },
           body: JSON.stringify({ slides_json: { slides, theme } }),
         });
@@ -281,7 +282,7 @@ export default function StudioSmartboardDesignerPage() {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'X-Tenant-Slug': localStorage.getItem('tenantSlug') || 'isna',
+          'X-Tenant-Slug': localStorage.getItem('tenantSlug') || DEFAULT_TENANT_SLUG,
         },
         body: JSON.stringify({ sourceText }),
       });

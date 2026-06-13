@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -229,7 +230,7 @@ export default function ForumThreadPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      const slug = localStorage.getItem('isna-v2-tenant-slug') || localStorage.getItem('tenantSlug') || 'isna';
+      const slug = localStorage.getItem('isna-v2-tenant-slug') || localStorage.getItem('tenantSlug') || DEFAULT_TENANT_SLUG;
       const base = (import.meta.env.VITE_API_URL || 'http://localhost:4002').replace(/\/+$/, '');
       const res = await fetch(`${base}/knowledge/answer`, {
         method: 'POST',

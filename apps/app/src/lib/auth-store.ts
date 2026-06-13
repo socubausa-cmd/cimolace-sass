@@ -1,3 +1,5 @@
+import { DEFAULT_TENANT_SLUG } from '@/config/platform';
+
 const TOKEN_KEY = 'isna-v2-debug-api-bearer';
 const TENANT_KEY = 'isna-v2-tenant-slug';
 const LEGACY_TENANT_KEY = 'tenantSlug';
@@ -10,12 +12,12 @@ function inferTenantSlugFromLocation() {
   if (typeof window === 'undefined') return '';
   const pathname = normalizeTenantSlug(window.location.pathname);
   const search = normalizeTenantSlug(window.location.search);
-  if (pathname.includes('/prorascience') || search.includes('prorascience')) return 'isna';
-  if (pathname.startsWith('/m/eleve') || pathname.startsWith('/dev/liri-host-live')) return 'isna';
-  if (pathname.startsWith('/student-school-life') || pathname.startsWith('/teacher-space')) return 'isna';
-  if (pathname.startsWith('/secretariat-space') || pathname.startsWith('/classroom')) return 'isna';
-  if (pathname.startsWith('/live/') || pathname.startsWith('/live-manager')) return 'isna';
-  if (pathname.startsWith('/cimolace')) return 'isna';
+  if (pathname.includes('/prorascience') || search.includes('prorascience')) return DEFAULT_TENANT_SLUG;
+  if (pathname.startsWith('/m/eleve') || pathname.startsWith('/dev/liri-host-live')) return DEFAULT_TENANT_SLUG;
+  if (pathname.startsWith('/student-school-life') || pathname.startsWith('/teacher-space')) return DEFAULT_TENANT_SLUG;
+  if (pathname.startsWith('/secretariat-space') || pathname.startsWith('/classroom')) return DEFAULT_TENANT_SLUG;
+  if (pathname.startsWith('/live/') || pathname.startsWith('/live-manager')) return DEFAULT_TENANT_SLUG;
+  if (pathname.startsWith('/cimolace')) return DEFAULT_TENANT_SLUG;
   const tenantMatch = pathname.match(/^\/t\/([a-z0-9-]+)/);
   if (tenantMatch?.[1]) return tenantMatch[1];
   return '';

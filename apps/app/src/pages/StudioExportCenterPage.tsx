@@ -3,6 +3,7 @@
  * Route: /studio/export-center
  */
 import React, { useState } from 'react';
+import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft, Download, FileJson, FileText, Presentation,
@@ -33,7 +34,7 @@ export default function StudioExportCenterPage() {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'X-Tenant-Slug': localStorage.getItem('tenantSlug') || 'isna',
+          'X-Tenant-Slug': localStorage.getItem('tenantSlug') || DEFAULT_TENANT_SLUG,
         },
         body: JSON.stringify({ workspaceId: workspaceId || undefined, jobType: 'export', exportFormat: formatId }),
       });
