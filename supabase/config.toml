@@ -350,6 +350,16 @@ authorization_url_path = "/oauth/consent"
 # Allow dynamic client registration
 allow_dynamic_registration = false
 
+# OAuth Google multi-tenant (flux white-label scalable, edge functions).
+# oauth-callback est appelé par Google SANS Authorization → verify_jwt DOIT être false
+# (sinon Supabase renvoie 401 avant d'exécuter la fonction).
+# oauth-initiate est public (protégé par state CSRF + vérif tenant en base).
+[functions.oauth-initiate]
+verify_jwt = false
+
+[functions.oauth-callback]
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

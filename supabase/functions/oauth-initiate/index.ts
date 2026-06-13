@@ -12,8 +12,10 @@
  * Retourne: { redirect_url: string, mode: 'tenant' | 'platform' }
  */
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+// Boot fix : on utilise `Deno.serve` natif (comme toutes les autres edge functions).
+// L'ancien `import { serve } from 'deno.land/std@0.168.0/http/server.ts'` faisait
+// crasher la fonction au démarrage (503 BOOT_ERROR) sur le runtime Edge actuel.
 
 const SUPABASE_URL               = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -37,7 +39,7 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-serve(async (req: Request): Promise<Response> => {
+Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
