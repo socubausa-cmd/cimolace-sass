@@ -6,6 +6,7 @@
  * Aucune modification du routeur requise.
  */
 import React, { useState } from 'react';
+import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -165,7 +166,7 @@ const LogoStrip = () => (
 
 const TenantAdminShell = ({ children }) => {
   const { tenantSlug } = useParams();
-  const slug = tenantSlug || 'isna';
+  const slug = tenantSlug || DEFAULT_TENANT_SLUG;
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const desktopSidebar = (

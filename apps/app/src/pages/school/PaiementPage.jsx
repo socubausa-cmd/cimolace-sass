@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { offeringCheckoutApi } from '@/lib/api-v2';
@@ -95,7 +96,7 @@ export default function PaiementPage() {
 
       <header className="border-b border-white/10 px-4 py-4 sm:px-6">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <Link to={`/t/${tenantSlug || 'isna'}`} className="text-sm text-gray-300 hover:text-white">
+          <Link to={`/t/${tenantSlug || DEFAULT_TENANT_SLUG}`} className="text-sm text-gray-300 hover:text-white">
             ← Retour
           </Link>
           <span className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">PRORASCIENCE</span>
@@ -183,7 +184,7 @@ export default function PaiementPage() {
             {status.message}
             {/No auth token|UNAUTHORIZED|connect/i.test(status.message) && (
               <p className="mt-2">
-                <Link to={`/t/${tenantSlug || 'isna'}/login`} className="font-semibold text-[#D4AF37] hover:underline">
+                <Link to={`/t/${tenantSlug || DEFAULT_TENANT_SLUG}/login`} className="font-semibold text-[#D4AF37] hover:underline">
                   Se connecter pour finaliser →
                 </Link>
               </p>

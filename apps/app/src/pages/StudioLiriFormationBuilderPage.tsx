@@ -5,6 +5,7 @@
  * V2 port from isna_app V1
  */
 import React, { useCallback, useState } from 'react';
+import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { Link } from 'react-router-dom';
 import {
   GraduationCap, ArrowLeft, ChevronRight, ChevronDown, Plus, Sparkles,
@@ -204,7 +205,7 @@ export default function StudioLiriFormationBuilderPage() {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'X-Tenant-Slug': localStorage.getItem('tenantSlug') || 'isna',
+          'X-Tenant-Slug': localStorage.getItem('tenantSlug') || DEFAULT_TENANT_SLUG,
         },
         body: JSON.stringify({ title: titre || tree.titre, programmeType: typeProgramme, audienceLevel: niveau }),
       });
@@ -216,7 +217,7 @@ export default function StudioLiriFormationBuilderPage() {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-            'X-Tenant-Slug': localStorage.getItem('tenantSlug') || 'isna',
+            'X-Tenant-Slug': localStorage.getItem('tenantSlug') || DEFAULT_TENANT_SLUG,
           },
           body: JSON.stringify(tree),
         });
