@@ -210,6 +210,39 @@ const MaquetteMission = lazy(() => import('@/pages/MaquetteMission'));
 const MaquetteProgramme = lazy(() => import('@/pages/MaquetteProgramme'));
 const MaquetteTemple = lazy(() => import('@/pages/MaquetteTemple'));
 const MaquetteEcole = lazy(() => import('@/pages/MaquetteEcole'));
+
+// ── Vitrines tenant (multi-tenant) ──────────────────────────────────────────
+// Un tenant peut avoir une vitrine narrative dédiée ; sinon on rend la vitrine
+// générique (SchoolVitrineTenantPage). `isna` = vitrine PRORASCIENCE (Maquette*).
+// Le ROUTAGE devient générique (/t/:slug) ; le CONTENU reste propre au tenant.
+// Pour un nouveau tenant à vitrine dédiée : ajouter une entrée ici (zéro route en dur).
+// Cf. docs/CIMOLACE_ARCHITECTURE.md §7.
+const TENANT_VITRINES = {
+  isna: {
+    home: MaquetteHero04,
+    pages: {
+      ecole: MaquetteEcole,
+      temple: MaquetteTemple,
+      programme: MaquetteProgramme,
+      mission: MaquetteMission,
+      fondateur: MaquetteFondateur,
+      doctrine: MaquetteCosmos,
+    },
+  },
+};
+
+function TenantVitrineHome() {
+  const { tenantSlug } = useParams();
+  const Comp = TENANT_VITRINES[String(tenantSlug || '').toLowerCase()]?.home;
+  return Comp ? <Comp /> : <SchoolVitrineTenantPage />;
+}
+
+function TenantVitrinePage() {
+  const { tenantSlug, vitrinePage } = useParams();
+  const entry = TENANT_VITRINES[String(tenantSlug || '').toLowerCase()];
+  const Comp = entry?.pages?.[String(vitrinePage || '').toLowerCase()];
+  return Comp ? <Comp /> : <Navigate to={`/t/${tenantSlug}`} replace />;
+}
 const PublicHomePage = lazy(() => import('@/pages/PublicHomePage'));
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 const PublicIsnaPage = lazy(() => import('@/pages/PublicIsnaPage'));
@@ -1873,17 +1906,13 @@ isLiriHostDevPreviewRoute;
 
           {/* ── Routes publiques tenant ─────────────────────────────────── */}
           {/* Landing dédiée ISNA / PRORASCIENCE — nouveau design narratif (maquette portée). L'apex prorascience.org redirige vers /t/isna */}
-          <Route path="/t/isna" element={<MaquetteHero04 />} />
-          <Route path="/t/isna/ecole" element={<MaquetteEcole />} />
-          <Route path="/t/isna/temple" element={<MaquetteTemple />} />
-          <Route path="/t/isna/programme" element={<MaquetteProgramme />} />
-          <Route path="/t/isna/mission" element={<MaquetteMission />} />
-          <Route path="/t/isna/fondateur" element={<MaquetteFondateur />} />
-          <Route path="/t/isna/doctrine" element={<MaquetteCosmos />} />
-          <Route
-            path="/t/:tenantSlug"
-            element={<SchoolVitrineTenantPage />}
-          />
+          {/* Vitrine tenant GÉNÉRIQUE (multi-tenant). isna → vitrine PRORASCIENCE
+              (Maquette*) via le registre TENANT_VITRINES ; autres tenants → vitrine
+              générique. Les sous-pages narratives passent par /t/:slug/:vitrinePage.
+              v6 classe les routes statiques (login/courses/paiement/admin) au-dessus
+              de :vitrinePage → pas de collision. Cf. docs/CIMOLACE_ARCHITECTURE.md §7. */}
+          <Route path="/t/:tenantSlug" element={<TenantVitrineHome />} />
+          <Route path="/t/:tenantSlug/:vitrinePage" element={<TenantVitrinePage />} />
           <Route
             path="/t/:tenantSlug/login"
             element={<SchoolLoginPage />}
