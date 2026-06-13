@@ -83,6 +83,6 @@ test('LIRI_MODELS : catalogue Claude à jour (aucun ID daté)', () => {
   assert.ok(keys.includes('claude-opus-4-8'), 'Opus 4.8 présent');
   assert.ok(!keys.some((k) => /20250514/.test(k)), 'aucun ID Claude daté (…20250514) ne doit subsister');
   for (const m of LIRI_MODELS) {
-    assert.ok(['deepseek', 'anthropic', 'openai'].includes(m.provider), `provider inconnu: ${m.provider}`);
+    assert.ok(['deepseek', 'anthropic', 'openai', 'mistral'].includes(m.provider), `provider inconnu: ${m.provider}`);
   }
 });
