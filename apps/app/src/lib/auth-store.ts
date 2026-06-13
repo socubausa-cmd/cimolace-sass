@@ -1,9 +1,14 @@
 import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { getCachedHostTenant } from './tenantResolver';
 
-const TOKEN_KEY = 'isna-v2-debug-api-bearer';
-const TENANT_KEY = 'isna-v2-tenant-slug';
-const LEGACY_TENANT_KEY = 'tenantSlug';
+// Clés de stockage NEUTRES (plateforme Cimolace, pas un tenant).
+// Les anciennes clés `isna-v2-*` sont lues en REPLI (rétro-compat : aucune
+// déconnexion des sessions existantes) puis migrées à la prochaine écriture.
+const TOKEN_KEY = 'cimolace-v2-api-bearer';
+const TENANT_KEY = 'cimolace-v2-tenant-slug';
+const LEGACY_TOKEN_KEY = 'isna-v2-debug-api-bearer';
+const LEGACY_TENANT_KEY_ISNA = 'isna-v2-tenant-slug';
+const LEGACY_TENANT_KEY = 'tenantSlug'; // clé partagée avec d'autres lecteurs directs — conservée
 
 function normalizeTenantSlug(value?: string | null) {
   return String(value || '').trim().toLowerCase();
@@ -28,31 +33,40 @@ function inferTenantSlugFromLocation() {
 }
 
 export const authStore = {
-  getToken: () => localStorage.getItem(TOKEN_KEY) ?? '',
+  // Lecture : nouvelle clé puis ancienne (compat) — pas de déconnexion à la bascule.
+  getToken: () => localStorage.getItem(TOKEN_KEY) ?? localStorage.getItem(LEGACY_TOKEN_KEY) ?? '',
   setToken: (v: string) => {
-    if (v.trim()) localStorage.setItem(TOKEN_KEY, v.trim());
-    else localStorage.removeItem(TOKEN_KEY);
+    if (v.trim()) {
+      localStorage.setItem(TOKEN_KEY, v.trim());
+      localStorage.removeItem(LEGACY_TOKEN_KEY); // migration de l'ancienne clé
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(LEGACY_TOKEN_KEY);
+    }
   },
   getTenantSlug: () => {
-    const stored = normalizeTenantSlug(localStorage.getItem(TENANT_KEY));
+    const stored =
+      normalizeTenantSlug(localStorage.getItem(TENANT_KEY)) ||
+      normalizeTenantSlug(localStorage.getItem(LEGACY_TENANT_KEY_ISNA)) ||
+      normalizeTenantSlug(localStorage.getItem(LEGACY_TENANT_KEY));
     if (stored) return stored;
-    const legacy = normalizeTenantSlug(localStorage.getItem(LEGACY_TENANT_KEY));
-    if (legacy) return legacy;
     return inferTenantSlugFromLocation();
   },
   setTenantSlug: (v: string) => {
     const normalized = normalizeTenantSlug(v);
     if (normalized) {
       localStorage.setItem(TENANT_KEY, normalized);
-      localStorage.setItem(LEGACY_TENANT_KEY, normalized);
+      localStorage.setItem(LEGACY_TENANT_KEY, normalized); // compat des lecteurs directs ('tenantSlug')
+      localStorage.removeItem(LEGACY_TENANT_KEY_ISNA); // migration de l'ancienne clé isna
     } else {
       localStorage.removeItem(TENANT_KEY);
       localStorage.removeItem(LEGACY_TENANT_KEY);
+      localStorage.removeItem(LEGACY_TENANT_KEY_ISNA);
     }
   },
   clear: () => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(TENANT_KEY);
-    localStorage.removeItem(LEGACY_TENANT_KEY);
+    [TOKEN_KEY, LEGACY_TOKEN_KEY, TENANT_KEY, LEGACY_TENANT_KEY_ISNA, LEGACY_TENANT_KEY].forEach(
+      (k) => localStorage.removeItem(k),
+    );
   },
 };
