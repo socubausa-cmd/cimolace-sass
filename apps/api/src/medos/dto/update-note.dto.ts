@@ -1,8 +1,23 @@
 import {
   IsArray,
+  IsBoolean,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class Icd10CodeDto {
+  @IsString()
+  code!: string;
+
+  @IsString()
+  description!: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_primary?: boolean;
+}
 
 export class UpdateNoteDto {
   @IsOptional()
@@ -27,5 +42,7 @@ export class UpdateNoteDto {
 
   @IsOptional()
   @IsArray()
-  icd10_codes?: { code: string; description: string; is_primary?: boolean }[];
+  @ValidateNested({ each: true })
+  @Type(() => Icd10CodeDto)
+  icd10_codes?: Icd10CodeDto[];
 }

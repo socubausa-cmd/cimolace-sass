@@ -85,7 +85,9 @@ export class ClinicalListsService {
     };
 
     // Pour allergies & medications & immunizations : tracer la source
-    if (table === 'med_allergies' || table === 'med_medications') {
+    // Seule med_allergies a les colonnes recorded_by/recorded_by_role.
+    // med_medications ne les a pas -> ne pas les injecter (sinon INSERT 500).
+    if (table === 'med_allergies') {
       if (enriched.recorded_by === undefined) {
         enriched.recorded_by = actorId;
       }

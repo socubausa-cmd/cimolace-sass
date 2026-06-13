@@ -10,6 +10,7 @@ import {
   IsUUID,
   MinLength,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreatePatientDto {
   /**
@@ -52,14 +53,17 @@ export class CreatePatientDto {
 
   @IsOptional()
   @IsArray()
+  @Type(() => Object)
   allergies?: Record<string, unknown>[];
 
   @IsOptional()
   @IsArray()
+  @Type(() => Object)
   chronic_conditions?: Record<string, unknown>[];
 
   @IsOptional()
   @IsArray()
+  @Type(() => Object)
   current_medications?: Record<string, unknown>[];
 
   @IsOptional()

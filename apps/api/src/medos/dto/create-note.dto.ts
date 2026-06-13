@@ -1,8 +1,29 @@
 import {
   IsArray,
+  IsBoolean,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+
+/**
+ * Code CIM-10 d'une note. Classe réelle (pas un type inline) pour que
+ * class-transformer connaisse la forme des éléments du tableau : sans ça,
+ * sous ValidationPipe { whitelist:true, enableImplicitConversion:true },
+ * chaque objet du tableau est coercé en [] (corruption silencieuse).
+ */
+export class Icd10CodeDto {
+  @IsString()
+  code!: string;
+
+  @IsString()
+  description!: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_primary?: boolean;
+}
 
 export class CreateNoteDto {
   @IsOptional()
@@ -27,5 +48,7 @@ export class CreateNoteDto {
 
   @IsOptional()
   @IsArray()
-  icd10_codes?: { code: string; description: string; is_primary?: boolean }[];
+  @ValidateNested({ each: true })
+  @Type(() => Icd10CodeDto)
+  icd10_codes?: Icd10CodeDto[];
 }

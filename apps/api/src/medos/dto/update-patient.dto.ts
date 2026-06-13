@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class UpdatePatientDto {
   @IsOptional()
@@ -26,16 +27,21 @@ export class UpdatePatientDto {
   @IsString()
   blood_type?: string;
 
+  // @Type(() => Object) empêche enableImplicitConversion de vider chaque
+  // objet du tableau en [] (corruption silencieuse sous whitelist:true).
   @IsOptional()
   @IsArray()
+  @Type(() => Object)
   allergies?: Record<string, unknown>[];
 
   @IsOptional()
   @IsArray()
+  @Type(() => Object)
   chronic_conditions?: Record<string, unknown>[];
 
   @IsOptional()
   @IsArray()
+  @Type(() => Object)
   current_medications?: Record<string, unknown>[];
 
   @IsOptional()
