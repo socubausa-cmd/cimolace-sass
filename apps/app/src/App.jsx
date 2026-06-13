@@ -939,6 +939,17 @@ isLiriHostDevPreviewRoute;
   /** Espace propriétaire : layout plein écran sans barre globale (évite tout doublon LIRI / PRORASCIENCE). */
   const isOwnerDashboardShell = /^\/owner-dashboard(\/|$)/.test(location.pathname || '/');
 
+  /** Pages « maquette » narratives /t/isna : elles embarquent leur propre header (MaqNav) dans un overlay `fixed inset-0` → pas de header global (évite le flash de l'ancien nav au chargement + le rendu fantôme dessous). Match EXACT pour épargner /t/isna/courses, /login, /signup, /paiement, /admin… */
+  const isMaquetteRoute = [
+    '/t/isna',
+    '/t/isna/ecole',
+    '/t/isna/temple',
+    '/t/isna/programme',
+    '/t/isna/mission',
+    '/t/isna/fondateur',
+    '/t/isna/doctrine',
+  ].includes((location.pathname || '/').replace(/\/+$/, '') || '/');
+
   const shouldShowHeader =
     !isAdminRoute &&
     !isMarketingShellRoute &&
@@ -947,7 +958,8 @@ isLiriHostDevPreviewRoute;
     !isOwnerDashboardShell &&
     !hideHeaderRoutes.some(route => location.pathname.startsWith(route)) &&
     !mobileReelsShellActive &&
-    !isCimolaceRoute;
+    !isCimolaceRoute &&
+    !isMaquetteRoute;
   const shouldOffsetMain =
     shouldShowHeader &&
     !isImmersiveHomeRoute &&

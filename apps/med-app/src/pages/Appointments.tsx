@@ -144,7 +144,7 @@ export function Appointments() {
   async function handleCreateAvailability(e: React.FormEvent) {
     e.preventDefault();
     if (!practitionerId) {
-      setError('Pas de praticien connecté');
+      setError('Pas de praticien connecte');
       return;
     }
     setSaving(true);
@@ -168,14 +168,14 @@ export function Appointments() {
       setAvailOpen(false);
       await fetchAvailabilities();
     } catch (err: any) {
-      setError(err?.message || 'Échec');
+      setError(err?.message || 'Echec');
     } finally {
       setSaving(false);
     }
   }
 
   async function handleDeleteAvailability(id: string) {
-    if (!confirm('Supprimer cette disponibilité récurrente ?')) return;
+    if (!confirm('Supprimer cette disponibilite recurrente ?')) return;
     try {
       const res = await fetch(API + '/med/availability/' + id, {
         method: 'DELETE',
@@ -192,7 +192,7 @@ export function Appointments() {
   async function handleCreateAppointment(e: React.FormEvent) {
     e.preventDefault();
     if (!practitionerId) {
-      setError('Pas de praticien connecté');
+      setError('Pas de praticien connecte');
       return;
     }
     if (!apptForm.patient_id || !apptForm.scheduled_at) {
@@ -222,7 +222,7 @@ export function Appointments() {
       setApptForm({ patient_id: '', scheduled_at: '', duration_minutes: '30', appointment_type: 'in_person', reason: '' });
       await fetchAppointments();
     } catch (err: any) {
-      setError(err?.message || 'Échec');
+      setError(err?.message || 'Echec');
     } finally {
       setSaving(false);
     }
@@ -283,7 +283,7 @@ export function Appointments() {
       }
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (err: any) {
-      setError(err?.message || 'Échec');
+      setError(err?.message || 'Echec');
     }
   }
 
@@ -302,7 +302,7 @@ export function Appointments() {
       }
       await fetchAppointments();
     } catch (err: any) {
-      setError(err?.message || 'Échec');
+      setError(err?.message || 'Echec');
     }
   }
 
@@ -337,13 +337,13 @@ export function Appointments() {
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             onClick={() => { setError(null); setAvailOpen(true); }}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: '#fff', color: 'var(--brand-primary)', border: '1px solid var(--brand-primary)', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: '#fff', color: '#6366f1', border: '1px solid #6366f1', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
           >
-            <Clock size={14} /> + Disponibilité
+            <Clock size={14} /> + Disponibilite
           </button>
           <button
             onClick={() => { setError(null); setApptOpen(true); }}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
           >
             <Plus size={16} /> Nouveau RDV
           </button>
@@ -359,7 +359,7 @@ export function Appointments() {
         <div>
           {/* KPI strip */}
           <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-            <KpiCard label="A venir" value={upcoming.length} color="var(--brand-primary)" />
+            <KpiCard label="A venir" value={upcoming.length} color="#6366f1" />
             <KpiCard label="Cette semaine" value={appointments.filter((a) => {
               const d = new Date(a.scheduled_at).getTime();
               return d >= now && d < now + 7 * 24 * 3600 * 1000 && a.status !== 'cancelled';
@@ -378,12 +378,12 @@ export function Appointments() {
                   display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 8, border: 'none',
                   cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.15s',
                   background: tab === key ? '#fff' : 'transparent',
-                  color: tab === key ? 'var(--brand-primary)' : '#64748b',
+                  color: tab === key ? '#6366f1' : '#64748b',
                   boxShadow: tab === key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
                 }}
               >
                 {label}
-                <span style={{ fontSize: 11, fontWeight: 700, minWidth: 16, textAlign: 'center', padding: '1px 6px', borderRadius: 10, background: tab === key ? '#f1f5f9' : '#e2e8f0', color: tab === key ? 'var(--brand-primary)' : '#64748b' }}>{count}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, minWidth: 16, textAlign: 'center', padding: '1px 6px', borderRadius: 10, background: tab === key ? '#eef2ff' : '#e2e8f0', color: tab === key ? '#6366f1' : '#64748b' }}>{count}</span>
               </button>
             ))}
           </div>
@@ -448,12 +448,12 @@ export function Appointments() {
         {/* Availability sidebar */}
         <aside style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 16, alignSelf: 'flex-start' }}>
           <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Clock size={14} /> Disponibilités récurrentes
+            <Clock size={14} /> Disponibilites recurrentes
           </h3>
           {availabilities.length === 0 && (
             <p style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', padding: 12 }}>
-              Aucune disponibilité définie.<br/>
-              Cliquez sur "+ Disponibilité" pour configurer vos créneaux hebdomadaires.
+              Aucune disponibilite definie.<br/>
+              Cliquez sur "+ Disponibilite" pour configurer vos creneaux hebdomadaires.
             </p>
           )}
           {availabilities.map((a) => (
@@ -504,7 +504,7 @@ export function Appointments() {
             </Field>
           </div>
           {error && <div style={errStyle}>{error}</div>}
-          <Actions onCancel={() => setAvailOpen(false)} saving={saving} submitLabel="Créer la disponibilité" submitColor="var(--brand-primary)" />
+          <Actions onCancel={() => setAvailOpen(false)} saving={saving} submitLabel="Creer la disponibilite" submitColor="#6366f1" />
         </Modal>
       )}
 
@@ -513,7 +513,7 @@ export function Appointments() {
         <Modal title="Nouveau rendez-vous" onClose={() => !saving && setApptOpen(false)} onSubmit={handleCreateAppointment}>
           <Field label="Patient *">
             <select required value={apptForm.patient_id} onChange={(e) => setApptForm({ ...apptForm, patient_id: e.target.value })} style={inputStyle}>
-              <option value="">— Sélectionnez —</option>
+              <option value="">— Selectionnez —</option>
               {Object.values(patients).map((p) => <option key={p.id} value={p.id}>{patientName(p)}</option>)}
             </select>
           </Field>
@@ -534,7 +534,7 @@ export function Appointments() {
             <textarea rows={2} value={apptForm.reason} onChange={(e) => setApptForm({ ...apptForm, reason: e.target.value })} style={{ ...inputStyle, fontFamily: 'inherit', resize: 'vertical' }} placeholder="Première consultation, suivi, douleur cervicale…" />
           </Field>
           {error && <div style={errStyle}>{error}</div>}
-          <Actions onCancel={() => setApptOpen(false)} saving={saving} submitLabel="Planifier le RDV" submitColor="var(--brand-primary)" />
+          <Actions onCancel={() => setApptOpen(false)} saving={saving} submitLabel="Planifier le RDV" submitColor="#6366f1" />
         </Modal>
       )}
     </div>
@@ -554,13 +554,11 @@ function KpiCard({ label, value, color }: { label: string; value: number; color:
 
 function ApptStatusBadge({ status }: { status: string }) {
   const config: Record<string, { bg: string; fg: string; label: string }> = {
-    pending: { bg: '#fef3c7', fg: '#92400e', label: 'À confirmer' },
-    requested: { bg: '#fef3c7', fg: '#92400e', label: 'Demandé' },
-    confirmed: { bg: '#dbeafe', fg: '#1e40af', label: 'Confirmé' },
-    completed: { bg: '#dcfce7', fg: '#166534', label: 'Terminé' },
-    cancelled: { bg: '#fecaca', fg: '#991b1b', label: 'Annulé' },
-    refused: { bg: '#fecaca', fg: '#991b1b', label: 'Refusé' },
-    no_show: { bg: '#f1f5f9', fg: '#475569', label: 'Absent' },
+    pending: { bg: '#fef3c7', fg: '#92400e', label: 'A confirmer' },
+    confirmed: { bg: '#dbeafe', fg: '#1e40af', label: 'Confirme' },
+    completed: { bg: '#dcfce7', fg: '#166534', label: 'Termine' },
+    cancelled: { bg: '#fecaca', fg: '#991b1b', label: 'Annule' },
+    no_show: { bg: '#f1f5f9', fg: '#475569', label: 'No-show' },
   };
   const c = config[status] || { bg: '#f1f5f9', fg: '#475569', label: status };
   return (
@@ -582,8 +580,8 @@ function ApptActions({ status, onAction }: { status: string; onAction: (a: 'conf
   if (status === 'confirmed') {
     return (
       <div style={{ display: 'flex', gap: 4 }}>
-        <ActionBtn icon={<CheckCircle size={14} />} title="Terminé" color="#10b981" onClick={() => onAction('complete')} />
-        <ActionBtn icon={<AlertCircle size={14} />} title="Absent" color="#f59e0b" onClick={() => onAction('no-show')} />
+        <ActionBtn icon={<CheckCircle size={14} />} title="Termine" color="#10b981" onClick={() => onAction('complete')} />
+        <ActionBtn icon={<AlertCircle size={14} />} title="No-show" color="#f59e0b" onClick={() => onAction('no-show')} />
         <ActionBtn icon={<XCircle size={14} />} title="Annuler" color="#dc2626" onClick={() => onAction('cancel')} />
       </div>
     );
