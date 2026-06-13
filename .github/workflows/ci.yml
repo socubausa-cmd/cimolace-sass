@@ -44,8 +44,8 @@ jobs:
       - name: Build NestJS
         run: npm run build
 
-      - name: Tests unitaires (Jest)
-        run: npx jest --passWithNoTests --forceExit --ci
+      - name: Tests unitaires (node --test)
+        run: npm run test:unit
         env:
           # Secrets injectés depuis GitHub Secrets (aucune valeur réelle ici)
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
