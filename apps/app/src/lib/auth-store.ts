@@ -1,4 +1,5 @@
 import { DEFAULT_TENANT_SLUG } from '@/config/platform';
+import { getCachedHostTenant } from './tenantResolver';
 
 const TOKEN_KEY = 'isna-v2-debug-api-bearer';
 const TENANT_KEY = 'isna-v2-tenant-slug';
@@ -10,6 +11,9 @@ function normalizeTenantSlug(value?: string | null) {
 
 function inferTenantSlugFromLocation() {
   if (typeof window === 'undefined') return '';
+  // Résolution par DOMAINE custom (tenant_domains via API, en cache) — prioritaire, multi-tenant.
+  const byHost = getCachedHostTenant(window.location.hostname);
+  if (byHost) return byHost;
   const pathname = normalizeTenantSlug(window.location.pathname);
   const search = normalizeTenantSlug(window.location.search);
   if (pathname.includes('/prorascience') || search.includes('prorascience')) return DEFAULT_TENANT_SLUG;
