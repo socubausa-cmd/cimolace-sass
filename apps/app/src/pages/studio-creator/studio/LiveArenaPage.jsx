@@ -2793,12 +2793,22 @@ export default function LiveArenaPage() {
   // ENVOYER un message chat
   // ───────────────────────────────────────────────────────────────────────────
   const sendChatMessage = useCallback(async (text) => {
-    if (!text?.trim() || !sessionId || !user?.id) return;
-    await supabase.from('live_session_chat').insert({
-      live_session_id: sessionId,
-      user_id:         user.id,
-      message:         text.trim(),
-    });
+    const t = String(text || '').trim();
+    if (!t || !sessionId || !user?.id) return;
+    // Moteur de messagerie UNIFIÉ : on envoie via chatApi (room logique 'live:<id>'),
+    // exactement comme les DM. Le backing reste live_session_chat → le realtime
+    // existant et toutes les surfaces live (mobile, waiting room) restent cohérents.
+    try {
+      const { chatApi } = await import('@/lib/api');
+      await chatApi.send(`live:${sessionId}`, t);
+    } catch {
+      // Repli direct (résilience live) si l'API est indisponible.
+      await supabase.from('live_session_chat').insert({
+        live_session_id: sessionId,
+        user_id:         user.id,
+        message:         t,
+      });
+    }
   }, [sessionId, user?.id]);
 
   const sendForumMessage = useCallback(async (raw) => {

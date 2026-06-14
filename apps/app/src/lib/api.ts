@@ -166,6 +166,8 @@ export const bookingApi = {
 // ── Chat / messagerie (moteur UNIQUE : live, groupes, DM) ───────────────────
 export const chatApi = {
   openDirect: (userId: string) => api.post<any>(`/chat-engine/direct/${userId}`).then(bookingUnwrap),
+  // Chat du live (room logique 'live:<sessionId>') — même moteur que DM/groupes.
+  openLive: (liveSessionId: string) => api.post<any>(`/chat-engine/live/${liveSessionId}`).then(bookingUnwrap),
   rooms: () => api.get<any>("/chat-engine/rooms").then(bookingUnwrap),
   messages: (roomId: string) => api.get<any>(`/chat-engine/rooms/${roomId}/messages`).then(bookingUnwrap),
   send: (roomId: string, content: string) =>

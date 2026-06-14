@@ -20,11 +20,32 @@ export class ChatEngineService {
   }
 
   async sendMessage(tenantId: string, roomId: string, userId: string, content: string) {
+    // Rooms 'live:<sessionId>' = chat du live → table live_session_chat (partagée
+    // par toutes les surfaces live + realtime). MÊME moteur (chatApi), backing différent.
+    if (roomId.startsWith('live:')) {
+      const liveSessionId = roomId.slice(5);
+      const { data } = await (this.supabase.client as any)
+        .from('live_session_chat')
+        .insert({ live_session_id: liveSessionId, user_id: userId, message: content })
+        .select('id, user_id, message, created_at')
+        .single();
+      return data ? { id: data.id, sender_id: data.user_id, content: data.message, created_at: data.created_at } : null;
+    }
     const { data } = await (this.supabase.client as any).from('chat_messages').insert({ tenant_id: tenantId, room_id: roomId, sender_id: userId, content }).select('*').single();
     return data;
   }
 
   async getMessages(tenantId: string, roomId: string, limit = 50) {
+    if (roomId.startsWith('live:')) {
+      const liveSessionId = roomId.slice(5);
+      const { data } = await (this.supabase.client as any)
+        .from('live_session_chat')
+        .select('id, user_id, message, created_at')
+        .eq('live_session_id', liveSessionId)
+        .order('created_at')
+        .limit(limit);
+      return (data ?? []).map((m: any) => ({ id: m.id, sender_id: m.user_id, content: m.message, created_at: m.created_at }));
+    }
     const { data } = await (this.supabase.client as any).from('chat_messages').select('*').eq('room_id', roomId).eq('tenant_id', tenantId).order('created_at').limit(limit);
     return data ?? [];
   }
@@ -65,5 +86,15 @@ export class ChatEngineService {
       await this.joinRoom(tenantId, room.id, b);
     }
     return room;
+  }
+
+  /**
+   * Chat du live : room logique 'live:<sessionId>'. Le chat du live est servi par
+   * le MÊME moteur (chatApi.messages/send + UnifiedChatPanel) que les DM/groupes,
+   * mais stocké dans live_session_chat (réutilisé par le realtime des salles live).
+   * Pas de ligne chat_rooms → pas de split-brain avec les surfaces live existantes.
+   */
+  async openLiveRoom(tenantId: string, liveSessionId: string) {
+    return { id: `live:${liveSessionId}`, type: 'live', name: `live:${liveSessionId}`, liveSessionId };
   }
 }
