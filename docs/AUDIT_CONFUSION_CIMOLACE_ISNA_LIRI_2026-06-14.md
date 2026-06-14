@@ -100,7 +100,7 @@ Tenant ISNA `billing_status = unpaid` alors que les abonnements sont actifs, mon
 | C3 | Liri + École fusionnés | `apps/app/src/modules/liri-school/` | `liri/` (autonome) **+** `school/` | 🔴 critique |
 | C4 | Branding ISNA en dur | 558 fichiers `#D4AF37`, 67 imports `tenants/isna` | branding runtime tenant | 🟠 moyenne |
 | C5 | App par défaut = ISNA | `App.jsx` racine, `prorascience.org` | défaut = Cimolace / resolver tenant | 🟠 moyenne |
-| C6 | Moteurs live qui se chevauchent | `live`, `immersive-live`, `zoom-engine` | un seul moteur Liri Live canonique | 🟠 moyenne |
+| C6 | ~~Moteurs live qui se chevauchent~~ → **INFIRMÉ** (cf. note Phase 4) | `live`, `immersive-live`, `zoom-engine` | pas de duplication ; seul `zoom-engine` est mal nommé | ⚪️ résolu |
 | C7 | 6 vs 11 vs 12 moteurs école | template vs code vs manifeste | un seul nombre, une seule source | 🟠 moyenne |
 | C8 | Studio Créateur non délimité | `liri-school/studio`, `studio_creator` | produit séparé, vendu à part | 🟠 moyenne |
 | C9 | Doublons legacy MEDOS | `apps/api/src` Med*Module | seul `MedosModule` | 🟡 faible |
@@ -163,6 +163,19 @@ Builds API + app, tests catalogue, E2E provisioning école (`scripts/cimolace-pr
 4. **Phase 3** (dé-brander ISNA) — gros volume, peut se faire en parallèle/incrémental.
 5. **Phases 4, 7, 8** — consolidation.
 6. **Phase 9** — verrouille le tout.
+
+---
+
+## 7. Note Phase 4 (2026-06-14) — C6 infirmé après investigation
+
+Vérification du code `apps/api/src/` : **il n'y a PAS de moteurs live en double**. C6 est infirmé.
+
+- **`live`** (`/lives`, `/liri/admin`) — moteur **Liri Live** canonique (sessions, tokens, start/end, recording).
+- **`immersive-live`** (`/immersive-live`) — sous-moteur **Liri immersif** (companion, caméra mobile, AI guide). **Actif** (6 fichiers frontend) et **réutilise déjà `livekit.service`** → aucune duplication de logique token.
+- **`zoom-engine`** (`/zoom-engine`) — **PAS un moteur live** : c'est un **connecteur Zoom** (OAuth + import recordings cloud → shorts → social). **Actif** : utilisé par `apps/worker/src/jobs/zoom-sync.js` et `apps/public-site` (admin YouTube).
+- **`livekit`** — infra WebRTC **partagée** par `live` et `immersive-live`.
+
+**Conclusion** : aucune consolidation à faire ; fusionner casserait des fonctionnalités actives et distinctes. Seul résidu : le **nom `zoom-engine` est trompeur** (c'est un connecteur, pas un moteur). Renommage non effectué car il touche `worker` + `public-site` + `app.module` (risque vis-à-vis des autres agents) — à faire dans une passe dédiée si souhaité.
 
 ---
 
