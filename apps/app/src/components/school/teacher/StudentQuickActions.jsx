@@ -32,10 +32,32 @@ export default function StudentQuickActions({ student }) {
     }
   };
 
+  const [dmLoading, setDmLoading] = useState(false);
+  const handleMessage = async () => {
+    if (!student?.id || dmLoading) return;
+    setDmLoading(true);
+    try {
+      const { chatApi } = await import('@/lib/api');
+      const room = await chatApi.openDirect(student.id); // même moteur que le chat du live
+      if (room?.id) {
+        // TODO: ouvrir le panneau de messagerie unifié sur cette room.
+        // eslint-disable-next-line no-alert
+        alert(`Conversation privée prête avec ${student.name || 'l\'élève'}.`);
+        return;
+      }
+      throw new Error('Conversation indisponible');
+    } catch (e) {
+      // eslint-disable-next-line no-alert
+      alert(e?.message || 'Impossible d\'ouvrir la conversation');
+    } finally {
+      setDmLoading(false);
+    }
+  };
+
   return (
     <div className="flex items-center gap-2">
-      <Button variant="outline" className="gap-2" title="Bientôt : messagerie privée">
-        <MessageSquare className="w-4 h-4" /> Message privé
+      <Button variant="outline" className="gap-2" onClick={handleMessage} disabled={dmLoading}>
+        {dmLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />} Message privé
       </Button>
       <Button
         onClick={handleScheduleLive}

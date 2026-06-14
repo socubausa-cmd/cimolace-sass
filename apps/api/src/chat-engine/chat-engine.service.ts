@@ -40,4 +40,30 @@ export class ChatEngineService {
     const { data } = await (this.supabase.client as any).from('chat_room_members').select('user_id').eq('room_id', roomId).eq('tenant_id', tenantId);
     return data ?? [];
   }
+
+  /**
+   * DM 1-à-1 : ouvre (ou réutilise) la room privée entre deux membres.
+   * Dédup par clé déterministe (`dm:<a>:<b>`, ids triés). MÊME moteur que le
+   * chat de groupe / live — un DM n'est qu'une room de type 'dm' à 2 membres.
+   */
+  async openDirectRoom(tenantId: string, userA: string, userB: string) {
+    const [a, b] = [userA, userB].sort();
+    const key = `dm:${a}:${b}`;
+    const { data: existing } = await (this.supabase.client as any)
+      .from('chat_rooms')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .eq('type', 'dm')
+      .eq('name', key)
+      .maybeSingle();
+    let room = existing;
+    if (!room) {
+      room = await this.createRoom(tenantId, key, 'dm');
+    }
+    if (room?.id) {
+      await this.joinRoom(tenantId, room.id, a);
+      await this.joinRoom(tenantId, room.id, b);
+    }
+    return room;
+  }
 }

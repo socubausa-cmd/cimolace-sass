@@ -163,6 +163,15 @@ export const bookingApi = {
     api.post<any>("/booking/reschedule/request", body).then(bookingUnwrap),
 };
 
+// ── Chat / messagerie (moteur UNIQUE : live, groupes, DM) ───────────────────
+export const chatApi = {
+  openDirect: (userId: string) => api.post<any>(`/chat-engine/direct/${userId}`).then(bookingUnwrap),
+  rooms: () => api.get<any>("/chat-engine/rooms").then(bookingUnwrap),
+  messages: (roomId: string) => api.get<any>(`/chat-engine/rooms/${roomId}/messages`).then(bookingUnwrap),
+  send: (roomId: string, content: string) =>
+    api.post<any>(`/chat-engine/rooms/${roomId}/messages`, { content }).then(bookingUnwrap),
+};
+
 // ── Back-office tenant : marketplace + support ──────────────────────────────
 export const tenantPortalApi = {
   marketplace: () => api.get<ApiEnvelope<any>>("/tenant-portal/marketplace").then(unwrap).then(peel),
