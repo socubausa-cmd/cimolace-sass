@@ -62,23 +62,12 @@ export const EV_SH = {
   cta: '0 8px 28px -6px rgba(123, 97, 255, 0.42)',
 };
 
-function readMessagesTabBadgeFromEnv() {
-  try {
-    const v = import.meta.env?.VITE_ELEVE_MESSAGES_TAB_BADGE;
-    if (v === undefined || v === '') return 0;
-    const n = parseInt(String(v), 10);
-    if (!Number.isFinite(n) || n < 0) return 0;
-    return Math.min(99, n);
-  } catch {
-    return 0;
-  }
-}
-
 /**
- * Badge rouge onglet Messages. Défaut 0. Pour retrouver la maquette (ex. « 2 ») :
- * `VITE_ELEVE_MESSAGES_TAB_BADGE=2` dans `.env` local.
+ * NB : le badge rouge de l'onglet Messages n'est plus piloté par une variable d'env
+ * (ancien `VITE_ELEVE_MESSAGES_TAB_BADGE` / `EV_MSG_TAB_BADGE`). Il est désormais branché
+ * sur le vrai compteur de non‑lus de `EleveMobileShell` (même source que la cloche header,
+ * via `useDataSync().notifications`). Voir P5(e).
  */
-export const EV_MSG_TAB_BADGE = readMessagesTabBadgeFromEnv();
 
 export function firstNameFromUser(user) {
   return (

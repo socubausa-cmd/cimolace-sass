@@ -26,8 +26,8 @@ import {
   NGOWAZULU_CONSULTATION_FLOW,
 } from '@/config/ngowazuluConsultation';
 import { EV_BG, EV_MUTED, EV_PAGE_AMBIENT } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
-
-const USE_NETLIFY_BOOKING_IN_DEV = String(import.meta.env.VITE_USE_NETLIFY_BOOKING_IN_DEV || '') === '1';
+import { authStore } from '@/lib/auth-store';
+import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 
 const TOPICS = [
   { id: 'orientation', label: 'Orientation', detail: 'Choisir un parcours ou un module.' },
@@ -128,7 +128,7 @@ function AppCard({ children, className }) {
 }
 
 export default function EleveAppointmentRequestScreen() {
-  const { user, session } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -180,47 +180,21 @@ export default function EleveAppointmentRequestScreen() {
     };
   }, [user?.id, user?.email]);
 
-  const loadSlots = useCallback(async () => {
+  // Les créneaux proposés sont des PRÉFÉRENCES locales (08 h–18 h sur 10 jours),
+  // pas des disponibilités réelles : il n'existe aucun back-end de slots pour les
+  // demandes élève. La demande part sans slot_id ; le secrétariat fixe l'horaire
+  // réel à la confirmation. La préférence choisie est jointe à p_notes (RPC).
+  const loadSlots = useCallback(() => {
     if (!selectedDate) return;
     setSlotsLoading(true);
     setSlotError('');
     setSelectedSlot(null);
     try {
-      if (import.meta.env.DEV && !USE_NETLIFY_BOOKING_IN_DEV) {
-        setSlots(buildLocalSlots(selectedDate, bookingChannel));
-        return;
-      }
-      const windowStart = new Date(`${selectedDate}T00:00:00`);
-      const windowEnd = new Date(`${selectedDate}T23:30:00`);
-      const qs = new URLSearchParams({
-        timezone,
-        country,
-        channel: bookingChannel,
-        windowStart: windowStart.toISOString(),
-        windowEnd: windowEnd.toISOString(),
-      });
-      const res = await fetch(`/.netlify/functions/booking-available-slots?${qs.toString()}`);
-      const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(payload?.error || 'Créneaux indisponibles');
-      const primary = Array.isArray(payload?.slots) ? payload.slots : [];
-      const fallback = Array.isArray(payload?.fallbackSlots) ? payload.fallbackSlots : [];
-      const merged = [...primary, ...fallback];
-      const seen = new Set();
-      setSlots(
-        merged.filter((s) => {
-          const k = `${s.slotUtc}:${s.secretariatId}`;
-          if (!s?.slotUtc || !s?.secretariatId || seen.has(k)) return false;
-          seen.add(k);
-          return true;
-        }),
-      );
-    } catch (e) {
-      setSlots([]);
-      setSlotError(e?.message || 'Impossible de charger les créneaux.');
+      setSlots(buildLocalSlots(selectedDate, bookingChannel));
     } finally {
       setSlotsLoading(false);
     }
-  }, [bookingChannel, country, selectedDate, timezone]);
+  }, [bookingChannel, selectedDate]);
 
   useEffect(() => {
     if (step === 3) void loadSlots();
@@ -251,48 +225,42 @@ export default function EleveAppointmentRequestScreen() {
   };
 
   const submit = async () => {
-    if (!user?.id || !session?.access_token) {
+    if (!user?.id) {
       navigate(`${ELEVE_MOBILE.login}?${new URLSearchParams({ redirect: ELEVE_MOBILE.appointmentRequest }).toString()}`);
       return;
     }
     if (!canContinue || !selectedSlot) return;
     setBooking(true);
     try {
-      if (import.meta.env.DEV && !USE_NETLIFY_BOOKING_IN_DEV) {
-        toast({ title: 'Mode local', description: 'Rendez-vous simulé en local.' });
-        navigate(ELEVE_MOBILE.agenda);
-        return;
-      }
-      const res = await fetch('/.netlify/functions/booking-request-appointment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          subject: subject.trim(),
-          description: description.trim() || subject.trim(),
-          scheduledAt: selectedSlot.slotUtc,
-          secretariatId: selectedSlot.secretariatId,
-          visitorTimezone: timezone,
-          visitorCountry: country,
-          bookingChannel,
-          notificationEmail: email.trim(),
-          whatsappPhone: whatsapp.trim().replace(/\s/g, ''),
-          notificationConsent: consent,
-          notifySms: smsOptIn,
-        }),
+      // Le front ne connaît que le slug du tenant (résolu via host / DEFAULT) ;
+      // même source que le X-Tenant-Slug du read booking → cohérence read/write.
+      const slug = authStore.getTenantSlug() || DEFAULT_TENANT_SLUG;
+      const topicLabel = TOPICS.find((t) => t.id === topic)?.label || topic;
+      // appointments n'a aucune colonne pour le sujet/contact/horaire souhaité :
+      // tout est consigné en texte dans notes (lu par le secrétariat).
+      const notes = [
+        `Sujet : ${subject.trim()}`,
+        `Catégorie : ${topicLabel}`,
+        description.trim() ? `Précisions : ${description.trim()}` : null,
+        selectedSlot?.slotUtc ? `Créneau préféré : ${formatFullDate(selectedSlot.slotUtc)} (${timezone})` : null,
+        `Canal : ${bookingChannel === BOOKING_CHANNEL_NGOWAZULU ? 'Consultation Ngowazulu' : 'Secrétariat Prorascience'}`,
+        email.trim() ? `E-mail : ${email.trim()}` : null,
+        whatsapp.trim() ? `WhatsApp : ${whatsapp.trim().replace(/\s/g, '')}` : null,
+        country ? `Pays : ${country}` : null,
+      ]
+        .filter(Boolean)
+        .join('\n');
+
+      const { error } = await supabase.rpc('request_appointment', { p_slug: slug, p_notes: notes });
+      if (error) throw new Error(error.message || 'Demande impossible');
+
+      toast({
+        title: 'Demande envoyée',
+        description: 'Le secrétariat te recontactera pour confirmer un créneau.',
       });
-      const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(payload?.error || 'Réservation impossible');
-      toast({ title: 'Rendez-vous envoyé', description: 'La demande est enregistrée.' });
-      if (payload?.bookingReference) {
-        navigate(`/rendez-vous/${encodeURIComponent(payload.bookingReference)}`, { replace: true });
-      } else {
-        navigate(ELEVE_MOBILE.agenda, { replace: true });
-      }
+      navigate(ELEVE_MOBILE.agenda, { replace: true });
     } catch (e) {
-      toast({ title: 'Erreur', description: e?.message || 'Réessayez.', variant: 'destructive' });
+      toast({ title: 'Erreur', description: e?.message || 'Réessaie dans un instant.', variant: 'destructive' });
     } finally {
       setBooking(false);
     }
@@ -497,7 +465,7 @@ export default function EleveAppointmentRequestScreen() {
                   </div>
 
                   <div className="mt-4 flex items-center justify-between">
-                    <p className="text-[12px] font-semibold text-white/55">Créneaux disponibles</p>
+                    <p className="text-[12px] font-semibold text-white/55">Créneau souhaité</p>
                     <button type="button" onClick={() => loadSlots()} className="text-[12px] font-semibold text-[var(--school-accent)]">
                       Actualiser
                     </button>
@@ -552,7 +520,7 @@ export default function EleveAppointmentRequestScreen() {
                   <div className="mt-5 space-y-2">
                     {[
                       ['Sujet', subject],
-                      ['Date', selectedSlot?.slotUtc ? formatFullDate(selectedSlot.slotUtc) : '—'],
+                      ['Créneau souhaité', selectedSlot?.slotUtc ? formatFullDate(selectedSlot.slotUtc) : '—'],
                       ['Équipe', selectedSlot?.secretariatName || 'Secrétariat'],
                       ['E-mail', email],
                       ['WhatsApp', whatsapp],

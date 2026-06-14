@@ -312,7 +312,7 @@ const StudentAgendaPage = () => {
   );
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-  const pendingCount = appointmentRequests?.filter((r) => r.status === 'pending').length || 0;
+  const pendingCount = appointmentRequests?.filter((r) => r.status === 'requested').length || 0;
 
   const handleJoin = (ev) => {
     if (isDemoMode) return restrictedAction('Rejoindre la session');

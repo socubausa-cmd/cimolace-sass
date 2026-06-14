@@ -32,6 +32,21 @@ function inferTenantSlugFromLocation() {
   return '';
 }
 
+/**
+ * `?tenant=<slug>` explicite dans l'URL courante. Sert aux deep-links inter-tenant
+ * (ex : salle de téléconsultation MEDOS ouverte depuis un AUTRE tenant que celui en
+ * cache). Lu à chaud — JAMAIS persisté, pour ne pas « coller » le studio sur ce
+ * tenant après coup (ce qui pourrait régresser isna dans le même navigateur).
+ */
+function queryTenantSlug() {
+  if (typeof window === 'undefined') return '';
+  try {
+    return normalizeTenantSlug(new URLSearchParams(window.location.search).get('tenant'));
+  } catch {
+    return '';
+  }
+}
+
 export const authStore = {
   // Lecture : nouvelle clé puis ancienne (compat) — pas de déconnexion à la bascule.
   getToken: () => localStorage.getItem(TOKEN_KEY) ?? localStorage.getItem(LEGACY_TOKEN_KEY) ?? '',
@@ -45,6 +60,11 @@ export const authStore = {
     }
   },
   getTenantSlug: () => {
+    // 0. `?tenant=` explicite = deep-link inter-tenant : priorité absolue, écrase un
+    //    localStorage périmé (sinon le studio retombe sur le tenant précédent / isna).
+    //    C'est le cas de la salle de téléconsultation MEDOS ouverte depuis Zahir.
+    const fromQuery = queryTenantSlug();
+    if (fromQuery) return fromQuery;
     const stored =
       normalizeTenantSlug(localStorage.getItem(TENANT_KEY)) ||
       normalizeTenantSlug(localStorage.getItem(LEGACY_TENANT_KEY_ISNA)) ||

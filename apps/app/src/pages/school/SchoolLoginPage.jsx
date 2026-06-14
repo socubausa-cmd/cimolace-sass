@@ -10,7 +10,6 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
-import { startTenantGoogleOAuth, startGoogleOAuth } from '@/lib/googleOAuth';
 import { authStore } from '@/lib/auth-store';
 import { getApiBaseUrl } from '@/lib/apiBase';
 
@@ -43,7 +42,7 @@ async function fetchTenantRole(tenantSlug) {
 export default function SchoolLoginPage() {
   const { tenantSlug } = useParams();
   const navigate = useNavigate();
-  const { login, supabase } = useAuth();
+  const { login, loginWithOAuth } = useAuth();
   const { branding } = useTenantBranding();
 
   const [email, setEmail] = useState('');
@@ -87,35 +86,18 @@ export default function SchoolLoginPage() {
     setError('');
     setGoogleLoading(true);
     try {
-      // Essayer d'abord le flux custom per-tenant (affiche le nom de l'école sur Google)
-      const { error: customError, code } = await startTenantGoogleOAuth({
-        tenantSlug,
-        anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-      });
-
-      if (!customError) {
-        // La redirection est en cours (startTenantGoogleOAuth fait window.location.assign)
-        return;
+      // Flux Google STANDARD Supabase (provider natif) — fiable, identique à /login.
+      // redirectTo = /auth/callback, déjà autorisé dans Supabase (uri_allow_list) pour
+      // prorascience.org + app.cimolace.space. Le flux white-label per-tenant
+      // (edge function oauth-initiate) reste déployé mais requiert son secret Google
+      // (PLATFORM_GOOGLE_CLIENT_SECRET) — bascule possible plus tard sans casser celui-ci.
+      authStore.setTenantSlug(tenantSlug);
+      const { error: oauthError } = await loginWithOAuth('google', `/t/${tenantSlug}/courses`);
+      if (oauthError) {
+        setError(oauthError.message ?? 'Connexion Google indisponible.');
+        setGoogleLoading(false);
       }
-
-      // Si OAuth non configuré pour ce tenant → fallback sur Supabase OAuth générique
-      if (code === 'oauth_not_configured') {
-        const redirectTo = `${window.location.origin}/cimolace/auth/google/callback?tenant=${encodeURIComponent(tenantSlug)}`;
-        const { error: fallbackError } = await startGoogleOAuth(supabase, {
-          redirectTo,
-          tenantSlug,
-        });
-        if (fallbackError) {
-          setError(fallbackError.message ?? 'Connexion Google indisponible.');
-          setGoogleLoading(false);
-        }
-        // startGoogleOAuth redirige via window.location.assign
-        return;
-      }
-
-      // Autre erreur (réseau, tenant introuvable, etc.)
-      setError(customError.message ?? 'Connexion Google indisponible.');
-      setGoogleLoading(false);
+      // Sinon : redirection vers Google en cours (loginWithOAuth → window.location.assign).
     } catch (err) {
       setError(err?.message ?? 'Erreur Google OAuth');
       setGoogleLoading(false);

@@ -211,23 +211,34 @@ export function moduleCatalogSurface(available) {
 export { EV_MUTED };
 
 export async function fetchPublishedFormationsForModules() {
-  // Source réelle : table `courses` (la table `formations` n'existe pas dans ce tenant)
+  // Source réelle : table `courses` (la table `formations` n'existe pas dans ce tenant).
+  // On lit aussi les vraies colonnes d'accès (price_cents/is_free) pour que le
+  // badge des modules reflète l'accès réel et non la simple existence d'un cours.
   const { data, error } = await supabase
     .from('courses')
-    .select('id,title,description,category')
+    .select('id,title,description,category,price_cents,is_free,currency')
     .order('title', { ascending: true })
     .limit(40);
   if (error) return [];
   // Normalise vers la même forme attendue par findFormationForModule
-  return (Array.isArray(data) ? data : []).map((c) => ({
-    id: c.id,
-    title: c.title,
-    description: c.description,
-    image_url: null,
-    status: 'published',
-    meta: { catalog_number: null, category: c.category },
-    price: 0,
-  }));
+  return (Array.isArray(data) ? data : []).map((c) => {
+    const priceCents = Number.isFinite(Number(c.price_cents)) ? Number(c.price_cents) : 0;
+    // accès connu uniquement si la colonne est réellement renvoyée par la source
+    const accessInfoKnown =
+      typeof c.is_free === 'boolean' || typeof c.price_cents === 'number';
+    const isPaid = c.is_free === false || (c.is_free == null && priceCents > 0);
+    return {
+      id: c.id,
+      title: c.title,
+      description: c.description,
+      image_url: null,
+      status: 'published',
+      accessInfoKnown,
+      isPaid,
+      meta: { catalog_number: null, category: c.category },
+      price: priceCents > 0 ? Math.round(priceCents / 100) : 0,
+    };
+  });
 }
 
 export async function fetchActiveBillingPlans() {

@@ -103,7 +103,7 @@ export default function EleveAgendaScreen() {
   const { user } = useAuth();
   const { notifications: sync } = useDataSync();
   const [weekAnchor, setWeekAnchor] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
-  const { events, loading, refresh } = useLiriMobileAgendaMerged(user?.id);
+  const { events, loading, refresh, pendingRequests } = useLiriMobileAgendaMerged(user?.id);
 
   const weekStart = startOfWeek(weekAnchor, { weekStartsOn: 1 });
   const weekEnd = addDays(weekStart, 7);
@@ -265,6 +265,39 @@ export default function EleveAgendaScreen() {
               })}
             </div>
           </div>
+
+          {pendingRequests?.length > 0 ? (
+            <div
+              className="mb-4 border p-3"
+              style={{
+                borderRadius: EV_R.lg,
+                background: 'rgba(245,158,11,0.08)',
+                borderColor: 'rgba(245,158,11,0.30)',
+                boxShadow: EV_SH.sm,
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 shrink-0 text-amber-300" />
+                <p className="text-[13px] font-bold text-amber-200">
+                  {pendingRequests.length} demande{pendingRequests.length > 1 ? 's' : ''} de rendez-vous en attente
+                </p>
+              </div>
+              <p className="mt-1 text-[12px]" style={{ color: EV_MUTED }}>
+                Le secrétariat te recontactera pour confirmer un créneau.
+              </p>
+              <ul className="mt-2 space-y-1">
+                {pendingRequests.slice(0, 3).map((r) => {
+                  const firstLine = String(r.notes || '').split('\n')[0]?.trim() || 'Demande de rendez-vous';
+                  return (
+                    <li key={r.id} className="truncate text-[12px] text-white/70">
+                      • {firstLine}
+                      {r.created_at ? <span className="text-white/35"> · {safeFmt(r.created_at, 'd MMM')}</span> : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
 
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/35">Cette semaine</p>
 

@@ -1,11 +1,10 @@
 import React, { useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, BookOpen, Radio, MessageCircle, User, Network } from 'lucide-react';
+import { Home, BookOpen, Radio, MessageCircle, User, GraduationCap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import {
-  EV_MSG_TAB_BADGE,
   EV_BG as EV_MAQUETTE_BG,
   EV_R,
   EV_LINE,
@@ -16,7 +15,15 @@ import {
 import { EleveImmersiveHalo } from '@/components/eleve-mobile/EleveImmersiveHalo';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
+import { defaultTenantBranding } from '@/lib/tenant/tenantBranding';
+import { useDataSync } from '@/contexts/DataSyncContext';
 import { isNativeRuntime } from '@/lib/nativeCapabilities';
+
+/**
+ * Couleur d'état actif unifiée pour toute la navigation principale (onglets latéraux
+ * ET bouton Live central) — voir P5(c). Une seule teinte = cohérence visuelle.
+ */
+const EV_TAB_ACTIVE = EV_ACCENT;
 
 /**
  * Coquille principale de l'app mobile « Élève » LIRI.
@@ -41,13 +48,27 @@ export function EleveMobileShell({
   subtitle,
   rightSlot,
   /**
-   * Badge rouge sur l'onglet Messages (maquette : indicateur non lus). `0` = masqué.
-   * @default {EV_MSG_TAB_BADGE}
+   * Badge rouge sur l'onglet Messages (indicateur non lus). `0` = masqué.
+   * Par défaut (`undefined`) : branché sur le vrai compteur de non‑lus — même source
+   * que la cloche de l'en‑tête (`useDataSync().notifications`), voir P5(e).
    */
-  messagesTabBadge = EV_MSG_TAB_BADGE,
+  messagesTabBadge,
 }) {
   const { branding } = useTenantBranding();
-  const tenantLogo = branding?.logo && !branding.logo.includes('isna-logo') ? branding.logo : null;
+  const { notifications: syncNotifications } = useDataSync();
+  // Même source que la cloche header : non‑lus issus de useDataSync.
+  const unreadCount = (Array.isArray(syncNotifications) ? syncNotifications : []).filter(
+    (n) => !n?.isRead,
+  ).length;
+  const resolvedMessagesBadge =
+    messagesTabBadge == null ? unreadCount : messagesTabBadge;
+  /**
+   * Logo tenant : on n'affiche le logo de marque que si le tenant a défini SON propre logo.
+   * Quand `branding.logo` vaut le logo par défaut de la config (FALLBACK_BRANDING), on retombe
+   * sur le wordmark LIRI plutôt que de coder en dur un nom de fichier (`isna-logo`). Voir P5(g).
+   */
+  const tenantLogo =
+    branding?.logo && branding.logo !== defaultTenantBranding.logo ? branding.logo : null;
 
   const initials = (() => {
     const name = user?.user_metadata?.full_name || user?.email || '';
@@ -185,7 +206,7 @@ export function EleveMobileShell({
       </main>
 
       {/* Tab bar avec bouton Live élevé */}
-      {!hideTabBar ? <EleveBottomTabBar messagesTabBadge={messagesTabBadge} /> : null}
+      {!hideTabBar ? <EleveBottomTabBar messagesTabBadge={resolvedMessagesBadge} /> : null}
     </div>
   );
 }
@@ -273,7 +294,7 @@ function EleveBottomTabBar({ messagesTabBadge = 0 }) {
           <SideTab to={ELEVE_MOBILE.home} label="Accueil" icon={Home} end />
           <SideTab to={ELEVE_MOBILE.bibliotheque} label="Cours" icon={BookOpen} />
           <CenterLiveTab />
-          <SideTab to={ELEVE_MOBILE.enLigne} label="En ligne" icon={Network} end />
+          <SideTab to={ELEVE_MOBILE.vieScolaire} label="Vie scolaire" icon={GraduationCap} />
           <SideTab
             to={ELEVE_MOBILE.messages}
             label="Messages"
@@ -300,9 +321,10 @@ function SideTab({ to, label, icon: Icon, end, badge = 0 }) {
       className={({ isActive }) =>
         cn(
           'flex flex-col items-center justify-end gap-1 py-1.5 rounded-xl transition-colors',
-          isActive ? 'text-[#5b8def]' : 'text-white/50 hover:text-white/85',
+          isActive ? 'text-[var(--eve-tab-active)]' : 'text-white/50 hover:text-white/85',
         )
       }
+      style={{ '--eve-tab-active': EV_TAB_ACTIVE }}
     >
       {({ isActive }) => (
         <>
@@ -371,10 +393,8 @@ function CenterLiveTab() {
               <Radio className="h-7 w-7 text-white" strokeWidth={2.2} />
             </span>
             <span
-              className={cn(
-                'mt-1.5 text-[10px] font-semibold',
-                isLive ? 'text-[#7c5cff]' : 'text-white/50',
-              )}
+              className={cn('mt-1.5 text-[10px] font-semibold', !isLive && 'text-white/50')}
+              style={isLive ? { color: EV_TAB_ACTIVE } : undefined}
             >
               Live
             </span>
@@ -613,20 +633,11 @@ export function EleveEmptyState({ icon: Icon, title, description, primary, secon
   );
 }
 
-/** Petit label majuscule style « Membre » / or */
-export function EleveKicker({ children, className }) {
-  return (
-    <p
-      className={cn('text-[10px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]', className)}
-    >
-      {children}
-    </p>
-  );
-}
-
+/**
+ * Surface « plaque » néon-violet du design system élève.
+ * (L'ancienne variante `wallet` dorée a été retirée — thème « or » résiduel, P5(d).)
+ */
 const ELEVE_SURFACE_STYLES = {
-  wallet:
-    'rounded-3xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[linear-gradient(160deg,rgba(31,24,18,0.9),rgba(12,10,8,0.95))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_8px_32px_-8px_rgba(0,0,0,0.5)] backdrop-blur-md',
   plate:
     'rounded-3xl border border-white/[0.08] bg-white/[0.03] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-md',
 };
@@ -639,48 +650,15 @@ export function EleveSurface({ variant = 'plate', className, children, ...rest }
   );
 }
 
-export function ElevePrimaryButton({ to, children, className, ...rest }) {
-  return (
-    <Link
-      to={to}
-      className={cn(
-        'flex h-12 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]',
-        'bg-gradient-to-b from-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] to-[#8b6914]/22 text-[14px] font-semibold text-[#fbf3df]',
-        'shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_4px_16px_rgba(212,175,55,0.15)] transition-transform active:scale-[0.98]',
-        className,
-      )}
-      {...rest}
-    >
-      {children}
-    </Link>
-  );
-}
-
-export function EleveGhostButton({ to, children, className, ...rest }) {
-  return (
-    <Link
-      to={to}
-      className={cn(
-        'flex h-12 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.04] text-[14px] font-medium',
-        'text-[#f5edd9]/90 backdrop-blur-sm transition-transform active:scale-[0.98]',
-        className,
-      )}
-      {...rest}
-    >
-      {children}
-    </Link>
-  );
-}
-
-export function EleveBadge({ children, tone = 'gold', className }) {
+export function EleveBadge({ children, tone = 'violet', className }) {
   const tones = {
-    gold: 'border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[var(--school-accent)] shadow-[0_0_0_1px_rgba(212,175,55,0.2)]',
+    violet: 'border-violet-400/35 bg-violet-500/12 text-violet-200 shadow-[0_0_0_1px_rgba(124,92,255,0.2)]',
   };
   return (
     <span
       className={cn(
         'inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider',
-        tones[tone] || tones.gold,
+        tones[tone] || tones.violet,
         className,
       )}
     >

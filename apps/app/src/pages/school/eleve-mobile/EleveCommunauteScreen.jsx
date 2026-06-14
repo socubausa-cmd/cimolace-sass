@@ -147,7 +147,7 @@ function FeedCard({ to, kicker, title, sub, icon: Icon, badge }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-300/85">{kicker}</p>
-            {badge ? <EleveBadge tone="gold">{badge}</EleveBadge> : null}
+            {badge ? <EleveBadge tone="violet">{badge}</EleveBadge> : null}
           </div>
           <p className="mt-1.5 line-clamp-2 text-[15px] font-semibold leading-snug tracking-tight text-white/95">
             {title}

@@ -9,7 +9,10 @@ function isPublicEleveMobilePath(pathname) {
     pathname.startsWith(`${ELEVE_MOBILE.connexion}/`) ||
     pathname === ELEVE_MOBILE.login ||
     pathname === ELEVE_MOBILE.signup ||
-    pathname.startsWith(`${ELEVE_MOBILE.liveRoomMaquette}`)
+    // Maquettes live publiques = DEV uniquement. En prod, ces routes ne sont pas montées
+    // (App.jsx <Route path="live/maquette"> gardé par import.meta.env.DEV) et ne doivent
+    // jamais bénéficier d'un bypass d'auth (sinon vue hôte LIRI exposée sans session).
+    (import.meta.env.DEV && pathname.startsWith(`${ELEVE_MOBILE.liveRoomMaquette}`))
   );
 }
 

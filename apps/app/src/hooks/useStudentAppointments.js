@@ -7,6 +7,24 @@ const isSchemaMismatchError = (error) => {
   return code === '42703' || msg.includes('column') || msg.includes('does not exist');
 };
 
+/**
+ * Rendez-vous & agenda élève.
+ *
+ * Les RDV sont lus via l'API booking : supabaseCompat route `appointments` vers
+ * GET /booking/appointments, STUDENT-SCOPÉ côté serveur (userRole='student' →
+ * filtre student_id = auth.uid()) → un élève ne voit QUE ses propres lignes.
+ *
+ * Schéma RÉEL de public.appointments (vérifié prod 2026-06-14) :
+ *   { id, tenant_id, student_id, slot_id, status, notes, source, created_at, updated_at }
+ * PAS de scheduled_at / type / teacher_id / video_meeting_url. La date éventuelle
+ * vient du créneau joint (booking_slots.start_at), posé par le secrétariat à la
+ * confirmation. Une DEMANDE en attente = status='requested' + slot_id NULL →
+ * AUCUNE date : elle est exposée via `appointmentRequests` (bannière « en
+ * attente »), jamais dans `upcomingEvents` (réservé aux événements datés).
+ *
+ * NB : l'ancienne table `appointment_requests` (stub `[]` dans supabaseCompat)
+ * n'est plus lue — les demandes vivent désormais dans `appointments`.
+ */
 export function useStudentAppointments(userId) {
   const [appointmentRequests, setAppointmentRequests] = useState([]);
   const [appointments, setAppointments] = useState([]);
@@ -23,19 +41,15 @@ export function useStudentAppointments(userId) {
     setLoading(true);
     setError(null);
     try {
-      const [reqRes, apptRes, partRes, reportRes] = await Promise.all([
-        supabase
-          .from('appointment_requests')
-          .select('id, reason, status, scheduled_at, video_meeting_url, assigned_teacher_id, created_at')
-          .eq('student_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(50),
+      const [apptRes, partRes, reportRes] = await Promise.all([
+        // Routé vers GET /booking/appointments (créneau joint, scope élève serveur).
         supabase
           .from('appointments')
-          .select('id, type, scheduled_at, status, video_meeting_url, teacher_id, duration_minutes')
+          .select(
+            'id, tenant_id, student_id, slot_id, status, notes, source, created_at, updated_at, booking_slots(start_at, end_at, title, type)',
+          )
           .eq('student_id', userId)
-          .gte('scheduled_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-          .order('scheduled_at', { ascending: true })
+          .order('created_at', { ascending: false })
           .limit(100),
         supabase
           .from('live_session_participants')
@@ -49,19 +63,33 @@ export function useStudentAppointments(userId) {
           .limit(50),
       ]);
 
-      // appointment_requests can be absent from the schema — treat as non-critical
-      const reqs = reqRes.error ? [] : (reqRes.data || []);
-
-      // Normalise booking API response: booking_slots.start_at → scheduled_at
       const rawAppts = apptRes.error ? [] : (apptRes.data || []);
       const appts = rawAppts.map((a) => {
-        const slot = a.booking_slots || {};
+        const slot = a.booking_slots || null;
         return {
-          ...a,
-          scheduled_at: slot.start_at || a.scheduled_at || a.created_at,
-          type: a.type || slot.type || 'entretien',
+          id: a.id,
+          tenant_id: a.tenant_id,
+          status: a.status,
+          notes: a.notes || '',
+          source: a.source || null,
+          slot_id: a.slot_id || null,
+          created_at: a.created_at,
+          // Date réelle = créneau confirmé par le secrétariat ; NULL pour une demande.
+          scheduled_at: slot?.start_at || null,
+          slot,
         };
       });
+
+      // Demandes en attente : status='requested' (slot_id NULL → sans date).
+      const requests = appts
+        .filter((a) => a.status === 'requested')
+        .map((a) => ({
+          id: a.id,
+          status: a.status, // 'requested'
+          notes: a.notes,
+          created_at: a.created_at,
+        }));
+
       const parts = partRes.error ? [] : (partRes.data || []);
       const reports = reportRes.error ? [] : (reportRes.data || []);
 
@@ -89,16 +117,15 @@ export function useStudentAppointments(userId) {
         }));
       }
 
-      const teacherIds = [...new Set([
-        ...reqs.map((r) => r.assigned_teacher_id),
-        ...appts.map((a) => a.teacher_id),
-        ...lives.map((l) => l.teacher_id),
-      ].filter(Boolean))];
-      const { data: profiles } = teacherIds.length ? await supabase.from('profiles').select('id, name, email').in('id', teacherIds) : { data: [] };
+      // appointments n'a pas de teacher_id (vrai schéma) → seuls les lives en ont.
+      const teacherIds = [...new Set(lives.map((l) => l.teacher_id).filter(Boolean))];
+      const { data: profiles } = teacherIds.length
+        ? await supabase.from('profiles').select('id, name, email').in('id', teacherIds)
+        : { data: [] };
       const profileMap = Object.fromEntries((profiles || []).map((p) => [p.id, p]));
 
-      setAppointmentRequests(reqs.map((r) => ({ ...r, teacher: profileMap[r.assigned_teacher_id] })));
-      setAppointments(appts.map((a) => ({ ...a, teacher: profileMap[a.teacher_id] })));
+      setAppointments(appts);
+      setAppointmentRequests(requests);
       setLiveSessions(lives.map((l) => ({ ...l, teacher: profileMap[l.teacher_id] })));
       setStudentReports(reports);
     } catch (e) {
@@ -117,16 +144,18 @@ export function useStudentAppointments(userId) {
   }, [refresh]);
 
   const upcomingEvents = [
+    // RDV avec un créneau confirmé uniquement — les demandes sans date sont
+    // exclues (cf. appointmentRequests / bannière « en attente »).
     ...appointments
-      .filter((a) => !['cancelled'].includes(a.status))
+      .filter((a) => a.scheduled_at && a.status !== 'cancelled')
       .map((a) => ({
         id: a.id,
         type: 'appointment',
-        title: `${a.type} - ${a.teacher?.name || 'Conseiller'}`,
+        title: a.slot?.title || 'Rendez-vous',
         scheduled_at: a.scheduled_at,
-        video_url: a.video_meeting_url,
+        video_url: null,
         status: a.status,
-        instructor: a.teacher?.name,
+        instructor: null,
       })),
     ...liveSessions
       .filter((l) => l.status !== 'cancelled')

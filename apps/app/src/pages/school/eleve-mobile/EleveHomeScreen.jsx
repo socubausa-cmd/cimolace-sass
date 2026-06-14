@@ -826,8 +826,14 @@ export default function EleveHomeScreen() {
               label="Vie scolaire"
               accent="blue"
             />
+            {/*
+              P5(a) — consolidation : « Espace élève » (etudiant) double l'aperçu de Vie scolaire
+              (mêmes données : moyenne, absences, formations). On pointe cette entrée vers la cible
+              canonique `vieScolaire`. L'espace étudiant détaillé reste accessible via le menu de
+              parité web (VieScolaireWebParityMenu) et ses routes /m/eleve/etudiant/*.
+            */}
             <QuickTile
-              to={ELEVE_MOBILE.etudiant}
+              to={ELEVE_MOBILE.vieScolaire}
               icon={GraduationCap}
               label="Espace élève"
               accent="orange"

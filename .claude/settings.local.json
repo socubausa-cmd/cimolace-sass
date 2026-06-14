@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo \"=== Section 7 de l'archi doc ===\" && sed -n '/^##* *7/,/^##* *8/p' docs/CIMOLACE_ARCHITECTURE.md 2>/dev/null | head -120)",
+      "Bash(node run-sql.js --sql \"SELECT to_regclass\\('public.isna_pipeline_runs'\\) AS isna_table, to_regclass\\('public.course_pipeline_runs'\\) AS course_table; SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_schema='public' AND table_name='isna_pipeline_runs' ORDER BY ordinal_position; SELECT relname, relrowsecurity AS rls_enabled FROM pg_class WHERE relname IN \\('isna_pipeline_runs','course_pipeline_runs'\\); SELECT policyname, cmd, qual, with_check FROM pg_policies WHERE schemaname='public' AND tablename='isna_pipeline_runs';\")",
+      "Bash(git fetch *)",
+      "Bash(git checkout *)",
+      "Bash(echo \"=== Recherche fichiers mémoire ===\"; find /Users/ngowazulu/.claude -type f \\\\\\( -name \"*eleve-parcours*\" -o -name \"*pedagogie-tenant*\" -o -name \"*repo-git-worktrees*\" -o -name \"MEMORY.md\" \\\\\\) 2>/dev/null | head -50 *)"
+    ]
+  }
+}

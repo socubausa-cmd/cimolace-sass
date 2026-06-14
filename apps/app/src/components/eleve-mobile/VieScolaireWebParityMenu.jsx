@@ -33,13 +33,13 @@ import { cn } from '@/lib/utils';
 const RUBRIQUES = [
   { to: ELEVE_MOBILE.etudiant, label: 'Tableau de bord', sub: 'Stats, aperçu (LIRI)', icon: LayoutDashboard, accent: 'violet' },
   { to: ELEVE_MOBILE.etudiantFormations, label: 'Mes formations', sub: 'Inscriptions, parcours', icon: BookOpen, accent: 'violet' },
-  { to: '/classroom', label: 'Ma classe', sub: 'Parcours web (salle)', icon: Book, accent: 'amber' },
+  { to: ELEVE_MOBILE.classe, label: 'Ma classe', sub: 'Classe & membres (LIRI)', icon: Book, accent: 'violet' },
   { to: ELEVE_MOBILE.vieScolaire, label: 'Vie scolaire', sub: 'Notes, agenda, assiduité (LIRI)', icon: School, accent: 'violet' },
   { to: ELEVE_MOBILE.bibliotheque, label: 'Bibliothèque LIRI', sub: 'Cours & suivi', icon: Library, accent: 'violet' },
   {
     to: '/student-school-life/bibliotheque-ressources',
-    label: 'Ressources (web)',
-    sub: 'Médiathèque portail',
+    label: 'Ressources',
+    sub: 'Médiathèque (ouvre le portail web)',
     icon: Archive,
   },
   { to: ELEVE_MOBILE.agenda, label: 'Agenda LIRI', sub: 'Planning & RDV', icon: Calendar, accent: 'violet' },
@@ -48,9 +48,9 @@ const RUBRIQUES = [
   { to: ELEVE_MOBILE.etudiantNotes, label: 'Notes & résultats', sub: 'Relevés & moyennes', icon: FileText, accent: 'violet' },
   { to: ELEVE_MOBILE.etudiantAbsences, label: 'Absences', sub: 'Assiduité', icon: AlertTriangle, accent: 'violet' },
   { to: ELEVE_MOBILE.etudiantDocuments, label: 'Documents', sub: 'Factures & certificats', icon: Download, accent: 'violet' },
-  { to: '/student-school-life/forum', label: 'Forum communauté', sub: 'Espace (web)', icon: MessageCircle },
+  { to: ELEVE_MOBILE.communaute, label: 'Forum communauté', sub: 'Échanges & annonces (LIRI)', icon: MessageCircle, accent: 'violet' },
   { to: ELEVE_MOBILE.forfaits, label: 'Forfaits LIRI', sub: 'Abonnement, cycles', icon: CreditCard, accent: 'violet' },
-  { to: '/mes-factures', label: 'Mes factures (web)', sub: 'Historique de paiement', icon: Receipt },
+  { to: '/mes-factures', label: 'Mes factures', sub: 'Historique de paiement (ouvre le portail web)', icon: Receipt },
   { to: ELEVE_MOBILE.profile, label: 'Mon profil LIRI', sub: 'Compte & paramètres', icon: User, accent: 'violet' },
 ];
 

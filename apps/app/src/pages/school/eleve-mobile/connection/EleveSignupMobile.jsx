@@ -47,7 +47,7 @@ function GoogleLogo() {
 export default function EleveSignupMobile() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { signup, loginWithOAuth } = useAuth();
+  const { signup, loginWithOAuth, ensureStudentMembership } = useAuth();
   const { branding } = useTenantBranding();
 
   const redirect = searchParams.get('redirect') || ELEVE_MOBILE.home;
@@ -85,11 +85,21 @@ export default function EleveSignupMobile() {
     if (form.password !== form.confirm) return setError('Les mots de passe ne correspondent pas.');
     setLoading(true);
     try {
-      const { error: err } = await signup(form.email, form.password, {
+      const { data, error: err } = await signup(form.email, form.password, {
         display_name: form.name.trim(),
         full_name: form.name.trim(),
       });
       if (err) throw err;
+      // Rattachement tenant (role=student) DÈS l'inscription : prérequis de tout
+      // accès élève (les RLS pédagogiques tenant-scoped et la demande de RDV
+      // exigent une tenant_memberships active). On AWAIT quand une session est déjà
+      // disponible (confirmation email désactivée) pour que la membership existe
+      // AVANT le 1er écran protégé. Idempotent + jamais bloquant en cas d'échec.
+      // Si la confirmation email est active (pas de session immédiate), le
+      // rattachement se fera au 1er login via le self-heal du contexte auth.
+      if (data?.session?.user) {
+        await ensureStudentMembership(data.session.user);
+      }
       navigate(redirect, { replace: true });
     } catch (e) {
       setError(e?.message || 'Erreur lors de la création du compte.');

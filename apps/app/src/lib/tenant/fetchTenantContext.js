@@ -21,7 +21,18 @@ function currentPathTenantSlug() {
   // 1. URL /t/:slug
   const match = String(window.location.pathname || '').match(/^\/t\/([^/?#]+)/);
   if (match?.[1]) return decodeURIComponent(match[1]);
-  // 2. Env var (LIRI mobile sur /m/eleve/* ou build dédié)
+  // 2. ?tenant=<slug> explicite — deep-link inter-tenant hors préfixe /t/ (ex : salle
+  //    de téléconsultation MEDOS sur /studio/live-arena/:id?tenant=zahirwellness).
+  //    Aligne le branding sur le tenant réel de la salle au lieu du défaut isna.
+  try {
+    const qp = String(new URLSearchParams(window.location.search).get('tenant') || '')
+      .trim()
+      .toLowerCase();
+    if (qp) return qp;
+  } catch {
+    /* ignore */
+  }
+  // 3. Env var (LIRI mobile sur /m/eleve/* ou build dédié)
   const envSlug =
     (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TENANT_SLUG) || '';
   return envSlug.trim() || null;

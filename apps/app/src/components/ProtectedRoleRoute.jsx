@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 import { getEffectiveRole } from '@/lib/accountRoleMode';
 
-const ProtectedRoleRoute = ({ children, allowedRoles = [], redirectTo = '/dashboard' }) => {
+const ProtectedRoleRoute = ({ children, allowedRoles = [], redirectTo = '/dashboard', allowTenantRole = false }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
@@ -23,7 +23,16 @@ const ProtectedRoleRoute = ({ children, allowedRoles = [], redirectTo = '/dashbo
   if (Array.isArray(allowedRoles) && allowedRoles.length > 0) {
     const role = getEffectiveRole(user);
     const normalizedAllowed = allowedRoles.map((r) => String(r || '').toLowerCase());
-    if (!normalizedAllowed.includes(role)) {
+    // Multi-tenant : un owner/practitioner d'un tenant a un profiles.role GLOBAL faible
+    // (souvent 'visitor') ; son vrai rôle est dans le JWT (app_metadata.tenant_role).
+    // Les routes tenant-scoped (ex: /studio pour la téléconsult) passent allowTenantRole
+    // pour l'accepter aussi. Périmètre limité : l'autorisation fine reste la RLS sur la
+    // session (un owner d'un autre tenant passe le garde mais ne peut charger la session).
+    const tenantRole = String(user?.tenant_role || '').toLowerCase();
+    const ok =
+      normalizedAllowed.includes(role) ||
+      (allowTenantRole && tenantRole && normalizedAllowed.includes(tenantRole));
+    if (!ok) {
       return <Navigate to={redirectTo} replace />;
     }
   }
