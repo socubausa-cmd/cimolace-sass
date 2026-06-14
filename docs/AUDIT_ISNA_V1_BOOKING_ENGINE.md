@@ -81,6 +81,6 @@ Le moteur générique `calendar` est trop pauvre. On le **remplace** par un mote
 3. **Porter `booking-set-preparation`** en endpoint NestJS et rebrancher `AppointmentPreparationPanel` dessus (sortir le dernier appel Netlify v1).
 4. ~~**Enrichir la messagerie**~~ → **DÉJÀ FAIT** : le module `smart-response` (`GET /smart-response/threads`, `/threads/:id/messages`, `POST /smart-response/secretariat/reply`) porte le response-engine qualifiant, **multi-tenant**. Rien à construire.
 5. **Catalogue** : ajouter `booking_engine`, remplacer `calendar` dans school/wellness/temple/community (après audit des usages de `calendar`).
-6. **Notifications avant live** : porter `live-start-emails-scheduled` (cron) → worker/email-engine.
+6. ~~**Notifications avant live**~~ → **FAIT** : worker `jobs/live-reminders.js` (poll 60s) enfile des rappels dans `email_queue` (envoyés par `jobs/email.js` → Resend), idempotent via `live_sessions.reminder_sent_at`. Destinataires : hôte + élève du RDV.
 
 > Côté santé (MEDOS/Zahir), `teleconsult.service` prouve déjà que le pont RDV→live via le moteur Liri fonctionne en v2 — il sert de **modèle d'implémentation** pour le portage côté école.
