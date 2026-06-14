@@ -4,6 +4,7 @@ import {
   Loader2, Sparkles, Users, FlaskConical, FileText, GitBranch, Clock, TrendingUp, Beaker, Search, Camera as CameraIcon,
 } from 'lucide-react';
 import { useCamera } from '../native/useCamera';
+import { BodyViewer } from './BodyViewer';
 
 const panel: React.CSSProperties = { background: '#fff', borderRadius: 14, border: '1px solid var(--zw-border)', padding: 18 };
 const head: React.CSSProperties = { fontSize: 14, fontWeight: 700, margin: 0, marginBottom: 12, color: 'var(--zw-text)', display: 'flex', alignItems: 'center', gap: 7 };
@@ -351,6 +352,12 @@ export function SimulatorPanel({ patientId }: { patientId: string }) {
   useEffect(() => { run([]); /* charge le catalogue */ }, [patientId]);
   function toggle(k: string) { const s = new Set(picked); s.has(k) ? s.delete(k) : s.add(k); setPicked(s); run([...s]); }
 
+  const projColor = (s: number): OrganColor => (s >= 80 ? 'green' : s >= 60 ? 'yellow' : s >= 40 ? 'orange' : 'red');
+  const projected = (result?.organ_deltas || []).map((d: any) => ({
+    code: d.organ_code, name_fr: '', position: null,
+    score: { score: d.after, color: projColor(d.after) },
+  }));
+
   return (
     <div style={panel}>
       <h3 style={head}><Beaker size={15} color="#f97316" /> Simulateur d'intervention</h3>
@@ -373,6 +380,14 @@ export function SimulatorPanel({ patientId }: { patientId: string }) {
               </div>
             ))}
           </div>
+          {projected.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--zw-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Projection sur le corps</div>
+              <div style={{ height: 430 }}>
+                <BodyViewer organs={projected as any} selected={null} onSelect={() => {}} />
+              </div>
+            </div>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px,1fr))', gap: 8 }}>
             {(result.organ_deltas || []).filter((d: any) => d.delta !== 0).map((d: any) => (
               <div key={d.organ_code} style={{ fontSize: 12, display: 'flex', justifyContent: 'space-between', background: 'var(--zw-bg)', borderRadius: 6, padding: '5px 8px' }}>

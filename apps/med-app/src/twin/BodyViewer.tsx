@@ -12,19 +12,19 @@ const GREY = '#c9bdab';
 
 // Front-view anatomical layout (viewBox 300 × 470). `side` = which margin the
 // label sits in; `ly` = its vertical position (manually spaced to avoid overlap).
-const POS: Record<string, { x: number; y: number; side: 'L' | 'R'; ly: number }> = {
-  brain:        { x: 150, y: 50,  side: 'L', ly: 40 },
-  thyroid:      { x: 150, y: 100, side: 'L', ly: 96 },
-  heart:        { x: 134, y: 158, side: 'L', ly: 152 },
-  lungs:        { x: 168, y: 150, side: 'R', ly: 142 },
-  liver:        { x: 178, y: 206, side: 'R', ly: 198 },
-  stomach:      { x: 122, y: 204, side: 'L', ly: 206 },
-  pancreas:     { x: 150, y: 228, side: 'R', ly: 232 },
-  adrenals:     { x: 120, y: 238, side: 'L', ly: 260 },
-  kidneys:      { x: 180, y: 246, side: 'R', ly: 266 },
-  gut:          { x: 150, y: 274, side: 'R', ly: 300 },
-  immune:       { x: 112, y: 282, side: 'L', ly: 308 },
-  reproductive: { x: 150, y: 306, side: 'R', ly: 336 },
+const POS: Record<string, { x: number; y: number; side: 'L' | 'R'; ly: number; name: string }> = {
+  brain:        { x: 150, y: 50,  side: 'L', ly: 40,  name: 'Cerveau' },
+  thyroid:      { x: 150, y: 100, side: 'L', ly: 96,  name: 'Thyroïde' },
+  heart:        { x: 134, y: 158, side: 'L', ly: 152, name: 'Cœur' },
+  lungs:        { x: 168, y: 150, side: 'R', ly: 142, name: 'Poumons' },
+  liver:        { x: 178, y: 206, side: 'R', ly: 198, name: 'Foie' },
+  stomach:      { x: 122, y: 204, side: 'L', ly: 206, name: 'Estomac' },
+  pancreas:     { x: 150, y: 228, side: 'R', ly: 232, name: 'Pancréas' },
+  adrenals:     { x: 120, y: 238, side: 'L', ly: 260, name: 'Surrénales' },
+  kidneys:      { x: 180, y: 246, side: 'R', ly: 266, name: 'Reins' },
+  gut:          { x: 150, y: 274, side: 'R', ly: 300, name: 'Intestin' },
+  immune:       { x: 112, y: 282, side: 'L', ly: 308, name: 'Immunité' },
+  reproductive: { x: 150, y: 306, side: 'R', ly: 336, name: 'Reproducteur' },
 };
 
 export function BodyViewer({
@@ -40,7 +40,7 @@ export function BodyViewer({
   const byCode = new Map(organs.map((o) => [o.code, o]));
   const list = Object.keys(POS).map((code) => {
     const o = byCode.get(code);
-    return { code, name: o?.name_fr || code, score: o?.score || null, ...POS[code] };
+    return { code, score: o?.score || null, ...POS[code], name: o?.name_fr || POS[code].name || code };
   });
   const colorOf = (s: OrganNode['score']) => (s ? COLOR_HEX[s.color] : GREY);
 
