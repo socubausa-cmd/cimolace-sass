@@ -11,12 +11,12 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
 type BuilderField = { _uid: number; label: string; type: FieldType; required?: boolean; options?: string[] };
 
+// Catégories alignées sur l'enum backend (create-form.dto : IsIn).
 const CATEGORIES = [
   { value: 'intake', label: 'Anamnèse' },
+  { value: 'assessment', label: 'Bilan' },
   { value: 'consent', label: 'Consentement' },
   { value: 'followup', label: 'Suivi' },
-  { value: 'symptom', label: 'Symptômes' },
-  { value: 'satisfaction', label: 'Satisfaction' },
   { value: 'custom', label: 'Personnalisé' },
 ];
 

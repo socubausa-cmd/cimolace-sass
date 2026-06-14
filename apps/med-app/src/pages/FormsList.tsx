@@ -14,8 +14,10 @@ type Form = FormShape & {
 };
 
 const CATEGORIES: Record<string, string> = {
-  intake: 'Anamnèse', consent: 'Consentement', followup: 'Suivi',
-  symptom: 'Symptômes', satisfaction: 'Satisfaction', custom: 'Personnalisé',
+  intake: 'Anamnèse', assessment: 'Bilan', consent: 'Consentement', followup: 'Suivi',
+  custom: 'Personnalisé',
+  // rétro-compat (anciens formulaires) :
+  symptom: 'Symptômes', satisfaction: 'Satisfaction',
 };
 
 function authHeaders(): HeadersInit {
