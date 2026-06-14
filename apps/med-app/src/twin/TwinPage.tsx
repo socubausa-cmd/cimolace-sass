@@ -409,12 +409,19 @@ function OrganDetail({ organ, onAsk, busy, assistant, onClose }: { organ: any; o
           {(score.contributing_biomarkers || []).length > 0 && (
             <div style={{ marginBottom: 12 }}>
               <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--zw-text-soft)', marginBottom: 4 }}>Biomarqueurs contributifs</div>
-              {score.contributing_biomarkers.map((c: any) => (
-                <div key={c.code} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '2px 0' }}>
-                  <span style={{ color: 'var(--zw-text-soft)' }}>{c.name_fr}</span>
-                  <span style={{ color: c.flag === 'normal' ? '#10b981' : '#f59e0b', fontWeight: 600 }}>{c.value} · {c.flag}</span>
-                </div>
-              ))}
+              {score.contributing_biomarkers.map((c: any) => {
+                const flagColor = c.flag === 'normal' ? '#10b981' : c.flag === 'critical' ? '#ef4444' : '#f59e0b';
+                const flagLabel = ({ normal: 'normal', critical: 'critique', high: 'élevé', low: 'bas', borderline: 'limite' } as Record<string, string>)[c.flag] || c.flag;
+                return (
+                  <div key={c.code} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '3px 0' }}>
+                    <span style={{ color: 'var(--zw-text-soft)' }}>{c.name_fr}</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                      <span style={{ color: 'var(--zw-text)' }}>{c.value}</span>
+                      <span style={{ fontSize: 10.5, fontWeight: 700, color: flagColor, background: flagColor + '1e', padding: '1px 7px', borderRadius: 999 }}>{flagLabel}</span>
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
           <button onClick={onAsk} disabled={busy} style={{ width: '100%', padding: '9px', background: 'var(--zw-violet)', color: '#fff', border: 'none', borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: busy ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
