@@ -17,16 +17,16 @@ import {
   ProrasciencePublicPageShell,
   ProrasciencePublicCard,
 } from '@/components/prorascience/ProrasciencePublicPageShell';
-import LiveHostMessagingPanel from '@/components/live-room/LiveHostMessagingPanel';
-import LiveHostFooterMessaging from '@/components/live-room/LiveHostFooterMessaging';
-import AmbientAudioLayer from '@/components/live-room/AmbientAudioLayer';
+import LiveHostMessagingPanel from '@/components/liri/live-room/LiveHostMessagingPanel';
+import LiveHostFooterMessaging from '@/components/liri/live-room/LiveHostFooterMessaging';
+import AmbientAudioLayer from '@/components/liri/live-room/AmbientAudioLayer';
 import {
   Countdown,
   StatusBadge,
   WaitingStatus,
   displayNameInitials,
   planFromConfig,
-} from '@/pages/studio/LiveWaitingRoomPage';
+} from '@/pages/studio-creator/studio/LiveWaitingRoomPage';
 
 const SCENARIOS = [
   { id: 'host', label: 'Vue hôte — « Lancer la session »' },

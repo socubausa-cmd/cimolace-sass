@@ -12,7 +12,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { getLoginEntryPath } from '@/lib/loginEntryPath';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { getPayerPath } from '@/lib/eleveBillingPath';
-import { EV_MUTED } from '@/pages/eleve-mobile/eleveMobileScreensShared';
+import { EV_MUTED } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 import { cn } from '@/lib/utils';
 import {
   openPaymentCheckoutUrl,

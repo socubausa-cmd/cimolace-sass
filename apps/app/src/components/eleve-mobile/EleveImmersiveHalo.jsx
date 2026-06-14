@@ -5,7 +5,7 @@ import {
   evHaloAtmosphere,
   EV_HALO_INSET_SPECULAR,
   EV_HALO_NOISE,
-} from '@/pages/eleve-mobile/eleveMobileScreensShared';
+} from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 /**
  * Fond d'atmosphère type Apple : halos en couches, grain fin, bords (specular + vignette).

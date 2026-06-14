@@ -3,9 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { generateVideoPlaylistData } from '@/lib/mockVideoPlaylistData';
-import VideoPlayer from '@/components/classroom/VideoPlayer';
-import ProgressivePlaylist from '@/components/classroom/ProgressivePlaylist';
-import { VideoProgressProvider, useVideoProgress } from '@/components/classroom/VideoProgressTracker';
+import VideoPlayer from '@/components/school/classroom/VideoPlayer';
+import ProgressivePlaylist from '@/components/school/classroom/ProgressivePlaylist';
+import { VideoProgressProvider, useVideoProgress } from '@/components/school/classroom/VideoProgressTracker';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 // Main Content Component wrapped in Provider

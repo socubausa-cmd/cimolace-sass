@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import LiveRoomShell from '@/components/live-room/LiveRoomShell';
-import LiveControlsBar from '@/components/live-room/LiveControlsBar';
+import LiveRoomShell from '@/components/liri/live-room/LiveRoomShell';
+import LiveControlsBar from '@/components/liri/live-room/LiveControlsBar';
 import { cn } from '@/lib/utils';
 
 /**

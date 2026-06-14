@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { MessageCircle } from 'lucide-react';
-import OwnerFormationBuilder from '@/components/formations/OwnerFormationBuilder';
+import OwnerFormationBuilder from '@/components/school/formations/OwnerFormationBuilder';
 import { FORUM_COMMUNITY_PATH } from '@/lib/forumDashboardPaths';
 
 /**

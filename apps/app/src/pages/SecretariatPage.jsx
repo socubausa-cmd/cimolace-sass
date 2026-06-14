@@ -19,7 +19,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import TeacherCard from '@/components/TeacherCard';
+import TeacherCard from '@/components/school/TeacherCard';
 import AnnouncementCard from '@/components/AnnouncementCard';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';

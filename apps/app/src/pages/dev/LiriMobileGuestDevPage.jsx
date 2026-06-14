@@ -1,5 +1,5 @@
 import React from 'react';
-import LiriLiveMobileGuestView from '@/components/live-room/LiriLiveMobileGuestView';
+import LiriLiveMobileGuestView from '@/components/liri/live-room/LiriLiveMobileGuestView';
 
 const DEMO_LESSON = {
   subject: 'Physique – Terminale S',

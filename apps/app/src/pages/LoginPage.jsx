@@ -12,13 +12,13 @@ import { clearSelectedAccountRole } from '@/lib/accountRoleMode';
 import { Capacitor } from '@capacitor/core';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { formatLoginErrorMessage } from '@/lib/authNetworkMessage';
-import { EleveConnectionLayout } from '@/pages/eleve-mobile/connection/EleveConnectionLayout';
+import { EleveConnectionLayout } from '@/pages/school/eleve-mobile/connection/EleveConnectionLayout';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { shouldUseLiriMobileLogin, FORCE_DESKTOP_LOGIN_PARAM } from '@/lib/loginEntryPath';
 import { shouldShowStudentInstallGate } from '@/lib/studentWebPlatform';
 import { LiriPageFooterLine } from '@/components/brand/LiriWordmark';
 import { InstallAppGate } from '@/components/eleve-mobile/InstallAppGate';
-import { EV_ACCENT, EV_MUTED, EV_LINE, EV_CARD, EV_CARD_INNER, EV_R, EV_SH } from '@/pages/eleve-mobile/eleveMobileScreensShared';
+import { EV_ACCENT, EV_MUTED, EV_LINE, EV_CARD, EV_CARD_INNER, EV_R, EV_SH } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
 import { Ripple, AnimatedForm } from '@/components/ui/animated-sign-in';
 

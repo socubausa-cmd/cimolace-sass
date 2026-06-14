@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutGrid, Calendar, Award, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { EV_MUTED, EV_R } from '@/pages/eleve-mobile/eleveMobileScreensShared';
+import { EV_MUTED, EV_R } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const TABS = [
   { to: '.', end: true, label: 'Aperçu', short: 'Résumé', icon: LayoutGrid },

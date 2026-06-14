@@ -45,9 +45,9 @@ import { useImmersiveLiveKit } from '@/hooks/useImmersiveLiveKit';
 import { useLiriCompactLiveUiState } from '@/hooks/useLiriCompactLiveUiState';
 import { useMobileLiriStore } from '@/stores/mobileLiriStore';
 import { buildMaquettePlanRibbon, buildMaquetteSceneLineCaption } from '@/lib/liriMobilePlanRibbon';
-import { GestureOverlayController } from '@/components/liri-mobile/GestureOverlayController';
-import { LiriMobileOverlaysRoot } from '@/components/liri-mobile/LiriMobileOverlaysRoot';
-import { LiriHeartBurst } from '@/components/liri-mobile/LiriHeartBurst';
+import { GestureOverlayController } from '@/components/liri/liri-mobile/GestureOverlayController';
+import { LiriMobileOverlaysRoot } from '@/components/liri/liri-mobile/LiriMobileOverlaysRoot';
+import { LiriHeartBurst } from '@/components/liri/liri-mobile/LiriHeartBurst';
 import { getAuxVideoTrackForSmartboard } from '@/lib/livekitCameraUtils';
 import { normalizeLiveSceneToSlide } from '@/lib/liveSceneNormalize';
 import {
@@ -56,13 +56,13 @@ import {
   navigatorSceneIds,
   buildSmartboardNavigatorScenes,
 } from '@/lib/smartboardNavigatorScenes';
-import { SmartboardNavigatorSceneIcon } from '@/components/live-room/SmartboardNavigatorSceneIcon';
+import { SmartboardNavigatorSceneIcon } from '@/components/liri/live-room/SmartboardNavigatorSceneIcon';
 import { useLiveInvite } from '@/hooks/useLiveInvite';
 import { useLiveRoomPresence } from '@/hooks/useLiveRoomPresence';
 import { useLiveQuestions } from '@/hooks/useLiveQuestions';
 import { useLiveScript } from '@/hooks/useLiveScript';
 import { usePostLiveSummary } from '@/hooks/usePostLiveSummary';
-import LiveInviteNotification from '@/components/live-room/LiveInviteNotification';
+import LiveInviteNotification from '@/components/liri/live-room/LiveInviteNotification';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/customSupabaseClient';
 import { runStorageWithAuthRetry } from '@/lib/supabaseResilience';
@@ -79,12 +79,12 @@ import { ToastAction } from '@/components/ui/toast';
 import { useLiveSessionWhispers } from '@/hooks/useLiveSessionWhispers';
 import { createImmersiveCompanionLink } from '@/services/livekitApi';
 import { QRCodeSVG } from 'qrcode.react';
-import ImmersiveLiveStageBackdrop from '@/components/live-room/ImmersiveLiveStageBackdrop';
-import LiveRoomShell from '@/components/live-room/LiveRoomShell';
-import LiveSettingsPanel from '@/components/live-room/LiveSettingsPanel';
+import ImmersiveLiveStageBackdrop from '@/components/liri/live-room/ImmersiveLiveStageBackdrop';
+import LiveRoomShell from '@/components/liri/live-room/LiveRoomShell';
+import LiveSettingsPanel from '@/components/liri/live-room/LiveSettingsPanel';
 import QuickAppointmentModal from '@/components/messaging/QuickAppointmentModal';
 import PostCallReportModal from '@/components/messaging/PostCallReportModal';
-import PostLiveSummaryModal from '@/components/live-room/PostLiveSummaryModal';
+import PostLiveSummaryModal from '@/components/liri/live-room/PostLiveSummaryModal';
 import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useLiveDashboardNotifications } from '@/hooks/useLiveDashboardNotifications';

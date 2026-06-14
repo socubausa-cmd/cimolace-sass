@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import Header from '@/components/Header';
 import { Video, BookOpen, GraduationCap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import LiveClassesSection from '@/components/classroom/LiveClassesSection';
-import ProgressiveLearningSectionComponent from '@/components/classroom/ProgressiveLearningSectionComponent';
+import LiveClassesSection from '@/components/school/classroom/LiveClassesSection';
+import ProgressiveLearningSectionComponent from '@/components/school/classroom/ProgressiveLearningSectionComponent';
 
 const GoToClassPage = () => {
   const [activeMode, setActiveMode] = useState(null); // 'live' | 'progressive' | null

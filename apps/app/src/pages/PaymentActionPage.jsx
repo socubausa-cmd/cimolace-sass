@@ -15,9 +15,9 @@ import { getNgowazuluMentoratOffer } from '@/config/ngowazuluMentoratOffers';
 import { getBillingCheckoutPath, getPayerPath } from '@/lib/eleveBillingPath';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { EleveMobileShell } from '@/components/eleve-mobile/EleveMobileShell';
-import { LiriStatusBar } from '@/pages/eleve-mobile/connection/EleveConnectionLayout';
+import { LiriStatusBar } from '@/pages/school/eleve-mobile/connection/EleveConnectionLayout';
 import { useDataSync } from '@/contexts/DataSyncContext';
-import { EV_PAGE_AMBIENT } from '@/pages/eleve-mobile/eleveMobileScreensShared';
+import { EV_PAGE_AMBIENT } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const NGOWAZULU_OPENING_PLAN_SLUG = 'ngowazulu-ouverture-recouvrement';
 const DEFAULT_OPENING_FEE_EUR = 100;

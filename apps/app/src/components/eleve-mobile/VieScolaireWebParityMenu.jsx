@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { EleveSectionTitle } from '@/components/eleve-mobile/EleveMobileShell';
-import { EV_MUTED, EV_R, EV_LINE, EV_SH } from '@/pages/eleve-mobile/eleveMobileScreensShared';
+import { EV_MUTED, EV_R, EV_LINE, EV_SH } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 import { cn } from '@/lib/utils';
 
 /**

@@ -12,9 +12,9 @@ import { getProrascienceVitrineMenuSections } from '@/lib/prorascienceVitrineMen
 import { cn } from '@/lib/utils';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { getLiriMemberLoginPath } from '@/lib/liriVitrineModel';
-import { LiriStatusBar } from '@/pages/eleve-mobile/connection/EleveConnectionLayout';
+import { LiriStatusBar } from '@/pages/school/eleve-mobile/connection/EleveConnectionLayout';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
-import { EV_BG } from '@/pages/eleve-mobile/eleveMobileScreensShared';
+import { EV_BG } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 /** Même fond que l'accueil connexion LIRI (branding unifié). */
 export const PRORASCIENCE_VITRINE_PAGE_BG = EV_BG;

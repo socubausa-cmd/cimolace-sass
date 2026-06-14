@@ -27,9 +27,9 @@ import {
 import MindMapNavigation from '@/components/lesson-player/MindMapNavigation';
 import NodeExplanationPanel from '@/components/lesson-player/NodeExplanationPanel';
 import { ArrowLeft, Check, Clapperboard, GraduationCap, LayoutGrid, Loader2, Plus, Sparkles, Trash } from 'lucide-react';
-import SplitScreenCoursePreview from '@/components/course-builder/SplitScreenCoursePreview';
-import SegmentAIEditorPanel from '@/components/course-builder/SegmentAIEditorPanel';
-import CoursePipelineView from '@/components/course-builder/CoursePipelineView';
+import SplitScreenCoursePreview from '@/components/school/course-builder/SplitScreenCoursePreview';
+import SegmentAIEditorPanel from '@/components/school/course-builder/SegmentAIEditorPanel';
+import CoursePipelineView from '@/components/school/course-builder/CoursePipelineView';
 import NleEngineWorkspace from '@/features/nle-engine/components/NleEngineWorkspace';
 import { useNleProjectStore } from '@/features/nle-engine/store/useNleProjectStore';
 import { applyNleProjectToChapterRows } from '@/lib/nleEngine/applyNleProjectToChapterRows';

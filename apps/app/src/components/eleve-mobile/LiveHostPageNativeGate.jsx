@@ -1,8 +1,8 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import LiveHostPage from '@/pages/LiveHostPage';
-import { LiriPortalShell } from '@/components/LiriPortalShell';
+import LiveHostPage from '@/pages/liri/LiveHostPage';
+import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { isNativeRuntime } from '@/lib/nativeCapabilities';
 

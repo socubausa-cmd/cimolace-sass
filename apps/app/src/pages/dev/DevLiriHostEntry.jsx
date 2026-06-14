@@ -5,7 +5,7 @@ import LiriHostShellDevPage from './LiriHostShellDevPage';
 import LiriMobileGuestDevPage from './LiriMobileGuestDevPage';
 import OwnerShellDevPage from './OwnerShellDevPage';
 import EleveShellDevPage from './EleveShellDevPage';
-import LiveHostPage from '@/pages/LiveHostPage';
+import LiveHostPage from '@/pages/liri/LiveHostPage';
 
 /**
  * Point d'entrée unique pour /dev/* — évite les 404 si la correspondance des routes plates varie
