@@ -44,7 +44,7 @@ const cardSurface = (active = false) => ({
     : EV_CARD,
   border:     `1px solid ${active ? 'rgba(123,97,255,0.3)' : EV_LINE}`,
   borderRadius: EV_R.lg,
-  boxShadow:    active ? `0 0 0 1px rgba(123,97,255,0.15), ${EV_SH}` : EV_SH,
+  boxShadow:    active ? `0 0 0 1px rgba(123,97,255,0.15), ${EV_SH.md}` : EV_SH.md,
 });
 
 // ── Barre de progression ──────────────────────────────────────────────────────

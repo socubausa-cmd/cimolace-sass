@@ -145,14 +145,14 @@ const MENU = [
   {
     to: '/settings',
     title: 'Informations personnelles',
-    sub: 'Gère ton profil et tes informations',
+    sub: 'Gère ton profil (ouvre le portail web)',
     icon: User,
     iconClass: 'text-violet-400',
   },
   {
     to: '/dashboard',
     title: 'Mes statistiques détaillées',
-    sub: 'Découvre ton évolution',
+    sub: 'Ton évolution (ouvre le portail web)',
     icon: BarChart2,
     iconClass: 'text-emerald-400',
   },
@@ -180,7 +180,7 @@ const MENU = [
   {
     to: '/notebook',
     title: 'Mes notes',
-    sub: 'Toutes tes notes sauvegardées',
+    sub: 'Tes notes sauvegardées (ouvre le portail web)',
     icon: Bookmark,
     iconClass: 'text-sky-400',
   },
@@ -260,7 +260,7 @@ function GlobalProgressBlock({ percent, completedCh, totalCh }) {
 
   return (
     <Link
-      to="/formations/mes-formations"
+      to={ELEVE_MOBILE.bibliotheque}
       className="mb-5 block overflow-hidden p-3.5 active:opacity-95"
       style={{ borderRadius: EV_R.lg, ...globalProgressCardSurface() }}
     >
