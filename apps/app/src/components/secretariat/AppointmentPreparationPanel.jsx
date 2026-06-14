@@ -166,6 +166,25 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
     }
   };
 
+  /* Lancer la séance live à partir du rendez-vous (pont RDV→live). */
+  const [startingLive, setStartingLive] = useState(false);
+  const handleStartLive = async () => {
+    if (!appointment?.id || startingLive) return;
+    setStartingLive(true);
+    try {
+      const { bookingApi } = await import('@/lib/api');
+      const res = await bookingApi.startLiveFromAppointment(appointment.id);
+      const liveId = res?.liveSessionId;
+      if (!liveId) throw new Error('Séance non créée');
+      toast({ title: 'Séance prête', description: 'Ouverture de la salle hôte…' });
+      window.location.href = `/live/host/${liveId}`;
+    } catch (e) {
+      toast({ title: 'Erreur', description: e.message, variant: 'destructive' });
+    } finally {
+      setStartingLive(false);
+    }
+  };
+
   if (!loaded) {
     return (
       <div className="flex items-center justify-center py-8 text-gray-500">
@@ -288,6 +307,17 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
       >
         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
         {isReady ? 'Enregistrer & activer la salle' : 'Enregistrer la préparation'}
+      </Button>
+
+      {/* Pont RDV → séance live */}
+      <Button
+        onClick={handleStartLive}
+        disabled={startingLive}
+        variant="outline"
+        className="mt-2 w-full flex items-center justify-center gap-2"
+      >
+        {startingLive ? <Loader2 className="w-4 h-4 animate-spin" /> : <Video className="w-4 h-4" />}
+        Lancer la séance live
       </Button>
     </div>
   );

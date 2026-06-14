@@ -142,6 +142,19 @@ export const tenantApiKeysApi = {
     api.delete<ApiEnvelope<any>>(`/tenants/api-keys/${keyId}`).then(unwrap).then(peel),
 };
 
+// ── Booking (RDV, secrétariat, pont RDV→live) ───────────────────────────────
+const bookingUnwrap = (r: any) => (r?.data && typeof r.data === "object" && "data" in r.data ? r.data.data : r?.data);
+export const bookingApi = {
+  availableSecretaries: (params?: { timezone?: string; country?: string; when?: string }) =>
+    api.get<any>("/booking/available-secretaries", { params }).then(bookingUnwrap),
+  startLiveFromAppointment: (appointmentId: string) =>
+    api.post<any>(`/booking/appointments/${appointmentId}/start-live`).then(bookingUnwrap),
+  getPreparation: (appointmentId: string) =>
+    api.get<any>(`/booking/appointments/${appointmentId}/preparation`).then(bookingUnwrap),
+  setPreparation: (appointmentId: string, body: Record<string, unknown>) =>
+    api.post<any>(`/booking/appointments/${appointmentId}/preparation`, body).then(bookingUnwrap),
+};
+
 // ── Back-office tenant : marketplace + support ──────────────────────────────
 export const tenantPortalApi = {
   marketplace: () => api.get<ApiEnvelope<any>>("/tenant-portal/marketplace").then(unwrap).then(peel),
