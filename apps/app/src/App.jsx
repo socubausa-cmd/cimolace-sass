@@ -514,6 +514,7 @@ const SmartboardToolPage = lazy(() => import('@/app/dashboard/tools/smartboard/p
 const StudioRouter = lazy(() => import('@/pages/studio/StudioRouter'));
 const StudioLiriRouter = lazy(() => import('@/pages/studio/StudioLiriRouter'));
 const LiveHostPageNativeGate = lazy(() => import('@/components/eleve-mobile/LiveHostPageNativeGate'));
+const LiveHostPageRoute = lazy(() => import('@/pages/LiveHostPage'));
 const LiveGuestPage = lazy(() => import('@/pages/LiveGuestPage'));
 const DevLiriHostEntry = lazy(() => import('@/pages/dev/DevLiriHostEntry'));
 const LiveWaitingRoomPage = lazy(() => import('@/pages/studio/LiveWaitingRoomPage'));
@@ -1821,6 +1822,16 @@ isLiriHostDevPreviewRoute;
               `practitioner` / `clinic_admin` ajoutés pour la téléconsultation MEDOS :
               le praticien ouvre la salle immersive Liri (/studio/live-arena/:id) avec
               SmartBoard. Additif — n'enlève l'accès à personne. */}
+          {/* Salle live/téléconsult immersive : AUTH-ONLY. Autorisée par la session
+              (RLS sur live_sessions), PAS par le rôle école ISNA — un praticien d'un
+              autre tenant (ex: zahirwellness owner) n'a pas de profiles.role école, et
+              son tenant_role vit dans le JWT (que supabase n'expose pas via user.app_metadata).
+              Route plus spécifique que /studio/* → priorité React Router v6. */}
+          <Route path="/studio/live-arena/:sessionId" element={
+            <ProtectedRoleRoute allowedRoles={[]}>
+              <LiveHostPageRoute />
+            </ProtectedRoleRoute>
+          } />
           <Route path="/studio/*" element={
             <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat', 'practitioner', 'clinic_admin']} allowTenantRole>
               <StudioRouter />
