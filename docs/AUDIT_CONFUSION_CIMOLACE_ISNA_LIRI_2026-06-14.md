@@ -177,6 +177,14 @@ Vérification du code `apps/api/src/` : **il n'y a PAS de moteurs live en double
 
 **Conclusion** : aucune consolidation à faire ; fusionner casserait des fonctionnalités actives et distinctes. Seul résidu : le **nom `zoom-engine` est trompeur** (c'est un connecteur, pas un moteur). Renommage non effectué car il touche `worker` + `public-site` + `app.module` (risque vis-à-vis des autres agents) — à faire dans une passe dédiée si souhaité.
 
+## 8. Note Phases 5 / 7 / 8 (2026-06-14)
+
+**Phase 5 — Catalogue.** Source canonique = `apps/api/src/cimolace-backoffice/school-engine-manifest.ts` : **11 moteurs** (6 `core` + 5 `recommended`) + `liri_masterclass` en **addon**. Le front `apps/app/src/lib/infrastructures.ts` ne listait que 6 moteurs (périmé) → **aligné sur les 11**. Reste à faire (non bloquant) : faire consommer `GET /catalog/templates` par l'onboarding au lieu de la liste statique (vraie déduplication). Studio Créateur est bien présent comme moteur distinct (`studio_creator`).
+
+**Phase 7 — Legacy MEDOS & billing.** Les modules MEDOS legacy (`MedEhrModule`, `MedNotesModule`, …) signalés par le `SOURCE_OF_TRUTH` **n'existent plus** : `app.module.ts` n'importe que `MedosModule` (tout est consolidé sous `medos/`). **Déjà résolu.** Le statut billing ISNA `unpaid` est une **donnée en base** (à corriger via la DB/back-office, pas dans le code).
+
+**Phase 8 — Domaines.** Les runbooks existent déjà : `docs/CIMOLACE_VERCEL_DOMAIN_RUNBOOK.md` et `docs/PRORASCIENCE_DOMAIN_GOLIVE.md`. L'exécution (réassigner `cimolace.space` → `public-site`, `app.cimolace.space` → `app`, wildcards) demande un accès **DNS/Vercel** — à faire par l'opérateur, hors code.
+
 ---
 
 *Sources internes : `docs/CIMOLACE_ARCHITECTURE_SOURCE_OF_TRUTH.md`, `docs/ARCHITECTURE_LIRI_VS_ECOLE.md`, `docs/ISNA_PRORASCIENCE_SCHOOL_TENANT_MODEL_AUDIT.md`, `docs/CIMOLACE_ONBOARDING_CATALOG_STATUS.md`, code `apps/app/src/`, `apps/api/src/`.*
