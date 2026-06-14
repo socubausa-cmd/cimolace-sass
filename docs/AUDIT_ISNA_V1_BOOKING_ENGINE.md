@@ -84,3 +84,20 @@ Le moteur générique `calendar` est trop pauvre. On le **remplace** par un mote
 6. ~~**Notifications avant live**~~ → **FAIT** : worker `jobs/live-reminders.js` (poll 60s) enfile des rappels dans `email_queue` (envoyés par `jobs/email.js` → Resend), idempotent via `live_sessions.reminder_sent_at`. Destinataires : hôte + élève du RDV.
 
 > Côté santé (MEDOS/Zahir), `teleconsult.service` prouve déjà que le pont RDV→live via le moteur Liri fonctionne en v2 — il sert de **modèle d'implémentation** pour le portage côté école.
+
+---
+
+## 6. Reste à faire — migration de la modale de RDV visiteur (`BookingCalendarModal`)
+
+Migré vers v2 : `available-secretaries` (moteur de matching), `cancel`, `reschedule`, et le bouton « Lancer la séance live ».
+
+**4 appels Netlify v1 restants — ce ne sont PAS de simples rebranchements** : les endpoints v2 actuels renvoient des formes bien plus pauvres que ce que la modale attend. À **construire backend** (puis rebrancher le front + QA navigateur) :
+
+| Appel Netlify v1 | Endpoint v2 actuel | Manque (à enrichir backend) |
+|---|---|---|
+| `booking-available-slots` | `GET /booking/slots` (lignes brutes) | calcul du **slotGrid**, **dispo par région**, `schoolOpen`, fallback inter-zones, format `slotUtc`/`secretariatId` |
+| `booking-request-appointment` | `POST /booking/appointments` (slotId → ligne) | **assignation secrétaire**, notifications email/WhatsApp, `bookingReference`, `queuePosition`, `secretariatName` |
+| `booking-my-appointments` | `GET /booking/appointments` | forme attendue par la modale (détails visiteur) |
+| `booking-appointment-ics` | `GET /booking/appointments/:id/ics` | OK côté API ; reste le **téléchargement blob** côté front |
+
+→ Sous-chantier dédié (backend d'abord), à valider au **navigateur**. Ne pas rebrancher le front à l'aveugle : casserait le sélecteur de créneaux et l'écran de confirmation.
