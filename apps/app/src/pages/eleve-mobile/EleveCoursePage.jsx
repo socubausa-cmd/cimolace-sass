@@ -7,6 +7,7 @@ import {
   Layers,
   Clock,
   Lock,
+  Unlock,
   Sparkles,
   ArrowRight,
   MessageCircle,
@@ -64,10 +65,12 @@ export default function EleveCoursePage() {
       setLoading(true);
       setLoadError(null);
       try {
-        // Source réelle : table `courses` (la table `formations` n'existe pas)
+        // Source réelle : table `courses` (la table `formations` n'existe pas).
+        // On lit les VRAIES colonnes d'accès/prix (price_cents/currency/is_free :
+        // 20260521000031_courses_learning.sql) au lieu d'inventer access_mode='free'.
         const { data: formData, error: formErr } = await supabase
           .from('courses')
-          .select('id, title, description, category, created_at')
+          .select('id, title, description, category, created_at, price_cents, currency, is_free, status, metadata')
           .eq('id', id)
           .maybeSingle();
 
@@ -79,15 +82,40 @@ export default function EleveCoursePage() {
           setModules([]);
           return;
         }
+        // L'info de prix peut être ABSENTE si l'API (coursesApi) ne renvoie pas
+        // encore ces colonnes : on ne déduit un cours PAYANT que sur preuve
+        // explicite (is_free === false OU price_cents > 0). Sinon → ouvert/gratuit
+        // si membre du tenant (fail-open contrôlé, cohérent avec l'existant).
+        const hasAccessInfo =
+          typeof formData.is_free === 'boolean' || typeof formData.price_cents === 'number';
+        const priceCents = Number.isFinite(Number(formData.price_cents))
+          ? Number(formData.price_cents)
+          : 0;
+        const isPaidCourse =
+          formData.is_free === false || (formData.is_free == null && priceCents > 0);
+        const meta =
+          formData.metadata && typeof formData.metadata === 'object' ? formData.metadata : {};
+        // Respecte un mode d'accès explicitement déclaré dans metadata
+        // (subscription/one_time/free) ; sinon déduit du prix réel.
+        const declaredMode = meta.access_mode || meta?.access?.mode || null;
+        const resolvedAccessMode =
+          declaredMode || (isPaidCourse ? 'one_time' : 'free');
         // Normalise vers le shape attendu par les composants
         setFormation({
           ...formData,
-          status: 'published',
+          status: formData.status || 'published',
           cycle: null,
           duration_weeks: null,
-          price: 0,
+          price: priceCents > 0 ? Math.round(priceCents / 100) : 0,
           image_url: null,
-          meta: { access_mode: 'free', category: formData.category },
+          accessInfoKnown: hasAccessInfo,
+          meta: {
+            ...meta,
+            access_mode: resolvedAccessMode,
+            standalone_price: priceCents > 0 ? Math.round(priceCents / 100) : null,
+            standalone_currency: formData.currency || meta.standalone_currency || 'XAF',
+            category: formData.category,
+          },
         });
 
         if (user?.id) {
@@ -156,8 +184,24 @@ export default function EleveCoursePage() {
   const price = meta.standalone_price ?? meta?.access?.standalone_price ?? formation?.price ?? null;
   const currency = meta.standalone_currency || meta?.access?.standalone_currency || 'XAF';
 
+  // Accès RÉEL au cours = cours gratuit/ouvert OU abonnement actif OU déjà inscrit
+  // (student_progress). Le cadenas n'apparaît QUE pour un cours prouvé payant
+  // sans abonnement ni inscription.
+  const isPaidCourse = accessMode !== 'free';
+  const hasCourseAccess = !isPaidCourse || hasSubscriptionAccess || enrolled;
+
+  // Il n'existe PAS de lecteur de leçon dans la coque /m/eleve : la seule route
+  // cours est cette page. Le contenu (player) vit sur le web → lien hors-coque
+  // explicite (ouvert via openLearn), et NON via navigate() qui casserait le shell.
   const learnHref = id ? `/formation/${encodeURIComponent(id)}/learn` : null;
   const webDetailHref = id ? `/formation/${encodeURIComponent(id)}` : null;
+
+  const openLearn = useCallback(() => {
+    if (!learnHref) return;
+    if (typeof window !== 'undefined') {
+      window.location.assign(learnHref);
+    }
+  }, [learnHref]);
 
   const ensureEnrollment = useCallback(async () => {
     if (!user?.id || !id) return;
@@ -212,16 +256,16 @@ export default function EleveCoursePage() {
     }
     try {
       if (enrolled) {
-        if (learnHref) navigate(learnHref);
+        openLearn();
         return;
       }
       if (accessMode === 'subscription') {
         if (!hasSubscriptionAccess) {
-          navigate('/forfaits');
+          navigate(ELEVE_MOBILE.forfaits);
           return;
         }
         await ensureEnrollment();
-        if (learnHref) navigate(learnHref);
+        openLearn();
         return;
       }
       if (accessMode === 'one_time') {
@@ -229,7 +273,7 @@ export default function EleveCoursePage() {
         return;
       }
       await ensureEnrollment();
-      if (learnHref) navigate(learnHref);
+      openLearn();
     } catch (e) {
       setActionError(String(e?.message || 'Action impossible'));
     } finally {
@@ -242,7 +286,7 @@ export default function EleveCoursePage() {
     enrolled,
     accessMode,
     hasSubscriptionAccess,
-    learnHref,
+    openLearn,
     ensureEnrollment,
     createOneTimePayment,
   ]);
@@ -268,10 +312,13 @@ export default function EleveCoursePage() {
     if (accessMode === 'subscription') {
       return hasSubscriptionAccess ? "S'inscrire et accéder" : "S'abonner pour accéder";
     }
-    if (accessMode === 'one_time' && price != null) {
-      return `Payer le module — ${Number(price).toLocaleString()} ${currency}`;
+    if (accessMode === 'one_time') {
+      return price != null
+        ? `Payer le module — ${Number(price).toLocaleString()} ${currency}`
+        : 'Débloquer le module';
     }
-    return "S'inscrire gratuitement";
+    // Cours gratuit confirmé vs accès inconnu (on évite de promettre "gratuit").
+    return formation?.accessInfoKnown ? "S'inscrire gratuitement" : 'Accéder au cours';
   };
 
   return (
@@ -364,7 +411,9 @@ export default function EleveCoursePage() {
                           ? 'Abonnement'
                           : accessMode === 'one_time'
                             ? 'Vente module'
-                            : 'Gratuit'}
+                            : formation?.accessInfoKnown
+                              ? 'Gratuit'
+                              : 'Accès cours'}
                       </span>
                     </div>
                     <h1 className="font-serif text-2xl font-bold leading-tight text-white">{formation.title}</h1>
@@ -401,7 +450,7 @@ export default function EleveCoursePage() {
 
                     {accessMode === 'subscription' && !hasSubscriptionAccess && (
                       <Link
-                        to="/forfaits"
+                        to={ELEVE_MOBILE.forfaits}
                         className="flex h-12 w-full items-center justify-center rounded-2xl border text-sm font-semibold text-white/90"
                         style={{ borderColor: `${GOLD}66`, color: GOLD, background: `${GOLD}12` }}
                       >
@@ -479,7 +528,11 @@ export default function EleveCoursePage() {
                           <h3 className="min-w-0 flex-1 text-sm font-semibold text-white">
                             {mod.title || `Module ${mIdx + 1}`}
                           </h3>
-                          <Lock className="h-4 w-4 shrink-0 text-white/35" />
+                          {hasCourseAccess ? (
+                            <Unlock className="h-4 w-4 shrink-0" style={{ color: GOLD }} />
+                          ) : (
+                            <Lock className="h-4 w-4 shrink-0 text-white/35" />
+                          )}
                         </div>
                         <div className="space-y-1.5 border-t border-white/[0.06] px-3 py-2 pl-[3.25rem]">
                           {(mod.weeks || []).slice(0, 4).map((week, wIdx) => (

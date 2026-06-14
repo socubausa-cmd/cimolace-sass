@@ -7,9 +7,11 @@ import {
   ChevronRight,
   GraduationCap,
   Loader2,
+  Lock,
   UserCheck,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { useBilling } from '@/contexts/BillingContext';
 import { useDataSync } from '@/contexts/DataSyncContext';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
 import { EleveMobileShell, EleveSectionTitle } from '@/components/eleve-mobile/EleveMobileShell';
@@ -35,11 +37,15 @@ const PAGE_AMBIENT = ELEV_MODULES_PAGE_AMBIENT ?? EV_PAGE_AMBIENT;
  */
 export default function EleveModulesScreen() {
   const { user } = useAuth();
+  const { status: billingStatus, inGrace } = useBilling();
   const { notifications: sync } = useDataSync();
   const unreadInbox = (Array.isArray(sync) ? sync : []).filter((n) => !n.isRead).length;
   const [cycleFilter, setCycleFilter] = useState('all');
   const [formations, setFormations] = useState([]);
   const [formationsLoading, setFormationsLoading] = useState(true);
+
+  const hasSubscriptionAccess =
+    billingStatus === 'active' || (billingStatus === 'past_due' && inGrace);
 
   useEffect(() => {
     let alive = true;
@@ -59,9 +65,20 @@ export default function EleveModulesScreen() {
   const moduleRows = useMemo(() => {
     return PRORASCIENCE_MODULES.map((mod) => {
       const formation = findFormationForModule(formations, mod);
-      return { ...mod, formation, available: Boolean(formation) };
+      const exists = Boolean(formation);
+      // Accès réel : un cours payant sans abonnement actif n'est PAS "ouvert".
+      // Si l'info de prix est inconnue, on reste fail-open (cohérent avec la fiche).
+      const locked = exists && formation?.isPaid === true && !hasSubscriptionAccess;
+      return {
+        ...mod,
+        formation,
+        // `available` = il existe un cours rattaché (navigable vers la fiche)
+        available: exists,
+        // `accessState` = ce qu'on AFFICHE réellement
+        accessState: !exists ? 'soon' : locked ? 'locked' : 'open',
+      };
     });
-  }, [formations]);
+  }, [formations, hasSubscriptionAccess]);
 
   const displayedModules = useMemo(() => {
     if (cycleFilter === 'all') return moduleRows;
@@ -69,7 +86,8 @@ export default function EleveModulesScreen() {
     return moduleRows.filter((m) => cycle?.modules?.includes(m.number));
   }, [cycleFilter, moduleRows]);
 
-  const availableCount = moduleRows.filter((m) => m.available).length;
+  // "Ouverts" = modules réellement accessibles (pas seulement existants).
+  const availableCount = moduleRows.filter((m) => m.accessState === 'open').length;
 
   return (
     <EleveMobileShell user={user} notificationCount={unreadInbox} hideHeader contentClassName="!px-0">
@@ -184,6 +202,11 @@ export default function EleveModulesScreen() {
             <ul className="space-y-3">
               {displayedModules.map((mod, i) => {
                 const Icon = MODULE_ICONS[mod.number - 1] || BookOpen;
+                const isOpen = mod.accessState === 'open';
+                const isLocked = mod.accessState === 'locked';
+                // Un module rattaché à un cours reste navigable (vers la fiche),
+                // qu'il soit ouvert ou premium ; seul "à venir" ne l'est pas.
+                const navigable = mod.available;
                 const to = mod.formation?.id
                   ? ELEVE_MOBILE.course(mod.formation.id)
                   : ELEVE_MOBILE.forfaits;
@@ -192,8 +215,8 @@ export default function EleveModulesScreen() {
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.025 * i }}
-                    className={cn('overflow-hidden p-3.5', !mod.available && 'opacity-58')}
-                    style={{ borderRadius: EV_R.md, ...moduleCatalogSurface(mod.available) }}
+                    className={cn('overflow-hidden p-3.5', !navigable && 'opacity-58')}
+                    style={{ borderRadius: EV_R.md, ...moduleCatalogSurface(navigable) }}
                   >
                     <div className="flex items-start gap-3">
                       <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10">
@@ -214,13 +237,16 @@ export default function EleveModulesScreen() {
                           </div>
                           <span
                             className={cn(
-                              'shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em]',
-                              mod.available
+                              'inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em]',
+                              isOpen
                                 ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-300'
-                                : 'border-white/10 bg-white/[0.04] text-white/35',
+                                : isLocked
+                                  ? 'border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37]'
+                                  : 'border-white/10 bg-white/[0.04] text-white/35',
                             )}
                           >
-                            {mod.available ? 'Ouvert' : 'À venir'}
+                            {isLocked ? <Lock className="h-2.5 w-2.5" /> : null}
+                            {isOpen ? 'Ouvert' : isLocked ? 'Premium' : 'À venir'}
                           </span>
                         </div>
                         <p className="mt-2 line-clamp-2 text-[11.5px] leading-relaxed text-white/45">
@@ -238,10 +264,10 @@ export default function EleveModulesScreen() {
                           <span
                             className={cn(
                               'inline-flex items-center text-[12px] font-semibold',
-                              mod.available ? 'text-[#D4AF37]' : 'text-white/30',
+                              navigable ? 'text-[#D4AF37]' : 'text-white/30',
                             )}
                           >
-                            {mod.available ? 'Ouvrir' : 'Bientôt'}
+                            {isOpen ? 'Ouvrir' : isLocked ? 'Débloquer' : 'Bientôt'}
                             <ChevronRight className="ml-0.5 h-4 w-4" />
                           </span>
                         </div>
@@ -251,7 +277,7 @@ export default function EleveModulesScreen() {
                 );
                 return (
                   <li key={mod.number}>
-                    {mod.available ? <Link to={to} className="block">{content}</Link> : content}
+                    {navigable ? <Link to={to} className="block">{content}</Link> : content}
                   </li>
                 );
               })}
