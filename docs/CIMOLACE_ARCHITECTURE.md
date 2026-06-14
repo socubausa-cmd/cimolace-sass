@@ -151,7 +151,7 @@ nouveau client.** Ne jamais revenir à un flux qui exige d'allowlister chaque do
 | `App.jsx` routes exactes `/t/isna`, `/t/isna/ecole|temple|programme|mission|fondateur|doctrine` (`MaquetteHero04`…) | vitrine narrative ISNA montée sur des chemins en dur | route générique `/t/:slug` qui charge la vitrine **depuis la config/DB du tenant** (le **contenu** ISNA reste à ISNA, le **chemin** devient générique) |
 | `lib/auth-store.ts` `TOKEN_KEY='isna-v2-debug-api-bearer'`, `TENANT_KEY='isna-v2-tenant-slug'` | clés localStorage préfixées `isna` | préfixe neutre `cimolace-…` (compat à gérer) |
 | Fallbacks `localStorage.getItem('tenantSlug') \|\| 'isna'` (Forum, etc.) | défaut `'isna'` | `DEFAULT_TENANT_SLUG` central |
-| `StudioIsnaPipelinePage.jsx` table `isna_pipeline_runs` | table nommée par tenant | table générique scopée `tenant_id` |
+| ~~`StudioIsnaPipelinePage.jsx` table `isna_pipeline_runs`~~ ✅ | table nommée par tenant | **Fait (2026-06-14, étape 4)** — page morte supprimée, réf éliminée (cf. *État* ci-dessous) |
 | `apps/app/src/app/isna/*` (Next legacy) | pages `/app/isna/*` | redirections legacy — à supprimer à terme |
 
 **Légitimes (NE PAS toucher)** : `tenants/isna/tenant.config.js` (données du tenant ISNA),
@@ -165,15 +165,62 @@ les assets `/image-pro/prorascience-*`, l'email de dev `cimolace-admin@prorascie
 2. Résoudre le tenant **par domaine** via `tenant_domains` (au lieu des `if path.includes('prorascience')`).
 3. Rendre la vitrine `/t/:slug` générique (charger `Maquette*`/contenu depuis la config tenant)
    et faire pointer l'apex du domaine perso dessus, en gardant le rendu actuel pour ISNA.
-4. Nettoyer les routes/redirections legacy `/app/isna/*`, `/isna/*`, `/ecoles/isna-*`.
+4. Nettoyer les routes/redirections legacy `/app/isna/*`, `/isna/*`, `/ecoles/isna-*`. **Partiellement fait (2026-06-14, étape 4)** — cf. *État* ci-dessous.
 
 > ⚠️ Plusieurs de ces points sont **load-bearing en prod** (prorascience.org est servi via
 > `/t/isna`). À faire en chantier dédié, branche + revue, pas en sweep aveugle.
 
+### État au 2026-06-14 — étape 4 (finitions du découplage `isna`)
+
+Contexte : la grande refonte (Phases 1→6 de `docs/AUDIT_CONFUSION_CIMOLACE_ISNA_LIRI_2026-06-14.md`)
+a tranché la Phase 1 en **gardant `App.jsx` comme coque canonique unique** (suppression du doublon
+mort `App.tsx`/`main.jsx`) et a renommé le repo `isna_platform_v2 → cimolace`. Nettoyer `App.jsx`
+est donc **durable**, pas jetable.
+
+**1) Table `isna_pipeline_runs` — résolue par suppression, pas par migration.**
+Constat vérifié en prod : la table **n'a jamais existé** (`to_regclass` = `null`) ; la page
+`StudioIsnaPipelinePage` tournait en **fallback `localStorage`**. Elle était de surcroît **morte**
+(importée dans `StudioRouter` mais montée sur aucune route) et **remplacée** par
+`StudioFormationLlmBuilderPage` (`/studio/formation-llm-builder`), vers lequel `constructeur-isna`
+et `isna-course-constructor` redirigent déjà. → **Page supprimée** ; l'unique référence à
+`isna_pipeline_runs` disparaît du code. **Aucune action prod** (rien à migrer).
+*En réserve* — si un pipeline de runs est ré-introduit (côté `formation-llm-builder`), créer une
+table **générique scopée tenant** plutôt que de recréer `isna_pipeline_runs` :
+
+```sql
+-- À appliquer SEULEMENT si le pipeline de runs renaît.
+-- db push est cassé ici → SQL Editor du dashboard OU tools/migrate-liri/run-sql.js --file <ce.sql>
+create table public.course_pipeline_runs (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references public.tenants(id) on delete cascade,
+  created_by uuid not null,
+  video_url text, course_brief text, niveau text, contexte text, profil_pedagogique text,
+  phase1_status text, phase1_message text, phase1_transcript jsonb default '[]'::jsonb,
+  phase2_status text, phase2_message text,
+  course_json jsonb default '{}'::jsonb, meta_json jsonb default '{}'::jsonb, snapshot_json jsonb,
+  created_at timestamptz default now(), updated_at timestamptz default now()
+);
+alter table public.course_pipeline_runs enable row level security;
+create policy course_pipeline_runs_owner on public.course_pipeline_runs
+  for all
+  using (created_by = auth.uid()
+    and tenant_id in (select tenant_id from public.tenant_memberships where user_id = auth.uid()))
+  with check (created_by = auth.uid()
+    and tenant_id in (select tenant_id from public.tenant_memberships where user_id = auth.uid()));
+```
+
+**2) Redirections legacy `isna` dans `App.jsx` — nettoyage conservateur.**
+Ce sont des **pures redirections** (`<Navigate>` vers le système tenant générique déjà monté
+`/t/:slug/*`), sans page propre. **Retirées** (mortes, *aucun lien interne*, pas de valeur bookmark) :
+`/constructeur-isna` et `/isna-course-constructor` (doublons de `/studio/formation-llm-builder`) et la
+route mobile `prorascience/isna-pro`. **Conservées** (liens internes vivants + bookmarks/SEO) :
+`/isna` (lien depuis `LandingPage`), `/ecoles/isna-pro` (lien depuis `EcolesProrasciencePage`),
+`/isna/produits`(`/:slug`). Leur retrait définitif accompagnera une éventuelle suppression de `App.jsx`.
+
 ---
 
 ## 8. Repères repos (écosystème)
-- **Control plane / API + back-office** : `~/Downloads/isna_platform_v2` (ce repo).
+- **Control plane / API + back-office** : `~/Downloads/cimolace` (ce repo, ex-`isna_platform_v2` — renommé Phase 0/1).
 - **mbolo** : `~/Projects/mbolo` (storefront e-commerce réutilisable, clé `mbk_`).
 - **zahirwellness.com** : `~/Projects/zahirwellness-main` (tenant MEDOS + mbolo).
 - **App mobile LIRI** : `apps/mobile` (Expo) — install isolé hors workspaces.
