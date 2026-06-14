@@ -1279,7 +1279,6 @@ isLiriHostDevPreviewRoute;
             <Route path="boutique" element={<EleveBoutiqueSacreeScreen />} />
             <Route path="prorascience/forfaits" element={<VitrineForfaitsMobileScreen />} />
             <Route path="prorascience/formations" element={<VitrineFormationsMobileScreen />} />
-            <Route path="prorascience/isna-pro" element={<Navigate to={TENANT_ADMIN_PATH} replace />} /> {/* Legacy ISNA mobile route - redirects to tenant system */}
             <Route path="prorascience/a-propos" element={<VitrineAboutMobileScreen />} />
             <Route path="prorascience/accompagnement/mentorat" element={<VitrineMentoratMobileScreen />} />
             <Route path="prorascience/accompagnement/coaching" element={<VitrineCoachingMobileScreen />} />
@@ -1823,16 +1822,6 @@ isLiriHostDevPreviewRoute;
           <Route path="/studio/*" element={
             <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat', 'practitioner', 'clinic_admin']}>
               <StudioRouter />
-            </ProtectedRoleRoute>
-          } />
-          <Route path="/constructeur-isna" element={
-            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
-              <Navigate to={TENANT_ADMIN_PATH} replace /> {/* Legacy ISNA route - redirects to tenant system */}
-            </ProtectedRoleRoute>
-          } />
-          <Route path="/isna-course-constructor" element={
-            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
-              <Navigate to={TENANT_ADMIN_PATH} replace /> {/* Legacy ISNA route - redirects to tenant system */}
             </ProtectedRoleRoute>
           } />
 
