@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { twinApi, WHEEL_LABELS, COLOR_HEX, type OrganColor, type LabDocument } from './api';
 import {
   Loader2, Sparkles, Users, FlaskConical, FileText, GitBranch, Clock, TrendingUp, Beaker, Search, Camera as CameraIcon,
@@ -62,7 +62,15 @@ export function WheelPanel({ patientId }: { patientId: string }) {
   );
 }
 
-// ─── Mindmap biologique + corrélations (Modules 8/9/17/22) ──────────────────
+// ─── Mindmap biologique + corrélations (Modules 8/9/17/22) — NAVIGABLE ──────
+const mmBtn: React.CSSProperties = {
+  width: 28, height: 28, borderRadius: 8, border: '1px solid var(--zw-border)', background: '#fff',
+  color: 'var(--zw-text-soft)', fontSize: 15, lineHeight: 1, cursor: 'pointer',
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+};
+const MM_W = 520, MM_H = 400;
+const TYPE_COLOR: Record<string, string> = { organ: '#0ea5e9', symptom: '#f59e0b', condition: '#ef4444', hormone: 'var(--zw-violet)', biomarker: '#10b981', system: 'var(--zw-text-muted)' };
+
 export function MindmapPanel({ patientId }: { patientId: string }) {
   const [graph, setGraph] = useState<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] });
   const [corr, setCorr] = useState<any>(null);
@@ -71,41 +79,134 @@ export function MindmapPanel({ patientId }: { patientId: string }) {
     twinApi.correlations(patientId).then(setCorr).catch(() => {});
   }, [patientId]);
 
-  const nodes = graph.nodes.slice(0, 16);
-  const cx = 250, cy = 170, R = 140;
-  const pos = new Map<string, { x: number; y: number }>();
-  nodes.forEach((n, i) => {
-    const a = (Math.PI * 2 * i) / nodes.length;
-    pos.set(n.ref_code, { x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) });
+  const nodes = useMemo(() => graph.nodes.slice(0, 16), [graph.nodes]);
+
+  // Draggable positions, seeded from a radial layout whenever the node set changes.
+  const [pos, setPos] = useState<Record<string, { x: number; y: number }>>({});
+  useEffect(() => {
+    const cx = MM_W / 2, cy = MM_H / 2, R = 150;
+    const p: Record<string, { x: number; y: number }> = {};
+    nodes.forEach((n, i) => {
+      const a = -Math.PI / 2 + (Math.PI * 2 * i) / Math.max(1, nodes.length);
+      p[n.ref_code] = { x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) };
+    });
+    setPos(p);
+  }, [nodes]);
+
+  const [view, setView] = useState({ tx: 0, ty: 0, k: 1 });
+  const [sel, setSel] = useState<string | null>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const drag = useRef<{ mode: 'pan' | 'node' | null; code?: string; lx: number; ly: number; moved: boolean }>({ mode: null, lx: 0, ly: 0, moved: false });
+
+  // screen → viewBox coordinates
+  const toVB = (cx: number, cy: number) => {
+    const r = svgRef.current?.getBoundingClientRect();
+    if (!r || !r.width) return { x: 0, y: 0 };
+    return { x: ((cx - r.left) / r.width) * MM_W, y: ((cy - r.top) / r.height) * MM_H };
+  };
+  const startPan = (e: React.PointerEvent) => {
+    svgRef.current?.setPointerCapture?.(e.pointerId);
+    const v = toVB(e.clientX, e.clientY);
+    drag.current = { mode: 'pan', lx: v.x, ly: v.y, moved: false };
+  };
+  const startNode = (e: React.PointerEvent, code: string) => {
+    e.stopPropagation();
+    svgRef.current?.setPointerCapture?.(e.pointerId);
+    const v = toVB(e.clientX, e.clientY);
+    drag.current = { mode: 'node', code, lx: v.x, ly: v.y, moved: false };
+  };
+  const onMove = (e: React.PointerEvent) => {
+    const d = drag.current;
+    if (!d.mode) return;
+    const v = toVB(e.clientX, e.clientY);
+    const dx = v.x - d.lx, dy = v.y - d.ly;
+    if (Math.abs(dx) > 1.2 || Math.abs(dy) > 1.2) d.moved = true;
+    if (d.mode === 'pan') setView((s) => ({ ...s, tx: s.tx + dx, ty: s.ty + dy }));
+    else if (d.code) setPos((p) => ({ ...p, [d.code!]: { x: (p[d.code!]?.x ?? 0) + dx / view.k, y: (p[d.code!]?.y ?? 0) + dy / view.k } }));
+    d.lx = v.x; d.ly = v.y;
+  };
+  const endDrag = () => {
+    const d = drag.current;
+    if (d.mode === 'node' && !d.moved && d.code) setSel((s) => (s === d.code ? null : d.code!));
+    else if (d.mode === 'pan' && !d.moved) setSel(null);
+    drag.current = { mode: null, lx: 0, ly: 0, moved: false };
+  };
+  const onWheel = (e: React.WheelEvent) => {
+    const v = toVB(e.clientX, e.clientY);
+    const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+    setView((s) => {
+      const k = Math.min(3, Math.max(0.4, s.k * factor));
+      const f = k / s.k;
+      return { k, tx: v.x - (v.x - s.tx) * f, ty: v.y - (v.y - s.ty) * f };
+    });
+  };
+  const zoomBy = (f: number) => setView((s) => {
+    const k = Math.min(3, Math.max(0.4, s.k * f));
+    const cx = MM_W / 2, cy = MM_H / 2, r = k / s.k;
+    return { k, tx: cx - (cx - s.tx) * r, ty: cy - (cy - s.ty) * r };
   });
-  const typeColor: Record<string, string> = { organ: '#0ea5e9', symptom: '#f59e0b', condition: '#ef4444', hormone: 'var(--zw-violet)', biomarker: '#10b981', system: 'var(--zw-text-muted)' };
+
+  const conn = useMemo(() => {
+    if (!sel) return null;
+    const s = new Set<string>([sel]);
+    graph.edges.forEach((e: any) => { if (e.from_code === sel) s.add(e.to_code); if (e.to_code === sel) s.add(e.from_code); });
+    return s;
+  }, [sel, graph.edges]);
 
   return (
     <div style={panel}>
-      <h3 style={head}><GitBranch size={15} color="var(--zw-violet)" /> Mindmap biologique & corrélations</h3>
-      <div className="twin-mindmap-scroll">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, gap: 8 }}>
+        <h3 style={{ ...head, marginBottom: 0 }}><GitBranch size={15} color="var(--zw-violet)" /> Mindmap biologique & corrélations</h3>
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          <button onClick={() => zoomBy(1.15)} style={mmBtn} title="Zoom avant">+</button>
+          <button onClick={() => zoomBy(1 / 1.15)} style={mmBtn} title="Zoom arrière">−</button>
+          <button onClick={() => { setView({ tx: 0, ty: 0, k: 1 }); setSel(null); }} style={mmBtn} title="Réinitialiser la vue">⟲</button>
+        </div>
+      </div>
+      <div style={{ border: '1px solid var(--zw-border)', borderRadius: 12, background: 'var(--zw-bg-subtle)', overflow: 'hidden' }}>
         <svg
+          ref={svgRef}
           width="100%"
-          viewBox="0 0 500 340"
+          viewBox={`0 0 ${MM_W} ${MM_H}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ display: 'block', width: '100%', height: 'auto', maxHeight: 380, overflow: 'visible' }}
+          style={{ display: 'block', width: '100%', height: 'auto', maxHeight: 460, touchAction: 'none', cursor: 'grab' }}
+          onPointerDown={startPan}
+          onPointerMove={onMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onWheel={onWheel}
         >
-          {graph.edges.map((e: any, i: number) => {
-            const a = pos.get(e.from_code), b = pos.get(e.to_code);
-            if (!a || !b) return null;
-            return <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="var(--zw-border-strong)" strokeWidth={Math.max(1, (e.weight || 0.5) * 3)} opacity="0.6" />;
-          })}
-          {nodes.map((n: any) => {
-            const p = pos.get(n.ref_code); if (!p) return null;
-            return (
-              <g key={n.id}>
-                <circle cx={p.x} cy={p.y} r="7" fill={typeColor[n.node_type] || 'var(--zw-text-muted)'} />
-                <text x={p.x} y={p.y - 11} fontSize="11" textAnchor="middle" fill="var(--zw-text-soft)">{n.label_fr}</text>
-              </g>
-            );
-          })}
+          <g transform={`translate(${view.tx} ${view.ty}) scale(${view.k})`}>
+            {graph.edges.map((e: any, i: number) => {
+              const a = pos[e.from_code], b = pos[e.to_code];
+              if (!a || !b) return null;
+              const touches = sel && (e.from_code === sel || e.to_code === sel);
+              const active = !conn || (conn.has(e.from_code) && conn.has(e.to_code));
+              return <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+                stroke={touches ? 'var(--zw-violet)' : 'var(--zw-border-strong)'}
+                strokeWidth={touches ? 2.2 : Math.max(1, (e.weight || 0.5) * 3)}
+                opacity={active ? (touches ? 0.95 : 0.5) : 0.1} />;
+            })}
+            {nodes.map((n: any) => {
+              const p = pos[n.ref_code]; if (!p) return null;
+              const dim = conn ? !conn.has(n.ref_code) : false;
+              const isSel = sel === n.ref_code;
+              return (
+                <g key={n.id} transform={`translate(${p.x} ${p.y})`} opacity={dim ? 0.22 : 1}
+                  style={{ cursor: 'pointer' }} onPointerDown={(ev) => startNode(ev, n.ref_code)}>
+                  <circle r={isSel ? 11 : 8} fill={TYPE_COLOR[n.node_type] || 'var(--zw-text-muted)'}
+                    stroke={isSel ? 'var(--zw-violet)' : '#fff'} strokeWidth={isSel ? 3 : 1.5} />
+                  <text y={-14} fontSize={11} fontWeight={isSel ? 700 : 500} textAnchor="middle"
+                    fill="var(--zw-text-soft)" style={{ pointerEvents: 'none', userSelect: 'none' }}>{n.label_fr}</text>
+                </g>
+              );
+            })}
+          </g>
         </svg>
       </div>
+      <p style={{ fontSize: 11, color: 'var(--zw-text-faint)', marginTop: 6 }}>
+        Glissez pour déplacer · molette / +− pour zoomer · cliquez un nœud pour isoler ses liens{sel ? ' · cliquez le fond pour tout réafficher' : ''}
+      </p>
       {corr && (
         <div style={{ marginTop: 8 }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--zw-text-soft)', marginBottom: 4 }}>Corrélations détectées (données patient)</div>
