@@ -15,7 +15,7 @@ const T = {
   surface2:  '#192734',
   border:    'rgba(255,255,255,0.07)',
   borderMid: 'rgba(255,255,255,0.12)',
-  gold:      '#D4AF37',
+  gold:      'var(--school-accent)',
   goldDim:   'rgba(212,175,55,0.12)',
   goldMid:   'rgba(212,175,55,0.28)',
   violet:    '#7C3AED',

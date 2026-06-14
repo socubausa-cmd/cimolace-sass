@@ -167,6 +167,17 @@ export class BookingController {
     return this.booking.updateAppointment(id, tenant.id, dto);
   }
 
+  // Annulation par le propriétaire (élève/visiteur) — pas de rôle staff,
+  // la propriété du RDV est vérifiée dans le service.
+  @Post('appointments/:id/cancel')
+  cancelOwnAppointment(
+    @Param('id') id: string,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
+  ) {
+    return this.booking.cancelOwnAppointment(id, tenant.id, (req as any).user.id);
+  }
+
   // ── Feedback ─────────────────────────────────────────────────────────────
 
   @Post('feedback')

@@ -168,6 +168,32 @@ export class BookingService {
     return data ?? [];
   }
 
+  /**
+   * Annulation par le propriétaire du RDV (élève/visiteur) — sans rôle staff.
+   * Vérifie que le RDV appartient bien à l'utilisateur (student_id) avant d'annuler.
+   */
+  async cancelOwnAppointment(appointmentId: string, tenantId: string, userId: string) {
+    const { data: appt } = await (this.supabase.client as any)
+      .from('appointments')
+      .select('id, student_id')
+      .eq('id', appointmentId)
+      .eq('tenant_id', tenantId)
+      .single();
+    if (!appt) throw new NotFoundException('Rendez-vous introuvable');
+    if (appt.student_id && String(appt.student_id) !== String(userId)) {
+      throw new NotFoundException('Rendez-vous introuvable');
+    }
+    const { data, error } = await (this.supabase.client as any)
+      .from('appointments')
+      .update({ status: 'cancelled' })
+      .eq('id', appointmentId)
+      .eq('tenant_id', tenantId)
+      .select('*')
+      .single();
+    if (error || !data) throw new NotFoundException('Rendez-vous introuvable');
+    return data;
+  }
+
   async getAppointment(appointmentId: string, tenantId: string) {
     const { data, error } = await (this.supabase.client as any)
       .from('appointments')

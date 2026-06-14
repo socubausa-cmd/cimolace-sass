@@ -158,7 +158,7 @@ export const bookingApi = {
   setPreparation: (appointmentId: string, body: Record<string, unknown>) =>
     api.post<any>(`/booking/appointments/${appointmentId}/preparation`, body).then(bookingUnwrap),
   cancelAppointment: (appointmentId: string) =>
-    api.patch<any>(`/booking/appointments/${appointmentId}`, { status: "cancelled" }).then(bookingUnwrap),
+    api.post<any>(`/booking/appointments/${appointmentId}/cancel`).then(bookingUnwrap),
   requestReschedule: (body: { appointment_id: string; reason?: string; proposed_slots?: Array<{ start: string; end: string }> }) =>
     api.post<any>("/booking/reschedule/request", body).then(bookingUnwrap),
 };
@@ -169,9 +169,9 @@ export const chatApi = {
   // Chat du live (room logique 'live:<sessionId>') — même moteur que DM/groupes.
   openLive: (liveSessionId: string) => api.post<any>(`/chat-engine/live/${liveSessionId}`).then(bookingUnwrap),
   rooms: () => api.get<any>("/chat-engine/rooms").then(bookingUnwrap),
-  messages: (roomId: string) => api.get<any>(`/chat-engine/rooms/${roomId}/messages`).then(bookingUnwrap),
+  messages: (roomId: string) => api.get<any>(`/chat-engine/rooms/${encodeURIComponent(roomId)}/messages`).then(bookingUnwrap),
   send: (roomId: string, content: string) =>
-    api.post<any>(`/chat-engine/rooms/${roomId}/messages`, { content }).then(bookingUnwrap),
+    api.post<any>(`/chat-engine/rooms/${encodeURIComponent(roomId)}/messages`, { content }).then(bookingUnwrap),
 };
 
 // ── Back-office tenant : marketplace + support ──────────────────────────────
