@@ -140,11 +140,20 @@ export const ENGINE_CATALOG: EngineEntry[] = [
     description: 'Outils marketing et growth',
     category: 'content',
   },
-  // Agenda
+  // Agenda / Booking
   {
+    key: 'booking_engine',
+    label: 'Booking',
+    description:
+      'RDV intelligents (disponibilités, routing secrétariat pondéré, rappels, satisfaction, ICS) + calendrier. Moteur AUTONOME embeddable (façon Calendly / Google Calendar) ; se prolonge en séance live quand Liri est activé.',
+    category: 'calendar',
+  },
+  {
+    // Déprécié — alias historique de booking_engine. Conservé pour rétro-compat
+    // (anciens tenant_services.service_key = 'calendar'). Ne plus utiliser dans les templates.
     key: 'calendar',
-    label: 'Calendar',
-    description: 'Calendrier et planification',
+    label: 'Calendar (déprécié → booking_engine)',
+    description: 'Alias historique de booking_engine.',
     category: 'calendar',
   },
   // MedOS
@@ -290,7 +299,7 @@ export const INFRA_TEMPLATES: InfraTemplate[] = [
       'liri_live',
       'liri_replay',
       'marketing_creator',
-      'calendar',
+      'booking_engine',
       'course_builder',
       // recommended
       'studio_creator',
@@ -340,7 +349,7 @@ export const INFRA_TEMPLATES: InfraTemplate[] = [
     engines: [
       'med_programs',
       'med_health',
-      'calendar',
+      'booking_engine',
       'chat_engine',
       'forum',
     ],
@@ -363,7 +372,7 @@ export const INFRA_TEMPLATES: InfraTemplate[] = [
     description: 'Live, calendrier, forum, paiement, chat',
     engines: [
       'liri_live',
-      'calendar',
+      'booking_engine',
       'forum',
       'pay_engine',
       'chat_engine',
@@ -376,7 +385,7 @@ export const INFRA_TEMPLATES: InfraTemplate[] = [
     engines: [
       'forum',
       'chat_engine',
-      'calendar',
+      'booking_engine',
       'pay_engine',
       'notif_engine',
     ],

@@ -26,7 +26,7 @@ Plateforme Cimolace
 
 ## 1. Le moteur Booking / Calendrier intelligent
 
-**Décision : en faire un moteur AUTONOME `cimolace_booking` (alias « Liri Booking »), frère de Liri — pas un sous-module de Liri.**
+**Décision : en faire un moteur AUTONOME `booking_engine` (alias « Liri Booking »), frère de Liri — pas un sous-module de Liri.**
 
 - **Vendable seul** → concurrent **Calendly / Cal.com / Google Calendar** : un client ajoute juste la prise de RDV sur son site (embed API/SDK), sans école ni live. **Point d'entrée à faible friction** (marché énorme, cycle de vente court).
 - **Composable** → Liri et l'École l'**activent**. Quand Liri est activé à côté, le moteur Booking **communique** avec lui (pont RDV → séance live, exactement le `booking-start-immersive-live` de v1). Quand Liri n'est pas là, le Booking marche seul (juste un RDV, un ICS, un rappel).
@@ -79,8 +79,8 @@ Au-dessus des moteurs, les **infrastructures clé-en-main** (École/ISNA, Santé
 
 ## 4. Décisions concrètes qui découlent de cette politique
 
-1. Créer le moteur **`cimolace_booking`** autonome (porter `_lib/booking/` de v1 en NestJS multi-tenant), avec **mode sans-Liri** (RDV/ICS seuls) et **mode avec-Liri** (pont RDV→live activé si Liri présent).
+1. Créer le moteur **`booking_engine`** autonome (porter `_lib/booking/` de v1 en NestJS multi-tenant), avec **mode sans-Liri** (RDV/ICS seuls) et **mode avec-Liri** (pont RDV→live activé si Liri présent).
 2. Lui donner sa **clé API / SDK / embed** propre (comme Liri) → vendable seul.
-3. **Remplacer `calendar`** par `cimolace_booking` dans le catalogue (après audit des usages de `'calendar'`).
+3. **Remplacer `calendar`** par `booking_engine` dans le catalogue (après audit des usages de `'calendar'`).
 4. **Ne pas** gonfler Liri : le secrétariat/RDV/messagerie restent des moteurs activés par l'**infrastructure École**, pas par Liri.
 5. Garder **ISNA = infrastructure École** comme bundle de référence « pixel-pixel v1 ».

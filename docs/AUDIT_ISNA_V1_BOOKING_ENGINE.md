@@ -1,7 +1,7 @@
 # Audit ISNA API v1 (modèle autoritaire) → moteur « Liri Booking » pour Cimolace v2
 
 > **ISNA v1** (`~/Downloads/isna_app`, app Vite + **Netlify Functions**, mono-tenant) est le **modèle de référence**. Chaque tenant école de Cimolace v2 doit lui ressembler **au pixel** sur les fonctions école : **messagerie**, **rendez-vous** (création + validation), **moteur de booking intelligent**, **calendrier**.
-> **Direction validée :** le moteur de booking intelligent de v1 devient un **moteur embarqué dans Liri** (`liri_booking`) qui traite les rendez-vous + gère le calendrier, et **remplace le moteur générique `calendar`**.
+> **Direction validée :** le moteur de booking intelligent de v1 devient un **moteur embarqué dans Liri** (`booking_engine`) qui traite les rendez-vous + gère le calendrier, et **remplace le moteur générique `calendar`**.
 > Audit : 2026-06-14.
 
 ---
@@ -59,9 +59,9 @@ Moteur de réponse secrétariat : `response-engine-secretariat-threads` / `-repl
 
 ---
 
-## 4. Cible : moteur `liri_booking` embarqué dans Liri (remplace `calendar`)
+## 4. Cible : moteur `booking_engine` embarqué dans Liri (remplace `calendar`)
 
-Le moteur générique `calendar` est trop pauvre. On le **remplace** par un moteur **`liri_booking`** (catégorie Liri), qui embarque tout le modèle v1 :
+Le moteur générique `calendar` est trop pauvre. On le **remplace** par un moteur **`booking_engine`** (catégorie Liri), qui embarque tout le modèle v1 :
 
 - **Rendez-vous** : création, validation, annulation, reschedule (décision staff).
 - **Booking intelligent** : `availabilityEngine` + `secretaryMatching` (scoring pondéré) + `timezoneRouting`.
@@ -70,17 +70,17 @@ Le moteur générique `calendar` est trop pauvre. On le **remplace** par un mote
 - **Préparation secrétaire** : endpoint NestJS (remplace la fonction Netlify v1).
 
 ### Impact catalogue
-`calendar` est utilisé par les templates **school, wellness, temple, community**. Remplacer `calendar` → `liri_booking` dans ces 4 templates (ou faire de `calendar` un alias de `liri_booking`). À faire prudemment : auditer d'abord tous les usages du `service_key` `'calendar'` (guards, tenant_services) avant le swap.
+`calendar` est utilisé par les templates **school, wellness, temple, community**. Remplacer `calendar` → `booking_engine` dans ces 4 templates (ou faire de `calendar` un alias de `booking_engine`). À faire prudemment : auditer d'abord tous les usages du `service_key` `'calendar'` (guards, tenant_services) avant le swap.
 
 ---
 
 ## 5. Plan de portage (pour rendre ISNA v2 « pixel-pixel » avec v1)
 
-1. **Créer le moteur `liri_booking`** côté `apps/api/src` : porter `_lib/booking/` (availabilityEngine, **secretaryMatching**, timezoneRouting, appointmentCreation, notifications) en services NestJS multi-tenant.
+1. **Créer le moteur `booking_engine`** côté `apps/api/src` : porter `_lib/booking/` (availabilityEngine, **secretaryMatching**, timezoneRouting, appointmentCreation, notifications) en services NestJS multi-tenant.
 2. **Porter le pont RDV → live école** : répliquer `booking-start-immersive-live` (insert `live_sessions` `entretien`/`secret`/`appointment_id`) en réutilisant le `LiveService` (comme `teleconsult.service` le fait déjà côté santé).
 3. **Porter `booking-set-preparation`** en endpoint NestJS et rebrancher `AppointmentPreparationPanel` dessus (sortir le dernier appel Netlify v1).
 4. **Enrichir la messagerie** : porter le response-engine qualifiant (`conversation_threads`, escalade/qualified) au-dessus de `chat-engine`.
-5. **Catalogue** : ajouter `liri_booking`, remplacer `calendar` dans school/wellness/temple/community (après audit des usages de `calendar`).
+5. **Catalogue** : ajouter `booking_engine`, remplacer `calendar` dans school/wellness/temple/community (après audit des usages de `calendar`).
 6. **Notifications avant live** : porter `live-start-emails-scheduled` (cron) → worker/email-engine.
 
 > Côté santé (MEDOS/Zahir), `teleconsult.service` prouve déjà que le pont RDV→live via le moteur Liri fonctionne en v2 — il sert de **modèle d'implémentation** pour le portage côté école.

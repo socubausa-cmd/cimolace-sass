@@ -20,7 +20,9 @@ export const ENGINE_CATALOG = [
   { key: "course_builder", name: "Course Builder", cat: "Contenu", desc: "Constructeur de formation", free: false },
   { key: "forum", name: "Forum", cat: "Contenu", desc: "Discussions + modération", free: true },
   { key: "marketing_creator", name: "Marketing Creator", cat: "Contenu", desc: "Promos, popups, bannières", free: false },
-  { key: "calendar", name: "Calendar", cat: "Agenda", desc: "Disponibilités + RDV", free: false },
+  { key: "booking_engine", name: "Booking", cat: "Agenda", desc: "RDV intelligents (routing secrétariat, rappels, ICS) + calendrier — autonome, embeddable", free: false },
+  // Déprécié — alias historique de booking_engine (rétro-compat tenant_services).
+  { key: "calendar", name: "Calendar (déprécié → booking_engine)", cat: "Agenda", desc: "Alias historique de booking_engine", free: false },
   { key: "med_ehr", name: "EHR", cat: "Santé", desc: "Dossiers patients", free: false },
   { key: "med_notes", name: "Notes SOAP", cat: "Santé", desc: "Consultation notes", free: false },
   { key: "med_prescriptions", name: "Prescriptions", cat: "Santé", desc: "Ordonnances numériques", free: false },
@@ -38,13 +40,13 @@ export const ENGINE_CATALOG = [
 
 // Infrastructure templates
 export const INFRA_TEMPLATES = [
-  { type: "school", name: "École en ligne", icon: "🏫", planDefault: "starter", engines: ["liri_smartboard","liri_live","liri_replay","marketing_creator","calendar"] },
+  { type: "school", name: "École en ligne", icon: "🏫", planDefault: "starter", engines: ["liri_smartboard","liri_live","liri_replay","marketing_creator","booking_engine"] },
   { type: "medos", name: "MedOS — Santé", icon: "🏥", planDefault: "solo", engines: ["med_ehr","med_notes","med_prescriptions","med_forms","med_health","med_programs","med_charting","gdpr_engine"] },
-  { type: "wellness", name: "Bien-être & Coaching", icon: "🌿", planDefault: "starter", engines: ["med_programs","med_health","calendar","chat_engine","forum"] },
+  { type: "wellness", name: "Bien-être & Coaching", icon: "🌿", planDefault: "starter", engines: ["med_programs","med_health","booking_engine","chat_engine","forum"] },
   { type: "creator", name: "Créateur de contenu", icon: "🎬", planDefault: "starter", engines: ["studio_creator","liri_live","liri_replay","pay_engine","marketing_creator"] },
   { type: "mbolo", name: "Boutique Mbolo", icon: "🛒", planDefault: "starter", engines: ["pay_engine","cinetpay","sms_engine","whatsapp_engine","notif_engine"] },
-  { type: "temple", name: "Temple & Spiritualité", icon: "🕌", planDefault: "starter", engines: ["liri_live","calendar","forum","pay_engine","chat_engine"] },
-  { type: "community", name: "Communauté", icon: "👥", planDefault: "starter", engines: ["forum","chat_engine","calendar","pay_engine","notif_engine"] },
+  { type: "temple", name: "Temple & Spiritualité", icon: "🕌", planDefault: "starter", engines: ["liri_live","booking_engine","forum","pay_engine","chat_engine"] },
+  { type: "community", name: "Communauté", icon: "👥", planDefault: "starter", engines: ["forum","chat_engine","booking_engine","pay_engine","notif_engine"] },
 ];
 
 @Injectable()

@@ -16,7 +16,7 @@ export const INFRASTRUCTURES: Array<{
     // core + recommended ; Masterclass = addon non activé par défaut).
     // Source de vérité = GET /catalog/templates ; cette liste statique n'est qu'un aperçu.
     engines: [
-      'SmartBoard', 'LIRI Live', 'Replay', 'Course Builder', 'Calendrier', 'Marketing',
+      'SmartBoard', 'LIRI Live', 'Replay', 'Course Builder', 'Booking / Calendrier', 'Marketing',
       'Studio Créateur', 'Neuro Recall', 'Paiements', 'Chat', 'Notifications',
     ],
   },

@@ -21,11 +21,11 @@ export interface SchoolEngineManifestEntry {
 
 export const SCHOOL_ENGINE_MANIFEST: SchoolEngineManifestEntry[] = [
   {
-    key: 'calendar',
-    label: 'Calendrier école',
+    key: 'booking_engine',
+    label: 'Booking / Calendrier école',
     tier: 'core',
     category: 'planning',
-    role: 'Agenda, rendez-vous, événements et planification pédagogique.',
+    role: 'RDV intelligents (routing secrétariat, rappels), agenda, événements et planification pédagogique. Se prolonge en séance live via Liri.',
     routes: ['/booking', '/m/eleve/calendrier', '/t/:tenantSlug/admin'],
     requiredProviders: ['supabase'],
     brandingZones: ['memberApp', 'adminBackoffice'],
