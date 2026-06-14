@@ -306,19 +306,19 @@ export function BookingCalendarModal({
         if (localData.recommended) setSelectedSecretary(localData.recommended);
         return;
       }
-      const qs = new URLSearchParams({
+      // API NestJS v2 (moteur secretaryMatching) — remplace la fonction Netlify v1.
+      const { bookingApi } = await import('@/lib/api');
+      const data = await bookingApi.availableSecretaries({
         timezone: requesterTimezone,
-        country: requesterCountry || '',
-        channel: bookingChannel,
+        country: requesterCountry || undefined,
       });
-      const res = await fetch(`/.netlify/functions/booking-available-secretaries?${qs.toString()}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'Impossible de charger les secrétaires');
-      setSecretaryRec(data.recommended || null);
-      setSecretaryAlts(data.alternatives || []);
-      setSecretaryStrategy(data.strategy || null);
+      const ranked = Array.isArray(data?.secretaries) ? data.secretaries : [];
+      const recommended = ranked[0] || null;
+      setSecretaryRec(recommended);
+      setSecretaryAlts(ranked.slice(1));
+      setSecretaryStrategy(data?.strategy?.strategy || data?.strategy || null);
       // Pré-sélectionner la recommandation
-      if (data.recommended) setSelectedSecretary(data.recommended);
+      if (recommended) setSelectedSecretary(recommended);
     } catch (e) {
       toast({ title: 'Secrétariat', description: e?.message || 'Réessayez.', variant: 'destructive' });
     } finally {
