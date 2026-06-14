@@ -20,7 +20,7 @@ import {
   CalendarDays, UserCheck, Zap, ArrowRight, Check, X, Info,
   Loader2, CheckCircle2, LogIn, ChevronLeft, Menu, Home,
 } from 'lucide-react';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const SITE_NAME = `${isnaTenantConfig.branding.name} · LIRI`;
 

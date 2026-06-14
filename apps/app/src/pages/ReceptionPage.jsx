@@ -31,7 +31,7 @@ import Logo from '@/components/Logo';
 import { cn } from '@/lib/utils';
 import { resolveDashboardPath } from '@/lib/dashboardRoute';
 import { useVitrineContactEmail } from '@/contexts/VitrineContactEmailContext';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const SCHOOL = isnaTenantConfig.branding.name;
 const SITE_NAME = `${SCHOOL} · LIRI`;

@@ -24,7 +24,7 @@ import {
   Bold, Italic, AlignLeft, AlignCenter, AlignRight, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 import {
   designerShellMicroLabel,
   designerShellCardInset,

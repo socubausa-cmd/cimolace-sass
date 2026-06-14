@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { ECOLES_SCIENCE_COLOR_PALETTE as colorPalette, ECOLES_SCIENCE_ICONS as iconsList, ECOLES_SCIENCES as sciences, ECOLES_CYCLES_DATA as cyclesData } from '@/data/ecoles21SciencesData';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const EcolesProrasciencePage = () => {
   const [redirectMobile, setRedirectMobile] = useState(() =>

@@ -42,7 +42,7 @@ import { Button } from '@/components/ui/button';
 import { FOUNDER_IMAGE_SOURCES } from '@/lib/founderImageSources';
 import { getLiriMemberLoginPath } from '@/lib/liriVitrineModel';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const SCHOOL = isnaTenantConfig.branding.name;
 const SCHOOL_FULL = isnaTenantConfig.branding.fullName;

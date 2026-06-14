@@ -6,7 +6,7 @@ import PricingDocumentation from '@/components/pricing/PricingDocumentation';
 import { useToast } from '@/components/ui/use-toast';
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const PricingPage = () => {
   const { toast } = useToast();

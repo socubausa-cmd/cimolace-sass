@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { Button } from '@/components/ui/button';
 import { User, Mail, MapPin, Shield, Edit2, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const MyProfilePage = () => {
   const { user, logout } = useAuth();

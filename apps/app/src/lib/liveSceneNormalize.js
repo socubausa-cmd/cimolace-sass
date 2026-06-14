@@ -2,7 +2,7 @@
  * Normalise une ligne live_scenes (ou brouillon wizard) vers le format SlideParallaxStage.
  */
 
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const LIVE_SCENE_BADGE_LABEL = `${isnaTenantConfig.branding.name} · LIRI`;
 

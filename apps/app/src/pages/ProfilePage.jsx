@@ -5,7 +5,7 @@ import { Helmet } from 'react-helmet';
 import { Button } from '@/components/ui/button';
 import { Save, User, Camera, Bell } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const ProfilePage = () => {
   const { user, profile } = useAuth();

@@ -46,7 +46,7 @@ import { useLiriMobileAgendaMerged } from '@/hooks/useLiriMobileAgendaMerged';
 import { useLiriMobileEnrollmentPreview } from '@/hooks/useLiriMobileEnrollmentPreview';
 import { formatDistanceToNow } from 'date-fns';
 import { fr as frDateFns } from 'date-fns/locale';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 import {
   hasQuickAccessLiveSoonSignal,
   pickQuickAccessLiveSession,

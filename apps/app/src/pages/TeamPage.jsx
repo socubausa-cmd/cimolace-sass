@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet';
 import { Linkedin, Twitter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { WEB_TEAM } from '@/data/prorascienceVitrineFromWebContent';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const TeamPage = () => {
   const t = WEB_TEAM;

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator'; // Need to create ui/separator or use hr
 import { Clock, BookOpen, CheckCircle, AlertCircle, ChevronDown, ChevronUp, ShoppingCart } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const ModuleDetailPageY2 = () => {
   const { moduleId } = useParams();

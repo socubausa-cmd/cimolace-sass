@@ -3,7 +3,7 @@ import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { ArrowRight, GraduationCap, Users, HelpCircle, Mail, BookOpen, Target, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const PUBLIC = isnaTenantConfig.branding.publicSiteOrigin;
 const SCHOOL = isnaTenantConfig.branding.name;

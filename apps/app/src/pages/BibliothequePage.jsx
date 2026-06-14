@@ -6,7 +6,7 @@ import {
   ArrowRight, GraduationCap, FileText, Tag,
   BookMarked, Library, ScrollText,
 } from 'lucide-react';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const LIBRARY_PAGE_TITLE = `Bibliothèque ${isnaTenantConfig.branding.name}`;
 

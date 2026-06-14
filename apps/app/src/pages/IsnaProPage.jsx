@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import SEO from '@/components/SEO';
 import { FOUNDER_IMAGE_SOURCES, FOUNDER_PORTRAIT_ALT } from '@/lib/founderImageSources';
 import { WEB_ISNA_PRO } from '@/data/prorascienceVitrineFromWebContent';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const HERO_PILLAR_META = [
   {

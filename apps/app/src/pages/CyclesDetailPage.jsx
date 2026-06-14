@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import PaymentOptionCard from '@/components/PaymentOptionCard';
 import ComparisonTable from '@/components/ComparisonTable';
 import { useVitrineContactEmail } from '@/contexts/VitrineContactEmailContext';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const SCHOOL = isnaTenantConfig.branding.name;
 

@@ -11,7 +11,7 @@ import {
   Activity, Target, Lock, BookOpen, Clock, Info
 } from 'lucide-react';
 import { WEB_MENTORAT } from '@/data/prorascienceVitrineFromWebContent';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const SubSection = ({ letter, title, children }) => (
   <div className="mb-10">

@@ -18,7 +18,7 @@ import TeacherClassroomPage from '@/pages/school/TeacherClassroomPage';
 import TeacherCorrectionPanel from '@/components/school/teacher/TeacherCorrectionPanel';
 import LiveSessionManager from '@/components/liri/lives/LiveSessionManager';
 import LiveStudioPage from '@/pages/studio-creator/LiveStudioPage';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 import StudentForumRedesign from '@/pages/school/student-school-life/StudentForumRedesign';
 import ForumNewQuestionPage from '@/pages/school/student-school-life/ForumNewQuestionPage';
 import ForumThreadPage from '@/pages/school/student-school-life/ForumThreadPage';

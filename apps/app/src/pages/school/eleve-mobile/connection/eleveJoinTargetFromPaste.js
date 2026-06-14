@@ -1,5 +1,5 @@
 import { parseLiveSessionIdFromRouteParam } from '@/lib/liveSessionRouteId';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 /**
  * Extrait l'UUID de session live d'un texte collé (URL complète, chemin, ou extrait).

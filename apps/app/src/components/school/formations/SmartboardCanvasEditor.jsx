@@ -18,7 +18,7 @@ import {
   genCanvasObjectId,
 } from '@/lib/smartboardCanvasModel';
 import CanvasTextFormatToolbar from '@/components/school/formations/CanvasTextFormatToolbar';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const GOLD = SB_CANVAS_GOLD;
 const GOLD_DIM = SB_CANVAS_GOLD_DIM;

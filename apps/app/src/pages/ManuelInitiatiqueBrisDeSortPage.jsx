@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 import manuelContent from '@/content/manuel-initiatique-bris-de-sort.md?raw';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const PUBLIC = isnaTenantConfig.branding.publicSiteOrigin;
 const PAGE_URL = `${PUBLIC}/manuel-initiatique-bris-de-sort`;

@@ -4,7 +4,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { Button } from '@/components/ui/button';
 import { Helmet } from 'react-helmet';
 import { ArrowLeft, Calendar, BookOpen, Clock, ChevronRight } from 'lucide-react';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const TrimesterDetailPage = () => {
   const { id } = useParams();

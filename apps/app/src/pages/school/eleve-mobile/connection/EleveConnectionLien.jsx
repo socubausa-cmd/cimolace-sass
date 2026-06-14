@@ -32,7 +32,7 @@ import {
   EV_R,
   EV_SH,
 } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const LAV_TITLE = 'rgb(196, 181, 253)';
 

@@ -12,7 +12,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Loader2, CheckCircle2, AlertCircle, Sparkles, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const LABELS = {
   1: 'Très insatisfait',

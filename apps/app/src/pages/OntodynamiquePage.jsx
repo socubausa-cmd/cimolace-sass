@@ -9,7 +9,7 @@ import {
   Square, GitBranch, Minus, Plus, Activity, Layers,
   BarChart3, Network
 } from 'lucide-react';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const PUBLIC = isnaTenantConfig.branding.publicSiteOrigin;
 const PAGE_URL = `${PUBLIC}/ontodynamique`;

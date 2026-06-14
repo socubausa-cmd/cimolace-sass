@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { Save, Upload } from 'lucide-react';
 import { useVitrineContactEmail } from '@/contexts/VitrineContactEmailContext';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const SITE_NAME = `${isnaTenantConfig.branding.name} · LIRI`;
 

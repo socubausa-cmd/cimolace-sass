@@ -14,7 +14,7 @@ import { CalendarSection } from '@/components/school/school-life/CalendarCompone
 import { Users, Info, Scale, Calendar as CalendarIcon, Bell, ClipboardCheck, MapPin } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import PremiumSegmentedSelector from '@/components/ui/premium-segmented-selector';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const SchoolLifePage = ({ embedded = false }) => {
   const location = useLocation();

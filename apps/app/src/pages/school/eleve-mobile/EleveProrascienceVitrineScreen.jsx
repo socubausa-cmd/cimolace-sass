@@ -36,7 +36,7 @@ import { LiriStatusBar } from '@/pages/school/eleve-mobile/connection/EleveConne
 import { EV_BG, EV_MUTED } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useDataSync } from '@/contexts/DataSyncContext';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const SCHOOL = isnaTenantConfig.branding.name;
 

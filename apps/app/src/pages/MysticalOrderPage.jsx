@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Crown, Star, Shield, ScrollText, Users, Eye, Zap, Scale, Heart, Globe, Infinity, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const SCHOOL = isnaTenantConfig.branding.name;
 const SITE_NAME = `${SCHOOL} · LIRI`;

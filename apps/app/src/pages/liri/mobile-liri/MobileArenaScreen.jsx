@@ -8,7 +8,7 @@ import {
   LiriSectionLabel,
 } from '@/components/liri/mobile-liri/LiriMobileScreenShell';
 import { LIRI_MOBILE } from '@/lib/liriMobileRoutes';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 /** Extrait l'UUID d'une session depuis un collage d'URL ou d'ID brut. */
 export function parseLiveSessionIdFromInput(raw) {

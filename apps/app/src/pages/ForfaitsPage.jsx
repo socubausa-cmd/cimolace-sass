@@ -51,7 +51,7 @@ import {
   TIER_ORDER,
   cycleContent,
 } from '@/data/cycleInitiationProduct';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const CYCLE_SELECTOR_ICONS = {
   autonome: BookOpen,

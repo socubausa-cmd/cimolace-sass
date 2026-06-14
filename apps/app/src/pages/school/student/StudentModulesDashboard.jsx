@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import { PlayCircle, Award, Clock } from 'lucide-react';
 import StatCard from '@/components/ui/StatCard';
 import PremiumSegmentedSelector from '@/components/ui/premium-segmented-selector';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const StudentModulesDashboard = () => {
   const { user } = useAuth();

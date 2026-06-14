@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import PremiumSegmentedSelector from '@/components/ui/premium-segmented-selector';
 import { Settings, CalendarDays, CreditCard, Shield, Bell, Plug } from 'lucide-react';
 
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 import { useResolvedTenantSlug } from '@/hooks/useResolvedTenantSlug';
 
 const SETTINGS_TABS = new Set(['general', 'academic', 'payments', 'security', 'notifications', 'integrations']);

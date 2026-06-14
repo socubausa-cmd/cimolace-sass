@@ -9,7 +9,7 @@ import FinalitySection from '@/components/school/formations/FinalitySection';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, ArrowDown } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const FormationsPage = () => {
 

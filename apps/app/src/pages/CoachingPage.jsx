@@ -8,7 +8,7 @@ import {
   CheckCircle2, Shield
 } from 'lucide-react';
 import { WEB_COACHING } from '@/data/prorascienceVitrineFromWebContent';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const PUBLIC = isnaTenantConfig.branding.publicSiteOrigin;
 const SCHOOL = isnaTenantConfig.branding.name;

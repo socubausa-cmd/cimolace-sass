@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 import { ngowazuluMentoratOffers } from '@/config/ngowazuluMentoratOffers';
 import { NGOWAZULU_CONSULTATION_NEXT_PATH } from '@/config/ngowazuluConsultation';
 import { HeroParallax } from '@/components/ui/hero-parallax';

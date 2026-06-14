@@ -15,7 +15,7 @@ import {
   Users,
 } from 'lucide-react';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const V = ELEVE_MOBILE.prorascience;
 
