@@ -35,7 +35,6 @@ import StudioSmartboardHelpPage from './StudioSmartboardHelpPage';
 import StudioCourseBuilderProPage from './StudioCourseBuilderProPage';
 import StudioLivePreviewPage from './StudioLivePreviewPage';
 import StudioExportCenterPage from './StudioExportCenterPage';
-import StudioIsnaPipelinePage from './StudioIsnaPipelinePage';
 import StudioFormationLlmBuilderPage from './StudioFormationLlmBuilderPage';
 
 export default function StudioRouter() {
