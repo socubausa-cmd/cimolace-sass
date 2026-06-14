@@ -66,6 +66,17 @@ export class BookingController {
     return this.booking.startLiveFromAppointment(tenant, userId, id);
   }
 
+  // ── Secrétaires disponibles (moteur de matching intelligent) ─────────────
+  @Get('available-secretaries')
+  availableSecretaries(
+    @CurrentTenant() tenant: TenantContext,
+    @Query('timezone') timezone?: string,
+    @Query('country') country?: string,
+    @Query('when') when?: string,
+  ) {
+    return this.booking.availableSecretaries(tenant, { timezone, country, when });
+  }
+
   // ── Préparation d'entretien (secrétariat) ────────────────────────────────
   @Get('appointments/:id/preparation')
   @UseGuards(RolesGuard)

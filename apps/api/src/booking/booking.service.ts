@@ -7,6 +7,13 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { LiveService } from '../live/live.service';
+import {
+  normalizeSecretaryProfile,
+  rankSecretaries,
+  matchingStrategy,
+  regionStatus,
+} from './engine/secretary-matching';
+import { detectVisitorContext } from './engine/timezone-routing';
 import type { TenantContext } from '../tenant/tenant.types';
 import type { CreateAppointmentDto, CreateSlotDto, SetPreparationDto, SubmitFeedbackDto, UpdateAppointmentDto } from './dto/booking.dto';
 
@@ -212,6 +219,97 @@ export class BookingService {
       .eq('tenant_id', tenant.id);
 
     return { ok: true, liveSessionId: live.id, reused: false };
+  }
+
+  // ── Secrétaires disponibles (moteur de matching v1) ──────────────────────
+  // Branche secretaryMatching/timezoneRouting sur les vrais membres du tenant.
+  async availableSecretaries(
+    tenant: TenantContext,
+    opts: { timezone?: string; country?: string; when?: string },
+  ) {
+    const context = detectVisitorContext({ timezone: opts.timezone, country: opts.country });
+    const when = opts.when ? new Date(opts.when) : new Date();
+    const closed = { strategy: 'closed' as const, openRegion: null };
+
+    // 1) Staff éligibles du tenant.
+    const { data: members } = await (this.supabase.client as any)
+      .from('tenant_memberships')
+      .select('user_id, role')
+      .eq('tenant_id', tenant.id)
+      .in('role', ['secretariat', 'admin', 'owner']);
+    const ids = (members ?? []).map((m: any) => m.user_id).filter(Boolean);
+    if (ids.length === 0) {
+      return { context, strategy: closed, statuses: [], secretaries: [] };
+    }
+
+    // 2) Profils (champs secrétariat).
+    const { data: rows } = await (this.supabase.client as any)
+      .from('profiles')
+      .select(
+        'id,name,email,timezone,country_code,secretariat_region,is_secretariat_active,is_secretariat_online,secretariat_last_seen_at,secretariat_sla_ms,availability_start_hour,availability_end_hour',
+      )
+      .in('id', ids);
+    const secretaries = (rows ?? []).map((row: any) => {
+      const s = normalizeSecretaryProfile(row);
+      // Éligible par défaut si membre staff et non explicitement désactivé.
+      if (row.is_secretariat_active === null || row.is_secretariat_active === undefined) {
+        s.active = true;
+      }
+      return s;
+    });
+
+    // 3) Charge (RDV en cours par membre).
+    const { data: queueRows } = await (this.supabase.client as any)
+      .from('appointments')
+      .select('teacher_id')
+      .eq('tenant_id', tenant.id)
+      .in('status', ['requested', 'scheduled', 'preparing']);
+    const queueBySecretary: Record<string, number> = {};
+    for (const r of queueRows ?? []) {
+      const id = r?.teacher_id;
+      if (id) queueBySecretary[id] = (queueBySecretary[id] || 0) + 1;
+    }
+
+    // 4) Capacité (créneaux dispo des 7 prochains jours par créateur).
+    const windowEnd = new Date(when);
+    windowEnd.setDate(windowEnd.getDate() + 7);
+    const { data: slotRows } = await (this.supabase.client as any)
+      .from('booking_slots')
+      .select('created_by, status')
+      .eq('tenant_id', tenant.id)
+      .eq('status', 'available')
+      .gte('start_at', when.toISOString())
+      .lte('start_at', windowEnd.toISOString());
+    const capacityBySecretary: Record<string, { free: number; total: number }> = {};
+    for (const slot of slotRows ?? []) {
+      const id = slot?.created_by;
+      if (!id) continue;
+      if (!capacityBySecretary[id]) capacityBySecretary[id] = { free: 0, total: 0 };
+      capacityBySecretary[id].total += 1;
+      capacityBySecretary[id].free += 1;
+    }
+
+    const strategy = matchingStrategy({ secretaries, visitorRegion: context.region, now: when });
+    const statuses = regionStatus(secretaries, when);
+    const ranked = rankSecretaries({
+      secretaries,
+      queueBySecretary,
+      capacityBySecretary,
+      visitorRegion: context.region,
+      slotDate: when,
+    }).map((s) => ({
+      id: s.id,
+      name: s.name,
+      region: s.region,
+      timezone: s.timezone,
+      score: s.score,
+      isOnline: s.isOnline,
+      isOpenForSlot: s.isOpenForSlot,
+      queueEstimate: s.queueCount,
+      freeSlots: capacityBySecretary[s.id]?.free ?? null,
+    }));
+
+    return { context, strategy, statuses, secretaries: ranked };
   }
 
   // ── Préparation d'entretien (secrétariat) ────────────────────────────────
