@@ -54,7 +54,7 @@ Moteur de réponse secrétariat : `response-engine-secretariat-threads` / `-repl
 | **Timezone routing** (contexte visiteur, prime hours) | — | ❌ **manquant** |
 | **Pont RDV → live (école)** | `live.service` évoque juste `appointment_id` (commentaire) | ❌ **manquant** (existe côté santé via `teleconsult.service`) |
 | **Préparation secrétaire** | front `AppointmentPreparationPanel` appelle encore `/.netlify/functions/booking-set-preparation` (**v1**) | ⚠️ **à porter** |
-| **Messagerie qualifiante** (`conversation_threads`, escalade) | `chat-engine` générique | ⚠️ **à enrichir** |
+| **Messagerie qualifiante** (`conversation_threads`, escalade) | **module `smart-response`** : `listThreads` (filtre status escalated/qualified, assigned_to), `threadMessages`, `secretariatReply` (message + maj statut) — **multi-tenant** (scopé via `response_engine_logs.tenant_id`) | ✅ **déjà porté** (mieux que v1) |
 | Calendrier | moteur générique **`calendar`** | ➡️ **à remplacer** (voir §4) |
 
 ---
@@ -79,7 +79,7 @@ Le moteur générique `calendar` est trop pauvre. On le **remplace** par un mote
 1. **Créer le moteur `booking_engine`** côté `apps/api/src` : porter `_lib/booking/` (availabilityEngine, **secretaryMatching**, timezoneRouting, appointmentCreation, notifications) en services NestJS multi-tenant.
 2. **Porter le pont RDV → live école** : répliquer `booking-start-immersive-live` (insert `live_sessions` `entretien`/`secret`/`appointment_id`) en réutilisant le `LiveService` (comme `teleconsult.service` le fait déjà côté santé).
 3. **Porter `booking-set-preparation`** en endpoint NestJS et rebrancher `AppointmentPreparationPanel` dessus (sortir le dernier appel Netlify v1).
-4. **Enrichir la messagerie** : porter le response-engine qualifiant (`conversation_threads`, escalade/qualified) au-dessus de `chat-engine`.
+4. ~~**Enrichir la messagerie**~~ → **DÉJÀ FAIT** : le module `smart-response` (`GET /smart-response/threads`, `/threads/:id/messages`, `POST /smart-response/secretariat/reply`) porte le response-engine qualifiant, **multi-tenant**. Rien à construire.
 5. **Catalogue** : ajouter `booking_engine`, remplacer `calendar` dans school/wellness/temple/community (après audit des usages de `calendar`).
 6. **Notifications avant live** : porter `live-start-emails-scheduled` (cron) → worker/email-engine.
 
