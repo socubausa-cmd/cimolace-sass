@@ -14,7 +14,11 @@ const LIVEKIT_URL = import.meta.env.VITE_LIVEKIT_URL || '';
 /** Mappe la réponse API { token, room } → forme attendue par le host { token, livekitUrl, roomName }. */
 async function fetchLiveKitTokenV2(liveSessionId, role) {
   const res = await apiV2.post(`/lives/${liveSessionId}/token`, { role });
-  const d = res?.data?.data ?? res?.data ?? {};
+  // Dépile les enveloppes `data` jusqu'au payload : le contrôleur renvoie `{data:…}`
+  // ET l'intercepteur global ré-emballe → réponse `{data:{data:{token,room}}}`. On
+  // tolère 1 ou 2 niveaux (selon l'endpoint) en s'arrêtant dès qu'on voit `token`.
+  let d = res?.data ?? {};
+  while (d && typeof d === 'object' && !('token' in d) && 'data' in d) d = d.data;
   if (!d.token) throw new Error('Token LiveKit indisponible (API)');
   if (!LIVEKIT_URL) throw new Error('VITE_LIVEKIT_URL manquant côté client');
   return { token: d.token, livekitUrl: LIVEKIT_URL, roomName: d.room, room: d.room };
