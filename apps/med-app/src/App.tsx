@@ -30,7 +30,7 @@ function AppRoutes() {
   // SSO handoff landing (embedded dashboard) — must run before the auth gate,
   // since it's what establishes the session.
   if (typeof window !== 'undefined' && window.location.pathname === '/handoff') return <HandoffPage />;
-  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>;
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--zw-text-faint)' }}>Chargement...</div>;
   if (!isAuthenticated) return <LoginPage />;
   return (
     <Routes>
@@ -52,7 +52,7 @@ function AppRoutes() {
         <Route
           path="/twin/new"
           element={
-            <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Chargement du wizard…</div>}>
+            <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--zw-text-faint)' }}>Chargement du wizard…</div>}>
               <PatientWizard />
             </Suspense>
           }
@@ -60,7 +60,7 @@ function AppRoutes() {
         <Route
           path="/twin/:patientId"
           element={
-            <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Chargement du jumeau numérique…</div>}>
+            <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--zw-text-faint)' }}>Chargement du jumeau numérique…</div>}>
               <TwinPage />
             </Suspense>
           }

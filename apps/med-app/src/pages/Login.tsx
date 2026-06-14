@@ -31,7 +31,7 @@ export function LoginPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#f8fafc',
+        background: 'var(--zw-bg)',
       }}
     >
       <div
@@ -56,7 +56,7 @@ export function LoginPage() {
           <h1 style={{ fontSize: 24, fontWeight: 700, marginTop: 12 }}>
             MedOS
           </h1>
-          <p style={{ color: '#64748b', marginTop: 4 }}>
+          <p style={{ color: 'var(--zw-text-muted)', marginTop: 4 }}>
             {isSignUp ? 'Créer mon compte praticien' : 'Espace praticien'}
             {' · '}
             <span style={{ color: 'var(--brand-primary)', fontWeight: 600 }}>
@@ -88,7 +88,7 @@ export function LoginPage() {
             style={{
               width: '100%',
               padding: 12,
-              border: '1px solid #e2e8f0',
+              border: '1px solid var(--zw-border)',
               borderRadius: 8,
               fontSize: 14,
               marginBottom: 12,
@@ -105,7 +105,7 @@ export function LoginPage() {
             style={{
               width: '100%',
               padding: 12,
-              border: '1px solid #e2e8f0',
+              border: '1px solid var(--zw-border)',
               borderRadius: 8,
               fontSize: 14,
               marginBottom: 20,
@@ -139,7 +139,7 @@ export function LoginPage() {
             textAlign: 'center',
             marginTop: 16,
             fontSize: 13,
-            color: '#64748b',
+            color: 'var(--zw-text-muted)',
           }}
         >
           {isSignUp ? 'Déjà un compte ?' : 'Pas encore de compte ?'}{' '}

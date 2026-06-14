@@ -1,6 +1,68 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; color: #0f172a; }
+
+/* ─── Design tokens (semantic) ─────────────────────────────────────────
+   Default = MEDOS neutral (slate). A tenant theme (set via the
+   [data-zw-theme] attribute by lib/branding) overrides these, so the engine
+   re-skins per tenant WITHOUT touching component code. Defaults equal the
+   original hardcoded values → tenants without a theme render identically. */
+:root {
+  --zw-text:          #0f172a;
+  --zw-text-soft:     #475569;
+  --zw-text-muted:    #64748b;
+  --zw-text-faint:    #94a3b8;
+  --zw-border:        #e2e8f0;
+  --zw-border-strong: #cbd5e1;
+  --zw-bg:            #f8fafc;
+  --zw-bg-subtle:     #f1f5f9;
+
+  /* Sidebar shell */
+  --zw-side-bg:        #1e293b;
+  --zw-side-text:      #e2e8f0;
+  --zw-side-text-dim:  #94a3b8;
+  --zw-side-active-bg: #334155;
+  --zw-side-border:    #334155;
+  --zw-side-accent:    var(--brand-primary, #10b981);
+
+  --zw-font-body:    system-ui, -apple-system, sans-serif;
+  --zw-font-display: system-ui, -apple-system, sans-serif;
+}
+
+/* ─── Zahir Wellness theme — warm cream + burgundy + serif ───────────── */
+[data-zw-theme="zahir"] {
+  --zw-text:          #2b2326;
+  --zw-text-soft:     #6b4a52;
+  --zw-text-muted:    #8a776e;
+  --zw-text-faint:    #ab9d8f;
+  --zw-border:        #eaded0;
+  --zw-border-strong: #d8c9b8;
+  --zw-bg:            #faf6f0;
+  --zw-bg-subtle:     #f4ece0;
+
+  --zw-side-bg:        #6d2e46;
+  --zw-side-text:      #f5ede3;
+  --zw-side-text-dim:  rgba(245, 237, 227, 0.6);
+  --zw-side-active-bg: rgba(255, 255, 255, 0.12);
+  --zw-side-border:    rgba(245, 237, 227, 0.16);
+  --zw-side-accent:    #c9a961;
+
+  --zw-font-body:    'Jost', system-ui, sans-serif;
+  --zw-font-display: 'Cormorant Garamond', 'Garamond', Georgia, serif;
+}
+
+body {
+  font-family: var(--zw-font-body);
+  background: var(--zw-bg);
+  color: var(--zw-text);
+}
 a { color: inherit; text-decoration: none; }
+
+/* Elegant serif for headings under a tenant theme (default theme untouched) */
+[data-zw-theme="zahir"] h1,
+[data-zw-theme="zahir"] h2,
+[data-zw-theme="zahir"] h3 {
+  font-family: var(--zw-font-display);
+  letter-spacing: 0.2px;
+}
 
 /* ─── Twin responsive helpers (Chantier 4) ──────────────────────────────
    Additive only — desktop layout untouched.

@@ -5,9 +5,9 @@ const BASE: React.CSSProperties = {
   fontSize: 11.5,
   fontWeight: 700,
   padding: '6px 9px',
-  border: '1px solid #e2e8f0',
+  border: '1px solid var(--zw-border)',
   background: '#fff',
-  color: '#64748b',
+  color: 'var(--zw-text-muted)',
   cursor: 'pointer',
   letterSpacing: 0.4,
 };

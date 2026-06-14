@@ -22,7 +22,7 @@ export type OrganNode = {
   score: { score: number; color: OrganColor } | null;
 };
 
-const GREY = '#cbd5e1';
+const GREY = 'var(--zw-border-strong)';
 
 function OrganMesh({
   organ,
@@ -117,7 +117,7 @@ export function BodyViewer({
           height: isMobile ? 'clamp(280px, 50vh, 460px)' : '100%',
           minHeight: isMobile ? 280 : 460,
           flex: isMobile ? '0 0 auto' : '1 1 auto',
-          background: 'radial-gradient(circle at 50% 30%, #0f172a, #020617)',
+          background: 'radial-gradient(circle at 50% 30%, var(--zw-text), #020617)',
           borderRadius: isMobile ? '16px 16px 0 0' : 16,
           touchAction: 'pan-y',
         }}
@@ -155,8 +155,8 @@ export function BodyViewer({
 
       {/* Mobile-only: liste organes sous le canvas */}
       {isMobile && scored.length > 0 && (
-        <div style={{ padding: 12, background: '#fff', borderRadius: '0 0 16px 16px', borderTop: '1px solid #e8eaf0' }}>
-          <div style={{ fontSize: 11.5, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 8 }}>
+        <div style={{ padding: 12, background: '#fff', borderRadius: '0 0 16px 16px', borderTop: '1px solid var(--zw-border)' }}>
+          <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--zw-text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>
             Organes scorés ({scored.length})
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5, maxHeight: 220, overflowY: 'auto' }}>
@@ -169,7 +169,7 @@ export function BodyViewer({
                   alignItems: 'center',
                   gap: 10,
                   padding: '8px 10px',
-                  background: selected === o.code ? '#eef2ff' : '#f8fafc',
+                  background: selected === o.code ? '#eef2ff' : 'var(--zw-bg)',
                   border: 'none',
                   borderRadius: 8,
                   cursor: 'pointer',
@@ -186,7 +186,7 @@ export function BodyViewer({
                     flexShrink: 0,
                   }}
                 />
-                <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: '#1e293b' }}>{o.name_fr}</span>
+                <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'var(--zw-text)' }}>{o.name_fr}</span>
                 <span style={{ fontSize: 13, fontWeight: 700, color: COLOR_HEX[o.score!.color] }}>{o.score!.score}</span>
               </button>
             ))}

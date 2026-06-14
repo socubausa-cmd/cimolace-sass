@@ -213,7 +213,7 @@ export function AttachmentsPanel({
         <label
           style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
-            background: uploading ? '#94a3b8' : 'var(--brand-primary)', color: '#fff',
+            background: uploading ? 'var(--zw-text-faint)' : 'var(--brand-primary)', color: '#fff',
             borderRadius: 6, fontSize: 13, fontWeight: 500, cursor: uploading ? 'wait' : 'pointer',
             whiteSpace: 'nowrap',
           }}
@@ -236,7 +236,7 @@ export function AttachmentsPanel({
       )}
 
       {items.length === 0 ? (
-        <p style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: 20, background: '#f8fafc', borderRadius: 8 }}>
+        <p style={{ color: 'var(--zw-text-faint)', fontSize: 13, textAlign: 'center', padding: 20, background: 'var(--zw-bg)', borderRadius: 8 }}>
           Aucun document. Importez votre premier fichier ci-dessus.
         </p>
       ) : (
@@ -246,26 +246,26 @@ export function AttachmentsPanel({
             return (
               <li
                 key={att.id}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: '#f8fafc', borderRadius: 8, marginBottom: 4 }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--zw-bg)', borderRadius: 8, marginBottom: 4 }}
               >
-                <Icon size={18} color="#475569" style={{ flexShrink: 0 }} />
+                <Icon size={18} color="var(--zw-text-soft)" style={{ flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--zw-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {att.file_name}
                   </div>
-                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                  <div style={{ fontSize: 11, color: 'var(--zw-text-muted)', marginTop: 2 }}>
                     {CATEGORY_OPTIONS.find((c) => c.value === att.category)?.label || att.category || 'Autre'} ·{' '}
                     {formatBytes(att.file_size_bytes)} ·{' '}
                     {new Date(att.created_at).toLocaleDateString('fr')}
                     {att.uploaded_role && ` · par ${att.uploaded_role}`}
                   </div>
-                  {att.description && <div style={{ fontSize: 11, color: '#475569', marginTop: 2, fontStyle: 'italic' }}>{att.description}</div>}
+                  {att.description && <div style={{ fontSize: 11, color: 'var(--zw-text-soft)', marginTop: 2, fontStyle: 'italic' }}>{att.description}</div>}
                 </div>
                 {canTogglePatientVisibility && (
                   <button
                     onClick={() => toggleVisibility(att)}
                     title={att.visible_to_patient ? 'Masquer au patient' : 'Rendre visible au patient'}
-                    style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 4, padding: 4, cursor: 'pointer', color: att.visible_to_patient ? '#10b981' : '#94a3b8' }}
+                    style={{ background: 'none', border: '1px solid var(--zw-border)', borderRadius: 4, padding: 4, cursor: 'pointer', color: att.visible_to_patient ? '#10b981' : 'var(--zw-text-faint)' }}
                   >
                     {att.visible_to_patient ? <Eye size={14} /> : <EyeOff size={14} />}
                   </button>
@@ -273,14 +273,14 @@ export function AttachmentsPanel({
                 <button
                   onClick={() => handleDownload(att)}
                   title="Telecharger"
-                  style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 4, padding: 4, cursor: 'pointer', color: 'var(--brand-primary)' }}
+                  style={{ background: 'none', border: '1px solid var(--zw-border)', borderRadius: 4, padding: 4, cursor: 'pointer', color: 'var(--brand-primary)' }}
                 >
                   <Download size={14} />
                 </button>
                 <button
                   onClick={() => handleDelete(att)}
                   title="Supprimer"
-                  style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 4, padding: 4, cursor: 'pointer', color: '#dc2626' }}
+                  style={{ background: 'none', border: '1px solid var(--zw-border)', borderRadius: 4, padding: 4, cursor: 'pointer', color: '#dc2626' }}
                 >
                   <Trash2 size={14} />
                 </button>
@@ -294,6 +294,6 @@ export function AttachmentsPanel({
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0',
+  width: '100%', padding: '8px 10px', border: '1px solid var(--zw-border)',
   borderRadius: 6, fontSize: 13, background: '#fff', boxSizing: 'border-box',
 };

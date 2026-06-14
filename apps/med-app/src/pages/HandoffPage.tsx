@@ -53,17 +53,17 @@ export function HandoffPage() {
   }, [supabase]);
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, background: '#f8fafc', padding: 24 }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, background: 'var(--zw-bg)', padding: 24 }}>
       {!error ? (
         <>
-          <div style={{ width: 36, height: 36, border: '3px solid #e2e8f0', borderTopColor: 'var(--brand-primary, #10b981)', borderRadius: '50%', animation: 'hspin 0.8s linear infinite' }} />
-          <p style={{ color: '#64748b', fontSize: 14 }}>Connexion à votre espace…</p>
+          <div style={{ width: 36, height: 36, border: '3px solid var(--zw-border)', borderTopColor: 'var(--brand-primary, #10b981)', borderRadius: '50%', animation: 'hspin 0.8s linear infinite' }} />
+          <p style={{ color: 'var(--zw-text-muted)', fontSize: 14 }}>Connexion à votre espace…</p>
           <style>{'@keyframes hspin{to{transform:rotate(360deg)}}'}</style>
         </>
       ) : (
         <div style={{ maxWidth: 360, textAlign: 'center', background: '#fff', border: '1px solid #fecaca', borderRadius: 12, padding: 20 }}>
           <p style={{ color: '#dc2626', fontWeight: 600, fontSize: 14, margin: 0 }}>{error}</p>
-          <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 8 }}>Relancez l'accès MEDOS depuis votre site.</p>
+          <p style={{ color: 'var(--zw-text-faint)', fontSize: 12, marginTop: 8 }}>Relancez l'accès MEDOS depuis votre site.</p>
         </div>
       )}
     </div>

@@ -5,8 +5,8 @@ import {
 } from 'lucide-react';
 import { useCamera } from '../native/useCamera';
 
-const panel: React.CSSProperties = { background: '#fff', borderRadius: 14, border: '1px solid #e8eaf0', padding: 18 };
-const head: React.CSSProperties = { fontSize: 14, fontWeight: 700, margin: 0, marginBottom: 12, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 7 };
+const panel: React.CSSProperties = { background: '#fff', borderRadius: 14, border: '1px solid var(--zw-border)', padding: 18 };
+const head: React.CSSProperties = { fontSize: 14, fontWeight: 700, margin: 0, marginBottom: 12, color: 'var(--zw-text)', display: 'flex', alignItems: 'center', gap: 7 };
 const colorFor = (s: number): string => COLOR_HEX[(s >= 80 ? 'green' : s >= 60 ? 'yellow' : s >= 40 ? 'orange' : 'red') as OrganColor];
 
 // ─── Roue de transformation (Module 2) ─────────────────────────────────────
@@ -34,25 +34,25 @@ export function WheelPanel({ patientId }: { patientId: string }) {
     <div style={panel}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={head}>🌱 Roue de transformation</h3>
-        <button onClick={() => (editing ? save() : setEditing(true))} disabled={busy} style={{ fontSize: 12, padding: '5px 12px', background: editing ? 'var(--brand-primary)' : '#f1f5f9', color: editing ? '#fff' : '#475569', border: 'none', borderRadius: 7, cursor: 'pointer' }}>
+        <button onClick={() => (editing ? save() : setEditing(true))} disabled={busy} style={{ fontSize: 12, padding: '5px 12px', background: editing ? 'var(--brand-primary)' : 'var(--zw-bg-subtle)', color: editing ? '#fff' : 'var(--zw-text-soft)', border: 'none', borderRadius: 7, cursor: 'pointer' }}>
           {busy ? '…' : editing ? 'Enregistrer' : 'Éditer'}
         </button>
       </div>
       <div className="twin-wheel-grid" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 16, alignItems: 'center' }}>
         <svg className="twin-wheel-svg" width="300" height="300" viewBox="0 0 300 300" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '100%', height: 'auto' }}>
-          {[0.25, 0.5, 0.75, 1].map((f) => <circle key={f} cx={cx} cy={cy} r={R * f} fill="none" stroke="#e2e8f0" strokeWidth="1" />)}
-          {pts.map((p, i) => <line key={i} x1={cx} y1={cy} x2={p.ax} y2={p.ay} stroke="#e2e8f0" strokeWidth="1" />)}
+          {[0.25, 0.5, 0.75, 1].map((f) => <circle key={f} cx={cx} cy={cy} r={R * f} fill="none" stroke="var(--zw-border)" strokeWidth="1" />)}
+          {pts.map((p, i) => <line key={i} x1={cx} y1={cy} x2={p.ax} y2={p.ay} stroke="var(--zw-border)" strokeWidth="1" />)}
           <polygon points={poly} fill="rgba(124,58,237,0.18)" stroke="#7c3aed" strokeWidth="2" />
           {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="#7c3aed" />)}
         </svg>
         <div className="twin-wheel-labels" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
           {domains.map((d, i) => (
-            <div key={d.domain} style={{ fontSize: 12, color: '#475569', display: 'flex', justifyContent: 'space-between', gap: 6 }}>
+            <div key={d.domain} style={{ fontSize: 12, color: 'var(--zw-text-soft)', display: 'flex', justifyContent: 'space-between', gap: 6 }}>
               <span>{WHEEL_LABELS[d.domain] || d.domain}</span>
               {editing ? (
-                <input type="number" min="0" max="100" value={d.score ?? 0} onChange={(e) => { const v = [...domains]; v[i] = { ...d, score: Number(e.target.value) }; setDomains(v); }} style={{ width: 50, fontSize: 12, padding: '1px 4px', border: '1px solid #e2e8f0', borderRadius: 4 }} />
+                <input type="number" min="0" max="100" value={d.score ?? 0} onChange={(e) => { const v = [...domains]; v[i] = { ...d, score: Number(e.target.value) }; setDomains(v); }} style={{ width: 50, fontSize: 12, padding: '1px 4px', border: '1px solid var(--zw-border)', borderRadius: 4 }} />
               ) : (
-                <strong style={{ color: d.score != null ? colorFor(d.score) : '#cbd5e1' }}>{d.score ?? '—'}</strong>
+                <strong style={{ color: d.score != null ? colorFor(d.score) : 'var(--zw-border-strong)' }}>{d.score ?? '—'}</strong>
               )}
             </div>
           ))}
@@ -78,7 +78,7 @@ export function MindmapPanel({ patientId }: { patientId: string }) {
     const a = (Math.PI * 2 * i) / nodes.length;
     pos.set(n.ref_code, { x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) });
   });
-  const typeColor: Record<string, string> = { organ: '#0ea5e9', symptom: '#f59e0b', condition: '#ef4444', hormone: '#7c3aed', biomarker: '#10b981', system: '#64748b' };
+  const typeColor: Record<string, string> = { organ: '#0ea5e9', symptom: '#f59e0b', condition: '#ef4444', hormone: '#7c3aed', biomarker: '#10b981', system: 'var(--zw-text-muted)' };
 
   return (
     <div style={panel}>
@@ -93,14 +93,14 @@ export function MindmapPanel({ patientId }: { patientId: string }) {
           {graph.edges.map((e: any, i: number) => {
             const a = pos.get(e.from_code), b = pos.get(e.to_code);
             if (!a || !b) return null;
-            return <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#cbd5e1" strokeWidth={Math.max(1, (e.weight || 0.5) * 3)} opacity="0.6" />;
+            return <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="var(--zw-border-strong)" strokeWidth={Math.max(1, (e.weight || 0.5) * 3)} opacity="0.6" />;
           })}
           {nodes.map((n: any) => {
             const p = pos.get(n.ref_code); if (!p) return null;
             return (
               <g key={n.id}>
-                <circle cx={p.x} cy={p.y} r="7" fill={typeColor[n.node_type] || '#64748b'} />
-                <text x={p.x} y={p.y - 11} fontSize="11" textAnchor="middle" fill="#334155">{n.label_fr}</text>
+                <circle cx={p.x} cy={p.y} r="7" fill={typeColor[n.node_type] || 'var(--zw-text-muted)'} />
+                <text x={p.x} y={p.y - 11} fontSize="11" textAnchor="middle" fill="var(--zw-text-soft)">{n.label_fr}</text>
               </g>
             );
           })}
@@ -108,12 +108,12 @@ export function MindmapPanel({ patientId }: { patientId: string }) {
       </div>
       {corr && (
         <div style={{ marginTop: 8 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>Corrélations détectées (données patient)</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--zw-text-soft)', marginBottom: 4 }}>Corrélations détectées (données patient)</div>
           {(corr.biomarker_organ || []).length === 0 ? (
-            <p style={{ fontSize: 12, color: '#94a3b8' }}>Aucune valeur anormale — saisissez des biomarqueurs.</p>
+            <p style={{ fontSize: 12, color: 'var(--zw-text-faint)' }}>Aucune valeur anormale — saisissez des biomarqueurs.</p>
           ) : (
             (corr.biomarker_organ || []).slice(0, 12).map((c: any, i: number) => (
-              <div key={i} style={{ fontSize: 12, color: '#475569', padding: '2px 0' }}>
+              <div key={i} style={{ fontSize: 12, color: 'var(--zw-text-soft)', padding: '2px 0' }}>
                 <strong>{c.from_label}</strong> ({c.flag}) → {c.to}
               </div>
             ))
@@ -144,20 +144,20 @@ export function TimelinePanel({ patientId }: { patientId: string }) {
     <div style={panel}>
       <h3 style={head}><Clock size={15} color="#0ea5e9" /> Timeline santé 360°</h3>
       <div className="twin-timeline-form" style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
-        <select value={form.event_type} onChange={(e) => setForm({ ...form, event_type: e.target.value })} style={{ padding: '6px 8px', border: '1px solid #e2e8f0', borderRadius: 7, fontSize: 12 }}>
+        <select value={form.event_type} onChange={(e) => setForm({ ...form, event_type: e.target.value })} style={{ padding: '6px 8px', border: '1px solid var(--zw-border)', borderRadius: 7, fontSize: 12 }}>
           {EVENT_TYPES.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
         </select>
-        <input placeholder="Titre" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} style={{ flex: 1, minWidth: 120, padding: '6px 8px', border: '1px solid #e2e8f0', borderRadius: 7, fontSize: 12 }} />
-        <input type="date" value={form.occurred_at} onChange={(e) => setForm({ ...form, occurred_at: e.target.value })} style={{ padding: '6px 8px', border: '1px solid #e2e8f0', borderRadius: 7, fontSize: 12 }} />
+        <input placeholder="Titre" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} style={{ flex: 1, minWidth: 120, padding: '6px 8px', border: '1px solid var(--zw-border)', borderRadius: 7, fontSize: 12 }} />
+        <input type="date" value={form.occurred_at} onChange={(e) => setForm({ ...form, occurred_at: e.target.value })} style={{ padding: '6px 8px', border: '1px solid var(--zw-border)', borderRadius: 7, fontSize: 12 }} />
         <button onClick={add} style={{ padding: '6px 12px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, cursor: 'pointer' }}>+ Ajouter</button>
       </div>
-      {events.length === 0 ? <p style={{ fontSize: 12, color: '#94a3b8' }}>Aucun événement.</p> : (
-        <div style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: 14 }}>
+      {events.length === 0 ? <p style={{ fontSize: 12, color: 'var(--zw-text-faint)' }}>Aucun événement.</p> : (
+        <div style={{ borderLeft: '2px solid var(--zw-border)', paddingLeft: 14 }}>
           {events.map((e) => (
             <div key={e.id} style={{ position: 'relative', marginBottom: 12 }}>
               <span style={{ position: 'absolute', left: -19, top: 3, width: 8, height: 8, borderRadius: '50%', background: '#0ea5e9' }} />
-              <div style={{ fontSize: 12.5, fontWeight: 600, color: '#1e293b' }}>{e.title}</div>
-              <div style={{ fontSize: 11, color: '#94a3b8' }}>{new Date(e.occurred_at).toLocaleDateString('fr')} · {EVENT_TYPES.find((t) => t.v === e.event_type)?.l || e.event_type}</div>
+              <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--zw-text)' }}>{e.title}</div>
+              <div style={{ fontSize: 11, color: 'var(--zw-text-faint)' }}>{new Date(e.occurred_at).toLocaleDateString('fr')} · {EVENT_TYPES.find((t) => t.v === e.event_type)?.l || e.event_type}</div>
             </div>
           ))}
         </div>
@@ -174,7 +174,7 @@ export function LongitudinalPanel({ patientId }: { patientId: string }) {
   return (
     <div style={panel}>
       <h3 style={head}><TrendingUp size={15} color="#10b981" /> Analyse longitudinale</h3>
-      {series.length === 0 ? <p style={{ fontSize: 12, color: '#94a3b8' }}>Pas encore d'historique (recalculez les scores à plusieurs dates).</p> : (
+      {series.length === 0 ? <p style={{ fontSize: 12, color: 'var(--zw-text-faint)' }}>Pas encore d'historique (recalculez les scores à plusieurs dates).</p> : (
         <div className="twin-longitudinal-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px,1fr))', gap: 12 }}>
           {series.map(([organ, pts]) => {
             const w = 160, h = 40, max = 100;
@@ -182,9 +182,9 @@ export function LongitudinalPanel({ patientId }: { patientId: string }) {
             const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${i * step} ${h - (p.score / max) * h}`).join(' ');
             const last = pts[pts.length - 1]?.score ?? 0;
             return (
-              <div key={organ} style={{ background: '#f8fafc', borderRadius: 8, padding: 10 }}>
+              <div key={organ} style={{ background: 'var(--zw-bg)', borderRadius: 8, padding: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-                  <span style={{ color: '#475569' }}>{organ}</span>
+                  <span style={{ color: 'var(--zw-text-soft)' }}>{organ}</span>
                   <strong style={{ color: colorFor(last) }}>{last}</strong>
                 </div>
                 <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: 'block' }}>
@@ -215,10 +215,10 @@ export function SimulatorPanel({ patientId }: { patientId: string }) {
   return (
     <div style={panel}>
       <h3 style={head}><Beaker size={15} color="#f97316" /> Simulateur d'intervention</h3>
-      <p style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 0 }}>Scénario probabiliste — estimation, jamais une promesse de résultat.</p>
+      <p style={{ fontSize: 11.5, color: 'var(--zw-text-faint)', marginTop: 0 }}>Scénario probabiliste — estimation, jamais une promesse de résultat.</p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
         {interventions.map((i) => (
-          <button key={i.key} onClick={() => toggle(i.key)} style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, border: '1px solid', cursor: 'pointer', background: picked.has(i.key) ? '#7c3aed' : '#fff', color: picked.has(i.key) ? '#fff' : '#475569', borderColor: picked.has(i.key) ? '#7c3aed' : '#e2e8f0' }}>
+          <button key={i.key} onClick={() => toggle(i.key)} style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, border: '1px solid', cursor: 'pointer', background: picked.has(i.key) ? '#7c3aed' : '#fff', color: picked.has(i.key) ? '#fff' : 'var(--zw-text-soft)', borderColor: picked.has(i.key) ? '#7c3aed' : 'var(--zw-border)' }}>
             {i.label_fr}
           </button>
         ))}
@@ -228,16 +228,16 @@ export function SimulatorPanel({ patientId }: { patientId: string }) {
         <>
           <div className="twin-simulator-indices" style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
             {[['Vitalité', result.global_indices.vitality], ['Inflammation', -result.global_indices.inflammation_load], ['Métabolisme', result.global_indices.metabolic_health]].map(([l, v]: any) => (
-              <div key={l} style={{ flex: 1, background: '#f8fafc', borderRadius: 8, padding: 10, textAlign: 'center' }}>
-                <div style={{ fontSize: 18, fontWeight: 800, color: v > 0 ? '#10b981' : v < 0 ? '#ef4444' : '#64748b' }}>{v > 0 ? '+' : ''}{v}</div>
-                <div style={{ fontSize: 11, color: '#64748b' }}>{l}</div>
+              <div key={l} style={{ flex: 1, background: 'var(--zw-bg)', borderRadius: 8, padding: 10, textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 800, color: v > 0 ? '#10b981' : v < 0 ? '#ef4444' : 'var(--zw-text-muted)' }}>{v > 0 ? '+' : ''}{v}</div>
+                <div style={{ fontSize: 11, color: 'var(--zw-text-muted)' }}>{l}</div>
               </div>
             ))}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px,1fr))', gap: 8 }}>
             {(result.organ_deltas || []).filter((d: any) => d.delta !== 0).map((d: any) => (
-              <div key={d.organ_code} style={{ fontSize: 12, display: 'flex', justifyContent: 'space-between', background: '#f8fafc', borderRadius: 6, padding: '5px 8px' }}>
-                <span style={{ color: '#475569' }}>{d.organ_code}</span>
+              <div key={d.organ_code} style={{ fontSize: 12, display: 'flex', justifyContent: 'space-between', background: 'var(--zw-bg)', borderRadius: 6, padding: '5px 8px' }}>
+                <span style={{ color: 'var(--zw-text-soft)' }}>{d.organ_code}</span>
                 <span style={{ color: '#10b981', fontWeight: 600 }}>{d.before}→{d.after} (+{d.delta})</span>
               </div>
             ))}
@@ -466,16 +466,16 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
   }
 
   const dropStyle: React.CSSProperties = {
-    border: `2px dashed ${dragging ? 'var(--brand-primary, #7c3aed)' : '#cbd5e1'}`,
-    background: dragging ? 'rgba(124,58,237,0.06)' : '#f8fafc',
+    border: `2px dashed ${dragging ? 'var(--brand-primary, #7c3aed)' : 'var(--zw-border-strong)'}`,
+    background: dragging ? 'rgba(124,58,237,0.06)' : 'var(--zw-bg)',
     borderRadius: 10, padding: 16, textAlign: 'center', cursor: 'pointer',
-    fontSize: 12.5, color: '#475569', transition: 'all 0.15s', display: 'block',
+    fontSize: 12.5, color: 'var(--zw-text-soft)', transition: 'all 0.15s', display: 'block',
   };
 
   return (
     <div style={panel}>
       <h3 style={head}><FileText size={15} color="#0ea5e9" /> Lecteur de bilan / ordonnance (IA)</h3>
-      <p style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 0 }}>
+      <p style={{ fontSize: 11.5, color: 'var(--zw-text-faint)', marginTop: 0 }}>
         Uploadez un PDF, JPG ou PNG d'un compte-rendu — ou collez le texte ci-dessous. L'IA extrait les biomarqueurs.
       </p>
 
@@ -490,10 +490,10 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
           const f = e.dataTransfer.files?.[0]; if (f) pickFile(f);
         }}
       >
-        <div style={{ fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+        <div style={{ fontWeight: 600, color: 'var(--zw-text-soft)', marginBottom: 4 }}>
           {file ? `📎 ${file.name}` : 'Glissez un PDF / JPG / PNG ici, ou cliquez pour parcourir'}
         </div>
-        <div style={{ fontSize: 11, color: '#94a3b8' }}>
+        <div style={{ fontSize: 11, color: 'var(--zw-text-faint)' }}>
           PDF, JPG, PNG, WebP, GIF — max {LAB_READER_MAX_MB} Mo
         </div>
         <input
@@ -533,7 +533,7 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
           <button
             onClick={() => { setFile(null); setExtracted(null); setMsg(null); setErr(null); }}
             disabled={busy}
-            style={{ padding: '9px 12px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: 8, fontSize: 12, cursor: 'pointer' }}
+            style={{ padding: '9px 12px', background: 'var(--zw-bg-subtle)', color: 'var(--zw-text-soft)', border: 'none', borderRadius: 8, fontSize: 12, cursor: 'pointer' }}
           >
             Annuler
           </button>
@@ -541,8 +541,8 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
       )}
 
       {/* Connecteur CSV labo (déterministe, zéro IA) */}
-      <div style={{ marginTop: 10, padding: 10, background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 8 }}>
-        <div style={{ fontSize: 11.5, color: '#475569', fontWeight: 600, marginBottom: 6 }}>
+      <div style={{ marginTop: 10, padding: 10, background: 'var(--zw-bg-subtle)', border: '1px solid var(--zw-border)', borderRadius: 8 }}>
+        <div style={{ fontSize: 11.5, color: 'var(--zw-text-soft)', fontWeight: 600, marginBottom: 6 }}>
           Import CSV labo (déterministe — zéro IA)
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -568,12 +568,12 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
           </button>
         </div>
         {csvImportResult && (
-          <div style={{ marginTop: 8, fontSize: 11.5, color: '#475569' }}>
+          <div style={{ marginTop: 8, fontSize: 11.5, color: 'var(--zw-text-soft)' }}>
             <div style={{ color: '#10b981', fontWeight: 600 }}>{csvImportResult.imported} importé(s)</div>
             {csvImportResult.skipped.length > 0 && (
               <div style={{ marginTop: 4 }}>
                 <div style={{ color: '#dc2626', fontWeight: 600 }}>{csvImportResult.skipped.length} ignoré(s) :</div>
-                <ul style={{ margin: '2px 0 0 16px', padding: 0, fontSize: 11, color: '#64748b' }}>
+                <ul style={{ margin: '2px 0 0 16px', padding: 0, fontSize: 11, color: 'var(--zw-text-muted)' }}>
                   {csvImportResult.skipped.slice(0, 10).map((s, i) => (
                     <li key={i}>{s.code || '(vide)'} — {s.reason}</li>
                   ))}
@@ -589,30 +589,30 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
 
       {/* Séparateur visuel + textarea */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '14px 0 8px' }}>
-        <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
-        <span style={{ fontSize: 11, color: '#94a3b8' }}>OU collez le texte</span>
-        <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+        <div style={{ flex: 1, height: 1, background: 'var(--zw-border)' }} />
+        <span style={{ fontSize: 11, color: 'var(--zw-text-faint)' }}>OU collez le texte</span>
+        <div style={{ flex: 1, height: 1, background: 'var(--zw-border)' }} />
       </div>
-      <textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} placeholder="Ex: CRP 4.1 mg/L, TSH 3.3 mUI/L, Vitamine D 21 ng/mL…" style={{ width: '100%', boxSizing: 'border-box', padding: 10, border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12.5, fontFamily: 'inherit' }} />
-      <button onClick={runText} disabled={busy || !text.trim()} style={{ marginTop: 8, width: '100%', padding: 9, background: '#475569', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: busy ? 'wait' : 'pointer', opacity: !text.trim() ? 0.5 : 1 }}>
+      <textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} placeholder="Ex: CRP 4.1 mg/L, TSH 3.3 mUI/L, Vitamine D 21 ng/mL…" style={{ width: '100%', boxSizing: 'border-box', padding: 10, border: '1px solid var(--zw-border)', borderRadius: 8, fontSize: 12.5, fontFamily: 'inherit' }} />
+      <button onClick={runText} disabled={busy || !text.trim()} style={{ marginTop: 8, width: '100%', padding: 9, background: 'var(--zw-text-soft)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: busy ? 'wait' : 'pointer', opacity: !text.trim() ? 0.5 : 1 }}>
         {busy ? 'Extraction…' : 'Extraire depuis le texte'}
       </button>
 
       {/* Liste des valeurs extraites */}
       {extracted && extracted.length > 0 && (
         <div style={{ marginTop: 14 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 6, display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--zw-text-soft)', marginBottom: 6, display: 'flex', justifyContent: 'space-between' }}>
             <span>Valeurs extraites ({extracted.length})</span>
             {inserted && <span style={{ color: '#10b981' }}>✓ insérées</span>}
           </div>
-          <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 8, padding: 8, background: '#f8fafc' }}>
+          <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid var(--zw-border)', borderRadius: 8, padding: 8, background: 'var(--zw-bg)' }}>
             {extracted.map((v, i) => {
               const conf = typeof v.confidence === 'number' ? v.confidence : null;
-              const confColor = conf == null ? '#94a3b8' : conf >= 0.8 ? '#10b981' : conf >= 0.6 ? '#f59e0b' : '#ef4444';
+              const confColor = conf == null ? 'var(--zw-text-faint)' : conf >= 0.8 ? '#10b981' : conf >= 0.6 ? '#f59e0b' : '#ef4444';
               return (
-                <div key={`${v.biomarker_code}-${i}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '4px 0', borderBottom: i < extracted.length - 1 ? '1px solid #e2e8f0' : 'none' }}>
-                  <span style={{ color: '#1e293b', fontWeight: 600 }}>{v.biomarker_code}</span>
-                  <span style={{ color: '#475569' }}>
+                <div key={`${v.biomarker_code}-${i}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '4px 0', borderBottom: i < extracted.length - 1 ? '1px solid var(--zw-border)' : 'none' }}>
+                  <span style={{ color: 'var(--zw-text)', fontWeight: 600 }}>{v.biomarker_code}</span>
+                  <span style={{ color: 'var(--zw-text-soft)' }}>
                     {v.value}{v.unit ? ` ${v.unit}` : ''}
                     {conf != null && (
                       <span style={{ marginLeft: 8, fontSize: 10.5, color: confColor, fontWeight: 600 }}>
@@ -640,11 +640,11 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
       {err && <div style={{ marginTop: 8, fontSize: 12, color: '#dc2626' }}>{err}</div>}
 
       {/* ─── Audit trail : bilans uploadés ─────────────────────────────── */}
-      <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px dashed #e2e8f0' }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <FileText size={13} color="#64748b" />
+      <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px dashed var(--zw-border)' }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--zw-text-soft)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <FileText size={13} color="var(--zw-text-muted)" />
           Bilans uploadés
-          <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 400 }}>
+          <span style={{ fontSize: 11, color: 'var(--zw-text-faint)', fontWeight: 400 }}>
             ({history.filter((d) => d.status !== 'deleted').length})
           </span>
           <button
@@ -657,7 +657,7 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
         </div>
 
         {history.length === 0 && (
-          <div style={{ fontSize: 11.5, color: '#94a3b8', fontStyle: 'italic', textAlign: 'center', padding: '12px 0' }}>
+          <div style={{ fontSize: 11.5, color: 'var(--zw-text-faint)', fontStyle: 'italic', textAlign: 'center', padding: '12px 0' }}>
             Aucun bilan pour l'instant. Uploadez un PDF/image au-dessus.
           </div>
         )}
@@ -673,7 +673,7 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
               const statusColor =
                 d.status === 'extracted' ? '#10b981' :
                 d.status === 'failed' ? '#ef4444' :
-                d.status === 'deleted' ? '#94a3b8' :
+                d.status === 'deleted' ? 'var(--zw-text-faint)' :
                 '#f59e0b';
               const statusLabel =
                 d.status === 'extracted' ? 'Extrait' :
@@ -688,17 +688,17 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8,
                     padding: '8px 10px',
-                    background: isDeleted ? '#f8fafc' : '#fff',
-                    border: '1px solid #e2e8f0', borderRadius: 8,
+                    background: isDeleted ? 'var(--zw-bg)' : '#fff',
+                    border: '1px solid var(--zw-border)', borderRadius: 8,
                     opacity: isDeleted ? 0.55 : 1,
                   }}
                 >
                   <span style={{ fontSize: 18 }}>{icon}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--zw-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {d.original_filename || (isPdf ? 'Bilan PDF' : isImg ? 'Bilan image' : 'Texte collé')}
                     </div>
-                    <div style={{ fontSize: 10.5, color: '#94a3b8', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <div style={{ fontSize: 10.5, color: 'var(--zw-text-faint)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       <span>{date}</span>
                       {sizeKb !== null && <span>· {sizeKb >= 1024 ? `${(sizeKb / 1024).toFixed(1)} Mo` : `${sizeKb} Ko`}</span>}
                       {d.extraction_confidence !== null && (
@@ -720,7 +720,7 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
                     <button
                       onClick={() => removeDoc(d.id)}
                       title="Supprimer (GDPR)"
-                      style={{ padding: '5px 8px', background: 'transparent', color: '#94a3b8', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}
+                      style={{ padding: '5px 8px', background: 'transparent', color: 'var(--zw-text-faint)', border: '1px solid var(--zw-border)', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}
                     >
                       ✕
                     </button>
@@ -748,14 +748,14 @@ export function MetabolicMapPanel({ state, refs }: { state: any; refs: any }) {
   return (
     <div style={panel}>
       <h3 style={head}><FlaskConical size={15} color="#7c3aed" /> Carte métabolique</h3>
-      {Object.keys(groups).length === 0 ? <p style={{ fontSize: 12, color: '#94a3b8' }}>Aucune donnée.</p> : (
+      {Object.keys(groups).length === 0 ? <p style={{ fontSize: 12, color: 'var(--zw-text-faint)' }}>Aucune donnée.</p> : (
         <div className="twin-metabolic-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px,1fr))', gap: 12 }}>
           {Object.entries(groups).map(([cat, items]) => (
-            <div key={cat} style={{ background: '#f8fafc', borderRadius: 8, padding: 10 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 6 }}>{cat}</div>
+            <div key={cat} style={{ background: 'var(--zw-bg)', borderRadius: 8, padding: 10 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--zw-text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>{cat}</div>
               {items.map((b) => (
                 <div key={b.biomarker_code} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '2px 0' }}>
-                  <span style={{ color: '#475569' }}>{b.ref?.name_fr || b.biomarker_code}</span>
+                  <span style={{ color: 'var(--zw-text-soft)' }}>{b.ref?.name_fr || b.biomarker_code}</span>
                   <span><strong>{b.value}</strong> <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: flagColor(b.flag), marginLeft: 4 }} /></span>
                 </div>
               ))}
@@ -796,8 +796,8 @@ export function CopilotPanel({ patientId }: { patientId: string }) {
         </button>
         {rootCauses.map((c, i) => (
           <div key={i} style={{ padding: 10, background: '#faf5ff', borderRadius: 8, marginBottom: 6 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}><strong style={{ fontSize: 13, color: '#1e293b' }}>{c.label_fr}</strong>{c.probability != null && <span style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed' }}>{Math.round(c.probability * 100)}%</span>}</div>
-            <div style={{ fontSize: 11.5, color: '#64748b', marginTop: 3 }}>{c.reasoning_fr}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}><strong style={{ fontSize: 13, color: 'var(--zw-text)' }}>{c.label_fr}</strong>{c.probability != null && <span style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed' }}>{Math.round(c.probability * 100)}%</span>}</div>
+            <div style={{ fontSize: 11.5, color: 'var(--zw-text-muted)', marginTop: 3 }}>{c.reasoning_fr}</div>
           </div>
         ))}
       </div>
@@ -810,9 +810,9 @@ export function CopilotPanel({ patientId }: { patientId: string }) {
         </button>
         {council && (
           <div>
-            <div style={{ padding: 10, background: '#eff6ff', borderRadius: 8, marginBottom: 8, fontSize: 12.5, color: '#1e293b' }}><strong>Consensus :</strong> {council.consensus_fr}</div>
+            <div style={{ padding: 10, background: '#eff6ff', borderRadius: 8, marginBottom: 8, fontSize: 12.5, color: 'var(--zw-text)' }}><strong>Consensus :</strong> {council.consensus_fr}</div>
             {(council.experts || []).map((e: any, i: number) => (
-              <div key={i} style={{ fontSize: 12, padding: '4px 0', borderBottom: '1px solid #f1f5f9' }}>
+              <div key={i} style={{ fontSize: 12, padding: '4px 0', borderBottom: '1px solid var(--zw-bg-subtle)' }}>
                 <strong style={{ color: '#0ea5e9' }}>{e.specialty_fr}</strong> — {e.key_recommendation_fr}
               </div>
             ))}
@@ -824,12 +824,12 @@ export function CopilotPanel({ patientId }: { patientId: string }) {
       <div style={panel}>
         <h3 style={head}><Search size={15} color="#10b981" /> Moteur scientifique (PubMed)</h3>
         <div className="twin-copilot-search" style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Ex: insulin resistance inflammation" style={{ flex: 1, padding: '7px 9px', border: '1px solid #e2e8f0', borderRadius: 7, fontSize: 12.5, minWidth: 0 }} />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Ex: insulin resistance inflammation" style={{ flex: 1, padding: '7px 9px', border: '1px solid var(--zw-border)', borderRadius: 7, fontSize: 12.5, minWidth: 0 }} />
           <button onClick={() => go('science')} disabled={!!busy || !query} style={{ padding: '7px 12px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer' }}>{busy === 'science' ? '…' : 'Rechercher'}</button>
         </div>
         {(science?.results || []).map((r: any) => (
-          <a key={r.pmid} href={r.url} target="_blank" rel="noreferrer" style={{ display: 'block', padding: '6px 0', borderBottom: '1px solid #f1f5f9', fontSize: 12, color: '#1e293b', textDecoration: 'none' }}>
-            {r.title} <span style={{ color: '#94a3b8' }}>· {r.source} {r.year}</span>
+          <a key={r.pmid} href={r.url} target="_blank" rel="noreferrer" style={{ display: 'block', padding: '6px 0', borderBottom: '1px solid var(--zw-bg-subtle)', fontSize: 12, color: 'var(--zw-text)', textDecoration: 'none' }}>
+            {r.title} <span style={{ color: 'var(--zw-text-faint)' }}>· {r.source} {r.year}</span>
           </a>
         ))}
       </div>

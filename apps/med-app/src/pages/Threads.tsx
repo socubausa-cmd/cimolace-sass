@@ -190,7 +190,7 @@ export function Threads() {
     urgent: '#dc2626',
     high: '#ea580c',
     normal: '#0d9488',
-    low: '#64748b',
+    low: 'var(--zw-text-muted)',
   };
   const priorityLabel: Record<string, string> = {
     urgent: 'Urgente', high: 'Haute', normal: 'Normale', low: 'Basse',
@@ -232,14 +232,14 @@ export function Threads() {
           style={{
             background: '#fff',
             borderRadius: 12,
-            border: '1px solid #e2e8f0',
+            border: '1px solid var(--zw-border)',
             padding: 8,
             maxHeight: 600,
             overflowY: 'auto',
           }}
         >
           {threads.length === 0 && (
-            <p style={{ color: '#94a3b8', padding: 20, textAlign: 'center', fontSize: 13 }}>
+            <p style={{ color: 'var(--zw-text-faint)', padding: 20, textAlign: 'center', fontSize: 13 }}>
               Aucune conversation.
               <br />
               Cliquez sur "Nouvelle conversation".
@@ -266,7 +266,7 @@ export function Threads() {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--zw-text)' }}>
                     {patientName(p)}
                   </span>
                   <span
@@ -274,7 +274,7 @@ export function Threads() {
                       fontSize: 9,
                       padding: '1px 6px',
                       borderRadius: 8,
-                      background: priorityColor[t.priority] || '#64748b',
+                      background: priorityColor[t.priority] || 'var(--zw-text-muted)',
                       color: '#fff',
                       textTransform: 'uppercase',
                       fontWeight: 600,
@@ -283,10 +283,10 @@ export function Threads() {
                     {priorityLabel[t.priority] || t.priority}
                   </span>
                 </div>
-                <div style={{ fontSize: 12, color: '#64748b', marginBottom: 2 }}>
+                <div style={{ fontSize: 12, color: 'var(--zw-text-muted)', marginBottom: 2 }}>
                   {t.subject || 'Sans sujet'}
                 </div>
-                <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                <div style={{ fontSize: 11, color: 'var(--zw-text-faint)' }}>
                   {t.last_message_at
                     ? new Date(t.last_message_at).toLocaleString('fr', {
                         dateStyle: 'short',
@@ -310,7 +310,7 @@ export function Threads() {
           style={{
             background: '#fff',
             borderRadius: 12,
-            border: '1px solid #e2e8f0',
+            border: '1px solid var(--zw-border)',
             display: 'flex',
             flexDirection: 'column',
             minHeight: 600,
@@ -318,17 +318,17 @@ export function Threads() {
         >
           {activeThread ? (
             <>
-              <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9' }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+              <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--zw-bg-subtle)' }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--zw-text)' }}>
                   {patientName(activePatient)} — {activeThread.subject || 'Conversation'}
                 </div>
-                <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: 'var(--zw-text-faint)', marginTop: 2 }}>
                   Statut : {statusLabel[activeThread.status] || activeThread.status} · Priorité : {priorityLabel[activeThread.priority] || activeThread.priority}
                 </div>
               </div>
               <div ref={scrollRef} style={{ flex: 1, padding: 20, overflowY: 'auto', maxHeight: 460 }}>
                 {messages.length === 0 && (
-                  <p style={{ color: '#94a3b8', textAlign: 'center', marginTop: 80 }}>
+                  <p style={{ color: 'var(--zw-text-faint)', textAlign: 'center', marginTop: 80 }}>
                     Aucun message. Envoyez le premier.
                   </p>
                 )}
@@ -348,8 +348,8 @@ export function Threads() {
                           maxWidth: '72%',
                           padding: '10px 14px',
                           borderRadius: 14,
-                          background: mine ? 'var(--brand-primary)' : '#f1f5f9',
-                          color: mine ? '#fff' : '#0f172a',
+                          background: mine ? 'var(--brand-primary)' : 'var(--zw-bg-subtle)',
+                          color: mine ? '#fff' : 'var(--zw-text)',
                           fontSize: 14,
                           lineHeight: 1.4,
                           whiteSpace: 'pre-wrap',
@@ -378,7 +378,7 @@ export function Threads() {
               </div>
               <form
                 onSubmit={handleSend}
-                style={{ borderTop: '1px solid #e2e8f0', padding: 12, display: 'flex', gap: 8 }}
+                style={{ borderTop: '1px solid var(--zw-border)', padding: 12, display: 'flex', gap: 8 }}
               >
                 <input
                   placeholder="Votre message au patient..."
@@ -388,7 +388,7 @@ export function Threads() {
                   style={{
                     flex: 1,
                     padding: '10px 14px',
-                    border: '1px solid #e2e8f0',
+                    border: '1px solid var(--zw-border)',
                     borderRadius: 8,
                     fontSize: 14,
                   }}
@@ -401,7 +401,7 @@ export function Threads() {
                     alignItems: 'center',
                     gap: 6,
                     padding: '10px 20px',
-                    background: input.trim() ? 'var(--brand-primary)' : '#94a3b8',
+                    background: input.trim() ? 'var(--brand-primary)' : 'var(--zw-text-faint)',
                     color: '#fff',
                     border: 'none',
                     borderRadius: 8,
@@ -419,7 +419,7 @@ export function Threads() {
               )}
             </>
           ) : (
-            <p style={{ color: '#94a3b8', textAlign: 'center', marginTop: 200 }}>
+            <p style={{ color: 'var(--zw-text-faint)', textAlign: 'center', marginTop: 200 }}>
               Sélectionnez une conversation ou démarrez-en une nouvelle.
             </p>
           )}
@@ -463,7 +463,7 @@ export function Threads() {
             </div>
 
             <label style={{ display: 'block', marginBottom: 12 }}>
-              <span style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 4, fontWeight: 500 }}>
+              <span style={{ display: 'block', fontSize: 12, color: 'var(--zw-text-soft)', marginBottom: 4, fontWeight: 500 }}>
                 Patient *
               </span>
               <select
@@ -473,7 +473,7 @@ export function Threads() {
                 style={{
                   width: '100%',
                   padding: '8px 10px',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid var(--zw-border)',
                   borderRadius: 6,
                   fontSize: 14,
                   background: '#fff',
@@ -490,7 +490,7 @@ export function Threads() {
             </label>
 
             <label style={{ display: 'block', marginBottom: 12 }}>
-              <span style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 4, fontWeight: 500 }}>
+              <span style={{ display: 'block', fontSize: 12, color: 'var(--zw-text-soft)', marginBottom: 4, fontWeight: 500 }}>
                 Sujet (optionnel)
               </span>
               <input
@@ -501,7 +501,7 @@ export function Threads() {
                 style={{
                   width: '100%',
                   padding: '8px 10px',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid var(--zw-border)',
                   borderRadius: 6,
                   fontSize: 14,
                   boxSizing: 'border-box',
@@ -510,7 +510,7 @@ export function Threads() {
             </label>
 
             <label style={{ display: 'block', marginBottom: 12 }}>
-              <span style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 4, fontWeight: 500 }}>
+              <span style={{ display: 'block', fontSize: 12, color: 'var(--zw-text-soft)', marginBottom: 4, fontWeight: 500 }}>
                 Premier message (optionnel)
               </span>
               <textarea
@@ -521,7 +521,7 @@ export function Threads() {
                 style={{
                   width: '100%',
                   padding: '8px 10px',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid var(--zw-border)',
                   borderRadius: 6,
                   fontSize: 14,
                   fontFamily: 'inherit',
@@ -545,8 +545,8 @@ export function Threads() {
                 style={{
                   padding: '10px 16px',
                   background: '#fff',
-                  color: '#475569',
-                  border: '1px solid #e2e8f0',
+                  color: 'var(--zw-text-soft)',
+                  border: '1px solid var(--zw-border)',
                   borderRadius: 8,
                   fontSize: 14,
                   fontWeight: 500,

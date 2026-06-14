@@ -131,7 +131,7 @@ export function PatientsList() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h2 style={{ fontSize: 24, fontWeight: 700, display: 'flex', alignItems: 'baseline', gap: 10 }}>
           Patients
-          <span style={{ fontSize: 15, fontWeight: 600, color: '#94a3b8' }}>{patients.length}</span>
+          <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--zw-text-faint)' }}>{patients.length}</span>
         </h2>
         <div style={{ display: 'flex', gap: 8 }}>
           <button
@@ -150,51 +150,51 @@ export function PatientsList() {
         </div>
       </div>
       <div style={{ position: 'relative', marginBottom: 16 }}>
-        <Search size={16} style={{ position: 'absolute', left: 12, top: 12, color: '#94a3b8' }} />
+        <Search size={16} style={{ position: 'absolute', left: 12, top: 12, color: 'var(--zw-text-faint)' }} />
         <input
           placeholder="Rechercher un patient..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ width: '100%', padding: '10px 12px 10px 36px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14 }}
+          style={{ width: '100%', padding: '10px 12px 10px 36px', border: '1px solid var(--zw-border)', borderRadius: 8, fontSize: 14 }}
         />
       </div>
-      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
-              <th style={{ padding: 12, fontSize: 12, fontWeight: 600, color: '#64748b' }}>Nom</th>
-              <th style={{ padding: 12, fontSize: 12, fontWeight: 600, color: '#64748b' }}>Date de naissance</th>
-              <th style={{ padding: 12, fontSize: 12, fontWeight: 600, color: '#64748b' }}>Genre</th>
-              <th style={{ padding: 12, fontSize: 12, fontWeight: 600, color: '#64748b' }}>Statut</th>
+            <tr style={{ background: 'var(--zw-bg)', textAlign: 'left' }}>
+              <th style={{ padding: 12, fontSize: 12, fontWeight: 600, color: 'var(--zw-text-muted)' }}>Nom</th>
+              <th style={{ padding: 12, fontSize: 12, fontWeight: 600, color: 'var(--zw-text-muted)' }}>Date de naissance</th>
+              <th style={{ padding: 12, fontSize: 12, fontWeight: 600, color: 'var(--zw-text-muted)' }}>Genre</th>
+              <th style={{ padding: 12, fontSize: 12, fontWeight: 600, color: 'var(--zw-text-muted)' }}>Statut</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={4} style={{ padding: 24, textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>
+                <td colSpan={4} style={{ padding: 24, textAlign: 'center', color: 'var(--zw-text-faint)', fontSize: 14 }}>
                   Aucun patient. Cliquez sur "+ Nouveau patient" pour créer le premier dossier.
                 </td>
               </tr>
             )}
             {filtered.map((p: any) => (
-              <tr key={p.id} style={{ borderTop: '1px solid #e2e8f0' }}>
+              <tr key={p.id} style={{ borderTop: '1px solid var(--zw-border)' }}>
                 <td style={{ padding: 12 }}>
                   <Link to={'/patients/' + p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--brand-primary)', fontWeight: 500, textDecoration: 'none' }}>
                     <span style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--brand-primary-soft)', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
                       {initials(p)}
                     </span>
-                    {fullName(p) || <span style={{ color: '#94a3b8' }}>(sans nom)</span>}
+                    {fullName(p) || <span style={{ color: 'var(--zw-text-faint)' }}>(sans nom)</span>}
                   </Link>
                 </td>
-                <td style={{ padding: 12, color: '#64748b' }}>
+                <td style={{ padding: 12, color: 'var(--zw-text-muted)' }}>
                   {p.date_of_birth ? (
                     <>
                       {new Date(p.date_of_birth).toLocaleDateString('fr')}
-                      {ageFromDob(p.date_of_birth) && <span style={{ color: '#94a3b8' }}> · {ageFromDob(p.date_of_birth)}</span>}
+                      {ageFromDob(p.date_of_birth) && <span style={{ color: 'var(--zw-text-faint)' }}> · {ageFromDob(p.date_of_birth)}</span>}
                     </>
                   ) : '—'}
                 </td>
-                <td style={{ padding: 12, color: '#64748b' }}>{GENDER_LABEL[p.gender] || '—'}</td>
+                <td style={{ padding: 12, color: 'var(--zw-text-muted)' }}>{GENDER_LABEL[p.gender] || '—'}</td>
                 <td style={{ padding: 12 }}>
                   <span
                     style={{
@@ -339,8 +339,8 @@ export function PatientsList() {
                 style={{
                   padding: '10px 16px',
                   background: '#fff',
-                  color: '#475569',
-                  border: '1px solid #e2e8f0',
+                  color: 'var(--zw-text-soft)',
+                  border: '1px solid var(--zw-border)',
                   borderRadius: 8,
                   fontSize: 14,
                   fontWeight: 500,
@@ -377,7 +377,7 @@ export function PatientsList() {
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '8px 10px',
-  border: '1px solid #e2e8f0',
+  border: '1px solid var(--zw-border)',
   borderRadius: 6,
   fontSize: 14,
   background: '#fff',
@@ -395,7 +395,7 @@ function Field({
 }) {
   return (
     <label style={{ display: 'block' }}>
-      <span style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 4, fontWeight: 500 }}>
+      <span style={{ display: 'block', fontSize: 12, color: 'var(--zw-text-soft)', marginBottom: 4, fontWeight: 500 }}>
         {label}
       </span>
       {children}

@@ -19,7 +19,7 @@ export function OnboardingTour() {
     styleEl.textContent = `
       .driver-popover.isna-theme {
         background: #fff;
-        color: #0f172a;
+        color: var(--zw-text);
         border-radius: 14px;
         box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.35);
         max-width: 380px;
@@ -27,12 +27,12 @@ export function OnboardingTour() {
       .driver-popover.isna-theme .driver-popover-title {
         font-size: 16px;
         font-weight: 700;
-        color: #0f172a;
+        color: var(--zw-text);
         margin-bottom: 6px;
       }
       .driver-popover.isna-theme .driver-popover-description {
         font-size: 13.5px;
-        color: #475569;
+        color: var(--zw-text-soft);
         line-height: 1.5;
       }
       .driver-popover.isna-theme .driver-popover-footer button {
@@ -47,15 +47,15 @@ export function OnboardingTour() {
         cursor: pointer;
       }
       .driver-popover.isna-theme .driver-popover-footer button.driver-popover-prev-btn {
-        background: #f1f5f9;
-        color: #475569;
+        background: var(--zw-bg-subtle);
+        color: var(--zw-text-soft);
       }
       .driver-popover.isna-theme .driver-popover-close-btn {
-        color: #94a3b8;
+        color: var(--zw-text-faint);
         font-size: 18px;
       }
       .driver-popover.isna-theme .driver-popover-progress-text {
-        color: #94a3b8;
+        color: var(--zw-text-faint);
         font-size: 12px;
       }
     `;

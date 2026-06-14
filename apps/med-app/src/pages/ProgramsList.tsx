@@ -276,7 +276,7 @@ export function ProgramsList() {
         {/* Programs list */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {programs.length === 0 && (
-            <p style={{ color: '#94a3b8', padding: 20, background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}>
+            <p style={{ color: 'var(--zw-text-faint)', padding: 20, background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', textAlign: 'center' }}>
               Aucun programme. Cliquez sur "+ Nouveau programme".
             </p>
           )}
@@ -292,18 +292,18 @@ export function ProgramsList() {
                   textAlign: 'left',
                   background: '#fff',
                   borderRadius: 12,
-                  border: isActive ? '2px solid #10b981' : '1px solid #e2e8f0',
+                  border: isActive ? '2px solid #10b981' : '1px solid var(--zw-border)',
                   padding: 16,
                   cursor: 'pointer',
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                  <h3 style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>{p.title}</h3>
-                  <CheckCircle size={18} color={p.is_active !== false ? '#10b981' : '#94a3b8'} />
+                  <h3 style={{ fontWeight: 600, fontSize: 14, color: 'var(--zw-text)' }}>{p.title}</h3>
+                  <CheckCircle size={18} color={p.is_active !== false ? '#10b981' : 'var(--zw-text-faint)'} />
                 </div>
-                {p.description && <p style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>{p.description}</p>}
-                <div style={{ display: 'flex', gap: 10, fontSize: 11, color: '#64748b' }}>
-                  <span style={{ padding: '2px 8px', background: '#f1f5f9', borderRadius: 6 }}>{categoryLabel(p.category)}</span>
+                {p.description && <p style={{ fontSize: 12, color: 'var(--zw-text-muted)', marginBottom: 8 }}>{p.description}</p>}
+                <div style={{ display: 'flex', gap: 10, fontSize: 11, color: 'var(--zw-text-muted)' }}>
+                  <span style={{ padding: '2px 8px', background: 'var(--zw-bg-subtle)', borderRadius: 6 }}>{categoryLabel(p.category)}</span>
                   {p.duration_days && <span>{p.duration_days}j</span>}
                 </div>
               </button>
@@ -312,9 +312,9 @@ export function ProgramsList() {
         </div>
 
         {/* Detail */}
-        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, minHeight: 500 }}>
+        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 20, minHeight: 500 }}>
           {!selected ? (
-            <p style={{ color: '#94a3b8', textAlign: 'center', marginTop: 200 }}>
+            <p style={{ color: 'var(--zw-text-faint)', textAlign: 'center', marginTop: 200 }}>
               Sélectionnez un programme pour voir ses étapes
             </p>
           ) : (
@@ -322,8 +322,8 @@ export function ProgramsList() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                 <div>
                   <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{selected.title}</h3>
-                  {selected.description && <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0' }}>{selected.description}</p>}
-                  <div style={{ marginTop: 6, fontSize: 12, color: '#64748b' }}>
+                  {selected.description && <p style={{ fontSize: 13, color: 'var(--zw-text-muted)', margin: '4px 0 0' }}>{selected.description}</p>}
+                  <div style={{ marginTop: 6, fontSize: 12, color: 'var(--zw-text-muted)' }}>
                     Catégorie : <strong>{categoryLabel(selected.category)}</strong>
                     {selected.duration_days && ` · ${selected.duration_days}j`}
                   </div>
@@ -336,7 +336,7 @@ export function ProgramsList() {
                 </button>
               </div>
 
-              <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 16, marginTop: 16 }}>
+              <div style={{ borderTop: '1px solid var(--zw-bg-subtle)', paddingTop: 16, marginTop: 16 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <h4 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>Étapes ({steps.length})</h4>
                   <button
@@ -348,7 +348,7 @@ export function ProgramsList() {
                 </div>
 
                 {steps.length === 0 ? (
-                  <p style={{ color: '#94a3b8', fontSize: 13, padding: 20, textAlign: 'center', background: '#f8fafc', borderRadius: 8 }}>
+                  <p style={{ color: 'var(--zw-text-faint)', fontSize: 13, padding: 20, textAlign: 'center', background: 'var(--zw-bg)', borderRadius: 8 }}>
                     Aucune étape. Ajoutez la première pour construire le programme.
                   </p>
                 ) : (
@@ -356,15 +356,15 @@ export function ProgramsList() {
                     {steps.map((s, idx) => (
                       <li
                         key={s.id}
-                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: '#f8fafc', borderRadius: 8, marginBottom: 6 }}
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: 'var(--zw-bg)', borderRadius: 8, marginBottom: 6 }}
                       >
                         <span style={{ width: 24, height: 24, borderRadius: '50%', background: '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, flexShrink: 0 }}>
                           {idx + 1}
                         </span>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>{s.title}</div>
-                          {s.description && <div style={{ fontSize: 12, color: '#64748b' }}>{s.description}</div>}
-                          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--zw-text)' }}>{s.title}</div>
+                          {s.description && <div style={{ fontSize: 12, color: 'var(--zw-text-muted)' }}>{s.description}</div>}
+                          <div style={{ fontSize: 11, color: 'var(--zw-text-faint)', marginTop: 2 }}>
                             {stepTypeLabel(s.step_type)} · J+{s.due_after_days ?? 0}
                             {s.is_required === false && ' · optionnel'}
                           </div>
@@ -465,7 +465,7 @@ export function ProgramsList() {
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '8px 10px',
-  border: '1px solid #e2e8f0',
+  border: '1px solid var(--zw-border)',
   borderRadius: 6,
   fontSize: 14,
   background: '#fff',
@@ -484,7 +484,7 @@ const errStyle: React.CSSProperties = {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label style={{ display: 'block', marginBottom: 12 }}>
-      <span style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 4, fontWeight: 500 }}>{label}</span>
+      <span style={{ display: 'block', fontSize: 12, color: 'var(--zw-text-soft)', marginBottom: 4, fontWeight: 500 }}>{label}</span>
       {children}
     </label>
   );
@@ -548,8 +548,8 @@ function Actions({
         onClick={onCancel}
         disabled={saving}
         style={{
-          padding: '10px 16px', background: '#fff', color: '#475569',
-          border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14, fontWeight: 500,
+          padding: '10px 16px', background: '#fff', color: 'var(--zw-text-soft)',
+          border: '1px solid var(--zw-border)', borderRadius: 8, fontSize: 14, fontWeight: 500,
           cursor: saving ? 'not-allowed' : 'pointer',
         }}
       >

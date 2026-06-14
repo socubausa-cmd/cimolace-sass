@@ -41,14 +41,14 @@ export function Layout() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <aside style={{ width: 240, background: '#1e293b', color: '#e2e8f0', padding: '20px 0', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '0 20px 16px', borderBottom: '1px solid #334155', marginBottom: 12 }}>
+      <aside style={{ width: 240, background: 'var(--zw-side-bg)', color: 'var(--zw-side-text)', padding: '20px 0', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '0 20px 16px', borderBottom: '1px solid var(--zw-side-border)', marginBottom: 12 }}>
           {branding.loading ? (
             /* Reserve space while branding resolves — avoids a MEDOS→tenant flash. */
             <div style={{ height: 30 }} />
           ) : hasTenantBrand ? (
-            /* Tenant-first identity — the cabinet's own brand leads. */
-            <h1 style={{ fontSize: 17, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10, margin: 0, lineHeight: 1.2 }}>
+            /* Tenant-first identity — the cabinet's own brand leads (serif via theme). */
+            <h1 style={{ fontSize: 19, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10, margin: 0, lineHeight: 1.2 }}>
               {branding.logoUrl ? (
                 <img
                   src={branding.logoUrl}
@@ -58,7 +58,7 @@ export function Layout() {
               ) : (
                 <span
                   style={{
-                    width: 30, height: 30, borderRadius: 7, background: 'var(--brand-primary)',
+                    width: 30, height: 30, borderRadius: 7, background: 'var(--zw-side-accent)',
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     color: '#fff', fontSize: 13, fontWeight: 700, flexShrink: 0,
                   }}
@@ -84,10 +84,10 @@ export function Layout() {
                 to={item.to}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px',
-                  background: isActive ? (hasTenantBrand ? 'var(--brand-primary-soft)' : '#334155') : 'transparent',
-                  color: isActive ? '#fff' : '#94a3b8',
+                  background: isActive ? 'var(--zw-side-active-bg)' : 'transparent',
+                  color: isActive ? '#fff' : 'var(--zw-side-text-dim)',
                   fontSize: 14, fontWeight: 500,
-                  borderLeft: isActive ? '3px solid var(--brand-primary)' : '3px solid transparent',
+                  borderLeft: isActive ? '3px solid var(--zw-side-accent)' : '3px solid transparent',
                 }}
               >
                 <item.icon size={18} /> {item.label}
@@ -97,7 +97,7 @@ export function Layout() {
         </nav>
         {hasTenantBrand && (
           /* Discreet engine attribution — honest co-brand without the loud wordmark. */
-          <div style={{ padding: '14px 20px 0', margin: '12px 0 0', borderTop: '1px solid #334155', fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ padding: '14px 20px 0', margin: '12px 0 0', borderTop: '1px solid var(--zw-side-border)', fontSize: 11, color: 'var(--zw-side-text-dim)', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Stethoscope size={13} /> Propulsé par MedOS
           </div>
         )}
