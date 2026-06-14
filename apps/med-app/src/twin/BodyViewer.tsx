@@ -1,19 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Html } from '@react-three/drei';
+import { useState } from 'react';
 import { COLOR_HEX, type OrganColor } from './api';
-
-// Tiny inline hook — viewport width tracker for responsive switches.
-function useViewportWidth(): number {
-  const [w, setW] = useState<number>(() => (typeof window === 'undefined' ? 1024 : window.innerWidth));
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const onResize = () => setW(window.innerWidth);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-  return w;
-}
 
 export type OrganNode = {
   code: string;
@@ -22,67 +8,24 @@ export type OrganNode = {
   score: { score: number; color: OrganColor } | null;
 };
 
-const GREY = 'var(--zw-border-strong)';
+const GREY = '#c9bdab';
 
-function OrganMesh({
-  organ,
-  selected,
-  onSelect,
-}: {
-  organ: OrganNode;
-  selected: boolean;
-  onSelect: (code: string) => void;
-}) {
-  const [hover, setHover] = useState(false);
-  const p = organ.position ?? { x: 0, y: 0, z: 0 };
-  const color = organ.score ? COLOR_HEX[organ.score.color] : GREY;
-  const critical = organ.score?.color === 'red';
-  const r = selected ? 0.27 : hover ? 0.25 : 0.22;
-
-  return (
-    <group position={[p.x, p.y, p.z]}>
-      <mesh
-        onClick={(e) => {
-          e.stopPropagation();
-          onSelect(organ.code);
-        }}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHover(true);
-        }}
-        onPointerOut={() => setHover(false)}
-      >
-        <sphereGeometry args={[r, 32, 32]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={critical ? 0.6 : hover || selected ? 0.3 : 0.12}
-          roughness={0.45}
-          metalness={0.1}
-        />
-      </mesh>
-      {(hover || selected) && (
-        <Html distanceFactor={8} position={[0, r + 0.18, 0]} center>
-          <div
-            style={{
-              background: 'rgba(15,23,42,0.92)',
-              color: '#fff',
-              padding: '4px 9px',
-              borderRadius: 8,
-              fontSize: 12,
-              fontWeight: 600,
-              whiteSpace: 'nowrap',
-              pointerEvents: 'none',
-            }}
-          >
-            {organ.name_fr}
-            {organ.score ? ` · ${organ.score.score}/100` : ' · —'}
-          </div>
-        </Html>
-      )}
-    </group>
-  );
-}
+// Front-view anatomical layout (viewBox 300 × 470). `side` = which margin the
+// label sits in; `ly` = its vertical position (manually spaced to avoid overlap).
+const POS: Record<string, { x: number; y: number; side: 'L' | 'R'; ly: number }> = {
+  brain:        { x: 150, y: 50,  side: 'L', ly: 40 },
+  thyroid:      { x: 150, y: 100, side: 'L', ly: 96 },
+  heart:        { x: 134, y: 158, side: 'L', ly: 152 },
+  lungs:        { x: 168, y: 150, side: 'R', ly: 142 },
+  liver:        { x: 178, y: 206, side: 'R', ly: 198 },
+  stomach:      { x: 122, y: 204, side: 'L', ly: 206 },
+  pancreas:     { x: 150, y: 228, side: 'R', ly: 232 },
+  adrenals:     { x: 120, y: 238, side: 'L', ly: 260 },
+  kidneys:      { x: 180, y: 246, side: 'R', ly: 266 },
+  gut:          { x: 150, y: 274, side: 'R', ly: 300 },
+  immune:       { x: 112, y: 282, side: 'L', ly: 308 },
+  reproductive: { x: 150, y: 306, side: 'R', ly: 336 },
+};
 
 export function BodyViewer({
   organs,
@@ -93,106 +36,84 @@ export function BodyViewer({
   selected: string | null;
   onSelect: (code: string) => void;
 }) {
-  const vw = useViewportWidth();
-  const isMobile = vw <= 768;
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  // Liste compacte des organes scorés, affichée SOUS le canvas en mobile.
-  const scored = organs.filter((o) => o.score).sort((a, b) => (a.score!.score - b.score!.score));
+  const [hover, setHover] = useState<string | null>(null);
+  const byCode = new Map(organs.map((o) => [o.code, o]));
+  const list = Object.keys(POS).map((code) => {
+    const o = byCode.get(code);
+    return { code, name: o?.name_fr || code, score: o?.score || null, ...POS[code] };
+  });
+  const colorOf = (s: OrganNode['score']) => (s ? COLOR_HEX[s.color] : GREY);
 
   return (
-    <div
-      ref={wrapRef}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100%',
-        height: '100%',
-        minHeight: isMobile ? 360 : 460,
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          height: isMobile ? 'clamp(280px, 50vh, 460px)' : '100%',
-          minHeight: isMobile ? 280 : 460,
-          flex: isMobile ? '0 0 auto' : '1 1 auto',
-          background: 'radial-gradient(circle at 50% 30%, var(--zw-text), #020617)',
-          borderRadius: isMobile ? '16px 16px 0 0' : 16,
-          touchAction: 'pan-y',
-        }}
-      >
-        <Canvas camera={{ position: [0, 1.2, 6.2], fov: isMobile ? 48 : 42 }}>
-          <ambientLight intensity={0.7} />
-          <directionalLight position={[3, 6, 4]} intensity={1.1} />
-          <directionalLight position={[-4, 2, -3]} intensity={0.4} color="#93c5fd" />
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', minHeight: 460, background: 'radial-gradient(circle at 50% 20%, #ffffff, var(--zw-bg-subtle))', borderRadius: 16, padding: 8, boxSizing: 'border-box' }}>
+      <svg viewBox="0 0 300 470" preserveAspectRatio="xMidYMid meet" style={{ width: '100%', flex: 1, minHeight: 380, maxHeight: 540, display: 'block' }} role="img" aria-label="Carte anatomique des organes">
+        <defs>
+          <linearGradient id="zw-body-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#f0e7d9" />
+            <stop offset="1" stopColor="#e2d4be" />
+          </linearGradient>
+        </defs>
 
-          {/* Silhouette corporelle translucide */}
-          <mesh position={[0, 0.9, -0.05]}>
-            <capsuleGeometry args={[0.95, 3.1, 8, 24]} />
-            <meshStandardMaterial color="#38bdf8" transparent opacity={0.06} roughness={1} />
-          </mesh>
-          {/* Tête */}
-          <mesh position={[0, 3.25, 0]}>
-            <sphereGeometry args={[0.55, 24, 24]} />
-            <meshStandardMaterial color="#38bdf8" transparent opacity={0.06} roughness={1} />
-          </mesh>
+        {/* Silhouette */}
+        <g fill="url(#zw-body-fill)" stroke="#d7c8af" strokeWidth="1.5">
+          <ellipse cx="150" cy="48" rx="27" ry="31" />
+          <rect x="139" y="74" width="22" height="20" rx="9" />
+          <path d="M150 90 C116 90 100 106 100 136 L104 252 C106 292 124 312 150 312 C176 312 194 292 196 252 L200 136 C200 106 184 90 150 90 Z" />
+          <rect x="71" y="118" width="22" height="120" rx="11" transform="rotate(8 82 178)" />
+          <rect x="207" y="118" width="22" height="120" rx="11" transform="rotate(-8 218 178)" />
+          <rect x="118" y="306" width="26" height="152" rx="13" />
+          <rect x="156" y="306" width="26" height="152" rx="13" />
+        </g>
 
-          {organs.map((o) => (
-            <OrganMesh key={o.code} organ={o} selected={selected === o.code} onSelect={onSelect} />
-          ))}
+        {/* Leader lines + labels (clickable) */}
+        {list.map((it) => {
+          const active = selected === it.code || hover === it.code;
+          const lx = it.side === 'L' ? 8 : 292;
+          const lineStart = it.side === 'L' ? 78 : 222;
+          return (
+            <g key={'lbl-' + it.code} style={{ cursor: 'pointer' }}
+              onClick={() => onSelect(it.code)} onMouseEnter={() => setHover(it.code)} onMouseLeave={() => setHover(null)}>
+              <line x1={lineStart} y1={it.ly} x2={it.x} y2={it.y} stroke="var(--zw-border-strong)" strokeWidth={active ? 1.6 : 1} opacity={active ? 0.95 : 0.4} />
+              <text x={lx} y={it.ly + 3} textAnchor={it.side === 'L' ? 'start' : 'end'} fontSize="11" fontWeight={active ? 700 : 500} fill="var(--zw-text-soft)" style={{ userSelect: 'none' }}>
+                {it.name}{it.score ? ` · ${it.score.score}` : ''}
+              </text>
+            </g>
+          );
+        })}
 
-          <OrbitControls
-            enablePan={false}
-            minDistance={3.5}
-            maxDistance={9}
-            target={[0, 0.9, 0]}
-            autoRotate={!selected}
-            autoRotateSpeed={0.6}
-          />
-        </Canvas>
+        {/* Organ markers */}
+        {list.map((it) => {
+          const c = colorOf(it.score);
+          const active = selected === it.code || hover === it.code;
+          const r = selected === it.code ? 11 : active ? 10 : 8.5;
+          const critical = it.score?.color === 'red';
+          return (
+            <g key={it.code} style={{ cursor: 'pointer' }}
+              onClick={() => onSelect(it.code)} onMouseEnter={() => setHover(it.code)} onMouseLeave={() => setHover(null)}>
+              {critical && (
+                <circle cx={it.x} cy={it.y} r={r + 4} fill={c} opacity="0.25">
+                  <animate attributeName="r" values={`${r + 2};${r + 9};${r + 2}`} dur="1.8s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.3;0.04;0.3" dur="1.8s" repeatCount="indefinite" />
+                </circle>
+              )}
+              <circle cx={it.x} cy={it.y} r={r} fill={c} stroke="#fff" strokeWidth={selected === it.code ? 3 : 2} />
+            </g>
+          );
+        })}
+      </svg>
+
+      {/* Légende */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', justifyContent: 'center', padding: '8px 4px 2px', fontSize: 11, color: 'var(--zw-text-muted)' }}>
+        {(['green', 'yellow', 'orange', 'red'] as OrganColor[]).map((c, i) => (
+          <span key={c} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ width: 9, height: 9, borderRadius: '50%', background: COLOR_HEX[c] }} />
+            {['Optimal', 'À surveiller', 'Sub-optimal', 'Critique'][i]}
+          </span>
+        ))}
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ width: 9, height: 9, borderRadius: '50%', background: GREY }} />Non évalué
+        </span>
       </div>
-
-      {/* Mobile-only: liste organes sous le canvas */}
-      {isMobile && scored.length > 0 && (
-        <div style={{ padding: 12, background: '#fff', borderRadius: '0 0 16px 16px', borderTop: '1px solid var(--zw-border)' }}>
-          <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--zw-text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>
-            Organes scorés ({scored.length})
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, maxHeight: 220, overflowY: 'auto' }}>
-            {scored.map((o) => (
-              <button
-                key={o.code}
-                onClick={() => onSelect(o.code)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '8px 10px',
-                  background: selected === o.code ? '#eef2ff' : 'var(--zw-bg)',
-                  border: 'none',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  width: '100%',
-                }}
-              >
-                <span
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: '50%',
-                    background: COLOR_HEX[o.score!.color],
-                    flexShrink: 0,
-                  }}
-                />
-                <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'var(--zw-text)' }}>{o.name_fr}</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: COLOR_HEX[o.score!.color] }}>{o.score!.score}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

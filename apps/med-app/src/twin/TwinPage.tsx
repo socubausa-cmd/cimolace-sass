@@ -88,12 +88,20 @@ export function TwinPage() {
       .catch(() => {});
   }, [load, patientId]);
 
-  const organs = (state?.organs || []).map((o: any) => ({
-    code: o.code,
-    name_fr: o.name_fr,
-    position: o.position,
-    score: o.score ? { score: o.score.score, color: o.score.color as OrganColor } : null,
-  }));
+  // Merge the reference organ set (always the full 12) with the patient's
+  // scores, so the body always shows every organ (grey when not yet scored)
+  // and a click never lands on a missing organ.
+  const scoreByCode = new Map<string, any>((state?.organs || []).map((o: any) => [o.code, o.score || null]));
+  const organSource = (refs.organs && refs.organs.length ? refs.organs : (state?.organs || []));
+  const organs = organSource.map((o: any) => {
+    const sc = scoreByCode.get(o.code);
+    return {
+      code: o.code,
+      name_fr: o.name_fr,
+      position: o.position,
+      score: sc ? { score: sc.score, color: sc.color as OrganColor } : null,
+    };
+  });
   const selectedOrgan = organs.find((o: any) => o.code === selected);
   const bmRefByCode = new Map<string, any>((refs.biomarkers || []).map((b: any) => [b.code, b]));
 
