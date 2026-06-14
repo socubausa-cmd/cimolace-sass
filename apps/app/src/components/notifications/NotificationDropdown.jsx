@@ -82,21 +82,33 @@ const NotificationDropdown = ({ externalUnreadCount = 0, externalItems = [] }) =
     void fetchLiveNotifications();
     if (!user?.id) return undefined;
 
-    const ch1 = supabase
-      .channel(`notif-dropdown-${user.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications',
-        filter: `user_id=eq.${user.id}` }, fetchNotifications)
-      .subscribe();
+    // Robustesse realtime : nom de canal UNIQUE par exécution (évite la collision
+    // « cannot add postgres_changes after subscribe() » quand l'effet re-tourne avant
+    // la fin du removeChannel async — sinon supabase.channel(name) renvoie le canal
+    // déjà souscrit et .on() throw). + try/catch : le realtime ne doit JAMAIS faire
+    // planter le dashboard (sinon écran noir, cf. absence d'ErrorBoundary proche).
+    let ch1;
+    let ch2;
+    const sub = `${user.id}-${Math.random().toString(36).slice(2, 8)}`;
+    try {
+      ch1 = supabase
+        .channel(`notif-dropdown-${sub}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications',
+          filter: `user_id=eq.${user.id}` }, fetchNotifications)
+        .subscribe();
 
-    const ch2 = supabase
-      .channel(`live-notif-dropdown-${user.id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_notifications',
-        filter: `user_id=eq.${user.id}` }, fetchLiveNotifications)
-      .subscribe();
+      ch2 = supabase
+        .channel(`live-notif-dropdown-${sub}`)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_notifications',
+          filter: `user_id=eq.${user.id}` }, fetchLiveNotifications)
+        .subscribe();
+    } catch (err) {
+      console.warn('[NotificationDropdown] realtime indisponible (non bloquant):', err?.message || err);
+    }
 
     return () => {
-      supabase.removeChannel(ch1);
-      supabase.removeChannel(ch2);
+      try { if (ch1) supabase.removeChannel(ch1); } catch { /* ignore */ }
+      try { if (ch2) supabase.removeChannel(ch2); } catch { /* ignore */ }
     };
   }, [fetchNotifications, fetchLiveNotifications, user?.id]);
 
