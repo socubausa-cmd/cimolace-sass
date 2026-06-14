@@ -1411,6 +1411,13 @@ isLiriHostDevPreviewRoute;
               <SmartboardStreamingPage />
             </ProtectedRoleRoute>
           } />
+          {/* Liri Brain — assistant IA conversationnel (multi-modèles). Nom canonique
+              /liri/brain ; /dashboard/liri conservé en alias legacy (rétro-compat). */}
+          <Route path="/liri/brain" element={
+            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
+              <DashboardLiri />
+            </ProtectedRoleRoute>
+          } />
           <Route path="/dashboard/liri" element={
             <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
               <DashboardLiri />
