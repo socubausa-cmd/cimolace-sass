@@ -965,6 +965,7 @@ const AppContent = () => {
     '/live/',
     '/dev/masterclass-factory',
     '/embed/',       // LIRI embed iframe — aucun shell
+    '/handoff',      // handoff cross-domain (« Connexion à la salle ») — coque neutre, pas de shell école
   ];
 
   // Routes live immersif — aucun shell app autour (plein écran total)
@@ -1425,7 +1426,7 @@ isLiriHostDevPreviewRoute;
             </ProtectedRoleRoute>
           } />
           <Route path="/liri" element={
-            <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student']}>
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole>
               <LiriPortalPage />
             </ProtectedLiriRoute>
           } />
