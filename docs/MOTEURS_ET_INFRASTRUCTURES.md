@@ -56,6 +56,28 @@
 
 ---
 
+## 2c. Parcours d'un LIVE : quelle interface s'ouvre ?
+
+Quand un tenant (ISNA, Zahir…) lance un live, **plusieurs surfaces interviennent à des moments différents**. L'interface qui s'ouvre dépend de **qui** (hôte vs invité) et **où** (dans l'app vs embarqué sur un site externe).
+
+| Étape | Surface | Route | Page |
+|---|---|---|---|
+| Voir / gérer mes lives | Portail ou Bibliothèque | `/liri`, `/lives` | LiriPortalPage, LivesLibraryPage |
+| Préparer un live (scènes, smartboard…) | Studio | `/studio/liri`, prépa | StudioLiri*, LivePreparationStudio |
+| **Lancer / héberger le live (HÔTE)** | **Salle de l'hôte** | `/live/host/:sessionId` | **LiveHostPage** |
+| Rejoindre (INVITÉ / participant) | Salle invité | `/live/:sessionId` | LiveGuestPage |
+| Salle d'attente | Waiting room | `/live/waiting/:sessionId` | LiveWaitingRoom |
+| Companion (téléphone / caméra mobile) | — | `/live/phone`, `/live/mobile-camera` | Immersive/MobileCamera |
+| **Embarqué sur un site externe du tenant** | iframe embed | `/embed/live/:sessionId`, `/embed/studio` | LiveEmbed |
+
+**Réponse directe :** lancer un live **pour l'héberger** ouvre **`LiveHostPage`** (la salle de l'hôte). Le **Portail** et le **Studio** sont **avant** (gérer / préparer) ; la salle live elle-même = `LiveHostPage` (hôte) ou `LiveGuestPage` (invité).
+
+> ⚠️ **Confusion de noms (à arbitrer, non corrigé) :** « **Arena** » n'est **pas** une page différente. La route `/studio/live-arena/:sessionId` rend **exactement la même `LiveHostPage`** que `/live/host/:sessionId`. Donc **Arena = Host = salle live de l'hôte**, sous deux noms de route. Recommandation : garder **un seul** nom (« salle live » / host) et faire de `/studio/live-arena/:sessionId` un simple alias documenté, pour ne plus laisser croire qu'« Arena » est un produit distinct.
+>
+> Quand **Liri est embarqué** dans le site externe d'un tenant (via clé API / SDK), ce ne sont **pas** ces routes app qui s'ouvrent mais les routes **`/embed/*`** (iframe), pour que le live s'affiche **dans** le site du client sans le sortir de son domaine.
+
+---
+
 ## 3. Les 7 INFRASTRUCTURES (templates) et leurs moteurs
 
 | Infrastructure | `type` | Moteurs assemblés |
