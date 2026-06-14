@@ -204,7 +204,8 @@ export default function LiriDashboardShell({
 
       {/* Sidebar flottante (desktop) */}
       <aside className="hidden lg:flex" style={{
-        position: 'fixed', top: 14, left: 14, bottom: 14, width: collapsed ? 64 : 220, zIndex: 50,
+        // top: 96 → passe SOUS le header global (« Mon École », 89px fixe) au lieu d'être caché dessous.
+        position: 'fixed', top: 96, left: 14, bottom: 14, width: collapsed ? 64 : 220, zIndex: 50,
         flexDirection: 'column', background: T.panel, border: `1px solid ${T.border}`, borderRadius: 18,
         backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', overflow: 'hidden',
         boxShadow: '0 16px 48px -16px rgba(0,0,0,0.55)', transition: 'width 200ms cubic-bezier(0.4,0,0.2,1)',
