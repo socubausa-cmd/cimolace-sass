@@ -5,17 +5,29 @@ import {
 } from 'lucide-react';
 import { useCamera } from '../native/useCamera';
 import { BodyViewer } from './BodyViewer';
+import { FunctionalWheel, BilanModal } from './TransformationBilan';
+import { scoreResponses, type Answers } from './transformation';
 
 const panel: React.CSSProperties = { background: '#fff', borderRadius: 14, border: '1px solid var(--zw-border)', padding: 18 };
 const head: React.CSSProperties = { fontSize: 14, fontWeight: 700, margin: 0, marginBottom: 12, color: 'var(--zw-text)', display: 'flex', alignItems: 'center', gap: 7 };
 const colorFor = (s: number): string => COLOR_HEX[(s >= 80 ? 'green' : s >= 60 ? 'yellow' : s >= 40 ? 'orange' : 'red') as OrganColor];
 
-// ─── Roue de transformation (Module 2) ─────────────────────────────────────
+// ─── Roue de transformation (Module 2) — bilan Détox → 2 roues ──────────────
 export function WheelPanel({ patientId }: { patientId: string }) {
+  const [mode, setMode] = useState<'functional' | 'lifestyle'>('functional');
   const [domains, setDomains] = useState<Array<{ domain: string; score: number | null }>>([]);
+  const [functional, setFunctional] = useState<Record<string, number>>({});
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
-  useEffect(() => { twinApi.getWheel(patientId).then((d) => setDomains(d.domains || [])).catch(() => {}); }, [patientId]);
+  const [bilanOpen, setBilanOpen] = useState(false);
+  const [answers, setAnswers] = useState<Answers>({});
+  const [selAxis, setSelAxis] = useState<string | null>(null);
+  const lsKey = 'twin_bilan_' + patientId;
+
+  useEffect(() => {
+    twinApi.getWheel(patientId).then((d) => setDomains(d.domains || [])).catch(() => {});
+    try { const raw = localStorage.getItem(lsKey); if (raw) { const o = JSON.parse(raw); setFunctional(o.functional || {}); setAnswers(o.answers || {}); } } catch { /* noop */ }
+  }, [patientId, lsKey]);
 
   const cx = 150, cy = 150, R = 120;
   const pts = domains.map((d, i) => {
@@ -25,40 +37,83 @@ export function WheelPanel({ patientId }: { patientId: string }) {
   });
   const poly = pts.map((p) => `${p.x},${p.y}`).join(' ');
 
-  async function save() {
+  async function saveLifestyle(next: typeof domains) {
     setBusy(true);
-    try { await twinApi.saveWheel(patientId, domains.map((d) => ({ domain: d.domain, score: d.score ?? 0 }))); setEditing(false); }
+    try { await twinApi.saveWheel(patientId, next.map((d) => ({ domain: d.domain, score: d.score ?? 0 }))); }
     finally { setBusy(false); }
   }
 
+  function applyBilan(ans: Answers) {
+    const { lifestyle, functional: fn } = scoreResponses(ans);
+    setFunctional(fn); setAnswers(ans);
+    try { localStorage.setItem(lsKey, JSON.stringify({ answers: ans, functional: fn })); } catch { /* noop */ }
+    const next = domains.map((d) => (lifestyle[d.domain] != null ? { ...d, score: lifestyle[d.domain] } : d));
+    setDomains(next); saveLifestyle(next);
+    setBilanOpen(false); setMode('functional');
+  }
+
+  const hasBilan = Object.keys(functional).length > 0;
+
   return (
     <div style={panel}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
         <h3 style={head}>🌱 Roue de transformation</h3>
-        <button onClick={() => (editing ? save() : setEditing(true))} disabled={busy} style={{ fontSize: 12, padding: '5px 12px', background: editing ? 'var(--brand-primary)' : 'var(--zw-bg-subtle)', color: editing ? '#fff' : 'var(--zw-text-soft)', border: 'none', borderRadius: 7, cursor: 'pointer' }}>
-          {busy ? '…' : editing ? 'Enregistrer' : 'Éditer'}
-        </button>
-      </div>
-      <div className="twin-wheel-grid" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 16, alignItems: 'center' }}>
-        <svg className="twin-wheel-svg" width="300" height="300" viewBox="0 0 300 300" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '100%', height: 'auto' }}>
-          {[0.25, 0.5, 0.75, 1].map((f) => <circle key={f} cx={cx} cy={cy} r={R * f} fill="none" stroke="var(--zw-border)" strokeWidth="1" />)}
-          {pts.map((p, i) => <line key={i} x1={cx} y1={cy} x2={p.ax} y2={p.ay} stroke="var(--zw-border)" strokeWidth="1" />)}
-          <polygon points={poly} fill="rgba(124,58,237,0.18)" stroke="var(--zw-violet)" strokeWidth="2" />
-          {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="var(--zw-violet)" />)}
-        </svg>
-        <div className="twin-wheel-labels" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-          {domains.map((d, i) => (
-            <div key={d.domain} style={{ fontSize: 12, color: 'var(--zw-text-soft)', display: 'flex', justifyContent: 'space-between', gap: 6 }}>
-              <span>{WHEEL_LABELS[d.domain] || d.domain}</span>
-              {editing ? (
-                <input type="number" min="0" max="100" value={d.score ?? 0} onChange={(e) => { const v = [...domains]; v[i] = { ...d, score: Number(e.target.value) }; setDomains(v); }} style={{ width: 50, fontSize: 12, padding: '1px 4px', border: '1px solid var(--zw-border)', borderRadius: 4 }} />
-              ) : (
-                <strong style={{ color: d.score != null ? colorFor(d.score) : 'var(--zw-border-strong)' }}>{d.score ?? '—'}</strong>
-              )}
-            </div>
-          ))}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'inline-flex', gap: 2, background: 'var(--zw-bg-subtle)', borderRadius: 8, padding: 3 }}>
+            {([['functional', 'Matrice fonctionnelle'], ['lifestyle', 'Hygiène de vie']] as const).map(([m, lbl]) => (
+              <button key={m} onClick={() => setMode(m)} style={{ fontSize: 12, padding: '5px 11px', borderRadius: 6, border: 'none', cursor: 'pointer', fontWeight: 600, background: mode === m ? '#fff' : 'transparent', color: mode === m ? 'var(--brand-primary)' : 'var(--zw-text-muted)', boxShadow: mode === m ? '0 1px 3px rgba(15,23,42,.12)' : 'none' }}>{lbl}</button>
+            ))}
+          </div>
+          <button onClick={() => setBilanOpen(true)} style={{ fontSize: 12, padding: '6px 13px', background: 'var(--zw-violet)', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <Sparkles size={13} /> {hasBilan ? 'Refaire le bilan' : 'Remplir le bilan'}
+          </button>
         </div>
       </div>
+
+      {mode === 'functional' ? (
+        <div style={{ marginTop: 10 }}>
+          {!hasBilan ? (
+            <div style={{ textAlign: 'center', padding: '34px 16px', color: 'var(--zw-text-muted)', fontSize: 13, lineHeight: 1.6 }}>
+              Remplissez le <strong>bilan de transformation</strong> (questionnaire Détox Zahir)<br />pour générer la roue fonctionnelle — <strong>7 systèmes + 5 processus</strong>.
+              <div style={{ marginTop: 14 }}>
+                <button onClick={() => setBilanOpen(true)} style={{ fontSize: 13, padding: '9px 18px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 9, cursor: 'pointer', fontWeight: 700 }}>Démarrer le bilan</button>
+              </div>
+            </div>
+          ) : (
+            <FunctionalWheel scores={functional} selected={selAxis} onSelect={(k) => setSelAxis(k === selAxis ? null : k)} />
+          )}
+        </div>
+      ) : (
+        <div className="twin-wheel-grid" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 16, alignItems: 'center', marginTop: 10 }}>
+          <svg className="twin-wheel-svg" width="300" height="300" viewBox="0 0 300 300" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '100%', height: 'auto' }}>
+            {[0.25, 0.5, 0.75, 1].map((f) => <circle key={f} cx={cx} cy={cy} r={R * f} fill="none" stroke="var(--zw-border)" strokeWidth="1" />)}
+            {pts.map((p, i) => <line key={i} x1={cx} y1={cy} x2={p.ax} y2={p.ay} stroke="var(--zw-border)" strokeWidth="1" />)}
+            <polygon points={poly} fill="rgba(124,58,237,0.18)" stroke="var(--zw-violet)" strokeWidth="2" />
+            {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="var(--zw-violet)" />)}
+          </svg>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+              <button onClick={() => (editing ? saveLifestyle(domains).then(() => setEditing(false)) : setEditing(true))} disabled={busy} style={{ fontSize: 11.5, padding: '4px 10px', background: editing ? 'var(--brand-primary)' : 'var(--zw-bg-subtle)', color: editing ? '#fff' : 'var(--zw-text-soft)', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
+                {busy ? '…' : editing ? 'Enregistrer' : 'Éditer'}
+              </button>
+            </div>
+            <div className="twin-wheel-labels" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+              {domains.map((d, i) => (
+                <div key={d.domain} style={{ fontSize: 12, color: 'var(--zw-text-soft)', display: 'flex', justifyContent: 'space-between', gap: 6 }}>
+                  <span>{WHEEL_LABELS[d.domain] || d.domain}</span>
+                  {editing ? (
+                    <input type="number" min="0" max="100" value={d.score ?? 0} onChange={(e) => { const v = [...domains]; v[i] = { ...d, score: Number(e.target.value) }; setDomains(v); }} style={{ width: 50, fontSize: 12, padding: '1px 4px', border: '1px solid var(--zw-border)', borderRadius: 4 }} />
+                  ) : (
+                    <strong style={{ color: d.score != null ? colorFor(d.score) : 'var(--zw-border-strong)' }}>{d.score ?? '—'}</strong>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {bilanOpen && <BilanModal initial={answers} onClose={() => setBilanOpen(false)} onComplete={applyBilan} />}
     </div>
   );
 }
