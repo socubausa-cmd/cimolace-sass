@@ -1814,7 +1814,7 @@ isLiriHostDevPreviewRoute;
               le praticien ouvre la salle immersive Liri (/studio/live-arena/:id) avec
               SmartBoard. Additif — n'enlève l'accès à personne. */}
           <Route path="/studio/*" element={
-            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat', 'practitioner', 'clinic_admin']}>
+            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat', 'practitioner', 'clinic_admin']} allowTenantRole>
               <StudioRouter />
             </ProtectedRoleRoute>
           } />

@@ -102,6 +102,11 @@ const buildUser = (authUser, profile) => {
       authUser.email?.split('@')[0] ||
       '',
     role: resolvedRole,
+    // Rôle DANS LE TENANT ACTIF (JWT app_metadata, posé à la création de session).
+    // Un owner/practitioner d'un tenant (ex: zahirwellness) a un profiles.role GLOBAL
+    // = 'visitor' ; ce champ porte son vrai rôle pour les gardes tenant-scoped (studio).
+    tenant_role: String(authUser.app_metadata?.tenant_role || '').toLowerCase(),
+    tenant_id: authUser.app_metadata?.tenant_id || null,
     metadata: profile?.metadata || {},
     cimolace_staff: Boolean(profile?.metadata?.cimolace_staff || meta.cimolace_staff || isDevCimolaceAdmin(authUser.email)),
     avatar_url: profile?.avatar_url || null,
