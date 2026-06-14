@@ -8,7 +8,7 @@
  *   - Marquer la séance comme prête (is_ready)
  *   - Changer le statut : confirmed → preparing → ready
  *
- * Soumet via POST /booking-set-preparation.
+ * Soumet via POST /booking/appointments/:id/preparation (API NestJS v2).
  */
 
 import React, { useEffect, useState } from 'react';
@@ -101,16 +101,14 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
   const [saving, setSaving]           = useState(false);
   const [loaded, setLoaded]           = useState(false);
 
-  /* Charger la préparation existante */
+  /* Charger la préparation existante (via API NestJS — plus de Netlify v1) */
   useEffect(() => {
     if (!appointment?.id) return;
-    import('@/lib/customSupabaseClient').then(({ supabase }) => {
-      supabase
-        .from('appointment_preparation')
-        .select('plan_json, room_type, notes_secretary, is_ready')
-        .eq('appointment_id', appointment.id)
-        .maybeSingle()
-        .then(({ data }) => {
+    import('@/lib/api').then(({ api }) => {
+      api
+        .get(`/booking/appointments/${appointment.id}/preparation`)
+        .then((res) => {
+          const data = res?.data?.data ?? res?.data ?? null;
           if (data) {
             const map = {};
             (data.plan_json || []).forEach(item => { map[item.step] = item; });
@@ -120,7 +118,8 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
             setIsReady(data.is_ready || false);
           }
           setLoaded(true);
-        });
+        })
+        .catch(() => setLoaded(true));
     });
   }, [appointment?.id]);
 
@@ -140,28 +139,20 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
     if (!appointment?.id || saving) return;
     setSaving(true);
     try {
-      const token = session?.access_token;
-      if (!token) throw new Error('Session expirée');
-
       const planJson = PLAN_STEPS
         .filter(s => planMap[s.step]?.content?.trim())
         .map(s => ({ ...planMap[s.step], step: s.step, title: s.label }));
 
-      const res = await fetch('/.netlify/functions/booking-set-preparation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          appointmentId:  appointment.id,
-          planJson,
-          roomType,
-          notesSecretary: notes.trim() || null,
-          documentsJson:  [],
-          isReady,
-          newStatus:      newStatus || null,
-        }),
+      // API NestJS (auth + X-Tenant-Slug via interceptors) — remplace la fonction Netlify v1.
+      const { api } = await import('@/lib/api');
+      await api.post(`/booking/appointments/${appointment.id}/preparation`, {
+        planJson,
+        roomType,
+        notesSecretary: notes.trim() || null,
+        documentsJson: [],
+        isReady,
+        newStatus: newStatus || null,
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || 'Erreur serveur');
 
       toast({ title: 'Préparation enregistrée', description: newStatus ? `Statut → ${newStatus}` : 'Plan sauvegardé avec succès.' });
       if (newStatus) {

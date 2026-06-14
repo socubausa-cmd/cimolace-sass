@@ -8,7 +8,7 @@ import {
 import { SupabaseService } from '../supabase/supabase.service';
 import { LiveService } from '../live/live.service';
 import type { TenantContext } from '../tenant/tenant.types';
-import type { CreateAppointmentDto, CreateSlotDto, SubmitFeedbackDto, UpdateAppointmentDto } from './dto/booking.dto';
+import type { CreateAppointmentDto, CreateSlotDto, SetPreparationDto, SubmitFeedbackDto, UpdateAppointmentDto } from './dto/booking.dto';
 
 @Injectable()
 export class BookingService {
@@ -212,6 +212,56 @@ export class BookingService {
       .eq('tenant_id', tenant.id);
 
     return { ok: true, liveSessionId: live.id, reused: false };
+  }
+
+  // ── Préparation d'entretien (secrétariat) ────────────────────────────────
+  // Porté d'ISNA v1 (booking-set-preparation). Remplace l'appel Netlify v1.
+  async getAppointmentPreparation(tenant: TenantContext, appointmentId: string) {
+    await this.getAppointment(appointmentId, tenant.id); // garde tenant
+    const { data } = await (this.supabase.client as any)
+      .from('appointment_preparation')
+      .select('plan_json, room_type, notes_secretary, documents_json, is_ready')
+      .eq('appointment_id', appointmentId)
+      .maybeSingle();
+    return data ?? null;
+  }
+
+  async setAppointmentPreparation(
+    tenant: TenantContext,
+    appointmentId: string,
+    dto: SetPreparationDto,
+  ) {
+    await this.getAppointment(appointmentId, tenant.id); // 404 si hors tenant
+
+    const { data: prep, error: prepErr } = await (this.supabase.client as any)
+      .from('appointment_preparation')
+      .upsert(
+        {
+          tenant_id: tenant.id,
+          appointment_id: appointmentId,
+          plan_json: Array.isArray(dto.planJson) ? dto.planJson : [],
+          room_type: dto.roomType ?? 'chat',
+          notes_secretary: dto.notesSecretary?.trim() || null,
+          documents_json: Array.isArray(dto.documentsJson) ? dto.documentsJson : [],
+          is_ready: Boolean(dto.isReady),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'appointment_id' },
+      )
+      .select('id')
+      .single();
+    if (prepErr) throw new BadRequestException(prepErr.message);
+
+    // Maj du statut du RDV si demandé (active le bouton « Rejoindre » côté élève).
+    if (dto.newStatus) {
+      await (this.supabase.client as any)
+        .from('appointments')
+        .update({ status: dto.newStatus })
+        .eq('id', appointmentId)
+        .eq('tenant_id', tenant.id);
+    }
+
+    return { ok: true, preparationId: prep?.id, status: dto.newStatus ?? null };
   }
 
   // ── Feedback / Satisfaction ──────────────────────────────────────────────

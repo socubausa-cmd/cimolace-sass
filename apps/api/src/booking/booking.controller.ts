@@ -18,7 +18,7 @@ import { CurrentTenant } from '../tenant/current-tenant.decorator';
 import { TenantGuard } from '../tenant/tenant.guard';
 import type { TenantContext } from '../tenant/tenant.types';
 import { BookingService } from './booking.service';
-import { CreateAppointmentDto, CreateSlotDto, SubmitFeedbackDto, UpdateAppointmentDto } from './dto/booking.dto';
+import { CreateAppointmentDto, CreateSlotDto, SetPreparationDto, SubmitFeedbackDto, UpdateAppointmentDto } from './dto/booking.dto';
 
 @Controller('booking')
 @UseGuards(JwtAuthGuard, TenantGuard)
@@ -64,6 +64,25 @@ export class BookingController {
   ) {
     const userId = (req as any).user?.id;
     return this.booking.startLiveFromAppointment(tenant, userId, id);
+  }
+
+  // ── Préparation d'entretien (secrétariat) ────────────────────────────────
+  @Get('appointments/:id/preparation')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin', 'teacher', 'secretariat')
+  getPreparation(@Param('id') id: string, @CurrentTenant() tenant: TenantContext) {
+    return this.booking.getAppointmentPreparation(tenant, id);
+  }
+
+  @Post('appointments/:id/preparation')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin', 'teacher', 'secretariat')
+  setPreparation(
+    @Param('id') id: string,
+    @Body() dto: SetPreparationDto,
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.booking.setAppointmentPreparation(tenant, id, dto);
   }
 
   @Delete('slots/:id')
