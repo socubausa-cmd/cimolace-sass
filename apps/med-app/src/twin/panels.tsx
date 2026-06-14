@@ -7,6 +7,7 @@ import { useCamera } from '../native/useCamera';
 import { BodyViewer } from './BodyViewer';
 import { FunctionalWheel, BilanModal } from './TransformationBilan';
 import { scoreResponses, type Answers } from './transformation';
+import { ensureBilanForm, saveBilanResponse, loadLatestBilan } from './bilan-api';
 
 const panel: React.CSSProperties = { background: '#fff', borderRadius: 14, border: '1px solid var(--zw-border)', padding: 18 };
 const head: React.CSSProperties = { fontSize: 14, fontWeight: 700, margin: 0, marginBottom: 12, color: 'var(--zw-text)', display: 'flex', alignItems: 'center', gap: 7 };
@@ -22,11 +23,22 @@ export function WheelPanel({ patientId }: { patientId: string }) {
   const [bilanOpen, setBilanOpen] = useState(false);
   const [answers, setAnswers] = useState<Answers>({});
   const [selAxis, setSelAxis] = useState<string | null>(null);
+  const [formId, setFormId] = useState<string | null>(null);
   const lsKey = 'twin_bilan_' + patientId;
 
   useEffect(() => {
     twinApi.getWheel(patientId).then((d) => setDomains(d.domains || [])).catch(() => {});
+    // cache instantané (localStorage) puis source de vérité serveur
     try { const raw = localStorage.getItem(lsKey); if (raw) { const o = JSON.parse(raw); setFunctional(o.functional || {}); setAnswers(o.answers || {}); } } catch { /* noop */ }
+    (async () => {
+      const fid = await ensureBilanForm(); if (!fid) return; setFormId(fid);
+      const ans = await loadLatestBilan(fid, patientId);
+      if (ans && Object.keys(ans).length) {
+        const { functional: fn } = scoreResponses(ans);
+        setFunctional(fn); setAnswers(ans);
+        try { localStorage.setItem(lsKey, JSON.stringify({ answers: ans, functional: fn })); } catch { /* noop */ }
+      }
+    })();
   }, [patientId, lsKey]);
 
   const cx = 150, cy = 150, R = 120;
@@ -49,6 +61,8 @@ export function WheelPanel({ patientId }: { patientId: string }) {
     try { localStorage.setItem(lsKey, JSON.stringify({ answers: ans, functional: fn })); } catch { /* noop */ }
     const next = domains.map((d) => (lifestyle[d.domain] != null ? { ...d, score: lifestyle[d.domain] } : d));
     setDomains(next); saveLifestyle(next);
+    // persistance serveur du bilan (réponse de formulaire)
+    (async () => { const fid = formId || await ensureBilanForm(); if (fid) { if (!formId) setFormId(fid); saveBilanResponse(fid, patientId, ans); } })();
     setBilanOpen(false); setMode('functional');
   }
 
