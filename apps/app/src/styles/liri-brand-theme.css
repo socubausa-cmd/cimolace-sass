@@ -152,13 +152,13 @@ body {
   color: var(--liri-text) !important;
 }
 
+/* Carte alignée sur le nouveau shell (back-office élève / LiriDashboardShell) :
+   surface opaque #192734, sans le verre flou de l'ancien design. */
 .premium-panel {
-  border-radius: 1rem;
-  border: 1px solid var(--liri-border);
-  background: color-mix(in srgb, var(--liri-surface) 70%, transparent);
-  backdrop-filter: blur(18px) saturate(1.15);
-  -webkit-backdrop-filter: blur(18px) saturate(1.15);
-  box-shadow: var(--liri-glow-hero);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: #192734;
+  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.5);
 }
 
 /* -------------------------------------------------------------------------- */
