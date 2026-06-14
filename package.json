@@ -1,5 +1,5 @@
 {
-  "name": "isna-platform-v2",
+  "name": "cimolace",
   "private": true,
   "workspaces": [
     "apps/api",

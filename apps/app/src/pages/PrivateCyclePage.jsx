@@ -14,7 +14,7 @@ const FAQItem = ({ question, answer, isOpen, toggle }) => (
       className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
     >
       <span className="font-bold text-white text-lg">{question}</span>
-      {isOpen ? <ChevronUp className="text-[#D4AF37]" /> : <ChevronDown className="text-gray-400" />}
+      {isOpen ? <ChevronUp className="text-[var(--school-accent)]" /> : <ChevronDown className="text-gray-400" />}
     </button>
     {isOpen && (
       <div className="px-6 py-4 text-gray-300 text-base leading-relaxed border-t border-white/5 bg-black/20">
@@ -64,7 +64,7 @@ const PrivateCyclePage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0F1419] font-sans text-gray-300 selection:bg-[#D4AF37]/30 pb-20">
+    <div className="min-h-screen bg-[#0F1419] font-sans text-gray-300 selection:bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] pb-20">
       <Helmet>
         <title>Cycle Privé - ISNA Fondation Manikongo</title>
         <meta name="description" content="Cycle Privé : Un accompagnement spirituel personnalisé pour une transformation profonde." />
@@ -75,11 +75,11 @@ const PrivateCyclePage = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-[#192734] via-[#0F1419] to-[#0F1419] z-0" />
         <div className="max-w-5xl mx-auto relative z-10 text-center">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 border border-[#D4AF37]/30 rounded-full bg-[#D4AF37]/10 backdrop-blur-sm">
-              <Star className="w-4 h-4 text-[#D4AF37]" />
-              <span className="text-[#D4AF37] text-sm font-bold tracking-widest uppercase">Formation Premium</span>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] backdrop-blur-sm">
+              <Star className="w-4 h-4 text-[var(--school-accent)]" />
+              <span className="text-[var(--school-accent)] text-sm font-bold tracking-widest uppercase">Formation Premium</span>
             </div>
-            <h1 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6">Cycle Privé<br/><span className="text-[#D4AF37] text-2xl md:text-4xl block mt-2 font-sans font-light">ISNA Fondation Manikongo</span></h1>
+            <h1 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6">Cycle Privé<br/><span className="text-[var(--school-accent)] text-2xl md:text-4xl block mt-2 font-sans font-light">ISNA Fondation Manikongo</span></h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto font-light leading-relaxed">
               L'accompagnement individuel pour une transformation profonde et durable.
             </p>
@@ -102,7 +102,7 @@ const PrivateCyclePage = () => {
             </p>
           </motion.div>
           
-          <motion.div variants={itemVariants} className="bg-[#192734] rounded-2xl p-8 border border-[#D4AF37]/20 shadow-lg shadow-[#D4AF37]/5">
+          <motion.div variants={itemVariants} className="bg-[#192734] rounded-2xl p-8 border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]">
             <h3 className="text-xl font-bold text-white mb-6">Vos Avantages Exclusifs</h3>
             <ul className="space-y-4">
               {[
@@ -113,7 +113,7 @@ const PrivateCyclePage = () => {
                 "Invitation aux cercles de discussion privés"
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-3 text-gray-300">
-                  <CheckCircle2 className="w-5 h-5 text-[#D4AF37] shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-[var(--school-accent)] shrink-0" />
                   {item}
                 </li>
               ))}
@@ -122,10 +122,10 @@ const PrivateCyclePage = () => {
         </motion.div>
 
         {/* Configuration Fees */}
-        <div className="bg-gradient-to-r from-[#192734] to-[#15202B] border border-[#D4AF37]/30 rounded-2xl p-8 text-center max-w-4xl mx-auto">
-          <Shield className="w-12 h-12 text-[#D4AF37] mx-auto mb-4" />
+        <div className="bg-gradient-to-r from-[#192734] to-[#15202B] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] rounded-2xl p-8 text-center max-w-4xl mx-auto">
+          <Shield className="w-12 h-12 text-[var(--school-accent)] mx-auto mb-4" />
           <h3 className="text-2xl font-bold text-white mb-2">Frais de Configuration Spirituelle</h3>
-          <p className="text-[#D4AF37] text-4xl font-bold mb-4">100€ <span className="text-base text-gray-400 font-normal">(paiement unique)</span></p>
+          <p className="text-[var(--school-accent)] text-4xl font-bold mb-4">100€ <span className="text-base text-gray-400 font-normal">(paiement unique)</span></p>
           <p className="text-gray-400 max-w-2xl mx-auto">
             Ce montant est indispensable pour valider votre inscription. Il couvre l'ouverture de votre dossier vibratoire et l\'accès initial à la plateforme sécurisée. Ces frais sont à régler une seule fois au début du cursus.
           </p>
@@ -189,12 +189,12 @@ const PrivateCyclePage = () => {
           <div className="flex flex-col sm:flex-row justify-center gap-6">
             <Button variant="outline" className="gap-3 h-12 text-white border-white/20 hover:bg-white/10" asChild>
               <a href={`mailto:${vitrineEmail}`}>
-                <Mail className="w-5 h-5 text-[#D4AF37]" />
+                <Mail className="w-5 h-5 text-[var(--school-accent)]" />
                 {vitrineEmail}
               </a>
             </Button>
             <Button variant="outline" className="gap-3 h-12 text-white border-white/20 hover:bg-white/10">
-              <MessageCircle className="w-5 h-5 text-[#D4AF37]" />
+              <MessageCircle className="w-5 h-5 text-[var(--school-accent)]" />
               Support WhatsApp
             </Button>
           </div>

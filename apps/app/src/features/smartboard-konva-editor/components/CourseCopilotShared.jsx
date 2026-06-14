@@ -34,7 +34,7 @@ export function MindmapTree({ node }) {
     <li className="text-[10px] text-white/80">
       <span className="font-medium text-[#e8c76b]">{node.label}</span>
       {node.children?.length ? (
-        <ul className="ml-2 mt-1 space-y-0.5 border-l border-[#D4AF37]/22 pl-2">
+        <ul className="ml-2 mt-1 space-y-0.5 border-l border-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] pl-2">
           {node.children.map((ch) => (
             <MindmapTree key={ch.id} node={ch} />
           ))}
@@ -47,7 +47,7 @@ export function MindmapTree({ node }) {
 /** Carte section — style premium cohérent */
 export function CopilotCard({ title, icon: Icon, accent = 'gold', children, className }) {
   const accents = {
-    gold: 'border-[#D4AF37]/25 shadow-[0_0_24px_-8px_rgba(212,175,55,0.15)]',
+    gold: 'border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] shadow-[0_0_24px_-8px_rgba(212,175,55,0.15)]',
     violet: 'border-violet-500/25 shadow-[0_0_24px_-8px_rgba(139,92,246,0.12)]',
     teal: 'border-teal-500/20 shadow-[0_0_20px_-10px_rgba(45,212,191,0.12)]',
     rose: 'border-rose-500/20',
@@ -96,7 +96,7 @@ export function CopyRow({ label, text, className }) {
         type="button"
         title="Copier"
         onClick={() => copyText(text)}
-        className="shrink-0 rounded-lg border border-white/10 p-1.5 text-white/45 transition-colors hover:border-[#D4AF37]/40 hover:text-[#D4AF37]"
+        className="shrink-0 rounded-lg border border-white/10 p-1.5 text-white/45 transition-colors hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] hover:text-[var(--school-accent)]"
       >
         <ClipboardCopy className="h-3.5 w-3.5" />
       </button>
@@ -118,7 +118,7 @@ export function ZoneCopyCard({ zone, index }) {
         <button
           type="button"
           onClick={() => copyText(bundle)}
-          className="shrink-0 rounded-lg border border-[#D4AF37]/28 bg-black/35 px-2 py-1.5 text-[9px] font-medium text-[#e8c76b]/95 transition-colors hover:bg-[#D4AF37]/12"
+          className="shrink-0 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-black/35 px-2 py-1.5 text-[9px] font-medium text-[#e8c76b]/95 transition-colors hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]"
         >
           Copier
         </button>

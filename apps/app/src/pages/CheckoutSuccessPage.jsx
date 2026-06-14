@@ -9,7 +9,7 @@ const CheckoutSuccessPage = () => {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0F1419] p-4">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-1/2 top-20 h-[260px] w-[520px] -translate-x-1/2 rounded-full bg-[#D4AF37]/10 blur-[120px]" />
+        <div className="absolute left-1/2 top-20 h-[260px] w-[520px] -translate-x-1/2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] blur-[120px]" />
       </div>
       <Helmet>
         <title>Commande confirmée | PRORASCIENCE</title>

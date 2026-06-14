@@ -6,12 +6,12 @@ const ProraScienceDefinitionBox = ({ title, children, icon: Icon, className = ""
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
-    className={`relative p-[2px] rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#F2D06B] to-[#D4AF37] shadow-xl ${className}`}
+    className={`relative p-[2px] rounded-xl bg-gradient-to-r from-[var(--school-accent)] via-[#F2D06B] to-[var(--school-accent)] shadow-xl ${className}`}
   >
     <div className="bg-[#0F1419] p-8 rounded-[10px] h-full relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-32 h-32 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
       {Icon && (
-        <div className="mb-6 inline-flex items-center justify-center p-3 rounded-full bg-[#D4AF37]/10 text-[#D4AF37]">
+        <div className="mb-6 inline-flex items-center justify-center p-3 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]">
           <Icon className="w-8 h-8" />
         </div>
       )}

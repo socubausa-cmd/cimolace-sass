@@ -25,13 +25,13 @@ const CoachingMentoringTab = () => {
       >
         <div>
           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <User className="text-[#D4AF37]" /> Coaching & Mentorat
+            <User className="text-[var(--school-accent)]" /> Coaching & Mentorat
           </h2>
           <p className="text-gray-400 text-sm">
             Gérez vos sessions individuelles et de groupe ({activeSubTab === 'upcoming' ? 'vue planification' : 'vue historique'}).
           </p>
         </div>
-        <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500">
+        <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
           <Plus className="w-4 h-4 mr-2" /> Nouvelle Session
         </Button>
       </motion.div>
@@ -59,7 +59,7 @@ const CoachingMentoringTab = () => {
         <Card className="premium-panel border-white/10">
           <CardContent className="p-4">
              <p className="text-gray-400 text-xs uppercase">Heures totales</p>
-             <p className="text-2xl font-bold text-[#D4AF37]">{pastSessions.length * 1.5}h</p>
+             <p className="text-2xl font-bold text-[var(--school-accent)]">{pastSessions.length * 1.5}h</p>
              <div className="mt-2 text-xs text-amber-300 flex items-center gap-1"><Radio className="w-3 h-3" /> Activite globale</div>
           </CardContent>
         </Card>
@@ -68,8 +68,8 @@ const CoachingMentoringTab = () => {
 
       <Tabs defaultValue="upcoming" onValueChange={setActiveSubTab} className="w-full">
         <TabsList className="premium-panel border border-white/10">
-          <TabsTrigger value="upcoming" className="data-[state=active]:bg-[#D4AF37] data-[state=active]:text-black">A venir</TabsTrigger>
-          <TabsTrigger value="past" className="data-[state=active]:bg-[#D4AF37] data-[state=active]:text-black">Historique</TabsTrigger>
+          <TabsTrigger value="upcoming" className="data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-black">A venir</TabsTrigger>
+          <TabsTrigger value="past" className="data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-black">Historique</TabsTrigger>
         </TabsList>
         <TabsContent value="upcoming">
            <SessionsTable sessions={upcomingSessions} />
@@ -100,7 +100,7 @@ const SessionsTable = ({ sessions }) => (
           <TableRow className="border-white/5">
             <TableCell colSpan={6} className="text-center py-10">
               <div className="inline-flex flex-col items-center gap-2">
-                <Calendar className="w-7 h-7 text-[#D4AF37]" />
+                <Calendar className="w-7 h-7 text-[var(--school-accent)]" />
                 <p className="text-white font-medium">Aucune session dans cette vue</p>
                 <p className="text-xs text-gray-500">Crée une nouvelle session pour alimenter le planning.</p>
               </div>

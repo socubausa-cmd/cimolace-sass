@@ -30,7 +30,7 @@ const ResourceLibraryPage = () => {
           <div className="flex gap-3 w-full md:w-auto">
              <div className="relative flex-1 md:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input type="text" placeholder="Rechercher une ressource..." className="w-full bg-[#192734] border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm focus:border-[#D4AF37] outline-none text-white" />
+                <input type="text" placeholder="Rechercher une ressource..." className="w-full bg-[#192734] border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm focus:border-[var(--school-accent)] outline-none text-white" />
              </div>
              <Button variant="outline" className="border-white/10 text-gray-300 hover:text-white"><Filter className="w-4 h-4" /></Button>
           </div>
@@ -43,7 +43,7 @@ const ResourceLibraryPage = () => {
                key={type}
                onClick={() => setActiveTab(type)}
                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                 activeTab === type ? 'bg-[#D4AF37] text-black' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                 activeTab === type ? 'bg-[var(--school-accent)] text-black' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                }`}
              >
                {type === 'all' ? 'Tout' : type.charAt(0).toUpperCase() + type.slice(1)}
@@ -54,7 +54,7 @@ const ResourceLibraryPage = () => {
         {/* Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {resources.map((res) => (
-             <div key={res.id} className="bg-[#192734] border border-white/5 rounded-xl p-6 hover:border-[#D4AF37]/30 transition-all group">
+             <div key={res.id} className="bg-[#192734] border border-white/5 rounded-xl p-6 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all group">
                 <div className="flex justify-between items-start mb-4">
                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                       res.type === 'pdf' ? 'bg-red-500/10 text-red-500' :
@@ -66,10 +66,10 @@ const ResourceLibraryPage = () => {
                        res.type === 'video' ? <Video className="w-5 h-5"/> :
                        <Book className="w-5 h-5"/>}
                    </div>
-                   <button className="text-gray-500 hover:text-[#D4AF37] transition-colors"><Bookmark className="w-5 h-5"/></button>
+                   <button className="text-gray-500 hover:text-[var(--school-accent)] transition-colors"><Bookmark className="w-5 h-5"/></button>
                 </div>
                 
-                <h3 className="font-bold text-lg mb-2 group-hover:text-[#D4AF37] transition-colors">{res.title}</h3>
+                <h3 className="font-bold text-lg mb-2 group-hover:text-[var(--school-accent)] transition-colors">{res.title}</h3>
                 
                 <div className="flex items-center justify-between mt-6 text-sm text-gray-400">
                    <span className="bg-white/5 px-2 py-1 rounded uppercase tracking-wide">{res.category}</span>
@@ -77,7 +77,7 @@ const ResourceLibraryPage = () => {
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-white/5 flex gap-2">
-                   <Button className="w-full bg-white/5 hover:bg-[#D4AF37] hover:text-black text-white text-xs h-8">
+                   <Button className="w-full bg-white/5 hover:bg-[var(--school-accent)] hover:text-black text-white text-xs h-8">
                       {res.type === 'pdf' ? 'Télécharger' : 'Consulter'}
                    </Button>
                 </div>

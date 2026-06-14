@@ -38,7 +38,7 @@ export function PanelCard({
       ref={setNodeRef}
       style={style}
       className={`flex flex-col rounded-xl border bg-[#0d1b2a] overflow-hidden shadow-md h-full transition-opacity duration-150 ${
-        isDragging ? 'border-[#D4AF37]/50' : 'border-white/10'
+        isDragging ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]' : 'border-white/10'
       }`}
     >
       {/* ── Draggable header ── */}
@@ -59,7 +59,7 @@ export function PanelCard({
               aria-label={`Promouvoir ${title} en panneau principal`}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); onPromote(); }}
-              className="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-[#D4AF37] transition-colors"
+              className="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-[var(--school-accent)] transition-colors"
             >
               <Maximize2 className="w-3 h-3" />
             </button>

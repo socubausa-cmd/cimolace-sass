@@ -4,7 +4,7 @@ import { Check, ChevronRight, LayoutTemplate } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { IMMERSIVE_DISPLAYS, getStoredImmersiveMode, setStoredImmersiveMode } from '@/lib/eleveLiveImmersive';
-import { EV_MUTED } from '@/pages/eleve-mobile/eleveMobileScreensShared';
+import { EV_MUTED } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const OPTIONS = [IMMERSIVE_DISPLAYS.default, IMMERSIVE_DISPLAYS.alpha];
 

@@ -11,7 +11,7 @@ import {
   Activity, Target, Lock, BookOpen, Clock, Info
 } from 'lucide-react';
 import { WEB_MENTORAT } from '@/data/prorascienceVitrineFromWebContent';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const SubSection = ({ letter, title, children }) => (
   <div className="mb-10">
@@ -462,7 +462,7 @@ const MentoringPage = () => {
                 {ngowazuluMentoratOffers.map((offer) => (
                   <tr key={offer.slug} className="border-b border-white/5 hover:bg-white/[0.03]">
                     <td className="px-4 py-3">
-                      <span className="text-[#D4AF37] font-semibold">Mentorat {offer.commercialName}</span>
+                      <span className="text-[var(--school-accent)] font-semibold">Mentorat {offer.commercialName}</span>
                       <div className="text-gray-500 text-xs">{offer.subtitle}</div>
                     </td>
                     <td className="px-4 py-3 text-gray-300">{offer.frequencyShort}</td>

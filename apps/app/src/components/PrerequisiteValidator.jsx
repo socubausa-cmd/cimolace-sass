@@ -92,7 +92,7 @@ const PrerequisiteValidator = ({ children }) => {
             </p>
             <div className="flex flex-col gap-3">
                <Link to="/curriculum/first-year">
-                  <Button className="w-full bg-[#D4AF37] text-black font-bold">
+                  <Button className="w-full bg-[var(--school-accent)] text-black font-bold">
                      Terminer la 1ère Année
                   </Button>
                </Link>

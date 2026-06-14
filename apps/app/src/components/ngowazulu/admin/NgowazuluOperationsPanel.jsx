@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 function SectionHeader({ icon: Icon, title }) {
   return (
     <div className="flex items-center gap-2">
-      <Icon className="w-4 h-4 text-[#D4AF37]" />
+      <Icon className="w-4 h-4 text-[var(--school-accent)]" />
       <h3 className="text-sm font-semibold text-white">{title}</h3>
     </div>
   );
@@ -433,7 +433,7 @@ export default function NgowazuluOperationsPanel() {
         ].map((s) => (
           <Card key={s.label} className="bg-[#151a21] border-white/10">
             <CardContent className="p-4 flex items-center gap-3">
-              <s.icon className="w-5 h-5 text-[#D4AF37]" />
+              <s.icon className="w-5 h-5 text-[var(--school-accent)]" />
               <div>
                 <p className="text-xs text-gray-400">{s.label}</p>
                 <p className="text-xl font-bold text-white">{s.value}</p>
@@ -464,7 +464,7 @@ export default function NgowazuluOperationsPanel() {
             >
               Assigner 1 critique à moi
             </Button>
-            <Button className="bg-[#D4AF37] text-black hover:bg-amber-500" onClick={assignBatchToMe}>
+            <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500" onClick={assignBatchToMe}>
               Assigner 5 dossiers à moi
             </Button>
           </div>
@@ -480,7 +480,7 @@ export default function NgowazuluOperationsPanel() {
         ].map((s) => (
           <Card key={s.label} className="bg-[#101721] border-white/10">
             <CardContent className="p-4 flex items-center gap-3">
-              <s.icon className="w-5 h-5 text-[#D4AF37]" />
+              <s.icon className="w-5 h-5 text-[var(--school-accent)]" />
               <div>
                 <p className="text-[11px] text-gray-400">{s.label}</p>
                 <p className="text-xl font-bold text-white">{s.value}</p>
@@ -539,7 +539,7 @@ export default function NgowazuluOperationsPanel() {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <button
                         type="button"
-                        className="text-left text-sm font-semibold text-white hover:text-[#D4AF37]"
+                        className="text-left text-sm font-semibold text-white hover:text-[var(--school-accent)]"
                         onClick={() => setSelectedCaseId(row.id)}
                       >
                         {row.title}
@@ -560,7 +560,7 @@ export default function NgowazuluOperationsPanel() {
                       </Button>
                       <Button
                         size="sm"
-                        className="bg-[#D4AF37] text-black hover:bg-amber-500"
+                        className="bg-[var(--school-accent)] text-black hover:bg-amber-500"
                         onClick={() => assignCaseToMe(row.id)}
                       >
                         M'assigner
@@ -610,13 +610,13 @@ export default function NgowazuluOperationsPanel() {
             {cults.slice(0, 6).map((c) => (
               <div key={c.id} className="text-xs text-gray-300 flex justify-between border-b border-white/5 pb-2 last:border-b-0">
                 <span>{c.title}</span>
-                <span className="text-[#D4AF37]">{new Date(c.starts_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                <span className="text-[var(--school-accent)]">{new Date(c.starts_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}</span>
               </div>
             ))}
             <div className="pt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
               <Input value={newCult.title} onChange={(e) => setNewCult((p) => ({ ...p, title: e.target.value }))} placeholder="Titre culte" className="bg-[#0f1419] border-white/10" />
               <Input type="datetime-local" value={newCult.starts_at} onChange={(e) => setNewCult((p) => ({ ...p, starts_at: e.target.value }))} className="bg-[#0f1419] border-white/10" />
-              <Button onClick={createCult} className="bg-[#D4AF37] text-black hover:bg-amber-500"><Plus className="w-4 h-4 mr-1" />Ajouter</Button>
+              <Button onClick={createCult} className="bg-[var(--school-accent)] text-black hover:bg-amber-500"><Plus className="w-4 h-4 mr-1" />Ajouter</Button>
             </div>
           </CardContent>
         </Card>
@@ -632,7 +632,7 @@ export default function NgowazuluOperationsPanel() {
                 type="button"
                 onClick={() => setSelectedCaseId(c.id)}
                 className={`w-full text-xs text-gray-300 flex justify-between border-b border-white/5 pb-2 last:border-b-0 text-left ${
-                  selectedCaseId === c.id ? 'text-[#D4AF37]' : ''
+                  selectedCaseId === c.id ? 'text-[var(--school-accent)]' : ''
                 }`}
               >
                 <span>{c.title}</span>
@@ -645,7 +645,7 @@ export default function NgowazuluOperationsPanel() {
                 <Input value={newCase.patient_id} onChange={(e) => setNewCase((p) => ({ ...p, patient_id: e.target.value }))} placeholder="UUID patient" className="bg-[#0f1419] border-white/10" />
               </div>
               <Textarea value={newCase.summary} onChange={(e) => setNewCase((p) => ({ ...p, summary: e.target.value }))} placeholder="Résumé initial" className="bg-[#0f1419] border-white/10 min-h-[70px]" />
-              <Button onClick={createCase} className="bg-[#D4AF37] text-black hover:bg-amber-500"><Plus className="w-4 h-4 mr-1" />Créer dossier</Button>
+              <Button onClick={createCase} className="bg-[var(--school-accent)] text-black hover:bg-amber-500"><Plus className="w-4 h-4 mr-1" />Créer dossier</Button>
             </div>
           </CardContent>
         </Card>
@@ -671,7 +671,7 @@ export default function NgowazuluOperationsPanel() {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[#D4AF37]">{new Date(t.starts_at).toLocaleDateString('fr-FR')}</span>
+                    <span className="text-[var(--school-accent)]">{new Date(t.starts_at).toLocaleDateString('fr-FR')}</span>
                     <button
                       type="button"
                       onClick={() => {
@@ -701,8 +701,8 @@ export default function NgowazuluOperationsPanel() {
             {selectedTravelId && (() => {
               const regsForTravel = travelRegs.filter((r) => r.travel_id === selectedTravelId);
               return (
-                <div className="rounded-xl border border-[#D4AF37]/15 bg-[#D4AF37]/5 p-3 space-y-2">
-                  <p className="text-[11px] text-[#D4AF37] font-medium uppercase tracking-wider">
+                <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] p-3 space-y-2">
+                  <p className="text-[11px] text-[var(--school-accent)] font-medium uppercase tracking-wider">
                     Demandes d'inscription ({regsForTravel.length})
                   </p>
                   {regsForTravel.length === 0 ? (
@@ -764,7 +764,7 @@ export default function NgowazuluOperationsPanel() {
               <Input value={newTravel.location} onChange={(e) => setNewTravel((p) => ({ ...p, location: e.target.value }))} placeholder="Lieu" className="bg-[#0f1419] border-white/10" />
               <Input type="datetime-local" value={newTravel.starts_at} onChange={(e) => setNewTravel((p) => ({ ...p, starts_at: e.target.value }))} className="bg-[#0f1419] border-white/10" />
             </div>
-            <Button onClick={createTravel} className="bg-[#D4AF37] text-black hover:bg-amber-500"><Plus className="w-4 h-4 mr-1" />Planifier</Button>
+            <Button onClick={createTravel} className="bg-[var(--school-accent)] text-black hover:bg-amber-500"><Plus className="w-4 h-4 mr-1" />Planifier</Button>
           </CardContent>
         </Card>
 
@@ -776,7 +776,7 @@ export default function NgowazuluOperationsPanel() {
             {rules.slice(0, 6).map((r) => (
               <div key={r.id} className="text-xs text-gray-300 flex justify-between border-b border-white/5 pb-2 last:border-b-0">
                 <span>{r.title}</span>
-                <span className="text-[#D4AF37]">{r.code}</span>
+                <span className="text-[var(--school-accent)]">{r.code}</span>
               </div>
             ))}
             <div className="pt-2 space-y-2">
@@ -785,7 +785,7 @@ export default function NgowazuluOperationsPanel() {
                 <Input value={newRule.title} onChange={(e) => setNewRule((p) => ({ ...p, title: e.target.value }))} placeholder="Titre règle" className="bg-[#0f1419] border-white/10" />
               </div>
               <Textarea value={newRule.body} onChange={(e) => setNewRule((p) => ({ ...p, body: e.target.value }))} placeholder="Texte de la règle" className="bg-[#0f1419] border-white/10 min-h-[70px]" />
-              <Button onClick={createRule} className="bg-[#D4AF37] text-black hover:bg-amber-500"><Plus className="w-4 h-4 mr-1" />Publier règle</Button>
+              <Button onClick={createRule} className="bg-[var(--school-accent)] text-black hover:bg-amber-500"><Plus className="w-4 h-4 mr-1" />Publier règle</Button>
             </div>
           </CardContent>
         </Card>
@@ -802,7 +802,7 @@ export default function NgowazuluOperationsPanel() {
             <>
               <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-xs text-gray-300 flex flex-wrap items-center gap-2">
                 <span className="text-white font-semibold">{selectedCase.title}</span>
-                <span className="uppercase text-[#D4AF37]">{selectedCase.case_type}</span>
+                <span className="uppercase text-[var(--school-accent)]">{selectedCase.case_type}</span>
                 <span className="uppercase">{selectedCase.status}</span>
                 <span>Patient: {selectedCase.patient_id}</span>
               </div>
@@ -856,7 +856,7 @@ export default function NgowazuluOperationsPanel() {
                     placeholder="Compte rendu, action, décision..."
                     className="md:col-span-2 bg-[#0f1419] border-white/10 min-h-[40px]"
                   />
-                  <Button onClick={addCaseEvent} className="bg-[#D4AF37] text-black hover:bg-amber-500">
+                  <Button onClick={addCaseEvent} className="bg-[var(--school-accent)] text-black hover:bg-amber-500">
                     Ajouter à timeline
                   </Button>
                 </div>
@@ -866,7 +866,7 @@ export default function NgowazuluOperationsPanel() {
                 {caseEvents.length > 0 ? (
                   caseEvents.map((evt) => (
                     <div key={evt.id} className="text-xs text-gray-300 border-b border-white/5 pb-2 last:border-b-0">
-                      <p className="uppercase text-[#D4AF37]">{evt.event_type}</p>
+                      <p className="uppercase text-[var(--school-accent)]">{evt.event_type}</p>
                       <p>{evt.content}</p>
                       <p className="text-[10px] text-gray-500">
                         {new Date(evt.created_at).toLocaleString('fr-FR')}

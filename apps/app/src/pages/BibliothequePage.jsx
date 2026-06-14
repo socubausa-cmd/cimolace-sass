@@ -6,7 +6,7 @@ import {
   ArrowRight, GraduationCap, FileText, Tag,
   BookMarked, Library, ScrollText,
 } from 'lucide-react';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const LIBRARY_PAGE_TITLE = `Bibliothèque ${isnaTenantConfig.branding.name}`;
 
@@ -83,8 +83,8 @@ const series = ['Toutes', ...new Set(books.map((b) => b.serie))];
 
 const colorMap = {
   gold: {
-    bg: 'bg-[#D4AF37]/10', border: 'border-[#D4AF37]/20', hoverBorder: 'hover:border-[#D4AF37]/40',
-    text: 'text-[#D4AF37]', badge: 'bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/20',
+    bg: 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]', border: 'border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]', hoverBorder: 'hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]',
+    text: 'text-[var(--school-accent)]', badge: 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]',
   },
 };
 
@@ -106,7 +106,7 @@ const BookCard = ({ book, viewMode, embedded = false }) => {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className={`text-base font-bold text-white transition-colors ${soon ? '' : 'group-hover:text-[#D4AF37]'}`}>{book.title}</h3>
+                <h3 className={`text-base font-bold text-white transition-colors ${soon ? '' : 'group-hover:text-[var(--school-accent)]'}`}>{book.title}</h3>
                 <span className={`text-xs px-2 py-0.5 rounded-full border ${c.badge}`}>{book.subtitle}</span>
               </div>
               <p className="text-sm text-gray-400 mt-0.5 truncate">{book.description}</p>
@@ -115,8 +115,8 @@ const BookCard = ({ book, viewMode, embedded = false }) => {
               <span className="text-xs text-gray-500">{book.chapters} chapitres</span>
               <span className="text-xs px-2 py-0.5 rounded bg-white/5 text-gray-400 border border-white/5">{book.category}</span>
               {soon
-                ? <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 font-bold">Bientôt</span>
-                : <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-[#D4AF37] transition-colors" />}
+                ? <span className="text-[10px] px-2 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] font-bold">Bientôt</span>
+                : <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-[var(--school-accent)] transition-colors" />}
             </div>
           </div>
         </div>
@@ -132,14 +132,14 @@ const BookCard = ({ book, viewMode, embedded = false }) => {
           <Icon className={`w-16 h-16 ${c.text} opacity-30 absolute`} />
           <div className="relative text-center px-4">
             <span className={`text-xs font-bold ${c.text} uppercase tracking-widest`}>{book.serie}</span>
-            <h3 className={`text-xl md:text-2xl font-serif font-bold text-white mt-1 transition-colors ${soon ? '' : 'group-hover:text-[#D4AF37]'}`}>{book.title}</h3>
+            <h3 className={`text-xl md:text-2xl font-serif font-bold text-white mt-1 transition-colors ${soon ? '' : 'group-hover:text-[var(--school-accent)]'}`}>{book.title}</h3>
           </div>
           <div className="absolute top-3 right-3">
             <span className={`text-[10px] px-2 py-1 rounded-full border ${c.badge} font-bold`}>{book.subtitle}</span>
           </div>
           {soon && (
             <div className="absolute top-3 left-3">
-              <span className="text-[10px] px-2 py-1 rounded-full bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 font-bold">Bientôt</span>
+              <span className="text-[10px] px-2 py-1 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] font-bold">Bientôt</span>
             </div>
           )}
         </div>
@@ -193,7 +193,7 @@ const BibliothequePage = ({ embedded = false }) => {
           placeholder="Rechercher un ouvrage, un thème…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-11 pr-4 py-3 bg-black/20 border border-white/10 rounded-xl text-white placeholder-gray-600 text-sm focus:outline-none focus:border-[#D4AF37]/30 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all"
+          className="w-full pl-11 pr-4 py-3 bg-black/20 border border-white/10 rounded-xl text-white placeholder-gray-600 text-sm focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-all"
         />
       </div>
       <div className="flex flex-wrap items-center gap-3">
@@ -202,7 +202,7 @@ const BibliothequePage = ({ embedded = false }) => {
           {categories.map((cat) => (
             <button key={cat} onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                selectedCategory === cat ? 'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30' : 'bg-white/5 text-gray-400 border border-white/5 hover:text-white hover:bg-white/10'
+                selectedCategory === cat ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]' : 'bg-white/5 text-gray-400 border border-white/5 hover:text-white hover:bg-white/10'
               }`}>{cat}</button>
           ))}
         </div>
@@ -211,7 +211,7 @@ const BibliothequePage = ({ embedded = false }) => {
           {series.map((s) => (
             <button key={s} onClick={() => setSelectedSerie(s)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                selectedSerie === s ? 'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30' : 'bg-white/5 text-gray-400 border border-white/5 hover:text-white hover:bg-white/10'
+                selectedSerie === s ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]' : 'bg-white/5 text-gray-400 border border-white/5 hover:text-white hover:bg-white/10'
               }`}>{s}</button>
           ))}
         </div>
@@ -228,7 +228,7 @@ const BibliothequePage = ({ embedded = false }) => {
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-gray-500">{filtered.length} ouvrage{filtered.length > 1 ? 's' : ''} trouvé{filtered.length > 1 ? 's' : ''}</p>
         {(selectedCategory !== 'Tous' || selectedSerie !== 'Toutes' || searchQuery) && (
-          <button onClick={resetFilters} className="text-xs text-[#D4AF37] hover:text-yellow-400 transition-colors">Réinitialiser les filtres</button>
+          <button onClick={resetFilters} className="text-xs text-[var(--school-accent)] hover:text-yellow-400 transition-colors">Réinitialiser les filtres</button>
         )}
       </div>
       {filtered.length === 0 ? (
@@ -239,7 +239,7 @@ const BibliothequePage = ({ embedded = false }) => {
         <div className="space-y-3">{filtered.map((book) => <BookCard key={book.id} book={book} viewMode="list" embedded={embedded} />)}</div>
       )}
       <section className="mt-12 bg-[#192734] border border-white/5 rounded-2xl p-6">
-        <h2 className="text-xl font-serif font-bold text-white mb-6 flex items-center gap-2"><BookMarked className="w-5 h-5 text-[#D4AF37]" /> Ordre de lecture recommandé</h2>
+        <h2 className="text-xl font-serif font-bold text-white mb-6 flex items-center gap-2"><BookMarked className="w-5 h-5 text-[var(--school-accent)]" /> Ordre de lecture recommandé</h2>
         <div className="space-y-3">
           {[...books].sort((a, b) => a.order - b.order).map((book, i) => {
             const c = colorMap[book.color] || colorMap.gold;
@@ -251,7 +251,7 @@ const BibliothequePage = ({ embedded = false }) => {
                   <h3 className="text-sm font-bold text-white">{book.title}</h3>
                   <p className="text-xs text-gray-500 truncate">{book.subtitle} — {book.chapters} chapitres</p>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 font-bold">Bientôt</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] font-bold">Bientôt</span>
                 <Icon className={`w-4 h-4 ${c.text} opacity-50`} />
               </div>
             );
@@ -266,8 +266,8 @@ const BibliothequePage = ({ embedded = false }) => {
       <div className="space-y-6 pb-8">
         <SEO title={LIBRARY_PAGE_TITLE} />
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-[#D4AF37]/10 rounded-xl border border-[#D4AF37]/20">
-            <Library className="w-6 h-6 text-[#D4AF37]" />
+          <div className="p-2 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
+            <Library className="w-6 h-6 text-[var(--school-accent)]" />
           </div>
           <div>
             <h1 className="text-2xl font-serif font-bold text-white">{LIBRARY_PAGE_TITLE}</h1>
@@ -288,20 +288,20 @@ const BibliothequePage = ({ embedded = false }) => {
       />
       <section className="relative py-24 md:py-32 px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0F1419] via-[#192734]/40 to-[#0F1419]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#D4AF37]/5 rounded-full blur-[250px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[250px]" />
         <div className="relative max-w-4xl mx-auto text-center space-y-5">
-          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] text-xs font-bold uppercase tracking-widest border border-[#D4AF37]/20">
+          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] text-xs font-bold uppercase tracking-widest border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
             <Library className="w-4 h-4" /> {LIBRARY_PAGE_TITLE}
           </span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-white leading-tight">
-            Les ouvrages du<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-yellow-400 to-[#D4AF37]">programme</span>
+            Les ouvrages du<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] via-yellow-400 to-[var(--school-accent)]">programme</span>
           </h1>
           <p className="text-gray-400 text-lg max-w-xl mx-auto">
             {`Tajwîd, Sciences du Coran, Fiqh et Langue arabe — la bibliothèque ${isnaTenantConfig.branding.name}.`}
           </p>
           <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
-            <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4 text-[#D4AF37]" /> <strong className="text-white">{books.length}</strong> ouvrages</span>
-            <span className="flex items-center gap-1.5"><FileText className="w-4 h-4 text-[#D4AF37]" /> <strong className="text-white">{books.reduce((s, b) => s + b.chapters, 0)}</strong> chapitres</span>
+            <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4 text-[var(--school-accent)]" /> <strong className="text-white">{books.length}</strong> ouvrages</span>
+            <span className="flex items-center gap-1.5"><FileText className="w-4 h-4 text-[var(--school-accent)]" /> <strong className="text-white">{books.reduce((s, b) => s + b.chapters, 0)}</strong> chapitres</span>
           </div>
         </div>
       </section>

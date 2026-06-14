@@ -55,12 +55,12 @@ const AdminCommunitiesPage = () => {
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-serif font-bold flex items-center gap-3">
-            <MessageCircle className="w-8 h-8 text-[#D4AF37]" />
+            <MessageCircle className="w-8 h-8 text-[var(--school-accent)]" />
             Communautés
           </h1>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-[#D4AF37] text-black hover:bg-amber-500 gap-2">
+              <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500 gap-2">
                 <Plus className="w-4 h-4" /> Créer une communauté
               </Button>
             </DialogTrigger>
@@ -116,7 +116,7 @@ const AdminCommunitiesPage = () => {
                 <Button
                   onClick={handleCreate}
                   disabled={createLoading}
-                  className="bg-[#D4AF37] text-black hover:bg-amber-500"
+                  className="bg-[var(--school-accent)] text-black hover:bg-amber-500"
                 >
                   {createLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Créer'}
                 </Button>
@@ -134,7 +134,7 @@ const AdminCommunitiesPage = () => {
         <div className="space-y-4">
           {loading ? (
             <div className="flex justify-center py-16">
-              <Loader2 className="w-10 h-10 animate-spin text-[#D4AF37]" />
+              <Loader2 className="w-10 h-10 animate-spin text-[var(--school-accent)]" />
             </div>
           ) : communities.length === 0 ? (
             <motion.div
@@ -155,13 +155,13 @@ const AdminCommunitiesPage = () => {
                 className="rounded-xl border border-white/10 bg-[#151a21]/80 backdrop-blur-xl p-6 flex items-center justify-between"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-[#D4AF37]/20 flex items-center justify-center">
-                    <Users className="w-6 h-6 text-[#D4AF37]" />
+                  <div className="w-12 h-12 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center">
+                    <Users className="w-6 h-6 text-[var(--school-accent)]" />
                   </div>
                   <div>
                     <h3 className="font-bold text-white">{c.name}</h3>
                     <p className="text-sm text-gray-400">{c.description || '—'}</p>
-                    <p className="text-xs text-[#D4AF37] mt-1">
+                    <p className="text-xs text-[var(--school-accent)] mt-1">
                       Créateur : {c.creator?.name || c.creator?.email || 'Inconnu'}
                     </p>
                   </div>
@@ -177,7 +177,7 @@ const AdminCommunitiesPage = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-[#D4AF37]/30 text-[#D4AF37]"
+                    className="border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)]"
                     onClick={() => (window.location.href = `/community/${c.id}`)}
                   >
                     Voir

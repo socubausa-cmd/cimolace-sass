@@ -182,7 +182,7 @@ body {
   background: rgba(123, 97, 255, 0.1) !important;
 }
 
-#root .premium-app-shell > header [class*='border'][class*='D4AF37'] {
+#root .premium-app-shell > header [class*='border'][class*='school-accent'] {
   border-color: var(--liri-border-gold) !important;
 }
 

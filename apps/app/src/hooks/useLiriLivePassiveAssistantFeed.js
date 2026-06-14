@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLiveWhiteboardStore } from '@/components/live-room/useLiveWhiteboardStore';
+import { useLiveWhiteboardStore } from '@/components/liri/live-room/useLiveWhiteboardStore';
 import { supabase } from '@/lib/customSupabaseClient';
 import { getSupabaseFunctionErrorMessage } from '@/lib/supabaseEdgeInvoke';
 

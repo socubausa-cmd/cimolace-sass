@@ -38,7 +38,7 @@ const SettingsPage = () => {
             <Button onClick={refresh} variant="outline" className="border-white/10 text-white hover:bg-white/5 gap-2" disabled={loading}>
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Actualiser
             </Button>
-            <Button onClick={handleSave} className="bg-[#D4AF37] text-black hover:bg-[#b5952f] gap-2" disabled={loading}>
+            <Button onClick={handleSave} className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f] gap-2" disabled={loading}>
             <Save className="w-4 h-4" /> Sauvegarder
             </Button>
           </div>
@@ -55,7 +55,7 @@ const SettingsPage = () => {
 
         <div className="space-y-8">
           <div className="premium-panel p-6">
-            <h2 className="text-xl font-bold mb-4 text-[#D4AF37]">Général</h2>
+            <h2 className="text-xl font-bold mb-4 text-[var(--school-accent)]">Général</h2>
             <div className="grid gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Nom du Site</label>
@@ -77,7 +77,7 @@ const SettingsPage = () => {
           </div>
 
           <div className="premium-panel p-6">
-            <h2 className="text-xl font-bold mb-4 text-[#D4AF37]">Sécurité</h2>
+            <h2 className="text-xl font-bold mb-4 text-[var(--school-accent)]">Sécurité</h2>
             <div className="grid gap-6">
                <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-300">Expiration Session (minutes)</label>

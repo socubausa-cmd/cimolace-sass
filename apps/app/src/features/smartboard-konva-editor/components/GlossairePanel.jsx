@@ -109,7 +109,7 @@ export default function GlossairePanel({ scenes, onHighlightKeyword, className }
                       )}
                       title={'Frequence : ' + count}
                     >
-                      {count > 2 && <Star className="h-2 w-2 text-[#D4AF37]" />}
+                      {count > 2 && <Star className="h-2 w-2 text-[var(--school-accent)]" />}
                       {word}
                       {count > 1 && <span className="text-[7px] opacity-50">x{count}</span>}
                     </button>

@@ -19,7 +19,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import TeacherCard from '@/components/TeacherCard';
+import TeacherCard from '@/components/school/TeacherCard';
 import AnnouncementCard from '@/components/AnnouncementCard';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
@@ -336,10 +336,10 @@ const SecretariatPage = () => {
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs uppercase tracking-wider text-gray-400">{item.label}</span>
-                <item.icon className={`w-5 h-5 ${item.alert ? 'text-amber-400' : 'text-[#D4AF37]'}`} />
+                <item.icon className={`w-5 h-5 ${item.alert ? 'text-amber-400' : 'text-[var(--school-accent)]'}`} />
               </div>
               <div className="mt-3 text-2xl font-bold text-white">
-                {loadingData ? <Loader2 className="w-6 h-6 animate-spin text-[#D4AF37]" /> : item.value}
+                {loadingData ? <Loader2 className="w-6 h-6 animate-spin text-[var(--school-accent)]" /> : item.value}
               </div>
             </div>
           ))}
@@ -357,13 +357,13 @@ const SecretariatPage = () => {
               <Link
                 key={idx}
                 to={action.link}
-                className="group flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-[#151a21]/60 hover:border-[#D4AF37]/40 hover:bg-[#192734]/80 transition-all"
+                className="group flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-[#151a21]/60 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] hover:bg-[#192734]/80 transition-all"
               >
                 <div className={`p-2 rounded-lg bg-white/5 ${action.color} group-hover:bg-white/10`}>
                   <action.icon className="w-5 h-5" />
                 </div>
                 <span className="text-sm font-medium text-gray-200 group-hover:text-white truncate">{action.label}</span>
-                <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-[#D4AF37] group-hover:translate-x-1 transition-all ml-auto flex-shrink-0" />
+                <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-[var(--school-accent)] group-hover:translate-x-1 transition-all ml-auto flex-shrink-0" />
               </Link>
             ))}
           </div>
@@ -380,7 +380,7 @@ const SecretariatPage = () => {
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <FileCheck className="w-5 h-5 text-[#D4AF37]" />
+                <FileCheck className="w-5 h-5 text-[var(--school-accent)]" />
                 Demandes à traiter
               </h2>
               <span className="text-xs text-gray-500">
@@ -391,7 +391,7 @@ const SecretariatPage = () => {
             <div className="space-y-3">
               {loadingData ? (
                 <div className="rounded-xl border border-white/10 bg-[#151a21]/60 p-6 flex items-center justify-center gap-2 text-gray-400">
-                  <Loader2 className="w-5 h-5 animate-spin text-[#D4AF37]" />
+                  <Loader2 className="w-5 h-5 animate-spin text-[var(--school-accent)]" />
                   Chargement...
                 </div>
               ) : administrativeQueue.length > 0 ? (
@@ -405,7 +405,7 @@ const SecretariatPage = () => {
                         {task.type === 'facturation' ? (
                           <CreditCard className="w-3.5 h-3.5 text-amber-400" />
                         ) : (
-                          <AlertTriangle className="w-3.5 h-3.5 text-[#D4AF37]" />
+                          <AlertTriangle className="w-3.5 h-3.5 text-[var(--school-accent)]" />
                         )}
                         {task.type}
                       </div>
@@ -415,7 +415,7 @@ const SecretariatPage = () => {
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <Button
                         size="sm"
-                        className="bg-[#D4AF37] text-black hover:bg-amber-500 font-semibold"
+                        className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-semibold"
                         onClick={() => handleTaskAction(task)}
                         disabled={Boolean(taskLoading[task.id])}
                       >
@@ -447,14 +447,14 @@ const SecretariatPage = () => {
             {recentlyProcessed.length > 0 && (
               <div className="mt-6 pt-6 border-t border-white/10">
                 <h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
-                  <History className="w-4 h-4 text-[#D4AF37]" />
+                  <History className="w-4 h-4 text-[var(--school-accent)]" />
                   Dernières actions
                 </h3>
                 <ul className="space-y-2">
                   {recentlyProcessed.slice(0, 4).map((item) => (
                     <li key={item.id} className="text-sm text-gray-400 flex justify-between gap-2">
                       <span>
-                        <span className="text-[#D4AF37]">{item.type}</span> — {item.subject}
+                        <span className="text-[var(--school-accent)]">{item.type}</span> — {item.subject}
                       </span>
                       <span className="text-gray-500 text-xs whitespace-nowrap">{item.processedAt}</span>
                     </li>
@@ -492,7 +492,7 @@ const SecretariatPage = () => {
                 <h2 className="text-lg font-semibold text-white">Équipe pédagogique</h2>
                 <Link
                   to="/secretariat-space/teachers"
-                  className="text-xs text-[#D4AF37] hover:text-amber-400 transition-colors"
+                  className="text-xs text-[var(--school-accent)] hover:text-amber-400 transition-colors"
                 >
                   Voir tout →
                 </Link>

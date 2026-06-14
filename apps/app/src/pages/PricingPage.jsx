@@ -6,7 +6,7 @@ import PricingDocumentation from '@/components/pricing/PricingDocumentation';
 import { useToast } from '@/components/ui/use-toast';
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const PricingPage = () => {
   const { toast } = useToast();
@@ -28,7 +28,7 @@ const PricingPage = () => {
     toast({
       title: "Forfait Sélectionné",
       description: `Vous avez choisi ${pkg?.title}. Redirection vers le paiement... (Simulation)`,
-      className: "bg-[#D4AF37] text-black border-none font-medium"
+      className: "bg-[var(--school-accent)] text-black border-none font-medium"
     });
   };
 
@@ -46,12 +46,12 @@ const PricingPage = () => {
            <ChevronRight className="w-4 h-4 mx-2" />
            <Link to="/formations" className="hover:text-white transition-colors">Formations</Link>
            <ChevronRight className="w-4 h-4 mx-2" />
-           <span className="text-[#D4AF37]">Tarifs</span>
+           <span className="text-[var(--school-accent)]">Tarifs</span>
         </div>
         
         <div className="text-center max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-6xl font-serif font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-400">
-            Tarification <span className="text-[#D4AF37]">Transparente</span>
+            Tarification <span className="text-[var(--school-accent)]">Transparente</span>
           </h1>
           <p className="text-xl text-gray-400">
             Choisissez l'investissement qui correspond à votre ambition.

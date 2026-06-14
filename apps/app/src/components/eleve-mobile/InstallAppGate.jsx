@@ -8,7 +8,7 @@ import {
   isStudentWebFallbackEnabled,
   setStudentWebLimitedOptIn,
 } from '@/lib/studentWebPlatform';
-import { EV_MUTED, EV_R, EV_LINE, EV_SH, EV_ACCENT } from '@/pages/eleve-mobile/eleveMobileScreensShared';
+import { EV_MUTED, EV_R, EV_LINE, EV_SH, EV_ACCENT } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const CTA = {
   background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #5B21B6 100%)`,

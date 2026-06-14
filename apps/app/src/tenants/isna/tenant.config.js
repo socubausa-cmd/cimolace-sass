@@ -40,7 +40,7 @@ export const isnaTenantConfig = {
     logo: '/logos/isna-logo.png',
     primaryColor: '#1a5f7a',
     secondaryColor: '#2c3e50',
-    accentColor: '#e74c3c',
+    accentColor: '#D4AF37',
     backgroundColor: '#f8f9fa',
     domain: 'isna.pro',
     /** Origine publique canonique (Helmet, OG, JSON-LD vitrine). `domain` reste l'hôte applicatif / e-mail. */

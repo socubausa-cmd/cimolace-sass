@@ -12,7 +12,13 @@ export const INFRASTRUCTURES: Array<{
     name: 'Ecole / ISNA',
     description: 'Formations, lives payants, replay, calendrier et marketing.',
     status: 'MVP pret',
-    engines: ['SmartBoard', 'LIRI Live', 'Replay', 'Marketing', 'Calendrier', 'Course Builder'],
+    // Aligné sur le manifeste canonique backend (school-engine-manifest.ts : 11 moteurs
+    // core + recommended ; Masterclass = addon non activé par défaut).
+    // Source de vérité = GET /catalog/templates ; cette liste statique n'est qu'un aperçu.
+    engines: [
+      'SmartBoard', 'LIRI Live', 'Replay', 'Course Builder', 'Calendrier', 'Marketing',
+      'Studio Créateur', 'Neuro Recall', 'Paiements', 'Chat', 'Notifications',
+    ],
   },
   {
     type: 'medos',

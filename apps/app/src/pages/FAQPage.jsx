@@ -126,7 +126,7 @@ const FAQPage = () => {
           transition={{ duration: 0.5, ease: easePremium }}
           className="text-center"
         >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--school-accent)]">
             {INITIATION_PRODUCT_NAME}
           </p>
           <h1 className="mt-4 text-3xl font-bold leading-tight md:text-4xl">Questions fréquentes</h1>
@@ -141,7 +141,7 @@ const FAQPage = () => {
           <Input
             type="search"
             placeholder="Filtrer les questions…"
-            className="h-12 rounded-full border-white/15 bg-[#0c111d]/90 pl-12 text-white placeholder:text-white/40 focus-visible:ring-[#D4AF37]/40"
+            className="h-12 rounded-full border-white/15 bg-[#0c111d]/90 pl-12 text-white placeholder:text-white/40 focus-visible:ring-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -162,11 +162,11 @@ const FAQPage = () => {
         </div>
 
         {selectedCycle !== 'all' && CYCLE_MARKETING_CONTENT[selectedCycle] ? (
-          <Card className="premium-panel mt-8 border border-[#D4AF37]/25 bg-gradient-to-br from-[#1a2234]/95 to-[#0d121c]/95">
+          <Card className="premium-panel mt-8 border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-gradient-to-br from-[#1a2234]/95 to-[#0d121c]/95">
             <CardHeader className="pb-2">
               <div className="flex flex-wrap items-center gap-2">
                 <BadgeTier tier={CYCLE_MARKETING_CONTENT[selectedCycle].tier} />
-                <CardDescription className="text-[#D4AF37]/90">
+                <CardDescription className="text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">
                   {CYCLE_MARKETING_CONTENT[selectedCycle].tierBadge}
                 </CardDescription>
               </div>
@@ -192,7 +192,7 @@ const FAQPage = () => {
                 <section key={section.key}>
                   <div className="mb-4 flex flex-wrap items-end justify-between gap-2 border-b border-white/10 pb-3">
                     <div>
-                      <h2 className="text-lg font-bold text-[#D4AF37] md:text-xl">{section.headline}</h2>
+                      <h2 className="text-lg font-bold text-[var(--school-accent)] md:text-xl">{section.headline}</h2>
                       <p className="text-sm text-white/55">{section.tagline}</p>
                     </div>
                     <span className="text-xs uppercase tracking-wider text-white/40">Niveau {section.tier}</span>
@@ -220,7 +220,7 @@ const FAQPage = () => {
           {generalFaq.length > 0 ? (
             <section>
               <div className="mb-4 flex items-center gap-2 border-b border-white/10 pb-3">
-                <HelpCircle className="h-5 w-5 text-[#D4AF37]" />
+                <HelpCircle className="h-5 w-5 text-[var(--school-accent)]" />
                 <h2 className="text-lg font-bold text-white md:text-xl">Contrats, paiement &amp; montée en gamme</h2>
               </div>
               <FaqAccordionList items={generalFaq} idPrefix="general-" openKey={openKey} onToggle={toggle} />
@@ -238,7 +238,7 @@ const FAQPage = () => {
             </div>
             <div className="flex flex-wrap gap-3">
               <Button
-                className="bg-[#D4AF37] font-bold text-black hover:bg-[#ebca5e]"
+                className="bg-[var(--school-accent)] font-bold text-black hover:bg-[#ebca5e]"
                 asChild
               >
                 <Link to="/forfaits">
@@ -259,7 +259,7 @@ const FAQPage = () => {
 
 function BadgeTier({ tier }) {
   return (
-    <span className="rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/12 px-2.5 py-0.5 text-[11px] font-semibold text-[#D4AF37]">
+    <span className="rounded-full border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--school-accent)]">
       Niv. {tier}
     </span>
   );
@@ -284,7 +284,7 @@ function FaqAccordionList({ items, idPrefix, openKey, onToggle }) {
             >
               <span className="font-semibold leading-snug text-white/95">{item.q}</span>
               {isOpen ? (
-                <Minus className="mt-0.5 h-5 w-5 shrink-0 text-[#D4AF37]" aria-hidden />
+                <Minus className="mt-0.5 h-5 w-5 shrink-0 text-[var(--school-accent)]" aria-hidden />
               ) : (
                 <Plus className="mt-0.5 h-5 w-5 shrink-0 text-white/40" aria-hidden />
               )}

@@ -28,7 +28,7 @@ export default function CinemaPedagogyTimeline({ takes, activeSlideIndex, onPick
   if (!sorted.length) return null;
 
   return (
-    <div className="rounded-lg border border-[#D4AF37]/15 bg-black/25 px-2 py-2">
+    <div className="rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] bg-black/25 px-2 py-2">
       <div className="mb-1.5 flex items-center justify-between gap-2 text-[9px] text-white/40">
         <span>Timeline — ordre slides</span>
         <span className="tabular-nums">{totalSec.toFixed(1)} s total</span>
@@ -48,7 +48,7 @@ export default function CinemaPedagogyTimeline({ takes, activeSlideIndex, onPick
               className={cn(
                 'flex items-center justify-center text-[9px] font-semibold tabular-nums transition-opacity hover:opacity-100',
                 active
-                  ? 'bg-[#D4AF37]/50 text-white shadow-[inset_0_0_0_1px_rgba(212,175,55,0.35)]'
+                  ? 'bg-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-white shadow-[inset_0_0_0_1px_rgba(212,175,55,0.35)]'
                   : 'bg-violet-500/35 text-white/85',
                 !active && i % 2 === 1 && 'bg-indigo-500/35',
               )}

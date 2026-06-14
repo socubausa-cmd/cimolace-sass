@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 import manuelContent from '@/content/manuel-initiatique-bris-de-sort.md?raw';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const PUBLIC = isnaTenantConfig.branding.publicSiteOrigin;
 const PAGE_URL = `${PUBLIC}/manuel-initiatique-bris-de-sort`;
@@ -84,21 +84,21 @@ const CroixIncarnationDiagram = () => (
 const ThreeLevelsDiagram = () => (
   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
     <div className="bg-[#0B0E11] border border-white/10 rounded-2xl p-5">
-      <div className="text-xs font-bold uppercase tracking-widest text-[#D4AF37]">Mpandu</div>
+      <div className="text-xs font-bold uppercase tracking-widest text-[var(--school-accent)]">Mpandu</div>
       <div className="text-lg font-serif font-bold text-white mt-1">Tête</div>
       <div className="text-sm text-gray-400 mt-2">Intelligence · Finances · Commerce · Vision</div>
       <div className="mt-4 text-xs text-gray-500">Signes :</div>
       <div className="text-sm text-gray-300 mt-1">Confusion · échecs répétés · blocages</div>
     </div>
     <div className="bg-[#0B0E11] border border-white/10 rounded-2xl p-5">
-      <div className="text-xs font-bold uppercase tracking-widest text-[#D4AF37]">Nzinga</div>
+      <div className="text-xs font-bold uppercase tracking-widest text-[var(--school-accent)]">Nzinga</div>
       <div className="text-lg font-serif font-bold text-white mt-1">Cœur</div>
       <div className="text-sm text-gray-400 mt-2">Relations · Image sociale · Valeur · Amour</div>
       <div className="mt-4 text-xs text-gray-500">Signes :</div>
       <div className="text-sm text-gray-300 mt-1">Rejet · ruptures · isolement</div>
     </div>
     <div className="bg-[#0B0E11] border border-white/10 rounded-2xl p-5">
-      <div className="text-xs font-bold uppercase tracking-widest text-[#D4AF37]">Nsanku</div>
+      <div className="text-xs font-bold uppercase tracking-widest text-[var(--school-accent)]">Nsanku</div>
       <div className="text-lg font-serif font-bold text-white mt-1">Ombrine</div>
       <div className="text-sm text-gray-400 mt-2">Corps · Santé · Force vitale · Sexualité</div>
       <div className="mt-4 text-xs text-gray-500">Signes :</div>
@@ -119,7 +119,7 @@ const RitualTimelineDiagram = () => (
       <div key={s.t} className="bg-[#0B0E11] border border-white/10 rounded-2xl p-4">
         <div className="flex items-center justify-between">
           <div className="text-xs text-gray-500 font-bold">Étape {i + 1}</div>
-          <div className="text-[10px] text-[#D4AF37] border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-2 py-0.5 rounded-full">3h00</div>
+          <div className="text-[10px] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-2 py-0.5 rounded-full">3h00</div>
         </div>
         <div className="text-sm font-bold text-white mt-2">{s.t}</div>
         <div className="text-xs text-gray-400 mt-1 leading-relaxed">{s.d}</div>
@@ -151,7 +151,7 @@ const MaterialsChecklistDiagram = () => (
     <div className="bg-[#0B0E11] border border-white/10 rounded-2xl p-5">
       <div className="text-sm font-bold text-white">Règles critiques</div>
       <div className="mt-3 space-y-2">
-        <div className="text-xs text-gray-300 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-xl px-3 py-2">
+        <div className="text-xs text-gray-300 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] rounded-xl px-3 py-2">
           Eau vivante : pluie / source / chute / tronc d'arbre / vin de palme / eau de coco
         </div>
         <div className="text-xs text-gray-300 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">
@@ -241,20 +241,20 @@ const ManuelInitiatiqueBrisDeSortPage = () => {
       {/* HERO */}
       <section className="relative py-28 md:py-40 px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0F1419] via-[#192734]/60 to-[#0F1419]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#D4AF37]/5 rounded-full blur-[300px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[300px]" />
 
         <div className="relative max-w-4xl mx-auto text-center space-y-6">
-          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] text-xs font-bold uppercase tracking-widest border border-[#D4AF37]/20">
+          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] text-xs font-bold uppercase tracking-widest border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
             <BookOpen className="w-4 h-4" /> Prorascience · Manuel
           </span>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-white leading-tight">
             Rituel de<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-yellow-400 to-[#D4AF37]">Bris de Sort</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] via-yellow-400 to-[var(--school-accent)]">Bris de Sort</span>
           </h1>
 
           <p className="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto">
-            Transmission du <span className="text-[#D4AF37] font-semibold">5ᵉ Manikongo</span> — Ngowazulu. 8 chapitres : doctrine + pratique (Mpandu, Nzinga, Nsanku, Croix d'Incarnation).
+            Transmission du <span className="text-[var(--school-accent)] font-semibold">5ᵉ Manikongo</span> — Ngowazulu. 8 chapitres : doctrine + pratique (Mpandu, Nzinga, Nsanku, Croix d'Incarnation).
           </p>
 
           <div className="flex items-center justify-center gap-4 flex-wrap">
@@ -264,19 +264,19 @@ const ManuelInitiatiqueBrisDeSortPage = () => {
               </Button>
             </Link>
             <a href="#ch1" onClick={(e) => { e.preventDefault(); go('ch1'); }}>
-              <Button className="bg-[#D4AF37] text-black hover:bg-[#bfa345] font-bold h-11 px-6">
+              <Button className="bg-[var(--school-accent)] text-black hover:bg-[#bfa345] font-bold h-11 px-6">
                 Lire maintenant <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
             </a>
           </div>
 
           <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
-            <span className="flex items-center gap-1.5"><Crown className="w-4 h-4 text-[#D4AF37]" /> 5ᵉ Manikongo</span>
-            <span className="flex items-center gap-1.5"><FileText className="w-4 h-4 text-[#D4AF37]" /> 8 chapitres</span>
-            <span className="flex items-center gap-1.5"><Tag className="w-4 h-4 text-[#D4AF37]" /> Rituel</span>
+            <span className="flex items-center gap-1.5"><Crown className="w-4 h-4 text-[var(--school-accent)]" /> 5ᵉ Manikongo</span>
+            <span className="flex items-center gap-1.5"><FileText className="w-4 h-4 text-[var(--school-accent)]" /> 8 chapitres</span>
+            <span className="flex items-center gap-1.5"><Tag className="w-4 h-4 text-[var(--school-accent)]" /> Rituel</span>
           </div>
 
-          <ChevronDown className="w-6 h-6 text-[#D4AF37]/50 mx-auto animate-bounce" />
+          <ChevronDown className="w-6 h-6 text-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] mx-auto animate-bounce" />
         </div>
       </section>
 
@@ -289,7 +289,7 @@ const ManuelInitiatiqueBrisDeSortPage = () => {
               onClick={() => go(it.id)}
               className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 ac === it.id
-                  ? 'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30'
+                  ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
                   : 'bg-white/5 text-gray-400 border border-white/5 hover:text-white'
               }`}
             >
@@ -303,8 +303,8 @@ const ManuelInitiatiqueBrisDeSortPage = () => {
         <section id="intro" className="space-y-6 scroll-mt-28">
           <div className="bg-[#192734] border border-white/5 rounded-2xl p-6">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center shrink-0">
-                <AlertTriangle className="w-5 h-5 text-[#D4AF37]" />
+              <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-[var(--school-accent)]" />
               </div>
               <div>
                 <div className="text-sm font-bold text-white">Avertissement</div>
@@ -358,11 +358,11 @@ const ManuelInitiatiqueBrisDeSortPage = () => {
         {parsed.chapters.map((ch) => (
           <section key={ch.id} id={ch.id} className="space-y-5 scroll-mt-28">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center">
-                <BookOpen className="w-5 h-5 text-[#D4AF37]" />
+              <div className="w-11 h-11 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-[var(--school-accent)]" />
               </div>
               <div>
-                <span className="text-xs text-[#D4AF37] font-bold uppercase tracking-wider">Chapitre {ch.number}</span>
+                <span className="text-xs text-[var(--school-accent)] font-bold uppercase tracking-wider">Chapitre {ch.number}</span>
                 <h2 className="text-2xl md:text-3xl font-serif font-bold text-white">{ch.title}</h2>
               </div>
             </div>

@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 // ─── Timeline événements d'un dossier de cas ─────────────────────────────────
 const EVENT_ICONS = {
   note:         { icon: FileText,  color: 'text-blue-300  bg-blue-500/10  border-blue-500/20'  },
-  intervention: { icon: Swords,    color: 'text-[#D4AF37] bg-[#D4AF37]/10 border-[#D4AF37]/20' },
+  intervention: { icon: Swords,    color: 'text-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]' },
   ritual:       { icon: Sparkles,  color: 'text-purple-300 bg-purple-500/10 border-purple-500/20' },
   follow_up:    { icon: RefreshCw, color: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20' },
 };
@@ -44,15 +44,15 @@ function CaseTimeline({ caseId }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 text-[11px] text-[#D4AF37] hover:text-amber-300 transition-colors"
+        className="flex items-center gap-1.5 text-[11px] text-[var(--school-accent)] hover:text-amber-300 transition-colors"
       >
         {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
         {open ? 'Masquer la timeline' : 'Voir la timeline'}
       </button>
 
       {open && (
-        <div className="mt-2 space-y-2 pl-3 border-l border-[#D4AF37]/20">
-          {loading && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#D4AF37]" />}
+        <div className="mt-2 space-y-2 pl-3 border-l border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
+          {loading && <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--school-accent)]" />}
           {!loading && events.length === 0 && (
             <p className="text-[11px] text-gray-500">Aucun événement enregistré.</p>
           )}
@@ -318,10 +318,10 @@ export default function NgowazuluTemplePage() {
   return (
     <div className="min-h-screen bg-[#0F1419] text-white pt-24 pb-12 px-4 md:px-8">
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-6 md:p-8">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37] mb-2">PRORASCIENCE · Temple</p>
+        <div className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-6 md:p-8">
+          <p className="text-xs uppercase tracking-[0.2em] text-[var(--school-accent)] mb-2">PRORASCIENCE · Temple</p>
           <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-            <Flame className="w-7 h-7 text-[#D4AF37]" />
+            <Flame className="w-7 h-7 text-[var(--school-accent)]" />
             Espace Ngowazulu
           </h1>
           <p className="text-sm text-gray-300 mt-2 max-w-3xl">
@@ -336,13 +336,13 @@ export default function NgowazuluTemplePage() {
               key={item.id}
               className={`border ${
                 selected?.id === item.id
-                  ? 'border-[#D4AF37]/60 bg-[#D4AF37]/10'
+                  ? 'border-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]'
                   : 'border-white/10 bg-[#151a21]'
               }`}
             >
               <CardHeader className="pb-2">
                 <CardTitle className="text-white text-base flex items-center gap-2">
-                  <item.icon className="w-4 h-4 text-[#D4AF37]" />
+                  <item.icon className="w-4 h-4 text-[var(--school-accent)]" />
                   {item.title}
                 </CardTitle>
               </CardHeader>
@@ -359,10 +359,10 @@ export default function NgowazuluTemplePage() {
         </div>
 
         {selected ? (
-          <Card className="border-[#D4AF37]/25 bg-[#151a21]">
+          <Card className="border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#151a21]">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
-                <selected.icon className="w-5 h-5 text-[#D4AF37]" />
+                <selected.icon className="w-5 h-5 text-[var(--school-accent)]" />
                 {selected.title}
               </CardTitle>
             </CardHeader>
@@ -373,7 +373,7 @@ export default function NgowazuluTemplePage() {
               ) : null}
               {loadingData ? (
                 <div className="flex items-center gap-2 text-sm text-gray-400">
-                  <Loader2 className="w-4 h-4 animate-spin text-[#D4AF37]" />
+                  <Loader2 className="w-4 h-4 animate-spin text-[var(--school-accent)]" />
                   Chargement...
                 </div>
               ) : null}
@@ -381,12 +381,12 @@ export default function NgowazuluTemplePage() {
                 <div className="space-y-3">
                   <div className="flex flex-wrap gap-2">
                     <Link to="/services-spirituels#ngowazulu">
-                      <Button className="bg-[#D4AF37] text-black hover:bg-amber-500 font-bold">
+                      <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-bold">
                         Voir les offres Ngowazulu
                       </Button>
                     </Link>
                     <Link to="/appointment/request?flow=ngowazulu-consultation">
-                      <Button variant="outline" className="border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10">
+                      <Button variant="outline" className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
                         Réserver une consultation
                       </Button>
                     </Link>
@@ -398,7 +398,7 @@ export default function NgowazuluTemplePage() {
                         <div key={row.id} className="text-xs text-gray-300 border-b border-white/5 pb-3 last:border-b-0 last:pb-0">
                           <div className="flex items-center justify-between">
                             <span className="text-white font-medium">{row.title}</span>
-                            <span className="uppercase text-[10px] text-[#D4AF37]">{row.status}</span>
+                            <span className="uppercase text-[10px] text-[var(--school-accent)]">{row.status}</span>
                           </div>
                           <CaseTimeline caseId={row.id} />
                         </div>
@@ -415,7 +415,7 @@ export default function NgowazuluTemplePage() {
                     cults.map((row) => (
                       <div key={row.id} className="text-xs text-gray-300 flex items-center justify-between border-b border-white/5 pb-2 last:border-b-0 last:pb-0">
                         <span>{row.title}</span>
-                        <span className="text-[10px] uppercase text-[#D4AF37]">
+                        <span className="text-[10px] uppercase text-[var(--school-accent)]">
                           {new Date(row.starts_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
                         </span>
                       </div>
@@ -432,7 +432,7 @@ export default function NgowazuluTemplePage() {
                       <div key={row.id} className="text-xs text-gray-300 border-b border-white/5 pb-3 last:border-b-0 last:pb-0">
                         <div className="flex items-center justify-between">
                           <span className="text-white font-medium">{row.title}</span>
-                          <span className="uppercase text-[10px] text-[#D4AF37]">{row.status}</span>
+                          <span className="uppercase text-[10px] text-[var(--school-accent)]">{row.status}</span>
                         </div>
                         <CaseTimeline caseId={row.id} />
                       </div>
@@ -449,7 +449,7 @@ export default function NgowazuluTemplePage() {
                       <div key={row.id} className="text-xs text-gray-300 border-b border-white/5 pb-3 last:border-b-0 last:pb-0">
                         <div className="flex items-center justify-between">
                           <span className="text-white font-medium">{row.title}</span>
-                          <span className="uppercase text-[10px] text-[#D4AF37]">{row.status}</span>
+                          <span className="uppercase text-[10px] text-[var(--school-accent)]">{row.status}</span>
                         </div>
                         <CaseTimeline caseId={row.id} />
                       </div>
@@ -481,7 +481,7 @@ export default function NgowazuluTemplePage() {
                             <p className="font-medium text-white text-sm">{row.title}</p>
                             <p className="text-xs text-gray-400 mt-0.5">{row.location || 'Lieu à confirmer'}</p>
                             <div className="flex items-center gap-2 mt-1 flex-wrap">
-                              <span className="text-[10px] uppercase text-[#D4AF37]">
+                              <span className="text-[10px] uppercase text-[var(--school-accent)]">
                                 {new Date(row.starts_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
                               </span>
                               {row.seats_total !== null && (
@@ -505,7 +505,7 @@ export default function NgowazuluTemplePage() {
                                 type="button"
                                 onClick={() => registerTravel(row.id)}
                                 disabled={isLoading}
-                                className="h-7 px-3 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#D4AF37] text-[11px] font-semibold hover:bg-[#D4AF37]/25 transition-colors disabled:opacity-50 flex items-center gap-1"
+                                className="h-7 px-3 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] text-[11px] font-semibold hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] transition-colors disabled:opacity-50 flex items-center gap-1"
                               >
                                 {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
                                 S'inscrire
@@ -559,7 +559,7 @@ export default function NgowazuluTemplePage() {
                                 size="sm"
                                 onClick={() => acceptRule(rule.id)}
                                 disabled={acceptingRuleId === rule.id}
-                                className="bg-[#D4AF37] text-black hover:bg-amber-500 font-bold"
+                                className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-bold"
                               >
                                 {acceptingRuleId === rule.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'J\'accepte cette règle'}
                               </Button>

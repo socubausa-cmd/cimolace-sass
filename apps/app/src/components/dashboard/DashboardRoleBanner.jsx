@@ -10,7 +10,7 @@ const DashboardRoleBanner = ({ roleLabel }) => {
         <div className="flex items-center gap-3 min-w-0">
           <Logo size="small" variant="dark" showText={false} />
           <p className="text-white font-semibold leading-tight">
-            Tableau de bord <span className="text-[#D4AF37]">- {roleLabel}</span>
+            Tableau de bord <span className="text-[var(--school-accent)]">- {roleLabel}</span>
           </p>
         </div>
       </div>

@@ -94,7 +94,7 @@ const NotesPanel: React.FC<Props> = ({ lessonId, currentTimeSeconds, onSeek, onN
         <Button
           onClick={addNote}
           disabled={saving || !String(text || '').trim()}
-          className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold"
+          className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"
         >
           {saving ? 'Ajout…' : 'Ajouter'}
         </Button>
@@ -122,7 +122,7 @@ const NotesPanel: React.FC<Props> = ({ lessonId, currentTimeSeconds, onSeek, onN
                     className="text-left min-w-0"
                     onClick={() => onSeek(Number(r.timestamp_seconds || 0))}
                   >
-                    <div className="text-xs text-[#D4AF37]">{formatTime(Number(r.timestamp_seconds || 0))}</div>
+                    <div className="text-xs text-[var(--school-accent)]">{formatTime(Number(r.timestamp_seconds || 0))}</div>
                     <div className="text-sm text-gray-200 whitespace-pre-wrap break-words">{r.note_text}</div>
                   </button>
                   <div className="shrink-0">

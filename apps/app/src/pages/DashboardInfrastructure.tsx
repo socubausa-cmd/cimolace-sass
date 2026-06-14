@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { catalogApi, tenantsApi, type InfrastructureType } from '../lib/api';
 import { authStore } from '../lib/auth-store';
 import { INFRASTRUCTURES } from '../lib/infrastructures';
+import { InfrastructureDetailPanel } from '../components/cimolace/InfrastructureDetailPanel';
 
 export function DashboardInfrastructure() {
   const queryClient = useQueryClient();
@@ -167,6 +168,8 @@ export function DashboardInfrastructure() {
               : `${services.data?.filter((service) => service.active).length ?? 0} moteurs actifs sur ce tenant.`}
           </p>
         </section>
+
+        {!authError && <InfrastructureDetailPanel tenantSlug={(tenant.data as any)?.slug} />}
       </main>
     </div>
   );

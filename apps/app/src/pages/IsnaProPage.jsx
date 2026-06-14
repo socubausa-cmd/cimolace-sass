@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import SEO from '@/components/SEO';
 import { FOUNDER_IMAGE_SOURCES, FOUNDER_PORTRAIT_ALT } from '@/lib/founderImageSources';
 import { WEB_ISNA_PRO } from '@/data/prorascienceVitrineFromWebContent';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const HERO_PILLAR_META = [
   {
@@ -598,10 +598,10 @@ export default function IsnaProPage() {
                   <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-xl border border-white/15 bg-black/45 px-4 py-3 text-xs text-white/85 backdrop-blur">
                     <span>Temoignage en direct + interpretation multilingue</span>
                     <span className="flex h-5 items-end gap-1">
-                      <span className="isna-wave h-3 w-1 rounded-full bg-[#D4AF37]" />
-                      <span className="isna-wave h-5 w-1 rounded-full bg-[#D4AF37]" />
-                      <span className="isna-wave h-4 w-1 rounded-full bg-[#D4AF37]" />
-                      <span className="isna-wave h-6 w-1 rounded-full bg-[#D4AF37]" />
+                      <span className="isna-wave h-3 w-1 rounded-full bg-[var(--school-accent)]" />
+                      <span className="isna-wave h-5 w-1 rounded-full bg-[var(--school-accent)]" />
+                      <span className="isna-wave h-4 w-1 rounded-full bg-[var(--school-accent)]" />
+                      <span className="isna-wave h-6 w-1 rounded-full bg-[var(--school-accent)]" />
                     </span>
                   </div>
                 </div>
@@ -705,7 +705,7 @@ export default function IsnaProPage() {
                 </div>
                 <div className="h-2 rounded-full bg-white/10">
                   <motion.div
-                    className="h-2 rounded-full bg-gradient-to-r from-[#6f4cff] via-[#0fb3ff] to-[#D4AF37]"
+                    className="h-2 rounded-full bg-gradient-to-r from-[#6f4cff] via-[#0fb3ff] to-[var(--school-accent)]"
                     initial={{ width: 0 }}
                     whileInView={{ width: `${g.value}%` }}
                     viewport={{ once: true }}

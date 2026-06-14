@@ -108,7 +108,7 @@ export default function ArchitectPanel({ className }) {
     <div className={cn('flex flex-col', className)}>
       {/* Header */}
       <div className="flex shrink-0 items-center gap-2 border-b border-white/8 px-3 py-2">
-        <Wand2 className="h-4 w-4 text-[#D4AF37]" />
+        <Wand2 className="h-4 w-4 text-[var(--school-accent)]" />
         <span className="text-[12px] font-semibold text-white">Architect</span>
         {highCount > 0 && (
           <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500/20 text-[9px] font-bold text-red-400">
@@ -118,7 +118,7 @@ export default function ArchitectPanel({ className }) {
         {coachFeedback && !architectBusy && suggestions.length > 0 && (
           <button
             onClick={handleFullRedesign}
-            className="ml-auto flex items-center gap-1 text-[11px] text-[#D4AF37]/70 hover:text-[#D4AF37]"
+            className="ml-auto flex items-center gap-1 text-[11px] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] hover:text-[var(--school-accent)]"
           >
             <Wand2 className="h-3 w-3" />
             Redesign complet
@@ -150,7 +150,7 @@ export default function ArchitectPanel({ className }) {
         )}
 
         {architectBusy && (
-          <div className="flex items-center gap-2 text-[11px] text-[#D4AF37]/60">
+          <div className="flex items-center gap-2 text-[11px] text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
             Architect travaille...
           </div>

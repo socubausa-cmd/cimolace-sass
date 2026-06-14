@@ -3,8 +3,8 @@ import { supabase } from '@/lib/customSupabaseClient';
 
 /**
  * Inscriptions « Mes formations » — partagé par
- * `pages/student-school-life/StudentFormationsPage` et
- * `pages/eleve-mobile/etudiantParity/EleveEtudiantFormationsScreen`.
+ * `pages/school/student-school-life/StudentFormationsPage` et
+ * `pages/school/eleve-mobile/etudiantParity/EleveEtudiantFormationsScreen`.
  *
  * Source réelle : `student_progress` (jointure `courses` via FK course_id → courses.id).
  * La table `enrollments` ne contient pas de FK vers les cours dans ce tenant —

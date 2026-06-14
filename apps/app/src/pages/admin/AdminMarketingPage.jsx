@@ -1015,7 +1015,7 @@ export default function AdminMarketingPage() {
       <div className="premium-panel p-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Megaphone className="w-6 h-6 text-[#D4AF37]" />
+            <Megaphone className="w-6 h-6 text-[var(--school-accent)]" />
             PRORASCIENCE Growth Engine
           </h1>
           <p className="text-sm text-gray-400 mt-1">Campaigns, funnels, leads, automation et analytics connectes au booking/paiement.</p>
@@ -1057,7 +1057,7 @@ export default function AdminMarketingPage() {
           <Workflow className="w-4 h-4 mr-2 text-violet-300" />
           Ouvrir Automation (flows)
         </Button>
-        <Button asChild variant="outline" className="border-[#D4AF37]/35 text-[#D4AF37] hover:bg-[#D4AF37]/10">
+        <Button asChild variant="outline" className="border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
           <Link to="/appointment/request">
             <CalendarDays className="w-4 h-4 mr-2" />
             Calendrier public — prise de RDV
@@ -1109,7 +1109,7 @@ export default function AdminMarketingPage() {
                 {aiSuggestLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                 Suggestion IA
               </Button>
-              <Button className="bg-[#D4AF37] text-black hover:bg-amber-500" onClick={createCampaign}>Creer campagne</Button>
+              <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500" onClick={createCampaign}>Creer campagne</Button>
             </div>
           </div>
           <div className="premium-panel p-5 space-y-2">
@@ -1123,10 +1123,10 @@ export default function AdminMarketingPage() {
 
       {tab === 'funnels' && (
         <div className="premium-panel p-5 space-y-3">
-          <h2 className="text-white font-semibold flex items-center gap-2"><GitBranch className="w-4 h-4 text-[#D4AF37]" /> Funnel Builder Engine</h2>
+          <h2 className="text-white font-semibold flex items-center gap-2"><GitBranch className="w-4 h-4 text-[var(--school-accent)]" /> Funnel Builder Engine</h2>
           <Input placeholder="Nom funnel" value={funnelForm.name} onChange={(e) => setFunnelForm((p) => ({ ...p, name: e.target.value }))} />
           <Input placeholder="Formation liee (UUID optionnel)" value={funnelForm.linkedFormationId} onChange={(e) => setFunnelForm((p) => ({ ...p, linkedFormationId: e.target.value }))} />
-          <Button className="bg-[#D4AF37] text-black hover:bg-amber-500" onClick={createFunnel} disabled={funnelSaving}>
+          <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500" onClick={createFunnel} disabled={funnelSaving}>
             {funnelSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
             Creer funnel standard
           </Button>
@@ -1282,7 +1282,7 @@ export default function AdminMarketingPage() {
                   Recharger
                 </Button>
                 <Button
-                  className="bg-[#D4AF37] text-black hover:bg-amber-500"
+                  className="bg-[var(--school-accent)] text-black hover:bg-amber-500"
                   onClick={ingestFromLlmsFile}
                   disabled={kbImporting}
                 >
@@ -1314,7 +1314,7 @@ export default function AdminMarketingPage() {
                       <Badge className={entry.is_active ? 'bg-emerald-500/20 text-emerald-200 border-emerald-500/30' : 'bg-zinc-500/20 text-zinc-200 border-zinc-500/30'}>
                         {entry.is_active ? 'active' : 'inactive'}
                       </Badge>
-                      <Badge className="bg-[#D4AF37]/20 text-[#D4AF37] border-[#D4AF37]/40">P{entry.priority}</Badge>
+                      <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]">P{entry.priority}</Badge>
                     </div>
                   </div>
                   <p className="text-xs text-gray-300 line-clamp-2">{entry.content}</p>
@@ -1401,7 +1401,7 @@ export default function AdminMarketingPage() {
               <option value="no">Inactive</option>
             </select>
             <div className="flex flex-wrap gap-2">
-              <Button className="bg-[#D4AF37] text-black hover:bg-amber-500" onClick={saveKnowledgeEntry} disabled={kbSaving}>
+              <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500" onClick={saveKnowledgeEntry} disabled={kbSaving}>
                 {kbSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                 {kbForm.id ? 'Mettre a jour' : 'Ajouter a la KB'}
               </Button>
@@ -1417,13 +1417,13 @@ export default function AdminMarketingPage() {
         <div className="space-y-4 min-w-0 max-w-full overflow-x-clip">
           {automationTabLoading && flows.length === 0 ? (
             <div className="premium-panel p-6 flex items-center gap-3 text-gray-300">
-              <Loader2 className="w-5 h-5 animate-spin text-[#D4AF37]" />
+              <Loader2 className="w-5 h-5 animate-spin text-[var(--school-accent)]" />
               Chargement des flows et du journal d&apos;audit…
             </div>
           ) : null}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start min-w-0 max-w-full">
             <div className="premium-panel p-5 space-y-3 min-w-0 max-w-full overflow-hidden">
-          <h2 className="text-white font-semibold flex items-center gap-2 flex-wrap"><Workflow className="w-4 h-4 text-[#D4AF37] shrink-0" /> Automation Flow Engine</h2>
+          <h2 className="text-white font-semibold flex items-center gap-2 flex-wrap"><Workflow className="w-4 h-4 text-[var(--school-accent)] shrink-0" /> Automation Flow Engine</h2>
           <p className="text-sm text-gray-400">Trigger → Condition → Action. Les données flows/audit se chargent à l&apos;ouverture de cet onglet (pas tout le tableau d&apos;un coup).</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <select
@@ -1602,14 +1602,14 @@ export default function AdminMarketingPage() {
           </div>
           <div className="flex flex-wrap gap-2 pt-1">
           <Button
-            className="bg-[#D4AF37] text-black hover:bg-amber-500"
+            className="bg-[var(--school-accent)] text-black hover:bg-amber-500"
             onClick={createFlow}
             disabled={flowSaving || !flowForm.name.trim() || !flowActions.length}
           >
             {flowSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
             {editingFlowId ? 'Mettre a jour flow' : 'Creer flow'}
           </Button>
-          <Button className="bg-[#D4AF37] text-black hover:bg-amber-500" onClick={runAutomation} disabled={runningAutomation}>
+          <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500" onClick={runAutomation} disabled={runningAutomation}>
             {runningAutomation ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
             Executer trigger {flowForm.trigger || 'lead_created'}
           </Button>
@@ -1847,7 +1847,7 @@ export default function AdminMarketingPage() {
         <div className="space-y-4">
           <div className="premium-panel p-5">
             <h2 className="text-white font-semibold flex items-center gap-2 mb-4">
-              <BarChart3 className="w-4 h-4 text-[#D4AF37]" />
+              <BarChart3 className="w-4 h-4 text-[var(--school-accent)]" />
               Conversion Analytics Engine
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
@@ -1855,7 +1855,7 @@ export default function AdminMarketingPage() {
                 { label: 'Taux de conversion', value: `${analytics?.metrics?.conversionRate || 0}%`, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
                 { label: 'Open rate email', value: `${analytics?.metrics?.openRate || 0}%`, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
                 { label: 'Click rate', value: `${analytics?.metrics?.clickRate || 0}%`, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
-                { label: 'Revenus générés', value: `${analytics?.metrics?.revenue || 0} €`, color: 'text-[#D4AF37]', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20' },
+                { label: 'Revenus générés', value: `${analytics?.metrics?.revenue || 0} €`, color: 'text-[var(--school-accent)]', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20' },
               ].map((kpi) => (
                 <div key={kpi.label} className={`rounded-xl ${kpi.bg} border ${kpi.border} p-4`}>
                   <p className="text-xs text-gray-400 mb-1">{kpi.label}</p>
@@ -1943,14 +1943,14 @@ export default function AdminMarketingPage() {
             <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
               <div>
                 <h2 className="text-white font-semibold flex items-center gap-2">
-                  <Link2 className="w-4 h-4 text-[#D4AF37]" />
+                  <Link2 className="w-4 h-4 text-[var(--school-accent)]" />
                   Canaux de vente & publicité
                 </h2>
                 <p className="text-sm text-gray-400 mt-1">Connectez vos plateformes pour automatiser la diffusion et le suivi.</p>
               </div>
               <Link
                 to="/studio/ad-creator"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#D4AF37] text-black text-sm font-semibold hover:bg-amber-500 transition-all"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--school-accent)] text-black text-sm font-semibold hover:bg-amber-500 transition-all"
               >
                 <Megaphone className="w-4 h-4" />
                 Ouvrir Ad Creator Studio
@@ -1976,9 +1976,9 @@ export default function AdminMarketingPage() {
               ))}
             </div>
 
-            <div className="rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-4">
+            <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] p-4">
               <p className="text-sm font-semibold text-white mb-1 flex items-center gap-2">
-                <Megaphone className="w-4 h-4 text-[#D4AF37]" />
+                <Megaphone className="w-4 h-4 text-[var(--school-accent)]" />
                 Studio de création publicitaire
               </p>
               <p className="text-xs text-gray-300 mb-3">
@@ -1987,7 +1987,7 @@ export default function AdminMarketingPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-gray-400">
                 {['Sélectionner un extrait de cours ou live', 'Générer titre + description + CTA avec l\'IA', 'Publier sur Facebook, TikTok, YouTube'].map((step, i) => (
                   <div key={step} className="flex items-start gap-2">
-                    <span className="w-5 h-5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                    <span className="w-5 h-5 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
                     <span>{step}</span>
                   </div>
                 ))}
@@ -2032,7 +2032,7 @@ export default function AdminMarketingPage() {
               Recalculer scores intelligents
             </Button>
             <Button
-              className="bg-[#D4AF37] text-black hover:bg-amber-500"
+              className="bg-[var(--school-accent)] text-black hover:bg-amber-500"
               onClick={async () => {
                 setOrchestrateLoading(true);
                 setOrchestrateResult(null);

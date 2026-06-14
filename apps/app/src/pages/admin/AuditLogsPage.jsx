@@ -28,7 +28,7 @@ const AuditLogsPage = () => {
 
         <div className="premium-panel overflow-hidden">
           {loading ? (
-             <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-[#D4AF37] w-8 h-8" /></div>
+             <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-[var(--school-accent)] w-8 h-8" /></div>
           ) : (
             <table className="w-full text-left text-sm">
               <thead className="bg-white/5 text-gray-400 uppercase font-medium">

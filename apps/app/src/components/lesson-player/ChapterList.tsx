@@ -43,7 +43,7 @@ const ChapterList: React.FC<Props> = ({ timestamps, currentTimeSeconds, onSeek }
                 onClick={() => onSeek(c.timeSeconds)}
                 className={
                   active
-                    ? 'w-full text-left px-3 py-2 rounded bg-[#D4AF37]/10 border border-[#D4AF37]/30'
+                    ? 'w-full text-left px-3 py-2 rounded bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
                     : 'w-full text-left px-3 py-2 rounded hover:bg-white/5 border border-white/10'
                 }
               >

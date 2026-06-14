@@ -5,7 +5,7 @@ import { Helmet } from 'react-helmet';
 import { Button } from '@/components/ui/button';
 import { Save, User, Camera, Bell } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const ProfilePage = () => {
   const { user, profile } = useAuth();
@@ -74,7 +74,7 @@ const ProfilePage = () => {
           <div className="rounded-xl border border-white/15 bg-black/20 p-4">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-start gap-3">
-                <Bell className="mt-0.5 h-4 w-4 text-[#D4AF37]" />
+                <Bell className="mt-0.5 h-4 w-4 text-[var(--school-accent)]" />
                 <div>
                   <p className="text-sm font-medium text-white">Rappels SMS rendez-vous</p>
                   <p className="text-xs text-gray-400">Recevoir les rappels J-1 et H-1 par SMS.</p>
@@ -82,7 +82,7 @@ const ProfilePage = () => {
               </div>
               <input
                 type="checkbox"
-                className="h-4 w-4 accent-[#D4AF37]"
+                className="h-4 w-4 accent-[var(--school-accent)]"
                 checked={formData.notify_sms === true}
                 onChange={(e) => setFormData({ ...formData, notify_sms: e.target.checked })}
               />

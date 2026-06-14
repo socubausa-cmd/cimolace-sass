@@ -22,12 +22,12 @@ const MessageInput = ({ onSend }) => {
 
   return (
     <div className="p-4 border-t border-white/10 bg-[#0F1419]">
-      <div className="flex items-end gap-2 bg-[#192734] p-2 rounded-xl border border-white/10 focus-within:border-[#D4AF37]/50 transition-colors">
+      <div className="flex items-end gap-2 bg-[#192734] p-2 rounded-xl border border-white/10 focus-within:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] transition-colors">
         <div className="flex pb-2 gap-1">
-           <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-[#D4AF37] rounded-full">
+           <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-[var(--school-accent)] rounded-full">
              <Paperclip className="w-4 h-4" />
            </Button>
-           <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-[#D4AF37] rounded-full hidden sm:flex">
+           <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-[var(--school-accent)] rounded-full hidden sm:flex">
              <ImageIcon className="w-4 h-4" />
            </Button>
         </div>
@@ -42,11 +42,11 @@ const MessageInput = ({ onSend }) => {
         />
 
         <div className="flex pb-2 gap-1">
-           <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-[#D4AF37] rounded-full">
+           <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-[var(--school-accent)] rounded-full">
              <Smile className="w-4 h-4" />
            </Button>
            {content.trim() ? (
-             <Button onClick={handleSend} size="icon" className="h-8 w-8 bg-[#D4AF37] text-black hover:bg-yellow-500 rounded-full transition-all">
+             <Button onClick={handleSend} size="icon" className="h-8 w-8 bg-[var(--school-accent)] text-black hover:bg-yellow-500 rounded-full transition-all">
                <Send className="w-4 h-4 ml-0.5" />
              </Button>
            ) : (

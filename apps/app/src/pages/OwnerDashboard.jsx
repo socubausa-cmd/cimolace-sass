@@ -8,7 +8,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 // Core Components
 import OwnerFormationsTab from '@/components/owner/OwnerFormationsTab';
 import AccompanimentClientList from '@/components/accompaniment/AccompanimentClientList';
-import SchoolLifeManagementTab from '@/components/school-life-admin/SchoolLifeManagementTab';
+import SchoolLifeManagementTab from '@/components/school/school-life-admin/SchoolLifeManagementTab';
 
 // Financial Tabs
 import InventoryTab from '@/components/owner/financial/InventoryTab';
@@ -20,7 +20,7 @@ import CoachingMentoringTab from '@/components/coaching/CoachingMentoringTab';
 import WorkshopsTab from '@/components/coaching/WorkshopsTab';
 import SupportTab from '@/components/support/SupportTab';
 import NotificationCenter from '@/pages/NotificationCenter';
-import OwnerCertificatesManagement from '@/components/certificates/OwnerCertificatesManagement';
+import OwnerCertificatesManagement from '@/components/school/certificates/OwnerCertificatesManagement';
 import ReportsPage from '@/pages/ReportsPage';
 import SettingsPage from '@/pages/SettingsPage';
 import TenantPayoutProvidersForm from '@/components/settings/TenantPayoutProvidersForm';
@@ -35,8 +35,8 @@ import NgowazuluOperationsPanel from '@/components/ngowazulu/admin/NgowazuluOper
 import SiteReviewsModerationPanel from '@/components/marketing/SiteReviewsModerationPanel';
 import { useAuth } from '@/hooks/useAuth';
 import { getEffectiveRole } from '@/lib/accountRoleMode';
-import StudentForumCommunityPage from '@/pages/student-school-life/StudentForumCommunityPage';
-import { FormationForumContent } from '@/pages/FormationForumPage';
+import StudentForumCommunityPage from '@/pages/school/student-school-life/StudentForumCommunityPage';
+import { FormationForumContent } from '@/pages/school/FormationForumPage';
 import { formationForumUrlForRole } from '@/lib/forumDashboardPaths';
 
 const OwnerDashboard = () => {

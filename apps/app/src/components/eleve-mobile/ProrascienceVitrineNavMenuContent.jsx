@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 /** Fond + bordure + teinte d'icône par section (aligné coque bleu / indigo / violet). */
 function iconPillClass(sectionId) {

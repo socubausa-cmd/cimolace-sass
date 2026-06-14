@@ -25,7 +25,7 @@ export const CHOOSE_ACCOUNT_ROLE_OPTIONS = [
     description: 'Vue complète de pilotage global de la plateforme.',
     icon: ShieldCheck,
     badge: 'Global',
-    gradient: 'from-[#D4AF37]/30 to-amber-500/10',
+    gradient: 'from-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] to-amber-500/10',
     accent: '#D4AF37',
   },
   {
@@ -68,7 +68,7 @@ export function ChooseAccountRoleRow({ option, isSelected, onSelect, compact }) 
         compact ? 'py-3' : 'py-4'
       } ${
         isSelected
-          ? 'border-[#D4AF37]/60 bg-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/25'
+          ? 'border-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] bg-[var(--school-accent)] text-black shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]'
           : 'border-white/10 bg-[#151a21]/95 text-white active:bg-white/10'
       }`}
     >

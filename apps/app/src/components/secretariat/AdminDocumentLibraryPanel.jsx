@@ -93,7 +93,7 @@ export default function AdminDocumentLibraryPanel({ editor, onApplyTemplate, onO
       <button
         type="button"
         onClick={onOpenAssistant}
-        className="mb-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[#D4AF37]/35 bg-[#D4AF37]/10 py-2 text-[10px] font-semibold text-[#f5dd8a] hover:bg-[#D4AF37]/18"
+        className="mb-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] py-2 text-[10px] font-semibold text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)]"
       >
         <Bot className="h-3.5 w-3.5" />
         Assistant (structure en 5 étapes)

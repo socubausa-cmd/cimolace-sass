@@ -61,7 +61,7 @@ const AccompanimentClientList = () => {
           <Button variant="outline" className="border-white/10 text-white bg-[#192734]" onClick={() => setFilter(filter === 'all' ? 'coaching' : filter === 'coaching' ? 'mentoring' : 'all')}>
             <Filter className="h-4 w-4 mr-2" /> {filter === 'all' ? 'Tous' : filter === 'coaching' ? 'Coaching' : 'Mentorat'}
           </Button>
-          <Button onClick={() => setIsAddModalOpen(true)} className="bg-[#D4AF37] text-black hover:bg-yellow-500">
+          <Button onClick={() => setIsAddModalOpen(true)} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
             <Plus className="h-4 w-4 mr-2" /> Nouveau
           </Button>
         </div>
@@ -72,10 +72,10 @@ const AccompanimentClientList = () => {
           <Card 
             key={student.id} 
             onClick={() => navigate(`/owner-dashboard/client/${student.id}`)}
-            className="bg-[#192734] border-white/10 hover:border-[#D4AF37] cursor-pointer transition-all group"
+            className="bg-[#192734] border-white/10 hover:border-[var(--school-accent)] cursor-pointer transition-all group"
           >
             <CardContent className="p-6 flex items-start gap-4">
-              <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-700 flex-shrink-0 border-2 border-transparent group-hover:border-[#D4AF37] transition-colors">
+              <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-700 flex-shrink-0 border-2 border-transparent group-hover:border-[var(--school-accent)] transition-colors">
                 <img src={student.avatar} alt={student.name} className="h-full w-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
@@ -142,7 +142,7 @@ const AccompanimentClientList = () => {
           </div>
           <DialogFooter>
              <Button variant="ghost" onClick={() => setIsAddModalOpen(false)}>Annuler</Button>
-             <Button onClick={handleAddStudent} className="bg-[#D4AF37] text-black hover:bg-yellow-500">Ajouter</Button>
+             <Button onClick={handleAddStudent} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">Ajouter</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

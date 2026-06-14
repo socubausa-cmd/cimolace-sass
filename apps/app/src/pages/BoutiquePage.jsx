@@ -47,7 +47,7 @@ const BoutiquePage = () => {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center bg-[#0B0B0F] text-white">
         <div className="flex flex-col items-center gap-3 text-white/60">
-          <LiriWordmark size="compact" className="text-[#D4AF37]/90" />
+          <LiriWordmark size="compact" className="text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]" />
           <p className="text-[12px]">Ouverture de la Boutique Sacrée…</p>
         </div>
       </div>
@@ -70,12 +70,12 @@ const BoutiquePage = () => {
         <div className="relative max-w-7xl mx-auto px-6 py-16 md:py-20">
           <div className="max-w-4xl">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300">
-              <Flame className="w-4 h-4 text-[#D4AF37]" />
+              <Flame className="w-4 h-4 text-[var(--school-accent)]" />
               🕯️ BOUTIQUE SACRÉE NGOWAZULU
             </div>
 
             <h1 className="mt-6 text-4xl md:text-6xl font-serif font-bold leading-tight">
-              Temple du Feu, de la Lumière et de la <span className="text-[#D4AF37]">Purification Ancestrale</span>
+              Temple du Feu, de la Lumière et de la <span className="text-[var(--school-accent)]">Purification Ancestrale</span>
             </h1>
 
             <p className="mt-6 text-lg md:text-xl text-gray-300 italic leading-relaxed">
@@ -85,7 +85,7 @@ const BoutiquePage = () => {
 
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
               <a href="#pack" className="inline-flex">
-                <Button className="bg-[#D4AF37] text-black hover:bg-[#bfa345] font-bold h-12 px-8">
+                <Button className="bg-[var(--school-accent)] text-black hover:bg-[#bfa345] font-bold h-12 px-8">
                   Découvrir le Pack Sacré
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
@@ -118,9 +118,9 @@ const BoutiquePage = () => {
               </p>
             </div>
 
-            <div className="mt-8 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-6">
+            <div className="mt-8 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-6">
               <div className="flex items-start gap-3">
-                <Shield className="w-5 h-5 text-[#D4AF37] mt-0.5" />
+                <Shield className="w-5 h-5 text-[var(--school-accent)] mt-0.5" />
                 <div>
                   <div className="font-bold text-white">⚠️ Important</div>
                   <p className="mt-1 text-sm text-gray-200">
@@ -134,7 +134,7 @@ const BoutiquePage = () => {
           <div className="lg:col-span-5">
             <div className="bg-[#192734] border border-white/5 rounded-2xl p-8">
               <h3 className="text-xl font-bold flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-[#D4AF37]" />
+                <Sparkles className="w-5 h-5 text-[var(--school-accent)]" />
                 🌟 Découvrez Nos Instruments Sacrés
               </h3>
               <p className="text-sm text-gray-400 mt-2">Diaporama des Produits du Temple Ngowazulu</p>
@@ -181,12 +181,12 @@ const BoutiquePage = () => {
               {packCore.map((item) => (
                 <div key={item.number} className="bg-[#192734] border border-white/5 rounded-2xl p-8">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/15 text-[#D4AF37] flex items-center justify-center font-bold">
+                    <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] flex items-center justify-center font-bold">
                       {item.number}
                     </div>
                     <div className="flex-1">
                       <div className="text-lg font-bold text-white">{item.title}</div>
-                      <div className="text-sm text-[#D4AF37]">{item.subtitle}</div>
+                      <div className="text-sm text-[var(--school-accent)]">{item.subtitle}</div>
                       <p className="mt-3 text-sm text-gray-400 leading-relaxed">{item.description}</p>
                       <div className="mt-4 text-sm text-gray-300">
                         <span className="text-gray-500">Action :</span> {item.action}
@@ -209,7 +209,7 @@ const BoutiquePage = () => {
                 <div className="mt-4 space-y-2">
                   {guarantees.map((g) => (
                     <div key={g} className="flex items-start gap-2 text-sm text-gray-300">
-                      <CheckCircle className="w-4 h-4 text-[#D4AF37] mt-0.5" />
+                      <CheckCircle className="w-4 h-4 text-[var(--school-accent)] mt-0.5" />
                       <span>{g}</span>
                     </div>
                   ))}
@@ -219,13 +219,13 @@ const BoutiquePage = () => {
               <div className="mt-10">
                 {BUY_URL ? (
                   <a href={BUY_URL} target="_blank" rel="noreferrer" className="inline-flex w-full">
-                    <Button className="w-full bg-[#D4AF37] text-black hover:bg-[#bfa345] font-bold h-12">
+                    <Button className="w-full bg-[var(--school-accent)] text-black hover:bg-[#bfa345] font-bold h-12">
                       Commander le Pack Complet Maintenant
                       <ArrowRight className="ml-2 w-5 h-5" />
                     </Button>
                   </a>
                 ) : (
-                  <Button className="w-full bg-[#D4AF37] text-black hover:bg-[#bfa345] font-bold h-12" disabled>
+                  <Button className="w-full bg-[var(--school-accent)] text-black hover:bg-[#bfa345] font-bold h-12" disabled>
                     Commander le Pack Complet Maintenant
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
@@ -298,7 +298,7 @@ const BoutiquePage = () => {
                 'Activation de la foudre protectrice intérieure',
               ].map((line) => (
                 <div key={line} className="flex items-start gap-2">
-                  <Zap className="w-4 h-4 text-[#D4AF37] mt-0.5" />
+                  <Zap className="w-4 h-4 text-[var(--school-accent)] mt-0.5" />
                   <span>{line}</span>
                 </div>
               ))}
@@ -358,7 +358,7 @@ const BoutiquePage = () => {
                 "Clôture — Scelle l'espace sacré après un travail spirituel",
               ].map((line) => (
                 <div key={line} className="flex items-start gap-2">
-                  <Bell className="w-4 h-4 text-[#D4AF37] mt-0.5" />
+                  <Bell className="w-4 h-4 text-[var(--school-accent)] mt-0.5" />
                   <span>{line}</span>
                 </div>
               ))}
@@ -420,7 +420,7 @@ const BoutiquePage = () => {
                 'Action guidée',
               ].map((step) => (
                 <div key={step} className="flex items-start gap-2 bg-black/20 border border-white/10 rounded-xl px-4 py-3">
-                  <ScrollText className="w-4 h-4 text-[#D4AF37] mt-0.5" />
+                  <ScrollText className="w-4 h-4 text-[var(--school-accent)] mt-0.5" />
                   <span>{step}</span>
                 </div>
               ))}
@@ -443,7 +443,7 @@ const BoutiquePage = () => {
                 { n: '04', t: 'Scellement Mystique', d: 'La poudre scelle la parole et la transforme en commande spirituelle.' },
               ].map((b) => (
                 <div key={b.n} className="bg-black/20 border border-white/10 rounded-2xl p-6">
-                  <div className="text-xs text-[#D4AF37] font-bold">{b.n}</div>
+                  <div className="text-xs text-[var(--school-accent)] font-bold">{b.n}</div>
                   <div className="font-bold text-white mt-1">{b.t}</div>
                   <p className="text-sm text-gray-400 mt-2">{b.d}</p>
                 </div>
@@ -485,7 +485,7 @@ const BoutiquePage = () => {
               },
             ].map((step) => (
               <div key={step.title} className="bg-[#192734] border border-white/5 rounded-2xl p-8">
-                <div className="text-[#D4AF37] font-bold">{step.title}</div>
+                <div className="text-[var(--school-accent)] font-bold">{step.title}</div>
                 <p className="mt-3 text-sm text-gray-400 leading-relaxed">{step.description}</p>
               </div>
             ))}
@@ -500,7 +500,7 @@ const BoutiquePage = () => {
           <div className="mt-10 grid md:grid-cols-3 gap-6">
             {phases.map((p) => (
               <div key={p.title} className="bg-[#192734] border border-white/5 rounded-2xl p-8">
-                <div className="text-[#D4AF37] font-bold">{p.title}</div>
+                <div className="text-[var(--school-accent)] font-bold">{p.title}</div>
                 <div className="text-white font-bold mt-1">{p.subtitle}</div>
                 <p className="mt-3 text-sm text-gray-400 leading-relaxed">{p.description}</p>
               </div>
@@ -521,7 +521,7 @@ const BoutiquePage = () => {
               {activationSteps.map((s) => (
                 <div key={s.number} className="bg-[#192734] border border-white/5 rounded-2xl p-8">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/15 text-[#D4AF37] flex items-center justify-center font-bold">
+                    <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] flex items-center justify-center font-bold">
                       {s.number}
                     </div>
                     <div>
@@ -537,7 +537,7 @@ const BoutiquePage = () => {
           <div className="lg:col-span-5">
             <div className="bg-black/20 border border-white/10 rounded-3xl p-10">
               <div className="flex items-center gap-2 text-white font-bold">
-                <Package className="w-5 h-5 text-[#D4AF37]" />
+                <Package className="w-5 h-5 text-[var(--school-accent)]" />
                 Garanties Spirituelles
               </div>
 
@@ -546,7 +546,7 @@ const BoutiquePage = () => {
                 <div className="mt-4 space-y-2">
                   {guarantees.map((g) => (
                     <div key={g} className="flex items-start gap-2 text-sm text-gray-300">
-                      <CheckCircle className="w-4 h-4 text-[#D4AF37] mt-0.5" />
+                      <CheckCircle className="w-4 h-4 text-[var(--school-accent)] mt-0.5" />
                       <span>{g}</span>
                     </div>
                   ))}
@@ -558,7 +558,7 @@ const BoutiquePage = () => {
                 <div className="mt-4 space-y-2">
                   {conditions.map((c) => (
                     <div key={c} className="flex items-start gap-2 text-sm text-gray-300">
-                      <Sword className="w-4 h-4 text-[#D4AF37] mt-0.5" />
+                      <Sword className="w-4 h-4 text-[var(--school-accent)] mt-0.5" />
                       <span>{c}</span>
                     </div>
                   ))}
@@ -609,7 +609,7 @@ const BoutiquePage = () => {
             ].map((k) => (
               <div key={k.subtitle} className="bg-[#192734] border border-white/5 rounded-2xl p-8 text-center">
                 <div className="text-4xl font-bold text-white">{k.title}</div>
-                <div className="text-[#D4AF37] font-bold mt-2">{k.subtitle}</div>
+                <div className="text-[var(--school-accent)] font-bold mt-2">{k.subtitle}</div>
                 <div className="text-sm text-gray-400 mt-3">{k.text}</div>
               </div>
             ))}
@@ -627,13 +627,13 @@ const BoutiquePage = () => {
           <div className="mt-8">
             {BUY_URL ? (
               <a href={BUY_URL} target="_blank" rel="noreferrer" className="inline-flex">
-                <Button className="bg-[#D4AF37] text-black hover:bg-[#bfa345] font-bold h-12 px-8">
+                <Button className="bg-[var(--school-accent)] text-black hover:bg-[#bfa345] font-bold h-12 px-8">
                   Commander le Pack Complet Maintenant
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </a>
             ) : (
-              <Button className="bg-[#D4AF37] text-black hover:bg-[#bfa345] font-bold h-12 px-8" disabled>
+              <Button className="bg-[var(--school-accent)] text-black hover:bg-[#bfa345] font-bold h-12 px-8" disabled>
                 Commander le Pack Complet Maintenant
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>

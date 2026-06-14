@@ -164,7 +164,7 @@ const CreateOwnerAccountPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-[#0F1419] via-[#1a2c3b] to-[#0F1419] flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-[#D4AF37]/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-3xl"></div>
         <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-3xl"></div>
       </div>
 
@@ -179,9 +179,9 @@ const CreateOwnerAccountPage = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.1 }}
-            className="w-20 h-20 bg-[#192734] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#D4AF37]/30 shadow-[0_0_30px_rgba(212,175,55,0.15)]"
+            className="w-20 h-20 bg-[#192734] rounded-full flex items-center justify-center mx-auto mb-4 border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] shadow-[0_0_30px_rgba(212,175,55,0.15)]"
           >
-            <ShieldCheck className="w-10 h-10 text-[#D4AF37]" />
+            <ShieldCheck className="w-10 h-10 text-[var(--school-accent)]" />
           </motion.div>
           <h1 className="text-3xl font-serif font-bold text-white mb-2">Initialisation Système</h1>
           <p className="text-gray-400">Configuration du compte Propriétaire (Owner)</p>
@@ -208,7 +208,7 @@ const CreateOwnerAccountPage = () => {
                       ID: {createdId}
                     </div>
                   )}
-                  <div className="flex items-center justify-center gap-2 text-sm text-[#D4AF37] animate-pulse">
+                  <div className="flex items-center justify-center gap-2 text-sm text-[var(--school-accent)] animate-pulse">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Redirection vers la connexion...
                   </div>
@@ -246,7 +246,7 @@ const CreateOwnerAccountPage = () => {
                         name="fullName" 
                         value={formData.fullName} 
                         onChange={handleChange}
-                        className={`bg-[#0F1419] border-white/10 focus:border-[#D4AF37] text-white transition-all ${errors.fullName ? 'border-red-500' : ''}`}
+                        className={`bg-[#0F1419] border-white/10 focus:border-[var(--school-accent)] text-white transition-all ${errors.fullName ? 'border-red-500' : ''}`}
                         placeholder="Ex: Jean Dupont"
                       />
                       {errors.fullName && <p className="text-xs text-red-400 mt-1">{errors.fullName}</p>}
@@ -260,7 +260,7 @@ const CreateOwnerAccountPage = () => {
                         type="email"
                         value={formData.email} 
                         onChange={handleChange}
-                        className={`bg-[#0F1419] border-white/10 focus:border-[#D4AF37] text-white transition-all ${errors.email ? 'border-red-500' : ''}`}
+                        className={`bg-[#0F1419] border-white/10 focus:border-[var(--school-accent)] text-white transition-all ${errors.email ? 'border-red-500' : ''}`}
                         placeholder="owner@prorascience.com"
                       />
                       {errors.email && <p className="text-xs text-red-400 mt-1">{errors.email}</p>}
@@ -276,7 +276,7 @@ id="password"
                           autoComplete="new-password"
                           value={formData.password}
                           onChange={handleChange}
-                          className={`bg-[#0F1419] border-white/10 pr-10 focus:border-[#D4AF37] text-white transition-all ${errors.password ? 'border-red-500' : ''}`}
+                          className={`bg-[#0F1419] border-white/10 pr-10 focus:border-[var(--school-accent)] text-white transition-all ${errors.password ? 'border-red-500' : ''}`}
                           placeholder="••••••••"
                         />
                         <button 
@@ -322,7 +322,7 @@ id="password"
                         autoComplete="new-password"
                         value={formData.passwordConfirm} 
                         onChange={handleChange}
-                        className={`bg-[#0F1419] border-white/10 focus:border-[#D4AF37] text-white transition-all ${errors.passwordConfirm ? 'border-red-500' : ''}`}
+                        className={`bg-[#0F1419] border-white/10 focus:border-[var(--school-accent)] text-white transition-all ${errors.passwordConfirm ? 'border-red-500' : ''}`}
                         placeholder="••••••••"
                       />
                       {errors.passwordConfirm && <p className="text-xs text-red-400 mt-1">{errors.passwordConfirm}</p>}
@@ -331,7 +331,7 @@ id="password"
                     <Button 
                       type="submit" 
                       disabled={isLoading}
-                      className="w-full bg-gradient-to-r from-[#D4AF37] to-[#b5952f] hover:from-[#E5C048] hover:to-[#c6a63d] text-black font-bold mt-4 h-11 transition-all shadow-lg shadow-[#D4AF37]/20"
+                      className="w-full bg-gradient-to-r from-[var(--school-accent)] to-[#b5952f] hover:from-[#E5C048] hover:to-[#c6a63d] text-black font-bold mt-4 h-11 transition-all shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
                     >
                       {isLoading ? (
                         <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Création en cours...</>

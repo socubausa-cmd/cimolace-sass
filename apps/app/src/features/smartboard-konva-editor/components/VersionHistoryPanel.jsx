@@ -30,7 +30,7 @@ export default function VersionHistoryPanel({ historyPast, historyTimestamps, on
         onClick={() => setExpanded((v) => !v)}
         className="flex w-full items-center gap-2 px-3 py-2"
       >
-        <History className="h-3.5 w-3.5 shrink-0 text-[#D4AF37]/70" />
+        <History className="h-3.5 w-3.5 shrink-0 text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]" />
         <div className="min-w-0 flex-1 text-left">
           <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">
             Historique
@@ -55,8 +55,8 @@ export default function VersionHistoryPanel({ historyPast, historyTimestamps, on
           ) : (
             <div className="max-h-48 space-y-0.5 overflow-y-auto [scrollbar-width:thin]">
               {/* Version courante */}
-              <div className="flex items-center gap-2 rounded-lg bg-[#D4AF37]/10 px-2 py-1.5">
-                <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#D4AF37]" />
+              <div className="flex items-center gap-2 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-2 py-1.5">
+                <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--school-accent)]" />
                 <span className="flex-1 text-[9px] text-[#f5dd8a]">Version actuelle</span>
                 <span className="text-[8px] text-white/30">maintenant</span>
               </div>
@@ -86,7 +86,7 @@ export default function VersionHistoryPanel({ historyPast, historyTimestamps, on
                     <button
                       type="button"
                       onClick={() => onRestore && onRestore(absIdx)}
-                      className="flex shrink-0 items-center gap-1 rounded-lg border border-white/15 px-1.5 py-0.5 text-[8px] text-white/50 hover:border-[#D4AF37]/40 hover:text-[#D4AF37]"
+                      className="flex shrink-0 items-center gap-1 rounded-lg border border-white/15 px-1.5 py-0.5 text-[8px] text-white/50 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] hover:text-[var(--school-accent)]"
                       title="Restaurer cette version"
                     >
                       <RotateCcw className="h-2.5 w-2.5" />

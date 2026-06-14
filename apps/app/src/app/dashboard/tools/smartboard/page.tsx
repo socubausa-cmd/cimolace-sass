@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import SlideGenerationPanel from '@/components/smartboard/SlideGenerationPanel';
-import SlideNavigator from '@/components/smartboard/SlideNavigator';
-import SlideStepRail from '@/components/smartboard/SlideStepRail';
-import SmartBoardStage from '@/components/smartboard/SmartBoardStage';
+import SlideGenerationPanel from '@/components/liri/smartboard/SlideGenerationPanel';
+import SlideNavigator from '@/components/liri/smartboard/SlideNavigator';
+import SlideStepRail from '@/components/liri/smartboard/SlideStepRail';
+import SmartBoardStage from '@/components/liri/smartboard/SmartBoardStage';
 import { useSmartboardStore } from '@/stores/liri-smartboard-generator.store';
 import type { SmartboardSlide } from '@/lib/liri-smartboard/types';
 

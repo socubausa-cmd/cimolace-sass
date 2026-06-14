@@ -15,14 +15,14 @@ const PublicIsnaPage = () => {
 
       <section className="border-b border-white/10 px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-5xl">
-          <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Pôle École</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Pôle École</p>
           <h1 className="mt-4 text-4xl font-semibold sm:text-6xl">ISNA — apprendre avec structure et profondeur</h1>
           <p className="mt-6 max-w-3xl text-gray-300">
             ISNA professionnalise l'apprentissage: chaque concept est relié à une méthode, chaque méthode à une application.
             Vous ne suivez pas des contenus, vous construisez une compétence durable.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link to="/nous-contacter" className="rounded-xl bg-[#D4AF37] px-6 py-3 font-semibold text-black hover:bg-[#e5c04a]">
+            <Link to="/nous-contacter" className="rounded-xl bg-[var(--school-accent)] px-6 py-3 font-semibold text-black hover:bg-[#e5c04a]">
               Parler à un conseiller
             </Link>
             <Link to="/" className="rounded-xl border border-white/20 px-6 py-3 hover:bg-white/10">

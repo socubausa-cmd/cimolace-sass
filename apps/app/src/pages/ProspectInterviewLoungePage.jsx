@@ -27,7 +27,7 @@ function FlowStepPill({ label, done, active }) {
         done
           ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
           : active
-            ? 'border-[#D4AF37]/40 bg-[#D4AF37]/10 text-[#D4AF37]'
+            ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
             : 'border-white/10 bg-white/5 text-gray-500'
       }`}
     >
@@ -192,14 +192,14 @@ const ProspectInterviewLoungePage = () => {
           target="_blank"
           rel="noreferrer"
           whileTap={{ scale: 0.98 }}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#D4AF37] py-3.5 text-sm font-bold text-black shadow-[0_0_28px_rgba(212,175,55,0.28)]"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--school-accent)] py-3.5 text-sm font-bold text-black shadow-[0_0_28px_rgba(212,175,55,0.28)]"
         >
           <Video className="h-4 w-4" /> Rejoindre la salle
         </motion.a>
       );
     }
     return (
-      <Button asChild className="h-auto w-full rounded-xl bg-[#D4AF37] py-3.5 text-sm font-bold text-black hover:bg-amber-500">
+      <Button asChild className="h-auto w-full rounded-xl bg-[var(--school-accent)] py-3.5 text-sm font-bold text-black hover:bg-amber-500">
         <Link to="/messages">
           <MessageSquare className="mr-2 h-4 w-4" /> Ouvrir le chat immersif
         </Link>
@@ -234,10 +234,10 @@ const ProspectInterviewLoungePage = () => {
           className="sticky top-0 z-20 flex items-center justify-between border-b border-white/5 bg-[#0a0908]/80 px-4 py-3 backdrop-blur-xl sm:px-6 sm:py-4"
           style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))' }}
         >
-          <Link to="/" className="flex items-center gap-2 text-sm font-bold tracking-wide text-[#D4AF37]">
+          <Link to="/" className="flex items-center gap-2 text-sm font-bold tracking-wide text-[var(--school-accent)]">
             <Sparkles className="h-4 w-4" /> PRORASCIENCE
           </Link>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#D4AF37]/80">Salon entretien</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">Salon entretien</span>
         </header>
 
         <main className="flex flex-1 flex-col items-center px-4 pb-28 pt-8 lg:pb-14 lg:pt-10">
@@ -247,7 +247,7 @@ const ProspectInterviewLoungePage = () => {
             transition={{ duration: 0.45, ease: 'easeOut' }}
             className="w-full max-w-3xl space-y-8"
           >
-            <div className="relative overflow-hidden rounded-3xl border-2 border-[#D4AF37]/35 bg-gradient-to-br from-[#1a1510]/90 via-[#10141a]/95 to-[#0a0908] p-6 shadow-[0_32px_80px_rgba(0,0,0,0.55),0_0_60px_rgba(212,175,55,0.08)] backdrop-blur-sm before:pointer-events-none before:absolute before:inset-x-4 before:top-0 before:h-px before:rounded-full before:bg-gradient-to-r before:from-transparent before:via-[#D4AF37] before:to-transparent sm:p-10">
+            <div className="relative overflow-hidden rounded-3xl border-2 border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-gradient-to-br from-[#1a1510]/90 via-[#10141a]/95 to-[#0a0908] p-6 shadow-[0_32px_80px_rgba(0,0,0,0.55),0_0_60px_rgba(212,175,55,0.08)] backdrop-blur-sm before:pointer-events-none before:absolute before:inset-x-4 before:top-0 before:h-px before:rounded-full before:bg-gradient-to-r before:from-transparent before:via-[var(--school-accent)] before:to-transparent sm:p-10">
               <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h1 className="text-2xl font-bold leading-tight sm:text-3xl">Espace entretien</h1>
@@ -292,7 +292,7 @@ const ProspectInterviewLoungePage = () => {
                       asChild
                       variant="outline"
                       size="sm"
-                      className="border-[#D4AF37]/35 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                      className="border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                     >
                       <Link to={`/rendez-vous/${encodeURIComponent(refCode)}`}>
                         <ExternalLink className="mr-2 h-3.5 w-3.5" />
@@ -306,7 +306,7 @@ const ProspectInterviewLoungePage = () => {
                     <span className="font-medium text-white">{nextInterview.reason || "Entretien d'orientation"}</span>
                   </p>
                   <p className="flex items-center gap-2 text-gray-300">
-                    <CalendarClock className="h-4 w-4 shrink-0 text-[#D4AF37]" />
+                    <CalendarClock className="h-4 w-4 shrink-0 text-[var(--school-accent)]" />
                     {nextInterview.scheduled_at
                       ? new Date(nextInterview.scheduled_at).toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short' })
                       : 'Horaire en cours de préparation'}
@@ -322,9 +322,9 @@ const ProspectInterviewLoungePage = () => {
                         ],
                       }}
                       transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
-                      className="rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-5"
+                      className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-5"
                     >
-                      <p className="flex items-center gap-2 text-sm font-semibold text-[#D4AF37]">
+                      <p className="flex items-center gap-2 text-sm font-semibold text-[var(--school-accent)]">
                         <Timer className="h-4 w-4" />
                         Compteur avant entretien
                       </p>
@@ -352,7 +352,7 @@ const ProspectInterviewLoungePage = () => {
                       <motion.div
                         className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${
                           reminderStatus.h1
-                            ? 'border-[#D4AF37]/40 bg-[#D4AF37]/10 text-[#D4AF37]'
+                            ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
                             : 'border-white/10 bg-white/5 text-gray-400'
                         }`}
                         whileHover={{ y: -1 }}
@@ -388,7 +388,7 @@ const ProspectInterviewLoungePage = () => {
                     {canJoinLive ? (
                       <Button
                         asChild
-                        className="bg-[#D4AF37] text-black transition-all hover:-translate-y-0.5 hover:bg-amber-500 hover:shadow-[0_0_24px_rgba(212,175,55,0.35)]"
+                        className="bg-[var(--school-accent)] text-black transition-all hover:-translate-y-0.5 hover:bg-amber-500 hover:shadow-[0_0_24px_rgba(212,175,55,0.35)]"
                       >
                         <a href={joinUrl} target="_blank" rel="noreferrer">
                           <Video className="mr-2 h-4 w-4" />
@@ -398,7 +398,7 @@ const ProspectInterviewLoungePage = () => {
                     ) : (
                       <Button
                         asChild
-                        className="bg-[#D4AF37] text-black transition-all hover:-translate-y-0.5 hover:bg-amber-500 hover:shadow-[0_0_24px_rgba(212,175,55,0.35)]"
+                        className="bg-[var(--school-accent)] text-black transition-all hover:-translate-y-0.5 hover:bg-amber-500 hover:shadow-[0_0_24px_rgba(212,175,55,0.35)]"
                       >
                         <Link to="/messages">
                           <MessageSquare className="mr-2 h-4 w-4" />
@@ -415,7 +415,7 @@ const ProspectInterviewLoungePage = () => {
                     Aucun entretien programmé pour le moment. Choisissez un créneau selon les disponibilités du secrétariat.
                   </p>
                   <Link to="/appointment/request">
-                    <Button className="bg-[#D4AF37] text-black hover:bg-amber-500">Programmer un entretien</Button>
+                    <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500">Programmer un entretien</Button>
                   </Link>
                 </div>
               )}

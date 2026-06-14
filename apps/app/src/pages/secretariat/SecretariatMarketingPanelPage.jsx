@@ -207,12 +207,12 @@ export default function SecretariatMarketingPanelPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-[#D4AF37]" />
+              <ShieldCheck className="w-5 h-5 text-[var(--school-accent)]" />
               Secrétariat Prorascience — Missions commerciales
             </h2>
             <p className="text-sm text-gray-400">Le secrétariat est le premier point de conversion.</p>
           </div>
-          <Badge className="bg-[#D4AF37]/15 text-[#D4AF37] border-[#D4AF37]/30">
+          <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
             Prospect - Echange - Comprehension - Orientation - Conversion
           </Badge>
         </div>
@@ -240,7 +240,7 @@ export default function SecretariatMarketingPanelPage() {
           {missionCards.map((mission) => (
             <div key={mission.title} className="rounded-xl border border-white/10 bg-[#0F1419]/70 p-4">
               <p className="text-sm font-semibold text-white flex items-center gap-2 mb-2">
-                <mission.icon className="w-4 h-4 text-[#D4AF37]" />
+                <mission.icon className="w-4 h-4 text-[var(--school-accent)]" />
                 {mission.title}
               </p>
               <div className="space-y-1">
@@ -250,7 +250,7 @@ export default function SecretariatMarketingPanelPage() {
                   </p>
                 ))}
               </div>
-              <p className="text-xs text-[#D4AF37] mt-3">{mission.note}</p>
+              <p className="text-xs text-[var(--school-accent)] mt-3">{mission.note}</p>
             </div>
           ))}
         </div>
@@ -264,7 +264,7 @@ export default function SecretariatMarketingPanelPage() {
             <Badge className="bg-white/10 text-gray-200 border-white/10">accompagner</Badge>
             <Badge className="bg-white/10 text-gray-200 border-white/10">vendre</Badge>
           </div>
-          <p className="text-sm text-[#D4AF37] mt-3">Le secretariat ne gere pas les messages: il transforme les prospects en clients.</p>
+          <p className="text-sm text-[var(--school-accent)] mt-3">Le secretariat ne gere pas les messages: il transforme les prospects en clients.</p>
         </div>
 
         <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4">
@@ -284,7 +284,7 @@ export default function SecretariatMarketingPanelPage() {
       <div className="premium-panel p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Megaphone className="w-5 h-5 text-[#D4AF37]" />
+            <Megaphone className="w-5 h-5 text-[var(--school-accent)]" />
             Secretary Marketing Panel
           </h2>
           <p className="text-sm text-gray-400">Relance leads, message direct et proposition rendez-vous.</p>
@@ -296,7 +296,7 @@ export default function SecretariatMarketingPanelPage() {
               Growth Engine complet
             </Link>
           </Button>
-          <Button asChild variant="outline" size="sm" className="border-[#D4AF37]/35 text-[#D4AF37] hover:bg-[#D4AF37]/10">
+          <Button asChild variant="outline" size="sm" className="border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
             <Link to="/admin/marketing?tab=automation">
               <Workflow className="w-4 h-4 mr-1" />
               Automation
@@ -315,7 +315,7 @@ export default function SecretariatMarketingPanelPage() {
           </Button>
           <Button
             variant="outline"
-            className="border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+            className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
             onClick={async () => {
               try {
                 const payload = await authFetch('/api/response/followup/run', { method: 'POST' });
@@ -350,7 +350,7 @@ export default function SecretariatMarketingPanelPage() {
                 }}
                 className={`w-full text-left rounded-lg border p-3 transition-colors ${
                   selectedThreadId === thread.id
-                    ? 'border-[#D4AF37]/40 bg-[#D4AF37]/10'
+                    ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]'
                     : 'border-white/10 bg-[#0F1419]/60 hover:bg-white/5'
                 }`}
               >
@@ -369,12 +369,12 @@ export default function SecretariatMarketingPanelPage() {
               <Button asChild variant="outline" className="border-white/10 text-white hover:bg-white/5">
                 <Link to="/messages">Ouvrir chat immersif</Link>
               </Button>
-              <Button asChild className="bg-[#D4AF37] text-black hover:bg-amber-500">
+              <Button asChild className="bg-[var(--school-accent)] text-black hover:bg-amber-500">
                 <Link to="/appointment/request">Programmer rendez-vous</Link>
               </Button>
               <Button
                 variant="outline"
-                className="border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                 onClick={async () => {
                   if (!selectedThread) return;
                   try {
@@ -461,14 +461,14 @@ export default function SecretariatMarketingPanelPage() {
               </Button>
               <Button
                 variant="outline"
-                className="border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                 onClick={() => quickAction(lead, 'campaign')}
                 disabled={processingLeadId === `${lead.id}-campaign`}
               >
                 Campagne
               </Button>
               <Button
-                className="bg-[#D4AF37] text-black hover:bg-amber-500"
+                className="bg-[var(--school-accent)] text-black hover:bg-amber-500"
                 onClick={() => quickAction(lead, 'booking')}
                 disabled={processingLeadId === `${lead.id}-booking`}
               >

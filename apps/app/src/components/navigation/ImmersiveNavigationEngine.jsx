@@ -726,7 +726,7 @@ export default function ImmersiveNavigationEngine({
             <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#0F1419] text-white">
               {/* Ambiance — alignée sur ChooseAccountTypePage */}
               <div className="pointer-events-none fixed inset-0" aria-hidden>
-                <div className="absolute top-1/4 left-1/2 h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-[#D4AF37]/5 blur-[120px]" />
+                <div className="absolute top-1/4 left-1/2 h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] blur-[120px]" />
                 <div className="absolute bottom-1/4 right-1/4 h-[300px] w-[300px] rounded-full bg-indigo-500/5 blur-[100px]" />
               </div>
 
@@ -754,7 +754,7 @@ export default function ImmersiveNavigationEngine({
                 <button
                   type="button"
                   onClick={closeEngine}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-400 transition-all duration-300 hover:border-[#D4AF37]/30 hover:bg-[#D4AF37]/10 hover:text-white"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-400 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] hover:text-white"
                   aria-label="Fermer"
                 >
                   <X className="h-5 w-5" />
@@ -775,7 +775,7 @@ export default function ImmersiveNavigationEngine({
                           key={i}
                           type="button"
                           onClick={() => { setQuery(s); runQuery(s); }}
-                          className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-left text-xs text-gray-400 transition-all duration-300 hover:border-[#D4AF37]/30 hover:bg-[#D4AF37]/10 hover:text-white"
+                          className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-left text-xs text-gray-400 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] hover:text-white"
                         >
                           {s}
                         </button>
@@ -794,7 +794,7 @@ export default function ImmersiveNavigationEngine({
                             key={i}
                             type="button"
                             onClick={() => runQuery(chip.query)}
-                            className="rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-3 py-2 text-left text-xs text-gray-300 transition-all duration-300 hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/10"
+                            className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] px-3 py-2 text-left text-xs text-gray-300 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                           >
                             {chip.label}
                           </button>
@@ -811,7 +811,7 @@ export default function ImmersiveNavigationEngine({
               {/* ── Brand header (ChooseAccountTypePage) ── */}
               <motion.div variants={blockVariants} className="mb-6 w-full pt-2 text-center sm:mb-8">
                 <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2">
-                  <Sparkles className="h-4 w-4 text-[#D4AF37]" />
+                  <Sparkles className="h-4 w-4 text-[var(--school-accent)]" />
                   <span className="text-sm text-gray-400">
                     {submitted ? 'Assistant ISNA' : 'Navigation intelligente'}
                   </span>
@@ -846,7 +846,7 @@ export default function ImmersiveNavigationEngine({
                       ) : null}
                       {ex.assistant ? (
                         <div className="flex justify-start">
-                          <div className="max-w-[92%] rounded-2xl rounded-bl-sm border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3.5 py-2.5 text-[13px] leading-relaxed text-gray-200 shadow-lg backdrop-blur-md">
+                          <div className="max-w-[92%] rounded-2xl rounded-bl-sm border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-3.5 py-2.5 text-[13px] leading-relaxed text-gray-200 shadow-lg backdrop-blur-md">
                             {ex.assistant}
                           </div>
                         </div>
@@ -1154,7 +1154,7 @@ export default function ImmersiveNavigationEngine({
                       key={i}
                       type="button"
                       onClick={() => { setQuery(s); runQuery(s); }}
-                      className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3.5 py-2 text-xs text-gray-400 transition-all duration-300 hover:border-[#D4AF37]/30 hover:bg-[#D4AF37]/10 hover:text-white"
+                      className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3.5 py-2 text-xs text-gray-400 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] hover:text-white"
                     >
                       {s}
                     </button>
@@ -1167,7 +1167,7 @@ export default function ImmersiveNavigationEngine({
                 className={cn(
                   'shrink-0 border-t border-white/10 bg-[#151a21]/90 px-3 py-3 backdrop-blur-xl transition-all duration-300',
                   embeddedPanel
-                    ? 'fixed bottom-4 left-4 z-[200] w-[min(420px,calc(100vw-2rem))] rounded-2xl border border-[#D4AF37]/25 shadow-2xl shadow-[#D4AF37]/10 lg:left-6 lg:max-w-md'
+                    ? 'fixed bottom-4 left-4 z-[200] w-[min(420px,calc(100vw-2rem))] rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] shadow-2xl shadow-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] lg:left-6 lg:max-w-md'
                     : 'relative mt-auto rounded-2xl border border-white/5',
                 )}
               >
@@ -1187,7 +1187,7 @@ export default function ImmersiveNavigationEngine({
                     className={cn(
                       'w-full resize-none rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 pr-[5.75rem] text-sm text-gray-200',
                       'placeholder:text-white/35 backdrop-blur-xl transition-all duration-300',
-                      'focus:border-[#D4AF37]/45 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/15',
+                      'focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]',
                     )}
                   />
                   {hasMic && (
@@ -1253,7 +1253,7 @@ export default function ImmersiveNavigationEngine({
                       <button
                         type="button"
                         onClick={closeEmbeddedPanel}
-                        className="shrink-0 rounded-xl border border-white/10 p-2 text-gray-400 transition-colors hover:border-[#D4AF37]/30 hover:bg-[#D4AF37]/10 hover:text-white"
+                        className="shrink-0 rounded-xl border border-white/10 p-2 text-gray-400 transition-colors hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] hover:text-white"
                         aria-label="Fermer le panneau"
                       >
                         <X className="h-4 w-4" />

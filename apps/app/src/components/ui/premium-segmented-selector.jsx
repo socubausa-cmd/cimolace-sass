@@ -47,7 +47,7 @@ export default function PremiumSegmentedSelector({
               {isActive ? (
                 <motion.div
                   layoutId={layoutId}
-                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#D4AF37]/20 to-[#D4AF37]/5 border border-[#D4AF37]/30"
+                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]"
                   initial={false}
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
@@ -56,7 +56,7 @@ export default function PremiumSegmentedSelector({
                 <span
                   className={cn(
                     'relative z-10 flex h-8 w-8 items-center justify-center rounded-lg',
-                    isActive ? 'bg-[#D4AF37] text-black' : 'bg-white/5 text-gray-400'
+                    isActive ? 'bg-[var(--school-accent)] text-black' : 'bg-white/5 text-gray-400'
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -67,7 +67,7 @@ export default function PremiumSegmentedSelector({
                 {option.badge ? <span className="block truncate text-xs text-gray-500">{option.badge}</span> : null}
               </span>
               {showChevron && isActive ? (
-                <ChevronRight className="relative z-10 ml-auto h-4 w-4 text-[#D4AF37]" />
+                <ChevronRight className="relative z-10 ml-auto h-4 w-4 text-[var(--school-accent)]" />
               ) : null}
             </motion.button>
           );

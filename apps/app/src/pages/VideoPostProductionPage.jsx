@@ -27,9 +27,9 @@ import {
 import MindMapNavigation from '@/components/lesson-player/MindMapNavigation';
 import NodeExplanationPanel from '@/components/lesson-player/NodeExplanationPanel';
 import { ArrowLeft, Check, Clapperboard, GraduationCap, LayoutGrid, Loader2, Plus, Sparkles, Trash } from 'lucide-react';
-import SplitScreenCoursePreview from '@/components/course-builder/SplitScreenCoursePreview';
-import SegmentAIEditorPanel from '@/components/course-builder/SegmentAIEditorPanel';
-import CoursePipelineView from '@/components/course-builder/CoursePipelineView';
+import SplitScreenCoursePreview from '@/components/school/course-builder/SplitScreenCoursePreview';
+import SegmentAIEditorPanel from '@/components/school/course-builder/SegmentAIEditorPanel';
+import CoursePipelineView from '@/components/school/course-builder/CoursePipelineView';
 import NleEngineWorkspace from '@/features/nle-engine/components/NleEngineWorkspace';
 import { useNleProjectStore } from '@/features/nle-engine/store/useNleProjectStore';
 import { applyNleProjectToChapterRows } from '@/lib/nleEngine/applyNleProjectToChapterRows';
@@ -1347,7 +1347,7 @@ const VideoPostProductionPage = ({
             : 'min-h-screen bg-[#0F1419] text-white flex items-center justify-center'
         }
       >
-        <Loader2 className="w-6 h-6 animate-spin text-[#D4AF37]" />
+        <Loader2 className="w-6 h-6 animate-spin text-[var(--school-accent)]" />
       </div>
     );
   }
@@ -1367,7 +1367,7 @@ const VideoPostProductionPage = ({
               onClick={save}
               disabled={saving}
               size="sm"
-              className="shrink-0 bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold"
+              className="shrink-0 bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"
             >
               {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
               Valider
@@ -1428,7 +1428,7 @@ const VideoPostProductionPage = ({
             ) : null}
           </div>
 
-          <Button onClick={save} disabled={saving} className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold">
+          <Button onClick={save} disabled={saving} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold">
             {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
             Valider
           </Button>
@@ -1441,7 +1441,7 @@ const VideoPostProductionPage = ({
             type="button"
             size="sm"
             variant={postProdView === 'classic' ? 'default' : 'outline'}
-            className={postProdView === 'classic' ? 'bg-[#D4AF37] text-black hover:bg-yellow-500' : 'border-white/10 text-white hover:bg-white/5'}
+            className={postProdView === 'classic' ? 'bg-[var(--school-accent)] text-black hover:bg-yellow-500' : 'border-white/10 text-white hover:bg-white/5'}
             onClick={() => setPostProdView('classic')}
           >
             Workflow classique
@@ -1450,7 +1450,7 @@ const VideoPostProductionPage = ({
             type="button"
             size="sm"
             variant={postProdView === 'smartboard' ? 'default' : 'outline'}
-            className={postProdView === 'smartboard' ? 'bg-[#D4AF37] text-black hover:bg-yellow-500' : 'border-white/10 text-white hover:bg-white/5'}
+            className={postProdView === 'smartboard' ? 'bg-[var(--school-accent)] text-black hover:bg-yellow-500' : 'border-white/10 text-white hover:bg-white/5'}
             onClick={() => setPostProdView('smartboard')}
           >
             <Sparkles className="w-4 h-4 mr-2" />
@@ -1460,7 +1460,7 @@ const VideoPostProductionPage = ({
             type="button"
             size="sm"
             variant={postProdView === 'assistant' ? 'default' : 'outline'}
-            className={postProdView === 'assistant' ? 'bg-[#D4AF37] text-black hover:bg-yellow-500' : 'border-white/10 text-white hover:bg-white/5'}
+            className={postProdView === 'assistant' ? 'bg-[var(--school-accent)] text-black hover:bg-yellow-500' : 'border-white/10 text-white hover:bg-white/5'}
             onClick={() => setPostProdView('assistant')}
           >
             Assistance IA
@@ -1469,7 +1469,7 @@ const VideoPostProductionPage = ({
             type="button"
             size="sm"
             variant={postProdView === 'nle' ? 'default' : 'outline'}
-            className={postProdView === 'nle' ? 'bg-[#D4AF37] text-black hover:bg-yellow-500' : 'border-white/10 text-white hover:bg-white/5'}
+            className={postProdView === 'nle' ? 'bg-[var(--school-accent)] text-black hover:bg-yellow-500' : 'border-white/10 text-white hover:bg-white/5'}
             onClick={() => setPostProdView('nle')}
           >
             <Clapperboard className="w-4 h-4 mr-2" />
@@ -1479,7 +1479,7 @@ const VideoPostProductionPage = ({
             type="button"
             size="sm"
             variant={postProdView === 'pipeline' ? 'default' : 'outline'}
-            className={postProdView === 'pipeline' ? 'bg-[#D4AF37] text-black hover:bg-yellow-500' : 'border-white/10 text-white hover:bg-white/5'}
+            className={postProdView === 'pipeline' ? 'bg-[var(--school-accent)] text-black hover:bg-yellow-500' : 'border-white/10 text-white hover:bg-white/5'}
             onClick={() => setPostProdView('pipeline')}
           >
             ⚙ Pipeline
@@ -1636,7 +1636,7 @@ const VideoPostProductionPage = ({
                         if (t == null) return;
                         setOutSafe(t);
                       }}>Définir OUT</Button>
-                      <Button size="sm" className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold" disabled={chapterIn === ''} onClick={previewSegment}>Prévisualiser</Button>
+                      <Button size="sm" className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold" disabled={chapterIn === ''} onClick={previewSegment}>Prévisualiser</Button>
                       <Button
                         size="sm"
                         className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -1815,7 +1815,7 @@ const VideoPostProductionPage = ({
                 <div className="flex flex-wrap gap-2">
                   <Button
                     type="button"
-                    className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold"
+                    className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"
                     aria-disabled={asrLoading}
                     onClick={generateTranscriptWithASR}
                   >
@@ -1955,7 +1955,7 @@ const VideoPostProductionPage = ({
                         >
                           <Plus className="w-4 h-4 mr-2" /> Ajouter une ligne
                         </Button>
-                        <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold" onClick={() => setTranscriptEditorOpen(false)}>
+                        <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold" onClick={() => setTranscriptEditorOpen(false)}>
                           <Check className="w-4 h-4 mr-2" /> OK
                         </Button>
                       </div>
@@ -1991,7 +1991,7 @@ const VideoPostProductionPage = ({
                     </Button>
                     <Button
                       type="button"
-                      className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold disabled:opacity-60 disabled:cursor-not-allowed"
                       disabled={aiLoading}
                       onClick={generateMindmapWithAI}
                     >
@@ -2090,7 +2090,7 @@ const VideoPostProductionPage = ({
               onSeek={seekTo}
             />
             <div className="rounded-xl border border-white/10 bg-black/20 p-4 text-xs space-y-3">
-              <p className="text-[11px] font-semibold text-[#D4AF37]/90">Sources vidéo additionnelles</p>
+              <p className="text-[11px] font-semibold text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">Sources vidéo additionnelles</p>
               <p className="text-[10px] text-white/45 leading-relaxed">
                 Pour chaque ref utilisée sur un clip V1 (champ <span className="font-mono text-white/70">sourceRef</span>
                 ), indique l'URL du fichier. L\'export FFmpeg charge <span className="font-mono text-white/70">data.url</span>{' '}
@@ -2100,7 +2100,7 @@ const VideoPostProductionPage = ({
                 <ul className="space-y-2">
                   {Object.entries(sourceVideoUrlsByRef).map(([ref, url]) => (
                     <li key={ref} className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-[10px] text-[#D4AF37]/90 w-24 shrink-0 truncate" title={ref}>
+                      <span className="font-mono text-[10px] text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)] w-24 shrink-0 truncate" title={ref}>
                         {ref}
                       </span>
                       <Input
@@ -2342,10 +2342,10 @@ function RenderExportPanel({
   const latestJob = jobs[0] || null;
 
   return (
-    <div className="rounded-2xl border border-[#D4AF37]/20 bg-[#0d1522] p-4 space-y-4">
+    <div className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[#0d1522] p-4 space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-wider text-[#D4AF37]/60 font-semibold">🎬 Vidéo de sortie</p>
+          <p className="text-[11px] uppercase tracking-wider text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] font-semibold">🎬 Vidéo de sortie</p>
           <p className="text-sm text-white font-medium mt-0.5">Exporter la vidéo avec SmartBoard intégré</p>
           <p className="text-xs text-gray-500 mt-0.5">
             Export jusqu'en 4K, split-screen formateur + slide, audio AAC haut débit, réglages NLE conservés.
@@ -2379,7 +2379,7 @@ function RenderExportPanel({
           </select>
           <Button
             type="button"
-            className="bg-[#D4AF37] text-black hover:bg-amber-500 font-bold"
+            className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-bold"
             onClick={handleEnqueue}
             disabled={enqueueLoading || !contentId}
           >

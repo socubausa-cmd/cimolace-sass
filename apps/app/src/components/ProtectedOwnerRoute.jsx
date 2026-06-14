@@ -11,7 +11,7 @@ const ProtectedOwnerRoute = ({ children, redirectTo = '/dashboard' }) => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0F1419]">
-        <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
+        <Loader2 className="w-8 h-8 text-[var(--school-accent)] animate-spin" />
       </div>
     );
   }

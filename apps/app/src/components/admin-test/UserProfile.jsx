@@ -20,7 +20,7 @@ const UserProfile = () => {
             <h2 className="text-2xl font-bold text-white">Admin User</h2>
             <p className="text-gray-400">Senior Administrator</p>
           </div>
-          <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500">Edit Profile</Button>
+          <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">Edit Profile</Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

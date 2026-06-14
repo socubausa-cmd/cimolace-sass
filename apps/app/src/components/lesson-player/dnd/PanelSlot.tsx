@@ -24,7 +24,7 @@ export function PanelSlot({ slotId, isMain, children }: PanelSlotProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 rounded-xl ring-2 ring-[#D4AF37]/70 ring-inset bg-[#D4AF37]/5 z-20 pointer-events-none"
+          className="absolute inset-0 rounded-xl ring-2 ring-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] ring-inset bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] z-20 pointer-events-none"
         />
       )}
       {children}

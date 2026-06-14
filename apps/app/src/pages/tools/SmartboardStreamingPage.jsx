@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { SMARTBOARD_STEPS } from '@/lib/liri-smartboard/steps';
-import StepRail from '@/components/smartboard-stream/StepRail';
-import SmartBoardStreamStage from '@/components/smartboard-stream/SmartBoardStreamStage';
-import SlideLiveInspector from '@/components/smartboard-stream/SlideLiveInspector';
-import StreamingControls from '@/components/smartboard-stream/StreamingControls';
+import StepRail from '@/components/liri/smartboard-stream/StepRail';
+import SmartBoardStreamStage from '@/components/liri/smartboard-stream/SmartBoardStreamStage';
+import SlideLiveInspector from '@/components/liri/smartboard-stream/SlideLiveInspector';
+import StreamingControls from '@/components/liri/smartboard-stream/StreamingControls';
 import { useOrchestratorLiveStore } from '@/stores/orchestrator-live.store';
 
 export default function SmartboardStreamingPage() {

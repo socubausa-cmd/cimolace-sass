@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import PaymentOptionCard from '@/components/PaymentOptionCard';
 import ComparisonTable from '@/components/ComparisonTable';
 import { useVitrineContactEmail } from '@/contexts/VitrineContactEmailContext';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const SCHOOL = isnaTenantConfig.branding.name;
 
@@ -28,7 +28,7 @@ const FAQItem = ({ question, answer, isOpen, toggle }) => {
         className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
       >
         <span className="font-bold text-white text-lg">{question}</span>
-        {isOpen ? <ChevronUp className="text-[#D4AF37]" /> : <ChevronDown className="text-gray-400" />}
+        {isOpen ? <ChevronUp className="text-[var(--school-accent)]" /> : <ChevronDown className="text-gray-400" />}
       </button>
       {isOpen && (
         <div className="px-6 py-4 text-gray-300 text-base leading-relaxed border-t border-white/5 bg-black/20">
@@ -104,7 +104,7 @@ const CyclesDetailPage = ({ cycleId: cycleIdProp }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0F1419] font-sans text-gray-300 selection:bg-[#D4AF37]/30 pb-20">
+    <div className="min-h-screen bg-[#0F1419] font-sans text-gray-300 selection:bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] pb-20">
       <Helmet>
         <title>{`Cycle académique — ${SCHOOL}`}</title>
         <meta name="description" content={`Cycle académique ${SCHOOL} : formation complète, certification et communauté d'élite.`} />
@@ -113,7 +113,7 @@ const CyclesDetailPage = ({ cycleId: cycleIdProp }) => {
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#15202B] via-[#0F1419] to-[#0F1419] z-0" />
-        <div className="absolute top-0 right-0 p-64 bg-[#D4AF37]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+        <div className="absolute top-0 right-0 p-64 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
         
         <div className="max-w-5xl mx-auto relative z-10 text-center">
           <motion.div
@@ -121,12 +121,12 @@ const CyclesDetailPage = ({ cycleId: cycleIdProp }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 border border-[#D4AF37]/30 rounded-full bg-[#D4AF37]/10 backdrop-blur-sm">
-              <GraduationCap className="w-4 h-4 text-[#D4AF37]" />
-              <span className="text-[#D4AF37] text-sm font-bold tracking-widest uppercase">Formation Certifiante</span>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] backdrop-blur-sm">
+              <GraduationCap className="w-4 h-4 text-[var(--school-accent)]" />
+              <span className="text-[var(--school-accent)] text-sm font-bold tracking-widest uppercase">Formation Certifiante</span>
             </div>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-white mb-6 tracking-tight leading-tight">
-              CYCLE <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-yellow-200">ACADÉMIQUE</span>
+              CYCLE <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] to-yellow-200">ACADÉMIQUE</span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto font-light leading-relaxed">
               {`Le parcours d'excellence pour maîtriser les fondamentaux du cursus ${SCHOOL}.`}
@@ -203,9 +203,9 @@ const CyclesDetailPage = ({ cycleId: cycleIdProp }) => {
 
         {/* Separator */}
         <div className="flex justify-center items-center opacity-30">
-            <div className="h-px w-32 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"></div>
-            <span className="mx-6 text-[#D4AF37] text-2xl">⸻</span>
-            <div className="h-px w-32 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"></div>
+            <div className="h-px w-32 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent"></div>
+            <span className="mx-6 text-[var(--school-accent)] text-2xl">⸻</span>
+            <div className="h-px w-32 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent"></div>
         </div>
 
         {/* Pricing Options */}
@@ -274,7 +274,7 @@ const CyclesDetailPage = ({ cycleId: cycleIdProp }) => {
         {/* FAQ Section */}
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-3 mb-8 justify-center">
-            <HelpCircle className="w-8 h-8 text-[#D4AF37]" />
+            <HelpCircle className="w-8 h-8 text-[var(--school-accent)]" />
             <h2 className="text-3xl font-serif font-bold text-white">Questions Fréquentes</h2>
           </div>
           <div className="space-y-4">
@@ -302,7 +302,7 @@ const CyclesDetailPage = ({ cycleId: cycleIdProp }) => {
               { num: "05", title: "Début", text: "Commencez votre premier cours !" },
             ].map((step, i) => (
               <div key={i} className="text-center relative">
-                <div className="text-4xl font-bold text-[#D4AF37]/20 mb-2 font-serif">{step.num}</div>
+                <div className="text-4xl font-bold text-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] mb-2 font-serif">{step.num}</div>
                 <h3 className="text-lg font-bold text-white mb-1">{step.title}</h3>
                 <p className="text-sm text-gray-400">{step.text}</p>
                 {i < 4 && (
@@ -319,12 +319,12 @@ const CyclesDetailPage = ({ cycleId: cycleIdProp }) => {
           <div className="flex flex-col sm:flex-row justify-center gap-6">
             <Button variant="outline" className="border-white/20 hover:bg-white/5 gap-3 h-12" asChild>
               <a href={`mailto:${vitrineEmail}`}>
-                <Mail className="w-5 h-5 text-[#D4AF37]" />
+                <Mail className="w-5 h-5 text-[var(--school-accent)]" />
                 {vitrineEmail}
               </a>
             </Button>
             <Button variant="outline" className="border-white/20 hover:bg-white/5 gap-3 h-12">
-              <MessageCircle className="w-5 h-5 text-[#D4AF37]" />
+              <MessageCircle className="w-5 h-5 text-[var(--school-accent)]" />
               Support WhatsApp
             </Button>
           </div>

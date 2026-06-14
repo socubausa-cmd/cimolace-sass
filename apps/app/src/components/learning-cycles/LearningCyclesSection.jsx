@@ -23,7 +23,7 @@ const LearningCyclesSection = () => {
             transition={{ duration: 0.8 }}
           >
             <h2 className="text-3xl md:text-5xl font-serif font-bold text-white mb-4">
-              Choisissez votre <span className="text-[#D4AF37]">Parcours d'Apprentissage</span>
+              Choisissez votre <span className="text-[var(--school-accent)]">Parcours d'Apprentissage</span>
             </h2>
             <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto font-light">
               Adaptez votre formation à vos objectifs personnels et professionnels.

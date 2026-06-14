@@ -21,7 +21,7 @@ function qualityChipClass(band) {
     case 'bon':
       return 'border-emerald-500/30 bg-emerald-950/25 text-emerald-100/95';
     case 'excellent':
-      return 'border-[#D4AF37]/40 bg-[#1a1810] text-[#f5dd8a]';
+      return 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[#1a1810] text-[#f5dd8a]';
     default:
       return 'border-white/8 bg-white/[0.03] text-white/38';
   }
@@ -105,7 +105,7 @@ export default function SmartboardProjectDashboardStrip({ className, quality = n
         >
           Plan Σ {planTimingSum ? `${Math.round(planTimingSum * 10) / 10}` : '—'} min
         </span>
-        <span className="rounded-lg border border-[#D4AF37]/28 bg-[#1a1510] px-3 py-1 text-[10px] font-medium text-[#f5dd8a]">
+        <span className="rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-[#1a1510] px-3 py-1 text-[10px] font-medium text-[#f5dd8a]">
           {slideCount} fiche{slideCount > 1 ? 's' : ''} (plan)
         </span>
         <span
@@ -156,7 +156,7 @@ export default function SmartboardProjectDashboardStrip({ className, quality = n
       </div>
       {quality ? (
         <details className="group border-t border-white/[0.06] bg-[#080a12]/95 px-4 py-2">
-          <summary className="cursor-pointer list-none text-[9px] font-medium text-[#D4AF37]/85 marker:content-none [&::-webkit-details-marker]:hidden">
+          <summary className="cursor-pointer list-none text-[9px] font-medium text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)] marker:content-none [&::-webkit-details-marker]:hidden">
             <span className="underline-offset-2 group-open:underline">Détail qualité — slide actif</span>
             <span className="ml-2 text-white/35">({quality.score}/100)</span>
           </summary>
@@ -166,7 +166,7 @@ export default function SmartboardProjectDashboardStrip({ className, quality = n
         </details>
       ) : null}
       <details className="group border-t border-white/[0.06] bg-[#080a12]/95 px-4 py-2">
-        <summary className="cursor-pointer list-none text-[9px] font-medium text-[#D4AF37]/85 marker:content-none [&::-webkit-details-marker]:hidden">
+        <summary className="cursor-pointer list-none text-[9px] font-medium text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)] marker:content-none [&::-webkit-details-marker]:hidden">
           <span className="underline-offset-2 group-open:underline">Checklist validation finale</span>
           <span className="ml-2 text-white/35">
             ({validationDone}/{validationTotal})

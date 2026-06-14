@@ -42,7 +42,7 @@ import { Button } from '@/components/ui/button';
 import { FOUNDER_IMAGE_SOURCES } from '@/lib/founderImageSources';
 import { getLiriMemberLoginPath } from '@/lib/liriVitrineModel';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const SCHOOL = isnaTenantConfig.branding.name;
 const SCHOOL_FULL = isnaTenantConfig.branding.fullName;
@@ -306,8 +306,8 @@ function CommercialFounderPortrait() {
 
   return (
     <div className="relative mx-auto w-full max-w-md lg:mx-0 lg:max-w-lg">
-      <div className="absolute -inset-px rounded-3xl bg-gradient-to-br from-[#D4AF37]/30 via-transparent to-blue-500/15" />
-      <div className="relative overflow-hidden rounded-2xl border border-[#D4AF37]/40 bg-[#101722] shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
+      <div className="absolute -inset-px rounded-3xl bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] via-transparent to-blue-500/15" />
+      <div className="relative overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[#101722] shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
         {!hideImage ? (
           <img
             src={sources[srcIndex]}
@@ -319,14 +319,14 @@ function CommercialFounderPortrait() {
         ) : (
           <div className="flex aspect-[4/5] flex-col items-center justify-center gap-2 bg-white/[0.04] p-8 text-center">
             <p className="text-sm text-white/55">
-              Déposez <code className="rounded bg-black/40 px-1.5 py-0.5 text-[#D4AF37]">founder.jpg</code> ou{' '}
-              <code className="rounded bg-black/40 px-1.5 py-0.5 text-[#D4AF37]">founder.png</code> dans{' '}
+              Déposez <code className="rounded bg-black/40 px-1.5 py-0.5 text-[var(--school-accent)]">founder.jpg</code> ou{' '}
+              <code className="rounded bg-black/40 px-1.5 py-0.5 text-[var(--school-accent)]">founder.png</code> dans{' '}
               <code className="rounded bg-black/40 px-1.5 py-0.5">public/</code> pour afficher le portrait.
             </p>
           </div>
         )}
       </div>
-      <p className="mt-4 text-center text-xs font-medium tracking-wide text-[#D4AF37]/90 lg:text-left">
+      <p className="mt-4 text-center text-xs font-medium tracking-wide text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)] lg:text-left">
         5ᵉ Manikongo · Badika Jel David (Ngowazulu)
       </p>
     </div>
@@ -436,7 +436,7 @@ function BrandShimmerWord({ text }) {
   const reduce = useReducedMotion();
   const letters = useMemo(() => [...text], [text]);
   if (reduce) {
-    return <span className="text-[#D4AF37]">{text}</span>;
+    return <span className="text-[var(--school-accent)]">{text}</span>;
   }
   return (
     <span className="relative inline-block prs-brand-shimmer">
@@ -492,7 +492,7 @@ function AnimatedStatBlock({ value, label }) {
 
   return (
     <div ref={ref} className="rounded-xl border border-white/10 bg-black/30 p-3 md:p-3.5">
-      <p className="text-xl font-bold tabular-nums text-[#D4AF37] md:text-2xl">{display}</p>
+      <p className="text-xl font-bold tabular-nums text-[var(--school-accent)] md:text-2xl">{display}</p>
       <p className="mt-0.5 text-[11px] leading-snug text-white/65 md:text-xs">{label}</p>
     </div>
   );
@@ -505,7 +505,7 @@ function SectionHeading({ eyebrow, title, className = '' }) {
   return (
     <div className={className}>
       <motion.p
-        className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]"
+        className="text-xs uppercase tracking-[0.2em] text-[var(--school-accent)]"
         initial={reduce ? false : { opacity: 0, y: 14, filter: 'blur(8px)' }}
         whileInView={reduce ? undefined : { opacity: 1, y: 0, filter: 'blur(0px)' }}
         viewport={{ once: true, amount: 0.9 }}
@@ -627,7 +627,7 @@ function ParallaxOrbs() {
         aria-hidden
       />
       <motion.div
-        className="prs-orb alt absolute right-8 top-24 h-96 w-96 rounded-full bg-[#D4AF37]"
+        className="prs-orb alt absolute right-8 top-24 h-96 w-96 rounded-full bg-[var(--school-accent)]"
         style={{ y: yB }}
         aria-hidden
       />
@@ -661,7 +661,7 @@ function LiriPhoneOrbit({ reduce }) {
   return (
     <div className="relative mx-auto flex min-h-[280px] w-full max-w-[400px] items-center justify-center lg:min-h-[340px]">
       <motion.div
-        className="absolute h-[min(88vw,420px)] w-[min(88vw,420px)] rounded-full border border-[#D4AF37]/20 bg-[radial-gradient(circle_at_50%_50%,rgba(212,175,55,0.14),transparent_62%)]"
+        className="absolute h-[min(88vw,420px)] w-[min(88vw,420px)] rounded-full border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[radial-gradient(circle_at_50%_50%,rgba(212,175,55,0.14),transparent_62%)]"
         animate={reduce ? undefined : { scale: [1, 1.04, 1], opacity: [0.45, 0.75, 0.45] }}
         transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
         aria-hidden
@@ -675,29 +675,29 @@ function LiriPhoneOrbit({ reduce }) {
         {[0, 1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
-            className="absolute left-1/2 top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[#D4AF37]/35 bg-[#0c111d]/90 shadow-[0_0_24px_rgba(212,175,55,0.2)]"
+            className="absolute left-1/2 top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[#0c111d]/90 shadow-[0_0_24px_rgba(212,175,55,0.2)]"
             style={{
               transform: `rotate(${i * 60}deg) translateY(-118px) rotate(${-i * 60}deg)`,
             }}
           >
-            <Users className="h-5 w-5 text-[#D4AF37]" />
+            <Users className="h-5 w-5 text-[var(--school-accent)]" />
           </div>
         ))}
       </motion.div>
       <motion.div
-        className="relative z-[3] w-[155px] rounded-[2rem] border-2 border-[#D4AF37]/55 bg-gradient-to-b from-[#1a2234] via-[#121a2b] to-[#0a0f18] p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_28px_80px_rgba(0,0,0,0.55),0_0_60px_rgba(212,175,55,0.22)]"
+        className="relative z-[3] w-[155px] rounded-[2rem] border-2 border-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] bg-gradient-to-b from-[#1a2234] via-[#121a2b] to-[#0a0f18] p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_28px_80px_rgba(0,0,0,0.55),0_0_60px_rgba(212,175,55,0.22)]"
         animate={reduce ? undefined : { y: [0, -12, 0] }}
         transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
       >
         <div className="flex justify-center">
-          <LiriWordmark size="kicker" className="text-[#D4AF37]" />
+          <LiriWordmark size="kicker" className="text-[var(--school-accent)]" />
         </div>
         <div className="mt-3 space-y-2 rounded-xl bg-black/50 p-2 ring-1 ring-white/10">
           <div className="flex gap-1">
             <div className="h-1.5 flex-1 rounded-full bg-white/15" />
-            <div className="h-1.5 w-6 rounded-full bg-[#D4AF37]/50" />
+            <div className="h-1.5 w-6 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]" />
           </div>
-          <div className="h-24 rounded-lg bg-gradient-to-br from-[#D4AF37]/25 via-[#6f4cff]/15 to-transparent ring-1 ring-[#D4AF37]/25" />
+          <div className="h-24 rounded-lg bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] via-[#6f4cff]/15 to-transparent ring-1 ring-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]" />
           <div className="h-2 w-2/3 rounded-full bg-white/10" />
           <div className="h-2 w-1/2 rounded-full bg-white/10" />
         </div>
@@ -714,9 +714,9 @@ function LiriImmersiveBlock() {
 
   const intro = (
     <div className="max-w-2xl text-white">
-      <p className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#D4AF37]">
+      <p className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-[var(--school-accent)]">
         <span>Cours immersifs ·</span>
-        <LiriWordmark size="kicker" className="text-[#D4AF37]" />
+        <LiriWordmark size="kicker" className="text-[var(--school-accent)]" />
       </p>
       <h2 className="mt-3 font-serif text-3xl font-bold leading-tight text-white md:text-4xl">
         LIRI : la classe autour de l&apos;application
@@ -755,7 +755,7 @@ function LiriImmersiveBlock() {
                   role="listitem"
                   className="rounded-2xl border border-white/15 bg-black/35 px-5 py-4 text-left md:px-6 md:py-5"
                 >
-                  <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.24em] text-[#D4AF37]">
+                  <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.24em] text-[var(--school-accent)]">
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <p className="m-0 text-base font-medium leading-relaxed text-white md:text-lg">{line}</p>
@@ -769,7 +769,7 @@ function LiriImmersiveBlock() {
         </div>
         <div className="relative mt-8 flex flex-wrap gap-3">
           <Link to="/m/eleve">
-            <Button variant="outline" className="border-[#D4AF37]/45 text-[#D4AF37] hover:bg-[#D4AF37]/10">
+            <Button variant="outline" className="border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
               Ouvrir LIRI mobile
               <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
@@ -827,7 +827,7 @@ function TestimonialProfileCard({ t, index, reduce, marqueeLayout }) {
         >
           &ldquo;
         </motion.span>
-        <div className="mb-3 flex justify-center gap-0.5 text-[#D4AF37]">
+        <div className="mb-3 flex justify-center gap-0.5 text-[var(--school-accent)]">
           {[0, 1, 2, 3, 4].map((s) => (
             <Star key={s} className="h-3.5 w-3.5 fill-current md:h-4 md:w-4" />
           ))}
@@ -889,13 +889,13 @@ function ProduitBentoCard({ item, variant = 'light', ctaLabel, href, children, c
         compact ? 'p-4 md:p-5' : ''
       } ${
         dark
-          ? 'border-[#D4AF37]/28 bg-[#060a11] shadow-[inset_0_1px_0_rgba(212,175,55,0.14)]'
+          ? 'border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-[#060a11] shadow-[inset_0_1px_0_rgba(212,175,55,0.14)]'
           : 'border-white/10 bg-[#131b2d]/98 shadow-[0_20px_60px_rgba(0,0,0,0.35)]'
       }`}
     >
       <div
         className={`mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl md:mb-4 md:h-12 md:w-12 ${
-          dark ? 'bg-[#D4AF37]/14 text-[#D4AF37]' : 'bg-[#6f4cff]/14 text-[#b8a9ff]'
+          dark ? 'bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] text-[var(--school-accent)]' : 'bg-[#6f4cff]/14 text-[#b8a9ff]'
         }`}
       >
         <Icon className={`h-5 w-5 ${compact ? '' : 'md:h-6 md:w-6'}`} />
@@ -918,7 +918,7 @@ function ProduitBentoCard({ item, variant = 'light', ctaLabel, href, children, c
       {href && ctaLabel ? (
         <Link
           to={href}
-          className="mt-4 inline-flex items-center text-sm font-medium text-[#D4AF37] transition-colors hover:text-[#ebca5e]"
+          className="mt-4 inline-flex items-center text-sm font-medium text-[var(--school-accent)] transition-colors hover:text-[#ebca5e]"
         >
           {ctaLabel}
           <ChevronRight className="ml-0.5 h-4 w-4 shrink-0" />
@@ -969,14 +969,14 @@ function ProduitBentoGrid({ prefersReducedMotion: reduce }) {
           <motion.div variants={bentoStaggerItem}>
             <ProduitBentoCard item={communaute}>
               <Link to="/signup" className="mt-4 block">
-                <Button className="h-10 w-full bg-[#D4AF37] text-sm font-semibold text-black hover:bg-[#ebca5e] md:w-auto md:px-6">
+                <Button className="h-10 w-full bg-[var(--school-accent)] text-sm font-semibold text-black hover:bg-[#ebca5e] md:w-auto md:px-6">
                   Échanges initiatiques
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
               <Link
                 to="/signup"
-                className="mt-3 inline-flex items-center text-sm font-medium text-[#D4AF37] hover:text-[#ebca5e]"
+                className="mt-3 inline-flex items-center text-sm font-medium text-[var(--school-accent)] hover:text-[#ebca5e]"
               >
                 Ouvrir l&apos;espace membre
                 <ChevronRight className="ml-0.5 h-4 w-4" />
@@ -1031,7 +1031,7 @@ function ProduitBentoGrid({ prefersReducedMotion: reduce }) {
                     </div>
                     <div className="h-2 overflow-hidden rounded-full bg-white/[0.08]">
                       <motion.div
-                        className="h-full rounded-full bg-gradient-to-r from-[#D4AF37] to-[#6f4cff]"
+                        className="h-full rounded-full bg-gradient-to-r from-[var(--school-accent)] to-[#6f4cff]"
                         initial={reduce ? false : { width: 0 }}
                         whileInView={{ width: `${row.pct}%` }}
                         viewport={{ once: true, amount: 0.6 }}
@@ -1043,7 +1043,7 @@ function ProduitBentoGrid({ prefersReducedMotion: reduce }) {
               </div>
             </div>
             <div className="border-t border-white/10 bg-white/[0.035] px-4 py-5 md:px-7 md:py-7">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#D4AF37]/85">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)]">
                 {cursus?.title}
               </p>
               <h3 className="mt-2 text-xl font-bold leading-tight text-white md:text-2xl">{`Cursus officiel ${SCHOOL}`}</h3>
@@ -1052,15 +1052,15 @@ function ProduitBentoGrid({ prefersReducedMotion: reduce }) {
               </p>
               <ul className="mt-5 space-y-2.5 text-sm text-white/78">
                 <li className="flex gap-2">
-                  <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#D4AF37]" />
+                  <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[var(--school-accent)]" />
                   Curriculum structuré : fondations → sciences invisibles → maîtrise.
                 </li>
                 <li className="flex gap-2">
-                  <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#D4AF37]" />
+                  <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[var(--school-accent)]" />
                   Lives, replays et classe immersive (LIRI) selon ton forfait.
                 </li>
                 <li className="flex gap-2">
-                  <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#D4AF37]" />
+                  <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[var(--school-accent)]" />
                   Suivi des modules, évaluations et visibilité sur ta progression.
                 </li>
               </ul>
@@ -1085,11 +1085,11 @@ function ProduitBentoGrid({ prefersReducedMotion: reduce }) {
             <ProduitBentoCard item={lives}>
               <ul className="mt-3 space-y-1.5 text-sm text-white/65">
                 <li className="flex gap-2">
-                  <span className="text-[#D4AF37]">·</span>
+                  <span className="text-[var(--school-accent)]">·</span>
                   Classes en live & replays
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-[#D4AF37]">·</span>
+                  <span className="text-[var(--school-accent)]">·</span>
                   Agenda ISNA & événements
                 </li>
               </ul>
@@ -1104,7 +1104,7 @@ function ProduitBentoGrid({ prefersReducedMotion: reduce }) {
                 </Link>
                 <Link
                   to="/formations/catalogue"
-                  className="inline-flex items-center text-sm font-medium text-[#D4AF37] hover:text-[#ebca5e]"
+                  className="inline-flex items-center text-sm font-medium text-[var(--school-accent)] hover:text-[#ebca5e]"
                 >
                   Catalogue & agenda
                   <ChevronRight className="ml-0.5 h-4 w-4" />
@@ -1257,7 +1257,7 @@ const ProrascienceCommercialPage = () => {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center bg-[#0B0B0F] text-white">
         <div className="flex flex-col items-center gap-3 text-white/60">
-          <LiriWordmark size="compact" className="text-[#D4AF37]/90" />
+          <LiriWordmark size="compact" className="text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]" />
           <p className="text-[12px]">Ouverture LIRI…</p>
         </div>
       </div>
@@ -1758,7 +1758,7 @@ const ProrascienceCommercialPage = () => {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2 text-sm font-semibold tracking-wide text-white/90">
             <motion.span
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#D4AF37] text-black"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--school-accent)] text-black"
               initial={{ boxShadow: '0 0 0 0 rgba(212,175,55,0)' }}
               animate={
                 prefersReducedMotion
@@ -1809,7 +1809,7 @@ const ProrascienceCommercialPage = () => {
               </Button>
             </PremiumPressable>
             <PremiumPressable>
-              <Button className="prs-cta-primary bg-[#D4AF37] text-black hover:bg-[#ebca5e]" asChild>
+              <Button className="prs-cta-primary bg-[var(--school-accent)] text-black hover:bg-[#ebca5e]" asChild>
                 <Link to="/signup">Rejoindre l&apos;ISNA</Link>
               </Button>
             </PremiumPressable>
@@ -1843,7 +1843,7 @@ const ProrascienceCommercialPage = () => {
             >
               <motion.div
                 variants={{ hidden: { opacity: 0, y: 28 }, visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: easePremium } } }}
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.18em] text-[#D4AF37]"
+                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.18em] text-[var(--school-accent)]"
               >
                 <Sparkles className="h-4 w-4" />
                 Initiation aux Sciences Nocturnes Africaines (ISNA)
@@ -1897,7 +1897,7 @@ const ProrascienceCommercialPage = () => {
               >
                 <PremiumPressable>
                   <Button
-                    className="group prs-cta-primary h-12 bg-[#D4AF37] px-7 font-bold text-black hover:bg-[#ebca5e]"
+                    className="group prs-cta-primary h-12 bg-[var(--school-accent)] px-7 font-bold text-black hover:bg-[#ebca5e]"
                     asChild
                   >
                     <Link to="/signup" className="inline-flex items-center">
@@ -1923,7 +1923,7 @@ const ProrascienceCommercialPage = () => {
                 variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.5 } } }}
                 className="mt-8 flex flex-wrap items-center gap-2 text-xs text-white/55"
               >
-                <ShieldCheck className="h-4 w-4 text-[#D4AF37]" />
+                <ShieldCheck className="h-4 w-4 text-[var(--school-accent)]" />
                 Système MK5 / Ngowazulu / ISNA
                 <span className="mx-1 text-white/30">•</span>
                 Parcours encadré
@@ -1969,7 +1969,7 @@ const ProrascienceCommercialPage = () => {
                       {[14, 10, 16, 12].map((h, i) => (
                         <span
                           key={i}
-                          className="w-0.5 rounded-full bg-[#D4AF37]/75 prs-wave-bar"
+                          className="w-0.5 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_75%,transparent)] prs-wave-bar"
                           style={{ height: h }}
                         />
                       ))}
@@ -2013,10 +2013,10 @@ const ProrascienceCommercialPage = () => {
           <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,420px)_1fr] lg:gap-16">
             <CommercialFounderPortrait />
             <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-[#D4AF37]">Transmission</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-[var(--school-accent)]">Transmission</p>
               <h2 className="mt-3 font-serif text-3xl font-bold leading-tight md:text-4xl lg:text-[2.75rem]">
                 Le fondateur de&nbsp;
-                <span className="text-[#D4AF37]">{SCHOOL_FULL}</span>
+                <span className="text-[var(--school-accent)]">{SCHOOL_FULL}</span>
               </h2>
               <p className="mt-5 text-base leading-relaxed text-white/78 md:text-lg">
                 Le <strong className="font-semibold text-white/92">5ᵉ Manikongo</strong> — Badika Jel David, connu dans
@@ -2032,7 +2032,7 @@ const ProrascienceCommercialPage = () => {
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <PremiumPressable>
-                  <Button className="group prs-cta-primary h-11 bg-[#D4AF37] px-6 font-semibold text-black hover:bg-[#ebca5e]" asChild>
+                  <Button className="group prs-cta-primary h-11 bg-[var(--school-accent)] px-6 font-semibold text-black hover:bg-[#ebca5e]" asChild>
                     <Link to="/a-propos/fondateur" className="inline-flex items-center">
                       Biographie et mandat complet
                       <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
@@ -2063,7 +2063,7 @@ const ProrascienceCommercialPage = () => {
         </div>
         <div className="mx-auto mt-10 max-w-5xl">
           <motion.div
-            className="prs-video-chassis relative overflow-hidden rounded-2xl border border-white/15 bg-black shadow-2xl ring-1 ring-[#D4AF37]/25"
+            className="prs-video-chassis relative overflow-hidden rounded-2xl border border-white/15 bg-black shadow-2xl ring-1 ring-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]"
             initial={{ opacity: 0, scale: 0.94, y: 40 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
             viewport={{ once: true, amount: 0.35 }}
@@ -2124,7 +2124,7 @@ const ProrascienceCommercialPage = () => {
       <AnimatedSection className="scroll-mt-24 border-y border-white/10 bg-[#070c14] px-6 py-16 md:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="mx-auto mb-12 max-w-3xl text-center">
-            <p className="text-xs uppercase tracking-[0.18em] text-[#D4AF37]">Mode histoire</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-[var(--school-accent)]">Mode histoire</p>
             <h2 className="mt-3 font-serif text-3xl font-bold leading-tight md:text-4xl">
               Avant la classe immersive, voici l'histoire que l\'application vient résoudre
             </h2>
@@ -2145,7 +2145,7 @@ const ProrascienceCommercialPage = () => {
                 className="grid gap-6 overflow-hidden rounded-[1.9rem] border border-white/10 bg-white/[0.03] p-5 md:p-7 lg:grid-cols-[0.92fr_1.08fr] lg:items-center"
               >
                 <div className={index % 2 === 1 ? 'lg:order-2' : ''}>
-                  <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]/80">{item.eyebrow}</p>
+                  <p className="text-xs uppercase tracking-[0.22em] text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">{item.eyebrow}</p>
                   <h3 className="mt-3 text-2xl font-bold leading-tight text-white md:text-4xl">{item.title}</h3>
                   <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/72 md:text-base">{item.body}</p>
                 </div>
@@ -2174,7 +2174,7 @@ const ProrascienceCommercialPage = () => {
         <div className="mx-auto max-w-7xl">
           <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-[#D4AF37]">Vie de l&apos;école</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-[var(--school-accent)]">Vie de l&apos;école</p>
               <h2 className="mt-2 text-3xl font-bold md:text-4xl">Ni secte ni folklore : une communauté d&apos;élèves</h2>
             </div>
             <p className="max-w-md text-sm text-white/70">
@@ -2233,7 +2233,7 @@ const ProrascienceCommercialPage = () => {
                 même fil conducteur — de la compréhension des lois jusqu&apos;à la maîtrise pratique.
               </p>
               <PremiumPressable className="mt-5">
-                <Button className="group prs-cta-primary bg-[#D4AF37] text-black hover:bg-[#ebca5e]" asChild>
+                <Button className="group prs-cta-primary bg-[var(--school-accent)] text-black hover:bg-[#ebca5e]" asChild>
                   <Link to="/signup" className="inline-flex items-center">
                     Ouvrir un compte visiteur
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1.5" />
@@ -2288,19 +2288,19 @@ const ProrascienceCommercialPage = () => {
                 style={{ perspective: 1200 }}
               >
                 <motion.div
-                  className="mb-4 inline-flex rounded-xl bg-[#D4AF37]/10 p-3 text-[#D4AF37]"
+                  className="mb-4 inline-flex rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-3 text-[var(--school-accent)]"
                   whileHover={prefersReducedMotion ? undefined : { scale: 1.06, rotate: [0, -6, 6, 0] }}
                   transition={{ duration: 0.5 }}
                 >
                   <block.icon className="h-5 w-5" />
                 </motion.div>
-                <p className="text-xs uppercase tracking-[0.18em] text-[#D4AF37]">{block.eyebrow}</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-[var(--school-accent)]">{block.eyebrow}</p>
                 <h3 className="mt-3 text-2xl font-bold leading-tight">{block.title}</h3>
                 <p className="mt-3 text-sm leading-relaxed text-white/70">{block.text}</p>
                 <ul className="mt-4 space-y-2">
                   {block.points.map((point) => (
                     <li key={point} className="flex items-start gap-2 text-sm text-white/80">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#D4AF37]" />
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--school-accent)]" />
                       {point}
                     </li>
                   ))}
@@ -2324,13 +2324,13 @@ const ProrascienceCommercialPage = () => {
             >
               <div className="grid items-center gap-6 md:grid-cols-[1.2fr_0.8fr]">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-[#D4AF37]">{row.badge}</p>
+                  <p className="text-xs uppercase tracking-[0.18em] text-[var(--school-accent)]">{row.badge}</p>
                   <h3 className="mt-2 text-2xl font-bold md:text-3xl">{row.title}</h3>
                   <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/70 md:text-base">{row.text}</p>
                   <ul className="mt-4 space-y-2">
                     {row.bullets.map((item) => (
                       <li key={item} className="flex items-start gap-2 text-sm text-white/80">
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#D4AF37]" />
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--school-accent)]" />
                         {item}
                       </li>
                     ))}
@@ -2338,7 +2338,7 @@ const ProrascienceCommercialPage = () => {
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
                   <motion.div
-                    className="inline-flex rounded-xl bg-[#D4AF37]/10 p-3 text-[#D4AF37]"
+                    className="inline-flex rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-3 text-[var(--school-accent)]"
                     whileHover={prefersReducedMotion ? undefined : { rotate: [0, -5, 5, 0], scale: 1.05 }}
                     transition={{ duration: 0.5 }}
                   >
@@ -2348,7 +2348,7 @@ const ProrascienceCommercialPage = () => {
                     Accès direct aux ressources et parcours décrits à gauche — la même doctrine que sur le site
                     institutionnel.
                   </p>
-                  <Link to={row.ctaHref} className="mt-4 inline-flex items-center text-sm font-medium text-[#D4AF37]">
+                  <Link to={row.ctaHref} className="mt-4 inline-flex items-center text-sm font-medium text-[var(--school-accent)]">
                     {row.ctaLabel}
                     <ChevronRight className="ml-1 h-4 w-4" />
                   </Link>
@@ -2406,20 +2406,20 @@ const ProrascienceCommercialPage = () => {
                 whileHover={prefersReducedMotion ? undefined : { y: -5, transition: { duration: 0.25 } }}
                 className={`rounded-2xl border p-6 ${
                   plan.featured
-                    ? 'border-[#D4AF37]/50 bg-gradient-to-b from-[#1b2437] to-[#12192b]'
+                    ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-gradient-to-b from-[#1b2437] to-[#12192b]'
                     : 'border-white/10 bg-[#0f1628]'
                 }`}
               >
                 <p className="text-sm text-white/75">{plan.audience}</p>
                 <h3 className="mt-2 text-2xl font-bold">{plan.name}</h3>
-                <p className="mt-3 text-3xl font-bold text-[#D4AF37]">
+                <p className="mt-3 text-3xl font-bold text-[var(--school-accent)]">
                   {plan.price}
                   <span className="ml-1 text-base font-medium text-white/60">{plan.period}</span>
                 </p>
                 <ul className="mt-4 space-y-2">
                   {plan.points.map((p) => (
                     <li key={p} className="flex items-start gap-2 text-sm text-white/80">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#D4AF37]" />
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--school-accent)]" />
                       {p}
                     </li>
                   ))}
@@ -2428,7 +2428,7 @@ const ProrascienceCommercialPage = () => {
                   <Button
                     className={
                       plan.featured
-                        ? 'w-full bg-[#D4AF37] text-black hover:bg-[#ebca5e]'
+                        ? 'w-full bg-[var(--school-accent)] text-black hover:bg-[#ebca5e]'
                         : 'w-full border border-white/25 bg-transparent text-white hover:bg-white/10'
                     }
                   >
@@ -2439,7 +2439,7 @@ const ProrascienceCommercialPage = () => {
             ))}
           </motion.div>
 
-          <div className="prs-aurora-wrap rounded-3xl border border-[#D4AF37]/35 bg-gradient-to-r from-[#12192c] via-[#101a30] to-[#172741] p-10 text-center md:p-14">
+          <div className="prs-aurora-wrap rounded-3xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-gradient-to-r from-[#12192c] via-[#101a30] to-[#172741] p-10 text-center md:p-14">
             <div className="prs-aurora-content">
               <motion.p
                 className="text-xs uppercase tracking-[0.18em] text-[#f2d983]"
@@ -2465,7 +2465,7 @@ const ProrascienceCommercialPage = () => {
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <PremiumPressable>
-                  <Button className="group prs-cta-primary h-12 bg-[#D4AF37] px-7 font-bold text-black hover:bg-[#ebca5e]" asChild>
+                  <Button className="group prs-cta-primary h-12 bg-[var(--school-accent)] px-7 font-bold text-black hover:bg-[#ebca5e]" asChild>
                     <Link to="/signup" className="inline-flex items-center">
                       Créer mon compte
                       <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1.5" />

@@ -178,7 +178,7 @@ export default function KonvaCoachSlidePanel({ className, contextExtra = '' }) {
       {coachResult ? (
         <>
           {(typeof coachScore === 'number' || coachTier) ? (
-            <div className="flex flex-wrap items-center gap-1.5 rounded border border-[#D4AF37]/25 bg-[#1a1510]/50 px-2 py-1 text-[8px] text-[#e8c76b]/90">
+            <div className="flex flex-wrap items-center gap-1.5 rounded border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#1a1510]/50 px-2 py-1 text-[8px] text-[#e8c76b]/90">
               {typeof coachScore === 'number' ? (
                 <span>
                   Score <strong className="text-[#f5dd8a]">{coachScore}</strong>

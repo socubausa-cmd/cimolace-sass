@@ -106,9 +106,14 @@ export function DashboardHome() {
                 Ce tenant possède {activeServices.length} moteur{activeServices.length > 1 ? 's' : ''} actif{activeServices.length > 1 ? 's' : ''}.
               </p>
             </div>
-            <Link to="/dashboard/infrastructure" className="text-sm text-indigo-600 hover:underline">
-              Changer l'infrastructure
-            </Link>
+            <div className="flex flex-col items-end gap-1">
+              <Link to="/dashboard/infrastructures" className="text-sm font-medium text-indigo-600 hover:underline">
+                Mes infrastructures
+              </Link>
+              <Link to="/dashboard/infrastructure" className="text-sm text-indigo-600 hover:underline">
+                Changer l'infrastructure
+              </Link>
+            </div>
           </div>
 
           {services.isLoading && <p className="text-gray-500 text-sm">Chargement des moteurs...</p>}

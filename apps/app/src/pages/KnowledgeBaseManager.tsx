@@ -208,7 +208,7 @@ export default function KnowledgeBaseManager() {
     await fetchEntries();
   };
 
-  const ic = 'bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#D4AF37] focus:ring-0';
+  const ic = 'bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[var(--school-accent)] focus:ring-0';
 
   return (
     <div className="min-h-screen bg-[#0A0F1A] text-white flex flex-col">
@@ -219,12 +219,12 @@ export default function KnowledgeBaseManager() {
           <button type="button" onClick={() => navigate(-1)} className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <BookOpen className="w-6 h-6 text-[#D4AF37]" />
+          <BookOpen className="w-6 h-6 text-[var(--school-accent)]" />
           <div className="flex-1">
             <h1 className="text-2xl font-bold">Base de connaissances</h1>
             <p className="text-xs text-gray-500">Les documents enrichissent automatiquement les explications IA (pgvector RAG).</p>
           </div>
-          <Button onClick={() => { setShowForm((v) => !v); setSaveStatus('idle'); }} className="bg-[#D4AF37] text-black hover:bg-yellow-400 font-bold gap-2 text-sm">
+          <Button onClick={() => { setShowForm((v) => !v); setSaveStatus('idle'); }} className="bg-[var(--school-accent)] text-black hover:bg-yellow-400 font-bold gap-2 text-sm">
             <Plus className="w-4 h-4" /> Ajouter un document
           </Button>
         </div>
@@ -237,7 +237,7 @@ export default function KnowledgeBaseManager() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher dans vos documents (titre, catégorie, contenu)…"
-              className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-[#D4AF37]"
+              className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-[var(--school-accent)]"
             />
             {search && <button type="button" onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><X className="w-4 h-4" /></button>}
           </div>
@@ -248,7 +248,7 @@ export default function KnowledgeBaseManager() {
                 key={cat}
                 type="button"
                 onClick={() => setActiveCategory(cat)}
-                className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${activeCategory === cat ? 'bg-[#D4AF37] border-[#D4AF37] text-black font-semibold' : 'border-white/15 text-gray-400 hover:border-white/30 hover:text-white'}`}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${activeCategory === cat ? 'bg-[var(--school-accent)] border-[var(--school-accent)] text-black font-semibold' : 'border-white/15 text-gray-400 hover:border-white/30 hover:text-white'}`}
               >
                 {cat}
                 {cat !== 'Toutes' && <span className="ml-1 opacity-60">({entries.filter((e) => e.topic === cat).length})</span>}
@@ -263,13 +263,13 @@ export default function KnowledgeBaseManager() {
                   onChange={(e) => setNewCatValue(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') addCategory(); if (e.key === 'Escape') { setShowCatInput(false); setNewCatValue(''); } }}
                   placeholder="Nom de catégorie…"
-                  className="text-xs px-3 py-1.5 rounded-full bg-white/5 border border-[#D4AF37] text-white placeholder:text-gray-500 focus:outline-none w-44"
+                  className="text-xs px-3 py-1.5 rounded-full bg-white/5 border border-[var(--school-accent)] text-white placeholder:text-gray-500 focus:outline-none w-44"
                 />
-                <button type="button" onClick={addCategory} className="text-[#D4AF37] hover:text-yellow-300 p-1"><CheckCircle2 className="w-4 h-4" /></button>
+                <button type="button" onClick={addCategory} className="text-[var(--school-accent)] hover:text-yellow-300 p-1"><CheckCircle2 className="w-4 h-4" /></button>
                 <button type="button" onClick={() => { setShowCatInput(false); setNewCatValue(''); }} className="text-gray-500 hover:text-white p-1"><X className="w-4 h-4" /></button>
               </div>
             ) : (
-              <button type="button" onClick={() => setShowCatInput(true)} className="text-xs px-3 py-1.5 rounded-full border border-dashed border-white/20 text-gray-500 hover:text-[#D4AF37] hover:border-[#D4AF37] transition-colors flex items-center gap-1">
+              <button type="button" onClick={() => setShowCatInput(true)} className="text-xs px-3 py-1.5 rounded-full border border-dashed border-white/20 text-gray-500 hover:text-[var(--school-accent)] hover:border-[var(--school-accent)] transition-colors flex items-center gap-1">
                 <Tag className="w-3 h-3" /> Nouvelle catégorie
               </button>
             )}
@@ -278,9 +278,9 @@ export default function KnowledgeBaseManager() {
 
         {/* ── Add form (collapsible) ── */}
         {showForm && (
-          <div className="rounded-2xl border border-[#D4AF37]/30 bg-white/3 p-6 space-y-4">
+          <div className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-white/3 p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold text-[#D4AF37] uppercase tracking-wider">Nouveau document</div>
+              <div className="text-sm font-semibold text-[var(--school-accent)] uppercase tracking-wider">Nouveau document</div>
               <button type="button" onClick={() => setShowForm(false)} className="text-gray-500 hover:text-white"><X className="w-4 h-4" /></button>
             </div>
 
@@ -291,10 +291,10 @@ export default function KnowledgeBaseManager() {
               onDrop={handleFileDrop}
               onClick={() => fileInputRef.current?.click()}
               onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
-              className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-6 cursor-pointer transition-colors ${dragOver ? 'border-[#D4AF37] bg-[#D4AF37]/8' : 'border-white/15 hover:border-white/30 bg-black/10'}`}
+              className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-6 cursor-pointer transition-colors ${dragOver ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)]' : 'border-white/15 hover:border-white/30 bg-black/10'}`}
             >
               <input ref={fileInputRef} type="file" accept=".txt,.md,.pdf" className="sr-only" onChange={handleFileChange} />
-              {parseStatus === 'parsing' ? <><Loader2 className="w-5 h-5 animate-spin text-[#D4AF37]" /><span className="text-sm text-gray-300">Extraction…</span></>
+              {parseStatus === 'parsing' ? <><Loader2 className="w-5 h-5 animate-spin text-[var(--school-accent)]" /><span className="text-sm text-gray-300">Extraction…</span></>
                 : parseStatus === 'done' ? <><CheckCircle2 className="w-5 h-5 text-green-400" /><span className="text-sm text-green-400">Texte extrait — vérifiez ci-dessous</span></>
                 : parseStatus === 'error' ? <><FileText className="w-5 h-5 text-red-400" /><span className="text-sm text-red-400">{parseError}</span></>
                 : <><Upload className="w-5 h-5 text-gray-400" /><span className="text-sm text-gray-400">Glisse PDF, TXT ou MD ici — ou clique pour parcourir</span></>}
@@ -311,7 +311,7 @@ export default function KnowledgeBaseManager() {
                   <select
                     value={form.topic}
                     onChange={(e) => setForm((f) => ({ ...f, topic: e.target.value }))}
-                    className="flex-1 rounded-md bg-white/5 border border-white/10 text-sm text-white px-3 py-2 focus:outline-none focus:border-[#D4AF37]"
+                    className="flex-1 rounded-md bg-white/5 border border-white/10 text-sm text-white px-3 py-2 focus:outline-none focus:border-[var(--school-accent)]"
                   >
                     <option value="">— Aucune —</option>
                     {allCategories.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -333,7 +333,7 @@ export default function KnowledgeBaseManager() {
             {saveStatus === 'error' && <div className="text-sm text-red-400 rounded-lg border border-red-500/20 bg-red-500/5 p-3">{saveError}</div>}
             {saveStatus === 'success' && <div className="flex items-center gap-2 text-sm text-green-400 rounded-lg border border-green-500/20 bg-green-500/5 p-3"><CheckCircle2 className="w-4 h-4" />Document ajouté et vectorisé.</div>}
 
-            <Button onClick={handleAdd} disabled={saveStatus === 'saving' || !form.title.trim() || !form.content.trim()} className="bg-[#D4AF37] text-black hover:bg-yellow-400 font-bold gap-2">
+            <Button onClick={handleAdd} disabled={saveStatus === 'saving' || !form.title.trim() || !form.content.trim()} className="bg-[var(--school-accent)] text-black hover:bg-yellow-400 font-bold gap-2">
               {saveStatus === 'saving' ? <><Loader2 className="w-4 h-4 animate-spin" />Vectorisation…</> : <><Plus className="w-4 h-4" />Ajouter à la base</>}
             </Button>
           </div>
@@ -361,12 +361,12 @@ export default function KnowledgeBaseManager() {
               <div
                 key={entry.id}
                 onClick={() => openEntry(entry)}
-                className={`rounded-xl border p-4 flex items-start gap-3 cursor-pointer transition-all group ${selected?.id === entry.id ? 'border-[#D4AF37]/50 bg-[#D4AF37]/5' : 'border-white/10 bg-white/3 hover:border-white/20 hover:bg-white/5'}`}
+                className={`rounded-xl border p-4 flex items-start gap-3 cursor-pointer transition-all group ${selected?.id === entry.id ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]' : 'border-white/10 bg-white/3 hover:border-white/20 hover:bg-white/5'}`}
               >
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-white text-sm">{entry.title}</span>
-                    {entry.topic && <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20">{entry.topic}</span>}
+                    {entry.topic && <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">{entry.topic}</span>}
                     {entry.embedding
                       ? <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">✓ vectorisé</span>
                       : <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">⏳ en attente</span>}
@@ -378,7 +378,7 @@ export default function KnowledgeBaseManager() {
                   </div>
                 </div>
                 <div className="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button type="button" onClick={(e) => { e.stopPropagation(); openEntry(entry); }} className="p-1.5 rounded text-gray-400 hover:text-[#D4AF37] hover:bg-white/10 transition-colors" title="Voir / Modifier"><Eye className="w-4 h-4" /></button>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); openEntry(entry); }} className="p-1.5 rounded text-gray-400 hover:text-[var(--school-accent)] hover:bg-white/10 transition-colors" title="Voir / Modifier"><Eye className="w-4 h-4" /></button>
                   <button type="button" onClick={(e) => { e.stopPropagation(); handleDelete(entry.id); }} disabled={deleteId === entry.id} className="p-1.5 rounded text-gray-400 hover:text-red-400 hover:bg-white/10 transition-colors" title="Supprimer">
                     {deleteId === entry.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                   </button>
@@ -393,12 +393,12 @@ export default function KnowledgeBaseManager() {
               <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
                 <div className="flex items-center gap-2">
                   {editMode
-                    ? <Pencil className="w-4 h-4 text-[#D4AF37]" />
+                    ? <Pencil className="w-4 h-4 text-[var(--school-accent)]" />
                     : <Eye className="w-4 h-4 text-gray-400" />}
                   <span className="text-sm font-semibold text-white truncate max-w-[200px]">{selected.title}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button type="button" onClick={() => { setEditMode((v) => !v); setEditStatus('idle'); }} className={`p-1.5 rounded transition-colors text-xs flex items-center gap-1 px-3 py-1.5 border ${editMode ? 'border-white/20 text-gray-400 hover:text-white' : 'border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10'}`}>
+                  <button type="button" onClick={() => { setEditMode((v) => !v); setEditStatus('idle'); }} className={`p-1.5 rounded transition-colors text-xs flex items-center gap-1 px-3 py-1.5 border ${editMode ? 'border-white/20 text-gray-400 hover:text-white' : 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]'}`}>
                     {editMode ? <><X className="w-3 h-3" />Annuler</> : <><Pencil className="w-3 h-3" />Modifier</>}
                   </button>
                   <button type="button" onClick={() => setSelected(null)} className="p-1.5 rounded text-gray-500 hover:text-white hover:bg-white/10 transition-colors ml-1"><X className="w-4 h-4" /></button>
@@ -414,7 +414,7 @@ export default function KnowledgeBaseManager() {
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs text-gray-400">Catégorie</Label>
-                      <select value={editForm.topic} onChange={(e) => setEditForm((f) => ({ ...f, topic: e.target.value }))} className="w-full rounded-md bg-white/5 border border-white/10 text-sm text-white px-3 py-2 focus:outline-none focus:border-[#D4AF37]">
+                      <select value={editForm.topic} onChange={(e) => setEditForm((f) => ({ ...f, topic: e.target.value }))} className="w-full rounded-md bg-white/5 border border-white/10 text-sm text-white px-3 py-2 focus:outline-none focus:border-[var(--school-accent)]">
                         <option value="">— Aucune —</option>
                         {allCategories.map((c) => <option key={c} value={c}>{c}</option>)}
                       </select>
@@ -429,14 +429,14 @@ export default function KnowledgeBaseManager() {
                     </div>
                     {editStatus === 'error' && <div className="text-sm text-red-400 bg-red-500/5 border border-red-500/20 rounded-lg p-3">{editError}</div>}
                     {editStatus === 'saved' && <div className="flex items-center gap-2 text-sm text-green-400 bg-green-500/5 border border-green-500/20 rounded-lg p-3"><CheckCircle2 className="w-4 h-4" />Sauvegardé et re-vectorisé.</div>}
-                    <Button onClick={handleSave} disabled={editStatus === 'saving'} className="w-full bg-[#D4AF37] text-black hover:bg-yellow-400 font-bold gap-2">
+                    <Button onClick={handleSave} disabled={editStatus === 'saving'} className="w-full bg-[var(--school-accent)] text-black hover:bg-yellow-400 font-bold gap-2">
                       {editStatus === 'saving' ? <><Loader2 className="w-4 h-4 animate-spin" />Re-vectorisation…</> : <><Save className="w-4 h-4" />Sauvegarder et re-vectoriser</>}
                     </Button>
                   </>
                 ) : (
                   <>
                     <div className="flex items-center gap-2 flex-wrap">
-                      {selected.topic && <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20">{selected.topic}</span>}
+                      {selected.topic && <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">{selected.topic}</span>}
                       {selected.embedding
                         ? <span className="text-xs px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">✓ vectorisé</span>
                         : <span className="text-xs px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">⏳ en attente</span>}

@@ -6,7 +6,7 @@ import { useMessaging } from '@/contexts/MessagingContext';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const EditProfilePage = () => {
   const { user, refreshProfile, supabase } = useAuth();
@@ -152,7 +152,7 @@ const EditProfilePage = () => {
               <Button
                 type="submit"
                 disabled={saving}
-                className="w-full bg-[#D4AF37] text-black font-semibold hover:bg-[#c9a432]"
+                className="w-full bg-[var(--school-accent)] text-black font-semibold hover:bg-[#c9a432]"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enregistrer'}
               </Button>

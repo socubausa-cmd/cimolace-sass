@@ -21,15 +21,15 @@ export default function NgowazuluMentoratDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md border-[#D4AF37]/20">
+      <DialogContent className="max-w-md border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
         <DialogHeader>
           <DialogTitle className="text-xl font-serif text-white pr-6">
-            Mentorat <span className="text-[#D4AF37]">{offer.commercialName}</span>
+            Mentorat <span className="text-[var(--school-accent)]">{offer.commercialName}</span>
           </DialogTitle>
           <DialogDescription className="text-left text-gray-400 text-sm space-y-3 pt-2">
             <p>
               <span className="text-white font-semibold">Contrat d'un mois.</span> Chaque offre couvre une période d\'un mois ;
-              ce qui change, c'est le <span className="text-[#D4AF37]">nombre de rencontres</span> avec le maître : vous choisissez la
+              ce qui change, c'est le <span className="text-[var(--school-accent)]">nombre de rencontres</span> avec le maître : vous choisissez la
               fréquence (Essentiel à Souverain) selon votre situation.
             </p>
             <p className="text-gray-300">{offer.detailIntro}</p>
@@ -40,7 +40,7 @@ export default function NgowazuluMentoratDetailDialog({
             </ul>
             <p className="text-xs text-amber-200/90">
               <span className="font-semibold text-amber-100">Premier achat :</span> des{' '}
-              <span className="text-[#D4AF37]">frais de configuration</span> (100 EUR, uniques) sont ajoutés automatiquement — ce n&apos;est pas un produit séparé.
+              <span className="text-[var(--school-accent)]">frais de configuration</span> (100 EUR, uniques) sont ajoutés automatiquement — ce n&apos;est pas un produit séparé.
             </p>
             {onExplainConfigFees ? (
               <Button
@@ -56,7 +56,7 @@ export default function NgowazuluMentoratDetailDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col sm:flex-row gap-2 pt-2">
-          <Button asChild className="bg-[#D4AF37] text-black hover:bg-amber-500 font-bold">
+          <Button asChild className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-bold">
             <Link to={href} onClick={() => onOpenChange?.(false)}>
               Souscrire — {offer.priceLabel}
             </Link>

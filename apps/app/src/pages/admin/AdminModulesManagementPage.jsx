@@ -46,7 +46,7 @@ const AdminModulesManagementPage = () => {
       <Helmet><title>Admin Modules Y2</title></Helmet>
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-white">Gestion Modules Année 2</h2>
-        <Button className="bg-[#D4AF37] text-black"><Plus className="w-4 h-4 mr-2"/> Nouveau Module</Button>
+        <Button className="bg-[var(--school-accent)] text-black"><Plus className="w-4 h-4 mr-2"/> Nouveau Module</Button>
       </div>
 
       <div className="bg-[#192734] border border-white/10 rounded-xl overflow-hidden">

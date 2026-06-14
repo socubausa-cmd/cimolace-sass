@@ -183,8 +183,8 @@ export default function LiriKonvaToolkitPanel({ addObjects, className, quickFilt
   return (
     <div className={cn('space-y-3', className)}>
       {showParityQuickLink ? (
-        <div className="rounded-xl border border-[#D4AF37]/20 bg-[#0d1222]/90 px-2.5 py-2">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#D4AF37]/80">Parcours & exports</p>
+        <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[#0d1222]/90 px-2.5 py-2">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">Parcours & exports</p>
           <p className="mt-1 text-[9px] leading-snug text-white/45">
             Exports PDF / workspace / qualité depuis le Designer (même écran).
           </p>

@@ -69,7 +69,7 @@ const ModuleCartPage = () => {
           <div className="text-center py-20 bg-[#192734] rounded-2xl border border-white/5">
             <p className="text-gray-400 mb-6">Votre panier est vide.</p>
             <Link to="/modules/year2-catalog">
-              <Button className="bg-[#D4AF37] text-black hover:bg-[#b5952f]">
+              <Button className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f]">
                 Parcourir le catalogue
               </Button>
             </Link>
@@ -84,7 +84,7 @@ const ModuleCartPage = () => {
                     <p className="text-sm text-gray-400 font-mono">{item.code}</p>
                   </div>
                   <div className="flex items-center gap-6">
-                    <span className="font-bold text-[#D4AF37]">{item.price}€</span>
+                    <span className="font-bold text-[var(--school-accent)]">{item.price}€</span>
                     <button onClick={() => removeItem(item.id)} className="text-gray-500 hover:text-red-500 transition-colors">
                       <Trash2 className="w-5 h-5" />
                     </button>
@@ -112,7 +112,7 @@ const ModuleCartPage = () => {
                 <span>{calculateTotal()}€</span>
               </div>
               
-              <Button onClick={handleCheckout} disabled={loading} className="w-full bg-[#D4AF37] text-black hover:bg-[#b5952f] font-bold py-6">
+              <Button onClick={handleCheckout} disabled={loading} className="w-full bg-[var(--school-accent)] text-black hover:bg-[#b5952f] font-bold py-6">
                 {loading ? 'Chargement...' : <><CreditCard className="w-5 h-5 mr-2" /> Payer</>}
               </Button>
             </div>

@@ -193,7 +193,7 @@ export default function KonvaParityFeatureRoot({ className, editorRef }) {
             className={cn(
               'rounded-lg border px-2.5 py-1 text-[10px] font-medium transition-colors',
               designerPreviewMode === m
-                ? 'border-[#D4AF37]/45 bg-[rgba(212,175,55,0.14)] text-[#f5dd8a]'
+                ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[rgba(212,175,55,0.14)] text-[#f5dd8a]'
                 : 'border-white/12 bg-white/[0.04] text-white/65 hover:bg-white/[0.08]',
             )}
           >
@@ -203,10 +203,10 @@ export default function KonvaParityFeatureRoot({ className, editorRef }) {
       </div>
       <details className="group border-t border-white/[0.06]">
         <summary
-          className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-left text-[10px] font-medium text-[#D4AF37]/85 transition-colors hover:bg-white/[0.03] [&::-webkit-details-marker]:hidden"
+          className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-left text-[10px] font-medium text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)] transition-colors hover:bg-white/[0.03] [&::-webkit-details-marker]:hidden"
           aria-label="Ouvrir exports LIRI, thème et blocs pédagogiques"
         >
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[#D4AF37]/70 transition-transform group-open:rotate-180" />
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] transition-transform group-open:rotate-180" />
           <span>
             Exports &amp; parité LIRI <span className="font-normal text-white/45">— PDF, scripts, thème, blocs</span>
           </span>
@@ -300,7 +300,7 @@ export default function KonvaParityFeatureRoot({ className, editorRef }) {
               type="button"
               title={b.hint}
               onClick={() => runPedagogicalInsert(b.id)}
-              className="inline-flex max-w-[11rem] items-center gap-1 rounded-md border border-[#D4AF37]/25 bg-[#1a1510]/80 px-2 py-1 text-left text-[10px] leading-tight text-[#e9bf72]/95 hover:bg-[#2a2218]/90"
+              className="inline-flex max-w-[11rem] items-center gap-1 rounded-md border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#1a1510]/80 px-2 py-1 text-left text-[10px] leading-tight text-[#e9bf72]/95 hover:bg-[#2a2218]/90"
             >
               <LayoutGrid className="h-3 w-3 shrink-0 opacity-75" />
               <span className="truncate">{b.label}</span>

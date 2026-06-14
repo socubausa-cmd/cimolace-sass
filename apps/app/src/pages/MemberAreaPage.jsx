@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import PremiumSegmentedSelector from '@/components/ui/premium-segmented-selector';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const SITE_NAME = `${isnaTenantConfig.branding.name} · LIRI`;
 const PUBLIC_HOST = (() => {

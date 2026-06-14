@@ -60,8 +60,8 @@ const SectionCard = ({
   actionLabel,
   canActivate = () => true,
   onActions,
-  color = 'text-[#D4AF37]',
-  gradient = 'from-[#D4AF37]/20 to-amber-500/5',
+  color = 'text-[var(--school-accent)]',
+  gradient = 'from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-amber-500/5',
   index = 0,
 }) => (
   <motion.div
@@ -81,7 +81,7 @@ const SectionCard = ({
           <Icon className={`w-5 h-5 ${color}`} />
         </motion.div>
         {title}
-        {items.length > 0 && <Badge className="ml-auto bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30">{items.length}</Badge>}
+        {items.length > 0 && <Badge className="ml-auto bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">{items.length}</Badge>}
       </CardTitle>
     </CardHeader>
     <CardContent className="relative pt-0 px-5 pb-5">
@@ -119,7 +119,7 @@ const SectionCard = ({
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                      className="text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                       onClick={(e) => { e.stopPropagation(); onAction(item); }}
                     >
                       {actionLabel || 'Voir'}
@@ -320,7 +320,7 @@ const SecretariatStudentDashboard = () => {
     <div className="relative min-h-[60vh]">
       {/* Ambient background */}
       <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[#D4AF37]/5 rounded-full blur-[100px]" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[100px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] bg-indigo-500/5 rounded-full blur-[80px]" />
       </div>
 
@@ -339,7 +339,7 @@ const SecretariatStudentDashboard = () => {
             transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-3"
           >
-            <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+            <Sparkles className="w-4 h-4 text-[var(--school-accent)]" />
             <span className="text-xs text-gray-400">Pipeline élève</span>
           </motion.div>
           <h2 className="text-2xl md:text-3xl font-serif font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-400">
@@ -357,7 +357,7 @@ const SecretariatStudentDashboard = () => {
           <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
             <DialogTrigger asChild>
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button size="sm" className="bg-[#D4AF37] text-black hover:bg-amber-500 shadow-lg shadow-[#D4AF37]/20">
+                <Button size="sm" className="bg-[var(--school-accent)] text-black hover:bg-amber-500 shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                   <UserPlus className="w-4 h-4 mr-2" />
                   Créer élève
                 </Button>
@@ -388,7 +388,7 @@ const SecretariatStudentDashboard = () => {
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button type="submit" disabled={createLoading} className="bg-[#D4AF37] text-black hover:bg-amber-500">
+                  <Button type="submit" disabled={createLoading} className="bg-[var(--school-accent)] text-black hover:bg-amber-500">
                     {createLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Inviter'}
                   </Button>
                   <Button type="button" variant="outline" onClick={() => setCreateModalOpen(false)} className="border-white/10">
@@ -422,7 +422,7 @@ const SecretariatStudentDashboard = () => {
                     </Select>
                     <Button
                       size="sm"
-                      className="mt-2 bg-[#D4AF37] text-black"
+                      className="mt-2 bg-[var(--school-accent)] text-black"
                       onClick={handleAssignFormation}
                       disabled={actionLoading['assign-formation'] || !assignFormationId}
                     >
@@ -445,7 +445,7 @@ const SecretariatStudentDashboard = () => {
                     </Select>
                     <Button
                       size="sm"
-                      className="mt-2 bg-[#D4AF37] text-black"
+                      className="mt-2 bg-[var(--school-accent)] text-black"
                       onClick={handleAssignTeacher}
                       disabled={actionLoading['assign-teacher'] || !assignTeacherId || !selectedStudent.formation_id}
                     >
@@ -464,7 +464,7 @@ const SecretariatStudentDashboard = () => {
                     />
                     <Button
                       size="sm"
-                      className="mt-2 bg-[#D4AF37] text-black"
+                      className="mt-2 bg-[var(--school-accent)] text-black"
                       onClick={handleSendMessage}
                       disabled={actionLoading['send-message'] || !messageText?.trim()}
                     >

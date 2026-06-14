@@ -53,7 +53,7 @@ const ModuleDetailPage = () => {
 
   if (loading) return (
     <div className="min-h-screen bg-[#0F1419] flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D4AF37]"></div>
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--school-accent)]"></div>
     </div>
   );
 
@@ -65,16 +65,16 @@ const ModuleDetailPage = () => {
 
       {/* --- HERO HEADER --- */}
       <div className="relative overflow-hidden mb-12">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37]/5 via-transparent to-[#D4AF37]/5 opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] via-transparent to-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] opacity-30" />
         <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
-          <Link to="/curriculum/first-year" className="inline-flex items-center text-gray-400 hover:text-[#D4AF37] mb-6 transition-colors">
+          <Link to="/curriculum/first-year" className="inline-flex items-center text-gray-400 hover:text-[var(--school-accent)] mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4 mr-2" /> Retour au Cursus
           </Link>
 
           <div className="flex flex-col lg:flex-row gap-12 items-start">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-4">
-                <Badge variant="outline" className="border-[#D4AF37] text-[#D4AF37] text-lg px-3 py-1 font-bold">{module.code}</Badge>
+                <Badge variant="outline" className="border-[var(--school-accent)] text-[var(--school-accent)] text-lg px-3 py-1 font-bold">{module.code}</Badge>
                 <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/30 border-red-500/30">{module.type}</Badge>
                 <span className="text-gray-400 uppercase tracking-widest text-xs font-semibold">{module.trimester}</span>
               </div>
@@ -92,9 +92,9 @@ const ModuleDetailPage = () => {
               </p>
 
               <div className="flex flex-wrap gap-6 text-sm text-gray-400 border-t border-white/10 pt-6">
-                <div className="flex items-center gap-2"><Clock className="w-5 h-5 text-[#D4AF37]" /> {module.duration_weeks} Semaines ({module.duration_hours}h)</div>
-                <div className="flex items-center gap-2"><Target className="w-5 h-5 text-[#D4AF37]" /> Niveau {module.level}</div>
-                <div className="flex items-center gap-2"><Star className="w-5 h-5 text-[#D4AF37] fill-[#D4AF37]" /> {module.rating}/5 ({module.reviews_count} avis)</div>
+                <div className="flex items-center gap-2"><Clock className="w-5 h-5 text-[var(--school-accent)]" /> {module.duration_weeks} Semaines ({module.duration_hours}h)</div>
+                <div className="flex items-center gap-2"><Target className="w-5 h-5 text-[var(--school-accent)]" /> Niveau {module.level}</div>
+                <div className="flex items-center gap-2"><Star className="w-5 h-5 text-[var(--school-accent)] fill-[var(--school-accent)]" /> {module.rating}/5 ({module.reviews_count} avis)</div>
               </div>
             </div>
 
@@ -105,10 +105,10 @@ const ModuleDetailPage = () => {
               className="w-full lg:w-96 bg-[#192734]/80 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl"
             >
               <div className="flex items-center gap-4 mb-6">
-                <img src={module.professor.avatar} alt={module.professor.name} className="w-16 h-16 rounded-full border-2 border-[#D4AF37] object-cover" />
+                <img src={module.professor.avatar} alt={module.professor.name} className="w-16 h-16 rounded-full border-2 border-[var(--school-accent)] object-cover" />
                 <div>
                   <h3 className="font-bold text-white">{module.professor.name}</h3>
-                  <p className="text-xs text-[#D4AF37] uppercase">{module.professor.title}</p>
+                  <p className="text-xs text-[var(--school-accent)] uppercase">{module.professor.title}</p>
                 </div>
               </div>
               
@@ -120,7 +120,7 @@ const ModuleDetailPage = () => {
 
               {!isEnrolled ? (
                 <div className="space-y-3">
-                  <Button onClick={handleEnroll} className="w-full bg-[#D4AF37] text-black hover:bg-[#b5952f] font-bold py-6 text-lg">
+                  <Button onClick={handleEnroll} className="w-full bg-[var(--school-accent)] text-black hover:bg-[#b5952f] font-bold py-6 text-lg">
                     S'inscrire au Module
                   </Button>
                   <div className="grid grid-cols-2 gap-3">
@@ -159,7 +159,7 @@ const ModuleDetailPage = () => {
           {/* Objectives */}
           <section>
              <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white">
-               <Target className="w-6 h-6 text-[#D4AF37]" /> Objectifs d'Apprentissage
+               <Target className="w-6 h-6 text-[var(--school-accent)]" /> Objectifs d'Apprentissage
              </h2>
              <div className="grid gap-4">
                {module.objectives.map(obj => (
@@ -171,7 +171,7 @@ const ModuleDetailPage = () => {
           {/* Syllabus */}
           <section>
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white">
-              <FileText className="w-6 h-6 text-[#D4AF37]" /> Programme Hebdomadaire
+              <FileText className="w-6 h-6 text-[var(--school-accent)]" /> Programme Hebdomadaire
             </h2>
             <div>
               {module.weeks.map(week => (
@@ -204,9 +204,9 @@ const ModuleDetailPage = () => {
           {/* Reviews */}
           <section>
              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-3"><Star className="w-6 h-6 text-[#D4AF37]" /> Avis Étudiants</h2>
+                <h2 className="text-2xl font-bold text-white flex items-center gap-3"><Star className="w-6 h-6 text-[var(--school-accent)]" /> Avis Étudiants</h2>
                 <div className="text-right">
-                   <div className="text-3xl font-bold text-[#D4AF37]">{module.rating} <span className="text-sm text-gray-500 font-normal">/ 5</span></div>
+                   <div className="text-3xl font-bold text-[var(--school-accent)]">{module.rating} <span className="text-sm text-gray-500 font-normal">/ 5</span></div>
                    <div className="text-xs text-green-400">{module.recommendation_rate}% recommandent ce cours</div>
                 </div>
              </div>
@@ -215,7 +215,7 @@ const ModuleDetailPage = () => {
                  <ReviewCard key={review.id} review={review} />
                ))}
              </div>
-             <Button variant="ghost" className="w-full mt-4 text-[#D4AF37] hover:bg-[#D4AF37]/10">Voir les {module.reviews_count} avis</Button>
+             <Button variant="ghost" className="w-full mt-4 text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">Voir les {module.reviews_count} avis</Button>
           </section>
         </div>
 
@@ -225,7 +225,7 @@ const ModuleDetailPage = () => {
           {/* Evaluations Widget */}
           <div className="bg-[#192734] border border-white/10 rounded-2xl p-6 sticky top-24">
              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <GraduationCap className="w-5 h-5 text-[#D4AF37]" /> Critères d'Évaluation
+                <GraduationCap className="w-5 h-5 text-[var(--school-accent)]" /> Critères d'Évaluation
              </h3>
              <EvaluationCriteria evaluations={module.evaluations} />
              

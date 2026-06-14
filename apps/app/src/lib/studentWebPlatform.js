@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { shouldUseLiriMobileLogin } from '@/lib/loginEntryPath';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const DEFAULT_PUBLIC_WEB = isnaTenantConfig.branding.publicSiteOrigin;
 

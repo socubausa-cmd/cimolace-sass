@@ -31,7 +31,7 @@ import Logo from '@/components/Logo';
 import { cn } from '@/lib/utils';
 import { resolveDashboardPath } from '@/lib/dashboardRoute';
 import { useVitrineContactEmail } from '@/contexts/VitrineContactEmailContext';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const SCHOOL = isnaTenantConfig.branding.name;
 const SITE_NAME = `${SCHOOL} · LIRI`;
@@ -335,7 +335,7 @@ const ReceptionPage = () => {
       <div className="lg:col-span-7 space-y-5 lg:space-y-7">
         <Logo size="large" variant="dark" showText />
         <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/20 px-3 py-1.5 text-xs text-gray-200">
-          <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+          <Sparkles className="w-3.5 h-3.5 text-[var(--school-accent)]" />
           Plateforme immersive
         </div>
         <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-serif font-bold text-white leading-tight">
@@ -344,7 +344,7 @@ const ReceptionPage = () => {
         <p className="text-base lg:text-lg text-gray-300 max-w-xl">{section.description}</p>
         <div className="flex flex-wrap gap-3">
           <Link to={classroomLink}>
-            <button className="h-11 px-6 rounded-xl bg-[#D4AF37] text-black font-semibold hover:bg-[#e5c04a] transition-all text-sm">
+            <button className="h-11 px-6 rounded-xl bg-[var(--school-accent)] text-black font-semibold hover:bg-[#e5c04a] transition-all text-sm">
               Aller en classe
             </button>
           </Link>
@@ -388,7 +388,7 @@ const ReceptionPage = () => {
             { icon: Star, label: 'Satisfaction', value: '98%' },
           ].map((s) => (
             <div key={s.label} className="premium-panel p-3 text-center">
-              <s.icon className="w-4 h-4 text-[#D4AF37] mx-auto mb-1" />
+              <s.icon className="w-4 h-4 text-[var(--school-accent)] mx-auto mb-1" />
               <p className="text-white font-bold text-sm">{s.value}</p>
               <p className="text-gray-500 text-[10px] leading-tight">{s.label}</p>
             </div>
@@ -409,7 +409,7 @@ const ReceptionPage = () => {
           const content = (
             <div
               className={cn(
-                'premium-panel p-4 text-left hover:border-[#D4AF37]/35 transition-all h-full relative',
+                'premium-panel p-4 text-left hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] transition-all h-full relative',
                 phoneCopied && action.id === 'phone' && 'border-green-500/30'
               )}
             >
@@ -447,39 +447,39 @@ const ReceptionPage = () => {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link to="/landing" className="group block">
-          <div className="premium-panel p-5 h-full hover:border-[#D4AF37]/30 transition-all">
+          <div className="premium-panel p-5 h-full hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
             <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center mb-4">
               <BookOpen className="w-5 h-5 text-blue-400" />
             </div>
-            <h3 className="text-base font-bold text-white mb-2 group-hover:text-[#D4AF37] transition-colors">Nouveau visiteur</h3>
+            <h3 className="text-base font-bold text-white mb-2 group-hover:text-[var(--school-accent)] transition-colors">Nouveau visiteur</h3>
             <p className="text-sm text-gray-400 mb-4">Découvrez le fonctionnement global de l'école.</p>
-            <span className="text-[#D4AF37] text-xs uppercase tracking-wider inline-flex items-center gap-1.5">
+            <span className="text-[var(--school-accent)] text-xs uppercase tracking-wider inline-flex items-center gap-1.5">
               Commencer <ArrowRight className="w-3 h-3" />
             </span>
           </div>
         </Link>
 
         <Link to={classroomLink} className="group block">
-          <div className="premium-panel p-5 h-full hover:border-[#D4AF37]/30 transition-all">
+          <div className="premium-panel p-5 h-full hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
             <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center mb-4">
               <GraduationCap className="w-5 h-5 text-yellow-400" />
             </div>
-            <h3 className="text-base font-bold text-white mb-2 group-hover:text-[#D4AF37] transition-colors">Déjà inscrit</h3>
+            <h3 className="text-base font-bold text-white mb-2 group-hover:text-[var(--school-accent)] transition-colors">Déjà inscrit</h3>
             <p className="text-sm text-gray-400 mb-4">Accédez directement à votre classe et vos modules.</p>
-            <span className="text-[#D4AF37] text-xs uppercase tracking-wider inline-flex items-center gap-1.5">
+            <span className="text-[var(--school-accent)] text-xs uppercase tracking-wider inline-flex items-center gap-1.5">
               Ouvrir la classe <ArrowRight className="w-3 h-3" />
             </span>
           </div>
         </Link>
 
         <button onClick={() => setIsContactModalOpen(true)} className="group text-left block w-full">
-          <div className="premium-panel p-5 h-full hover:border-[#D4AF37]/30 transition-all">
+          <div className="premium-panel p-5 h-full hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
             <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center mb-4">
               <HelpCircle className="w-5 h-5 text-purple-400" />
             </div>
-            <h3 className="text-base font-bold text-white mb-2 group-hover:text-[#D4AF37] transition-colors">Besoin d'aide</h3>
+            <h3 className="text-base font-bold text-white mb-2 group-hover:text-[var(--school-accent)] transition-colors">Besoin d'aide</h3>
             <p className="text-sm text-gray-400 mb-4">Un conseiller vous accompagne rapidement.</p>
-            <span className="text-[#D4AF37] text-xs uppercase tracking-wider inline-flex items-center gap-1.5">
+            <span className="text-[var(--school-accent)] text-xs uppercase tracking-wider inline-flex items-center gap-1.5">
               Contacter <ArrowRight className="w-3 h-3" />
             </span>
           </div>
@@ -498,7 +498,7 @@ const ReceptionPage = () => {
         {/* Annonces */}
         <div className="lg:col-span-3 space-y-3">
           <div className="flex items-center gap-2 mb-3">
-            <Bell className="w-4 h-4 text-[#D4AF37]" />
+            <Bell className="w-4 h-4 text-[var(--school-accent)]" />
             <p className="text-xs uppercase tracking-wider text-gray-400">Annonces récentes</p>
           </div>
           {announcements.slice(0, 3).map((a) => (
@@ -511,7 +511,7 @@ const ReceptionPage = () => {
         {/* Équipe */}
         <div className="lg:col-span-2 space-y-3">
           <div className="flex items-center gap-2 mb-3">
-            <Users className="w-4 h-4 text-[#D4AF37]" />
+            <Users className="w-4 h-4 text-[var(--school-accent)]" />
             <p className="text-xs uppercase tracking-wider text-gray-400">Équipe pédagogique</p>
           </div>
           {teachers.slice(0, 3).map((t) => (
@@ -526,7 +526,7 @@ const ReceptionPage = () => {
     <div className="w-full">
       <div className="premium-panel p-6 lg:p-8">
         <div className="max-w-3xl mb-6">
-          <p className="text-xs uppercase tracking-[0.28em] text-[#D4AF37]/85 mb-2">Ressources</p>
+          <p className="text-xs uppercase tracking-[0.28em] text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)] mb-2">Ressources</p>
           <h2 className="text-3xl sm:text-4xl font-serif font-bold text-white">{section.title}</h2>
           <p className="text-gray-300 mt-2 text-base">{section.description}</p>
         </div>
@@ -540,7 +540,7 @@ const ReceptionPage = () => {
             </p>
             <div className="space-y-2 text-sm text-gray-300">
               <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                <MapPin className="w-4 h-4 text-[var(--school-accent)] shrink-0" />
                 <span>Agondje Village, Libreville</span>
               </div>
               <button
@@ -548,57 +548,57 @@ const ReceptionPage = () => {
                 onClick={handleCopyPhone}
                 className="flex items-center gap-2 hover:text-white transition-colors group"
               >
-                {phoneCopied ? <Check className="w-4 h-4 text-green-400 shrink-0" /> : <Phone className="w-4 h-4 text-[#D4AF37] shrink-0" />}
+                {phoneCopied ? <Check className="w-4 h-4 text-green-400 shrink-0" /> : <Phone className="w-4 h-4 text-[var(--school-accent)] shrink-0" />}
                 <span className={phoneCopied ? 'text-green-400' : ''}>
                   {phoneCopied ? 'Numéro copié !' : '+33 7 66 52 57 08'}
                 </span>
                 {!phoneCopied && <Copy className="w-3 h-3 text-gray-600 group-hover:text-gray-400 transition-colors" />}
               </button>
               <a href={`mailto:${vitrineEmail}`} className="flex items-center gap-2 hover:text-white transition-colors">
-                <Mail className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                <Mail className="w-4 h-4 text-[var(--school-accent)] shrink-0" />
                 <span>{vitrineEmail}</span>
               </a>
             </div>
           </div>
 
           <div className="lg:col-span-8 grid grid-cols-2 gap-3">
-            <Link to={dashboardPath} className="premium-panel p-4 hover:border-[#D4AF37]/35 transition-all group block">
-              <div className="flex items-center gap-2 text-[#D4AF37] mb-1.5">
+            <Link to={dashboardPath} className="premium-panel p-4 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] transition-all group block">
+              <div className="flex items-center gap-2 text-[var(--school-accent)] mb-1.5">
                 <LayoutDashboard className="w-4 h-4" />
                 <span className="text-[10px] uppercase tracking-wider">Gestion</span>
               </div>
-              <p className="text-white font-semibold text-sm group-hover:text-[#D4AF37] transition-colors">Tableau de bord</p>
+              <p className="text-white font-semibold text-sm group-hover:text-[var(--school-accent)] transition-colors">Tableau de bord</p>
               <p className="text-xs text-gray-400 mt-0.5">Accédez à votre espace de pilotage.</p>
             </Link>
 
-            <Link to="/formations" className="premium-panel p-4 hover:border-[#D4AF37]/35 transition-all group block">
-              <div className="flex items-center gap-2 text-[#D4AF37] mb-1.5">
+            <Link to="/formations" className="premium-panel p-4 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] transition-all group block">
+              <div className="flex items-center gap-2 text-[var(--school-accent)] mb-1.5">
                 <BookOpen className="w-4 h-4" />
                 <span className="text-[10px] uppercase tracking-wider">Navigation</span>
               </div>
-              <p className="text-white font-semibold text-sm group-hover:text-[#D4AF37] transition-colors">Catalogue formations</p>
+              <p className="text-white font-semibold text-sm group-hover:text-[var(--school-accent)] transition-colors">Catalogue formations</p>
               <p className="text-xs text-gray-400 mt-0.5">Explorez les parcours disponibles.</p>
             </Link>
 
-            <Link to="/faq" className="premium-panel p-4 hover:border-[#D4AF37]/35 transition-all group block">
-              <div className="flex items-center gap-2 text-[#D4AF37] mb-1.5">
+            <Link to="/faq" className="premium-panel p-4 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] transition-all group block">
+              <div className="flex items-center gap-2 text-[var(--school-accent)] mb-1.5">
                 <HelpCircle className="w-4 h-4" />
                 <span className="text-[10px] uppercase tracking-wider">Support</span>
               </div>
-              <p className="text-white font-semibold text-sm group-hover:text-[#D4AF37] transition-colors">FAQ</p>
+              <p className="text-white font-semibold text-sm group-hover:text-[var(--school-accent)] transition-colors">FAQ</p>
               <p className="text-xs text-gray-400 mt-0.5">Réponses aux questions fréquentes.</p>
             </Link>
 
             <button
               type="button"
               onClick={() => setIsContactModalOpen(true)}
-              className="premium-panel p-4 hover:border-[#D4AF37]/35 transition-all group text-left block w-full"
+              className="premium-panel p-4 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] transition-all group text-left block w-full"
             >
-              <div className="flex items-center gap-2 text-[#D4AF37] mb-1.5">
+              <div className="flex items-center gap-2 text-[var(--school-accent)] mb-1.5">
                 <Mail className="w-4 h-4" />
                 <span className="text-[10px] uppercase tracking-wider">Contact</span>
               </div>
-              <p className="text-white font-semibold text-sm group-hover:text-[#D4AF37] transition-colors">Nous contacter</p>
+              <p className="text-white font-semibold text-sm group-hover:text-[var(--school-accent)] transition-colors">Nous contacter</p>
               <p className="text-xs text-gray-400 mt-0.5">Parlez à un conseiller rapidement.</p>
             </button>
           </div>
@@ -659,7 +659,7 @@ const ReceptionPage = () => {
         />
         <motion.div
           style={{ x: parallaxXInverse, y: parallaxYInverse }}
-          className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-[#D4AF37]/8 blur-[110px]"
+          className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] blur-[110px]"
         />
         <div className="absolute top-[20%] right-[22%] w-48 h-48 rounded-full bg-violet-500/8 blur-[95px]" />
       </motion.div>
@@ -667,7 +667,7 @@ const ReceptionPage = () => {
       {/* ── Top navigation bar ─────────────────────────────────────────────── */}
       <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 sm:px-8 py-4">
         <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/25 backdrop-blur-xl px-3 py-1.5 text-xs text-gray-200">
-          <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+          <Sparkles className="w-3.5 h-3.5 text-[var(--school-accent)]" />
           <span className="hidden sm:inline">{SITE_NAME}</span>
           <span className="sm:hidden">{SCHOOL}</span>
         </div>
@@ -676,7 +676,7 @@ const ReceptionPage = () => {
           {user ? (
             <Link
               to={dashboardPath}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-3 py-1.5 text-xs text-[#D4AF37] hover:bg-[#D4AF37]/20 transition-all backdrop-blur-xl"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-3 py-1.5 text-xs text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-all backdrop-blur-xl"
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Mon espace</span>
@@ -692,7 +692,7 @@ const ReceptionPage = () => {
               </Link>
               <Link
                 to="/signup"
-                className="inline-flex items-center gap-1.5 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/15 px-3 py-1.5 text-xs text-[#D4AF37] hover:bg-[#D4AF37]/25 transition-all backdrop-blur-xl font-medium"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] px-3 py-1.5 text-xs text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] transition-all backdrop-blur-xl font-medium"
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 <span>S'inscrire</span>

@@ -146,7 +146,7 @@ const OwnerSetupPage = () => {
       <div className="max-w-4xl w-full space-y-8">
         
         <div className="text-center space-y-2">
-          <ShieldCheck className="w-16 h-16 text-[#D4AF37] mx-auto" />
+          <ShieldCheck className="w-16 h-16 text-[var(--school-accent)] mx-auto" />
           <h1 className="text-3xl font-serif font-bold text-white">Configuration Compte Propriétaire</h1>
           <p className="text-gray-400">Outil de vérification et d'initialisation des accès admin</p>
         </div>
@@ -156,7 +156,7 @@ const OwnerSetupPage = () => {
           <Card className="bg-[#192734] border-white/10 text-white flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Terminal className="w-5 h-5 text-[#D4AF37]" />
+                <Terminal className="w-5 h-5 text-[var(--school-accent)]" />
                 Journal de Vérification
               </CardTitle>
               <CardDescription className="text-gray-400">
@@ -183,7 +183,7 @@ const OwnerSetupPage = () => {
               <Button 
                 onClick={verifySetup} 
                 disabled={loading}
-                className="w-full bg-[#D4AF37] hover:bg-[#b5952f] text-black font-bold"
+                className="w-full bg-[var(--school-accent)] hover:bg-[#b5952f] text-black font-bold"
               >
                 {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Vérification...</> : 'Lancer la Vérification'}
               </Button>
@@ -195,7 +195,7 @@ const OwnerSetupPage = () => {
             <Card className={`bg-[#192734] border-white/10 text-white transition-opacity duration-500`}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Lock className="w-5 h-5 text-[#D4AF37]" />
+                  <Lock className="w-5 h-5 text-[var(--school-accent)]" />
                   Identifiants Sécurisés
                 </CardTitle>
                 <CardDescription className="text-gray-400">
@@ -238,7 +238,7 @@ const OwnerSetupPage = () => {
                 </div>
 
                 <div className="pt-4 border-t border-white/5">
-                  <h4 className="text-sm font-semibold text-[#D4AF37] mb-3 flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-[var(--school-accent)] mb-3 flex items-center gap-2">
                     <RefreshCw className="w-4 h-4" /> 
                     Réinitialisation
                   </h4>
@@ -258,13 +258,13 @@ const OwnerSetupPage = () => {
             </Card>
 
             <Link to="/login" className="block w-full">
-               <Card className="bg-gradient-to-r from-purple-900/40 to-blue-900/40 border-white/10 hover:border-[#D4AF37]/50 transition-all cursor-pointer group">
+               <Card className="bg-gradient-to-r from-purple-900/40 to-blue-900/40 border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] transition-all cursor-pointer group">
                   <CardContent className="p-6 flex items-center justify-between">
                     <div>
-                      <h3 className="font-bold text-lg text-white group-hover:text-[#D4AF37] transition-colors">Connexion Admin</h3>
+                      <h3 className="font-bold text-lg text-white group-hover:text-[var(--school-accent)] transition-colors">Connexion Admin</h3>
                       <p className="text-sm text-gray-400">Accéder au tableau de bord</p>
                     </div>
-                    <ShieldCheck className="w-8 h-8 text-white/20 group-hover:text-[#D4AF37] transition-colors" />
+                    <ShieldCheck className="w-8 h-8 text-white/20 group-hover:text-[var(--school-accent)] transition-colors" />
                   </CardContent>
                </Card>
             </Link>

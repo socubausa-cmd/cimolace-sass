@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet';
 import { Linkedin, Twitter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { WEB_TEAM } from '@/data/prorascienceVitrineFromWebContent';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const TeamPage = () => {
   const t = WEB_TEAM;
@@ -24,7 +24,7 @@ const TeamPage = () => {
       {/* Founders */}
       <section className="py-10">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold mb-16 text-center text-[#D4AF37]">Les Fondateurs</h2>
+          <h2 className="text-3xl font-bold mb-16 text-center text-[var(--school-accent)]">Les Fondateurs</h2>
           <div className="grid md:grid-cols-2 gap-12">
             {founders.map((founder, i) => (
               <div key={i} className="premium-panel rounded-2xl overflow-hidden border border-white/10 flex flex-col md:flex-row">
@@ -33,7 +33,7 @@ const TeamPage = () => {
                 </div>
                 <div className="p-8 md:w-3/5 flex flex-col justify-center">
                   <h3 className="text-2xl font-bold mb-1">{founder.name}</h3>
-                  <p className="text-[#D4AF37] text-sm uppercase tracking-wider mb-4">{founder.role}</p>
+                  <p className="text-[var(--school-accent)] text-sm uppercase tracking-wider mb-4">{founder.role}</p>
                   <p className="text-gray-300 leading-relaxed mb-6">{founder.bio}</p>
                   <div className="flex gap-4">
                     <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white"><Linkedin className="w-4 h-4"/></Button>
@@ -60,7 +60,7 @@ const TeamPage = () => {
                    </div>
                 </div>
                 <h3 className="font-bold text-lg mb-1">{prof.name}</h3>
-                <p className="text-[#D4AF37] text-xs font-bold mb-2">{prof.module}</p>
+                <p className="text-[var(--school-accent)] text-xs font-bold mb-2">{prof.module}</p>
                 <p className="text-gray-400 text-xs">{prof.spec}</p>
               </div>
             ))}
@@ -75,7 +75,7 @@ const TeamPage = () => {
            <p className="text-gray-400 mb-8">
               {cta.text}
            </p>
-           <Button variant="outline" className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black">
+           <Button variant="outline" className="border-[var(--school-accent)] text-[var(--school-accent)] hover:bg-[var(--school-accent)] hover:text-black">
               Voir les offres
            </Button>
         </div>

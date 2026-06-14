@@ -53,13 +53,13 @@ function StepBadge({ step, currentIdx, idx }) {
     <div className="flex flex-col items-center gap-1 flex-1">
       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${
         done   ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300' :
-        active ? 'bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]' :
+        active ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border-[var(--school-accent)] text-[var(--school-accent)]' :
                  'bg-white/5 border-white/15 text-gray-600'
       }`}>
         {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : idx + 1}
       </div>
       <p className={`text-[10px] text-center leading-tight ${
-        active ? 'text-[#D4AF37]' : done ? 'text-emerald-400' : 'text-gray-600'
+        active ? 'text-[var(--school-accent)]' : done ? 'text-emerald-400' : 'text-gray-600'
       }`}>{step.label}</p>
     </div>
   );
@@ -143,7 +143,7 @@ export default function SessionFlowPanel({ appointment, session, onStatusChange 
     <div className="rounded-2xl border border-white/10 bg-[#0f1520]/80 backdrop-blur-xl overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/8 bg-gradient-to-r from-[#172437]/60 to-transparent">
-        <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+        <Sparkles className="w-4 h-4 text-[var(--school-accent)]" />
         <p className="text-sm font-semibold text-white">Centre de commandes — Session</p>
         {!isEnded && (
           <span className="ml-auto text-[10px] rounded-full px-2 py-0.5 bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
@@ -213,7 +213,7 @@ export default function SessionFlowPanel({ appointment, session, onStatusChange 
         {!isEnded && (
           <button
             onClick={() => setShowPrep(p => !p)}
-            className="w-full flex items-center justify-between text-xs text-gray-400 hover:text-[#D4AF37] border border-white/8 hover:border-[#D4AF37]/30 rounded-lg px-3 py-2 transition-colors"
+            className="w-full flex items-center justify-between text-xs text-gray-400 hover:text-[var(--school-accent)] border border-white/8 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] rounded-lg px-3 py-2 transition-colors"
           >
             <span className="flex items-center gap-1.5">
               <span>📋</span> Studio de préparation
@@ -230,7 +230,7 @@ export default function SessionFlowPanel({ appointment, session, onStatusChange 
               <Button
                 onClick={handleStartChat}
                 disabled={!!loading}
-                className="w-full bg-[#D4AF37] text-black hover:bg-amber-400 font-semibold flex items-center gap-2"
+                className="w-full bg-[var(--school-accent)] text-black hover:bg-amber-400 font-semibold flex items-center gap-2"
               >
                 {loading === 'chat' ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
                 Démarrer le chat
@@ -241,7 +241,7 @@ export default function SessionFlowPanel({ appointment, session, onStatusChange 
             {curIdx === 1 && appointment.immersive_chat_id && (
               <Button
                 variant="outline"
-                className="w-full border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10 flex items-center gap-2"
+                className="w-full border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] flex items-center gap-2"
                 onClick={() => window.open(`/messagerie?inviteId=${appointment.immersive_chat_id}`, '_blank')}
               >
                 <MessageCircle className="w-4 h-4" /> Rejoindre le chat
@@ -322,14 +322,14 @@ export default function SessionFlowPanel({ appointment, session, onStatusChange 
                 }}
                 disabled={!!loading}
                 variant="outline"
-                className="w-full border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/10 flex items-center gap-2 text-sm"
+                className="w-full border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] flex items-center gap-2 text-sm"
               >
                 {loading === 'survey' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
                 Envoyer l'enquête de satisfaction
               </Button>
             )}
             {surveySent && (
-              <div className="flex items-center gap-2 text-xs text-[#D4AF37]/80">
+              <div className="flex items-center gap-2 text-xs text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">
                 <Star className="w-3.5 h-3.5" /> Enquête envoyée à l'élève.
               </div>
             )}

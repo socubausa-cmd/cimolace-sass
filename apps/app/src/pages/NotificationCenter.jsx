@@ -88,7 +88,7 @@ const NotificationCenter = () => {
      switch(type) {
         case 'message': return <Mail className="w-5 h-5 text-blue-400" />;
         case 'payment_received': return <CreditCard className="w-5 h-5 text-green-400" />;
-        case 'formation_enrolled': return <BookOpen className="w-5 h-5 text-[#D4AF37]" />;
+        case 'formation_enrolled': return <BookOpen className="w-5 h-5 text-[var(--school-accent)]" />;
         case 'appointment': return <Bell className="w-5 h-5 text-amber-400" />;
         default: return <Bell className="w-5 h-5 text-gray-400" />;
      }
@@ -134,7 +134,7 @@ const NotificationCenter = () => {
                 openNotificationTarget(notif);
               }
             }}
-            className={`bg-[#192734] border-white/10 p-4 flex items-center gap-4 transition-all ${!notif.isRead ? 'border-l-4 border-l-[#D4AF37]' : ''} ${notif.action_url ? 'cursor-pointer hover:bg-white/[0.04]' : ''}`}
+            className={`bg-[#192734] border-white/10 p-4 flex items-center gap-4 transition-all ${!notif.isRead ? 'border-l-4 border-l-[var(--school-accent)]' : ''} ${notif.action_url ? 'cursor-pointer hover:bg-white/[0.04]' : ''}`}
           >
             <div className="p-3 bg-white/5 rounded-full">
               {getIcon(notif.type)}
@@ -149,7 +149,7 @@ const NotificationCenter = () => {
             <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
               {!notif.isRead && (
                 <Button size="icon" variant="ghost" onClick={() => markAsRead(notif.id)} title="Marquer comme lu">
-                  <Check className="w-4 h-4 text-[#D4AF37]" />
+                  <Check className="w-4 h-4 text-[var(--school-accent)]" />
                 </Button>
               )}
               <Button size="icon" variant="ghost" onClick={() => deleteNotification(notif.id)} title="Supprimer">

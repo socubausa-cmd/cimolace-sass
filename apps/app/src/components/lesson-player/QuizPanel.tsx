@@ -81,7 +81,7 @@ function QuizCard({
         className="px-4 py-2 flex items-center justify-between gap-2"
         style={{ background: 'rgba(212,175,55,0.07)', borderBottom: '1px solid rgba(212,175,55,0.1)' }}
       >
-        <span className="text-xs font-bold text-[#D4AF37] truncate">
+        <span className="text-xs font-bold text-[var(--school-accent)] truncate">
           {index + 1}/{total} — {node.label}
         </span>
         {state.quiz?.difficulty && (
@@ -141,7 +141,7 @@ function QuizCard({
                   else if (isSelected && !isRight) btnStyle = 'border-red-500/60 bg-red-500/10 text-red-300';
                   else btnStyle = 'border-white/5 text-gray-600';
                 } else if (isSelected) {
-                  btnStyle = 'border-[#D4AF37]/60 bg-[#D4AF37]/10 text-[#D4AF37]';
+                  btnStyle = 'border-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]';
                 }
                 return (
                   <button
@@ -247,7 +247,7 @@ const QuizPanel: React.FC<Props> = ({ nodes, videoTitle, unlocked }) => {
       <div className="flex-shrink-0 px-4 py-3 border-b border-white/10 flex items-center justify-between gap-3">
         <div>
           <div className="text-sm font-bold text-white flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-[#D4AF37]" /> Quiz de révision
+            <Trophy className="w-4 h-4 text-[var(--school-accent)]" /> Quiz de révision
           </div>
           <div className="text-xs text-gray-500 mt-0.5">{allNodes.length} questions · {answeredStates.length} répondues</div>
         </div>

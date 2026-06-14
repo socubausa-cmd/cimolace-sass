@@ -13,7 +13,7 @@ function miniScoreChipClass(band) {
     case 'bon':
       return 'border-emerald-500/30 bg-emerald-950/30 text-emerald-100/95';
     case 'excellent':
-      return 'border-[#D4AF37]/40 bg-[#1a1810] text-[#f5dd8a]';
+      return 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[#1a1810] text-[#f5dd8a]';
     default:
       return 'border-white/12 bg-white/[0.06] text-white/45';
   }
@@ -80,7 +80,7 @@ export default function SmartboardFilmstripBar({
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           {typeof onSlideTimingChange === 'function' ? (
             <label className="flex items-center gap-1.5 rounded-lg border border-white/12 bg-black/30 px-2 py-1.5 text-[10px] text-white/80">
-              <Clock className="h-3.5 w-3.5 shrink-0 text-[#D4AF37]/85" strokeWidth={2} />
+              <Clock className="h-3.5 w-3.5 shrink-0 text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)]" strokeWidth={2} />
               <span className="text-white/45">Fiche</span>
               <input
                 type="number"

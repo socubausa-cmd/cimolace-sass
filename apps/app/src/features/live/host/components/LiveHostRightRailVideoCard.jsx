@@ -1,7 +1,7 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
 import { Track } from 'livekit-client';
-import LiveHostVideoCell from '@/components/live-room/LiveHostVideoCell';
+import LiveHostVideoCell from '@/components/liri/live-room/LiveHostVideoCell';
 import { LH_SIDEBAR_CARD_GLOW } from '@/features/live/host/liveHostTheme';
 import { PHASE } from '@/features/live/host/liveHostConstants';
 import { ARENA_LAYOUT } from '@/lib/liriArenaLayout';

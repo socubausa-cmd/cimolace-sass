@@ -103,7 +103,7 @@ const UpdatePasswordPage = () => {
       <div className="min-h-screen bg-[#0F1419] flex items-center justify-center p-6 text-white">
         <Helmet><title>Nouveau mot de passe | PRORASCIENCE</title></Helmet>
         <div className="flex items-center gap-3 text-gray-300">
-          <Loader2 className="h-5 w-5 animate-spin text-[#D4AF37]" />
+          <Loader2 className="h-5 w-5 animate-spin text-[var(--school-accent)]" />
           Vérification du lien…
         </div>
       </div>
@@ -119,7 +119,7 @@ const UpdatePasswordPage = () => {
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{sessionError}</AlertDescription>
           </Alert>
-          <Link to="/forgot-password" className="block text-center text-[#D4AF37] hover:underline text-sm">
+          <Link to="/forgot-password" className="block text-center text-[var(--school-accent)] hover:underline text-sm">
             Demander un nouveau lien
           </Link>
           <Link to="/login" className="block text-center text-gray-400 hover:text-white text-sm">
@@ -157,7 +157,7 @@ const UpdatePasswordPage = () => {
                 placeholder="Au moins 6 caractères"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[#D4AF37]"
+                className="pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[var(--school-accent)]"
               />
             </div>
           </div>
@@ -173,13 +173,13 @@ const UpdatePasswordPage = () => {
                 placeholder="Répétez le mot de passe"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                className="pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[#D4AF37]"
+                className="pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[var(--school-accent)]"
               />
             </div>
           </div>
           <Button
             type="submit"
-            className="w-full h-11 bg-[#D4AF37] hover:bg-[#bfa345] text-black font-bold"
+            className="w-full h-11 bg-[var(--school-accent)] hover:bg-[#bfa345] text-black font-bold"
             disabled={busy}
           >
             {busy ? (

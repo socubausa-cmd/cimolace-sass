@@ -34,13 +34,13 @@ const DropdownMenu = ({ title, icon: Icon, items, mega = false }) => {
         onClick={() => setIsOpen((v) => !v)}
         aria-expanded={isOpen}
         className={`flex items-center gap-1.5 px-2 py-2 text-[0.8rem] xl:text-sm font-medium transition-all duration-300 rounded-lg group ${
-          isOpen || isActive ? 'text-[#D4AF37] bg-white/5' : 'text-gray-300 hover:text-white hover:bg-white/5'
+          isOpen || isActive ? 'text-[var(--school-accent)] bg-white/5' : 'text-gray-300 hover:text-white hover:bg-white/5'
         }`}
       >
-        {Icon && <Icon className={`w-3.5 h-3.5 xl:w-4 xl:h-4 ${isOpen || isActive ? 'text-[#D4AF37]' : 'text-gray-500 group-hover:text-white'}`} />}
+        {Icon && <Icon className={`w-3.5 h-3.5 xl:w-4 xl:h-4 ${isOpen || isActive ? 'text-[var(--school-accent)]' : 'text-gray-500 group-hover:text-white'}`} />}
         <span className="uppercase tracking-tight font-bold whitespace-nowrap">{title}</span>
         <ChevronDown 
-          className={`w-3 h-3 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#D4AF37]' : 'text-gray-600'}`} 
+          className={`w-3 h-3 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[var(--school-accent)]' : 'text-gray-600'}`} 
         />
       </button>
 
@@ -56,7 +56,7 @@ const DropdownMenu = ({ title, icon: Icon, items, mega = false }) => {
             <div className="bg-[#192734]/90 border border-white/15 rounded-2xl shadow-[0_20px_50px_-20px_rgba(0,0,0,0.7)] overflow-hidden backdrop-blur-xl ring-1 ring-white/5">
               
               {/* Decorative top border */}
-              <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-80"></div>
+              <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent opacity-80"></div>
 
               {mega ? (
                 <div className="grid grid-cols-3 gap-0">
@@ -66,9 +66,9 @@ const DropdownMenu = ({ title, icon: Icon, items, mega = false }) => {
                         key={index}
                         to={item.path}
                         onClick={() => setIsOpen(false)}
-                        className="group rounded-xl border border-white/10 bg-white/5 px-3 py-3 hover:border-[#D4AF37]/40 hover:bg-white/10 transition-all"
+                        className="group rounded-xl border border-white/10 bg-white/5 px-3 py-3 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] hover:bg-white/10 transition-all"
                       >
-                        <div className="text-sm font-semibold text-white group-hover:text-[#D4AF37] transition-colors">
+                        <div className="text-sm font-semibold text-white group-hover:text-[var(--school-accent)] transition-colors">
                           {item.label}
                         </div>
                         <div className="mt-1 text-xs text-gray-400">
@@ -77,8 +77,8 @@ const DropdownMenu = ({ title, icon: Icon, items, mega = false }) => {
                       </Link>
                     ))}
                   </div>
-                  <div className="p-4 border-l border-white/10 bg-gradient-to-b from-[#D4AF37]/10 to-transparent">
-                    <div className="flex items-center gap-2 text-[#D4AF37] text-xs uppercase tracking-wider font-semibold">
+                  <div className="p-4 border-l border-white/10 bg-gradient-to-b from-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] to-transparent">
+                    <div className="flex items-center gap-2 text-[var(--school-accent)] text-xs uppercase tracking-wider font-semibold">
                       <Sparkles className="w-3.5 h-3.5" />
                       Focus Formation
                     </div>
@@ -91,7 +91,7 @@ const DropdownMenu = ({ title, icon: Icon, items, mega = false }) => {
                     <Link
                       to="/formations/catalogue"
                       onClick={() => setIsOpen(false)}
-                      className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[#D4AF37] hover:text-white transition-colors"
+                      className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--school-accent)] hover:text-white transition-colors"
                     >
                       Ouvrir le catalogue
                       <ArrowRight className="w-4 h-4" />
@@ -108,14 +108,14 @@ const DropdownMenu = ({ title, icon: Icon, items, mega = false }) => {
                       className="flex items-center gap-3 px-3 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-all group relative overflow-hidden"
                     >
                       {item.icon && (
-                        <div className="p-1.5 rounded-md bg-[#0F1419] border border-white/5 text-gray-500 group-hover:text-[#D4AF37] group-hover:border-[#D4AF37]/30 transition-colors shadow-sm z-10">
+                        <div className="p-1.5 rounded-md bg-[#0F1419] border border-white/5 text-gray-500 group-hover:text-[var(--school-accent)] group-hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-colors shadow-sm z-10">
                           <item.icon className="w-4 h-4" />
                         </div>
                       )}
                       <span className="font-medium group-hover:translate-x-1 transition-transform duration-300 text-xs xl:text-sm z-10">
                         {item.label}
                       </span>
-                      <div className="absolute left-0 top-0 w-0.5 h-full bg-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute left-0 top-0 w-0.5 h-full bg-[var(--school-accent)] opacity-0 group-hover:opacity-100 transition-opacity" />
                       <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </Link>
                   ))}

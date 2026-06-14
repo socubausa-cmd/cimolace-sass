@@ -13,14 +13,14 @@ const ExpandableCard = ({ title, children, icon: Icon, className = "", defaultEx
       >
         <div className="flex items-center gap-4">
           {Icon && (
-            <div className="p-3 bg-[#D4AF37]/10 rounded-lg text-[#D4AF37]">
+            <div className="p-3 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-lg text-[var(--school-accent)]">
               <Icon className="w-6 h-6" />
             </div>
           )}
           <h3 className="text-xl font-serif font-bold text-white">{title}</h3>
         </div>
         <ChevronDown 
-          className={`w-6 h-6 text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180 text-[#D4AF37]' : ''}`} 
+          className={`w-6 h-6 text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180 text-[var(--school-accent)]' : ''}`} 
         />
       </button>
 

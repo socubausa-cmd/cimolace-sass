@@ -134,9 +134,9 @@ const EnrollmentModal = ({ pkg, onClose }) => {
               <div className="space-y-2">
                 <div className="text-xs text-gray-500 uppercase tracking-wider">Période</div>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => setInterval('monthly')} className={`flex-1 h-10 rounded-lg border ${interval==='monthly' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-white' : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'}`}>Mensuel</button>
-                  <button type="button" onClick={() => setInterval('quarterly')} className={`flex-1 h-10 rounded-lg border ${interval==='quarterly' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-white' : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'}`}>Trimestriel</button>
-                  <button type="button" onClick={() => setInterval('yearly')} className={`flex-1 h-10 rounded-lg border ${interval==='yearly' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-white' : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'}`}>Annuel</button>
+                  <button type="button" onClick={() => setInterval('monthly')} className={`flex-1 h-10 rounded-lg border ${interval==='monthly' ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-white' : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'}`}>Mensuel</button>
+                  <button type="button" onClick={() => setInterval('quarterly')} className={`flex-1 h-10 rounded-lg border ${interval==='quarterly' ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-white' : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'}`}>Trimestriel</button>
+                  <button type="button" onClick={() => setInterval('yearly')} className={`flex-1 h-10 rounded-lg border ${interval==='yearly' ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-white' : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'}`}>Annuel</button>
                 </div>
                 <div className="text-[11px] text-gray-500">
                   {interval === 'monthly' ? `${monthly.amount}${monthly.period}` : interval === 'quarterly' ? `${quarterly.amount}${quarterly.period}` : `${full.amount}`}
@@ -145,11 +145,11 @@ const EnrollmentModal = ({ pkg, onClose }) => {
               <div className="space-y-2">
                 <div className="text-xs text-gray-500 uppercase tracking-wider">Moyen de paiement</div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  <button type="button" onClick={() => setPaymentMethod('mobile_money')} className={`h-10 rounded-lg border ${paymentMethod==='mobile_money' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-white' : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'}`}>Mobile Money</button>
-                  <button type="button" onClick={() => setPaymentMethod('monero')} className={`h-10 rounded-lg border ${paymentMethod==='monero' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-white' : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'}`}>Monero (XMR)</button>
-                  <button type="button" onClick={() => setPaymentMethod('chariow')} className={`h-10 rounded-lg border ${paymentMethod==='chariow' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-white' : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'}`}>Chariow</button>
-                  <button type="button" onClick={() => setPaymentMethod('paypal')} className={`h-10 rounded-lg border ${paymentMethod==='paypal' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-white' : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'}`}>PayPal</button>
-                  <button type="button" onClick={() => setPaymentMethod('stripe')} className={`h-10 rounded-lg border ${paymentMethod==='stripe' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-white' : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'}`}>Carte (Stripe)</button>
+                  <button type="button" onClick={() => setPaymentMethod('mobile_money')} className={`h-10 rounded-lg border ${paymentMethod==='mobile_money' ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-white' : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'}`}>Mobile Money</button>
+                  <button type="button" onClick={() => setPaymentMethod('monero')} className={`h-10 rounded-lg border ${paymentMethod==='monero' ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-white' : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'}`}>Monero (XMR)</button>
+                  <button type="button" onClick={() => setPaymentMethod('chariow')} className={`h-10 rounded-lg border ${paymentMethod==='chariow' ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-white' : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'}`}>Chariow</button>
+                  <button type="button" onClick={() => setPaymentMethod('paypal')} className={`h-10 rounded-lg border ${paymentMethod==='paypal' ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-white' : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'}`}>PayPal</button>
+                  <button type="button" onClick={() => setPaymentMethod('stripe')} className={`h-10 rounded-lg border ${paymentMethod==='stripe' ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-white' : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'}`}>Carte (Stripe)</button>
                 </div>
                 <div className="text-[11px] text-gray-500">
                   {paymentMethod === 'monero'

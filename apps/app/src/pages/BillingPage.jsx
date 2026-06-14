@@ -8,8 +8,8 @@ const BillingPage = () => (
     <Helmet><title>Facturation — LIRI</title></Helmet>
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/15 flex items-center justify-center">
-          <CreditCard className="w-6 h-6 text-[#D4AF37]" />
+        <div className="w-12 h-12 rounded-2xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] flex items-center justify-center">
+          <CreditCard className="w-6 h-6 text-[var(--school-accent)]" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">Facturation</h1>

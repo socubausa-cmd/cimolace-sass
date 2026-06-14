@@ -51,7 +51,7 @@ const PaymentPage = () => {
     toast({
       title: "Redirection vers Chariow...",
       description: "Vous allez être redirigé vers la page de paiement sécurisée Chariow.",
-      className: "bg-[#192734] text-white border-[#D4AF37]"
+      className: "bg-[#192734] text-white border-[var(--school-accent)]"
     });
   // Intégration Chariow réelle à brancher ici
   };
@@ -120,7 +120,7 @@ const PaymentPage = () => {
                 />
              </div>
 
-             <Button onClick={handlePayment} className="w-full bg-[#D4AF37] hover:bg-[#b5952f] text-black font-bold py-6 text-lg shadow-[0_0_20px_rgba(212,175,55,0.2)]">
+             <Button onClick={handlePayment} className="w-full bg-[var(--school-accent)] hover:bg-[#b5952f] text-black font-bold py-6 text-lg shadow-[0_0_20px_rgba(212,175,55,0.2)]">
                 Procéder au Paiement Sécurisé
              </Button>
              <p className="text-center text-sm text-gray-500 mt-4">En validant, vous acceptez les Conditions Générales de Vente.</p>
@@ -132,7 +132,7 @@ const PaymentPage = () => {
                 "Choix de l'offre", "Création de compte", "Paiement Sécurisé", "Accès Immédiat"
              ].map((step, i) => (
                 <div key={i} className="text-center">
-                   <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-2 text-sm font-bold ${i <= 2 ? 'bg-[#D4AF37] text-black' : 'bg-white/10 text-gray-500'}`}>{i+1}</div>
+                   <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-2 text-sm font-bold ${i <= 2 ? 'bg-[var(--school-accent)] text-black' : 'bg-white/10 text-gray-500'}`}>{i+1}</div>
                    <span className="text-sm text-gray-400">{step}</span>
                 </div>
              ))}
@@ -154,7 +154,7 @@ const PaymentPage = () => {
            </div>
 
            <div className="bg-white/5 p-6 rounded-xl border border-white/5">
-              <h3 className="text-white font-bold mb-4 flex items-center gap-2"><HelpCircle className="text-[#D4AF37]"/> FAQ Paiement</h3>
+              <h3 className="text-white font-bold mb-4 flex items-center gap-2"><HelpCircle className="text-[var(--school-accent)]"/> FAQ Paiement</h3>
               <div className="space-y-4">
                  <div>
                     <p className="text-xs font-bold text-gray-300">Puis-je annuler à tout moment ?</p>
@@ -167,9 +167,9 @@ const PaymentPage = () => {
               </div>
            </div>
 
-           <div className="bg-[#D4AF37]/10 p-4 rounded-xl border border-[#D4AF37]/20 flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-[#D4AF37] shrink-0" />
-              <p className="text-xs text-[#D4AF37]">
+           <div className="bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-4 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-[var(--school-accent)] shrink-0" />
+              <p className="text-xs text-[var(--school-accent)]">
                  {`En cas de problème de paiement, contactez immédiatement ${vitrineEmail}`}
               </p>
            </div>

@@ -25,4 +25,53 @@ export default tseslint.config(
       ],
     },
   },
+  // ──────────────────────────────────────────────────────────────
+  // INVARIANT D'ARCHITECTURE — LIRI doit rester AUTONOME.
+  // Le moteur live (modules/liri, components/liri, pages/liri) ne doit
+  // JAMAIS importer l'École (school) ni Studio Créateur (studio-creator).
+  // École et Studio Créateur peuvent dépendre de Liri, jamais l'inverse.
+  // Cf. docs/ARCHITECTURE_LIRI_VS_ECOLE.md
+  // ──────────────────────────────────────────────────────────────
+  {
+    files: [
+      'src/modules/liri/**/*.{js,jsx,ts,tsx}',
+      'src/components/liri/**/*.{js,jsx,ts,tsx}',
+      'src/pages/liri/**/*.{js,jsx,ts,tsx}',
+    ],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: { ecmaFeatures: { jsx: true } },
+    },
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '@/components/school/*',
+                '@/pages/school/*',
+                '@/modules/school/*',
+                '**/components/school/*',
+                '**/pages/school/*',
+                '**/modules/school/*',
+              ],
+              message:
+                "Liri doit rester autonome : import depuis École (school) interdit. École consomme Liri, jamais l'inverse.",
+            },
+            {
+              group: [
+                '@/components/studio-creator/*',
+                '@/pages/studio-creator/*',
+                '**/components/studio-creator/*',
+                '**/pages/studio-creator/*',
+              ],
+              message:
+                'Liri doit rester autonome : import depuis Studio Créateur interdit. Studio Créateur consomme Liri, jamais l’inverse.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 )

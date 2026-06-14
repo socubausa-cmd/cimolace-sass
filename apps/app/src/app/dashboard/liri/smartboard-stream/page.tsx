@@ -1,9 +1,9 @@
 import React from 'react';
 import { Bell, Gauge, Grid2x2, PanelLeftClose, Sparkles } from 'lucide-react';
-import { SlideLiveInspector } from '@/components/smartboard-stream/SlideLiveInspector';
-import { SmartBoardStreamStage } from '@/components/smartboard-stream/SmartBoardStreamStage';
-import { StepRail } from '@/components/smartboard-stream/StepRail';
-import { StreamingControls } from '@/components/smartboard-stream/StreamingControls';
+import { SlideLiveInspector } from '@/components/liri/smartboard-stream/SlideLiveInspector';
+import { SmartBoardStreamStage } from '@/components/liri/smartboard-stream/SmartBoardStreamStage';
+import { StepRail } from '@/components/liri/smartboard-stream/StepRail';
+import { StreamingControls } from '@/components/liri/smartboard-stream/StreamingControls';
 import { useOrchestratorLiveStore } from '@/stores/orchestrator-live.store';
 
 export default function SmartBoardStreamPage() {

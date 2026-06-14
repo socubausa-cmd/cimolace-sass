@@ -542,7 +542,7 @@ export default function CanvaDesignPanel({
             className={cn(
               'flex min-w-0 flex-col items-center gap-0.5 px-3 py-2 text-[13px] font-medium transition-colors',
               tab === t.id
-                ? 'border-b-2 border-[#D4AF37] text-[#f5dd8a]'
+                ? 'border-b-2 border-[var(--school-accent)] text-[#f5dd8a]'
                 : 'border-b-2 border-transparent text-white/50 hover:text-white/80',
             )}
           >
@@ -558,7 +558,7 @@ export default function CanvaDesignPanel({
         {/* ── MODÈLES ── */}
         {tab === 'templates' && (
           <div className="space-y-3">
-            <p className="px-1 text-[13px] font-semibold uppercase tracking-[0.2em] text-[#D4AF37]/70">
+            <p className="px-1 text-[13px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">
               Modèles prêts à l&apos;emploi
             </p>
             {filteredTemplates.length === 0 ? (
@@ -571,7 +571,7 @@ export default function CanvaDesignPanel({
                 key={tpl.id}
                 type="button"
                 onClick={() => applyTemplate(tpl)}
-                className="group w-full overflow-hidden rounded-xl border border-white/10 text-left transition-all hover:border-[#D4AF37]/45 hover:shadow-[0_0_16px_rgba(212,175,55,0.12)]"
+                className="group w-full overflow-hidden rounded-xl border border-white/10 text-left transition-all hover:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] hover:shadow-[0_0_16px_rgba(212,175,55,0.12)]"
               >
                 {/* Miniature slide */}
                 <div
@@ -609,7 +609,7 @@ export default function CanvaDesignPanel({
         {/* ── ÉLÉMENTS ── */}
         {tab === 'elements' && (
           <div className="space-y-3">
-            <p className="px-1 text-[13px] font-semibold uppercase tracking-[0.2em] text-[#D4AF37]/70">
+            <p className="px-1 text-[13px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">
               Formes & éléments
             </p>
             <div className="grid grid-cols-3 gap-1.5">
@@ -625,7 +625,7 @@ export default function CanvaDesignPanel({
                     key={i}
                     type="button"
                     onClick={() => addObject(s.mk())}
-                    className="flex flex-col items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] py-3 text-[13px] font-medium text-white/75 transition-all hover:border-[#D4AF37]/35 hover:bg-white/[0.07] hover:text-white"
+                    className="flex flex-col items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] py-3 text-[13px] font-medium text-white/75 transition-all hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:bg-white/[0.07] hover:text-white"
                   >
                     {s.emoji ? (
                       <span className="text-xl leading-none" style={{ color: s.color }}>{s.emoji}</span>
@@ -647,7 +647,7 @@ export default function CanvaDesignPanel({
 
             {/* Image section */}
             <div className="space-y-1.5 rounded-xl border border-white/[0.07] bg-black/25 p-2.5">
-              <p className="text-[13px] font-semibold uppercase tracking-wider text-[#D4AF37]/70">
+              <p className="text-[13px] font-semibold uppercase tracking-wider text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">
                 Image
               </p>
               <input
@@ -678,7 +678,7 @@ export default function CanvaDesignPanel({
               <button
                 type="button"
                 onClick={() => addObject(mkImageObject(imageUrlDraft.trim()))}
-                className="flex w-full items-center justify-center gap-1 rounded-lg border border-[#D4AF37]/35 bg-[#D4AF37]/12 py-1.5 text-[13px] font-medium text-[#f5dd8a]"
+                className="flex w-full items-center justify-center gap-1 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] py-1.5 text-[13px] font-medium text-[#f5dd8a]"
               >
                 <ImageIcon className="h-3 w-3" />
                 Placer sur le canvas
@@ -781,7 +781,7 @@ export default function CanvaDesignPanel({
         {/* ── TEXTE ── */}
         {tab === 'texte' && (
           <div className="space-y-2">
-            <p className="px-1 text-[13px] font-semibold uppercase tracking-[0.2em] text-[#D4AF37]/70">
+            <p className="px-1 text-[13px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">
               Styles typographiques
             </p>
             {filteredTypoPresets.length === 0 ? (
@@ -792,7 +792,7 @@ export default function CanvaDesignPanel({
                 key={preset.id}
                 type="button"
                 onClick={() => addTypoPreset(preset)}
-                className="w-full rounded-xl border border-white/[0.08] bg-[#10131c] px-3 py-2.5 text-left transition-all hover:border-[#D4AF37]/35 hover:bg-[#1a1d2a]"
+                className="w-full rounded-xl border border-white/[0.08] bg-[#10131c] px-3 py-2.5 text-left transition-all hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:bg-[#1a1d2a]"
               >
                 <p
                   className="leading-tight text-white/90"
@@ -840,7 +840,7 @@ export default function CanvaDesignPanel({
                     key={bg.id}
                     type="button"
                     onClick={() => setCanvasBackground(bg.css)}
-                    className="group relative h-14 w-full overflow-hidden rounded-xl border border-white/10 transition-all hover:border-[#D4AF37]/50 hover:shadow-[0_0_12px_rgba(212,175,55,0.15)]"
+                    className="group relative h-14 w-full overflow-hidden rounded-xl border border-white/10 transition-all hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] hover:shadow-[0_0_12px_rgba(212,175,55,0.15)]"
                     style={{ background: bg.css }}
                     title={bg.label}
                   >
@@ -863,7 +863,7 @@ export default function CanvaDesignPanel({
                     key={bg.id}
                     type="button"
                     onClick={() => setCanvasBackground(bg.css)}
-                    className="group relative h-14 w-full overflow-hidden rounded-xl border border-black/20 transition-all hover:border-[#D4AF37]/50"
+                    className="group relative h-14 w-full overflow-hidden rounded-xl border border-black/20 transition-all hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]"
                     style={{ background: bg.css }}
                     title={bg.label}
                   >
@@ -886,7 +886,7 @@ export default function CanvaDesignPanel({
                     key={bg.id}
                     type="button"
                     onClick={() => setCanvasBackground(bg.css)}
-                    className="h-10 w-full rounded-xl border border-white/15 transition-all hover:border-[#D4AF37]/60 hover:scale-105"
+                    className="h-10 w-full rounded-xl border border-white/15 transition-all hover:border-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] hover:scale-105"
                     style={{ background: bg.css }}
                     title={bg.label}
                   />
@@ -908,7 +908,7 @@ export default function CanvaDesignPanel({
                         key={i}
                         type="button"
                         onClick={() => setCanvasBackground(c)}
-                        className="h-7 flex-1 rounded-lg border border-white/10 transition-all hover:scale-110 hover:border-[#D4AF37]/50"
+                        className="h-7 flex-1 rounded-lg border border-white/10 transition-all hover:scale-110 hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]"
                         style={{ background: c }}
                         title={c}
                       />
@@ -923,7 +923,7 @@ export default function CanvaDesignPanel({
         {/* ── ICÔNES ── */}
         {tab === 'icones' && (
           <div className="space-y-2">
-            <p className="px-1 text-[13px] font-semibold uppercase tracking-[0.2em] text-[#D4AF37]/70">
+            <p className="px-1 text-[13px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">
               Bibliothèque d&apos;icônes
             </p>
             {/* Category tabs */}
@@ -936,7 +936,7 @@ export default function CanvaDesignPanel({
                   className={cn(
                     'rounded-lg border px-2 py-0.5 text-[13px] transition-colors',
                     iconCategory === key
-                      ? 'border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#f5dd8a]'
+                      ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f5dd8a]'
                       : 'border-white/10 text-white/50 hover:border-white/25',
                   )}
                 >
@@ -954,7 +954,7 @@ export default function CanvaDesignPanel({
                     key={emoji}
                     type="button"
                     onClick={() => addObject(mkEmojiObject(emoji))}
-                    className="flex h-10 w-full items-center justify-center rounded-lg border border-white/[0.07] bg-white/[0.03] text-xl transition-all hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/10 hover:scale-110"
+                    className="flex h-10 w-full items-center justify-center rounded-lg border border-white/[0.07] bg-white/[0.03] text-xl transition-all hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] hover:scale-110"
                     title={`Ajouter ${emoji}`}
                   >
                     {emoji}
@@ -968,7 +968,7 @@ export default function CanvaDesignPanel({
         {/* ── BLOCS PEDAGOGIQUES (Module 5) ── */}
         {tab === 'blocs' && (
           <div className="space-y-2">
-            <p className="px-1 text-[13px] font-semibold uppercase tracking-[0.2em] text-[#D4AF37]/70">
+            <p className="px-1 text-[13px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">
               Blocs pedagogiques
             </p>
             {/* Search */}
@@ -977,7 +977,7 @@ export default function CanvaDesignPanel({
               value={blocSearch}
               onChange={(e) => setBlocSearch(e.target.value)}
               placeholder="Rechercher un bloc..."
-              className="w-full rounded-lg border border-white/10 bg-black/30 px-2 py-1.5 text-[12px] text-white placeholder:text-white/25 focus:border-[#D4AF37]/35 focus:outline-none"
+              className="w-full rounded-lg border border-white/10 bg-black/30 px-2 py-1.5 text-[12px] text-white placeholder:text-white/25 focus:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] focus:outline-none"
             />
             {/* Category filter */}
             {!blocSearch && (
@@ -990,7 +990,7 @@ export default function CanvaDesignPanel({
                     className={cn(
                       'rounded-lg border px-2 py-0.5 text-[13px] transition-colors',
                       blocCategory === cat
-                        ? 'border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#f5dd8a]'
+                        ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f5dd8a]'
                         : 'border-white/10 text-white/50 hover:border-white/25',
                     )}
                   >
@@ -1022,7 +1022,7 @@ export default function CanvaDesignPanel({
                       );
                       addObjects(objs);
                     }}
-                    className="group flex w-full items-start gap-2.5 rounded-xl border border-white/[0.08] bg-[#10131c] px-3 py-2.5 text-left transition-all hover:border-[#D4AF37]/35 hover:bg-[#1a1d2a]"
+                    className="group flex w-full items-start gap-2.5 rounded-xl border border-white/[0.08] bg-[#10131c] px-3 py-2.5 text-left transition-all hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:bg-[#1a1d2a]"
                   >
                     <span className="mt-0.5 text-2xl leading-none">{bloc.icon}</span>
                     <div className="min-w-0">
@@ -1032,7 +1032,7 @@ export default function CanvaDesignPanel({
                         {bloc.category}
                       </span>
                     </div>
-                    <span className="ml-auto shrink-0 text-[13px] text-[#D4AF37]/0 transition-colors group-hover:text-[#D4AF37]/70">
+                    <span className="ml-auto shrink-0 text-[13px] text-[color-mix(in_srgb,var(--school-accent)_0%,transparent)] transition-colors group-hover:text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">
                       Inserer
                     </span>
                   </button>
@@ -1049,7 +1049,7 @@ export default function CanvaDesignPanel({
         {/* ── THEME GLOBAL (Module 4) ── */}
         {tab === 'theme' && (
           <div className="space-y-3">
-            <p className="px-1 text-[13px] font-semibold uppercase tracking-[0.2em] text-[#D4AF37]/70">
+            <p className="px-1 text-[13px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">
               Theme global du cours
             </p>
             <p className="px-1 text-[13px] leading-relaxed text-white/35">
@@ -1064,7 +1064,7 @@ export default function CanvaDesignPanel({
                   key={theme.id}
                   type="button"
                   onClick={() => applyGlobalTheme?.(theme)}
-                  className="group flex w-full items-center gap-3 overflow-hidden rounded-xl border border-white/[0.08] bg-[#10131c] transition-all hover:border-[#D4AF37]/45 hover:shadow-[0_0_16px_rgba(212,175,55,0.1)]"
+                  className="group flex w-full items-center gap-3 overflow-hidden rounded-xl border border-white/[0.08] bg-[#10131c] transition-all hover:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] hover:shadow-[0_0_16px_rgba(212,175,55,0.1)]"
                 >
                   {/* Miniature couleur */}
                   <div
@@ -1088,7 +1088,7 @@ export default function CanvaDesignPanel({
                       <span className="text-[13px] text-white/30">{theme.preview.accent}</span>
                     </div>
                   </div>
-                  <span className="mr-3 shrink-0 text-[13px] text-[#D4AF37]/0 transition-colors group-hover:text-[#D4AF37]/70">
+                  <span className="mr-3 shrink-0 text-[13px] text-[color-mix(in_srgb,var(--school-accent)_0%,transparent)] transition-colors group-hover:text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">
                     Appliquer
                   </span>
                 </button>
@@ -1144,7 +1144,7 @@ export default function CanvaDesignPanel({
                 json, workspace, pdf, pptx…).
               </p>
             ) : null}
-            <p className="px-1 text-[13px] font-semibold uppercase tracking-[0.2em] text-[#D4AF37]/70">
+            <p className="px-1 text-[13px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">
               Gestion du projet
             </p>
             {showFileAction(['sauvegarder', 'brouillon', 'charger', 'gestion', 'projet']) ? (
@@ -1154,7 +1154,7 @@ export default function CanvaDesignPanel({
                 onClick={onSaveLocalDraft}
                 className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] text-white/80 hover:bg-white/[0.08]"
               >
-                <Save className="h-3.5 w-3.5 text-[#D4AF37]" />
+                <Save className="h-3.5 w-3.5 text-[var(--school-accent)]" />
                 Sauvegarder brouillon
               </button>
               <button
@@ -1162,7 +1162,7 @@ export default function CanvaDesignPanel({
                 onClick={onLoadLocalDraft}
                 className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] text-white/80 hover:bg-white/[0.08]"
               >
-                <FolderOpen className="h-3.5 w-3.5 text-[#D4AF37]" />
+                <FolderOpen className="h-3.5 w-3.5 text-[var(--school-accent)]" />
                 Charger brouillon
               </button>
             </div>
@@ -1199,7 +1199,7 @@ export default function CanvaDesignPanel({
             </div>
             ) : null}
 
-            <p className="mt-2 px-1 text-[13px] font-semibold uppercase tracking-[0.18em] text-[#D4AF37]/60">
+            <p className="mt-2 px-1 text-[13px] font-semibold uppercase tracking-[0.18em] text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]">
               Workspace complet
             </p>
             {showFileAction(['workspace', 'complet', 'exporter', 'importer']) ? (
@@ -1207,7 +1207,7 @@ export default function CanvaDesignPanel({
               <button
                 type="button"
                 onClick={onDownloadWorkspace}
-                className="flex w-full items-center gap-2 rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/08 px-3 py-2 text-[12px] text-[#f5dd8a]/90 hover:bg-[#D4AF37]/15"
+                className="flex w-full items-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_08%,transparent)] px-3 py-2 text-[12px] text-[#f5dd8a]/90 hover:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]"
               >
                 <Download className="h-3.5 w-3.5" />
                 Exporter workspace
@@ -1215,7 +1215,7 @@ export default function CanvaDesignPanel({
               <button
                 type="button"
                 onClick={() => workspaceFileInputRef.current?.click()}
-                className="flex w-full items-center gap-2 rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/08 px-3 py-2 text-[12px] text-[#f5dd8a]/90 hover:bg-[#D4AF37]/15"
+                className="flex w-full items-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_08%,transparent)] px-3 py-2 text-[12px] text-[#f5dd8a]/90 hover:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]"
               >
                 <Upload className="h-3.5 w-3.5" />
                 Importer workspace
@@ -1243,9 +1243,9 @@ export default function CanvaDesignPanel({
                     <button
                       type="button"
                       onClick={onExportPdf}
-                      className="flex w-full items-center gap-2 rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/08 px-3 py-2 text-[12px] text-[#f5dd8a]/90 hover:bg-[#D4AF37]/15"
+                      className="flex w-full items-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_08%,transparent)] px-3 py-2 text-[12px] text-[#f5dd8a]/90 hover:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]"
                     >
-                      <Download className="h-3.5 w-3.5 text-[#D4AF37]" />
+                      <Download className="h-3.5 w-3.5 text-[var(--school-accent)]" />
                       Exporter PDF (toutes les slides)
                     </button>
                   )}

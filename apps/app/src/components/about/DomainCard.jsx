@@ -11,14 +11,14 @@ const DomainCard = ({ title, definition, study, application, index }) => {
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.05 }}
-      className={`bg-[#192734] border rounded-xl overflow-hidden transition-all duration-300 ${isOpen ? 'border-[#D4AF37]/30 shadow-lg shadow-[#D4AF37]/5' : 'border-white/5 hover:border-[#D4AF37]/20'}`}
+      className={`bg-[#192734] border rounded-xl overflow-hidden transition-all duration-300 ${isOpen ? 'border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]' : 'border-white/5 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]'}`}
     >
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between p-5 bg-gradient-to-r from-[#192734] to-[#15202B] hover:bg-[#1e2f3f] transition-colors"
       >
-        <span className={`font-bold text-lg text-left transition-colors ${isOpen ? 'text-[#D4AF37]' : 'text-white'}`}>{title}</span>
-        <ChevronDown className={`w-5 h-5 text-[#D4AF37] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+        <span className={`font-bold text-lg text-left transition-colors ${isOpen ? 'text-[var(--school-accent)]' : 'text-white'}`}>{title}</span>
+        <ChevronDown className={`w-5 h-5 text-[var(--school-accent)] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       
       <AnimatePresence>
@@ -45,9 +45,9 @@ const DomainCard = ({ title, definition, study, application, index }) => {
                 </div>
               </div>
               <div className="flex gap-3">
-                 <div className="mt-0.5 min-w-[20px]"><Zap className="w-4 h-4 text-[#D4AF37]" /></div>
+                 <div className="mt-0.5 min-w-[20px]"><Zap className="w-4 h-4 text-[var(--school-accent)]" /></div>
                 <div>
-                  <span className="text-[#D4AF37] font-bold block text-xs uppercase mb-1">Application</span>
+                  <span className="text-[var(--school-accent)] font-bold block text-xs uppercase mb-1">Application</span>
                   <p className="text-gray-300 leading-relaxed">{application}</p>
                 </div>
               </div>

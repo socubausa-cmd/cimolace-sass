@@ -1,14 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { getLiriMemberLoginPath } from '@/lib/liriVitrineModel';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 export default function AppMemberAccessPage() {
   return (
     <div className="min-h-screen bg-[#060910] text-white relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(212,175,55,0.18),transparent_35%),radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.22),transparent_45%),linear-gradient(180deg,#060910_0%,#060910_100%)]" />
       <div className="relative mx-auto max-w-4xl px-4 py-24 sm:px-6 text-center">
-        <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Espace membre — application LIRI</p>
+        <p className="text-xs uppercase tracking-[0.22em] text-[var(--school-accent)]">Espace membre — application LIRI</p>
         <h1 className="mt-5 text-4xl sm:text-6xl font-semibold leading-tight">
           Accédez à l'app uniquement en vous connectant
         </h1>
@@ -20,7 +20,7 @@ export default function AppMemberAccessPage() {
         <div className="mt-9 flex flex-wrap gap-3 justify-center">
           <Link
             to={getLiriMemberLoginPath()}
-            className="rounded-xl bg-[#D4AF37] px-6 py-3 font-semibold text-black hover:bg-[#e5c04a]"
+            className="rounded-xl bg-[var(--school-accent)] px-6 py-3 font-semibold text-black hover:bg-[#e5c04a]"
             title="Ouvrir la connexion LIRI"
           >
             Se connecter à LIRI

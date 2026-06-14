@@ -84,8 +84,8 @@ export default function InvoicePanel() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/15 flex items-center justify-center flex-shrink-0">
-          <FileText className="w-4 h-4 text-[#D4AF37]" />
+        <div className="w-9 h-9 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] flex items-center justify-center flex-shrink-0">
+          <FileText className="w-4 h-4 text-[var(--school-accent)]" />
         </div>
         <div>
           <h2 className="text-sm font-bold text-white">Mes factures</h2>
@@ -95,7 +95,7 @@ export default function InvoicePanel() {
 
       {loading && (
         <div className="flex items-center justify-center py-10 text-gray-500 gap-2 text-sm">
-          <Loader2 className="w-5 h-5 animate-spin text-[#D4AF37]" /> Chargement…
+          <Loader2 className="w-5 h-5 animate-spin text-[var(--school-accent)]" /> Chargement…
         </div>
       )}
 
@@ -128,7 +128,7 @@ export default function InvoicePanel() {
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-mono text-[#D4AF37] font-semibold">{inv.invoiceNumber}</span>
+                  <span className="text-xs font-mono text-[var(--school-accent)] font-semibold">{inv.invoiceNumber}</span>
                   <span className="text-[10px] bg-white/8 text-gray-400 px-1.5 py-0.5 rounded-full">
                     {typeLabel(inv.purchaseType)}
                   </span>
@@ -148,7 +148,7 @@ export default function InvoicePanel() {
               <Button
                 size="sm"
                 variant="ghost"
-                className="flex-shrink-0 border border-white/10 hover:border-[#D4AF37]/40 hover:text-[#D4AF37] text-gray-400 h-8 px-2"
+                className="flex-shrink-0 border border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] hover:text-[var(--school-accent)] text-gray-400 h-8 px-2"
                 onClick={() => openInvoice(inv.paymentId, inv.invoiceNumber)}
                 disabled={downloadingId === inv.paymentId}
                 title="Télécharger la facture"

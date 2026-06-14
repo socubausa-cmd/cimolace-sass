@@ -1,5 +1,5 @@
 import React from 'react';
-import LiveHostMemberPanelCard from '@/components/live-room/LiveHostMemberPanelCard';
+import LiveHostMemberPanelCard from '@/components/liri/live-room/LiveHostMemberPanelCard';
 import { LIVE_STRIP_DOCK_MIN_MEMBER_SLOTS } from '@/lib/liveCommLayers';
 
 /**

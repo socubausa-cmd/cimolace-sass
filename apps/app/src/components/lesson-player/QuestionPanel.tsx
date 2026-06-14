@@ -184,7 +184,7 @@ export default function QuestionPanel({ videoTitle, transcript, mindmap, videoUr
         <div className="flex items-center gap-2 min-w-0">
           <MessageCircle className="w-4 h-4 text-blue-400 flex-shrink-0" />
           <div className="min-w-0">
-            <span className="text-sm font-semibold text-[#D4AF37]">ProraScience</span>
+            <span className="text-sm font-semibold text-[var(--school-accent)]">ProraScience</span>
             <p className="text-[10px] text-gray-400 leading-tight">
               Conversation avec la mémoire du cours — consultez, posez vos questions, je vous réponds sur ce cours.
             </p>
@@ -238,7 +238,7 @@ export default function QuestionPanel({ videoTitle, transcript, mindmap, videoUr
                 <div
                   className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
                     msg.role === 'user'
-                      ? 'bg-[#D4AF37]/15 border border-[#D4AF37]/25 text-gray-100 rounded-tr-sm'
+                      ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] text-gray-100 rounded-tr-sm'
                       : msg.msgType === 'other_level'
                       ? 'bg-purple-900/30 border border-purple-500/30 text-purple-200 rounded-tl-sm'
                       : msg.msgType === 'offtopic'

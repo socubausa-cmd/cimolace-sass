@@ -5,7 +5,7 @@
  */
 
 import { resolveVitrineContactEmailSync } from '@/lib/vitrineContactEmail';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const SCHOOL = isnaTenantConfig.branding.name;
 const SITE_KICKER = `${SCHOOL} · LIRI`;

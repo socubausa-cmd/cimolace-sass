@@ -148,7 +148,7 @@ const ChatModal = ({ isOpen, onClose }) => {
                         <div className="flex flex-wrap gap-2">
                           <Link
                             to={msg.meta.ctaPrimaryUrl || '/appointment/request'}
-                            className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded bg-[#D4AF37] text-black font-medium hover:bg-amber-400"
+                            className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded bg-[var(--school-accent)] text-black font-medium hover:bg-amber-400"
                             onClick={onClose}
                           >
                             <CalendarPlus className="w-3 h-3" />

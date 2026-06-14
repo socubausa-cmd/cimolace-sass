@@ -11,7 +11,7 @@ export default function CourseCopilotPanel({ className }) {
   return (
     <div
       className={cn(
-        'flex w-[min(100%,400px)] shrink-0 flex-col gap-3 overflow-y-auto rounded-2xl border border-[#D4AF37]/20 bg-[#060a12] p-2 [scrollbar-width:thin]',
+        'flex w-[min(100%,400px)] shrink-0 flex-col gap-3 overflow-y-auto rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[#060a12] p-2 [scrollbar-width:thin]',
         className,
       )}
     >

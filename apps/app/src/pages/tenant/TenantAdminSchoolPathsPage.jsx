@@ -7,7 +7,7 @@ import { useParams, Link } from 'react-router-dom';
 import { BookOpen, Users, BarChart3, Loader2, ChevronDown } from 'lucide-react';
 import TenantAdminShell from '@/components/admin/TenantAdminShell';
 import { ADMIN_T as T } from '@/lib/tenantAdminTheme';
-import SchoolPathsParcoursPanel from '@/components/liri-ecosystem/SchoolPathsParcoursPanel';
+import SchoolPathsParcoursPanel from '@/components/liri/liri-ecosystem/SchoolPathsParcoursPanel';
 import { supabase } from '@/lib/supabase';
 import { getApiBaseUrl } from '@/lib/apiBase';
 

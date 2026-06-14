@@ -34,10 +34,10 @@ const OwnerAccompanimentTab = () => {
         <TabsContent value="coaches" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {coaches.map(coach => (
-              <Card key={coach.id} className="bg-[#192734] border-white/10 hover:border-[#D4AF37]/50 transition-all">
+              <Card key={coach.id} className="bg-[#192734] border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] transition-all">
                 <CardContent className="p-6 space-y-4">
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-full bg-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] font-bold">
+                    <div className="h-12 w-12 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center text-[var(--school-accent)] font-bold">
                       {coach.name.charAt(0)}
                     </div>
                     <div>
@@ -53,7 +53,7 @@ const OwnerAccompanimentTab = () => {
                   </div>
                   <div className="pt-4 border-t border-white/10 flex justify-between items-center text-sm">
                     <span className="text-gray-500">{coach.assignedStudents.length} Étudiants</span>
-                    <Button variant="link" className="text-[#D4AF37] p-0 h-auto">Détails</Button>
+                    <Button variant="link" className="text-[var(--school-accent)] p-0 h-auto">Détails</Button>
                   </div>
                 </CardContent>
               </Card>
@@ -82,7 +82,7 @@ const OwnerAccompanimentTab = () => {
                       {service.type === 'message' && <MessageSquare className="h-4 w-4 text-green-400" />}
                     </TableCell>
                     <TableCell className="text-gray-400">{service.description}</TableCell>
-                    <TableCell className="text-right text-[#D4AF37] font-bold">{service.price}€</TableCell>
+                    <TableCell className="text-right text-[var(--school-accent)] font-bold">{service.price}€</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

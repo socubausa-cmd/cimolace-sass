@@ -21,7 +21,7 @@ const ProraComparisonTable = () => {
         <thead className="text-xs uppercase bg-[#15202B] text-gray-400 border-b border-white/10">
           <tr>
             <th className="px-6 py-5 font-bold tracking-wider">Critère</th>
-            <th className="px-6 py-5 text-[#D4AF37] bg-[#D4AF37]/10 font-bold tracking-wider border-b-2 border-[#D4AF37] min-w-[150px]">PRORASCIENCE</th>
+            <th className="px-6 py-5 text-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] font-bold tracking-wider border-b-2 border-[var(--school-accent)] min-w-[150px]">PRORASCIENCE</th>
             <th className="px-6 py-5 font-bold tracking-wider min-w-[120px]">Religion</th>
             <th className="px-6 py-5 font-bold tracking-wider min-w-[120px]">Ésotérisme</th>
             <th className="px-6 py-5 font-bold tracking-wider min-w-[120px]">Dogme</th>
@@ -31,7 +31,7 @@ const ProraComparisonTable = () => {
           {data.map((row, index) => (
             <tr key={index} className="bg-[#192734] hover:bg-white/5 transition-colors">
               <td className="px-6 py-4 font-medium text-white border-r border-white/5">{row.criteria}</td>
-              <td className="px-6 py-4 text-[#D4AF37] font-bold bg-[#D4AF37]/5 border-r border-white/5 shadow-[inset_0_0_10px_rgba(212,175,55,0.05)]">{row.prora}</td>
+              <td className="px-6 py-4 text-[var(--school-accent)] font-bold bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] border-r border-white/5 shadow-[inset_0_0_10px_rgba(212,175,55,0.05)]">{row.prora}</td>
               <td className="px-6 py-4 text-gray-400 border-r border-white/5">{row.religion}</td>
               <td className="px-6 py-4 text-gray-400 border-r border-white/5">{row.esoterism}</td>
               <td className="px-6 py-4 text-gray-400">{row.dogma}</td>

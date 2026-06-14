@@ -76,7 +76,7 @@ function AppointmentCard({ appt, selected, onSelect }) {
       onClick={() => onSelect(appt)}
       className={`w-full text-left rounded-xl border px-4 py-3.5 transition-all flex items-center gap-3 ${
         selected
-          ? 'border-[#D4AF37]/50 bg-[#D4AF37]/10 shadow-[0_0_20px_rgba(212,175,55,0.1)]'
+          ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] shadow-[0_0_20px_rgba(212,175,55,0.1)]'
           : `${conf.ring} hover:border-white/20`
       }`}
     >
@@ -90,7 +90,7 @@ function AppointmentCard({ appt, selected, onSelect }) {
         </div>
         <div className="flex items-center gap-1.5 mt-1">
           <span className={`text-[10px] rounded-full px-2 py-0.5 border font-medium ${
-            selected ? 'border-[#D4AF37]/40 bg-[#D4AF37]/15 text-[#D4AF37]' :
+            selected ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)]' :
             `border-white/10 bg-white/5 text-gray-400`
           }`}>
             {conf.label}
@@ -102,7 +102,7 @@ function AppointmentCard({ appt, selected, onSelect }) {
           )}
         </div>
       </div>
-      <ChevronRight className={`w-4 h-4 shrink-0 transition-colors ${selected ? 'text-[#D4AF37]' : 'text-gray-600'}`} />
+      <ChevronRight className={`w-4 h-4 shrink-0 transition-colors ${selected ? 'text-[var(--school-accent)]' : 'text-gray-600'}`} />
     </motion.button>
   );
 }
@@ -271,7 +271,7 @@ export default function SecretariatAppointmentsPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <CalendarClock className="w-5 h-5 text-[#D4AF37]" />
+            <CalendarClock className="w-5 h-5 text-[var(--school-accent)]" />
             Rendez-vous actifs — {bookingChannel === BOOKING_CHANNEL_NGOWAZULU ? 'Ngowazulu' : 'Prorascience'}
           </h2>
           <p className="text-xs text-gray-500 mt-0.5">
@@ -301,7 +301,7 @@ export default function SecretariatAppointmentsPage() {
             }}
             className={`text-xs rounded-lg border px-3 py-1.5 font-medium transition-all ${
               bookingChannel === BOOKING_CHANNEL_PRORASCIENCE
-                ? 'bg-[#D4AF37]/20 border-[#D4AF37]/50 text-[#D4AF37]'
+                ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[var(--school-accent)]'
                 : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/25 hover:text-white'
             }`}
           >
@@ -315,7 +315,7 @@ export default function SecretariatAppointmentsPage() {
             }}
             className={`text-xs rounded-lg border px-3 py-1.5 font-medium transition-all ${
               bookingChannel === BOOKING_CHANNEL_NGOWAZULU
-                ? 'bg-[#D4AF37]/20 border-[#D4AF37]/50 text-[#D4AF37]'
+                ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[var(--school-accent)]'
                 : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/25 hover:text-white'
             }`}
           >
@@ -328,7 +328,7 @@ export default function SecretariatAppointmentsPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Rechercher sujet, visiteur, réf…"
-            className="w-full pl-8 pr-3 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#D4AF37]/40 transition-colors"
+            className="w-full pl-8 pr-3 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
           />
         </div>
         <div className="flex gap-1 flex-wrap">
@@ -338,7 +338,7 @@ export default function SecretariatAppointmentsPage() {
               onClick={() => setFilter(opt.value)}
               className={`text-xs rounded-lg border px-3 py-1.5 font-medium transition-all ${
                 filter === opt.value
-                  ? 'bg-[#D4AF37]/20 border-[#D4AF37]/50 text-[#D4AF37]'
+                  ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[var(--school-accent)]'
                   : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/25 hover:text-white'
               }`}
             >
@@ -427,8 +427,8 @@ export default function SecretariatAppointmentsPage() {
                 animate={{ opacity: 1 }}
                 className="hidden lg:flex flex-col items-center justify-center h-full min-h-[300px] rounded-2xl border border-white/8 bg-white/3 text-gray-600 gap-4"
               >
-                <div className="w-14 h-14 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-[#D4AF37]/50" />
+                <div className="w-14 h-14 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]" />
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-medium text-gray-400">Sélectionnez un rendez-vous</p>

@@ -38,7 +38,7 @@ const ConversationItem = ({ conversation, isActive, onClick, currentUser, users 
       onClick={onClick}
       className={`p-3 cursor-pointer flex items-center gap-3 transition-colors ${
         isActive 
-          ? 'bg-[#D4AF37]/10 border-r-2 border-[#D4AF37]' 
+          ? 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border-r-2 border-[var(--school-accent)]' 
           : 'hover:bg-white/5 border-r-2 border-transparent'
       }`}
     >
@@ -73,7 +73,7 @@ const ConversationItem = ({ conversation, isActive, onClick, currentUser, users 
           <div className="flex items-center gap-1">
             {conversation.pinned && <Pin className="w-3 h-3 text-gray-500" />}
             {conversation.unreadCount > 0 && (
-              <Badge className="h-4 min-w-[16px] p-0 px-1 flex items-center justify-center text-[9px] bg-[#D4AF37] text-black">
+              <Badge className="h-4 min-w-[16px] p-0 px-1 flex items-center justify-center text-[9px] bg-[var(--school-accent)] text-black">
                 {conversation.unreadCount}
               </Badge>
             )}
@@ -129,7 +129,7 @@ const ConversationList = ({ onSelect }) => {
               onClick={() => setFilter(f.toLowerCase())}
               className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
                 filter === f.toLowerCase() 
-                  ? 'bg-[#D4AF37] text-black' 
+                  ? 'bg-[var(--school-accent)] text-black' 
                   : 'bg-white/5 text-gray-400 hover:bg-white/10'
               }`}
             >

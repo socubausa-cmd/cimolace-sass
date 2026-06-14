@@ -55,17 +55,17 @@ export const LibrarySection = () => {
                <div className={cn("p-3 rounded-lg", res.type === 'PDF' ? 'bg-red-500/10 text-red-400' : res.type === 'Audio' ? 'bg-purple-500/10 text-purple-400' : 'bg-blue-500/10 text-blue-400')}>
                  {res.type === 'PDF' ? <FileText className="w-6 h-6"/> : res.type === 'Audio' ? <Mic className="w-6 h-6"/> : <BookOpen className="w-6 h-6"/>}
                </div>
-               <Button size="icon" variant="ghost" className="text-gray-500 hover:text-[#D4AF37]"><Star className="w-5 h-5"/></Button>
+               <Button size="icon" variant="ghost" className="text-gray-500 hover:text-[var(--school-accent)]"><Star className="w-5 h-5"/></Button>
             </div>
             
-            <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#D4AF37] transition-colors">{res.title}</h3>
+            <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[var(--school-accent)] transition-colors">{res.title}</h3>
             <p className="text-sm text-gray-400 mb-4">Par {res.author}</p>
             
             <div className="flex items-center justify-between text-sm text-gray-500 border-t border-white/5 pt-4">
                <span>{res.module}</span>
                <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1"><Download className="w-3 h-3"/> {res.downloads}</span>
-                  <span className="flex items-center gap-1 text-[#D4AF37]"><Star className="w-3 h-3 fill-current"/> {res.rating}</span>
+                  <span className="flex items-center gap-1 text-[var(--school-accent)]"><Star className="w-3 h-3 fill-current"/> {res.rating}</span>
                </div>
             </div>
           </motion.div>
@@ -102,7 +102,7 @@ export const VideosSection = () => {
                     <div className="flex gap-2 text-sm text-gray-500">
                        <span className="flex items-center gap-1"><Eye className="w-3 h-3"/> {vid.views}</span>
                     </div>
-                    <Button size="sm" variant="ghost" className="text-[#D4AF37] hover:bg-[#D4AF37]/10"><Share2 className="w-4 h-4"/></Button>
+                    <Button size="sm" variant="ghost" className="text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"><Share2 className="w-4 h-4"/></Button>
                  </div>
               </div>
            </div>
@@ -133,16 +133,16 @@ export const ExercisesSection = () => {
        <div className="lg:col-span-2 space-y-6">
           <h3 className="text-xl font-bold text-white">À Faire</h3>
           {activeExercises.map(ex => (
-             <div key={ex.id} className="bg-[#192734] border border-white/10 rounded-xl p-6 flex justify-between items-center hover:border-[#D4AF37]/50 transition-colors">
+             <div key={ex.id} className="bg-[#192734] border border-white/10 rounded-xl p-6 flex justify-between items-center hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] transition-colors">
                 <div>
                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="outline" className="border-[#D4AF37] text-[#D4AF37]">{ex.module}</Badge>
+                      <Badge variant="outline" className="border-[var(--school-accent)] text-[var(--school-accent)]">{ex.module}</Badge>
                       <span className={cn("text-xs px-2 py-0.5 rounded", ex.difficulty === 'Facile' ? 'bg-green-500/10 text-green-500' : 'bg-orange-500/10 text-orange-500')}>{ex.difficulty}</span>
                    </div>
                    <h4 className="font-bold text-white text-lg">{ex.title}</h4>
                    <p className="text-sm text-gray-400 mt-1">Date limite : {new Date(ex.deadline).toLocaleDateString()}</p>
                 </div>
-                <Button className="bg-[#D4AF37] text-black hover:bg-[#b5952f]">Commencer</Button>
+                <Button className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f]">Commencer</Button>
              </div>
           ))}
        </div>
@@ -184,14 +184,14 @@ export const GlossarySection = () => {
     <div className="space-y-8">
        <div className="flex flex-wrap gap-1 justify-center bg-[#192734] p-4 rounded-xl border border-white/10">
           {alphabet.map(letter => (
-             <button key={letter} className="w-8 h-8 rounded hover:bg-[#D4AF37] hover:text-black transition-colors text-sm font-bold text-gray-400">{letter}</button>
+             <button key={letter} className="w-8 h-8 rounded hover:bg-[var(--school-accent)] hover:text-black transition-colors text-sm font-bold text-gray-400">{letter}</button>
           ))}
        </div>
 
        <div className="grid md:grid-cols-2 gap-4">
           {terms.map((t, i) => (
              <div key={i} className="bg-[#192734] border border-white/10 p-6 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer">
-                <h3 className="text-xl font-serif font-bold text-[#D4AF37] mb-2">{t.term}</h3>
+                <h3 className="text-xl font-serif font-bold text-[var(--school-accent)] mb-2">{t.term}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">{t.def}</p>
                 <div className="mt-4 pt-4 border-t border-white/5 flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                    <span className="text-sm text-gray-500 flex items-center hover:text-white">Voir détails <ArrowRight className="w-3 h-3 ml-1"/></span>

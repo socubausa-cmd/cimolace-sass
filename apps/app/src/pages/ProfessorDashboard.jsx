@@ -57,7 +57,7 @@ const ProfessorDashboard = () => {
             <Logo size="small" variant="dark" showText={false} className="mb-2" /> {/* Changed to showText={false} */}
             <h1 className="text-3xl font-serif font-bold text-white">Gestion des Cours</h1>
           </div>
-          <Button onClick={() => setIsModalOpen(true)} className="bg-[#D4AF37] hover:bg-yellow-500 text-black">
+          <Button onClick={() => setIsModalOpen(true)} className="bg-[var(--school-accent)] hover:bg-yellow-500 text-black">
             <Plus className="mr-2 h-4 w-4" /> Nouveau Cours
           </Button>
         </div>
@@ -109,7 +109,7 @@ const ProfessorDashboard = () => {
                    <input type="number" className="w-full bg-black/30 border border-white/20 rounded-lg p-3 text-white" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
                 </div>
               </div>
-              <Button type="submit" disabled={loading} className="w-full bg-[#D4AF37] hover:bg-yellow-500 text-black font-bold">
+              <Button type="submit" disabled={loading} className="w-full bg-[var(--school-accent)] hover:bg-yellow-500 text-black font-bold">
                 {loading ? 'Création...' : 'Créer le cours'}
               </Button>
             </form>

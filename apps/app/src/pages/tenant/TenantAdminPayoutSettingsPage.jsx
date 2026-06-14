@@ -21,7 +21,7 @@ export default function TenantAdminPayoutSettingsPage() {
             <Link to={`/settings?tab=payments`} className="text-sm text-gray-400 hover:text-white hover:underline shrink-0">
               Paramètres → Paiements
             </Link>
-            <Link to="/owner-dashboard?tab=payments&finance=payout-setup" className="text-sm text-[#D4AF37] hover:underline shrink-0">
+            <Link to="/owner-dashboard?tab=payments&finance=payout-setup" className="text-sm text-[var(--school-accent)] hover:underline shrink-0">
               Tableau de bord propriétaire (vue équivalente)
             </Link>
           </div>

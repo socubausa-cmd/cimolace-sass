@@ -11,7 +11,7 @@ import {
   EV_MUTED,
   EV_ACCENT,
   EV_SH,
-} from '@/pages/eleve-mobile/eleveMobileScreensShared';
+} from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 import { EleveImmersiveHalo } from '@/components/eleve-mobile/EleveImmersiveHalo';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
 import { useTenantBranding } from '@/hooks/useTenantBranding';

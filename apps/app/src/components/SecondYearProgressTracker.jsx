@@ -80,7 +80,7 @@ const SecondYearProgressTracker = ({ moduleId }) => {
           <div className="flex items-center gap-3">
              <div className="text-2xl font-bold text-white">{progress?.progress_percentage || 0}%</div>
              <div className="w-32 h-2 bg-black/40 rounded-full overflow-hidden">
-                <div className="h-full bg-[#D4AF37] transition-all" style={{ width: `${progress?.progress_percentage || 0}%` }}></div>
+                <div className="h-full bg-[var(--school-accent)] transition-all" style={{ width: `${progress?.progress_percentage || 0}%` }}></div>
              </div>
           </div>
        </div>
@@ -88,9 +88,9 @@ const SecondYearProgressTracker = ({ moduleId }) => {
           {progress?.status === 'completed' ? (
              <span className="flex items-center gap-2 text-green-500 font-bold bg-green-500/10 px-4 py-2 rounded-lg"><CheckCircle className="w-5 h-5"/> Terminé</span>
           ) : progress?.status === 'in_progress' ? (
-             <Button onClick={() => updateStatus('completed')} variant="outline" className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10"><CheckCircle className="w-4 h-4 mr-2"/> Terminer</Button>
+             <Button onClick={() => updateStatus('completed')} variant="outline" className="border-[var(--school-accent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"><CheckCircle className="w-4 h-4 mr-2"/> Terminer</Button>
           ) : (
-             <Button onClick={() => updateStatus('in_progress')} className="bg-[#D4AF37] text-black hover:bg-[#b5952f]"><PlayCircle className="w-4 h-4 mr-2"/> Commencer</Button>
+             <Button onClick={() => updateStatus('in_progress')} className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f]"><PlayCircle className="w-4 h-4 mr-2"/> Commencer</Button>
           )}
        </div>
     </div>

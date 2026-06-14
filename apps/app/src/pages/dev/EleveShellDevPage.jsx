@@ -1,7 +1,7 @@
 import React from 'react';
 import { EleveMobileShell } from '@/components/eleve-mobile/EleveMobileShell';
 import { LiriPageFooterLine } from '@/components/brand/LiriWordmark';
-import { EV_MUTED, EV_PAGE_AMBIENT } from '@/pages/eleve-mobile/eleveMobileScreensShared';
+import { EV_MUTED, EV_PAGE_AMBIENT } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 /**
  * Coque LIRI élève « vide » — même header d'accueil (logo + tagline) + zone centrale + onglets bas.

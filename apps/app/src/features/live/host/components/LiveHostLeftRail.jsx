@@ -3,8 +3,8 @@ import { ChevronLeft, ChevronRight, Boxes, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
 import { designerShellCloseBtn } from '@/lib/liriDesignerShellClasses';
-import LiriHostLeftLiveAssistantRail from '@/components/live-room/LiriHostLeftLiveAssistantRail';
-import LiveHostInviteManagementPanel from '@/components/live-room/LiveHostInviteManagementPanel';
+import LiriHostLeftLiveAssistantRail from '@/components/liri/live-room/LiriHostLeftLiveAssistantRail';
+import LiveHostInviteManagementPanel from '@/components/liri/live-room/LiveHostInviteManagementPanel';
 import { PHASE } from '@/features/live/host/liveHostConstants';
 
 export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(

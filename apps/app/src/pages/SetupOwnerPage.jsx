@@ -36,10 +36,10 @@ const SetupOwnerPage = () => {
     <div className="min-h-screen bg-[#0F1419] flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-[#192734] border-white/10 text-white shadow-2xl">
         <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 bg-[#D4AF37]/20 rounded-full flex items-center justify-center mb-4">
-            <Shield className="w-6 h-6 text-[#D4AF37]" />
+          <div className="mx-auto w-12 h-12 bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] rounded-full flex items-center justify-center mb-4">
+            <Shield className="w-6 h-6 text-[var(--school-accent)]" />
           </div>
-          <CardTitle className="text-2xl font-bold text-[#D4AF37]">Setup Owner Account</CardTitle>
+          <CardTitle className="text-2xl font-bold text-[var(--school-accent)]">Setup Owner Account</CardTitle>
           <CardDescription className="text-gray-400">
             Initialize the system by creating the primary owner account.
           </CardDescription>
@@ -56,7 +56,7 @@ const SetupOwnerPage = () => {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Role:</span>
-              <span className="text-[#D4AF37] font-bold uppercase text-xs">Owner</span>
+              <span className="text-[var(--school-accent)] font-bold uppercase text-xs">Owner</span>
             </div>
           </div>
 
@@ -78,7 +78,7 @@ const SetupOwnerPage = () => {
             <Button 
               onClick={handleCreateOwner} 
               disabled={loading}
-              className="w-full bg-[#D4AF37] hover:bg-yellow-500 text-black font-bold transition-all"
+              className="w-full bg-[var(--school-accent)] hover:bg-yellow-500 text-black font-bold transition-all"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               {loading ? 'Initializing...' : 'Create Owner User'}

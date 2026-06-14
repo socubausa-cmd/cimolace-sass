@@ -110,7 +110,7 @@ const RecoveryTab = () => {
        >
         <div>
            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-             <FileText className="text-[#D4AF37]" /> Recouvrement
+             <FileText className="text-[var(--school-accent)]" /> Recouvrement
            </h2>
            <p className="text-gray-400 text-sm">Source: paiements et factures provider (Supabase)</p>
         </div>
@@ -142,7 +142,7 @@ const RecoveryTab = () => {
         <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[#D4AF37]/30 transition-all">
+            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
                 <p className="text-gray-400 text-xs uppercase">Montant Total</p>
                 <p className="text-2xl font-bold text-white">{stats.totalAmount.toLocaleString()} EUR</p>
@@ -150,7 +150,7 @@ const RecoveryTab = () => {
             </Card>
             </motion.div>
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[#D4AF37]/30 transition-all">
+            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
                 <p className="text-gray-400 text-xs uppercase">Recouvré</p>
                 <p className="text-2xl font-bold text-green-400">{stats.recovered.toLocaleString()} EUR</p>
@@ -158,7 +158,7 @@ const RecoveryTab = () => {
             </Card>
             </motion.div>
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[#D4AF37]/30 transition-all">
+            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
                 <p className="text-gray-400 text-xs uppercase">Reste à payer</p>
                 <p className="text-2xl font-bold text-red-400">{stats.pending.toLocaleString()} EUR</p>
@@ -166,10 +166,10 @@ const RecoveryTab = () => {
             </Card>
             </motion.div>
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[#D4AF37]/30 transition-all">
+            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
                 <p className="text-gray-400 text-xs uppercase">Taux Recouvrement</p>
-                <p className="text-2xl font-bold text-[#D4AF37]">{stats.recoveryRate.toFixed(1)}%</p>
+                <p className="text-2xl font-bold text-[var(--school-accent)]">{stats.recoveryRate.toFixed(1)}%</p>
               </CardContent>
             </Card>
             </motion.div>

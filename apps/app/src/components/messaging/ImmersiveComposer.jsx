@@ -178,7 +178,7 @@ export function ImmersiveComposer({
       className={cn(
         'relative z-30 px-4 pb-1 pt-1.5 md:px-8',
         immersiveLiveComposerChrome &&
-          'border-t border-[#D4AF37]/20 bg-gradient-to-t from-black/50 via-[#070a10]/80 to-transparent pt-3 shadow-[0_-12px_40px_-28px_rgba(212,175,55,0.35)]',
+          'border-t border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-gradient-to-t from-black/50 via-[#070a10]/80 to-transparent pt-3 shadow-[0_-12px_40px_-28px_rgba(212,175,55,0.35)]',
       )}
     >
       {/* Recipient chip */}
@@ -191,10 +191,10 @@ export function ImmersiveComposer({
             transition={{ duration: 0.18 }}
             className="mb-1.5 flex items-center gap-2"
           >
-            <div className="inline-flex items-center gap-2 h-7 pl-1.5 pr-3 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30">
+            <div className="inline-flex items-center gap-2 h-7 pl-1.5 pr-3 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
               <UserAvatar user={selectedRecipient} size="sm" />
-              <span className="text-xs font-medium text-[#D4AF37]">{selectedRecipient.name}</span>
-              <button onClick={onClearRecipient} className="ml-1 text-[#D4AF37]/60 hover:text-[#D4AF37]">
+              <span className="text-xs font-medium text-[var(--school-accent)]">{selectedRecipient.name}</span>
+              <button onClick={onClearRecipient} className="ml-1 text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] hover:text-[var(--school-accent)]">
                 <X className="w-3 h-3" />
               </button>
             </div>
@@ -215,8 +215,8 @@ export function ImmersiveComposer({
               className={cn(
                 'flex-shrink-0 h-7 px-3 rounded-full text-[11px] border backdrop-blur-md transition-all whitespace-nowrap',
                 item.id === 'payment'
-                  ? 'text-[#D4AF37] border-[#D4AF37]/35 bg-[#D4AF37]/12 hover:bg-[#D4AF37]/18 shadow-[0_8px_20px_-14px_rgba(212,175,55,0.8)]'
-                  : 'text-gray-400 border-white/10 bg-white/[0.03] hover:border-[#D4AF37]/35 hover:text-[#D4AF37] hover:bg-white/5'
+                  ? 'text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] shadow-[0_8px_20px_-14px_rgba(212,175,55,0.8)]'
+                  : 'text-gray-400 border-white/10 bg-white/[0.03] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:text-[var(--school-accent)] hover:bg-white/5'
               )}
             >
               <Link2 className="w-3 h-3 inline mr-1 opacity-60" />
@@ -277,13 +277,13 @@ export function ImmersiveComposer({
       </AnimatePresence>
 
       {/* Main toolbar */}
-      <div className="relative flex items-center gap-1.5 rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.09] via-white/[0.04] to-white/[0.03] backdrop-blur-xl px-2.5 py-2 focus-within:border-[#D4AF37]/45 shadow-[0_16px_40px_-24px_rgba(0,0,0,0.95)] transition-colors">
+      <div className="relative flex items-center gap-1.5 rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.09] via-white/[0.04] to-white/[0.03] backdrop-blur-xl px-2.5 py-2 focus-within:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] shadow-[0_16px_40px_-24px_rgba(0,0,0,0.95)] transition-colors">
         <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_70%_0%,rgba(212,175,55,0.12),transparent_38%)]" />
 
         <button
           type="button"
           onClick={onOpenPicker}
-          className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#D4AF37] hover:bg-white/5 transition-all"
+          className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-[var(--school-accent)] hover:bg-white/5 transition-all"
           aria-label="Membres"
           title="Sélectionner un membre"
         >
@@ -341,7 +341,7 @@ export function ImmersiveComposer({
             !liveEnabled
               ? 'bg-white/[0.03] text-gray-700 cursor-not-allowed'
               : liveActive
-                ? 'bg-[#D4AF37]/20 text-[#D4AF37] ring-1 ring-[#D4AF37]/35'
+                ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] ring-1 ring-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]'
                 : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
           )}
           aria-label="Live vidéo"
@@ -361,8 +361,8 @@ export function ImmersiveComposer({
             className={cn(
               'flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all',
               liveSettingsOpen
-                ? 'bg-[#D4AF37]/20 text-[#D4AF37] ring-1 ring-[#D4AF37]/35'
-                : 'text-gray-400 hover:text-[#D4AF37] hover:bg-white/5'
+                ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] ring-1 ring-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]'
+                : 'text-gray-400 hover:text-[var(--school-accent)] hover:bg-white/5'
             )}
             aria-label="Paramètres live"
             title="Paramètres vidéo, audio, SmartBoard"
@@ -380,8 +380,8 @@ export function ImmersiveComposer({
             immersiveLiveComposerChrome ? 'h-9 w-9 rounded-full' : 'rounded-xl',
             canSend
               ? immersiveLiveComposerChrome
-                ? 'bg-[#D4AF37] text-black shadow-[0_0_22px_-6px_rgba(212,175,55,0.85)] hover:bg-[#e5c04a]'
-                : 'bg-[#D4AF37] text-black hover:bg-[#e5c04a]'
+                ? 'bg-[var(--school-accent)] text-black shadow-[0_0_22px_-6px_rgba(212,175,55,0.85)] hover:bg-[#e5c04a]'
+                : 'bg-[var(--school-accent)] text-black hover:bg-[#e5c04a]'
               : 'bg-white/5 text-gray-600',
           )}
           aria-label="Envoyer"

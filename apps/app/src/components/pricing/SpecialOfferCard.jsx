@@ -10,15 +10,15 @@ const SpecialOfferCard = () => {
   return (
     <div className="relative mt-16 mb-12">
       <div className="absolute inset-0 bg-gradient-to-r from-red-900/40 to-purple-900/40 blur-xl rounded-3xl"></div>
-      <Card className="relative bg-gradient-to-br from-[#1a1a2e] to-[#16213e] border border-[#D4AF37]/30 shadow-2xl overflow-hidden">
-        <div className="absolute top-0 right-0 bg-[#D4AF37] text-black font-bold px-6 py-2 rounded-bl-xl z-10">
+      <Card className="relative bg-gradient-to-br from-[#1a1a2e] to-[#16213e] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] shadow-2xl overflow-hidden">
+        <div className="absolute top-0 right-0 bg-[var(--school-accent)] text-black font-bold px-6 py-2 rounded-bl-xl z-10">
           OFFRE EXCLUSIVE
         </div>
         
         <CardContent className="p-8 md:p-12">
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#D4AF37] text-sm font-medium">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[var(--school-accent)] text-sm font-medium">
                 <Sparkles className="w-4 h-4" />
                 <span>Le choix de l'excellence</span>
               </div>
@@ -36,7 +36,7 @@ const SpecialOfferCard = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {combo.features.map((feat, i) => (
                   <div key={i} className="flex items-center gap-3 text-white">
-                    <CheckCircle2 className="w-5 h-5 text-[#D4AF37]" />
+                    <CheckCircle2 className="w-5 h-5 text-[var(--school-accent)]" />
                     <span>{feat}</span>
                   </div>
                 ))}
@@ -82,7 +82,7 @@ const SpecialOfferCard = () => {
                      <div className="text-red-400 line-through text-sm">4000€</div>
                    </div>
                    <div className="text-right">
-                     <div className="text-3xl font-bold text-[#D4AF37]">{combo.pricing.full}€</div>
+                     <div className="text-3xl font-bold text-[var(--school-accent)]">{combo.pricing.full}€</div>
                      <div className="text-green-400 text-xs flex items-center justify-end gap-1">
                        <TrendingDown className="w-3 h-3" /> Économisez {combo.savings.full}€
                      </div>
@@ -90,7 +90,7 @@ const SpecialOfferCard = () => {
                  </div>
                </div>
 
-               <Button className="w-full mt-8 bg-gradient-to-r from-[#D4AF37] to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-bold h-12 text-lg">
+               <Button className="w-full mt-8 bg-gradient-to-r from-[var(--school-accent)] to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-bold h-12 text-lg">
                  Profiter de l'offre combinée
                </Button>
             </div>

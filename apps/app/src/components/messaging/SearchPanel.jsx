@@ -52,7 +52,7 @@ export function SearchPanel({ open, onClose, conversations, onSelect }) {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Chercher une conversation…"
-                  className="w-full h-8 pl-8 pr-3 rounded-lg bg-white/5 border border-white/10 text-xs text-white placeholder:text-gray-500 outline-none focus:border-[#D4AF37]/40 transition-colors"
+                  className="w-full h-8 pl-8 pr-3 rounded-lg bg-white/5 border border-white/10 text-xs text-white placeholder:text-gray-500 outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
                 />
               </div>
             </div>

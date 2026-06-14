@@ -14,7 +14,7 @@ const SelectTrigger = React.forwardRef(({ className, children, ...props }, ref) 
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/40 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
       className
     )}
     {...props}
@@ -104,7 +104,7 @@ const SelectItem = React.forwardRef(({ className, children, value, ...props }, r
     <SelectPrimitive.Item
       ref={ref}
       className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-md py-2 pl-8 pr-2 text-sm text-gray-100 outline-none focus:bg-[#D4AF37]/15 focus:text-[#D4AF37] data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex w-full cursor-default select-none items-center rounded-md py-2 pl-8 pr-2 text-sm text-gray-100 outline-none focus:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] focus:text-[var(--school-accent)] data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className
       )}
       value={normalizedValue}

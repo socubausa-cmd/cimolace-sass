@@ -17,7 +17,7 @@ const Slider = React.forwardRef(({ className, value, onValueChange, onValueCommi
     <div className={cn("relative flex w-full touch-none select-none items-center", className)} {...props}>
       <div className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary/20 bg-gray-700">
         <div 
-          className="absolute h-full bg-[#D4AF37]" 
+          className="absolute h-full bg-[var(--school-accent)]" 
           style={{ width: `${percentage}%` }} 
         />
       </div>
@@ -32,7 +32,7 @@ const Slider = React.forwardRef(({ className, value, onValueChange, onValueCommi
         className="absolute inset-0 h-full w-full opacity-0 cursor-pointer z-10"
       />
       <div 
-        className="absolute h-5 w-5 rounded-full border-2 border-[#D4AF37] bg-[#192734] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 z-0"
+        className="absolute h-5 w-5 rounded-full border-2 border-[var(--school-accent)] bg-[#192734] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 z-0"
         style={{ left: `calc(${percentage}% - 10px)` }}
       />
     </div>

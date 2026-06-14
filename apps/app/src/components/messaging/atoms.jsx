@@ -29,7 +29,7 @@ export function UserAvatar({ user, size = 'md' }) {
     <div
       className={cn(
         s,
-        'rounded-full bg-gradient-to-br from-[#D4AF37]/50 to-[#D4AF37]/20 flex items-center justify-center font-semibold text-white ring-1 ring-white/10'
+        'rounded-full bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] to-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center font-semibold text-white ring-1 ring-white/10'
       )}
     >
       {initials}

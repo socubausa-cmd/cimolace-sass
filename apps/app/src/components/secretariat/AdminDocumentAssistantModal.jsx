@@ -57,14 +57,14 @@ export default function AdminDocumentAssistantModal({ open, onClose, onApply }) 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
       <div
-        className="relative w-full max-w-lg rounded-2xl border border-[#D4AF37]/25 bg-[#0a0c14] shadow-2xl"
+        className="relative w-full max-w-lg rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#0a0c14] shadow-2xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="admin-assistant-title"
       >
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-[#D4AF37]" />
+            <Sparkles className="h-4 w-4 text-[var(--school-accent)]" />
             <h2 id="admin-assistant-title" className="text-sm font-semibold text-white">
               Assistant LONGIA — document structuré
             </h2>
@@ -82,7 +82,7 @@ export default function AdminDocumentAssistantModal({ open, onClose, onApply }) 
         <div className="px-4 py-2">
           <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
             <div
-              className="h-full rounded-full bg-[#D4AF37]/80 transition-all"
+              className="h-full rounded-full bg-[color-mix(in_srgb,var(--school-accent)_80%,transparent)] transition-all"
               style={{ width: `${((step + 1) / total) * 100}%` }}
             />
           </div>
@@ -169,7 +169,7 @@ export default function AdminDocumentAssistantModal({ open, onClose, onApply }) 
             <button
               type="button"
               onClick={() => setStep(step + 1)}
-              className="inline-flex items-center gap-1 rounded-lg bg-[#D4AF37] px-3 py-2 text-[11px] font-semibold text-black hover:bg-[#c9a532]"
+              className="inline-flex items-center gap-1 rounded-lg bg-[var(--school-accent)] px-3 py-2 text-[11px] font-semibold text-black hover:bg-[#c9a532]"
             >
               Suivant <ChevronRight className="h-3.5 w-3.5" />
             </button>
@@ -177,7 +177,7 @@ export default function AdminDocumentAssistantModal({ open, onClose, onApply }) 
             <button
               type="button"
               onClick={handleFinish}
-              className="inline-flex items-center gap-1 rounded-lg bg-[#D4AF37] px-3 py-2 text-[11px] font-semibold text-black hover:bg-[#c9a532]"
+              className="inline-flex items-center gap-1 rounded-lg bg-[var(--school-accent)] px-3 py-2 text-[11px] font-semibold text-black hover:bg-[#c9a532]"
             >
               Générer le document
             </button>

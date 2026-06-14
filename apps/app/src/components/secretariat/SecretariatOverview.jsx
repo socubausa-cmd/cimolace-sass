@@ -35,7 +35,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import DashboardLiveSessionsPanel from '@/components/live/DashboardLiveSessionsPanel';
+import DashboardLiveSessionsPanel from '@/components/liri/live/DashboardLiveSessionsPanel';
 
 const isMissingRelationError = (error) => {
   const code = String(error?.code || '');
@@ -223,7 +223,7 @@ const SecretariatOverview = () => {
     { title: 'Formations Publiées', value: stats.publishedFormations || 0, icon: BookOpen, color: 'text-purple-400', bg: 'bg-purple-500/10' },
     { title: 'Paiements Confirmés', value: stats.confirmedPayments || 0, icon: CreditCard, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
     { title: 'Webhooks en attente', value: stats.pendingWebhooks || 0, icon: Activity, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-    { title: 'Demandes à traiter', value: administrativeQueue.length || 0, icon: FileCheck, color: 'text-[#D4AF37]', bg: 'bg-[#D4AF37]/10' },
+    { title: 'Demandes à traiter', value: administrativeQueue.length || 0, icon: FileCheck, color: 'text-[var(--school-accent)]', bg: 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]' },
   ];
 
   const recentActivities = (activities || []).slice(0, 10).map((a) => ({
@@ -239,14 +239,14 @@ const SecretariatOverview = () => {
       {/* Header - même style que Owner */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#192734] p-6 rounded-xl border border-white/10">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">Aperçu Secrétariat <span className="text-[#D4AF37]">.</span></h1>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2">Aperçu Secrétariat <span className="text-[var(--school-accent)]">.</span></h1>
           <p className="text-gray-400 text-sm mt-1 capitalize">{format(currentDate, 'EEEE d MMMM yyyy • HH:mm', { locale: fr })}</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
           <Button variant="outline" onClick={handleRefresh} className="border-white/10 text-white hover:bg-white/5 w-full sm:w-auto" disabled={loading}>
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} /> Actualiser
           </Button>
-          <Button onClick={handleExport} className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold w-full sm:w-auto">
+          <Button onClick={handleExport} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold w-full sm:w-auto">
             <Download className="w-4 h-4 mr-2" /> Rapport
           </Button>
         </div>
@@ -258,11 +258,11 @@ const SecretariatOverview = () => {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {statCards.map((stat, idx) => (
           <motion.div key={idx} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}>
-            <Card className="bg-[#192734] border-white/10 hover:border-[#D4AF37]/30 transition-all group">
+            <Card className="bg-[#192734] border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all group">
               <CardContent className="p-5 flex items-center justify-between">
                 <div>
                   <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">{stat.title}</p>
-                  <p className="text-2xl font-bold text-white mt-1 group-hover:text-[#D4AF37] transition-colors">{stat.value}</p>
+                  <p className="text-2xl font-bold text-white mt-1 group-hover:text-[var(--school-accent)] transition-colors">{stat.value}</p>
                 </div>
                 <div className={`p-3 rounded-xl ${stat.bg}`}>
                   <stat.icon className={`w-6 h-6 ${stat.color}`} />
@@ -278,7 +278,7 @@ const SecretariatOverview = () => {
         <Card className="lg:col-span-2 bg-[#192734] border-white/10">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <Activity className="w-5 h-5 text-[#D4AF37]" /> Tendances d'Activité (7 jours)
+              <Activity className="w-5 h-5 text-[var(--school-accent)]" /> Tendances d'Activité (7 jours)
             </CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">
@@ -305,8 +305,8 @@ const SecretariatOverview = () => {
           <Card className="bg-[#192734] border-white/10">
             <CardHeader className="pb-2">
               <CardTitle className="text-white flex items-center gap-2 text-base">
-                <FileCheck className="w-4 h-4 text-[#D4AF37]" /> Demandes à traiter
-                {administrativeQueue.length > 0 && <Badge className="ml-auto bg-[#D4AF37] text-black">{administrativeQueue.length}</Badge>}
+                <FileCheck className="w-4 h-4 text-[var(--school-accent)]" /> Demandes à traiter
+                {administrativeQueue.length > 0 && <Badge className="ml-auto bg-[var(--school-accent)] text-black">{administrativeQueue.length}</Badge>}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -325,7 +325,7 @@ const SecretariatOverview = () => {
                     <div key={task.id} className="p-3 rounded-lg border border-white/10 bg-white/5 mb-2 flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-3 text-xs text-gray-400">
-                          {task.type === 'facturation' ? <CreditCard className="w-3.5 h-3.5 text-amber-400" /> : <AlertTriangle className="w-3.5 h-3.5 text-[#D4AF37]" />}
+                          {task.type === 'facturation' ? <CreditCard className="w-3.5 h-3.5 text-amber-400" /> : <AlertTriangle className="w-3.5 h-3.5 text-[var(--school-accent)]" />}
                           {task.type}
                         </div>
                         <p className="text-white font-medium truncate">{task.title}</p>
@@ -334,7 +334,7 @@ const SecretariatOverview = () => {
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <Button
                           size="sm"
-                          className="bg-[#D4AF37] text-black hover:bg-amber-500 h-8 text-xs"
+                          className="bg-[var(--school-accent)] text-black hover:bg-amber-500 h-8 text-xs"
                           onClick={() => handleTaskAction(task)}
                           disabled={Boolean(taskLoading[task.id])}
                         >
@@ -386,14 +386,14 @@ const SecretariatOverview = () => {
             <Card className="bg-[#192734] border-white/10">
               <CardHeader className="pb-2">
                 <CardTitle className="text-white flex items-center gap-2 text-base">
-                  <History className="w-4 h-4 text-[#D4AF37]" /> Dernières actions
+                  <History className="w-4 h-4 text-[var(--school-accent)]" /> Dernières actions
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
                   {recentlyProcessed.slice(0, 4).map((item) => (
                     <li key={item.id} className="text-sm text-gray-400 flex justify-between gap-2">
-                      <span><span className="text-[#D4AF37]">{item.type}</span> — {item.subject}</span>
+                      <span><span className="text-[var(--school-accent)]">{item.type}</span> — {item.subject}</span>
                       <span className="text-gray-500 text-xs">{item.processedAt}</span>
                     </li>
                   ))}
@@ -427,7 +427,7 @@ const SecretariatOverview = () => {
                     <td className="px-6 py-4 font-medium text-white">{act.description}</td>
                     <td className="px-6 py-4">
                       {act.details?.user && <div className="text-white">{act.details.user}</div>}
-                      {act.details?.item && <div className="text-[#D4AF37] text-xs">{act.details.item}</div>}
+                      {act.details?.item && <div className="text-[var(--school-accent)] text-xs">{act.details.item}</div>}
                     </td>
                     <td className="px-6 py-4">{format(new Date(act.timestamp), 'dd MMM HH:mm', { locale: fr })}</td>
                     <td className="px-6 py-4">

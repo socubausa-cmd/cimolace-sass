@@ -8,28 +8,28 @@ import { useSchoolYear } from '@/hooks/useSchoolYear';
 
 // Mêmes composants que OwnerDashboard (accès restreints par RLS)
 import OwnerFormationsTab from '@/components/owner/OwnerFormationsTab';
-import SchoolLifeManagementTab from '@/components/school-life-admin/SchoolLifeManagementTab';
+import SchoolLifeManagementTab from '@/components/school/school-life-admin/SchoolLifeManagementTab';
 import CoachingMentoringTab from '@/components/coaching/CoachingMentoringTab';
 import WorkshopsTab from '@/components/coaching/WorkshopsTab';
 import SupportTab from '@/components/support/SupportTab';
 import NotificationCenter from '@/pages/NotificationCenter';
-import OwnerCertificatesManagement from '@/components/certificates/OwnerCertificatesManagement';
+import OwnerCertificatesManagement from '@/components/school/certificates/OwnerCertificatesManagement';
 import ReportsPage from '@/pages/ReportsPage';
 import SecretariatInboxPage from '@/pages/secretariat/SecretariatInboxPage';
 import SecretariatCalendarPage from '@/pages/secretariat/SecretariatCalendarPage';
 import SecretariatMarketingPanelPage from '@/pages/secretariat/SecretariatMarketingPanelPage';
 import SecretariatAppointmentsPage from '@/pages/secretariat/SecretariatAppointmentsPage';
 import HowItWorksPage from '@/pages/HowItWorksPage';
-import CoursesPage from '@/pages/CoursesPage';
-import TeachersPage from '@/pages/TeachersPage';
+import CoursesPage from '@/pages/school/CoursesPage';
+import TeachersPage from '@/pages/school/TeachersPage';
 import CyclesDetailPage from '@/pages/CyclesDetailPage';
 import SecretariatBillingPanel from '@/components/secretariat/SecretariatBillingPanel';
 import NgowazuluMentoratManagerTab from '@/components/ngowazulu/owner/NgowazuluMentoratManagerTab';
 import NgowazuluOperationsPanel from '@/components/ngowazulu/admin/NgowazuluOperationsPanel';
 import SiteReviewsModerationPanel from '@/components/marketing/SiteReviewsModerationPanel';
 import AdministrativeDocumentStudio from '@/components/secretariat/AdministrativeDocumentStudio';
-import StudentForumCommunityPage from '@/pages/student-school-life/StudentForumCommunityPage';
-import { FormationForumContent } from '@/pages/FormationForumPage';
+import StudentForumCommunityPage from '@/pages/school/student-school-life/StudentForumCommunityPage';
+import { FormationForumContent } from '@/pages/school/FormationForumPage';
 import { FORUM_COMMUNITY_PATH } from '@/lib/forumDashboardPaths';
 
 const VALID_TABS = ['dashboard', 'apercu', 'paiements', 'notifications', 'reports', 'formations', 'coaching-mentoring', 'workshops', 'ngowazulu-mentorat', 'ngowazulu-operations', 'reviews', 'certificates', 'support', 'school-life', 'forum', 'rendez-vous', 'calendrier', 'marketing', 'messagerie', 'teachers', 'how-it-works', 'courses', 'document-admin', 'cycles-disciple', 'cycles-initie', 'cycles-maitre'];

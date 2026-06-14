@@ -102,7 +102,7 @@ const InventoryTab = () => {
       >
         <div>
            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-             <Package className="text-[#D4AF37]" /> Inventaire
+             <Package className="text-[var(--school-accent)]" /> Inventaire
            </h2>
            <p className="text-gray-400 text-sm">Inventaire réel des forfaits et abonnés actifs</p>
         </div>
@@ -136,7 +136,7 @@ const InventoryTab = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[#D4AF37]/30 transition-all">
+            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
                 <p className="text-gray-400 text-xs uppercase">Total Articles</p>
                 <p className="text-2xl font-bold text-white">{stats.totalItems}</p>
@@ -144,15 +144,15 @@ const InventoryTab = () => {
             </Card>
             </motion.div>
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[#D4AF37]/30 transition-all">
+            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
                 <p className="text-gray-400 text-xs uppercase">Valeur Totale</p>
-                <p className="text-2xl font-bold text-[#D4AF37]">{stats.totalValue.toLocaleString()} EUR</p>
+                <p className="text-2xl font-bold text-[var(--school-accent)]">{stats.totalValue.toLocaleString()} EUR</p>
               </CardContent>
             </Card>
             </motion.div>
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[#D4AF37]/30 transition-all">
+            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
                 <p className="text-gray-400 text-xs uppercase">Rupture de Stock</p>
                 <p className="text-2xl font-bold text-red-400">{stats.outOfStock}</p>
@@ -160,7 +160,7 @@ const InventoryTab = () => {
             </Card>
             </motion.div>
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[#D4AF37]/30 transition-all">
+            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
                 <p className="text-gray-400 text-xs uppercase">Stock Faible</p>
                 <p className="text-2xl font-bold text-orange-400">{stats.lowStock}</p>
@@ -239,7 +239,7 @@ const InventoryTab = () => {
                       <TableCell className="text-gray-300">{item.category}</TableCell>
                       <TableCell className="text-white">{item.quantity}</TableCell>
                       <TableCell className="text-white">{item.unitPrice} EUR</TableCell>
-                      <TableCell className="text-[#D4AF37]">{(item.quantity * item.unitPrice).toLocaleString()} EUR</TableCell>
+                      <TableCell className="text-[var(--school-accent)]">{(item.quantity * item.unitPrice).toLocaleString()} EUR</TableCell>
                       <TableCell>
                         {item.quantity === 0 ? <Badge variant="destructive">Rupture</Badge> :
                           item.quantity <= item.minQuantity ? <Badge className="bg-orange-500 hover:bg-orange-600">Faible</Badge> :

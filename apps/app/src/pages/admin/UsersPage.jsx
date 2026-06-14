@@ -48,7 +48,7 @@ const UsersPage = () => {
 
   const getRoleBadgeClass = (role) => {
     const r = String(role || '').toLowerCase();
-    if (r === 'owner') return 'bg-[#D4AF37]/20 text-[#D4AF37]';
+    if (r === 'owner') return 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]';
     if (r === 'admin') return 'bg-purple-500/20 text-purple-400';
     if (r === 'creator') return 'bg-pink-500/20 text-pink-400';
     if (r === 'secretariat') return 'bg-emerald-500/20 text-emerald-400';
@@ -106,7 +106,7 @@ const UsersPage = () => {
           </div>
           <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-[#D4AF37] text-black hover:bg-[#b5952f] gap-2">
+              <Button className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f] gap-2">
                 <UserPlus className="w-4 h-4" /> Ajouter
               </Button>
             </DialogTrigger>
@@ -169,7 +169,7 @@ const UsersPage = () => {
 
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsInviteOpen(false)} className="border-white/10">Annuler</Button>
-                <Button onClick={submitInvite} disabled={inviteLoading} className="bg-[#D4AF37] text-black hover:bg-[#b5952f]">
+                <Button onClick={submitInvite} disabled={inviteLoading} className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f]">
                   {inviteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Inviter'}
                 </Button>
               </DialogFooter>
@@ -207,7 +207,7 @@ const UsersPage = () => {
                 {loading ? (
                   <tr>
                     <td colSpan="5" className="px-6 py-8 text-center">
-                      <div className="flex justify-center"><Loader2 className="animate-spin text-[#D4AF37]" /></div>
+                      <div className="flex justify-center"><Loader2 className="animate-spin text-[var(--school-accent)]" /></div>
                     </td>
                   </tr>
                 ) : filteredUsers.map((user) => (

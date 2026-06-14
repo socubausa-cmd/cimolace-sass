@@ -129,14 +129,14 @@ const SecretariatDashboardLayout = ({ children, activeTab, onTabChange }) => {
       >
         <div className="h-20 flex items-center justify-between gap-2 px-4 sm:px-6 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-500/20 text-white font-bold shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--school-accent)] to-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-500/20 text-white font-bold shrink-0">
               P
             </div>
             {isSidebarOpen && (
               <h1 className="text-white font-bold text-lg leading-tight truncate">
                 Secrétariat
                 <br />
-                <span className="text-[#D4AF37]">Prorascience</span>
+                <span className="text-[var(--school-accent)]">Prorascience</span>
               </h1>
             )}
           </div>
@@ -166,7 +166,7 @@ const SecretariatDashboardLayout = ({ children, activeTab, onTabChange }) => {
               className={cn(
                 'w-full flex items-center px-4 py-3 rounded-xl transition-all duration-200',
                 activeTab === item.id
-                  ? 'bg-gradient-to-r from-[#D4AF37] to-[#f1cf63] text-black font-semibold shadow-lg shadow-[#D4AF37]/25'
+                  ? 'bg-gradient-to-r from-[var(--school-accent)] to-[#f1cf63] text-black font-semibold shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]'
                   : 'text-gray-400 hover:bg-white/5 hover:text-white border border-transparent hover:border-white/10',
               )}
             >
@@ -180,7 +180,7 @@ const SecretariatDashboardLayout = ({ children, activeTab, onTabChange }) => {
           <div className={cn('flex items-center', isSidebarOpen ? 'justify-between' : 'justify-center')}>
             {isSidebarOpen && (
               <div className="flex items-center gap-3 overflow-hidden min-w-0">
-                <Avatar className="h-9 w-9 border border-[#D4AF37] shrink-0">
+                <Avatar className="h-9 w-9 border border-[var(--school-accent)] shrink-0">
                   <AvatarImage src="" />
                   <AvatarFallback>
                     <User className="w-4 h-4 text-black" />

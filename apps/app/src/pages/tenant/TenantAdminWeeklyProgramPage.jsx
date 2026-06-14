@@ -8,8 +8,8 @@ import { useParams, Link } from 'react-router-dom';
 import { CalendarDays, BookOpen, Loader2, ChevronRight, Layers } from 'lucide-react';
 import TenantAdminShell from '@/components/admin/TenantAdminShell';
 import { ADMIN_T as T } from '@/lib/tenantAdminTheme';
-import WeekDayEditorPanel from '@/components/liri-ecosystem/WeekDayEditorPanel';
-import WeekGrammarTemplateSelector from '@/components/liri-ecosystem/WeekGrammarTemplateSelector';
+import WeekDayEditorPanel from '@/components/liri/liri-ecosystem/WeekDayEditorPanel';
+import WeekGrammarTemplateSelector from '@/components/liri/liri-ecosystem/WeekGrammarTemplateSelector';
 import { supabase } from '@/lib/supabase';
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */

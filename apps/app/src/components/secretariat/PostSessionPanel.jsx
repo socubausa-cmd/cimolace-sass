@@ -66,7 +66,7 @@ export default function PostSessionPanel({ appointment, session, onDone, onCance
     <div className="p-4 space-y-4 bg-[#0a0f1a]/60">
       {/* Title */}
       <div className="flex items-center gap-2">
-        <FileText className="w-4 h-4 text-[#D4AF37]" />
+        <FileText className="w-4 h-4 text-[var(--school-accent)]" />
         <p className="text-sm font-semibold text-white">Rapport post-session</p>
       </div>
 
@@ -103,7 +103,7 @@ export default function PostSessionPanel({ appointment, session, onDone, onCance
           onChange={e => set('summary', e.target.value)}
           placeholder="Points abordés, décisions prises…"
           rows={3}
-          className="w-full resize-none rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#D4AF37]/40 transition-colors"
+          className="w-full resize-none rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
         />
       </div>
 
@@ -115,7 +115,7 @@ export default function PostSessionPanel({ appointment, session, onDone, onCance
           onChange={e => set('notes', e.target.value)}
           placeholder="Observations, contexte, points de vigilance…"
           rows={2}
-          className="w-full resize-none rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#D4AF37]/40 transition-colors"
+          className="w-full resize-none rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
         />
       </div>
 
@@ -126,7 +126,7 @@ export default function PostSessionPanel({ appointment, session, onDone, onCance
           <select
             value={form.nextAction}
             onChange={e => set('nextAction', e.target.value)}
-            className="w-full appearance-none rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 pr-9 text-sm text-white focus:outline-none focus:border-[#D4AF37]/40 transition-colors cursor-pointer"
+            className="w-full appearance-none rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 pr-9 text-sm text-white focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors cursor-pointer"
           >
             {NEXT_ACTIONS.map(a => (
               <option key={a.value} value={a.value} className="bg-[#0f1520] text-white">
@@ -151,7 +151,7 @@ export default function PostSessionPanel({ appointment, session, onDone, onCance
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="flex-1 bg-[#D4AF37] text-black hover:bg-amber-400 font-semibold flex items-center justify-center gap-2"
+          className="flex-1 bg-[var(--school-accent)] text-black hover:bg-amber-400 font-semibold flex items-center justify-center gap-2"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Enregistrer le rapport

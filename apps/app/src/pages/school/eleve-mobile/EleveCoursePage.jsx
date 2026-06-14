@@ -1,0 +1,589 @@
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import {
+  BookOpen,
+  ChevronLeft,
+  Layers,
+  Clock,
+  Lock,
+  Unlock,
+  Sparkles,
+  ArrowRight,
+  MessageCircle,
+} from 'lucide-react';
+import { EleveMobileShell } from '@/components/eleve-mobile/EleveMobileShell';
+import { LiriStatusBar } from '@/pages/school/eleve-mobile/connection/EleveConnectionLayout';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { useDataSync } from '@/contexts/DataSyncContext';
+import { useBilling } from '@/contexts/BillingContext';
+import { supabase } from '@/lib/customSupabaseClient';
+import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
+import { getLoginEntryPath } from '@/lib/loginEntryPath';
+import { getBillingCheckoutPath } from '@/lib/eleveBillingPath';
+import { LiriPageFooterLine } from '@/components/brand/LiriWordmark';
+import { EV_LINE, EV_PAGE_AMBIENT } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
+
+const WEB_FORMATION_BG = '#0F1419';
+const GOLD = '#D4AF37';
+const PANEL = 'rgba(21, 26, 33, 0.85)';
+
+/**
+ * Fiche formation élève — alignée sur `FormationDetailPage` (web) : même données,
+ * programme, CTA (inscription, abonnement, paiement, accès au cours).
+ * Route : `/m/eleve/cours/:courseId`
+ */
+export default function EleveCoursePage() {
+  const { courseId } = useParams();
+  const navigate = useNavigate();
+  const { user, session } = useAuth();
+  const { status: billingStatus, inGrace } = useBilling();
+  const { notifications: sync } = useDataSync();
+  const inboxUnread = (Array.isArray(sync) ? sync : []).filter((n) => !n.isRead).length;
+
+  const [formation, setFormation] = useState(null);
+  const [modules, setModules] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [enrolled, setEnrolled] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState('');
+
+  const hasSubscriptionAccess = billingStatus === 'active' || (billingStatus === 'past_due' && inGrace);
+
+  const id = courseId ? String(courseId) : '';
+
+  useEffect(() => {
+    if (!id) {
+      setFormation(null);
+      setModules([]);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setLoadError(null);
+      try {
+        // Source réelle : table `courses` (la table `formations` n'existe pas).
+        // On lit les VRAIES colonnes d'accès/prix (price_cents/currency/is_free :
+        // 20260521000031_courses_learning.sql) au lieu d'inventer access_mode='free'.
+        const { data: formData, error: formErr } = await supabase
+          .from('courses')
+          .select('id, title, description, category, created_at, price_cents, currency, is_free, status, metadata')
+          .eq('id', id)
+          .maybeSingle();
+
+        if (formErr) throw formErr;
+        if (cancelled) return;
+        if (!formData) {
+          setFormation(null);
+          setLoadError('Cours introuvable.');
+          setModules([]);
+          return;
+        }
+        // L'info de prix peut être ABSENTE si l'API (coursesApi) ne renvoie pas
+        // encore ces colonnes : on ne déduit un cours PAYANT que sur preuve
+        // explicite (is_free === false OU price_cents > 0). Sinon → ouvert/gratuit
+        // si membre du tenant (fail-open contrôlé, cohérent avec l'existant).
+        const hasAccessInfo =
+          typeof formData.is_free === 'boolean' || typeof formData.price_cents === 'number';
+        const priceCents = Number.isFinite(Number(formData.price_cents))
+          ? Number(formData.price_cents)
+          : 0;
+        const isPaidCourse =
+          formData.is_free === false || (formData.is_free == null && priceCents > 0);
+        const meta =
+          formData.metadata && typeof formData.metadata === 'object' ? formData.metadata : {};
+        // Respecte un mode d'accès explicitement déclaré dans metadata
+        // (subscription/one_time/free) ; sinon déduit du prix réel.
+        const declaredMode = meta.access_mode || meta?.access?.mode || null;
+        const resolvedAccessMode =
+          declaredMode || (isPaidCourse ? 'one_time' : 'free');
+        // Normalise vers le shape attendu par les composants
+        setFormation({
+          ...formData,
+          status: formData.status || 'published',
+          cycle: null,
+          duration_weeks: null,
+          price: priceCents > 0 ? Math.round(priceCents / 100) : 0,
+          image_url: null,
+          accessInfoKnown: hasAccessInfo,
+          meta: {
+            ...meta,
+            access_mode: resolvedAccessMode,
+            standalone_price: priceCents > 0 ? Math.round(priceCents / 100) : null,
+            standalone_currency: formData.currency || meta.standalone_currency || 'XAF',
+            category: formData.category,
+          },
+        });
+
+        if (user?.id) {
+          // Vérifie si l'utilisateur a déjà progressé dans ce cours
+          const { data: spData } = await supabase
+            .from('student_progress')
+            .select('id, status')
+            .eq('user_id', user.id)
+            .eq('course_id', id)
+            .limit(1)
+            .maybeSingle();
+          if (!cancelled) setEnrolled(!!spData);
+        } else {
+          setEnrolled(false);
+        }
+
+        // Structure du cours depuis course_modules + course_lessons
+        const { data: modulesData } = await supabase
+          .from('course_modules')
+          .select('id, title, description, course_lessons(id, title, description, content_type, duration_minutes, sort_order)')
+          .eq('course_id', id)
+          .order('sort_order', { ascending: true });
+
+        if (!cancelled) {
+          const structData = (modulesData || []).map((m) => ({
+            id: m.id,
+            title: m.title,
+            weeks: [{
+              id: m.id + '-w',
+              title: m.title,
+              days: (m.course_lessons || []).map((l) => ({
+                id: l.id,
+                title: l.title,
+                videos: [],
+                powerpoint: null,
+                quiz: null,
+              })),
+            }],
+          }));
+          setModules(structData);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setLoadError(e?.message || 'Erreur de chargement');
+          setFormation(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, user?.id]);
+
+  const meta = formation?.meta && typeof formation.meta === 'object' ? formation.meta : {};
+  const year = useMemo(() => {
+    if (!formation) return '';
+    if (formation.cycle === 'fondements') return '1ère année';
+    if (formation.cycle === 'approfondissement') return '2ème année';
+    if (formation.cycle === 'maitrise') return '3ème année';
+    return formation.meta?.year || '';
+  }, [formation]);
+
+  const accessMode = meta.access_mode || meta?.access?.mode || 'free';
+  const price = meta.standalone_price ?? meta?.access?.standalone_price ?? formation?.price ?? null;
+  const currency = meta.standalone_currency || meta?.access?.standalone_currency || 'XAF';
+
+  // Accès RÉEL au cours = cours gratuit/ouvert OU abonnement actif OU déjà inscrit
+  // (student_progress). Le cadenas n'apparaît QUE pour un cours prouvé payant
+  // sans abonnement ni inscription.
+  const isPaidCourse = accessMode !== 'free';
+  const hasCourseAccess = !isPaidCourse || hasSubscriptionAccess || enrolled;
+
+  // Il n'existe PAS de lecteur de leçon dans la coque /m/eleve : la seule route
+  // cours est cette page. Le contenu (player) vit sur le web → lien hors-coque
+  // explicite (ouvert via openLearn), et NON via navigate() qui casserait le shell.
+  const learnHref = id ? `/formation/${encodeURIComponent(id)}/learn` : null;
+  const webDetailHref = id ? `/formation/${encodeURIComponent(id)}` : null;
+
+  const openLearn = useCallback(() => {
+    if (!learnHref) return;
+    if (typeof window !== 'undefined') {
+      window.location.assign(learnHref);
+    }
+  }, [learnHref]);
+
+  const ensureEnrollment = useCallback(async () => {
+    if (!user?.id || !id) return;
+    // Récupère la première leçon du cours pour créer une ligne student_progress
+    const { data: firstLesson } = await supabase
+      .from('course_lessons')
+      .select('id, module_id, course_modules!inner(course_id)')
+      .eq('course_modules.course_id', id)
+      .order('sort_order', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (!firstLesson) return; // pas de leçon → pas d'inscription possible
+    const { error: spErr } = await supabase.from('student_progress').upsert({
+      user_id: user.id,
+      course_id: id,
+      lesson_id: firstLesson.id,
+      status: 'in_progress',
+    }, { onConflict: 'user_id,course_id,lesson_id', ignoreDuplicates: true });
+    if (spErr && spErr.code !== '23505') throw spErr;
+  }, [user?.id, id]);
+
+  const createOneTimePayment = useCallback(
+    async (paymentMethod = 'mobile_money') => {
+      if (!session?.access_token) {
+        navigate(getLoginEntryPath(), { state: { from: { pathname: `/formation/${id}` } } });
+        return;
+      }
+      const res = await fetch('/.netlify/functions/billing-create-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ formationId: id, paymentMethod }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || 'Erreur creation paiement module');
+      const paymentId = data?.payment?.id;
+      if (!paymentId) throw new Error('Paiement cree mais identifiant manquant');
+      navigate(getBillingCheckoutPath(paymentId));
+    },
+    [session?.access_token, id, navigate],
+  );
+
+  const handlePrimaryAction = useCallback(async () => {
+    setActionError('');
+    setActionLoading(true);
+    if (!user) {
+      navigate(getLoginEntryPath(), { state: { from: { pathname: `/formation/${id}` } } });
+      setActionLoading(false);
+      return;
+    }
+    try {
+      if (enrolled) {
+        openLearn();
+        return;
+      }
+      if (accessMode === 'subscription') {
+        if (!hasSubscriptionAccess) {
+          navigate(ELEVE_MOBILE.forfaits);
+          return;
+        }
+        await ensureEnrollment();
+        openLearn();
+        return;
+      }
+      if (accessMode === 'one_time') {
+        await createOneTimePayment('mobile_money');
+        return;
+      }
+      await ensureEnrollment();
+      openLearn();
+    } catch (e) {
+      setActionError(String(e?.message || 'Action impossible'));
+    } finally {
+      setActionLoading(false);
+    }
+  }, [
+    user,
+    navigate,
+    id,
+    enrolled,
+    accessMode,
+    hasSubscriptionAccess,
+    openLearn,
+    ensureEnrollment,
+    createOneTimePayment,
+  ]);
+
+  const handleOneTimeMethod = useCallback(
+    async (method) => {
+      setActionError('');
+      setActionLoading(true);
+      try {
+        await createOneTimePayment(method);
+      } catch (e) {
+        setActionError(String(e?.message || 'Paiement impossible'));
+      } finally {
+        setActionLoading(false);
+      }
+    },
+    [createOneTimePayment],
+  );
+
+  const primaryButtonLabel = () => {
+    if (actionLoading) return 'Traitement...';
+    if (enrolled) return 'Accéder au cours';
+    if (accessMode === 'subscription') {
+      return hasSubscriptionAccess ? "S'inscrire et accéder" : "S'abonner pour accéder";
+    }
+    if (accessMode === 'one_time') {
+      return price != null
+        ? `Payer le module — ${Number(price).toLocaleString()} ${currency}`
+        : 'Débloquer le module';
+    }
+    // Cours gratuit confirmé vs accès inconnu (on évite de promettre "gratuit").
+    return formation?.accessInfoKnown ? "S'inscrire gratuitement" : 'Accéder au cours';
+  };
+
+  return (
+    <EleveMobileShell user={user} notificationCount={inboxUnread} hideHeader contentClassName="!px-0">
+      <div
+        className="flex w-full flex-1 flex-col"
+        style={{
+          minHeight: '100dvh',
+          backgroundColor: WEB_FORMATION_BG,
+          backgroundImage: EV_PAGE_AMBIENT,
+        }}
+      >
+        <div className="pointer-events-none fixed inset-0 -z-10">
+          <div
+            className="absolute top-0 left-1/2 h-[300px] w-[min(100vw,800px)] -translate-x-1/2 rounded-full opacity-90"
+            style={{ background: `${GOLD}0f`, filter: 'blur(80px)' }}
+          />
+        </div>
+
+        <div className="px-4 pt-[max(0.35rem,env(safe-area-inset-top))]">
+          <LiriStatusBar />
+        </div>
+
+        <div
+          className="sticky top-0 z-20 -mx-0 flex items-center justify-between border-b border-white/10 px-4 py-3"
+          style={{ background: `${PANEL}`, backdropFilter: 'blur(16px)' }}
+        >
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1 py-1.5 pl-0 pr-2 text-sm text-white/50 transition hover:text-white"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Retour
+          </button>
+          <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
+            <Sparkles className="h-3.5 w-3.5" style={{ color: GOLD }} />
+            <span className="text-[10px] text-white/50">Formation</span>
+          </div>
+        </div>
+
+        <div className="px-4 pb-6">
+          {loading ? (
+            <div className="mt-4 space-y-4" aria-busy="true" aria-label="Chargement de la formation">
+              <div
+                className="h-[180px] animate-pulse rounded-2xl border border-white/10"
+                style={{ background: PANEL }}
+              />
+              <div className="h-24 animate-pulse rounded-2xl border border-white/10" style={{ background: PANEL }} />
+              <div className="h-12 animate-pulse rounded-2xl bg-white/[0.06]" />
+            </div>
+          ) : loadError || !formation ? (
+            <div className="mt-8 text-center">
+              <p className="text-sm text-white/50">{loadError || 'Formation introuvable.'}</p>
+              <Link
+                to={ELEVE_MOBILE.bibliotheque}
+                className="mt-4 inline-flex h-11 items-center justify-center rounded-2xl border border-white/15 px-5 text-sm font-semibold text-white/90"
+                style={{ borderColor: EV_LINE, background: 'rgba(255,255,255,0.05)' }}
+              >
+                Retour à la bibliothèque
+              </Link>
+            </div>
+          ) : (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+              <section
+                className="mt-4 overflow-hidden rounded-2xl border border-white/10"
+                style={{ background: PANEL, backdropFilter: 'blur(12px)' }}
+              >
+                <div className="relative h-44 bg-neutral-800">
+                  {formation.image_url ? (
+                    <img src={formation.image_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-[#0F1419]">
+                      <BookOpen className="h-16 w-16 text-white/20" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#151a21] via-transparent to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <div className="mb-2 flex flex-wrap gap-1.5">
+                      <span
+                        className="rounded-full border border-white/10 bg-black/50 px-2 py-0.5 text-[10px] font-semibold text-white/95 backdrop-blur"
+                      >
+                        {year || 'Formation'}
+                      </span>
+                      <span
+                        className="rounded-full border px-2 py-0.5 text-[10px] font-semibold"
+                        style={{ borderColor: `${GOLD}66`, color: GOLD, background: `${GOLD}22` }}
+                      >
+                        {accessMode === 'subscription'
+                          ? 'Abonnement'
+                          : accessMode === 'one_time'
+                            ? 'Vente module'
+                            : formation?.accessInfoKnown
+                              ? 'Gratuit'
+                              : 'Accès cours'}
+                      </span>
+                    </div>
+                    <h1 className="font-serif text-2xl font-bold leading-tight text-white">{formation.title}</h1>
+                    <div className="mt-2 flex flex-wrap gap-4 text-xs text-white/45">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Layers className="h-3.5 w-3.5" style={{ color: GOLD }} />
+                        {modules.length} modules
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5" style={{ color: GOLD }} />
+                        {formation.duration_weeks ? `${formation.duration_weeks} semaines` : '—'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  <p className="mb-5 text-sm leading-relaxed text-white/45">
+                    {formation.description?.trim() || 'Aucune description.'}
+                  </p>
+
+                  <div className="flex flex-col gap-2.5">
+                    <button
+                      type="button"
+                      onClick={handlePrimaryAction}
+                      disabled={actionLoading}
+                      className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[15px] font-bold text-black shadow-lg active:scale-[0.99] disabled:opacity-70"
+                      style={{ background: GOLD, boxShadow: `0 8px 24px -6px ${GOLD}55` }}
+                    >
+                      {actionLoading ? <Sparkles className="h-4 w-4 animate-pulse" /> : null}
+                      {primaryButtonLabel()}
+                      {!actionLoading ? <ArrowRight className="h-4 w-4" /> : null}
+                    </button>
+
+                    {accessMode === 'subscription' && !hasSubscriptionAccess && (
+                      <Link
+                        to={ELEVE_MOBILE.forfaits}
+                        className="flex h-12 w-full items-center justify-center rounded-2xl border text-sm font-semibold text-white/90"
+                        style={{ borderColor: `${GOLD}66`, color: GOLD, background: `${GOLD}12` }}
+                      >
+                        Voir les forfaits
+                      </Link>
+                    )}
+
+                    {accessMode === 'one_time' && !enrolled ? (
+                      <div className="flex flex-wrap gap-2">
+                        {['mobile_money', 'monero', 'chariow', 'paypal'].map((m) => (
+                          <button
+                            key={m}
+                            type="button"
+                            disabled={actionLoading}
+                            onClick={() => handleOneTimeMethod(m)}
+                            className="min-h-[40px] flex-1 rounded-xl border border-white/20 bg-white/[0.04] py-2 text-xs font-medium text-white active:scale-[0.99] disabled:opacity-50"
+                          >
+                            {m === 'mobile_money'
+                              ? 'Mobile Money'
+                              : m === 'monero'
+                                ? 'Monero'
+                                : m === 'paypal'
+                                  ? 'PayPal'
+                                  : 'Chariow'}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                  {actionError ? <p className="mt-3 text-sm text-red-300/95">{actionError}</p> : null}
+
+                  {webDetailHref ? (
+                    <a
+                      href={webDetailHref}
+                      className="mt-4 block w-full text-center text-[11px] text-white/35 underline decoration-white/20 underline-offset-2"
+                    >
+                      Ouvrir la fiche sur le site web
+                    </a>
+                  ) : null}
+                </div>
+              </section>
+
+              <section
+                className="mt-4 overflow-hidden rounded-2xl border border-white/10"
+                style={{ background: PANEL, backdropFilter: 'blur(12px)' }}
+              >
+                <div className="flex items-center gap-3 border-b border-white/10 p-4">
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-xl"
+                    style={{ background: `${GOLD}30` }}
+                  >
+                    <Layers className="h-5 w-5" style={{ color: GOLD }} />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-white">Programme détaillé</h2>
+                    <p className="text-xs text-white/40">Même contenu que sur le web</p>
+                  </div>
+                </div>
+                <div className="max-h-[min(50vh,420px)] space-y-3 overflow-y-auto p-4 [scrollbar-width:thin]">
+                  {modules.length === 0 ? (
+                    <p className="py-6 text-center text-sm text-white/40">Aucun module pour l'instant.</p>
+                  ) : (
+                    modules.map((mod, mIdx) => (
+                      <div
+                        key={mod.id || mIdx}
+                        className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]"
+                      >
+                        <div className="flex items-center gap-2.5 p-3">
+                          <div
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold"
+                            style={{ background: `${GOLD}28`, color: GOLD }}
+                          >
+                            {mIdx + 1}
+                          </div>
+                          <h3 className="min-w-0 flex-1 text-sm font-semibold text-white">
+                            {mod.title || `Module ${mIdx + 1}`}
+                          </h3>
+                          {hasCourseAccess ? (
+                            <Unlock className="h-4 w-4 shrink-0" style={{ color: GOLD }} />
+                          ) : (
+                            <Lock className="h-4 w-4 shrink-0 text-white/35" />
+                          )}
+                        </div>
+                        <div className="space-y-1.5 border-t border-white/[0.06] px-3 py-2 pl-[3.25rem]">
+                          {(mod.weeks || []).slice(0, 4).map((week, wIdx) => (
+                            <div
+                              key={week.id || wIdx}
+                              className="flex items-start gap-2 text-xs text-white/40"
+                            >
+                              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: `${GOLD}80` }} />
+                              <span>
+                                {week.title}
+                                {(week.days || []).length > 0 ? (
+                                  <span className="text-white/30"> · {(week.days || []).length} jours</span>
+                                ) : null}
+                              </span>
+                            </div>
+                          ))}
+                          {(mod.weeks || []).length > 4 ? (
+                            <p className="text-[10px] text-white/30">
+                              + {(mod.weeks || []).length - 4} autre(s) semaine(s)
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </section>
+
+              <div className="mt-4 flex flex-col gap-2">
+                <Link
+                  to={ELEVE_MOBILE.bibliotheque}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border py-3.5 text-sm font-semibold text-white/90 active:scale-[0.99]"
+                  style={{ borderColor: EV_LINE, background: 'rgba(255,255,255,0.04)' }}
+                >
+                  <BookOpen className="h-4 w-4" />
+                  Voir mes cours
+                </Link>
+                <Link
+                  to={ELEVE_MOBILE.messages}
+                  className="flex w-full items-center justify-center gap-2 py-2 text-sm font-medium text-white/40 active:text-white/70"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Contacter le formateur
+                </Link>
+              </div>
+
+              <LiriPageFooterLine marginClass="mt-5" suffix="Formation" />
+            </motion.div>
+          )}
+        </div>
+      </div>
+    </EleveMobileShell>
+  );
+}

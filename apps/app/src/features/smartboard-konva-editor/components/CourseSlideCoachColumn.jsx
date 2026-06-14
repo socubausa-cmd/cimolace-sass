@@ -60,13 +60,13 @@ export default function CourseSlideCoachColumn({
         'flex flex-col gap-2.5 overflow-y-auto [scrollbar-width:thin]',
         embedded
           ? 'w-full'
-          : 'w-[min(100%,360px)] shrink-0 rounded-2xl border border-[#D4AF37]/20 bg-gradient-to-b from-[#0c0a18] via-[#080c16] to-[#050810] p-2.5 shadow-[0_0_40px_-12px_rgba(212,175,55,0.12)]',
+          : 'w-[min(100%,360px)] shrink-0 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-gradient-to-b from-[#0c0a18] via-[#080c16] to-[#050810] p-2.5 shadow-[0_0_40px_-12px_rgba(212,175,55,0.12)]',
         className,
       )}
     >
       {!hideCoachTitleRow ? (
         <div className="flex items-center gap-2 rounded-xl border border-violet-500/20 bg-violet-950/20 px-3 py-2">
-          <Sparkles className="h-4 w-4 text-[#D4AF37]" />
+          <Sparkles className="h-4 w-4 text-[var(--school-accent)]" />
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#f5dd8a]">Coach slide</p>
             <p className="text-[9px] text-white/45">Consignes & script pour la scène active</p>
@@ -127,7 +127,7 @@ export default function CourseSlideCoachColumn({
                     className={cn(
                       'rounded-lg border px-2 py-1 text-[9px] font-medium transition-all',
                       i === activeSlideIndex
-                        ? 'border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#f5dd8a] shadow-[0_0_12px_rgba(212,175,55,0.15)]'
+                        ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f5dd8a] shadow-[0_0_12px_rgba(212,175,55,0.15)]'
                         : 'border-white/10 text-white/50 hover:border-white/25 hover:text-white/75',
                     )}
                   >
@@ -179,7 +179,7 @@ export default function CourseSlideCoachColumn({
                 <CopyRow label="Vue globale du cours" text={course.masterScriptOverview} className="mt-2" />
 
                 {/* LONGIA — Amelioration IA du script */}
-                <div className="mt-3 rounded-xl border border-[#D4AF37]/20 bg-[#1a1410]/60 p-2.5">
+                <div className="mt-3 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[#1a1410]/60 p-2.5">
                   <p className="mb-2 text-[9px] font-semibold uppercase tracking-wider text-[#f5dd8a]">LONGIA — Ameliorer ce script</p>
                   <div className="mb-2 flex flex-wrap gap-1">
                     {[
@@ -195,7 +195,7 @@ export default function CourseSlideCoachColumn({
                         className={cn(
                           'rounded-lg border px-2 py-0.5 text-[8px] transition-colors',
                           aiScriptMode === m.id
-                            ? 'border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#f5dd8a]'
+                            ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f5dd8a]'
                             : 'border-white/10 text-white/45 hover:border-white/25',
                         )}
                       >
@@ -207,14 +207,14 @@ export default function CourseSlideCoachColumn({
                     type="button"
                     disabled={aiScriptBusy}
                     onClick={generateAiScript}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/8 py-2 text-[10px] font-medium text-[#f5dd8a] hover:bg-[#D4AF37]/15 disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] py-2 text-[10px] font-medium text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] disabled:opacity-50"
                   >
                     {aiScriptBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
                     {aiScriptBusy ? 'Generation...' : 'Generer avec LONGIA'}
                   </button>
                   {aiScriptResult && (
                     <div className="mt-2 rounded-xl border border-white/10 bg-black/30 p-2.5">
-                      <p className="mb-1 text-[8px] font-semibold uppercase tracking-wider text-[#D4AF37]/60">Resultat LONGIA</p>
+                      <p className="mb-1 text-[8px] font-semibold uppercase tracking-wider text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]">Resultat LONGIA</p>
                       <p className="whitespace-pre-wrap text-[10px] leading-relaxed text-white/85">{aiScriptResult}</p>
                       <button
                         type="button"
@@ -260,7 +260,7 @@ export default function CourseSlideCoachColumn({
                         key={i}
                         className="flex gap-2 rounded-xl border border-white/[0.06] bg-black/30 px-2.5 py-2"
                       >
-                        <span className="font-semibold text-[#D4AF37]">{i + 1}.</span>
+                        <span className="font-semibold text-[var(--school-accent)]">{i + 1}.</span>
                         {g}
                       </li>
                     ))}

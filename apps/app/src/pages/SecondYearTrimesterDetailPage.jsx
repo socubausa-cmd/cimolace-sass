@@ -30,7 +30,7 @@ const SecondYearTrimesterDetailPage = () => {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-[#0F1419] flex items-center justify-center"><div className="w-12 h-12 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div></div>;
+  if (loading) return <div className="min-h-screen bg-[#0F1419] flex items-center justify-center"><div className="w-12 h-12 border-4 border-[var(--school-accent)] border-t-transparent rounded-full animate-spin"></div></div>;
   if (!trimester) return <div className="text-white text-center p-20">Introuvable</div>;
 
   return (
@@ -48,7 +48,7 @@ const SecondYearTrimesterDetailPage = () => {
           {/* Info Panel */}
           <div className="lg:col-span-1 space-y-8">
             <div className="bg-[#192734] border border-white/10 rounded-2xl p-8 sticky top-28">
-               <span className="text-[#D4AF37] font-bold text-sm tracking-wider uppercase mb-2 block">Trimestre {trimester.order}</span>
+               <span className="text-[var(--school-accent)] font-bold text-sm tracking-wider uppercase mb-2 block">Trimestre {trimester.order}</span>
                <h1 className="text-3xl font-serif font-bold mb-4">{trimester.name}</h1>
                <p className="text-gray-400 mb-8 leading-relaxed">{trimester.description}</p>
                
@@ -57,7 +57,7 @@ const SecondYearTrimesterDetailPage = () => {
                   <ul className="space-y-2">
                      {trimester.objectives?.map((obj, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-gray-400">
-                           <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] mt-1.5 shrink-0"></span>
+                           <span className="w-1.5 h-1.5 rounded-full bg-[var(--school-accent)] mt-1.5 shrink-0"></span>
                            {obj}
                         </li>
                      ))}
@@ -70,8 +70,8 @@ const SecondYearTrimesterDetailPage = () => {
           <div className="lg:col-span-2 space-y-6">
              <h2 className="text-2xl font-bold mb-6">Modules du Trimestre</h2>
              {modules.map((module) => (
-                <div key={module.id} className="bg-[#192734] border border-white/5 rounded-xl p-6 flex flex-col sm:flex-row gap-6 hover:border-[#D4AF37]/50 transition-colors">
-                   <div className="w-16 h-16 bg-[#0F1419] rounded-lg flex items-center justify-center border border-white/10 shrink-0 text-[#D4AF37] font-bold text-lg">
+                <div key={module.id} className="bg-[#192734] border border-white/5 rounded-xl p-6 flex flex-col sm:flex-row gap-6 hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] transition-colors">
+                   <div className="w-16 h-16 bg-[#0F1419] rounded-lg flex items-center justify-center border border-white/10 shrink-0 text-[var(--school-accent)] font-bold text-lg">
                       {module.code}
                    </div>
                    <div className="flex-1">
@@ -83,7 +83,7 @@ const SecondYearTrimesterDetailPage = () => {
                       </div>
                    </div>
                    <Link to={`/curriculum/module-2/${module.id}`}>
-                      <Button className="bg-[#D4AF37] text-black font-bold">Voir</Button>
+                      <Button className="bg-[var(--school-accent)] text-black font-bold">Voir</Button>
                    </Link>
                 </div>
              ))}

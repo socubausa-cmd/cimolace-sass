@@ -135,7 +135,7 @@ export default function NgowazuluIntakePage() {
   if (loadingGate) {
     return (
       <div className="min-h-screen bg-[#0F1419] text-white flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#D4AF37]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[var(--school-accent)]" />
       </div>
     );
   }
@@ -220,13 +220,13 @@ export default function NgowazuluIntakePage() {
             <CardContent className="space-y-4 text-sm text-gray-300">
               <p>
                 Le dossier patient s&apos;ouvre après un <span className="text-white font-medium">premier paiement mentorat</span>. Les{' '}
-                <span className="text-[#D4AF37]">frais de configuration</span> (100 EUR, uniques — cérémonie d&apos;inauguration et mise en place du service de protection) sont{' '}
+                <span className="text-[var(--school-accent)]">frais de configuration</span> (100 EUR, uniques — cérémonie d&apos;inauguration et mise en place du service de protection) sont{' '}
                 <span className="text-white font-medium">calculés et ajoutés automatiquement</span> à ce premier règlement ; ce n&apos;est pas un produit séparé dans le catalogue.
               </p>
               <p className="text-xs text-gray-500">
                 Chariow : vous serez guidé en deux étapes de paiement si nécessaire. Mobile Money / Monero : souvent une seule transaction avec le détail sur la facture.
               </p>
-              <Button asChild className="bg-[#D4AF37] text-black hover:bg-amber-500">
+              <Button asChild className="bg-[var(--school-accent)] text-black hover:bg-amber-500">
                 <a href="/services-spirituels#ngowazulu">Choisir un contrat mentorat</a>
               </Button>
             </CardContent>
@@ -239,10 +239,10 @@ export default function NgowazuluIntakePage() {
   return (
     <div className="min-h-screen bg-[#0F1419] text-white px-4 py-10">
       <div className="mx-auto max-w-4xl space-y-6">
-        <Card className="premium-panel border border-[#D4AF37]/25 bg-[#151a21]/95">
+        <Card className="premium-panel border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#151a21]/95">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl">
-              <CheckCircle2 className="h-6 w-6 text-[#D4AF37]" />
+              <CheckCircle2 className="h-6 w-6 text-[var(--school-accent)]" />
               Dossier de prise en charge NGOWAZULU
             </CardTitle>
             <p className="text-sm text-gray-400">
@@ -252,7 +252,7 @@ export default function NgowazuluIntakePage() {
           <CardContent>
             <div className="mb-5 grid gap-4 md:grid-cols-3">
               <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                <div className="flex items-center gap-2 text-[#D4AF37] text-sm font-semibold mb-2">
+                <div className="flex items-center gap-2 text-[var(--school-accent)] text-sm font-semibold mb-2">
                   <Clock3 className="h-4 w-4" /> Délais indicatifs
                 </div>
                 <ul className="text-xs text-gray-300 space-y-1.5">
@@ -262,7 +262,7 @@ export default function NgowazuluIntakePage() {
                 </ul>
               </div>
               <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                <div className="flex items-center gap-2 text-[#D4AF37] text-sm font-semibold mb-2">
+                <div className="flex items-center gap-2 text-[var(--school-accent)] text-sm font-semibold mb-2">
                   <ListChecks className="h-4 w-4" /> Procédure du temple
                 </div>
                 <ol className="text-xs text-gray-300 space-y-1.5 list-decimal list-inside">
@@ -273,7 +273,7 @@ export default function NgowazuluIntakePage() {
                 </ol>
               </div>
               <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                <div className="flex items-center gap-2 text-[#D4AF37] text-sm font-semibold mb-2">
+                <div className="flex items-center gap-2 text-[var(--school-accent)] text-sm font-semibold mb-2">
                   <Landmark className="h-4 w-4" /> Règles du temple
                 </div>
                 <ul className="text-xs text-gray-300 space-y-1.5">
@@ -378,7 +378,7 @@ export default function NgowazuluIntakePage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-3 pt-2">
-                <Button type="submit" disabled={submitting || !checklistValid} className="bg-[#D4AF37] text-black hover:bg-amber-500">
+                <Button type="submit" disabled={submitting || !checklistValid} className="bg-[var(--school-accent)] text-black hover:bg-amber-500">
                   {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
                   Enregistrer mon dossier
                 </Button>

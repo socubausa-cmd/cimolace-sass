@@ -405,13 +405,13 @@ export default function LongiaDesignerChatSection({
             )}
             {!m.streaming && m.pendingActions?.length ? (
               <>
-                <p className="mt-2 text-[10px] font-medium text-[#D4AF37]/95">
+                <p className="mt-2 text-[10px] font-medium text-[color-mix(in_srgb,var(--school-accent)_95%,transparent)]">
                   {lang === 'en' ? 'Action on canvas' : 'Action sur le canvas'}
                 </p>
                 <button
                   type="button"
                   onClick={() => applyPending(m.id, m.pendingActions)}
-                  className="mt-1 w-full cursor-pointer rounded-md border border-[#D4AF37]/45 bg-gradient-to-r from-[#D4AF37]/20 to-amber-600/15 py-2 text-[11px] font-semibold text-[#f5dd8a] shadow-[0_0_0_1px_rgba(212,175,55,0.15)] hover:from-[#D4AF37]/30 hover:to-amber-600/25"
+                  className="mt-1 w-full cursor-pointer rounded-md border border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-amber-600/15 py-2 text-[11px] font-semibold text-[#f5dd8a] shadow-[0_0_0_1px_rgba(212,175,55,0.15)] hover:from-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:to-amber-600/25"
                 >
                   {lang === 'en'
                     ? `Tap here — add ${m.pendingActions.length} shape(s) to the slide`

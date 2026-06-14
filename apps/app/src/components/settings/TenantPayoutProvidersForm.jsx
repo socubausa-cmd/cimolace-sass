@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/customSupabaseClient';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 import { Copy } from 'lucide-react';
 
 const FN_ACCOUNTS = '/.netlify/functions/billing-save-tenant-payment-accounts';
@@ -403,7 +403,7 @@ export default function TenantPayoutProvidersForm({ initialTenantSlug, lockTenan
             type="button"
             onClick={saveBillingPrefs}
             disabled={busyPrefs}
-            className="bg-[#D4AF37] text-black hover:bg-[#c29e30]"
+            className="bg-[var(--school-accent)] text-black hover:bg-[#c29e30]"
           >
             {busyPrefs ? '…' : 'Enregistrer la politique'}
           </Button>
@@ -444,7 +444,7 @@ export default function TenantPayoutProvidersForm({ initialTenantSlug, lockTenan
                 ...(chariowWh.trim() ? { chariow_webhook_secret: chariowWh.trim() } : {}),
               })
             }
-            className="bg-[#D4AF37] text-black hover:bg-[#c29e30]"
+            className="bg-[var(--school-accent)] text-black hover:bg-[#c29e30]"
           >
             {busy === 'chariow' ? '…' : 'Enregistrer Chariow'}
           </Button>

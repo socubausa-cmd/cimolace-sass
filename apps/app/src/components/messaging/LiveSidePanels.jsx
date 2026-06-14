@@ -93,7 +93,7 @@ export function PublicProfilePanel({ open, profile, onClose }) {
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-white truncate">{profile.name}</p>
                 <p className="text-xs text-gray-500 truncate">{profile.email}</p>
-                <p className="text-[11px] text-[#D4AF37] mt-1">
+                <p className="text-[11px] text-[var(--school-accent)] mt-1">
                   {roleLabels[profile.role] || profile.role || 'Membre'}
                 </p>
               </div>
@@ -140,7 +140,7 @@ export function LiveSummaryPanel({ open, data, onClose }) {
         >
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.18em] text-[#D4AF37]">Post Live</p>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--school-accent)]">Post Live</p>
               <h3 className="text-xl md:text-2xl font-semibold text-white mt-1">
                 {data.ai?.title || 'Résumé de session'}
               </h3>
@@ -195,7 +195,7 @@ export function LiveSummaryPanel({ open, data, onClose }) {
                     href={data.cloudRecordUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 text-sm text-[#D4AF37] hover:text-[#e5c04a]"
+                    className="inline-flex items-center gap-2 text-sm text-[var(--school-accent)] hover:text-[#e5c04a]"
                   >
                     <Download className="w-4 h-4" />
                     Ouvrir version cloud
@@ -233,7 +233,7 @@ export function LiveInvitePrompt({
         className="fixed bottom-24 right-4 md:right-8 z-[85] w-[min(92vw,420px)] rounded-2xl border border-white/10 bg-[#0c1118]/93 backdrop-blur-2xl p-4 shadow-2xl"
       >
         <div className="flex items-start gap-3">
-          <div className="mt-0.5 w-9 h-9 rounded-xl bg-[#D4AF37]/15 text-[#D4AF37] flex items-center justify-center">
+          <div className="mt-0.5 w-9 h-9 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] flex items-center justify-center">
             {isMissed ? <BellRing className="w-4 h-4" /> : <CalendarClock className="w-4 h-4" />}
           </div>
           <div className="min-w-0 flex-1">
@@ -244,7 +244,7 @@ export function LiveInvitePrompt({
               {senderProfile?.name || 'Un membre'} vous invite à passer en mode immersive Classroom.
             </p>
             {invite.scheduled_for ? (
-              <p className="text-[11px] text-[#D4AF37] mt-1">
+              <p className="text-[11px] text-[var(--school-accent)] mt-1">
                 Programmé: {formatInviteDate(invite.scheduled_for)}
               </p>
             ) : null}
@@ -276,7 +276,7 @@ export function LiveInvitePrompt({
             <button
               type="button"
               onClick={onScheduleMissed}
-              className="h-9 px-3 rounded-xl bg-[#D4AF37]/20 border border-[#D4AF37]/35 text-[#D4AF37] text-xs font-medium"
+              className="h-9 px-3 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] text-xs font-medium"
             >
               Programmer un rendez-vous
             </button>
@@ -337,7 +337,7 @@ export function LiveAgendaPanel({ open, invites, currentUserId, profiles, onJoin
                     <button
                       type="button"
                       onClick={() => onJoin(inv)}
-                      className="h-8 px-2.5 rounded-lg text-[11px] bg-[#D4AF37]/20 border border-[#D4AF37]/35 text-[#D4AF37]"
+                      className="h-8 px-2.5 rounded-lg text-[11px] bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)]"
                     >
                       Ouvrir conversation
                     </button>
@@ -346,7 +346,7 @@ export function LiveAgendaPanel({ open, invites, currentUserId, profiles, onJoin
                     <button
                       type="button"
                       onClick={() => onScheduleMissed(inv)}
-                      className="h-8 px-2.5 rounded-lg text-[11px] bg-[#D4AF37]/20 border border-[#D4AF37]/35 text-[#D4AF37]"
+                      className="h-8 px-2.5 rounded-lg text-[11px] bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)]"
                     >
                       Reprogrammer
                     </button>

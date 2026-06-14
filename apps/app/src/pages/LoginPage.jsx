@@ -12,13 +12,13 @@ import { clearSelectedAccountRole } from '@/lib/accountRoleMode';
 import { Capacitor } from '@capacitor/core';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { formatLoginErrorMessage } from '@/lib/authNetworkMessage';
-import { EleveConnectionLayout } from '@/pages/eleve-mobile/connection/EleveConnectionLayout';
+import { EleveConnectionLayout } from '@/pages/school/eleve-mobile/connection/EleveConnectionLayout';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { shouldUseLiriMobileLogin, FORCE_DESKTOP_LOGIN_PARAM } from '@/lib/loginEntryPath';
 import { shouldShowStudentInstallGate } from '@/lib/studentWebPlatform';
 import { LiriPageFooterLine } from '@/components/brand/LiriWordmark';
 import { InstallAppGate } from '@/components/eleve-mobile/InstallAppGate';
-import { EV_ACCENT, EV_MUTED, EV_LINE, EV_CARD, EV_CARD_INNER, EV_R, EV_SH } from '@/pages/eleve-mobile/eleveMobileScreensShared';
+import { EV_ACCENT, EV_MUTED, EV_LINE, EV_CARD, EV_CARD_INNER, EV_R, EV_SH } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
 import { Ripple, AnimatedForm } from '@/components/ui/animated-sign-in';
 
@@ -184,7 +184,7 @@ const LoginPage = () => {
       )}
 
       {!isSupabaseConfigured ? (
-        <Alert className={isLiriMobileAuth ? 'mb-4 border-amber-500/30 bg-amber-500/10' : 'mb-5 border-[#D4AF37]/40 bg-[#D4AF37]/10 text-[#f5e6c8]'}>
+        <Alert className={isLiriMobileAuth ? 'mb-4 border-amber-500/30 bg-amber-500/10' : 'mb-5 border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[#f5e6c8]'}>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             Configuration serveur absente (variables Supabase). Reconstruisez l&apos;app avec un fichier .env correct.
@@ -220,7 +220,7 @@ const LoginPage = () => {
             className={
               isLiriMobileAuth
                 ? 'mb-4 h-12 w-full border-violet-500/40 text-violet-200 hover:bg-violet-500/10'
-                : 'w-full mb-5 h-12 border-[#D4AF37]/50 text-[#f5e6c8] hover:bg-[#D4AF37]/15'
+                : 'w-full mb-5 h-12 border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[#f5e6c8] hover:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]'
             }
             asChild
           >
@@ -305,7 +305,7 @@ const LoginPage = () => {
               className={
                 isLiriMobileAuth
                   ? 'h-12 border pl-10 text-white placeholder:text-white/35 focus:border-violet-500/60 focus:ring-violet-500/25'
-                  : 'pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/30'
+                  : 'pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
               }
               style={isLiriMobileAuth ? { background: EV_CARD, borderColor: EV_LINE } : undefined}
             />
@@ -322,7 +322,7 @@ const LoginPage = () => {
             </Label>
             <Link
               to="/forgot-password"
-              className={isLiriMobileAuth ? 'text-xs font-medium text-violet-400 hover:underline' : 'text-xs text-[#D4AF37] hover:underline'}
+              className={isLiriMobileAuth ? 'text-xs font-medium text-violet-400 hover:underline' : 'text-xs text-[var(--school-accent)] hover:underline'}
             >
               Oublié ?
             </Link>
@@ -340,7 +340,7 @@ const LoginPage = () => {
               className={
                 isLiriMobileAuth
                   ? 'h-12 border pl-10 text-white placeholder:text-white/35 focus:border-violet-500/60 focus:ring-violet-500/25'
-                  : 'pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/30'
+                  : 'pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
               }
               style={isLiriMobileAuth ? { background: EV_CARD, borderColor: EV_LINE } : undefined}
             />
@@ -349,7 +349,7 @@ const LoginPage = () => {
 
         <Button
           type="submit"
-          className={isLiriMobileAuth ? 'h-12 w-full border-0 font-bold text-white shadow-lg' : 'w-full h-11 bg-[#D4AF37] hover:bg-[#bfa345] text-black font-bold text-base tracking-wide'}
+          className={isLiriMobileAuth ? 'h-12 w-full border-0 font-bold text-white shadow-lg' : 'w-full h-11 bg-[var(--school-accent)] hover:bg-[#bfa345] text-black font-bold text-base tracking-wide'}
           style={isLiriMobileAuth ? { ...LIRI_CTA } : undefined}
           disabled={isLoading}
         >
@@ -371,7 +371,7 @@ const LoginPage = () => {
         Pas encore inscrit ?{' '}
         <Link
           to="/signup"
-          className={isLiriMobileAuth ? 'font-medium text-violet-400 hover:underline' : 'text-[#D4AF37] hover:underline font-medium'}
+          className={isLiriMobileAuth ? 'font-medium text-violet-400 hover:underline' : 'text-[var(--school-accent)] hover:underline font-medium'}
         >
           Créer un compte
         </Link>
@@ -543,7 +543,7 @@ const LoginPage = () => {
             onGoogle={handleGoogleLogin}
             forgotLabel="Oublié ?"
             onForgot={() => navigate('/forgot-password')}
-            footer={<>Pas encore inscrit ?{' '}<Link to="/signup" className="font-medium text-[#D4AF37] hover:underline">Créer un compte</Link></>}
+            footer={<>Pas encore inscrit ?{' '}<Link to="/signup" className="font-medium text-[var(--school-accent)] hover:underline">Créer un compte</Link></>}
           />
         </motion.div>
       </div>

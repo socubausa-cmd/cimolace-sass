@@ -242,12 +242,12 @@ const CinemaPedagogyBar = forwardRef(function CinemaPedagogyBar(
 
   return (
     <div
-      className="flex flex-col gap-2 border-t border-[#D4AF37]/20 px-3 py-2"
+      className="flex flex-col gap-2 border-t border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] px-3 py-2"
       style={{ background: 'linear-gradient(180deg, rgba(212,175,55,0.06) 0%, rgba(15,17,23,0.98) 100%)' }}
     >
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 text-[11px] text-[#f5dd8a]/90">
-          <Film className="h-4 w-4 shrink-0 text-[#D4AF37]" />
+          <Film className="h-4 w-4 shrink-0 text-[var(--school-accent)]" />
           <span className="font-semibold">Cinéma pédagogique</span>
           <span className="text-white/35">·</span>
           <span className="truncate text-white/55" title={slideTitle}>
@@ -274,7 +274,7 @@ const CinemaPedagogyBar = forwardRef(function CinemaPedagogyBar(
               'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition-colors',
               isRecording
                 ? 'border-red-500/50 bg-red-500/15 text-red-300 hover:bg-red-500/25'
-                : 'border-[#D4AF37]/35 bg-[#D4AF37]/10 text-[#f5dd8a] hover:bg-[#D4AF37]/20',
+                : 'border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]',
             )}
           >
             {isRecording ? (

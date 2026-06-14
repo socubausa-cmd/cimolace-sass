@@ -928,7 +928,7 @@ export function BookingCalendarModal({
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.35)] md:p-5">
               <JourneySectionLabel className="mb-2">Rendez-vous en attente</JourneySectionLabel>
               <h3 className="font-display text-xl font-semibold leading-[1.1] tracking-tight text-white">
-                <span className="text-[#D4AF37]">Espace entretien</span>
+                <span className="text-[var(--school-accent)]">Espace entretien</span>
               </h3>
               <p className="mt-2 text-xs leading-relaxed text-gray-300 md:text-sm">
                 Vos informations d&apos;espace entretien sont regroupées ici : salle d&apos;attente, suivi du statut,
@@ -937,7 +937,7 @@ export function BookingCalendarModal({
               <div className="mt-3 space-y-1.5 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-left text-xs text-gray-300 md:text-sm">
                 <p>
                   <span className="text-gray-500">Réf. </span>
-                  <span className="font-mono text-[#D4AF37]">
+                  <span className="font-mono text-[var(--school-accent)]">
                     {String(visitorDetail.bookingReference || visitorDetail.appointmentId || '').slice(0, 14).toUpperCase()}
                   </span>
                 </p>
@@ -964,7 +964,7 @@ export function BookingCalendarModal({
                 {visitorCountdown ? (
                   <p>
                     <span className="text-gray-500">Compte à rebours </span>
-                    <span className="text-[#D4AF37]">
+                    <span className="text-[var(--school-accent)]">
                       {visitorCountdown.days}j {String(visitorCountdown.hours).padStart(2, '0')}h {String(visitorCountdown.mins).padStart(2, '0')}m {String(visitorCountdown.secs).padStart(2, '0')}s
                     </span>
                   </p>
@@ -972,19 +972,19 @@ export function BookingCalendarModal({
                 {visitorDetail.secretariatName ? (
                   <p className="text-xs text-gray-400">Secrétariat : {visitorDetail.secretariatName}</p>
                 ) : null}
-                <div className="mt-1.5 rounded-lg border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-2">
+                <div className="mt-1.5 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] p-2">
                   <div className="mb-1.5 flex items-center justify-between text-[10px] uppercase tracking-[0.12em]">
-                    <span className="text-[#D4AF37]">Statut du rendez-vous</span>
+                    <span className="text-[var(--school-accent)]">Statut du rendez-vous</span>
                     <span className="text-white/80">{visitorProgressPercent}%</span>
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#b8942e] via-[#D4AF37] to-amber-300"
+                      className="h-full rounded-full bg-gradient-to-r from-[#b8942e] via-[var(--school-accent)] to-amber-300"
                       style={{ width: `${visitorProgressPercent}%` }}
                     />
                   </div>
                   <p className="mt-1 text-[10px] text-gray-400">
-                    Niveau actuel : <span className="text-[#D4AF37]">{visitorProgressSteps[visitorProgressIndex]?.label}</span>
+                    Niveau actuel : <span className="text-[var(--school-accent)]">{visitorProgressSteps[visitorProgressIndex]?.label}</span>
                   </p>
                 </div>
               </div>
@@ -999,7 +999,7 @@ export function BookingCalendarModal({
                         className={cn(
                           'rounded-lg border px-2 py-1.5 text-[11px] font-medium',
                           isDone && 'border-emerald-500/35 bg-emerald-500/12 text-emerald-200',
-                          isActive && 'border-[#D4AF37]/45 bg-[#D4AF37]/14 text-[#D4AF37]',
+                          isActive && 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] text-[var(--school-accent)]',
                           !isDone && !isActive && 'border-white/12 bg-white/[0.02] text-gray-500',
                         )}
                       >
@@ -1017,7 +1017,7 @@ export function BookingCalendarModal({
           {rescheduleOpen ? (
             <form
               onSubmit={submitRescheduleRequest}
-              className="space-y-3 rounded-xl border border-[#D4AF37]/25 bg-black/35 p-4 text-left backdrop-blur-sm"
+              className="space-y-3 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-black/35 p-4 text-left backdrop-blur-sm"
             >
               <p className="text-sm font-medium text-white">Demande de report</p>
               <div>
@@ -1044,7 +1044,7 @@ export function BookingCalendarModal({
                 <Button type="button" variant="ghost" onClick={() => setRescheduleOpen(false)}>
                   Retour
                 </Button>
-                <Button type="submit" className="bg-[#D4AF37] text-black" disabled={rescheduleSubmitting}>
+                <Button type="submit" className="bg-[var(--school-accent)] text-black" disabled={rescheduleSubmitting}>
                   {rescheduleSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Envoyer la demande'}
                 </Button>
               </div>
@@ -1055,7 +1055,7 @@ export function BookingCalendarModal({
       </div>
 
       <div
-        className="relative z-10 shrink-0 space-y-2 border-t border-[#D4AF37]/15 bg-[#0a0908]/96 px-4 py-3 shadow-[0_-16px_48px_rgba(0,0,0,0.5)] backdrop-blur-xl md:px-6 md:py-4"
+        className="relative z-10 shrink-0 space-y-2 border-t border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] bg-[#0a0908]/96 px-4 py-3 shadow-[0_-16px_48px_rgba(0,0,0,0.5)] backdrop-blur-xl md:px-6 md:py-4"
         style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
       >
         <div className="mb-1 rounded-xl border border-violet-500/25 bg-violet-500/5 px-3 py-2.5">
@@ -1077,7 +1077,7 @@ export function BookingCalendarModal({
         </div>
 
         <Button
-          className="h-12 w-full bg-[#D4AF37] text-base font-bold text-black shadow-[0_0_24px_rgba(212,175,55,0.25)] hover:bg-amber-400 max-lg:min-h-[3.25rem]"
+          className="h-12 w-full bg-[var(--school-accent)] text-base font-bold text-black shadow-[0_0_24px_rgba(212,175,55,0.25)] hover:bg-amber-400 max-lg:min-h-[3.25rem]"
           onClick={() => navigate('/prospect/entretien')}
         >
           Salle d&apos;attente
@@ -1086,7 +1086,7 @@ export function BookingCalendarModal({
           <Button
             asChild
             variant="outline"
-            className="h-11 w-full border-[#D4AF37]/35 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+            className="h-11 w-full border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
           >
             <Link to={`/rendez-vous/${encodeURIComponent(String(visitorPublicRef))}`}>Page publique du rendez-vous</Link>
           </Button>
@@ -1179,7 +1179,7 @@ export function BookingCalendarModal({
       className="relative z-10 flex min-h-0 flex-1 flex-col"
     >
       <div className="flex flex-1 flex-col items-center justify-center px-5 pb-4 pt-2 text-center md:justify-start md:pt-6">
-        <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-[#D4AF37]/25 bg-gradient-to-br from-[#1a1510]/95 via-[#10141a]/95 to-[#0a0908] p-6 shadow-[0_24px_60px_rgba(0,0,0,0.45)]">
+        <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-gradient-to-br from-[#1a1510]/95 via-[#10141a]/95 to-[#0a0908] p-6 shadow-[0_24px_60px_rgba(0,0,0,0.45)]">
           <JourneySectionLabel className="mb-3">Confirmé</JourneySectionLabel>
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-emerald-500/35 bg-emerald-500/15">
             <CheckCircle className="h-7 w-7 text-emerald-400" />
@@ -1191,7 +1191,7 @@ export function BookingCalendarModal({
           )}
           <p className="mt-2 text-sm text-gray-400">
             Réf.{' '}
-            <span className="font-mono text-[#D4AF37]">
+            <span className="font-mono text-[var(--school-accent)]">
               {submitted.bookingReference
                 ? String(submitted.bookingReference).slice(0, 12).toUpperCase()
                 : String(submitted.appointmentId || '').slice(0, 8).toUpperCase()}
@@ -1207,7 +1207,7 @@ export function BookingCalendarModal({
             <Button
               asChild
               variant="outline"
-              className="mt-4 w-full border-[#D4AF37]/35 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+              className="mt-4 w-full border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
             >
               <Link to={`/rendez-vous/${encodeURIComponent(String(submitted.bookingReference))}`}>
                 Ouvrir la salle d&apos;attente publique
@@ -1217,11 +1217,11 @@ export function BookingCalendarModal({
         </div>
       </div>
       <div
-        className="shrink-0 space-y-2 border-t border-[#D4AF37]/15 bg-[#0a0908]/96 px-4 py-3 shadow-[0_-16px_48px_rgba(0,0,0,0.5)] backdrop-blur-xl md:px-6"
+        className="shrink-0 space-y-2 border-t border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] bg-[#0a0908]/96 px-4 py-3 shadow-[0_-16px_48px_rgba(0,0,0,0.5)] backdrop-blur-xl md:px-6"
         style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
       >
         <Button
-          className="h-12 w-full bg-[#D4AF37] text-base font-bold text-black hover:bg-amber-400 max-lg:min-h-[3.25rem]"
+          className="h-12 w-full bg-[var(--school-accent)] text-base font-bold text-black hover:bg-amber-400 max-lg:min-h-[3.25rem]"
           onClick={() => navigate('/prospect/entretien')}
         >
           Salon entretien
@@ -1278,11 +1278,11 @@ export function BookingCalendarModal({
 
   const bookingSurfaceClass = embedded
     ? cn(
-        'relative flex w-full flex-col gap-0 overflow-hidden rounded-3xl border-2 border-[#D4AF37]/35 !bg-[#0a0908] p-0 text-white shadow-[0_0_0_1px_rgba(212,175,55,0.12),0_25px_80px_rgba(0,0,0,0.55)]',
+        'relative flex w-full flex-col gap-0 overflow-hidden rounded-3xl border-2 border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] !bg-[#0a0908] p-0 text-white shadow-[0_0_0_1px_rgba(212,175,55,0.12),0_25px_80px_rgba(0,0,0,0.55)]',
         'h-[min(calc(100dvh-9rem),760px)] max-h-[min(calc(100dvh-9rem),760px)]',
       )
     : cn(
-        'relative flex max-h-[min(92vh,820px)] flex-col gap-0 overflow-hidden rounded-2xl border-2 border-[#D4AF37]/35 !bg-[#0a0908] p-0 text-white shadow-[0_0_0_1px_rgba(212,175,55,0.12),0_25px_80px_rgba(0,0,0,0.55)] sm:max-w-2xl',
+        'relative flex max-h-[min(92vh,820px)] flex-col gap-0 overflow-hidden rounded-2xl border-2 border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] !bg-[#0a0908] p-0 text-white shadow-[0_0_0_1px_rgba(212,175,55,0.12),0_25px_80px_rgba(0,0,0,0.55)] sm:max-w-2xl',
         'max-lg:!fixed max-lg:inset-0 max-lg:!left-0 max-lg:!top-0 max-lg:h-[100dvh] max-lg:max-h-none max-lg:w-full max-lg:!max-w-none max-lg:!translate-x-0 max-lg:!translate-y-0 max-lg:rounded-none max-lg:border-0 max-lg:shadow-[0_0_120px_rgba(212,175,55,0.06)]',
         'w-full max-w-[min(100vw-1.5rem,36rem)]',
       );
@@ -1321,7 +1321,7 @@ export function BookingCalendarModal({
       >
         <JourneyAmbientInset />
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-1 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-[0.95]"
+          className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-1 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent opacity-[0.95]"
           aria-hidden
         />
         <AnimatePresence mode="wait">
@@ -1331,7 +1331,7 @@ export function BookingCalendarModal({
                 animate={{ opacity: [0.55, 1, 0.55] }}
                 transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <Loader2 className="h-9 w-9 animate-spin text-[#D4AF37]" />
+                <Loader2 className="h-9 w-9 animate-spin text-[var(--school-accent)]" />
               </motion.div>
               <p className="max-w-xs text-center text-sm text-gray-400">Préparation de votre espace réservation…</p>
             </div>
@@ -1362,9 +1362,9 @@ export function BookingCalendarModal({
                     initial={false}
                     animate={{ rotate: [0, -6, 6, 0], scale: [1, 1.05, 1] }}
                     transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 5 }}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#D4AF37]/25 to-amber-600/10 ring-1 ring-[#D4AF37]/30"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] to-amber-600/10 ring-1 ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]"
                   >
-                    <CalendarGlyph className="h-5 w-5 text-[#D4AF37]" strokeWidth={2} />
+                    <CalendarGlyph className="h-5 w-5 text-[var(--school-accent)]" strokeWidth={2} />
                   </motion.div>
                   <div className="min-w-0 flex-1">
                     {embedded ? (
@@ -1379,7 +1379,7 @@ export function BookingCalendarModal({
                         {isNgowazuluBooking ? 'Réserver une consultation Ngowazulu' : 'Prendre rendez-vous'}
                       </DialogTitle>
                     )}
-                    <p className="mt-1.5 text-left text-[10px] font-semibold uppercase tracking-[0.24em] text-[#D4AF37]/90">
+                    <p className="mt-1.5 text-left text-[10px] font-semibold uppercase tracking-[0.24em] text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">
                       Parcours guidé · 4 étapes
                     </p>
                     {embedded ? (
@@ -1399,14 +1399,14 @@ export function BookingCalendarModal({
                       key={step}
                       initial={{ opacity: 0, y: -4 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="font-medium text-[#D4AF37]/90"
+                      className="font-medium text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]"
                     >
                       {['Sujet', 'Secrétariat', 'Calendrier', 'Confirmation'][step - 1]}
                     </motion.span>
                   </div>
                   <div className="relative h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
                     <motion.div
-                      className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#b8942e] via-[#D4AF37] to-amber-300 shadow-[0_0_20px_rgba(212,175,55,0.45)]"
+                      className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#b8942e] via-[var(--school-accent)] to-amber-300 shadow-[0_0_20px_rgba(212,175,55,0.45)]"
                       initial={false}
                       animate={{ width: `${(step / 4) * 100}%` }}
                       transition={{ type: 'spring', stiffness: 100, damping: 22 }}
@@ -1432,10 +1432,10 @@ export function BookingCalendarModal({
                             className={cn(
                               'flex h-7 w-7 items-center justify-center rounded-full border-2 text-[10px] font-bold transition-shadow md:h-8 md:w-8 md:text-xs',
                               done &&
-                                'border-[#D4AF37] bg-[#D4AF37] text-black shadow-[0_0_18px_rgba(212,175,55,0.45)]',
+                                'border-[var(--school-accent)] bg-[var(--school-accent)] text-black shadow-[0_0_18px_rgba(212,175,55,0.45)]',
                               active &&
                                 !done &&
-                                'border-[#D4AF37] bg-[#D4AF37]/15 text-[#D4AF37] shadow-[0_0_22px_rgba(212,175,55,0.28)]',
+                                'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] shadow-[0_0_22px_rgba(212,175,55,0.28)]',
                               !active &&
                                 !done &&
                                 'border-white/15 bg-black/20 text-gray-500',
@@ -1446,7 +1446,7 @@ export function BookingCalendarModal({
                           <span
                             className={cn(
                               'block max-w-[3.25rem] text-center text-[8px] leading-tight sm:max-w-none sm:text-[9px]',
-                              active ? 'text-[#D4AF37]' : 'text-gray-500',
+                              active ? 'text-[var(--school-accent)]' : 'text-gray-500',
                             )}
                           >
                             {shortLabel}
@@ -1464,7 +1464,7 @@ export function BookingCalendarModal({
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="space-y-3 rounded-2xl border border-[#D4AF37]/30 bg-gradient-to-br from-[#1a1510]/90 to-[#0a0908] px-4 py-5 text-sm text-amber-50 shadow-[0_0_40px_rgba(212,175,55,0.08)]"
+                    className="space-y-3 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-gradient-to-br from-[#1a1510]/90 to-[#0a0908] px-4 py-5 text-sm text-amber-50 shadow-[0_0_40px_rgba(212,175,55,0.08)]"
                   >
                     <JourneySectionLabel>Accès</JourneySectionLabel>
                     <p className="font-semibold text-white">Connexion requise</p>
@@ -1473,7 +1473,7 @@ export function BookingCalendarModal({
                     </p>
                     <Button
                       type="button"
-                      className="h-12 w-full bg-[#D4AF37] text-base font-bold text-black hover:bg-amber-400"
+                      className="h-12 w-full bg-[var(--school-accent)] text-base font-bold text-black hover:bg-amber-400"
                       onClick={() => navigate('/login', { state: { from: { pathname: '/appointment/request' } } })}>
                       Se connecter
                     </Button>
@@ -1529,12 +1529,12 @@ export function BookingCalendarModal({
                             />
                           </div>
                           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 space-y-3">
-                            <p className="text-[11px] font-semibold uppercase tracking-wide text-[#D4AF37]/90">
+                            <p className="text-[11px] font-semibold uppercase tracking-wide text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">
                               Vos coordonnées de notification
                             </p>
                             <div>
                               <Label className="text-xs text-gray-400 flex items-center gap-1.5">
-                                <Mail className="h-3 w-3 text-[#D4AF37]/80" />
+                                <Mail className="h-3 w-3 text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]" />
                                 E-mail <span className="text-red-400">*</span>
                               </Label>
                               <Input
@@ -1566,7 +1566,7 @@ export function BookingCalendarModal({
                             <label className="flex items-start gap-2 rounded-lg border border-white/10 bg-black/20 p-2.5">
                               <input
                                 type="checkbox"
-                                className="mt-0.5 h-4 w-4 accent-[#D4AF37]"
+                                className="mt-0.5 h-4 w-4 accent-[var(--school-accent)]"
                                 checked={notificationConsent}
                                 data-testid="booking-notification-consent"
                                 onChange={(e) => setNotificationConsent(e.target.checked)}
@@ -1578,7 +1578,7 @@ export function BookingCalendarModal({
                             <label className="flex items-start gap-2 rounded-lg border border-white/10 bg-black/20 p-2.5">
                               <input
                                 type="checkbox"
-                                className="mt-0.5 h-4 w-4 accent-[#D4AF37]"
+                                className="mt-0.5 h-4 w-4 accent-[var(--school-accent)]"
                                 checked={smsOptIn}
                                 data-testid="booking-sms-opt-in"
                                 onChange={(e) => setSmsOptIn(e.target.checked)}
@@ -1590,7 +1590,7 @@ export function BookingCalendarModal({
                             <p className="text-[10px] leading-relaxed text-gray-500">
                               Vos données sont utilisées uniquement pour la gestion de votre rendez-vous.
                               {' '}
-                              <Link to="/politique-confidentialite" className="text-[#D4AF37] hover:underline">
+                              <Link to="/politique-confidentialite" className="text-[var(--school-accent)] hover:underline">
                                 Voir la politique de confidentialité
                               </Link>
                               .
@@ -1612,7 +1612,7 @@ export function BookingCalendarModal({
                       {step === 2 && (
                         <motion.div key="step2" {...stepMotion} className="space-y-4">
                           <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 flex items-center gap-3">
-                            <Globe className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                            <Globe className="w-4 h-4 text-[var(--school-accent)] shrink-0" />
                             <div>
                               <p className="text-xs text-gray-500">Votre fuseau horaire détecté</p>
                               <p className="text-sm text-white font-medium">{requesterTimezone}</p>
@@ -1621,7 +1621,7 @@ export function BookingCalendarModal({
 
                           {loadingSecretaries ? (
                             <div className="flex items-center gap-2 text-sm text-gray-500 py-6 justify-center">
-                              <Loader2 className="w-5 h-5 animate-spin text-[#D4AF37]" />
+                              <Loader2 className="w-5 h-5 animate-spin text-[var(--school-accent)]" />
                               Recherche du meilleur interlocuteur…
                             </div>
                           ) : secretaryStrategy === 'closed' ? (
@@ -1647,19 +1647,19 @@ export function BookingCalendarModal({
                                     onClick={() => setSelectedSecretary(sec)}
                                     className={`w-full text-left rounded-xl border px-4 py-3 transition-all ${
                                       active
-                                        ? 'border-[#D4AF37] bg-[#D4AF37]/10'
+                                        ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]'
                                         : 'border-white/10 bg-white/5 hover:border-white/20'
                                     }`}
                                   >
                                     <div className="flex items-center justify-between">
                                       <div className="flex items-center gap-2">
-                                        <UserCheck className={`w-4 h-4 ${active ? 'text-[#D4AF37]' : 'text-gray-400'}`} />
+                                        <UserCheck className={`w-4 h-4 ${active ? 'text-[var(--school-accent)]' : 'text-gray-400'}`} />
                                         <span className="text-sm font-medium text-white">{sec.name}</span>
                                         {sec.isOnline && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" title="En ligne" />}
                                       </div>
                                       <div className="flex items-center gap-2">
                                         {sec.score >= 80 && (
-                                          <Badge className="text-[9px] bg-[#D4AF37]/15 text-[#D4AF37] border-[#D4AF37]/30">
+                                          <Badge className="text-[9px] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
                                             Recommandé
                                           </Badge>
                                         )}
@@ -1695,7 +1695,7 @@ export function BookingCalendarModal({
                         <motion.div key="step3" {...stepMotion} className="space-y-4">
                           {selectedSecretary && (
                             <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-gray-300 flex items-center gap-2">
-                              <UserCheck className="w-3.5 h-3.5 text-[#D4AF37]" />
+                              <UserCheck className="w-3.5 h-3.5 text-[var(--school-accent)]" />
                               {staffLabel} : <span className="text-white font-medium">{selectedSecretary.name}</span>
                               <span className="text-gray-500">({selectedSecretary.region})</span>
                             </div>
@@ -1722,12 +1722,12 @@ export function BookingCalendarModal({
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ type: 'spring', stiffness: 260, damping: 28 }}
                             className={cn(
-                              'rounded-2xl border border-[#D4AF37]/30 bg-white/[0.03] p-3 shadow-[0_0_40px_rgba(212,175,55,0.08)] backdrop-blur-md sm:p-4',
+                              'rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-white/[0.03] p-3 shadow-[0_0_40px_rgba(212,175,55,0.08)] backdrop-blur-md sm:p-4',
                               embedded && 'p-2.5 sm:p-3',
                             )}
                           >
                             <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-                              <Label className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-[#D4AF37]">
+                              <Label className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--school-accent)]">
                                 Choisir la date
                               </Label>
                               <p className="font-display text-sm font-medium tracking-tight text-white/90">
@@ -1766,7 +1766,7 @@ export function BookingCalendarModal({
                                     type="button"
                                     variant="outline"
                                     className={cn(
-                                      'w-full justify-between border-[#D4AF37]/30 bg-black/30 px-4 text-left font-display tracking-tight text-white hover:bg-white/5',
+                                      'w-full justify-between border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-black/30 px-4 text-left font-display tracking-tight text-white hover:bg-white/5',
                                       embedded ? 'h-11 text-sm font-semibold' : 'h-14 text-base font-semibold',
                                     )}
                                   >
@@ -1775,12 +1775,12 @@ export function BookingCalendarModal({
                                         ? formatDateFns(parsedSelectedDate, 'EEEE d MMMM yyyy', { locale: frLocale })
                                         : 'Choisir une date'}
                                     </span>
-                                    <CalendarGlyph className="h-5 w-5 shrink-0 text-[#D4AF37]" strokeWidth={2.25} />
+                                    <CalendarGlyph className="h-5 w-5 shrink-0 text-[var(--school-accent)]" strokeWidth={2.25} />
                                   </Button>
                                 </PopoverTrigger>
                                 <PopoverContent
                                   align="start"
-                                  className="w-auto border-[#D4AF37]/25 bg-[#0a0908]/98 p-2 backdrop-blur-xl"
+                                  className="w-auto border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#0a0908]/98 p-2 backdrop-blur-xl"
                                 >
                                   <DayPickerCalendar
                                     mode="single"
@@ -1821,12 +1821,12 @@ export function BookingCalendarModal({
                           </motion.div>
 
                           <div>
-                            <Label className="font-display mb-2 block text-[11px] font-semibold uppercase tracking-[0.16em] text-[#D4AF37]/90">
+                            <Label className="font-display mb-2 block text-[11px] font-semibold uppercase tracking-[0.16em] text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">
                               Créneaux · 30 min
                             </Label>
                             {loadingSlots ? (
                               <div className="flex items-center justify-center gap-2 py-10 text-sm text-gray-500">
-                                <Loader2 className="h-6 w-6 animate-spin text-[#D4AF37]" />
+                                <Loader2 className="h-6 w-6 animate-spin text-[var(--school-accent)]" />
                                 Chargement…
                               </div>
                             ) : slotGrid.length > 0 ? (
@@ -1861,7 +1861,7 @@ export function BookingCalendarModal({
                                           : taken
                                             ? 'cursor-not-allowed border-white/10 bg-white/[0.04] text-gray-500 opacity-60 line-through'
                                             : active
-                                              ? 'border-[#D4AF37] bg-[#D4AF37]/25 text-white shadow-[0_0_16px_rgba(212,175,55,0.35)] ring-1 ring-[#D4AF37]/40'
+                                              ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] text-white shadow-[0_0_16px_rgba(212,175,55,0.35)] ring-1 ring-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]'
                                               : 'cursor-pointer border-emerald-400/40 bg-emerald-500/15 text-emerald-50 ring-1 ring-emerald-500/20 hover:bg-emerald-500/25'
                                     }`;
                                     const tooltip = past
@@ -1910,8 +1910,8 @@ export function BookingCalendarModal({
                           </div>
 
                           {selectedSlot && (
-                            <div className="rounded-lg border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-3 py-2 text-xs text-gray-200">
-                              <span className="text-[#D4AF37] font-medium">Sélection : </span>
+                            <div className="rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] px-3 py-2 text-xs text-gray-200">
+                              <span className="text-[var(--school-accent)] font-medium">Sélection : </span>
                               {new Date(selectedSlot.slotUtc).toLocaleString('fr-FR', {
                                 timeZone: requesterTimezone, dateStyle: 'medium', timeStyle: 'short',
                               })} · {selectedSlot.secretariatName}
@@ -1924,7 +1924,7 @@ export function BookingCalendarModal({
                       {step === 4 && (
                         <motion.div key="step4" {...stepMotion} className="space-y-4">
                           <p className="text-sm text-gray-300">Vérifiez les informations avant de confirmer :</p>
-                          <div className="rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 divide-y divide-white/5">
+                          <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] divide-y divide-white/5">
                             {[
                               { label: 'Sujet', value: reason },
                               description ? { label: 'Description', value: description } : null,
@@ -1960,7 +1960,7 @@ export function BookingCalendarModal({
 
                   {/* ── Footer navigation ── */}
                   <div
-                    className="flex shrink-0 gap-2 border-t border-[#D4AF37]/15 bg-[#0a0908]/95 px-4 py-3 shadow-[0_-16px_48px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:px-5 sm:py-4"
+                    className="flex shrink-0 gap-2 border-t border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] bg-[#0a0908]/95 px-4 py-3 shadow-[0_-16px_48px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:px-5 sm:py-4"
                     style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
                   >
                     {step > 1 && (
@@ -1976,7 +1976,7 @@ export function BookingCalendarModal({
                     {step < 4 && (
                       <Button
                         type="button"
-                        className="min-h-11 flex-1 bg-[#D4AF37] font-display text-base font-semibold tracking-tight text-black hover:bg-amber-400 max-lg:min-h-[3.25rem]"
+                        className="min-h-11 flex-1 bg-[var(--school-accent)] font-display text-base font-semibold tracking-tight text-black hover:bg-amber-400 max-lg:min-h-[3.25rem]"
                         disabled={
                           step === 1 && (!reason.trim() || !contactEmailOk || !contactWhatsappOk || !notificationConsent)
                         }
@@ -2030,7 +2030,7 @@ export function BookingCalendarModal({
                     {step === 4 && (
                       <Button
                         type="button"
-                        className="min-h-11 flex-1 bg-[#D4AF37] text-base font-bold text-black hover:bg-amber-400 disabled:opacity-60 max-lg:min-h-[3.25rem]"
+                        className="min-h-11 flex-1 bg-[var(--school-accent)] text-base font-bold text-black hover:bg-amber-400 disabled:opacity-60 max-lg:min-h-[3.25rem]"
                         disabled={booking || !selectedSlot}
                         onClick={handleSubmit}>
                         {booking ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmer le rendez-vous'}

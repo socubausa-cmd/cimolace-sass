@@ -77,7 +77,7 @@ const ShoppingCart = () => {
       >
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <h2 className="text-xl font-serif font-bold text-white flex items-center">
-            <ShoppingBag className="w-5 h-5 mr-2 text-[#D4AF37]" />
+            <ShoppingBag className="w-5 h-5 mr-2 text-[var(--school-accent)]" />
             Votre Panier ({cartItems.reduce((a,c) => a + c.quantity, 0)})
           </h2>
           <button 
@@ -111,7 +111,7 @@ const ShoppingCart = () => {
                   <div className="flex-1 flex flex-col justify-between">
                     <div>
                       <h3 className="font-medium text-white line-clamp-2 text-sm">{item.title}</h3>
-                      <p className="text-[#D4AF37] font-semibold mt-1">
+                      <p className="text-[var(--school-accent)] font-semibold mt-1">
                         {formatCurrency(item.price_in_cents, { code: item.currency })}
                       </p>
                     </div>
@@ -159,7 +159,7 @@ const ShoppingCart = () => {
             </div>
             
             <Button 
-              className="w-full bg-[#D4AF37] hover:bg-[#b5952f] text-black font-bold h-12"
+              className="w-full bg-[var(--school-accent)] hover:bg-[#b5952f] text-black font-bold h-12"
               onClick={handleCheckout}
               disabled={isCheckingOut}
             >

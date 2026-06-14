@@ -15,9 +15,9 @@ import { getNgowazuluMentoratOffer } from '@/config/ngowazuluMentoratOffers';
 import { getBillingCheckoutPath, getPayerPath } from '@/lib/eleveBillingPath';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { EleveMobileShell } from '@/components/eleve-mobile/EleveMobileShell';
-import { LiriStatusBar } from '@/pages/eleve-mobile/connection/EleveConnectionLayout';
+import { LiriStatusBar } from '@/pages/school/eleve-mobile/connection/EleveConnectionLayout';
 import { useDataSync } from '@/contexts/DataSyncContext';
-import { EV_PAGE_AMBIENT } from '@/pages/eleve-mobile/eleveMobileScreensShared';
+import { EV_PAGE_AMBIENT } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const NGOWAZULU_OPENING_PLAN_SLUG = 'ngowazulu-ouverture-recouvrement';
 const DEFAULT_OPENING_FEE_EUR = 100;
@@ -142,7 +142,7 @@ function ChariowCountryPicker({ optionsSorted, countryNameByCode, value, onSelec
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Filtrer par nom ou code (ex. fr, sénégal)…"
-            className="h-9 w-full rounded-md border border-white/10 bg-black/35 px-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/50"
+            className="h-9 w-full rounded-md border border-white/10 bg-black/35 px-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]"
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
@@ -161,7 +161,7 @@ function ChariowCountryPicker({ optionsSorted, countryNameByCode, value, onSelec
                     type="button"
                     className={cn(
                       'w-full px-3 py-2.5 text-left text-sm text-white transition hover:bg-white/10',
-                      selected && 'bg-[#D4AF37]/20 text-[#f0e6d0]',
+                      selected && 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[#f0e6d0]',
                     )}
                     onClick={() => {
                       onSelect(c.code);
@@ -514,7 +514,7 @@ export default function PaymentActionPage({ layout = 'web' }) {
         >
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
-              <Badge className="bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 mb-2">Paiement sécurisé</Badge>
+              <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] mb-2">Paiement sécurisé</Badge>
               <h1 className="text-2xl md:text-3xl font-bold">Effectuer un Paiement</h1>
               <p className="text-gray-400 text-sm mt-1">
                 Choisis le moyen de paiement puis confirme tes informations.
@@ -554,7 +554,7 @@ export default function PaymentActionPage({ layout = 'web' }) {
             ) : null}
 
             {isNgowazuluMentoratMonthly ? (
-              <div className="rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-4 text-sm text-amber-100 space-y-3">
+              <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-4 text-sm text-amber-100 space-y-3">
                 <p className="font-semibold text-white mb-1">Panier automatique mentorat — {ngowazuluOffer?.commercialName || 'contrat mensuel'}</p>
                 {cartLoading ? (
                   <p className="text-amber-100/80">Calcul du panier en cours…</p>
@@ -573,7 +573,7 @@ export default function PaymentActionPage({ layout = 'web' }) {
                       ) : null}
                       <div className="pt-2 mt-2 border-t border-white/10 flex items-center justify-between gap-2">
                         <span className="text-white font-semibold">Total estimé de cette phase</span>
-                        <span className="text-[#D4AF37] font-bold text-base">
+                        <span className="text-[var(--school-accent)] font-bold text-base">
                           {forceTwoSteps ? (openingFeeAmount || DEFAULT_OPENING_FEE_EUR) : estimatedMentoratTotal} EUR
                         </span>
                       </div>
@@ -673,7 +673,7 @@ export default function PaymentActionPage({ layout = 'web' }) {
               </div>
               <div className="flex items-center justify-between gap-2 mt-1">
                 <span>Fréquence</span>
-                <Badge className="bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30">{interval}</Badge>
+                <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">{interval}</Badge>
               </div>
               {isNgowazuluMentoratMonthly && !hasPaidNgowazuluOpening ? (
                 <div className="mt-2 text-xs text-gray-400">
@@ -714,7 +714,7 @@ export default function PaymentActionPage({ layout = 'web' }) {
               <Button
                 onClick={handleCreatePayment}
                 disabled={!canSubmit || submitting}
-                className="bg-[#D4AF37] text-black hover:bg-[#c4a030] font-bold shadow-lg shadow-[#D4AF37]/20"
+                className="bg-[var(--school-accent)] text-black hover:bg-[#c4a030] font-bold shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
               >
                 {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                 Continuer vers le paiement
@@ -797,7 +797,7 @@ export default function PaymentActionPage({ layout = 'web' }) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0F1419] px-4 pb-16 pt-24 text-white">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute top-24 left-1/2 h-[260px] w-[520px] -translate-x-1/2 rounded-full bg-[#D4AF37]/10 blur-[120px]" />
+        <div className="absolute top-24 left-1/2 h-[260px] w-[520px] -translate-x-1/2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] blur-[120px]" />
         <div className="absolute bottom-0 right-0 h-[280px] w-[280px] rounded-full bg-blue-500/10 blur-[120px]" />
       </div>
       <Helmet>

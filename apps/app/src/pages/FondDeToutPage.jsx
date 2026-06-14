@@ -8,17 +8,17 @@ import {
   Eye, Zap, Star, Sparkles, Shield, Lock, Scale,
   Quote, FileText, GraduationCap
 } from 'lucide-react';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const PUBLIC = isnaTenantConfig.branding.publicSiteOrigin;
 const PAGE_URL = `${PUBLIC}/fond-de-tout`;
 const SITE_NAME = `${isnaTenantConfig.branding.name} · LIRI`;
 
 const LawBox = ({ title, children }) => (
-  <div className="bg-[#D4AF37]/[0.08] border border-[#D4AF37]/20 rounded-xl p-5 my-4">
+  <div className="bg-[var(--school-accent)]/[0.08] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] rounded-xl p-5 my-4">
     <div className="flex items-center gap-2 mb-2">
-      <Scale className="w-4 h-4 text-[#D4AF37]" />
-      <span className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Loi : {title}</span>
+      <Scale className="w-4 h-4 text-[var(--school-accent)]" />
+      <span className="text-xs font-bold text-[var(--school-accent)] uppercase tracking-wider">Loi : {title}</span>
     </div>
     <p className="text-gray-200 leading-relaxed font-medium">{children}</p>
   </div>
@@ -46,15 +46,15 @@ const TE = ({ number, title, children }) => (
 );
 
 const BQ = ({ children }) => (
-  <div className="border-l-4 border-[#D4AF37] pl-5 py-3 my-5">
-    <p className="text-lg font-serif italic text-[#D4AF37]/90 leading-relaxed">{children}</p>
+  <div className="border-l-4 border-[var(--school-accent)] pl-5 py-3 my-5">
+    <p className="text-lg font-serif italic text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)] leading-relaxed">{children}</p>
   </div>
 );
 
 const DT = ({ headers, rows }) => (
   <div className="overflow-x-auto my-4">
     <table className="w-full text-sm border-collapse">
-      <thead><tr>{headers.map((h, i) => <th key={i} className="text-left text-[#D4AF37] text-xs uppercase tracking-wider py-3 px-4 border-b border-white/10 bg-[#D4AF37]/5">{h}</th>)}</tr></thead>
+      <thead><tr>{headers.map((h, i) => <th key={i} className="text-left text-[var(--school-accent)] text-xs uppercase tracking-wider py-3 px-4 border-b border-white/10 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]">{h}</th>)}</tr></thead>
       <tbody>{rows.map((row, i) => <tr key={i} className="border-b border-white/5 hover:bg-white/[0.02]">{row.map((cell, j) => <td key={j} className="py-3 px-4 text-gray-300">{cell}</td>)}</tr>)}</tbody>
     </table>
   </div>
@@ -97,20 +97,20 @@ const FondDeToutPage = () => {
       {/* HERO */}
       <section className="relative py-28 md:py-40 px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0F1419] via-[#192734]/60 to-[#0F1419]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#D4AF37]/5 rounded-full blur-[300px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[300px]" />
         <div className="relative max-w-4xl mx-auto text-center space-y-6">
-          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] text-xs font-bold uppercase tracking-widest border border-[#D4AF37]/20">
+          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] text-xs font-bold uppercase tracking-widest border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
             <BookOpen className="w-4 h-4" /> Prorascience · Livre I
           </span>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-white leading-tight">
-            Le Fond de<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-yellow-400 to-[#D4AF37]">Tout</span>
+            Le Fond de<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] via-yellow-400 to-[var(--school-accent)]">Tout</span>
           </h1>
-          <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto">Par le <span className="text-[#D4AF37] font-semibold">5ᵉ Manikongo</span> — Fondateur du Système Prorascience</p>
+          <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto">Par le <span className="text-[var(--school-accent)] font-semibold">5ᵉ Manikongo</span> — Fondateur du Système Prorascience</p>
           <div className="bg-[#192734]/80 border border-white/5 rounded-xl p-5 max-w-lg mx-auto">
             <p className="text-lg font-serif italic text-gray-300">« Rien ne peut partir de rien, car le rien n'est pas un état. »</p>
           </div>
           <p className="text-xs text-gray-600 uppercase tracking-widest">© PRORASCIENCE — NGOWAZULU · ISNA — Première édition</p>
-          <ChevronDown className="w-6 h-6 text-[#D4AF37]/50 mx-auto animate-bounce" />
+          <ChevronDown className="w-6 h-6 text-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] mx-auto animate-bounce" />
         </div>
       </section>
 
@@ -118,7 +118,7 @@ const FondDeToutPage = () => {
       <div className="sticky top-20 z-30 bg-[#0F1419]/95 backdrop-blur-xl border-b border-white/5 py-3 mb-8">
         <div className="max-w-4xl mx-auto px-4 flex gap-2 overflow-x-auto">
           {navItems.map(n => (
-            <button key={n.id} onClick={() => go(n.id)} className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${ac === n.id ? 'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30' : 'bg-white/5 text-gray-400 border border-white/5 hover:text-white'}`}>{n.s}</button>
+            <button key={n.id} onClick={() => go(n.id)} className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${ac === n.id ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]' : 'bg-white/5 text-gray-400 border border-white/5 hover:text-white'}`}>{n.s}</button>
           ))}
         </div>
       </div>
@@ -158,7 +158,7 @@ const FondDeToutPage = () => {
           <h3 className="text-xl font-serif font-bold text-white mt-6">La démonstration par réduction</h3>
           <p className="text-gray-300 leading-relaxed">Trois éléments : 1, 2, 3.</p>
           <DT headers={["Type", "Combinaisons", "Nombre"]} rows={[["Ordre 2", "12, 13, 21, 23, 31, 32", "6 qualia"], ["Ordre 3", "123, 132, 213, 231, 312, 321", "6 qualia"], ["TOTAL", "Portée ontologique", "12 qualia"]]} />
-          <p className="text-gray-300 leading-relaxed">Peut-on enlever 1 ? <span className="text-white font-semibold">Non</span>. Si on enlève 1, 2 et 3 — même la possibilité de former quoi que ce soit disparaît. <span className="text-[#D4AF37] font-semibold">1, 2, 3 sont le plancher. Le mur ontologique.</span></p>
+          <p className="text-gray-300 leading-relaxed">Peut-on enlever 1 ? <span className="text-white font-semibold">Non</span>. Si on enlève 1, 2 et 3 — même la possibilité de former quoi que ce soit disparaît. <span className="text-[var(--school-accent)] font-semibold">1, 2, 3 sont le plancher. Le mur ontologique.</span></p>
           <h3 className="text-xl font-serif font-bold text-white mt-6">Ce que le Potentia Prima n'est pas</h3>
           <DT headers={["Ce qu'on croit", "Ce que c'est vraiment"]} rows={[["Un endroit", "Pas spatial — antérieur à l'espace"], ["Un moment", "Pas temporel — antérieur au temps"], ["Une énergie", "Antérieur à l'énergie — il la permet"], ["Un dieu", "Pas d'intention, pas de volonté, pas de plan"], ["Le néant", "Le néant ne permet rien. Le PP permet tout."], ["Une substance", "Une structure de permission"]]} />
         </section>
@@ -217,7 +217,7 @@ const FondDeToutPage = () => {
           </TE>
           <BQ>Avant le premier coup de baguette, le temps n'existe pas encore pour cette musique.</BQ>
           <div className="bg-[#192734] border border-white/10 rounded-xl p-5 text-center my-4">
-            <p className="text-xl font-mono text-[#D4AF37] font-bold">Ω(α) = Σ α! / (α - n)!</p>
+            <p className="text-xl font-mono text-[var(--school-accent)] font-bold">Ω(α) = Σ α! / (α - n)!</p>
           </div>
           <DT headers={["Entropie α", "Portée Ω", "Signification"]} rows={[["3", "12 qualia", "Simple"], ["4", "60 qualia", "Modéré"], ["10", "9 864 100", "Élevé"], ["Notre cosmos", "Ω immense", "Quasi-infini"]]} />
           <LawBox title="Règle d'Or — Non-Répétition">Toute combinaison valide doit contenir une différenciation minimum entre ses composants. En physique : principe d'exclusion de Pauli. En Prorascience : loi ontologique universelle.</LawBox>
@@ -235,7 +235,7 @@ const FondDeToutPage = () => {
           <LawBox title="Loi de l'Effondrement">L'effondrement n\'est pas causé par un événement extérieur. Il est la conséquence inévitable de la tension interne de l\'onde ontologique.</LawBox>
           <DT headers={["Ce qui naît", "Description"]} rows={[["Le qualia effectif", "Une réalité distincte, irréductible, manifestée"], ["Le temps τ₀", "L'irréversibilité — un avant et un après"], ["La trace", "Le Vibratinium enregistre — l'empreinte ne disparaît pas"]]} />
           <h3 className="text-xl font-serif font-bold text-white mt-6">Naissance de l'espace-temps</h3>
-          <p className="text-gray-300 leading-relaxed">L'effondrement primordial produit le qualia fondamental : <span className="text-[#D4AF37] font-bold">{'{C, D}'} — contraction et dilatation</span>.</p>
+          <p className="text-gray-300 leading-relaxed">L'effondrement primordial produit le qualia fondamental : <span className="text-[var(--school-accent)] font-bold">{'{C, D}'} — contraction et dilatation</span>.</p>
           <DT headers={["Tendance", "Ce qu'elle génère"]} rows={[["C — Contraction", "L'espace"], ["D — Dilatation", "Le temps τ₂"], ["Δ = |C - D|", "L'énergie"]]} />
           <TE number="10" title="L'Arc et la Flèche">
             <p>L'énergie d\'un arc est la tension entre la rigidité du bois et l\'étirement de la corde. L\'énergie cosmologique est la mesure de la tension entre deux tendances opposées.</p>
@@ -260,8 +260,8 @@ const FondDeToutPage = () => {
         {/* CH7 */}
         <section id="ch7" className="space-y-5 scroll-mt-28">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center"><Map className="w-5 h-5 text-[#D4AF37]" /></div>
-            <div><span className="text-xs text-[#D4AF37] font-bold uppercase tracking-wider">Chapitre 7</span><h2 className="text-2xl md:text-3xl font-serif font-bold text-white">La Carte Complète</h2></div>
+            <div className="w-11 h-11 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center"><Map className="w-5 h-5 text-[var(--school-accent)]" /></div>
+            <div><span className="text-xs text-[var(--school-accent)] font-bold uppercase tracking-wider">Chapitre 7</span><h2 className="text-2xl md:text-3xl font-serif font-bold text-white">La Carte Complète</h2></div>
           </div>
           <h3 className="text-xl font-serif font-bold text-white">Les 10 Équations Fondamentales</h3>
           <div className="space-y-3">
@@ -277,10 +277,10 @@ const FondDeToutPage = () => {
               { id:"E9", n:"Temps physique", eq:"Q(2)_{C,D} ⟹ τ₂ = f(D)", d:"Le temps mesurable est porté par la tendance D" },
               { id:"E10", n:"Relation des temps", eq:"τ₂ ⊂ τ₀ ⊄ τ₂", d:"τ₂ instance de τ₀, mais τ₀ plus universel" },
             ].map(e => (
-              <div key={e.id} className="bg-[#192734] border border-white/5 rounded-xl p-5 hover:border-[#D4AF37]/20 transition-all group">
+              <div key={e.id} className="bg-[#192734] border border-white/5 rounded-xl p-5 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-all group">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center shrink-0"><span className="text-xs font-bold text-[#D4AF37]">{e.id}</span></div>
-                  <div><h4 className="text-base font-bold text-white">{e.n}</h4><p className="font-mono text-sm text-[#D4AF37]">{e.eq}</p><p className="text-sm text-gray-400">{e.d}</p></div>
+                  <div className="w-10 h-10 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center shrink-0"><span className="text-xs font-bold text-[var(--school-accent)]">{e.id}</span></div>
+                  <div><h4 className="text-base font-bold text-white">{e.n}</h4><p className="font-mono text-sm text-[var(--school-accent)]">{e.eq}</p><p className="text-sm text-gray-400">{e.d}</p></div>
                 </div>
               </div>
             ))}
@@ -292,14 +292,14 @@ const FondDeToutPage = () => {
         {/* EPILOGUE */}
         <section id="epilogue" className="space-y-5 scroll-mt-28">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center"><Star className="w-5 h-5 text-[#D4AF37]" /></div>
-            <div><span className="text-xs text-[#D4AF37] font-bold uppercase tracking-wider">Épilogue</span><h2 className="text-2xl md:text-3xl font-serif font-bold text-white">Ce que tu es dans ce système</h2></div>
+            <div className="w-11 h-11 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center"><Star className="w-5 h-5 text-[var(--school-accent)]" /></div>
+            <div><span className="text-xs text-[var(--school-accent)] font-bold uppercase tracking-wider">Épilogue</span><h2 className="text-2xl md:text-3xl font-serif font-bold text-white">Ce que tu es dans ce système</h2></div>
           </div>
           <p className="text-gray-300 leading-relaxed">Tu es un <span className="text-white font-semibold">qualia d'ordre très élevé</span>. Tu es une combinaison de briques fondamentales dont la géométrie était permise dans le Potentia Prima de ce cosmos. Tu t\'es manifesté après l\'effondrement. Tu portes une trace irréductible dans le Vibratinium.</p>
-          <p className="text-gray-300 leading-relaxed">Et maintenant tu fais quelque chose de remarquable : <span className="text-[#D4AF37] font-semibold">tu lis le champ de permission qui t'a produit</span>.</p>
-          <div className="bg-gradient-to-br from-[#D4AF37]/[0.08] to-transparent border border-[#D4AF37]/20 rounded-2xl p-8 text-center">
+          <p className="text-gray-300 leading-relaxed">Et maintenant tu fais quelque chose de remarquable : <span className="text-[var(--school-accent)] font-semibold">tu lis le champ de permission qui t'a produit</span>.</p>
+          <div className="bg-gradient-to-br from-[var(--school-accent)]/[0.08] to-transparent border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] rounded-2xl p-8 text-center">
             <p className="text-lg md:text-xl font-serif italic text-gray-200 leading-relaxed max-w-2xl mx-auto">
-              « Le cosmos n'est pas gouverné par des lois. Il est rendu possible par la possibilité, structuré par l\'information, lisible par des lois. Et toi qui lis — <span className="text-[#D4AF37] font-bold">tu es la preuve que sa géométrie était suffisamment riche pour produire quelqu\'un capable de la lire</span>. »
+              « Le cosmos n'est pas gouverné par des lois. Il est rendu possible par la possibilité, structuré par l\'information, lisible par des lois. Et toi qui lis — <span className="text-[var(--school-accent)] font-bold">tu es la preuve que sa géométrie était suffisamment riche pour produire quelqu\'un capable de la lire</span>. »
             </p>
           </div>
         </section>
@@ -360,9 +360,9 @@ const FondDeToutPage = () => {
 
         {/* CTA */}
         <section className="text-center space-y-6">
-          <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto" />
+          <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent mx-auto" />
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/formations/catalogue"><Button className="bg-[#D4AF37] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-base font-bold"><GraduationCap className="w-5 h-5" /> Voir les formations</Button></Link>
+            <Link to="/formations/catalogue"><Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-base font-bold"><GraduationCap className="w-5 h-5" /> Voir les formations</Button></Link>
             <Link to="/ecoles"><Button variant="outline" className="border-white/20 hover:bg-white/5 text-white h-12 px-8 text-base"><BookOpen className="w-5 h-5 mr-2" /> Les 21 Sciences</Button></Link>
           </div>
         </section>

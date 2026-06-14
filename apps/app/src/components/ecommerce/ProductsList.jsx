@@ -33,7 +33,7 @@ const ProductsList = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-[#D4AF37]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--school-accent)]" />
         <span className="ml-2 text-gray-400">Chargement des produits...</span>
       </div>
     );
@@ -65,7 +65,7 @@ const ProductsList = () => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((product) => (
-        <Card key={product.id} className="bg-[#192734] border-white/10 overflow-hidden flex flex-col h-full hover:border-[#D4AF37]/30 transition-all duration-300">
+        <Card key={product.id} className="bg-[#192734] border-white/10 overflow-hidden flex flex-col h-full hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all duration-300">
           <div className="relative aspect-square overflow-hidden bg-white/5 group">
             <img 
               src={product.image || '/placeholder-product.jpg'} 
@@ -79,7 +79,7 @@ const ProductsList = () => {
             )}
             {product.ribbon_text && (
                <div className="absolute top-2 left-2">
-                <Badge className="bg-[#D4AF37] text-black hover:bg-[#b5952f]">{product.ribbon_text}</Badge>
+                <Badge className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f]">{product.ribbon_text}</Badge>
               </div>
             )}
           </div>
@@ -94,7 +94,7 @@ const ProductsList = () => {
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star 
                       key={star} 
-                      className={`w-3 h-3 ${star <= 5 ? 'text-[#D4AF37] fill-[#D4AF37]' : 'text-gray-600'}`} 
+                      className={`w-3 h-3 ${star <= 5 ? 'text-[var(--school-accent)] fill-[var(--school-accent)]' : 'text-gray-600'}`} 
                     />
                   ))}
                   <span className="text-sm text-gray-500 ml-1">(5.0)</span>
@@ -108,7 +108,7 @@ const ProductsList = () => {
               className="text-sm text-gray-400 line-clamp-3 mb-4"
               dangerouslySetInnerHTML={{ __html: product.description }} 
             />
-            <div className="text-xl font-bold text-[#D4AF37]">
+            <div className="text-xl font-bold text-[var(--school-accent)]">
               {formatCurrency(product.price_in_cents, { code: product.currency })}
             </div>
           </CardContent>
@@ -121,7 +121,7 @@ const ProductsList = () => {
               </Button>
             </Link>
             <Button 
-              className="flex-1 bg-[#D4AF37] hover:bg-[#b5952f] text-black"
+              className="flex-1 bg-[var(--school-accent)] hover:bg-[#b5952f] text-black"
               disabled={!product.purchasable}
               onClick={() => addToCart(product)}
             >

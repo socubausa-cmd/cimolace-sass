@@ -77,7 +77,7 @@ export default function LibraryPanel({
     <div className={cn('flex flex-col bg-[#07090f]', className)}>
       {/* Header */}
       <div className="flex shrink-0 items-center gap-2 border-b border-white/8 px-3 py-2">
-        <BookMarked className="h-4 w-4 text-[#D4AF37]" />
+        <BookMarked className="h-4 w-4 text-[var(--school-accent)]" />
         <span className="text-[12px] font-semibold text-white">Bibliothèque</span>
         <div className="ml-auto flex items-center gap-1.5">
           <button
@@ -88,7 +88,7 @@ export default function LibraryPanel({
           </button>
           <button
             onClick={openImportModal}
-            className="flex items-center gap-1 rounded-lg border border-[#D4AF37]/30 px-2 py-1 text-[11px] text-[#D4AF37] hover:bg-[#D4AF37]/10"
+            className="flex items-center gap-1 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] px-2 py-1 text-[11px] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
           >
             <Plus className="h-3 w-3" />
             Importer
@@ -109,7 +109,7 @@ export default function LibraryPanel({
             className={cn(
               'flex flex-1 items-center justify-center gap-1.5 py-2 text-[11px] transition-colors',
               activeTab === id
-                ? 'border-b-2 border-[#D4AF37] text-[#D4AF37]'
+                ? 'border-b-2 border-[var(--school-accent)] text-[var(--school-accent)]'
                 : 'text-white/40 hover:text-white/70',
             )}
           >
@@ -163,7 +163,7 @@ export default function LibraryPanel({
                 className={cn(
                   'flex items-center gap-3 rounded-lg border p-2.5 text-left transition-colors',
                   selectedItemId === item.id
-                    ? 'border-[#D4AF37]/40 bg-[#D4AF37]/8'
+                    ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)]'
                     : 'border-white/6 hover:border-white/15',
                 )}
               >
@@ -178,7 +178,7 @@ export default function LibraryPanel({
                 </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); handleUse(item); }}
-                  className="shrink-0 rounded border border-[#D4AF37]/30 px-2 py-1 text-[10px] text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                  className="shrink-0 rounded border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] px-2 py-1 text-[10px] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                 >
                   Utiliser
                 </button>

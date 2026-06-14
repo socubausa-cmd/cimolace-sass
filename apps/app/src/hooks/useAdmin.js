@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { resolveVitrineContactEmailSync } from '@/lib/vitrineContactEmail';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 let auditLogsTableAvailable = true;
 

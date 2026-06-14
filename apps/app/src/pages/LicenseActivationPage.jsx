@@ -62,7 +62,7 @@ export default function LicenseActivationPage() {
         <Card className="bg-[#192734] border-white/10">
           <CardHeader>
             <CardTitle className="text-2xl flex items-center gap-2">
-              <KeyRound className="w-6 h-6 text-[#D4AF37]" />
+              <KeyRound className="w-6 h-6 text-[var(--school-accent)]" />
               Activer mon compte avec une licence
             </CardTitle>
             <CardDescription className="text-gray-300">
@@ -108,7 +108,7 @@ export default function LicenseActivationPage() {
               <Button
                 onClick={handleActivate}
                 disabled={submitting}
-                className="bg-[#D4AF37] text-black hover:bg-[#c4a030] font-bold"
+                className="bg-[var(--school-accent)] text-black hover:bg-[#c4a030] font-bold"
               >
                 {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                 Activer maintenant

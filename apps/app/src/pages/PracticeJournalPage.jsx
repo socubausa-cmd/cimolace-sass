@@ -77,7 +77,7 @@ const PracticeJournalPage = () => {
                 <h1 className="text-3xl font-serif font-bold mb-2">Journal de Pratique</h1>
                 <p className="text-gray-400">Consignez vos expériences, rituels et réflexions quotidiennes.</p>
              </div>
-             <Button onClick={() => setShowForm(!showForm)} className="bg-[#D4AF37] text-black font-bold">
+             <Button onClick={() => setShowForm(!showForm)} className="bg-[var(--school-accent)] text-black font-bold">
                 {showForm ? 'Annuler' : 'Nouvelle Entrée'}
              </Button>
           </div>
@@ -89,7 +89,7 @@ const PracticeJournalPage = () => {
                       <label className="block text-sm font-bold text-gray-300 mb-2">Module concerné</label>
                       <select 
                          required
-                         className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-[#D4AF37] outline-none"
+                         className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-[var(--school-accent)] outline-none"
                          value={formData.module_id}
                          onChange={e => setFormData({...formData, module_id: e.target.value})}
                       >
@@ -101,7 +101,7 @@ const PracticeJournalPage = () => {
                       <label className="block text-sm font-bold text-gray-300 mb-2">Contenu de la pratique</label>
                       <textarea 
                          required
-                         className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white h-32 focus:border-[#D4AF37] outline-none"
+                         className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white h-32 focus:border-[var(--school-accent)] outline-none"
                          placeholder="Décrivez le rituel ou l'exercice effectué..."
                          value={formData.content}
                          onChange={e => setFormData({...formData, content: e.target.value})}
@@ -110,14 +110,14 @@ const PracticeJournalPage = () => {
                    <div>
                       <label className="block text-sm font-bold text-gray-300 mb-2">Réflexion personnelle / Ressenti</label>
                       <textarea 
-                         className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white h-24 focus:border-[#D4AF37] outline-none"
+                         className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white h-24 focus:border-[var(--school-accent)] outline-none"
                          placeholder="Vos impressions, difficultés, révélations..."
                          value={formData.reflection}
                          onChange={e => setFormData({...formData, reflection: e.target.value})}
                       />
                    </div>
                    <div className="pt-4 flex justify-end">
-                      <Button type="submit" className="bg-[#D4AF37] text-black font-bold">Enregistrer l'entrée</Button>
+                      <Button type="submit" className="bg-[var(--school-accent)] text-black font-bold">Enregistrer l'entrée</Button>
                    </div>
                 </form>
              </div>
@@ -131,18 +131,18 @@ const PracticeJournalPage = () => {
                 </div>
              ) : (
                 entries.map(entry => (
-                   <div key={entry.id} className="bg-[#192734] border border-white/5 rounded-xl p-6 hover:border-[#D4AF37]/30 transition-colors">
+                   <div key={entry.id} className="bg-[#192734] border border-white/5 rounded-xl p-6 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-colors">
                       <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
                          <span className="flex items-center gap-1"><Calendar className="w-3 h-3"/> {new Date(entry.entry_date).toLocaleDateString()}</span>
                          {entry.second_year_modules && <span className="flex items-center gap-1"><BookOpen className="w-3 h-3"/> {entry.second_year_modules.title}</span>}
                       </div>
                       <div className="space-y-4">
                          <div>
-                            <h4 className="text-[#D4AF37] text-sm font-bold uppercase mb-1">Pratique</h4>
+                            <h4 className="text-[var(--school-accent)] text-sm font-bold uppercase mb-1">Pratique</h4>
                             <p className="text-gray-300 text-sm whitespace-pre-line">{entry.content}</p>
                          </div>
                          {entry.reflection && (
-                            <div className="bg-black/20 p-4 rounded-lg border-l-2 border-[#D4AF37]">
+                            <div className="bg-black/20 p-4 rounded-lg border-l-2 border-[var(--school-accent)]">
                                <h4 className="text-gray-400 text-xs font-bold uppercase mb-1">Réflexion</h4>
                                <p className="text-gray-400 text-sm italic">"{entry.reflection}"</p>
                             </div>

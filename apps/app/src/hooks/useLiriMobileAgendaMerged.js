@@ -37,7 +37,7 @@ function formationLivesFromYears(years) {
  */
 export function useLiriMobileAgendaMerged(userId) {
   const { years } = useDataSync();
-  const { upcomingEvents, loading: apptLoading, refresh: refreshAppt } = useStudentAppointments(userId || undefined);
+  const { upcomingEvents, appointmentRequests, loading: apptLoading, refresh: refreshAppt } = useStudentAppointments(userId || undefined);
   const [schoolEvents, setSchoolEvents] = useState([]);
   const [calendarRows, setCalendarRows] = useState([]);
   const [extraLoading, setExtraLoading] = useState(true);
@@ -128,5 +128,7 @@ export function useLiriMobileAgendaMerged(userId) {
     }).length;
   }, [events]);
 
-  return { events, loading, refresh, thisWeekCount };
+  // Demandes de RDV en attente (status='requested', sans date) — affichées
+  // hors grille semaine (cf. EleveAgendaScreen), car elles n'ont pas de créneau.
+  return { events, loading, refresh, thisWeekCount, pendingRequests: appointmentRequests };
 }

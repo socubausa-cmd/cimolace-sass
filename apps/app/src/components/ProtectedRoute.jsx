@@ -35,7 +35,7 @@ const ProtectedRoute = ({ children }) => {
   if (effectiveLoading) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-6 bg-[#0F1419] p-6">
-        <Loader2 className="h-10 w-10 animate-spin text-[#D4AF37]" />
+        <Loader2 className="h-10 w-10 animate-spin text-[var(--school-accent)]" />
         <p className="text-center text-sm text-gray-400">Vérification de la session…</p>
         {slowLoad && (
           <div className="max-w-sm rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-center space-y-3">
@@ -51,7 +51,7 @@ const ProtectedRoute = ({ children }) => {
               <button
                 type="button"
                 onClick={() => window.location.reload()}
-                className="rounded-lg bg-[#D4AF37] px-4 py-2 text-sm font-medium text-black hover:bg-amber-500"
+                className="rounded-lg bg-[var(--school-accent)] px-4 py-2 text-sm font-medium text-black hover:bg-amber-500"
               >
                 Réessayer
               </button>

@@ -141,7 +141,7 @@ export default function AgendaEventDetailSheet({
 
         <div className="mt-6 space-y-5">
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" className="border-[#D4AF37]/40 text-[#D4AF37]">
+            <Badge variant="outline" className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)]">
               {isLive ? 'Live' : 'RDV'}
             </Badge>
             <Badge variant="secondary" className="bg-white/10 text-gray-200">
@@ -156,18 +156,18 @@ export default function AgendaEventDetailSheet({
 
           <div className="rounded-xl border border-white/10 bg-black/20 p-4 space-y-3 text-sm">
             <div className="flex items-start gap-2 text-gray-300">
-              <Calendar className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
+              <Calendar className="w-4 h-4 text-[var(--school-accent)] shrink-0 mt-0.5" />
               <span>{safeFormat(event.scheduled_at, "EEEE d MMMM yyyy 'à' HH:mm")}</span>
             </div>
             <div className="flex items-start gap-2 text-gray-300">
-              <Clock className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
+              <Clock className="w-4 h-4 text-[var(--school-accent)] shrink-0 mt-0.5" />
               <span>
                 Durée :{' '}
                 {event.duration_minutes != null ? `${event.duration_minutes} min` : '—'}
               </span>
             </div>
             <div className="flex items-start gap-2 text-gray-300">
-              <User className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
+              <User className="w-4 h-4 text-[var(--school-accent)] shrink-0 mt-0.5" />
               <span>
                 Hôte / maître : <span className="text-white">{hostName || '—'}</span>
               </span>
@@ -177,7 +177,7 @@ export default function AgendaEventDetailSheet({
                 <User className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
                 <span>
                   Participant :{' '}
-                  <span className="text-[#D4AF37]">{event.student.name || event.student.email || '—'}</span>
+                  <span className="text-[var(--school-accent)]">{event.student.name || event.student.email || '—'}</span>
                 </span>
               </div>
             )}
@@ -186,7 +186,7 @@ export default function AgendaEventDetailSheet({
           <div>
             <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Préparation studio</p>
             <p className="text-sm text-gray-300 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+              <Sparkles className="w-4 h-4 text-[var(--school-accent)]" />
               {prepLabel}
             </p>
           </div>
@@ -227,7 +227,7 @@ export default function AgendaEventDetailSheet({
           <div className="flex flex-col gap-2 pt-2">
             {canStudio && studioPath && (
               <Button
-                className="w-full bg-[#D4AF37] text-black hover:bg-[#e5c04a] font-semibold"
+                className="w-full bg-[var(--school-accent)] text-black hover:bg-[#e5c04a] font-semibold"
                 onClick={goStudio}
               >
                 <Clapperboard className="w-4 h-4 mr-2" />
@@ -237,7 +237,7 @@ export default function AgendaEventDetailSheet({
 
             {canStudio && !studioPath && isAppt && needsPrep && (
               <Button
-                className="w-full bg-[#D4AF37] text-black hover:bg-[#e5c04a] font-semibold"
+                className="w-full bg-[var(--school-accent)] text-black hover:bg-[#e5c04a] font-semibold"
                 disabled={studioBusy}
                 onClick={handleCreateAndPrep}
               >

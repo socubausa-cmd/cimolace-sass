@@ -24,7 +24,7 @@ const AlertDialogContent = React.forwardRef(({ className, ...props }, ref) => (
     <AlertDialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed left-[50%] top-[50%] z-[1100] grid w-[calc(100%-1.5rem)] max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 rounded-2xl border border-[#D4AF37]/25 bg-[#0a0908] p-6 text-white shadow-[0_24px_60px_rgba(0,0,0,0.55)] duration-200',
+        'fixed left-[50%] top-[50%] z-[1100] grid w-[calc(100%-1.5rem)] max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#0a0908] p-6 text-white shadow-[0_24px_60px_rgba(0,0,0,0.55)] duration-200',
         'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
         className,
       )}
@@ -81,7 +81,7 @@ const AlertDialogCancel = React.forwardRef(({ className, ...props }, ref) => (
   <AlertDialogPrimitive.Cancel
     ref={ref}
     className={cn(
-      'inline-flex h-11 items-center justify-center rounded-lg border border-white/15 bg-transparent px-4 text-sm font-medium text-gray-200 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]/40',
+      'inline-flex h-11 items-center justify-center rounded-lg border border-white/15 bg-transparent px-4 text-sm font-medium text-gray-200 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]',
       className,
     )}
     {...props}

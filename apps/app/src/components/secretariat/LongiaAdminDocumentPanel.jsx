@@ -107,7 +107,7 @@ export default function LongiaAdminDocumentPanel({ editor, documentTitle }) {
   if (!editor) return null;
 
   return (
-    <div className="rounded-xl border border-[#D4AF37]/30 bg-gradient-to-b from-[#1a1410]/90 to-[#0d1525]/95 p-3 shadow-[0_0_24px_-8px_rgba(212,175,55,0.15)]">
+    <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-gradient-to-b from-[#1a1410]/90 to-[#0d1525]/95 p-3 shadow-[0_0_24px_-8px_rgba(212,175,55,0.15)]">
       <div className="mb-3 flex items-center gap-2">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/25 to-violet-600/20">
           <Sparkles className="h-4 w-4 text-[#f5dd8a]" />
@@ -133,7 +133,7 @@ export default function LongiaAdminDocumentPanel({ editor, documentTitle }) {
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-[#0d1525] px-2 py-1 text-[10px] text-white/85 hover:border-[#D4AF37]/35"
+          className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-[#0d1525] px-2 py-1 text-[10px] text-white/85 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]"
           title="Titre"
         >
           <Heading2 className="h-3 w-3" /> Titre
@@ -142,7 +142,7 @@ export default function LongiaAdminDocumentPanel({ editor, documentTitle }) {
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-[#0d1525] px-2 py-1 text-[10px] text-white/85 hover:border-[#D4AF37]/35"
+          className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-[#0d1525] px-2 py-1 text-[10px] text-white/85 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]"
           title="Sous-titre"
         >
           <Heading3 className="h-3 w-3" /> Sous-titre
@@ -151,7 +151,7 @@ export default function LongiaAdminDocumentPanel({ editor, documentTitle }) {
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().setParagraph().run()}
-          className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-[#0d1525] px-2 py-1 text-[10px] text-white/85 hover:border-[#D4AF37]/35"
+          className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-[#0d1525] px-2 py-1 text-[10px] text-white/85 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]"
           title="Paragraphe"
         >
           <AlignLeft className="h-3 w-3" /> Texte
@@ -164,7 +164,7 @@ export default function LongiaAdminDocumentPanel({ editor, documentTitle }) {
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={insertComposerBlock}
-          className="inline-flex items-center gap-1 rounded-lg border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-2 py-1 text-[10px] text-[#f5dd8a] hover:bg-[#D4AF37]/15"
+          className="inline-flex items-center gap-1 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-2 py-1 text-[10px] text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]"
           title="Insère un paragraphe-type administratif (à modifier)"
         >
           <Layers className="h-3 w-3" /> Composer
@@ -187,7 +187,7 @@ export default function LongiaAdminDocumentPanel({ editor, documentTitle }) {
           disabled={busy === 'compose'}
           onClick={() => invokeLongia('compose')}
           className={cn(
-            'inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#D4AF37]/35 bg-[#D4AF37]/12 py-2 text-[10px] font-medium text-[#f5dd8a] hover:bg-[#D4AF37]/18 disabled:opacity-45',
+            'inline-flex items-center justify-center gap-1.5 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] py-2 text-[10px] font-medium text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] disabled:opacity-45',
           )}
         >
           {busy === 'compose' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
@@ -223,9 +223,9 @@ export default function LongiaAdminDocumentPanel({ editor, documentTitle }) {
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => insertParagraphJson(s)}
-                className="w-full rounded-md border border-white/6 bg-[#0d1525]/80 px-2 py-1.5 text-left text-[10px] leading-snug text-white/80 hover:border-[#D4AF37]/30 hover:text-white"
+                className="w-full rounded-md border border-white/6 bg-[#0d1525]/80 px-2 py-1.5 text-left text-[10px] leading-snug text-white/80 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:text-white"
               >
-                <span className="mr-1 font-semibold text-[#D4AF37]/80">{i + 1}.</span>
+                <span className="mr-1 font-semibold text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">{i + 1}.</span>
                 {s}
               </button>
             </li>

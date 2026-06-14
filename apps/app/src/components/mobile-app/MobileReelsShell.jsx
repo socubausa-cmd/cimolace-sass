@@ -50,7 +50,7 @@ function TabItem({ to, end, icon: Icon, label }) {
             className={cn(
               'rounded-xl p-1 transition-all duration-200',
               isActive &&
-                'scale-105 border border-[#D4AF37]/45 bg-gradient-to-b from-[#D4AF37]/22 to-[#8a7018]/15 text-[#fff4dc] shadow-[0_0_20px_-6px_rgba(212,175,55,0.45)]',
+                'scale-105 border border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-gradient-to-b from-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] to-[#8a7018]/15 text-[#fff4dc] shadow-[0_0_20px_-6px_rgba(212,175,55,0.45)]',
               !isActive && 'text-white/55',
             )}
           >
@@ -105,7 +105,7 @@ export default function MobileReelsShell() {
     <>
       {/* Barre du haut — type Instagram (logo zone + titre + actions) */}
       <header
-        className="fixed top-0 left-0 right-0 z-[140] border-b border-[#D4AF37]/12 bg-gradient-to-b from-[#0c0a08]/95 to-black/88 backdrop-blur-xl supports-[backdrop-filter]:from-[#0c0a08]/88"
+        className="fixed top-0 left-0 right-0 z-[140] border-b border-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] bg-gradient-to-b from-[#0c0a08]/95 to-black/88 backdrop-blur-xl supports-[backdrop-filter]:from-[#0c0a08]/88"
         style={{ paddingTop: 'max(0.35rem, env(safe-area-inset-top))' }}
       >
         <div className="flex h-12 items-center gap-2 px-2 sm:px-3">
@@ -122,10 +122,10 @@ export default function MobileReelsShell() {
             ) : (
               <Link
                 to={homeHref}
-                className="flex h-10 min-w-[2.75rem] items-center justify-center gap-0.5 rounded-xl border border-[#D4AF37]/40 bg-black/50 px-1.5 shadow-[0_0_20px_-6px_rgba(212,175,55,0.5)]"
+                className="flex h-10 min-w-[2.75rem] items-center justify-center gap-0.5 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-black/50 px-1.5 shadow-[0_0_20px_-6px_rgba(212,175,55,0.5)]"
                 aria-label="LIRI accueil"
               >
-                <LiriWordmark size="compact" className="text-[#D4AF37]" />
+                <LiriWordmark size="compact" className="text-[var(--school-accent)]" />
               </Link>
             )}
           </div>
@@ -168,7 +168,7 @@ export default function MobileReelsShell() {
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-[min(100%,320px)] overflow-y-auto border-[#D4AF37]/15 bg-gradient-to-b from-[#0f0c0a] to-[#080706]"
+                className="w-[min(100%,320px)] overflow-y-auto border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] bg-gradient-to-b from-[#0f0c0a] to-[#080706]"
               >
                 <SheetHeader>
                   <SheetTitle className="text-left font-serif text-[#f5e6c8]">Menu</SheetTitle>
@@ -179,7 +179,7 @@ export default function MobileReelsShell() {
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-3 rounded-xl px-3 py-3 text-white/90 hover:bg-white/5"
                   >
-                    <ExternalLink className="h-5 w-5 text-[#D4AF37]" />
+                    <ExternalLink className="h-5 w-5 text-[var(--school-accent)]" />
                     Site web classique
                   </Link>
                   <Link
@@ -187,7 +187,7 @@ export default function MobileReelsShell() {
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-3 rounded-xl px-3 py-3 text-white/90 hover:bg-white/5"
                   >
-                    <BookOpen className="h-5 w-5 text-[#D4AF37]" />
+                    <BookOpen className="h-5 w-5 text-[var(--school-accent)]" />
                     Catalogue formations
                   </Link>
                   <Link
@@ -195,7 +195,7 @@ export default function MobileReelsShell() {
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-3 rounded-xl px-3 py-3 text-white/90 hover:bg-white/5"
                   >
-                    <Wallet className="h-5 w-5 text-[#D4AF37]" />
+                    <Wallet className="h-5 w-5 text-[var(--school-accent)]" />
                     Espace client
                   </Link>
                   <Link
@@ -203,7 +203,7 @@ export default function MobileReelsShell() {
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-3 rounded-xl px-3 py-3 text-white/90 hover:bg-white/5"
                   >
-                    <ShoppingBag className="h-5 w-5 text-[#D4AF37]" />
+                    <ShoppingBag className="h-5 w-5 text-[var(--school-accent)]" />
                     Boutique
                   </Link>
                   <Link
@@ -211,7 +211,7 @@ export default function MobileReelsShell() {
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-3 rounded-xl px-3 py-3 text-white/90 hover:bg-white/5"
                   >
-                    <Calendar className="h-5 w-5 text-[#D4AF37]" />
+                    <Calendar className="h-5 w-5 text-[var(--school-accent)]" />
                     Prendre RDV
                   </Link>
                   {user ? (
@@ -221,7 +221,7 @@ export default function MobileReelsShell() {
                         onClick={() => setMenuOpen(false)}
                         className="flex items-center gap-3 rounded-xl px-3 py-3 text-white/90 hover:bg-white/5"
                       >
-                        <HelpCircle className="h-5 w-5 text-[#D4AF37]" />
+                        <HelpCircle className="h-5 w-5 text-[var(--school-accent)]" />
                         Support
                       </Link>
                       <Link
@@ -229,7 +229,7 @@ export default function MobileReelsShell() {
                         onClick={() => setMenuOpen(false)}
                         className="flex items-center gap-3 rounded-xl px-3 py-3 text-white/90 hover:bg-white/5"
                       >
-                        <Settings className="h-5 w-5 text-[#D4AF37]" />
+                        <Settings className="h-5 w-5 text-[var(--school-accent)]" />
                         Réglages
                       </Link>
                     </>
@@ -237,7 +237,7 @@ export default function MobileReelsShell() {
                     <Link
                       to={getLiriMemberLoginPath()}
                       onClick={() => setMenuOpen(false)}
-                      className="flex items-center gap-3 rounded-xl px-3 py-3 text-[#D4AF37] font-medium hover:bg-white/5"
+                      className="flex items-center gap-3 rounded-xl px-3 py-3 text-[var(--school-accent)] font-medium hover:bg-white/5"
                       title="Connexion LIRI — espace membre"
                     >
                       Connexion
@@ -280,7 +280,7 @@ export default function MobileReelsShell() {
 
       {/* Barre du bas — 5 onglets type Instagram */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-[140] border-t border-[#D4AF37]/10 bg-gradient-to-t from-black via-[#0a0908]/98 to-[#0d0b09]/95 backdrop-blur-2xl supports-[backdrop-filter]:to-[#0a0908]/92"
+        className="fixed bottom-0 left-0 right-0 z-[140] border-t border-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] bg-gradient-to-t from-black via-[#0a0908]/98 to-[#0d0b09]/95 backdrop-blur-2xl supports-[backdrop-filter]:to-[#0a0908]/92"
         style={{ paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom))' }}
         aria-label="Navigation principale"
       >

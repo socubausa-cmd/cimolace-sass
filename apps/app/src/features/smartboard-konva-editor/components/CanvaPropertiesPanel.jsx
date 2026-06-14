@@ -73,7 +73,7 @@ const FONT_OPTIONS = [
 
 function SectionLabel({ children }) {
   return (
-    <p className="mb-1.5 text-[13px] font-semibold uppercase tracking-[0.2em] text-[#D4AF37]/70">
+    <p className="mb-1.5 text-[13px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">
       {children}
     </p>
   );
@@ -88,8 +88,8 @@ function IconBtn({ onClick, title, className, children, active }) {
       className={cn(
         'flex h-7 w-7 items-center justify-center rounded-md border text-white/70 transition-colors',
         active
-          ? 'border-[#D4AF37]/60 bg-[#D4AF37]/20 text-[#f5dd8a]'
-          : 'border-white/12 bg-white/[0.04] hover:border-[#D4AF37]/35 hover:bg-white/10',
+          ? 'border-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[#f5dd8a]'
+          : 'border-white/12 bg-white/[0.04] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:bg-white/10',
         className,
       )}
     >
@@ -157,7 +157,7 @@ export default function CanvaPropertiesPanel({
           <button
             type="button"
             onClick={onExportPng}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#D4AF37]/40 bg-[#D4AF37]/12 py-2.5 text-[12px] font-medium text-[#f5dd8a] hover:bg-[#D4AF37]/20"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] py-2.5 text-[12px] font-medium text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
           >
             <Download className="h-3.5 w-3.5" />
             Exporter slide PNG
@@ -187,7 +187,7 @@ export default function CanvaPropertiesPanel({
       {/* Multi-select indicator */}
       {selectedIds.length > 1 && (
         <div className="px-3 py-1.5">
-          <span className="text-[13px] text-[#D4AF37]/80">{selectedIds.length} objets sélectionnés</span>
+          <span className="text-[13px] text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">{selectedIds.length} objets sélectionnés</span>
         </div>
       )}
 
@@ -308,7 +308,7 @@ export default function CanvaPropertiesPanel({
             step={0.01}
             value={opacity}
             onChange={(e) => setObjectOpacity(selectedObj.id, Number(e.target.value))}
-            className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full accent-[#D4AF37]"
+            className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full accent-[var(--school-accent)]"
           />
           <span className="w-8 text-right text-[13px] font-mono text-white/60">
             {Math.round(opacity * 100)}%
@@ -347,10 +347,10 @@ export default function CanvaPropertiesPanel({
       {isText && (
         <div className="px-3 py-2.5">
           <SectionLabel>Typographie</SectionLabel>
-          <div className="mb-2 rounded-lg border border-[#D4AF37]/18 bg-[#0d1018]/90 p-2">
-            <div className="mb-1 flex items-end gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#D4AF37]/75">
+          <div className="mb-2 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] bg-[#0d1018]/90 p-2">
+            <div className="mb-1 flex items-end gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-[color-mix(in_srgb,var(--school-accent)_75%,transparent)]">
               <span>Presets</span>
-              <LiriWordmark size="footer" className="text-[#D4AF37]/75" subtleGlow />
+              <LiriWordmark size="footer" className="text-[color-mix(in_srgb,var(--school-accent)_75%,transparent)]" subtleGlow />
             </div>
             <p className="mb-1.5 text-[10px] leading-snug text-white/40">Applique le style typographique du pack (contenu du texte inchangé).</p>
             <select
@@ -473,7 +473,7 @@ export default function CanvaPropertiesPanel({
                 step={0.05}
                 value={st.lineHeight ?? 1.25}
                 onChange={(e) => updateStyle({ lineHeight: Number(e.target.value) })}
-                className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[#D4AF37]"
+                className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[var(--school-accent)]"
               />
             </div>
             {/* Ombre */}
@@ -547,7 +547,7 @@ export default function CanvaPropertiesPanel({
                 step={1}
                 value={st.strokeWidth ?? 0}
                 onChange={(e) => updateStyle({ strokeWidth: Number(e.target.value) })}
-                className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[#D4AF37]"
+                className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[var(--school-accent)]"
               />
             </div>
             {selectedObj.type === 'rect' && (
@@ -562,7 +562,7 @@ export default function CanvaPropertiesPanel({
                   step={1}
                   value={st.cornerRadius ?? 0}
                   onChange={(e) => updateStyle({ cornerRadius: Number(e.target.value) })}
-                  className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[#D4AF37]"
+                  className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[var(--school-accent)]"
                 />
                 <p className="mt-1.5 text-[10px] leading-snug text-white/28">
                   Astuce : barre d'outils du canvas — « Grille 8px » pour un repère type Photoshop ; « Snap 8px » pour magnétiser déplacement et redimensionnement sur la grille.
@@ -581,7 +581,7 @@ export default function CanvaPropertiesPanel({
                   step={1}
                   value={st.numPoints ?? 5}
                   onChange={(e) => updateStyle({ numPoints: Number(e.target.value) })}
-                  className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[#D4AF37]"
+                  className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[var(--school-accent)]"
                 />
               </div>
             )}
@@ -597,7 +597,7 @@ export default function CanvaPropertiesPanel({
                   step={1}
                   value={st.strokeWidth ?? 3}
                   onChange={(e) => updateStyle({ strokeWidth: Number(e.target.value) })}
-                  className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[#D4AF37]"
+                  className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[var(--school-accent)]"
                 />
               </div>
             )}
@@ -672,7 +672,7 @@ export default function CanvaPropertiesPanel({
             <input type="range" min={0} max={80} step={1}
               value={st.cornerRadius ?? 0}
               onChange={(e) => updateStyle({ cornerRadius: Number(e.target.value) })}
-              className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[#D4AF37]"
+              className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[var(--school-accent)]"
             />
           </div>
           {/* Recadrage source (Konva crop) */}
@@ -720,7 +720,7 @@ export default function CanvaPropertiesPanel({
                     },
                   });
                 }}
-                className="flex-1 rounded-lg border border-[#D4AF37]/35 bg-[#D4AF37]/12 py-1.5 text-[11px] font-medium text-[#f5dd8a] hover:bg-[#D4AF37]/20"
+                className="flex-1 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] py-1.5 text-[11px] font-medium text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
               >
                 Appliquer recadrage
               </button>
@@ -799,7 +799,7 @@ export default function CanvaPropertiesPanel({
               className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-blue-400"
             />
           </div>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#D4AF37]/60">Étalonnage colorimétrique</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]">Étalonnage colorimétrique</p>
           {/* Luminosite */}
           <div>
             <span className="mb-0.5 block text-[13px] text-white/35">Luminosite — {st.brightness ?? 0}</span>
@@ -869,7 +869,7 @@ export default function CanvaPropertiesPanel({
                 step={1}
                 value={st.shadowOffsetX ?? 0}
                 onChange={(e) => updateStyle({ shadowOffsetX: Number(e.target.value) })}
-                className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[#D4AF37]/80"
+                className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]"
               />
             </div>
             <div>
@@ -881,7 +881,7 @@ export default function CanvaPropertiesPanel({
                 step={1}
                 value={st.shadowOffsetY ?? 0}
                 onChange={(e) => updateStyle({ shadowOffsetY: Number(e.target.value) })}
-                className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[#D4AF37]/80"
+                className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]"
               />
             </div>
           </div>
@@ -935,9 +935,9 @@ export default function CanvaPropertiesPanel({
                             updateObject(selectedObj.id, { content: { ...selectedObj.content, data: newData } });
                           }}
                           className={cn(
-                            'w-full rounded border px-1 py-0.5 text-[13px] outline-none focus:border-[#D4AF37]/50',
+                            'w-full rounded border px-1 py-0.5 text-[13px] outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]',
                             ri === 0 && st.headerRow !== false
-                              ? 'border-[#D4AF37]/30 bg-[#1a1f35] text-[#f5dd8a]'
+                              ? 'border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[#1a1f35] text-[#f5dd8a]'
                               : 'border-white/10 bg-black/40 text-white/80',
                           )}
                         />
@@ -1032,7 +1032,7 @@ export default function CanvaPropertiesPanel({
               <input type="range" min={1} max={20} step={1}
                 value={st.strokeWidth ?? 3}
                 onChange={(e) => updateStyle({ strokeWidth: Number(e.target.value) })}
-                className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[#D4AF37]"
+                className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[var(--school-accent)]"
               />
             </div>
           </div>
@@ -1076,7 +1076,7 @@ export default function CanvaPropertiesPanel({
         <button
           type="button"
           onClick={onExportPng}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#D4AF37]/40 bg-[#D4AF37]/12 py-2.5 text-[12px] font-medium text-[#f5dd8a] hover:bg-[#D4AF37]/20"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] py-2.5 text-[12px] font-medium text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
         >
           <Download className="h-3.5 w-3.5" />
           Exporter slide PNG

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, FileText, CreditCard, CalendarCheck } from 'lucide-react';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const SCHOOL = isnaTenantConfig.branding.name;
 const SITE_NAME = `${SCHOOL} · LIRI`;
@@ -28,7 +28,7 @@ const EnrollmentTermsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F1419] font-sans text-gray-300 selection:bg-[#D4AF37]/30 pb-20">
+    <div className="min-h-screen bg-[#0F1419] font-sans text-gray-300 selection:bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] pb-20">
       <Helmet>
         <title>{`Modalités d'inscription — ${SITE_NAME}`}</title>
         <meta name="description" content={`Conditions d'admission, processus d'inscription et prérequis pour rejoindre ${SCHOOL}.`} />
@@ -51,8 +51,8 @@ const EnrollmentTermsPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="inline-block px-4 py-1.5 mb-6 border border-[#D4AF37]/30 rounded-full bg-[#D4AF37]/10 backdrop-blur-sm">
-              <span className="text-[#D4AF37] text-sm font-bold tracking-widest uppercase">Admission</span>
+            <div className="inline-block px-4 py-1.5 mb-6 border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] backdrop-blur-sm">
+              <span className="text-[var(--school-accent)] text-sm font-bold tracking-widest uppercase">Admission</span>
             </div>
             <h1 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6 tracking-tight">
               Modalités d'Inscription
@@ -75,7 +75,7 @@ const EnrollmentTermsPage = () => {
         >
           
           {/* Section 1: Prerequisites */}
-          <motion.div variants={itemVariants} className="bg-[#192734] rounded-2xl p-8 md:p-10 shadow-xl border border-white/5 hover:border-[#D4AF37]/20 transition-all duration-300">
+          <motion.div variants={itemVariants} className="bg-[#192734] rounded-2xl p-8 md:p-10 shadow-xl border border-white/5 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-all duration-300">
             <div className="flex items-center gap-4 mb-6">
               <span className="text-4xl">📋</span>
               <h2 className="text-2xl md:text-3xl font-bold text-white font-serif">1. Prérequis d'Admission</h2>
@@ -103,13 +103,13 @@ const EnrollmentTermsPage = () => {
 
           {/* Separator */}
           <div className="flex justify-center items-center py-2 opacity-30">
-             <div className="h-px w-24 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"></div>
-             <span className="mx-4 text-[#D4AF37] text-xl">⸻</span>
-             <div className="h-px w-24 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"></div>
+             <div className="h-px w-24 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent"></div>
+             <span className="mx-4 text-[var(--school-accent)] text-xl">⸻</span>
+             <div className="h-px w-24 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent"></div>
           </div>
 
           {/* Section 2: Registration Process */}
-          <motion.div variants={itemVariants} className="bg-[#192734] rounded-2xl p-8 md:p-10 shadow-xl border border-white/5 hover:border-[#D4AF37]/20 transition-all duration-300">
+          <motion.div variants={itemVariants} className="bg-[#192734] rounded-2xl p-8 md:p-10 shadow-xl border border-white/5 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-all duration-300">
             <div className="flex items-center gap-4 mb-6">
               <span className="text-4xl">📝</span>
               <h2 className="text-2xl md:text-3xl font-bold text-white font-serif">2. Procédure d'Inscription</h2>
@@ -117,36 +117,36 @@ const EnrollmentTermsPage = () => {
             
             <div className="grid md:grid-cols-2 gap-8 mt-6">
                 <div className="bg-black/20 p-6 rounded-xl border border-white/5 relative overflow-hidden group">
-                   <div className="absolute top-0 right-0 p-16 bg-[#D4AF37]/5 rounded-full -mr-8 -mt-8 group-hover:bg-[#D4AF37]/10 transition-colors"></div>
+                   <div className="absolute top-0 right-0 p-16 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full -mr-8 -mt-8 group-hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] transition-colors"></div>
                    <div className="relative z-10">
-                      <div className="w-8 h-8 rounded-full bg-[#D4AF37] text-black font-bold flex items-center justify-center mb-4">1</div>
+                      <div className="w-8 h-8 rounded-full bg-[var(--school-accent)] text-black font-bold flex items-center justify-center mb-4">1</div>
                       <h3 className="font-bold text-white mb-2">Création de Compte</h3>
                       <p className="text-sm text-gray-400">Remplissez le formulaire en ligne avec vos informations personnelles véridiques via la page "S'inscrire".</p>
                    </div>
                 </div>
 
                 <div className="bg-black/20 p-6 rounded-xl border border-white/5 relative overflow-hidden group">
-                   <div className="absolute top-0 right-0 p-16 bg-[#D4AF37]/5 rounded-full -mr-8 -mt-8 group-hover:bg-[#D4AF37]/10 transition-colors"></div>
+                   <div className="absolute top-0 right-0 p-16 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full -mr-8 -mt-8 group-hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] transition-colors"></div>
                    <div className="relative z-10">
-                      <div className="w-8 h-8 rounded-full bg-[#D4AF37] text-black font-bold flex items-center justify-center mb-4">2</div>
+                      <div className="w-8 h-8 rounded-full bg-[var(--school-accent)] text-black font-bold flex items-center justify-center mb-4">2</div>
                       <h3 className="font-bold text-white mb-2">Choix du Forfait</h3>
                       <p className="text-sm text-gray-400">Sélectionnez le module ou le cycle complet correspondant à vos objectifs d'apprentissage.</p>
                    </div>
                 </div>
 
                 <div className="bg-black/20 p-6 rounded-xl border border-white/5 relative overflow-hidden group">
-                   <div className="absolute top-0 right-0 p-16 bg-[#D4AF37]/5 rounded-full -mr-8 -mt-8 group-hover:bg-[#D4AF37]/10 transition-colors"></div>
+                   <div className="absolute top-0 right-0 p-16 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full -mr-8 -mt-8 group-hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] transition-colors"></div>
                    <div className="relative z-10">
-                      <div className="w-8 h-8 rounded-full bg-[#D4AF37] text-black font-bold flex items-center justify-center mb-4">3</div>
+                      <div className="w-8 h-8 rounded-full bg-[var(--school-accent)] text-black font-bold flex items-center justify-center mb-4">3</div>
                       <h3 className="font-bold text-white mb-2">Paiement Sécurisé</h3>
                       <p className="text-sm text-gray-400">Réglez les frais d'inscription via nos moyens de paiement sécurisés (Carte Bancaire, Virement).</p>
                    </div>
                 </div>
 
                 <div className="bg-black/20 p-6 rounded-xl border border-white/5 relative overflow-hidden group">
-                   <div className="absolute top-0 right-0 p-16 bg-[#D4AF37]/5 rounded-full -mr-8 -mt-8 group-hover:bg-[#D4AF37]/10 transition-colors"></div>
+                   <div className="absolute top-0 right-0 p-16 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full -mr-8 -mt-8 group-hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] transition-colors"></div>
                    <div className="relative z-10">
-                      <div className="w-8 h-8 rounded-full bg-[#D4AF37] text-black font-bold flex items-center justify-center mb-4">4</div>
+                      <div className="w-8 h-8 rounded-full bg-[var(--school-accent)] text-black font-bold flex items-center justify-center mb-4">4</div>
                       <h3 className="font-bold text-white mb-2">Validation</h3>
                       <p className="text-sm text-gray-400">Après vérification, vous recevrez vos accès complets à la plateforme étudiant sous 24h.</p>
                    </div>
@@ -156,13 +156,13 @@ const EnrollmentTermsPage = () => {
 
           {/* Separator */}
           <div className="flex justify-center items-center py-2 opacity-30">
-             <div className="h-px w-24 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"></div>
-             <span className="mx-4 text-[#D4AF37] text-xl">⸻</span>
-             <div className="h-px w-24 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"></div>
+             <div className="h-px w-24 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent"></div>
+             <span className="mx-4 text-[var(--school-accent)] text-xl">⸻</span>
+             <div className="h-px w-24 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent"></div>
           </div>
 
           {/* Section 3: Administrative Info */}
-          <motion.div variants={itemVariants} className="bg-[#192734] rounded-2xl p-8 md:p-10 shadow-xl border border-white/5 hover:border-[#D4AF37]/20 transition-all duration-300">
+          <motion.div variants={itemVariants} className="bg-[#192734] rounded-2xl p-8 md:p-10 shadow-xl border border-white/5 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-all duration-300">
              <div className="flex items-center gap-4 mb-6">
               <span className="text-4xl">💼</span>
               <h2 className="text-2xl md:text-3xl font-bold text-white font-serif">3. Documents à Fournir</h2>
@@ -170,13 +170,13 @@ const EnrollmentTermsPage = () => {
             <div className="bg-black/20 border border-white/5 rounded-xl p-6">
                <ul className="space-y-3 text-gray-300">
                   <li className="flex items-center gap-3">
-                     <FileText className="w-5 h-5 text-[#D4AF37]" /> Copie d'une pièce d\'identité valide (CNI ou Passeport).
+                     <FileText className="w-5 h-5 text-[var(--school-accent)]" /> Copie d'une pièce d\'identité valide (CNI ou Passeport).
                   </li>
                   <li className="flex items-center gap-3">
-                     <FileText className="w-5 h-5 text-[#D4AF37]" /> Justificatif de domicile de moins de 3 mois.
+                     <FileText className="w-5 h-5 text-[var(--school-accent)]" /> Justificatif de domicile de moins de 3 mois.
                   </li>
                   <li className="flex items-center gap-3">
-                     <FileText className="w-5 h-5 text-[#D4AF37]" /> Photo d'identité numérique récente.
+                     <FileText className="w-5 h-5 text-[var(--school-accent)]" /> Photo d'identité numérique récente.
                   </li>
                </ul>
             </div>
@@ -187,7 +187,7 @@ const EnrollmentTermsPage = () => {
 
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
              <Link to="/signup">
-                <Button className="w-full sm:w-auto bg-[#D4AF37] text-black hover:bg-yellow-500 text-lg px-8 py-6 rounded-xl font-semibold">
+                <Button className="w-full sm:w-auto bg-[var(--school-accent)] text-black hover:bg-yellow-500 text-lg px-8 py-6 rounded-xl font-semibold">
                   S'inscrire maintenant
                 </Button>
              </Link>

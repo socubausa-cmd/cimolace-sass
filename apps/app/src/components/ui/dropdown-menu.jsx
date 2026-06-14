@@ -20,7 +20,7 @@ const DropdownMenuSubTrigger = React.forwardRef(({ className, inset, children, .
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(
-      "flex cursor-default select-none items-center rounded-md px-2 py-1.5 text-sm text-gray-100 outline-none focus:bg-[#D4AF37]/15 focus:text-[#D4AF37] data-[state=open]:bg-[#D4AF37]/15 data-[state=open]:text-[#D4AF37]",
+      "flex cursor-default select-none items-center rounded-md px-2 py-1.5 text-sm text-gray-100 outline-none focus:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] focus:text-[var(--school-accent)] data-[state=open]:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] data-[state=open]:text-[var(--school-accent)]",
       inset && "pl-8",
       className
     )}
@@ -60,7 +60,7 @@ const DropdownMenuItem = React.forwardRef(({ className, inset, ...props }, ref) 
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-md px-2 py-2 text-sm text-gray-100 outline-none transition-colors focus:bg-[#D4AF37]/15 focus:text-[#D4AF37] data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex cursor-default select-none items-center rounded-md px-2 py-2 text-sm text-gray-100 outline-none transition-colors focus:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] focus:text-[var(--school-accent)] data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       inset && "pl-8",
       className
     )}
@@ -72,7 +72,7 @@ const DropdownMenuCheckboxItem = React.forwardRef(({ className, children, checke
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-md py-2 pl-8 pr-2 text-sm text-gray-100 outline-none transition-colors focus:bg-[#D4AF37]/15 focus:text-[#D4AF37] data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex cursor-default select-none items-center rounded-md py-2 pl-8 pr-2 text-sm text-gray-100 outline-none transition-colors focus:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] focus:text-[var(--school-accent)] data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     )}
     checked={checked}
@@ -92,7 +92,7 @@ const DropdownMenuRadioItem = React.forwardRef(({ className, children, ...props 
   <DropdownMenuPrimitive.RadioItem
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-md py-2 pl-8 pr-2 text-sm text-gray-100 outline-none transition-colors focus:bg-[#D4AF37]/15 focus:text-[#D4AF37] data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex cursor-default select-none items-center rounded-md py-2 pl-8 pr-2 text-sm text-gray-100 outline-none transition-colors focus:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] focus:text-[var(--school-accent)] data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     )}
     {...props}>

@@ -1,4 +1,6 @@
-# ISNA Platform V2 — Guide pour agents IA et nouveaux développeurs
+# Cimolace (ex « ISNA Platform V2 ») — Guide pour agents IA et nouveaux développeurs
+
+> ⚠️ **À LIRE EN PREMIER : [docs/REGLES_ARCHITECTURE_CIMOLACE.md](docs/REGLES_ARCHITECTURE_CIMOLACE.md)** — vocabulaire (Cimolace ≠ tenant ≠ moteur), structure `liri/ studio-creator/ school/`, et les **5 règles d'or** (Liri reste autonome — vérifié par ESLint · une seule coque `App.jsx` · pas d'import direct `@/tenants/isna` (passer par le seam `activeTenantConfig`) · pas de couleur `#D4AF37` en dur (utiliser `var(--school-accent)`) · catalogue = source backend). Ne pas re-confondre Cimolace / ISNA / Liri / Studio Créateur.
 
 ## Architecture générale
 

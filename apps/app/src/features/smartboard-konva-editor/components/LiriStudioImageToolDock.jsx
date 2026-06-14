@@ -155,7 +155,7 @@ export default function LiriStudioImageToolDock({ className }) {
           className={cn(
             'mr-0.5 flex h-8 w-8 items-center justify-center rounded-lg border transition-colors',
             shortcutsOpen
-              ? 'border-[#D4AF37]/45 bg-[#D4AF37]/12 text-[#f5dd8a]'
+              ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[#f5dd8a]'
               : 'border-transparent text-white/40 hover:bg-white/[0.06] hover:text-white/75',
           )}
         >
@@ -174,7 +174,7 @@ export default function LiriStudioImageToolDock({ className }) {
               className={cn(
                 'flex h-8 w-8 items-center justify-center rounded-lg border transition-colors',
                 on
-                  ? 'border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#f5dd8a]'
+                  ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f5dd8a]'
                   : 'border-transparent text-white/45 hover:bg-white/[0.06] hover:text-white/80',
               )}
             >
@@ -297,7 +297,7 @@ export default function LiriStudioImageToolDock({ className }) {
           className={cn(
             'flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-[12px] transition-colors',
             layersOpen
-              ? 'border-[#D4AF37]/45 bg-[#D4AF37]/12 text-[#f5dd8a]'
+              ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[#f5dd8a]'
               : 'border-white/10 text-white/55 hover:bg-white/[0.05] hover:text-white/85',
           )}
         >

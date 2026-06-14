@@ -27,7 +27,7 @@ function IndicatorBar({ value, className }) {
   return (
     <div className={cn('h-1.5 w-full overflow-hidden rounded-full bg-white/[0.08]', className)}>
       <div
-        className="h-full rounded-full bg-gradient-to-r from-[#7d89b0]/90 to-[#D4AF37]/95 transition-[width] duration-300"
+        className="h-full rounded-full bg-gradient-to-r from-[#7d89b0]/90 to-[color-mix(in_srgb,var(--school-accent)_95%,transparent)] transition-[width] duration-300"
         style={{ width: `${v}%` }}
       />
     </div>

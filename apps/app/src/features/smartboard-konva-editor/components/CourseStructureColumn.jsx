@@ -156,7 +156,7 @@ export default function CourseStructureColumn({
       )}
     >
       {!hideIntroBanner ? (
-        <div className="rounded-xl border border-[#D4AF37]/20 bg-[#0d1428]/80 px-3 py-2.5">
+        <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[#0d1428]/80 px-3 py-2.5">
           <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#c9a227]">Structure</p>
           <p className="mt-0.5 text-[11px] text-white/55">IA cadre le cours · vous composez sur le canvas</p>
         </div>
@@ -192,7 +192,7 @@ export default function CourseStructureColumn({
             {docImportBusy ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <FileText className="h-3.5 w-3.5 text-[#D4AF37]" />
+              <FileText className="h-3.5 w-3.5 text-[var(--school-accent)]" />
             )}
             PDF / .txt
           </button>
@@ -220,7 +220,7 @@ export default function CourseStructureColumn({
           type="button"
           disabled={!sourceText.trim()}
           onClick={onSeedCanvas}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] py-2 text-[10px] text-white/80 hover:border-[#D4AF37]/30 disabled:opacity-45"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] py-2 text-[10px] text-white/80 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] disabled:opacity-45"
         >
           Texte → blocs canvas
         </button>
@@ -256,7 +256,7 @@ export default function CourseStructureColumn({
             <div className="mb-3 grid grid-cols-2 gap-2">
               <div className="rounded-xl border border-white/[0.06] bg-black/35 px-2.5 py-2 text-[9px] text-white/50">
                 Complexité
-                <span className="ml-1 font-medium text-[#D4AF37]">{course.analysis.complexity}</span>
+                <span className="ml-1 font-medium text-[var(--school-accent)]">{course.analysis.complexity}</span>
               </div>
               <div className="rounded-xl border border-white/[0.06] bg-black/35 px-2.5 py-2 text-[9px] text-white/50">
                 Durée
@@ -295,7 +295,7 @@ export default function CourseStructureColumn({
               )}
             </ul>
             <p className="mt-3 text-[9px] text-white/45">
-              <span className="font-semibold text-[#D4AF37]">{slideCount}</span> slides ·{' '}
+              <span className="font-semibold text-[var(--school-accent)]">{slideCount}</span> slides ·{' '}
               {sf && !narrativeMatchesFilter ? (
                 <span className="italic text-white/35">
                   Fil narratif sans « {structureFilter.trim()} » — élargissez ou videz le filtre.
@@ -329,9 +329,9 @@ export default function CourseStructureColumn({
               </p>
             ) : (
               <>
-            <div className="relative overflow-hidden rounded-xl border border-[#D4AF37]/20 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.07),transparent_65%)] px-2 py-4">
+            <div className="relative overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.07),transparent_65%)] px-2 py-4">
               <div className="relative z-[1] flex min-h-[100px] items-center justify-center">
-                <div className="rounded-full border border-[#D4AF37]/35 bg-[#0c1224] px-4 py-2.5 text-center text-[11px] font-medium text-[#f0d78c] shadow-[0_0_20px_rgba(212,175,55,0.12)]">
+                <div className="rounded-full border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[#0c1224] px-4 py-2.5 text-center text-[11px] font-medium text-[#f0d78c] shadow-[0_0_20px_rgba(212,175,55,0.12)]">
                   {(sf ? filteredMindmapRoot?.label : course.mindmap?.label) || course.title}
                 </div>
               </div>

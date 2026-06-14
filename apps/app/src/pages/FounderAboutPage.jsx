@@ -36,7 +36,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useVitrineContactEmail } from '@/contexts/VitrineContactEmailContext';
 import { WEB_FONDATEUR } from '@/data/prorascienceVitrineFromWebContent';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const PUBLIC = isnaTenantConfig.branding.publicSiteOrigin;
 const SCHOOL = isnaTenantConfig.branding.name;
@@ -52,7 +52,7 @@ const SectionTitle = ({ children, subtitle }) => (
     className="text-center mb-16"
   >
     <h2 className="text-3xl md:text-4xl font-serif font-bold text-white mb-4 uppercase tracking-wider">{children}</h2>
-    <div className="h-1 w-20 bg-[#D4AF37] mx-auto mb-6 rounded-full" />
+    <div className="h-1 w-20 bg-[var(--school-accent)] mx-auto mb-6 rounded-full" />
     {subtitle && <p className="text-gray-400 max-w-2xl mx-auto text-lg leading-relaxed">{subtitle}</p>}
   </motion.div>
 );
@@ -60,10 +60,10 @@ const SectionTitle = ({ children, subtitle }) => (
 const IdentityCard = ({ icon: Icon, title, value, detail }) => (
   <motion.div 
     whileHover={{ y: -5 }}
-    className="bg-[#192734] border border-white/5 p-8 rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.1)] hover:border-[#D4AF37]/30 transition-all duration-300 group"
+    className="bg-[#192734] border border-white/5 p-8 rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.1)] hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all duration-300 group"
   >
-    <div className="w-12 h-12 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-[#D4AF37]/20 transition-colors">
-      <Icon className="w-6 h-6 text-[#D4AF37]" />
+    <div className="w-12 h-12 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-full flex items-center justify-center mb-6 group-hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors">
+      <Icon className="w-6 h-6 text-[var(--school-accent)]" />
     </div>
     <div className="text-xs uppercase tracking-widest text-gray-500 mb-2">{title}</div>
     <div className="text-xl md:text-2xl font-bold text-white mb-3 font-serif">{value}</div>
@@ -75,11 +75,11 @@ const ModelCard = ({ title, concept, formula, status }) => (
   <motion.div
     whileHover={{ y: -5, scale: 1.01 }}
     transition={{ duration: 0.2 }}
-    className="bg-[#15202B] p-6 rounded-xl border border-white/5 hover:border-[#D4AF37]/30 transition-all shadow-[0_20px_40px_-30px_rgba(0,0,0,0.8)]"
+    className="bg-[#15202B] p-6 rounded-xl border border-white/5 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all shadow-[0_20px_40px_-30px_rgba(0,0,0,0.8)]"
   >
     <div className="flex items-start justify-between mb-4">
       <h4 className="text-lg font-bold text-white">{title}</h4>
-      <Badge className="bg-[#D4AF37]/10 text-[#D4AF37] border-0">{status}</Badge>
+      <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] border-0">{status}</Badge>
     </div>
     <div className="space-y-3 text-sm">
       <div className="flex gap-2">
@@ -100,10 +100,10 @@ const QuoteCard = ({ text }) => (
     transition={{ duration: 0.2 }}
     className="relative p-8 bg-[#192734] rounded-xl border border-white/5 shadow-lg"
   >
-    <Quote className="absolute top-6 left-6 w-8 h-8 text-[#D4AF37]/20" />
+    <Quote className="absolute top-6 left-6 w-8 h-8 text-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]" />
     <p className="relative z-10 text-lg text-gray-300 italic leading-relaxed text-center mb-6 pt-4">"{text}"</p>
     <div className="text-center border-t border-white/5 pt-4">
-      <span className="text-[#D4AF37] text-sm font-bold uppercase tracking-widest">5ᵉ Manikongo</span>
+      <span className="text-[var(--school-accent)] text-sm font-bold uppercase tracking-widest">5ᵉ Manikongo</span>
       <span className="block text-sm text-gray-500 mt-1">Badika Jel David</span>
     </div>
   </motion.div>
@@ -111,19 +111,19 @@ const QuoteCard = ({ text }) => (
 
 const ThesisSection = ({ number, title, statement, affirmation, principles, conclusion, implications, icon: Icon }) => (
   <div className="mb-24 relative">
-    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#D4AF37] via-[#D4AF37]/20 to-transparent opacity-30" />
+    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[var(--school-accent)] via-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-transparent opacity-30" />
     <div className="pl-8 md:pl-12">
       <div className="flex items-center gap-4 mb-6">
-        <div className="bg-[#D4AF37]/10 p-3 rounded-lg border border-[#D4AF37]/30">
-          <Icon className="w-8 h-8 text-[#D4AF37]" />
+        <div className="bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-3 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
+          <Icon className="w-8 h-8 text-[var(--school-accent)]" />
         </div>
         <div>
-          <span className="text-[#D4AF37] font-bold tracking-widest uppercase text-sm">Thèse {number}</span>
+          <span className="text-[var(--school-accent)] font-bold tracking-widest uppercase text-sm">Thèse {number}</span>
           <h3 className="text-3xl font-serif font-bold text-white mt-1 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">{title}</h3>
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-[#192734] to-[#0F1419] p-8 rounded-xl border border-white/10 shadow-xl mb-8 border-l-4 border-l-[#D4AF37]">
+      <div className="bg-gradient-to-r from-[#192734] to-[#0F1419] p-8 rounded-xl border border-white/10 shadow-xl mb-8 border-l-4 border-l-[var(--school-accent)]">
         <p className="text-xl md:text-2xl font-serif font-bold text-center text-white leading-relaxed">"{statement}"</p>
       </div>
 
@@ -133,23 +133,23 @@ const ThesisSection = ({ number, title, statement, affirmation, principles, conc
 
       <div className="grid md:grid-cols-3 gap-6 mb-8">
         {principles.map((p, i) => (
-          <div key={i} className="bg-[#0F1419] p-6 rounded-lg border border-white/5 hover:border-[#D4AF37]/30 transition-all">
-            <h4 className="font-bold text-[#D4AF37] mb-2">{p.title}</h4>
+          <div key={i} className="bg-[#0F1419] p-6 rounded-lg border border-white/5 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
+            <h4 className="font-bold text-[var(--school-accent)] mb-2">{p.title}</h4>
             <p className="text-sm text-gray-400 leading-relaxed">{p.desc}</p>
           </div>
         ))}
       </div>
 
       {conclusion && (
-        <div className="bg-[#D4AF37]/5 border border-[#D4AF37]/20 p-6 rounded-lg text-center mb-8">
-          <p className="text-[#D4AF37] font-medium font-serif italic">{conclusion}</p>
+        <div className="bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] p-6 rounded-lg text-center mb-8">
+          <p className="text-[var(--school-accent)] font-medium font-serif italic">{conclusion}</p>
         </div>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {implications.map((imp, i) => (
           <div key={i} className="flex items-start gap-3 text-sm text-gray-400 bg-[#15202B] p-4 rounded-lg border border-white/5">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] mt-1.5 shrink-0" />
+            <div className="w-1.5 h-1.5 rounded-full bg-[var(--school-accent)] mt-1.5 shrink-0" />
             <span>{imp}</span>
           </div>
         ))}
@@ -180,13 +180,13 @@ const FounderPortrait = ({
   return (
     <div className={`flex flex-col items-center ${containerClassName}`}>
       <div className={`relative group ${className}`}>
-        <div className="absolute inset-0 bg-[#D4AF37] rounded-lg blur opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+        <div className="absolute inset-0 bg-[var(--school-accent)] rounded-lg blur opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
         {!hideImage && (
           <img 
             src={FOUNDER_IMAGE_SOURCES[srcIndex]}
             alt={FOUNDER_PORTRAIT_ALT} 
             onError={handleError}
-            className="relative z-10 w-full h-auto rounded-lg border-[3px] border-[#D4AF37] shadow-[0_4px_12px_rgba(0,0,0,0.5)] group-hover:shadow-[0_8px_24px_rgba(212,175,55,0.2)] transition-all duration-500 object-cover"
+            className="relative z-10 w-full h-auto rounded-lg border-[3px] border-[var(--school-accent)] shadow-[0_4px_12px_rgba(0,0,0,0.5)] group-hover:shadow-[0_8px_24px_rgba(212,175,55,0.2)] transition-all duration-500 object-cover"
           />
         )}
       </div>
@@ -210,9 +210,9 @@ const FounderAboutPage = () => {
   const titleLines = f.hero.title.split('\n').filter(Boolean);
   const identityIcons = [Fingerprint, Crown, Award, Target];
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0F1419] font-sans text-gray-300 selection:bg-[#D4AF37]/30">
+    <div className="relative min-h-screen overflow-hidden bg-[#0F1419] font-sans text-gray-300 selection:bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute top-[-140px] left-1/2 h-[380px] w-[620px] -translate-x-1/2 rounded-full bg-[#D4AF37]/8 blur-[120px]" />
+        <div className="absolute top-[-140px] left-1/2 h-[380px] w-[620px] -translate-x-1/2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] blur-[120px]" />
         <div className="absolute top-[20%] -left-32 h-[320px] w-[320px] rounded-full bg-blue-500/10 blur-[120px]" />
         <div className="absolute bottom-10 right-[-120px] h-[340px] w-[340px] rounded-full bg-violet-500/10 blur-[130px]" />
       </div>
@@ -244,7 +244,7 @@ const FounderAboutPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] mb-8 backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] mb-8 backdrop-blur-md">
               <Crown className="w-4 h-4" />
               <span className="text-sm font-bold tracking-widest uppercase">{f.hero.kicker}</span>
             </div>
@@ -253,12 +253,12 @@ const FounderAboutPage = () => {
                 <>
                   {titleLines[0]}
                   <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-[#F2D06B] to-[#D4AF37]">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] via-[#F2D06B] to-[var(--school-accent)]">
                     {titleLines[1]}
                   </span>
                 </>
               ) : (
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-[#F2D06B] to-[#D4AF37]">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] via-[#F2D06B] to-[var(--school-accent)]">
                   {titleLines[0]}
                 </span>
               )}
@@ -275,7 +275,7 @@ const FounderAboutPage = () => {
               contextText={f.portraitContext}
             />
 
-            <div className="h-px w-32 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mb-8" />
+            <div className="h-px w-32 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent mx-auto mb-8" />
             <p className="text-xl text-gray-300 max-w-3xl mx-auto font-serif italic leading-relaxed">
               « {f.hero.quote} »
             </p>
@@ -306,8 +306,8 @@ const FounderAboutPage = () => {
           })}
         </div>
 
-        <div className="mt-12 bg-[#192734] p-8 rounded-xl border-l-4 border-[#D4AF37] flex flex-col md:flex-row gap-6 items-start">
-          <Crown className="w-12 h-12 text-[#D4AF37] shrink-0" />
+        <div className="mt-12 bg-[#192734] p-8 rounded-xl border-l-4 border-[var(--school-accent)] flex flex-col md:flex-row gap-6 items-start">
+          <Crown className="w-12 h-12 text-[var(--school-accent)] shrink-0" />
           <div>
             <h3 className="text-xl font-bold text-white mb-2">{f.manikongoExplainer.title}</h3>
             <p className="text-gray-400 leading-relaxed">
@@ -332,13 +332,13 @@ const FounderAboutPage = () => {
               <Badge className="bg-blue-500/10 text-blue-500">Racine</Badge>
             </div>
             
-            <div className="bg-[#0F1419] p-8 rounded-xl border border-white/5 hover:border-[#D4AF37]/30 transition-colors">
-              <Brain className="w-10 h-10 text-[#D4AF37] mb-6" />
+            <div className="bg-[#0F1419] p-8 rounded-xl border border-white/5 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-colors">
+              <Brain className="w-10 h-10 text-[var(--school-accent)] mb-6" />
               <h3 className="text-xl font-bold text-white mb-4">Raison Systémique</h3>
               <p className="text-gray-400 text-sm leading-relaxed mb-4">
                 L'utilisation de la logique formelle et de la déduction pour structurer les intuitions spirituelles en modèles cohérents.
               </p>
-              <Badge className="bg-[#D4AF37]/10 text-[#D4AF37]">Méthode</Badge>
+              <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]">Méthode</Badge>
             </div>
             
             <div className="bg-[#0F1419] p-8 rounded-xl border border-white/5 hover:border-purple-500/30 transition-colors">
@@ -351,7 +351,7 @@ const FounderAboutPage = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-[#D4AF37]/20 via-[#D4AF37]/5 to-transparent p-1 rounded-xl">
+          <div className="bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] via-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] to-transparent p-1 rounded-xl">
             <div className="bg-[#0F1419] rounded-lg p-8 text-center">
               <p className="text-xl md:text-2xl font-serif italic text-white">
                 "Je ne cherche pas à convaincre ceux qui croient, mais à équiper ceux qui cherchent à comprendre."
@@ -370,7 +370,7 @@ const FounderAboutPage = () => {
             <div className="w-full border-t border-white/10"></div>
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-[#0F1419] px-6 text-[#D4AF37] font-serif text-2xl font-bold">Thèse Centrale</span>
+            <span className="bg-[#0F1419] px-6 text-[var(--school-accent)] font-serif text-2xl font-bold">Thèse Centrale</span>
           </div>
         </div>
 
@@ -408,7 +408,7 @@ const FounderAboutPage = () => {
               title: "SAVOIRS AFRICAINS", 
               stmt: "L'Afrique possède le paradigme de synthèse.", 
               impl: "C'est dans le berceau de l'humanité que se trouve la clé de l'unification des sciences.",
-              color: "text-[#D4AF37]"
+              color: "text-[var(--school-accent)]"
             }
           ].map((item, i) => (
             <div key={i} className="flex flex-col md:flex-row gap-6 bg-[#15202B] p-6 rounded-xl border border-white/5 items-start md:items-center">
@@ -427,7 +427,7 @@ const FounderAboutPage = () => {
 
       {/* SECTION 5: TRAVAIL DE RECHERCHE */}
       <section className="relative z-10 py-24 px-6 bg-[#0B1116] border-y border-white/5 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#D4AF37]/5 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[100px] pointer-events-none" />
         
         <div className="max-w-7xl mx-auto relative z-10">
           <SectionTitle subtitle="Apports Théoriques Majeurs">TRAVAIL DE RECHERCHE ET MODÉLISATION</SectionTitle>
@@ -478,9 +478,9 @@ const FounderAboutPage = () => {
         <SectionTitle subtitle="L'Éthique de l'Enseignement">VISION DE LA TRANSMISSION</SectionTitle>
         
         <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
-          <div className="bg-[#192734] p-8 rounded-2xl border-l-4 border-[#D4AF37] shadow-xl">
+          <div className="bg-[#192734] p-8 rounded-2xl border-l-4 border-[var(--school-accent)] shadow-xl">
              <h3 className="text-2xl font-serif text-white mb-6">La Maxime Fondatrice</h3>
-             <p className="text-xl text-[#D4AF37] italic mb-6">
+             <p className="text-xl text-[var(--school-accent)] italic mb-6">
                "Je ne veux pas de disciples, je veux des Maîtres. Le but de l'enseignement est de rendre l'étudiant autonome, souverain et libre, même de son propre enseignant."
              </p>
              <div className="flex gap-2 text-sm text-gray-500 font-bold uppercase tracking-widest">
@@ -510,7 +510,7 @@ const FounderAboutPage = () => {
       </section>
 
       {/* SECTION 7: POSITIONNEMENT AFRICAIN */}
-      <section className="relative z-10 py-24 px-6 bg-[#D4AF37] text-black">
+      <section className="relative z-10 py-24 px-6 bg-[var(--school-accent)] text-black">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4 uppercase tracking-wider">POSITIONNEMENT AFRICAIN ASSUMÉ</h2>
@@ -548,30 +548,30 @@ const FounderAboutPage = () => {
         
         <div className="flex flex-col lg:flex-row gap-16 items-start">
           <div className="lg:w-1/2 space-y-12">
-            <div className="relative pl-8 border-l-2 border-[#D4AF37]/30">
-              <span className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-[#D4AF37]" />
+            <div className="relative pl-8 border-l-2 border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
+              <span className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-[var(--school-accent)]" />
               <h3 className="text-xl font-bold text-white mb-2">1. L'Origine de l\'Appel</h3>
               <p className="text-gray-400 leading-relaxed">
                 Ce n'était pas une ambition personnelle, mais une impérieuse nécessité intérieure. Une confrontation directe avec les incohérences des dogmes religieux importés et la puissance inexpliquée des traditions ancestrales.
               </p>
             </div>
             
-            <div className="relative pl-8 border-l-2 border-[#D4AF37]/30">
-              <span className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-[#192734] border-2 border-[#D4AF37]" />
+            <div className="relative pl-8 border-l-2 border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
+              <span className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-[#192734] border-2 border-[var(--school-accent)]" />
               <h3 className="text-xl font-bold text-white mb-2">2. L'Épreuve Fondatrice</h3>
               <p className="text-gray-400 leading-relaxed">
                 Une période d'isolement et d\'ascèse, nécessaire pour déconstruire les conditionnements et recevoir, sans filtre, la structure de ce qui allait devenir la Prorascience.
               </p>
             </div>
 
-            <div className="relative pl-8 border-l-2 border-[#D4AF37]/30">
-              <span className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-[#192734] border-2 border-[#D4AF37]" />
+            <div className="relative pl-8 border-l-2 border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
+              <span className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-[#192734] border-2 border-[var(--school-accent)]" />
               <h3 className="text-xl font-bold text-white mb-2">3. Le Mandat (Les 4 Verbes)</h3>
               <div className="grid grid-cols-2 gap-4 mt-4">
-                 <Badge className="justify-center py-2 bg-[#D4AF37]/20 text-[#D4AF37]">RESTAURER</Badge>
-                 <Badge className="justify-center py-2 bg-[#D4AF37]/20 text-[#D4AF37]">TRADUIRE</Badge>
-                 <Badge className="justify-center py-2 bg-[#D4AF37]/20 text-[#D4AF37]">STRUCTURER</Badge>
-                 <Badge className="justify-center py-2 bg-[#D4AF37]/20 text-[#D4AF37]">TRANSMETTRE</Badge>
+                 <Badge className="justify-center py-2 bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]">RESTAURER</Badge>
+                 <Badge className="justify-center py-2 bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]">TRADUIRE</Badge>
+                 <Badge className="justify-center py-2 bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]">STRUCTURER</Badge>
+                 <Badge className="justify-center py-2 bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]">TRANSMETTRE</Badge>
               </div>
             </div>
           </div>
@@ -615,7 +615,7 @@ const FounderAboutPage = () => {
             <p className="text-sm text-gray-400">Accepter la critique, la révision et l'évolution permanente des modèles.</p>
           </div>
           <div className="bg-[#192734] p-6 rounded-xl border border-white/5 hover:bg-[#1e2f3f] transition-colors">
-            <Globe className="w-8 h-8 text-[#D4AF37] mb-4" />
+            <Globe className="w-8 h-8 text-[var(--school-accent)] mb-4" />
             <h4 className="font-bold text-white mb-2">Envers l'Afrique</h4>
             <p className="text-sm text-gray-400">Œuvrer sans relâche pour que le continent retrouve sa place de guide spirituel.</p>
           </div>
@@ -842,28 +842,28 @@ const FounderAboutPage = () => {
           />
 
           {/* FORMULE DE SYNTHÈSE */}
-          <div className="mt-32 relative bg-gradient-to-br from-[#D4AF37] via-[#F2D06B] to-[#D4AF37] rounded-3xl p-1 text-center shadow-[0_0_100px_rgba(212,175,55,0.3)]">
+          <div className="mt-32 relative bg-gradient-to-br from-[var(--school-accent)] via-[#F2D06B] to-[var(--school-accent)] rounded-3xl p-1 text-center shadow-[0_0_100px_rgba(212,175,55,0.3)]">
             <div className="bg-[#0F1419] rounded-[22px] py-20 px-6 md:px-12 relative overflow-hidden">
                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
                <div className="relative z-10">
-                 <Crown className="w-16 h-16 text-[#D4AF37] mx-auto mb-8 animate-pulse" />
-                 <h2 className="text-3xl md:text-5xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-white to-[#D4AF37] mb-12 uppercase tracking-tight">
+                 <Crown className="w-16 h-16 text-[var(--school-accent)] mx-auto mb-8 animate-pulse" />
+                 <h2 className="text-3xl md:text-5xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] via-white to-[var(--school-accent)] mb-12 uppercase tracking-tight">
                    Formule de Synthèse du Manikongo
                  </h2>
                  
-                 <div className="bg-[#15202B] p-8 md:p-12 rounded-2xl border border-[#D4AF37]/30 shadow-2xl mb-12 max-w-4xl mx-auto transform hover:scale-[1.02] transition-transform duration-500">
+                 <div className="bg-[#15202B] p-8 md:p-12 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] shadow-2xl mb-12 max-w-4xl mx-auto transform hover:scale-[1.02] transition-transform duration-500">
                    <p className="text-2xl md:text-4xl font-serif font-bold text-white leading-relaxed space-y-4">
                      <span className="block text-gray-400 text-xl md:text-2xl mb-4">"L'univers n'est pas fait de matière, mais d'information."</span>
-                     <span className="block text-[#D4AF37]">La Conscience l'organise.</span>
+                     <span className="block text-[var(--school-accent)]">La Conscience l'organise.</span>
                      <span className="block text-white">L'Énergie l\'anime.</span>
-                     <span className="block text-[#D4AF37]">Le Temps la déploie.</span>
+                     <span className="block text-[var(--school-accent)]">Le Temps la déploie.</span>
                      <span className="block text-gray-400 text-xl md:text-2xl mt-4">Le Destin les localise."</span>
                    </p>
                  </div>
 
                  <div className="grid md:grid-cols-2 gap-12 text-left max-w-5xl mx-auto">
                    <div>
-                     <h3 className="text-[#D4AF37] font-bold text-xl mb-4 flex items-center gap-2">
+                     <h3 className="text-[var(--school-accent)] font-bold text-xl mb-4 flex items-center gap-2">
                        <Lightbulb className="w-5 h-5" /> Signification
                      </h3>
                      <p className="text-gray-400 leading-relaxed">
@@ -871,7 +871,7 @@ const FounderAboutPage = () => {
                      </p>
                    </div>
                    <div>
-                     <h3 className="text-[#D4AF37] font-bold text-xl mb-4 flex items-center gap-2">
+                     <h3 className="text-[var(--school-accent)] font-bold text-xl mb-4 flex items-center gap-2">
                        <Network className="w-5 h-5" /> Implication
                      </h3>
                      <p className="text-gray-400 leading-relaxed">
@@ -893,17 +893,17 @@ const FounderAboutPage = () => {
           
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             <div className="flex flex-col items-center p-6 bg-[#192734] rounded-xl">
-               <Mail className="w-6 h-6 text-[#D4AF37] mb-3" />
+               <Mail className="w-6 h-6 text-[var(--school-accent)] mb-3" />
                <span className="text-sm text-gray-400">Email Secrétariat</span>
                <span className="text-white font-medium mt-1">{vitrineEmail}</span>
             </div>
             <div className="flex flex-col items-center p-6 bg-[#192734] rounded-xl">
-               <Phone className="w-6 h-6 text-[#D4AF37] mb-3" />
+               <Phone className="w-6 h-6 text-[var(--school-accent)] mb-3" />
                <span className="text-sm text-gray-400">WhatsApp</span>
                <span className="text-white font-medium mt-1">+33 7 66 52 57 08</span>
             </div>
             <div className="flex flex-col items-center p-6 bg-[#192734] rounded-xl">
-               <MapPin className="w-6 h-6 text-[#D4AF37] mb-3" />
+               <MapPin className="w-6 h-6 text-[var(--school-accent)] mb-3" />
                <span className="text-sm text-gray-400">Siège</span>
                <span className="text-white font-medium mt-1">Libreville, Gabon — Agondjé Village</span>
             </div>
@@ -911,7 +911,7 @@ const FounderAboutPage = () => {
 
           <div className="flex flex-col sm:flex-row justify-center gap-6">
             <Link to="/ressources">
-              <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold px-8 py-6 rounded-xl text-lg shadow-lg shadow-[#D4AF37]/20">
+              <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold px-8 py-6 rounded-xl text-lg shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                 <Mic className="w-5 h-5 mr-2" />
                 Écouter ses Conférences
               </Button>

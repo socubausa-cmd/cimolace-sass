@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 const ambientBlobs = (
   <>
     <motion.div
-      className="absolute -top-28 left-1/2 h-[min(480px,55vh)] w-[min(920px,160vw)] -translate-x-1/2 rounded-full bg-[#D4AF37]/14 blur-[110px]"
+      className="absolute -top-28 left-1/2 h-[min(480px,55vh)] w-[min(920px,160vw)] -translate-x-1/2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] blur-[110px]"
       animate={{ opacity: [0.45, 0.9, 0.45], scale: [1, 1.06, 1] }}
       transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
     />
@@ -51,7 +51,7 @@ export function JourneyAmbientInset({ className }) {
 export function JourneySectionLabel({ children, className = '' }) {
   return (
     <div
-      className={`font-display text-[10px] font-semibold uppercase tracking-[0.24em] text-[#D4AF37]/90 ${className}`}
+      className={`font-display text-[10px] font-semibold uppercase tracking-[0.24em] text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)] ${className}`}
     >
       {children}
     </div>
@@ -65,7 +65,7 @@ export function JourneyMobileDock({ primary, secondary }) {
   if (!primary && !secondary) return null;
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#D4AF37]/20 bg-[#0a0908]/95 px-4 pt-3 backdrop-blur-xl lg:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[#0a0908]/95 px-4 pt-3 backdrop-blur-xl lg:hidden"
       style={{
         paddingBottom: 'max(0.85rem, env(safe-area-inset-bottom, 0px))',
       }}

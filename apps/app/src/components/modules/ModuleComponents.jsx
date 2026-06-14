@@ -24,7 +24,7 @@ export const getResourceIcon = (type) => {
 // --- WeeklyContentAccordion ---
 export const WeeklyContentAccordion = ({ week, isExpanded, onToggle, isLocked = false }) => {
   return (
-    <div className="bg-[#192734] border border-white/5 rounded-xl overflow-hidden mb-4 transition-all duration-300 hover:border-[#D4AF37]/30">
+    <div className="bg-[#192734] border border-white/5 rounded-xl overflow-hidden mb-4 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
       <button 
         onClick={onToggle}
         disabled={isLocked}
@@ -36,7 +36,7 @@ export const WeeklyContentAccordion = ({ week, isExpanded, onToggle, isLocked = 
         <div className="flex items-center gap-4">
           <div className={cn(
             "w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border",
-            isLocked ? "bg-gray-800 border-gray-700 text-gray-500" : "bg-[#0F1419] border-[#D4AF37]/30 text-[#D4AF37]"
+            isLocked ? "bg-gray-800 border-gray-700 text-gray-500" : "bg-[#0F1419] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)]"
           )}>
             {isLocked ? <Lock className="w-5 h-5" /> : week.number}
           </div>
@@ -49,7 +49,7 @@ export const WeeklyContentAccordion = ({ week, isExpanded, onToggle, isLocked = 
             </div>
           </div>
         </div>
-        {isLocked ? null : (isExpanded ? <ChevronUp className="w-5 h-5 text-[#D4AF37]" /> : <ChevronDown className="w-5 h-5 text-gray-400" />)}
+        {isLocked ? null : (isExpanded ? <ChevronUp className="w-5 h-5 text-[var(--school-accent)]" /> : <ChevronDown className="w-5 h-5 text-gray-400" />)}
       </button>
       
       <AnimatePresence>
@@ -65,7 +65,7 @@ export const WeeklyContentAccordion = ({ week, isExpanded, onToggle, isLocked = 
               
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
-                  <h4 className="text-sm font-bold text-[#D4AF37] uppercase mb-3 flex items-center gap-2">
+                  <h4 className="text-sm font-bold text-[var(--school-accent)] uppercase mb-3 flex items-center gap-2">
                     <BookOpen className="w-4 h-4" /> Sujets Abordés
                   </h4>
                   <ul className="space-y-2">
@@ -79,7 +79,7 @@ export const WeeklyContentAccordion = ({ week, isExpanded, onToggle, isLocked = 
                 </div>
                 
                 <div>
-                  <h4 className="text-sm font-bold text-[#D4AF37] uppercase mb-3 flex items-center gap-2">
+                  <h4 className="text-sm font-bold text-[var(--school-accent)] uppercase mb-3 flex items-center gap-2">
                     <Download className="w-4 h-4" /> Ressources
                   </h4>
                   <div className="space-y-2">
@@ -92,12 +92,12 @@ export const WeeklyContentAccordion = ({ week, isExpanded, onToggle, isLocked = 
 
               {week.exercises && (
                 <div className="mt-6 pt-6 border-t border-white/5">
-                   <h4 className="text-sm font-bold text-[#D4AF37] uppercase mb-3">Exercices Pratiques</h4>
+                   <h4 className="text-sm font-bold text-[var(--school-accent)] uppercase mb-3">Exercices Pratiques</h4>
                    <div className="grid gap-2">
                      {week.exercises.map((ex, idx) => (
                        <div key={idx} className="bg-white/5 p-3 rounded-lg text-sm text-gray-300 border border-white/5 flex items-center justify-between">
                          <span>{ex}</span>
-                         <Button size="sm" variant="ghost" className="h-6 text-[#D4AF37] hover:text-white">Détails</Button>
+                         <Button size="sm" variant="ghost" className="h-6 text-[var(--school-accent)] hover:text-white">Détails</Button>
                        </div>
                      ))}
                    </div>
@@ -123,10 +123,10 @@ export const LearningObjectiveCard = ({ objective }) => {
       <div className="flex items-start justify-between">
         <div className="flex gap-3">
           <div className="mt-1">
-            <CheckCircle className="w-5 h-5 text-[#D4AF37]" />
+            <CheckCircle className="w-5 h-5 text-[var(--school-accent)]" />
           </div>
           <div>
-            <h4 className="font-bold text-white group-hover:text-[#D4AF37] transition-colors">{objective.title}</h4>
+            <h4 className="font-bold text-white group-hover:text-[var(--school-accent)] transition-colors">{objective.title}</h4>
             <AnimatePresence>
               {isOpen && (
                 <motion.div
@@ -183,7 +183,7 @@ export const ResourceCard = ({ resource }) => {
            <p className="text-[10px] text-gray-500">{resource.type} • {resource.duration}</p>
         </div>
       </div>
-      <Download className="w-4 h-4 text-gray-600 group-hover:text-[#D4AF37] opacity-0 group-hover:opacity-100 transition-all" />
+      <Download className="w-4 h-4 text-gray-600 group-hover:text-[var(--school-accent)] opacity-0 group-hover:opacity-100 transition-all" />
     </div>
   );
 };
@@ -193,7 +193,7 @@ export const ReviewCard = ({ review }) => (
   <div className="bg-[#192734] p-4 rounded-xl border border-white/5">
     <div className="flex justify-between items-start mb-2">
       <div className="flex items-center gap-2">
-         <div className="w-8 h-8 rounded-full bg-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] font-bold text-xs">
+         <div className="w-8 h-8 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center text-[var(--school-accent)] font-bold text-xs">
             {review.user.charAt(0)}
          </div>
          <div>
@@ -203,7 +203,7 @@ export const ReviewCard = ({ review }) => (
       </div>
       <div className="flex items-center gap-0.5">
          {[...Array(5)].map((_, i) => (
-            <Star key={i} className={cn("w-3 h-3", i < review.rating ? "text-[#D4AF37] fill-[#D4AF37]" : "text-gray-700")} />
+            <Star key={i} className={cn("w-3 h-3", i < review.rating ? "text-[var(--school-accent)] fill-[var(--school-accent)]" : "text-gray-700")} />
          ))}
       </div>
     </div>
@@ -215,7 +215,7 @@ export const ReviewCard = ({ review }) => (
 export const EvaluationCriteria = ({ evaluations }) => (
   <div className="space-y-6">
     <div>
-      <h4 className="text-sm font-bold text-[#D4AF37] uppercase mb-3 border-b border-white/10 pb-2">Contrôle Continu</h4>
+      <h4 className="text-sm font-bold text-[var(--school-accent)] uppercase mb-3 border-b border-white/10 pb-2">Contrôle Continu</h4>
       <div className="space-y-3">
         {evaluations.continuous.map((item, i) => (
            <div key={i} className="flex justify-between items-center bg-white/5 p-3 rounded-lg">
@@ -223,13 +223,13 @@ export const EvaluationCriteria = ({ evaluations }) => (
                  <p className="font-medium text-white text-sm">{item.name}</p>
                  <p className="text-sm text-gray-500">{item.criteria}</p>
               </div>
-              <Badge className="bg-[#D4AF37] text-black font-bold">{item.weight}</Badge>
+              <Badge className="bg-[var(--school-accent)] text-black font-bold">{item.weight}</Badge>
            </div>
         ))}
       </div>
     </div>
     <div>
-      <h4 className="text-sm font-bold text-[#D4AF37] uppercase mb-3 border-b border-white/10 pb-2">Examen Final</h4>
+      <h4 className="text-sm font-bold text-[var(--school-accent)] uppercase mb-3 border-b border-white/10 pb-2">Examen Final</h4>
       <div className="space-y-3">
         {evaluations.final.map((item, i) => (
            <div key={i} className="flex justify-between items-center bg-white/5 p-3 rounded-lg">
@@ -237,7 +237,7 @@ export const EvaluationCriteria = ({ evaluations }) => (
                  <p className="font-medium text-white text-sm">{item.name}</p>
                  <p className="text-sm text-gray-500">{item.criteria}</p>
               </div>
-              <Badge className="bg-[#D4AF37] text-black font-bold">{item.weight}</Badge>
+              <Badge className="bg-[var(--school-accent)] text-black font-bold">{item.weight}</Badge>
            </div>
         ))}
       </div>

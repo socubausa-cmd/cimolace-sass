@@ -142,7 +142,7 @@ const ContactModal = ({ isOpen, onClose, initialSubject = '' }) => {
                  <p className="text-sm text-gray-400 mb-2">Vous préférez nous écrire directement ?</p>
                  <a
                    href={`mailto:${vitrineEmail}`}
-                   className="inline-flex items-center gap-2 text-[#D4AF37] hover:underline font-medium"
+                   className="inline-flex items-center gap-2 text-[var(--school-accent)] hover:underline font-medium"
                  >
                     <Mail className="w-4 h-4" />
                     {vitrineEmail}

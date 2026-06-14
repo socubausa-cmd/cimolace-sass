@@ -34,13 +34,13 @@ const ClientProfilePage = () => {
         </Button>
         <div className="flex gap-2">
            <Button className="bg-blue-600 hover:bg-blue-700 text-white"><Video className="mr-2 h-4 w-4" /> Lancer appel</Button>
-           <Button className="bg-[#D4AF37] hover:bg-yellow-600 text-black"><MessageSquare className="mr-2 h-4 w-4" /> Message</Button>
+           <Button className="bg-[var(--school-accent)] hover:bg-yellow-600 text-black"><MessageSquare className="mr-2 h-4 w-4" /> Message</Button>
         </div>
       </div>
 
       {/* Profile Header Card */}
       <Card className="bg-[#192734] border-white/10 overflow-hidden">
-        <div className="h-32 bg-gradient-to-r from-[#D4AF37]/20 to-blue-900/20"></div>
+        <div className="h-32 bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-blue-900/20"></div>
         <CardContent className="relative pt-0 px-8 pb-8">
           <div className="flex flex-col md:flex-row items-start md:items-end gap-6 -mt-12 mb-6">
             <div className="h-24 w-24 rounded-xl border-4 border-[#192734] overflow-hidden bg-gray-800 shadow-xl">
@@ -60,10 +60,10 @@ const ClientProfilePage = () => {
 
           <Tabs defaultValue="overview" className="w-full">
             <TabsList className="bg-black/20 w-full justify-start border-b border-white/10 rounded-none h-auto p-0">
-              <TabsTrigger value="overview" className="px-6 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#D4AF37] data-[state=active]:bg-transparent data-[state=active]:text-[#D4AF37]">Vue d'ensemble</TabsTrigger>
-              <TabsTrigger value="contracts" className="px-6 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#D4AF37] data-[state=active]:bg-transparent data-[state=active]:text-[#D4AF37]">Contrats & Services</TabsTrigger>
-              <TabsTrigger value="health" className="px-6 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#D4AF37] data-[state=active]:bg-transparent data-[state=active]:text-[#D4AF37]">Santé & Bien-être</TabsTrigger>
-              <TabsTrigger value="history" className="px-6 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#D4AF37] data-[state=active]:bg-transparent data-[state=active]:text-[#D4AF37]">Historique</TabsTrigger>
+              <TabsTrigger value="overview" className="px-6 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[var(--school-accent)] data-[state=active]:bg-transparent data-[state=active]:text-[var(--school-accent)]">Vue d'ensemble</TabsTrigger>
+              <TabsTrigger value="contracts" className="px-6 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[var(--school-accent)] data-[state=active]:bg-transparent data-[state=active]:text-[var(--school-accent)]">Contrats & Services</TabsTrigger>
+              <TabsTrigger value="health" className="px-6 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[var(--school-accent)] data-[state=active]:bg-transparent data-[state=active]:text-[var(--school-accent)]">Santé & Bien-être</TabsTrigger>
+              <TabsTrigger value="history" className="px-6 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[var(--school-accent)] data-[state=active]:bg-transparent data-[state=active]:text-[var(--school-accent)]">Historique</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="pt-6 space-y-6">
@@ -93,7 +93,7 @@ const ClientProfilePage = () => {
                              <span>{progressValue}%</span>
                           </div>
                           <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                             <div className="h-full bg-[#D4AF37]" style={{ width: `${progressValue}%` }}></div>
+                             <div className="h-full bg-[var(--school-accent)]" style={{ width: `${progressValue}%` }}></div>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4 mt-4">
@@ -126,7 +126,7 @@ const ClientProfilePage = () => {
                           <p className="text-gray-400 text-sm">Du {contract.startDate} au {contract.endDate}</p>
                         </div>
                         <div className="text-right">
-                          <div className="text-2xl font-bold text-[#D4AF37]">{contract.remainingSessions} / {contract.totalSessions}</div>
+                          <div className="text-2xl font-bold text-[var(--school-accent)]">{contract.remainingSessions} / {contract.totalSessions}</div>
                           <div className="text-sm text-gray-500">Sessions restantes</div>
                         </div>
                      </CardContent>
@@ -139,7 +139,7 @@ const ClientProfilePage = () => {
                <div className="relative border-l border-white/10 ml-4 space-y-8 py-2">
                   {student.interactions?.map((interaction, i) => (
                     <div key={i} className="relative pl-8">
-                       <div className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-[#D4AF37] ring-4 ring-[#0F1419]"></div>
+                       <div className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-[var(--school-accent)] ring-4 ring-[#0F1419]"></div>
                        <div className="flex flex-col gap-1">
                           <span className="text-sm text-gray-500">{new Date(interaction.date).toLocaleDateString()}</span>
                           <h4 className="text-white font-bold capitalize">{interaction.type}</h4>

@@ -36,7 +36,7 @@ function layoutNodes(root, cx = 600, cy = 300) {
 }
 
 function MindmapNode({ id, x, y, label, depth, active, onClick }) {
-  const colors = ['bg-[#D4AF37]/20 border-[#D4AF37]/50 text-[#D4AF37]', 'bg-blue-500/10 border-blue-500/30 text-blue-300', 'bg-white/[0.04] border-white/15 text-white/70'];
+  const colors = ['bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[var(--school-accent)]', 'bg-blue-500/10 border-blue-500/30 text-blue-300', 'bg-white/[0.04] border-white/15 text-white/70'];
   const colorClass = colors[Math.min(depth, colors.length - 1)];
 
   return (
@@ -46,7 +46,7 @@ function MindmapNode({ id, x, y, label, depth, active, onClick }) {
         className={cn(
           'flex h-full cursor-pointer items-center justify-center rounded-lg border px-2 text-center text-[11px] font-medium transition-all',
           colorClass,
-          active && 'ring-2 ring-[#D4AF37]/60',
+          active && 'ring-2 ring-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]',
         )}
         title={label}
       >

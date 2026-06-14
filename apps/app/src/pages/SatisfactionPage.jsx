@@ -12,7 +12,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Loader2, CheckCircle2, AlertCircle, Sparkles, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
+import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const LABELS = {
   1: 'Très insatisfait',
@@ -41,7 +41,7 @@ function StarRow({ selected, onSelect }) {
         >
           <Star
             className={`w-10 h-10 transition-colors ${
-              n <= active ? 'text-[#D4AF37] fill-[#D4AF37]' : 'text-white/20'
+              n <= active ? 'text-[var(--school-accent)] fill-[var(--school-accent)]' : 'text-white/20'
             }`}
           />
         </motion.button>
@@ -106,16 +106,16 @@ export default function SatisfactionPage() {
           <div>
             <h1 className="text-2xl font-bold text-white mb-2">Merci pour votre avis !</h1>
             <p className="text-gray-400">
-              Votre note de <span className="text-[#D4AF37] font-bold">{rating}/5 étoile{rating > 1 ? 's' : ''}</span> a bien été enregistrée.
+              Votre note de <span className="text-[var(--school-accent)] font-bold">{rating}/5 étoile{rating > 1 ? 's' : ''}</span> a bien été enregistrée.
             </p>
             <p className="text-gray-500 text-sm mt-2">Votre retour nous aide à améliorer l'accompagnement de chaque élève.</p>
           </div>
           <div className="flex justify-center gap-1">
             {[1,2,3,4,5].map(n => (
-              <Star key={n} className={`w-7 h-7 ${n <= rating ? 'text-[#D4AF37] fill-[#D4AF37]' : 'text-white/15'}`} />
+              <Star key={n} className={`w-7 h-7 ${n <= rating ? 'text-[var(--school-accent)] fill-[var(--school-accent)]' : 'text-white/15'}`} />
             ))}
           </div>
-          <a href="/" className="inline-block text-sm text-[#D4AF37] hover:underline mt-4">
+          <a href="/" className="inline-block text-sm text-[var(--school-accent)] hover:underline mt-4">
             Retour à l'accueil
           </a>
         </motion.div>
@@ -141,7 +141,7 @@ export default function SatisfactionPage() {
       <div className="max-w-md w-full space-y-6">
         {/* Logo */}
         <div className="text-center">
-          <p className="text-[#D4AF37] font-bold text-lg tracking-widest">{isnaTenantConfig.branding.name}</p>
+          <p className="text-[var(--school-accent)] font-bold text-lg tracking-widest">{isnaTenantConfig.branding.name}</p>
           <p className="text-gray-600 text-xs">{isnaTenantConfig.branding.fullName}</p>
         </div>
 
@@ -152,8 +152,8 @@ export default function SatisfactionPage() {
           className="rounded-2xl border border-white/10 bg-[#172437]/80 backdrop-blur-xl p-6 shadow-[0_24px_60px_rgba(0,0,0,0.5)] space-y-5"
         >
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center">
-              <Sparkles className="w-4.5 h-4.5 text-[#D4AF37]" />
+            <div className="w-9 h-9 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center">
+              <Sparkles className="w-4.5 h-4.5 text-[var(--school-accent)]" />
             </div>
             <div>
               <p className="text-base font-semibold text-white">Comment s'est passé votre entretien ?</p>
@@ -171,7 +171,7 @@ export default function SatisfactionPage() {
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="text-center text-sm text-[#D4AF37] font-medium -mt-2"
+                className="text-center text-sm text-[var(--school-accent)] font-medium -mt-2"
               >
                 {LABELS[rating]}
               </motion.p>
@@ -188,7 +188,7 @@ export default function SatisfactionPage() {
               onChange={e => setComment(e.target.value)}
               placeholder="Partagez votre expérience, suggestions…"
               rows={3}
-              className="w-full resize-none rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#D4AF37]/40 transition-colors"
+              className="w-full resize-none rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
             />
           </div>
 
@@ -196,7 +196,7 @@ export default function SatisfactionPage() {
           <Button
             onClick={handleSubmit}
             disabled={!rating || state === 'submitting'}
-            className="w-full bg-[#D4AF37] text-black hover:bg-amber-400 font-bold flex items-center justify-center gap-2 h-11"
+            className="w-full bg-[var(--school-accent)] text-black hover:bg-amber-400 font-bold flex items-center justify-center gap-2 h-11"
           >
             {state === 'submitting'
               ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -220,17 +220,17 @@ function ErrorScreen({ icon, title, msg, retry, color = 'red' }) {
     <div className="min-h-screen bg-[#090D14] flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center space-y-4">
         <div className={`w-16 h-16 rounded-full mx-auto flex items-center justify-center ${
-          color === 'gold' ? 'bg-[#D4AF37]/15 border border-[#D4AF37]/30' : 'bg-red-500/15 border border-red-500/30'
+          color === 'gold' ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]' : 'bg-red-500/15 border border-red-500/30'
         }`}>
           {icon === 'check'
-            ? <CheckCircle2 className={`w-8 h-8 ${color === 'gold' ? 'text-[#D4AF37]' : 'text-emerald-400'}`} />
+            ? <CheckCircle2 className={`w-8 h-8 ${color === 'gold' ? 'text-[var(--school-accent)]' : 'text-emerald-400'}`} />
             : <AlertCircle className="w-8 h-8 text-red-400" />
           }
         </div>
         <h2 className="text-xl font-bold text-white">{title}</h2>
         <p className="text-gray-400 text-sm">{msg}</p>
         {retry && (
-          <button onClick={retry} className="text-[#D4AF37] underline text-sm">Réessayer</button>
+          <button onClick={retry} className="text-[var(--school-accent)] underline text-sm">Réessayer</button>
         )}
       </div>
     </div>

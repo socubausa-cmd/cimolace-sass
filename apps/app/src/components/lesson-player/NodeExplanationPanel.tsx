@@ -169,7 +169,7 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
           <div className="flex-1 min-w-0">
             <div className="text-base font-bold text-white leading-tight">{node.label}</div>
             {nodeSeconds != null && (
-              <div className="text-xs text-[#D4AF37] mt-1 flex items-center gap-1">
+              <div className="text-xs text-[var(--school-accent)] mt-1 flex items-center gap-1">
                 <span>⏱</span>
                 <span>{formatTime(nodeSeconds)}</span>
               </div>
@@ -189,7 +189,7 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
           type="button"
           disabled={nodeSeconds == null || !onSeek}
           onClick={() => { if (nodeSeconds != null && onSeek) { onSeek(nodeSeconds); } }}
-          className="w-full flex items-center justify-center gap-2 bg-[#D4AF37] text-black font-bold rounded-lg px-3 py-2 text-sm hover:bg-yellow-400 disabled:opacity-40 transition-colors"
+          className="w-full flex items-center justify-center gap-2 bg-[var(--school-accent)] text-black font-bold rounded-lg px-3 py-2 text-sm hover:bg-yellow-400 disabled:opacity-40 transition-colors"
         >
           ▶ Aller au temps vidéo
         </button>
@@ -241,12 +241,12 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
 
             {/* Core Principle */}
             {explanation.corePrinciple && (
-              <div className="rounded-xl border border-[#D4AF37]/40 bg-[#D4AF37]/8 px-4 py-3 flex items-start gap-2"
+              <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] px-4 py-3 flex items-start gap-2"
                 style={{ background: 'rgba(212,175,55,0.08)' }}>
-                <span className="text-[#D4AF37] text-base flex-shrink-0">⚡</span>
+                <span className="text-[var(--school-accent)] text-base flex-shrink-0">⚡</span>
                 <div>
-                  <div className="text-[10px] font-semibold text-[#D4AF37]/70 uppercase tracking-wider mb-0.5">Principe fondamental</div>
-                  <p className="text-sm font-semibold text-[#D4AF37] leading-snug">{explanation.corePrinciple}</p>
+                  <div className="text-[10px] font-semibold text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] uppercase tracking-wider mb-0.5">Principe fondamental</div>
+                  <p className="text-sm font-semibold text-[var(--school-accent)] leading-snug">{explanation.corePrinciple}</p>
                 </div>
               </div>
             )}

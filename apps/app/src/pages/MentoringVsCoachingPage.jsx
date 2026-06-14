@@ -43,7 +43,7 @@ const MentoratPage = () => {
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-serif font-bold text-white leading-tight">
             {v.pageHero.title}
           </h1>
-          <p className="text-lg md:text-xl text-[#D4AF37] font-medium">
+          <p className="text-lg md:text-xl text-[var(--school-accent)] font-medium">
             {v.pageHero.subtitle}
           </p>
           <div className="w-24 h-0.5 bg-gradient-to-r from-yellow-500 via-white/20 to-red-500 mx-auto" />
@@ -236,14 +236,14 @@ const MentoratPage = () => {
 
         {/* CTA Principal */}
         <section className="bg-gradient-to-br from-[#192734] to-[#0f1216] rounded-3xl p-10 md:p-16 text-center border border-white/10 relative overflow-hidden shadow-2xl">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
           <div className="relative z-10 max-w-2xl mx-auto space-y-6">
             <h2 className="text-2xl font-bold font-serif text-white">Besoin d'aide pour choisir ?</h2>
             <p className="text-gray-400">
               Prenez rendez-vous avec un conseiller qui analysera votre situation et vous orientera vers le service le plus adapte a votre phase de vie.
             </p>
             <a href="/appointment/request">
-              <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-lg font-bold mt-4">
+              <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-lg font-bold mt-4">
                 <MessageCircle className="w-5 h-5" /> Prendre rendez-vous
               </Button>
             </a>

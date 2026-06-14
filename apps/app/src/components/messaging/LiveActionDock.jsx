@@ -8,7 +8,7 @@ import {
   MessageSquare, Mic, Video, MonitorUp, Sparkles,
   PhoneOff, Settings, HelpCircle, Smartphone,
 } from 'lucide-react';
-import { SmartboardNavigatorSceneIcon } from '@/components/live-room/SmartboardNavigatorSceneIcon';
+import { SmartboardNavigatorSceneIcon } from '@/components/liri/live-room/SmartboardNavigatorSceneIcon';
 import { cn } from '@/lib/utils';
 
 // ─── DockItem ─────────────────────────────────────────────────────────────────
@@ -66,7 +66,7 @@ function DockItem({
         !disabled && danger
           ? 'bg-red-500/20 border-red-400/30 text-red-200 hover:bg-red-500/30'
           : !disabled && active
-            ? 'bg-[#D4AF37]/18 border-[#D4AF37]/35 text-[#D4AF37] shadow-[0_10px_24px_-12px_rgba(212,175,55,0.8)]'
+            ? 'bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] shadow-[0_10px_24px_-12px_rgba(212,175,55,0.8)]'
             : !disabled
               ? 'bg-white/[0.05] border-white/12 text-white/75 hover:bg-white/10'
               : 'border-white/10 bg-white/[0.04] text-white/40'
@@ -120,7 +120,7 @@ export function LiveActionDock({
       <span className="relative inline-flex">
         <MessageSquare className="w-4 h-4" />
         {liveMessageUnread > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 h-3.5 min-w-3.5 rounded-full bg-[#D4AF37] text-[8px] font-bold text-black flex items-center justify-center px-0.5">
+          <span className="absolute -top-1.5 -right-1.5 h-3.5 min-w-3.5 rounded-full bg-[var(--school-accent)] text-[8px] font-bold text-black flex items-center justify-center px-0.5">
             {liveMessageUnread > 9 ? '9+' : liveMessageUnread}
           </span>
         )}

@@ -63,14 +63,14 @@ function VisualCard({ title, children, onExpand }: { title?: string; children: R
         style={{ background: 'linear-gradient(90deg, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.03) 100%)', borderBottom: '1px solid rgba(212,175,55,0.15)' }}
       >
         {title && (
-          <span className="text-xs font-semibold text-[#D4AF37] truncate tracking-wide">{title}</span>
+          <span className="text-xs font-semibold text-[var(--school-accent)] truncate tracking-wide">{title}</span>
         )}
         {onExpand && (
           <button
             type="button"
             onClick={onExpand}
             title="Agrandir"
-            className="ml-auto flex-shrink-0 text-[#D4AF37]/40 hover:text-[#D4AF37] transition-colors p-0.5 rounded"
+            className="ml-auto flex-shrink-0 text-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] hover:text-[var(--school-accent)] transition-colors p-0.5 rounded"
           >
             <Maximize2 className="w-3 h-3" />
           </button>

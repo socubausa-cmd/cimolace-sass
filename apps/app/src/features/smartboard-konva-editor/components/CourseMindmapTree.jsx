@@ -28,7 +28,7 @@ function MindNode({ node, depth, onInsert }) {
             type="button"
             onClick={() => onInsert({ nodeId: nid, label })}
             title="Insérer sur le canvas (texte)"
-            className="shrink-0 rounded border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#e8c76b] opacity-80 hover:bg-[#D4AF37]/20 hover:opacity-100"
+            className="shrink-0 rounded border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#e8c76b] opacity-80 hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] hover:opacity-100"
           >
             <span className="inline-flex items-center gap-0.5">
               <PlusSquare className="h-3 w-3" />
@@ -67,7 +67,7 @@ export default function CourseMindmapTree({ root, activeSlideTitle, onInsertNode
           Vue issue du plan Copilot (structure globale du cours). Utilisez <span className="text-violet-200/80">Canvas</span> pour placer un libellé sur la scène.
         </p>
         {activeSlideTitle ? (
-          <p className="mt-2 truncate text-[10px] text-[#D4AF37]/75">
+          <p className="mt-2 truncate text-[10px] text-[color-mix(in_srgb,var(--school-accent)_75%,transparent)]">
             Fiche canvas liée (Copilot) : <span className="font-medium text-[#f5dd8a]/90">{activeSlideTitle}</span>
           </p>
         ) : null}

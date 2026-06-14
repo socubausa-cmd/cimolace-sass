@@ -96,7 +96,7 @@ export function MemberPickerPanel({
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Rechercher un membre…"
-                  className="w-full h-9 pl-9 pr-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-gray-500 outline-none focus:border-[#D4AF37]/40 transition-colors"
+                  className="w-full h-9 pl-9 pr-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-gray-500 outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
                 />
               </div>
             </div>
@@ -113,7 +113,7 @@ export function MemberPickerPanel({
                   className={cn(
                     'h-7 px-3 rounded-lg text-xs font-medium transition-all',
                     tab === t.id
-                      ? 'bg-[#D4AF37]/20 text-[#D4AF37]'
+                      ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]'
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
                   )}
                 >
@@ -129,7 +129,7 @@ export function MemberPickerPanel({
                   {grouped.map(({ role, members }) => (
                     <div key={role}>
                       <div className="px-2 pt-2.5 pb-1">
-                        <p className="text-[10px] uppercase tracking-wider text-[#D4AF37]/70 font-medium">
+                        <p className="text-[10px] uppercase tracking-wider text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] font-medium">
                           {roleLabels[role] || role}
                           <span className="ml-1 text-gray-600">({members.length})</span>
                         </p>
@@ -145,7 +145,7 @@ export function MemberPickerPanel({
                             <OnlineDot status={user.status} className="absolute -bottom-0.5 -right-0.5" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm text-white truncate group-hover:text-[#D4AF37] transition-colors">
+                            <p className="text-sm text-white truncate group-hover:text-[var(--school-accent)] transition-colors">
                               {user.name}
                             </p>
                             <p className="text-[11px] text-gray-500 truncate">{user.email}</p>
@@ -168,7 +168,7 @@ export function MemberPickerPanel({
                           </p>
                           <button
                             onClick={onReload}
-                            className="inline-flex items-center gap-1.5 h-8 px-4 rounded-lg bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-medium hover:bg-[#D4AF37]/25 transition-all"
+                            className="inline-flex items-center gap-1.5 h-8 px-4 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] text-xs font-medium hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] transition-all"
                           >
                             Réessayer
                           </button>
@@ -181,7 +181,7 @@ export function MemberPickerPanel({
 
                   {loading && (
                     <div className="flex justify-center py-8">
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#D4AF37] border-t-transparent" />
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--school-accent)] border-t-transparent" />
                     </div>
                   )}
                 </>
@@ -203,7 +203,7 @@ export function MemberPickerPanel({
                         </p>
                       </div>
                       {conv.unreadCount > 0 && (
-                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#D4AF37] text-[10px] font-bold text-black flex items-center justify-center">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--school-accent)] text-[10px] font-bold text-black flex items-center justify-center">
                           {conv.unreadCount}
                         </span>
                       )}

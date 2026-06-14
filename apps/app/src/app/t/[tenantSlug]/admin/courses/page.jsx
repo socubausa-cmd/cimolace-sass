@@ -7,7 +7,7 @@
 
 import { getCurrentTenant, getTenantConfig } from '../../../../lib/tenant/getCurrentTenant.js';
 import { getFeatureGating } from '../../../../lib/tenant/featureGating.js';
-import { createCourseEngine } from '../../../../modules/liri-school/courses/courseEngine.js';
+import { createCourseEngine } from '../../../../modules/school/courses/courseEngine.js';
 
 export default async function TenantAdminCoursesPage({ params }) {
   const { tenantSlug } = params;

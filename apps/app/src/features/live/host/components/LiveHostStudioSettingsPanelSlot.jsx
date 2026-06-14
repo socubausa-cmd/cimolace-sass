@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import LiveHostVideoCell from '@/components/live-room/LiveHostVideoCell';
-import LiveStudioSettingsPanel from '@/components/live-room/LiveStudioSettingsPanel';
-import LiveHostAsideAndMonitorBar from '@/components/live-room/LiveHostAsideAndMonitorBar';
+import LiveHostVideoCell from '@/components/liri/live-room/LiveHostVideoCell';
+import LiveStudioSettingsPanel from '@/components/liri/live-room/LiveStudioSettingsPanel';
+import LiveHostAsideAndMonitorBar from '@/components/liri/live-room/LiveHostAsideAndMonitorBar';
 import { PHASE } from '@/features/live/host/liveHostConstants';
 
 /**

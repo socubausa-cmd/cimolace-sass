@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { EV_MUTED, EV_ACCENT, EV_LINE, EV_R, EV_SH } from '@/pages/eleve-mobile/eleveMobileScreensShared';
+import { EV_MUTED, EV_ACCENT, EV_LINE, EV_R, EV_SH } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const GRAD_BTN =
   'flex w-full items-center gap-3 px-4 py-3.5 text-left shadow-lg transition active:scale-[0.99] sm:py-4';
