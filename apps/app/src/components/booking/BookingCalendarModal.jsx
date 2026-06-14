@@ -750,16 +750,9 @@ export function BookingCalendarModal({
         return;
       }
 
-      const res = await fetch('/.netlify/functions/booking-cancel-appointment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ appointmentId: visitorDetail.appointmentId }),
-      });
-      const payload = await res.json();
-      if (!res.ok) throw new Error(payload?.error || 'Annulation impossible');
+      // API NestJS v2 (PATCH statut) — remplace la fonction Netlify v1.
+      const { bookingApi } = await import('@/lib/api');
+      await bookingApi.cancelAppointment(visitorDetail.appointmentId);
       setCancelConfirmOpen(false);
       clearVisitorAppointmentSnapshot();
       setVisitorDetail(null);
@@ -803,20 +796,16 @@ export function BookingCalendarModal({
     }
     setRescheduleSubmitting(true);
     try {
-      const res = await fetch('/.netlify/functions/booking-reschedule-request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          appointmentId: visitorDetail.appointmentId,
-          proposedScheduledAt: proposed.toISOString(),
-          justification: rescheduleJustification.trim(),
-        }),
+      // API NestJS v2 (reschedule/request) — remplace la fonction Netlify v1.
+      const { bookingApi } = await import('@/lib/api');
+      await bookingApi.requestReschedule({
+        appointment_id: visitorDetail.appointmentId,
+        reason: rescheduleJustification.trim(),
+        proposed_slots: [{
+          start: proposed.toISOString(),
+          end: new Date(proposed.getTime() + 30 * 60 * 1000).toISOString(),
+        }],
       });
-      const payload = await res.json();
-      if (!res.ok) throw new Error(payload?.error || 'Envoi impossible');
       setRescheduleOpen(false);
       toast({
         title: 'Demande envoyée',

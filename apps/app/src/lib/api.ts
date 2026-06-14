@@ -153,6 +153,10 @@ export const bookingApi = {
     api.get<any>(`/booking/appointments/${appointmentId}/preparation`).then(bookingUnwrap),
   setPreparation: (appointmentId: string, body: Record<string, unknown>) =>
     api.post<any>(`/booking/appointments/${appointmentId}/preparation`, body).then(bookingUnwrap),
+  cancelAppointment: (appointmentId: string) =>
+    api.patch<any>(`/booking/appointments/${appointmentId}`, { status: "cancelled" }).then(bookingUnwrap),
+  requestReschedule: (body: { appointment_id: string; reason?: string; proposed_slots?: Array<{ start: string; end: string }> }) =>
+    api.post<any>("/booking/reschedule/request", body).then(bookingUnwrap),
 };
 
 // ── Back-office tenant : marketplace + support ──────────────────────────────
