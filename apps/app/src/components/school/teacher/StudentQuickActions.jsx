@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Video, Loader2 } from 'lucide-react';
+import UnifiedChatPanel from '@/components/chat/UnifiedChatPanel';
 
 /**
  * StudentQuickActions — actions prof depuis la fiche élève.
@@ -33,18 +34,14 @@ export default function StudentQuickActions({ student }) {
   };
 
   const [dmLoading, setDmLoading] = useState(false);
+  const [dmRoom, setDmRoom] = useState(null);
   const handleMessage = async () => {
     if (!student?.id || dmLoading) return;
     setDmLoading(true);
     try {
       const { chatApi } = await import('@/lib/api');
       const room = await chatApi.openDirect(student.id); // même moteur que le chat du live
-      if (room?.id) {
-        // TODO: ouvrir le panneau de messagerie unifié sur cette room.
-        // eslint-disable-next-line no-alert
-        alert(`Conversation privée prête avec ${student.name || 'l\'élève'}.`);
-        return;
-      }
+      if (room?.id) { setDmRoom(room); return; }
       throw new Error('Conversation indisponible');
     } catch (e) {
       // eslint-disable-next-line no-alert
@@ -55,6 +52,17 @@ export default function StudentQuickActions({ student }) {
   };
 
   return (
+    <>
+    {dmRoom && (
+      <div
+        onClick={() => setDmRoom(null)}
+        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+      >
+        <div onClick={(e) => e.stopPropagation()} style={{ width: 'min(560px, 96vw)', height: 'min(640px, 90vh)' }}>
+          <UnifiedChatPanel roomId={dmRoom.id} title={`Message privé — ${student?.name || ''}`.trim()} onClose={() => setDmRoom(null)} />
+        </div>
+      </div>
+    )}
     <div className="flex items-center gap-2">
       <Button variant="outline" className="gap-2" onClick={handleMessage} disabled={dmLoading}>
         {dmLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />} Message privé
@@ -68,5 +76,6 @@ export default function StudentQuickActions({ student }) {
         Programmer un live
       </Button>
     </div>
+    </>
   );
 }
