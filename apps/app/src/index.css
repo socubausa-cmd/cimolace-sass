@@ -11,6 +11,11 @@
     --btn-border: hsl(214deg, 31.8%, 91.4%);
     --input: hsl(220, 20%, 90%);
     --radius: 0.5rem;
+    /* Accent tenant par défaut = OR ISNA (#D4AF37). Surchargé par tenant via
+       schoolShellTheme (--school-accent). Permet de migrer les couleurs codées
+       en dur vers var(--school-accent) sans changer l'apparence d'ISNA. */
+    --school-accent: #d4af37;
+    --school-accent-rgb: 212 175 55;
   }
 
   .dark {
