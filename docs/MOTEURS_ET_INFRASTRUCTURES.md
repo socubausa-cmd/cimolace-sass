@@ -37,6 +37,25 @@
 
 ---
 
+## 2b. Liri : moteur, Portail, Studio — qui est quoi
+
+« Liri » désigne **deux choses** : le **produit/moteur** (la techno live) ET des **pages d'interface**. D'où la confusion. Voici la grille :
+
+| Terme | C'est quoi | Route | Nature |
+|---|---|---|---|
+| **Liri** (le produit/moteur) | La **techno live** de Cimolace = les moteurs `liri_live`, `liri_replay`, `liri_smartboard`, `studio_creator`, `liri_neuro_recall`. | — (ce sont des moteurs activables) | **MOTEUR** |
+| **Liri Portail** | La **page d'accueil / cockpit** du produit Liri : vue d'ensemble (mes lives, replays, activité, revenus, stats). C'est là qu'on **atterrit**. | `/liri` | **PAGE** (vue) |
+| **Liri Studio** | Le **hub des outils de création / production** : préparer un live, Course/Formation Builder, Masterclass, Smartboard Designer. C'est là qu'on **crée**. | `/studio/liri` | **PAGE** (création) |
+| **Dashboard Liri** | Vue de **gestion** Liri réservée au staff (teacher/admin/owner). | `/dashboard/liri` | **PAGE** (admin) |
+
+**À retenir :**
+- **Liri Portail ≠ Liri Studio** : le Portail est l'**accueil** (on consulte) ; le Studio est l'**atelier** (on produit). Les deux affichent le **même produit Liri**, sous deux angles.
+- **Liri ≠ ISNA.** Liri est un **moteur**. ISNA est un **tenant** (école) qui **active** ce moteur. Le Portail et le Studio Liri apparaissent **dans** l'espace ISNA **parce qu'ISNA a activé Liri** — pas parce qu'ils appartiennent à ISNA. Le même Liri peut tourner pour Zahir, un créateur, ou seul sur un site externe (via clé API).
+
+> ⚠️ **Confusion résiduelle à arbitrer (UX, pas bloquant) :** il existe **3 surfaces d'entrée Liri** qui se chevauchent — `/liri` (Portail), `/dashboard/liri` (Dashboard), `/studio/liri` (Studio Hub). Recommandation : **`/liri` = accueil produit**, **`/studio/liri` = création**, et **fusionner / clarifier `/dashboard/liri`** (gestion) pour qu'il ne fasse pas doublon avec le Portail. À décider en équipe ; non corrigé ici car ça touche le routing (territoire partagé).
+
+---
+
 ## 3. Les 7 INFRASTRUCTURES (templates) et leurs moteurs
 
 | Infrastructure | `type` | Moteurs assemblés |
