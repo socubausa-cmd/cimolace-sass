@@ -966,6 +966,7 @@ const AppContent = () => {
     '/dev/masterclass-factory',
     '/embed/',       // LIRI embed iframe — aucun shell
     '/handoff',      // handoff cross-domain (« Connexion à la salle ») — coque neutre, pas de shell école
+    '/liri',         // accueil LIRI standalone (LiriPortalShell a son propre topbar) — pas de header école
   ];
 
   // Routes live immersif — aucun shell app autour (plein écran total)
