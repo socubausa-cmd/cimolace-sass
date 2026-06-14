@@ -1,5 +1,5 @@
 import React from 'react';
-import { MemberVideoModal } from '@/components/live-room/MemberVideoModal';
+import { MemberVideoModal } from '@/components/liri/live-room/MemberVideoModal';
 import { ARENA_LAYOUT } from '@/lib/liriArenaLayout';
 
 /**

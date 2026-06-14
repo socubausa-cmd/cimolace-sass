@@ -1,9 +1,9 @@
 import React from 'react';
-import AmbientAudioLayer from '@/components/live-room/AmbientAudioLayer';
-import DebateVoteStrip from '@/components/live-room/DebateVoteStrip';
-import LiveAsidePip from '@/components/live-room/LiveAsidePip';
-import LiveGuestNeuronqPanel from '@/components/live-room/LiveGuestNeuronqPanel';
-import LiveHostLongiaHubDrawer from '@/components/live-room/LiveHostLongiaHubDrawer';
+import AmbientAudioLayer from '@/components/liri/live-room/AmbientAudioLayer';
+import DebateVoteStrip from '@/components/liri/live-room/DebateVoteStrip';
+import LiveAsidePip from '@/components/liri/live-room/LiveAsidePip';
+import LiveGuestNeuronqPanel from '@/components/liri/live-room/LiveGuestNeuronqPanel';
+import LiveHostLongiaHubDrawer from '@/components/liri/live-room/LiveHostLongiaHubDrawer';
 import { LiveCompactRailToggles } from '@/features/live/host/components/LiveCompactRailToggles';
 import { LiveDebateVoteOverlay } from '@/features/live/host/components/LiveDebateVoteOverlay';
 import { LiveGuestProctorConsentModal } from '@/features/live/host/components/LiveGuestProctorConsentModal';

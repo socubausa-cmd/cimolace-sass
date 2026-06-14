@@ -4,7 +4,7 @@
 import React from 'react';
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import StudioEntryPage from './StudioEntryPage';
-import LiveStudioPage from '@/pages/liri/LiveStudioPage';
+import LiveStudioPage from '@/pages/studio-creator/LiveStudioPage';
 import StudioFormationPage from './StudioFormationPage';
 import StudioAppointmentPage from './StudioAppointmentPage';
 import StudioEventPage from './StudioEventPage';

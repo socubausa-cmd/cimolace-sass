@@ -1,5 +1,5 @@
 import React from 'react';
-import LiveHostVideoCell from '@/components/live-room/LiveHostVideoCell';
+import LiveHostVideoCell from '@/components/liri/live-room/LiveHostVideoCell';
 
 const VARIANTS = {
   host: {

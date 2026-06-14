@@ -1,4 +1,4 @@
-import { formatSecondsToTimeText, parseTimestampToSeconds } from '@/components/course-builder/segmentUtils';
+import { formatSecondsToTimeText, parseTimestampToSeconds } from '@/components/school/course-builder/segmentUtils';
 import { applySegmentsFromNleV1Clips } from './applySegmentsFromNleV1Clips.js';
 
 /**

@@ -1,10 +1,10 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import HostPermissionRequestsPanel from '@/components/liri-live/HostPermissionRequestsPanel';
-import ControlMeshPanel from '@/components/live-room/ControlMeshPanel';
-import Zone3Panel from '@/components/live-room/Zone3Panel';
-import LiveHostLongiaCoachPanel from '@/components/live-room/LiveHostLongiaCoachPanel';
-import LiveHostLayoutPreviewPanel from '@/components/live-room/LiveHostLayoutPreviewPanel';
+import HostPermissionRequestsPanel from '@/components/liri/liri-live/HostPermissionRequestsPanel';
+import ControlMeshPanel from '@/components/liri/live-room/ControlMeshPanel';
+import Zone3Panel from '@/components/liri/live-room/Zone3Panel';
+import LiveHostLongiaCoachPanel from '@/components/liri/live-room/LiveHostLongiaCoachPanel';
+import LiveHostLayoutPreviewPanel from '@/components/liri/live-room/LiveHostLayoutPreviewPanel';
 import { LIVE_DRAWER_SPRING_ELASTIC } from '@/lib/liveDrawerMotion';
 import {
   LIVE_HOST_HUB_GOVERNOR_LABELS,

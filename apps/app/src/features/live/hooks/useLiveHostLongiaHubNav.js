@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { PHASE } from '@/features/live/host/liveHostConstants';
-import { LIRI_LIVE_LONGIA_HUB_EXPAND_EVENT } from '@/components/live-room/LiveHostLongiaHubDrawer';
+import { LIRI_LIVE_LONGIA_HUB_EXPAND_EVENT } from '@/components/liri/live-room/LiveHostLongiaHubDrawer';
 import { LIRI_HOST_EXPAND_NOTIFICATIONS_EVENT } from '@/lib/longiaLiveCopilot';
 
 /**

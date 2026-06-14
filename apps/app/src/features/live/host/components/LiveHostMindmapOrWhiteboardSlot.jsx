@@ -1,5 +1,5 @@
 import React from 'react';
-import LiveWhiteboardToolsSidebar from '@/components/live-room/LiveWhiteboardToolsSidebar';
+import LiveWhiteboardToolsSidebar from '@/components/liri/live-room/LiveWhiteboardToolsSidebar';
 import { LH_SIDEBAR_CARD } from '@/features/live/host/liveHostTheme';
 import { LiveMindmapCard } from '@/features/live/host/components/LiveMindmapCard';
 

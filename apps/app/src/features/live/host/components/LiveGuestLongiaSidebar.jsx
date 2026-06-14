@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
-import LiveGuestLongiaPanel from '@/components/live-room/LiveGuestLongiaPanel';
-import GuestLivekitInterpreterAudios from '@/components/live-room/GuestLivekitInterpreterAudios';
+import LiveGuestLongiaPanel from '@/components/liri/live-room/LiveGuestLongiaPanel';
+import GuestLivekitInterpreterAudios from '@/components/liri/live-room/GuestLivekitInterpreterAudios';
 import { formatMeshCountdown } from '@/features/live/host/liveHostUtils';
 import { PHASE } from '@/features/live/host/liveHostConstants';
 

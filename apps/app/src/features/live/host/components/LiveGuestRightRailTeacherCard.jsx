@@ -1,8 +1,8 @@
 import React from 'react';
 import { Track } from 'livekit-client';
-import LiveHostVideoCell from '@/components/live-room/LiveHostVideoCell';
-import GuestMembersGrid from '@/components/live-room/GuestMembersGrid';
-import GuestNotesPanel from '@/components/live-room/GuestNotesPanel';
+import LiveHostVideoCell from '@/components/liri/live-room/LiveHostVideoCell';
+import GuestMembersGrid from '@/components/liri/live-room/GuestMembersGrid';
+import GuestNotesPanel from '@/components/liri/live-room/GuestNotesPanel';
 import { LH_SIDEBAR_CARD } from '@/features/live/host/liveHostTheme';
 import { PHASE } from '@/features/live/host/liveHostConstants';
 

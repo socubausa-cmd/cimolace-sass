@@ -1,6 +1,6 @@
 import React from 'react';
 import { Track } from 'livekit-client';
-import LiveHostVideoCell from '@/components/live-room/LiveHostVideoCell';
+import LiveHostVideoCell from '@/components/liri/live-room/LiveHostVideoCell';
 import {
   ARENA_MEMBERS_WALL_MAX_VISIBLE,
   ARENA_PANEL_MAX_SLOTS,

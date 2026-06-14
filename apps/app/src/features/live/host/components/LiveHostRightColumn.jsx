@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
-import HostSharedGuestNotesInbox from '@/components/live-room/HostSharedGuestNotesInbox';
+import HostSharedGuestNotesInbox from '@/components/liri/live-room/HostSharedGuestNotesInbox';
 import { AudioScenePanel } from '@/lib/liriAudioScene';
 import { LiveRightRailCollapsedStrip } from '@/features/live/host/components/LiveRightRailCollapsedStrip';
 import { LiveGuestRightRailTeacherCard } from '@/features/live/host/components/LiveGuestRightRailTeacherCard';

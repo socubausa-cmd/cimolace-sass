@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import LiveHostMessagingPanel from '@/components/live-room/LiveHostMessagingPanel';
-import LiveMemberVideoPreviewModal from '@/components/live-room/LiveMemberVideoPreviewModal';
+import LiveHostMessagingPanel from '@/components/liri/live-room/LiveHostMessagingPanel';
+import LiveMemberVideoPreviewModal from '@/components/liri/live-room/LiveMemberVideoPreviewModal';
 import { LIVE_STRIP_DOCK_MIN_MEMBER_SLOTS } from '@/lib/liveCommLayers';
 import { PHASE } from '@/features/live/host/liveHostConstants';
 

@@ -16,7 +16,7 @@
 import React from 'react';
 import { Mic, MicOff, Video, VideoOff, Crown } from 'lucide-react';
 import GuestSelfVideoCard from './GuestSelfVideoCard';
-import { proColors, proRadii, proShadow, proType } from '@/components/studio-creator/studio-pro';
+import { proColors, proRadii, proShadow, proType } from '@/styles/proTokens';
 
 export default function GuestMembersGrid({
   self,

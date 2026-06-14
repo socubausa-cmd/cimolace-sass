@@ -9,8 +9,8 @@ import {
 
 /**
  * Même lot de requêtes que `StudentDashboard` (portail web) — sans mode démo.
- * Partagé avec : `pages/student-school-life/StudentDashboard` et
- * `pages/eleve-mobile/etudiantParity/EleveEtudiantDashboardScreen`.
+ * Partagé avec : `pages/school/student-school-life/StudentDashboard` et
+ * `pages/school/eleve-mobile/etudiantParity/EleveEtudiantDashboardScreen`.
  */
 export function useStudentDashboardParityData(userId) {
   const [loading, setLoading] = useState(Boolean(userId));

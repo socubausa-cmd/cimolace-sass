@@ -34,7 +34,7 @@ import {
 import { jsPDF } from 'jspdf';
 import { useGuestNotes } from '@/hooks/useGuestNotes';
 import { useToast } from '@/components/ui/use-toast';
-import { proColors, proRadii, proSize, proType } from '@/components/studio-creator/studio-pro';
+import { proColors, proRadii, proSize, proType } from '@/styles/proTokens';
 
 const TOOLBAR_BTN = {
   height: 26, minWidth: 26, padding: '0 6px',

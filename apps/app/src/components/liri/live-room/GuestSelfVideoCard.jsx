@@ -19,7 +19,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Mic, MicOff, Video, VideoOff, Sparkles, Wifi } from 'lucide-react';
-import { proColors, proRadii, proShadow, proType } from '@/components/studio-creator/studio-pro';
+import { proColors, proRadii, proShadow, proType } from '@/styles/proTokens';
 
 const QUALITY_COLOR = {
   good: proColors.ok,

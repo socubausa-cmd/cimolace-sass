@@ -1,7 +1,7 @@
 import React from 'react';
-import LiveHostLiriMobileColumn from '@/components/live-room/LiveHostLiriMobileColumn';
-import LiveHostSmartBoardStage from '@/components/live-room/LiveHostSmartBoardStage';
-import LiveHostArenaLiveBar from '@/components/live-room/LiveHostArenaLiveBar';
+import LiveHostLiriMobileColumn from '@/components/liri/live-room/LiveHostLiriMobileColumn';
+import LiveHostSmartBoardStage from '@/components/liri/live-room/LiveHostSmartBoardStage';
+import LiveHostArenaLiveBar from '@/components/liri/live-room/LiveHostArenaLiveBar';
 import { DebateModeBanner } from '@/features/live/host/components/DebateModeBanner';
 import { LiveSceneSlide } from '@/features/live/host/components/LiveSceneSlide';
 import { LiveStageFloatingOverlays } from '@/features/live/host/components/LiveStageFloatingOverlays';

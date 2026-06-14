@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import AmbientAudioLayer from '@/components/live-room/AmbientAudioLayer';
+import AmbientAudioLayer from '@/components/liri/live-room/AmbientAudioLayer';
 import { LiveHostMobileTopBar }         from './LiveHostMobileTopBar';
 import { LiveHostMobileBottomBar }       from './LiveHostMobileBottomBar';
 import { LiveHostMobileParticipantStrip } from './LiveHostMobileParticipantStrip';
