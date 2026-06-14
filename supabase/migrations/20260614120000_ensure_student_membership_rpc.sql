@@ -87,6 +87,9 @@ $$;
 
 -- Seul un utilisateur authentifié peut s'auto-rattacher ; révoquer l'accès large.
 REVOKE ALL ON FUNCTION public.ensure_student_membership(text) FROM PUBLIC;
+-- anon hérite d'EXECUTE via les défauts Supabase malgré le REVOKE PUBLIC → le retirer
+-- explicitement (la fonction lève déjà 28000 si auth.uid() IS NULL, mais on durcit).
+REVOKE EXECUTE ON FUNCTION public.ensure_student_membership(text) FROM anon;
 GRANT EXECUTE ON FUNCTION public.ensure_student_membership(text) TO authenticated;
 
 COMMENT ON FUNCTION public.ensure_student_membership(text) IS
