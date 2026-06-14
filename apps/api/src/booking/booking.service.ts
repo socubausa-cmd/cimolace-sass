@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import { LiveService } from '../live/live.service';
 import type { TenantContext } from '../tenant/tenant.types';
 import type { CreateAppointmentDto, CreateSlotDto, SubmitFeedbackDto, UpdateAppointmentDto } from './dto/booking.dto';
 
@@ -13,7 +14,10 @@ import type { CreateAppointmentDto, CreateSlotDto, SubmitFeedbackDto, UpdateAppo
 export class BookingService {
   private readonly logger = new Logger(BookingService.name);
 
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly live: LiveService,
+  ) {}
 
   // ── Slots (disponibilités) ───────────────────────────────────────────────
 
@@ -166,6 +170,48 @@ export class BookingService {
 
     if (error || !data) throw new NotFoundException('Rendez-vous introuvable');
     return data;
+  }
+
+  // ── Pont RDV → séance live (école) ───────────────────────────────────────
+  // Porté d'ISNA v1 (booking-start-immersive-live). Le staff transforme un
+  // rendez-vous confirmé en séance live LIRI (entretien privé). Idempotent.
+  // S'appuie sur le moteur Liri (LiveService), comme teleconsult.service côté santé.
+  async startLiveFromAppointment(
+    tenant: TenantContext,
+    staffUserId: string,
+    appointmentId: string,
+  ) {
+    const appt: any = await this.getAppointment(appointmentId, tenant.id);
+
+    // Idempotent : si la séance existe déjà, on la renvoie.
+    if (appt.live_session_id) {
+      return { ok: true, liveSessionId: appt.live_session_id, reused: true };
+    }
+
+    const scheduledAt =
+      appt.scheduled_at || appt.booking_slots?.start_at || new Date().toISOString();
+    const shortId = String(appt.id).slice(0, 8);
+
+    // Création de la séance via le moteur Liri (autorité vidéo unique).
+    const live: any = await this.live.createSession(tenant.id, {
+      teacher_id: staffUserId,
+      title: `Live entretien ${shortId}`,
+      session_type: 'entretien',
+      scheduled_at: scheduledAt,
+      appointment_id: appt.id,
+    });
+    if (!live?.id) {
+      throw new BadRequestException('Création de la séance live impossible');
+    }
+
+    // Lien retour RDV → séance.
+    await (this.supabase.client as any)
+      .from('appointments')
+      .update({ live_session_id: live.id })
+      .eq('id', appt.id)
+      .eq('tenant_id', tenant.id);
+
+    return { ok: true, liveSessionId: live.id, reused: false };
   }
 
   // ── Feedback / Satisfaction ──────────────────────────────────────────────
