@@ -70,6 +70,7 @@ const mmBtn: React.CSSProperties = {
 };
 const MM_W = 520, MM_H = 400;
 const TYPE_COLOR: Record<string, string> = { organ: '#0ea5e9', symptom: '#f59e0b', condition: '#ef4444', hormone: 'var(--zw-violet)', biomarker: '#10b981', system: 'var(--zw-text-muted)' };
+const TYPE_LABEL: Record<string, string> = { organ: 'Organe', symptom: 'Symptôme', condition: 'Condition', hormone: 'Hormone', biomarker: 'Biomarqueur', system: 'Système' };
 
 export function MindmapPanel({ patientId }: { patientId: string }) {
   const [graph, setGraph] = useState<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] });
@@ -153,6 +154,10 @@ export function MindmapPanel({ patientId }: { patientId: string }) {
     return s;
   }, [sel, graph.edges]);
 
+  const nodeByCode = useMemo(() => Object.fromEntries(graph.nodes.map((n: any) => [n.ref_code, n])), [graph.nodes]);
+  const selNode: any = sel ? nodeByCode[sel] : null;
+  const selEdges = useMemo(() => (sel ? graph.edges.filter((e: any) => e.from_code === sel || e.to_code === sel) : []), [sel, graph.edges]);
+
   return (
     <div style={panel}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, gap: 8 }}>
@@ -163,7 +168,7 @@ export function MindmapPanel({ patientId }: { patientId: string }) {
           <button onClick={() => { setView({ tx: 0, ty: 0, k: 1 }); setSel(null); }} style={mmBtn} title="Réinitialiser la vue">⟲</button>
         </div>
       </div>
-      <div style={{ border: '1px solid var(--zw-border)', borderRadius: 12, background: 'var(--zw-bg-subtle)', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', border: '1px solid var(--zw-border)', borderRadius: 12, background: 'var(--zw-bg-subtle)', overflow: 'hidden' }}>
         <svg
           ref={svgRef}
           width="100%"
@@ -203,6 +208,39 @@ export function MindmapPanel({ patientId }: { patientId: string }) {
             })}
           </g>
         </svg>
+        {selNode && (
+          <div style={{ position: 'absolute', top: 8, right: 8, width: 'min(290px, 84%)', maxHeight: 'calc(100% - 16px)', overflowY: 'auto', background: '#fff', border: '1px solid var(--zw-border)', borderRadius: 12, boxShadow: '0 12px 32px -10px rgba(42,16,23,0.3)', padding: 14, zIndex: 5 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+              <div style={{ minWidth: 0 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--zw-text-muted)' }}>
+                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: TYPE_COLOR[selNode.node_type] || 'var(--zw-text-muted)' }} />
+                  {TYPE_LABEL[selNode.node_type] || selNode.node_type}
+                </span>
+                <h4 style={{ fontFamily: 'var(--zw-font-display)', fontSize: 19, fontWeight: 700, margin: '3px 0 0', color: 'var(--zw-text)', lineHeight: 1.15 }}>{selNode.label_fr}</h4>
+              </div>
+              <button onClick={() => setSel(null)} title="Fermer" style={{ ...mmBtn, width: 24, height: 24, fontSize: 16, flexShrink: 0 }}>×</button>
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--zw-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 12 }}>Connexions ({selEdges.length})</div>
+            {selEdges.length === 0 ? (
+              <p style={{ fontSize: 12, color: 'var(--zw-text-faint)', marginTop: 4 }}>Aucune connexion référencée.</p>
+            ) : selEdges.map((e: any, i: number) => {
+              const otherCode = e.from_code === sel ? e.to_code : e.from_code;
+              const incoming = e.to_code === sel;
+              return (
+                <div key={i} style={{ padding: '8px 0', borderTop: i === 0 ? 'none' : '1px solid var(--zw-border)' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--zw-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ color: 'var(--zw-violet)' }}>{incoming ? '←' : '→'}</span>
+                    {nodeByCode[otherCode]?.label_fr || otherCode}
+                  </div>
+                  {e.label_fr && <div style={{ fontSize: 12, color: 'var(--zw-text-soft)', fontStyle: 'italic', marginTop: 2 }}>{e.label_fr}</div>}
+                  <div style={{ fontSize: 10.5, color: 'var(--zw-text-faint)', marginTop: 3 }}>
+                    force {Math.round((e.weight || 0) * 100)}%{e.evidence_level ? ` · preuve ${e.evidence_level}` : ''}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
       <p style={{ fontSize: 11, color: 'var(--zw-text-faint)', marginTop: 6 }}>
         Glissez pour déplacer · molette / +− pour zoomer · cliquez un nœud pour isoler ses liens{sel ? ' · cliquez le fond pour tout réafficher' : ''}
