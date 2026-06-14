@@ -163,6 +163,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import TenantProtectedRoute from '@/components/TenantProtectedRoute';
 import ProtectedRoleRoute from '@/components/ProtectedRoleRoute';
 import ProtectedSubscriptionRoute from '@/components/ProtectedSubscriptionRoute';
+import ProtectedLiriRoute from '@/components/ProtectedLiriRoute';
 import { BillingProvider, useBilling } from '@/contexts/BillingContext';
 const GraceBanner = lazy(() => import('@/components/billing/GraceBanner'));
 const DiscoveryChat = lazy(() => import('@/components/booking/DiscoveryChat').then((m) => ({ default: m.DiscoveryChat })));
@@ -1411,15 +1412,22 @@ isLiriHostDevPreviewRoute;
               <SmartboardStreamingPage />
             </ProtectedRoleRoute>
           } />
+          {/* Liri Brain — assistant IA conversationnel (multi-modèles). Nom canonique
+              /liri/brain ; /dashboard/liri conservé en alias legacy (rétro-compat). */}
+          <Route path="/liri/brain" element={
+            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
+              <DashboardLiri />
+            </ProtectedRoleRoute>
+          } />
           <Route path="/dashboard/liri" element={
             <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
               <DashboardLiri />
             </ProtectedRoleRoute>
           } />
           <Route path="/liri" element={
-            <ProtectedRoleRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student']}>
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student']}>
               <LiriPortalPage />
-            </ProtectedRoleRoute>
+            </ProtectedLiriRoute>
           } />
           <Route path="/choose-account-type" element={
             <ProtectedRoute>
@@ -1839,9 +1847,9 @@ isLiriHostDevPreviewRoute;
             </ProtectedRoleRoute>
           } />
           <Route path="/studio/*" element={
-            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat', 'practitioner', 'clinic_admin']} allowTenantRole>
+            <ProtectedLiriRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat', 'practitioner', 'clinic_admin']} allowTenantRole>
               <StudioRouter />
-            </ProtectedRoleRoute>
+            </ProtectedLiriRoute>
           } />
 
           {/* Téléphone QR — rejoint la room immersive sans login (doit être avant /live/:sessionId) */}

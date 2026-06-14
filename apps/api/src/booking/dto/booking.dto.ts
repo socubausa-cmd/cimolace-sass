@@ -1,4 +1,31 @@
-import { IsIn, IsISO8601, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsArray, IsBoolean, IsIn, IsISO8601, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+
+export class SetPreparationDto {
+  @IsOptional()
+  @IsArray()
+  planJson?: any[];
+
+  @IsOptional()
+  @IsIn(['chat', 'live', 'chat_then_live'])
+  roomType?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  notesSecretary?: string | null;
+
+  @IsOptional()
+  @IsArray()
+  documentsJson?: any[];
+
+  @IsOptional()
+  @IsBoolean()
+  isReady?: boolean;
+
+  @IsOptional()
+  @IsIn(['preparing', 'ready', 'in_progress', 'confirmed'])
+  newStatus?: string | null;
+}
 
 export class CreateAppointmentDto {
   @IsUUID()

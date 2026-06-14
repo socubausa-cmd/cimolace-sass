@@ -35,6 +35,19 @@ Cimolace (SaaS, propriétaire = Ngowazulu / cimolace@gmail.com)
 pas une constante de plateforme. Rien de spécifique à ISNA ne doit être codé en dur dans le
 cœur applicatif — tout passe par la **résolution de tenant** (slug d'URL, domaine, config).
 
+### Règle de vocabulaire — LIRI = le produit, pas ISNA
+
+Même piège que `isna ≠ Cimolace`, appliqué à **LIRI**. Ne jamais confondre :
+
+| Terme | Ce que c'est | Portée |
+|-------|--------------|--------|
+| **LIRI (le portail / produit)** | Le moteur d'apprentissage & live : le **portail web** `apps/app` (« le portail web LIRI ») + l'**app native** `apps/mobile`. ~30 moteurs (`apps/mobile/src/lib/engines.ts` : Brain IA, Lives LiveKit, NeuroRecall, Forum, Arena, Smartboard, Masterscript, Bibliothèque, Vie scolaire, Commerce…). | **Multi-tenant, tenant-agnostique.** Ce que Cimolace vend/réutilise. |
+| **« LIRI dans ISNA »** | Une **instance** de LIRI scopée au tenant ISNA : ses données, son branding, son domaine `prorascience.org`, isolées par RLS (`tenant_id` / `tenant_memberships`). | **Un tenant parmi d'autres.** ISNA = la 1ʳᵉ école. |
+
+> **Analogie** — LIRI portail = *Shopify* (la plateforme) ; « LIRI dans ISNA » = *une boutique Shopify* (un marchand). LIRI = le moteur ; ISNA = la 1ʳᵉ voiture construite avec.
+
+⇒ Ne jamais désigner LIRI comme « l'app d'ISNA », ni coder un tenant en dur dans le produit. **LIRI est le produit ; ISNA en est un *client*.**
+
 ---
 
 ## 2. Cimolace = la plateforme SaaS

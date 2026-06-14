@@ -18,7 +18,7 @@ import { CurrentTenant } from '../tenant/current-tenant.decorator';
 import { TenantGuard } from '../tenant/tenant.guard';
 import type { TenantContext } from '../tenant/tenant.types';
 import { BookingService } from './booking.service';
-import { CreateAppointmentDto, CreateSlotDto, SubmitFeedbackDto, UpdateAppointmentDto } from './dto/booking.dto';
+import { CreateAppointmentDto, CreateSlotDto, SetPreparationDto, SubmitFeedbackDto, UpdateAppointmentDto } from './dto/booking.dto';
 
 @Controller('booking')
 @UseGuards(JwtAuthGuard, TenantGuard)
@@ -51,6 +51,49 @@ export class BookingController {
   @Get('slots/:id')
   getSlot(@Param('id') id: string, @CurrentTenant() tenant: TenantContext) {
     return this.booking.getSlot(id, tenant.id);
+  }
+
+  // ── Pont RDV → séance live (staff transforme un RDV en séance live LIRI) ──
+  @Post('appointments/:id/start-live')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin', 'teacher', 'secretariat')
+  startLiveFromAppointment(
+    @Param('id') id: string,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
+  ) {
+    const userId = (req as any).user?.id;
+    return this.booking.startLiveFromAppointment(tenant, userId, id);
+  }
+
+  // ── Secrétaires disponibles (moteur de matching intelligent) ─────────────
+  @Get('available-secretaries')
+  availableSecretaries(
+    @CurrentTenant() tenant: TenantContext,
+    @Query('timezone') timezone?: string,
+    @Query('country') country?: string,
+    @Query('when') when?: string,
+  ) {
+    return this.booking.availableSecretaries(tenant, { timezone, country, when });
+  }
+
+  // ── Préparation d'entretien (secrétariat) ────────────────────────────────
+  @Get('appointments/:id/preparation')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin', 'teacher', 'secretariat')
+  getPreparation(@Param('id') id: string, @CurrentTenant() tenant: TenantContext) {
+    return this.booking.getAppointmentPreparation(tenant, id);
+  }
+
+  @Post('appointments/:id/preparation')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin', 'teacher', 'secretariat')
+  setPreparation(
+    @Param('id') id: string,
+    @Body() dto: SetPreparationDto,
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.booking.setAppointmentPreparation(tenant, id, dto);
   }
 
   @Delete('slots/:id')

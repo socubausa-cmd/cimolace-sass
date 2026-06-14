@@ -12,6 +12,7 @@ import { pollAIJobs }                 from './jobs/ai.js';
 import { pollZoomSync }               from './jobs/zoom-sync.js';
 import { pollShortGeneration }        from './jobs/short-generator.js';
 import { pollCourseRenderJobs }       from './jobs/courseRender.js';
+import { pollLiveReminders }          from './jobs/live-reminders.js';
 
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
@@ -64,6 +65,18 @@ console.log('[worker] ✓ DLQ processor (5min)');
   }
 })();
 console.log('[worker] ✓ Email poller (15s)');
+
+// ── Rappels live (60s) ───────────────────────────────────────────────────
+(async () => {
+  while (true) {
+    try {
+      const count = await (pollLiveReminders as () => Promise<number>)();
+      if (count > 0) console.log(`[worker] Live reminders: ${count} rappels enfilés`);
+    } catch (e: unknown) { console.error('[worker] Live reminders error:', (e as Error).message); }
+    await sleep(60_000);
+  }
+})();
+console.log('[worker] ✓ Live reminders poller (60s)');
 
 // ── AI generation (10s) ──────────────────────────────────────────────────
 (async () => {
