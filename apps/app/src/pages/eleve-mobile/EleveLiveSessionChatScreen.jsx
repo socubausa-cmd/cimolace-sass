@@ -20,7 +20,7 @@ import { useDataSync } from '@/contexts/DataSyncContext';
 import { useToast } from '@/components/ui/use-toast';
 import { EleveMobileShell } from '@/components/eleve-mobile/EleveMobileShell';
 import { LiriStatusBar } from '@/pages/eleve-mobile/connection/EleveConnectionLayout';
-import { EV_BG, EV_CARD, EV_MUTED, EV_ACCENT, EV_LINE, EV_R, EV_SH, EV_MSG_TAB_BADGE } from '@/pages/eleve-mobile/eleveMobileScreensShared';
+import { EV_BG, EV_CARD, EV_MUTED, EV_ACCENT, EV_LINE, EV_R, EV_SH } from '@/pages/eleve-mobile/eleveMobileScreensShared';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { useLiveSessionChat } from '@/hooks/useLiveSessionChat';
 import { useLiveSessionHeaderInfo } from '@/hooks/useLiveSessionHeaderInfo';
@@ -109,7 +109,6 @@ export default function EleveLiveSessionChatScreen() {
   }, [live, liveRows.length]);
 
   const inboxUnread = (Array.isArray(sync) ? sync : []).filter((n) => !n.isRead).length;
-  const messagesBadge = EV_MSG_TAB_BADGE > 0 ? EV_MSG_TAB_BADGE : 2;
 
   const handleSend = async (e) => {
     e?.preventDefault();
@@ -144,7 +143,6 @@ export default function EleveLiveSessionChatScreen() {
       notificationCount={inboxUnread}
       hideHeader
       contentClassName="!px-0 !pb-0"
-      messagesTabBadge={messagesBadge}
     >
       <div
         className="flex h-full min-h-0 flex-col"
