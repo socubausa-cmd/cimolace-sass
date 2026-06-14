@@ -33,16 +33,17 @@
   --zw-text-soft:     #6b4a52;
   --zw-text-muted:    #8a776e;
   --zw-text-faint:    #ab9d8f;
-  --zw-border:        #eaded0;
-  --zw-border-strong: #d8c9b8;
-  --zw-bg:            #faf6f0;
-  --zw-bg-subtle:     #f4ece0;
+  --zw-border:        #ece0cb;
+  --zw-border-strong: #dccbaf;
+  --zw-bg:            #faf5ea;
+  --zw-bg-subtle:     #f3ead6;
 
-  --zw-side-bg:        #6d2e46;
-  --zw-side-text:      #f5ede3;
-  --zw-side-text-dim:  rgba(245, 237, 227, 0.6);
-  --zw-side-active-bg: rgba(255, 255, 255, 0.12);
-  --zw-side-border:    rgba(245, 237, 227, 0.16);
+  /* Sidebar = navy admin Zahir (--admin-bg), PAS bordeaux. Bordeaux/or = accents. */
+  --zw-side-bg:        linear-gradient(180deg, #090e17 0%, #080b12 55%, #060910 100%);
+  --zw-side-text:      #f8fafc;
+  --zw-side-text-dim:  #94a3b8;
+  --zw-side-active-bg: rgba(255, 255, 255, 0.08);
+  --zw-side-border:    rgba(255, 255, 255, 0.10);
   --zw-side-accent:    #c9a961;
 
   --zw-font-body:    'Jost', system-ui, sans-serif;
