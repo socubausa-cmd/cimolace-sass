@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, ChevronRight, Users, Zap, ArrowRight, Phone, HelpCircle, ShieldCheck } from 'lucide-react';
 
@@ -225,6 +226,7 @@ function ModuleCard({ module, selected, onToggle, disabled }) {
 
 /* ─── Main Configurator ─── */
 export default function CimolaceConfigurator() {
+  const navigate = useNavigate();
   const [selected,   setSelected]   = useState(new Set(['mbolo', 'payflow', 'scheduler']));
   const [scaleIdx,   setScaleIdx]   = useState(0);
   const [yearly,     setYearly]     = useState(false);
@@ -531,6 +533,7 @@ export default function CimolaceConfigurator() {
             {/* CTA */}
             <button
               disabled={selected.size === 0}
+              onClick={() => navigate('/cimolace/billing?tab=marketplace')}
               className="w-full py-4 rounded-xl font-black text-white text-base flex items-center justify-center gap-2 transition-all disabled:opacity-40"
               style={{
                 background: selected.size > 0

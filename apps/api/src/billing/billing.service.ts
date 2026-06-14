@@ -213,14 +213,34 @@ export class BillingService {
     const sb = this.supabase;
     const { data: sub } = await sb.from("billing_subscriptions").select("*").eq("id", subscriptionId).eq("tenant_id", tenantId).maybeSingle();
     if (!sub) throw new NotFoundException("Abonnement introuvable");
-    const { data: plan } = await sb.from("billing_plans").select("stripe_price_id, label").eq("key", (sub as any).plan_id).maybeSingle();
+    const { data: plan } = await sb
+      .from("billing_plans")
+      .select("stripe_price_id, label, price_cents, currency, billing_cycle")
+      .eq("key", (sub as any).plan_id)
+      .maybeSingle();
     const priceId = (plan as any)?.stripe_price_id;
-    if (!priceId) throw new BadRequestException("Aucun prix Stripe configuré pour ce plan (carte indisponible)");
+    // Montant = prix du plan (DB) sinon montant de l'abo ; JAMAIS fourni par le client.
+    const amountCents = Number((plan as any)?.price_cents ?? (sub as any)?.amount_cents ?? 0);
+    if (!priceId && amountCents <= 0) {
+      throw new BadRequestException("Aucun prix configuré pour ce plan (carte indisponible)");
+    }
 
     const frontend = process.env.FRONTEND_URL || "https://app.cimolace.space";
     const params = new URLSearchParams();
     params.append("mode", "subscription");
-    params.append("line_items[0][price]", priceId);
+    if (priceId) {
+      // Prix Stripe pré-créé (ex: zahir-forfait).
+      params.append("line_items[0][price]", priceId);
+    } else {
+      // Pas de prix Stripe pré-créé → prix INLINE depuis le catalogue (billing_plans).
+      // Rend tout plan/add-on payable sans devoir créer un prix Stripe à la main.
+      const currency = String((plan as any)?.currency ?? (sub as any)?.currency ?? "EUR").toLowerCase();
+      const interval = String((plan as any)?.billing_cycle ?? "monthly").toLowerCase() === "yearly" ? "year" : "month";
+      params.append("line_items[0][price_data][currency]", currency);
+      params.append("line_items[0][price_data][unit_amount]", String(amountCents));
+      params.append("line_items[0][price_data][recurring][interval]", interval);
+      params.append("line_items[0][price_data][product_data][name]", String((plan as any)?.label ?? (sub as any)?.plan_id ?? "Abonnement Cimolace"));
+    }
     params.append("line_items[0][quantity]", "1");
     params.append("success_url", `${frontend}/cimolace/billing?card=success&session_id={CHECKOUT_SESSION_ID}&sub=${subscriptionId}`);
     params.append("cancel_url", `${frontend}/cimolace/billing?card=cancel`);

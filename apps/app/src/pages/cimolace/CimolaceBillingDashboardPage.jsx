@@ -196,6 +196,10 @@ export default function CimolaceBillingDashboardPage() {
       setActiveSlug(initial);
 
       const card = params.get('card'); const subId = params.get('sub');
+      // Deep-link : ouvrir directement la marketplace (CTA catalogue / gate ?upgrade=liri).
+      const wantTab = params.get('tab'); const upgrade = params.get('upgrade');
+      if (upgrade) setTab('marketplace');
+      else if (wantTab && TABS.some((t) => t.id === wantTab)) setTab(wantTab);
       const clean = () => { ['card', 'sub', 'session_id'].forEach((k) => params.delete(k)); setParams(params, { replace: true }); };
       if (card === 'success' && subId) {
         try { if (initial && authStore.setTenantSlug) authStore.setTenantSlug(initial); const r = await billingApi.cardConfirm(subId); setNotice(r?.paid ? '✅ Paiement confirmé — votre forfait est actif.' : 'Paiement reçu, confirmation en cours…'); }
