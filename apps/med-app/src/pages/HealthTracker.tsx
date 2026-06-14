@@ -16,7 +16,7 @@ export function HealthTracker() {
   const metrics = [
     { icon: Heart, label: 'Humeur', key: 'mood_score', unit: '/10', color: '#ef4444' },
     { icon: Activity, label: 'Energie', key: 'energy_level', unit: '/10', color: '#f59e0b' },
-    { icon: Moon, label: 'Sommeil', key: 'sleep_hours', unit: 'h', color: '#8b5cf6' },
+    { icon: Moon, label: 'Sommeil', key: 'sleep_hours', unit: 'h', color: 'var(--zw-violet-soft)' },
     { icon: Dumbbell, label: 'Exercice', key: 'exercise_minutes', unit: 'min', color: '#10b981' },
     { icon: Droplets, label: 'Eau', key: 'water_liters', unit: 'L', color: '#3b82f6' },
   ];

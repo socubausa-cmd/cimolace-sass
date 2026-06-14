@@ -22,6 +22,9 @@
   --zw-c3: #f59e0b; --zw-c3-tint: #f59e0b18;
   --zw-c4: #8b5cf6; --zw-c4-tint: #8b5cf618;
   --zw-twin-bg: #7c3aed; --zw-twin-fg: #ffffff;
+  /* Twin / AI feature accents (violet family) */
+  --zw-violet: #7c3aed; --zw-violet-soft: #8b5cf6; --zw-violet-soft-tint: #8b5cf618;
+  --zw-violet-200: #c4b5fd; --zw-violet-bg: #ede9fe; --zw-indigo: #6366f1;
 
   /* Sidebar shell */
   --zw-side-bg:        #1e293b;
@@ -52,6 +55,9 @@
   --zw-c3: #c4896f; --zw-c3-tint: rgba(196, 137, 111, 0.15);
   --zw-c4: #a26769; --zw-c4-tint: rgba(162, 103, 105, 0.14);
   --zw-twin-bg: #c9a961; --zw-twin-fg: #43320f;
+  /* Twin / AI accents warmed to plum-wine + rose (stay distinct, on-brand) */
+  --zw-violet: #82385a; --zw-violet-soft: #a26769; --zw-violet-soft-tint: rgba(162, 103, 105, 0.12);
+  --zw-violet-200: #d9bcc8; --zw-violet-bg: #f5ecf0; --zw-indigo: #9e7152;
 
   /* Sidebar = navy admin Zahir (--admin-bg), PAS bordeaux. Bordeaux/or = accents. */
   --zw-side-bg:        linear-gradient(180deg, #090e17 0%, #080b12 55%, #060910 100%);

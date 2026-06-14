@@ -182,7 +182,7 @@ export function FormsList() {
         </h2>
         <button
           onClick={openBuilder}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#8b5cf6', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: 'var(--zw-violet-soft)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
         >
           <Plus size={16} /> Nouveau formulaire
         </button>
@@ -201,7 +201,7 @@ export function FormsList() {
             <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0, color: 'var(--zw-text)' }}>{f.title}</h3>
             <p style={{ fontSize: 13, color: 'var(--zw-text-muted)', marginTop: 4 }}>{f.description || 'Formulaire médical'}</p>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
-              <span style={{ display: 'inline-block', fontSize: 11, padding: '2px 8px', borderRadius: 8, background: '#ede9fe', color: '#7c3aed' }}>
+              <span style={{ display: 'inline-block', fontSize: 11, padding: '2px 8px', borderRadius: 8, background: 'var(--zw-violet-bg)', color: 'var(--zw-violet)' }}>
                 {CATEGORIES.find((c) => c.value === f.category)?.label || f.category || 'Personnalisé'}
               </span>
               <span style={{ fontSize: 11, color: 'var(--zw-text-faint)' }}>
@@ -308,7 +308,7 @@ export function FormsList() {
             <button
               type="button"
               onClick={addField}
-              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', background: '#fff', color: '#8b5cf6', border: '1px dashed #8b5cf6', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer', marginBottom: 16 }}
+              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', background: '#fff', color: 'var(--zw-violet-soft)', border: '1px dashed var(--zw-violet-soft)', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer', marginBottom: 16 }}
             >
               <Plus size={12} /> Ajouter un champ
             </button>
@@ -319,7 +319,7 @@ export function FormsList() {
               <button type="button" onClick={() => !saving && setNewOpen(false)} disabled={saving} style={cancelBtn(saving)}>
                 Annuler
               </button>
-              <button type="submit" disabled={saving} style={submitBtn('#8b5cf6', saving)}>
+              <button type="submit" disabled={saving} style={submitBtn('var(--zw-violet-soft)', saving)}>
                 {saving ? 'Création…' : 'Créer le formulaire'}
               </button>
             </div>
@@ -353,7 +353,7 @@ export function FormsList() {
               {(previewOpen.fields || []).map((field, i) => (
                 <li key={i} style={{ padding: '10px 0', borderTop: i === 0 ? 'none' : '1px solid var(--zw-bg-subtle)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ width: 24, height: 24, borderRadius: '50%', background: '#ede9fe', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600 }}>
+                    <span style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--zw-violet-bg)', color: 'var(--zw-violet)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600 }}>
                       {i + 1}
                     </span>
                     <strong style={{ fontSize: 13 }}>{field.label}</strong>

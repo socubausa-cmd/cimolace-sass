@@ -225,7 +225,7 @@ export function PatientDetail() {
             <Link
               to={'/twin/' + id}
               title="Ouvrir le jumeau numérique (Bio Digital Twin)"
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'linear-gradient(135deg, var(--brand-primary), #7c3aed)', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'linear-gradient(135deg, var(--brand-primary), var(--zw-violet))', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}
             >
               <Activity size={14} /> Jumeau numérique
             </Link>
@@ -286,7 +286,7 @@ export function PatientDetail() {
         </div>
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 20 }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Activity size={18} /> Suivi sante</h3>
-          <Link to={'/health'} style={{ display: 'inline-block', padding: '8px 16px', background: '#8b5cf6', color: '#fff', borderRadius: 6, fontSize: 13, fontWeight: 500 }}>Voir le suivi</Link>
+          <Link to={'/health'} style={{ display: 'inline-block', padding: '8px 16px', background: 'var(--zw-violet-soft)', color: '#fff', borderRadius: 6, fontSize: 13, fontWeight: 500 }}>Voir le suivi</Link>
         </div>
       </div>
       {id && (

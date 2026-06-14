@@ -39,7 +39,7 @@ function authHeaders(): HeadersInit {
 
 const actionColor: Record<string, string> = {
   create: '#10b981', read: '#0ea5e9', list: '#0ea5e9',
-  update: '#f59e0b', delete: '#dc2626', sign: '#7c3aed', share: '#0d9488',
+  update: '#f59e0b', delete: '#dc2626', sign: 'var(--zw-violet)', share: '#0d9488',
 };
 
 export function AuditPage() {

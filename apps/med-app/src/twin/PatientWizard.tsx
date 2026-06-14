@@ -401,7 +401,7 @@ export function PatientWizard() {
             disabled={submitting}
             style={{
               display: 'flex', alignItems: 'center', gap: 7,
-              padding: '10px 18px', background: '#7c3aed', color: '#fff',
+              padding: '10px 18px', background: 'var(--zw-violet)', color: '#fff',
               border: 'none', borderRadius: 10, fontSize: 13.5, fontWeight: 700,
               cursor: submitting ? 'wait' : 'pointer',
             }}
@@ -645,8 +645,8 @@ function Step3Biomarkers({
           onClick={onDemo}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            padding: '8px 14px', background: '#fff', color: '#7c3aed',
-            border: '1px dashed #c4b5fd', borderRadius: 9, fontSize: 12.5,
+            padding: '8px 14px', background: '#fff', color: 'var(--zw-violet)',
+            border: '1px dashed var(--zw-violet-200)', borderRadius: 9, fontSize: 12.5,
             fontWeight: 600, cursor: 'pointer',
           }}
         >
@@ -715,7 +715,7 @@ function Step3Biomarkers({
               disabled={extractBusy || !pasteText.trim()}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
-                padding: '8px 14px', background: '#7c3aed', color: '#fff',
+                padding: '8px 14px', background: 'var(--zw-violet)', color: '#fff',
                 border: 'none', borderRadius: 9, fontSize: 12.5, fontWeight: 600,
                 cursor: extractBusy || !pasteText.trim() ? 'not-allowed' : 'pointer',
                 opacity: !pasteText.trim() ? 0.5 : 1,

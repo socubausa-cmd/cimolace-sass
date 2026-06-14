@@ -42,8 +42,8 @@ export function WheelPanel({ patientId }: { patientId: string }) {
         <svg className="twin-wheel-svg" width="300" height="300" viewBox="0 0 300 300" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '100%', height: 'auto' }}>
           {[0.25, 0.5, 0.75, 1].map((f) => <circle key={f} cx={cx} cy={cy} r={R * f} fill="none" stroke="var(--zw-border)" strokeWidth="1" />)}
           {pts.map((p, i) => <line key={i} x1={cx} y1={cy} x2={p.ax} y2={p.ay} stroke="var(--zw-border)" strokeWidth="1" />)}
-          <polygon points={poly} fill="rgba(124,58,237,0.18)" stroke="#7c3aed" strokeWidth="2" />
-          {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="#7c3aed" />)}
+          <polygon points={poly} fill="rgba(124,58,237,0.18)" stroke="var(--zw-violet)" strokeWidth="2" />
+          {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="var(--zw-violet)" />)}
         </svg>
         <div className="twin-wheel-labels" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
           {domains.map((d, i) => (
@@ -78,11 +78,11 @@ export function MindmapPanel({ patientId }: { patientId: string }) {
     const a = (Math.PI * 2 * i) / nodes.length;
     pos.set(n.ref_code, { x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) });
   });
-  const typeColor: Record<string, string> = { organ: '#0ea5e9', symptom: '#f59e0b', condition: '#ef4444', hormone: '#7c3aed', biomarker: '#10b981', system: 'var(--zw-text-muted)' };
+  const typeColor: Record<string, string> = { organ: '#0ea5e9', symptom: '#f59e0b', condition: '#ef4444', hormone: 'var(--zw-violet)', biomarker: '#10b981', system: 'var(--zw-text-muted)' };
 
   return (
     <div style={panel}>
-      <h3 style={head}><GitBranch size={15} color="#7c3aed" /> Mindmap biologique & corrélations</h3>
+      <h3 style={head}><GitBranch size={15} color="var(--zw-violet)" /> Mindmap biologique & corrélations</h3>
       <div className="twin-mindmap-scroll">
         <svg
           width="100%"
@@ -218,7 +218,7 @@ export function SimulatorPanel({ patientId }: { patientId: string }) {
       <p style={{ fontSize: 11.5, color: 'var(--zw-text-faint)', marginTop: 0 }}>Scénario probabiliste — estimation, jamais une promesse de résultat.</p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
         {interventions.map((i) => (
-          <button key={i.key} onClick={() => toggle(i.key)} style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, border: '1px solid', cursor: 'pointer', background: picked.has(i.key) ? '#7c3aed' : '#fff', color: picked.has(i.key) ? '#fff' : 'var(--zw-text-soft)', borderColor: picked.has(i.key) ? '#7c3aed' : 'var(--zw-border)' }}>
+          <button key={i.key} onClick={() => toggle(i.key)} style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, border: '1px solid', cursor: 'pointer', background: picked.has(i.key) ? 'var(--zw-violet)' : '#fff', color: picked.has(i.key) ? '#fff' : 'var(--zw-text-soft)', borderColor: picked.has(i.key) ? 'var(--zw-violet)' : 'var(--zw-border)' }}>
             {i.label_fr}
           </button>
         ))}
@@ -466,7 +466,7 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
   }
 
   const dropStyle: React.CSSProperties = {
-    border: `2px dashed ${dragging ? 'var(--brand-primary, #7c3aed)' : 'var(--zw-border-strong)'}`,
+    border: `2px dashed ${dragging ? 'var(--brand-primary, var(--zw-violet))' : 'var(--zw-border-strong)'}`,
     background: dragging ? 'rgba(124,58,237,0.06)' : 'var(--zw-bg)',
     borderRadius: 10, padding: 16, textAlign: 'center', cursor: 'pointer',
     fontSize: 12.5, color: 'var(--zw-text-soft)', transition: 'all 0.15s', display: 'block',
@@ -650,7 +650,7 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
           <button
             onClick={loadHistory}
             disabled={historyLoading}
-            style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#7c3aed', fontSize: 11, cursor: 'pointer' }}
+            style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: 'var(--zw-violet)', fontSize: 11, cursor: 'pointer' }}
           >
             {historyLoading ? '…' : 'Rafraîchir'}
           </button>
@@ -711,7 +711,7 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
                     <button
                       onClick={() => openSigned(d.id)}
                       title="Voir le fichier source"
-                      style={{ padding: '5px 10px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                      style={{ padding: '5px 10px', background: 'var(--zw-violet)', color: '#fff', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
                     >
                       Voir
                     </button>
@@ -747,7 +747,7 @@ export function MetabolicMapPanel({ state, refs }: { state: any; refs: any }) {
   const flagColor = (f: string) => (f === 'normal' ? '#10b981' : f === 'critical' ? '#ef4444' : '#f59e0b');
   return (
     <div style={panel}>
-      <h3 style={head}><FlaskConical size={15} color="#7c3aed" /> Carte métabolique</h3>
+      <h3 style={head}><FlaskConical size={15} color="var(--zw-violet)" /> Carte métabolique</h3>
       {Object.keys(groups).length === 0 ? <p style={{ fontSize: 12, color: 'var(--zw-text-faint)' }}>Aucune donnée.</p> : (
         <div className="twin-metabolic-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px,1fr))', gap: 12 }}>
           {Object.entries(groups).map(([cat, items]) => (
@@ -790,13 +790,13 @@ export function CopilotPanel({ patientId }: { patientId: string }) {
     <div className="twin-copilot-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px,1fr))', gap: 16 }}>
       {/* Root Cause */}
       <div style={panel}>
-        <h3 style={head}><Sparkles size={15} color="#7c3aed" /> Root Cause Explorer</h3>
-        <button onClick={() => go('root')} disabled={!!busy} style={{ width: '100%', padding: 9, background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 10 }}>
+        <h3 style={head}><Sparkles size={15} color="var(--zw-violet)" /> Root Cause Explorer</h3>
+        <button onClick={() => go('root')} disabled={!!busy} style={{ width: '100%', padding: 9, background: 'var(--zw-violet)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 10 }}>
           {busy === 'root' ? <Loader2 size={14} className="spin" /> : 'Identifier les causes racines'}
         </button>
         {rootCauses.map((c, i) => (
           <div key={i} style={{ padding: 10, background: '#faf5ff', borderRadius: 8, marginBottom: 6 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}><strong style={{ fontSize: 13, color: 'var(--zw-text)' }}>{c.label_fr}</strong>{c.probability != null && <span style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed' }}>{Math.round(c.probability * 100)}%</span>}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}><strong style={{ fontSize: 13, color: 'var(--zw-text)' }}>{c.label_fr}</strong>{c.probability != null && <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--zw-violet)' }}>{Math.round(c.probability * 100)}%</span>}</div>
             <div style={{ fontSize: 11.5, color: 'var(--zw-text-muted)', marginTop: 3 }}>{c.reasoning_fr}</div>
           </div>
         ))}

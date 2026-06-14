@@ -179,7 +179,7 @@ export function TwinPage() {
             onClick={runAnalyze}
             disabled={!!busy}
             className="twin-analyze-btn"
-            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13.5, fontWeight: 600, cursor: busy ? 'wait' : 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', background: 'var(--zw-violet)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13.5, fontWeight: 600, cursor: busy ? 'wait' : 'pointer' }}
           >
             {busy === 'analyze' ? <Loader2 size={15} className="spin" /> : <Brain size={15} />} Analyse IA — hypothèses
           </button>
@@ -289,7 +289,7 @@ export function TwinPage() {
 
         {/* Hypothèses */}
         <div style={panel}>
-          <h3 style={head}><Sparkles size={15} color="#7c3aed" /> Hypothèses (à valider)</h3>
+          <h3 style={head}><Sparkles size={15} color="var(--zw-violet)" /> Hypothèses (à valider)</h3>
           {(state?.hypotheses || []).length === 0 ? (
             <p style={{ fontSize: 13, color: 'var(--zw-text-faint)' }}>Lancez « Analyse IA » pour générer des hypothèses cliniques.</p>
           ) : (
@@ -297,7 +297,7 @@ export function TwinPage() {
               <div key={h.id} style={{ padding: 10, borderRadius: 8, marginBottom: 8, background: 'var(--zw-bg)', opacity: h.status === 'rejected' ? 0.5 : 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--zw-text)' }}>{h.label_fr}</span>
-                  {h.probability != null && <span style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed' }}>{Math.round(h.probability * 100)}%</span>}
+                  {h.probability != null && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--zw-violet)' }}>{Math.round(h.probability * 100)}%</span>}
                 </div>
                 {h.reasoning_fr && <div style={{ fontSize: 11.5, color: 'var(--zw-text-muted)', marginTop: 3 }}>{h.reasoning_fr}</div>}
                 {h.status === 'suggested' && (
@@ -341,7 +341,7 @@ export function TwinPage() {
             </div>
           )}
 
-          <button onClick={() => saveBiomarkers(DEMO_PROFILE)} disabled={!!busy} style={{ width: '100%', padding: '8px', background: '#fff', color: '#7c3aed', border: '1px dashed #c4b5fd', borderRadius: 8, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', marginBottom: 12 }}>
+          <button onClick={() => saveBiomarkers(DEMO_PROFILE)} disabled={!!busy} style={{ width: '100%', padding: '8px', background: '#fff', color: 'var(--zw-violet)', border: '1px dashed var(--zw-violet-200)', borderRadius: 8, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', marginBottom: 12 }}>
             ⚡ Charger un profil démo
           </button>
 
@@ -409,7 +409,7 @@ function OrganDetail({ organ, onAsk, busy, assistant, onClose }: { organ: any; o
               ))}
             </div>
           )}
-          <button onClick={onAsk} disabled={busy} style={{ width: '100%', padding: '9px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: busy ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+          <button onClick={onAsk} disabled={busy} style={{ width: '100%', padding: '9px', background: 'var(--zw-violet)', color: '#fff', border: 'none', borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: busy ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
             {busy ? <Loader2 size={14} className="spin" /> : <Sparkles size={14} />} Pourquoi ce score ? (IA explicable)
           </button>
           {assistant && (

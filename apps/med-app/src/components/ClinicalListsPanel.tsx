@@ -18,7 +18,7 @@ const TABS: { key: Tab; label: string; icon: React.ComponentType<{ size?: number
   { key: 'medications',   label: 'Medicaments', icon: Pill,           color: '#f59e0b', route: 'medications' },
   { key: 'problems',      label: 'Problemes',   icon: Activity,       color: '#0ea5e9', route: 'problems' },
   { key: 'immunizations', label: 'Vaccins',     icon: Syringe,        color: '#10b981', route: 'immunizations' },
-  { key: 'lab-results',   label: 'Resultats labo', icon: FlaskConical, color: '#8b5cf6', route: 'lab-results' },
+  { key: 'lab-results',   label: 'Resultats labo', icon: FlaskConical, color: 'var(--zw-violet-soft)', route: 'lab-results' },
 ];
 
 type RowFn = (it: any) => { title: string; subtitle: string; meta?: string };
