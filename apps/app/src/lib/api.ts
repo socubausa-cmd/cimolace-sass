@@ -151,6 +151,8 @@ export const bookingApi = {
     api.get<any>("/booking/slots/availability", { params }).then(bookingUnwrap),
   startLiveFromAppointment: (appointmentId: string) =>
     api.post<any>(`/booking/appointments/${appointmentId}/start-live`).then(bookingUnwrap),
+  scheduleLiveWithStudent: (studentId: string, body?: { title?: string; scheduledAt?: string }) =>
+    api.post<any>(`/booking/students/${studentId}/schedule-live`, body ?? {}).then(bookingUnwrap),
   getPreparation: (appointmentId: string) =>
     api.get<any>(`/booking/appointments/${appointmentId}/preparation`).then(bookingUnwrap),
   setPreparation: (appointmentId: string, body: Record<string, unknown>) =>

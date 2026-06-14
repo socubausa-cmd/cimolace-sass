@@ -180,6 +180,33 @@ export class BookingService {
     return data;
   }
 
+  // ── Prof → séance live avec un élève (action depuis le profil élève) ──────
+  // Réutilise le moteur Liri (LiveService). Le prof ouvre ensuite /live/host/:id ;
+  // l'élève est invité via le flux d'invitation live.
+  async scheduleLiveWithStudent(
+    tenant: TenantContext,
+    teacherId: string,
+    studentId: string,
+    opts: { title?: string; scheduledAt?: string } = {},
+  ) {
+    const { data: member } = await (this.supabase.client as any)
+      .from('tenant_memberships')
+      .select('user_id')
+      .eq('tenant_id', tenant.id)
+      .eq('user_id', studentId)
+      .maybeSingle();
+    if (!member) throw new NotFoundException('Élève introuvable dans ce tenant');
+
+    const live: any = await this.live.createSession(tenant.id, {
+      teacher_id: teacherId,
+      title: opts.title?.trim() || 'Séance live',
+      session_type: 'entretien',
+      scheduled_at: opts.scheduledAt || new Date().toISOString(),
+    });
+    if (!live?.id) throw new BadRequestException('Création de la séance live impossible');
+    return { ok: true, liveSessionId: live.id };
+  }
+
   // ── Pont RDV → séance live (école) ───────────────────────────────────────
   // Porté d'ISNA v1 (booking-start-immersive-live). Le staff transforme un
   // rendez-vous confirmé en séance live LIRI (entretien privé). Idempotent.

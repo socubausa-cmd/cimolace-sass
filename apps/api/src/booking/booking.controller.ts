@@ -89,6 +89,20 @@ export class BookingController {
     return this.booking.availableSecretaries(tenant, { timezone, country, when });
   }
 
+  // ── Prof → séance live avec un élève (depuis le profil élève) ────────────
+  @Post('students/:studentId/schedule-live')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin', 'teacher', 'secretariat')
+  scheduleLiveWithStudent(
+    @Param('studentId') studentId: string,
+    @Body() body: { title?: string; scheduledAt?: string },
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
+  ) {
+    const userId = (req as any).user?.id;
+    return this.booking.scheduleLiveWithStudent(tenant, userId, studentId, body ?? {});
+  }
+
   // ── Préparation d'entretien (secrétariat) ────────────────────────────────
   @Get('appointments/:id/preparation')
   @UseGuards(RolesGuard)
