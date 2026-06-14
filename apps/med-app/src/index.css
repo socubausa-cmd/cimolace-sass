@@ -15,6 +15,14 @@
   --zw-bg:            #f8fafc;
   --zw-bg-subtle:     #f1f5f9;
 
+  /* Decorative accent ramp (Dashboard chips / quick-actions). Default = tech
+     palette; a tenant theme can warm these. *-tint = soft chip background. */
+  --zw-c1: #0ea5e9; --zw-c1-tint: #0ea5e918;
+  --zw-c2: #10b981; --zw-c2-tint: #10b98118;
+  --zw-c3: #f59e0b; --zw-c3-tint: #f59e0b18;
+  --zw-c4: #8b5cf6; --zw-c4-tint: #8b5cf618;
+  --zw-twin-bg: #7c3aed; --zw-twin-fg: #ffffff;
+
   /* Sidebar shell */
   --zw-side-bg:        #1e293b;
   --zw-side-text:      #e2e8f0;
@@ -37,6 +45,13 @@
   --zw-border-strong: #dccbaf;
   --zw-bg:            #faf5ea;
   --zw-bg-subtle:     #f3ead6;
+
+  /* Warm accent ramp — sage / gold / terracotta / rose (cf. globals Zahir) */
+  --zw-c1: #6b8e6e; --zw-c1-tint: rgba(107, 142, 110, 0.13);
+  --zw-c2: #c9a961; --zw-c2-tint: rgba(201, 169, 97, 0.16);
+  --zw-c3: #c4896f; --zw-c3-tint: rgba(196, 137, 111, 0.15);
+  --zw-c4: #a26769; --zw-c4-tint: rgba(162, 103, 105, 0.14);
+  --zw-twin-bg: #c9a961; --zw-twin-fg: #43320f;
 
   /* Sidebar = navy admin Zahir (--admin-bg), PAS bordeaux. Bordeaux/or = accents. */
   --zw-side-bg:        linear-gradient(180deg, #090e17 0%, #080b12 55%, #060910 100%);

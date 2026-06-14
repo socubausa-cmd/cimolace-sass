@@ -137,7 +137,7 @@ export function PatientsList() {
           <button
             id="twin-cta-onboarding"
             onClick={() => navigate('/twin/new')}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: 'var(--zw-twin-bg)', color: 'var(--zw-twin-fg)', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
           >
             <Sparkles size={16} /> Onboarding Twin
           </button>

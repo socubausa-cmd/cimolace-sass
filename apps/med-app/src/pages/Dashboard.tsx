@@ -93,17 +93,17 @@ export function MedOSDashboard() {
 
   const kpis = [
     { icon: Users, label: 'Patients', value: patients.length, to: '/patients', color: 'var(--brand-primary)', tint: 'var(--brand-primary-soft)' },
-    { icon: CalendarDays, label: 'RDV à venir', value: upcomingCount, to: '/appointments', color: '#0ea5e9', tint: '#0ea5e918' },
-    { icon: Clock, label: "RDV aujourd'hui", value: todayAppts.length, to: '/appointments', color: '#10b981', tint: '#10b98118' },
-    { icon: Pill, label: 'Ordonnances', value: prescriptions, to: '/prescriptions', color: '#f59e0b', tint: '#f59e0b18' },
+    { icon: CalendarDays, label: 'RDV à venir', value: upcomingCount, to: '/appointments', color: 'var(--zw-c1)', tint: 'var(--zw-c1-tint)' },
+    { icon: Clock, label: "RDV aujourd'hui", value: todayAppts.length, to: '/appointments', color: 'var(--zw-c2)', tint: 'var(--zw-c2-tint)' },
+    { icon: Pill, label: 'Ordonnances', value: prescriptions, to: '/prescriptions', color: 'var(--zw-c3)', tint: 'var(--zw-c3-tint)' },
   ];
 
   const quick = [
     { to: '/patients', label: 'Nouveau patient', icon: Users, brand: true, color: 'var(--brand-primary)' },
-    { to: '/charting', label: 'Consultation IA', icon: Mic, brand: false, color: '#10b981' },
-    { to: '/prescriptions', label: 'Ordonnance', icon: Pill, brand: false, color: '#f59e0b' },
-    { to: '/appointments', label: 'Rendez-vous', icon: CalendarDays, brand: false, color: '#0ea5e9' },
-    { to: '/forms', label: 'Formulaire', icon: ClipboardList, brand: false, color: '#8b5cf6' },
+    { to: '/charting', label: 'Consultation IA', icon: Mic, brand: false, color: 'var(--zw-c2)' },
+    { to: '/prescriptions', label: 'Ordonnance', icon: Pill, brand: false, color: 'var(--zw-c3)' },
+    { to: '/appointments', label: 'Rendez-vous', icon: CalendarDays, brand: false, color: 'var(--zw-c1)' },
+    { to: '/forms', label: 'Formulaire', icon: ClipboardList, brand: false, color: 'var(--zw-c4)' },
   ];
 
   return (
@@ -123,7 +123,7 @@ export function MedOSDashboard() {
               <k.icon size={21} color={k.color} />
             </div>
             <div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--zw-text)', lineHeight: 1 }}>{k.value}</div>
+              <div style={{ fontSize: 27, fontWeight: 700, color: 'var(--zw-text)', lineHeight: 1, fontFamily: 'var(--zw-font-display)' }}>{k.value}</div>
               <div style={{ fontSize: 12.5, color: 'var(--zw-text-muted)', marginTop: 4 }}>{k.label}</div>
             </div>
           </Link>
@@ -148,7 +148,7 @@ export function MedOSDashboard() {
                     <div style={{ fontSize: 11.5, color: 'var(--zw-text-faint)' }}>{a.duration_minutes}min · {APP_TYPE_LABEL[a.appointment_type] || a.appointment_type}</div>
                   </div>
                   {a.appointment_type === 'teleconsult' && (
-                    <span style={{ fontSize: 10, fontWeight: 700, color: '#7c3aed', background: '#7c3aed15', padding: '3px 8px', borderRadius: 8 }}>VISIO</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--zw-c4)', background: 'var(--zw-c4-tint)', padding: '3px 8px', borderRadius: 8 }}>VISIO</span>
                   )}
                 </div>
               ))}
@@ -195,11 +195,11 @@ export function MedOSDashboard() {
         <div style={panel}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
             <div>
-              <h3 style={{ ...panelHead, marginBottom: 2 }}><Video size={16} color="#7c3aed" /> Consommation vidéo</h3>
+              <h3 style={{ ...panelHead, marginBottom: 2 }}><Video size={16} color="var(--zw-c4)" /> Consommation vidéo</h3>
               <p style={{ fontSize: 11.5, color: 'var(--zw-text-faint)', margin: 0 }}>Via Liri — toutes sources confondues</p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 26, fontWeight: 800, color: '#7c3aed', lineHeight: 1 }}>{consumption.total_minutes ?? 0}</div>
+              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--brand-primary)', lineHeight: 1, fontFamily: 'var(--zw-font-display)' }}>{consumption.total_minutes ?? 0}</div>
               <div style={{ fontSize: 10.5, color: 'var(--zw-text-faint)', textTransform: 'uppercase' }}>minutes</div>
             </div>
           </div>
