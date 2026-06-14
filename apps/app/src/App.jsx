@@ -514,6 +514,7 @@ const DashboardLiri = lazy(() => import('@/pages/liri/DashboardLiri').then((m) =
 // Portail LIRI — accueil/hub (rail Accueil/Lives/Forum/Studio/Biblio/Brain + stats live)
 const LiriPortalPage = lazy(() => import('@/pages/liri/LiriPortalPage').then((m) => ({ default: m.LiriPortalPage })));
 const LiriStudioHub = lazy(() => import('@/pages/dev/LiriStudioHub'));
+const LiriAdminShellDemo = lazy(() => import('@/pages/dev/LiriAdminShellDemo'));
 const MasterclassFactoryV2 = lazy(() => import('@/pages/dev/MasterclassFactoryV2'));
 const OrchestratorLiveV2 = lazy(() => import('@/pages/dev/OrchestratorLiveV2'));
 const SmartboardStreamingV2 = lazy(() => import('@/pages/dev/SmartboardStreamingV2'));
@@ -1208,6 +1209,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/dev/liri/masterclass-v2"  element={<ErrorBoundary logTag="MasterclassFactoryV2"  showDetailsInDev><MasterclassFactoryV2 /></ErrorBoundary>} />
           <Route path="/dev/liri/orchestrator-v2" element={<ErrorBoundary logTag="OrchestratorLiveV2"    showDetailsInDev><OrchestratorLiveV2 /></ErrorBoundary>} />
           <Route path="/dev/liri/streaming-v2"    element={<ErrorBoundary logTag="SmartboardStreamingV2" showDetailsInDev><SmartboardStreamingV2 /></ErrorBoundary>} />
+          <Route path="/dev/liri-admin-shell" element={<ErrorBoundary logTag="LiriAdminShellDemo" showDetailsInDev><LiriAdminShellDemo /></ErrorBoundary>} />
           <Route path="/dev/*" element={<DevLiriHostEntry />} />
           {/* LIRI mobile — UI dédiée, mêmes routes métier en cible */}
           {/* === App mobile « Élève » LIRI (sans Studio) — ErrorBoundary via layout */}
