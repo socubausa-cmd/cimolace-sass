@@ -44,6 +44,7 @@ export default function ForumThreadPage() {
   const preview = location.state?.preview;
 
   // Data states
+  const [convOpen, setConvOpen] = useState(true); // panneau Conversations rétractable
   const [thread, setThread] = useState(null);
   const [replies, setReplies] = useState([]);
   const [repliesLoading, setRepliesLoading] = useState(false);
@@ -438,7 +439,36 @@ export default function ForumThreadPage() {
       </div>
 
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 0, alignItems: 'flex-start', height: '100%' }}>
-        <ForumSommaire currentId={threadId} basePath={forumBase} />
+        {convOpen ? (
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <button
+              onClick={() => setConvOpen(false)}
+              title="Réduire les conversations"
+              aria-label="Réduire les conversations"
+              style={{
+                position: 'absolute', top: 2, right: -10, zIndex: 6,
+                width: 22, height: 22, borderRadius: '50%',
+                background: '#12111a', border: '1px solid rgba(255,255,255,0.12)',
+                color: 'rgba(245,245,247,0.65)', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, lineHeight: 1,
+              }}
+            >‹</button>
+            <ForumSommaire currentId={threadId} basePath={forumBase} />
+          </div>
+        ) : (
+          <button
+            onClick={() => setConvOpen(true)}
+            title="Afficher les conversations"
+            aria-label="Afficher les conversations"
+            style={{
+              flexShrink: 0, alignSelf: 'flex-start', marginTop: 2,
+              width: 34, height: 34, borderRadius: 10,
+              background: 'rgba(212,175,55,0.10)', border: '1px solid rgba(212,175,55,0.28)',
+              color: '#D4AF37', cursor: 'pointer', fontSize: 16, lineHeight: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >☰</button>
+        )}
         <div style={{ width: 1, alignSelf: 'stretch', background: 'rgba(255,255,255,0.06)', margin: '0 30px', flexShrink: 0 }} />
         <div ref={paneRef} style={{ flex: 1, minWidth: 0, height: '100%', overflowY: 'auto', padding: '0 24px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
