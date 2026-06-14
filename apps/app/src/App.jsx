@@ -443,6 +443,7 @@ const BillingCheckoutPage = lazy(() => import('@/pages/BillingCheckoutPage'));
 const LicenseActivationPage = lazy(() => import('@/pages/LicenseActivationPage'));
 const RedeemPrivilegedLinkPage = lazy(() => import('@/pages/RedeemPrivilegedLinkPage'));
 const DashboardInfrastructure = lazy(() => import('@/pages/DashboardInfrastructure').then((m) => ({ default: m.DashboardInfrastructure })));
+const DashboardInfrastructures = lazy(() => import('@/pages/DashboardInfrastructures').then((m) => ({ default: m.DashboardInfrastructures })));
 const MedosDashboard = lazy(() => import('@/pages/MedosDashboard').then((m) => ({ default: m.MedosDashboard })));
 const MedosPatients = lazy(() => import('@/pages/MedosPatients').then((m) => ({ default: m.MedosPatients })));
 const MedosPatientDetail = lazy(() => import('@/pages/MedosPatientDetail').then((m) => ({ default: m.MedosPatientDetail })));
@@ -1343,6 +1344,7 @@ isLiriHostDevPreviewRoute;
               <DashboardRedirect />
             </ProtectedRoute>
           } />
+          <Route path="/dashboard/infrastructures" element={<DashboardInfrastructures />} />
           <Route path="/dashboard/infrastructure" element={<DashboardInfrastructure />} />
           <Route path="/dashboard/medos" element={<MedosDashboard />} />
           <Route path="/dashboard/medos/patients" element={<MedosPatients />} />
