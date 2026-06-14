@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { authStore } from '@/lib/auth-store';
 import { getApiBaseUrl } from '@/lib/apiBase';
-import './DashboardLiri.css';
+import '../DashboardLiri.css';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

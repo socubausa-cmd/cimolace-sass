@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { authStore } from '@/lib/auth-store';
-import '../pages/LiriPortal.css';
+import '../../pages/LiriPortal.css';
 
 type RailKey = 'accueil' | 'lives' | 'forum' | 'studio' | 'biblio' | 'brain' | 'integrations' | 'reglages';
 

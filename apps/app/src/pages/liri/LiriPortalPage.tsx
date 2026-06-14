@@ -9,7 +9,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { authStore } from '@/lib/auth-store';
 import { getApiBaseUrl } from '@/lib/apiBase';
-import './LiriPortal.css';
+import '../LiriPortal.css';
 
 interface Live { id: string; title?: string; status?: string; scheduled_at?: string; started_at?: string | null; ended_at?: string | null; price_cents?: number; }
 interface Stats { totalMembers: number; totalLives: number; totalCourses: number; totalRevenueCents: number; }
