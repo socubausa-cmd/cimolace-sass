@@ -250,8 +250,12 @@ export default function LiriDashboardShell({
           </div>
           {topbarRight}
         </header>
-        <div style={{ maxWidth: 1320, margin: '0 auto', padding: '24px 24px 48px' }}>
-          {children}
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 20px 40px' }}>
+          {/* Cadre contenant (comme l'ancien premium-panel) : regroupe le contenu
+              au lieu de l'éparpiller sur le fond nu. Bordure subtile, fond léger. */}
+          <div style={{ background: 'rgba(255,255,255,0.018)', border: `1px solid ${T.border}`, borderRadius: 20, padding: '20px 22px', minHeight: 440 }}>
+            {children}
+          </div>
         </div>
       </main>
     </div>
