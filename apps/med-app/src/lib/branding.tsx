@@ -54,8 +54,8 @@ const ENGINE_DEFAULTS = {
  * Tenants without an entry render with the default MEDOS neutral theme.
  * (Long-term: serve this from the branding API alongside brand_colors.)
  */
-const TENANT_THEMES: Record<string, { theme: string; primary: string; accent: string }> = {
-  zahirwellness: { theme: 'zahir', primary: '#6d2e46', accent: '#c9a961' },
+const TENANT_THEMES: Record<string, { theme: string; primary: string; accent: string; logo?: string }> = {
+  zahirwellness: { theme: 'zahir', primary: '#7a2a3b', accent: '#c9a96a', logo: '/brand/zahir-nahir-logo.png' },
 };
 
 const BrandingContext = createContext<Branding>({
@@ -167,7 +167,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
         const colors = (t.brand_colors || {}) as Record<string, string>;
         setBranding({
           name: t.name || ENGINE_DEFAULTS.name,
-          logoUrl: t.logo_url || null,
+          logoUrl: themeCfg?.logo || t.logo_url || null,
           primary: themeCfg?.primary || colors.primary || ENGINE_DEFAULTS.primary,
           accent:
             themeCfg?.accent || colors.accent || colors.secondary || ENGINE_DEFAULTS.accent,

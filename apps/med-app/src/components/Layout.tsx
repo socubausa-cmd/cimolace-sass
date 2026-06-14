@@ -47,27 +47,21 @@ export function Layout() {
             /* Reserve space while branding resolves — avoids a MEDOS→tenant flash. */
             <div style={{ height: 30 }} />
           ) : hasTenantBrand ? (
-            /* Tenant-first identity — the cabinet's own brand leads (serif via theme). */
-            <h1 style={{ fontSize: 19, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10, margin: 0, lineHeight: 1.2 }}>
-              {branding.logoUrl ? (
-                <img
-                  src={branding.logoUrl}
-                  alt={branding.name}
-                  style={{ width: 30, height: 30, borderRadius: 7, objectFit: 'contain', background: '#fff', padding: 2, flexShrink: 0 }}
-                />
-              ) : (
-                <span
-                  style={{
-                    width: 30, height: 30, borderRadius: 7, background: 'var(--zw-side-accent)',
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#fff', fontSize: 13, fontWeight: 700, flexShrink: 0,
-                  }}
-                >
-                  {branding.name.slice(0, 1).toUpperCase()}
-                </span>
-              )}
-              <span>{branding.name}</span>
-            </h1>
+            /* Tenant-first — mirrors the Zahir admin brand block: logo in a white
+               rounded tile + serif name + small subtitle. */
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+              <span style={{ width: 44, height: 44, borderRadius: 12, background: '#fff', display: 'grid', placeItems: 'center', flexShrink: 0, padding: 5, boxSizing: 'border-box' }}>
+                {branding.logoUrl ? (
+                  <img src={branding.logoUrl} alt={branding.name} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+                ) : (
+                  <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--zw-side-accent)' }}>{branding.name.slice(0, 1).toUpperCase()}</span>
+                )}
+              </span>
+              <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1, minWidth: 0 }}>
+                <b style={{ fontFamily: 'var(--zw-font-display)', fontWeight: 600, fontSize: 16, letterSpacing: '0.02em', color: 'var(--zw-side-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{branding.name}</b>
+                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.04em', marginTop: 2, color: 'var(--zw-side-accent)' }}>Espace praticien</span>
+              </span>
+            </div>
           ) : (
             /* Engine default — no tenant brand resolved. */
             <h1 style={{ fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>

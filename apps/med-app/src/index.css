@@ -40,32 +40,32 @@
 
 /* ─── Zahir Wellness theme — warm cream + burgundy + serif ───────────── */
 [data-zw-theme="zahir"] {
-  --zw-text:          #2b2326;
-  --zw-text-soft:     #6b4a52;
-  --zw-text-muted:    #8a776e;
-  --zw-text-faint:    #ab9d8f;
-  --zw-border:        #ece0cb;
-  --zw-border-strong: #dccbaf;
-  --zw-bg:            #faf5ea;
-  --zw-bg-subtle:     #f3ead6;
+  --zw-text:          #2b1b1f;   /* az-ink */
+  --zw-text-soft:     #5a4448;   /* az-ink-soft */
+  --zw-text-muted:    #8a7478;   /* az-muted */
+  --zw-text-faint:    #a89a9c;
+  --zw-border:        #ece2d3;   /* az-cream-dark */
+  --zw-border-strong: #ddccba;
+  --zw-bg:            #f6efe6;   /* az-cream */
+  --zw-bg-subtle:     #efe6d8;
 
-  /* Warm accent ramp — sage / gold / terracotta / rose (cf. globals Zahir) */
-  --zw-c1: #6b8e6e; --zw-c1-tint: rgba(107, 142, 110, 0.13);
-  --zw-c2: #c9a961; --zw-c2-tint: rgba(201, 169, 97, 0.16);
-  --zw-c3: #c4896f; --zw-c3-tint: rgba(196, 137, 111, 0.15);
-  --zw-c4: #a26769; --zw-c4-tint: rgba(162, 103, 105, 0.14);
-  --zw-twin-bg: #c9a961; --zw-twin-fg: #43320f;
-  /* Twin / AI accents warmed to plum-wine + rose (stay distinct, on-brand) */
-  --zw-violet: #82385a; --zw-violet-soft: #a26769; --zw-violet-soft-tint: rgba(162, 103, 105, 0.12);
-  --zw-violet-200: #d9bcc8; --zw-violet-bg: #f5ecf0; --zw-indigo: #9e7152;
+  /* Accent ramp aligned to the admin studio: blue / gold / warm-brown / bordeaux-soft */
+  --zw-c1: #4f6f8f; --zw-c1-tint: rgba(79, 111, 143, 0.12);
+  --zw-c2: #c9a96a; --zw-c2-tint: rgba(201, 169, 106, 0.16);
+  --zw-c3: #b07b2b; --zw-c3-tint: rgba(176, 123, 43, 0.14);
+  --zw-c4: #9b3b4e; --zw-c4-tint: rgba(155, 59, 78, 0.13);
+  --zw-twin-bg: #c9a96a; --zw-twin-fg: #2b1b1f;
+  /* Twin / AI accents -> bordeaux-soft family (on-brand) */
+  --zw-violet: #9b3b4e; --zw-violet-soft: #b0566a; --zw-violet-soft-tint: rgba(155, 59, 78, 0.12);
+  --zw-violet-200: #d9b3bd; --zw-violet-bg: #f3e6ea; --zw-indigo: #4f6f8f;
 
-  /* Sidebar = navy admin Zahir (--admin-bg), PAS bordeaux. Bordeaux/or = accents. */
-  --zw-side-bg:        linear-gradient(180deg, #090e17 0%, #080b12 55%, #060910 100%);
-  --zw-side-text:      #f8fafc;
-  --zw-side-text-dim:  #94a3b8;
-  --zw-side-active-bg: rgba(255, 255, 255, 0.08);
-  --zw-side-border:    rgba(255, 255, 255, 0.10);
-  --zw-side-accent:    #c9a961;
+  /* Sidebar = navy bleu de l'admin Zahir (--az-navy #0f2240 -> #0a1730). */
+  --zw-side-bg:        linear-gradient(180deg, #0f2240 0%, #0c1c38 55%, #0a1730 100%);
+  --zw-side-text:      #eef1f7;
+  --zw-side-text-dim:  rgba(238, 241, 247, 0.55);
+  --zw-side-active-bg: #1a3355;   /* az-navy-soft */
+  --zw-side-border:    rgba(255, 255, 255, 0.09);
+  --zw-side-accent:    #c9a96a;   /* gold */
 
   --zw-font-body:    'Jost', system-ui, sans-serif;
   --zw-font-display: 'Cormorant Garamond', 'Garamond', Georgia, serif;
