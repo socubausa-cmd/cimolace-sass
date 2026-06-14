@@ -2,6 +2,8 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { supabase } from '@/lib/customSupabaseClient';
 import { authStore } from '@/lib/auth-store';
 import { getLoginEntryPath } from '@/lib/loginEntryPath';
+import { DEFAULT_TENANT_SLUG } from '@/config/platform';
+import { getCachedHostTenant } from '@/lib/tenantResolver';
 
 const AuthContext = createContext({});
 export const useAuth = () => useContext(AuthContext);
@@ -65,6 +67,84 @@ const ensureVisitorProfile = async (authUser) => {
   );
 
   return fetchProfile(authUser.id);
+};
+
+/**
+ * Slug du tenant de l'école COURANTE (multi-tenant Cimolace), résolu de façon
+ * synchrone : domaine custom en cache (tenantResolver) sinon tenant par défaut
+ * (config/platform). Sert à rattacher un nouvel élève au bon tenant. On évite de
+ * recoder 'isna' en dur — cf. docs/CIMOLACE_ARCHITECTURE.md §7.
+ */
+const resolveCurrentTenantSlug = () => {
+  try {
+    const host = typeof window !== 'undefined' ? window.location.hostname : '';
+    const byHost = getCachedHostTenant(host);
+    if (byHost) return byHost;
+  } catch {
+    // ignore — repli sur le tenant par défaut
+  }
+  return DEFAULT_TENANT_SLUG;
+};
+
+/**
+ * Évite de rappeler la RPC plusieurs fois pour le même utilisateur pendant une
+ * session (init + onAuthStateChange + login peuvent se déclencher d'affilée).
+ * La RPC reste idempotente côté DB (ON CONFLICT DO NOTHING) ; ceci économise
+ * juste des aller-retours réseau redondants.
+ */
+const studentMembershipEnsuredFor = new Set();
+
+/**
+ * Rattache l'utilisateur courant au tenant de l'école (role=student, idempotent)
+ * via la RPC SECURITY DEFINER public.ensure_student_membership(p_slug).
+ *
+ * PRÉREQUIS DE TOUT LE RESTE : sans tenant_memberships active, l'élève ne lit
+ * aucun contenu (RLS pédagogiques tenant-scoped) et ne peut pas demander de RDV.
+ * tenant_memberships n'a PAS de policy INSERT 'authenticated' → on passe par la
+ * RPC (supabase.rpc = vrai client Supabase dans supabaseCompat), jamais par un
+ * .from('tenant_memberships').insert() (qui échouerait en RLS / partirait dans
+ * l'API sans endpoint create).
+ *
+ * Fire-and-forget et silencieux : ne JAMAIS bloquer ni casser login/signup si la
+ * RPC n'est pas encore déployée ou si le réseau échoue. Idempotent côté DB
+ * (ON CONFLICT DO NOTHING) → un owner/teacher garde son rôle.
+ */
+const ensureStudentMembership = async (authUser) => {
+  if (!authUser?.id) return;
+  if (studentMembershipEnsuredFor.has(authUser.id)) return;
+  studentMembershipEnsuredFor.add(authUser.id);
+  const slug = resolveCurrentTenantSlug();
+  if (!slug) return;
+  try {
+    const { error } = await supabase.rpc('ensure_student_membership', { p_slug: slug });
+    if (error) {
+      // Ne pas désactiver définitivement : permet un nouvel essai au prochain login.
+      studentMembershipEnsuredFor.delete(authUser.id);
+      console.warn('[auth] ensure_student_membership:', error.message);
+    }
+  } catch (e) {
+    studentMembershipEnsuredFor.delete(authUser.id);
+    console.warn('[auth] ensure_student_membership error:', e?.message || e);
+  }
+};
+
+/** Vrai uniquement dans la coque élève /m/eleve (où le self-join student a un sens). */
+const isEleveShellPath = () => {
+  try {
+    return String(window.location.pathname || '').startsWith('/m/eleve');
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Self-heal rattachement élève, GATÉ sur la coque /m/eleve : ne touche pas les
+ * autres flux d'inscription (visiteur générique /signup, école /t/:slug/signup).
+ * Fire-and-forget.
+ */
+const maybeEnsureStudentMembership = (authUser) => {
+  if (!isEleveShellPath()) return;
+  void ensureStudentMembership(authUser);
 };
 
 /**
@@ -213,6 +293,9 @@ export const AuthProvider = ({ children }) => {
         if (currentSession?.user) {
           const profile = await withTimeout(ensureVisitorProfile(currentSession.user));
           setUser(buildUser(currentSession.user, profile));
+          // Self-heal (coque élève only) : rattache l'élève au tenant courant s'il
+          // ne l'est pas encore (inscriptions antérieures orphelines). Idempotent.
+          maybeEnsureStudentMembership(currentSession.user);
         }
       } catch (err) {
         console.warn('[auth] init error:', err.message);
@@ -234,6 +317,12 @@ export const AuthProvider = ({ children }) => {
         if (effectiveSession?.user) {
           const profile = await withTimeout(ensureVisitorProfile(effectiveSession.user));
           setUser(buildUser(effectiveSession.user, profile));
+          // Couvre l'inscription Google élève (session établie via AuthCallbackPage
+          // → redirige vers /m/eleve → SIGNED_IN ici) ET le self-heal au 1er login.
+          // Gaté sur la coque /m/eleve, idempotent, fire-and-forget.
+          if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED') {
+            maybeEnsureStudentMembership(effectiveSession.user);
+          }
         } else {
           setUser(null);
         }
@@ -271,6 +360,9 @@ export const AuthProvider = ({ children }) => {
           console.warn('[auth] login profile fetch:', e?.message || e);
           setUser(buildUser(data.session.user, null));
         }
+        // Self-heal au login (coque élève only) : un élève inscrit avant ce
+        // correctif (membership orpheline) est rattaché ici. Idempotent.
+        maybeEnsureStudentMembership(data.session.user);
       }
       return { data, error: null };
     } catch (err) {
@@ -295,6 +387,14 @@ export const AuthProvider = ({ children }) => {
       setError(authError.message);
       return { data: null, error: authError };
     }
+    // NB : le rattachement tenant (role=student) n'est PAS fait ici à dessein.
+    // signup() est partagé par plusieurs flux (élève /m/eleve, visiteur générique
+    // /signup → role:'visitor' + choix de forfait, école /t/:slug/signup qui a déjà
+    // son propre join via POST /tenants/:slug/join). Rattacher tout le monde au
+    // tenant par défaut casserait ces autres flux. Le rattachement élève est :
+    //  • explicite côté écran d'inscription élève (EleveSignupMobile), et
+    //  • auto en self-heal mais UNIQUEMENT dans la coque /m/eleve (cf.
+    //    maybeEnsureStudentMembership ci-dessous + onAuthStateChange/login/init).
     return { data, error: null };
   };
 
@@ -391,6 +491,7 @@ export const AuthProvider = ({ children }) => {
     resetPassword,
     updatePassword,
     refreshProfile,
+    ensureStudentMembership,
     supabase,
   };
 
