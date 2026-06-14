@@ -3,6 +3,7 @@ import { randomUUID, createHmac, timingSafeEqual } from "crypto";
 import { AuthService } from "../auth/auth.service";
 import { PawaPayService } from "../pawapay/pawapay.service";
 import { WebhookService } from "../liri-public/webhook.service";
+import { resolvePlanServices } from "./plan-services";
 
 @Injectable()
 export class BillingService {
@@ -103,6 +104,9 @@ export class BillingService {
       .from("tenants")
       .update({ metadata: merged, updated_at: new Date().toISOString() })
       .eq("id", tenantId);
+
+    // Provisioning produit : activer les moteurs du plan (parité avec le paiement).
+    await this.provisionPlanServices(tenantId, (plan as any).key);
 
     return { subscription, gating_enabled: true, plan: (plan as any).key };
   }
@@ -261,6 +265,8 @@ export class BillingService {
       await sb.from("billing_invoices").update({ status: "paid", provider: "stripe", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("subscription_id", subscriptionId).in("status", ["pending", "processing", "failed"]);
       // Le forfait payé remplace les autres abonnements actifs (ex: l'essai medos_standard).
       await this.supersedeOtherActiveSubscriptions(tenantId, subscriptionId);
+      // Provisioning produit : activer les moteurs du plan (le paiement « livre »).
+      await this.provisionPlanServices(tenantId, (sub as any).plan_id);
     }
     return { paid, status: paid ? "active" : (sub as any).status };
   }
@@ -276,6 +282,36 @@ export class BillingService {
       .eq("tenant_id", tenantId)
       .eq("status", "active")
       .neq("id", keepSubscriptionId);
+  }
+
+  /**
+   * PROVISIONING au paiement : active les moteurs (tenant_services) liés au plan.
+   * C'est le maillon qui relie « j'ai payé » à « mon produit est actif ». Source :
+   * billing_plans.features.services (override DB) sinon le manifeste PLAN_SERVICE_MAP.
+   * Additif + idempotent (upsert active=true ; ne coupe jamais un service existant).
+   * Tolérant aux pannes : un échec de provisioning ne casse JAMAIS l'activation de
+   * l'abonnement (le client a payé — on ne rejette pas l'ACK pour autant).
+   */
+  private async provisionPlanServices(tenantId: string | null | undefined, planKey: string | null | undefined) {
+    if (!tenantId || !planKey) return;
+    try {
+      const sb = this.supabase;
+      const { data: plan } = await sb.from("billing_plans").select("features").eq("key", planKey).maybeSingle();
+      const services = resolvePlanServices(planKey, (plan as any)?.features);
+      if (!services.length) {
+        console.warn(`[billing provisioning] aucun moteur mappé pour le plan "${planKey}" — rien activé`);
+        return;
+      }
+      const rows = services.map((service_key) => ({ tenant_id: tenantId, service_key, active: true }));
+      const { error } = await sb.from("tenant_services").upsert(rows, { onConflict: "tenant_id,service_key" });
+      if (error) {
+        console.warn(`[billing provisioning] upsert tenant_services échec (tenant=${tenantId}, plan=${planKey}): ${error.message}`);
+        return;
+      }
+      console.log(`[billing provisioning] ${services.length} moteur(s) activé(s) pour tenant=${tenantId} (plan=${planKey})`);
+    } catch (e) {
+      console.warn(`[billing provisioning] échec (tenant=${tenantId}, plan=${planKey}): ${(e as Error).message}`);
+    }
   }
 
   // ─── Retraits / versements mobile money (payouts PawaPay) ─────────────────
@@ -511,6 +547,8 @@ export class BillingService {
         .maybeSingle();
       if ((row as any)?.tenant_id) {
         await this.supersedeOtherActiveSubscriptions((row as any).tenant_id, (row as any).id);
+        // Provisioning produit : activer les moteurs du plan (le paiement « livre »).
+        await this.provisionPlanServices((row as any).tenant_id, (row as any).plan_id);
         this.notifyTenant((row as any).tenant_id, "billing.subscription.activated", {
           subscription_id: (row as any).id,
           plan_id: (row as any).plan_id,
