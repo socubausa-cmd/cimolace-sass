@@ -56,25 +56,30 @@
 
 ---
 
-## 2c. Parcours d'un LIVE : quelle interface s'ouvre ?
+## 2c. Parcours d'un LIVE : quelle interface, à quel moment ?
 
-Quand un tenant (ISNA, Zahir…) lance un live, **plusieurs surfaces interviennent à des moments différents**. L'interface qui s'ouvre dépend de **qui** (hôte vs invité) et **où** (dans l'app vs embarqué sur un site externe).
+Le cycle de vie d'un live passe par **des pages différentes selon l'étape**. ⚠️ Piège de nommage majeur : **« Arena » n'est PAS la préparation — c'est la séance live elle-même.** La préparation étape par étape, c'est **`LivePreparationStudioPage`**.
 
-| Étape | Surface | Route | Page |
-|---|---|---|---|
-| Voir / gérer mes lives | Portail ou Bibliothèque | `/liri`, `/lives` | LiriPortalPage, LivesLibraryPage |
-| Préparer un live (scènes, smartboard…) | Studio | `/studio/liri`, prépa | StudioLiri*, LivePreparationStudio |
-| **Lancer / héberger le live (HÔTE)** | **Salle de l'hôte** | `/live/host/:sessionId` | **LiveHostPage** |
-| Rejoindre (INVITÉ / participant) | Salle invité | `/live/:sessionId` | LiveGuestPage |
-| Salle d'attente | Waiting room | `/live/waiting/:sessionId` | LiveWaitingRoom |
-| Companion (téléphone / caméra mobile) | — | `/live/phone`, `/live/mobile-camera` | Immersive/MobileCamera |
-| **Embarqué sur un site externe du tenant** | iframe embed | `/embed/live/:sessionId`, `/embed/studio` | LiveEmbed |
+| Étape | Page | Route |
+|---|---|---|
+| 1. Voir / gérer mes lives | LiriPortalPage / LivesLibraryPage | `/liri`, `/lives` |
+| 2. **Préparer le live (wizard étape par étape : scènes, couches, smartboard, autosave)** | **`LivePreparationStudioPage`** | `/studio/live-preparation/:sessionId` |
+| 3. Salle d'attente | Waiting room | `/live/waiting/:sessionId` |
+| 4. **Être EN LIVE (hôte) — la séance** | **`LiveHostPage`** *(alias « Arena »)* | `/live/host/:sessionId` **et** `/studio/live-arena/:sessionId` |
+| 5. Rejoindre (invité / participant) | `LiveGuestPage` | `/live/:sessionId` |
+| 6. Companion (téléphone / caméra mobile) | Immersive / MobileCamera | `/live/phone`, `/live/mobile-camera` |
+| 7. Après le live (post-production, replay, IA) | `LivePostIntelligencePage` | `/studio/live-post/:sessionId` |
+| — Embarqué sur un site externe du tenant | LiveEmbed (iframe) | `/embed/live/:sessionId`, `/embed/studio` |
 
-**Réponse directe :** lancer un live **pour l'héberger** ouvre **`LiveHostPage`** (la salle de l'hôte). Le **Portail** et le **Studio** sont **avant** (gérer / préparer) ; la salle live elle-même = `LiveHostPage` (hôte) ou `LiveGuestPage` (invité).
+**Le bon modèle mental :**
+- **Préparer** (configurer, étape par étape) = **`LivePreparationStudioPage`** (`/studio/live-preparation/:sessionId`). ← *c'est ça qu'on prend souvent pour « Arena »*.
+- **Être en live** (la séance, héberger) = **`LiveHostPage`** (`/live/host/:sessionId`). **« Arena » (`/studio/live-arena/:sessionId`) rend exactement cette même `LiveHostPage`.**
 
-> ⚠️ **Confusion de noms (à arbitrer, non corrigé) :** « **Arena** » n'est **pas** une page différente. La route `/studio/live-arena/:sessionId` rend **exactement la même `LiveHostPage`** que `/live/host/:sessionId`. Donc **Arena = Host = salle live de l'hôte**, sous deux noms de route. Recommandation : garder **un seul** nom (« salle live » / host) et faire de `/studio/live-arena/:sessionId` un simple alias documenté, pour ne plus laisser croire qu'« Arena » est un produit distinct.
+> ⚠️ **Confusions de noms à arbitrer (non corrigées — routing partagé) :**
+> 1. **« Arena » = la séance live**, pas la prépa. `/studio/live-arena/:sessionId` → **`LiveHostPage`** (la même page que `/live/host/:sessionId`). Le mot « Arena » laisse croire à une étape de configuration → trompeur. Reco : renommer « Arena » en **« Salle live »**, garder « **Preparation Studio** » pour la prépa.
+> 2. L'ancienne salle immersive OBS (`/studio/live-arena-obs/:sessionId`, composant `LiveArenaPage`) est **désactivée** : elle **redirige** vers `/studio/live-arena` (`LiveHostPage`). Tout converge donc vers **une seule salle live**.
 >
-> Quand **Liri est embarqué** dans le site externe d'un tenant (via clé API / SDK), ce ne sont **pas** ces routes app qui s'ouvrent mais les routes **`/embed/*`** (iframe), pour que le live s'affiche **dans** le site du client sans le sortir de son domaine.
+> Quand **Liri est embarqué** dans le site externe d'un tenant (clé API / SDK), ce ne sont **pas** ces routes qui s'ouvrent mais les routes **`/embed/*`** (iframe) — le live s'affiche **dans** le site du client, sans quitter son domaine.
 
 ---
 
