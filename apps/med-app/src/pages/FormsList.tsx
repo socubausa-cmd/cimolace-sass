@@ -1,79 +1,37 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ClipboardList, Plus, X, Trash2, GripVertical, FileText } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ClipboardList, Plus, X, FileText, CheckCircle2, Search } from 'lucide-react';
+import { FormRenderer, type FormShape } from '../forms/FormRenderer';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
-type FieldType = 'text' | 'textarea' | 'checkbox' | 'select' | 'signature' | 'number' | 'date';
-
-type Field = {
-  key: string;
-  label: string;
-  type: FieldType;
-  required?: boolean;
-  options?: string[];
-};
-
-type Form = {
+type Form = FormShape & {
   id: string;
-  title: string;
-  description?: string | null;
   category?: string;
-  fields?: Field[];
   is_template?: boolean;
+  send_before_days?: number | null;
   created_at?: string;
 };
 
-const CATEGORIES = [
-  { value: 'intake', label: 'Anamnèse' },
-  { value: 'consent', label: 'Consentement' },
-  { value: 'followup', label: 'Suivi' },
-  { value: 'symptom', label: 'Symptômes' },
-  { value: 'satisfaction', label: 'Satisfaction' },
-  { value: 'custom', label: 'Personnalisé' },
-];
-
-const FIELD_TYPES: { value: FieldType; label: string }[] = [
-  { value: 'text', label: 'Texte court' },
-  { value: 'textarea', label: 'Texte long' },
-  { value: 'number', label: 'Nombre' },
-  { value: 'date', label: 'Date' },
-  { value: 'select', label: 'Liste déroulante' },
-  { value: 'checkbox', label: 'Case à cocher' },
-  { value: 'signature', label: 'Signature' },
-];
+const CATEGORIES: Record<string, string> = {
+  intake: 'Anamnèse', consent: 'Consentement', followup: 'Suivi',
+  symptom: 'Symptômes', satisfaction: 'Satisfaction', custom: 'Personnalisé',
+};
 
 function authHeaders(): HeadersInit {
-  const t = localStorage.getItem('supabase_token');
   return {
-    Authorization: 'Bearer ' + (t || ''),
+    Authorization: 'Bearer ' + (localStorage.getItem('supabase_token') || ''),
     'X-Tenant-Slug': localStorage.getItem('tenant_slug') || '',
   };
 }
 
-function slugify(s: string) {
-  return s
-    .toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '')
-    .slice(0, 40) || 'field';
-}
-
-const emptyField: Field = { key: '', label: '', type: 'text', required: false };
-
 export function FormsList() {
+  const navigate = useNavigate();
+  const location = useLocation() as { state?: { created?: boolean } };
   const [forms, setForms] = useState<Form[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  const [newOpen, setNewOpen] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState<Form | null>(null);
-  const [saving, setSaving] = useState(false);
-
-  // Builder form state
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('custom');
-  const [fields, setFields] = useState<Field[]>([{ ...emptyField, key: 'field_1' }]);
+  const [preview, setPreview] = useState<Form | null>(null);
+  const [query, setQuery] = useState('');
+  const [toast, setToast] = useState(false);
 
   const fetchForms = useCallback(async () => {
     try {
@@ -81,335 +39,116 @@ export function FormsList() {
       if (!res.ok) return;
       const d = await res.json();
       setForms(d.data || d || []);
-    } catch {
-      /* ignore */
-    }
+    } catch { /* ignore */ }
   }, []);
 
+  useEffect(() => { fetchForms(); }, [fetchForms]);
+
   useEffect(() => {
-    fetchForms();
-  }, [fetchForms]);
-
-  function openBuilder() {
-    setTitle('');
-    setDescription('');
-    setCategory('custom');
-    setFields([{ ...emptyField, key: 'field_1' }]);
-    setError(null);
-    setNewOpen(true);
-  }
-
-  function addField() {
-    setFields((prev) => [...prev, { ...emptyField, key: `field_${prev.length + 1}` }]);
-  }
-
-  function removeField(i: number) {
-    setFields((prev) => prev.filter((_, idx) => idx !== i));
-  }
-
-  function updateField(i: number, patch: Partial<Field>) {
-    setFields((prev) =>
-      prev.map((f, idx) => {
-        if (idx !== i) return f;
-        const next = { ...f, ...patch };
-        // auto-slug the key from label if user didn't override
-        if (patch.label !== undefined && (!f.key || f.key === slugify(f.label))) {
-          next.key = slugify(patch.label || `field_${idx + 1}`);
-        }
-        return next;
-      }),
-    );
-  }
-
-  function moveField(i: number, dir: -1 | 1) {
-    setFields((prev) => {
-      const next = [...prev];
-      const target = i + dir;
-      if (target < 0 || target >= next.length) return prev;
-      [next[i], next[target]] = [next[target], next[i]];
-      return next;
-    });
-  }
-
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    if (!title.trim()) {
-      setError('Titre requis');
-      return;
+    if (location.state?.created) {
+      setToast(true);
+      navigate('.', { replace: true, state: {} });
+      const t = setTimeout(() => setToast(false), 3200);
+      return () => clearTimeout(t);
     }
-    const validFields = fields
-      .filter((f) => f.label.trim())
-      .map((f, i) => ({
-        ...f,
-        key: f.key || slugify(f.label) || `field_${i + 1}`,
-        options: f.type === 'select' ? (f.options || []).filter((o) => o.trim()) : undefined,
-      }));
-    if (validFields.length === 0) {
-      setError('Au moins un champ avec un libellé requis');
-      return;
-    }
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await fetch(API + '/med/forms', {
-        method: 'POST',
-        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: title.trim(),
-          description: description.trim() || undefined,
-          category,
-          fields: validFields,
-        }),
-      });
-      if (!res.ok) {
-        const b = await res.json().catch(() => ({}));
-        throw new Error(b?.message || `Erreur ${res.status}`);
-      }
-      setNewOpen(false);
-      await fetchForms();
-    } catch (err: any) {
-      setError(err?.message || 'Échec');
-    } finally {
-      setSaving(false);
-    }
-  }
+  }, [location.state, navigate]);
+
+  const visible = forms.filter((f) =>
+    !query.trim() || (f.title || '').toLowerCase().includes(query.toLowerCase()));
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h2 style={{ fontSize: 24, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <ClipboardList size={22} /> Formulaires medicaux
+      {toast && (
+        <div className="fl-toast"><CheckCircle2 size={16} /> Formulaire créé avec succès</div>
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: 12, flexWrap: 'wrap' }}>
+        <h2 style={{ fontSize: 24, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 9, margin: 0, color: 'var(--zw-text)' }}>
+          <ClipboardList size={22} color="var(--brand-primary)" /> Formulaires médicaux
         </h2>
-        <button
-          onClick={openBuilder}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: 'var(--zw-violet-soft)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
-        >
+        <button onClick={() => navigate('/forms/new')} className="fl-new">
           <Plus size={16} /> Nouveau formulaire
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-        {forms.map((f) => (
-          <button
-            key={f.id}
-            onClick={() => setPreviewOpen(f)}
-            style={{
-              background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 20,
-              textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
-            }}
-          >
-            <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0, color: 'var(--zw-text)' }}>{f.title}</h3>
-            <p style={{ fontSize: 13, color: 'var(--zw-text-muted)', marginTop: 4 }}>{f.description || 'Formulaire médical'}</p>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
-              <span style={{ display: 'inline-block', fontSize: 11, padding: '2px 8px', borderRadius: 8, background: 'var(--zw-violet-bg)', color: 'var(--zw-violet)' }}>
-                {CATEGORIES.find((c) => c.value === f.category)?.label || f.category || 'Personnalisé'}
-              </span>
-              <span style={{ fontSize: 11, color: 'var(--zw-text-faint)' }}>
+      {forms.length > 4 && (
+        <div className="fl-search">
+          <Search size={15} />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Rechercher un formulaire…" />
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
+        {/* Carte “créer” */}
+        <button onClick={() => navigate('/forms/new')} className="fl-create-card">
+          <span className="fl-create-plus"><Plus size={22} /></span>
+          <span style={{ fontSize: 14, fontWeight: 700 }}>Créer un formulaire</span>
+          <span style={{ fontSize: 12, color: 'var(--zw-text-muted)' }}>Anamnèse, consentement, suivi…</span>
+        </button>
+
+        {visible.map((f) => (
+          <button key={f.id} onClick={() => setPreview(f)} className="fl-card">
+            <h3 style={{ fontSize: 15.5, fontWeight: 700, margin: 0, color: 'var(--zw-text)' }}>{f.title}</h3>
+            <p style={{ fontSize: 12.5, color: 'var(--zw-text-muted)', margin: '5px 0 0', minHeight: 32, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {f.description || 'Formulaire médical'}
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+              <span className="fl-badge">{CATEGORIES[f.category || ''] || f.category || 'Personnalisé'}</span>
+              <span style={{ fontSize: 11.5, color: 'var(--zw-text-faint)', fontWeight: 600 }}>
                 {(f.fields || []).length} champ{(f.fields || []).length > 1 ? 's' : ''}
               </span>
             </div>
-            {f.is_template && (
-              <span style={{ display: 'inline-block', marginTop: 8, fontSize: 10, padding: '1px 6px', background: '#fef3c7', color: '#92400e', borderRadius: 4, fontWeight: 600 }}>
-                MODÈLE
-              </span>
-            )}
+            {f.is_template && <span className="fl-tpl">MODÈLE</span>}
           </button>
         ))}
-        {forms.length === 0 && <p style={{ color: 'var(--zw-text-faint)', gridColumn: '1/-1' }}>Aucun formulaire</p>}
+
+        {forms.length === 0 && (
+          <p style={{ color: 'var(--zw-text-faint)', gridColumn: '1/-1', fontSize: 13 }}>
+            Aucun formulaire pour l’instant — créez le premier.
+          </p>
+        )}
       </div>
 
-      {/* Builder modal */}
-      {newOpen && (
-        <div
-          onClick={() => !saving && setNewOpen(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}
-        >
-          <form
-            onClick={(e) => e.stopPropagation()}
-            onSubmit={handleCreate}
-            style={{ background: '#fff', borderRadius: 12, padding: 24, width: 'min(720px, 100%)', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Nouveau formulaire</h3>
-              <button type="button" onClick={() => !saving && setNewOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-                <X size={18} />
-              </button>
+      {/* Aperçu (rendu fidèle, lecture seule) */}
+      {preview && (
+        <div className="fl-overlay" onClick={() => setPreview(null)}>
+          <div className="fl-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="fl-modal-head">
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 700, color: 'var(--zw-text-soft)' }}>
+                <FileText size={15} /> Aperçu du formulaire
+              </span>
+              <button onClick={() => setPreview(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--zw-text-muted)' }}><X size={18} /></button>
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12, marginBottom: 12 }}>
-              <Field label="Titre *">
-                <input required value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} placeholder="Ex: Anamnese ostepathie" />
-              </Field>
-              <Field label="Catégorie">
-                <select value={category} onChange={(e) => setCategory(e.target.value)} style={inputStyle}>
-                  {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-                </select>
-              </Field>
+            <div className="fl-modal-body">
+              <FormRenderer form={preview} interactive={false} />
             </div>
-
-            <Field label="Description (optionnel)">
-              <textarea
-                rows={2}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Quand utiliser ce formulaire, instructions au patient..."
-                style={{ ...inputStyle, fontFamily: 'inherit', resize: 'vertical' }}
-              />
-            </Field>
-
-            <h4 style={{ fontSize: 14, fontWeight: 600, margin: '16px 0 8px', color: 'var(--zw-text-soft)' }}>
-              Champs ({fields.length})
-            </h4>
-
-            {fields.map((f, i) => (
-              <div key={i} style={{ background: 'var(--zw-bg)', padding: 12, borderRadius: 8, marginBottom: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <button type="button" onClick={() => moveField(i, -1)} disabled={i === 0} style={navBtn}>▲</button>
-                    <button type="button" onClick={() => moveField(i, 1)} disabled={i === fields.length - 1} style={navBtn}>▼</button>
-                  </div>
-                  <GripVertical size={14} color="var(--zw-text-faint)" />
-                  <span style={{ fontSize: 12, color: 'var(--zw-text-muted)', fontWeight: 600 }}>Champ {i + 1}</span>
-                  <div style={{ flex: 1 }} />
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--zw-text-soft)', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={f.required || false} onChange={(e) => updateField(i, { required: e.target.checked })} />
-                    Obligatoire
-                  </label>
-                  {fields.length > 1 && (
-                    <button type="button" onClick={() => removeField(i)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: 4 }}>
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 8, marginBottom: 6 }}>
-                  <input
-                    placeholder="Libellé du champ (ex: Motif de consultation)"
-                    value={f.label}
-                    onChange={(e) => updateField(i, { label: e.target.value })}
-                    style={inputStyle}
-                  />
-                  <select value={f.type} onChange={(e) => updateField(i, { type: e.target.value as FieldType })} style={inputStyle}>
-                    {FIELD_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-                  </select>
-                </div>
-
-                {f.type === 'select' && (
-                  <input
-                    placeholder="Options separees par virgule (ex: oui, non, parfois)"
-                    value={(f.options || []).join(', ')}
-                    onChange={(e) => updateField(i, { options: e.target.value.split(',').map((s) => s.trim()) })}
-                    style={inputStyle}
-                  />
-                )}
-              </div>
-            ))}
-
-            <button
-              type="button"
-              onClick={addField}
-              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', background: '#fff', color: 'var(--zw-violet-soft)', border: '1px dashed var(--zw-violet-soft)', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer', marginBottom: 16 }}
-            >
-              <Plus size={12} /> Ajouter un champ
-            </button>
-
-            {error && <div style={errStyle}>{error}</div>}
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 20 }}>
-              <button type="button" onClick={() => !saving && setNewOpen(false)} disabled={saving} style={cancelBtn(saving)}>
-                Annuler
-              </button>
-              <button type="submit" disabled={saving} style={submitBtn('var(--zw-violet-soft)', saving)}>
-                {saving ? 'Création…' : 'Créer le formulaire'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Preview modal */}
-      {previewOpen && (
-        <div
-          onClick={() => setPreviewOpen(null)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{ background: '#fff', borderRadius: 12, padding: 24, width: 'min(600px, 100%)', maxHeight: '85vh', overflowY: 'auto' }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-              <div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <FileText size={18} /> {previewOpen.title}
-                </h3>
-                {previewOpen.description && <p style={{ fontSize: 13, color: 'var(--zw-text-muted)', margin: '4px 0 0' }}>{previewOpen.description}</p>}
-              </div>
-              <button type="button" onClick={() => setPreviewOpen(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-                <X size={18} />
-              </button>
-            </div>
-
-            <ol style={{ paddingLeft: 0, listStyle: 'none', margin: 0 }}>
-              {(previewOpen.fields || []).map((field, i) => (
-                <li key={i} style={{ padding: '10px 0', borderTop: i === 0 ? 'none' : '1px solid var(--zw-bg-subtle)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--zw-violet-bg)', color: 'var(--zw-violet)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600 }}>
-                      {i + 1}
-                    </span>
-                    <strong style={{ fontSize: 13 }}>{field.label}</strong>
-                    {field.required && <span style={{ color: '#dc2626' }}>*</span>}
-                    <span style={{ marginLeft: 'auto', fontSize: 10, padding: '1px 6px', background: 'var(--zw-bg-subtle)', color: 'var(--zw-text-soft)', borderRadius: 4, textTransform: 'uppercase' }}>
-                      {FIELD_TYPES.find((t) => t.value === field.type)?.label || field.type}
-                    </span>
-                  </div>
-                  {field.type === 'select' && field.options && field.options.length > 0 && (
-                    <div style={{ fontSize: 11, color: 'var(--zw-text-faint)', marginTop: 4, marginLeft: 32 }}>
-                      Options : {field.options.join(', ')}
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ol>
           </div>
         </div>
       )}
+
+      <style>{CSS}</style>
     </div>
   );
 }
 
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '8px 10px', border: '1px solid var(--zw-border)',
-  borderRadius: 6, fontSize: 13, background: '#fff', boxSizing: 'border-box',
-};
-const errStyle: React.CSSProperties = {
-  marginTop: 12, padding: 10, background: '#fef2f2',
-  color: '#991b1b', borderRadius: 8, fontSize: 13,
-};
-const navBtn: React.CSSProperties = {
-  fontSize: 9, padding: '1px 4px', background: '#fff', border: '1px solid var(--zw-border)',
-  borderRadius: 3, cursor: 'pointer', color: 'var(--zw-text-soft)', lineHeight: 1,
-};
-
-function cancelBtn(saving: boolean): React.CSSProperties {
-  return {
-    padding: '10px 16px', background: '#fff', color: 'var(--zw-text-soft)',
-    border: '1px solid var(--zw-border)', borderRadius: 8, fontSize: 14, fontWeight: 500,
-    cursor: saving ? 'not-allowed' : 'pointer',
-  };
-}
-function submitBtn(color: string, saving: boolean): React.CSSProperties {
-  return {
-    padding: '10px 18px', background: color, color: '#fff',
-    border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500,
-    cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1,
-  };
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label style={{ display: 'block', marginBottom: 12 }}>
-      <span style={{ display: 'block', fontSize: 12, color: 'var(--zw-text-soft)', marginBottom: 4, fontWeight: 500 }}>{label}</span>
-      {children}
-    </label>
-  );
-}
+const CSS = `
+.fl-new { display:inline-flex; align-items:center; gap:6px; padding:10px 18px; background:var(--brand-primary, #7c3aed); color:#fff; border:none; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; transition:transform .14s, box-shadow .2s; box-shadow:0 8px 18px -8px color-mix(in srgb, var(--brand-primary, #7c3aed) 70%, transparent); }
+.fl-new:hover { transform:translateY(-1px); }
+.fl-search { display:flex; align-items:center; gap:8px; background:#fff; border:1px solid var(--zw-border); border-radius:10px; padding:0 12px; margin-bottom:16px; max-width:340px; color:var(--zw-text-faint); }
+.fl-search input { flex:1; border:none; outline:none; padding:9px 0; font-size:13.5px; background:transparent; color:var(--zw-text); }
+.fl-create-card { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; text-align:center; min-height:138px; background:color-mix(in srgb, var(--brand-primary, #7c3aed) 5%, #fff); border:1.5px dashed color-mix(in srgb, var(--brand-primary, #7c3aed) 40%, var(--zw-border)); border-radius:14px; cursor:pointer; font-family:inherit; color:var(--zw-text); transition:all .16s; }
+.fl-create-card:hover { border-color:var(--brand-primary, #7c3aed); transform:translateY(-2px); }
+.fl-create-plus { width:42px; height:42px; border-radius:12px; background:var(--brand-primary, #7c3aed); color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 16px -6px color-mix(in srgb, var(--brand-primary, #7c3aed) 70%, transparent); }
+.fl-card { position:relative; background:#fff; border-radius:14px; border:1px solid var(--zw-border); padding:18px; text-align:left; cursor:pointer; font-family:inherit; transition:transform .16s, box-shadow .2s, border-color .16s; }
+.fl-card:hover { transform:translateY(-2px); box-shadow:0 14px 30px -16px rgba(15,23,42,0.3); border-color:color-mix(in srgb, var(--brand-primary, #7c3aed) 30%, var(--zw-border)); }
+.fl-badge { display:inline-block; font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; background:color-mix(in srgb, var(--brand-primary, #7c3aed) 12%, #fff); color:var(--brand-primary, #7c3aed); }
+.fl-tpl { position:absolute; top:14px; right:14px; font-size:9px; padding:2px 6px; background:#fef3c7; color:#92400e; border-radius:5px; font-weight:800; letter-spacing:.03em; }
+.fl-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.55); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; z-index:1000; padding:20px; animation:flFade .18s ease; }
+@keyframes flFade { from { opacity:0; } to { opacity:1; } }
+.fl-modal { background:var(--zw-bg, #f6efe6); border-radius:18px; width:min(540px,100%); max-height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 30px 60px -20px rgba(0,0,0,0.45); animation:flPop .22s cubic-bezier(.2,.7,.3,1); }
+@keyframes flPop { from { opacity:0; transform:translateY(10px) scale(.98); } to { opacity:1; transform:none; } }
+.fl-modal-head { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#fff; border-bottom:1px solid var(--zw-border); }
+.fl-modal-body { padding:18px; overflow-y:auto; }
+.fl-toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:2000; display:inline-flex; align-items:center; gap:8px; background:#16a34a; color:#fff; padding:11px 18px; border-radius:11px; font-size:13.5px; font-weight:600; box-shadow:0 14px 30px -10px rgba(22,163,74,0.6); animation:flToast .3s cubic-bezier(.2,.7,.3,1); }
+@keyframes flToast { from { opacity:0; transform:translateX(-50%) translateY(-12px); } to { opacity:1; transform:translateX(-50%); } }
+`;

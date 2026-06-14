@@ -22,6 +22,8 @@ import { Layout } from './components/Layout';
 const TwinPage = lazy(() => import('./twin/TwinPage').then((m) => ({ default: m.TwinPage })));
 // Wizard onboarding patient (Chantier 3) — lazy aussi (allège le bundle initial).
 const PatientWizard = lazy(() => import('./twin/PatientWizard').then((m) => ({ default: m.PatientWizard })));
+// Créateur de formulaire (page pleine config|aperçu) — lazy.
+const FormBuilder = lazy(() => import('./forms/FormBuilder').then((m) => ({ default: m.FormBuilder })));
 
 const queryClient = new QueryClient();
 
@@ -43,6 +45,14 @@ function AppRoutes() {
         <Route path="/notes/:id" element={<NotesEditor />} />
         <Route path="/prescriptions" element={<PrescriptionsList />} />
         <Route path="/forms" element={<FormsList />} />
+        <Route
+          path="/forms/new"
+          element={
+            <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--zw-text-faint)' }}>Chargement du créateur…</div>}>
+              <FormBuilder />
+            </Suspense>
+          }
+        />
         <Route path="/health" element={<HealthTracker />} />
         <Route path="/programs" element={<ProgramsList />} />
         <Route path="/charting" element={<ChartingPage />} />
