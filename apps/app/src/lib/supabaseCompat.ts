@@ -748,8 +748,11 @@ export const supabase = {
   // Data — routed through API
   from: (table: string) => new QueryBuilder(table),
 
-  // Realtime — stub for now (V1 live uses LiveKit, not Supabase Realtime)
-  channel: (_name: string) => new ChannelStub(),
+  // Realtime — délégué au VRAI client Supabase. Le live (chat, hand-raise, smartboard,
+  // présence, bus LONGIA) utilise des broadcasts/presence ÉPHÉMÈRES (peer-to-peer via le
+  // serveur realtime) → aucune table ni publication requise. Le JWT de la session est
+  // attaché automatiquement → scoppé RLS. (Avant : ChannelStub no-op → realtime mort partout.)
+  channel: (name: string, opts?: any) => realSupabase.channel(name, opts),
 
   // Edge functions — déléguées au vrai client (le JWT de la session est attaché automatiquement).
   // Débloque generate-transcript (ASR), generate-mindmap, et toutes les edge functions LIRI.
@@ -761,6 +764,8 @@ export const supabase = {
   // RPC — vrai client (les fonctions SECURITY DEFINER vérifient auth.uid() côté DB).
   rpc: realSupabase.rpc.bind(realSupabase),
 
-  // Utility
-  removeChannel: (_channel: any) => {},
+  // Utility — realtime délégué au vrai client
+  removeChannel: (channel: any) => realSupabase.removeChannel(channel),
+  removeAllChannels: () => realSupabase.removeAllChannels(),
+  getChannels: () => realSupabase.getChannels(),
 };
