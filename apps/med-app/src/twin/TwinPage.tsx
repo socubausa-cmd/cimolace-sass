@@ -16,6 +16,9 @@ import { LanguageSwitcher } from '../components/LanguageSwitcher';
 const BodyViewer = lazy(() =>
   import('./BodyViewer').then((m) => ({ default: m.BodyViewer })),
 );
+const BodyViewer3D = lazy(() =>
+  import('./BodyViewer3D').then((m) => ({ default: m.BodyViewer3D })),
+);
 
 const TABS: Array<{ key: string; i18nKey: string }> = [
   { key: 'body', i18nKey: 'twin:tabs.body3d' },
@@ -59,6 +62,8 @@ export function TwinPage() {
   const [pickValue, setPickValue] = useState('');
   const [err, setErr] = useState<string | null>(null);
   const [tab, setTab] = useState('body');
+  const [bodyMode, setBodyMode] = useState<'3d' | '2d'>('3d');
+  const [patientSex, setPatientSex] = useState<'female' | 'male'>('female');
 
   const load = useCallback(async () => {
     try {
@@ -83,7 +88,12 @@ export function TwinPage() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         const p = d?.data || d;
-        if (p) setPatientName(`${p.first_name || ''} ${p.last_name || ''}`.trim());
+        if (p) {
+          setPatientName(`${p.first_name || ''} ${p.last_name || ''}`.trim());
+          const raw = String(p.sex ?? p.gender ?? p.biological_sex ?? '').toLowerCase();
+          if (/^(m|male|homme|h)/.test(raw)) setPatientSex('male');
+          else if (/^(f|female|femme|w)/.test(raw)) setPatientSex('female');
+        }
       })
       .catch(() => {});
   }, [load, patientId]);
@@ -227,11 +237,25 @@ export function TwinPage() {
       )}
 
       {tab === 'body' && <>
+      {/* Bascule Corps 3D / Vue 2D */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <div style={{ display: 'inline-flex', gap: 4, background: 'var(--zw-bg-subtle)', borderRadius: 9, padding: 3, border: '1px solid var(--zw-border)' }}>
+          {(['3d', '2d'] as const).map((m) => (
+            <button key={m} onClick={() => setBodyMode(m)} style={{ padding: '5px 14px', borderRadius: 7, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, background: bodyMode === m ? '#fff' : 'transparent', color: bodyMode === m ? 'var(--brand-primary)' : 'var(--zw-text-muted)', boxShadow: bodyMode === m ? '0 1px 3px rgba(15,23,42,0.12)' : 'none' }}>
+              {m === '3d' ? '◷ Corps 3D' : '▭ Vue 2D'}
+            </button>
+          ))}
+        </div>
+      </div>
       {/* Corps 3D + Organe sélectionné */}
       <div className="twin-grid-2col" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16, marginBottom: 16 }}>
         <div className="twin-body-panel twin-body-canvas" style={{ ...panel, padding: 0, overflow: 'hidden', minHeight: 480 }}>
-          <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--zw-text-faint)' }}>Chargement du corps 3D…</div>}>
-            <BodyViewer organs={organs} selected={selected} onSelect={(c) => { setSelected(c); setAssistant(null); }} />
+          <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--zw-text-faint)' }}>Chargement du corps…</div>}>
+            {bodyMode === '3d' ? (
+              <BodyViewer3D organs={organs} selected={selected} onSelect={(c) => { setSelected(c); setAssistant(null); }} sex={patientSex} />
+            ) : (
+              <BodyViewer organs={organs} selected={selected} onSelect={(c) => { setSelected(c); setAssistant(null); }} />
+            )}
           </Suspense>
         </div>
 
