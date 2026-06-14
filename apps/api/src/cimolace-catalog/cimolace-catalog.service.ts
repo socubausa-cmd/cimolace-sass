@@ -281,14 +281,23 @@ export const INFRA_TEMPLATES: InfraTemplate[] = [
   {
     type: 'school',
     label: 'École / ISNA',
-    description: 'Formation en ligne, lives, replay, marketing, calendrier',
+    description: 'Formation en ligne, lives, replay, studio, marketing, calendrier, paiement',
+    // Aligné sur le pack école canonique (school-engine-manifest.ts) : 6 core + 5 recommended.
+    // Masterclass (liri_masterclass) reste un addon non activé par défaut.
     engines: [
+      // core
       'liri_smartboard',
       'liri_live',
       'liri_replay',
       'marketing_creator',
       'calendar',
       'course_builder',
+      // recommended
+      'studio_creator',
+      'liri_neuro_recall',
+      'pay_engine',
+      'chat_engine',
+      'notif_engine',
     ],
   },
   {
