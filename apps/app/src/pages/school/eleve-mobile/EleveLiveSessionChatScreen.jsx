@@ -20,7 +20,7 @@ import { useDataSync } from '@/contexts/DataSyncContext';
 import { useToast } from '@/components/ui/use-toast';
 import { EleveMobileShell } from '@/components/eleve-mobile/EleveMobileShell';
 import { LiriStatusBar } from '@/pages/school/eleve-mobile/connection/EleveConnectionLayout';
-import { EV_BG, EV_CARD, EV_MUTED, EV_ACCENT, EV_LINE, EV_R, EV_SH, EV_MSG_TAB_BADGE } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
+import { EV_BG, EV_CARD, EV_MUTED, EV_ACCENT, EV_LINE, EV_R, EV_SH } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { useLiveSessionChat } from '@/hooks/useLiveSessionChat';
 import { useLiveSessionHeaderInfo } from '@/hooks/useLiveSessionHeaderInfo';
