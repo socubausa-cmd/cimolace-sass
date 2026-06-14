@@ -65,7 +65,7 @@ const ProgressionQuizManager = ({ formation, onUpdate }) => {
     <div className="space-y-6">
        <div className="flex justify-between items-center">
           <h3 className="text-xl font-bold text-white">Gestion des Évaluations</h3>
-          <Button onClick={() => setEditingQuiz({ type: 'week' })} className="bg-[#D4AF37] text-black hover:bg-yellow-500">
+          <Button onClick={() => setEditingQuiz({ type: 'week' })} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
              <Plus className="w-4 h-4 mr-2"/> Nouveau Quiz
           </Button>
        </div>
@@ -80,7 +80,7 @@ const ProgressionQuizManager = ({ formation, onUpdate }) => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
              {filterQuizzes(activeTab).map(quiz => (
-                <Card key={quiz.id} className="bg-[#192734] border-white/10 hover:border-[#D4AF37] transition-colors group">
+                <Card key={quiz.id} className="bg-[#192734] border-white/10 hover:border-[var(--school-accent)] transition-colors group">
                    <CardContent className="p-5 space-y-4">
                       <div className="flex justify-between items-start">
                          <Badge variant="outline" className={`

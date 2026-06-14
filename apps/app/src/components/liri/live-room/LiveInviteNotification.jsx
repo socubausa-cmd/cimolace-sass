@@ -61,7 +61,7 @@ export default function LiveInviteNotification({
                 ? 'border-amber-500/30 bg-amber-500/10'
                 : 'border-amber-300 bg-amber-50'
               : isDarkTheme
-                ? 'border-[#D4AF37]/25 bg-[#111827]/88'
+                ? 'border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#111827]/88'
                 : 'border-[#e6ca71] bg-white',
             className
           )}
@@ -69,7 +69,7 @@ export default function LiveInviteNotification({
           <div className="flex items-center gap-2.5">
             <div className={cn(
               'w-7 h-7 rounded-lg flex items-center justify-center shrink-0',
-              isMissed ? 'bg-amber-400/20 text-amber-300' : 'bg-[#D4AF37]/15 text-[#D4AF37]'
+              isMissed ? 'bg-amber-400/20 text-amber-300' : 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)]'
             )}>
               {isMissed ? <BellRing className="w-3.5 h-3.5" /> : <Video className="w-3.5 h-3.5" />}
             </div>
@@ -79,7 +79,7 @@ export default function LiveInviteNotification({
                 {isMissed ? (
                   <><span className="text-amber-300 font-medium">{senderName}</span> a manqué l'appel.</>
                 ) : (
-                  <><span className="text-[#D4AF37] font-medium">{senderName}</span> vous invite en vidéo.</>
+                  <><span className="text-[var(--school-accent)] font-medium">{senderName}</span> vous invite en vidéo.</>
                 )}
               </p>
               {scheduled && (
@@ -119,7 +119,7 @@ export default function LiveInviteNotification({
                   <button
                     type="button"
                     onClick={onSchedule}
-                    className="h-7 px-2.5 rounded-lg bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#D4AF37] text-[11px] hover:bg-[#D4AF37]/25 transition-colors inline-flex items-center gap-1"
+                    className="h-7 px-2.5 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] text-[11px] hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] transition-colors inline-flex items-center gap-1"
                   >
                     <CalendarPlus className="w-3 h-3" />
                     Planifier

@@ -97,7 +97,7 @@ const ModuleProgressTracker = ({ moduleId }) => {
           <div className="flex items-center gap-3">
              <div className="text-2xl font-bold text-white">{progress?.progress_percentage || 0}%</div>
              <div className="w-32 h-2 bg-black/40 rounded-full overflow-hidden">
-                <div className="h-full bg-[#D4AF37] transition-all duration-500" style={{ width: `${progress?.progress_percentage || 0}%` }}></div>
+                <div className="h-full bg-[var(--school-accent)] transition-all duration-500" style={{ width: `${progress?.progress_percentage || 0}%` }}></div>
              </div>
           </div>
        </div>
@@ -110,12 +110,12 @@ const ModuleProgressTracker = ({ moduleId }) => {
           ) : (
              <>
                 {progress?.status !== 'in_progress' && (
-                   <Button onClick={() => updateStatus('in_progress')} className="bg-[#D4AF37] text-black font-bold hover:bg-[#b5952f]">
+                   <Button onClick={() => updateStatus('in_progress')} className="bg-[var(--school-accent)] text-black font-bold hover:bg-[#b5952f]">
                       <PlayCircle className="w-4 h-4 mr-2" /> Démarrer
                    </Button>
                 )}
                 {progress?.status === 'in_progress' && (
-                   <Button onClick={() => updateStatus('completed')} variant="outline" className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10">
+                   <Button onClick={() => updateStatus('completed')} variant="outline" className="border-[var(--school-accent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
                       <CheckCircle className="w-4 h-4 mr-2" /> Marquer comme Terminé
                    </Button>
                 )}

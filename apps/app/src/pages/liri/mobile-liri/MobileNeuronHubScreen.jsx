@@ -29,12 +29,12 @@ export default function MobileNeuronHubScreen() {
       <Link to={LIRI_MOBILE.arena} className="block mb-3">
         <LiriGoldCard className="p-4 transition-transform active:scale-[0.99]">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#D4AF37]/35 bg-[#D4AF37]/10">
-              <Swords className="h-6 w-6 text-[#D4AF37]" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
+              <Swords className="h-6 w-6 text-[var(--school-accent)]" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-white/95 flex items-center gap-2">
-                <HelpCircle className="h-4 w-4 text-[#D4AF37]/90 shrink-0" />
+                <HelpCircle className="h-4 w-4 text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)] shrink-0" />
                 NeuronQ en direct
               </p>
               <p className="mt-1 text-xs text-white/45 leading-relaxed">

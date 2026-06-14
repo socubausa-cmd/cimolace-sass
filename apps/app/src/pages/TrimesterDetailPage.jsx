@@ -48,7 +48,7 @@ const TrimesterDetailPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0F1419] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-[var(--school-accent)] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -72,7 +72,7 @@ const TrimesterDetailPage = () => {
           {/* Sidebar / Info */}
           <div className="lg:col-span-1 space-y-8">
             <div className="bg-[#192734] border border-white/10 rounded-2xl p-8 sticky top-28">
-               <span className="text-[#D4AF37] font-bold text-sm tracking-wider uppercase mb-2 block">Trimestre {trimester.number}</span>
+               <span className="text-[var(--school-accent)] font-bold text-sm tracking-wider uppercase mb-2 block">Trimestre {trimester.number}</span>
                <h1 className="text-3xl font-serif font-bold mb-4">{trimester.name.replace(`Trimestre ${trimester.number} : `, '')}</h1>
                <p className="text-gray-400 mb-8 leading-relaxed">
                  {trimester.description}
@@ -80,11 +80,11 @@ const TrimesterDetailPage = () => {
 
                <div className="space-y-4 mb-8">
                   <div className="flex items-center gap-3 text-sm text-gray-300">
-                     <Calendar className="w-5 h-5 text-[#D4AF37]" />
+                     <Calendar className="w-5 h-5 text-[var(--school-accent)]" />
                      <span>{new Date(trimester.start_date).toLocaleDateString()} - {new Date(trimester.end_date).toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm text-gray-300">
-                     <BookOpen className="w-5 h-5 text-[#D4AF37]" />
+                     <BookOpen className="w-5 h-5 text-[var(--school-accent)]" />
                      <span>{modules.length} Modules</span>
                   </div>
                </div>
@@ -94,7 +94,7 @@ const TrimesterDetailPage = () => {
                   <ul className="space-y-3">
                      {trimester.objectives?.map((obj, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-gray-400">
-                           <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] mt-1.5 shrink-0"></span>
+                           <span className="w-1.5 h-1.5 rounded-full bg-[var(--school-accent)] mt-1.5 shrink-0"></span>
                            {obj}
                         </li>
                      ))}
@@ -107,9 +107,9 @@ const TrimesterDetailPage = () => {
           <div className="lg:col-span-2 space-y-6">
              <h2 className="text-2xl font-bold mb-6">Modules du Trimestre</h2>
              {modules.map((module) => (
-                <div key={module.id} className="bg-[#192734] border border-white/5 rounded-xl p-6 hover:border-[#D4AF37]/50 transition-colors flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+                <div key={module.id} className="bg-[#192734] border border-white/5 rounded-xl p-6 hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] transition-colors flex flex-col sm:flex-row gap-6 items-start sm:items-center">
                    <div className="w-16 h-16 bg-[#0F1419] rounded-lg flex flex-col items-center justify-center border border-white/10 shrink-0">
-                      <span className="text-[#D4AF37] font-bold text-lg">{module.code}</span>
+                      <span className="text-[var(--school-accent)] font-bold text-lg">{module.code}</span>
                    </div>
                    
                    <div className="flex-1">
@@ -122,7 +122,7 @@ const TrimesterDetailPage = () => {
                    </div>
 
                    <Link to={`/curriculum/module/${module.id}`}>
-                      <Button className="bg-[#D4AF37] text-black font-bold hover:bg-[#b5952f]">
+                      <Button className="bg-[var(--school-accent)] text-black font-bold hover:bg-[#b5952f]">
                          Voir le Module
                       </Button>
                    </Link>

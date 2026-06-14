@@ -14,7 +14,7 @@ const WeekClosureBlock = ({ requirements, onValidate }) => {
 
    return (
       <Card className="bg-gradient-to-r from-[#192734] to-[#0f172a] border-white/10 p-8 shadow-2xl relative overflow-hidden">
-         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-32 h-32 bg-[#D4AF37] opacity-10 rounded-full blur-3xl"></div>
+         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-32 h-32 bg-[var(--school-accent)] opacity-10 rounded-full blur-3xl"></div>
          
          <div className="relative z-10 text-center mb-8">
             <div className="inline-flex items-center justify-center p-4 bg-green-500/10 rounded-full mb-4 ring-1 ring-green-500/30">
@@ -59,9 +59,9 @@ const RequirementItem = ({ label, current, total }) => {
       <div className="bg-black/20 p-4 rounded-lg border border-white/5">
          <div className="flex justify-between mb-2">
             <span className="text-gray-300 text-sm font-medium">{label}</span>
-            <span className={isDone ? "text-green-500" : "text-[#D4AF37]"}>{current}/{total}</span>
+            <span className={isDone ? "text-green-500" : "text-[var(--school-accent)]"}>{current}/{total}</span>
          </div>
-         <Progress value={progress} className="h-1.5 bg-gray-700" indicatorClassName={isDone ? "bg-green-500" : "bg-[#D4AF37]"} />
+         <Progress value={progress} className="h-1.5 bg-gray-700" indicatorClassName={isDone ? "bg-green-500" : "bg-[var(--school-accent)]"} />
       </div>
    );
 };

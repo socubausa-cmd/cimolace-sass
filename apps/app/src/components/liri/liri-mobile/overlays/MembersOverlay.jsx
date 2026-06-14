@@ -23,7 +23,7 @@ function VizBars({ className }) {
       {basePx.map((h, i) => (
         <motion.span
           key={i}
-          className="w-[3px] rounded-full bg-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.45)]"
+          className="w-[3px] rounded-full bg-[var(--school-accent)] shadow-[0_0_10px_rgba(212,175,55,0.45)]"
           initial={{ height: h * 0.7 }}
           animate={{ height: [h * 0.45, h, h * 0.6] }}
           transition={{
@@ -96,19 +96,19 @@ export function MembersOverlay({ members = [], currentUserId }) {
       animate={{ y: 0 }}
       exit={{ y: '100%' }}
       transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-      className="fixed inset-x-0 bottom-0 z-[210] flex max-h-[min(88dvh,780px)] flex-col rounded-t-[28px] border border-[#D4AF37]/35 bg-[#0a0908]/98 shadow-[0_-24px_64px_rgba(0,0,0,0.65),0_0_40px_-12px_rgba(212,175,55,0.18)] backdrop-blur-2xl"
+      className="fixed inset-x-0 bottom-0 z-[210] flex max-h-[min(88dvh,780px)] flex-col rounded-t-[28px] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[#0a0908]/98 shadow-[0_-24px_64px_rgba(0,0,0,0.65),0_0_40px_-12px_rgba(212,175,55,0.18)] backdrop-blur-2xl"
       data-liri-no-doubletap
     >
-      <div className="mx-auto mt-2.5 h-1 w-11 rounded-full bg-[#D4AF37]/35" />
-      <div className="flex items-center justify-between gap-2 border-b border-[#D4AF37]/20 px-4 py-3.5">
+      <div className="mx-auto mt-2.5 h-1 w-11 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]" />
+      <div className="flex items-center justify-between gap-2 border-b border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] px-4 py-3.5">
         <div className="flex min-w-0 items-center gap-2">
-          <Users className="h-4 w-4 shrink-0 text-[#D4AF37]" strokeWidth={1.85} />
-          <h2 className="truncate font-serif text-lg font-semibold text-[#D4AF37]">Membres</h2>
+          <Users className="h-4 w-4 shrink-0 text-[var(--school-accent)]" strokeWidth={1.85} />
+          <h2 className="truncate font-serif text-lg font-semibold text-[var(--school-accent)]">Membres</h2>
         </div>
         <button
           type="button"
           onClick={closeOverlay}
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#D4AF37]/25 text-[#D4AF37]/70 transition-colors hover:bg-[#D4AF37]/10"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] transition-colors hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
           aria-label="Fermer"
         >
           <X className="h-4 w-4" />
@@ -116,13 +116,13 @@ export function MembersOverlay({ members = [], currentUserId }) {
       </div>
 
       <div className="px-4 pb-2">
-        <div className="flex items-center gap-2.5 rounded-2xl border border-[#D4AF37]/30 bg-black/40 px-3 py-2.5 shadow-[inset_0_1px_0_0_rgba(212,175,55,0.1)]">
-          <Search className="h-4 w-4 shrink-0 text-[#D4AF37]/55" />
+        <div className="flex items-center gap-2.5 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-black/40 px-3 py-2.5 shadow-[inset_0_1px_0_0_rgba(212,175,55,0.1)]">
+          <Search className="h-4 w-4 shrink-0 text-[color-mix(in_srgb,var(--school-accent)_55%,transparent)]" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Rechercher…"
-            className="min-w-0 flex-1 bg-transparent text-sm text-[#f5e6c8] placeholder:text-[#D4AF37]/35 outline-none"
+            className="min-w-0 flex-1 bg-transparent text-sm text-[#f5e6c8] placeholder:text-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] outline-none"
           />
         </div>
       </div>
@@ -156,14 +156,14 @@ export function MembersOverlay({ members = [], currentUserId }) {
                     openMember(m);
                   }}
                   className={cn(
-                    'flex w-full items-center gap-3 rounded-2xl border border-[#D4AF37]/28 bg-black/35 px-3 py-2.5 text-left shadow-[0_0_24px_-12px_rgba(212,175,55,0.25),inset_0_1px_0_0_rgba(212,175,55,0.08)] transition-colors active:bg-[#D4AF37]/[0.06]',
-                    m.isHost && 'border-[#D4AF37]/45 bg-[#D4AF37]/[0.07]',
+                    'flex w-full items-center gap-3 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-black/35 px-3 py-2.5 text-left shadow-[0_0_24px_-12px_rgba(212,175,55,0.25),inset_0_1px_0_0_rgba(212,175,55,0.08)] transition-colors active:bg-[var(--school-accent)]/[0.06]',
+                    m.isHost && 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[var(--school-accent)]/[0.07]',
                   )}
                 >
                   <div className="relative shrink-0">
-                    <Avatar className="h-14 w-14 rounded-xl border border-[#D4AF37]/35 shadow-[0_0_16px_-4px_rgba(212,175,55,0.35)]">
+                    <Avatar className="h-14 w-14 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] shadow-[0_0_16px_-4px_rgba(212,175,55,0.35)]">
                       {m.avatar_url ? <AvatarImage src={m.avatar_url} alt="" className="object-cover" /> : null}
-                      <AvatarFallback className="rounded-xl bg-[#D4AF37]/15 text-lg font-semibold text-[#D4AF37]">
+                      <AvatarFallback className="rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-lg font-semibold text-[var(--school-accent)]">
                         {(m.name || '?').slice(0, 1).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -171,7 +171,7 @@ export function MembersOverlay({ members = [], currentUserId }) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium text-[#faf3e6]">{m.name}</p>
-                    <p className="mt-0.5 truncate text-xs text-[#D4AF37]/65">{subtitle}</p>
+                    <p className="mt-0.5 truncate text-xs text-[color-mix(in_srgb,var(--school-accent)_65%,transparent)]">{subtitle}</p>
                   </div>
                   <VizBars className="w-10 shrink-0 opacity-90" />
                 </button>
@@ -180,7 +180,7 @@ export function MembersOverlay({ members = [], currentUserId }) {
           })}
         </ul>
         {filtered.length === 0 ? (
-          <p className="py-10 text-center text-sm text-[#D4AF37]/45">Aucun membre ne correspond.</p>
+          <p className="py-10 text-center text-sm text-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]">Aucun membre ne correspond.</p>
         ) : null}
       </div>
     </motion.div>

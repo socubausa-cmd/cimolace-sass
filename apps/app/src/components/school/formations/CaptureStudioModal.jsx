@@ -194,7 +194,7 @@ function PipelinePanel({ segments, formTitle, recordingTime, onClose }) {
         </div>
         <p className="text-xs text-gray-400">Lance la pipeline IA pour segmenter, transcrire et générer le Master Script.</p>
         <div className="flex gap-2">
-          <Button size="sm" onClick={runPipeline} className="flex-1 bg-[#D4AF37] text-black hover:bg-amber-400 font-bold text-xs">
+          <Button size="sm" onClick={runPipeline} className="flex-1 bg-[var(--school-accent)] text-black hover:bg-amber-400 font-bold text-xs">
             ✨ Lancer la pipeline IA
           </Button>
           <Button size="sm" variant="outline" onClick={onClose} className="border-white/10 text-gray-300 hover:text-white text-xs">
@@ -207,14 +207,14 @@ function PipelinePanel({ segments, formTitle, recordingTime, onClose }) {
 
   if (status === 'running') {
     return (
-      <div className="border border-[#D4AF37]/30 bg-[#D4AF37]/5 rounded-xl p-4 space-y-3">
+      <div className="border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-xl p-4 space-y-3">
         <div className="flex items-center gap-2">
-          <Loader2 className="w-5 h-5 text-[#D4AF37] animate-spin" />
-          <p className="text-sm font-semibold text-[#D4AF37]">Pipeline en cours…</p>
+          <Loader2 className="w-5 h-5 text-[var(--school-accent)] animate-spin" />
+          <p className="text-sm font-semibold text-[var(--school-accent)]">Pipeline en cours…</p>
         </div>
         <p className="text-xs text-gray-400">{step}</p>
         <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
-          <div className="h-full bg-[#D4AF37] rounded-full animate-pulse w-2/3" />
+          <div className="h-full bg-[var(--school-accent)] rounded-full animate-pulse w-2/3" />
         </div>
       </div>
     );
@@ -1008,7 +1008,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/25 backdrop-blur-xl">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-[#D4AF37]/20 flex items-center justify-center text-base">
+                <div className="w-8 h-8 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center text-base">
                   {SOURCE_LABELS[source]?.icon || '🎥'}
                 </div>
                 <div>
@@ -1026,7 +1026,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                 {/* Left: Course info + segments */}
                 <div className="p-6 space-y-5 border-r border-white/5">
                   <div>
-                    <p className="text-[11px] uppercase tracking-widest text-[#D4AF37] font-semibold mb-3">Informations du cours</p>
+                    <p className="text-[11px] uppercase tracking-widest text-[var(--school-accent)] font-semibold mb-3">Informations du cours</p>
                     <div className="space-y-3">
                       <div>
                         <Label className="text-xs text-gray-400 mb-1 block">Titre de la vidéo</Label>
@@ -1052,8 +1052,8 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                   {/* Segment planner */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-[11px] uppercase tracking-widest text-[#D4AF37] font-semibold">Plan du cours</p>
-                      <button type="button" onClick={addSegment} className="flex items-center gap-1 text-xs text-[#D4AF37] hover:text-amber-400 transition-colors">
+                      <p className="text-[11px] uppercase tracking-widest text-[var(--school-accent)] font-semibold">Plan du cours</p>
+                      <button type="button" onClick={addSegment} className="flex items-center gap-1 text-xs text-[var(--school-accent)] hover:text-amber-400 transition-colors">
                         <Plus className="w-3.5 h-3.5" /> Ajouter un segment
                       </button>
                     </div>
@@ -1061,7 +1061,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                       {segments.map((seg, si) => (
                         <div key={seg.id} className="rounded-xl border border-white/8 bg-[#0F1827] p-3 space-y-2">
                           <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] text-[10px] font-bold flex items-center justify-center flex-shrink-0">{si + 1}</span>
+                            <span className="w-5 h-5 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] text-[10px] font-bold flex items-center justify-center flex-shrink-0">{si + 1}</span>
                             <Input
                               value={seg.title}
                               onChange={(e) => updateSegment(seg.id, 'title', e.target.value)}
@@ -1077,7 +1077,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                           <div className="space-y-1.5 pl-7">
                             {seg.points.map((pt, pi) => (
                               <div key={pi} className="flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]/40 flex-shrink-0" />
+                                <span className="w-1.5 h-1.5 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] flex-shrink-0" />
                                 <Input
                                   value={pt}
                                   onChange={(e) => updatePoint(seg.id, pi, e.target.value)}
@@ -1091,7 +1091,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                                 )}
                               </div>
                             ))}
-                            <button type="button" onClick={() => addPoint(seg.id)} className="text-[10px] text-gray-500 hover:text-[#D4AF37] transition-colors flex items-center gap-1 ml-3.5">
+                            <button type="button" onClick={() => addPoint(seg.id)} className="text-[10px] text-gray-500 hover:text-[var(--school-accent)] transition-colors flex items-center gap-1 ml-3.5">
                               <Plus className="w-3 h-3" /> Ajouter un point
                             </button>
                           </div>
@@ -1104,7 +1104,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                 {/* Right: Camera preview + settings */}
                 <div className="p-6 space-y-5">
                   <div>
-                    <p className="text-[11px] uppercase tracking-widest text-[#D4AF37] font-semibold mb-3">Aperçu caméra</p>
+                    <p className="text-[11px] uppercase tracking-widest text-[var(--school-accent)] font-semibold mb-3">Aperçu caméra</p>
                     <div className={`relative bg-black rounded-xl overflow-hidden border border-white/10 ${orientation === 'portrait' ? 'aspect-[9/16] max-h-64' : 'aspect-video'}`}>
                       <video
                         ref={liveVideoRef}
@@ -1137,7 +1137,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
 
                   {/* Device + orientation settings */}
                   <div className="space-y-3">
-                    <p className="text-[11px] uppercase tracking-widest text-[#D4AF37] font-semibold">Paramètres</p>
+                    <p className="text-[11px] uppercase tracking-widest text-[var(--school-accent)] font-semibold">Paramètres</p>
                     {videoDevices.length > 0 && (
                       <div>
                         <Label className="text-xs text-gray-400 mb-1 block">Caméra</Label>
@@ -1172,14 +1172,14 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                         <button
                           type="button"
                           onClick={() => setOrientation('landscape')}
-                          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs border transition-colors ${orientation === 'landscape' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37]' : 'border-white/10 text-gray-400 hover:border-white/20'}`}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs border transition-colors ${orientation === 'landscape' ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]' : 'border-white/10 text-gray-400 hover:border-white/20'}`}
                         >
                           <Monitor className="w-4 h-4" /> Paysage
                         </button>
                         <button
                           type="button"
                           onClick={() => setOrientation('portrait')}
-                          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs border transition-colors ${orientation === 'portrait' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37]' : 'border-white/10 text-gray-400 hover:border-white/20'}`}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs border transition-colors ${orientation === 'portrait' ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]' : 'border-white/10 text-gray-400 hover:border-white/20'}`}
                         >
                           <Smartphone className="w-4 h-4" /> Portrait
                         </button>
@@ -1188,7 +1188,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                   </div>
 
                   <Button
-                    className="w-full bg-[#D4AF37] text-black hover:bg-amber-400 font-bold h-12 text-base"
+                    className="w-full bg-[var(--school-accent)] text-black hover:bg-amber-400 font-bold h-12 text-base"
                     onClick={startRecording}
                     disabled={!formTitle.trim() || segments.length === 0}
                   >
@@ -1264,7 +1264,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                         onClick={() => setSbStudioEditorMode('classic')}
                         className={`text-[10px] px-2 py-1 rounded-md border transition-colors ${
                           sbStudioEditorMode === 'classic'
-                            ? 'border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#D4AF37]'
+                            ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)]'
                             : 'border-white/10 text-white/60 hover:bg-white/10'
                         }`}
                       >
@@ -1275,7 +1275,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                         onClick={() => setSbStudioEditorMode('canvas')}
                         className={`text-[10px] px-2 py-1 rounded-md border transition-colors ${
                           sbStudioEditorMode === 'canvas'
-                            ? 'border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#D4AF37]'
+                            ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)]'
                             : 'border-white/10 text-white/60 hover:bg-white/10'
                         }`}
                       >
@@ -1585,7 +1585,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                 <button
                   type="button"
                   onClick={requestNextChapter}
-                  className="w-9 h-9 rounded-full bg-[#D4AF37]/80 hover:bg-[#D4AF37] flex items-center justify-center transition-colors"
+                  className="w-9 h-9 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_80%,transparent)] hover:bg-[var(--school-accent)] flex items-center justify-center transition-colors"
                   title="Chapitre suivant"
                 >
                   <ArrowRight className="w-4 h-4 text-black" />
@@ -1605,7 +1605,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-colors ${activeTab === tab.id ? 'text-[#D4AF37] border-b-2 border-[#D4AF37]' : 'text-gray-400 hover:text-white'}`}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-colors ${activeTab === tab.id ? 'text-[var(--school-accent)] border-b-2 border-[var(--school-accent)]' : 'text-gray-400 hover:text-white'}`}
                   >
                     <tab.icon className="w-3.5 h-3.5" />
                     {tab.label}
@@ -1617,10 +1617,10 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                   <div className="p-4 space-y-2">
                     <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-2">Édite le plan — le SmartBoard se met à jour en direct</p>
                     {segments.map((seg, si) => (
-                      <div key={seg.id} className={`rounded-xl border p-3 transition-colors ${si === activeSegmentIdx ? 'border-[#D4AF37]/50 bg-[#D4AF37]/5' : 'border-white/8 bg-white/[0.02]'}`}>
+                      <div key={seg.id} className={`rounded-xl border p-3 transition-colors ${si === activeSegmentIdx ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]' : 'border-white/8 bg-white/[0.02]'}`}>
                         <div className="flex items-center gap-2">
                           <button type="button" onClick={() => { setActiveSegmentIdx(si); setActivePointIdx(0); }}
-                            className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0 ${si === activeSegmentIdx ? 'bg-[#D4AF37] text-black' : 'bg-white/10 text-gray-400'}`}>{si + 1}</button>
+                            className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0 ${si === activeSegmentIdx ? 'bg-[var(--school-accent)] text-black' : 'bg-white/10 text-gray-400'}`}>{si + 1}</button>
                           <Input
                             value={seg.title}
                             onChange={(e) => updateSegment(seg.id, 'title', e.target.value)}
@@ -1647,14 +1647,14 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                                 </div>
                               );
                             })}
-                            <button type="button" onClick={() => addPoint(seg.id)} className="text-[10px] text-gray-500 hover:text-[#D4AF37] flex items-center gap-1 ml-5">
+                            <button type="button" onClick={() => addPoint(seg.id)} className="text-[10px] text-gray-500 hover:text-[var(--school-accent)] flex items-center gap-1 ml-5">
                               <Plus className="w-3 h-3" /> Point
                             </button>
                           </div>
                         )}
                       </div>
                     ))}
-                    <button type="button" onClick={addSegment} className="flex items-center gap-1 text-xs text-[#D4AF37] hover:text-amber-400 pt-1">
+                    <button type="button" onClick={addSegment} className="flex items-center gap-1 text-xs text-[var(--school-accent)] hover:text-amber-400 pt-1">
                       <Plus className="w-3.5 h-3.5" /> Segment
                     </button>
                     <div className="flex gap-2 pt-2">
@@ -1672,16 +1672,16 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                     <p className="text-[10px] uppercase tracking-widest text-gray-500">Téléprompteur</p>
                     {activeSeg && (
                       <>
-                        <div className="rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-3">
-                          <p className="text-[10px] text-[#D4AF37] uppercase tracking-wider mb-1">Segment actif</p>
+                        <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] p-3">
+                          <p className="text-[10px] text-[var(--school-accent)] uppercase tracking-wider mb-1">Segment actif</p>
                           <h3 className="text-sm font-bold text-white">{activeSeg.title}</h3>
                         </div>
                         <div className="space-y-2">
                           {activeSeg.points.filter(Boolean).map((pt, pi) => {
                             const done = completedPoints.has(`${activeSegmentIdx}-${pi}`);
                             return (
-                              <div key={pi} className={`rounded-lg p-2.5 border text-xs transition-all cursor-pointer ${pi === activePointIdx ? 'border-[#D4AF37]/40 bg-[#D4AF37]/8 text-white font-medium' : done ? 'border-white/5 bg-white/2 text-gray-500 line-through' : 'border-white/8 bg-white/3 text-gray-300'}`} onClick={() => setActivePointIdx(pi)}>
-                                <span className="mr-2 text-[#D4AF37]">→</span>{pt}
+                              <div key={pi} className={`rounded-lg p-2.5 border text-xs transition-all cursor-pointer ${pi === activePointIdx ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] text-white font-medium' : done ? 'border-white/5 bg-white/2 text-gray-500 line-through' : 'border-white/8 bg-white/3 text-gray-300'}`} onClick={() => setActivePointIdx(pi)}>
+                                <span className="mr-2 text-[var(--school-accent)]">→</span>{pt}
                               </div>
                             );
                           })}
@@ -1692,7 +1692,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                 )}
                 {activeTab === 'copilot' && (
                   <div className="p-4 space-y-3">
-                    <div className="rounded-2xl border border-[#D4AF37]/30 bg-gradient-to-br from-[#D4AF37]/10 to-[#D4AF37]/3 p-4">
+                    <div className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] to-[color-mix(in_srgb,var(--school-accent)_3%,transparent)] p-4">
                       <div className="text-2xl mb-2">{tip.icon}</div>
                       <p className="text-sm font-medium text-white leading-relaxed">{tip.text}</p>
                     </div>
@@ -1710,14 +1710,14 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
               <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md">
                 <div className="bg-gradient-to-b from-[#15243a] to-[#0d1828] border border-white/20 shadow-[0_25px_80px_rgba(0,0,0,0.55)] rounded-2xl p-6 max-w-sm w-full mx-4 space-y-5">
                   <div className="flex items-center gap-3">
-                    <Brain className="w-7 h-7 text-[#D4AF37]" />
+                    <Brain className="w-7 h-7 text-[var(--school-accent)]" />
                     <div>
                       <p className="text-white font-bold">Chapitre terminé</p>
                       <p className="text-xs text-gray-400">Chapitre {activeSegmentIdx + 1} → {activeSegmentIdx + 2}</p>
                     </div>
                   </div>
                   <p className="text-sm text-gray-300 leading-relaxed">
-                    Activer la <strong className="text-[#D4AF37]">Pédagogie Augmentée</strong> ? L'IA va formuler une synthèse de transition à afficher sur le SmartBoard avant de passer au chapitre suivant.
+                    Activer la <strong className="text-[var(--school-accent)]">Pédagogie Augmentée</strong> ? L'IA va formuler une synthèse de transition à afficher sur le SmartBoard avant de passer au chapitre suivant.
                   </p>
                   {pedagogyGenerating && (
                     <div className="flex items-center gap-2 text-xs text-gray-400">
@@ -1726,7 +1726,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                   )}
                   <div className="flex gap-3">
                     <Button
-                      className="flex-1 bg-[#D4AF37] text-black hover:bg-amber-400 font-bold text-xs shadow-[0_10px_30px_rgba(212,175,55,0.35)]"
+                      className="flex-1 bg-[var(--school-accent)] text-black hover:bg-amber-400 font-bold text-xs shadow-[0_10px_30px_rgba(212,175,55,0.35)]"
                       onClick={() => confirmNextChapter(true)}
                       disabled={pedagogyGenerating}
                     >
@@ -1787,7 +1787,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
               {/* Actions */}
               <div className="w-full lg:w-72 flex-shrink-0 bg-gradient-to-b from-[#111d34] to-[#0a1120] border-t lg:border-t-0 lg:border-l border-white/10 p-6 space-y-4">
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-semibold mb-3">Récapitulatif</p>
+                  <p className="text-[10px] uppercase tracking-widest text-[var(--school-accent)] font-semibold mb-3">Récapitulatif</p>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-400">Durée</span>
@@ -1825,7 +1825,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                 ) : (
                   <div className="space-y-3">
                     <Button
-                      className="w-full bg-[#D4AF37] text-black hover:bg-amber-400 font-bold"
+                      className="w-full bg-[var(--school-accent)] text-black hover:bg-amber-400 font-bold"
                       onClick={uploadVideo}
                     >
                       <Upload className="w-4 h-4 mr-2" />
@@ -1849,8 +1849,8 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
         {/* ── UPLOADING PHASE ─────────────────────────────────────────── */}
         {phase === 'uploading' && (
           <div className="flex-1 flex flex-col items-center justify-center gap-6 p-8 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.12),transparent_45%)]">
-            <div className="w-16 h-16 rounded-full bg-[#D4AF37]/20 flex items-center justify-center shadow-[0_0_35px_rgba(212,175,55,0.25)]">
-              <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
+            <div className="w-16 h-16 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center shadow-[0_0_35px_rgba(212,175,55,0.25)]">
+              <Loader2 className="w-8 h-8 text-[var(--school-accent)] animate-spin" />
             </div>
             <div className="text-center space-y-2">
               <h3 className="text-lg font-bold">Téléversement en cours…</h3>
@@ -1863,7 +1863,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
               </div>
               <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-[#D4AF37] transition-all duration-300"
+                  className="h-full bg-[var(--school-accent)] transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>

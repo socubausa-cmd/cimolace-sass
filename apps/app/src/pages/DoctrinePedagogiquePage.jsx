@@ -39,17 +39,17 @@ const DoctrinePedagogiquePage = () => {
       {/* HERO */}
       <section className="relative py-28 md:py-40 px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0F1419] via-[#192734]/60 to-[#0F1419]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#D4AF37]/5 rounded-full blur-[250px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[250px]" />
         <div className="absolute top-20 left-20 w-[300px] h-[300px] bg-violet-500/5 rounded-full blur-[150px]" />
 
         <div className="relative max-w-4xl mx-auto text-center space-y-6">
-          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] text-xs font-bold uppercase tracking-widest border border-[#D4AF37]/20">
+          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] text-xs font-bold uppercase tracking-widest border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
             <BookOpen className="w-4 h-4" /> Doctrine officielle
           </span>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-white leading-tight">
             L'Art de la Transmission<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-yellow-400 to-[#D4AF37]">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] via-yellow-400 to-[var(--school-accent)]">
               par Présence
             </span>
           </h1>
@@ -58,9 +58,9 @@ const DoctrinePedagogiquePage = () => {
             Doctrine Pédagogique de l'ISNA — Comment l\'école Ngowazulu transmet le savoir initiatique à travers la connexion vivante.
           </p>
 
-          <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto" />
+          <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent mx-auto" />
 
-          <ChevronDown className="w-6 h-6 text-[#D4AF37]/50 mx-auto animate-bounce" />
+          <ChevronDown className="w-6 h-6 text-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] mx-auto animate-bounce" />
         </div>
       </section>
 
@@ -83,9 +83,9 @@ const DoctrinePedagogiquePage = () => {
               Dans une ère saturée de données, nous faisons face à un paradoxe civilisationnel : <span className="text-white font-semibold">l'information abonde, mais la transmission s\'étiole</span>. L\'accumulation frénétique de savoirs ne produit que des érudits de surface, incapables de transmuter le concept en compétence.
             </p>
             <p>
-              À l'ISNA, nous affirmons que <span className="text-[#D4AF37] font-semibold">l\'étude seule ne mène pas à la compréhension</span>. Cette architecture pédagogique transcende la simple instruction pour ériger un sanctuaire de transformation intérieure.
+              À l'ISNA, nous affirmons que <span className="text-[var(--school-accent)] font-semibold">l\'étude seule ne mène pas à la compréhension</span>. Cette architecture pédagogique transcende la simple instruction pour ériger un sanctuaire de transformation intérieure.
             </p>
-            <div className="bg-[#192734] border-l-4 border-[#D4AF37] rounded-r-xl p-5">
+            <div className="bg-[#192734] border-l-4 border-[var(--school-accent)] rounded-r-xl p-5">
               <p className="text-gray-300 italic">
                 La pièce maîtresse manquante dans l'éducation moderne est la <span className="text-white font-semibold">connexion vivante</span>. Sans ce lien organique, le savoir reste une entité étrangère. Pour franchir ce fossé, il faut restaurer la primauté de l\'imprégnation sur la simple mémorisation.
               </p>
@@ -110,15 +110,15 @@ const DoctrinePedagogiquePage = () => {
               La doctrine ISNA repose sur une vérité métaphysique fondamentale : l'esprit humain n\'est pas qu\'un outil analytique froid ; il est un <span className="text-white font-semibold">organe d\'imitation dynamique</span> et une <span className="text-white font-semibold">photocopie vivante</span>.
             </p>
             <p>
-              Selon ce principe, <span className="text-[#D4AF37] font-semibold">l'homme devient ce qu\'il contemple</span>. L\'apprentissage n\'est pas un acte de volonté isolée, mais une configuration de l\'esprit par ce qu\'il reçoit par immersion.
+              Selon ce principe, <span className="text-[var(--school-accent)] font-semibold">l'homme devient ce qu\'il contemple</span>. L\'apprentissage n\'est pas un acte de volonté isolée, mais une configuration de l\'esprit par ce qu\'il reçoit par immersion.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {vectors.map((v, i) => (
-              <div key={i} className="bg-[#192734] border border-white/5 rounded-2xl p-6 hover:border-[#D4AF37]/30 transition-all">
-                <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center mb-4">
-                  <v.icon className="w-5 h-5 text-[#D4AF37]" />
+              <div key={i} className="bg-[#192734] border border-white/5 rounded-2xl p-6 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
+                <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] flex items-center justify-center mb-4">
+                  <v.icon className="w-5 h-5 text-[var(--school-accent)]" />
                 </div>
                 <h3 className="text-lg font-serif font-bold text-white mb-2">{v.title}</h3>
                 <p className="text-sm text-gray-400 leading-relaxed">{v.description}</p>
@@ -141,7 +141,7 @@ const DoctrinePedagogiquePage = () => {
 
           <div className="space-y-4 text-gray-300 text-base leading-relaxed">
             <p>
-              Historiquement, la transmission des hauts savoirs n'a jamais été l\'apanage des parchemins, mais du <span className="text-white font-semibold">« moment vivant »</span>. Autour du feu ancestral, le Grand-père initiateur ne se contentait pas de réciter : il projetait une présence, un regard et une voix qui ouvraient des visions. Il s\'agissait d\'une <span className="text-[#D4AF37] font-semibold">contamination vibratoire</span>.
+              Historiquement, la transmission des hauts savoirs n'a jamais été l\'apanage des parchemins, mais du <span className="text-white font-semibold">« moment vivant »</span>. Autour du feu ancestral, le Grand-père initiateur ne se contentait pas de réciter : il projetait une présence, un regard et une voix qui ouvraient des visions. Il s\'agissait d\'une <span className="text-[var(--school-accent)] font-semibold">contamination vibratoire</span>.
             </p>
             <p>
               L'ISNA réinvente ce principe à travers la technologie. La classe virtuelle devient le <span className="text-white font-semibold">« feu ancestral moderne »</span>, un espace où le direct génère un champ de connaissance actif.
@@ -180,7 +180,7 @@ const DoctrinePedagogiquePage = () => {
               Imaginez une demeure protégée par un chien de garde. Si un étranger tente d'entrer seul, il est repoussé car il n\'est pas identifié par le lieu. En revanche, s\'il pénètre dans la maison <span className="text-white font-semibold">accompagné du Maître</span>, le chien l\'observe, l\'enregistre et le reconnaît.
             </p>
             <p className="text-gray-300 leading-relaxed">
-              Dès lors, le champ de la maison a intégré son identité. L'étudiant peut désormais revenir seul : il est <span className="text-[#D4AF37] font-semibold">"enregistré" dans le domaine de la connaissance</span>.
+              Dès lors, le champ de la maison a intégré son identité. L'étudiant peut désormais revenir seul : il est <span className="text-[var(--school-accent)] font-semibold">"enregistré" dans le domaine de la connaissance</span>.
             </p>
             <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4 mt-4">
               <p className="text-sm text-gray-400 italic">
@@ -207,14 +207,14 @@ const DoctrinePedagogiquePage = () => {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="bg-gradient-to-br from-[#D4AF37]/10 to-[#192734] border border-[#D4AF37]/20 rounded-2xl p-6 md:p-8">
+            <div className="bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] to-[#192734] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] rounded-2xl p-6 md:p-8">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-[#D4AF37]/20 flex items-center justify-center">
-                  <Monitor className="w-6 h-6 text-[#D4AF37]" />
+                <div className="w-12 h-12 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center">
+                  <Monitor className="w-6 h-6 text-[var(--school-accent)]" />
                 </div>
                 <div>
                   <h3 className="text-lg font-serif font-bold text-white">Le Direct</h3>
-                  <p className="text-xs text-[#D4AF37]">Classe Virtuelle</p>
+                  <p className="text-xs text-[var(--school-accent)]">Classe Virtuelle</p>
                 </div>
               </div>
               <div className="space-y-2 mb-4">
@@ -262,7 +262,7 @@ const DoctrinePedagogiquePage = () => {
             <p className="text-gray-300 leading-relaxed">
               <span className="text-white font-semibold">La Loi de Maturation est ici inflexible :</span> le direct ouvre la porte et sature l'Esprit par imprégnation, tandis que la salle numérique permet à l\'Âme de digérer et de cristalliser le savoir. Le replay <span className="text-cyan-400">réactive</span> le champ de connaissance pour la maturation, mais il ne peut en aucun cas le <span className="text-cyan-400">créer</span>.
             </p>
-            <p className="text-[#D4AF37] font-semibold mt-3">
+            <p className="text-[var(--school-accent)] font-semibold mt-3">
               Sans le direct, vous restez extérieur ; sans l'étude, vous restez immature.
             </p>
           </div>
@@ -271,14 +271,14 @@ const DoctrinePedagogiquePage = () => {
         {/* VI. LES 7 AXIOMES */}
         <section className="space-y-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center">
-              <span className="text-sm font-bold text-[#D4AF37]">VI</span>
+            <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center">
+              <span className="text-sm font-bold text-[var(--school-accent)]">VI</span>
             </div>
             <h2 className="text-2xl md:text-3xl font-serif font-bold text-white">
               Les Axiomes de la Réussite
             </h2>
           </div>
-          <p className="text-sm text-[#D4AF37] font-medium uppercase tracking-wider">Manifeste de la Maîtrise Initiatique</p>
+          <p className="text-sm text-[var(--school-accent)] font-medium uppercase tracking-wider">Manifeste de la Maîtrise Initiatique</p>
 
           <p className="text-gray-300 text-base leading-relaxed">
             La progression de l'apprenant à l\'ISNA, du statut d\'observateur à celui de participant reconnu, est régie par <span className="text-white font-semibold">sept axiomes doctrinaux</span> :
@@ -286,10 +286,10 @@ const DoctrinePedagogiquePage = () => {
 
           <div className="space-y-3">
             {axioms.map((a) => (
-              <div key={a.number} className="bg-[#192734] border border-white/5 rounded-xl p-5 hover:border-[#D4AF37]/30 transition-all group">
+              <div key={a.number} className="bg-[#192734] border border-white/5 rounded-xl p-5 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all group">
                 <div className="flex items-start gap-4">
-                  <div className="w-9 h-9 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center shrink-0 group-hover:bg-[#D4AF37]/20 transition-all">
-                    <span className="text-sm font-bold text-[#D4AF37]">{a.number}</span>
+                  <div className="w-9 h-9 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center shrink-0 group-hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-all">
+                    <span className="text-sm font-bold text-[var(--school-accent)]">{a.number}</span>
                   </div>
                   <div>
                     <h3 className="text-base font-bold text-white mb-1">{a.title}</h3>
@@ -313,14 +313,14 @@ const DoctrinePedagogiquePage = () => {
           </div>
 
           <p className="text-gray-300 text-base leading-relaxed">
-            La transmission authentique à l'ISNA n\'est pas un transfert de fichiers, mais une <span className="text-white font-semibold">expérience de co-présence</span> qui aligne l\'attention et synchronise les états cognitifs. C\'est un <span className="text-[#D4AF37] font-semibold">acte de naissance dans un nouveau champ de conscience</span>.
+            La transmission authentique à l'ISNA n\'est pas un transfert de fichiers, mais une <span className="text-white font-semibold">expérience de co-présence</span> qui aligne l\'attention et synchronise les états cognitifs. C\'est un <span className="text-[var(--school-accent)] font-semibold">acte de naissance dans un nouveau champ de conscience</span>.
           </p>
 
           <div className="space-y-4">
             <div className="bg-[#192734] border border-white/5 rounded-2xl p-6">
               <div className="flex items-center gap-2 mb-3">
-                <Star className="w-5 h-5 text-[#D4AF37]" />
-                <h3 className="text-sm font-bold text-[#D4AF37] uppercase tracking-wider">Version Signature</h3>
+                <Star className="w-5 h-5 text-[var(--school-accent)]" />
+                <h3 className="text-sm font-bold text-[var(--school-accent)] uppercase tracking-wider">Version Signature</h3>
               </div>
               <p className="text-lg text-white font-serif font-bold leading-relaxed">
                 Le direct vous relie à la source. L'étude vous permet de l\'habiter.
@@ -340,22 +340,22 @@ const DoctrinePedagogiquePage = () => {
         </section>
 
         {/* DÉCRET DU MANIKONGO */}
-        <section className="bg-gradient-to-br from-[#D4AF37]/[0.08] to-transparent border border-[#D4AF37]/20 rounded-3xl p-8 md:p-12 text-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-[#D4AF37]/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
+        <section className="bg-gradient-to-br from-[var(--school-accent)]/[0.08] to-transparent border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] rounded-3xl p-8 md:p-12 text-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
           <div className="relative">
-            <Crown className="w-10 h-10 text-[#D4AF37] mx-auto mb-4" />
-            <p className="text-xs text-[#D4AF37] uppercase tracking-[0.3em] font-bold mb-6">Décret du Manikongo</p>
+            <Crown className="w-10 h-10 text-[var(--school-accent)] mx-auto mb-4" />
+            <p className="text-xs text-[var(--school-accent)] uppercase tracking-[0.3em] font-bold mb-6">Décret du Manikongo</p>
             <blockquote className="text-2xl md:text-4xl font-serif font-bold text-white leading-tight mb-6">
               « On apprend par présence.<br />
               On comprend par maturation. »
             </blockquote>
-            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mb-6" />
+            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent mx-auto mb-6" />
             <p className="text-gray-400 text-lg leading-relaxed max-w-xl mx-auto mb-8">
-              Nous vous invitons à franchir le seuil et à rejoindre ce champ vivant. Le savoir n'attend plus d\'être observé, <span className="text-[#D4AF37] font-semibold">il attend d\'être vécu</span>.
+              Nous vous invitons à franchir le seuil et à rejoindre ce champ vivant. Le savoir n'attend plus d\'être observé, <span className="text-[var(--school-accent)] font-semibold">il attend d\'être vécu</span>.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/formations/catalogue">
-                <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-lg font-bold">
+                <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-lg font-bold">
                   <BookOpen className="w-5 h-5" /> Voir les formations
                 </Button>
               </Link>

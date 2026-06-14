@@ -28,7 +28,7 @@ function isBookingIntent(intent = '', text = '') {
 function BubbleUser({ text }) {
   return (
     <div className="flex justify-end">
-      <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-[#D4AF37]/20 border border-[#D4AF37]/30 px-4 py-2.5 text-sm text-white">
+      <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] px-4 py-2.5 text-sm text-white">
         {text}
       </div>
     </div>
@@ -38,8 +38,8 @@ function BubbleUser({ text }) {
 function BubbleAI({ text, routes, onBook }) {
   return (
     <div className="flex gap-2.5 items-start">
-      <div className="w-7 h-7 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center shrink-0 mt-0.5">
-        <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+      <div className="w-7 h-7 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center shrink-0 mt-0.5">
+        <Sparkles className="w-3.5 h-3.5 text-[var(--school-accent)]" />
       </div>
       <div className="flex-1 space-y-2">
         <div className="rounded-2xl rounded-tl-sm bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-gray-200 leading-relaxed">
@@ -51,7 +51,7 @@ function BubbleAI({ text, routes, onBook }) {
               <a
                 key={r.path}
                 href={r.path}
-                className="inline-flex items-center gap-1 text-[11px] rounded-full border border-white/15 bg-white/5 px-3 py-1 text-gray-300 hover:border-[#D4AF37]/40 hover:text-[#D4AF37] transition-colors"
+                className="inline-flex items-center gap-1 text-[11px] rounded-full border border-white/15 bg-white/5 px-3 py-1 text-gray-300 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] hover:text-[var(--school-accent)] transition-colors"
               >
                 {r.ctaLabel || r.label}
               </a>
@@ -63,7 +63,7 @@ function BubbleAI({ text, routes, onBook }) {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onBook}
-            className="flex items-center gap-2 text-[12px] rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 px-4 py-2 text-[#D4AF37] font-semibold hover:bg-[#D4AF37]/25 transition-all"
+            className="flex items-center gap-2 text-[12px] rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] px-4 py-2 text-[var(--school-accent)] font-semibold hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] transition-all"
           >
             <CalendarClock className="w-3.5 h-3.5" />
             Prendre rendez-vous avec le secrétariat
@@ -77,14 +77,14 @@ function BubbleAI({ text, routes, onBook }) {
 function TypingDot() {
   return (
     <div className="flex gap-2.5 items-start">
-      <div className="w-7 h-7 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center shrink-0">
-        <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+      <div className="w-7 h-7 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center shrink-0">
+        <Sparkles className="w-3.5 h-3.5 text-[var(--school-accent)]" />
       </div>
       <div className="rounded-2xl rounded-tl-sm bg-white/5 border border-white/10 px-4 py-3 flex items-center gap-1">
         {[0, 0.2, 0.4].map((delay, i) => (
           <motion.div
             key={i}
-            className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]/60"
+            className="w-1.5 h-1.5 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]"
             animate={{ y: [0, -4, 0] }}
             transition={{ duration: 0.8, repeat: Infinity, delay }}
           />
@@ -213,8 +213,8 @@ export function DiscoveryChat() {
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-white/8 bg-gradient-to-r from-[#172437]/80 to-[#090D14]/80 shrink-0">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                  <div className="w-8 h-8 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-[var(--school-accent)]" />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-white">Assistant Prorascience</p>
@@ -242,7 +242,7 @@ export function DiscoveryChat() {
                       <button
                         key={s}
                         onClick={() => sendMessage(s)}
-                        className="text-[11px] rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-gray-300 hover:border-[#D4AF37]/40 hover:text-[#D4AF37] transition-colors text-left"
+                        className="text-[11px] rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-gray-300 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] hover:text-[var(--school-accent)] transition-colors text-left"
                       >
                         {s}
                       </button>
@@ -262,20 +262,20 @@ export function DiscoveryChat() {
                     onKeyDown={handleKeyDown}
                     placeholder="Posez votre question…"
                     rows={1}
-                    className="flex-1 resize-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#D4AF37]/40 transition-colors max-h-[80px] overflow-y-auto"
+                    className="flex-1 resize-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors max-h-[80px] overflow-y-auto"
                     style={{ lineHeight: '1.5' }}
                     disabled={loading}
                   />
                   <button
                     onClick={() => sendMessage()}
                     disabled={!input.trim() || loading}
-                    className="w-9 h-9 rounded-xl bg-[#D4AF37] text-black flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:bg-amber-400 transition-all shrink-0"
+                    className="w-9 h-9 rounded-xl bg-[var(--school-accent)] text-black flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:bg-amber-400 transition-all shrink-0"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   </button>
                 </div>
                 <p className="text-[10px] text-gray-600 mt-1.5 text-center">
-                  Pour un entretien — <button onClick={() => { setOpen(false); setBookingOpen(true); }} className="text-[#D4AF37] hover:underline">prendre rendez-vous</button>
+                  Pour un entretien — <button onClick={() => { setOpen(false); setBookingOpen(true); }} className="text-[var(--school-accent)] hover:underline">prendre rendez-vous</button>
                 </p>
               </div>
             </motion.div>
@@ -287,7 +287,7 @@ export function DiscoveryChat() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => open ? setOpen(false) : handleOpen()}
-          className="relative w-14 h-14 rounded-full bg-[#D4AF37] text-black shadow-[0_8px_32px_rgba(212,175,55,0.4)] flex items-center justify-center"
+          className="relative w-14 h-14 rounded-full bg-[var(--school-accent)] text-black shadow-[0_8px_32px_rgba(212,175,55,0.4)] flex items-center justify-center"
         >
           <AnimatePresence mode="wait">
             {open

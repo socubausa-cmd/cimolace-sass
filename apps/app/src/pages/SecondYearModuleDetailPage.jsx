@@ -84,13 +84,13 @@ const SecondYearModuleDetailPage = () => {
     toast({
       title: "Inscription",
       description: `Vous avez demandé l'accès au module ${module.code}.`,
-      className: "bg-[#D4AF37] text-black border-none"
+      className: "bg-[var(--school-accent)] text-black border-none"
     });
   };
 
   if (loading) return (
     <div className="min-h-screen bg-[#0F1419] flex items-center justify-center">
-      <div className="w-12 h-12 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
+      <div className="w-12 h-12 border-4 border-[var(--school-accent)] border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
@@ -118,7 +118,7 @@ const SecondYearModuleDetailPage = () => {
     <div className="min-h-screen bg-[#0F1419] flex items-center justify-center text-white">
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-2">Module non trouvé</h2>
-        <Link to="/year2-modules" className="text-[#D4AF37] hover:underline">Retour au catalogue</Link>
+        <Link to="/year2-modules" className="text-[var(--school-accent)] hover:underline">Retour au catalogue</Link>
       </div>
     </div>
   );
@@ -135,7 +135,7 @@ const SecondYearModuleDetailPage = () => {
 
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto px-6 mb-8">
-        <Link to="/year2-modules" className="inline-flex items-center text-gray-400 hover:text-[#D4AF37] transition-colors">
+        <Link to="/year2-modules" className="inline-flex items-center text-gray-400 hover:text-[var(--school-accent)] transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" /> Retour au Catalogue 2ème Année
         </Link>
       </div>
@@ -148,8 +148,8 @@ const SecondYearModuleDetailPage = () => {
           {/* Header */}
           <div>
             <div className="flex flex-wrap items-center gap-3 mb-4">
-              <Badge className="bg-[#D4AF37] text-black font-bold text-lg px-3">{module.code}</Badge>
-              <span className="text-[#D4AF37] font-semibold tracking-wide uppercase text-sm border border-[#D4AF37]/30 px-3 py-1 rounded-full bg-[#D4AF37]/10">
+              <Badge className="bg-[var(--school-accent)] text-black font-bold text-lg px-3">{module.code}</Badge>
+              <span className="text-[var(--school-accent)] font-semibold tracking-wide uppercase text-sm border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] px-3 py-1 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
                 {module.part}
               </span>
               <Badge variant="outline" className="text-gray-400 border-gray-600">{module.type}</Badge>
@@ -160,15 +160,15 @@ const SecondYearModuleDetailPage = () => {
             </h1>
 
             <div className="flex flex-wrap gap-6 text-sm text-gray-400 border-b border-white/10 pb-8 mb-8">
-              <div className="flex items-center gap-2"><Clock className="w-5 h-5 text-[#D4AF37]" /> {module.duration_weeks} Semaines</div>
-              <div className="flex items-center gap-2"><BookOpen className="w-5 h-5 text-[#D4AF37]" /> {module.duration_hours} Heures</div>
-              <div className="flex items-center gap-2"><Target className="w-5 h-5 text-[#D4AF37]" /> Niveau {module.level}</div>
+              <div className="flex items-center gap-2"><Clock className="w-5 h-5 text-[var(--school-accent)]" /> {module.duration_weeks} Semaines</div>
+              <div className="flex items-center gap-2"><BookOpen className="w-5 h-5 text-[var(--school-accent)]" /> {module.duration_hours} Heures</div>
+              <div className="flex items-center gap-2"><Target className="w-5 h-5 text-[var(--school-accent)]" /> Niveau {module.level}</div>
             </div>
 
             {/* Objectives */}
             <div className="bg-[#192734] border border-white/5 rounded-2xl p-8 mb-10">
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                <Target className="w-6 h-6 text-[#D4AF37]" /> Objectifs
+                <Target className="w-6 h-6 text-[var(--school-accent)]" /> Objectifs
               </h2>
               <ul className="grid gap-4">
                 {objectives.map((obj, i) => (
@@ -183,7 +183,7 @@ const SecondYearModuleDetailPage = () => {
             {/* Weekly Content */}
             <div className="space-y-4">
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                <FileText className="w-6 h-6 text-[#D4AF37]" /> Programme Détaillé
+                <FileText className="w-6 h-6 text-[var(--school-accent)]" /> Programme Détaillé
               </h2>
               {weeks.map((week, idx) => (
                 <div key={idx} className="bg-[#192734] border border-white/5 rounded-xl overflow-hidden">
@@ -192,12 +192,12 @@ const SecondYearModuleDetailPage = () => {
                     className="w-full flex items-center justify-between p-6 hover:bg-white/5 transition-colors text-left"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-[#0F1419] flex items-center justify-center font-bold text-[#D4AF37] border border-[#D4AF37]/20">
+                      <div className="w-10 h-10 rounded-full bg-[#0F1419] flex items-center justify-center font-bold text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                         {week.week || idx + 1}
                       </div>
                       <h3 className="font-bold text-lg">{week.topic}</h3>
                     </div>
-                    {expandedWeek === idx ? <ChevronUp className="w-5 h-5 text-[#D4AF37]" /> : <ChevronDown className="w-5 h-5 text-gray-500" />}
+                    {expandedWeek === idx ? <ChevronUp className="w-5 h-5 text-[var(--school-accent)]" /> : <ChevronDown className="w-5 h-5 text-gray-500" />}
                   </button>
                   <AnimatePresence>
                     {expandedWeek === idx && (
@@ -228,14 +228,14 @@ const SecondYearModuleDetailPage = () => {
         <div className="space-y-8">
           
           {/* Action Card */}
-          <div className="bg-[#192734] border border-[#D4AF37]/30 rounded-2xl p-6 shadow-2xl sticky top-24">
+          <div className="bg-[#192734] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] rounded-2xl p-6 shadow-2xl sticky top-24">
             <div className="text-center mb-6">
               <span className="text-gray-400 text-sm uppercase">Investissement</span>
               <div className="text-4xl font-bold text-white mt-1">{module.price > 0 ? `${module.price}€` : "Inclus"}</div>
               <p className="text-sm text-gray-500 mt-2">Accès à vie • Certificat Inclus</p>
             </div>
             
-            <Button onClick={handleEnroll} className="w-full bg-[#D4AF37] text-black font-bold py-6 text-lg hover:bg-[#b5952f] mb-4">
+            <Button onClick={handleEnroll} className="w-full bg-[var(--school-accent)] text-black font-bold py-6 text-lg hover:bg-[#b5952f] mb-4">
               Accéder au Module
             </Button>
             
@@ -259,7 +259,7 @@ const SecondYearModuleDetailPage = () => {
           {/* Resources Widget */}
           <div className="bg-[#192734] border border-white/5 rounded-2xl p-6">
             <h3 className="font-bold mb-4 flex items-center gap-2">
-              <Download className="w-5 h-5 text-[#D4AF37]" /> Ressources Incluses
+              <Download className="w-5 h-5 text-[var(--school-accent)]" /> Ressources Incluses
             </h3>
             <div className="space-y-3">
               {resources.length > 0 ? resources.map((res, i) => (
@@ -274,7 +274,7 @@ const SecondYearModuleDetailPage = () => {
           {/* Evaluation Widget */}
           <div className="bg-[#192734] border border-white/5 rounded-2xl p-6">
              <h3 className="font-bold mb-4 flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-[#D4AF37]" /> Validation
+                <CheckCircle className="w-5 h-5 text-[var(--school-accent)]" /> Validation
              </h3>
              <p className="text-sm text-gray-300 mb-2">Critères : {evaluation.criteria || "Participation et Quiz"}</p>
              <div className="w-full bg-gray-700 h-1.5 rounded-full mt-2">

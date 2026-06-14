@@ -25,13 +25,13 @@ export const OfficialManualsSection = ({ searchTerm }) => {
           <div className="absolute top-0 right-0 p-4">
             {manual.access_level === 'reserved' ? <Lock className="w-5 h-5 text-red-400" /> : <div className="w-2 h-2 bg-green-500 rounded-full" />}
           </div>
-          <div className="mb-4 text-[#D4AF37]">
+          <div className="mb-4 text-[var(--school-accent)]">
             <Book className="w-8 h-8" />
           </div>
           <span className="inline-block px-2 py-1 bg-white/5 text-sm text-gray-400 rounded mb-2 uppercase tracking-wide">{manual.cycle || 'Universel'}</span>
           <h3 className="text-xl font-serif font-bold text-white mb-2">{manual.title}</h3>
           <p className="text-sm text-gray-400 mb-4">{manual.description || "Manuel officiel du cycle."}</p>
-          <Button variant="outline" className="w-full border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black">
+          <Button variant="outline" className="w-full border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] hover:bg-[var(--school-accent)] hover:text-black">
             <Download className="w-4 h-4 mr-2" /> Télécharger PDF
           </Button>
         </motion.div>
@@ -57,7 +57,7 @@ export const CourseMaterialsSection = ({ searchTerm }) => {
   return (
     <div className="space-y-4">
       {filtered.map((item) => (
-        <div key={item.id} className="bg-[#192734] border border-white/10 rounded-lg p-4 flex flex-col md:flex-row items-center justify-between hover:border-[#D4AF37]/30 transition-colors">
+        <div key={item.id} className="bg-[#192734] border border-white/10 rounded-lg p-4 flex flex-col md:flex-row items-center justify-between hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-colors">
           <div className="flex items-center space-x-4 mb-4 md:mb-0">
             <div className="bg-blue-500/20 p-3 rounded-lg text-blue-400">
               <FileText className="w-6 h-6" />
@@ -111,7 +111,7 @@ export const ArchivesReplaysSection = ({ searchTerm }) => {
             <h4 className="text-white font-medium line-clamp-2 mb-2">{video.title}</h4>
             <div className="flex justify-between items-center text-sm text-gray-400">
               <span>{video.date || "Date inconnue"}</span>
-              <span className="text-[#D4AF37]">{video.cycle}</span>
+              <span className="text-[var(--school-accent)]">{video.cycle}</span>
             </div>
           </div>
         </div>
@@ -139,7 +139,7 @@ export const GlossarySection = ({ searchTerm }) => {
     <div className="bg-[#192734] border border-white/10 rounded-xl p-6">
       <div className="mb-6 flex items-center justify-between">
          <h3 className="text-xl font-serif text-white">Référentiel Doctrinal</h3>
-         <span className="text-xs text-[#D4AF37] border border-[#D4AF37]/30 px-2 py-1 rounded">Norme Officielle</span>
+         <span className="text-xs text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] px-2 py-1 rounded">Norme Officielle</span>
       </div>
       <div className="space-y-2">
         {filtered.map((item) => (
@@ -148,7 +148,7 @@ export const GlossarySection = ({ searchTerm }) => {
               onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
               className="w-full flex items-center justify-between py-4 text-left hover:bg-white/5 px-2 rounded transition-colors"
             >
-              <span className="font-bold text-[#D4AF37] font-mono">{item.term}</span>
+              <span className="font-bold text-[var(--school-accent)] font-mono">{item.term}</span>
               {expandedId === item.id ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
             </button>
             <AnimatePresence>
@@ -159,7 +159,7 @@ export const GlossarySection = ({ searchTerm }) => {
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden"
                 >
-                  <p className="text-gray-300 pb-4 px-2 text-sm leading-relaxed border-l-2 border-[#D4AF37]/20 ml-2 pl-4">
+                  <p className="text-gray-300 pb-4 px-2 text-sm leading-relaxed border-l-2 border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] ml-2 pl-4">
                     {item.definition}
                   </p>
                 </motion.div>
@@ -189,14 +189,14 @@ export const FoundingTextsSection = ({ searchTerm }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {filtered.map((text) => (
-        <div key={text.id} className="flex items-start p-4 bg-[#192734] border border-white/10 rounded-lg hover:border-[#D4AF37]/50 transition-colors">
-          <div className="bg-[#D4AF37]/10 p-3 rounded mr-4">
-            <GraduationCap className="w-6 h-6 text-[#D4AF37]" />
+        <div key={text.id} className="flex items-start p-4 bg-[#192734] border border-white/10 rounded-lg hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] transition-colors">
+          <div className="bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-3 rounded mr-4">
+            <GraduationCap className="w-6 h-6 text-[var(--school-accent)]" />
           </div>
           <div className="flex-1">
             <h4 className="text-white font-bold mb-1">{text.title}</h4>
             <p className="text-sm text-gray-400 mb-2">{text.description}</p>
-            <Button size="sm" variant="link" className="text-[#D4AF37] p-0 h-auto">
+            <Button size="sm" variant="link" className="text-[var(--school-accent)] p-0 h-auto">
               Lire le document &rarr;
             </Button>
           </div>
@@ -232,7 +232,7 @@ export const RecommendedReadingSection = ({ searchTerm }) => {
             <h5 className="text-white text-sm font-bold mb-1 leading-tight">{item.title}</h5>
             <p className="text-sm text-gray-400 mb-3">{item.author}</p>
             <div className="mt-auto">
-              <a href={item.url} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs text-[#D4AF37] hover:underline">
+              <a href={item.url} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs text-[var(--school-accent)] hover:underline">
                 Voir la source <ExternalLink className="w-3 h-3 ml-1" />
               </a>
             </div>

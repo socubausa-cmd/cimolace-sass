@@ -34,7 +34,7 @@ export const GeneralSettingsForm = () => {
                <Label className="text-white">Adresse physique</Label>
                <Input name="address" value={formData.address} onChange={handleChange} className="bg-[#0F1419] border-white/10 text-white" />
             </div>
-            <Button onClick={handleSave} className="bg-[#D4AF37] text-black">Enregistrer</Button>
+            <Button onClick={handleSave} className="bg-[var(--school-accent)] text-black">Enregistrer</Button>
          </CardContent>
       </Card>
    );
@@ -47,7 +47,7 @@ export const SecuritySettingsForm = () => {
       <div className="space-y-6">
          <Card className="bg-[#192734] border-white/10">
             <CardHeader>
-               <CardTitle className="text-white flex items-center gap-2"><Shield className="w-5 h-5 text-[#D4AF37]"/> Sécurité du Compte</CardTitle>
+               <CardTitle className="text-white flex items-center gap-2"><Shield className="w-5 h-5 text-[var(--school-accent)]"/> Sécurité du Compte</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
                <div className="flex items-center justify-between p-4 bg-[#0F1419] rounded-lg border border-white/5">
@@ -56,7 +56,7 @@ export const SecuritySettingsForm = () => {
                      <p className="text-sm text-gray-400">Ajoutez une couche de sécurité supplémentaire à votre compte.</p>
                   </div>
                   <Link to="/settings/2fa">
-                     <Button variant="outline" className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black">
+                     <Button variant="outline" className="border-[var(--school-accent)] text-[var(--school-accent)] hover:bg-[var(--school-accent)] hover:text-black">
                         Configurer
                      </Button>
                   </Link>

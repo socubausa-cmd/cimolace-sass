@@ -37,7 +37,7 @@ export default function ArchitectSuggestionsPanel({
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="shrink-0 border-b border-white/[0.07] bg-[#0a0c12]/90 p-2.5">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#D4AF37]/75">Architect</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color-mix(in_srgb,var(--school-accent)_75%,transparent)]">Architect</p>
         <p className="mt-1 text-[11px] leading-snug text-white/40">
           Préconisations selon la sélection et la bibliothèque LIRI. Le moteur logique tourne sans jetons ; les variantes IA
           consomment des tokens.
@@ -47,7 +47,7 @@ export default function ArchitectSuggestionsPanel({
             type="button"
             disabled={architectBusy}
             onClick={onRegenerateHeuristics}
-            className="inline-flex items-center gap-1.5 rounded-sm border border-[#D4AF37]/40 bg-[#14100c] px-2.5 py-1.5 text-[11px] font-semibold text-[#f5dd8a] transition-colors hover:bg-[#1a1510] disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-sm border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[#14100c] px-2.5 py-1.5 text-[11px] font-semibold text-[#f5dd8a] transition-colors hover:bg-[#1a1510] disabled:opacity-50"
           >
             <RefreshCw className={cn('h-3.5 w-3.5', architectBusy && 'animate-spin')} />
             Régénérer
@@ -81,7 +81,7 @@ export default function ArchitectSuggestionsPanel({
             )}
           >
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className={cn('font-semibold', it.fromCopilot ? 'text-cyan-200/95' : 'text-[#D4AF37]/90')}>
+              <span className={cn('font-semibold', it.fromCopilot ? 'text-cyan-200/95' : 'text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]')}>
                 {it.title}
               </span>
               {it.kind && it.fromCopilot ? (

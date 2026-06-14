@@ -60,7 +60,7 @@ const SettingsPage = () => {
       case 'payments':
         return (
           <div className="space-y-4">
-            <div className="premium-panel flex flex-wrap items-center justify-between gap-3 border border-[#D4AF37]/20 p-4">
+            <div className="premium-panel flex flex-wrap items-center justify-between gap-3 border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] p-4">
               <p className="text-sm text-gray-400">
                 Lien encaissement pour le tenant résolu depuis ce domaine{' '}
                 {hostTenantLoading ? (
@@ -70,7 +70,7 @@ const SettingsPage = () => {
                     (<code className="text-gray-300">{hostTenantSlug}</code>) :{' '}
                     <Link
                       to={`/t/${hostTenantSlug}/admin/settings`}
-                      className="break-all font-mono text-xs text-[#D4AF37] hover:underline"
+                      className="break-all font-mono text-xs text-[var(--school-accent)] hover:underline"
                     >
                       /t/{hostTenantSlug}/admin/settings
                     </Link>
@@ -81,7 +81,7 @@ const SettingsPage = () => {
                     Accès config par défaut ISNA :{' '}
                     <Link
                       to={`/t/${isnaTenantConfig.slug}/admin/settings`}
-                      className="font-mono text-[#D4AF37]/80 hover:underline"
+                      className="font-mono text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)] hover:underline"
                     >
                       /t/{isnaTenantConfig.slug}/admin/settings
                     </Link>

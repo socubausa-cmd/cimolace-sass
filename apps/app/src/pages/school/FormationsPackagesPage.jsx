@@ -33,7 +33,7 @@ const FormationsPackagesPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F1419] font-sans text-gray-300 selection:bg-[#D4AF37]/30 pb-20">
+    <div className="min-h-screen bg-[#0F1419] font-sans text-gray-300 selection:bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] pb-20">
       <Helmet>
         <title>{`Formations et forfaits — ${isnaTenantConfig.branding.name}`}</title>
         <meta name="description" content={`Détails des cycles de formation et des forfaits (${isnaTenantConfig.branding.name}) : académique, modulaire, privé et privilégié.`} />
@@ -56,8 +56,8 @@ const FormationsPackagesPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="inline-block px-4 py-1.5 mb-6 border border-[#D4AF37]/30 rounded-full bg-[#D4AF37]/10 backdrop-blur-sm">
-              <span className="text-[#D4AF37] text-sm font-bold tracking-widest uppercase">Cursus</span>
+            <div className="inline-block px-4 py-1.5 mb-6 border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] backdrop-blur-sm">
+              <span className="text-[var(--school-accent)] text-sm font-bold tracking-widest uppercase">Cursus</span>
             </div>
             <h1 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6 tracking-tight">
               Formations & Forfaits
@@ -84,7 +84,7 @@ const FormationsPackagesPage = () => {
              <motion.div variants={itemVariants} className="text-center mb-10">
                 <span className="text-4xl block mb-4">🎓</span>
                 <h2 className="text-3xl md:text-4xl font-serif font-bold text-white">Les Cycles Académiques</h2>
-                <div className="w-20 h-1 bg-[#D4AF37] mx-auto mt-4 rounded-full"></div>
+                <div className="w-20 h-1 bg-[var(--school-accent)] mx-auto mt-4 rounded-full"></div>
              </motion.div>
 
              <div className="grid md:grid-cols-3 gap-6">
@@ -104,17 +104,17 @@ const FormationsPackagesPage = () => {
                 </motion.div>
 
                 {/* Cycle 2 */}
-                <motion.div variants={itemVariants} whileHover="hover" initial="rest" animate="rest" className="bg-[#192734] rounded-2xl p-8 border border-[#D4AF37]/20 relative overflow-hidden group shadow-lg shadow-[#D4AF37]/5">
-                   <div className="absolute top-0 right-0 p-24 bg-[#D4AF37]/5 rounded-full -mr-12 -mt-12 group-hover:bg-[#D4AF37]/10 transition-all duration-500"></div>
+                <motion.div variants={itemVariants} whileHover="hover" initial="rest" animate="rest" className="bg-[#192734] rounded-2xl p-8 border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] relative overflow-hidden group shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]">
+                   <div className="absolute top-0 right-0 p-24 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full -mr-12 -mt-12 group-hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] transition-all duration-500"></div>
                    <h3 className="text-2xl font-bold text-white mb-2 relative z-10">Cycle Maîtrise</h3>
-                   <div className="text-[#D4AF37] text-sm font-bold uppercase tracking-wider mb-4 relative z-10">Année 2 • La Puissance</div>
+                   <div className="text-[var(--school-accent)] text-sm font-bold uppercase tracking-wider mb-4 relative z-10">Année 2 • La Puissance</div>
                    <p className="text-gray-400 leading-relaxed mb-6 relative z-10">
                       Approfondissement technique des lois. Application pratique pour transformer sa réalité. Développement des facultés supérieures.
                    </p>
                    <ul className="space-y-2 text-sm text-gray-300 relative z-10 mb-6">
-                      <li className="flex gap-2"><Check className="w-4 h-4 text-[#D4AF37]" /> Lois de la vibration</li>
-                      <li className="flex gap-2"><Check className="w-4 h-4 text-[#D4AF37]" /> Géométrie sacrée</li>
-                      <li className="flex gap-2"><Check className="w-4 h-4 text-[#D4AF37]" /> Science des nombres</li>
+                      <li className="flex gap-2"><Check className="w-4 h-4 text-[var(--school-accent)]" /> Lois de la vibration</li>
+                      <li className="flex gap-2"><Check className="w-4 h-4 text-[var(--school-accent)]" /> Géométrie sacrée</li>
+                      <li className="flex gap-2"><Check className="w-4 h-4 text-[var(--school-accent)]" /> Science des nombres</li>
                    </ul>
                 </motion.div>
 
@@ -137,9 +137,9 @@ const FormationsPackagesPage = () => {
 
           {/* Separator */}
           <div className="flex justify-center items-center py-8 opacity-30">
-             <div className="h-px w-32 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"></div>
-             <span className="mx-6 text-[#D4AF37] text-2xl">⸻</span>
-             <div className="h-px w-32 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"></div>
+             <div className="h-px w-32 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent"></div>
+             <span className="mx-6 text-[var(--school-accent)] text-2xl">⸻</span>
+             <div className="h-px w-32 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent"></div>
           </div>
 
           {/* Section 2: Packages */}
@@ -183,9 +183,9 @@ const FormationsPackagesPage = () => {
                 </motion.div>
 
                 {/* Forfait Privé */}
-                <motion.div variants={itemVariants} className="bg-[#15202B] rounded-xl p-6 border border-[#D4AF37]/30 flex flex-col hover:border-[#D4AF37] transition-colors relative shadow-lg shadow-[#D4AF37]/5">
-                   <div className="absolute top-0 right-0 bg-[#D4AF37] text-black text-[10px] font-bold px-2 py-1 rounded-bl-lg uppercase">Populaire</div>
-                   <div className="w-12 h-12 bg-[#D4AF37]/20 rounded-lg flex items-center justify-center mb-4 text-[#D4AF37]">
+                <motion.div variants={itemVariants} className="bg-[#15202B] rounded-xl p-6 border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex flex-col hover:border-[var(--school-accent)] transition-colors relative shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]">
+                   <div className="absolute top-0 right-0 bg-[var(--school-accent)] text-black text-[10px] font-bold px-2 py-1 rounded-bl-lg uppercase">Populaire</div>
+                   <div className="w-12 h-12 bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] rounded-lg flex items-center justify-center mb-4 text-[var(--school-accent)]">
                       <Star className="w-6 h-6" />
                    </div>
                    <h3 className="text-xl font-bold text-white mb-2">Privé</h3>
@@ -218,7 +218,7 @@ const FormationsPackagesPage = () => {
 
           <motion.div variants={itemVariants} className="flex justify-center pt-8">
              <Link to="/signup">
-                <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500 text-lg px-10 py-6 rounded-xl font-semibold shadow-lg shadow-[#D4AF37]/10 flex items-center gap-2 group">
+                <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 text-lg px-10 py-6 rounded-xl font-semibold shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] flex items-center gap-2 group">
                   S'inscrire à une formation
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>

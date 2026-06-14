@@ -43,7 +43,7 @@ const CoursePlayerPage = () => {
             <ScrollArea className="flex-1">
                <div className="p-4 space-y-2">
                  {parentModule?.courses?.map((c, idx) => (
-                   <div key={c.id} className={`p-3 rounded-lg flex items-center gap-3 cursor-pointer ${c.id === course.id ? 'bg-[#D4AF37] text-black' : 'text-gray-400 hover:bg-white/5'}`}>
+                   <div key={c.id} className={`p-3 rounded-lg flex items-center gap-3 cursor-pointer ${c.id === course.id ? 'bg-[var(--school-accent)] text-black' : 'text-gray-400 hover:bg-white/5'}`}>
                       {c.type === 'video' ? <PlayCircle className="h-4 w-4"/> : <FileText className="h-4 w-4"/>}
                       <div className="text-sm font-medium line-clamp-2">{c.title}</div>
                       {c.completed && <CheckCircle className="h-3 w-3 ml-auto text-green-500"/>}
@@ -65,7 +65,7 @@ const CoursePlayerPage = () => {
            <div className="flex items-center gap-4">
               <span className="text-sm text-gray-500">Progression: 45%</span>
               <div className="w-32 h-2 bg-gray-800 rounded-full overflow-hidden">
-                <div className="h-full bg-[#D4AF37] w-[45%]"></div>
+                <div className="h-full bg-[var(--school-accent)] w-[45%]"></div>
               </div>
               <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">Terminer leçon</Button>
            </div>

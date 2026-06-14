@@ -50,7 +50,7 @@ function renderMessageContent(content) {
               href={part}
               target="_blank"
               rel="noreferrer"
-              className="underline decoration-[#D4AF37]/60 text-[#D4AF37]"
+              className="underline decoration-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] text-[var(--school-accent)]"
             >
               {part}
             </a>
@@ -140,13 +140,13 @@ export function ImmersiveMessage({
           className={cn(
             'px-3.5 py-2.5 text-sm leading-relaxed border shadow-sm',
             isOwn
-              ? 'bg-[#D4AF37]/16 border-[#D4AF37]/30 text-[#f4ead0]'
+              ? 'bg-[color-mix(in_srgb,var(--school-accent)_16%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[#f4ead0]'
               : 'bg-white/[0.04] border-white/12 text-gray-100',
             groupPosition === 'single' && 'rounded-2xl',
             groupPosition === 'start' && (isOwn ? 'rounded-t-2xl rounded-bl-2xl rounded-br-md' : 'rounded-t-2xl rounded-br-2xl rounded-bl-md'),
             groupPosition === 'middle' && (isOwn ? 'rounded-l-2xl rounded-r-md' : 'rounded-r-2xl rounded-l-md'),
             groupPosition === 'end' && (isOwn ? 'rounded-b-2xl rounded-tl-2xl rounded-tr-md' : 'rounded-b-2xl rounded-tr-2xl rounded-tl-md'),
-            isActive && 'ring-1 ring-[#D4AF37]/40'
+            isActive && 'ring-1 ring-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]'
           )}
         >
           {editing ? (
@@ -155,7 +155,7 @@ export function ImmersiveMessage({
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 rows={3}
-                className="w-full rounded-lg border text-sm p-2.5 outline-none focus:border-[#D4AF37]/50 resize-y min-h-[90px] bg-black/20 border-white/15 text-white"
+                className="w-full rounded-lg border text-sm p-2.5 outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] resize-y min-h-[90px] bg-black/20 border-white/15 text-white"
               />
               <div className="flex justify-end gap-2">
                 <button
@@ -169,7 +169,7 @@ export function ImmersiveMessage({
                   type="button"
                   disabled={saving || !draft.trim()}
                   onClick={handleSaveEdit}
-                  className="px-3 py-1.5 rounded-md text-xs bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/35 hover:bg-[#D4AF37]/30 disabled:opacity-40"
+                  className="px-3 py-1.5 rounded-md text-xs bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] disabled:opacity-40"
                 >
                   {saving ? '…' : 'Enregistrer'}
                 </button>
@@ -187,7 +187,7 @@ export function ImmersiveMessage({
             {formatMessageTime(message.created_at)}
           </span>
           {isLatest && (
-            <span className="text-[10px] text-[#D4AF37]/70">{isOwn ? 'Envoyé' : 'Lu'}</span>
+            <span className="text-[10px] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">{isOwn ? 'Envoyé' : 'Lu'}</span>
           )}
           {!editing && (
             <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
@@ -203,7 +203,7 @@ export function ImmersiveMessage({
                 <button
                   type="button"
                   onClick={() => setEditing(true)}
-                  className="inline-flex items-center gap-1 h-6 px-1.5 rounded text-[10px] text-gray-400 hover:text-[#D4AF37] hover:bg-white/5"
+                  className="inline-flex items-center gap-1 h-6 px-1.5 rounded text-[10px] text-gray-400 hover:text-[var(--school-accent)] hover:bg-white/5"
                   aria-label="Modifier le message"
                 >
                   <Pencil className="w-3 h-3" />

@@ -25,7 +25,7 @@ export default function NeuroInkPanel({
   const rail = variant === 'rail';
   const selectCls = rail
     ? cn(designerShellInput, 'py-1.5 text-[11px]')
-    : 'rounded-lg border border-white/15 bg-black/50 px-2 py-1 text-white/85 outline-none focus:border-[#D4AF37]/40';
+    : 'rounded-lg border border-white/15 bg-black/50 px-2 py-1 text-white/85 outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]';
   const labelMuted = rail ? designerShellMicroLabel : 'text-white/45';
   const blockGap = rail ? 'gap-1.5 text-[10px] text-white/68' : 'gap-2 text-[10px] text-white/70';
 
@@ -40,7 +40,7 @@ export default function NeuroInkPanel({
                 designerShellChipGhost,
                 'flex w-full items-center justify-between gap-2 border-white/[0.09] py-1.5 pl-2 pr-1.5 text-[10px] font-medium text-amber-100/85',
               )
-            : 'flex w-full items-center justify-between gap-2 rounded-lg border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-2 py-1.5 text-[10px] font-semibold text-[#e8d89a] hover:bg-[#D4AF37]/15',
+            : 'flex w-full items-center justify-between gap-2 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-2 py-1.5 text-[10px] font-semibold text-[#e8d89a] hover:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]',
           toggleClassName,
         )}
         title="Lissage et correction au relâchement du trait (crayon)"
@@ -84,7 +84,7 @@ export default function NeuroInkPanel({
               max={100}
               value={neuroInk.stabilization}
               onChange={(e) => setNeuroInk((s) => ({ ...s, stabilization: Number(e.target.value) }))}
-              className="w-full accent-[#D4AF37]"
+              className="w-full accent-[var(--school-accent)]"
             />
           </label>
           <label className="flex flex-col gap-0.5">
@@ -118,7 +118,7 @@ export default function NeuroInkPanel({
               type="checkbox"
               checked={neuroInk.shapeDetection}
               onChange={(e) => setNeuroInk((s) => ({ ...s, shapeDetection: e.target.checked }))}
-              className="accent-[#D4AF37]"
+              className="accent-[var(--school-accent)]"
             />
           </label>
           <label className="flex items-center justify-between gap-2 cursor-pointer">
@@ -127,7 +127,7 @@ export default function NeuroInkPanel({
               type="checkbox"
               checked={neuroInk.snapStraight}
               onChange={(e) => setNeuroInk((s) => ({ ...s, snapStraight: e.target.checked }))}
-              className="accent-[#D4AF37]"
+              className="accent-[var(--school-accent)]"
             />
           </label>
           <label className="flex items-center justify-between gap-2 cursor-pointer">
@@ -136,7 +136,7 @@ export default function NeuroInkPanel({
               type="checkbox"
               checked={neuroInk.curvePreserve}
               onChange={(e) => setNeuroInk((s) => ({ ...s, curvePreserve: e.target.checked }))}
-              className="accent-[#D4AF37]"
+              className="accent-[var(--school-accent)]"
             />
           </label>
           {footerHint ? (

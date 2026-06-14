@@ -34,7 +34,7 @@ const ModuleDetailPageY2 = () => {
 
   if (loading) return (
     <div className="min-h-screen bg-[#0F1419] flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D4AF37]"></div>
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--school-accent)]"></div>
     </div>
   );
 
@@ -47,15 +47,15 @@ const ModuleDetailPageY2 = () => {
       {/* --- YEAR 2 HEADER --- */}
       <div className="relative overflow-hidden mb-12 bg-[#192734] border-b border-white/5 pb-12">
         <div className="max-w-7xl mx-auto px-6 pt-12">
-          <Link to="/curriculum/second-year" className="inline-flex items-center text-gray-400 hover:text-[#D4AF37] mb-6 transition-colors">
+          <Link to="/curriculum/second-year" className="inline-flex items-center text-gray-400 hover:text-[var(--school-accent)] mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4 mr-2" /> Retour au Catalogue Année 2
           </Link>
 
           <div className="flex flex-col lg:flex-row gap-12">
             <div className="flex-1">
                <div className="flex items-center gap-3 mb-4">
-                  <Badge className="bg-[#D4AF37] text-black font-bold text-lg px-3 hover:bg-[#b5952f]">{module.code}</Badge>
-                  <Badge variant="outline" className="text-[#D4AF37] border-[#D4AF37]">{module.type}</Badge>
+                  <Badge className="bg-[var(--school-accent)] text-black font-bold text-lg px-3 hover:bg-[#b5952f]">{module.code}</Badge>
+                  <Badge variant="outline" className="text-[var(--school-accent)] border-[var(--school-accent)]">{module.type}</Badge>
                   {module.access_level && (
                     <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
                        <Shield className="w-3 h-3 mr-1" /> {module.access_level}
@@ -72,11 +72,11 @@ const ModuleDetailPageY2 = () => {
                </p>
 
                <div className="flex flex-wrap gap-8 text-sm text-gray-400">
-                  <div className="flex items-center gap-2"><Clock className="w-5 h-5 text-[#D4AF37]" /> {module.duration_weeks} Semaines</div>
+                  <div className="flex items-center gap-2"><Clock className="w-5 h-5 text-[var(--school-accent)]" /> {module.duration_weeks} Semaines</div>
                   {module.mentor_required && (
                     <div className="flex items-center gap-2 text-blue-400"><UserCheck className="w-5 h-5" /> Mentor Requis</div>
                   )}
-                  <div className="flex items-center gap-2"><BookOpen className="w-5 h-5 text-[#D4AF37]" /> {module.duration_hours} Heures</div>
+                  <div className="flex items-center gap-2"><BookOpen className="w-5 h-5 text-[var(--school-accent)]" /> {module.duration_hours} Heures</div>
                </div>
             </div>
 
@@ -89,7 +89,7 @@ const ModuleDetailPageY2 = () => {
                   </div>
 
                   <div className="space-y-3">
-                     <Button className="w-full bg-[#D4AF37] text-black hover:bg-[#b5952f]">S'inscrire</Button>
+                     <Button className="w-full bg-[var(--school-accent)] text-black hover:bg-[#b5952f]">S'inscrire</Button>
                      {module.mentor_required && (
                         <Button variant="outline" className="w-full border-blue-500/30 text-blue-400 hover:bg-blue-500/10">
                            <UserCheck className="w-4 h-4 mr-2" /> Demander un Mentor
@@ -117,7 +117,7 @@ const ModuleDetailPageY2 = () => {
 
             {/* Objectives */}
             <section>
-               <h2 className="text-2xl font-bold mb-6 text-white flex items-center gap-2"><Target className="w-6 h-6 text-[#D4AF37]" /> Objectifs Spécifiques</h2>
+               <h2 className="text-2xl font-bold mb-6 text-white flex items-center gap-2"><Target className="w-6 h-6 text-[var(--school-accent)]" /> Objectifs Spécifiques</h2>
                <div className="grid gap-4">
                   {module.objectives.map(obj => <LearningObjectiveCard key={obj.id} objective={obj} />)}
                </div>
@@ -125,7 +125,7 @@ const ModuleDetailPageY2 = () => {
 
             {/* Content */}
             <section>
-               <h2 className="text-2xl font-bold mb-6 text-white flex items-center gap-2"><FileText className="w-6 h-6 text-[#D4AF37]" /> Programme Détaillé</h2>
+               <h2 className="text-2xl font-bold mb-6 text-white flex items-center gap-2"><FileText className="w-6 h-6 text-[var(--school-accent)]" /> Programme Détaillé</h2>
                <div>
                   {module.weeks.map(week => (
                      <WeeklyContentAccordion 
@@ -152,7 +152,7 @@ const ModuleDetailPageY2 = () => {
                   <img src={module.professor.avatar} alt="Mentor" className="w-12 h-12 rounded-full object-cover" />
                   <div>
                      <p className="font-bold text-white text-sm">{module.professor.name}</p>
-                     <p className="text-xs text-[#D4AF37]">{module.professor.title}</p>
+                     <p className="text-xs text-[var(--school-accent)]">{module.professor.title}</p>
                   </div>
                </div>
                <p className="text-sm text-gray-500 mt-4 italic">"Ce module requiert une supervision stricte pour garantir la sécurité énergétique de l'étudiant."</p>

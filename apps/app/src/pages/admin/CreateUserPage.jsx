@@ -63,8 +63,8 @@ const CreateUserPage = () => {
       <Card className="w-full max-w-lg bg-[#192734] border-white/10 text-white shadow-xl">
         <CardHeader>
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-[#D4AF37]/20 rounded-lg">
-              <UserPlus className="w-6 h-6 text-[#D4AF37]" />
+            <div className="p-2 bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] rounded-lg">
+              <UserPlus className="w-6 h-6 text-[var(--school-accent)]" />
             </div>
             <div>
               <CardTitle className="text-xl font-bold text-white">Create Owner User</CardTitle>
@@ -85,7 +85,7 @@ const CreateUserPage = () => {
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="bg-[#0F1419] border-white/10 text-white focus:border-[#D4AF37]/50"
+                className="bg-[#0F1419] border-white/10 text-white focus:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]"
                 required
               />
             </div>
@@ -98,7 +98,7 @@ const CreateUserPage = () => {
                 type="text" 
                 value={formData.password}
                 onChange={handleChange}
-                className="bg-[#0F1419] border-white/10 text-white focus:border-[#D4AF37]/50 font-mono"
+                className="bg-[#0F1419] border-white/10 text-white focus:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] font-mono"
                 required
               />
               <p className="text-sm text-gray-500">Visible for verification purposes.</p>
@@ -112,7 +112,7 @@ const CreateUserPage = () => {
                 type="text"
                 value={formData.full_name}
                 onChange={handleChange}
-                className="bg-[#0F1419] border-white/10 text-white focus:border-[#D4AF37]/50"
+                className="bg-[#0F1419] border-white/10 text-white focus:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]"
                 required
               />
             </div>
@@ -140,7 +140,7 @@ const CreateUserPage = () => {
 
             <Button 
               type="submit" 
-              className="w-full bg-[#D4AF37] hover:bg-yellow-500 text-black font-bold mt-4"
+              className="w-full bg-[var(--school-accent)] hover:bg-yellow-500 text-black font-bold mt-4"
               disabled={loading}
             >
               {loading ? (

@@ -5,7 +5,7 @@ import { Users, AlertTriangle, Clock, Calendar, ShieldAlert, HeartPulse, Megapho
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 const StatCard = ({ title, value, icon: Icon, color, subtext }) => (
-  <Card className="bg-[#192734] border-white/10 hover:border-[#D4AF37]/50 transition-all">
+  <Card className="bg-[#192734] border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] transition-all">
     <CardContent className="p-6">
       <div className="flex items-center justify-between">
         <div>

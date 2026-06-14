@@ -66,7 +66,7 @@ export function LiveKitRoom({ liveSessionId, session, isTeacher, onConnected, on
     return (
       <div className="flex-1 flex items-center justify-center bg-[#0F1419]">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-[#D4AF37] mx-auto mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin text-[var(--school-accent)] mx-auto mb-4" />
           <p className="text-gray-400">Connexion à la salle...</p>
         </div>
       </div>

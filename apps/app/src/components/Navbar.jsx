@@ -63,7 +63,7 @@ const Navbar = () => {
               {navigation.map((item) => (
                 <div key={item.name} className="relative group">
                   {item.children ? (
-                    <button className="text-gray-300 hover:text-[#D4AF37] px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1 transition-colors">
+                    <button className="text-gray-300 hover:text-[var(--school-accent)] px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1 transition-colors">
                       {item.name}
                       <ChevronDown className="w-4 h-4" />
                     </button>
@@ -72,7 +72,7 @@ const Navbar = () => {
                       href={item.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3 py-2 rounded-md text-sm font-medium transition-colors text-gray-300 hover:text-[#D4AF37]"
+                      className="px-3 py-2 rounded-md text-sm font-medium transition-colors text-gray-300 hover:text-[var(--school-accent)]"
                     >
                       {item.name}
                     </a>
@@ -81,8 +81,8 @@ const Navbar = () => {
                       to={item.href}
                       className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                         location.pathname === item.href 
-                          ? 'text-[#D4AF37]' 
-                          : 'text-gray-300 hover:text-[#D4AF37]'
+                          ? 'text-[var(--school-accent)]' 
+                          : 'text-gray-300 hover:text-[var(--school-accent)]'
                       }`}
                     >
                       {item.name}
@@ -97,7 +97,7 @@ const Navbar = () => {
                           <Link
                             key={child.name}
                             to={child.href}
-                            className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-[#D4AF37]"
+                            className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-[var(--school-accent)]"
                           >
                             {child.name}
                           </Link>
@@ -115,7 +115,7 @@ const Navbar = () => {
             {user ? (
               <div className="flex items-center gap-4">
                  <Link to={dashboardPath}>
-                    <Button variant="ghost" className="text-white hover:text-[#D4AF37] hover:bg-white/5">
+                    <Button variant="ghost" className="text-white hover:text-[var(--school-accent)] hover:bg-white/5">
                        <User className="w-4 h-4 mr-2" />
                        Mon Espace
                     </Button>
@@ -129,7 +129,7 @@ const Navbar = () => {
                   </Button>
                 </Link>
                 <Link to="/signup">
-                  <Button className="bg-[#D4AF37] text-black hover:bg-[#b5952f] font-bold">
+                  <Button className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f] font-bold">
                     S'inscrire
                   </Button>
                 </Link>
@@ -194,7 +194,7 @@ const Navbar = () => {
           <div className="pt-4 border-t border-white/10 mt-4">
              {user ? (
                <Link to={dashboardPath} onClick={() => setIsOpen(false)}>
-                   <Button className="w-full bg-[#D4AF37] text-black">Mon Espace</Button>
+                   <Button className="w-full bg-[var(--school-accent)] text-black">Mon Espace</Button>
                 </Link>
              ) : (
                 <div className="grid grid-cols-2 gap-2">
@@ -202,7 +202,7 @@ const Navbar = () => {
                       <Button variant="outline" className="w-full border-white/20 text-white" title="Espace membre — LIRI">Connexion</Button>
                    </Link>
                    <Link to="/signup" onClick={() => setIsOpen(false)}>
-                      <Button className="w-full bg-[#D4AF37] text-black">S'inscrire</Button>
+                      <Button className="w-full bg-[var(--school-accent)] text-black">S'inscrire</Button>
                    </Link>
                 </div>
              )}

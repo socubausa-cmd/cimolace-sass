@@ -75,7 +75,7 @@ const VideoPlayerContent = () => {
              {/* Mobile Playlist Toggle */}
              <Sheet>
                 <SheetTrigger asChild>
-                   <Button variant="ghost" size="icon" className="md:hidden text-[#D4AF37]">
+                   <Button variant="ghost" size="icon" className="md:hidden text-[var(--school-accent)]">
                       <Menu className="w-6 h-6" />
                    </Button>
                 </SheetTrigger>
@@ -98,7 +98,7 @@ const VideoPlayerContent = () => {
              <div>
                 <h1 className="font-bold text-sm md:text-lg leading-tight truncate max-w-[200px] md:max-w-md">{currentVideo.title}</h1>
                 <p className="text-[10px] md:text-sm text-gray-400 flex items-center gap-2">
-                   <span className="text-[#D4AF37]">Module {context.moduleId ? 'Actif' : ''}</span>
+                   <span className="text-[var(--school-accent)]">Module {context.moduleId ? 'Actif' : ''}</span>
                    <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
                    <span>Semaine {context.weekId ? 'Active' : ''}</span>
                 </p>
@@ -106,7 +106,7 @@ const VideoPlayerContent = () => {
           </div>
           
           <div className="flex items-center gap-4">
-             <Button variant="outline" className="hidden md:flex border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black font-bold text-xs h-8">
+             <Button variant="outline" className="hidden md:flex border-[var(--school-accent)] text-[var(--school-accent)] hover:bg-[var(--school-accent)] hover:text-black font-bold text-xs h-8">
                 Tableau de bord
              </Button>
           </div>

@@ -44,8 +44,8 @@ const CalendarSection = ({ data }) => {
              const events = getEventsForDay(day);
              const isTodayDate = isToday(day);
              return (
-                <div key={day.toISOString()} className={`bg-[#192734] min-h-[100px] p-2 hover:bg-white/5 transition-colors ${isTodayDate ? 'bg-[#D4AF37]/5' : ''}`}>
-                   <div className={`text-right text-sm font-bold mb-2 ${isTodayDate ? 'text-[#D4AF37]' : 'text-gray-400'}`}>
+                <div key={day.toISOString()} className={`bg-[#192734] min-h-[100px] p-2 hover:bg-white/5 transition-colors ${isTodayDate ? 'bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]' : ''}`}>
+                   <div className={`text-right text-sm font-bold mb-2 ${isTodayDate ? 'text-[var(--school-accent)]' : 'text-gray-400'}`}>
                       {format(day, 'd')}
                    </div>
                    <div className="space-y-1">

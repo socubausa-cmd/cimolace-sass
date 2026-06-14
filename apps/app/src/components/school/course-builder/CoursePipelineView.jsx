@@ -535,15 +535,15 @@ export default function CoursePipelineView({
         <div className="px-4 py-4 border-b border-white/8">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-semibold">Pipeline</p>
+              <p className="text-[10px] uppercase tracking-widest text-[var(--school-accent)] font-semibold">Pipeline</p>
               <h2 className="text-sm font-bold text-white">Course Production</h2>
             </div>
-            <span className="text-xs font-mono text-[#D4AF37]">{pipelineProgress}%</span>
+            <span className="text-xs font-mono text-[var(--school-accent)]">{pipelineProgress}%</span>
           </div>
           {/* Progress bar */}
           <div className="h-1.5 bg-white/8 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-[#D4AF37] to-amber-500 rounded-full"
+              className="h-full bg-gradient-to-r from-[var(--school-accent)] to-amber-500 rounded-full"
               animate={{ width: `${pipelineProgress}%` }}
               transition={{ type: 'spring', stiffness: 60 }}
             />
@@ -565,7 +565,7 @@ export default function CoursePipelineView({
           ) : (
             <Button
               size="sm"
-              className="w-full bg-[#D4AF37] text-black hover:bg-amber-400 text-xs font-bold"
+              className="w-full bg-[var(--school-accent)] text-black hover:bg-amber-400 text-xs font-bold"
               onClick={runAll}
             >
               <Zap className="w-3.5 h-3.5 mr-1.5" /> Exécuter tout le pipeline
@@ -587,7 +587,7 @@ export default function CoursePipelineView({
                 key={step.id}
                 type="button"
                 onClick={() => setActiveStep(step.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left ${isActive ? 'bg-white/5 border-r-2 border-[#D4AF37]' : 'hover:bg-white/3'}`}
+                className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left ${isActive ? 'bg-white/5 border-r-2 border-[var(--school-accent)]' : 'hover:bg-white/3'}`}
               >
                 {/* Line connector */}
                 <div className="relative flex flex-col items-center flex-shrink-0">
@@ -714,7 +714,7 @@ export default function CoursePipelineView({
                     </div>
                     <Button
                       size="sm"
-                      className="bg-[#D4AF37] text-black hover:bg-amber-400 text-xs font-bold"
+                      className="bg-[var(--school-accent)] text-black hover:bg-amber-400 text-xs font-bold"
                       onClick={() => runStep(activeStep)}
                       disabled={autoRunning}
                     >
@@ -811,7 +811,7 @@ function StepOutputRenderer({ stepId, output, scriptText }) {
               href={output.downloadUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-xs text-[#D4AF37] hover:text-amber-400 transition-colors"
+              className="inline-flex items-center gap-2 text-xs text-[var(--school-accent)] hover:text-amber-400 transition-colors"
             >
               <Download className="w-3.5 h-3.5" /> Télécharger la vidéo finale
             </a>
@@ -828,7 +828,7 @@ function StepOutputRenderer({ stepId, output, scriptText }) {
       <div className="space-y-2">
         <p className="text-sm text-emerald-300">✓ Formation publiée et accessible</p>
         {output.downloadUrl && (
-          <a href={output.downloadUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[#D4AF37] hover:text-amber-400 flex items-center gap-1">
+          <a href={output.downloadUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--school-accent)] hover:text-amber-400 flex items-center gap-1">
             <Eye className="w-3.5 h-3.5" /> Voir la vidéo enrichie
           </a>
         )}

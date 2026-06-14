@@ -86,7 +86,7 @@ const TeacherClassroomPage = ({ defaultView = 'classroom' }) => {
             <Card className="premium-panel">
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
                 <p className="text-gray-400 text-xs uppercase">Progression moyenne</p>
-                <p className="text-2xl font-bold text-[#D4AF37]">{avgProgress}%</p>
+                <p className="text-2xl font-bold text-[var(--school-accent)]">{avgProgress}%</p>
               </CardContent>
             </Card>
           </div>
@@ -105,7 +105,7 @@ const TeacherClassroomPage = ({ defaultView = 'classroom' }) => {
              <Card className="premium-panel border-white/10 flex flex-col overflow-hidden">
                <div className="p-4 border-b border-white/10 font-bold text-white flex items-center justify-between">
                  <span>Étudiants - {activeWeek?.title || 'Classe active'}</span>
-                 <Badge className="bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30">
+                 <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
                    {students.length}
                  </Badge>
                </div>
@@ -116,7 +116,7 @@ const TeacherClassroomPage = ({ defaultView = 'classroom' }) => {
                        key={student.id}
                        onClick={() => setSelectedStudent(student)}
                        className={`p-3 rounded-lg flex items-center gap-3 cursor-pointer transition-colors ${
-                         selectedStudent?.id === student.id ? 'bg-[#D4AF37]/20 border border-[#D4AF37]/30' : 'hover:bg-white/5 border border-transparent'
+                         selectedStudent?.id === student.id ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]' : 'hover:bg-white/5 border border-transparent'
                        }`}
                      >
                        <Avatar className="w-10 h-10 border border-white/10">
@@ -152,7 +152,7 @@ const TeacherClassroomPage = ({ defaultView = 'classroom' }) => {
                          <p className="text-sm text-gray-400">Participation pédagogique: active</p>
                        </div>
                      </div>
-                     <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold gap-2">
+                     <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold gap-2">
                        <MessageSquare className="w-4 h-4" /> Message privé
                      </Button>
                    </div>
@@ -178,7 +178,7 @@ const TeacherClassroomPage = ({ defaultView = 'classroom' }) => {
                            {selectedStudent.notebooks.map((entry, idx) => (
                              <div key={idx} className="bg-[#0F1419] p-4 rounded-lg border border-white/5">
                                <div className="flex justify-between mb-3">
-                                 <h4 className="font-bold text-[#D4AF37]">Jour {entry.day}</h4>
+                                 <h4 className="font-bold text-[var(--school-accent)]">Jour {entry.day}</h4>
                                  <span className="text-sm text-gray-500">Score auto: {entry.score}/5</span>
                                </div>
                                <p className="text-gray-300 italic mb-4">"{entry.content}"</p>
@@ -245,7 +245,7 @@ const TeacherClassroomPage = ({ defaultView = 'classroom' }) => {
                          setView('classroom');
                          navigate(`/teacher-space/classroom/${row.id}`);
                        }}
-                       className="bg-[#D4AF37] text-black hover:bg-[#c4a030]"
+                       className="bg-[var(--school-accent)] text-black hover:bg-[#c4a030]"
                      >
                        Ouvrir <ArrowRight className="w-4 h-4 ml-2" />
                      </Button>
@@ -256,7 +256,7 @@ const TeacherClassroomPage = ({ defaultView = 'classroom' }) => {
              {classesRows.length === 0 ? (
                <Card className="premium-panel border-white/10">
                  <CardContent className="p-10 text-center">
-                   <BookOpen className="w-8 h-8 text-[#D4AF37] mx-auto mb-3" />
+                   <BookOpen className="w-8 h-8 text-[var(--school-accent)] mx-auto mb-3" />
                    <p className="text-white font-medium">Aucune classe disponible</p>
                  </CardContent>
                </Card>

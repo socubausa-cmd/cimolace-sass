@@ -19,7 +19,7 @@ export default function ElementToolbar({ onAdd }) {
             key={item.id}
             type="button"
             onClick={() => onAdd?.(item.id)}
-            className="h-9 px-3 rounded-xl border border-white/12 bg-white/[0.04] text-gray-200 text-xs inline-flex items-center gap-1.5 hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"
+            className="h-9 px-3 rounded-xl border border-white/12 bg-white/[0.04] text-gray-200 text-xs inline-flex items-center gap-1.5 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:text-[var(--school-accent)]"
           >
             <Icon className="w-3.5 h-3.5" />
             {item.label}

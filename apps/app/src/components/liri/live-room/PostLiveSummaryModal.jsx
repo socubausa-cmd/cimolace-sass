@@ -58,7 +58,7 @@ function SlideBar({ slide, maxDuration }) {
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
           transition={{ duration: 0.6, delay: 0.1 + slide.index * 0.04 }}
-          className="h-full rounded-full bg-[#D4AF37]/60"
+          className="h-full rounded-full bg-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]"
         />
       </div>
       <span className="w-10 text-[9px] text-gray-400 flex-shrink-0">
@@ -145,8 +145,8 @@ export default function PostLiveSummaryModal({
             {/* Header */}
             <div className="relative flex items-start justify-between p-5 pb-4 border-b border-white/8">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/12 border border-[#D4AF37]/25 flex items-center justify-center flex-shrink-0">
-                  <Award className="w-4.5 h-4.5 text-[#D4AF37]" />
+                <div className="w-9 h-9 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] flex items-center justify-center flex-shrink-0">
+                  <Award className="w-4.5 h-4.5 text-[var(--school-accent)]" />
                 </div>
                 <div>
                   <h2 className="text-sm font-semibold text-white">Résumé de session</h2>
@@ -170,8 +170,8 @@ export default function PostLiveSummaryModal({
               {/* Generating state */}
               {generating && (
                 <div className="flex flex-col items-center justify-center py-10 gap-3">
-                  <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-[#D4AF37] animate-pulse" />
+                  <div className="w-12 h-12 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-[var(--school-accent)] animate-pulse" />
                   </div>
                   <p className="text-sm text-white/70">Génération du résumé en cours…</p>
                   <p className="text-[10px] text-gray-500">Claude analyse votre session</p>
@@ -194,8 +194,8 @@ export default function PostLiveSummaryModal({
                       icon={Clock}
                       label="Durée"
                       value={formatDuration(summary.durationSeconds)}
-                      color="text-[#D4AF37]"
-                      bg="bg-[#D4AF37]/5"
+                      color="text-[var(--school-accent)]"
+                      bg="bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]"
                     />
                     <StatCard
                       icon={Layers}
@@ -222,10 +222,10 @@ export default function PostLiveSummaryModal({
 
                   {/* AI Summary */}
                   {summary.aiSummary && (
-                    <div className="rounded-xl border border-[#D4AF37]/15 bg-[#D4AF37]/5 p-4">
+                    <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] p-4">
                       <div className="flex items-center gap-1.5 mb-2">
-                        <Sparkles className="w-3 h-3 text-[#D4AF37]" />
-                        <span className="text-[9px] uppercase tracking-wider text-[#D4AF37]/70 font-semibold">Résumé IA</span>
+                        <Sparkles className="w-3 h-3 text-[var(--school-accent)]" />
+                        <span className="text-[9px] uppercase tracking-wider text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] font-semibold">Résumé IA</span>
                       </div>
                       <p className="text-xs text-white/80 leading-relaxed">{summary.aiSummary}</p>
                     </div>
@@ -246,7 +246,7 @@ export default function PostLiveSummaryModal({
                             transition={{ delay: i * 0.06 }}
                             className="flex items-start gap-2 rounded-lg bg-white/[0.03] border border-white/8 px-3 py-2"
                           >
-                            <span className="w-4 h-4 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/25 text-[8px] font-bold text-[#D4AF37] flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="w-4 h-4 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] text-[8px] font-bold text-[var(--school-accent)] flex items-center justify-center flex-shrink-0 mt-0.5">
                               {i + 1}
                             </span>
                             <p className="text-xs text-white/75">{point}</p>
@@ -325,7 +325,7 @@ export default function PostLiveSummaryModal({
                     type="button"
                     onClick={handleSendReport}
                     disabled={sendingReport || !summary}
-                    className="flex-1 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-xs text-[#D4AF37] font-semibold flex items-center justify-center gap-1.5 hover:bg-[#D4AF37]/22 disabled:opacity-40 transition-all"
+                    className="flex-1 h-9 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-xs text-[var(--school-accent)] font-semibold flex items-center justify-center gap-1.5 hover:bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] disabled:opacity-40 transition-all"
                   >
                     {sendingReport
                       ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Envoi…</>

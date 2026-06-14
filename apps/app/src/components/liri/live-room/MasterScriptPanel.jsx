@@ -41,14 +41,14 @@ function SectionCard({
       className={cn(
         'rounded-xl border transition-all',
         isCurrent
-          ? 'bg-[#D4AF37]/10 border-[#D4AF37]/30 shadow-[0_0_16px_rgba(212,175,55,0.12)]'
+          ? 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] shadow-[0_0_16px_rgba(212,175,55,0.12)]'
           : 'bg-white/[0.03] border-white/10 hover:border-white/18'
       )}
     >
       {/* Header */}
       <div className="flex items-center gap-1.5 px-3 pt-2.5 pb-1">
         {section.slide_index != null ? (
-          <span className="h-4 px-1.5 rounded bg-[#D4AF37]/15 border border-[#D4AF37]/25 text-[8px] font-bold text-[#D4AF37]">
+          <span className="h-4 px-1.5 rounded bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] text-[8px] font-bold text-[var(--school-accent)]">
             Diapo #{section.slide_index + 1}
           </span>
         ) : (
@@ -72,13 +72,13 @@ function SectionCard({
       {/* Content */}
       <div className="px-3 pb-2.5">
         {(section.title || section.slide_title) && (
-          <p className="text-[10px] font-semibold text-[#D4AF37]/85 mb-1.5 leading-tight">
+          <p className="text-[10px] font-semibold text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)] mb-1.5 leading-tight">
             {section.title || section.slide_title}
           </p>
         )}
         <p className={cn(
           'text-[11px] leading-relaxed whitespace-pre-wrap',
-          showAi && section.ai_content ? 'text-[#D4AF37]/85' : 'text-white/80'
+          showAi && section.ai_content ? 'text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)]' : 'text-white/80'
         )}>
           {displayContent}
         </p>
@@ -90,7 +90,7 @@ function SectionCard({
           type="button"
           disabled={isImproving}
           onClick={() => onImprove('improve')}
-          className="flex items-center gap-1 h-5 px-2 rounded bg-[#D4AF37]/8 border border-[#D4AF37]/18 text-[8px] text-[#D4AF37]/70 hover:bg-[#D4AF37]/15 hover:text-[#D4AF37] disabled:opacity-40 transition-colors"
+          className="flex items-center gap-1 h-5 px-2 rounded bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] text-[8px] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] hover:text-[var(--school-accent)] disabled:opacity-40 transition-colors"
         >
           {isImproving ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Sparkles className="w-2.5 h-2.5" />}
           Améliorer
@@ -117,7 +117,7 @@ function SectionCard({
               className={cn(
                 'h-5 px-2 rounded border text-[8px] transition-colors',
                 showAi
-                  ? 'bg-[#D4AF37]/15 border-[#D4AF37]/30 text-[#D4AF37]'
+                  ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)]'
                   : 'bg-white/[0.04] border-white/10 text-gray-500 hover:text-white'
               )}
             >
@@ -148,9 +148,9 @@ function SectionEditForm({ initial, totalSlides, onSave, onCancel }) {
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border border-[#D4AF37]/28 bg-[#D4AF37]/8 p-3 space-y-2.5"
+      className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] p-3 space-y-2.5"
     >
-      <p className="text-[10px] font-semibold text-[#D4AF37]/80">
+      <p className="text-[10px] font-semibold text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">
         {initial ? 'Modifier la section' : 'Nouvelle section'}
       </p>
       <textarea
@@ -158,7 +158,7 @@ function SectionEditForm({ initial, totalSlides, onSave, onCancel }) {
         onChange={(e) => setContent(e.target.value)}
         placeholder="Saisissez votre texte de script…"
         rows={4}
-        className="w-full bg-black/20 border border-white/12 rounded-xl px-3 py-2 text-xs text-white placeholder:text-gray-500 outline-none focus:border-[#D4AF37]/40 resize-none"
+        className="w-full bg-black/20 border border-white/12 rounded-xl px-3 py-2 text-xs text-white placeholder:text-gray-500 outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] resize-none"
       />
       <div className="flex items-center gap-2">
         <label className="text-[9px] text-gray-400 flex-shrink-0">Diapo associée :</label>
@@ -178,7 +178,7 @@ function SectionEditForm({ initial, totalSlides, onSave, onCancel }) {
           type="button"
           onClick={() => onSave(content, slideIndex === '' ? null : Number(slideIndex))}
           disabled={!content.trim()}
-          className="flex-1 h-7 rounded-xl bg-[#D4AF37]/20 border border-[#D4AF37]/35 text-xs text-[#D4AF37] font-semibold flex items-center justify-center gap-1 hover:bg-[#D4AF37]/30 disabled:opacity-40"
+          className="flex-1 h-7 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-xs text-[var(--school-accent)] font-semibold flex items-center justify-center gap-1 hover:bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] disabled:opacity-40"
         >
           <Check className="w-3 h-3" /> Enregistrer
         </button>
@@ -228,7 +228,7 @@ function PrompterOverlay({ sections, currentSection, onClose }) {
       {/* Controls */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-white/8 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-[#D4AF37]" />
+          <BookOpen className="w-4 h-4 text-[var(--school-accent)]" />
           <span className="text-xs font-semibold text-white/80">Mode Prompteur</span>
         </div>
         <div className="flex items-center gap-3">
@@ -238,7 +238,7 @@ function PrompterOverlay({ sections, currentSection, onClose }) {
             <input
               type="range" min={0.3} max={4} step={0.1} value={speed}
               onChange={(e) => setSpeed(Number(e.target.value))}
-              className="w-20 accent-[#D4AF37]"
+              className="w-20 accent-[var(--school-accent)]"
             />
           </div>
           <button
@@ -247,7 +247,7 @@ function PrompterOverlay({ sections, currentSection, onClose }) {
             className={cn(
               'h-7 px-3 rounded-xl text-xs font-semibold border transition-all',
               autoScroll
-                ? 'bg-[#D4AF37]/20 border-[#D4AF37]/35 text-[#D4AF37]'
+                ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)]'
                 : 'bg-white/[0.06] border-white/12 text-white/60 hover:text-white'
             )}
           >
@@ -277,7 +277,7 @@ function PrompterOverlay({ sections, currentSection, onClose }) {
               )}
             >
               {s.slide_index != null && (
-                <p className="text-[10px] uppercase tracking-widest text-[#D4AF37]/50 mb-2">
+                <p className="text-[10px] uppercase tracking-widest text-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] mb-2">
                   Diapositive #{s.slide_index + 1}
                 </p>
               )}
@@ -350,7 +350,7 @@ export default function MasterScriptPanel({
           <button
             type="button"
             onClick={() => setEditingId('new')}
-            className="flex items-center gap-1 h-6 px-2 rounded-lg bg-[#D4AF37]/12 border border-[#D4AF37]/25 text-[9px] text-[#D4AF37] hover:bg-[#D4AF37]/20 transition-colors"
+            className="flex items-center gap-1 h-6 px-2 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] text-[9px] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors"
           >
             <Plus className="w-2.5 h-2.5" /> Ajouter
           </button>

@@ -67,8 +67,8 @@ export function EmptyState({ onOpenPicker, conversations, onSelectConversation }
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="flex flex-col items-center justify-center text-center px-6 py-12 h-full"
     >
-      <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#D4AF37]/20 to-violet-500/10 border border-white/10 flex items-center justify-center mb-6">
-        <MessageSquare className="w-9 h-9 text-[#D4AF37]/70" />
+      <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-violet-500/10 border border-white/10 flex items-center justify-center mb-6">
+        <MessageSquare className="w-9 h-9 text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]" />
       </div>
       <h2 className="text-xl font-semibold text-white mb-2">Messagerie immersive</h2>
       <p className="text-sm text-gray-400 max-w-sm mb-6">
@@ -82,11 +82,11 @@ export function EmptyState({ onOpenPicker, conversations, onSelectConversation }
             <button
               key={conv.id}
               onClick={() => onSelectConversation(conv)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.07] hover:border-[#D4AF37]/30 hover:bg-white/[0.07] transition-all text-left group"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.07] hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:bg-white/[0.07] transition-all text-left group"
             >
               <UserAvatar user={conv} size="sm" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm text-white truncate group-hover:text-[#D4AF37] transition-colors">
+                <p className="text-sm text-white truncate group-hover:text-[var(--school-accent)] transition-colors">
                   {conv.name}
                 </p>
                 <p className="text-[11px] text-gray-500 truncate">
@@ -94,7 +94,7 @@ export function EmptyState({ onOpenPicker, conversations, onSelectConversation }
                 </p>
               </div>
               {conv.unreadCount > 0 && (
-                <span className="flex-shrink-0 h-5 min-w-5 rounded-full bg-[#D4AF37] text-[10px] font-bold text-black flex items-center justify-center px-1">
+                <span className="flex-shrink-0 h-5 min-w-5 rounded-full bg-[var(--school-accent)] text-[10px] font-bold text-black flex items-center justify-center px-1">
                   {conv.unreadCount}
                 </span>
               )}
@@ -105,7 +105,7 @@ export function EmptyState({ onOpenPicker, conversations, onSelectConversation }
 
       <button
         onClick={onOpenPicker}
-        className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#D4AF37] text-sm font-medium hover:bg-[#D4AF37]/25 transition-all"
+        className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] text-sm font-medium hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] transition-all"
       >
         <Users className="w-4 h-4" />
         Choisir un destinataire
@@ -124,7 +124,7 @@ export function NoMessagesState({ recipientName }) {
       className="flex flex-col items-center justify-center h-full text-center px-6"
     >
       <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
-        <Sparkles className="w-7 h-7 text-[#D4AF37]/50" />
+        <Sparkles className="w-7 h-7 text-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]" />
       </div>
       <p className="text-gray-400 text-sm">
         Aucun message avec <span className="text-white font-medium">{recipientName}</span>

@@ -63,14 +63,14 @@ const InscriptionContractPage = () => {
 
       {/* Control Bar (Hidden on print) */}
       <div className="bg-[#0F1419] text-white py-4 px-6 shadow-md print:hidden sticky top-16 z-40 flex justify-between items-center">
-        <h1 className="text-xl font-sans font-bold text-[#D4AF37] flex items-center gap-2">
+        <h1 className="text-xl font-sans font-bold text-[var(--school-accent)] flex items-center gap-2">
           <PenTool className="w-5 h-5" /> Contrat d'Inscription
         </h1>
         <div className="flex gap-3">
           <Button onClick={handlePrint} variant="outline" className="border-white/20 hover:bg-white/10 text-white gap-2">
             <Printer className="w-4 h-4" /> Imprimer / PDF
           </Button>
-          <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500 gap-2">
+          <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 gap-2">
             <Download className="w-4 h-4" /> Télécharger
           </Button>
         </div>
@@ -81,12 +81,12 @@ const InscriptionContractPage = () => {
         
         {/* Official Header */}
         <header className="text-center border-b-4 border-double border-[#0F1419] pb-6 mb-8">
-          <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center border-2 border-[#D4AF37]">
+          <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center border-2 border-[var(--school-accent)]">
             {/* Logo Placeholder */}
             <span className="text-3xl font-bold text-[#0F1419]">ISNA</span>
           </div>
           <h1 className="text-2xl font-bold uppercase tracking-widest text-[#0F1419] mb-2">{`${SCHOOL} — école en ligne`}</h1>
-          <h2 className="text-xl font-bold text-[#D4AF37] mb-1">FONDATION MANIKONGO</h2>
+          <h2 className="text-xl font-bold text-[var(--school-accent)] mb-1">FONDATION MANIKONGO</h2>
           <p className="text-sm text-gray-500 uppercase tracking-widest">Institut des Sciences de la Nature et de l'Âme</p>
         </header>
 
@@ -96,7 +96,7 @@ const InscriptionContractPage = () => {
         </div>
 
         {/* Preamble */}
-        <div className="mb-8 italic text-justify text-gray-700 bg-gray-50 p-4 border-l-4 border-[#D4AF37]">
+        <div className="mb-8 italic text-justify text-gray-700 bg-gray-50 p-4 border-l-4 border-[var(--school-accent)]">
           "Dans le respect des Lois Universelles et de la quête de Vérité, ce contrat scelle l'engagement mutuel entre l'École, dispensatrice du savoir, et l'Étudiant, chercheur de connaissance."
         </div>
 
@@ -116,31 +116,31 @@ const InscriptionContractPage = () => {
           <div className="grid grid-cols-2 gap-x-8 gap-y-4 bg-gray-50 p-6 border border-gray-200 rounded-lg print:bg-transparent print:border-black">
             <div className="col-span-1">
               <label className="block text-xs uppercase font-bold text-gray-500 mb-1">Nom :</label>
-              <input type="text" name="name" value={formData.name} onChange={handleInputChange} className="w-full bg-transparent border-b border-gray-400 focus:border-[#D4AF37] outline-none py-1 font-sans" />
+              <input type="text" name="name" value={formData.name} onChange={handleInputChange} className="w-full bg-transparent border-b border-gray-400 focus:border-[var(--school-accent)] outline-none py-1 font-sans" />
             </div>
             <div className="col-span-1">
               <label className="block text-xs uppercase font-bold text-gray-500 mb-1">Prénom(s) :</label>
-              <input type="text" name="firstname" value={formData.firstname} onChange={handleInputChange} className="w-full bg-transparent border-b border-gray-400 focus:border-[#D4AF37] outline-none py-1 font-sans" />
+              <input type="text" name="firstname" value={formData.firstname} onChange={handleInputChange} className="w-full bg-transparent border-b border-gray-400 focus:border-[var(--school-accent)] outline-none py-1 font-sans" />
             </div>
             <div className="col-span-1">
               <label className="block text-xs uppercase font-bold text-gray-500 mb-1">Date de naissance :</label>
-              <input type="date" name="birthdate" value={formData.birthdate} onChange={handleInputChange} className="w-full bg-transparent border-b border-gray-400 focus:border-[#D4AF37] outline-none py-1 font-sans" />
+              <input type="date" name="birthdate" value={formData.birthdate} onChange={handleInputChange} className="w-full bg-transparent border-b border-gray-400 focus:border-[var(--school-accent)] outline-none py-1 font-sans" />
             </div>
              <div className="col-span-1">
               <label className="block text-xs uppercase font-bold text-gray-500 mb-1">Pays de résidence :</label>
-              <input type="text" name="country" value={formData.country} onChange={handleInputChange} className="w-full bg-transparent border-b border-gray-400 focus:border-[#D4AF37] outline-none py-1 font-sans" />
+              <input type="text" name="country" value={formData.country} onChange={handleInputChange} className="w-full bg-transparent border-b border-gray-400 focus:border-[var(--school-accent)] outline-none py-1 font-sans" />
             </div>
             <div className="col-span-2">
               <label className="block text-xs uppercase font-bold text-gray-500 mb-1">Adresse complète :</label>
-              <input type="text" name="address" value={formData.address} onChange={handleInputChange} className="w-full bg-transparent border-b border-gray-400 focus:border-[#D4AF37] outline-none py-1 font-sans" />
+              <input type="text" name="address" value={formData.address} onChange={handleInputChange} className="w-full bg-transparent border-b border-gray-400 focus:border-[var(--school-accent)] outline-none py-1 font-sans" />
             </div>
             <div className="col-span-1">
               <label className="block text-xs uppercase font-bold text-gray-500 mb-1">Téléphone (avec indicatif) :</label>
-              <input type="text" name="phone" value={formData.phone} onChange={handleInputChange} className="w-full bg-transparent border-b border-gray-400 focus:border-[#D4AF37] outline-none py-1 font-sans" />
+              <input type="text" name="phone" value={formData.phone} onChange={handleInputChange} className="w-full bg-transparent border-b border-gray-400 focus:border-[var(--school-accent)] outline-none py-1 font-sans" />
             </div>
             <div className="col-span-1">
               <label className="block text-xs uppercase font-bold text-gray-500 mb-1">Email :</label>
-              <input type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full bg-transparent border-b border-gray-400 focus:border-[#D4AF37] outline-none py-1 font-sans" />
+              <input type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full bg-transparent border-b border-gray-400 focus:border-[var(--school-accent)] outline-none py-1 font-sans" />
             </div>
           </div>
           <div className="pl-6">
@@ -178,7 +178,7 @@ const InscriptionContractPage = () => {
                </div>
                <div>
                   <label className="text-xs font-bold">Net à payer (€) :</label>
-                  <input type="number" name="finalAmount" value={formData.finalAmount} onChange={handleInputChange} className="w-full border border-[#D4AF37] p-1 font-bold bg-yellow-50" />
+                  <input type="number" name="finalAmount" value={formData.finalAmount} onChange={handleInputChange} className="w-full border border-[var(--school-accent)] p-1 font-bold bg-yellow-50" />
                </div>
             </div>
             <p className="mt-2">L'Étudiant s\'engage à régler la somme due selon l\'échéancier convenu. Tout retard de paiement de plus de 7 jours pourra entraîner la suspension de l\'accès aux cours.</p>

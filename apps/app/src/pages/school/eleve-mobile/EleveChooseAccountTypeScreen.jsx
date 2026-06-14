@@ -110,7 +110,7 @@ export default function EleveChooseAccountTypeScreen() {
         }}
       >
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute left-1/2 top-1/4 h-[320px] w-[500px] -translate-x-1/2 rounded-full bg-[#D4AF37]/5 blur-[100px]" />
+          <div className="absolute left-1/2 top-1/4 h-[320px] w-[500px] -translate-x-1/2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] blur-[100px]" />
         </div>
 
         <div className="px-4 pt-[max(0.35rem,env(safe-area-inset-top))]">
@@ -131,7 +131,7 @@ export default function EleveChooseAccountTypeScreen() {
             className="mb-4 text-center"
           >
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-[#D4AF37]" />
+              <Sparkles className="h-3.5 w-3.5 text-[var(--school-accent)]" />
               <span className="text-[11px] text-white/55">Multi-rôles</span>
             </div>
             <h1 className="text-[22px] font-extrabold leading-tight tracking-[-0.02em] text-white">
@@ -180,7 +180,7 @@ export default function EleveChooseAccountTypeScreen() {
         >
           <Button
             type="button"
-            className="h-12 w-full bg-[#D4AF37] font-bold text-black hover:bg-[#bfa345]"
+            className="h-12 w-full bg-[var(--school-accent)] font-bold text-black hover:bg-[#bfa345]"
             onClick={() => chooseRole(currentOption.id)}
           >
             Ouvrir ce tableau de bord

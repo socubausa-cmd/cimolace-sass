@@ -31,7 +31,7 @@ const ProgressiveLearningSectionComponent = () => {
                    <div className="w-full md:w-64 h-48 md:h-auto bg-cover bg-center shrink-0 relative" style={{ backgroundImage: `url(${formation.thumbnail})` }}>
                       <div className="absolute inset-0 bg-black/50 md:bg-gradient-to-r md:from-black/80 md:to-transparent"></div>
                       <div className="absolute bottom-3 left-3 md:hidden">
-                         <span className="bg-[#D4AF37] text-black text-xs font-bold px-2 py-1 rounded">{formation.level}</span>
+                         <span className="bg-[var(--school-accent)] text-black text-xs font-bold px-2 py-1 rounded">{formation.level}</span>
                       </div>
                    </div>
                    
@@ -39,7 +39,7 @@ const ProgressiveLearningSectionComponent = () => {
                       <div className="flex justify-between items-start">
                          <div>
                             <div className="flex items-center gap-2 mb-2">
-                               <span className="hidden md:inline-block bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 text-xs font-bold px-2 py-0.5 rounded">{formation.level}</span>
+                               <span className="hidden md:inline-block bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-xs font-bold px-2 py-0.5 rounded">{formation.level}</span>
                                <span className="text-gray-400 text-xs uppercase tracking-wider">{formation.category}</span>
                             </div>
                             <h3 className="text-2xl font-bold text-white mb-2">{formation.title}</h3>
@@ -59,7 +59,7 @@ const ProgressiveLearningSectionComponent = () => {
                       </div>
 
                       <div className="flex flex-col md:flex-row gap-3 pt-2">
-                         <Button className="flex-1 bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold" onClick={() => toggleFormation(formation.id)}>
+                         <Button className="flex-1 bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold" onClick={() => toggleFormation(formation.id)}>
                             {expandedFormation === formation.id ? 'Masquer le contenu' : 'Voir le programme'}
                             <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${expandedFormation === formation.id ? 'rotate-180' : ''}`} />
                          </Button>
@@ -80,7 +80,7 @@ const ProgressiveLearningSectionComponent = () => {
                                onClick={() => toggleModule(mod.id)}
                             >
                                <div className="flex items-center gap-3">
-                                  <div className="p-2 bg-[#0F1419] rounded-md text-[#D4AF37] border border-white/10">
+                                  <div className="p-2 bg-[#0F1419] rounded-md text-[var(--school-accent)] border border-white/10">
                                      {expandedModule === mod.id ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                                   </div>
                                   <div>
@@ -101,7 +101,7 @@ const ProgressiveLearningSectionComponent = () => {
                                   {mod.weeks.map(week => (
                                      <div key={week.id} className="border-b border-white/5 last:border-0 pl-12 pr-4 py-3">
                                         <div 
-                                           className="flex items-center justify-between cursor-pointer hover:text-[#D4AF37]"
+                                           className="flex items-center justify-between cursor-pointer hover:text-[var(--school-accent)]"
                                            onClick={() => toggleWeek(week.id)}
                                         >
                                            <div className="flex items-center gap-2">
@@ -116,11 +116,11 @@ const ProgressiveLearningSectionComponent = () => {
                                               {week.days.map(day => (
                                                  <div key={day.id} className="flex justify-between items-center py-1.5 group">
                                                     <div className="flex items-center gap-2">
-                                                       {Math.random() > 0.5 ? <CheckCircle className="w-3 h-3 text-green-500" /> : <PlayCircle className="w-3 h-3 text-gray-500 group-hover:text-[#D4AF37]" />}
+                                                       {Math.random() > 0.5 ? <CheckCircle className="w-3 h-3 text-green-500" /> : <PlayCircle className="w-3 h-3 text-gray-500 group-hover:text-[var(--school-accent)]" />}
                                                        <span className="text-sm text-gray-400 group-hover:text-white transition-colors">{day.title}</span>
                                                     </div>
                                                     <Link to={`/classroom/video/${formation.id}/${mod.id}/${week.id}/${day.id}`}>
-                                                       <Button size="sm" variant="ghost" className="h-6 text-[10px] uppercase border border-white/10 hover:bg-[#D4AF37] hover:text-black">
+                                                       <Button size="sm" variant="ghost" className="h-6 text-[10px] uppercase border border-white/10 hover:bg-[var(--school-accent)] hover:text-black">
                                                           Accéder
                                                        </Button>
                                                     </Link>

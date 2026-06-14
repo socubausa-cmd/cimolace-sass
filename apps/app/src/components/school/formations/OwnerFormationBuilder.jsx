@@ -271,7 +271,7 @@ const StepStructure = ({ modules, setModules, formationId }) => {
     <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in">
        <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold text-white">Structure du Programme</h3>
-          <Button onClick={addModule} className="bg-[#D4AF37] text-black hover:bg-yellow-500"><Plus className="w-4 h-4 mr-2"/> Ajouter Module</Button>
+          <Button onClick={addModule} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500"><Plus className="w-4 h-4 mr-2"/> Ajouter Module</Button>
        </div>
        
        <Accordion type="multiple" className="space-y-4">
@@ -279,7 +279,7 @@ const StepStructure = ({ modules, setModules, formationId }) => {
              <AccordionItem key={module.id} value={`mod-${module.id}`} className="bg-[#192734] border border-white/10 rounded-lg px-4">
                 <AccordionTrigger className="hover:no-underline">
                    <div className="flex items-center gap-4 w-full pr-4">
-                      <span className="font-bold text-[#D4AF37]">Module {mIdx+1}</span>
+                      <span className="font-bold text-[var(--school-accent)]">Module {mIdx+1}</span>
                       <Input 
                         value={module.title} 
                         onChange={(e) => { const nm = [...modules]; nm[mIdx].title = e.target.value; setModules(nm); }} 
@@ -298,7 +298,7 @@ const StepStructure = ({ modules, setModules, formationId }) => {
                                <Input value={week.title} onChange={(e) => {
                                   const nm = [...modules]; nm[mIdx].weeks[wIdx].title = e.target.value; setModules(nm);
                                }} className="h-7 w-64 bg-[#0F1419] border-white/10 text-xs" />
-                               <Button size="sm" variant="ghost" onClick={() => addDay(mIdx, wIdx)} className="h-7 text-[#D4AF37] text-xs"><Plus className="w-3 h-3 mr-1"/> Jour</Button>
+                               <Button size="sm" variant="ghost" onClick={() => addDay(mIdx, wIdx)} className="h-7 text-[var(--school-accent)] text-xs"><Plus className="w-3 h-3 mr-1"/> Jour</Button>
                             </div>
 
                             {/* Days Grid */}
@@ -315,7 +315,7 @@ const StepStructure = ({ modules, setModules, formationId }) => {
                                               type="button"
                                               size="sm"
                                               variant="ghost"
-                                              className="h-7 text-[10px] text-gray-400 hover:text-[#D4AF37] shrink-0"
+                                              className="h-7 text-[10px] text-gray-400 hover:text-[var(--school-accent)] shrink-0"
                                               onClick={async () => {
                                                 try {
                                                   await navigator.clipboard.writeText(day.id);
@@ -353,7 +353,7 @@ const StepStructure = ({ modules, setModules, formationId }) => {
                                      <div className="space-y-2">
                                         {day.videos.map((video, vIdx) => (
                                            <div key={video.id} className="flex items-center gap-3 bg-[#192734] p-2 rounded border border-white/5">
-                                              <Video className="w-4 h-4 text-[#D4AF37]" />
+                                              <Video className="w-4 h-4 text-[var(--school-accent)]" />
                                               <span className="text-xs text-white flex-1 truncate">{video.title}</span>
                                               <span className="text-sm text-gray-500">{video.duration} min</span>
                                               <Button
@@ -693,7 +693,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
       <div className="min-h-[70vh] flex flex-col bg-[#0F1419] text-white">
         <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 overflow-hidden">
           <div className="md:col-span-1 border border-white/10 rounded-xl overflow-hidden bg-[#151a21]/80 backdrop-blur">
-            <div className="p-3 border-b border-white/10 text-sm font-semibold text-[#D4AF37]">Programme</div>
+            <div className="p-3 border-b border-white/10 text-sm font-semibold text-[var(--school-accent)]">Programme</div>
             <ScrollArea className="h-[60vh]">
               <div className="p-3 space-y-3">
                 {modules.length === 0 ? (
@@ -704,7 +704,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
                   <div key={mod.id || mIdx} className="space-y-2">
                     <Button
                       variant={mIdx === previewPath.mIdx ? 'default' : 'outline'}
-                      className={mIdx === previewPath.mIdx ? 'w-full bg-[#D4AF37] text-black hover:bg-yellow-500 justify-start' : 'w-full border-white/10 text-white hover:bg-white/5 justify-start'}
+                      className={mIdx === previewPath.mIdx ? 'w-full bg-[var(--school-accent)] text-black hover:bg-yellow-500 justify-start' : 'w-full border-white/10 text-white hover:bg-white/5 justify-start'}
                       onClick={() => selectSafe({ mIdx, wIdx: 0, dIdx: 0 })}
                     >
                       {mod.title || `Module ${mIdx + 1}`}
@@ -769,7 +769,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
                             <button
                               key={c.key}
                               type="button"
-                              className="text-left border border-white/10 rounded-xl p-4 bg-white/5 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition-all"
+                              className="text-left border border-white/10 rounded-xl p-4 bg-white/5 hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all"
                               onClick={() => setActivePreviewItem(c)}
                             >
                               <div className="flex items-start justify-between gap-3">
@@ -836,7 +836,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
     <div className="min-h-screen flex flex-col bg-[#0B1118] relative">
       {/* Ambient background */}
       <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[#D4AF37]/5 rounded-full blur-[100px]" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[100px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] bg-indigo-500/5 rounded-full blur-[80px]" />
       </div>
 
@@ -855,8 +855,8 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
             <Button variant="outline" className="border-white/10 text-white hover:bg-white/5" onClick={() => setPreviewOpen(true)} disabled={isSaving}>
               <Layout className="w-4 h-4 mr-2" /> Aperçu élève
             </Button>
-            <Button variant="outline" onClick={() => handleSave('draft')} disabled={isSaving} className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10">Brouillon</Button>
-            <Button onClick={() => handleSave('published')} disabled={isSaving} className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold gap-2">
+            <Button variant="outline" onClick={() => handleSave('draft')} disabled={isSaving} className="border-[var(--school-accent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">Brouillon</Button>
+            <Button onClick={() => handleSave('published')} disabled={isSaving} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold gap-2">
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {isSaving ? 'Publication...' : 'Publier'}
             </Button>
@@ -867,7 +867,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
         <DialogContent className="max-w-[98vw] w-full h-[92vh] bg-[#151a21]/95 backdrop-blur-xl border border-white/10 p-0 overflow-hidden">
           <DialogTitle className="sr-only">Aperçu élève</DialogTitle>
           <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-[#151a21]/95 backdrop-blur-xl border-b border-white/10">
-            <span className="text-sm font-medium text-[#D4AF37]">Aperçu élève</span>
+            <span className="text-sm font-medium text-[var(--school-accent)]">Aperçu élève</span>
             <Button variant="ghost" size="sm" onClick={() => setPreviewOpen(false)} className="text-gray-400 hover:text-white">
               Fermer
             </Button>
@@ -950,7 +950,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
                   <div className="flex items-center gap-4 min-w-0">
                     <Sheet>
                       <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="md:hidden text-[#D4AF37]">
+                        <Button variant="ghost" size="icon" className="md:hidden text-[var(--school-accent)]">
                           <Menu className="w-6 h-6" />
                         </Button>
                       </SheetTrigger>
@@ -1006,7 +1006,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
                   </div>
 
                   <div className="hidden md:flex items-center gap-2">
-                    <Button variant="outline" onClick={() => setActivePreviewItem(null)} className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black font-bold text-xs h-8">
+                    <Button variant="outline" onClick={() => setActivePreviewItem(null)} className="border-[var(--school-accent)] text-[var(--school-accent)] hover:bg-[var(--school-accent)] hover:text-black font-bold text-xs h-8">
                       Fermer
                     </Button>
                   </div>
@@ -1151,7 +1151,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
                     onClick={() => setStep(item.id)}
                     className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all whitespace-nowrap ${
                       isActive
-                        ? 'border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#D4AF37]'
+                        ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
                         : isDone
                           ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
                           : 'border-white/10 bg-white/5 text-gray-400'
@@ -1159,7 +1159,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
                   >
                     <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                       isActive
-                        ? 'bg-[#D4AF37] text-black'
+                        ? 'bg-[var(--school-accent)] text-black'
                         : isDone
                           ? 'bg-emerald-500 text-black'
                           : 'bg-white/10 text-gray-300'
@@ -1169,7 +1169,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
                     <span className="text-xs md:text-sm font-medium">{item.label}</span>
                   </button>
                   {idx < stepMeta.length - 1 ? (
-                    <div className={`h-px w-6 md:w-10 ${step > item.id ? 'bg-[#D4AF37]' : 'bg-white/10'}`} />
+                    <div className={`h-px w-6 md:w-10 ${step > item.id ? 'bg-[var(--school-accent)]' : 'bg-white/10'}`} />
                   ) : null}
                 </React.Fragment>
               );
@@ -1195,7 +1195,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
                     onClick={() => setStep(item.id)}
                     className={`w-full text-left rounded-xl border p-3 transition-all ${
                       active
-                        ? 'border-[#D4AF37]/40 bg-[#D4AF37]/10'
+                        ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]'
                         : done
                           ? 'border-emerald-500/30 bg-emerald-500/10'
                           : 'border-white/10 bg-white/5 hover:bg-white/10'
@@ -1204,7 +1204,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
                     <div className="flex items-start gap-3">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                         active
-                          ? 'bg-[#D4AF37] text-black'
+                          ? 'bg-[var(--school-accent)] text-black'
                           : done
                             ? 'bg-emerald-500 text-black'
                             : 'bg-white/10 text-gray-300'
@@ -1212,7 +1212,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
                         <Icon className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
-                        <p className={`text-sm font-semibold ${active ? 'text-[#D4AF37]' : 'text-white'}`}>
+                        <p className={`text-sm font-semibold ${active ? 'text-[var(--school-accent)]' : 'text-white'}`}>
                           {item.label}
                         </p>
                         <p className="text-[11px] text-gray-400 mt-0.5">{item.subtitle}</p>
@@ -1281,7 +1281,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
               </div>
               <Button
                 variant="outline"
-                className="w-full border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                className="w-full border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                 onClick={() => setPreviewOpen(true)}
               >
                 <Layout className="w-4 h-4 mr-2" />
@@ -1295,7 +1295,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
       {/* Footer Navigation */}
       <div className="p-4 border-t border-white/10 bg-[#111823]/95 backdrop-blur-xl flex justify-between">
          <Button disabled={step === 1} onClick={handleBack} variant="outline" className="border-white/10 text-white hover:bg-white/5"><ArrowLeft className="w-4 h-4 mr-2"/> Précédent</Button>
-         <Button disabled={isSaving} onClick={step === 5 ? () => handleSave(data?.status || 'draft') : handleNext} className="bg-[#D4AF37] hover:bg-[#e5c04a] text-black gap-2 font-semibold">
+         <Button disabled={isSaving} onClick={step === 5 ? () => handleSave(data?.status || 'draft') : handleNext} className="bg-[var(--school-accent)] hover:bg-[#e5c04a] text-black gap-2 font-semibold">
            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
            {step === 5 ? (isSaving ? 'Enregistrement...' : 'Terminer') : 'Suivant'}
            {!isSaving ? <ArrowRight className="w-4 h-4 ml-2"/> : null}

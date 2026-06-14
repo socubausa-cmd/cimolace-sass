@@ -60,7 +60,7 @@ const StudentDashboard = () => {
             </div>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl p-6 flex items-center space-x-4">
-            <div className="p-3 bg-[#D4AF37]/20 rounded-lg text-[#D4AF37]"><Award className="h-6 w-6" /></div>
+            <div className="p-3 bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] rounded-lg text-[var(--school-accent)]"><Award className="h-6 w-6" /></div>
             <div>
               <p className="text-gray-400 text-sm">Certificats</p>
               <p className="text-2xl font-bold text-white">{stats.certificates}</p>
@@ -72,7 +72,7 @@ const StudentDashboard = () => {
         <h2 className="text-2xl font-bold text-white mb-6">Mes Cours</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {enrolledCourses.length > 0 ? enrolledCourses.map((enrollment) => (
-            <div key={enrollment.id} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-[#D4AF37]/30 transition-all group">
+            <div key={enrollment.id} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all group">
               <div className="h-40 overflow-hidden">
                 <img src={enrollment.courses.thumbnail_url} alt={enrollment.courses.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </div>
@@ -83,7 +83,7 @@ const StudentDashboard = () => {
                   <span>{enrollment.progress}%</span>
                 </div>
                 <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden mb-6">
-                  <div className="bg-[#D4AF37] h-full" style={{ width: `${enrollment.progress}%` }}></div>
+                  <div className="bg-[var(--school-accent)] h-full" style={{ width: `${enrollment.progress}%` }}></div>
                 </div>
                 <Link to={`/cours/${enrollment.course_id}`}>
                   <Button className="w-full btn-secondary py-2 text-sm">Continuer</Button>

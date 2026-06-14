@@ -159,7 +159,7 @@ function renderMessageContent(content) {
               href={part}
               target="_blank"
               rel="noreferrer"
-              className="underline decoration-[#D4AF37]/60 text-[#D4AF37]"
+              className="underline decoration-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] text-[var(--school-accent)]"
             >
               {part}
             </a>
@@ -343,7 +343,7 @@ function UserAvatar({ user, size = 'md' }) {
     <div
       className={cn(
         s,
-        'rounded-full bg-gradient-to-br from-[#D4AF37]/50 to-[#D4AF37]/20 flex items-center justify-center font-semibold text-white ring-1 ring-white/10'
+        'rounded-full bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] to-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center font-semibold text-white ring-1 ring-white/10'
       )}
     >
       {initials}
@@ -433,13 +433,13 @@ function ImmersiveMessage({
             className={cn(
             'px-3.5 py-2.5 text-sm leading-relaxed border shadow-sm',
             isOwn
-              ? 'bg-[#D4AF37]/16 border-[#D4AF37]/30 text-[#f4ead0]'
+              ? 'bg-[color-mix(in_srgb,var(--school-accent)_16%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[#f4ead0]'
               : 'bg-white/[0.04] border-white/12 text-gray-100',
             groupPosition === 'single' && 'rounded-2xl',
             groupPosition === 'start' && (isOwn ? 'rounded-t-2xl rounded-bl-2xl rounded-br-md' : 'rounded-t-2xl rounded-br-2xl rounded-bl-md'),
             groupPosition === 'middle' && (isOwn ? 'rounded-l-2xl rounded-r-md' : 'rounded-r-2xl rounded-l-md'),
             groupPosition === 'end' && (isOwn ? 'rounded-b-2xl rounded-tl-2xl rounded-tr-md' : 'rounded-b-2xl rounded-tr-2xl rounded-tl-md'),
-            isActive && 'ring-1 ring-[#D4AF37]/40'
+            isActive && 'ring-1 ring-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]'
           )}
         >
           {editing ? (
@@ -448,7 +448,7 @@ function ImmersiveMessage({
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 rows={3}
-                className="w-full rounded-lg border text-sm p-2.5 outline-none focus:border-[#D4AF37]/50 resize-y min-h-[90px] bg-black/20 border-white/15 text-white"
+                className="w-full rounded-lg border text-sm p-2.5 outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] resize-y min-h-[90px] bg-black/20 border-white/15 text-white"
               />
               <div className="flex justify-end gap-2">
                 <button
@@ -462,7 +462,7 @@ function ImmersiveMessage({
                   type="button"
                   disabled={saving || !draft.trim()}
                   onClick={handleSaveEdit}
-                  className="px-3 py-1.5 rounded-md text-xs bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/35 hover:bg-[#D4AF37]/30 disabled:opacity-40"
+                  className="px-3 py-1.5 rounded-md text-xs bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] disabled:opacity-40"
                 >
                   {saving ? '…' : 'Enregistrer'}
                 </button>
@@ -484,7 +484,7 @@ function ImmersiveMessage({
             {formatMessageTime(message.created_at)}
           </span>
           {isLatest && (
-            <span className="text-[10px] text-[#D4AF37]/70">{isOwn ? 'Envoyé' : 'Lu'}</span>
+            <span className="text-[10px] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">{isOwn ? 'Envoyé' : 'Lu'}</span>
           )}
           {!editing && (
             <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
@@ -500,7 +500,7 @@ function ImmersiveMessage({
                 <button
                   type="button"
                   onClick={() => setEditing(true)}
-                  className="inline-flex items-center gap-1 h-6 px-1.5 rounded text-[10px] text-gray-400 hover:text-[#D4AF37] hover:bg-white/5"
+                  className="inline-flex items-center gap-1 h-6 px-1.5 rounded text-[10px] text-gray-400 hover:text-[var(--school-accent)] hover:bg-white/5"
                   aria-label="Modifier le message"
                 >
                   <Pencil className="w-3 h-3" />
@@ -568,8 +568,8 @@ function EmptyState({ onOpenPicker, conversations, onSelectConversation }) {
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="flex flex-col items-center justify-center text-center px-6 py-12 h-full"
     >
-      <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#D4AF37]/20 to-violet-500/10 border border-white/10 flex items-center justify-center mb-6">
-        <MessageSquare className="w-9 h-9 text-[#D4AF37]/70" />
+      <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-violet-500/10 border border-white/10 flex items-center justify-center mb-6">
+        <MessageSquare className="w-9 h-9 text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]" />
       </div>
       <h2 className="text-xl font-semibold text-white mb-2">Messagerie immersive</h2>
       <p className="text-sm text-gray-400 max-w-sm mb-6">
@@ -583,15 +583,15 @@ function EmptyState({ onOpenPicker, conversations, onSelectConversation }) {
             <button
               key={conv.id}
               onClick={() => onSelectConversation(conv)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.07] hover:border-[#D4AF37]/30 hover:bg-white/[0.07] transition-all text-left group"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.07] hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:bg-white/[0.07] transition-all text-left group"
             >
               <UserAvatar user={conv} size="sm" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm text-white truncate group-hover:text-[#D4AF37] transition-colors">{conv.name}</p>
+                <p className="text-sm text-white truncate group-hover:text-[var(--school-accent)] transition-colors">{conv.name}</p>
                 <p className="text-[11px] text-gray-500 truncate">{conv.lastMessage?.content || '—'}</p>
               </div>
               {conv.unreadCount > 0 && (
-                <span className="flex-shrink-0 h-5 min-w-5 rounded-full bg-[#D4AF37] text-[10px] font-bold text-black flex items-center justify-center px-1">
+                <span className="flex-shrink-0 h-5 min-w-5 rounded-full bg-[var(--school-accent)] text-[10px] font-bold text-black flex items-center justify-center px-1">
                   {conv.unreadCount}
                 </span>
               )}
@@ -602,7 +602,7 @@ function EmptyState({ onOpenPicker, conversations, onSelectConversation }) {
 
       <button
         onClick={onOpenPicker}
-        className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#D4AF37] text-sm font-medium hover:bg-[#D4AF37]/25 transition-all"
+        className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] text-sm font-medium hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] transition-all"
       >
         <Users className="w-4 h-4" />
         Choisir un destinataire
@@ -619,7 +619,7 @@ function NoMessagesState({ recipientName }) {
       className="flex flex-col items-center justify-center h-full text-center px-6"
     >
       <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
-        <Sparkles className="w-7 h-7 text-[#D4AF37]/50" />
+        <Sparkles className="w-7 h-7 text-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]" />
       </div>
       <p className="text-gray-400 text-sm">
         Aucun message avec <span className="text-white font-medium">{recipientName}</span>
@@ -793,7 +793,7 @@ function ImmersiveComposer({
     <div
       className={cn(
         'relative z-30 px-4 pb-1 pt-1.5 md:px-8',
-        immersiveLiveComposerChrome && 'border-t border-[#D4AF37]/20 bg-gradient-to-t from-black/50 via-[#070a10]/80 to-transparent pt-3 shadow-[0_-12px_40px_-28px_rgba(212,175,55,0.35)]',
+        immersiveLiveComposerChrome && 'border-t border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-gradient-to-t from-black/50 via-[#070a10]/80 to-transparent pt-3 shadow-[0_-12px_40px_-28px_rgba(212,175,55,0.35)]',
       )}
     >
       {/* Recipient chip */}
@@ -806,10 +806,10 @@ function ImmersiveComposer({
             transition={{ duration: 0.18 }}
             className="mb-1.5 flex items-center gap-2"
           >
-            <div className="inline-flex items-center gap-2 h-7 pl-1.5 pr-3 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30">
+            <div className="inline-flex items-center gap-2 h-7 pl-1.5 pr-3 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
               <UserAvatar user={selectedRecipient} size="sm" />
-              <span className="text-xs font-medium text-[#D4AF37]">{selectedRecipient.name}</span>
-              <button onClick={onClearRecipient} className="ml-1 text-[#D4AF37]/60 hover:text-[#D4AF37]">
+              <span className="text-xs font-medium text-[var(--school-accent)]">{selectedRecipient.name}</span>
+              <button onClick={onClearRecipient} className="ml-1 text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] hover:text-[var(--school-accent)]">
                 <X className="w-3 h-3" />
               </button>
             </div>
@@ -829,8 +829,8 @@ function ImmersiveComposer({
               className={cn(
                 'flex-shrink-0 h-7 px-3 rounded-full text-[11px] border backdrop-blur-md transition-all whitespace-nowrap',
                 item.id === 'payment'
-                  ? 'text-[#D4AF37] border-[#D4AF37]/35 bg-[#D4AF37]/12 hover:bg-[#D4AF37]/18 shadow-[0_8px_20px_-14px_rgba(212,175,55,0.8)]'
-                  : 'text-gray-400 border-white/10 bg-white/[0.03] hover:border-[#D4AF37]/35 hover:text-[#D4AF37] hover:bg-white/5'
+                  ? 'text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] shadow-[0_8px_20px_-14px_rgba(212,175,55,0.8)]'
+                  : 'text-gray-400 border-white/10 bg-white/[0.03] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:text-[var(--school-accent)] hover:bg-white/5'
               )}
             >
               <Link2 className="w-3 h-3 inline mr-1 opacity-60" />
@@ -891,12 +891,12 @@ function ImmersiveComposer({
       </AnimatePresence>
 
       {/* Main toolbar */}
-      <div className="relative flex items-center gap-1.5 rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.09] via-white/[0.04] to-white/[0.03] backdrop-blur-xl px-2.5 py-2 focus-within:border-[#D4AF37]/45 shadow-[0_16px_40px_-24px_rgba(0,0,0,0.95)] transition-colors">
+      <div className="relative flex items-center gap-1.5 rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.09] via-white/[0.04] to-white/[0.03] backdrop-blur-xl px-2.5 py-2 focus-within:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] shadow-[0_16px_40px_-24px_rgba(0,0,0,0.95)] transition-colors">
         <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_70%_0%,rgba(212,175,55,0.12),transparent_38%)]" />
         <button
           type="button"
           onClick={onOpenPicker}
-          className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#D4AF37] hover:bg-white/5 transition-all"
+          className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-[var(--school-accent)] hover:bg-white/5 transition-all"
           aria-label="Membres"
           title="Sélectionner un membre"
         >
@@ -950,7 +950,7 @@ function ImmersiveComposer({
             !liveEnabled
               ? 'bg-white/[0.03] text-gray-700 cursor-not-allowed'
               : liveActive
-              ? 'bg-[#D4AF37]/20 text-[#D4AF37] ring-1 ring-[#D4AF37]/35'
+              ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] ring-1 ring-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]'
               : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
           )}
           aria-label="Live vidéo"
@@ -965,8 +965,8 @@ function ImmersiveComposer({
             className={cn(
               'flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all',
               liveSettingsOpen
-                ? 'bg-[#D4AF37]/20 text-[#D4AF37] ring-1 ring-[#D4AF37]/35'
-                : 'text-gray-400 hover:text-[#D4AF37] hover:bg-white/5'
+                ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] ring-1 ring-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]'
+                : 'text-gray-400 hover:text-[var(--school-accent)] hover:bg-white/5'
             )}
             aria-label="Paramètres live"
             title="Paramètres vidéo, audio, SmartBoard"
@@ -983,8 +983,8 @@ function ImmersiveComposer({
             immersiveLiveComposerChrome ? 'h-9 w-9 rounded-full' : 'rounded-xl',
             canSend
               ? immersiveLiveComposerChrome
-                ? 'bg-[#D4AF37] text-black shadow-[0_0_22px_-6px_rgba(212,175,55,0.85)] hover:bg-[#e5c04a]'
-                : 'bg-[#D4AF37] text-black hover:bg-[#e5c04a]'
+                ? 'bg-[var(--school-accent)] text-black shadow-[0_0_22px_-6px_rgba(212,175,55,0.85)] hover:bg-[#e5c04a]'
+                : 'bg-[var(--school-accent)] text-black hover:bg-[#e5c04a]'
               : 'bg-white/5 text-gray-600',
           )}
           aria-label="Envoyer"
@@ -1055,7 +1055,7 @@ function DockItem({
         !disabled && danger
           ? 'bg-red-500/20 border-red-400/30 text-red-200 hover:bg-red-500/30'
           : !disabled && active
-            ? 'bg-[#D4AF37]/18 border-[#D4AF37]/35 text-[#D4AF37] shadow-[0_10px_24px_-12px_rgba(212,175,55,0.8)]'
+            ? 'bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] shadow-[0_10px_24px_-12px_rgba(212,175,55,0.8)]'
             : !disabled
               ? 'bg-white/[0.05] border-white/12 text-white/75 hover:bg-white/10'
               : 'border-white/10 bg-white/[0.04] text-white/40'
@@ -1106,7 +1106,7 @@ function LiveActionDock({
       <span className="relative inline-flex">
         <MessageSquare className="w-4 h-4" />
         {liveMessageUnread > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 h-3.5 min-w-3.5 rounded-full bg-[#D4AF37] text-[8px] font-bold text-black flex items-center justify-center px-0.5">
+          <span className="absolute -top-1.5 -right-1.5 h-3.5 min-w-3.5 rounded-full bg-[var(--school-accent)] text-[8px] font-bold text-black flex items-center justify-center px-0.5">
             {liveMessageUnread > 9 ? '9+' : liveMessageUnread}
           </span>
         )}
@@ -1251,7 +1251,7 @@ function MemberPickerPanel({ open, onClose, users, currentUserId, conversations,
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Rechercher un membre…"
-                  className="w-full h-9 pl-9 pr-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-gray-500 outline-none focus:border-[#D4AF37]/40 transition-colors"
+                  className="w-full h-9 pl-9 pr-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-gray-500 outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
                 />
               </div>
             </div>
@@ -1266,7 +1266,7 @@ function MemberPickerPanel({ open, onClose, users, currentUserId, conversations,
                   className={cn(
                     'h-7 px-3 rounded-lg text-xs font-medium transition-all',
                     tab === t.id
-                      ? 'bg-[#D4AF37]/20 text-[#D4AF37]'
+                      ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]'
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
                   )}
                 >
@@ -1280,7 +1280,7 @@ function MemberPickerPanel({ open, onClose, users, currentUserId, conversations,
                   {grouped.map(({ role, members }) => (
                     <div key={role}>
                       <div className="px-2 pt-2.5 pb-1">
-                        <p className="text-[10px] uppercase tracking-wider text-[#D4AF37]/70 font-medium">
+                        <p className="text-[10px] uppercase tracking-wider text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] font-medium">
                           {roleLabels[role] || role}
                           <span className="ml-1 text-gray-600">({members.length})</span>
                         </p>
@@ -1296,7 +1296,7 @@ function MemberPickerPanel({ open, onClose, users, currentUserId, conversations,
                             <OnlineDot status={user.status} className="absolute -bottom-0.5 -right-0.5" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm text-white truncate group-hover:text-[#D4AF37] transition-colors">{user.name}</p>
+                            <p className="text-sm text-white truncate group-hover:text-[var(--school-accent)] transition-colors">{user.name}</p>
                             <p className="text-[11px] text-gray-500 truncate">{user.email}</p>
                           </div>
                         </button>
@@ -1314,7 +1314,7 @@ function MemberPickerPanel({ open, onClose, users, currentUserId, conversations,
                           </p>
                           <button
                             onClick={onReload}
-                            className="inline-flex items-center gap-1.5 h-8 px-4 rounded-lg bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-medium hover:bg-[#D4AF37]/25 transition-all"
+                            className="inline-flex items-center gap-1.5 h-8 px-4 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] text-xs font-medium hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] transition-all"
                           >
                             Réessayer
                           </button>
@@ -1326,7 +1326,7 @@ function MemberPickerPanel({ open, onClose, users, currentUserId, conversations,
                   )}
                   {loading && (
                     <div className="flex justify-center py-8">
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#D4AF37] border-t-transparent" />
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--school-accent)] border-t-transparent" />
                     </div>
                   )}
                 </>
@@ -1347,7 +1347,7 @@ function MemberPickerPanel({ open, onClose, users, currentUserId, conversations,
                         </p>
                       </div>
                       {conv.unreadCount > 0 && (
-                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#D4AF37] text-[10px] font-bold text-black flex items-center justify-center">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--school-accent)] text-[10px] font-bold text-black flex items-center justify-center">
                           {conv.unreadCount}
                         </span>
                       )}
@@ -1406,7 +1406,7 @@ function SearchPanel({ open, onClose, conversations, onSelect }) {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Chercher une conversation…"
-                  className="w-full h-8 pl-8 pr-3 rounded-lg bg-white/5 border border-white/10 text-xs text-white placeholder:text-gray-500 outline-none focus:border-[#D4AF37]/40 transition-colors"
+                  className="w-full h-8 pl-8 pr-3 rounded-lg bg-white/5 border border-white/10 text-xs text-white placeholder:text-gray-500 outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
                 />
               </div>
             </div>
@@ -1506,7 +1506,7 @@ function PublicProfilePanel({ open, profile, onClose }) {
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-white truncate">{profile.name}</p>
                 <p className="text-xs text-gray-500 truncate">{profile.email}</p>
-                <p className="text-[11px] text-[#D4AF37] mt-1">
+                <p className="text-[11px] text-[var(--school-accent)] mt-1">
                   {roleLabels[profile.role] || profile.role || 'Membre'}
                 </p>
               </div>
@@ -1551,7 +1551,7 @@ function LiveSummaryPanel({ open, data, onClose }) {
         >
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.18em] text-[#D4AF37]">Post Live</p>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--school-accent)]">Post Live</p>
               <h3 className="text-xl md:text-2xl font-semibold text-white mt-1">{data.ai?.title || 'Résumé de session'}</h3>
               <p className="text-xs text-gray-400 mt-1">
                 {data.participantName} • {formatDuration(data.durationSec)} • {data.modeLabel}
@@ -1608,7 +1608,7 @@ function LiveSummaryPanel({ open, data, onClose }) {
                     href={data.cloudRecordUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 text-sm text-[#D4AF37] hover:text-[#e5c04a]"
+                    className="inline-flex items-center gap-2 text-sm text-[var(--school-accent)] hover:text-[#e5c04a]"
                   >
                     <Download className="w-4 h-4" />
                     Ouvrir version cloud
@@ -1644,7 +1644,7 @@ function LiveInvitePrompt({
         className="fixed bottom-24 right-4 md:right-8 z-[85] w-[min(92vw,420px)] rounded-2xl border border-white/10 bg-[#0c1118]/93 backdrop-blur-2xl p-4 shadow-2xl"
       >
         <div className="flex items-start gap-3">
-          <div className="mt-0.5 w-9 h-9 rounded-xl bg-[#D4AF37]/15 text-[#D4AF37] flex items-center justify-center">
+          <div className="mt-0.5 w-9 h-9 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] flex items-center justify-center">
             {isMissed ? <BellRing className="w-4 h-4" /> : <CalendarClock className="w-4 h-4" />}
           </div>
           <div className="min-w-0 flex-1">
@@ -1655,7 +1655,7 @@ function LiveInvitePrompt({
               {senderProfile?.name || 'Un membre'} vous invite à passer en mode immersive Classroom.
             </p>
             {invite.scheduled_for ? (
-              <p className="text-[11px] text-[#D4AF37] mt-1">Programmé: {formatInviteDate(invite.scheduled_for)}</p>
+              <p className="text-[11px] text-[var(--school-accent)] mt-1">Programmé: {formatInviteDate(invite.scheduled_for)}</p>
             ) : null}
           </div>
           <button onClick={onClose} className="text-gray-500 hover:text-white">
@@ -1685,7 +1685,7 @@ function LiveInvitePrompt({
             <button
               type="button"
               onClick={onScheduleMissed}
-              className="h-9 px-3 rounded-xl bg-[#D4AF37]/20 border border-[#D4AF37]/35 text-[#D4AF37] text-xs font-medium"
+              className="h-9 px-3 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] text-xs font-medium"
             >
               Programmer un rendez-vous
             </button>
@@ -1742,7 +1742,7 @@ function LiveAgendaPanel({ open, invites, currentUserId, profiles, onJoin, onSch
                     <button
                       type="button"
                       onClick={() => onJoin(inv)}
-                      className="h-8 px-2.5 rounded-lg text-[11px] bg-[#D4AF37]/20 border border-[#D4AF37]/35 text-[#D4AF37]"
+                      className="h-8 px-2.5 rounded-lg text-[11px] bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)]"
                     >
                       Ouvrir conversation
                     </button>
@@ -1752,7 +1752,7 @@ function LiveAgendaPanel({ open, invites, currentUserId, profiles, onJoin, onSch
                       <button
                         type="button"
                         onClick={() => onScheduleMissed(inv)}
-                        className="h-8 px-2.5 rounded-lg text-[11px] bg-[#D4AF37]/20 border border-[#D4AF37]/35 text-[#D4AF37]"
+                        className="h-8 px-2.5 rounded-lg text-[11px] bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)]"
                       >
                         Reprogrammer
                       </button>
@@ -4858,7 +4858,7 @@ const MessagingPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100dvh-5rem)] bg-[#090D14]">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#D4AF37] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--school-accent)] border-t-transparent" />
       </div>
     );
   }
@@ -4977,7 +4977,7 @@ const MessagingPage = () => {
           <ImmersiveLiveStageBackdrop parallax={messagingLiveParallax} />
         ) : (
           <>
-            <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#D4AF37]/[0.08] rounded-full blur-[150px]" />
+            <div className="absolute -top-32 -left-32 w-96 h-96 bg-[var(--school-accent)]/[0.08] rounded-full blur-[150px]" />
             <div className="absolute top-1/3 -right-24 w-80 h-80 bg-cyan-500/[0.06] rounded-full blur-[150px]" />
             <div className="absolute bottom-0 right-0 w-80 h-80 bg-violet-500/[0.06] rounded-full blur-[140px]" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(212,175,55,0.08),transparent_34%),radial-gradient(circle_at_80%_90%,rgba(124,58,237,0.08),transparent_34%)]" />
@@ -5009,14 +5009,14 @@ const MessagingPage = () => {
                 <div className="min-w-0 text-left">
                   <h1
                     className={cn(
-                      'truncate text-sm font-semibold transition-colors group-hover:text-[#D4AF37]',
-                      liveActive && recipientId ? 'font-serif text-[#D4AF37]' : 'text-white',
+                      'truncate text-sm font-semibold transition-colors group-hover:text-[var(--school-accent)]',
+                      liveActive && recipientId ? 'font-serif text-[var(--school-accent)]' : 'text-white',
                     )}
                   >
                     {recipientProfile?.name}
                   </h1>
                   {isRemoteTyping ? (
-                    <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[10px] text-[#D4AF37]">
+                    <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[10px] text-[var(--school-accent)]">
                       écrit…
                     </motion.p>
                   ) : (
@@ -5027,10 +5027,10 @@ const MessagingPage = () => {
             </>
           ) : (
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#D4AF37]/60" />
+              <Sparkles className="w-4 h-4 text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]" />
               <h1 className="text-sm font-semibold text-white">{liveActive ? 'Live-Room Immersif' : 'Messagerie'}</h1>
               {totalUnread > 0 && (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#D4AF37] text-[10px] font-bold text-black px-1">
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--school-accent)] text-[10px] font-bold text-black px-1">
                   {totalUnread}
                 </span>
               )}
@@ -5058,7 +5058,7 @@ const MessagingPage = () => {
           {liveActive && recipientId ? (
             <Link
               to="/studio"
-              className="hidden h-8 items-center rounded-lg border border-[#D4AF37]/35 bg-[#D4AF37]/10 px-2.5 text-[11px] font-medium text-[#D4AF37] transition-colors hover:bg-[#D4AF37]/18 sm:inline-flex"
+              className="hidden h-8 items-center rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-2.5 text-[11px] font-medium text-[var(--school-accent)] transition-colors hover:bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] sm:inline-flex"
             >
               Studio créateur
             </Link>
@@ -5079,7 +5079,7 @@ const MessagingPage = () => {
             className={cn(
               'h-8 px-2.5 rounded-lg border transition-all inline-flex items-center gap-1.5',
               showConversationList
-                ? 'border-[#D4AF37]/40 bg-[#D4AF37]/10 text-[#D4AF37]'
+                ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
                 : 'border-white/10 bg-white/[0.03] text-gray-300 hover:text-white hover:bg-white/5'
             )}
             aria-label="Liste des conversations"
@@ -5098,7 +5098,7 @@ const MessagingPage = () => {
             className={cn(
               'h-8 px-2.5 rounded-lg border transition-all inline-flex items-center gap-1.5',
               searchOpen
-                ? 'border-[#D4AF37]/40 bg-[#D4AF37]/10 text-[#D4AF37]'
+                ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
                 : 'border-white/10 bg-white/[0.03] text-gray-300 hover:text-white hover:bg-white/5'
             )}
             aria-label="Recherche"
@@ -5125,7 +5125,7 @@ const MessagingPage = () => {
             className={cn(
               'relative h-8 px-2.5 rounded-lg border transition-all inline-flex items-center gap-1.5',
               liveAgendaOpen
-                ? 'border-[#D4AF37]/40 bg-[#D4AF37]/10 text-[#D4AF37]'
+                ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
                 : 'border-white/10 bg-white/[0.03] text-gray-300 hover:text-white hover:bg-white/5'
             )}
             aria-label="Agenda live"
@@ -5166,7 +5166,7 @@ const MessagingPage = () => {
                       onClick={() => setListMode('compact')}
                       className={cn(
                         'h-6 px-2 rounded text-[10px]',
-                        listMode === 'compact' ? 'bg-[#D4AF37]/15 text-[#D4AF37]' : 'text-gray-500 hover:text-white'
+                        listMode === 'compact' ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)]' : 'text-gray-500 hover:text-white'
                       )}
                     >
                       Compact
@@ -5176,7 +5176,7 @@ const MessagingPage = () => {
                       onClick={() => setListMode('detail')}
                       className={cn(
                         'h-6 px-2 rounded text-[10px]',
-                        listMode === 'detail' ? 'bg-[#D4AF37]/15 text-[#D4AF37]' : 'text-gray-500 hover:text-white'
+                        listMode === 'detail' ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)]' : 'text-gray-500 hover:text-white'
                       )}
                     >
                       Détail
@@ -5230,7 +5230,7 @@ const MessagingPage = () => {
                                     {liveDashboardNotifTypeLabel(n.type)}
                                   </span>
                                   {!n.read_at ? (
-                                    <span className="h-1.5 w-1.5 rounded-full bg-[#D4AF37]" />
+                                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--school-accent)]" />
                                   ) : null}
                                 </div>
                                 <p className="truncate text-xs font-medium text-white/95">{n.title || 'Session live'}</p>
@@ -5271,7 +5271,7 @@ const MessagingPage = () => {
                         ) : null}
                       </div>
                       {conv.unreadCount > 0 ? (
-                        <span className="h-4 min-w-4 rounded-full bg-[#D4AF37] text-[9px] font-bold text-black flex items-center justify-center px-1">
+                        <span className="h-4 min-w-4 rounded-full bg-[var(--school-accent)] text-[9px] font-bold text-black flex items-center justify-center px-1">
                           {conv.unreadCount}
                         </span>
                       ) : null}
@@ -5568,7 +5568,7 @@ const MessagingPage = () => {
                     type="button"
                     disabled={sendingInvite}
                     onClick={() => void sendLiveInvite(null)}
-                    className="h-9 rounded-xl bg-[#D4AF37]/20 border border-[#D4AF37]/35 text-[#D4AF37] text-xs font-medium"
+                    className="h-9 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] text-xs font-medium"
                   >
                     {sendingInvite ? 'Envoi...' : 'Inviter maintenant'}
                   </button>
@@ -5641,11 +5641,11 @@ const MessagingPage = () => {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
-              className="mx-4 md:mx-8 mb-2 flex items-center gap-3 rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/8 px-3 py-2"
+              className="mx-4 md:mx-8 mb-2 flex items-center gap-3 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] px-3 py-2"
             >
-              <Clapperboard className="w-4 h-4 text-[#D4AF37] shrink-0" />
+              <Clapperboard className="w-4 h-4 text-[var(--school-accent)] shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-[#D4AF37] truncate">
+                <p className="text-xs font-medium text-[var(--school-accent)] truncate">
                   {activeAppointment.subject || 'Rendez-vous actif'}
                 </p>
                 <p className="text-[10px] text-white/40">
@@ -5656,10 +5656,10 @@ const MessagingPage = () => {
                 type="button"
                 onClick={handleOpenStudio}
                 disabled={studioLoading}
-                className="flex items-center gap-1.5 h-7 px-3 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-[11px] font-medium hover:bg-[#D4AF37]/30 transition-colors disabled:opacity-50 shrink-0"
+                className="flex items-center gap-1.5 h-7 px-3 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] text-[11px] font-medium hover:bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-colors disabled:opacity-50 shrink-0"
               >
                 {studioLoading
-                  ? <span className="w-3 h-3 border border-[#D4AF37]/60 border-t-[#D4AF37] rounded-full animate-spin" />
+                  ? <span className="w-3 h-3 border border-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] border-t-[var(--school-accent)] rounded-full animate-spin" />
                   : <><Clapperboard className="w-3 h-3" /> Studio Live <ArrowRight className="w-3 h-3" /></>
                 }
               </button>
@@ -5781,7 +5781,7 @@ const MessagingPage = () => {
                       <div>
                         <p className="text-sm font-semibold text-white">Téléphone (QR)</p>
                         <p className="text-[10px] text-white/45 mt-0.5 leading-snug">
-                          Scannez avec l'appareil photo. Sur le téléphone : caméra ou écran en direct. Sur ce poste : scène <span className="text-[#D4AF37]">Cam 2</span> → flux <span className="text-[#D4AF37]">Téléphone (QR)</span>.
+                          Scannez avec l'appareil photo. Sur le téléphone : caméra ou écran en direct. Sur ce poste : scène <span className="text-[var(--school-accent)]">Cam 2</span> → flux <span className="text-[var(--school-accent)]">Téléphone (QR)</span>.
                         </p>
                       </div>
                       <button
@@ -5795,7 +5795,7 @@ const MessagingPage = () => {
                     </div>
                     {companionLinkLoading ? (
                       <div className="flex flex-col items-center gap-3 py-10">
-                        <span className="w-8 h-8 border-2 border-[#D4AF37]/40 border-t-[#D4AF37] rounded-full animate-spin" />
+                        <span className="w-8 h-8 border-2 border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] border-t-[var(--school-accent)] rounded-full animate-spin" />
                         <p className="text-xs text-white/50">Génération du lien…</p>
                       </div>
                     ) : null}
@@ -5832,7 +5832,7 @@ const MessagingPage = () => {
             <div className="flex items-center gap-2 flex-wrap">
               {liveError ? <span className="text-[10px] text-red-400/90">{liveError}</span> : null}
               {sendError ? <span className="text-[10px] text-red-400/90">{sendError}</span> : null}
-              {uploadingLiveRecord ? <span className="text-[10px] text-[#D4AF37]/80">Upload cloud…</span> : null}
+              {uploadingLiveRecord ? <span className="text-[10px] text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">Upload cloud…</span> : null}
               {!uploadingLiveRecord && liveCloudUrl ? <span className="text-[10px] text-emerald-300/70">● Enregistrement cloud disponible</span> : null}
             </div>
             </>

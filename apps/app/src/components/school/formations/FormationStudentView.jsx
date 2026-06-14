@@ -15,15 +15,15 @@ const FormationStudentView = ({ formation, enrolled = false, progress = 0 }) => 
   // If used in a list (Card View)
   if (!detailsOpen) {
      return (
-        <Card className="bg-[#192734] border-white/10 hover:border-[#D4AF37]/50 transition-all group overflow-hidden flex flex-col h-full shadow-lg hover:shadow-2xl hover:-translate-y-1 duration-300 cursor-pointer" onClick={() => setDetailsOpen(true)}>
+        <Card className="bg-[#192734] border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] transition-all group overflow-hidden flex flex-col h-full shadow-lg hover:shadow-2xl hover:-translate-y-1 duration-300 cursor-pointer" onClick={() => setDetailsOpen(true)}>
            <div className="h-48 bg-gray-800 relative overflow-hidden">
               <img src={formation.thumbnail || formation.coverImage} alt={formation.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
               <div className="absolute top-3 right-3 flex gap-2">
-                 <Badge className="bg-black/60 backdrop-blur border border-white/10 text-[#D4AF37]">{formation.year}</Badge>
+                 <Badge className="bg-black/60 backdrop-blur border border-white/10 text-[var(--school-accent)]">{formation.year}</Badge>
               </div>
               {enrolled && (
                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700">
-                    <div className="h-full bg-[#D4AF37]" style={{width: `${progress}%`}}></div>
+                    <div className="h-full bg-[var(--school-accent)]" style={{width: `${progress}%`}}></div>
                  </div>
               )}
            </div>
@@ -33,11 +33,11 @@ const FormationStudentView = ({ formation, enrolled = false, progress = 0 }) => 
               <p className="text-sm text-gray-400 line-clamp-2 mb-4 flex-1">{formation.description}</p>
               
               <div className="flex items-center justify-between text-sm text-gray-500 mt-auto pt-4 border-t border-white/5">
-                 <span className="flex items-center gap-1"><BookOpen className="w-3 h-3 text-[#D4AF37]"/> {formation.modules.length} Modules</span>
-                 <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-[#D4AF37]"/> {formation.duration}</span>
+                 <span className="flex items-center gap-1"><BookOpen className="w-3 h-3 text-[var(--school-accent)]"/> {formation.modules.length} Modules</span>
+                 <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-[var(--school-accent)]"/> {formation.duration}</span>
               </div>
               
-              <Button className={`w-full mt-4 ${enrolled ? 'bg-green-600 hover:bg-green-700' : 'bg-[#D4AF37] hover:bg-yellow-500 text-black'}`}>
+              <Button className={`w-full mt-4 ${enrolled ? 'bg-green-600 hover:bg-green-700' : 'bg-[var(--school-accent)] hover:bg-yellow-500 text-black'}`}>
                  {enrolled ? 'Continuer' : "S'inscrire"}
               </Button>
            </CardContent>
@@ -51,7 +51,7 @@ const FormationStudentView = ({ formation, enrolled = false, progress = 0 }) => 
                     <img src={formation.coverImage} className="w-full h-full object-cover opacity-50" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0F1419] via-transparent to-transparent"></div>
                     <div className="absolute bottom-6 left-8 right-8">
-                       <Badge className="mb-4 bg-[#D4AF37] text-black hover:bg-[#D4AF37]">{formation.year}</Badge>
+                       <Badge className="mb-4 bg-[var(--school-accent)] text-black hover:bg-[var(--school-accent)]">{formation.year}</Badge>
                        <h2 className="text-4xl font-serif font-bold text-white mb-2">{formation.title}</h2>
                        <div className="flex items-center gap-6 text-gray-300 text-sm">
                           <span className="flex items-center gap-2"><Clock className="w-4 h-4"/> {formation.duration}</span>
@@ -77,7 +77,7 @@ const FormationStudentView = ({ formation, enrolled = false, progress = 0 }) => 
                                    <div key={idx} className="bg-[#192734] rounded-lg border border-white/10 overflow-hidden">
                                       <div className="p-4 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors">
                                          <div className="flex items-center gap-4">
-                                            <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold text-[#D4AF37]">{idx+1}</span>
+                                            <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold text-[var(--school-accent)]">{idx+1}</span>
                                             <h4 className="font-bold text-white">{mod.title}</h4>
                                          </div>
                                          <span className="text-sm text-gray-500">{mod.weeks.length} semaines</span>
@@ -95,9 +95,9 @@ const FormationStudentView = ({ formation, enrolled = false, progress = 0 }) => 
                                    <div className="space-y-4">
                                       <div className="flex justify-between text-sm text-gray-400">
                                          <span>Progression</span>
-                                         <span className="text-[#D4AF37]">{progress}%</span>
+                                         <span className="text-[var(--school-accent)]">{progress}%</span>
                                       </div>
-                                      <Progress value={progress} className="h-2" indicatorClassName="bg-[#D4AF37]" />
+                                      <Progress value={progress} className="h-2" indicatorClassName="bg-[var(--school-accent)]" />
                                       <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold h-12" onClick={() => navigate(`/formation/${formation.id}/learn`)}>
                                          Reprendre le cours
                                       </Button>
@@ -105,7 +105,7 @@ const FormationStudentView = ({ formation, enrolled = false, progress = 0 }) => 
                                 ) : (
                                    <div className="space-y-4">
                                       <div className="text-3xl font-bold text-white text-center">{formation.price}€</div>
-                                      <Button className="w-full bg-[#D4AF37] hover:bg-yellow-500 text-black font-bold h-12">
+                                      <Button className="w-full bg-[var(--school-accent)] hover:bg-yellow-500 text-black font-bold h-12">
                                          Rejoindre la formation
                                       </Button>
                                       <p className="text-xs text-center text-gray-500">Accès immédiat • Satisfait ou remboursé</p>

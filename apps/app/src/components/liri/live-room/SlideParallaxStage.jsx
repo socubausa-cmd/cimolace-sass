@@ -209,7 +209,7 @@ function IaTacticalPanel({
         <>
           <div
             role="presentation"
-            className="sb-tactical-handle absolute left-1 right-8 top-0 z-[80] h-7 cursor-grab rounded-t-[inherit] bg-[#D4AF37]/12 hover:bg-[#D4AF37]/22 active:cursor-grabbing touch-none"
+            className="sb-tactical-handle absolute left-1 right-8 top-0 z-[80] h-7 cursor-grab rounded-t-[inherit] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] active:cursor-grabbing touch-none"
             onPointerDown={(e) => {
               e.stopPropagation();
               onBeginTacticalDrag?.(panelId);
@@ -230,7 +230,7 @@ function IaTacticalPanel({
           />
           <div
             role="presentation"
-            className="sb-tactical-handle absolute bottom-0 right-0 z-[80] h-4 w-4 cursor-se-resize rounded-br-[inherit] border border-[#D4AF37]/45 bg-black/45 touch-none"
+            className="sb-tactical-handle absolute bottom-0 right-0 z-[80] h-4 w-4 cursor-se-resize rounded-br-[inherit] border border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-black/45 touch-none"
             onPointerDown={(e) => {
               e.stopPropagation();
               onBeginTacticalDrag?.(panelId);
@@ -297,7 +297,7 @@ function LegacyFreeTextBlock({ el }) {
           e.stopPropagation();
           setOpen((o) => !o);
         }}
-        className="mb-1 shrink-0 rounded-md border border-white/12 bg-black/45 px-2 py-1 text-left text-[11px] font-medium text-[#D4AF37]/95 hover:bg-black/60"
+        className="mb-1 shrink-0 rounded-md border border-white/12 bg-black/45 px-2 py-1 text-left text-[11px] font-medium text-[color-mix(in_srgb,var(--school-accent)_95%,transparent)] hover:bg-black/60"
       >
         <span className="tabular-nums opacity-80">{open ? '▼' : '▶'}</span>{' '}
         {String(el.sectionLabel || 'Texte').slice(0, 120)}
@@ -323,11 +323,11 @@ function renderElement(el, onSmartboardImageExpand) {
     );
   }
   if (el.type === 'quote') {
-    return <p className="text-lg italic text-[#D4AF37]">"{el.content}"</p>;
+    return <p className="text-lg italic text-[var(--school-accent)]">"{el.content}"</p>;
   }
   if (el.type === 'badge') {
     return (
-      <span className="inline-flex h-7 px-3 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/35 text-[#D4AF37] text-xs">
+      <span className="inline-flex h-7 px-3 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] text-xs">
         {el.content}
       </span>
     );
@@ -766,8 +766,8 @@ function ProgressiveBuildSlide({
     ? 'bg-[radial-gradient(ellipse_at_15%_0%,rgba(99,102,241,0.22),transparent_45%),radial-gradient(ellipse_at_85%_90%,rgba(212,175,55,0.14),transparent_42%),radial-gradient(ellipse_at_50%_50%,rgba(15,23,42,0.9),#050814_75%)]'
     : 'bg-[radial-gradient(ellipse_at_20%_10%,rgba(151,127,255,0.18),transparent_50%),radial-gradient(ellipse_at_80%_85%,rgba(212,175,55,0.12),transparent_50%)]';
 
-  const accentBorder = isCosmic ? 'border-[#C9D3F2]/25' : 'border-[#D4AF37]/30';
-  const accentBg = isCosmic ? 'bg-[#C9D3F2]/08' : 'bg-[#D4AF37]/08';
+  const accentBorder = isCosmic ? 'border-[#C9D3F2]/25' : 'border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]';
+  const accentBg = isCosmic ? 'bg-[#C9D3F2]/08' : 'bg-[color-mix(in_srgb,var(--school-accent)_08%,transparent)]';
 
   return (
     <div
@@ -840,8 +840,8 @@ function ProgressiveBuildSlide({
                 className="flex flex-col gap-2"
               >
                 {!transparentStageBackground ? (
-                  <span className={`inline-flex self-start items-center gap-1.5 h-6 px-3 rounded-full ${accentBg} border ${accentBorder} text-[#D4AF37] text-[11px] font-medium tracking-wider uppercase`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
+                  <span className={`inline-flex self-start items-center gap-1.5 h-6 px-3 rounded-full ${accentBg} border ${accentBorder} text-[var(--school-accent)] text-[11px] font-medium tracking-wider uppercase`}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--school-accent)] animate-pulse" />
                     {isHorizontal
                       ? `Canevas ${designW}×${designH} · Écran intelligent`
                       : 'Grande Affiche'}
@@ -884,8 +884,8 @@ function ProgressiveBuildSlide({
                   </div>
                 )}
                 {!isHorizontal && data.slide_summary && (
-                  <div className="mt-3 rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/06 px-4 py-3 max-w-2xl">
-                    <p className="text-[10px] uppercase tracking-widest text-[#D4AF37]/55 font-semibold mb-1.5">Résumé</p>
+                  <div className="mt-3 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_06%,transparent)] px-4 py-3 max-w-2xl">
+                    <p className="text-[10px] uppercase tracking-widest text-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] font-semibold mb-1.5">Résumé</p>
                     <p className="text-sm md:text-[15px] text-white/88 leading-relaxed font-serif">{data.slide_summary}</p>
                   </div>
                 )}
@@ -922,7 +922,7 @@ function ProgressiveBuildSlide({
                 viewOnly={tacticalViewOnly}
                 className=""
               >
-                <p className="text-[10px] uppercase tracking-widest text-[#D4AF37]/65 mb-2 font-semibold">
+                <p className="text-[10px] uppercase tracking-widest text-[color-mix(in_srgb,var(--school-accent)_65%,transparent)] mb-2 font-semibold">
                   Idée centrale
                 </p>
                 <p className="text-xl font-semibold text-[#F5F1E8] leading-snug">
@@ -976,11 +976,11 @@ function ProgressiveBuildSlide({
                         transition={{ delay: i * 0.06, duration: 0.35 }}
                         className={`rounded-xl bg-white/[0.05] border ${accentBorder} backdrop-blur-md px-4 py-3`}
                       >
-                        <p className="text-[11px] font-bold text-[#D4AF37] tracking-wide mb-2">{block.label}</p>
+                        <p className="text-[11px] font-bold text-[var(--school-accent)] tracking-wide mb-2">{block.label}</p>
                         <ul className="space-y-1.5">
                           {(block.points || []).slice(0, 3).map((pt, j) => (
                             <li key={j} className="text-[15px] text-[#F5F1E8]/90 leading-snug flex gap-2">
-                              <span className="text-[#D4AF37]/80 flex-shrink-0">▸</span>
+                              <span className="text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)] flex-shrink-0">▸</span>
                               <span>{pt}</span>
                             </li>
                           ))}
@@ -1075,7 +1075,7 @@ function ProgressiveBuildSlide({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className={`rounded-2xl overflow-hidden border ${isHorizontal ? 'border-[#D4AF37]/25' : 'border-purple-500/20'} ${isHorizontal ? 'bg-black/30 backdrop-blur-md' : 'bg-gradient-to-br from-purple-500/08 to-blue-500/06'}`}
+              className={`rounded-2xl overflow-hidden border ${isHorizontal ? 'border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]' : 'border-purple-500/20'} ${isHorizontal ? 'bg-black/30 backdrop-blur-md' : 'bg-gradient-to-br from-purple-500/08 to-blue-500/06'}`}
             >
               <IaTacticalPanel
                 panelId="ia-footer"
@@ -1091,7 +1091,7 @@ function ProgressiveBuildSlide({
                 className=""
               >
                 <div className="px-4 py-2 border-b border-white/06 flex items-center gap-2">
-                  <span className={`text-[10px] uppercase tracking-widest font-semibold ${isHorizontal ? 'text-[#D4AF37]/70' : 'text-purple-300/60'}`}>
+                  <span className={`text-[10px] uppercase tracking-widest font-semibold ${isHorizontal ? 'text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]' : 'text-purple-300/60'}`}>
                     {isHorizontal ? 'Insight & formule' : 'Illustration'}
                   </span>
                 </div>
@@ -1116,7 +1116,7 @@ function ProgressiveBuildSlide({
                   )}
                   {data.illustration?.formula && (
                     <div className="rounded-xl bg-white/[0.06] border border-white/10 px-4 py-2 text-center">
-                      <p className="text-sm font-mono font-bold text-[#D4AF37] tracking-wide">
+                      <p className="text-sm font-mono font-bold text-[var(--school-accent)] tracking-wide">
                         {data.illustration.formula}
                       </p>
                     </div>
@@ -1153,7 +1153,7 @@ function ProgressiveBuildSlide({
               className={[
                 'rounded-full transition-all duration-300',
                 ph <= effectiveStep
-                  ? 'bg-[#D4AF37] w-5 h-1.5 shadow-[0_0_8px_rgba(212,175,55,0.6)]'
+                  ? 'bg-[var(--school-accent)] w-5 h-1.5 shadow-[0_0_8px_rgba(212,175,55,0.6)]'
                   : 'bg-white/20 w-1.5 h-1.5',
                 revealAll && 'opacity-80 cursor-default',
               ].join(' ')}
@@ -1178,7 +1178,7 @@ function ProgressiveBuildSlide({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); advance(); }}
-            className="h-7 px-3 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/35 text-[#D4AF37] text-[11px] font-semibold hover:bg-[#D4AF37]/25 transition-colors flex items-center gap-1.5"
+            className="h-7 px-3 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] text-[11px] font-semibold hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] transition-colors flex items-center gap-1.5"
           >
             <span>{PHASE_LABELS[step + 1]}</span>
             <span className="opacity-60">→</span>
@@ -1666,7 +1666,7 @@ export default function SlideParallaxStage({
                 className={cn(
                   isDoc ? 'min-h-0 min-w-0' : '',
                   spotlight && el.animation === 'spotlight' ? 'drop-shadow-[0_0_30px_rgba(212,175,55,0.45)]' : '',
-                  tacticalOn && isFocused && 'rounded-lg ring-2 ring-[#D4AF37]/60 shadow-[0_0_48px_rgba(212,175,55,0.22)]',
+                  tacticalOn && isFocused && 'rounded-lg ring-2 ring-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] shadow-[0_0_48px_rgba(212,175,55,0.22)]',
                   tacticalOn && !isDoc && 'origin-center',
                 )}
                 onContextMenu={
@@ -1733,7 +1733,7 @@ export default function SlideParallaxStage({
                   <>
                     <div
                       role="presentation"
-                      className="sb-tactical-handle absolute left-1 right-8 top-0 z-[80] h-7 cursor-grab rounded-t-md bg-[#D4AF37]/12 hover:bg-[#D4AF37]/22 active:cursor-grabbing touch-none"
+                      className="sb-tactical-handle absolute left-1 right-8 top-0 z-[80] h-7 cursor-grab rounded-t-md bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] active:cursor-grabbing touch-none"
                       onPointerDown={(e) => {
                         e.stopPropagation();
                         setLegacyDragElKey(elKey);
@@ -1757,7 +1757,7 @@ export default function SlideParallaxStage({
                     />
                     <div
                       role="presentation"
-                      className="sb-tactical-handle absolute bottom-0 right-0 z-[80] h-4 w-4 cursor-se-resize rounded-br-md border border-[#D4AF37]/45 bg-black/45 touch-none"
+                      className="sb-tactical-handle absolute bottom-0 right-0 z-[80] h-4 w-4 cursor-se-resize rounded-br-md border border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-black/45 touch-none"
                       onPointerDown={(e) => {
                         e.stopPropagation();
                         setLegacyDragElKey(elKey);

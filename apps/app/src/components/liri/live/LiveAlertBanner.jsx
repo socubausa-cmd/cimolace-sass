@@ -104,7 +104,7 @@ function SessionAlert({ session, onDismiss }) {
         ? 'bg-[#140e00]/90 border-amber-500/25'
         : joinArena || immersiveActive || immersivePending
           ? 'bg-[#0c1410]/90 border-emerald-500/30'
-          : 'bg-[#0c0f18]/90 border-[#D4AF37]/20';
+          : 'bg-[#0c0f18]/90 border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]';
 
   const iconWrapClass = isWaiting
     ? 'bg-amber-500/20'
@@ -116,7 +116,7 @@ function SessionAlert({ session, onDismiss }) {
         ? 'bg-amber-500/20'
         : joinArena || immersiveActive || immersivePending
           ? 'bg-emerald-500/20'
-          : 'bg-[#D4AF37]/15';
+          : 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]';
 
   const subtitle = (() => {
     if (immersivePending) return 'Connexion en cours • ouvrir la messagerie';
@@ -142,7 +142,7 @@ function SessionAlert({ session, onDismiss }) {
         ? 'bg-amber-500/20 border-amber-500/30 text-amber-200 hover:bg-amber-500/28'
         : joinArena || immersiveActive || immersivePending
           ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/30'
-          : 'bg-[#D4AF37]/15 border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/25';
+          : 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]';
 
   return (
     <motion.div
@@ -181,7 +181,7 @@ function SessionAlert({ session, onDismiss }) {
                   : 'text-cyan-300'
                 : joinArena || immersiveActive
                   ? 'text-emerald-400'
-                  : 'text-[#D4AF37]',
+                  : 'text-[var(--school-accent)]',
             )}
           />
         )}

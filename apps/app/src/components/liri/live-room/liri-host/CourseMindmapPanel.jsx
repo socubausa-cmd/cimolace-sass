@@ -41,7 +41,7 @@ export function CourseMindmapPanel({
         });
       });
       return { branches: [
-        { label: 'SmartBoard IA', color: 'from-violet-500/25 to-[#D4AF37]/10', children: out.filter((n) => n.id.startsWith('native-')) },
+        { label: 'SmartBoard IA', color: 'from-violet-500/25 to-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]', children: out.filter((n) => n.id.startsWith('native-')) },
         { label: 'Diapo importé', color: 'from-sky-500/20 to-white/5', children: out.filter((n) => n.id.startsWith('import-')) },
       ] };
     }
@@ -50,7 +50,7 @@ export function CourseMindmapPanel({
       branches: [
         {
           label: 'Déroulé',
-          color: 'from-[#D4AF37]/20 to-violet-500/10',
+          color: 'from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-violet-500/10',
           children: arr.map((s, idx) => ({
             id: `s-${idx}`,
             title: s?.title || s?.label || `Slide ${idx + 1}`,
@@ -65,7 +65,7 @@ export function CourseMindmapPanel({
   return (
     <div className="flex min-h-0 flex-col rounded-xl border border-white/[0.09] bg-black/22 p-2 backdrop-blur-md">
       <div className="mb-2 flex items-center gap-2 px-0.5">
-        <GitBranch className="h-3.5 w-3.5 text-[#D4AF37]/80" />
+        <GitBranch className="h-3.5 w-3.5 text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]" />
         <p className={cn(railTitleClass, 'text-[10px] font-semibold uppercase tracking-[0.14em] text-white/55')}>
           Mindmap{readOnly ? ' · repérage' : ''}
         </p>
@@ -81,7 +81,7 @@ export function CourseMindmapPanel({
             >
               <p className="text-[9px] font-semibold uppercase tracking-wide text-white/65">{br.label}</p>
             </div>
-            <div className="ml-2 space-y-1 border-l border-[#D4AF37]/25 pl-2">
+            <div className="ml-2 space-y-1 border-l border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] pl-2">
               {br.children.length === 0 ? (
                 <p className="py-2 text-[10px] text-white/35">Aucune slide</p>
               ) : (
@@ -89,10 +89,10 @@ export function CourseMindmapPanel({
                   const rowClass = cn(
                     'w-full rounded-lg border px-2 py-1.5 text-left text-[10px] transition-colors',
                     node.active
-                      ? 'border-[#D4AF37]/50 bg-[#D4AF37]/14 font-medium text-[#f5dd8a] shadow-[0_0_0_1px_rgba(212,175,55,0.15)]'
+                      ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] font-medium text-[#f5dd8a] shadow-[0_0_0_1px_rgba(212,175,55,0.15)]'
                       : readOnly
                         ? 'border-white/10 bg-white/[0.03] text-white/80'
-                        : 'border-white/10 bg-white/[0.03] text-white/80 hover:border-[#D4AF37]/30 hover:bg-[#D4AF37]/8',
+                        : 'border-white/10 bg-white/[0.03] text-white/80 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)]',
                   );
                   if (readOnly) {
                     return (

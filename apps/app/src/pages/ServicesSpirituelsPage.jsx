@@ -11,7 +11,7 @@ import { ngowazuluMentoratOffers } from '@/config/ngowazuluMentoratOffers';
 import NgowazuluMentoratDetailDialog from '@/components/ngowazulu/NgowazuluMentoratDetailDialog';
 import NgowazuluConfigFeesModal from '@/components/ngowazulu/NgowazuluConfigFeesModal';
 
-const SectionTitle = ({ icon: Icon, title, color = 'text-[#D4AF37]' }) => (
+const SectionTitle = ({ icon: Icon, title, color = 'text-[var(--school-accent)]' }) => (
   <div className="flex items-center gap-3 mb-6">
     <div className={`p-2.5 rounded-xl bg-white/5 border border-white/10`}>
       <Icon className={`w-6 h-6 ${color}`} />
@@ -23,7 +23,7 @@ const SectionTitle = ({ icon: Icon, title, color = 'text-[#D4AF37]' }) => (
 const SubSection = ({ letter, title, children }) => (
   <div className="mb-10">
     <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-      <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] text-sm font-bold border border-[#D4AF37]/20">
+      <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] text-sm font-bold border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
         {letter}
       </span>
       {title}
@@ -34,15 +34,15 @@ const SubSection = ({ letter, title, children }) => (
 
 const BulletItem = ({ children, icon = '▸' }) => (
   <li className="flex items-start gap-2.5 text-base text-gray-300 leading-relaxed">
-    <span className="text-[#D4AF37] mt-0.5 shrink-0">{icon}</span>
+    <span className="text-[var(--school-accent)] mt-0.5 shrink-0">{icon}</span>
     <span>{children}</span>
   </li>
 );
 
 const NumberedStep = ({ number, title, description }) => (
   <div className="flex gap-4 items-start">
-    <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center shrink-0 mt-0.5">
-      <span className="text-sm font-bold text-[#D4AF37]">{number}</span>
+    <div className="w-8 h-8 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center shrink-0 mt-0.5">
+      <span className="text-sm font-bold text-[var(--school-accent)]">{number}</span>
     </div>
     <div>
       <p className="text-base font-semibold text-white">{title}</p>
@@ -87,20 +87,20 @@ const ServicesSpirituelsPage = () => {
       {/* ═══════════ HERO ═══════════ */}
       <section className="relative py-24 px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0F1419] via-[#192734]/50 to-[#0F1419]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#D4AF37]/5 rounded-full blur-[150px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[150px]" />
         
         <div className="relative max-w-4xl mx-auto text-center space-y-6">
-          <div className="flex items-center justify-center gap-3 text-[#D4AF37] text-sm uppercase tracking-[0.3em] font-bold">
+          <div className="flex items-center justify-center gap-3 text-[var(--school-accent)] text-sm uppercase tracking-[0.3em] font-bold">
             <span>✦</span> PRORASCIENCE <span>✦</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-serif font-bold text-white leading-tight">
             Système de services<br />
-            <span className="text-[#D4AF37]">Spirituels professionnels</span>
+            <span className="text-[var(--school-accent)]">Spirituels professionnels</span>
           </h1>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
             Document officiel de référence — Établi par le 5ᵉ Manikongo — MK5
           </p>
-          <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mt-6" />
+          <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent mx-auto mt-6" />
 
           {/* Quick nav */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
@@ -123,7 +123,7 @@ const ServicesSpirituelsPage = () => {
             <h2 className="text-xl font-bold text-white">Important</h2>
           </div>
           <p className="text-gray-300 text-lg max-w-3xl mx-auto leading-relaxed">
-            Comprendre la différence entre ces deux services est <span className="text-[#D4AF37] font-bold">essentiel</span> avant toute inscription.
+            Comprendre la différence entre ces deux services est <span className="text-[var(--school-accent)] font-bold">essentiel</span> avant toute inscription.
             Le coaching forme un praticien. Le Montorat prend en charge un bénéficiaire.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10 max-w-3xl mx-auto">
@@ -207,7 +207,7 @@ const ServicesSpirituelsPage = () => {
                   'Notes et observations du therapeute',
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-2 text-base text-gray-300 bg-white/[0.02] border border-white/5 rounded-lg p-3">
-                    <FileText className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                    <FileText className="w-4 h-4 text-[var(--school-accent)] shrink-0" />
                     <span>{item}</span>
                   </div>
                 ))}
@@ -270,7 +270,7 @@ const ServicesSpirituelsPage = () => {
         {/* ═══════════ SEPARATOR ═══════════ */}
         <div className="flex items-center justify-center opacity-30">
           <div className="h-px bg-white w-full max-w-xs" />
-          <span className="px-6 text-3xl text-[#D4AF37]">⚜</span>
+          <span className="px-6 text-3xl text-[var(--school-accent)]">⚜</span>
           <div className="h-px bg-white w-full max-w-xs" />
         </div>
 
@@ -410,7 +410,7 @@ const ServicesSpirituelsPage = () => {
             </span>
             <h2 className="text-3xl md:text-5xl font-serif font-bold text-white">
               NGOWAZULU
-              <span className="block text-[#D4AF37] text-2xl md:text-3xl mt-2">L&apos;hôpital spirituel de la science africaine</span>
+              <span className="block text-[var(--school-accent)] text-2xl md:text-3xl mt-2">L&apos;hôpital spirituel de la science africaine</span>
             </h2>
             <p className="text-gray-400 mt-4 max-w-3xl mx-auto">
               Prorascience enseigne. Ngowazulu intervient.
@@ -441,8 +441,8 @@ const ServicesSpirituelsPage = () => {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-6">
-              <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37] mb-3">Parcours d'intervention</p>
+            <div className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] p-6">
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--school-accent)] mb-3">Parcours d'intervention</p>
               <div className="space-y-4">
                 <NumberedStep
                   number="1"
@@ -470,21 +470,21 @@ const ServicesSpirituelsPage = () => {
             <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-black/40 to-black/20 p-6 md:p-8">
               <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37] mb-1">Temple Ngowazulu</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-[var(--school-accent)] mb-1">Temple Ngowazulu</p>
                   <p className="text-2xl font-serif font-bold text-white">Contrats mentorat</p>
                   <p className="text-sm text-gray-400 mt-2 max-w-xl">
                     Chaque contrat dure <span className="text-white font-medium">un mois</span>. Vous choisissez la densité des rencontres
-                    (du rythme Essentiel au palier Souverain). Cliquez sur <span className="text-[#D4AF37]">Détails</span> pour la fiche complète.
+                    (du rythme Essentiel au palier Souverain). Cliquez sur <span className="text-[var(--school-accent)]">Détails</span> pour la fiche complète.
                   </p>
                 </div>
-                <Sparkles className="w-10 h-10 text-[#D4AF37]/60 hidden md:block" />
+                <Sparkles className="w-10 h-10 text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] hidden md:block" />
               </div>
 
               <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 max-w-2xl">
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-wider">Entrée</p>
                   <p className="text-lg font-semibold text-white mt-1">Consultation spirituelle</p>
-                  <p className="text-[#D4AF37] font-bold">50 EUR</p>
+                  <p className="text-[var(--school-accent)] font-bold">50 EUR</p>
                   <p className="text-xs text-gray-400 mt-2">1 h 30 — discernement et orientation.</p>
                 </div>
                 <Link
@@ -526,7 +526,7 @@ const ServicesSpirituelsPage = () => {
                           Mentorat {offer.commercialName}
                         </span>
                         <p className="text-white font-semibold mt-2">{offer.subtitle}</p>
-                        <p className="text-[#D4AF37] font-bold text-lg mt-1">{offer.priceLabel}</p>
+                        <p className="text-[var(--school-accent)] font-bold text-lg mt-1">{offer.priceLabel}</p>
                         <p className="text-xs text-gray-400 mt-1">{offer.frequencyShort}</p>
                       </div>
                     </div>
@@ -541,7 +541,7 @@ const ServicesSpirituelsPage = () => {
                         <Info className="w-4 h-4 mr-1.5" /> Détails
                       </Button>
                       <a href={`/paiements/payer?plan=${encodeURIComponent(offer.slug)}&interval=monthly`}>
-                        <Button size="sm" className="bg-[#D4AF37] text-black hover:bg-amber-500 font-bold">Souscrire</Button>
+                        <Button size="sm" className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-bold">Souscrire</Button>
                       </a>
                     </div>
                   </div>
@@ -611,13 +611,13 @@ const ServicesSpirituelsPage = () => {
               </div>
             </div>
 
-            <div className="text-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-6">
+            <div className="text-center rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] p-6">
               <p className="text-white text-lg font-semibold">Positionnement</p>
               <p className="text-gray-300 mt-2">
                 Ngowazulu n&apos;est pas une simple consultation ni une pratique isolée.
                 C&apos;est un système complet d&apos;intervention spirituelle.
               </p>
-              <p className="text-[#D4AF37] font-bold mt-4">
+              <p className="text-[var(--school-accent)] font-bold mt-4">
                 Quand il faut comprendre → Prorascience | Quand il faut agir → Ngowazulu
               </p>
             </div>
@@ -626,7 +626,7 @@ const ServicesSpirituelsPage = () => {
 
         {/* ═══════════ CTA FINAL ═══════════ */}
         <section className="bg-gradient-to-br from-[#192734] to-[#0f1216] rounded-3xl p-10 md:p-16 text-center border border-white/10 relative overflow-hidden shadow-2xl">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
           
           <div className="relative z-10 max-w-2xl mx-auto space-y-8">
@@ -637,7 +637,7 @@ const ServicesSpirituelsPage = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a href="/appointment/request">
-                <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-lg font-bold">
+                <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-lg font-bold">
                   <MessageCircle className="w-5 h-5" /> Prendre rendez-vous
                 </Button>
               </a>

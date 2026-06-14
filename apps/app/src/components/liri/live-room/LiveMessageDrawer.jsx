@@ -11,7 +11,7 @@ import {
 
 /** Aligné sur LiveRoomShell — cadre arène premium */
 const immersiveArenaPanelClass =
-  'rounded-2xl border border-[#D4AF37]/40 bg-[#070a10]/92 shadow-[0_0_42px_-14px_rgba(212,175,55,0.28),inset_0_1px_0_0_rgba(212,175,55,0.12)] backdrop-blur-md';
+  'rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[#070a10]/92 shadow-[0_0_42px_-14px_rgba(212,175,55,0.28),inset_0_1px_0_0_rgba(212,175,55,0.12)] backdrop-blur-md';
 
 const immersiveArenaStarfieldClass =
   'bg-[#05070c] bg-[radial-gradient(ellipse_at_50%_0%,rgba(212,175,55,0.12),transparent_55%),radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.04),transparent_2px),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.03),transparent_2px),radial-gradient(circle_at_40%_80%,rgba(255,255,255,0.025),transparent_2px)] bg-[length:100%_100%,120px_120px,180px_180px,140px_140px]';
@@ -77,7 +77,7 @@ export default function LiveMessageDrawer({
       <div
         className={cn(
           'flex flex-shrink-0 items-center border-b',
-          immersiveArena ? 'border-[#D4AF37]/25 bg-black/40 px-3 py-2' : 'border-white/15 bg-white/[0.04]',
+          immersiveArena ? 'border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-black/40 px-3 py-2' : 'border-white/15 bg-white/[0.04]',
           isInline && !immersiveArena ? 'h-11 px-3 py-1' : null,
           !isInline ? 'h-12 px-4' : null,
           immersiveArena && isInline ? 'min-h-[52px]' : null,
@@ -87,12 +87,12 @@ export default function LiveMessageDrawer({
           <p
             className={cn(
               'truncate text-xs font-semibold',
-              immersiveArena ? 'font-serif text-sm text-[#D4AF37] md:text-base' : 'text-white/90',
+              immersiveArena ? 'font-serif text-sm text-[var(--school-accent)] md:text-base' : 'text-white/90',
             )}
           >
             {title}
           </p>
-          <p className={cn('truncate text-[10px] leading-tight', immersiveArena ? 'text-[#D4AF37]/55' : 'text-white/45')}>
+          <p className={cn('truncate text-[10px] leading-tight', immersiveArena ? 'text-[color-mix(in_srgb,var(--school-accent)_55%,transparent)]' : 'text-white/45')}>
             {subtitle}
           </p>
         </div>
@@ -112,7 +112,7 @@ export default function LiveMessageDrawer({
         )}
       >
         {normalized.length === 0 ? (
-          <p className={cn('px-2 py-8 text-center text-[11px]', immersiveArena ? 'text-[#D4AF37]/45' : 'text-white/40')}>
+          <p className={cn('px-2 py-8 text-center text-[11px]', immersiveArena ? 'text-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]' : 'text-white/40')}>
             {isInline
               ? immersiveArena
                 ? 'Forum public — les messages s\'affichent ici. Écrivez depuis la barre du bas (messagerie live).'
@@ -129,7 +129,7 @@ export default function LiveMessageDrawer({
                   <p
                     className={cn(
                       'mb-0.5 px-0.5 text-[9px] uppercase tracking-wide',
-                      immersiveArena ? 'text-[#D4AF37]/50' : 'text-white/40',
+                      immersiveArena ? 'text-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]' : 'text-white/40',
                     )}
                   >
                     {label}
@@ -139,7 +139,7 @@ export default function LiveMessageDrawer({
                   className={cn(
                     'rounded-2xl border px-3 py-2 text-xs backdrop-blur-md',
                     own
-                      ? 'border-[#D4AF37]/40 bg-[#D4AF37]/14 text-[#f6e8b3] shadow-[0_0_20px_-8px_rgba(212,175,55,0.45)]'
+                      ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] text-[#f6e8b3] shadow-[0_0_20px_-8px_rgba(212,175,55,0.45)]'
                       : immersiveArena
                         ? 'border-white/12 bg-black/50 text-gray-100'
                         : 'border-white/15 bg-white/[0.08] text-gray-100',
@@ -156,7 +156,7 @@ export default function LiveMessageDrawer({
         <div
           className={cn(
             'flex-shrink-0 border-t p-2',
-            immersiveArena ? 'border-[#D4AF37]/20 bg-black/45' : 'border-white/12 bg-black/20',
+            immersiveArena ? 'border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-black/45' : 'border-white/12 bg-black/20',
             isSheetDrawer && 'pb-[max(0.5rem,env(safe-area-inset-bottom))]',
           )}
         >
@@ -185,7 +185,7 @@ export default function LiveMessageDrawer({
               className={cn(
                 'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-colors',
                 canSend
-                  ? 'bg-[#D4AF37] text-black shadow-[0_0_24px_-6px_rgba(212,175,55,0.75)] hover:bg-[#e5c04a]'
+                  ? 'bg-[var(--school-accent)] text-black shadow-[0_0_24px_-6px_rgba(212,175,55,0.75)] hover:bg-[#e5c04a]'
                   : 'cursor-not-allowed border border-white/10 bg-white/[0.06] text-white/30',
               )}
               aria-label="Envoyer"

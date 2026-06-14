@@ -102,23 +102,23 @@ const StudentsPage = () => {
                <div className="grid md:grid-cols-2 gap-8">
                   <div className="space-y-4">
                      <div>
-                        <h4 className="text-[#D4AF37] text-sm font-bold uppercase mb-1">Module</h4>
+                        <h4 className="text-[var(--school-accent)] text-sm font-bold uppercase mb-1">Module</h4>
                         <p className="text-white text-lg">{selectedStudent.module}</p>
                      </div>
                      <div>
-                        <h4 className="text-[#D4AF37] text-sm font-bold uppercase mb-1">Inscription</h4>
+                        <h4 className="text-[var(--school-accent)] text-sm font-bold uppercase mb-1">Inscription</h4>
                         <p className="text-white">{selectedStudent.enrollment_date}</p>
                      </div>
                   </div>
                   <div className="space-y-4">
                      <div>
-                        <h4 className="text-[#D4AF37] text-sm font-bold uppercase mb-1">Paiement</h4>
+                        <h4 className="text-[var(--school-accent)] text-sm font-bold uppercase mb-1">Paiement</h4>
                         <p className={`font-bold ${selectedStudent.payment_status === 'overdue' ? 'text-red-400' : 'text-green-400'}`}>
                            {selectedStudent.payment_status}
                         </p>
                      </div>
                      <div>
-                        <h4 className="text-[#D4AF37] text-sm font-bold uppercase mb-1">Actions</h4>
+                        <h4 className="text-[var(--school-accent)] text-sm font-bold uppercase mb-1">Actions</h4>
                         <div className="flex gap-2">
                            <Button 
                               size="sm" 

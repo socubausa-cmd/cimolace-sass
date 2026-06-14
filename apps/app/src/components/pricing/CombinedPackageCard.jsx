@@ -12,8 +12,8 @@ const CombinedPackageCard = ({ onSelect }) => {
     <div className="relative w-full max-w-5xl mx-auto my-16">
       <div className="absolute inset-0 bg-gradient-to-r from-red-900/30 via-purple-900/30 to-blue-900/30 blur-3xl rounded-3xl opacity-60"></div>
       
-      <Card className="relative bg-gradient-to-br from-[#1a1a2e] to-[#0d1117] border border-[#D4AF37]/50 shadow-2xl overflow-hidden rounded-2xl">
-        <div className="absolute top-0 right-0 bg-gradient-to-l from-[#D4AF37] to-yellow-600 text-black font-bold px-8 py-2 rounded-bl-xl z-10 shadow-lg">
+      <Card className="relative bg-gradient-to-br from-[#1a1a2e] to-[#0d1117] border border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] shadow-2xl overflow-hidden rounded-2xl">
+        <div className="absolute top-0 right-0 bg-gradient-to-l from-[var(--school-accent)] to-yellow-600 text-black font-bold px-8 py-2 rounded-bl-xl z-10 shadow-lg">
           ⭐ OFFRE RECOMMANDÉE
         </div>
         
@@ -23,7 +23,7 @@ const CombinedPackageCard = ({ onSelect }) => {
             {/* Left Content Column */}
             <div className="lg:col-span-3 p-8 md:p-10 space-y-8 border-b lg:border-b-0 lg:border-r border-white/10">
               <div className="space-y-4">
-                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#D4AF37] text-sm font-medium border border-[#D4AF37]/20">
+                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[var(--school-accent)] text-sm font-medium border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                     <Sparkles className="w-4 h-4" />
                     <span>L'Excellence Combinée</span>
                  </div>
@@ -38,7 +38,7 @@ const CombinedPackageCard = ({ onSelect }) => {
               <div className="grid md:grid-cols-2 gap-6">
                  <div className="space-y-3">
                    <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                     <Key className="w-4 h-4 text-[#D4AF37]" /> Principe Important
+                     <Key className="w-4 h-4 text-[var(--school-accent)]" /> Principe Important
                    </h4>
                    <p className="text-sm text-gray-400 bg-black/20 p-3 rounded-lg border border-white/5">
                       {combo.principle}
@@ -58,7 +58,7 @@ const CombinedPackageCard = ({ onSelect }) => {
                  <h4 className="text-sm font-bold text-white uppercase tracking-wider">🧠 Ce que vous obtenez concrètement :</h4>
                  <div className="grid sm:grid-cols-2 gap-3">
                    {combo.inclusions.map((feat, i) => (
-                      <div key={i} className="flex items-center gap-3 bg-white/5 p-3 rounded-lg border border-white/5 hover:border-[#D4AF37]/30 transition-colors">
+                      <div key={i} className="flex items-center gap-3 bg-white/5 p-3 rounded-lg border border-white/5 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-colors">
                         <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
                         <span className="text-sm text-gray-200">{feat}</span>
                       </div>
@@ -76,7 +76,7 @@ const CombinedPackageCard = ({ onSelect }) => {
                   
                   <div className="space-y-4">
                     {/* Monthly Option */}
-                    <div className="relative group p-4 rounded-xl border-2 border-white/10 hover:border-[#D4AF37] hover:bg-[#D4AF37]/5 transition-all cursor-pointer">
+                    <div className="relative group p-4 rounded-xl border-2 border-white/10 hover:border-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] transition-all cursor-pointer">
                        <div className="flex justify-between items-start mb-1">
                           <span className="font-bold text-white">Option 1 : Mensuel</span>
                           <Badge className="bg-green-500/20 text-green-400 border-none hover:bg-green-500/30">-{combo.pricing.monthlySaving}</Badge>
@@ -89,7 +89,7 @@ const CombinedPackageCard = ({ onSelect }) => {
                     </div>
 
                     {/* Trimester Option */}
-                    <div className="relative group p-4 rounded-xl border-2 border-white/10 hover:border-[#D4AF37] hover:bg-[#D4AF37]/5 transition-all cursor-pointer">
+                    <div className="relative group p-4 rounded-xl border-2 border-white/10 hover:border-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] transition-all cursor-pointer">
                        <div className="flex justify-between items-start mb-1">
                           <span className="font-bold text-white">Option 2 : Trimestriel</span>
                           <Badge className="bg-green-500/20 text-green-400 border-none hover:bg-green-500/30">-{combo.pricing.trimesterSaving}</Badge>
@@ -102,10 +102,10 @@ const CombinedPackageCard = ({ onSelect }) => {
                     </div>
 
                     {/* Full Option */}
-                    <div className="relative group p-4 rounded-xl border-2 border-[#D4AF37] bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 transition-all cursor-pointer shadow-lg shadow-[#D4AF37]/10">
-                       <div className="absolute -top-3 right-4 bg-[#D4AF37] text-black text-[10px] font-bold px-2 py-0.5 rounded">MEILLEURE OFFRE</div>
+                    <div className="relative group p-4 rounded-xl border-2 border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-all cursor-pointer shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
+                       <div className="absolute -top-3 right-4 bg-[var(--school-accent)] text-black text-[10px] font-bold px-2 py-0.5 rounded">MEILLEURE OFFRE</div>
                        <div className="flex justify-between items-start mb-1">
-                          <span className="font-bold text-[#D4AF37]">Option 3 : Intégral</span>
+                          <span className="font-bold text-[var(--school-accent)]">Option 3 : Intégral</span>
                           <Badge className="bg-green-500 text-black border-none font-bold">-{combo.pricing.fullSaving}</Badge>
                        </div>
                        <div className="flex items-baseline gap-2">
@@ -121,7 +121,7 @@ const CombinedPackageCard = ({ onSelect }) => {
 
                <Button 
                  onClick={() => onSelect(combo.title)}
-                 className="w-full bg-gradient-to-r from-[#D4AF37] to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-bold h-14 text-lg shadow-lg shadow-yellow-900/20 hover:shadow-yellow-500/30 transition-all"
+                 className="w-full bg-gradient-to-r from-[var(--school-accent)] to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-bold h-14 text-lg shadow-lg shadow-yellow-900/20 hover:shadow-yellow-500/30 transition-all"
                >
                  Candidater pour ce combiné <ArrowRight className="w-5 h-5 ml-2" />
                </Button>

@@ -55,7 +55,7 @@ const SecondYearCatalogPage = () => {
 
   if (loading) return (
     <div className="min-h-screen bg-[#0F1419] flex items-center justify-center">
-      <div className="w-12 h-12 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
+      <div className="w-12 h-12 border-4 border-[var(--school-accent)] border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
@@ -87,7 +87,7 @@ const SecondYearCatalogPage = () => {
               />
             </div>
             <select 
-              className="bg-[#0F1419] border border-white/10 rounded-md px-4 h-12 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+              className="bg-[#0F1419] border border-white/10 rounded-md px-4 h-12 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--school-accent)]"
               value={selectedPart}
               onChange={(e) => setSelectedPart(e.target.value)}
             >
@@ -106,7 +106,7 @@ const SecondYearCatalogPage = () => {
           Object.keys(groupedModules).map(part => (
             <section key={part} className="animate-in fade-in slide-in-from-bottom-4 duration-700">
               <div className="flex items-center gap-4 mb-8 border-b border-white/10 pb-4">
-                <Layers className="w-8 h-8 text-[#D4AF37]" />
+                <Layers className="w-8 h-8 text-[var(--school-accent)]" />
                 <h2 className="text-3xl font-bold font-serif">{part}</h2>
               </div>
               
@@ -123,7 +123,7 @@ const SecondYearCatalogPage = () => {
             <p className="text-xl">Aucun module trouvé pour votre recherche.</p>
             <Button 
               variant="link" 
-              className="text-[#D4AF37]" 
+              className="text-[var(--school-accent)]" 
               onClick={() => { setSearchTerm(''); setSelectedPart('All'); }}
             >
               Réinitialiser les filtres

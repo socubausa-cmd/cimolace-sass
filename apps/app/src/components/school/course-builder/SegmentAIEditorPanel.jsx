@@ -88,7 +88,7 @@ export default function SegmentAIEditorPanel({
           <Button type="button" size="sm" variant="outline" className="border-white/10 text-white hover:bg-white/5" onClick={onGenerateAll} disabled={loading}>
             Générer tous
           </Button>
-          <Button type="button" size="sm" className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-semibold" onClick={onApprove} disabled={loading}>
+          <Button type="button" size="sm" className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-semibold" onClick={onApprove} disabled={loading}>
             <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Valider
           </Button>
           <Button type="button" size="sm" variant="outline" className="border-red-500/30 text-red-200 hover:bg-red-500/10" onClick={onReject} disabled={loading}>
@@ -140,7 +140,7 @@ export default function SegmentAIEditorPanel({
       <div className="rounded-xl border border-white/10 bg-[#0a111d] p-3 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Image className="w-4 h-4 text-[#D4AF37]" />
+            <Image className="w-4 h-4 text-[var(--school-accent)]" />
             <span className="text-xs font-semibold text-white">Illustration IA</span>
           </div>
           <div className="flex items-center gap-2">
@@ -205,7 +205,7 @@ export default function SegmentAIEditorPanel({
               <Button
                 type="button"
                 size="sm"
-                className="bg-[#D4AF37] text-black hover:bg-amber-500 self-end"
+                className="bg-[var(--school-accent)] text-black hover:bg-amber-500 self-end"
                 onClick={() => handleRegenerateIllustration(illoPromptEdit)}
                 disabled={illoLoading}
               >
@@ -222,9 +222,9 @@ export default function SegmentAIEditorPanel({
 
       {/* Question de compréhension */}
       {ai.comprehension_question && (
-        <div className="rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-3">
-          <p className="text-[10px] uppercase tracking-widest text-[#D4AF37]/60 font-semibold mb-1">Question de compréhension</p>
-          <p className="text-sm text-[#D4AF37] italic">{ai.comprehension_question}</p>
+        <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] p-3">
+          <p className="text-[10px] uppercase tracking-widest text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] font-semibold mb-1">Question de compréhension</p>
+          <p className="text-sm text-[var(--school-accent)] italic">{ai.comprehension_question}</p>
         </div>
       )}
     </div>

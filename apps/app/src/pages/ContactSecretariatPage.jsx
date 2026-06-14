@@ -93,7 +93,7 @@ const ContactSecretariatPage = () => {
             <h2 className="text-2xl font-serif font-bold text-white mb-6">Coordonnées Officielles</h2>
             <div className="space-y-6">
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-[#D4AF37]/10 rounded-lg text-[#D4AF37]"><Mail className="w-5 h-5"/></div>
+                <div className="p-3 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-lg text-[var(--school-accent)]"><Mail className="w-5 h-5"/></div>
                 <div>
                   <h4 className="text-white font-bold">Adresses Email</h4>
                   <p className="text-sm text-gray-400 mt-1">{`${vitrineEmail} (Administratif)`}</p>
@@ -102,7 +102,7 @@ const ContactSecretariatPage = () => {
                 </div>
               </div>
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-[#D4AF37]/10 rounded-lg text-[#D4AF37]"><Phone className="w-5 h-5"/></div>
+                <div className="p-3 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-lg text-[var(--school-accent)]"><Phone className="w-5 h-5"/></div>
                 <div>
                   <h4 className="text-white font-bold">Téléphone & WhatsApp</h4>
                   <p className="text-sm text-gray-400 mt-1">+33 7 66 52 57 08</p>
@@ -110,7 +110,7 @@ const ContactSecretariatPage = () => {
                 </div>
               </div>
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-[#D4AF37]/10 rounded-lg text-[#D4AF37]"><Clock className="w-5 h-5"/></div>
+                <div className="p-3 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-lg text-[var(--school-accent)]"><Clock className="w-5 h-5"/></div>
                 <div>
                   <h4 className="text-white font-bold">Horaires d'Ouverture</h4>
                   <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm text-gray-400 mt-1">
@@ -135,7 +135,7 @@ const ContactSecretariatPage = () => {
                    "Réponse finale par email ou téléphone"
                 ].map((step, i) => (
                    <li key={i} className="flex items-center gap-3 text-sm text-gray-300">
-                      <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs text-[#D4AF37] font-bold">{i+1}</span>
+                      <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs text-[var(--school-accent)] font-bold">{i+1}</span>
                       {step}
                    </li>
                 ))}
@@ -170,7 +170,7 @@ const ContactSecretariatPage = () => {
                </div>
                <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-300">Module (Optionnel)</label>
-                  <select name="module" value={formData.module} onChange={handleChange} className="w-full h-10 px-3 rounded-md bg-black/20 border border-white/10 text-white text-sm focus:outline-none focus:border-[#D4AF37]">
+                  <select name="module" value={formData.module} onChange={handleChange} className="w-full h-10 px-3 rounded-md bg-black/20 border border-white/10 text-white text-sm focus:outline-none focus:border-[var(--school-accent)]">
                      <option value="">Sélectionner...</option>
                      <option value="academique">Académique</option>
                      <option value="coaching">Coaching</option>
@@ -181,7 +181,7 @@ const ContactSecretariatPage = () => {
 
             <div className="space-y-2">
                <label className="text-sm font-medium text-gray-300">Type de demande</label>
-               <select name="requestType" required value={formData.requestType} onChange={handleChange} className="w-full h-10 px-3 rounded-md bg-black/20 border border-white/10 text-white text-sm focus:outline-none focus:border-[#D4AF37]">
+               <select name="requestType" required value={formData.requestType} onChange={handleChange} className="w-full h-10 px-3 rounded-md bg-black/20 border border-white/10 text-white text-sm focus:outline-none focus:border-[var(--school-accent)]">
                   <option value="">Sélectionner le service...</option>
                   <option value="inscription">Inscription & Admissions</option>
                   <option value="finance">Paiements & Facturation</option>
@@ -204,11 +204,11 @@ const ContactSecretariatPage = () => {
                   rows="5"
                   value={formData.message} 
                   onChange={handleChange} 
-                  className="w-full p-3 rounded-md bg-black/20 border border-white/10 text-white text-sm focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full p-3 rounded-md bg-black/20 border border-white/10 text-white text-sm focus:outline-none focus:border-[var(--school-accent)]"
                ></textarea>
             </div>
 
-            <Button type="submit" disabled={isSubmitting} className="w-full bg-[#D4AF37] text-black hover:bg-[#b5952f] font-bold py-6">
+            <Button type="submit" disabled={isSubmitting} className="w-full bg-[var(--school-accent)] text-black hover:bg-[#b5952f] font-bold py-6">
                {isSubmitting ? 'Envoi en cours...' : <><Send className="w-4 h-4 mr-2" /> Envoyer la demande</>}
             </Button>
 

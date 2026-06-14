@@ -60,13 +60,13 @@ function Toggle({ label, description, checked, onChange, color = '#D4AF37', data
       className={cn(
         'w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left',
         checked
-          ? 'border-[#D4AF37]/30 bg-[#D4AF37]/8'
+          ? 'border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)]'
           : 'border-white/8 bg-white/[0.03] hover:border-white/15'
       )}
     >
       <div
         className={cn('w-9 h-5 rounded-full relative transition-colors flex-shrink-0',
-          checked ? 'bg-[#D4AF37]' : 'bg-white/15')}
+          checked ? 'bg-[var(--school-accent)]' : 'bg-white/15')}
       >
         <div className={cn('absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform',
           checked ? 'translate-x-4' : 'translate-x-0.5')} />

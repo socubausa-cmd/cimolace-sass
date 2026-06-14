@@ -64,7 +64,7 @@ function StepEditor({ step, data, onChange, onRemoveContent }) {
                 onChange={e => onChange({ ...data, step: step.step, title: step.label, content: e.target.value })}
                 placeholder={step.placeholder}
                 rows={2}
-                className="w-full resize-none rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#D4AF37]/40 transition-colors"
+                className="w-full resize-none rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
               />
               <div className="flex items-center gap-3">
                 <label className="text-xs text-gray-500">Durée :</label>
@@ -74,7 +74,7 @@ function StepEditor({ step, data, onChange, onRemoveContent }) {
                   value={data?.duration_min || ''}
                   onChange={e => onChange({ ...data, step: step.step, title: step.label, duration_min: Number(e.target.value) || undefined })}
                   placeholder="min"
-                  className="w-16 rounded-lg bg-white/5 border border-white/10 px-2 py-1 text-sm text-white text-center focus:outline-none focus:border-[#D4AF37]/40"
+                  className="w-16 rounded-lg bg-white/5 border border-white/10 px-2 py-1 text-sm text-white text-center focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]"
                 />
                 <span className="text-xs text-gray-500">minutes</span>
                 {data?.content && (
@@ -189,7 +189,7 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
     <div className="space-y-4 p-4">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <List className="w-4 h-4 text-[#D4AF37]" />
+        <List className="w-4 h-4 text-[var(--school-accent)]" />
         <p className="text-sm font-semibold text-white">Studio de préparation</p>
         <span className="ml-auto text-[10px] text-gray-500 border border-white/10 rounded px-2 py-0.5">§3 & §8</span>
       </div>
@@ -204,7 +204,7 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
               onClick={() => setRoomType(rt.value)}
               className={`flex-1 flex flex-col items-center gap-1.5 rounded-xl border py-3 text-xs font-medium transition-all ${
                 roomType === rt.value
-                  ? 'border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#D4AF37]'
+                  ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)]'
                   : 'border-white/10 bg-white/5 text-gray-500 hover:border-white/25'
               }`}
             >
@@ -244,7 +244,7 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
           onChange={e => setNotes(e.target.value)}
           placeholder="Observations, contexte, points de vigilance avant la séance…"
           rows={2}
-          className="w-full resize-none rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#D4AF37]/40 transition-colors"
+          className="w-full resize-none rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
         />
       </div>
 
@@ -252,7 +252,7 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
       <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
         <button
           onClick={() => setIsReady(r => !r)}
-          className={`w-10 h-5 rounded-full transition-all flex items-center px-0.5 ${isReady ? 'bg-[#D4AF37]' : 'bg-white/20'}`}
+          className={`w-10 h-5 rounded-full transition-all flex items-center px-0.5 ${isReady ? 'bg-[var(--school-accent)]' : 'bg-white/20'}`}
         >
           <motion.div className="w-4 h-4 rounded-full bg-white shadow" animate={{ x: isReady ? 20 : 0 }} transition={{ type: 'spring', stiffness: 300 }} />
         </button>
@@ -293,7 +293,7 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
       <Button
         onClick={handleSave}
         disabled={saving}
-        className="w-full bg-[#D4AF37] text-black hover:bg-amber-400 font-bold flex items-center justify-center gap-2"
+        className="w-full bg-[var(--school-accent)] text-black hover:bg-amber-400 font-bold flex items-center justify-center gap-2"
       >
         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
         {isReady ? 'Enregistrer & activer la salle' : 'Enregistrer la préparation'}

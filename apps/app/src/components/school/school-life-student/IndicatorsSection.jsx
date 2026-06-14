@@ -46,7 +46,7 @@ const IndicatorsSection = ({ data }) => {
           value={data.averageNoteQuality} 
           unit="/10" 
           trend="up" 
-          color="text-[#D4AF37]"
+          color="text-[var(--school-accent)]"
           subtitle="+0.2 pts"
         />
         <IndicatorCard 

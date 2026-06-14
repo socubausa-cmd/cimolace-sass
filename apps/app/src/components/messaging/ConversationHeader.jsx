@@ -17,7 +17,7 @@ const ConversationHeader = ({ conversation }) => {
         <div className="relative">
           <Avatar className="h-10 w-10 border border-white/10">
             <AvatarImage src={conversation.image} />
-            <AvatarFallback className="bg-gray-800 text-[#D4AF37]">
+            <AvatarFallback className="bg-gray-800 text-[var(--school-accent)]">
               {conversation.name?.substring(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>

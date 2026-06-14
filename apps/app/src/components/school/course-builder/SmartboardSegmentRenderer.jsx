@@ -71,7 +71,7 @@ function GammaSlide({ segment, ai, mode, illustrationUrl }) {
 
       {/* Ambient glow orbs */}
       <div className={`absolute top-0 right-0 w-64 h-64 rounded-full bg-gradient-radial ${accent.glow} to-transparent blur-3xl opacity-60 pointer-events-none`} />
-      <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-gradient-radial from-[#D4AF37]/10 to-transparent blur-3xl opacity-40 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-gradient-radial from-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] to-transparent blur-3xl opacity-40 pointer-events-none" />
 
       {/* Grid pattern overlay */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -87,7 +87,7 @@ function GammaSlide({ segment, ai, mode, illustrationUrl }) {
               Chapitre {chapterNum}
             </span>
             {mode === 'masterclass' && (
-              <span className="inline-flex items-center gap-1 h-6 px-2 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#D4AF37] text-[10px] font-semibold">
+              <span className="inline-flex items-center gap-1 h-6 px-2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] text-[10px] font-semibold">
                 <Target className="w-3 h-3" /> Masterclass
               </span>
             )}
@@ -175,10 +175,10 @@ function GammaSlide({ segment, ai, mode, illustrationUrl }) {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.35 }}
-                className="mt-auto rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/8 p-3"
+                className="mt-auto rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] p-3"
               >
-                <p className="text-[10px] uppercase tracking-widest text-[#D4AF37]/70 font-semibold mb-1">À retenir</p>
-                <p className="text-sm text-[#D4AF37] font-medium italic leading-snug">"{retention}"</p>
+                <p className="text-[10px] uppercase tracking-widest text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] font-semibold mb-1">À retenir</p>
+                <p className="text-sm text-[var(--school-accent)] font-medium italic leading-snug">"{retention}"</p>
               </motion.div>
             )}
           </div>

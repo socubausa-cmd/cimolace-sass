@@ -28,7 +28,7 @@ export const DashboardTab = ({ stats }) => {
             <CardTitle className="text-gray-400 text-sm">Formations Actives</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-[#D4AF37]">{safeStats.activeFormations || 0}</div>
+            <div className="text-3xl font-bold text-[var(--school-accent)]">{safeStats.activeFormations || 0}</div>
           </CardContent>
         </Card>
         <Card className="bg-[#192734] border-white/10">
@@ -79,18 +79,18 @@ export const FormationsTab = () => {
             placeholder="Nouvelle formation..." 
             className="w-64 bg-[#0F1419] border-white/10 text-white"
           />
-          <Button onClick={handleAdd} className="bg-[#D4AF37] text-black hover:bg-yellow-500">
+          <Button onClick={handleAdd} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
             <Plus className="w-4 h-4 mr-2" /> Ajouter
           </Button>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-10"><Loader2 className="animate-spin text-[#D4AF37]" /></div>
+        <div className="flex justify-center py-10"><Loader2 className="animate-spin text-[var(--school-accent)]" /></div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {safeData.map((formation) => (
-            <Card key={formation.id} className="bg-[#192734] border-white/10 hover:border-[#D4AF37]/30 transition-all">
+            <Card key={formation.id} className="bg-[#192734] border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
               <CardContent className="flex items-center justify-between p-6">
                 <div>
                   <h3 className="font-bold text-white text-lg">{formation.title}</h3>
@@ -133,7 +133,7 @@ export const AccompanimentTab = () => {
            <CardTitle className="text-white">Sessions Récentes</CardTitle>
         </CardHeader>
         <CardContent>
-           {loading ? <Loader2 className="animate-spin text-[#D4AF37]" /> : (
+           {loading ? <Loader2 className="animate-spin text-[var(--school-accent)]" /> : (
              <div className="space-y-4">
                {safeData.map(item => (
                  <div key={item.id} className="flex justify-between items-center border-b border-white/5 pb-4 last:border-0">
@@ -172,21 +172,21 @@ export const SchoolLifeTab = () => {
         <h2 className="text-xl font-bold text-white">Vie Scolaire (Événements & Annonces)</h2>
         <Dialog>
           <DialogTrigger asChild>
-             <Button className="bg-[#D4AF37] text-black"><Plus className="w-4 h-4 mr-2"/> Ajouter</Button>
+             <Button className="bg-[var(--school-accent)] text-black"><Plus className="w-4 h-4 mr-2"/> Ajouter</Button>
           </DialogTrigger>
           <DialogContent className="bg-[#192734] border-white/10 text-white">
              <DialogHeader><DialogTitle>Nouvel Événement</DialogTitle></DialogHeader>
              <div className="space-y-4 py-4">
                <Input placeholder="Titre" className="bg-[#0F1419]" value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} />
                <Input type="date" className="bg-[#0F1419]" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} />
-               <Button onClick={handleAdd} className="w-full bg-[#D4AF37] text-black">Créer</Button>
+               <Button onClick={handleAdd} className="w-full bg-[var(--school-accent)] text-black">Créer</Button>
              </div>
           </DialogContent>
         </Dialog>
       </div>
 
       <div className="grid gap-4">
-        {loading ? <Loader2 className="animate-spin text-[#D4AF37] mx-auto" /> : 
+        {loading ? <Loader2 className="animate-spin text-[var(--school-accent)] mx-auto" /> : 
            safeData.map(item => (
              <div key={item.id} className="flex items-center justify-between p-4 bg-[#192734] rounded-lg border border-white/5">
                 <div className="flex items-center gap-4">

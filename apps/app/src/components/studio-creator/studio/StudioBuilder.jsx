@@ -262,7 +262,7 @@ export function StudioBuilder({
     >
       {!liveCreationShell && (
         <div className="pointer-events-none fixed inset-0 z-0">
-          <div className="absolute -top-32 left-1/3 h-[min(420px,50vh)] w-[min(520px,120vw)] -translate-x-1/2 rounded-full bg-[#D4AF37]/10 blur-[100px]" />
+          <div className="absolute -top-32 left-1/3 h-[min(420px,50vh)] w-[min(520px,120vw)] -translate-x-1/2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] blur-[100px]" />
           <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-amber-950/25 blur-[90px]" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(212,175,55,0.07),transparent)]" />
         </div>
@@ -363,7 +363,7 @@ export function StudioBuilder({
               >
                 <X className="h-5 w-5" />
               </Button>
-              <div className="min-w-0 flex-1 border-l border-[#D4AF37]/15 pl-3 md:pl-4">
+              <div className="min-w-0 flex-1 border-l border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] pl-3 md:pl-4">
                 <h1 className="font-display truncate text-[1.0625rem] font-semibold leading-tight tracking-tight text-white sm:text-lg md:text-[1.125rem] md:leading-snug">
                   {title}
                 </h1>
@@ -392,7 +392,7 @@ export function StudioBuilder({
                 type="button"
                 variant="outline"
                 onClick={() => setStepsMenuOpen(true)}
-                className="hidden shrink-0 border-[#D4AF37]/30 bg-[#D4AF37]/10 font-display text-xs font-semibold text-[#f5e6c8] hover:bg-[#D4AF37]/18 lg:hidden"
+                className="hidden shrink-0 border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] font-display text-xs font-semibold text-[#f5e6c8] hover:bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] lg:hidden"
               >
                 <ListOrdered className="mr-1.5 h-4 w-4" />
                 {currentStep}/{totalSteps}
@@ -413,7 +413,7 @@ export function StudioBuilder({
                 variant="outline"
                 size="sm"
                 onClick={() => setStepsMenuOpen(true)}
-                className="border-[#D4AF37]/30 bg-[#D4AF37]/10 font-display text-[11px] font-semibold text-[#f5e6c8] hover:bg-[#D4AF37]/18"
+                className="border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] font-display text-[11px] font-semibold text-[#f5e6c8] hover:bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)]"
               >
                 <ListOrdered className="mr-1 h-3.5 w-3.5" />
                 {currentStep}/{totalSteps}
@@ -440,7 +440,7 @@ export function StudioBuilder({
         <DialogContent
           className={cn(
             'max-h-[88dvh] max-w-md overflow-hidden text-white sm:rounded-2xl',
-            liveCreationShell ? 'border-[#2D3139] bg-[#12141a]' : 'border-[#D4AF37]/25 bg-[#0a0908]',
+            liveCreationShell ? 'border-[#2D3139] bg-[#12141a]' : 'border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#0a0908]',
           )}
         >
           <DialogHeader>
@@ -606,7 +606,7 @@ export function StudioBuilder({
       ) : (
         <div className="relative z-10 flex min-h-0 flex-1">
           <main className="flex min-w-0 flex-1">
-            <aside className="hidden min-h-0 w-64 flex-shrink-0 overflow-y-auto border-r border-[#D4AF37]/12 bg-[#080706]/80 backdrop-blur-md lg:block">
+            <aside className="hidden min-h-0 w-64 flex-shrink-0 overflow-y-auto border-r border-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] bg-[#080706]/80 backdrop-blur-md lg:block">
               <StudioSidebar
                 steps={steps}
                 currentStep={currentStep}
@@ -648,7 +648,7 @@ export function StudioBuilder({
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: -10, scale: 0.98 }}
                             transition={{ duration: 0.24 }}
-                            className="mt-4 rounded-2xl border border-[#D4AF37]/15 bg-[#0f0d0b]/80 p-4 backdrop-blur-sm"
+                            className="mt-4 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] bg-[#0f0d0b]/80 p-4 backdrop-blur-sm"
                           >
                             {previewEl}
                           </motion.div>
@@ -659,7 +659,7 @@ export function StudioBuilder({
                 </div>
               </div>
 
-              <div className="flex-shrink-0 border-t border-[#D4AF37]/12 bg-[#0a0908]/90 px-4 py-3 backdrop-blur-xl md:px-6">
+              <div className="flex-shrink-0 border-t border-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] bg-[#0a0908]/90 px-4 py-3 backdrop-blur-xl md:px-6">
                 <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
                   <Button
                     variant="outline"
@@ -673,7 +673,7 @@ export function StudioBuilder({
                     {currentStep < totalSteps ? (
                       <Button
                         onClick={goNext}
-                        className="font-display max-w-[min(100%,24rem)] bg-gradient-to-r from-[#D4AF37] to-amber-500 font-semibold text-black shadow-[0_8px_32px_rgba(212,175,55,0.25)] hover:from-amber-400 hover:to-[#D4AF37]"
+                        className="font-display max-w-[min(100%,24rem)] bg-gradient-to-r from-[var(--school-accent)] to-amber-500 font-semibold text-black shadow-[0_8px_32px_rgba(212,175,55,0.25)] hover:from-amber-400 hover:to-[var(--school-accent)]"
                       >
                         <span className="truncate">{liveNextLabel || 'Suivant'}</span>
                         <ChevronRight className="ml-2 h-4 w-4 shrink-0" />
@@ -683,7 +683,7 @@ export function StudioBuilder({
                         type="button"
                         variant="outline"
                         onClick={scrollToLastStepActions}
-                        className="font-display border-[#D4AF37]/35 text-[#f5dd8a] hover:bg-[#D4AF37]/10"
+                        className="font-display border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                       >
                         <span className="hidden sm:inline">Programmer ou lancer</span>
                         <span className="sm:hidden">Actions finales</span>
@@ -709,7 +709,7 @@ export function StudioBuilder({
             </div>
 
             {showPreview && previewEl && (
-              <aside className="hidden w-[400px] flex-shrink-0 border-l border-[#D4AF37]/12 bg-[#080706]/90 p-6 backdrop-blur-md xl:flex xl:min-h-0 xl:overflow-hidden">
+              <aside className="hidden w-[400px] flex-shrink-0 border-l border-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] bg-[#080706]/90 p-6 backdrop-blur-md xl:flex xl:min-h-0 xl:overflow-hidden">
                 <div className="h-full min-h-0 w-full overflow-y-auto overscroll-contain">
                   <motion.div
                     key={currentStepKey}

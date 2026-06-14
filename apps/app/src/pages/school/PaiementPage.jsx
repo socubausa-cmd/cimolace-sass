@@ -86,7 +86,7 @@ export default function PaiementPage() {
   }
 
   const inputCls =
-    'w-full rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#D4AF37] focus:outline-none';
+    'w-full rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-white placeholder-gray-500 focus:border-[var(--school-accent)] focus:outline-none';
 
   return (
     <div className="min-h-screen bg-[#070b14] text-white">
@@ -99,16 +99,16 @@ export default function PaiementPage() {
           <Link to={`/t/${tenantSlug || DEFAULT_TENANT_SLUG}`} className="text-sm text-gray-300 hover:text-white">
             ← Retour
           </Link>
-          <span className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">PRORASCIENCE</span>
+          <span className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">PRORASCIENCE</span>
         </div>
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-        <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Paiement Mobile Money</p>
+        <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Paiement Mobile Money</p>
         <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">{offer.title}</h1>
         <p className="mt-2 text-gray-300">{offer.subtitle}</p>
 
-        <div className="mt-6 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-5">
+        <div className="mt-6 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-5">
           {offer.fixedLabel ? (
             <p className="text-2xl font-semibold text-white">
               {offer.fixedLabel}
@@ -167,7 +167,7 @@ export default function PaiementPage() {
           <button
             type="submit"
             disabled={status.state === 'submitting'}
-            className="w-full rounded-lg bg-[#D4AF37] px-5 py-3 font-semibold text-black hover:bg-[#e5c04a] disabled:opacity-60"
+            className="w-full rounded-lg bg-[var(--school-accent)] px-5 py-3 font-semibold text-black hover:bg-[#e5c04a] disabled:opacity-60"
           >
             {status.state === 'submitting' ? 'Envoi en cours…' : 'Payer par Mobile Money'}
           </button>
@@ -184,7 +184,7 @@ export default function PaiementPage() {
             {status.message}
             {/No auth token|UNAUTHORIZED|connect/i.test(status.message) && (
               <p className="mt-2">
-                <Link to={`/t/${tenantSlug || DEFAULT_TENANT_SLUG}/login`} className="font-semibold text-[#D4AF37] hover:underline">
+                <Link to={`/t/${tenantSlug || DEFAULT_TENANT_SLUG}/login`} className="font-semibold text-[var(--school-accent)] hover:underline">
                   Se connecter pour finaliser →
                 </Link>
               </p>

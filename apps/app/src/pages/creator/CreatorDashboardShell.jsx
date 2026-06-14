@@ -13,7 +13,7 @@ export default function CreatorDashboardShell() {
       <div className="sticky top-0 z-40 flex justify-end border-b border-white/10 bg-[#0F1419]/95 px-4 py-2 backdrop-blur-sm">
         <Link
           to={FORUM_COMMUNITY_PATH.student}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-[#D4AF37] hover:bg-white/5 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-[var(--school-accent)] hover:bg-white/5 transition-colors"
         >
           <MessageCircle className="w-4 h-4 shrink-0" />
           Forum communauté

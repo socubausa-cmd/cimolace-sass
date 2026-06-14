@@ -37,9 +37,9 @@ const ProgressivePlaylist = ({
   return (
     <div className="flex flex-col h-full bg-[#151a21]/95 backdrop-blur-xl border-l border-white/10 w-full overflow-hidden">
        {/* Playlist Header */}
-       <div className="p-4 border-b border-white/10 bg-gradient-to-b from-[#D4AF37]/5 to-transparent shrink-0">
-          <div className="flex items-center gap-2 text-[#D4AF37] mb-2">
-             <div className="w-7 h-7 rounded-lg bg-[#D4AF37]/20 flex items-center justify-center">
+       <div className="p-4 border-b border-white/10 bg-gradient-to-b from-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] to-transparent shrink-0">
+          <div className="flex items-center gap-2 text-[var(--school-accent)] mb-2">
+             <div className="w-7 h-7 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center">
                <LayoutList className="w-4 h-4" />
              </div>
              <span className="text-xs font-bold uppercase tracking-wider">Programme</span>
@@ -49,9 +49,9 @@ const ProgressivePlaylist = ({
           <div className="space-y-1.5">
              <div className="flex justify-between text-xs text-gray-400">
                 <span>Progression</span>
-                <span className="text-[#D4AF37] font-medium">{currentFormation.progress}%</span>
+                <span className="text-[var(--school-accent)] font-medium">{currentFormation.progress}%</span>
              </div>
-             <Progress value={currentFormation.progress} className="h-2 bg-white/5 rounded-full" indicatorClassName="bg-gradient-to-r from-[#D4AF37] to-amber-400" />
+             <Progress value={currentFormation.progress} className="h-2 bg-white/5 rounded-full" indicatorClassName="bg-gradient-to-r from-[var(--school-accent)] to-amber-400" />
           </div>
        </div>
 
@@ -63,7 +63,7 @@ const ProgressivePlaylist = ({
                    <div 
                       className={cn(
                          "flex items-center justify-between p-3 cursor-pointer hover:bg-white/5 transition-all duration-200 rounded-t-xl",
-                         expandedModules.includes(module.id) && "bg-[#D4AF37]/10 border-b border-[#D4AF37]/20"
+                         expandedModules.includes(module.id) && "bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border-b border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
                       )}
                       onClick={() => toggleModule(module.id)}
                    >
@@ -88,7 +88,7 @@ const ProgressivePlaylist = ({
                                {module.weeks.map((week, wIdx) => (
                                   <div key={week.id} className="border-l border-white/10 ml-2 pl-3 py-1">
                                      <div 
-                                        className="flex items-center gap-2 cursor-pointer py-1 hover:text-[#D4AF37] transition-colors group"
+                                        className="flex items-center gap-2 cursor-pointer py-1 hover:text-[var(--school-accent)] transition-colors group"
                                         onClick={() => toggleWeek(week.id)}
                                      >
                                         {expandedWeeks.includes(week.id) ? <ChevronDown className="w-3 h-3 text-gray-500" /> : <ChevronRight className="w-3 h-3 text-gray-500" />}
@@ -122,7 +122,7 @@ const ProgressivePlaylist = ({
                                                                 className={cn(
                                                                    "flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all border",
                                                                    isActive 
-                                                                      ? "bg-[#D4AF37]/15 border-[#D4AF37]/40 shadow-sm" 
+                                                                      ? "bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] shadow-sm" 
                                                                       : "bg-transparent border-transparent hover:bg-white/5 hover:border-white/10"
                                                                 )}
                                                              >
@@ -130,13 +130,13 @@ const ProgressivePlaylist = ({
                                                                    {isCompleted ? (
                                                                       <CheckCircle className="w-4 h-4 text-green-500" />
                                                                    ) : isActive ? (
-                                                                      <PlayCircle className="w-4 h-4 text-[#D4AF37]" />
+                                                                      <PlayCircle className="w-4 h-4 text-[var(--school-accent)]" />
                                                                    ) : (
                                                                       <Circle className="w-4 h-4 text-gray-600" />
                                                                    )}
                                                                 </div>
                                                                 <div className="flex-1 min-w-0">
-                                                                   <p className={cn("text-xs truncate font-medium", isActive ? "text-[#D4AF37]" : "text-gray-400 group-hover:text-gray-200")}>
+                                                                   <p className={cn("text-xs truncate font-medium", isActive ? "text-[var(--school-accent)]" : "text-gray-400 group-hover:text-gray-200")}>
                                                                       {video.title}
                                                                    </p>
                                                                    <p className="text-[10px] text-gray-600 mt-0.5">{Math.floor(video.duration / 60)} min</p>
@@ -163,14 +163,14 @@ const ProgressivePlaylist = ({
 
        {/* Sticky Footer Controls */}
        <div className="p-4 border-t border-white/10 bg-[#151a21]/80 backdrop-blur shrink-0 space-y-3">
-          <Button className="w-full bg-[#D4AF37] hover:bg-amber-500 text-black font-bold h-9 text-xs uppercase tracking-wide shadow-lg shadow-[#D4AF37]/20">
+          <Button className="w-full bg-[var(--school-accent)] hover:bg-amber-500 text-black font-bold h-9 text-xs uppercase tracking-wide shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
              <CheckCircle className="w-3 h-3 mr-2" /> Marquer comme terminé
           </Button>
           <div className="flex gap-2">
-             <Button variant="outline" size="sm" className="flex-1 border-white/10 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 text-gray-400 hover:text-[#D4AF37] h-8 text-xs">
+             <Button variant="outline" size="sm" className="flex-1 border-white/10 hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-gray-400 hover:text-[var(--school-accent)] h-8 text-xs">
                 <ArrowLeft className="w-3 h-3 mr-1" /> Précédent
              </Button>
-             <Button variant="outline" size="sm" className="flex-1 border-white/10 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 text-gray-400 hover:text-[#D4AF37] h-8 text-xs">
+             <Button variant="outline" size="sm" className="flex-1 border-white/10 hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-gray-400 hover:text-[var(--school-accent)] h-8 text-xs">
                 Suivant <ArrowRight className="w-3 h-3 ml-1" />
              </Button>
           </div>

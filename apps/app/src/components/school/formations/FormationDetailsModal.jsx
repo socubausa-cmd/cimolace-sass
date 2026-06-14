@@ -50,16 +50,16 @@ const FormationDetailsModal = ({ formation, isOpen, onClose }) => {
               <Badge className={formation.status === 'published' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}>
                 {formation.status === 'published' ? 'Publié' : formation.status === 'draft' ? 'Brouillon' : 'Archivé'}
               </Badge>
-              <Badge className="bg-[#D4AF37]/20 text-[#D4AF37] border-[#D4AF37]/50">{formation.year}</Badge>
+              <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]">{formation.year}</Badge>
             </div>
             
             <p className="text-gray-400 max-w-3xl line-clamp-2">{formation.description}</p>
             
             <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 mt-2">
-              <span className="flex items-center gap-1"><Layers className="w-4 h-4 text-[#D4AF37]"/> {formation.level}</span>
-              <span className="flex items-center gap-1"><BookOpen className="w-4 h-4 text-[#D4AF37]"/> {formation.modules?.length || 0} Modules</span>
-              <span className="flex items-center gap-1"><Clock className="w-4 h-4 text-[#D4AF37]"/> {formation.duration}</span>
-              <span className="flex items-center gap-1"><Users className="w-4 h-4 text-[#D4AF37]"/> {formation.enrolledStudents?.length || 0} Étudiants</span>
+              <span className="flex items-center gap-1"><Layers className="w-4 h-4 text-[var(--school-accent)]"/> {formation.level}</span>
+              <span className="flex items-center gap-1"><BookOpen className="w-4 h-4 text-[var(--school-accent)]"/> {formation.modules?.length || 0} Modules</span>
+              <span className="flex items-center gap-1"><Clock className="w-4 h-4 text-[var(--school-accent)]"/> {formation.duration}</span>
+              <span className="flex items-center gap-1"><Users className="w-4 h-4 text-[var(--school-accent)]"/> {formation.enrolledStudents?.length || 0} Étudiants</span>
             </div>
           </div>
         </div>
@@ -69,9 +69,9 @@ const FormationDetailsModal = ({ formation, isOpen, onClose }) => {
           <Tabs defaultValue="structure" className="h-full flex flex-col">
             <div className="px-6 py-2 bg-[#151a21]/60 backdrop-blur border-b border-white/10">
               <TabsList className="bg-transparent p-0 gap-4">
-                <TabsTrigger value="structure" className="data-[state=active]:bg-[#D4AF37] data-[state=active]:text-black text-gray-400 px-4 py-2 rounded-full transition-all">Structure & Contenu</TabsTrigger>
-                <TabsTrigger value="students" className="data-[state=active]:bg-[#D4AF37] data-[state=active]:text-black text-gray-400 px-4 py-2 rounded-full transition-all">Étudiants Inscrits</TabsTrigger>
-                <TabsTrigger value="stats" className="data-[state=active]:bg-[#D4AF37] data-[state=active]:text-black text-gray-400 px-4 py-2 rounded-full transition-all">Statistiques</TabsTrigger>
+                <TabsTrigger value="structure" className="data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-black text-gray-400 px-4 py-2 rounded-full transition-all">Structure & Contenu</TabsTrigger>
+                <TabsTrigger value="students" className="data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-black text-gray-400 px-4 py-2 rounded-full transition-all">Étudiants Inscrits</TabsTrigger>
+                <TabsTrigger value="stats" className="data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-black text-gray-400 px-4 py-2 rounded-full transition-all">Statistiques</TabsTrigger>
               </TabsList>
             </div>
 
@@ -83,7 +83,7 @@ const FormationDetailsModal = ({ formation, isOpen, onClose }) => {
                       <AccordionItem key={module.id} value={module.id} className="border border-white/10 bg-[#151a21]/80 backdrop-blur rounded-lg px-4 shadow-lg">
                         <AccordionTrigger className="hover:no-underline py-4">
                           <div className="flex items-center gap-4 text-left">
-                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] font-bold text-sm">
+                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] font-bold text-sm">
                               {idx + 1}
                             </span>
                             <div>
@@ -99,12 +99,12 @@ const FormationDetailsModal = ({ formation, isOpen, onClose }) => {
                                 <h5 className="text-sm font-bold text-gray-300 uppercase tracking-wider">{week.title}</h5>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                   {week.days?.map((day) => (
-                                    <div key={day.id} className="bg-black/40 p-4 rounded-lg border border-white/5 hover:border-[#D4AF37]/30 transition-colors">
+                                    <div key={day.id} className="bg-black/40 p-4 rounded-lg border border-white/5 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-colors">
                                       <p className="text-sm font-bold text-white mb-3 border-b border-white/10 pb-2">{day.title}</p>
                                       <div className="space-y-2">
                                         {day.videos?.map((video) => (
                                           <div key={video.id} className="flex items-center gap-2 text-sm text-gray-400">
-                                            <Video className="w-3 h-3 text-[#D4AF37]"/>
+                                            <Video className="w-3 h-3 text-[var(--school-accent)]"/>
                                             <span className="truncate flex-1">{video.title}</span>
                                             <span className="text-gray-600">{video.duration}m</span>
                                           </div>
@@ -160,7 +160,7 @@ const FormationDetailsModal = ({ formation, isOpen, onClose }) => {
                             <td className="p-4 text-gray-400">{format(new Date(student.enrollmentDate), 'dd MMM yyyy', {locale: fr})}</td>
                             <td className="p-4 w-48">
                               <div className="flex items-center gap-2">
-                                <Progress value={student.progress} className="h-2 bg-black/40" indicatorClassName="bg-[#D4AF37]" />
+                                <Progress value={student.progress} className="h-2 bg-black/40" indicatorClassName="bg-[var(--school-accent)]" />
                                 <span className="text-xs text-white w-8">{student.progress}%</span>
                               </div>
                             </td>

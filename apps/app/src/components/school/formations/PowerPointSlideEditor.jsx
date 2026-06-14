@@ -35,11 +35,11 @@ const PowerPointSlideEditor = ({ slide, onChange, onSave, onCancel }) => {
     <div className="space-y-6 p-4 bg-[#192734] rounded-lg border border-white/10 animate-in fade-in zoom-in-95 duration-200">
       <div className="flex justify-between items-center pb-4 border-b border-white/10">
         <h3 className="text-lg font-bold text-white flex items-center gap-2">
-          <Type className="w-5 h-5 text-[#D4AF37]" /> Éditeur de Slide
+          <Type className="w-5 h-5 text-[var(--school-accent)]" /> Éditeur de Slide
         </h3>
         <div className="flex gap-2">
           <Button variant="ghost" onClick={onCancel} className="text-gray-400 hover:text-white">Annuler</Button>
-          <Button onClick={() => onSave(localSlide)} className="bg-[#D4AF37] text-black hover:bg-yellow-500">Enregistrer</Button>
+          <Button onClick={() => onSave(localSlide)} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">Enregistrer</Button>
         </div>
       </div>
 
@@ -93,7 +93,7 @@ const PowerPointSlideEditor = ({ slide, onChange, onSave, onCancel }) => {
 
         <div className="space-y-4">
            <div className="p-4 bg-[#0F1419] rounded-lg border border-white/10">
-              <h4 className="text-sm font-bold text-[#D4AF37] mb-4 flex items-center gap-2"><Play className="w-4 h-4"/> Animations</h4>
+              <h4 className="text-sm font-bold text-[var(--school-accent)] mb-4 flex items-center gap-2"><Play className="w-4 h-4"/> Animations</h4>
               
               <div className="space-y-4">
                  <div className="space-y-2">

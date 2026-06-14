@@ -115,19 +115,19 @@ const SecondYearCurriculumPage = () => {
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2094&auto=format&fit=crop')] bg-cover bg-center opacity-10" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F1419]/90 via-[#0F1419]/80 to-[#0F1419]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-[#D4AF37]/10 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] via-transparent to-transparent" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
             <div className="flex flex-wrap justify-center gap-3 mb-6">
-              <Badge variant="outline" className="border-[#D4AF37] text-[#D4AF37] px-4 py-1 uppercase tracking-widest backdrop-blur-md">Niveau Intermédiaire - Avancé</Badge>
+              <Badge variant="outline" className="border-[var(--school-accent)] text-[var(--school-accent)] px-4 py-1 uppercase tracking-widest backdrop-blur-md">Niveau Intermédiaire - Avancé</Badge>
               <Badge className="bg-blue-500/20 text-blue-400 border border-blue-500/30">Théorique + Pratique</Badge>
               <Badge className="bg-green-500/20 text-green-400 border border-green-500/30">Statut : Actif</Badge>
             </div>
             
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-white mb-6 leading-tight">
-              Année 2 <span className="text-[#D4AF37]">Lois Cosmologiques</span> & Mort
+              Année 2 <span className="text-[var(--school-accent)]">Lois Cosmologiques</span> & Mort
             </h1>
             
             <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-10 leading-relaxed font-light">
@@ -148,7 +148,7 @@ const SecondYearCurriculumPage = () => {
                 <div className="text-xs uppercase tracking-wide text-gray-400">Trimestres</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-[#D4AF37] mb-1">Gratuit</div>
+                <div className="text-3xl font-bold text-[var(--school-accent)] mb-1">Gratuit</div>
                 <div className="text-xs uppercase tracking-wide text-gray-400">Accès</div>
               </div>
             </div>
@@ -169,9 +169,9 @@ const SecondYearCurriculumPage = () => {
             <motion.div 
               key={i} 
               whileHover={{ y: -5 }}
-              className="bg-[#192734] p-6 rounded-xl border border-white/5 text-center hover:border-[#D4AF37]/30 transition-all"
+              className="bg-[#192734] p-6 rounded-xl border border-white/5 text-center hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all"
             >
-              <obj.icon className="w-10 h-10 text-[#D4AF37] mx-auto mb-4" />
+              <obj.icon className="w-10 h-10 text-[var(--school-accent)] mx-auto mb-4" />
               <h3 className="text-sm font-bold text-white mb-2 uppercase">{obj.title}</h3>
               <p className="text-sm text-gray-400 leading-relaxed">{obj.desc}</p>
             </motion.div>
@@ -185,16 +185,16 @@ const SecondYearCurriculumPage = () => {
           <div className="flex flex-col md:flex-row justify-between items-end mb-6">
             <div>
               <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                <BarChart className="w-6 h-6 text-[#D4AF37]" /> Votre Progression
+                <BarChart className="w-6 h-6 text-[var(--school-accent)]" /> Votre Progression
               </h2>
               <p className="text-gray-400 text-sm">Modules complétés : {completedModules} / {totalModules} ({progressPercentage}%)</p>
             </div>
             <div className="text-right hidden md:block">
               <div className="text-white font-bold text-lg">~100 Heures</div>
-              <div className="text-[#D4AF37] text-sm">~8h / semaine</div>
+              <div className="text-[var(--school-accent)] text-sm">~8h / semaine</div>
             </div>
           </div>
-          <Progress value={progressPercentage} className="h-4 bg-black/40" indicatorClassName="bg-gradient-to-r from-[#D4AF37] to-yellow-600" />
+          <Progress value={progressPercentage} className="h-4 bg-black/40" indicatorClassName="bg-gradient-to-r from-[var(--school-accent)] to-yellow-600" />
           
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mt-8">
             {['II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'].map((part) => {
@@ -247,7 +247,7 @@ const SecondYearCurriculumPage = () => {
             />
           </div>
           <select 
-            className="bg-[#192734] text-white border border-white/10 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+            className="bg-[#192734] text-white border border-white/10 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--school-accent)]"
             value={partFilter}
             onChange={(e) => setPartFilter(e.target.value)}
           >
@@ -255,7 +255,7 @@ const SecondYearCurriculumPage = () => {
             {['II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'].map(p => <option key={p} value={p}>Partie {p}</option>)}
           </select>
           <select 
-            className="bg-[#192734] text-white border border-white/10 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+            className="bg-[#192734] text-white border border-white/10 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--school-accent)]"
             value={levelFilter}
             onChange={(e) => setLevelFilter(e.target.value)}
           >
@@ -276,18 +276,18 @@ const SecondYearCurriculumPage = () => {
                 initial={{ opacity: 0 }} 
                 animate={{ opacity: 1 }}
                 whileHover={{ y: -5 }}
-                className="bg-[#192734] rounded-xl overflow-hidden border border-white/5 hover:border-[#D4AF37]/50 transition-all group"
+                className="bg-[#192734] rounded-xl overflow-hidden border border-white/5 hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] transition-all group"
               >
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
-                    <Badge variant="outline" className="border-[#D4AF37] text-[#D4AF37] font-bold">{module.id}</Badge>
+                    <Badge variant="outline" className="border-[var(--school-accent)] text-[var(--school-accent)] font-bold">{module.id}</Badge>
                     {module.status === 'active' ? (
                       <CheckCircle className="w-5 h-5 text-green-500" />
                     ) : (
                       <Lock className="w-5 h-5 text-gray-600" />
                     )}
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 group-hover:text-[#D4AF37] transition-colors">{module.title}</h3>
+                  <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 group-hover:text-[var(--school-accent)] transition-colors">{module.title}</h3>
                   <p className="text-sm text-gray-400 mb-4 flex items-center gap-2">
                     <Users className="w-3 h-3" /> {module.professor}
                   </p>
@@ -296,13 +296,13 @@ const SecondYearCurriculumPage = () => {
                     <div>Partie {module.part}</div>
                     <div className="text-right">{module.duration}h</div>
                     <div>{module.level}</div>
-                    <div className="text-right text-[#D4AF37]">{module.type}</div>
+                    <div className="text-right text-[var(--school-accent)]">{module.type}</div>
                   </div>
                 </div>
                 <div className="px-6 py-4 border-t border-white/5 bg-black/20 flex justify-between items-center">
                   <span className="text-sm text-gray-500">Statut: {module.status === 'active' ? 'Ouvert' : 'Verrouillé'}</span>
                   <Link to={`/year2-modules/${module.id}`}>
-                    <Button size="sm" variant="ghost" className="hover:text-[#D4AF37] p-0 h-auto font-bold">
+                    <Button size="sm" variant="ghost" className="hover:text-[var(--school-accent)] p-0 h-auto font-bold">
                       Détails <ArrowRight className="w-3 h-3 ml-1" />
                     </Button>
                   </Link>
@@ -315,7 +315,7 @@ const SecondYearCurriculumPage = () => {
             <Table>
               <TableHeader className="bg-black/30">
                 <TableRow className="border-white/10 hover:bg-transparent">
-                  <TableHead className="text-[#D4AF37]">Code</TableHead>
+                  <TableHead className="text-[var(--school-accent)]">Code</TableHead>
                   <TableHead className="text-white">Titre</TableHead>
                   <TableHead className="text-white">Partie</TableHead>
                   <TableHead className="text-white">Durée</TableHead>
@@ -328,7 +328,7 @@ const SecondYearCurriculumPage = () => {
               <TableBody>
                 {filteredModules.map((module) => (
                   <TableRow key={module.id} className="border-white/5 hover:bg-white/5">
-                    <TableCell className="font-bold text-[#D4AF37]">{module.id}</TableCell>
+                    <TableCell className="font-bold text-[var(--school-accent)]">{module.id}</TableCell>
                     <TableCell className="font-medium text-gray-300">{module.title}</TableCell>
                     <TableCell>Partie {module.part}</TableCell>
                     <TableCell>{module.duration}h</TableCell>
@@ -338,7 +338,7 @@ const SecondYearCurriculumPage = () => {
                     <TableCell className="text-right">
                       <Link to={`/year2-modules/${module.id}`}>
                         <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                          <ArrowRight className="w-4 h-4 text-gray-400 hover:text-[#D4AF37]" />
+                          <ArrowRight className="w-4 h-4 text-gray-400 hover:text-[var(--school-accent)]" />
                         </Button>
                       </Link>
                     </TableCell>
@@ -357,7 +357,7 @@ const SecondYearCurriculumPage = () => {
           {/* Prerequisites */}
           <div>
             <h2 className="text-2xl font-serif font-bold text-white mb-6 flex items-center gap-3">
-              <Shield className="w-6 h-6 text-[#D4AF37]" /> Prérequis & Recommandations
+              <Shield className="w-6 h-6 text-[var(--school-accent)]" /> Prérequis & Recommandations
             </h2>
             <div className="space-y-6">
               <div className="bg-[#192734] p-5 rounded-xl border-l-4 border-red-500">
@@ -368,7 +368,7 @@ const SecondYearCurriculumPage = () => {
                   <li>Engagement personnel écrit.</li>
                 </ul>
               </div>
-              <div className="bg-[#192734] p-5 rounded-xl border-l-4 border-[#D4AF37]">
+              <div className="bg-[#192734] p-5 rounded-xl border-l-4 border-[var(--school-accent)]">
                 <h3 className="font-bold text-white mb-2">Recommandé</h3>
                 <ul className="text-sm text-gray-400 space-y-2 list-disc pl-4">
                   <li>Pratique régulière de la méditation (20 min/jour).</li>
@@ -382,7 +382,7 @@ const SecondYearCurriculumPage = () => {
           {/* Resources */}
           <div>
              <h2 className="text-2xl font-serif font-bold text-white mb-6 flex items-center gap-3">
-              <BookOpen className="w-6 h-6 text-[#D4AF37]" /> Ressources Pédagogiques
+              <BookOpen className="w-6 h-6 text-[var(--school-accent)]" /> Ressources Pédagogiques
             </h2>
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="bg-[#192734] p-4 rounded-xl flex items-center gap-3 border border-white/5">
@@ -407,14 +407,14 @@ const SecondYearCurriculumPage = () => {
                 </div>
               </div>
               <div className="bg-[#192734] p-4 rounded-xl flex items-center gap-3 border border-white/5">
-                <GraduationCap className="w-8 h-8 text-[#D4AF37]" />
+                <GraduationCap className="w-8 h-8 text-[var(--school-accent)]" />
                 <div>
                   <div className="text-2xl font-bold text-white">95+</div>
                   <div className="text-sm text-gray-400">Exercices Pratiques</div>
                 </div>
               </div>
             </div>
-            <Button className="w-full bg-[#192734] hover:bg-white/5 text-[#D4AF37] border border-[#D4AF37]/30">
+            <Button className="w-full bg-[#192734] hover:bg-white/5 text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
               Accéder à la Bibliothèque Complète
             </Button>
           </div>
@@ -451,20 +451,20 @@ const SecondYearCurriculumPage = () => {
               rating: "4.9/5"
             }
           ].map((prof, i) => (
-            <div key={i} className="bg-[#192734] rounded-2xl overflow-hidden border border-white/5 hover:shadow-xl hover:shadow-[#D4AF37]/10 transition-all group">
-              <div className="h-24 bg-gradient-to-r from-[#D4AF37]/20 to-black/50" />
+            <div key={i} className="bg-[#192734] rounded-2xl overflow-hidden border border-white/5 hover:shadow-xl hover:shadow-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] transition-all group">
+              <div className="h-24 bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-black/50" />
               <div className="px-6 pb-6 -mt-12 relative">
                 <div className="w-24 h-24 rounded-full bg-gray-700 border-4 border-[#0F1419] mx-auto mb-4 flex items-center justify-center text-2xl font-serif text-gray-400">
                   {prof.name.charAt(6)}
                 </div>
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-white">{prof.name}</h3>
-                  <p className="text-[#D4AF37] text-sm">{prof.role}</p>
+                  <p className="text-[var(--school-accent)] text-sm">{prof.role}</p>
                 </div>
                 <div className="space-y-3 text-sm text-gray-400">
-                  <div className="flex items-center gap-2"><Award className="w-4 h-4 text-[#D4AF37]"/> Spécialité: {prof.spec}</div>
-                  <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-[#D4AF37]"/> Dispo: {prof.avail}</div>
-                  <div className="flex items-center gap-2"><Star className="w-4 h-4 text-[#D4AF37]"/> Note: {prof.rating}</div>
+                  <div className="flex items-center gap-2"><Award className="w-4 h-4 text-[var(--school-accent)]"/> Spécialité: {prof.spec}</div>
+                  <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-[var(--school-accent)]"/> Dispo: {prof.avail}</div>
+                  <div className="flex items-center gap-2"><Star className="w-4 h-4 text-[var(--school-accent)]"/> Note: {prof.rating}</div>
                 </div>
               </div>
             </div>
@@ -521,7 +521,7 @@ const SecondYearCurriculumPage = () => {
             <div className="mt-8">
               <h3 className="text-lg font-bold text-white mb-4">Emploi du Temps Hebdomadaire</h3>
               <div className="grid grid-cols-5 gap-2 text-center text-xs">
-                {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'].map(d => <div key={d} className="bg-[#D4AF37]/20 text-[#D4AF37] p-2 rounded">{d}</div>)}
+                {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'].map(d => <div key={d} className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] p-2 rounded">{d}</div>)}
                 {['Diallo', 'Kimbembe', 'Mixte', 'Kimbembe', 'Nkosi'].map((p, i) => <div key={i} className="bg-[#192734] p-2 rounded text-gray-400 border border-white/5 py-4">{p}<br/>18h-20h</div>)}
               </div>
             </div>
@@ -542,14 +542,14 @@ const SecondYearCurriculumPage = () => {
                 <div className="flex justify-between text-sm text-gray-400"><span>Essais / Projets</span><span>30%</span></div>
                 <Progress value={30} className="h-1.5" />
               </div>
-              <div className="mt-4 text-center text-[#D4AF37] text-sm font-bold border-t border-white/10 pt-3">
+              <div className="mt-4 text-center text-[var(--school-accent)] text-sm font-bold border-t border-white/10 pt-3">
                 Moyenne minimale requise : 14/20
               </div>
             </div>
 
             <div className="flex gap-4">
-              <div className="flex-1 bg-gradient-to-br from-[#D4AF37]/20 to-[#192734] p-4 rounded-xl border border-[#D4AF37]/30 text-center">
-                <Award className="w-8 h-8 text-[#D4AF37] mx-auto mb-2" />
+              <div className="flex-1 bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-[#192734] p-4 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-center">
+                <Award className="w-8 h-8 text-[var(--school-accent)] mx-auto mb-2" />
                 <div className="font-bold text-white text-sm">Certificat Année 2</div>
                 <div className="text-sm text-gray-400">Fin de Cycle</div>
               </div>
@@ -569,7 +569,7 @@ const SecondYearCurriculumPage = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {testimonials.map((t) => (
             <div key={t.id} className="bg-[#192734] p-6 rounded-xl border border-white/5 relative">
-              <div className="flex text-[#D4AF37] mb-3">
+              <div className="flex text-[var(--school-accent)] mb-3">
                 {[...Array(5)].map((_, i) => <Star key={i} className={`w-3 h-3 ${i < Math.floor(t.rating) ? 'fill-current' : 'text-gray-600'}`} />)}
               </div>
               <p className="text-sm text-gray-300 italic mb-4 line-clamp-4">"{t.content}"</p>
@@ -581,7 +581,7 @@ const SecondYearCurriculumPage = () => {
           ))}
         </div>
 
-        <div className="bg-[#D4AF37] rounded-3xl p-8 md:p-12 text-center relative overflow-hidden">
+        <div className="bg-[var(--school-accent)] rounded-3xl p-8 md:p-12 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
           <div className="relative z-10">
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-black mb-6">Prêt pour l'Ascension ?</h2>

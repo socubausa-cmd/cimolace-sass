@@ -162,7 +162,7 @@ export function FormationForumContent({ formationId, embedded = false, community
         {embedded ? (
           <Link
             to={communityForumTo}
-            className="inline-flex items-center gap-1 text-sm text-[#D4AF37] hover:text-amber-400"
+            className="inline-flex items-center gap-1 text-sm text-[var(--school-accent)] hover:text-amber-400"
           >
             <ChevronLeft className="w-4 h-4" /> Forum communauté
           </Link>
@@ -189,7 +189,7 @@ export function FormationForumContent({ formationId, embedded = false, community
       {embedded ? (
         <Link
           to={communityForumTo}
-          className="inline-flex items-center gap-1 text-sm text-[#D4AF37] hover:text-amber-400 mb-2"
+          className="inline-flex items-center gap-1 text-sm text-[var(--school-accent)] hover:text-amber-400 mb-2"
         >
           <ChevronLeft className="w-4 h-4" /> Forum communauté
         </Link>
@@ -205,7 +205,7 @@ export function FormationForumContent({ formationId, embedded = false, community
         <div className="shrink-0">
           <div className="flex flex-wrap items-center gap-2 justify-end">
             {!embedded ? (
-              <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500">Forum</Button>
+              <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">Forum</Button>
             ) : null}
             <Button
               variant="outline"
@@ -247,7 +247,7 @@ export function FormationForumContent({ formationId, embedded = false, community
                 ref={isDeepLinked ? deepLinkRef : undefined}
                 className={
                   isDeepLinked
-                    ? 'bg-[#192734] border border-[#D4AF37]/60 p-5 space-y-3 shadow-[0_0_0_1px_rgba(212,175,55,0.25)]'
+                    ? 'bg-[#192734] border border-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] p-5 space-y-3 shadow-[0_0_0_1px_rgba(212,175,55,0.25)]'
                     : 'bg-[#192734] border border-white/10 p-5 space-y-3'
                 }
               >
@@ -258,7 +258,7 @@ export function FormationForumContent({ formationId, embedded = false, community
                       {String(q.video_id || '').length > 28 ? '…' : ''}
                     </div>
                     {hasClip ? (
-                      <div className="text-xs text-[#D4AF37] mt-1">
+                      <div className="text-xs text-[var(--school-accent)] mt-1">
                         Séquence: {fmt(start)}s → {fmt(normalizedEnd)}s
                       </div>
                     ) : null}

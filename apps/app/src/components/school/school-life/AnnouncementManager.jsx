@@ -276,9 +276,9 @@ const AnnouncementManager = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
-          <Megaphone className="h-5 w-5 text-[#D4AF37]" /> Annonces officielles
+          <Megaphone className="h-5 w-5 text-[var(--school-accent)]" /> Annonces officielles
         </h2>
-        <Button size="sm" onClick={() => handleOpenModal()} className="bg-[#D4AF37] text-black hover:bg-yellow-500">
+        <Button size="sm" onClick={() => handleOpenModal()} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
           <Plus className="h-4 w-4 mr-2" /> Nouvelle
         </Button>
       </div>
@@ -286,7 +286,7 @@ const AnnouncementManager = () => {
       <div className="grid grid-cols-1 gap-4">
         {Array.isArray(list) && list.length > 0 ? (
           list.map((announcement) => (
-            <Card key={announcement.id} className="bg-[#0F1419] border-white/10 hover:border-[#D4AF37]/30 transition-all">
+            <Card key={announcement.id} className="bg-[#0F1419] border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
               <CardContent className="p-4">
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex flex-wrap items-center gap-2">
@@ -324,7 +324,7 @@ const AnnouncementManager = () => {
                 <p className="text-gray-400 text-sm line-clamp-2 mb-3">{announcement.summary || announcement.content}</p>
                 <div className="flex items-center gap-2 text-sm text-gray-500 border-t border-white/5 pt-2">
                   <Target className="h-3 w-3" /> Cible :{' '}
-                  <span className="text-[#D4AF37]">{getAudienceLabel(announcement.audience)}</span>
+                  <span className="text-[var(--school-accent)]">{getAudienceLabel(announcement.audience)}</span>
                 </div>
               </CardContent>
             </Card>
@@ -398,7 +398,7 @@ const AnnouncementManager = () => {
                     type="button"
                     size="sm"
                     variant="outline"
-                    className="h-7 text-[10px] px-2 border-[#D4AF37]/40 text-[#D4AF37]"
+                    className="h-7 text-[10px] px-2 border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)]"
                     disabled={aiLoading}
                     onClick={() => runAiPolish('fix')}
                   >
@@ -527,7 +527,7 @@ const AnnouncementManager = () => {
               </Button>
               <Button
                 type="button"
-                className="flex-1 bg-[#D4AF37] text-black font-bold hover:bg-yellow-500"
+                className="flex-1 bg-[var(--school-accent)] text-black font-bold hover:bg-yellow-500"
                 disabled={saving}
                 onClick={() => save(true)}
               >

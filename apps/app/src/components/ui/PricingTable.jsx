@@ -7,7 +7,7 @@ const PricingTable = ({ pricingData }) => {
       <table className="w-full min-w-[800px] border-collapse bg-[#192734] rounded-xl overflow-hidden shadow-xl text-left">
         <thead>
           <tr className="bg-[#0F1419] border-b border-white/10">
-            <th className="p-6 text-[#D4AF37] font-serif text-lg font-bold">Module</th>
+            <th className="p-6 text-[var(--school-accent)] font-serif text-lg font-bold">Module</th>
             <th className="p-6 text-white font-bold text-center">Mensuel</th>
             <th className="p-6 text-white font-bold text-center">Trimestriel</th>
             <th className="p-6 text-white font-bold text-center">Annuel <span className="text-xs text-green-500 block font-normal">(Économie max)</span></th>
@@ -28,7 +28,7 @@ const PricingTable = ({ pricingData }) => {
                 {item.quarterly}
                 {item.quarterlyDiscount && <span className="block text-xs text-green-400 mt-1">-{item.quarterlyDiscount}</span>}
               </td>
-              <td className="p-6 text-center font-bold text-[#D4AF37] bg-[#D4AF37]/5">
+              <td className="p-6 text-center font-bold text-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]">
                 {item.yearly}
                 {item.yearlyDiscount && <span className="block text-xs text-green-400 mt-1">-{item.yearlyDiscount}</span>}
               </td>

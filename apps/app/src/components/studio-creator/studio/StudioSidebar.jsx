@@ -30,7 +30,7 @@ export function StudioSidebar({ steps, currentStep, onStepClick, stepStates = {}
             className={cn(
               'flex w-full items-center rounded-xl text-left transition-all duration-200',
               compact ? 'gap-2 px-3 py-2 rounded-lg' : 'gap-3 px-4 py-3',
-              isActive && 'bg-[#D4AF37]/15 text-[#D4AF37] border-l-2 border-[#D4AF37]',
+              isActive && 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border-l-2 border-[var(--school-accent)]',
               isCompleted && 'text-gray-400 hover:bg-white/5 hover:text-white',
               !isActive && !isCompleted && 'text-gray-500 hover:bg-white/5',
               hasError && !isActive && 'text-red-300',
@@ -41,8 +41,8 @@ export function StudioSidebar({ steps, currentStep, onStepClick, stepStates = {}
               className={cn(
                 'flex flex-shrink-0 items-center justify-center rounded-lg text-sm font-medium',
                 compact ? 'h-7 w-7' : 'h-8 w-8',
-                isActive && 'bg-[#D4AF37] text-black',
-                isCompleted && 'bg-[#D4AF37]/20 text-[#D4AF37]',
+                isActive && 'bg-[var(--school-accent)] text-black',
+                isCompleted && 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]',
                 !isActive && !isCompleted && 'bg-white/5',
                 hasError && 'bg-red-500/20 text-red-300'
               )}

@@ -186,7 +186,7 @@ const FormationDetailPage = () => {
     <div className="min-h-screen bg-[#0F1419] text-white relative overflow-hidden">
       {/* Ambient background */}
       <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#D4AF37]/6 rounded-full blur-[140px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[color-mix(in_srgb,var(--school-accent)_6%,transparent)] rounded-full blur-[140px]" />
         <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-indigo-500/5 rounded-full blur-[100px]" />
       </div>
 
@@ -200,7 +200,7 @@ const FormationDetailPage = () => {
           <ChevronLeft className="w-4 h-4 mr-1" /> Retour
         </Button>
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
-          <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+          <Sparkles className="w-4 h-4 text-[var(--school-accent)]" />
           <span className="text-xs text-gray-400">Découvrir la formation</span>
         </div>
       </motion.header>
@@ -225,18 +225,18 @@ const FormationDetailPage = () => {
             <div className="absolute bottom-6 left-6 right-6">
               <div className="flex flex-wrap gap-2 mb-3">
                 <Badge className="bg-black/50 text-white backdrop-blur border border-white/10">{year || 'Formation'}</Badge>
-                <Badge className="bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40">
+                <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]">
                   {accessMode === 'subscription' ? 'Abonnement' : accessMode === 'one_time' ? 'Vente module' : 'Gratuit'}
                 </Badge>
               </div>
               <h1 className="text-2xl md:text-4xl font-serif font-bold text-white">{formation.title}</h1>
               <div className="flex items-center gap-6 mt-3 text-sm text-gray-400">
                 <span className="flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-[#D4AF37]" />
+                  <Layers className="w-4 h-4 text-[var(--school-accent)]" />
                   {modules.length} modules
                 </span>
                 <span className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[#D4AF37]" />
+                  <Clock className="w-4 h-4 text-[var(--school-accent)]" />
                   {formation.duration_weeks ? `${formation.duration_weeks} semaines` : '—'}
                 </span>
               </div>
@@ -251,7 +251,7 @@ const FormationDetailPage = () => {
                   size="lg"
                   onClick={handlePrimaryAction}
                   disabled={actionLoading}
-                  className="bg-[#D4AF37] hover:bg-amber-500 text-black font-bold px-8 py-6 shadow-lg shadow-[#D4AF37]/20"
+                  className="bg-[var(--school-accent)] hover:bg-amber-500 text-black font-bold px-8 py-6 shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
                 >
                   {actionLoading ? (
                     <>
@@ -279,7 +279,7 @@ const FormationDetailPage = () => {
                   variant="outline"
                   size="lg"
                   onClick={() => navigate('/forfaits')}
-                  className="border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                  className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                 >
                   Voir les forfaits
                 </Button>
@@ -333,8 +333,8 @@ const FormationDetailPage = () => {
           className="rounded-2xl border border-white/10 bg-[#151a21]/80 backdrop-blur-xl overflow-hidden"
         >
           <div className="p-6 border-b border-white/10 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/20 flex items-center justify-center">
-              <Layers className="w-5 h-5 text-[#D4AF37]" />
+            <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center">
+              <Layers className="w-5 h-5 text-[var(--school-accent)]" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">Programme détaillé</h2>
@@ -354,7 +354,7 @@ const FormationDetailPage = () => {
                   className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden"
                 >
                   <div className="p-4 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] font-bold text-sm">
+                    <div className="w-8 h-8 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center text-[var(--school-accent)] font-bold text-sm">
                       {mIdx + 1}
                     </div>
                     <h3 className="font-semibold text-white">{mod.title || `Module ${mIdx + 1}`}</h3>
@@ -363,7 +363,7 @@ const FormationDetailPage = () => {
                   <div className="px-4 pb-4 pl-14 space-y-2">
                     {(mod.weeks || []).slice(0, 3).map((week, wIdx) => (
                       <div key={week.id || wIdx} className="flex items-center gap-2 text-sm text-gray-400">
-                        <span className="w-2 h-2 rounded-full bg-[#D4AF37]/50" />
+                        <span className="w-2 h-2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]" />
                         {week.title}
                         {(week.days || []).length > 0 && (
                           <span className="text-gray-500">· {(week.days || []).length} jours</span>
@@ -392,7 +392,7 @@ const FormationDetailPage = () => {
             size="lg"
             onClick={handlePrimaryAction}
             disabled={actionLoading}
-            className="bg-[#D4AF37] hover:bg-amber-500 text-black font-bold"
+            className="bg-[var(--school-accent)] hover:bg-amber-500 text-black font-bold"
           >
             {enrolled
               ? 'Accéder au cours'

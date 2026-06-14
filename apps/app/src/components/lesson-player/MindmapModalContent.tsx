@@ -77,7 +77,7 @@ function SummaryPanel({
       <div>
         <div className="font-semibold text-sm text-white leading-tight">{node.label}</div>
         {nodeSeconds != null && (
-          <div className="text-xs text-[#D4AF37] mt-0.5 flex items-center gap-1">
+          <div className="text-xs text-[var(--school-accent)] mt-0.5 flex items-center gap-1">
             <span>⏱</span>
             <span>{formatTime(nodeSeconds)}</span>
           </div>
@@ -88,7 +88,7 @@ function SummaryPanel({
         <button
           type="button"
           onClick={() => onSeek(nodeSeconds)}
-          className="w-full flex items-center justify-center gap-2 bg-[#D4AF37] text-black font-bold rounded-lg px-3 py-2 text-xs hover:bg-yellow-400 transition-colors"
+          className="w-full flex items-center justify-center gap-2 bg-[var(--school-accent)] text-black font-bold rounded-lg px-3 py-2 text-xs hover:bg-yellow-400 transition-colors"
         >
           ▶ Aller au temps vidéo
         </button>

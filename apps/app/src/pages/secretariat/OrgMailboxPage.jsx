@@ -71,7 +71,7 @@ const OrgMailboxPage = ({ embedded = false }) => {
         <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#D4AF37] to-amber-700 text-black font-bold text-sm shadow-lg shadow-amber-500/15">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--school-accent)] to-amber-700 text-black font-bold text-sm shadow-lg shadow-amber-500/15">
                 ✦
               </span>
               {`Mail CRM — ${VITRINE_EMAIL}`}
@@ -84,7 +84,7 @@ const OrgMailboxPage = ({ embedded = false }) => {
       ) : (
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-gray-400">
-            <span className="text-[#D4AF37] font-mono font-medium">{VITRINE_EMAIL}</span>
+            <span className="text-[var(--school-accent)] font-mono font-medium">{VITRINE_EMAIL}</span>
             <span className="mx-2 text-white/20">·</span>
             IMAP → Supabase · envoi Resend
           </p>
@@ -173,7 +173,7 @@ const OrgMailboxPage = ({ embedded = false }) => {
                     className={cn(
                       'px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors',
                       m.filterPipeline === f.value
-                        ? 'bg-[#D4AF37]/15 border-[#D4AF37]/50 text-[#D4AF37]'
+                        ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[var(--school-accent)]'
                         : 'border-white/10 text-gray-400 hover:border-white/25 hover:text-gray-200'
                     )}
                   >
@@ -184,7 +184,7 @@ const OrgMailboxPage = ({ embedded = false }) => {
               <div className="flex-1 overflow-y-auto min-h-0">
                 {m.loading ? (
                   <div className="p-10 flex justify-center">
-                    <Loader2 className="w-7 h-7 animate-spin text-[#D4AF37]" />
+                    <Loader2 className="w-7 h-7 animate-spin text-[var(--school-accent)]" />
                   </div>
                 ) : m.filteredThreads.length === 0 ? (
                   <div className="p-8 text-center text-sm text-gray-500">Aucun fil — lancez une sync IMAP.</div>
@@ -202,7 +202,7 @@ const OrgMailboxPage = ({ embedded = false }) => {
                         onClick={() => void m.openThread(t)}
                         className={cn(
                           'w-full text-left px-3 py-3 border-b border-white/[0.06] hover:bg-white/[0.04] transition-colors relative',
-                          m.selectedId === t.id && 'bg-[#D4AF37]/10 border-l-2 border-l-[#D4AF37] pl-[10px]',
+                          m.selectedId === t.id && 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border-l-2 border-l-[var(--school-accent)] pl-[10px]',
                           unread > 0 && m.selectedId !== t.id && 'border-l-2 border-l-violet-500/60'
                         )}
                       >
@@ -267,8 +267,8 @@ const OrgMailboxPage = ({ embedded = false }) => {
             <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-[#0a0e14]/80">
               {!m.selected ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-gray-500 gap-3 p-8">
-                  <div className="w-16 h-16 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 flex items-center justify-center">
-                    <Mail className="w-8 h-8 text-[#D4AF37]/60" />
+                  <div className="w-16 h-16 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] flex items-center justify-center">
+                    <Mail className="w-8 h-8 text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]" />
                   </div>
                   <p className="text-gray-300 font-medium">Sélectionnez un thread</p>
                   <p className="text-sm text-gray-500 text-center max-w-sm">
@@ -304,7 +304,7 @@ const OrgMailboxPage = ({ embedded = false }) => {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="border-[#D4AF37]/40 text-[#D4AF37] h-8 text-xs"
+                          className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] h-8 text-xs"
                           onClick={() => m.openReply()}
                         >
                           Répondre
@@ -344,7 +344,7 @@ const OrgMailboxPage = ({ embedded = false }) => {
                         </div>
                         <div className="flex flex-wrap gap-1.5 ml-auto">
                           {m.selected.lead_id ? (
-                            <Badge className="bg-[#D4AF37]/20 text-[#D4AF37] border-[#D4AF37]/30 text-[10px]">
+                            <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[10px]">
                               Lead lié
                             </Badge>
                           ) : null}
@@ -373,7 +373,7 @@ const OrgMailboxPage = ({ embedded = false }) => {
                                 'rounded-xl border overflow-hidden',
                                 item.data.is_read
                                   ? 'border-white/10 bg-black/20'
-                                  : 'border-[#D4AF37]/25 bg-[#D4AF37]/[0.06]'
+                                  : 'border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[var(--school-accent)]/[0.06]'
                               )}
                             >
                               <div className="px-4 py-2.5 bg-white/[0.03] border-b border-white/10 flex flex-wrap gap-2 text-[11px] text-gray-500">
@@ -390,7 +390,7 @@ const OrgMailboxPage = ({ embedded = false }) => {
                               <div className="p-4 text-sm text-gray-300 max-h-[320px] overflow-y-auto">
                                 {item.data.body_html ? (
                                   <div
-                                    className="prose prose-invert prose-sm max-w-none [&_a]:text-[#D4AF37]"
+                                    className="prose prose-invert prose-sm max-w-none [&_a]:text-[var(--school-accent)]"
                                     dangerouslySetInnerHTML={{ __html: item.data.body_html }}
                                   />
                                 ) : (
@@ -429,9 +429,9 @@ const OrgMailboxPage = ({ embedded = false }) => {
                     {/* Réponse inline (style mock) */}
                     {m.replyOpen ? (
                       <div className="border-t border-white/10 p-4 bg-[#0c1018] shrink-0">
-                        <div className="rounded-xl border border-[#D4AF37]/20 overflow-hidden bg-[#0a0e14]">
+                        <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] overflow-hidden bg-[#0a0e14]">
                           <div className="px-3 py-2 border-b border-white/10 flex items-center gap-2 text-xs text-gray-400">
-                            <Send className="w-3.5 h-3.5 text-[#D4AF37]" />
+                            <Send className="w-3.5 h-3.5 text-[var(--school-accent)]" />
                             Répondre à{' '}
                             <span className="text-white font-medium">{m.form.to || '—'}</span>
                           </div>
@@ -444,7 +444,7 @@ const OrgMailboxPage = ({ embedded = false }) => {
                           <div className="flex flex-wrap gap-2 px-3 py-2 border-t border-white/10 bg-black/20">
                             <Button
                               size="sm"
-                              className="bg-[#D4AF37] text-black hover:bg-[#c4a032]"
+                              className="bg-[var(--school-accent)] text-black hover:bg-[#c4a032]"
                               onClick={(e) => void m.sendMail(e)}
                               disabled={m.sending}
                             >
@@ -481,7 +481,7 @@ function RailBtn({ active, onClick, title, children, badge }) {
       onClick={onClick}
       className={cn(
         'relative w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
-        active ? 'bg-[#D4AF37]/20 text-[#D4AF37]' : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'
+        active ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]' : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'
       )}
     >
       {children}
@@ -524,14 +524,14 @@ function MetaPanel({ m }) {
 
         <div>
           <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono mb-2">Classification</p>
-          <div className="rounded-lg border border-violet-500/20 bg-gradient-to-br from-violet-950/40 to-[#D4AF37]/5 p-3">
+          <div className="rounded-lg border border-violet-500/20 bg-gradient-to-br from-violet-950/40 to-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] p-3">
             <p className="text-sm font-semibold text-white">
               {m.selected.classification_label || '—'}
             </p>
             <p className="text-xs text-gray-500 mt-1">{getSuggestedOffer(m.selected.classification_label)}</p>
             <div className="h-1 rounded-full bg-white/10 mt-3 overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-violet-500 to-[#D4AF37] transition-all"
+                className="h-full rounded-full bg-gradient-to-r from-violet-500 to-[var(--school-accent)] transition-all"
                 style={{
                   width: `${Math.min(100, Math.round(Number(m.selected.confidence_score || 0) * 100))}%`,
                 }}
@@ -558,7 +558,7 @@ function MetaPanel({ m }) {
                   onClick={() => void m.toggleTagOnThread(tag.id)}
                   className={cn(
                     'text-[10px] px-2 py-0.5 rounded-full border transition-opacity',
-                    on ? 'opacity-100 border-[#D4AF37]/50 text-[#D4AF37]' : 'opacity-50 border-white/20 text-gray-400'
+                    on ? 'opacity-100 border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[var(--school-accent)]' : 'opacity-50 border-white/20 text-gray-400'
                   )}
                   style={tag.color ? { borderColor: tag.color, color: tag.color } : undefined}
                 >
@@ -575,7 +575,7 @@ function MetaPanel({ m }) {
             <button
               type="button"
               onClick={() => void m.createOrLinkLead()}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/[0.03] text-sm text-gray-300 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 hover:text-[#D4AF37] transition-colors text-left"
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/[0.03] text-sm text-gray-300 hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:text-[var(--school-accent)] transition-colors text-left"
             >
               <Star className="w-4 h-4 shrink-0" />
               Créer / lier un lead
@@ -671,7 +671,7 @@ function AdminFullView({ m, syncStatusLabel, lastSync }) {
             {m.syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1" />}
             Sync maintenant
           </Button>
-          <Button size="sm" className="bg-[#D4AF37] text-black" onClick={() => void m.load()}>
+          <Button size="sm" className="bg-[var(--school-accent)] text-black" onClick={() => void m.load()}>
             Actualiser les données
           </Button>
         </div>
@@ -734,7 +734,7 @@ function LeadsFullView({ m }) {
               key={t.id}
               className="flex flex-wrap items-center gap-4 rounded-xl border border-white/10 bg-[#0f1419] p-4"
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D4AF37]/40 to-violet-600/40 flex items-center justify-center text-white font-bold text-sm">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] to-violet-600/40 flex items-center justify-center text-white font-bold text-sm">
                 {(t.primary_contact_email || '?')[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
@@ -742,7 +742,7 @@ function LeadsFullView({ m }) {
                 <p className="text-sm text-gray-400 truncate">{t.subject}</p>
                 <p className="text-xs text-gray-600 mt-1">{getSuggestedOffer(t.classification_label)}</p>
               </div>
-              <Button size="sm" className="bg-[#D4AF37] text-black" onClick={() => void m.openThread(t)}>
+              <Button size="sm" className="bg-[var(--school-accent)] text-black" onClick={() => void m.openThread(t)}>
                 Traiter
               </Button>
             </div>
@@ -758,7 +758,7 @@ function ComposeFullView({ m }) {
     <div className="flex-1 overflow-y-auto p-6 md:p-10 flex flex-col items-center">
       <div className="w-full max-w-xl rounded-2xl border border-white/10 bg-[#0f1419] shadow-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-white/10 flex items-center gap-2">
-          <Send className="w-5 h-5 text-[#D4AF37]" />
+          <Send className="w-5 h-5 text-[var(--school-accent)]" />
           <span className="font-bold text-white">Nouveau message</span>
           <Button variant="ghost" size="sm" className="ml-auto text-gray-400" onClick={() => m.setMailView('inbox')}>
             ×
@@ -801,7 +801,7 @@ function ComposeFullView({ m }) {
             />
           </div>
           <div className="flex flex-wrap gap-2 items-center">
-            <Button type="submit" className="bg-[#D4AF37] text-black" disabled={m.sending}>
+            <Button type="submit" className="bg-[var(--school-accent)] text-black" disabled={m.sending}>
               {m.sending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Envoyer via Resend'}
             </Button>
             <Button type="button" variant="outline" className="border-white/15" onClick={() => m.setMailView('inbox')}>

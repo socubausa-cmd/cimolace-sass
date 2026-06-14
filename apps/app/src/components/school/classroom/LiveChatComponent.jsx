@@ -74,16 +74,16 @@ const LiveChatComponent = () => {
                </Avatar>
                <div className={`flex flex-col ${msg.isMe ? 'items-end' : 'items-start'} max-w-[80%]`}>
                   <div className="flex items-center gap-2 mb-1">
-                     <span className={`text-xs font-medium ${msg.role === 'instructor' ? 'text-[#D4AF37]' : 'text-gray-400'}`}>
+                     <span className={`text-xs font-medium ${msg.role === 'instructor' ? 'text-[var(--school-accent)]' : 'text-gray-400'}`}>
                         {msg.sender}
                      </span>
                      <span className="text-[10px] text-gray-600">{msg.time}</span>
                   </div>
                   <div className={`p-3 rounded-lg text-sm ${
                      msg.isMe 
-                        ? 'bg-[#D4AF37] text-black rounded-tr-none' 
+                        ? 'bg-[var(--school-accent)] text-black rounded-tr-none' 
                         : msg.role === 'instructor' 
-                           ? 'bg-[#1d3344] border border-[#D4AF37]/30 text-white rounded-tl-none'
+                           ? 'bg-[#1d3344] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-white rounded-tl-none'
                            : 'bg-[#0F1419] text-gray-200 rounded-tl-none'
                   }`}>
                      {msg.message}
@@ -113,12 +113,12 @@ const LiveChatComponent = () => {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Écrivez un message..."
-              className="bg-[#0F1419] border-white/10 text-white focus-visible:ring-[#D4AF37]"
+              className="bg-[#0F1419] border-white/10 text-white focus-visible:ring-[var(--school-accent)]"
            />
-           <Button type="button" variant="ghost" size="icon" className="text-gray-400 hover:text-[#D4AF37]">
+           <Button type="button" variant="ghost" size="icon" className="text-gray-400 hover:text-[var(--school-accent)]">
               <Smile className="w-5 h-5" />
            </Button>
-           <Button type="submit" size="icon" className="bg-[#D4AF37] text-black hover:bg-yellow-500">
+           <Button type="submit" size="icon" className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
               <Send className="w-4 h-4" />
            </Button>
         </form>

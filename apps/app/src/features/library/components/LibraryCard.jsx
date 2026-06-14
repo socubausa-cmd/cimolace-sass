@@ -21,7 +21,7 @@ const CATEGORY_COLOR = {
   image: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
   vector: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
   lut: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
-  template: 'text-[#D4AF37] bg-[#D4AF37]/10 border-[#D4AF37]/20',
+  template: 'text-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]',
   project: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
 };
 
@@ -42,7 +42,7 @@ export default function LibraryCard({ item, onUse, onLike, onSelect, selected })
       className={cn(
         'group relative flex flex-col overflow-hidden rounded-xl border bg-[#0d1020] transition-all cursor-pointer',
         selected
-          ? 'border-[#D4AF37]/50 ring-1 ring-[#D4AF37]/30'
+          ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] ring-1 ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
           : 'border-white/8 hover:border-white/20',
       )}
       onClick={() => onSelect?.(item)}
@@ -69,7 +69,7 @@ export default function LibraryCard({ item, onUse, onLike, onSelect, selected })
 
         {/* Source badge */}
         {item.source === 'community' && (
-          <div className="absolute left-2 top-2 rounded-full bg-[#D4AF37]/20 px-1.5 py-0.5 text-[9px] font-semibold text-[#D4AF37] backdrop-blur-sm">
+          <div className="absolute left-2 top-2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--school-accent)] backdrop-blur-sm">
             COM
           </div>
         )}
@@ -78,7 +78,7 @@ export default function LibraryCard({ item, onUse, onLike, onSelect, selected })
         <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
           <button
             onClick={(e) => { e.stopPropagation(); onUse?.(item); }}
-            className="flex items-center gap-1.5 rounded-lg bg-[#D4AF37] px-3 py-1.5 text-[11px] font-bold text-black transition-colors hover:bg-[#e5c448]"
+            className="flex items-center gap-1.5 rounded-lg bg-[var(--school-accent)] px-3 py-1.5 text-[11px] font-bold text-black transition-colors hover:bg-[#e5c448]"
           >
             <Zap className="h-3.5 w-3.5" />
             Utiliser
@@ -126,7 +126,7 @@ export default function LibraryCard({ item, onUse, onLike, onSelect, selected })
           </span>
           <button
             onClick={(e) => { e.stopPropagation(); onUse?.(item); }}
-            className="ml-auto flex items-center gap-1 rounded-md border border-[#D4AF37]/30 px-2 py-1 text-[10px] text-[#D4AF37] transition-colors hover:bg-[#D4AF37]/10"
+            className="ml-auto flex items-center gap-1 rounded-md border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] px-2 py-1 text-[10px] text-[var(--school-accent)] transition-colors hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
           >
             Utiliser
           </button>

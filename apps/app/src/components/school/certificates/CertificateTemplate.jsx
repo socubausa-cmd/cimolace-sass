@@ -3,23 +3,23 @@ import { Award } from 'lucide-react';
 
 const CertificateTemplate = ({ studentName, title, date, certificateNumber }) => {
   return (
-    <div className="w-full h-full bg-white text-black p-8 relative overflow-hidden flex flex-col items-center justify-center border-[16px] border-[#D4AF37] double-border">
+    <div className="w-full h-full bg-white text-black p-8 relative overflow-hidden flex flex-col items-center justify-center border-[16px] border-[var(--school-accent)] double-border">
       <div className="absolute top-0 left-0 w-32 h-32 border-b-[30px] border-r-[30px] border-[#1a3a52] rounded-br-[50px]"></div>
       <div className="absolute bottom-0 right-0 w-32 h-32 border-t-[30px] border-l-[30px] border-[#1a3a52] rounded-tl-[50px]"></div>
       
       <div className="text-center z-10 space-y-6">
          <div className="flex justify-center mb-4">
-             <div className="w-20 h-20 bg-[#1a3a52] rounded-full flex items-center justify-center text-[#D4AF37]">
+             <div className="w-20 h-20 bg-[#1a3a52] rounded-full flex items-center justify-center text-[var(--school-accent)]">
                 <Award className="w-10 h-10" />
              </div>
          </div>
          
          <h1 className="text-5xl font-serif font-bold text-[#1a3a52] uppercase tracking-wider">Certificat</h1>
-         <h2 className="text-2xl font-serif text-[#D4AF37] italic">d'accomplissement</h2>
+         <h2 className="text-2xl font-serif text-[var(--school-accent)] italic">d'accomplissement</h2>
          
          <div className="py-8">
             <p className="text-lg text-gray-600 mb-2">Ce certificat est fièrement décerné à</p>
-            <p className="text-4xl font-cursive font-bold text-[#1a3a52] border-b-2 border-[#D4AF37] pb-2 inline-block px-12 min-w-[400px]">
+            <p className="text-4xl font-cursive font-bold text-[#1a3a52] border-b-2 border-[var(--school-accent)] pb-2 inline-block px-12 min-w-[400px]">
                {studentName}
             </p>
          </div>

@@ -334,7 +334,7 @@ export default function DesignerPostProductionDock({
                 <Suspense
                   fallback={
                     <div className="flex min-h-[16rem] items-center justify-center bg-[#0F1419]">
-                      <Loader2 className="h-6 w-6 animate-spin text-[#D4AF37]" />
+                      <Loader2 className="h-6 w-6 animate-spin text-[var(--school-accent)]" />
                     </div>
                   }
                 >

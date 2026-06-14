@@ -21,17 +21,17 @@ const SCHOOL = isnaTenantConfig.branding.name;
 
 // --- INTERNAL HELPERS ---
 const AccordionItem = ({ title, children, isOpen, onClick, icon: Icon }) => (
-  <div className="mb-4 border border-white/10 rounded-xl bg-[#192734] overflow-hidden transition-all duration-300 hover:border-[#D4AF37]/30">
+  <div className="mb-4 border border-white/10 rounded-xl bg-[#192734] overflow-hidden transition-all duration-300 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
     <button
       onClick={onClick}
       className="w-full flex items-center justify-between p-6 text-left focus:outline-none bg-[#192734] hover:bg-white/5 transition-colors"
     >
       <div className="flex items-center gap-4">
-        {Icon && <div className="p-2 bg-[#D4AF37]/10 rounded-lg"><Icon className="w-5 h-5 text-[#D4AF37]" /></div>}
+        {Icon && <div className="p-2 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-lg"><Icon className="w-5 h-5 text-[var(--school-accent)]" /></div>}
         <span className="text-lg font-bold text-white">{title}</span>
       </div>
       <ChevronDown 
-        className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#D4AF37]' : ''}`} 
+        className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[var(--school-accent)]' : ''}`} 
       />
     </button>
     <AnimatePresence>
@@ -54,9 +54,9 @@ const AccordionItem = ({ title, children, isOpen, onClick, icon: Icon }) => (
 const ValueCard = ({ icon: Icon, title, description }) => (
   <motion.div 
     whileHover={{ y: -5 }}
-    className="bg-[#192734] p-6 rounded-xl border border-white/5 shadow-lg hover:shadow-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition-all duration-300 h-full"
+    className="bg-[#192734] p-6 rounded-xl border border-white/5 shadow-lg hover:shadow-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all duration-300 h-full"
   >
-    <div className="w-12 h-12 bg-gradient-to-br from-[#D4AF37] to-yellow-700 rounded-lg flex items-center justify-center mb-4 shadow-lg">
+    <div className="w-12 h-12 bg-gradient-to-br from-[var(--school-accent)] to-yellow-700 rounded-lg flex items-center justify-center mb-4 shadow-lg">
       <Icon className="w-6 h-6 text-white" />
     </div>
     <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
@@ -82,7 +82,7 @@ const AboutProrascience = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F1419] font-sans text-gray-300 selection:bg-[#D4AF37]/30 pt-20">
+    <div className="min-h-screen bg-[#0F1419] font-sans text-gray-300 selection:bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] pt-20">
       <SEO
         title="À Propos de la Prorascience"
         description="Découvrez l'Initiation aux Sciences Nocturnes Africaines (ISNA), sa mission, ses piliers, son fondateur le 5ᵉ Manikongo et le système Prorascience."
@@ -100,7 +100,7 @@ const AboutProrascience = () => {
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop')] bg-cover bg-center opacity-20" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F1419]/90 via-[#0F1419]/80 to-[#0F1419]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#D4AF37]/10 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] via-transparent to-transparent" />
         </div>
         
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
@@ -109,19 +109,19 @@ const AboutProrascience = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <Badge className="mb-6 bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/30 px-4 py-1.5 text-sm uppercase tracking-widest backdrop-blur-md">
+            <Badge className="mb-6 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] px-4 py-1.5 text-sm uppercase tracking-widest backdrop-blur-md">
               {a.hero.badge}
             </Badge>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-white mb-8 leading-tight tracking-tight">
               {a.hero.titleLine1}{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-yellow-200">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] to-yellow-200">
                 {a.hero.titleGold}
               </span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-200 font-light mb-4">
               {a.hero.subtitle}
             </p>
-            <div className="h-1 w-24 bg-[#D4AF37] mx-auto my-8 rounded-full" />
+            <div className="h-1 w-24 bg-[var(--school-accent)] mx-auto my-8 rounded-full" />
             <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto italic">
               « {a.hero.quote} »
             </p>
@@ -135,7 +135,7 @@ const AboutProrascience = () => {
             const IconC = s.icon;
             return (
               <div key={s.label} className="text-center rounded-xl border border-white/5 bg-[#0F1419]/40 py-4">
-                <IconC className="w-5 h-5 mx-auto text-[#D4AF37] mb-2" />
+                <IconC className="w-5 h-5 mx-auto text-[var(--school-accent)] mb-2" />
                 <p className="text-xl md:text-2xl font-bold text-white tabular-nums">{s.value}</p>
                 <p className="text-[10px] md:text-xs text-gray-500 font-semibold uppercase tracking-wide">{s.label}</p>
               </div>
@@ -147,7 +147,7 @@ const AboutProrascience = () => {
       {/* Section 1: ISNA Presentation */}
       <section className="py-20 px-6 max-w-7xl mx-auto border-b border-white/5">
         <motion.div className="text-center mb-16" {...revealUp}>
-          <Badge className="bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/30 px-4 py-1.5 text-xs uppercase tracking-widest mb-5 animate-pulse">
+          <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] px-4 py-1.5 text-xs uppercase tracking-widest mb-5 animate-pulse">
             {a.sectionComprendre.kicker}
           </Badge>
           <h2 className="text-3xl md:text-5xl font-serif font-bold text-white mb-4">{a.sectionComprendre.title}</h2>
@@ -158,7 +158,7 @@ const AboutProrascience = () => {
 
         <div className="grid lg:grid-cols-2 gap-6 mb-10">
           <motion.div className="premium-panel p-6" {...revealUp}>
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Brain className="w-5 h-5 text-[#D4AF37]" /> Vous pratiquez... mais comprenez-vous vraiment ?</h3>
+            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Brain className="w-5 h-5 text-[var(--school-accent)]" /> Vous pratiquez... mais comprenez-vous vraiment ?</h3>
             <div className="space-y-2">
               {a.practiceItems.map((item, index) => (
                 <motion.div
@@ -176,7 +176,7 @@ const AboutProrascience = () => {
             </div>
           </motion.div>
           <motion.div className="premium-panel p-6" {...revealUp}>
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-[#D4AF37]" /> Mais au fond...</h3>
+            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-[var(--school-accent)]" /> Mais au fond...</h3>
             <div className="space-y-2">
               {a.rootQuestions.map((item, index) => (
                 <motion.div
@@ -218,7 +218,7 @@ const AboutProrascience = () => {
           <motion.div className="premium-panel p-6" {...revealUp}>
             <h4 className="font-bold text-white mb-3">{a.problem.title}</h4>
             <p className="text-sm text-gray-300">{a.problem.text}</p>
-            <p className="text-sm text-[#D4AF37] mt-3">{a.problem.highlight}</p>
+            <p className="text-sm text-[var(--school-accent)] mt-3">{a.problem.highlight}</p>
           </motion.div>
         </div>
 
@@ -249,7 +249,7 @@ const AboutProrascience = () => {
                   - {item}
                 </p>
               ))}
-              <p className="text-xs text-[#D4AF37] mt-3">{col.foot}</p>
+              <p className="text-xs text-[var(--school-accent)] mt-3">{col.foot}</p>
             </div>
           ))}
         </div>
@@ -259,7 +259,7 @@ const AboutProrascience = () => {
             <h4 className="text-white font-semibold mb-3">Pour qui ?</h4>
             {a.targetAudience.map((item) => (
               <div key={item} className="flex items-center gap-2 text-sm text-gray-300 mb-2">
-                <Compass className="w-4 h-4 text-[#D4AF37]" />
+                <Compass className="w-4 h-4 text-[var(--school-accent)]" />
                 <span>{item}</span>
               </div>
             ))}
@@ -282,10 +282,10 @@ const AboutProrascience = () => {
           <h3 className="text-2xl md:text-3xl font-bold text-white mt-6">{a.closing.title}</h3>
           <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
             <Link to="/formations/catalogue">
-              <Button className="bg-[#D4AF37] text-black hover:bg-amber-500">Rejoindre Prorascence Academy</Button>
+              <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500">Rejoindre Prorascence Academy</Button>
             </Link>
             <Link to="/appointment/request">
-              <Button variant="outline" className="border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10">Parler a un conseiller</Button>
+              <Button variant="outline" className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">Parler a un conseiller</Button>
             </Link>
           </div>
         </motion.div>
@@ -315,18 +315,18 @@ const AboutProrascience = () => {
       {/* SECTION 4: QU'EST-CE QUE LA PRORASCIENCE? */}
       <section className="py-24 px-6 relative bg-[#0F1419] overflow-hidden" id="what-is">
         {/* Decorative elements */}
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent" />
-        <div className="absolute top-0 left-1/2 w-[800px] h-[800px] bg-[#D4AF37]/5 rounded-full blur-[100px] -translate-x-1/2 pointer-events-none" />
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] to-transparent" />
+        <div className="absolute top-0 left-1/2 w-[800px] h-[800px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[100px] -translate-x-1/2 pointer-events-none" />
 
         <div className="max-w-7xl mx-auto relative z-10">
           {/* Main Title */}
           <div className="text-center mb-20">
-            <Badge className="bg-[#D4AF37] text-black hover:bg-[#b5952f] mb-4">{a.whatIs.kicker}</Badge>
+            <Badge className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f] mb-4">{a.whatIs.kicker}</Badge>
             <h2 className="text-4xl md:text-5xl font-serif font-bold text-white mb-6">
               {a.whatIs.title.includes('PRORASCIENCE') ? (
                 <>
                   {a.whatIs.title.split('PRORASCIENCE')[0]}
-                  <span className="text-[#D4AF37]">PRORASCIENCE</span>
+                  <span className="text-[var(--school-accent)]">PRORASCIENCE</span>
                   {a.whatIs.title.split('PRORASCIENCE')[1]}
                 </>
               ) : (
@@ -347,7 +347,7 @@ const AboutProrascience = () => {
           {/* Subsection 2: Developed Definition (3 Pillars) */}
           <div className="mb-24">
             <h3 className="text-2xl font-bold text-white mb-10 text-center flex items-center justify-center gap-3">
-              <Columns className="w-6 h-6 text-[#D4AF37]" /> Les 3 Piliers Fondateurs
+              <Columns className="w-6 h-6 text-[var(--school-accent)]" /> Les 3 Piliers Fondateurs
             </h3>
             <div className="grid md:grid-cols-3 gap-8">
               {[Brain, Database, History].map((IconP, i) => (
@@ -388,7 +388,7 @@ const AboutProrascience = () => {
           {/* Subsection 4: What PRORASCIENCE studies (8 Domains) */}
           <div className="mb-24">
              <h3 className="text-2xl font-bold text-white mb-10 text-center flex items-center justify-center gap-3">
-              <Target className="w-6 h-6 text-[#D4AF37]" /> Domaines d'Étude Concrets
+              <Target className="w-6 h-6 text-[var(--school-accent)]" /> Domaines d'Étude Concrets
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {a.studyDomains.map((d, index) => (
@@ -406,21 +406,21 @@ const AboutProrascience = () => {
 
           {/* Subsection 5: Etymology & Motto */}
           <div className="mb-24 text-center">
-            <div className="inline-block p-1 rounded-full border border-[#D4AF37]/30 mb-8">
+            <div className="inline-block p-1 rounded-full border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] mb-8">
               <div className="bg-[#192734] px-8 py-3 rounded-full">
-                <span className="font-serif text-[#D4AF37] text-xl italic">« {a.motto} »</span>
+                <span className="font-serif text-[var(--school-accent)] text-xl italic">« {a.motto} »</span>
               </div>
             </div>
             <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
               {a.mottoSteps.map((st, i) => (
                 <div key={st.title} className="text-center">
                   <div
-                    className={`text-4xl font-bold mb-2 ${i === 2 ? 'text-[#D4AF37]' : i === 0 ? 'text-gray-700' : 'text-gray-500'}`}
+                    className={`text-4xl font-bold mb-2 ${i === 2 ? 'text-[var(--school-accent)]' : i === 0 ? 'text-gray-700' : 'text-gray-500'}`}
                   >
                     {st.n}
                   </div>
                   <h4
-                    className={`font-bold mb-2 ${i === 2 ? 'text-[#D4AF37]' : 'text-white'}`}
+                    className={`font-bold mb-2 ${i === 2 ? 'text-[var(--school-accent)]' : 'text-white'}`}
                   >
                     {st.title}
                   </h4>
@@ -439,12 +439,12 @@ const AboutProrascience = () => {
           {/* Subsection 7: Method (4 Steps) */}
           <div className="mb-24 max-w-5xl mx-auto">
              <h3 className="text-2xl font-bold text-white mb-10 text-center flex items-center justify-center gap-3">
-              <Swords className="w-6 h-6 text-[#D4AF37]" /> La Méthode Prorascientifique
+              <Swords className="w-6 h-6 text-[var(--school-accent)]" /> La Méthode Prorascientifique
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {a.methodPro.map((item, i) => (
                 <div key={item.title} className="bg-[#192734] p-6 rounded-xl border border-white/5 relative group hover:bg-[#15202B] transition-colors">
-                  <div className="text-5xl font-bold text-white/5 absolute top-4 right-4 group-hover:text-[#D4AF37]/10 transition-colors">
+                  <div className="text-5xl font-bold text-white/5 absolute top-4 right-4 group-hover:text-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] transition-colors">
                     {String(i + 1).padStart(2, '0')}
                   </div>
                   <h4 className="text-lg font-bold text-white mb-2 relative z-10">{item.title}</h4>
@@ -477,7 +477,7 @@ const AboutProrascience = () => {
 
           {/* Subsection 9: Africa's Place */}
           <div className="mb-24 text-center max-w-3xl mx-auto">
-            <Globe className="w-12 h-12 text-[#D4AF37] mx-auto mb-6" />
+            <Globe className="w-12 h-12 text-[var(--school-accent)] mx-auto mb-6" />
             <h3 className="text-2xl font-bold text-white mb-6">{a.africa.title}</h3>
             <p className="text-gray-300 mb-8">
               {a.africa.lead.includes('Berceau') ? (
@@ -492,8 +492,8 @@ const AboutProrascience = () => {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {a.africa.blocks.map((b) => (
-                <div key={b.label} className="p-4 rounded-lg bg-[#192734] border border-[#D4AF37]/20">
-                  <span className="block text-[#D4AF37] font-bold mb-1">{b.label}</span>
+                <div key={b.label} className="p-4 rounded-lg bg-[#192734] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
+                  <span className="block text-[var(--school-accent)] font-bold mb-1">{b.label}</span>
                   <span className="text-sm text-gray-400">{b.text}</span>
                 </div>
               ))}
@@ -519,7 +519,7 @@ const AboutProrascience = () => {
                <h3 className="text-xl font-bold text-white mb-2">Prof. Kimbembe</h3>
                <p className="text-gray-300 italic mb-4">"La science sans conscience est la ruine de l'âme, mais la conscience sans science est l'impuissance de l'esprit."</p>
                <Link to="/equipe">
-                 <Button variant="outline" className="text-[#D4AF37] border-[#D4AF37] hover:bg-[#D4AF37] hover:text-black">
+                 <Button variant="outline" className="text-[var(--school-accent)] border-[var(--school-accent)] hover:bg-[var(--school-accent)] hover:text-black">
                    Découvrir son parcours complet
                  </Button>
                </Link>
@@ -557,7 +557,7 @@ const AboutProrascience = () => {
       </section>
 
       {/* Section 6: Future Commitments */}
-      <section className="py-20 bg-[#D4AF37] text-black text-center">
+      <section className="py-20 bg-[var(--school-accent)] text-black text-center">
         <div className="max-w-4xl mx-auto px-6">
           <h2 className="text-3xl md:text-4xl font-serif font-bold mb-8">Rejoignez l'Avant-Garde</h2>
           <p className="text-xl opacity-90 mb-10 max-w-2xl mx-auto">

@@ -112,7 +112,7 @@ export default function StudentForumCommunityPage({
             {loading ? (
               <Card className="bg-[#192734] border-white/10">
                 <CardContent className="p-8 flex items-center justify-center text-gray-400 gap-2">
-                  <Loader2 className="w-5 h-5 animate-spin text-[#D4AF37]" /> Chargement du forum…
+                  <Loader2 className="w-5 h-5 animate-spin text-[var(--school-accent)]" /> Chargement du forum…
                 </CardContent>
               </Card>
             ) : null}

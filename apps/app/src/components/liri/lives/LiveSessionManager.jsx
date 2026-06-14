@@ -109,7 +109,7 @@ const LiveSessionManager = () => {
         <h1 className="text-lg font-bold text-white">Gestion des lives</h1>
         <p className="text-sm text-gray-400 mt-1">
           Planifiez vos sessions virtuelles (Zoom / Meet / salle intégrée) : dates, statuts et liens de connexion.
-          Les données proviennent de la table <code className="text-[#D4AF37]">live_sessions</code> (Supabase).
+          Les données proviennent de la table <code className="text-[var(--school-accent)]">live_sessions</code> (Supabase).
         </p>
         {!canSeeAllSessions && (
           <p className="text-xs text-amber-200/90 mt-2 flex items-center gap-2">
@@ -166,7 +166,7 @@ const LiveSessionManager = () => {
                   }
                   className={`w-full text-left p-3 rounded-lg border transition-colors ${
                     selected?.id === live.id
-                      ? 'bg-[#D4AF37]/15 border-[#D4AF37]/50 text-[#D4AF37]'
+                      ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[var(--school-accent)]'
                       : 'bg-[#0F1419] border-white/10 text-gray-300 hover:border-white/20'
                   }`}
                 >
@@ -231,7 +231,7 @@ const LiveSessionManager = () => {
                   <select
                     value={selected.status || 'scheduled'}
                     onChange={(e) => setSelected((s) => ({ ...s, status: e.target.value }))}
-                    className="w-full h-10 px-3 rounded-md bg-[#0F1419] border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                    className="w-full h-10 px-3 rounded-md bg-[#0F1419] border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-[var(--school-accent)]"
                   >
                     {STATUS_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>
@@ -266,7 +266,7 @@ const LiveSessionManager = () => {
               </div>
 
               <div className="rounded-lg border border-white/10 bg-[#0F1419]/50 p-3 text-xs text-gray-400 flex gap-2">
-                <Video className="w-4 h-4 shrink-0 text-[#D4AF37]" />
+                <Video className="w-4 h-4 shrink-0 text-[var(--school-accent)]" />
                 <span>
                   Le replay peut être géré via le statut « Terminé » et vos enregistrements côté fournisseur vidéo ; un
                   champ replay dédié peut être ajouté en base si besoin.
@@ -276,7 +276,7 @@ const LiveSessionManager = () => {
               <Button
                 onClick={() => void handleSave()}
                 disabled={saving}
-                className="w-full bg-[#D4AF37] text-black font-bold hover:bg-amber-400"
+                className="w-full bg-[var(--school-accent)] text-black font-bold hover:bg-amber-400"
               >
                 {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin inline" /> : null}
                 Enregistrer les modifications

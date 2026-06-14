@@ -20,7 +20,7 @@ function AccordionRailSection({ title, open, onToggle, railTitleClass, children 
         </span>
         <ChevronDown
           className={cn(
-            'h-4 w-4 shrink-0 text-[#D4AF37]/75 transition-transform duration-200',
+            'h-4 w-4 shrink-0 text-[color-mix(in_srgb,var(--school-accent)_75%,transparent)] transition-transform duration-200',
             open && 'rotate-180',
           )}
         />
@@ -77,14 +77,14 @@ export function LiriHostGuidanceColumn({
         'gap-2 !pt-[7rem] pb-2 pl-0.5 pr-1 sm:pr-1.5',
       )}
     >
-      <div className="relative shrink-0 rounded-xl p-[1px] bg-gradient-to-br from-[#D4AF37]/38 via-violet-500/22 to-[#D4AF37]/18 shadow-[0_0_44px_-14px_rgba(139,92,246,0.32),0_0_52px_-18px_rgba(212,175,55,0.2)]">
+      <div className="relative shrink-0 rounded-xl p-[1px] bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_38%,transparent)] via-violet-500/22 to-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] shadow-[0_0_44px_-14px_rgba(139,92,246,0.32),0_0_52px_-18px_rgba(212,175,55,0.2)]">
         <div className="relative overflow-hidden rounded-[11px] bg-[#0a0d14]/96">
           <div className="pointer-events-none absolute -inset-8 bg-[radial-gradient(circle_at_50%_18%,rgba(212,175,55,0.16),transparent_42%),radial-gradient(circle_at_82%_72%,rgba(139,92,246,0.18),transparent_48%)]" />
           <div className="relative z-[1] p-1.5">
             <p
               className={cn(
                 railTitleClass,
-                'mb-1.5 px-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#D4AF37]/85',
+                'mb-1.5 px-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)]',
               )}
             >
               Hôte en direct

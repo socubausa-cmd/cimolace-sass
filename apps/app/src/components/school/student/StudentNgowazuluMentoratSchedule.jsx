@@ -104,7 +104,7 @@ export default function StudentNgowazuluMentoratSchedule({ studentId, planSlug }
 
   return (
     <div className="border-t border-white/10 pt-3 mt-2 space-y-3 text-xs text-gray-300">
-      <div className="flex items-center gap-2 text-[#D4AF37] font-semibold">
+      <div className="flex items-center gap-2 text-[var(--school-accent)] font-semibold">
         <CalendarClock className="w-4 h-4 shrink-0" />
         Planification
       </div>

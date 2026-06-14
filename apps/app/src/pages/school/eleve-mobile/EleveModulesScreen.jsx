@@ -115,20 +115,20 @@ export default function EleveModulesScreen() {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/22 bg-[#D4AF37]/10 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[0.18em] text-[#D4AF37]">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[0.18em] text-[var(--school-accent)]">
                   <GraduationCap className="h-3.5 w-3.5" />
                   Prorascience
                 </div>
                 <h2 className="mt-3 text-[22px] font-extrabold leading-[1.08] tracking-[-0.04em] text-white">
                   Modules initiatiques
-                  <span className="block text-[#D4AF37]">en coaching privé</span>
+                  <span className="block text-[var(--school-accent)]">en coaching privé</span>
                 </h2>
                 <p className="mt-2 max-w-[260px] text-[12.5px] leading-relaxed text-white/45">
                   Une progression mobile, cycle par cycle, pour choisir ton module et entrer dans le parcours.
                 </p>
               </div>
-              <div className="flex h-[74px] w-[74px] shrink-0 flex-col items-center justify-center rounded-3xl border border-[#D4AF37]/22 bg-[#D4AF37]/10 text-center shadow-[0_12px_26px_-18px_rgba(212,175,55,0.9)]">
-                <span className="text-[26px] font-black leading-none text-[#D4AF37]">21</span>
+              <div className="flex h-[74px] w-[74px] shrink-0 flex-col items-center justify-center rounded-3xl border border-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-center shadow-[0_12px_26px_-18px_rgba(212,175,55,0.9)]">
+                <span className="text-[26px] font-black leading-none text-[var(--school-accent)]">21</span>
                 <span className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">modules</span>
               </div>
             </div>
@@ -139,7 +139,7 @@ export default function EleveModulesScreen() {
                 <p className="mt-0.5 text-[9px] uppercase tracking-[0.12em] text-white/35">cycles</p>
               </div>
               <div className="rounded-2xl border border-white/8 bg-black/20 px-2 py-2 text-center">
-                <p className="text-[15px] font-extrabold text-[#D4AF37]">1</p>
+                <p className="text-[15px] font-extrabold text-[var(--school-accent)]">1</p>
                 <p className="mt-0.5 text-[9px] uppercase tracking-[0.12em] text-white/35">mois</p>
               </div>
               <div className="rounded-2xl border border-white/8 bg-black/20 px-2 py-2 text-center">
@@ -162,7 +162,7 @@ export default function EleveModulesScreen() {
                   className={cn(
                     'shrink-0 rounded-2xl border px-3 py-2 text-[11px] font-semibold transition',
                     active
-                      ? 'border-[#D4AF37]/60 bg-[#D4AF37] text-black shadow-[0_10px_22px_-14px_rgba(212,175,55,0.9)]'
+                      ? 'border-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] bg-[var(--school-accent)] text-black shadow-[0_10px_22px_-14px_rgba(212,175,55,0.9)]'
                       : 'border-white/10 bg-white/[0.04] text-white/50',
                   )}
                 >
@@ -196,9 +196,9 @@ export default function EleveModulesScreen() {
                     style={{ borderRadius: EV_R.md, ...moduleCatalogSurface(mod.available) }}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10">
-                        <Icon className="h-5 w-5 text-[#D4AF37]" strokeWidth={1.9} />
-                        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#D4AF37] px-1 text-[9px] font-black text-black">
+                      <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
+                        <Icon className="h-5 w-5 text-[var(--school-accent)]" strokeWidth={1.9} />
+                        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--school-accent)] px-1 text-[9px] font-black text-black">
                           {mod.number}
                         </span>
                       </div>
@@ -208,7 +208,7 @@ export default function EleveModulesScreen() {
                             <p className="line-clamp-2 text-[14px] font-extrabold leading-tight text-white">
                               {mod.title}
                             </p>
-                            <p className="mt-0.5 text-[11.5px] font-semibold text-[#D4AF37]/85">
+                            <p className="mt-0.5 text-[11.5px] font-semibold text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)]">
                               {mod.subtitle}
                             </p>
                           </div>
@@ -238,7 +238,7 @@ export default function EleveModulesScreen() {
                           <span
                             className={cn(
                               'inline-flex items-center text-[12px] font-semibold',
-                              mod.available ? 'text-[#D4AF37]' : 'text-white/30',
+                              mod.available ? 'text-[var(--school-accent)]' : 'text-white/30',
                             )}
                           >
                             {mod.available ? 'Ouvrir' : 'Bientôt'}
@@ -260,7 +260,7 @@ export default function EleveModulesScreen() {
 
           <p className="mt-4 text-center text-[11px] text-white/35">
             Besoin du parcours complet ?{' '}
-            <Link to="/appointment/request" className="text-[#D4AF37]/90 underline-offset-2 hover:underline">
+            <Link to="/appointment/request" className="text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)] underline-offset-2 hover:underline">
               Parler à un conseiller
             </Link>
             {' · '}

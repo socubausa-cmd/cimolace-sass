@@ -57,11 +57,11 @@ const TranscriptPanel: React.FC<Props> = ({ transcript, currentTimeSeconds, onSe
             onClick={() => onSeek(l.timeSeconds)}
             className={
               active
-                ? 'w-full text-left px-3 py-2 rounded-lg bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex gap-3 items-start'
+                ? 'w-full text-left px-3 py-2 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] flex gap-3 items-start'
                 : 'w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 border border-transparent flex gap-3 items-start'
             }
           >
-            <span className="flex-shrink-0 text-[11px] font-mono text-[#D4AF37] bg-[#D4AF37]/10 px-1.5 py-0.5 rounded mt-0.5 min-w-[44px] text-center">
+            <span className="flex-shrink-0 text-[11px] font-mono text-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-1.5 py-0.5 rounded mt-0.5 min-w-[44px] text-center">
               {formatTime(l.timeSeconds)}
             </span>
             <span className="flex-1 text-sm text-gray-100 leading-relaxed">{l.text}</span>

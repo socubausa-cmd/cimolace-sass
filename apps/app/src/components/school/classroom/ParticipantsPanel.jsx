@@ -25,7 +25,7 @@ const ParticipantsPanel = () => {
        <div className="p-4 border-b border-white/10 space-y-4">
           <div className="flex justify-between items-center">
              <h3 className="font-bold text-white">Participants</h3>
-             <Badge variant="outline" className="text-[#D4AF37] border-[#D4AF37]">{MOCK_PARTICIPANTS.length}</Badge>
+             <Badge variant="outline" className="text-[var(--school-accent)] border-[var(--school-accent)]">{MOCK_PARTICIPANTS.length}</Badge>
           </div>
           <div className="relative">
              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
@@ -55,7 +55,7 @@ const ParticipantsPanel = () => {
                       <div>
                          <p className="text-sm font-medium text-white flex items-center gap-2">
                             {participant.name}
-                            {participant.role === 'instructor' && <Badge className="h-4 px-1 text-[9px] bg-[#D4AF37] text-black hover:bg-[#D4AF37]">Hôte</Badge>}
+                            {participant.role === 'instructor' && <Badge className="h-4 px-1 text-[9px] bg-[var(--school-accent)] text-black hover:bg-[var(--school-accent)]">Hôte</Badge>}
                          </p>
                          <p className="text-[10px] text-gray-500 capitalize">{participant.status}</p>
                       </div>

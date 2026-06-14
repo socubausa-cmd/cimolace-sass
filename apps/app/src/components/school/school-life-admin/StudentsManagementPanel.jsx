@@ -178,8 +178,8 @@ const StudentsManagementPanel = () => {
                 <RefreshCw className="h-4 w-4" />
               </Button>
               <div className="h-6 w-px bg-white/10 mx-1" />
-              <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="icon" onClick={() => setViewMode('list')} className={viewMode === 'list' ? 'bg-[#D4AF37] text-black' : 'text-gray-400'}><LayoutList className="w-4 h-4" /></Button>
-              <Button variant={viewMode === 'card' ? 'default' : 'ghost'} size="icon" onClick={() => setViewMode('card')} className={viewMode === 'card' ? 'bg-[#D4AF37] text-black' : 'text-gray-400'}><LayoutGrid className="w-4 h-4" /></Button>
+              <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="icon" onClick={() => setViewMode('list')} className={viewMode === 'list' ? 'bg-[var(--school-accent)] text-black' : 'text-gray-400'}><LayoutList className="w-4 h-4" /></Button>
+              <Button variant={viewMode === 'card' ? 'default' : 'ghost'} size="icon" onClick={() => setViewMode('card')} className={viewMode === 'card' ? 'bg-[var(--school-accent)] text-black' : 'text-gray-400'}><LayoutGrid className="w-4 h-4" /></Button>
             </div>
           </div>
           <div className="text-xs text-gray-500">{filteredStudents.length} / {students.length} étudiant(s) affiché(s)</div>
@@ -199,18 +199,18 @@ const StudentsManagementPanel = () => {
           {viewMode === 'card' ? (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredStudents.map((student) => (
-                <Card key={student.id} className="bg-[#192734] border-white/10 hover:border-[#D4AF37] transition-all group cursor-pointer" onClick={() => setSelectedStudent(student)}>
+                <Card key={student.id} className="bg-[#192734] border-white/10 hover:border-[var(--school-accent)] transition-all group cursor-pointer" onClick={() => setSelectedStudent(student)}>
                   <CardContent className="p-0">
                     <div className="p-4 flex items-start gap-4">
                       <div className="relative shrink-0">
-                        <Avatar className="h-14 w-14 border-2 border-[#D4AF37]/50">
+                        <Avatar className="h-14 w-14 border-2 border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]">
                           <AvatarImage src={student.avatar} />
                           <AvatarFallback>{String(student.name || '?').charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-[#192734] ${student.status === 'active' ? 'bg-green-500' : 'bg-red-500'}`} />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-bold text-white truncate group-hover:text-[#D4AF37] transition-colors">{student.name}</h3>
+                        <h3 className="font-bold text-white truncate group-hover:text-[var(--school-accent)] transition-colors">{student.name}</h3>
                         <p className="text-sm text-gray-400 truncate mb-1">{student.email}</p>
                         <div className="flex gap-1 flex-wrap">
                           {getServiceBadge(student.serviceType)}

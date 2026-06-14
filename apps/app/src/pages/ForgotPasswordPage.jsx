@@ -43,7 +43,7 @@ const ForgotPasswordPage = () => {
       <div className="w-full max-w-md">
         <Link
           to="/login"
-          className="inline-flex items-center gap-2 text-sm text-[#D4AF37] hover:underline mb-8"
+          className="inline-flex items-center gap-2 text-sm text-[var(--school-accent)] hover:underline mb-8"
         >
           <ArrowLeft className="h-4 w-4" />
           Retour à la connexion
@@ -56,7 +56,7 @@ const ForgotPasswordPage = () => {
         </p>
 
         {!isSupabaseConfigured ? (
-          <Alert className="mb-5 border-[#D4AF37]/40 bg-[#D4AF37]/10 text-[#f5e6c8]">
+          <Alert className="mb-5 border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[#f5e6c8]">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               Configuration Supabase absente. Ajoutez les variables dans <code className="text-xs">.env</code> puis
@@ -67,7 +67,7 @@ const ForgotPasswordPage = () => {
 
         {Capacitor.isNativePlatform() ? (
           <Alert className="mb-5 border-white/15 bg-white/5 text-gray-200">
-            <AlertCircle className="h-4 w-4 shrink-0 text-[#D4AF37]" />
+            <AlertCircle className="h-4 w-4 shrink-0 text-[var(--school-accent)]" />
             <AlertDescription className="text-sm">
               Ouvrez le lien reçu par e-mail dans le <strong className="text-white">navigateur</strong> (Chrome, Safari),
               pas dans une mini-fenêtre Google. Après avoir défini le mot de passe, reconnectez-vous dans l'app avec
@@ -104,13 +104,13 @@ const ForgotPasswordPage = () => {
                   placeholder="vous@exemple.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[#D4AF37]"
+                  className="pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[var(--school-accent)]"
                 />
               </div>
             </div>
             <Button
               type="submit"
-              className="w-full h-11 bg-[#D4AF37] hover:bg-[#bfa345] text-black font-bold"
+              className="w-full h-11 bg-[var(--school-accent)] hover:bg-[#bfa345] text-black font-bold"
               disabled={isLoading}
             >
               {isLoading ? (

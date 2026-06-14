@@ -42,7 +42,7 @@ export default function ParticipantFluxMorePanel({ open, participants = [], acti
                 onClose?.();
               }}
             />
-            <button type="button" onClick={() => { onPromote?.(p.id); onClose?.(); }} className="h-6 w-full rounded-lg bg-white/[0.04] border border-white/10 hover:border-[#D4AF37]/35 hover:text-[#D4AF37] text-[10px] text-gray-300">Monter</button>
+            <button type="button" onClick={() => { onPromote?.(p.id); onClose?.(); }} className="h-6 w-full rounded-lg bg-white/[0.04] border border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:text-[var(--school-accent)] text-[10px] text-gray-300">Monter</button>
           </div>
         ))}
       </div>

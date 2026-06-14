@@ -129,7 +129,7 @@ export default function StudioLivePreviewPage() {
     <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#05070c] text-white">
       {/* Header */}
       <div className="flex shrink-0 items-center gap-3 border-b border-white/8 bg-[#080a12] px-4 py-2">
-        <Link to="/studio" className="flex items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] text-white/60 hover:text-[#D4AF37]">
+        <Link to="/studio" className="flex items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] text-white/60 hover:text-[var(--school-accent)]">
           <ChevronLeft className="h-3.5 w-3.5" />Studio
         </Link>
         <div className="h-5 w-px bg-white/10" />
@@ -143,7 +143,7 @@ export default function StudioLivePreviewPage() {
               onClick={() => setViewMode(id)}
               className={cn(
                 'flex items-center gap-1.5 rounded-md px-3 py-1 text-[11px] transition-colors',
-                viewMode === id ? 'bg-[#D4AF37] text-black font-semibold' : 'text-white/50 hover:text-white',
+                viewMode === id ? 'bg-[var(--school-accent)] text-black font-semibold' : 'text-white/50 hover:text-white',
               )}
             >
               <Icon className="h-3 w-3" />
@@ -184,7 +184,7 @@ export default function StudioLivePreviewPage() {
               className={cn(
                 'flex flex-col gap-1 rounded-lg border p-2 text-left transition-colors',
                 slide.id === activeSlide?.id
-                  ? 'border-[#D4AF37]/40 bg-[#D4AF37]/10'
+                  ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]'
                   : 'border-white/8 bg-white/[0.02] hover:border-white/15',
               )}
             >
@@ -223,7 +223,7 @@ export default function StudioLivePreviewPage() {
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
               <div
-                className="h-full bg-[#D4AF37] transition-all"
+                className="h-full bg-[var(--school-accent)] transition-all"
                 style={{ width: maxSteps > 0 ? `${(liveStep / maxSteps) * 100}%` : '0%' }}
               />
             </div>
@@ -236,7 +236,7 @@ export default function StudioLivePreviewPage() {
               <button
                 onClick={() => setActiveSection(null)}
                 className={cn('rounded-md border px-2 py-1 text-[11px] transition-colors',
-                  !activeSection ? 'border-[#D4AF37]/40 bg-[#D4AF37]/10 text-[#D4AF37]' : 'border-white/10 text-white/50 hover:border-white/20')}
+                  !activeSection ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]' : 'border-white/10 text-white/50 hover:border-white/20')}
               >
                 Tout visible
               </button>
@@ -245,7 +245,7 @@ export default function StudioLivePreviewPage() {
                   key={sec.id}
                   onClick={() => setActiveSection(activeSection === sec.id ? null : sec.id)}
                   className={cn('flex items-center gap-1.5 rounded-md border px-2 py-1 text-left text-[11px] transition-colors',
-                    activeSection === sec.id ? 'border-[#D4AF37]/40 bg-[#D4AF37]/10 text-[#D4AF37]' : 'border-white/10 text-white/50 hover:border-white/20')}
+                    activeSection === sec.id ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]' : 'border-white/10 text-white/50 hover:border-white/20')}
                 >
                   <Crosshair className="h-3 w-3 shrink-0" />
                   {sec.label}

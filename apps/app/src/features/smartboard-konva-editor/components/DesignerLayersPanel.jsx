@@ -68,7 +68,7 @@ export default function DesignerLayersPanel({
                 className={cn(
                   'group flex w-full items-center gap-1 rounded-md px-1.5 py-1 text-left text-[12px] transition-colors',
                   sel
-                    ? 'bg-[#D4AF37]/15 text-[#f5dd8a] ring-1 ring-[#D4AF37]/35'
+                    ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f5dd8a] ring-1 ring-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]'
                     : o.hidden
                       ? 'text-white/25 hover:bg-white/[0.04]'
                       : 'text-white/72 hover:bg-white/[0.06]',

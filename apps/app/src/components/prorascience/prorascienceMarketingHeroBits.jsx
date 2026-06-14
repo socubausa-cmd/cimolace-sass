@@ -276,7 +276,7 @@ export function BrandShimmerWord({ text }) {
   const reduce = useReducedMotion();
   const letters = useMemo(() => [...text], [text]);
   if (reduce) {
-    return <span className="text-[#D4AF37]">{text}</span>;
+    return <span className="text-[var(--school-accent)]">{text}</span>;
   }
   return (
     <span className="relative inline-block prs-brand-shimmer">
@@ -325,7 +325,7 @@ export function MarketingParallaxOrbs() {
         aria-hidden
       />
       <motion.div
-        className="prs-orb alt absolute right-8 top-24 h-96 w-96 rounded-full bg-[#D4AF37]"
+        className="prs-orb alt absolute right-8 top-24 h-96 w-96 rounded-full bg-[var(--school-accent)]"
         style={{ y: yB }}
         aria-hidden
       />

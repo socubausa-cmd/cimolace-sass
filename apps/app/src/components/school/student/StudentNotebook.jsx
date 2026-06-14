@@ -35,7 +35,7 @@ const StudentNotebook = () => {
     <div className="p-8 min-h-screen bg-[#0F1419] text-white">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold flex items-center gap-3">
-          <PenTool className="text-[#D4AF37]"/> Mon Carnet Virtuel
+          <PenTool className="text-[var(--school-accent)]"/> Mon Carnet Virtuel
         </h1>
         <div className="relative w-64">
            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
@@ -56,7 +56,7 @@ const StudentNotebook = () => {
                <CardContent className="p-6">
                   <div className="flex justify-between items-start mb-4">
                      <div>
-                        <h3 className="text-xl font-bold text-[#D4AF37]">{dayTitle}</h3>
+                        <h3 className="text-xl font-bold text-[var(--school-accent)]">{dayTitle}</h3>
                         <p className="text-sm text-gray-400">{moduleTitle} • {weekTitle}</p>
                      </div>
                      <Badge variant={writing.status === 'graded' ? 'default' : 'secondary'} className={writing.status === 'graded' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}>

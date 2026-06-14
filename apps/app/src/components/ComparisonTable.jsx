@@ -23,7 +23,7 @@ const ComparisonTable = ({
                 className={`
                   p-4 md:p-6 font-bold text-lg border-b border-white/10 
                   ${index === 0 ? 'text-gray-400 w-1/4' : 'w-1/4'}
-                  ${index === highlightColumnIndex ? 'text-[#D4AF37] bg-[#D4AF37]/5' : 'text-white'}
+                  ${index === highlightColumnIndex ? 'text-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]' : 'text-white'}
                 `}
               >
                 {header}
@@ -55,7 +55,7 @@ const ComparisonTable = ({
                     key={colIndex}
                     className={`
                       p-4 md:p-6 border-b border-white/5
-                      ${(colIndex + 1) === highlightColumnIndex ? 'text-[#D4AF37] font-bold bg-[#D4AF37]/5' : 'text-gray-300'}
+                      ${(colIndex + 1) === highlightColumnIndex ? 'text-[var(--school-accent)] font-bold bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]' : 'text-gray-300'}
                     `}
                   >
                     {val}
@@ -64,7 +64,7 @@ const ComparisonTable = ({
               ) : (
                 // Fallback for backward compatibility if needed
                 <>
-                  <td className="p-4 md:p-6 text-[#D4AF37] font-bold border-b border-white/5 bg-[#D4AF37]/5">{row.col1}</td>
+                  <td className="p-4 md:p-6 text-[var(--school-accent)] font-bold border-b border-white/5 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]">{row.col1}</td>
                   <td className="p-4 md:p-6 text-gray-300 border-b border-white/5">{row.col2}</td>
                   <td className="p-4 md:p-6 text-gray-300 border-b border-white/5">{row.col3}</td>
                 </>

@@ -12,7 +12,7 @@ export default function SlideSidebar({ slides = [], activeIndex = 0, onSelect })
           className={cn(
             'w-full text-left rounded-xl px-2.5 py-2 border transition-colors',
             idx === activeIndex
-              ? 'border-[#D4AF37]/35 bg-[#D4AF37]/12 text-[#D4AF37]'
+              ? 'border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[var(--school-accent)]'
               : 'border-white/0 hover:border-white/10 hover:bg-white/[0.03] text-gray-200'
           )}
         >

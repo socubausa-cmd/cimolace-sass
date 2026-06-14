@@ -99,12 +99,12 @@ const QuizBuilder = ({ quiz, scope = 'day', parentId = null, onSave, onCancel })
              <div>
                 <h2 className="text-xl font-bold flex items-center gap-2">
                    Constructeur de Quiz 
-                   <Badge variant="outline" className="text-[#D4AF37] border-[#D4AF37] capitalize">{data.type}</Badge>
+                   <Badge variant="outline" className="text-[var(--school-accent)] border-[var(--school-accent)] capitalize">{data.type}</Badge>
                 </h2>
                 <p className="text-sm text-gray-400">Créez des évaluations interactives pour valider les acquis.</p>
              </div>
          </div>
-         <Button onClick={handleSave} className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold gap-2">
+         <Button onClick={handleSave} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold gap-2">
             <Save className="w-4 h-4"/> Enregistrer
          </Button>
       </div>
@@ -129,7 +129,7 @@ const QuizBuilder = ({ quiz, scope = 'day', parentId = null, onSave, onCancel })
                      <div 
                         key={q.id} 
                         onClick={() => setActiveQuestion(idx)}
-                        className={`p-3 rounded-lg border cursor-pointer transition-all ${activeQuestion === idx ? 'bg-[#D4AF37]/10 border-[#D4AF37] shadow-lg' : 'bg-[#192734] border-white/5 hover:bg-white/5'}`}
+                        className={`p-3 rounded-lg border cursor-pointer transition-all ${activeQuestion === idx ? 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border-[var(--school-accent)] shadow-lg' : 'bg-[#192734] border-white/5 hover:bg-white/5'}`}
                      >
                         <div className="flex justify-between items-start mb-1">
                            <span className="text-xs font-bold text-gray-400">Q{idx + 1}</span>
@@ -160,7 +160,7 @@ const QuizBuilder = ({ quiz, scope = 'day', parentId = null, onSave, onCancel })
                <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2">
                   <div className="flex justify-between items-center">
                      <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-                        <span className="bg-[#D4AF37] text-black w-8 h-8 rounded-full flex items-center justify-center text-sm">
+                        <span className="bg-[var(--school-accent)] text-black w-8 h-8 rounded-full flex items-center justify-center text-sm">
                            {activeQuestion + 1}
                         </span>
                         Édition de la question
@@ -201,7 +201,7 @@ const QuizBuilder = ({ quiz, scope = 'day', parentId = null, onSave, onCancel })
 
                   {/* Answers Section */}
                   <div className="space-y-4 p-6 bg-[#192734]/50 rounded-xl border border-white/10">
-                     <Label className="text-[#D4AF37]">Réponses & Corrections</Label>
+                     <Label className="text-[var(--school-accent)]">Réponses & Corrections</Label>
                      
                      {data.questions[activeQuestion].type === 'multiple_choice' && (
                         <div className="space-y-3">
@@ -228,7 +228,7 @@ const QuizBuilder = ({ quiz, scope = 'day', parentId = null, onSave, onCancel })
                                  ><Trash className="w-4 h-4"/></Button>
                               </div>
                            ))}
-                           <Button variant="ghost" size="sm" onClick={() => updateQuestion(activeQuestion, 'options', [...data.questions[activeQuestion].options, ''])} className="text-[#D4AF37]">+ Ajouter une option</Button>
+                           <Button variant="ghost" size="sm" onClick={() => updateQuestion(activeQuestion, 'options', [...data.questions[activeQuestion].options, ''])} className="text-[var(--school-accent)]">+ Ajouter une option</Button>
                         </div>
                      )}
 
@@ -268,7 +268,7 @@ const QuizBuilder = ({ quiz, scope = 'day', parentId = null, onSave, onCancel })
                   <LayoutList className="w-16 h-16 mb-4 opacity-20" />
                   <p className="text-lg">Sélectionnez ou ajoutez une question</p>
                   <p className="text-sm">Utilisez le menu de gauche pour gérer vos questions.</p>
-                  <Button onClick={addQuestion} className="mt-6 bg-[#D4AF37] text-black hover:bg-yellow-500">
+                  <Button onClick={addQuestion} className="mt-6 bg-[var(--school-accent)] text-black hover:bg-yellow-500">
                      Créer ma première question
                   </Button>
                </div>

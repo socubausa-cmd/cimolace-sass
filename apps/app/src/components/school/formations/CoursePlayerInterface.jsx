@@ -108,12 +108,12 @@ const DemoCoursePlayerContent = () => {
            <h1 className="text-lg font-bold flex items-center gap-2">
              <span className="text-gray-400">{module?.title}</span> <ChevronRight className="h-4 w-4"/>
              <span className="text-gray-400">{week?.title}</span> <ChevronRight className="h-4 w-4"/>
-             <span className="text-[#D4AF37]">{day.title}</span>
+             <span className="text-[var(--school-accent)]">{day.title}</span>
            </h1>
          </div>
          <div className="flex gap-2">
             {[1, 2, 3, 4].map(s => (
-               <div key={s} className={`h-2 w-8 rounded-full ${step >= s ? 'bg-[#D4AF37]' : 'bg-gray-700'}`} />
+               <div key={s} className={`h-2 w-8 rounded-full ${step >= s ? 'bg-[var(--school-accent)]' : 'bg-gray-700'}`} />
             ))}
          </div>
       </div>
@@ -129,7 +129,7 @@ const DemoCoursePlayerContent = () => {
                   </div>
                </Card>
                <div className="mt-6 flex justify-end">
-                  <Button onClick={() => setStep(2)} className="bg-[#D4AF37] text-black hover:bg-yellow-500">
+                  <Button onClick={() => setStep(2)} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
                     J'ai terminé la vidéo <ArrowRight className="ml-2 h-4 w-4"/>
                   </Button>
                </div>
@@ -140,12 +140,12 @@ const DemoCoursePlayerContent = () => {
             <motion.div key="summary" initial={{opacity: 0, x: 20}} animate={{opacity: 1, x: 0}} exit={{opacity: 0, x: -20}}>
                <Card className="bg-[#192734] border border-white/10 p-8">
                   <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <BookOpen className="text-[#D4AF37]"/> Ce que tu dois retenir
+                    <BookOpen className="text-[var(--school-accent)]"/> Ce que tu dois retenir
                   </h2>
                   <div className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: day.content.summary }} />
                </Card>
                <div className="mt-6 flex justify-end">
-                  <Button onClick={() => setStep(3)} className="bg-[#D4AF37] text-black hover:bg-yellow-500">
+                  <Button onClick={() => setStep(3)} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
                     J'ai bien lu et compris <ArrowRight className="ml-2 h-4 w-4"/>
                   </Button>
                </div>
@@ -156,7 +156,7 @@ const DemoCoursePlayerContent = () => {
             <motion.div key="writing" initial={{opacity: 0, x: 20}} animate={{opacity: 1, x: 0}} exit={{opacity: 0, x: -20}}>
                <Card className="bg-[#192734] border border-white/10 p-8">
                   <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
-                    <PenTool className="text-[#D4AF37]"/> Qu'as-tu retenu ?
+                    <PenTool className="text-[var(--school-accent)]"/> Qu'as-tu retenu ?
                   </h2>
                   <p className="text-gray-400 mb-6">{day.content.writingPrompt}</p>
                   <Textarea 
@@ -170,7 +170,7 @@ const DemoCoursePlayerContent = () => {
                   </div>
                </Card>
                <div className="mt-6 flex justify-end">
-                  <Button onClick={handleWritingSubmit} className="bg-[#D4AF37] text-black hover:bg-yellow-500">
+                  <Button onClick={handleWritingSubmit} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
                     Soumettre ma réponse <ArrowRight className="ml-2 h-4 w-4"/>
                   </Button>
                </div>
@@ -188,7 +188,7 @@ const DemoCoursePlayerContent = () => {
                          <RadioGroup onValueChange={(val) => setQuizAnswers({...quizAnswers, [idx]: parseInt(val)})}>
                             {q.options.map((opt, optIdx) => (
                               <div key={optIdx} className="flex items-center space-x-2">
-                                <RadioGroupItem value={optIdx.toString()} id={`q${idx}-${optIdx}`} className="border-white/20 text-[#D4AF37]" />
+                                <RadioGroupItem value={optIdx.toString()} id={`q${idx}-${optIdx}`} className="border-white/20 text-[var(--school-accent)]" />
                                 <Label htmlFor={`q${idx}-${optIdx}`} className="text-gray-300">{opt}</Label>
                               </div>
                             ))}
@@ -198,7 +198,7 @@ const DemoCoursePlayerContent = () => {
                   </div>
                </Card>
                <div className="mt-6 flex justify-end">
-                  <Button onClick={handleQuizSubmit} className="bg-[#D4AF37] text-black hover:bg-yellow-500">
+                  <Button onClick={handleQuizSubmit} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
                     Valider le Quiz <CheckCircle className="ml-2 h-4 w-4"/>
                   </Button>
                </div>
@@ -216,7 +216,7 @@ const DemoCoursePlayerContent = () => {
                    <Button variant="outline" onClick={() => navigate('/formations')} className="border-white/10 text-white">
                      Retour aux formations
                    </Button>
-                   <Button className="bg-[#D4AF37] text-black">
+                   <Button className="bg-[var(--school-accent)] text-black">
                      Jour suivant <ArrowRight className="ml-2 h-4 w-4"/>
                    </Button>
                 </div>
@@ -916,7 +916,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
     <div className="min-h-screen bg-[#0F1419] text-white flex flex-col relative overflow-hidden">
       {/* Ambient background */}
       <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#D4AF37]/6 rounded-full blur-[140px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[color-mix(in_srgb,var(--school-accent)_6%,transparent)] rounded-full blur-[140px]" />
         <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-indigo-500/5 rounded-full blur-[100px]" />
         <div className="absolute top-1/2 left-0 w-[300px] h-[300px] bg-cyan-500/4 rounded-full blur-[80px]" />
       </div>
@@ -936,13 +936,13 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
             {formation?.title || 'Formation'}
           </h1>
           <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
-            <Layers className="w-3.5 h-3.5 text-[#D4AF37]/80" />
+            <Layers className="w-3.5 h-3.5 text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]" />
             <span className="truncate">{m?.title || ''}{w?.title ? ` › ${w.title}` : ''}{d?.title ? ` › ${d.title}` : ''}</span>
           </div>
         </div>
         <Button
           variant="outline"
-          className="border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+          className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
           onClick={() => { if (formationForumBase) navigate(formationForumBase); }}
         >
           Forum
@@ -959,10 +959,10 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
         >
           <div className="rounded-2xl border border-white/10 bg-[#151a21]/80 backdrop-blur-xl overflow-hidden">
             <div className="p-4 border-b border-white/10 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/20 flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+              <div className="w-8 h-8 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-[var(--school-accent)]" />
               </div>
-              <span className="font-bold text-[#D4AF37] uppercase tracking-wider text-sm">Programme</span>
+              <span className="font-bold text-[var(--school-accent)] uppercase tracking-wider text-sm">Programme</span>
             </div>
             <div className="p-3 max-h-[60vh] overflow-y-auto space-y-2">
               {modules.length === 0 ? (
@@ -982,13 +982,13 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                     className={cn(
                       'w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3',
                       mIdx === path.mIdx
-                        ? 'bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] shadow-lg shadow-[#D4AF37]/10'
+                        ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]'
                         : 'border border-transparent hover:bg-white/5 hover:border-white/10 text-gray-300'
                     )}
                   >
                     <span className={cn(
                       'w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0',
-                      mIdx === path.mIdx ? 'bg-[#D4AF37] text-black' : 'bg-white/10 text-gray-400'
+                      mIdx === path.mIdx ? 'bg-[var(--school-accent)] text-black' : 'bg-white/10 text-gray-400'
                     )}>
                       {mIdx + 1}
                     </span>
@@ -1027,7 +1027,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                     className={cn(
                                       'w-full text-left px-3 py-2 rounded-lg transition-all text-sm flex items-center gap-2',
                                       dIdx === path.dIdx
-                                        ? 'bg-[#D4AF37]/15 text-[#D4AF37] border-l-2 border-[#D4AF37] -ml-[2px] pl-[14px]'
+                                        ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border-l-2 border-[var(--school-accent)] -ml-[2px] pl-[14px]'
                                         : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
                                     )}
                                   >
@@ -1070,10 +1070,10 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                 transition={{ duration: 0.3 }}
                 className="rounded-2xl border border-white/10 bg-[#151a21]/80 backdrop-blur-xl overflow-hidden"
               >
-                <div className="p-6 border-b border-white/10 bg-gradient-to-r from-[#D4AF37]/10 to-transparent">
+                <div className="p-6 border-b border-white/10 bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] to-transparent">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/20 flex items-center justify-center">
-                      <Layers className="w-5 h-5 text-[#D4AF37]" />
+                    <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center">
+                      <Layers className="w-5 h-5 text-[var(--school-accent)]" />
                     </div>
                     <div>
                       <h2 className="text-xl font-bold text-white">{d.title}</h2>
@@ -1084,8 +1084,8 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
 
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-4">
-                    <Video className="w-4 h-4 text-[#D4AF37]" />
-                    <span className="text-sm font-semibold text-[#D4AF37] uppercase tracking-wider">Contenu du jour</span>
+                    <Video className="w-4 h-4 text-[var(--school-accent)]" />
+                    <span className="text-sm font-semibold text-[var(--school-accent)] uppercase tracking-wider">Contenu du jour</span>
                   </div>
                   {contentCards.length === 0 ? (
                     <div className="text-center py-12 text-gray-500 rounded-xl border border-dashed border-white/10">
@@ -1105,16 +1105,16 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                             whileHover={{ scale: 1.02, y: -2 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => setActiveItem(c)}
-                            className="group text-left rounded-xl border border-white/10 bg-white/[0.02] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/40 p-5 transition-all duration-300 flex items-start gap-4"
+                            className="group text-left rounded-xl border border-white/10 bg-white/[0.02] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] p-5 transition-all duration-300 flex items-start gap-4"
                           >
-                            <div className="w-12 h-12 rounded-xl bg-[#D4AF37]/20 flex items-center justify-center shrink-0 group-hover:bg-[#D4AF37]/30 transition-colors">
-                              <Icon className="w-6 h-6 text-[#D4AF37]" />
+                            <div className="w-12 h-12 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center shrink-0 group-hover:bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-colors">
+                              <Icon className="w-6 h-6 text-[var(--school-accent)]" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-white truncate group-hover:text-[#D4AF37] transition-colors">{c.title}</div>
+                              <div className="font-semibold text-white truncate group-hover:text-[var(--school-accent)] transition-colors">{c.title}</div>
                               <div className="text-xs text-gray-500 mt-0.5">{c.meta}</div>
                             </div>
-                            <div className="shrink-0 flex items-center gap-1 text-xs text-gray-500 group-hover:text-[#D4AF37] transition-colors">
+                            <div className="shrink-0 flex items-center gap-1 text-xs text-gray-500 group-hover:text-[var(--school-accent)] transition-colors">
                               <span>Ouvrir</span>
                               <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                             </div>
@@ -1214,7 +1214,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                   <div className="flex items-center gap-4 min-w-0">
                     <Sheet>
                       <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="md:hidden text-[#D4AF37]">
+                        <Button variant="ghost" size="icon" className="md:hidden text-[var(--school-accent)]">
                           <Menu className="w-6 h-6" />
                         </Button>
                       </SheetTrigger>
@@ -1292,7 +1292,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                     >
                       Forum
                     </Button>
-                    <Button variant="outline" onClick={() => setActiveItem(null)} className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black font-bold text-xs h-8">
+                    <Button variant="outline" onClick={() => setActiveItem(null)} className="border-[var(--school-accent)] text-[var(--school-accent)] hover:bg-[var(--school-accent)] hover:text-black font-bold text-xs h-8">
                       Fermer
                     </Button>
                     </div>
@@ -1311,7 +1311,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               variant="outline"
                               className={
                                 liked
-                                  ? 'border-[#D4AF37] text-[#D4AF37] hover:bg-white/5 font-bold'
+                                  ? 'border-[var(--school-accent)] text-[var(--school-accent)] hover:bg-white/5 font-bold'
                                   : 'border-white/10 text-white hover:bg-white/5 font-bold'
                               }
                               onClick={() => setLiked((v) => !v)}
@@ -1322,13 +1322,13 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                           </div>
                           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                             <div className="lg:col-span-2 border border-white/10 rounded-xl bg-[#151a21]/60 backdrop-blur p-5">
-                              <div className="text-xs text-[#D4AF37] uppercase tracking-wider font-semibold mb-2">Résumé</div>
+                              <div className="text-xs text-[var(--school-accent)] uppercase tracking-wider font-semibold mb-2">Résumé</div>
                               <div className="text-sm text-gray-200 whitespace-pre-wrap mt-2">
                                 {String(currentVideoMemo?.summary || currentVideoMemo?.description || '').trim() || '—'}
                               </div>
                             </div>
                             <div className="border border-white/10 rounded-xl bg-[#151a21]/60 backdrop-blur p-5">
-                              <div className="text-xs text-[#D4AF37] uppercase tracking-wider font-semibold mb-2">Points clés</div>
+                              <div className="text-xs text-[var(--school-accent)] uppercase tracking-wider font-semibold mb-2">Points clés</div>
                               <div className="text-sm text-gray-200 whitespace-pre-wrap mt-2">
                                 {String(currentVideoMemo?.keyPoints || '').trim() || '—'}
                               </div>
@@ -1369,7 +1369,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                     disabled={!mindmapUnlocked}
                                     title={!mindmapUnlocked ? (!videoDone ? 'Termine la vidéo pour accéder à la salle de révision' : 'Aucune mindmap disponible') : undefined}
                                     className={mindmapUnlocked
-                                      ? 'border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10 font-bold gap-2'
+                                      ? 'border-[var(--school-accent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] font-bold gap-2'
                                       : 'border-white/10 text-gray-500 cursor-not-allowed opacity-50 gap-2'
                                     }
                                     onClick={() => { if (mindmapUnlocked) { setMindmapTab('mindmap'); setMindmapOpen(true); } }}
@@ -1436,7 +1436,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                   onClick={() => setMindmapTab('mindmap')}
                                                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                                                     mindmapTab === 'mindmap'
-                                                      ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30'
+                                                      ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
                                                       : 'text-gray-400 hover:text-white'
                                                   }`}
                                                 >
@@ -1542,7 +1542,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                     onClick={() => setQuestionsSubTab('manual')}
                                                     className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
                                                       questionsSubTab === 'manual'
-                                                        ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30'
+                                                        ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
                                                         : 'text-gray-400 hover:text-white'
                                                     }`}
                                                   >
@@ -1570,7 +1570,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                 {questionsSubTab === 'manual' && (
                                                   <div className="flex-1 overflow-y-auto">
                                                     <div className="border border-white/10 rounded-xl bg-white/5 p-5 space-y-3 m-3">
-                                                      <div className="font-bold text-[#D4AF37]">✍️ Poser une question à Manikongo</div>
+                                                      <div className="font-bold text-[var(--school-accent)]">✍️ Poser une question à Manikongo</div>
                                                       <div className="text-sm text-gray-300">
                                                         Pose ta question sur cette leçon. Tu peux la rendre publique (visible dans le forum du cours) ou privée (uniquement pour l&apos;équipe enseignante).
 
@@ -1612,7 +1612,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                                 }}>
                                                                 Définir OUT
                                                               </Button>
-                                                              <Button size="sm" className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold"
+                                                              <Button size="sm" className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"
                                                                 disabled={!clipVideoRef.current || questionClipStart === '' || questionClipEnd === ''}
                                                                 onClick={() => {
                                                                   if (!clipVideoRef.current) return;
@@ -1780,7 +1780,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                         </Button>
                                                         <Button onClick={submitQuestion}
                                                           disabled={questionSending || !String(questionText || '').trim()}
-                                                          className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold">
+                                                          className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold">
                                                           {questionSending ? 'Envoi...' : editingQuestionId ? 'Enregistrer' : 'Envoyer à Manikongo'}
                                                         </Button>
                                                       </div>
@@ -1877,7 +1877,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               <Button
                                 onClick={saveNotes}
                                 disabled={notesSaving}
-                                className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold"
+                                className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"
                               >
                                 {notesSaving ? 'Enregistrement...' : 'Enregistrer'}
                               </Button>
@@ -1954,7 +1954,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                     </Button>
                                     <Button
                                       size="sm"
-                                      className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold"
+                                      className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"
                                       disabled={!clipVideoRef.current || questionClipStart === '' || questionClipEnd === ''}
                                       onClick={() => {
                                         if (!clipVideoRef.current) return;
@@ -2222,7 +2222,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               <Button
                                 onClick={submitQuestion}
                                 disabled={questionSending || !String(questionText || '').trim()}
-                                className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold"
+                                className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"
                               >
                                 {questionSending ? 'Envoi...' : editingQuestionId ? 'Enregistrer' : 'Envoyer'}
                               </Button>

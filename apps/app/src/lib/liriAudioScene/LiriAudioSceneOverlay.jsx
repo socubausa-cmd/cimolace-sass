@@ -99,13 +99,13 @@ export function LiriAudioSceneOverlay({
       role="status"
       aria-live="polite"
       className={cn(
-        'pointer-events-auto absolute left-1/2 top-[min(18vh,140px)] z-[44] w-[min(92vw,520px)] -translate-x-1/2 rounded-2xl border border-[#D4AF37]/35 bg-[#070a10]/92 p-4 text-white shadow-[0_28px_80px_-24px_rgba(0,0,0,0.9)] backdrop-blur-xl',
+        'pointer-events-auto absolute left-1/2 top-[min(18vh,140px)] z-[44] w-[min(92vw,520px)] -translate-x-1/2 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[#070a10]/92 p-4 text-white shadow-[0_28px_80px_-24px_rgba(0,0,0,0.9)] backdrop-blur-xl',
         className,
       )}
     >
       <div className="mb-2 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#D4AF37]/85">
+          <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)]">
             Scène — SmartBoard
           </div>
           {sceneName ? (
@@ -142,7 +142,7 @@ export function LiriAudioSceneOverlay({
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-2 inline-block text-xs text-[#D4AF37] underline-offset-2 hover:underline"
+          className="mt-2 inline-block text-xs text-[var(--school-accent)] underline-offset-2 hover:underline"
         >
           Ouvrir le média
         </a>

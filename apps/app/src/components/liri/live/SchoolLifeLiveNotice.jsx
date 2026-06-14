@@ -29,7 +29,7 @@ export default function SchoolLifeLiveNotice() {
 
   return (
     <div className="mb-8 space-y-3">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#D4AF37]/80">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">
         Live en cours
       </p>
       {actionable.map((s) => {

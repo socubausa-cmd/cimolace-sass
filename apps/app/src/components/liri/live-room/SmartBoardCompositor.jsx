@@ -4639,21 +4639,21 @@ function ShopScene({ products = [], onProductClick }) {
                       </div>
                     )}
                     {product.badge && (
-                      <span className="inline-block text-[9px] uppercase tracking-wider font-bold bg-[#D4AF37]/15 text-[#D4AF37] px-2 py-0.5 rounded-full mb-2 border border-[#D4AF37]/25">
+                      <span className="inline-block text-[9px] uppercase tracking-wider font-bold bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] px-2 py-0.5 rounded-full mb-2 border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]">
                         {product.badge}
                       </span>
                     )}
-                    <h4 className="text-sm font-semibold text-white group-hover:text-[#D4AF37] transition-colors leading-tight">
+                    <h4 className="text-sm font-semibold text-white group-hover:text-[var(--school-accent)] transition-colors leading-tight">
                       {product.name}
                     </h4>
                     {product.description && (
                       <p className="mt-1 line-clamp-2 text-[11px] text-white/40">{product.description}</p>
                     )}
                     <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/5">
-                      <span className="text-base font-bold text-[#D4AF37]">
+                      <span className="text-base font-bold text-[var(--school-accent)]">
                         {product.price != null ? `${product.price} ${product.currency || 'EUR'}` : 'Gratuit'}
                       </span>
-                      <span className="text-[10px] text-[#D4AF37] font-semibold bg-[#D4AF37]/10 px-2.5 py-1 rounded-full border border-[#D4AF37]/25 group-hover:bg-[#D4AF37]/20 transition-colors">
+                      <span className="text-[10px] text-[var(--school-accent)] font-semibold bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-2.5 py-1 rounded-full border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] group-hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors">
                         {product.cta || 'Acheter →'}
                       </span>
                     </div>
@@ -5466,7 +5466,7 @@ export default function SmartBoardCompositor({
           className={cn(
             'absolute z-40 overflow-hidden rounded-xl border-2 shadow-2xl transition-shadow select-none',
             pipEditMode
-              ? 'border-[#D4AF37] shadow-[0_0_16px_rgba(212,175,55,0.5)] cursor-move'
+              ? 'border-[var(--school-accent)] shadow-[0_0_16px_rgba(212,175,55,0.5)] cursor-move'
               : 'border-white/15 cursor-default'
           )}
           style={{
@@ -5496,7 +5496,7 @@ export default function SmartBoardCompositor({
                     onClick={(e) => { e.stopPropagation(); setPipSize(key); }}
                     className={cn(
                       'text-[9px] px-1.5 py-0.5 rounded font-bold transition-colors',
-                      pipSize === key ? 'bg-[#D4AF37] text-black' : 'bg-black/70 text-white/70 hover:bg-white/20'
+                      pipSize === key ? 'bg-[var(--school-accent)] text-black' : 'bg-black/70 text-white/70 hover:bg-white/20'
                     )}
                   >
                     {label}
@@ -5504,7 +5504,7 @@ export default function SmartBoardCompositor({
                 ))}
               </div>
               <div className="flex items-center gap-0.5">
-                <Move className="w-3 h-3 text-[#D4AF37] opacity-80" />
+                <Move className="w-3 h-3 text-[var(--school-accent)] opacity-80" />
               </div>
             </div>
           )}

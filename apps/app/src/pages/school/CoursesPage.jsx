@@ -50,27 +50,27 @@ const CoursesPage = () => {
         {/* Courses Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {mockCourses.map((course) => (
-            <Card key={course.id} className="bg-[#192734] border-white/10 hover:border-[#D4AF37]/30 transition-colors">
+            <Card key={course.id} className="bg-[#192734] border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-colors">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="px-2 py-1 bg-[#D4AF37]/20 text-[#D4AF37] text-xs font-bold rounded-full uppercase tracking-wider">
+                  <span className="px-2 py-1 bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] text-xs font-bold rounded-full uppercase tracking-wider">
                     {course.level}
                   </span>
-                  <BookOpen className="w-5 h-5 text-[#D4AF37]" />
+                  <BookOpen className="w-5 h-5 text-[var(--school-accent)]" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">{course.title}</h3>
                 <p className="text-sm text-gray-400 mb-4 leading-relaxed">{course.description}</p>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center text-gray-300">
-                    <Clock className="w-4 h-4 mr-2 text-[#D4AF37]" />
+                    <Clock className="w-4 h-4 mr-2 text-[var(--school-accent)]" />
                     <span>Durée : {course.duration}</span>
                   </div>
                   <div className="flex items-center text-gray-300">
-                    <Calendar className="w-4 h-4 mr-2 text-[#D4AF37]" />
+                    <Calendar className="w-4 h-4 mr-2 text-[var(--school-accent)]" />
                     <span>Prochaine session : {new Date(course.nextStart).toLocaleDateString('fr-FR')}</span>
                   </div>
                 </div>
-                <Button className="w-full mt-6 bg-[#D4AF37] hover:bg-yellow-500 text-black font-bold">
+                <Button className="w-full mt-6 bg-[var(--school-accent)] hover:bg-yellow-500 text-black font-bold">
                   Voir le programme
                 </Button>
               </CardContent>
@@ -84,7 +84,7 @@ const CoursesPage = () => {
             <h2 className="text-2xl font-serif font-bold text-white mb-4">Besoin de conseils ?</h2>
             <p className="text-gray-400 mb-6">Notre équipe pédagogique vous accompagne dans le choix de votre parcours.</p>
             <Link to="/secretariat-space/dashboard">
-              <Button variant="outline" className="border-white/20 text-white hover:bg-[#D4AF37] hover:text-black hover:border-[#D4AF37]">
+              <Button variant="outline" className="border-white/20 text-white hover:bg-[var(--school-accent)] hover:text-black hover:border-[var(--school-accent)]">
                 Contacter le secrétariat
               </Button>
             </Link>

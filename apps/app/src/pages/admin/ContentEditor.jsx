@@ -87,7 +87,7 @@ const ContentEditor = () => {
             <Button onClick={handleExport} variant="outline" className="border-white/10 text-white hover:bg-white/5 gap-2" disabled={filteredContent.length === 0}>
               <Download className="w-4 h-4" /> Export CSV
             </Button>
-            <Button onClick={handleCreate} className="bg-[#D4AF37] text-black hover:bg-[#b5952f] gap-2">
+            <Button onClick={handleCreate} className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f] gap-2">
               <Plus className="w-4 h-4" /> Nouveau Contenu
             </Button>
           </div>
@@ -136,7 +136,7 @@ const ContentEditor = () => {
 
         <div className="bg-[#192734] rounded-xl border border-white/5 overflow-hidden">
           {loading ? (
-             <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-[#D4AF37] w-8 h-8" /></div>
+             <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-[var(--school-accent)] w-8 h-8" /></div>
           ) : (
             <table className="w-full text-left text-sm">
               <thead className="bg-white/5 text-gray-400 uppercase font-medium">
@@ -170,7 +170,7 @@ const ContentEditor = () => {
                          <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white">
                             <Eye className="w-4 h-4" />
                          </Button>
-                         <Button variant="ghost" size="icon" className="h-8 w-8 text-[#D4AF37] hover:bg-[#D4AF37]/10">
+                         <Button variant="ghost" size="icon" className="h-8 w-8 text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
                             <Edit className="w-4 h-4" />
                          </Button>
                          <Button onClick={() => handleDelete(item.id)} variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-500/10">

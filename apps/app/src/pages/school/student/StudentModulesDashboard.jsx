@@ -84,7 +84,7 @@ const StudentModulesDashboard = () => {
                     </div>
                     
                     <div className="w-full bg-black/30 h-2 rounded-full mb-2 overflow-hidden">
-                      <div className="bg-[#D4AF37] h-full transition-all duration-500" style={{ width: `${enrollment.progress_percentage}%` }}></div>
+                      <div className="bg-[var(--school-accent)] h-full transition-all duration-500" style={{ width: `${enrollment.progress_percentage}%` }}></div>
                     </div>
                     <div className="flex justify-between text-sm text-gray-400 mb-6">
                       <span>Progression</span>
@@ -92,7 +92,7 @@ const StudentModulesDashboard = () => {
                     </div>
 
                     <Link to={`/student/modules/${enrollment.module_id}/content`}>
-                      <Button className="w-full bg-white/5 hover:bg-[#D4AF37] hover:text-black text-white">
+                      <Button className="w-full bg-white/5 hover:bg-[var(--school-accent)] hover:text-black text-white">
                         Accéder au contenu
                       </Button>
                     </Link>
@@ -111,7 +111,7 @@ const StudentModulesDashboard = () => {
             <div className="text-center py-10">
               <p className="mb-4 text-gray-400">Découvrez de nouveaux modules pour enrichir votre parcours.</p>
               <Link to="/modules/year2-catalog">
-                <Button className="bg-[#D4AF37] text-black">Voir le Catalogue Complet</Button>
+                <Button className="bg-[var(--school-accent)] text-black">Voir le Catalogue Complet</Button>
               </Link>
             </div>
           </TabsContent>

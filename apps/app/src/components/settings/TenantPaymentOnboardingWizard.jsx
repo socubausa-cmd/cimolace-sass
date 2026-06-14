@@ -387,11 +387,11 @@ export default function TenantPaymentOnboardingWizard({
               ].map((row) => (
                 <label
                   key={row.key}
-                  className="flex cursor-pointer items-start gap-3 rounded-lg border border-white/10 bg-[#0F1419] p-3 hover:border-[#D4AF37]/40"
+                  className="flex cursor-pointer items-start gap-3 rounded-lg border border-white/10 bg-[#0F1419] p-3 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]"
                 >
                   <input
                     type="checkbox"
-                    className="mt-1 accent-[#D4AF37]"
+                    className="mt-1 accent-[var(--school-accent)]"
                     checked={Boolean(selection[row.key])}
                     onChange={(e) => setSelection((s) => ({ ...s, [row.key]: e.target.checked }))}
                   />
@@ -466,7 +466,7 @@ export default function TenantPaymentOnboardingWizard({
             </ol>
             <Button
               type="button"
-              className="bg-[#D4AF37] text-black hover:bg-[#c29e30]"
+              className="bg-[var(--school-accent)] text-black hover:bg-[#c29e30]"
               onClick={() => scrollToCard('payment-card-chariow')}
             >
               Aller au formulaire Chariow
@@ -621,7 +621,7 @@ export default function TenantPaymentOnboardingWizard({
               disponibles ci-dessous.
             </p>
             <label className="flex items-center gap-2 text-xs text-gray-500 cursor-pointer">
-              <input type="checkbox" checked={collapsed} onChange={(e) => setCollapsed(e.target.checked)} className="accent-[#D4AF37]" />
+              <input type="checkbox" checked={collapsed} onChange={(e) => setCollapsed(e.target.checked)} className="accent-[var(--school-accent)]" />
               Réduire le tutoriel par défaut à la prochaine visite
             </label>
           </div>
@@ -636,7 +636,7 @@ export default function TenantPaymentOnboardingWizard({
       <Card className="bg-[#192734] border-emerald-500/30 mb-6">
         <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
           <p className="text-sm text-gray-300 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#D4AF37]" /> Tutoriel paiements terminé.
+            <Sparkles className="w-4 h-4 text-[var(--school-accent)]" /> Tutoriel paiements terminé.
           </p>
           <Button type="button" variant="outline" size="sm" className="border-white/20" onClick={() => setCollapsed(false)}>
             Rouvrir le guide
@@ -660,12 +660,12 @@ export default function TenantPaymentOnboardingWizard({
   }
 
   return (
-    <Card className="bg-gradient-to-br from-[#1a2332] to-[#152232] border-[#D4AF37]/25 mb-8 shadow-lg shadow-black/20">
+    <Card className="bg-gradient-to-br from-[#1a2332] to-[#152232] border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] mb-8 shadow-lg shadow-black/20">
       <CardHeader className="pb-2">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <CardTitle className="text-white flex items-center gap-2 text-xl">
-              <HelpCircle className="w-6 h-6 text-[#D4AF37]" />
+              <HelpCircle className="w-6 h-6 text-[var(--school-accent)]" />
               Tutoriel — Configuration des paiements
             </CardTitle>
             <CardDescription className="text-gray-400 mt-2 max-w-2xl">
@@ -684,7 +684,7 @@ export default function TenantPaymentOnboardingWizard({
           </Button>
         </div>
         <div className="mt-4 h-2 rounded-full bg-[#0F1419] overflow-hidden border border-white/5">
-          <div className="h-full bg-gradient-to-r from-[#D4AF37] to-amber-600 transition-all duration-300" style={{ width: `${pct}%` }} />
+          <div className="h-full bg-gradient-to-r from-[var(--school-accent)] to-amber-600 transition-all duration-300" style={{ width: `${pct}%` }} />
         </div>
       </CardHeader>
       <CardContent>
@@ -697,7 +697,7 @@ export default function TenantPaymentOnboardingWizard({
               </Button>
               <Button
                 type="button"
-                className="bg-[#D4AF37] text-black hover:bg-[#c29e30]"
+                className="bg-[var(--school-accent)] text-black hover:bg-[#c29e30]"
                 disabled={stepIndex >= stepIds.length - 1}
                 onClick={goNext}
               >

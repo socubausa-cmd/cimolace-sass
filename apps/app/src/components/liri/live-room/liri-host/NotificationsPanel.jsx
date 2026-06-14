@@ -69,7 +69,7 @@ export function NotificationsPanel({
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            <span className="rounded-md bg-[#D4AF37]/15 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[#D4AF37]">
+            <span className="rounded-md bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[var(--school-accent)]">
               {items.length}
             </span>
             <ChevronRight className={cn('h-4 w-4 text-white/35 transition-transform', expanded && 'rotate-90')} />
@@ -111,7 +111,7 @@ export function NotificationsPanel({
                     className={cn(
                       'shrink-0 rounded-md border px-2 py-0.5 text-[8px] font-medium transition-colors',
                       active
-                        ? 'border-[#D4AF37]/45 bg-[#D4AF37]/12 text-[#f5dd8a]'
+                        ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[#f5dd8a]'
                         : 'border-white/10 bg-white/[0.03] text-white/50 hover:text-white/75',
                     )}
                   >
@@ -130,7 +130,7 @@ export function NotificationsPanel({
                 <button
                   type="button"
                   onClick={() => onFilterChange?.('all')}
-                  className="mt-2 text-[9px] font-medium text-[#D4AF37]/85 underline"
+                  className="mt-2 text-[9px] font-medium text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)] underline"
                 >
                   Afficher tout
                 </button>

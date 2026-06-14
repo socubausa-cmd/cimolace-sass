@@ -87,7 +87,7 @@ const ContactPage = () => {
          {/* Form Section */}
          <div>
             <h2 className="text-2xl font-bold mb-8 flex items-center gap-3">
-               <Mail className="w-6 h-6 text-[#D4AF37]" /> Envoyez-nous un message
+               <Mail className="w-6 h-6 text-[var(--school-accent)]" /> Envoyez-nous un message
             </h2>
             
             {success ? (
@@ -111,7 +111,7 @@ const ContactPage = () => {
                            required 
                            value={formData.name} 
                            onChange={handleChange}
-                           className="bg-[#0F1419] border-white/10 focus:border-[#D4AF37]" 
+                           className="bg-[#0F1419] border-white/10 focus:border-[var(--school-accent)]" 
                            placeholder="Votre nom" 
                         />
                      </div>
@@ -123,7 +123,7 @@ const ContactPage = () => {
                            required 
                            value={formData.email} 
                            onChange={handleChange}
-                           className="bg-[#0F1419] border-white/10 focus:border-[#D4AF37]" 
+                           className="bg-[#0F1419] border-white/10 focus:border-[var(--school-accent)]" 
                            placeholder="votre@email.com" 
                         />
                      </div>
@@ -135,7 +135,7 @@ const ContactPage = () => {
                         required 
                         value={formData.subject} 
                         onChange={handleChange}
-                        className="w-full h-10 rounded-md border border-white/10 bg-[#0F1419] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-transparent"
+                        className="w-full h-10 rounded-md border border-white/10 bg-[#0F1419] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[var(--school-accent)] focus:border-transparent"
                      >
                         <option value="">Sélectionnez un sujet</option>
                         {wc.subjects.map((s) => (
@@ -152,11 +152,11 @@ const ContactPage = () => {
                         required 
                         value={formData.message} 
                         onChange={handleChange}
-                        className="bg-[#0F1419] border-white/10 focus:border-[#D4AF37] min-h-[150px]" 
+                        className="bg-[#0F1419] border-white/10 focus:border-[var(--school-accent)] min-h-[150px]" 
                         placeholder="Comment pouvons-nous vous aider ?" 
                      />
                   </div>
-                  <Button type="submit" disabled={loading} className="w-full bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold h-12">
+                  <Button type="submit" disabled={loading} className="w-full bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold h-12">
                      {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Send className="w-5 h-5 mr-2" />}
                      {loading ? "Envoi en cours..." : "Envoyer le Message"}
                   </Button>
@@ -171,7 +171,7 @@ const ContactPage = () => {
                <div className="space-y-6">
                   {contactInfo.map((item) => (
                      <div key={item.title} className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-[#192734] rounded-lg flex items-center justify-center text-[#D4AF37] border border-white/5 shrink-0">
+                        <div className="w-12 h-12 bg-[#192734] rounded-lg flex items-center justify-center text-[var(--school-accent)] border border-white/5 shrink-0">
                            <item.icon className="w-6 h-6" />
                         </div>
                         <div>
@@ -182,7 +182,7 @@ const ContactPage = () => {
                                   <a
                                     key={`${item.title}-${j}`}
                                     href={`mailto:${item.email}`}
-                                    className="block text-gray-400 hover:text-[#D4AF37] transition-colors"
+                                    className="block text-gray-400 hover:text-[var(--school-accent)] transition-colors"
                                   >
                                     {line}
                                   </a>

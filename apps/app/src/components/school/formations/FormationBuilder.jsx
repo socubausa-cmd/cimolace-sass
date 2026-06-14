@@ -101,7 +101,7 @@ const FormationBuilder = () => {
              addFormation({ id: newId, title: 'Nouvelle Formation', level: 'Nouveau', description: '', modules: [] });
              setSelectedFormationId(newId);
           }}>
-            <Plus className="h-4 w-4 text-[#D4AF37]" />
+            <Plus className="h-4 w-4 text-[var(--school-accent)]" />
           </Button>
         </div>
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -109,7 +109,7 @@ const FormationBuilder = () => {
             <button
               key={f.id}
               onClick={() => setSelectedFormationId(f.id)}
-              className={`w-full text-left p-3 rounded-lg transition-colors text-sm font-medium ${selectedFormationId === f.id ? 'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
+              className={`w-full text-left p-3 rounded-lg transition-colors text-sm font-medium ${selectedFormationId === f.id ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
             >
               {f.title}
             </button>
@@ -122,12 +122,12 @@ const FormationBuilder = () => {
         <div className="flex justify-between items-center bg-[#192734] p-4 rounded-xl border border-white/10 sticky top-0 z-10 backdrop-blur-xl bg-opacity-90">
           <div>
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-               <BookOpen className="h-5 w-5 text-[#D4AF37]" />
+               <BookOpen className="h-5 w-5 text-[var(--school-accent)]" />
                Éditeur de Contenu
             </h2>
             {isEditing && <span className="text-xs text-yellow-500 flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div> Modifications non enregistrées</span>}
           </div>
-          <Button onClick={handleSave} disabled={!isEditing} className={`gap-2 ${isEditing ? 'bg-[#D4AF37] text-black hover:bg-yellow-500' : 'bg-gray-700 text-gray-400'}`}>
+          <Button onClick={handleSave} disabled={!isEditing} className={`gap-2 ${isEditing ? 'bg-[var(--school-accent)] text-black hover:bg-yellow-500' : 'bg-gray-700 text-gray-400'}`}>
             <Save className="h-4 w-4" /> {isEditing ? 'Enregistrer' : 'À jour'}
           </Button>
         </div>

@@ -196,7 +196,7 @@ export default function WaitingRoomLivePreview({
       )}
     >
       <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-2">
-        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wide text-[#D4AF37]/90">
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wide text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">
           <Video className="h-3.5 w-3.5" />
           Aperçu du direct
         </div>
@@ -218,7 +218,7 @@ export default function WaitingRoomLivePreview({
         />
         {phase === 'connecting' ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/65 text-white/70">
-            <Loader2 className="h-7 w-7 animate-spin text-[#D4AF37]" />
+            <Loader2 className="h-7 w-7 animate-spin text-[var(--school-accent)]" />
             <p className="text-[11px]">Connexion à l'aperçu…</p>
           </div>
         ) : null}

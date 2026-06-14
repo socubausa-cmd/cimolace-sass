@@ -12,7 +12,7 @@ const ProgressionNotebook = () => {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-        <Trophy className="text-[#D4AF37]"/> Carnet de Progression
+        <Trophy className="text-[var(--school-accent)]"/> Carnet de Progression
       </h2>
 
       <Tabs defaultValue="overview" className="w-full">

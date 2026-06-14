@@ -12,10 +12,10 @@ const ContractsSection = ({ data }) => {
     <div className="space-y-6">
        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {contracts.map((contract) => (
-            <Card key={contract.id} className="bg-[#192734] border-white/10 hover:border-[#D4AF37]/50 transition-colors">
+            <Card key={contract.id} className="bg-[#192734] border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] transition-colors">
                <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <div className="flex items-center gap-3">
-                     <div className="p-2 bg-[#D4AF37]/10 rounded-lg text-[#D4AF37]"><FileText className="w-6 h-6"/></div>
+                     <div className="p-2 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-lg text-[var(--school-accent)]"><FileText className="w-6 h-6"/></div>
                      <div>
                         <CardTitle className="text-white text-lg">{contract.type}</CardTitle>
                         <p className="text-sm text-gray-400">Réf: {contract.id}</p>
@@ -47,10 +47,10 @@ const ContractsSection = ({ data }) => {
                      <div className="bg-black/20 p-3 rounded-lg border border-white/5">
                         <div className="flex justify-between text-xs mb-1">
                            <span className="text-gray-400">Sessions: {contract.completedSessions}/{contract.totalSessions}</span>
-                           <span className="text-[#D4AF37]">{Math.round((contract.completedSessions/contract.totalSessions)*100)}%</span>
+                           <span className="text-[var(--school-accent)]">{Math.round((contract.completedSessions/contract.totalSessions)*100)}%</span>
                         </div>
                         <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                           <div className="h-full bg-[#D4AF37]" style={{width: `${(contract.completedSessions/contract.totalSessions)*100}%`}}></div>
+                           <div className="h-full bg-[var(--school-accent)]" style={{width: `${(contract.completedSessions/contract.totalSessions)*100}%`}}></div>
                         </div>
                      </div>
 

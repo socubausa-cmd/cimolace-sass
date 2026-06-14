@@ -317,7 +317,7 @@ export default function LiveControlsBar({
                   onClick={() => setHostDockMoreOpen((v) => !v)}
                   className={cn(
                     'h-9 w-9 rounded-full transition-colors',
-                    hostDockMoreOpen ? 'bg-[#D4AF37]/20 text-[#f5dd8a]' : 'text-white/88 hover:bg-white/10',
+                    hostDockMoreOpen ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[#f5dd8a]' : 'text-white/88 hover:bg-white/10',
                   )}
                   title="Plus d'actions"
                 >
@@ -407,7 +407,7 @@ export default function LiveControlsBar({
               }}
               placeholder="Écrire une question ou une instruction…"
               disabled={instructionSending || typeof onHostInstructionSubmit !== 'function'}
-              className="min-h-9 min-w-0 w-full flex-1 rounded-full border border-white/10 bg-black/45 px-4 text-xs text-white placeholder:text-white/35 focus:border-[#D4AF37]/45 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/25 disabled:cursor-not-allowed disabled:opacity-45"
+              className="min-h-9 min-w-0 w-full flex-1 rounded-full border border-white/10 bg-black/45 px-4 text-xs text-white placeholder:text-white/35 focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] focus:outline-none focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] disabled:cursor-not-allowed disabled:opacity-45"
             />
             <div className="flex shrink-0 items-center justify-between gap-0.5 sm:justify-start">
               <button
@@ -495,7 +495,7 @@ export default function LiveControlsBar({
               className={cn(
                 'h-8 px-2 sm:px-2.5 rounded-full text-xs inline-flex items-center gap-1.5 transition-colors',
                 forumDrawerOpen
-                  ? 'bg-[#D4AF37]/22 text-[#D4AF37] border border-[#D4AF37]/35'
+                  ? 'bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]'
                   : 'text-white/85 hover:bg-white/10 border border-transparent',
               )}
               title={forumDrawerOpen ? 'Fermer le forum' : 'Forum live — messages publics'}
@@ -505,7 +505,7 @@ export default function LiveControlsBar({
               <span className="relative inline-flex">
                 <MessageSquare className="w-4 h-4" />
                 {forumUnreadCount > 0 && !forumDrawerOpen ? (
-                  <span className="absolute -top-1.5 -right-2 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[#D4AF37] px-0.5 text-[8px] font-bold text-black">
+                  <span className="absolute -top-1.5 -right-2 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[var(--school-accent)] px-0.5 text-[8px] font-bold text-black">
                     {forumUnreadCount > 9 ? '9+' : forumUnreadCount}
                   </span>
                 ) : null}
@@ -522,7 +522,7 @@ export default function LiveControlsBar({
               <button
                 type="button"
                 onClick={onToggleShare}
-                className={cn('h-8 w-8 rounded-full text-white/85 hover:bg-white/10', sharingScreen && 'bg-[#D4AF37]/20 text-[#D4AF37]')}
+                className={cn('h-8 w-8 rounded-full text-white/85 hover:bg-white/10', sharingScreen && 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]')}
                 title={sharingScreen ? 'Arrêter partage écran' : 'Partager écran'}
               >
                 <MonitorUp className="w-4 h-4 mx-auto" />
@@ -530,7 +530,7 @@ export default function LiveControlsBar({
               <button
                 type="button"
                 onClick={() => onToggleParticipants?.()}
-                className={cn('h-8 w-8 rounded-full text-white/85 hover:bg-white/10', participantsOpen && 'bg-[#D4AF37]/20 text-[#D4AF37]')}
+                className={cn('h-8 w-8 rounded-full text-white/85 hover:bg-white/10', participantsOpen && 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]')}
                 title={
                   participantsOpen
                     ? 'Afficher le plan de cours (mindmap, script, caméra)'
@@ -577,7 +577,7 @@ export default function LiveControlsBar({
               <button
                 type="button"
                 onClick={onToggleSpotlight}
-                className={cn('h-8 px-2 rounded-full text-xs', spotlight ? 'bg-[#D4AF37]/20 text-[#D4AF37]' : 'text-white/85 hover:bg-white/10')}
+                className={cn('h-8 px-2 rounded-full text-xs', spotlight ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]' : 'text-white/85 hover:bg-white/10')}
                 title="Activer spotlight"
               >
                 <Sparkles className="w-4 h-4" />
@@ -609,7 +609,7 @@ export default function LiveControlsBar({
                 className={cn(
                   'h-8 w-8 rounded-full transition-colors',
                   (cinemaMode || isFullscreen)
-                    ? 'bg-[#D4AF37]/20 text-[#D4AF37]'
+                    ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]'
                     : 'text-white/75 hover:bg-white/10'
                 )}
                 title={cinemaMode ? 'Quitter le mode cinéma (F)' : 'Mode cinéma — SmartBoard plein écran (F)'}
@@ -655,7 +655,7 @@ export default function LiveControlsBar({
                 onClick={() => setShowReactions((v) => !v)}
                 className={cn(
                   'h-8 w-8 rounded-full text-white/85 hover:bg-white/10',
-                  showReactions && 'bg-[#D4AF37]/20 text-[#D4AF37]'
+                  showReactions && 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]'
                 )}
                 title="Envoyer une réaction"
               >
@@ -666,7 +666,7 @@ export default function LiveControlsBar({
               <button
                 type="button"
                 onClick={onToggleCinema ?? toggleFullscreen}
-                className={cn('h-8 w-8 rounded-full transition-colors', (cinemaMode || isFullscreen) ? 'bg-[#D4AF37]/20 text-[#D4AF37]' : 'text-white/75 hover:bg-white/10')}
+                className={cn('h-8 w-8 rounded-full transition-colors', (cinemaMode || isFullscreen) ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]' : 'text-white/75 hover:bg-white/10')}
                 title={(cinemaMode || isFullscreen) ? 'Quitter le plein écran' : 'Plein écran'}
               >
                 {(cinemaMode || isFullscreen) ? <Minimize className="w-4 h-4 mx-auto" /> : <Maximize className="w-4 h-4 mx-auto" />}

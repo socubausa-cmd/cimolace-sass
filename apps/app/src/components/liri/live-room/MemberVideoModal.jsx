@@ -233,12 +233,12 @@ export function MemberVideoModal({
         >
           <div
             className={cn(
-              'absolute left-1/2 -translate-x-1/2 flex items-center gap-2 min-h-8 px-4 rounded-full bg-[#D4AF37]/18 border border-[#D4AF37]/30 z-[40] max-w-[min(92vw,320px)]',
+              'absolute left-1/2 -translate-x-1/2 flex items-center gap-2 min-h-8 px-4 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] z-[40] max-w-[min(92vw,320px)]',
               isViewport ? 'top-[max(0.75rem,env(safe-area-inset-top))]' : 'top-4',
             )}
           >
-            <Star className="w-3.5 h-3.5 text-[#D4AF37]" />
-            <span className="text-xs font-semibold text-[#D4AF37]">Membre en live</span>
+            <Star className="w-3.5 h-3.5 text-[var(--school-accent)]" />
+            <span className="text-xs font-semibold text-[var(--school-accent)]">Membre en live</span>
             {whisperHasBackgroundUnread ? (
               <span
                 className="h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.7)] animate-pulse"
@@ -290,10 +290,10 @@ export function MemberVideoModal({
                     <img
                       src={presenceMeta.avatar_url}
                       alt=""
-                      className="h-20 w-20 rounded-full object-cover border border-[#D4AF37]/35"
+                      className="h-20 w-20 rounded-full object-cover border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]"
                     />
                   ) : (
-                    <div className="h-20 w-20 rounded-full bg-gradient-to-br from-[#D4AF37]/28 to-[#1a2540] border border-[#D4AF37]/30 flex items-center justify-center text-xl font-bold text-[#D4AF37]">
+                    <div className="h-20 w-20 rounded-full bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] to-[#1a2540] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center text-xl font-bold text-[var(--school-accent)]">
                       {(name || '?').slice(0, 1).toUpperCase()}
                     </div>
                   )}
@@ -312,7 +312,7 @@ export function MemberVideoModal({
                 ) : null}
                 {joinedLabel ? <span>Connecté {joinedLabel}</span> : null}
                 {isPromoted ? (
-                  <span className="px-2 py-0.5 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/35 text-[#f5dd8a]">
+                  <span className="px-2 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[#f5dd8a]">
                     À l&apos;antenne
                   </span>
                 ) : null}
@@ -340,7 +340,7 @@ export function MemberVideoModal({
                 <Button
                   type="button"
                   variant="outline"
-                  className="border-[#D4AF37]/35 text-[#f5dd8a] hover:bg-[#D4AF37]/12"
+                  className="border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]"
                   onClick={() => {
                     onPromoteToStage(id);
                     onClose?.();
@@ -421,7 +421,7 @@ export function MemberVideoModal({
                     <span>Trouver un membre</span>
                     {whisperHasBackgroundUnread ? (
                       <span
-                        className="h-1.5 w-1.5 rounded-full bg-[#D4AF37] shadow-[0_0_8px_rgba(212,175,55,0.6)]"
+                        className="h-1.5 w-1.5 rounded-full bg-[var(--school-accent)] shadow-[0_0_8px_rgba(212,175,55,0.6)]"
                         title="Nouveau message privé — voir la liste ou le toast"
                         aria-hidden
                       />
@@ -446,7 +446,7 @@ export function MemberVideoModal({
                             className={cn(
                               'w-full text-left px-3 py-2 text-xs transition-colors',
                               String(p.id) === String(id)
-                                ? 'bg-[#D4AF37]/15 text-[#f5dd8a]'
+                                ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f5dd8a]'
                                 : 'text-white/85 hover:bg-white/[0.06]',
                             )}
                           >
@@ -488,7 +488,7 @@ export function MemberVideoModal({
                               className={cn(
                                 'max-w-[92%] rounded-lg px-2.5 py-1.5 text-[11px] leading-snug',
                                 mine
-                                  ? 'ml-auto bg-[#D4AF37]/22 border border-[#D4AF37]/30 text-white/95'
+                                  ? 'ml-auto bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-white/95'
                                   : 'mr-auto bg-white/[0.06] border border-white/10 text-white/88',
                               )}
                             >
@@ -514,7 +514,7 @@ export function MemberVideoModal({
                       <Button
                         type="button"
                         size="icon"
-                        className="h-10 w-10 shrink-0 rounded-xl bg-[#D4AF37]/25 border border-[#D4AF37]/40 text-[#f5dd8a] hover:bg-[#D4AF37]/35"
+                        className="h-10 w-10 shrink-0 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]"
                         onClick={submitWhisper}
                         disabled={!whisperDraft.trim()}
                         aria-label="Envoyer"

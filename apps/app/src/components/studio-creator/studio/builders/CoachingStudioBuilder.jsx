@@ -37,7 +37,7 @@ function StepCoachingInformations({ draft, updateDraft }) {
             onChange={(e) => updateDraft({ description: e.target.value })}
             placeholder="Décrivez votre programme..."
             rows={4}
-            className="mt-2 w-full rounded-xl bg-[#0F1419] border border-white/10 px-4 py-3 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-[#D4AF37]/50"
+            className="mt-2 w-full rounded-xl bg-[#0F1419] border border-white/10 px-4 py-3 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]"
           />
         </div>
       </div>
@@ -108,7 +108,7 @@ function StepCoachingExperience({ draft, updateDraft }) {
         {options.map(({ key, title, description, icon: Icon }) => (
           <div key={key} className="rounded-xl border border-white/10 bg-[#0F1419]/50 p-4 flex items-center justify-between gap-3">
             <div className="flex items-start gap-3">
-              <Icon className="w-4 h-4 text-[#D4AF37]/80 mt-1" />
+              <Icon className="w-4 h-4 text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)] mt-1" />
               <div>
                 <p className="text-sm text-white font-medium">{title}</p>
                 <p className="text-xs text-gray-500">{description}</p>
@@ -117,7 +117,7 @@ function StepCoachingExperience({ draft, updateDraft }) {
             <Switch
               checked={Boolean(draft?.[key])}
               onCheckedChange={(v) => updateDraft({ [key]: v })}
-              className="data-[state=checked]:bg-[#D4AF37]"
+              className="data-[state=checked]:bg-[var(--school-accent)]"
             />
           </div>
         ))}
@@ -133,8 +133,8 @@ function StepCoachingValidation({ draft }) {
         <h2 className="text-2xl font-semibold text-white mb-1">Validation</h2>
         <p className="text-gray-400">Contrôlez la cohérence avant création.</p>
       </div>
-      <div className="rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-5 space-y-2">
-        <div className="flex items-center gap-2 text-[#D4AF37]">
+      <div className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] p-5 space-y-2">
+        <div className="flex items-center gap-2 text-[var(--school-accent)]">
           <CheckCircle2 className="w-4 h-4" />
           <span className="text-sm font-medium">Programme premium prêt</span>
         </div>

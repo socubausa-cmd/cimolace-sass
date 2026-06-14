@@ -65,7 +65,7 @@ const FormationCreatorStep2 = ({ modules, setModules }) => {
              <h3 className="text-xl font-bold text-white">Structure & Contenu</h3>
              <p className="text-sm text-gray-400">Organisez votre formation par Modules, Semaines et Jours.</p>
           </div>
-          <Button onClick={addModule} className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold"><Plus className="w-4 h-4 mr-2"/> Ajouter Module</Button>
+          <Button onClick={addModule} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"><Plus className="w-4 h-4 mr-2"/> Ajouter Module</Button>
        </div>
        
        <div className="space-y-4">
@@ -74,7 +74,7 @@ const FormationCreatorStep2 = ({ modules, setModules }) => {
                 {/* Module Header */}
                 <div className="p-4 bg-[#192734] flex items-center gap-4 border-b border-white/5">
                    <GripVertical className="text-gray-600 cursor-move" />
-                   <span className="font-bold text-[#D4AF37] whitespace-nowrap">Module {mIdx+1}</span>
+                   <span className="font-bold text-[var(--school-accent)] whitespace-nowrap">Module {mIdx+1}</span>
                    <Input 
                      value={module.title} 
                      onChange={(e) => updateModule(mIdx, 'title', e.target.value)} 
@@ -114,7 +114,7 @@ const FormationCreatorStep2 = ({ modules, setModules }) => {
                                            type="button"
                                            size="sm"
                                            variant="ghost"
-                                           className="h-7 text-[10px] text-gray-400 hover:text-[#D4AF37] shrink-0"
+                                           className="h-7 text-[10px] text-gray-400 hover:text-[var(--school-accent)] shrink-0"
                                            onClick={async () => {
                                              try {
                                                await navigator.clipboard.writeText(String(day.id));
@@ -161,7 +161,7 @@ const FormationCreatorStep2 = ({ modules, setModules }) => {
                       </div>
                    ))}
                    
-                   <Button variant="ghost" size="sm" onClick={() => addWeek(mIdx)} className="text-[#D4AF37] hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 ml-4">
+                   <Button variant="ghost" size="sm" onClick={() => addWeek(mIdx)} className="text-[var(--school-accent)] hover:text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] ml-4">
                       <Plus className="w-3 h-3 mr-2"/> Ajouter une Semaine
                    </Button>
                 </div>
@@ -172,7 +172,7 @@ const FormationCreatorStep2 = ({ modules, setModules }) => {
        {modules.length === 0 && (
           <div className="text-center py-20 bg-[#15202B] rounded-lg border-2 border-dashed border-white/10 text-gray-500">
              <p>Aucun module créé.</p>
-             <Button onClick={addModule} className="mt-4 bg-[#D4AF37] text-black">Commencer</Button>
+             <Button onClick={addModule} className="mt-4 bg-[var(--school-accent)] text-black">Commencer</Button>
           </div>
        )}
     </div>

@@ -38,7 +38,7 @@ const FormationDetailsPageView = ({ formation, onBack, onEdit, onPreview, isEdit
     <div className="min-h-screen bg-[#0F1419] text-white overflow-hidden">
       {/* Ambient background */}
       <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[#D4AF37]/5 rounded-full blur-[120px]" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[120px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-indigo-500/5 rounded-full blur-[100px]" />
       </div>
 
@@ -66,7 +66,7 @@ const FormationDetailsPageView = ({ formation, onBack, onEdit, onPreview, isEdit
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="relative rounded-2xl overflow-hidden border bg-gradient-to-br from-[#D4AF37]/20 to-amber-500/10 border-white/10 mb-8"
+          className="relative rounded-2xl overflow-hidden border bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-amber-500/10 border-white/10 mb-8"
         >
           <div className="absolute inset-0 bg-[#151a21]/90 backdrop-blur-sm" />
           <div className="relative">
@@ -87,7 +87,7 @@ const FormationDetailsPageView = ({ formation, onBack, onEdit, onPreview, isEdit
                   transition={{ type: 'spring', stiffness: 200, damping: 15 }}
                   className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-3"
                 >
-                  <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                  <Sparkles className="w-4 h-4 text-[var(--school-accent)]" />
                   <span className="text-xs text-gray-400">Détails formation</span>
                 </motion.div>
                 <h1 className="text-2xl md:text-4xl font-serif font-bold text-white">
@@ -97,7 +97,7 @@ const FormationDetailsPageView = ({ formation, onBack, onEdit, onPreview, isEdit
                   <Badge className="bg-black/50 text-white backdrop-blur border border-white/10">
                     {formation.year}
                   </Badge>
-                  <Badge className="bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40">
+                  <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]">
                     {getAccessLabel(formation)}
                   </Badge>
                   <Badge
@@ -121,15 +121,15 @@ const FormationDetailsPageView = ({ formation, onBack, onEdit, onPreview, isEdit
 
               <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 mb-8">
                 <span className="flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-[#D4AF37]" />
+                  <Layers className="w-4 h-4 text-[var(--school-accent)]" />
                   {formation.modules?.length || 0} Modules
                 </span>
                 <span className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[#D4AF37]" />
+                  <Clock className="w-4 h-4 text-[var(--school-accent)]" />
                   {formation.duration || '—'}
                 </span>
                 <span className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-[#D4AF37]" />
+                  <Users className="w-4 h-4 text-[var(--school-accent)]" />
                   {formation.enrolledStudents?.length || 0} Étudiants
                 </span>
               </div>
@@ -141,7 +141,7 @@ const FormationDetailsPageView = ({ formation, onBack, onEdit, onPreview, isEdit
                     size="lg"
                     onClick={onPreview}
                     disabled={isPreviewLoading}
-                    className="bg-[#D4AF37] hover:bg-amber-500 text-black font-bold px-8 py-6 text-base shadow-lg shadow-[#D4AF37]/20 hover:shadow-[#D4AF37]/30 transition-all group"
+                    className="bg-[var(--school-accent)] hover:bg-amber-500 text-black font-bold px-8 py-6 text-base shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] hover:shadow-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all group"
                   >
                     <ExternalLink className="w-5 h-5 mr-2" />
                     {isPreviewLoading ? 'Chargement…' : 'Aperçu'}
@@ -153,7 +153,7 @@ const FormationDetailsPageView = ({ formation, onBack, onEdit, onPreview, isEdit
                     variant="outline"
                     onClick={onEdit}
                     disabled={isEditLoading}
-                    className="border-white/20 text-white hover:bg-white/10 hover:border-[#D4AF37]/40 px-8 py-6 text-base font-medium"
+                    className="border-white/20 text-white hover:bg-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] px-8 py-6 text-base font-medium"
                   >
                     <Edit className="w-5 h-5 mr-2" />
                     {isEditLoading ? 'Chargement…' : 'Éditer'}
@@ -176,19 +176,19 @@ const FormationDetailsPageView = ({ formation, onBack, onEdit, onPreview, isEdit
               <TabsList className="bg-transparent p-0 gap-2 flex flex-wrap">
                 <TabsTrigger
                   value="structure"
-                  className="data-[state=active]:bg-[#D4AF37] data-[state=active]:text-black text-gray-400 px-5 py-2.5 rounded-xl transition-all"
+                  className="data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-black text-gray-400 px-5 py-2.5 rounded-xl transition-all"
                 >
                   Structure & Contenu
                 </TabsTrigger>
                 <TabsTrigger
                   value="students"
-                  className="data-[state=active]:bg-[#D4AF37] data-[state=active]:text-black text-gray-400 px-5 py-2.5 rounded-xl transition-all"
+                  className="data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-black text-gray-400 px-5 py-2.5 rounded-xl transition-all"
                 >
                   Étudiants Inscrits
                 </TabsTrigger>
                 <TabsTrigger
                   value="stats"
-                  className="data-[state=active]:bg-[#D4AF37] data-[state=active]:text-black text-gray-400 px-5 py-2.5 rounded-xl transition-all"
+                  className="data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-black text-gray-400 px-5 py-2.5 rounded-xl transition-all"
                 >
                   Statistiques
                 </TabsTrigger>
@@ -206,7 +206,7 @@ const FormationDetailsPageView = ({ formation, onBack, onEdit, onPreview, isEdit
                         >
                           <AccordionTrigger className="hover:no-underline py-4">
                             <div className="flex items-center gap-4 text-left">
-                              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] font-bold text-sm">
+                              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] font-bold text-sm">
                                 {idx + 1}
                               </span>
                               <div>
@@ -226,7 +226,7 @@ const FormationDetailsPageView = ({ formation, onBack, onEdit, onPreview, isEdit
                                     {week.days?.map((day) => (
                                       <div
                                         key={day.id}
-                                        className="bg-black/40 p-4 rounded-xl border border-white/5 hover:border-[#D4AF37]/30 transition-colors"
+                                        className="bg-black/40 p-4 rounded-xl border border-white/5 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-colors"
                                       >
                                         <p className="text-sm font-bold text-white mb-3 border-b border-white/10 pb-2">
                                           {day.title}
@@ -237,7 +237,7 @@ const FormationDetailsPageView = ({ formation, onBack, onEdit, onPreview, isEdit
                                               key={video.id}
                                               className="flex items-center gap-2 text-sm text-gray-400"
                                             >
-                                              <Video className="w-3 h-3 text-[#D4AF37]" />
+                                              <Video className="w-3 h-3 text-[var(--school-accent)]" />
                                               <span className="truncate flex-1">{video.title}</span>
                                               <span className="text-gray-600">{video.duration}m</span>
                                             </div>
@@ -303,7 +303,7 @@ const FormationDetailsPageView = ({ formation, onBack, onEdit, onPreview, isEdit
                                   <Progress
                                     value={student.progress}
                                     className="h-2 bg-black/40"
-                                    indicatorClassName="bg-[#D4AF37]"
+                                    indicatorClassName="bg-[var(--school-accent)]"
                                   />
                                   <span className="text-xs text-white w-8">{student.progress}%</span>
                                 </div>

@@ -18,7 +18,7 @@ const ClassCard = ({ classData }) => {
   };
 
   return (
-    <Card className="bg-[#192734] border-white/10 overflow-hidden hover:border-[#D4AF37]/50 hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
+    <Card className="bg-[#192734] border-white/10 overflow-hidden hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
        <div className="relative h-40 bg-gray-800 overflow-hidden">
           <img 
             src={`https://source.unsplash.com/random/800x600?classroom,lecture&sig=${classData.id}`} 
@@ -33,7 +33,7 @@ const ClassCard = ({ classData }) => {
 
        <div className="p-5 flex-1 flex flex-col">
           <div className="flex justify-between items-start mb-2">
-             <h3 className="text-lg font-bold text-white group-hover:text-[#D4AF37] transition-colors line-clamp-2 leading-tight">
+             <h3 className="text-lg font-bold text-white group-hover:text-[var(--school-accent)] transition-colors line-clamp-2 leading-tight">
                 {classData.title}
              </h3>
           </div>
@@ -45,7 +45,7 @@ const ClassCard = ({ classData }) => {
 
           <div className="space-y-2 mb-4 text-sm text-gray-400 flex-1">
              <div className="flex items-center gap-2 bg-[#0F1419] p-2 rounded border border-white/5">
-                <Clock className="w-3.5 h-3.5 text-[#D4AF37]" />
+                <Clock className="w-3.5 h-3.5 text-[var(--school-accent)]" />
                 <span>
                    {format(new Date(classData.startTime), 'dd MMM yyyy • HH:mm', { locale: fr })}
                 </span>
@@ -68,7 +68,7 @@ const ClassCard = ({ classData }) => {
                    <PlayCircle className="w-4 h-4" /> Voir l'enregistrement
                 </Button>
              ) : (
-                <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold col-span-2">
+                <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold col-span-2">
                    S'inscrire
                 </Button>
              )}

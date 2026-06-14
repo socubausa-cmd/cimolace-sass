@@ -62,7 +62,7 @@ export default function LiriHostShellDevPage() {
 
   return (
     <div className="fixed inset-0 z-[100] overflow-hidden bg-[#0a0908] select-none">
-      <div className="pointer-events-auto absolute left-3 top-3 z-[200] max-w-[min(100%,20rem)] rounded-lg border border-[#D4AF37]/35 bg-black/70 px-2.5 py-1.5 text-[10px] text-[#E8D5A3] backdrop-blur-md">
+      <div className="pointer-events-auto absolute left-3 top-3 z-[200] max-w-[min(100%,20rem)] rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-black/70 px-2.5 py-1.5 text-[10px] text-[#E8D5A3] backdrop-blur-md">
         <span className="pointer-events-none">Dev — </span>
         <span className="font-mono text-white/90">/dev/liri-host-shell</span>
         {' · '}

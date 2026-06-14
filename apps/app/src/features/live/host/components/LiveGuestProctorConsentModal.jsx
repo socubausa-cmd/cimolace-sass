@@ -10,7 +10,7 @@ export const LiveGuestProctorConsentModal = ({ open, isGuestUi, onAccept, onRefu
       aria-modal="true"
       aria-labelledby="liri-proctor-consent-title"
     >
-      <div className="w-full max-w-md rounded-2xl border border-[#D4AF37]/35 bg-gradient-to-b from-[#141a28] to-[#0a0d14] p-6 shadow-2xl">
+      <div className="w-full max-w-md rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-gradient-to-b from-[#141a28] to-[#0a0d14] p-6 shadow-2xl">
         <h2 id="liri-proctor-consent-title" className="text-lg font-semibold text-[#f5dd8a] mb-3">
           Consentement — contrôle caméra (classe surveillée)
         </h2>
@@ -35,7 +35,7 @@ export const LiveGuestProctorConsentModal = ({ open, isGuestUi, onAccept, onRefu
           <Button type="button" variant="ghost" className="text-white/70 hover:text-white" onClick={onRefuse}>
             Refuser et quitter
           </Button>
-          <Button type="button" className="bg-[#D4AF37] text-black hover:bg-[#e8c85c]" onClick={onAccept}>
+          <Button type="button" className="bg-[var(--school-accent)] text-black hover:bg-[#e8c85c]" onClick={onAccept}>
             J&apos;accepte et j&apos;entre
           </Button>
         </div>

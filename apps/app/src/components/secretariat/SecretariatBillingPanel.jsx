@@ -235,7 +235,7 @@ export default function SecretariatBillingPanel() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#192734] p-6 rounded-xl border border-white/10">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <CreditCard className="w-6 h-6 text-[#D4AF37]" /> Suivi des paiements
+            <CreditCard className="w-6 h-6 text-[var(--school-accent)]" /> Suivi des paiements
           </h1>
           <p className="text-gray-400 text-sm mt-1">
             Vue complète de qui a payé, qui est en retard, et qui n'a pas d\'abonnement.
@@ -245,7 +245,7 @@ export default function SecretariatBillingPanel() {
           <Button variant="outline" onClick={load} disabled={loading} className="border-white/10 text-white hover:bg-white/5 w-full sm:w-auto">
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} /> Actualiser
           </Button>
-          <Button onClick={handleExport} className="bg-[#D4AF37] text-black hover:bg-amber-500 font-bold w-full sm:w-auto">
+          <Button onClick={handleExport} className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-bold w-full sm:w-auto">
             <Download className="w-4 h-4 mr-2" /> Exporter CSV
           </Button>
         </div>
@@ -288,7 +288,7 @@ export default function SecretariatBillingPanel() {
               onClick={() => setFilter(opt.value)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                 filter === opt.value
-                  ? 'bg-[#D4AF37] text-black border-[#D4AF37]'
+                  ? 'bg-[var(--school-accent)] text-black border-[var(--school-accent)]'
                   : 'bg-white/5 text-gray-300 border-white/10 hover:border-white/30'
               }`}
             >
@@ -334,7 +334,7 @@ export default function SecretariatBillingPanel() {
                     <div className="flex items-start gap-3">
                       <Avatar className="w-10 h-10 shrink-0">
                         <AvatarImage src={student.avatar_url} />
-                        <AvatarFallback className="bg-[#D4AF37]/20 text-[#D4AF37] text-xs">
+                        <AvatarFallback className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] text-xs">
                           {(student.name || student.email || '?')[0].toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -400,7 +400,7 @@ export default function SecretariatBillingPanel() {
                           <div className="flex items-center gap-3">
                             <Avatar className="w-8 h-8">
                               <AvatarImage src={student.avatar_url} />
-                              <AvatarFallback className="bg-[#D4AF37]/20 text-[#D4AF37] text-xs">
+                              <AvatarFallback className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] text-xs">
                                 {(student.name || student.email || '?')[0].toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
@@ -450,7 +450,7 @@ export default function SecretariatBillingPanel() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="text-[#D4AF37] hover:bg-[#D4AF37]/10 text-xs h-7 px-2"
+                            className="text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-xs h-7 px-2"
                             onClick={(e) => { e.stopPropagation(); openDetail(student); }}
                           >
                             Détails →
@@ -479,7 +479,7 @@ export default function SecretariatBillingPanel() {
               <div className="flex items-center gap-3">
                 <Avatar className="w-10 h-10">
                   <AvatarImage src={selected.avatar_url} />
-                  <AvatarFallback className="bg-[#D4AF37]/20 text-[#D4AF37]">
+                  <AvatarFallback className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]">
                     {(selected.name || selected.email || '?')[0].toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -592,7 +592,7 @@ export default function SecretariatBillingPanel() {
                                   type="button"
                                   size="sm"
                                   variant="outline"
-                                  className="h-7 text-[10px] border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                                  className="h-7 text-[10px] border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                                   disabled={!session?.access_token || resendPaymentId === pay.id}
                                   onClick={() => resendInvoiceForPayment(pay.id)}
                                 >

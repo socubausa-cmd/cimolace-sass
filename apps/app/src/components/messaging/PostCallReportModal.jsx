@@ -65,7 +65,7 @@ export default function PostCallReportModal({
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                      <Sparkles className="w-4 h-4 text-[var(--school-accent)]" />
                       <h2 className="text-white font-semibold text-sm">Rapport de session</h2>
                     </div>
                     <p className="text-white/40 text-xs">
@@ -89,7 +89,7 @@ export default function PostCallReportModal({
                       type="checkbox"
                       checked={sendInbox}
                       onChange={(e) => setSendInbox(e.target.checked)}
-                      className="w-4 h-4 accent-[#D4AF37] rounded"
+                      className="w-4 h-4 accent-[var(--school-accent)] rounded"
                     />
                     <div className="flex items-center gap-2">
                       <Inbox className="w-4 h-4 text-white/40" />
@@ -102,7 +102,7 @@ export default function PostCallReportModal({
                       type="checkbox"
                       checked={sendEmail}
                       onChange={(e) => setSendEmail(e.target.checked)}
-                      className="w-4 h-4 accent-[#D4AF37] rounded"
+                      className="w-4 h-4 accent-[var(--school-accent)] rounded"
                     />
                     <div className="flex items-center gap-2">
                       <Mail className="w-4 h-4 text-white/40" />
@@ -121,7 +121,7 @@ export default function PostCallReportModal({
                   <button
                     onClick={handleGenerate}
                     disabled={generating || (!sendEmail && !sendInbox)}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#D4AF37] text-sm font-medium disabled:opacity-40 hover:bg-[#D4AF37]/25 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] text-sm font-medium disabled:opacity-40 hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] transition-colors"
                   >
                     <FileText className="w-4 h-4" />
                     {generating ? 'Génération...' : 'Générer le rapport'}

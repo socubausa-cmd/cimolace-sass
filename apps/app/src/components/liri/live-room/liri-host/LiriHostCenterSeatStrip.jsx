@@ -5,7 +5,7 @@ import ParticipantStripChip from '../ParticipantStripChip';
 import { ArenaStripOverflowTile } from '../ArenaStripShellTiles';
 
 const placeVideShell =
-  'relative flex min-h-[56px] min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-dashed border-[#D4AF37]/35 bg-gradient-to-br from-[#1a1028]/90 via-[#0d0814]/85 to-black/80 shadow-[inset_0_0_24px_-8px_rgba(139,92,246,0.12),0_0_20px_-12px_rgba(212,175,55,0.08)]';
+  'relative flex min-h-[56px] min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-dashed border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-gradient-to-br from-[#1a1028]/90 via-[#0d0814]/85 to-black/80 shadow-[inset_0_0_24px_-8px_rgba(139,92,246,0.12),0_0_20px_-12px_rgba(212,175,55,0.08)]';
 
 const REMOTE_SLOTS = 8;
 
@@ -57,8 +57,8 @@ export function LiriHostCenterSeatStrip({
             />
           ) : (
             <div className={cn(placeVideShell, 'items-center justify-center px-1')}>
-              <User className="h-4 w-4 text-[#D4AF37]/50" />
-              <span className="mt-0.5 text-center text-[7px] font-medium uppercase tracking-wide text-[#D4AF37]/65">
+              <User className="h-4 w-4 text-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]" />
+              <span className="mt-0.5 text-center text-[7px] font-medium uppercase tracking-wide text-[color-mix(in_srgb,var(--school-accent)_65%,transparent)]">
                 Hôte
               </span>
             </div>
@@ -71,7 +71,7 @@ export function LiriHostCenterSeatStrip({
               <button
                 type="button"
                 onClick={onOpenMembersOverflow}
-                className="h-full w-full border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]/50"
+                className="h-full w-full border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]"
                 title="Voir tous les membres"
               >
                 <ArenaStripOverflowTile extraCount={p.extraCount} className="h-[56px] w-full" />
@@ -92,7 +92,7 @@ export function LiriHostCenterSeatStrip({
                 title="Place vide"
               >
                 <User className="h-3.5 w-3.5 text-violet-300/45" />
-                <span className="mt-0.5 text-center text-[7px] font-medium leading-tight text-[#D4AF37]/70">
+                <span className="mt-0.5 text-center text-[7px] font-medium leading-tight text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">
                   Place vide
                 </span>
               </div>

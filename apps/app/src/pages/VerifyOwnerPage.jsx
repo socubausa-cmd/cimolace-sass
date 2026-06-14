@@ -36,7 +36,7 @@ const VerifyOwnerPage = () => {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-[#0F1419] flex items-center justify-center text-white">
-        <Loader2 className="w-8 h-8 animate-spin text-[#D4AF37]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--school-accent)]" />
         <span className="ml-2">Chargement de l'authentification...</span>
       </div>
     );
@@ -46,13 +46,13 @@ const VerifyOwnerPage = () => {
     <div className="min-h-screen bg-[#0F1419] p-6 text-white flex flex-col items-center">
       <div className="max-w-3xl w-full space-y-8 mt-10">
         <div className="text-center">
-          <Shield className="w-16 h-16 text-[#D4AF37] mx-auto mb-4" />
+          <Shield className="w-16 h-16 text-[var(--school-accent)] mx-auto mb-4" />
           <h1 className="text-3xl font-bold font-serif">Diagnostic de Compte Propriétaire</h1>
           <p className="text-gray-400 mt-2">Outil de débogage pour vérifier la configuration des accès administrateur</p>
         </div>
 
         <div className="flex justify-center gap-4">
-          <Button onClick={runVerification} disabled={checking} className="bg-[#D4AF37] text-black hover:bg-[#b5952f]">
+          <Button onClick={runVerification} disabled={checking} className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f]">
             {checking ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
             Relancer le Diagnostic
           </Button>

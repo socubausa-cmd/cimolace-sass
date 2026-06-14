@@ -141,7 +141,7 @@ export function MemberSchoolLifeInlinePanel({ studentId, studentName, onBack, em
           </Button>
         </div>
       ) : null}
-      <p className={cn('text-sm font-semibold text-[#D4AF37] pb-2', embedded ? 'pt-1 px-1' : 'pt-3')}>
+      <p className={cn('text-sm font-semibold text-[var(--school-accent)] pb-2', embedded ? 'pt-1 px-1' : 'pt-3')}>
         Vie scolaire — {studentName || profile?.name || 'Élève'}
       </p>
       <div className="flex gap-1.5 flex-wrap pb-3 shrink-0">
@@ -157,7 +157,7 @@ export function MemberSchoolLifeInlinePanel({ studentId, studentName, onBack, em
             className={cn(
               'px-3 py-1.5 rounded-lg text-[11px] font-medium border transition-colors',
               tab === t.id
-                ? 'border-[#D4AF37]/45 bg-[#D4AF37]/15 text-[#f5dd8a]'
+                ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f5dd8a]'
                 : 'border-white/12 bg-white/[0.04] text-white/65 hover:bg-white/[0.07]',
             )}
           >

@@ -132,7 +132,7 @@ export function SecretariatRescheduleQueue({ onProcessed }) {
                 </p>
                 <p className="text-xs text-gray-500">
                   Réf.{' '}
-                  <span className="font-mono text-[#D4AF37]">
+                  <span className="font-mono text-[var(--school-accent)]">
                     {String(r.appointment?.bookingReference || r.appointmentId || '').slice(0, 14).toUpperCase()}
                   </span>
                 </p>

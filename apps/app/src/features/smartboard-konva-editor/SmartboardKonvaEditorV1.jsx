@@ -1323,10 +1323,10 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
       )}
 
       {/* Header */}
-      {!hideChrome && <header className="flex h-12 shrink-0 items-center gap-2 border-b border-[#D4AF37]/14 bg-[#09090f] px-3 shadow-[inset_0_-1px_0_rgba(212,175,55,0.07)]">
+      {!hideChrome && <header className="flex h-12 shrink-0 items-center gap-2 border-b border-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] bg-[#09090f] px-3 shadow-[inset_0_-1px_0_rgba(212,175,55,0.07)]">
         <div className="flex shrink-0 items-center gap-1.5">
-          <div className="flex items-center gap-1.5 rounded-lg border border-[#D4AF37]/28 bg-[#D4AF37]/8 px-2.5 py-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-[#D4AF37]" />
+          <div className="flex items-center gap-1.5 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] px-2.5 py-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-[var(--school-accent)]" />
             <LiriWordmark size="compact" className="text-[#e8c76b]" />
           </div>
           <span className="hidden text-[11px] font-semibold uppercase tracking-[0.18em] text-white/30 sm:inline">SMARTBOARD DESIGNER</span>
@@ -1352,7 +1352,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
               className={cn(
                 'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all',
                 topMode === id
-                  ? 'bg-[#D4AF37]/15 text-[#f5dd8a] shadow-[inset_0_0_0_1px_rgba(212,175,55,0.28)]'
+                  ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f5dd8a] shadow-[inset_0_0_0_1px_rgba(212,175,55,0.28)]'
                   : 'text-white/40 hover:bg-white/[0.06] hover:text-white/70',
               )}
             >
@@ -1379,7 +1379,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
             className="flex h-7 w-7 items-center justify-center rounded-md border border-white/12 bg-white/[0.04] text-white/60 hover:bg-white/10"
             title="Retablir"
           ><Redo2 className="h-3 w-3" /></button>
-          <div className="flex items-center gap-0.5 rounded-md border border-white/10 bg-black/30 text-[11px] text-[#D4AF37]/80">
+          <div className="flex items-center gap-0.5 rounded-md border border-white/10 bg-black/30 text-[11px] text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">
             <button
               type="button"
               onClick={() => setScale((s) => Math.max(0.2, Math.round((s - 0.1) * 10) / 10))}
@@ -1417,7 +1417,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
             }
           </button>
           {course ? (
-            <span className="hidden rounded-md border border-[#D4AF37]/25 bg-[#1a1510]/80 px-2 py-0.5 text-[11px] text-[#f5dd8a] lg:inline">
+            <span className="hidden rounded-md border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#1a1510]/80 px-2 py-0.5 text-[11px] text-[#f5dd8a] lg:inline">
               {course.slides.length} slides
             </span>
           ) : null}
@@ -1463,7 +1463,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
             <span className="rounded-lg border border-white/10 bg-white/[0.05] px-2.5 py-1 text-[12px] text-white/75">
               {course.analysis.estimatedDurationMinutes} min
             </span>
-            <span className="rounded-lg border border-[#D4AF37]/30 bg-[#1a1510] px-2.5 py-1 text-[12px] font-medium text-[#f5dd8a]">
+            <span className="rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[#1a1510] px-2.5 py-1 text-[12px] font-medium text-[#f5dd8a]">
               {course.slides.length} slides
             </span>
             <span className="rounded-lg border border-teal-500/20 bg-teal-950/30 px-2.5 py-1 text-[11px] uppercase tracking-wide text-teal-200/90">
@@ -1528,7 +1528,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
               className="h-7 w-9 cursor-pointer rounded border border-white/12 bg-transparent"
             />
             {textSelectedIds.length > 1 ? (
-              <span className="text-[11px] text-[#D4AF37]/70">{textSelectedIds.length} textes</span>
+              <span className="text-[11px] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">{textSelectedIds.length} textes</span>
             ) : null}
           </>
         ) : (
@@ -1563,7 +1563,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                 className={cn(
                   'flex flex-1 items-center justify-center py-2.5 text-[12px] font-medium transition-colors',
                   leftTool !== 'properties'
-                    ? 'border-b-2 border-[#D4AF37] text-[#f5dd8a]'
+                    ? 'border-b-2 border-[var(--school-accent)] text-[#f5dd8a]'
                     : 'border-b-2 border-transparent text-white/40 hover:text-white/70',
                 )}
               >
@@ -1575,7 +1575,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                 className={cn(
                   'flex flex-1 items-center justify-center py-2.5 text-[12px] font-medium transition-colors',
                   leftTool === 'properties'
-                    ? 'border-b-2 border-[#D4AF37] text-[#f5dd8a]'
+                    ? 'border-b-2 border-[var(--school-accent)] text-[#f5dd8a]'
                     : 'border-b-2 border-transparent text-white/40 hover:text-white/70',
                 )}
               >
@@ -1604,7 +1604,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                     className={cn(
                       'flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-[13px] font-medium transition-all',
                       leftTool === t
-                        ? 'border-[#D4AF37]/35 bg-[#D4AF37]/10 text-[#f5dd8a]'
+                        ? 'border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[#f5dd8a]'
                         : 'border-white/[0.07] bg-white/[0.025] text-white/60 hover:bg-white/[0.05] hover:text-white/80',
                     )}
                   >
@@ -1745,7 +1745,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                     if (e.key === 'Enter') { if (activeScene) renameScene(activeScene.id, renamingHeaderDraft.trim() || activeScene.name); setRenamingHeaderScene(false); }
                     if (e.key === 'Escape') setRenamingHeaderScene(false);
                   }}
-                  className="h-5 w-40 rounded border border-[#D4AF37]/40 bg-black/50 px-1.5 text-[13px] text-[#f5dd8a] outline-none"
+                  className="h-5 w-40 rounded border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-black/50 px-1.5 text-[13px] text-[#f5dd8a] outline-none"
                 />
               ) : (
                 <p
@@ -1772,7 +1772,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                   className={cn(
                     'flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] transition-colors',
                     viewMode === id
-                      ? 'bg-[#D4AF37]/20 text-[#f5dd8a]'
+                      ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[#f5dd8a]'
                       : 'text-white/40 hover:bg-white/[0.06] hover:text-white/70',
                   )}
                 >
@@ -1796,7 +1796,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                 </div>
               )}
               <span className="ml-1 hidden font-mono text-[11px] text-white/40 sm:inline">{cw}x{ch}</span>
-              <span className="rounded border border-white/10 bg-black/40 px-2 py-0.5 text-[11px] text-[#D4AF37]/85">
+              <span className="rounded border border-white/10 bg-black/40 px-2 py-0.5 text-[11px] text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)]">
                 {Math.round(scale * 100)}%
               </span>
             </div>
@@ -1810,7 +1810,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
               {course && <span>{course.slides?.[activeSlideIndex]?.title || ''}</span>}
               {activeScene?.sections?.length > 0 && <span>/</span>}
               {activeSection && (
-                <span className="text-[#D4AF37]/80">
+                <span className="text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">
                   {activeScene?.sections?.find(s => s.id === activeSection)?.label || ''}
                 </span>
               )}
@@ -1819,7 +1819,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
 
           {topMode === 'progression' ? (
             <div className="min-h-0 flex-1 overflow-y-auto bg-[#080a12] p-5 [scrollbar-width:thin]">
-              <p className="mb-1 text-center text-[12px] font-semibold uppercase tracking-[0.2em] text-[#D4AF37]/60">Progression — {activeScene?.name || 'Scene'}</p>
+              <p className="mb-1 text-center text-[12px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]">Progression — {activeScene?.name || 'Scene'}</p>
               <p className="mb-5 text-center text-[11px] text-white/30">
                 {maxStep === 0 ? 'Aucune etape definie. Assignez un numero "Etape" aux blocs dans Proprietes.' : maxStep + ' etape(s) de revelation'}
               </p>
@@ -1838,14 +1838,14 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                       className={cn(
                         'w-full rounded-2xl border p-3 text-left transition-all',
                         isCurrentStep
-                          ? 'border-[#D4AF37]/45 bg-[#1a1510]/80 shadow-[0_0_20px_rgba(212,175,55,0.1)]'
+                          ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[#1a1510]/80 shadow-[0_0_20px_rgba(212,175,55,0.1)]'
                           : 'border-white/[0.07] bg-white/[0.02] hover:border-white/15',
                       )}
                     >
                       <div className="mb-2 flex items-center gap-2">
                         <span className={cn(
                           'flex h-6 w-6 items-center justify-center rounded-lg text-[12px] font-bold',
-                          isCurrentStep ? 'bg-[#D4AF37]/20 text-[#f5dd8a]' : 'bg-white/[0.06] text-white/40',
+                          isCurrentStep ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[#f5dd8a]' : 'bg-white/[0.06] text-white/40',
                         )}>
                           {stepN === 0 ? 'B' : stepN}
                         </span>
@@ -1855,7 +1855,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                         <span className="ml-auto rounded-md border border-white/10 px-1.5 py-0.5 text-[11px] text-white/35">
                           {objs.length} bloc(s)
                         </span>
-                        {isCurrentStep && <Eye className="h-3.5 w-3.5 text-[#D4AF37]/70" />}
+                        {isCurrentStep && <Eye className="h-3.5 w-3.5 text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]" />}
                       </div>
                       {objs.length > 0 ? (
                         <ul className="space-y-1 pl-8">
@@ -1890,7 +1890,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
             </div>
           ) : topMode === 'mindmap' && course?.slides?.length ? (
             <div className="relative min-h-0 flex-1 overflow-auto bg-[#080a12] p-6">
-              <p className="mb-4 text-center text-[12px] font-semibold uppercase tracking-[0.2em] text-[#D4AF37]/60">Mindmap — {course.title}</p>
+              <p className="mb-4 text-center text-[12px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]">Mindmap — {course.title}</p>
               <svg
                 width="100%"
                 viewBox={'0 0 ' + Math.max(900, course.slides.length * 160) + ' 340'}
@@ -1995,10 +1995,10 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                 </div>
               )}
               {activeSection && (
-                <div className="absolute left-1/2 top-2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/15 px-3 py-1 text-[11px] text-[#f5dd8a] shadow-lg backdrop-blur-sm">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#D4AF37]" />
+                <div className="absolute left-1/2 top-2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] px-3 py-1 text-[11px] text-[#f5dd8a] shadow-lg backdrop-blur-sm">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--school-accent)]" />
                   Spotlight — {activeScene?.sections?.find(s => s.id === activeSection)?.label || 'Section'}
-                  <button type="button" onClick={() => setActiveSection(null)} className="ml-1 text-[#D4AF37]/60 hover:text-[#D4AF37]">x</button>
+                  <button type="button" onClick={() => setActiveSection(null)} className="ml-1 text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] hover:text-[var(--school-accent)]">x</button>
                 </div>
               )}
               <KonvaBoardStage
@@ -2027,9 +2027,9 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
         {(isFullscreen || hideChrome) ? null : <aside className="flex min-h-0 min-w-0 flex-col overflow-hidden border-l border-white/[0.08] bg-[#0e1019]">
           {/* LONGIA header */}
           <div className="flex shrink-0 items-center gap-2 border-b border-white/[0.07] bg-[#0a0c14] px-3 py-2">
-            <Bot className="h-4 w-4 shrink-0 text-[#D4AF37]" />
+            <Bot className="h-4 w-4 shrink-0 text-[var(--school-accent)]" />
             <div className="min-w-0 flex-1">
-              <span className="text-[13px] font-bold tracking-[0.12em] text-[#D4AF37]">LONGIA</span>
+              <span className="text-[13px] font-bold tracking-[0.12em] text-[var(--school-accent)]">LONGIA</span>
               <span className="ml-1.5 text-[12px] text-white/40">Guide IA</span>
             </div>
             {aiProvider && (
@@ -2053,7 +2053,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                 className={cn(
                   'flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors',
                   rightTab === id
-                    ? 'border-b-2 border-[#D4AF37] text-[#f5dd8a]'
+                    ? 'border-b-2 border-[var(--school-accent)] text-[#f5dd8a]'
                     : 'border-b-2 border-transparent text-white/35 hover:text-white/65',
                 )}
               >
@@ -2128,10 +2128,10 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
               ) : null}
 
               {/* LONGIA — Images pedagogiques */}
-              <div className="rounded-xl border border-[#D4AF37]/20 bg-[#1a1310]/40 p-2.5">
+              <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[#1a1310]/40 p-2.5">
                 <p className="mb-1.5 text-[12px] font-semibold text-[#f5dd8a]">LONGIA — Images pedagogiques</p>
                 {(longiaTopic || course?.slides?.[activeSlideIndex]?.title) ? (
-                  <p className="mb-2 truncate text-[11px] text-[#D4AF37]/55">
+                  <p className="mb-2 truncate text-[11px] text-[color-mix(in_srgb,var(--school-accent)_55%,transparent)]">
                     Theme : {longiaTopic || course?.slides?.[activeSlideIndex]?.title}
                   </p>
                 ) : (
@@ -2140,7 +2140,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                     value={longiaTopic}
                     onChange={(e) => setLongiaTopic(e.target.value)}
                     placeholder="Theme ou concept du slide..."
-                    className="mb-2 w-full rounded-lg border border-white/10 bg-black/30 px-2 py-1.5 text-[12px] text-white placeholder:text-white/25 focus:border-[#D4AF37]/40 focus:outline-none"
+                    className="mb-2 w-full rounded-lg border border-white/10 bg-black/30 px-2 py-1.5 text-[12px] text-white placeholder:text-white/25 focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] focus:outline-none"
                   />
                 )}
                 <div className="grid grid-cols-2 gap-1.5">
@@ -2148,25 +2148,25 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                     type="button"
                     disabled={longiaImageBusy || longiaGraphBusy}
                     onClick={generateNarrativeImage}
-                    className="flex flex-col items-start rounded-xl border border-[#D4AF37]/22 bg-[#D4AF37]/[0.06] px-2.5 py-2 text-left transition-all hover:bg-[#D4AF37]/12 disabled:opacity-50"
+                    className="flex flex-col items-start rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] bg-[var(--school-accent)]/[0.06] px-2.5 py-2 text-left transition-all hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] disabled:opacity-50"
                   >
                     <span className="flex items-center gap-1 text-[12px] font-semibold text-[#f5dd8a]">
                       {longiaImageBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3 w-3" />}
                       Image Narrative
                     </span>
-                    <span className="text-[11px] text-[#D4AF37]/45">Analogie visuelle symbolique</span>
+                    <span className="text-[11px] text-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]">Analogie visuelle symbolique</span>
                   </button>
                   <button
                     type="button"
                     disabled={longiaImageBusy || longiaGraphBusy}
                     onClick={generatePedagogyGraph}
-                    className="flex flex-col items-start rounded-xl border border-[#D4AF37]/22 bg-[#D4AF37]/[0.06] px-2.5 py-2 text-left transition-all hover:bg-[#D4AF37]/12 disabled:opacity-50"
+                    className="flex flex-col items-start rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] bg-[var(--school-accent)]/[0.06] px-2.5 py-2 text-left transition-all hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] disabled:opacity-50"
                   >
                     <span className="flex items-center gap-1 text-[12px] font-semibold text-[#f5dd8a]">
                       {longiaGraphBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <GitBranch className="h-3 w-3" />}
                       Graphique Pedagog.
                     </span>
-                    <span className="text-[11px] text-[#D4AF37]/45">Schema structurel etapes</span>
+                    <span className="text-[11px] text-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]">Schema structurel etapes</span>
                   </button>
                 </div>
               </div>
@@ -2177,7 +2177,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                   <button
                     type="button"
                     onClick={() => applyLongiaCourseToCanvas()}
-                    className="w-full rounded-xl border border-[#D4AF37]/28 bg-[#D4AF37]/8 py-2 text-[12px] font-semibold text-[#f5dd8a] transition-all hover:bg-[#D4AF37]/15"
+                    className="w-full rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] py-2 text-[12px] font-semibold text-[#f5dd8a] transition-all hover:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]"
                   >
                     <Sparkles className="mr-1.5 inline h-3 w-3" />
                     Appliquer slide {activeSlideIndex + 1} au canvas
@@ -2345,12 +2345,12 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                 className={cn(
                   'flex shrink-0 flex-col items-start gap-0.5 rounded-xl border px-3 py-2 text-left transition-all',
                   i === activeSlideIndex
-                    ? 'border-[#D4AF37]/45 bg-[#1a1420] shadow-[0_0_16px_rgba(212,175,55,0.12)]'
+                    ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[#1a1420] shadow-[0_0_16px_rgba(212,175,55,0.12)]'
                     : 'border-white/8 bg-white/[0.03] hover:border-white/18',
                 )}
                 style={{ minWidth: '110px', maxWidth: '170px' }}
               >
-                <span className="text-[11px] font-bold text-[#D4AF37]/55">{String(i + 1).padStart(2, '0')}</span>
+                <span className="text-[11px] font-bold text-[color-mix(in_srgb,var(--school-accent)_55%,transparent)]">{String(i + 1).padStart(2, '0')}</span>
                 <span className={cn('line-clamp-2 text-[12px] font-medium leading-tight', i === activeSlideIndex ? 'text-[#f5dd8a]' : 'text-white/60')}>
                   {s.title}
                 </span>
@@ -2391,9 +2391,9 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                 className={cn(
                   'group flex shrink-0 cursor-grab items-center overflow-hidden rounded-xl border transition-colors active:cursor-grabbing',
                   isActive
-                    ? 'border-[#D4AF37]/45 bg-[#D4AF37]/10'
+                    ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]'
                     : 'border-white/8 bg-white/[0.025] hover:border-white/18',
-                  dragSceneIdx === si && 'opacity-50 ring-1 ring-[#D4AF37]/40',
+                  dragSceneIdx === si && 'opacity-50 ring-1 ring-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]',
                 )}
               >
                 <button
@@ -2414,7 +2414,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                         e.stopPropagation();
                       }}
                       onClick={(e) => e.stopPropagation()}
-                      className="h-5 w-20 rounded border border-[#D4AF37]/40 bg-black/50 px-1 text-[12px] text-[#f5dd8a] outline-none"
+                      className="h-5 w-20 rounded border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-black/50 px-1 text-[12px] text-[#f5dd8a] outline-none"
                     />
                   ) : (
                     <span
@@ -2458,7 +2458,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
             );
           })}
           <button type="button" onClick={() => addScene()}
-            className="shrink-0 rounded-xl border border-dashed border-white/16 px-2.5 py-1.5 text-[12px] text-white/45 transition-all hover:border-[#D4AF37]/40 hover:text-[#D4AF37]">
+            className="shrink-0 rounded-xl border border-dashed border-white/16 px-2.5 py-1.5 text-[12px] text-white/45 transition-all hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] hover:text-[var(--school-accent)]">
             + Scene
           </button>
           <button type="button" onClick={() => duplicateActiveScene()}
@@ -2473,7 +2473,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                 const slide = course.slides[activeSlideIndex];
                 loadSceneFromSlide(slide, 'initial');
               }}
-              className="shrink-0 rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/[0.06] px-2.5 py-1.5 text-[12px] text-[#f5dd8a] transition-all hover:bg-[#D4AF37]/[0.12]"
+              className="shrink-0 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[var(--school-accent)]/[0.06] px-2.5 py-1.5 text-[12px] text-[#f5dd8a] transition-all hover:bg-[var(--school-accent)]/[0.12]"
             >
               ↓ Charger slide
             </button>
@@ -2490,11 +2490,11 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
           onClick={() => setAssetPreview(null)}
         >
           <div
-            className="max-h-[92vh] max-w-[min(960px,96vw)] overflow-hidden rounded-2xl border border-[#D4AF37]/35 bg-[#0b0f1a] shadow-[0_24px_80px_rgba(0,0,0,0.65)]"
+            className="max-h-[92vh] max-w-[min(960px,96vw)] overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[#0b0f1a] shadow-[0_24px_80px_rgba(0,0,0,0.65)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-2.5">
-              <p className="text-[12px] font-semibold text-[#D4AF37]">Apercu (clic molette)</p>
+              <p className="text-[12px] font-semibold text-[var(--school-accent)]">Apercu (clic molette)</p>
               <button type="button" onClick={() => setAssetPreview(null)}
                 className="rounded-lg px-2 py-1 text-[13px] text-white/50 hover:bg-white/10 hover:text-white">
                 Fermer
@@ -2505,7 +2505,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                 <img src={assetPreview.obj.content.src} alt="" className="mx-auto max-h-[75vh] w-auto max-w-full object-contain" />
               ) : null}
               {assetPreview.kind === 'icon' ? (
-                <div className="flex min-h-[200px] items-center justify-center p-8 text-[140px] leading-none text-[#D4AF37]">★</div>
+                <div className="flex min-h-[200px] items-center justify-center p-8 text-[140px] leading-none text-[var(--school-accent)]">★</div>
               ) : null}
               {assetPreview.kind === 'html' ? (
                 <iframe

@@ -109,7 +109,7 @@ const MedAiUsagePage = () => {
         {/* Header KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <KpiCard
-            icon={<Coins className="w-5 h-5 text-[#D4AF37]" />}
+            icon={<Coins className="w-5 h-5 text-[var(--school-accent)]" />}
             label="Coût estimé"
             value={loading ? '…' : formatCost(report?.total_cost_usd ?? 0)}
             subtitle={
@@ -198,7 +198,7 @@ const MedAiUsagePage = () => {
                     <td className="px-6 py-3 text-right text-gray-300">
                       {formatNumber(row.tokens)}
                     </td>
-                    <td className="px-6 py-3 text-right text-[#D4AF37]">
+                    <td className="px-6 py-3 text-right text-[var(--school-accent)]">
                       {formatCost(row.cost_usd)}
                     </td>
                   </tr>

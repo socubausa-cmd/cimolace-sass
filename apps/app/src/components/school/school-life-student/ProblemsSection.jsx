@@ -264,7 +264,7 @@ const ProblemsSection = ({ studentId, problems, loading, onRefresh }) => {
             <Button variant="ghost" onClick={() => setCreateOpen(false)} disabled={saving}>
               Annuler
             </Button>
-            <Button className="bg-[#D4AF37] text-black" onClick={handleCreate} disabled={saving}>
+            <Button className="bg-[var(--school-accent)] text-black" onClick={handleCreate} disabled={saving}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enregistrer'}
             </Button>
           </DialogFooter>

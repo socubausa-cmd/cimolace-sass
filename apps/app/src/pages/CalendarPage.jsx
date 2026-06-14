@@ -36,9 +36,9 @@ const CalendarPage = () => {
               </div>
               <div className="grid grid-cols-7 gap-2">
                  {[...Array(31)].map((_, i) => (
-                    <div key={i} className={`aspect-square rounded-lg border border-white/5 flex items-center justify-center relative hover:bg-white/5 cursor-pointer ${i === 14 ? 'bg-[#D4AF37]/20 border-[#D4AF37]' : ''}`}>
+                    <div key={i} className={`aspect-square rounded-lg border border-white/5 flex items-center justify-center relative hover:bg-white/5 cursor-pointer ${i === 14 ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border-[var(--school-accent)]' : ''}`}>
                        <span className="text-sm">{i + 1}</span>
-                       {i === 14 && <div className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></div>}
+                       {i === 14 && <div className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[var(--school-accent)]"></div>}
                     </div>
                  ))}
               </div>

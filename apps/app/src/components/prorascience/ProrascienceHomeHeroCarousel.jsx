@@ -81,7 +81,7 @@ export function ProrascienceHomeHeroCarousel({ prefersReducedMotion, onOpenVideo
       </AnimatePresence>
 
       <div className="pointer-events-none absolute inset-x-0 top-3 z-[2] flex justify-center px-3">
-        <span className="max-w-[95%] rounded-full border border-[#D4AF37]/35 bg-black/55 px-3 py-1 text-center text-[11px] font-bold uppercase tracking-[0.2em] text-[#ebca5e] backdrop-blur-md">
+        <span className="max-w-[95%] rounded-full border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-black/55 px-3 py-1 text-center text-[11px] font-bold uppercase tracking-[0.2em] text-[#ebca5e] backdrop-blur-md">
           {active.kicker}
         </span>
       </div>
@@ -123,7 +123,7 @@ export function ProrascienceHomeHeroCarousel({ prefersReducedMotion, onOpenVideo
         }
         transition={{ boxShadow: { duration: 3.2, repeat: Infinity, ease: 'easeInOut' } }}
       >
-        <PlayCircle className="h-8 w-8 text-[#D4AF37]" />
+        <PlayCircle className="h-8 w-8 text-[var(--school-accent)]" />
       </motion.button>
 
       <div className="absolute bottom-4 left-4 right-4 z-[2] space-y-2">
@@ -133,14 +133,14 @@ export function ProrascienceHomeHeroCarousel({ prefersReducedMotion, onOpenVideo
               key={s.src}
               type="button"
               onClick={() => setIndex(i)}
-              className={`h-1.5 rounded-full transition-all ${i === index ? 'w-6 bg-[#D4AF37]' : 'w-1.5 bg-white/35 hover:bg-white/55'}`}
+              className={`h-1.5 rounded-full transition-all ${i === index ? 'w-6 bg-[var(--school-accent)]' : 'w-1.5 bg-white/35 hover:bg-white/55'}`}
               aria-label={`Voir la diapositive ${i + 1} sur ${slides.length}`}
               aria-current={i === index ? 'true' : undefined}
             />
           ))}
         </div>
         <div className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-black/45 px-3 py-2 text-center text-[11px] font-medium leading-snug text-white/88 backdrop-blur-md sm:text-xs">
-          <Globe2 className="h-3.5 w-3.5 shrink-0 text-[#D4AF37]" aria-hidden />
+          <Globe2 className="h-3.5 w-3.5 shrink-0 text-[var(--school-accent)]" aria-hidden />
           <span>{active.footer}</span>
         </div>
       </div>

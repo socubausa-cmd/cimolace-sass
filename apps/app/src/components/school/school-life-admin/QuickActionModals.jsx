@@ -152,7 +152,7 @@ export const QuickActionModal = ({ isOpen, onClose, type, student, onSuccess }) 
         {renderContent()}
         <DialogFooter>
           <Button variant="ghost" onClick={onClose} className="text-gray-400">Annuler</Button>
-          <Button onClick={handleSubmit} className="bg-[#D4AF37] text-black font-bold hover:bg-yellow-500">Valider</Button>
+          <Button onClick={handleSubmit} className="bg-[var(--school-accent)] text-black font-bold hover:bg-yellow-500">Valider</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

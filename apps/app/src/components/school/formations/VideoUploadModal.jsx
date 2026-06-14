@@ -58,12 +58,12 @@ function PhoneCapturePanel({ onBack, onVideoReady }) {
           <ChevronLeft className="w-3.5 h-3.5" /> Retour aux sources
         </button>
         <div className="text-center space-y-1">
-          <p className="text-sm font-semibold text-white flex items-center justify-center gap-2"><Smartphone className="w-4 h-4 text-[#D4AF37]" /> Caméra téléphone</p>
+          <p className="text-sm font-semibold text-white flex items-center justify-center gap-2"><Smartphone className="w-4 h-4 text-[var(--school-accent)]" /> Caméra téléphone</p>
           <p className="text-xs text-gray-500">Scanne le QR code sur ton téléphone pour utiliser sa caméra</p>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <button type="button" onClick={() => setMode('upload')} className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 hover:border-[#D4AF37]/40 bg-white/2 hover:bg-[#D4AF37]/5 p-5 transition-all">
-            <Upload className="w-8 h-8 text-[#D4AF37]" />
+          <button type="button" onClick={() => setMode('upload')} className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-white/2 hover:bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] p-5 transition-all">
+            <Upload className="w-8 h-8 text-[var(--school-accent)]" />
             <div className="text-center">
               <p className="text-xs font-semibold text-white">Filmer et envoyer</p>
               <p className="text-[10px] text-gray-500 mt-0.5">Le téléphone filme, puis envoie la vidéo</p>
@@ -94,7 +94,7 @@ function PhoneCapturePanel({ onBack, onVideoReady }) {
         <p className="text-xs text-gray-500">Scanne ce QR code avec ton téléphone</p>
       </div>
       <div className="flex flex-col items-center gap-4">
-        <div className="rounded-2xl border border-[#D4AF37]/30 p-3 bg-[#D4AF37]/5">
+        <div className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] p-3 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]">
           <img src={qrUrl(chosenUrl)} alt="QR Code" className="w-48 h-48 rounded-xl" />
         </div>
         <p className="text-[10px] text-gray-600 text-center max-w-xs break-all">{chosenUrl}</p>
@@ -387,7 +387,7 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-[#192734] border-white/10 text-white max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-[#D4AF37]"><Video className="w-5 h-5"/> Ajouter une vidéo</DialogTitle>
+          <DialogTitle className="flex items-center gap-2 text-[var(--school-accent)]"><Video className="w-5 h-5"/> Ajouter une vidéo</DialogTitle>
         </DialogHeader>
 
         {/* ── Mode selector ── */}
@@ -426,8 +426,8 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
            <div className="space-y-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="bg-[#0F1419] border border-white/10 w-full grid grid-cols-2">
-                  <TabsTrigger value="link" className="data-[state=active]:bg-[#D4AF37] data-[state=active]:text-black">Lien Externe</TabsTrigger>
-                  <TabsTrigger value="upload" className="data-[state=active]:bg-[#D4AF37] data-[state=active]:text-black">Téléverser Fichier</TabsTrigger>
+                  <TabsTrigger value="link" className="data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-black">Lien Externe</TabsTrigger>
+                  <TabsTrigger value="upload" className="data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-black">Téléverser Fichier</TabsTrigger>
                 </TabsList>
 
                 <div className="mt-6 space-y-4">
@@ -444,7 +444,7 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
                           type="button"
                           onClick={() => handleReformulate('description')}
                           disabled={reformulateLoading === 'description'}
-                          className="flex items-center gap-1.5 text-xs text-[#D4AF37] hover:text-amber-400 disabled:opacity-50 transition-colors"
+                          className="flex items-center gap-1.5 text-xs text-[var(--school-accent)] hover:text-amber-400 disabled:opacity-50 transition-colors"
                           title="Reformuler avec l'IA"
                         >
                           {reformulateLoading === 'description'
@@ -494,10 +494,10 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
                   <TabsContent value="upload" className="space-y-4 mt-0">
                      <div className="border-2 border-dashed border-white/10 rounded-lg p-8 text-center bg-[#0F1419] hover:bg-white/5 transition-colors cursor-pointer relative group">
                         <input type="file" accept="video/mp4,video/webm,video/ogg" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                        <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2 group-hover:text-[#D4AF37] transition-colors"/>
+                        <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2 group-hover:text-[var(--school-accent)] transition-colors"/>
                         <p className="text-sm text-gray-400">Cliquez pour sélectionner un fichier (MP4, WebM)</p>
-                        {(data.type === 'upload' || data.type === 'file') && <p className="text-[#D4AF37] mt-2 font-bold"><Check className="inline w-4 h-4 mr-1"/> {data.title}</p>}
-                        {loading && <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg"><Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin"/></div>}
+                        {(data.type === 'upload' || data.type === 'file') && <p className="text-[var(--school-accent)] mt-2 font-bold"><Check className="inline w-4 h-4 mr-1"/> {data.title}</p>}
+                        {loading && <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg"><Loader2 className="w-8 h-8 text-[var(--school-accent)] animate-spin"/></div>}
                      </div>
 
                      {(loading || uploadProgress > 0) ? (
@@ -507,7 +507,7 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
                            <span>{uploadProgress}%</span>
                          </div>
                          <div className="h-2 bg-white/10 rounded overflow-hidden">
-                           <div className="h-full bg-[#D4AF37] transition-all" style={{ width: `${uploadProgress}%` }} />
+                           <div className="h-full bg-[var(--school-accent)] transition-all" style={{ width: `${uploadProgress}%` }} />
                          </div>
                        </div>
                      ) : null}
@@ -528,7 +528,7 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
 
            {/* Right Column: Preview */}
            <div className="space-y-4">
-              <Label className="text-[#D4AF37]">Aperçu Vidéo</Label>
+              <Label className="text-[var(--school-accent)]">Aperçu Vidéo</Label>
               <div className="aspect-video bg-black rounded-lg overflow-hidden border border-white/10 relative flex items-center justify-center group">
                  {!previewUrl ? (
                    <div className="text-gray-500 flex flex-col items-center">
@@ -556,11 +556,11 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
                        onPause={() => setIsPlaying(false)}
                      />
                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-4">
-                       <Button size="icon" variant="ghost" className="text-white hover:text-[#D4AF37]" onClick={togglePlay}>
+                       <Button size="icon" variant="ghost" className="text-white hover:text-[var(--school-accent)]" onClick={togglePlay}>
                          {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                        </Button>
                        <div className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
-                         <div className="h-full bg-[#D4AF37]" style={{ width: `${progress}%` }} />
+                         <div className="h-full bg-[var(--school-accent)]" style={{ width: `${progress}%` }} />
                        </div>
                        <div className="text-[10px] text-gray-300 w-20 text-right">{formatSecondsToTimeText(previewCurrentTime)}</div>
                        <div className="flex items-center gap-2 w-24">
@@ -622,7 +622,7 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
         {creationMode === 'upload' && (
         <DialogFooter className="mt-6 border-t border-white/10 pt-4">
           <Button variant="ghost" onClick={onClose} className="text-white hover:bg-white/10">Annuler</Button>
-          <Button onClick={handleSave} disabled={!data.title || (!previewUrl && !data.url)} className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold">
+          <Button onClick={handleSave} disabled={!data.title || (!previewUrl && !data.url)} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold">
             Ajouter la vidéo
           </Button>
         </DialogFooter>

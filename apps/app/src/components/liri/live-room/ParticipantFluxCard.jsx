@@ -16,7 +16,7 @@ export default function ParticipantFluxCard({ participant, active, depth = 1, on
       className={cn(
         'relative h-14 w-28 rounded-2xl border overflow-hidden backdrop-blur-xl transition-all',
         active
-          ? 'border-[#D4AF37]/55 bg-[#D4AF37]/20 shadow-[0_0_24px_rgba(212,175,55,0.3)] scale-[1.02]'
+          ? 'border-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] shadow-[0_0_24px_rgba(212,175,55,0.3)] scale-[1.02]'
           : 'border-white/15 bg-black/35 hover:bg-black/45'
       )}
       style={{
@@ -28,7 +28,7 @@ export default function ParticipantFluxCard({ participant, active, depth = 1, on
       {participant?.avatar_url ? (
         <img src={participant.avatar_url} alt={participant.name} className="h-full w-full object-cover" />
       ) : (
-        <div className="h-full w-full bg-gradient-to-br from-[#D4AF37]/35 to-[#1f2d41] flex items-center justify-center text-sm font-semibold text-white">
+        <div className="h-full w-full bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] to-[#1f2d41] flex items-center justify-center text-sm font-semibold text-white">
           {initials}
         </div>
       )}

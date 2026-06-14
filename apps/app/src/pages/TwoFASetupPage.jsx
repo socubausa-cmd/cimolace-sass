@@ -32,14 +32,14 @@ const TwoFASetupPage = () => {
               <CardContent>
                  {step === 1 && (
                     <div className="space-y-6 text-center py-4">
-                       <div className="w-20 h-20 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mx-auto text-[#D4AF37]">
+                       <div className="w-20 h-20 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-full flex items-center justify-center mx-auto text-[var(--school-accent)]">
                           <Smartphone className="w-10 h-10" />
                        </div>
                        <div>
                           <h3 className="text-lg font-bold text-white">Utiliser une application d'authentification</h3>
                           <p className="text-gray-400 mt-2">Utilisez Google Authenticator, Authy ou Microsoft Authenticator pour scanner un code QR.</p>
                        </div>
-                       <Button onClick={() => setStep(2)} className="bg-[#D4AF37] text-black w-full">Commencer</Button>
+                       <Button onClick={() => setStep(2)} className="bg-[var(--school-accent)] text-black w-full">Commencer</Button>
                     </div>
                  )}
 
@@ -52,7 +52,7 @@ const TwoFASetupPage = () => {
                           <p className="text-sm text-gray-400">Scannez ce code avec votre application.</p>
                           <p className="text-sm text-gray-500 mt-2 font-mono bg-black/20 p-2 rounded">KEY: AB12 CD34 EF56 GH78</p>
                        </div>
-                       <Button onClick={() => setStep(3)} className="bg-[#D4AF37] text-black w-full">J'ai scanné le code</Button>
+                       <Button onClick={() => setStep(3)} className="bg-[var(--school-accent)] text-black w-full">J'ai scanné le code</Button>
                     </div>
                  )}
 
@@ -69,7 +69,7 @@ const TwoFASetupPage = () => {
                           />
                           <p className="text-sm text-gray-500 text-center">(Pour le test: 123456)</p>
                        </div>
-                       <Button onClick={handleVerify} className="bg-[#D4AF37] text-black w-full">Vérifier</Button>
+                       <Button onClick={handleVerify} className="bg-[var(--school-accent)] text-black w-full">Vérifier</Button>
                     </div>
                  )}
 

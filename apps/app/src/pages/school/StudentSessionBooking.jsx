@@ -10,7 +10,7 @@ const StudentSessionBooking = () => {
        <main className="flex-grow pt-24 px-4 container mx-auto text-white">
           <div className="max-w-4xl mx-auto">
              <div className="flex items-center gap-4 mb-8">
-                <div className="p-3 bg-[#D4AF37]/10 rounded-full text-[#D4AF37]">
+                <div className="p-3 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-full text-[var(--school-accent)]">
                    <Calendar className="w-8 h-8" />
                 </div>
                 <div>
@@ -21,7 +21,7 @@ const StudentSessionBooking = () => {
              
              <div className="bg-[#192734] border border-white/10 rounded-xl p-12 text-center text-gray-400">
                 <p className="text-lg mb-4">Le module de réservation est en cours de maintenance.</p>
-                <Button className="bg-[#D4AF37] text-black">Retour au Dashboard</Button>
+                <Button className="bg-[var(--school-accent)] text-black">Retour au Dashboard</Button>
              </div>
           </div>
        </main>

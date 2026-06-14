@@ -20,9 +20,9 @@ const STEPS = [
     description: 'Votre espace élève personnel est prêt. Découvrez en quelques secondes tout ce qui vous attend.',
     visual: (
       <div className="relative flex items-center justify-center w-32 h-32 mx-auto mb-6">
-        <div className="absolute inset-0 bg-[#D4AF37]/10 rounded-full blur-2xl" />
-        <div className="w-24 h-24 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center">
-          <Sparkles className="w-10 h-10 text-[#D4AF37]" />
+        <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-full blur-2xl" />
+        <div className="w-24 h-24 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center">
+          <Sparkles className="w-10 h-10 text-[var(--school-accent)]" />
         </div>
       </div>
     ),
@@ -35,7 +35,7 @@ const STEPS = [
     subtitle: 'Tout ce dont vous avez besoin est dans le menu latéral.',
     description: null,
     features: [
-      { icon: GraduationCap, label: 'Mes Formations', desc: '21 modules disponibles, suivez votre progression', color: 'text-[#D4AF37]', bg: 'bg-[#D4AF37]/10' },
+      { icon: GraduationCap, label: 'Mes Formations', desc: '21 modules disponibles, suivez votre progression', color: 'text-[var(--school-accent)]', bg: 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]' },
       { icon: School,        label: 'Vie Scolaire',   desc: 'Agenda, règlements, absences et annonces',       color: 'text-blue-400',    bg: 'bg-blue-400/10' },
       { icon: Library,       label: 'Bibliothèque',   desc: 'Ouvrages fondateurs du corpus enseigné',         color: 'text-violet-400',  bg: 'bg-violet-400/10' },
       { icon: BookOpen,      label: 'Ressources',     desc: 'Vidéos, PDFs, glossaire, rituels, rapports',    color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
@@ -92,7 +92,7 @@ const OnboardingModal = ({ userName, onClose }) => {
         className="relative w-full max-w-lg bg-[#0F1419] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
       >
         {/* Top accent bar */}
-        <div className="h-1 bg-gradient-to-r from-[#D4AF37] via-yellow-400 to-[#D4AF37]" />
+        <div className="h-1 bg-gradient-to-r from-[var(--school-accent)] via-yellow-400 to-[var(--school-accent)]" />
 
         {/* Close */}
         <button
@@ -108,7 +108,7 @@ const OnboardingModal = ({ userName, onClose }) => {
             <div
               key={s.id}
               className={`h-1 rounded-full transition-all duration-300 ${
-                i === step ? 'w-8 bg-[#D4AF37]' : i < step ? 'w-4 bg-[#D4AF37]/40' : 'w-4 bg-white/10'
+                i === step ? 'w-8 bg-[var(--school-accent)]' : i < step ? 'w-4 bg-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]' : 'w-4 bg-white/10'
               }`}
             />
           ))}
@@ -131,7 +131,7 @@ const OnboardingModal = ({ userName, onClose }) => {
                 <h2 className="text-2xl font-serif font-bold text-white mb-2">
                   {current.title(firstName)}
                 </h2>
-                <p className="text-[#D4AF37] font-medium text-sm mb-3">{current.subtitle}</p>
+                <p className="text-[var(--school-accent)] font-medium text-sm mb-3">{current.subtitle}</p>
                 <p className="text-gray-400 text-sm leading-relaxed">{current.description}</p>
               </div>
             )}
@@ -174,7 +174,7 @@ const OnboardingModal = ({ userName, onClose }) => {
                       onClick={() => handleCTA(path)}
                       className={`w-full h-11 font-bold ${
                         primary
-                          ? 'bg-[#D4AF37] hover:bg-[#bfa345] text-black'
+                          ? 'bg-[var(--school-accent)] hover:bg-[#bfa345] text-black'
                           : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'
                       }`}
                     >
@@ -199,7 +199,7 @@ const OnboardingModal = ({ userName, onClose }) => {
             </button>
             <Button
               onClick={handleNext}
-              className="bg-[#D4AF37] hover:bg-[#bfa345] text-black font-bold px-6"
+              className="bg-[var(--school-accent)] hover:bg-[#bfa345] text-black font-bold px-6"
             >
               {step === STEPS.length - 2 ? 'Terminer' : 'Suivant'}
               <ArrowRight className="ml-2 w-4 h-4" />

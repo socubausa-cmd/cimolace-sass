@@ -70,7 +70,7 @@ const modules = FORMATION_CATALOG_MODULES;
 const getColorClasses = (idx) => {
   const c = moduleColors[idx] || "yellow";
   if (c === "yellow" && idx === 20) {
-    return { gradient: "from-[#D4AF37]/20 to-yellow-900/10", border: "border-[#D4AF37]/30", accent: "text-[#D4AF37]", bg: "bg-[#D4AF37]/10", badgeBg: "bg-[#D4AF37]" };
+    return { gradient: "from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-yellow-900/10", border: "border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]", accent: "text-[var(--school-accent)]", bg: "bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]", badgeBg: "bg-[var(--school-accent)]" };
   }
   return {
     gradient: `from-${c}-500/20 to-${c}-900/10`,
@@ -180,7 +180,7 @@ const ModuleCard = ({
               ) : (
                 <Button
                   size="sm"
-                  className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold gap-1.5 text-sm"
+                  className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold gap-1.5 text-sm"
                   onClick={onSubscribe}
                 >
                   <Lock className="w-3.5 h-3.5" />
@@ -197,7 +197,7 @@ const ModuleCard = ({
               ) : (
                 <Button
                   size="sm"
-                  className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold gap-1.5 text-sm"
+                  className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold gap-1.5 text-sm"
                   disabled={buyingFormationId === mod.formation?.id}
                   onClick={() => onBuy(mod)}
                 >
@@ -213,14 +213,14 @@ const ModuleCard = ({
               </Link>
             ) : justEnrolled ? (
               <Link to="/eleve">
-                <Button size="sm" className="bg-[#D4AF37] text-black hover:bg-yellow-500 gap-1.5 text-sm font-bold">
+                <Button size="sm" className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 gap-1.5 text-sm font-bold">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Inscrit !
                 </Button>
               </Link>
             ) : (
               <Button
                 size="sm"
-                className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold gap-1.5 text-sm"
+                className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold gap-1.5 text-sm"
                 disabled={enrolling === mod.formation?.id}
                 onClick={() => onEnroll(mod.formation)}
               >
@@ -286,13 +286,13 @@ const ModuleDetailModal = ({
         <div className="p-8 md:p-10 space-y-8">
           <div>
             <h3 className="text-lg font-serif font-bold text-white mb-4 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-[#D4AF37]" /> Ce que comprend ce module
+              <Sparkles className="w-5 h-5 text-[var(--school-accent)]" /> Ce que comprend ce module
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {includes.map((item, i) => (
                 <div key={i} className="flex items-start gap-3 bg-white/[0.03] border border-white/5 rounded-xl p-4">
-                  <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 flex items-center justify-center shrink-0">
-                    <item.icon className="w-4 h-4 text-[#D4AF37]" />
+                  <div className="w-8 h-8 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] flex items-center justify-center shrink-0">
+                    <item.icon className="w-4 h-4 text-[var(--school-accent)]" />
                   </div>
                   <span className="text-sm text-gray-300 font-medium leading-relaxed">{item.text}</span>
                 </div>
@@ -301,12 +301,12 @@ const ModuleDetailModal = ({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/[0.03] border border-white/5 rounded-xl p-5 text-center">
-              <CalendarDays className="w-6 h-6 text-[#D4AF37] mx-auto mb-2" />
+              <CalendarDays className="w-6 h-6 text-[var(--school-accent)] mx-auto mb-2" />
               <div className="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Durée</div>
               <div className="text-xl font-bold text-white">1 mois</div>
             </div>
             <div className="bg-white/[0.03] border border-white/5 rounded-xl p-5 text-center">
-              <Star className="w-6 h-6 text-[#D4AF37] mx-auto mb-2" />
+              <Star className="w-6 h-6 text-[var(--school-accent)] mx-auto mb-2" />
               <div className="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Disponibilité</div>
               <div className={`text-xl font-bold ${isAvailable ? 'text-green-400' : 'text-gray-500'}`}>
                 {isAvailable ? 'Disponible' : 'À venir'}
@@ -317,7 +317,7 @@ const ModuleDetailModal = ({
             {isAvailable ? (
               <>
                 <div className="text-sm text-green-400 font-bold uppercase tracking-wider mb-1">✓ Module disponible</div>
-                <div className="text-4xl md:text-5xl font-bold text-[#D4AF37] mb-1">
+                <div className="text-4xl md:text-5xl font-bold text-[var(--school-accent)] mb-1">
                   {mod.access?.mode === 'subscription'
                     ? 'Abonnement'
                     : mod.access?.mode === 'one_time'
@@ -341,7 +341,7 @@ const ModuleDetailModal = ({
                       </Link>
                     ) : (
                       <Button
-                        className="bg-[#D4AF37] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-base font-bold w-full sm:w-auto"
+                        className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-base font-bold w-full sm:w-auto"
                         onClick={onSubscribe}
                       >
                         <Lock className="w-5 h-5" /> Voir les forfaits
@@ -357,7 +357,7 @@ const ModuleDetailModal = ({
                     ) : (
                       <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                         <Button
-                          className="bg-[#D4AF37] text-black hover:bg-yellow-500 gap-2 h-12 px-6 text-base font-bold"
+                          className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 gap-2 h-12 px-6 text-base font-bold"
                           disabled={buyingFormationId === mod.formation?.id}
                           onClick={() => onBuy(mod, 'mobile_money')}
                         >
@@ -365,7 +365,7 @@ const ModuleDetailModal = ({
                         </Button>
                         <Button
                           variant="outline"
-                          className="border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10 gap-2 h-12 px-6 text-base font-bold"
+                          className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] gap-2 h-12 px-6 text-base font-bold"
                           disabled={buyingFormationId === mod.formation?.id}
                           onClick={() => onBuy(mod, 'monero')}
                         >
@@ -373,7 +373,7 @@ const ModuleDetailModal = ({
                         </Button>
                         <Button
                           variant="outline"
-                          className="border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10 gap-2 h-12 px-6 text-base font-bold"
+                          className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] gap-2 h-12 px-6 text-base font-bold"
                           disabled={buyingFormationId === mod.formation?.id}
                           onClick={() => onBuy(mod, 'chariow')}
                         >
@@ -381,7 +381,7 @@ const ModuleDetailModal = ({
                         </Button>
                         <Button
                           variant="outline"
-                          className="border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10 gap-2 h-12 px-6 text-base font-bold"
+                          className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] gap-2 h-12 px-6 text-base font-bold"
                           disabled={buyingFormationId === mod.formation?.id}
                           onClick={() => onBuy(mod, 'paypal')}
                         >
@@ -397,7 +397,7 @@ const ModuleDetailModal = ({
                     </Link>
                   ) : (
                     <Button
-                      className="bg-[#D4AF37] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-base font-bold w-full sm:w-auto"
+                      className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-base font-bold w-full sm:w-auto"
                       disabled={enrolling === mod.formation?.id}
                       onClick={() => onEnroll(mod.formation)}
                     >
@@ -570,7 +570,7 @@ const FormationCatalogPage = () => {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center bg-[#0B0B0F] text-white">
         <div className="flex flex-col items-center gap-3 text-white/60">
-          <LiriWordmark size="compact" className="text-[#D4AF37]/90" />
+          <LiriWordmark size="compact" className="text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]" />
           <p className="text-[12px]">Ouverture du catalogue mobile…</p>
         </div>
       </div>
@@ -598,7 +598,7 @@ const FormationCatalogPage = () => {
             <ChevronLeft className="h-6 w-6" />
           </Link>
           <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
-            <LiriWordmark size="compact" className="shrink-0 text-[#D4AF37]/90" />
+            <LiriWordmark size="compact" className="shrink-0 text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]" />
             <span className="truncate text-center text-[15px] font-semibold tracking-tight text-white">Formations</span>
           </div>
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -630,7 +630,7 @@ const FormationCatalogPage = () => {
                     onClick={() => setMobileMenuOpen(false)}
                     className={`flex items-center gap-3 rounded-xl px-3 py-3 transition ${
                       current
-                        ? 'bg-[#D4AF37]/15 text-[#D4AF37]'
+                        ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)]'
                         : 'text-white/80 hover:bg-white/[0.06]'
                     }`}
                   >
@@ -647,40 +647,40 @@ const FormationCatalogPage = () => {
       {/* HERO */}
       <section className="relative overflow-hidden px-4 py-10 sm:px-6 md:px-6 md:py-28 lg:py-36">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0F1419] via-[#192734]/60 to-[#0F1419]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#D4AF37]/5 rounded-full blur-[200px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[200px]" />
 
         <div className="relative mx-auto max-w-4xl space-y-5 text-center sm:space-y-6">
-          <span className="inline-flex max-w-[95vw] items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-2 text-[10px] font-bold uppercase leading-snug tracking-widest text-[#D4AF37] sm:px-5 sm:text-xs">
+          <span className="inline-flex max-w-[95vw] items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-4 py-2 text-[10px] font-bold uppercase leading-snug tracking-widest text-[var(--school-accent)] sm:px-5 sm:text-xs">
             <GraduationCap className="h-4 w-4 shrink-0" /> Coaching initiatique privé
           </span>
 
           <h1 className="font-serif text-3xl font-bold leading-[1.12] text-white sm:text-4xl md:text-6xl lg:text-7xl">
             Les 21 Modules de<br />
-            <span className="bg-gradient-to-r from-[#D4AF37] via-yellow-400 to-[#D4AF37] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[var(--school-accent)] via-yellow-400 to-[var(--school-accent)] bg-clip-text text-transparent">
               Formation Prorascience
             </span>
           </h1>
 
           <p className="mx-auto max-w-2xl text-base leading-relaxed text-gray-400 md:text-xl">
             L'école Ngowazulu propose un parcours unique d\'apprentissage. Chaque module est en
-            <span className="text-[#D4AF37] font-semibold"> coaching privé personnalisé</span>, avec un enseignement direct adapté à votre situation.
+            <span className="text-[var(--school-accent)] font-semibold"> coaching privé personnalisé</span>, avec un enseignement direct adapté à votre situation.
           </p>
 
-          <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto" />
+          <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent mx-auto" />
 
-          <ChevronDown className="w-6 h-6 text-[#D4AF37]/50 mx-auto animate-bounce" />
+          <ChevronDown className="w-6 h-6 text-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] mx-auto animate-bounce" />
         </div>
       </section>
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 pb-20 space-y-16">
 
         {/* CE QUE COMPREND CHAQUE MODULE */}
-        <section className="bg-gradient-to-br from-[#192734] to-[#0f1216] rounded-3xl p-8 md:p-12 border border-[#D4AF37]/20 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-[#D4AF37]/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
+        <section className="bg-gradient-to-br from-[#192734] to-[#0f1216] rounded-3xl p-8 md:p-12 border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
           <div className="relative">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
               <div>
-                <Sparkles className="w-8 h-8 text-[#D4AF37] mb-4" />
+                <Sparkles className="w-8 h-8 text-[var(--school-accent)] mb-4" />
                 <h2 className="text-2xl md:text-3xl font-serif font-bold text-white mb-4">
                   Formation Premium Personnalisée
                 </h2>
@@ -690,8 +690,8 @@ const FormationCatalogPage = () => {
                 <ul className="space-y-3">
                   {includes.map((item, i) => (
                     <li key={i} className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded-full bg-[#D4AF37]/20 flex items-center justify-center shrink-0">
-                        <Check className="w-3.5 h-3.5 text-[#D4AF37]" />
+                      <div className="w-6 h-6 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center shrink-0">
+                        <Check className="w-3.5 h-3.5 text-[var(--school-accent)]" />
                       </div>
                       <span className="text-sm text-gray-300 font-medium">{item}</span>
                     </li>
@@ -700,9 +700,9 @@ const FormationCatalogPage = () => {
               </div>
               <div className="flex flex-col items-center text-center bg-white/[0.03] border border-white/10 rounded-2xl p-8">
                 <div className="text-sm text-gray-500 uppercase tracking-wider font-bold mb-2">Accès instantané</div>
-                <div className="text-5xl md:text-6xl font-bold text-[#D4AF37] mb-1">Gratuit</div>
+                <div className="text-5xl md:text-6xl font-bold text-[var(--school-accent)] mb-1">Gratuit</div>
                 <div className="text-sm text-gray-500 mb-4">Inscription en un clic</div>
-                <div className="w-16 h-0.5 bg-[#D4AF37]/20 mx-auto mb-4" />
+                <div className="w-16 h-0.5 bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] mx-auto mb-4" />
                 {loadingFormations ? (
                   <div className="text-xs text-gray-600 mb-6 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Chargement…</div>
                 ) : (
@@ -711,7 +711,7 @@ const FormationCatalogPage = () => {
                   </div>
                 )}
                 <Link to="/login" state={{ from: { pathname: '/formations/catalogue' } }}>
-                  <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-base font-bold">
+                  <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-base font-bold">
                     <LogIn className="w-5 h-5" /> Accéder aux cours
                   </Button>
                 </Link>
@@ -734,7 +734,7 @@ const FormationCatalogPage = () => {
                 type="button"
                 onClick={() => setActiveFilter('all')}
                 className={`shrink-0 rounded-full px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:text-sm ${
-                  activeFilter === 'all' ? 'bg-[#D4AF37] text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                  activeFilter === 'all' ? 'bg-[var(--school-accent)] text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'
                 }`}
               >
                 Tous (21)
@@ -750,7 +750,7 @@ const FormationCatalogPage = () => {
                   key={c.key}
                   onClick={() => setActiveFilter(c.key)}
                   className={`shrink-0 rounded-full px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:text-sm ${
-                    activeFilter === c.key ? 'bg-[#D4AF37] text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                    activeFilter === c.key ? 'bg-[var(--school-accent)] text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'
                   }`}
                 >
                   {c.label}
@@ -761,7 +761,7 @@ const FormationCatalogPage = () => {
 
           {loadingFormations ? (
             <div className="flex justify-center items-center py-20 gap-3 text-gray-400">
-              <Loader2 className="w-6 h-6 animate-spin text-[#D4AF37]" />
+              <Loader2 className="w-6 h-6 animate-spin text-[var(--school-accent)]" />
               Chargement des modules…
             </div>
           ) : (
@@ -787,10 +787,10 @@ const FormationCatalogPage = () => {
         </section>
 
         {/* PARCOURS COMPLET */}
-        <section className="bg-gradient-to-br from-[#D4AF37]/[0.08] to-transparent border border-[#D4AF37]/20 rounded-3xl p-8 md:p-12 relative overflow-hidden">
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#D4AF37]/5 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2" />
+        <section className="bg-gradient-to-br from-[var(--school-accent)]/[0.08] to-transparent border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] rounded-3xl p-8 md:p-12 relative overflow-hidden">
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2" />
           <div className="relative text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] text-xs font-bold uppercase tracking-widest border border-[#D4AF37]/20 mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] text-xs font-bold uppercase tracking-widest border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] mb-4">
               <Star className="w-4 h-4" /> Parcours intégral
             </div>
             <h2 className="text-2xl md:text-3xl font-serif font-bold text-white mb-3">
@@ -802,21 +802,21 @@ const FormationCatalogPage = () => {
 
             <div className="grid grid-cols-3 gap-4 max-w-md mx-auto mb-8">
               <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-[#D4AF37]">21</div>
+                <div className="text-2xl font-bold text-[var(--school-accent)]">21</div>
                 <div className="text-xs text-gray-500">Modules</div>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-[#D4AF37]">21</div>
+                <div className="text-2xl font-bold text-[var(--school-accent)]">21</div>
                 <div className="text-xs text-gray-500">Mois</div>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-[#D4AF37]">4</div>
+                <div className="text-2xl font-bold text-[var(--school-accent)]">4</div>
                 <div className="text-xs text-gray-500">Cycles</div>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button className="h-12 gap-2 bg-[#D4AF37] px-8 text-lg font-bold text-black hover:bg-yellow-500" asChild>
+              <Button className="h-12 gap-2 bg-[var(--school-accent)] px-8 text-lg font-bold text-black hover:bg-yellow-500" asChild>
                 <Link to="/appointment/request">
                   <MessageCircle className="w-5 h-5" /> Discuter du parcours complet
                 </Link>
@@ -847,7 +847,7 @@ const FormationCatalogPage = () => {
 
       <Link
         to="/appointment/request"
-        className="fixed bottom-5 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#D4AF37] text-black shadow-lg shadow-black/50 ring-2 ring-black/30 transition active:scale-95 md:hidden"
+        className="fixed bottom-5 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--school-accent)] text-black shadow-lg shadow-black/50 ring-2 ring-black/30 transition active:scale-95 md:hidden"
         style={{ marginBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))' }}
         aria-label="Rendez-vous ou message"
       >

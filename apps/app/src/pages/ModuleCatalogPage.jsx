@@ -135,7 +135,7 @@ const ModuleCatalogPage = () => {
       {/* Hero */}
       <section className="pt-32 pb-16 px-6 text-center bg-gradient-to-b from-[#192734] to-[#0F1419]">
         <h1 className="text-4xl lg:text-5xl font-serif font-bold text-white mb-6">
-          Catalogue des <span className="text-[#D4AF37]">Formations</span>
+          Catalogue des <span className="text-[var(--school-accent)]">Formations</span>
         </h1>
         <p className="text-xl text-gray-400 max-w-2xl mx-auto">
           Choisissez le parcours qui correspond à votre quête de connaissance et à votre rythme d'apprentissage.
@@ -149,12 +149,12 @@ const ModuleCatalogPage = () => {
             key={module.id} 
             title={module.title} 
             icon={module.icon}
-            className="border-l-4 border-l-[#D4AF37]"
+            className="border-l-4 border-l-[var(--school-accent)]"
           >
             <div className="grid lg:grid-cols-2 gap-10">
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-[#D4AF37] font-bold uppercase text-sm mb-2 tracking-wider">Détails Clés</h4>
+                  <h4 className="text-[var(--school-accent)] font-bold uppercase text-sm mb-2 tracking-wider">Détails Clés</h4>
                   <ul className="grid grid-cols-2 gap-4 text-sm text-gray-300">
                     <li><span className="font-bold text-white">Niveau :</span> {module.level}</li>
                     <li><span className="font-bold text-white">Durée :</span> {module.duration}</li>
@@ -163,7 +163,7 @@ const ModuleCatalogPage = () => {
                   </ul>
                 </div>
                 <div>
-                  <h4 className="text-[#D4AF37] font-bold uppercase text-sm mb-2 tracking-wider">Objectifs</h4>
+                  <h4 className="text-[var(--school-accent)] font-bold uppercase text-sm mb-2 tracking-wider">Objectifs</h4>
                   <ul className="space-y-2">
                     {module.objectives.map((obj, i) => (
                       <li key={i} className="flex items-start gap-2 text-gray-300 text-sm">
@@ -177,23 +177,23 @@ const ModuleCatalogPage = () => {
 
               <div className="space-y-6">
                  <div>
-                  <h4 className="text-[#D4AF37] font-bold uppercase text-sm mb-2 tracking-wider">Contenu du Programme</h4>
+                  <h4 className="text-[var(--school-accent)] font-bold uppercase text-sm mb-2 tracking-wider">Contenu du Programme</h4>
                   <div className="bg-black/20 rounded-lg p-4 space-y-3">
                     {module.content.map((item, i) => (
                       <div key={i} className="flex items-center gap-3 text-gray-300 text-sm border-b border-white/5 last:border-0 pb-2 last:pb-0">
-                        <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-[#D4AF37]">{i + 1}</span>
+                        <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-[var(--school-accent)]">{i + 1}</span>
                         {item}
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="flex items-center justify-between bg-[#D4AF37]/10 p-4 rounded-lg border border-[#D4AF37]/30">
+                <div className="flex items-center justify-between bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-4 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
                    <div>
-                      <span className="block text-xs text-[#D4AF37] uppercase font-bold">À partir de</span>
+                      <span className="block text-xs text-[var(--school-accent)] uppercase font-bold">À partir de</span>
                       <span className="text-2xl font-bold text-white">{module.pricing.monthly}</span>
                       <span className="text-sm text-gray-400"> / mois</span>
                    </div>
-                   <Button className="bg-[#D4AF37] text-black hover:bg-[#b5952f]">S'inscrire</Button>
+                   <Button className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f]">S'inscrire</Button>
                 </div>
               </div>
             </div>

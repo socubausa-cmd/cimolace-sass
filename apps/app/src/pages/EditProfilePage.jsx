@@ -152,7 +152,7 @@ const EditProfilePage = () => {
               <Button
                 type="submit"
                 disabled={saving}
-                className="w-full bg-[#D4AF37] text-black font-semibold hover:bg-[#c9a432]"
+                className="w-full bg-[var(--school-accent)] text-black font-semibold hover:bg-[#c9a432]"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enregistrer'}
               </Button>

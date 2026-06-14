@@ -83,7 +83,7 @@ export function CheckoutSuccessContent({ variant = 'web' }) {
             </Button>
             <Button
               onClick={() => navigate('/products')}
-              className="flex-1 bg-[#D4AF37] font-bold text-black shadow-lg shadow-[#D4AF37]/20 hover:bg-[#b5952f]"
+              className="flex-1 bg-[var(--school-accent)] font-bold text-black shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] hover:bg-[#b5952f]"
             >
               <ShoppingBag className="mr-2 h-4 w-4" />
               Continuer

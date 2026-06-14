@@ -24,7 +24,7 @@ function TBtn({ active, disabled, onClick, title, children }) {
       className={cn(
         'flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[10px] transition-colors',
         disabled && 'cursor-not-allowed opacity-35',
-        !disabled && active && 'bg-[#D4AF37]/25 text-[#f5dd8a]',
+        !disabled && active && 'bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] text-[#f5dd8a]',
         !disabled && !active && 'text-white/50 hover:bg-white/[0.08] hover:text-white/90',
       )}
     >

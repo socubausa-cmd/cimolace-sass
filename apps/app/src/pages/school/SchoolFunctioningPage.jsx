@@ -28,7 +28,7 @@ const SchoolFunctioningPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F1419] font-sans text-gray-300 selection:bg-[#D4AF37]/30 pb-20">
+    <div className="min-h-screen bg-[#0F1419] font-sans text-gray-300 selection:bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] pb-20">
       <Helmet>
         <title>{`Fonctionnement de l'école — ${SITE_NAME}`}</title>
         <meta name="description" content={`Découvrez le fonctionnement institutionnel, les horaires et l'organisation de ${SCHOOL}.`} />
@@ -51,8 +51,8 @@ const SchoolFunctioningPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="inline-block px-4 py-1.5 mb-6 border border-[#D4AF37]/30 rounded-full bg-[#D4AF37]/10 backdrop-blur-sm">
-              <span className="text-[#D4AF37] text-sm font-bold tracking-widest uppercase">Institutionnel</span>
+            <div className="inline-block px-4 py-1.5 mb-6 border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] backdrop-blur-sm">
+              <span className="text-[var(--school-accent)] text-sm font-bold tracking-widest uppercase">Institutionnel</span>
             </div>
             <h1 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6 tracking-tight">
               Fonctionnement de l'École
@@ -75,7 +75,7 @@ const SchoolFunctioningPage = () => {
         >
           
           {/* Section 1: Philosophy */}
-          <motion.div variants={itemVariants} className="bg-[#192734] rounded-2xl p-8 md:p-10 shadow-xl border border-white/5 hover:border-[#D4AF37]/20 transition-all duration-300">
+          <motion.div variants={itemVariants} className="bg-[#192734] rounded-2xl p-8 md:p-10 shadow-xl border border-white/5 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-all duration-300">
             <div className="flex items-center gap-4 mb-6">
               <span className="text-4xl">🏛️</span>
               <h2 className="text-2xl md:text-3xl font-bold text-white font-serif">1. Philosophie Institutionnelle</h2>
@@ -89,13 +89,13 @@ const SchoolFunctioningPage = () => {
 
           {/* Separator */}
           <div className="flex justify-center items-center py-2 opacity-30">
-             <div className="h-px w-24 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"></div>
-             <span className="mx-4 text-[#D4AF37] text-xl">⸻</span>
-             <div className="h-px w-24 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"></div>
+             <div className="h-px w-24 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent"></div>
+             <span className="mx-4 text-[var(--school-accent)] text-xl">⸻</span>
+             <div className="h-px w-24 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent"></div>
           </div>
 
           {/* Section 2: Calendar & Rhythm */}
-          <motion.div variants={itemVariants} className="bg-[#192734] rounded-2xl p-8 md:p-10 shadow-xl border border-white/5 hover:border-[#D4AF37]/20 transition-all duration-300">
+          <motion.div variants={itemVariants} className="bg-[#192734] rounded-2xl p-8 md:p-10 shadow-xl border border-white/5 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-all duration-300">
             <div className="flex items-center gap-4 mb-6">
               <span className="text-4xl">📅</span>
               <h2 className="text-2xl md:text-3xl font-bold text-white font-serif">2. Rythme Scolaire</h2>
@@ -104,13 +104,13 @@ const SchoolFunctioningPage = () => {
               <div className="flex flex-col md:flex-row gap-6">
                  <div className="flex-1 bg-black/20 p-4 rounded-xl border border-white/5">
                     <h3 className="font-bold text-white mb-2 flex items-center gap-2">
-                       <Clock className="w-4 h-4 text-[#D4AF37]" /> Session Hebdomadaire
+                       <Clock className="w-4 h-4 text-[var(--school-accent)]" /> Session Hebdomadaire
                     </h3>
                     <p className="text-sm">Les cours magistraux sont dispensés chaque semaine via notre plateforme virtuelle. Des sessions de questions/réponses en direct sont organisées le week-end.</p>
                  </div>
                  <div className="flex-1 bg-black/20 p-4 rounded-xl border border-white/5">
                     <h3 className="font-bold text-white mb-2 flex items-center gap-2">
-                       <Calendar className="w-4 h-4 text-[#D4AF37]" /> Année Académique
+                       <Calendar className="w-4 h-4 text-[var(--school-accent)]" /> Année Académique
                     </h3>
                     <p className="text-sm">L'année est divisée en 3 trimestres, ponctués par des évaluations continues et un examen final obligatoire pour le passage au cycle supérieur.</p>
                  </div>
@@ -120,28 +120,28 @@ const SchoolFunctioningPage = () => {
 
           {/* Separator */}
           <div className="flex justify-center items-center py-2 opacity-30">
-             <div className="h-px w-24 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"></div>
-             <span className="mx-4 text-[#D4AF37] text-xl">⸻</span>
-             <div className="h-px w-24 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"></div>
+             <div className="h-px w-24 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent"></div>
+             <span className="mx-4 text-[var(--school-accent)] text-xl">⸻</span>
+             <div className="h-px w-24 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent"></div>
           </div>
 
           {/* Section 3: Student Life */}
-          <motion.div variants={itemVariants} className="bg-[#192734] rounded-2xl p-8 md:p-10 shadow-xl border border-white/5 hover:border-[#D4AF37]/20 transition-all duration-300">
+          <motion.div variants={itemVariants} className="bg-[#192734] rounded-2xl p-8 md:p-10 shadow-xl border border-white/5 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-all duration-300">
              <div className="flex items-center gap-4 mb-6">
               <span className="text-4xl">🎓</span>
               <h2 className="text-2xl md:text-3xl font-bold text-white font-serif">3. Vie de l'Étudiant</h2>
             </div>
             <ul className="space-y-4 text-lg leading-relaxed text-gray-300 list-none pl-2">
               <li className="flex gap-3">
-                 <span className="text-[#D4AF37]">✦</span>
+                 <span className="text-[var(--school-accent)]">✦</span>
                  <span><strong>Plateforme Numérique :</strong> Chaque élève dispose d'un espace personnel pour accéder aux cours, rendre ses devoirs et suivre sa progression.</span>
               </li>
               <li className="flex gap-3">
-                 <span className="text-[#D4AF37]">✦</span>
+                 <span className="text-[var(--school-accent)]">✦</span>
                  <span><strong>Bibliothèque :</strong> Accès illimité aux ressources documentaires, archives vidéo et lexiques spécialisés.</span>
               </li>
               <li className="flex gap-3">
-                 <span className="text-[#D4AF37]">✦</span>
+                 <span className="text-[var(--school-accent)]">✦</span>
                  <span><strong>Communauté :</strong> Participation aux forums de discussion surveillés par les instructeurs pour approfondir les thématiques.</span>
               </li>
             </ul>

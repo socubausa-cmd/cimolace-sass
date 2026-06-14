@@ -18,7 +18,7 @@ const FormationCard = ({ formation, onExpand }) => {
              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100"
           />
           <div className="absolute top-3 left-3">
-             <Badge className="bg-[#0F1419]/80 backdrop-blur text-[#D4AF37] border border-[#D4AF37]/30">
+             <Badge className="bg-[#0F1419]/80 backdrop-blur text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
                 {formation.level}
              </Badge>
           </div>
@@ -29,7 +29,7 @@ const FormationCard = ({ formation, onExpand }) => {
                 <span>Progression</span>
                 <span>{progress}%</span>
              </div>
-             <Progress value={progress} className="h-1.5 bg-gray-700" indicatorClassName={progress === 100 ? "bg-green-500" : "bg-[#D4AF37]"} />
+             <Progress value={progress} className="h-1.5 bg-gray-700" indicatorClassName={progress === 100 ? "bg-green-500" : "bg-[var(--school-accent)]"} />
           </div>
        </div>
 
@@ -51,7 +51,7 @@ const FormationCard = ({ formation, onExpand }) => {
                 <PlayCircle className="w-3 h-3 text-red-400" /> {formation.modules.reduce((acc, m) => acc + m.weeks.reduce((wAcc, w) => wAcc + w.days.reduce((dAcc, d) => dAcc + d.videos.length, 0), 0), 0)} Vidéos
              </div>
              <div className="flex items-center gap-1.5 bg-[#0F1419] p-1.5 rounded">
-                <Clock className="w-3 h-3 text-[#D4AF37]" /> {formation.duration}
+                <Clock className="w-3 h-3 text-[var(--school-accent)]" /> {formation.duration}
              </div>
              <div className="flex items-center gap-1.5 bg-[#0F1419] p-1.5 rounded">
                 <Award className="w-3 h-3 text-purple-400" /> Certifiant
@@ -64,7 +64,7 @@ const FormationCard = ({ formation, onExpand }) => {
                 className={`flex-1 font-bold ${
                    isStarted 
                       ? 'bg-green-600 hover:bg-green-700 text-white' 
-                      : 'bg-[#D4AF37] text-black hover:bg-yellow-500'
+                      : 'bg-[var(--school-accent)] text-black hover:bg-yellow-500'
                 }`}
              >
                 {isStarted ? 'Continuer' : 'Commencer'} <ChevronRight className="w-4 h-4 ml-1" />

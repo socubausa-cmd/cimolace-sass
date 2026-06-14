@@ -39,7 +39,7 @@ const EvaluationsSection = ({ data }) => {
           </Card>
           <Card className="bg-[#192734] border-white/10">
              <CardContent className="p-6 text-center">
-                <p className="text-3xl font-bold text-[#D4AF37]">{evaluations.reduce((acc, c) => acc + c.score, 0) / evaluations.length || 0}/20</p>
+                <p className="text-3xl font-bold text-[var(--school-accent)]">{evaluations.reduce((acc, c) => acc + c.score, 0) / evaluations.length || 0}/20</p>
                 <p className="text-sm text-gray-400">Moyenne</p>
              </CardContent>
           </Card>

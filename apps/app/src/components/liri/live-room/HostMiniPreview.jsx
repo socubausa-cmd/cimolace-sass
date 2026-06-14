@@ -119,14 +119,14 @@ export default function HostMiniPreview({
             embeddedSize === 'hero' &&
               'shadow-[0_8px_40px_-12px_rgba(139,92,246,0.25),0_12px_48px_-18px_rgba(212,175,55,0.32)]',
             arenaHostGoldFrame &&
-              'border-[#D4AF37]/50 shadow-[0_12px_40px_-18px_rgba(212,175,55,0.42),inset_0_0_0_1px_rgba(212,175,55,0.15)] ring-2 ring-[#D4AF37]/45 ring-offset-2 ring-offset-[#070a10]',
+              'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] shadow-[0_12px_40px_-18px_rgba(212,175,55,0.42),inset_0_0_0_1px_rgba(212,175,55,0.15)] ring-2 ring-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] ring-offset-2 ring-offset-[#070a10]',
           )
         : cn(
             embeddedSize === 'hero'
               ? 'relative z-20 min-h-[min(200px,28vh)] h-[min(34vh,320px)] max-h-[min(42vh,400px)] w-full overflow-hidden rounded-xl sm:rounded-2xl shadow-[0_10px_30px_-18px_rgba(0,0,0,0.9)]'
               : 'relative z-20 h-[156px] w-full max-h-[30vh] overflow-hidden rounded-2xl shadow-[0_10px_30px_-18px_rgba(0,0,0,0.9)]',
             arenaHostGoldFrame &&
-              'ring-2 ring-[#D4AF37]/45 ring-offset-2 ring-offset-[#070a10] shadow-[0_14px_40px_-16px_rgba(212,175,55,0.35)]',
+              'ring-2 ring-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] ring-offset-2 ring-offset-[#070a10] shadow-[0_14px_40px_-16px_rgba(212,175,55,0.35)]',
           )
       : 'absolute bottom-4 left-4 z-20 h-28 w-44 cursor-pointer overflow-hidden rounded-2xl shadow-[0_10px_30px_-18px_rgba(0,0,0,0.9)]';
 
@@ -260,7 +260,7 @@ export default function HostMiniPreview({
                 }}
                 className={cn(
                   'flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-black/50 backdrop-blur-sm transition-colors',
-                  heroCinemaActive ? 'text-[#f5dd8a] ring-1 ring-[#D4AF37]/45' : 'text-white/90 hover:bg-white/15',
+                  heroCinemaActive ? 'text-[#f5dd8a] ring-1 ring-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]' : 'text-white/90 hover:bg-white/15',
                 )}
                 title={heroCinemaActive ? 'Quitter le mode cinéma' : 'Mode cinéma'}
               >
@@ -278,7 +278,7 @@ export default function HostMiniPreview({
                   e.stopPropagation();
                   onHeroOpenSettings();
                 }}
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white/90 backdrop-blur-sm transition-colors hover:bg-[#D4AF37]/20 hover:text-[#f5dd8a]"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white/90 backdrop-blur-sm transition-colors hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] hover:text-[#f5dd8a]"
                 title="Réglages et effets"
               >
                 <Plus className="h-3.5 w-3.5" />
@@ -288,7 +288,7 @@ export default function HostMiniPreview({
           <div className="flex items-center justify-center gap-1">
             <p className="truncate text-center text-[9px] font-medium text-white/88 drop-shadow-sm">{name}</p>
             {privileged ? (
-              <span className="flex-shrink-0 text-[7px] font-bold text-[#D4AF37]">★</span>
+              <span className="flex-shrink-0 text-[7px] font-bold text-[var(--school-accent)]">★</span>
             ) : null}
           </div>
           {subtitle ? <p className="truncate text-center text-[8px] text-white/55">{subtitle}</p> : null}
@@ -298,7 +298,7 @@ export default function HostMiniPreview({
           <div className="flex items-center gap-1">
             <p className="truncate text-[10px] text-white drop-shadow-sm">{name}</p>
             {privileged && (
-              <span className="flex-shrink-0 text-[7px] font-bold text-[#D4AF37]">★</span>
+              <span className="flex-shrink-0 text-[7px] font-bold text-[var(--school-accent)]">★</span>
             )}
           </div>
           {subtitle ? (

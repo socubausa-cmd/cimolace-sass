@@ -26,7 +26,7 @@ export const WeeklyLiveBlock = ({ liveData }) => {
   };
 
   return (
-    <Card className="overflow-hidden bg-[#192734] border-white/10 hover:border-[#D4AF37]/50 transition-all duration-300 shadow-lg group">
+    <Card className="overflow-hidden bg-[#192734] border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] transition-all duration-300 shadow-lg group">
        <div className="flex flex-col md:flex-row">
           <div className="md:w-1/3 relative h-48 md:h-auto overflow-hidden bg-gradient-to-br from-[#203244] to-[#101a24]">
              {liveData.thumbnail ? (
@@ -49,11 +49,11 @@ export const WeeklyLiveBlock = ({ liveData }) => {
              </div>
           </div>
           <div className="p-6 flex flex-col justify-center flex-1">
-             <h3 className="text-xl font-bold text-white mb-2 group-hover:text-[#D4AF37] transition-colors">{liveData.title}</h3>
+             <h3 className="text-xl font-bold text-white mb-2 group-hover:text-[var(--school-accent)] transition-colors">{liveData.title}</h3>
              
              <div className="flex flex-wrap gap-4 text-sm text-gray-400 mb-6">
                 <div className="flex items-center gap-2">
-                   <User className="w-4 h-4 text-[#D4AF37]" />
+                   <User className="w-4 h-4 text-[var(--school-accent)]" />
                    {liveData.instructor}
                 </div>
                 <div className="flex items-center gap-2">
@@ -68,7 +68,7 @@ export const WeeklyLiveBlock = ({ liveData }) => {
 
              <div className="flex gap-3 mt-auto">
                <Button
-                 className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold"
+                 className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"
                  onClick={openLiveOrReplay}
                  disabled={!liveData.replayUrl && !liveData.url}
                >

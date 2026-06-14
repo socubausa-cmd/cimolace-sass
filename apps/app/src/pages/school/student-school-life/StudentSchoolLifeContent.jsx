@@ -44,8 +44,8 @@ const StudentSchoolLifeContent = () => {
                   { day: 'Mercredi', time: '14:00 - 16:00', title: 'Atelier Pratique', type: 'Atelier', loc: 'Zoom' },
                   { day: 'Vendredi', time: '18:00 - 20:00', title: 'Live de Clôture', type: 'Live', loc: 'Zoom' }
                 ].map((ev, i) => (
-                  <div key={i} className="flex items-center p-4 rounded-lg bg-black/20 border-l-4 border-[#D4AF37]">
-                    <div className="w-24 font-bold text-[#D4AF37]">{ev.day}</div>
+                  <div key={i} className="flex items-center p-4 rounded-lg bg-black/20 border-l-4 border-[var(--school-accent)]">
+                    <div className="w-24 font-bold text-[var(--school-accent)]">{ev.day}</div>
                     <div className="w-32 text-gray-400 text-sm">{ev.time}</div>
                     <div className="flex-1">
                       <p className="text-white font-medium">{ev.title}</p>
@@ -63,7 +63,7 @@ const StudentSchoolLifeContent = () => {
           <Card className="bg-[#192734] border-white/10">
             <CardHeader className="flex flex-row justify-between items-center">
               <CardTitle className="text-white">Mes Absences</CardTitle>
-              <Button size="sm" className="bg-[#D4AF37] text-black hover:bg-[#b5952f]">Justifier une absence</Button>
+              <Button size="sm" className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f]">Justifier une absence</Button>
             </CardHeader>
             <CardContent>
               <Table>
@@ -105,13 +105,13 @@ const StudentSchoolLifeContent = () => {
                ].map((doc, i) => (
                  <div key={i} className="flex justify-between items-center p-4 bg-black/20 rounded-lg">
                    <div className="flex items-center gap-3">
-                     <FileText className="w-8 h-8 text-[#D4AF37]" />
+                     <FileText className="w-8 h-8 text-[var(--school-accent)]" />
                      <div>
                        <p className="text-white font-medium">{doc.name}</p>
                        <p className="text-sm text-gray-500">Ajouté le {doc.date}</p>
                      </div>
                    </div>
-                   <Button variant="ghost" size="sm" className="text-[#D4AF37] hover:bg-[#D4AF37]/10"><Download className="w-4 h-4 mr-2" /> Télécharger</Button>
+                   <Button variant="ghost" size="sm" className="text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"><Download className="w-4 h-4 mr-2" /> Télécharger</Button>
                  </div>
                ))}
              </CardContent>

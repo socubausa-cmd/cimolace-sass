@@ -11,7 +11,7 @@ import {
 
 const ChapterSection = ({ number, title, color, icon: Icon, children }) => {
   const colorMap = {
-    yellow: { border: "border-[#D4AF37]/20", bg: "bg-[#D4AF37]/10", text: "text-[#D4AF37]", accent: "from-[#D4AF37]/10" },
+    yellow: { border: "border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]", bg: "bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]", text: "text-[var(--school-accent)]", accent: "from-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]" },
     violet: { border: "border-violet-500/20", bg: "bg-violet-500/10", text: "text-violet-400", accent: "from-violet-500/10" },
     blue: { border: "border-blue-500/20", bg: "bg-blue-500/10", text: "text-blue-400", accent: "from-blue-500/10" },
     emerald: { border: "border-emerald-500/20", bg: "bg-emerald-500/10", text: "text-emerald-400", accent: "from-emerald-500/10" },
@@ -43,7 +43,7 @@ const ChapterSection = ({ number, title, color, icon: Icon, children }) => {
 
 const VisionQuote = ({ children, color = "yellow" }) => {
   const bgMap = {
-    yellow: "bg-[#D4AF37]/10 border-[#D4AF37]/20",
+    yellow: "bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]",
     violet: "bg-violet-500/10 border-violet-500/20",
     blue: "bg-blue-500/10 border-blue-500/20",
     cyan: "bg-cyan-500/10 border-cyan-500/20",
@@ -54,7 +54,7 @@ const VisionQuote = ({ children, color = "yellow" }) => {
     teal: "bg-teal-500/10 border-teal-500/20",
   };
   const textMap = {
-    yellow: "text-[#D4AF37]",
+    yellow: "text-[var(--school-accent)]",
     violet: "text-violet-300",
     blue: "text-blue-300",
     cyan: "text-cyan-200",
@@ -87,28 +87,28 @@ const OrigineAppelPage = () => {
       {/* HERO */}
       <section className="relative py-28 md:py-40 px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0F1419] via-[#192734]/60 to-[#0F1419]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#D4AF37]/5 rounded-full blur-[250px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[250px]" />
         <div className="absolute top-20 right-20 w-[300px] h-[300px] bg-violet-500/5 rounded-full blur-[150px]" />
 
         <div className="relative max-w-4xl mx-auto text-center space-y-6">
-          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] text-xs font-bold uppercase tracking-widest border border-[#D4AF37]/20">
+          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] text-xs font-bold uppercase tracking-widest border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
             <Crown className="w-4 h-4" /> Témoignage du Fondateur
           </span>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-white leading-tight">
             L'Origine de<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-yellow-400 to-[#D4AF37]">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] via-yellow-400 to-[var(--school-accent)]">
               l'Appel
             </span>
           </h1>
 
           <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-            Le chemin spirituel du <span className="text-[#D4AF37] font-semibold">5ᵉ Manikongo</span>, des premières visions fondatrices à la naissance de la Prorascience et de l'école Ngowazulu.
+            Le chemin spirituel du <span className="text-[var(--school-accent)] font-semibold">5ᵉ Manikongo</span>, des premières visions fondatrices à la naissance de la Prorascience et de l'école Ngowazulu.
           </p>
 
-          <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto" />
+          <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent mx-auto" />
 
-          <ChevronDown className="w-6 h-6 text-[#D4AF37]/50 mx-auto animate-bounce" />
+          <ChevronDown className="w-6 h-6 text-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] mx-auto animate-bounce" />
         </div>
       </section>
 
@@ -117,7 +117,7 @@ const OrigineAppelPage = () => {
         {/* INTRODUCTION */}
         <section className="text-center space-y-4 mb-8">
           <p className="text-gray-300 text-lg leading-relaxed">
-            Je suis connu sous le nom de <span className="text-white font-semibold">5ᵉ Manikongo</span>, fondateur de la <span className="text-[#D4AF37] font-semibold">Prorascience</span> et de l'école initiatique <span className="text-[#D4AF37] font-semibold">Ngowazulu</span>.
+            Je suis connu sous le nom de <span className="text-white font-semibold">5ᵉ Manikongo</span>, fondateur de la <span className="text-[var(--school-accent)] font-semibold">Prorascience</span> et de l'école initiatique <span className="text-[var(--school-accent)] font-semibold">Ngowazulu</span>.
           </p>
         </section>
 
@@ -226,7 +226,7 @@ const OrigineAppelPage = () => {
             Alors il me montra la route et me dit de rentrer si je le peux, car en effet la porte de ce globe était une atmosphère que seul un pur peut traverser. Pour un impur, cela devait le repousser — car le portail d'air deviendra un champ magnétique comme la couche d\'ozone empêche les débris célestes de pénétrer la terre.
           </p>
           <p>
-            Personne ne peut y rentrer par corruption ou par identité familiale, car seule la <span className="text-[#D4AF37] font-semibold">justice personnelle</span> pouvait te faire rentrer. On ne rentre pas en groupe, là-bas personne ne parlera pour personne — c'est un événement personnel.
+            Personne ne peut y rentrer par corruption ou par identité familiale, car seule la <span className="text-[var(--school-accent)] font-semibold">justice personnelle</span> pouvait te faire rentrer. On ne rentre pas en groupe, là-bas personne ne parlera pour personne — c'est un événement personnel.
           </p>
           <p>
             Ainsi, lorsque je suis arrivé devant le portail, je mis ma main, elle se retrouva de l'autre côté. Je mis ma tête, elle se retrouva de l\'autre côté. Puis je mis mon corps et je me retrouvai de l\'autre côté. <span className="text-orange-300 font-bold">Le gardien des portails était étonné que je sois rentré et que le portail m\'ait obéi.</span>
@@ -248,7 +248,7 @@ const OrigineAppelPage = () => {
             Alors j'ai vu un long bâtiment : c\'était <span className="text-white font-semibold">une école</span>. Là-bas on instruisait ceux qui venaient de rentrer dans cette planète. Je suis rentré dans la classe et on me dit qu\'il y avait quelqu\'un qui m\'attendait.
           </p>
           <p>
-            Je suis parti dans la salle où il était et j'ai vu un homme élancé avec un boubou blanc. À ma surprise, j\'ai vu que c\'était <span className="text-[#D4AF37] font-bold">le Père</span>, lui-même en personne qui était venu m\'accueillir à l\'arrivée, et c\'était aussi lui-même le roi de ce beau monde. Alors j\'ai couru vers lui et l\'embrassai.
+            Je suis parti dans la salle où il était et j'ai vu un homme élancé avec un boubou blanc. À ma surprise, j\'ai vu que c\'était <span className="text-[var(--school-accent)] font-bold">le Père</span>, lui-même en personne qui était venu m\'accueillir à l\'arrivée, et c\'était aussi lui-même le roi de ce beau monde. Alors j\'ai couru vers lui et l\'embrassai.
           </p>
           <p>
             De l'autre côté, je pouvais voir les gens être jugés : les églises, les pasteurs, les chrétiens, les musulmans. Personne ne pouvait entrer avec sa confession, car là-bas on disait qu\'on ne les connaissait pas.
@@ -276,13 +276,13 @@ const OrigineAppelPage = () => {
             Alors je m'endormis avec ces questions. En ce temps-là, je venais d\'être perturbé dans une histoire d\'amour. Alors je rentrai en jeûne pour me repentir.
           </p>
           <p>
-            C'est à cet instant que j\'eus la vision d\'un homme noir — <span className="text-[#D4AF37] font-bold">Kimbangu</span> — qui vint à moi et me fit une délivrance, et la voix du tonnerre me dit :
+            C'est à cet instant que j\'eus la vision d\'un homme noir — <span className="text-[var(--school-accent)] font-bold">Kimbangu</span> — qui vint à moi et me fit une délivrance, et la voix du tonnerre me dit :
           </p>
           <VisionQuote color="yellow">
             « Tes péchés sont pardonnés ! »
           </VisionQuote>
           <p>
-            Voici que moi, <span className="text-white font-semibold">Ché'o</span>, ce fut la première fois que je croisai un céleste qui m\'a dit son nom et ce fut <span className="text-[#D4AF37] font-bold">Papa Simon Kimbangu</span>.
+            Voici que moi, <span className="text-white font-semibold">Ché'o</span>, ce fut la première fois que je croisai un céleste qui m\'a dit son nom et ce fut <span className="text-[var(--school-accent)] font-bold">Papa Simon Kimbangu</span>.
           </p>
           <p>
             Au sortir de là, je me demandais pourquoi ce n'est pas Jésus qui est venu pour me délivrer, et pourquoi c\'est un nom inconnu qui vient pardonner mes fautes. Je voyais celui qui a exercé sur moi la délivrance contre le péché qui vit dans mon ventre, avec l\'allure d\'un roi, et d\'une puissance qui gouverne la forêt, car c\'est au milieu des gros arbres qu\'il vivait. Et au-dessus du ciel une grande lumière et une voix sortait des nuages — et cette voix était celle du Père.
@@ -294,7 +294,7 @@ const OrigineAppelPage = () => {
             En <span className="text-white font-semibold">2012</span>, on me dit que j'étais héritier du cadavre de Kimbangu, car il venait de mourir et son corps était conduit par les frères vers moi. Alors je m\'irritai en disant : <span className="text-gray-400 italic">« Donc tu vivais mais tu ne faisais rien pendant tout ce temps-là ! »</span> — je ne reçus aucune réponse.
           </p>
           <p>
-            Jusqu'au jour, toujours dans l\'année 2012, où j\'ai vu un être entre la mer, le fleuve et la forêt, dans un croisement. J\'ai croisé un homme qui unissait ces trois mondes. Et je le confondis et je vis que c\'était <span className="text-[#D4AF37] font-bold">Kimbangu</span>.
+            Jusqu'au jour, toujours dans l\'année 2012, où j\'ai vu un être entre la mer, le fleuve et la forêt, dans un croisement. J\'ai croisé un homme qui unissait ces trois mondes. Et je le confondis et je vis que c\'était <span className="text-[var(--school-accent)] font-bold">Kimbangu</span>.
           </p>
           <p>
             Alors ce mystère m'attira à lui par lévitation jusqu\'à ce qu\'il me fît passer un <span className="text-white font-semibold">rituel de consécration</span> au bord d\'une rivière.
@@ -330,19 +330,19 @@ const OrigineAppelPage = () => {
         </ChapterSection>
 
         {/* AUJOURD'HUI */}
-        <section className="bg-gradient-to-br from-[#192734] to-[#0f1216] rounded-3xl p-8 md:p-12 border border-[#D4AF37]/20 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-[#D4AF37]/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
+        <section className="bg-gradient-to-br from-[#192734] to-[#0f1216] rounded-3xl p-8 md:p-12 border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
           <div className="relative space-y-4">
             <div className="flex items-center gap-3 mb-4">
-              <Sun className="w-8 h-8 text-[#D4AF37]" />
+              <Sun className="w-8 h-8 text-[var(--school-accent)]" />
               <h2 className="text-2xl md:text-3xl font-serif font-bold text-white">Aujourd'hui</h2>
             </div>
             <p className="text-gray-300 text-base leading-relaxed">
-              Aujourd'hui, à travers l\'école <span className="text-[#D4AF37] font-semibold">Ngowazulu</span>, je transmets cet enseignement sous la forme d\'un parcours structuré autour des <span className="text-white font-semibold">21 sciences de la Prorascience</span>, destiné à ceux qui souhaitent comprendre les lois invisibles de la réalité et développer leur conscience.
+              Aujourd'hui, à travers l\'école <span className="text-[var(--school-accent)] font-semibold">Ngowazulu</span>, je transmets cet enseignement sous la forme d\'un parcours structuré autour des <span className="text-white font-semibold">21 sciences de la Prorascience</span>, destiné à ceux qui souhaitent comprendre les lois invisibles de la réalité et développer leur conscience.
             </p>
-            <div className="bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-xl p-6 text-center">
+            <div className="bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] rounded-xl p-6 text-center">
               <p className="text-xl font-serif font-bold text-white leading-relaxed">
-                Mon objectif est d'aider chacun à <span className="text-[#D4AF37]">ouvrir les yeux</span>, <span className="text-[#D4AF37]">écouter profondément</span> et <span className="text-[#D4AF37]">devenir responsable de son propre destin</span>.
+                Mon objectif est d'aider chacun à <span className="text-[var(--school-accent)]">ouvrir les yeux</span>, <span className="text-[var(--school-accent)]">écouter profondément</span> et <span className="text-[var(--school-accent)]">devenir responsable de son propre destin</span>.
               </p>
             </div>
           </div>
@@ -350,10 +350,10 @@ const OrigineAppelPage = () => {
 
         {/* CTA */}
         <section className="text-center space-y-6">
-          <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto" />
+          <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent mx-auto" />
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/a-propos/fondateur">
-              <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-base font-bold">
+              <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-base font-bold">
                 <Crown className="w-5 h-5" /> Profil du Fondateur
               </Button>
             </Link>

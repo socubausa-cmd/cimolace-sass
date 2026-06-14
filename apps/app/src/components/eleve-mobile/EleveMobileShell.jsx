@@ -617,7 +617,7 @@ export function EleveEmptyState({ icon: Icon, title, description, primary, secon
 export function EleveKicker({ children, className }) {
   return (
     <p
-      className={cn('text-[10px] font-semibold uppercase tracking-[0.2em] text-[#D4AF37]/80', className)}
+      className={cn('text-[10px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]', className)}
     >
       {children}
     </p>
@@ -626,7 +626,7 @@ export function EleveKicker({ children, className }) {
 
 const ELEVE_SURFACE_STYLES = {
   wallet:
-    'rounded-3xl border border-[#D4AF37]/20 bg-[linear-gradient(160deg,rgba(31,24,18,0.9),rgba(12,10,8,0.95))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_8px_32px_-8px_rgba(0,0,0,0.5)] backdrop-blur-md',
+    'rounded-3xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[linear-gradient(160deg,rgba(31,24,18,0.9),rgba(12,10,8,0.95))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_8px_32px_-8px_rgba(0,0,0,0.5)] backdrop-blur-md',
   plate:
     'rounded-3xl border border-white/[0.08] bg-white/[0.03] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-md',
 };
@@ -644,8 +644,8 @@ export function ElevePrimaryButton({ to, children, className, ...rest }) {
     <Link
       to={to}
       className={cn(
-        'flex h-12 items-center justify-center rounded-2xl border border-[#D4AF37]/50',
-        'bg-gradient-to-b from-[#D4AF37]/28 to-[#8b6914]/22 text-[14px] font-semibold text-[#fbf3df]',
+        'flex h-12 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]',
+        'bg-gradient-to-b from-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] to-[#8b6914]/22 text-[14px] font-semibold text-[#fbf3df]',
         'shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_4px_16px_rgba(212,175,55,0.15)] transition-transform active:scale-[0.98]',
         className,
       )}
@@ -674,7 +674,7 @@ export function EleveGhostButton({ to, children, className, ...rest }) {
 
 export function EleveBadge({ children, tone = 'gold', className }) {
   const tones = {
-    gold: 'border-[#D4AF37]/35 bg-[#D4AF37]/12 text-[#D4AF37] shadow-[0_0_0_1px_rgba(212,175,55,0.2)]',
+    gold: 'border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[var(--school-accent)] shadow-[0_0_0_1px_rgba(212,175,55,0.2)]',
   };
   return (
     <span

@@ -435,8 +435,8 @@ const LibraryPage = ({ embedded = false }) => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
           >
-             <div className="mx-auto w-16 h-16 bg-[#D4AF37]/20 rounded-full flex items-center justify-center mb-6 border border-[#D4AF37]">
-                <BookOpen className="w-8 h-8 text-[#D4AF37]" />
+             <div className="mx-auto w-16 h-16 bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] rounded-full flex items-center justify-center mb-6 border border-[var(--school-accent)]">
+                <BookOpen className="w-8 h-8 text-[var(--school-accent)]" />
              </div>
             <h1 className="text-4xl lg:text-5xl font-serif font-bold text-white mb-6">Grande Bibliothèque du Savoir</h1>
             <p className="text-lg text-gray-300 max-w-2xl mx-auto">
@@ -453,7 +453,7 @@ const LibraryPage = ({ embedded = false }) => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
             <Input 
               placeholder="Rechercher..." 
-              className="pl-10 bg-[#192734] border-white/10 text-white focus:border-[#D4AF37]/50"
+              className="pl-10 bg-[#192734] border-white/10 text-white focus:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -470,15 +470,15 @@ const LibraryPage = ({ embedded = false }) => {
         {categories.map((cat) => (
           <ExpandableCard key={cat.id} title={cat.title} icon={cat.icon}>
              <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-2">
-                <span className="text-xs uppercase tracking-wider text-gray-500 font-bold">Accès : <span className="text-[#D4AF37]">{cat.access}</span></span>
+                <span className="text-xs uppercase tracking-wider text-gray-500 font-bold">Accès : <span className="text-[var(--school-accent)]">{cat.access}</span></span>
                 <span className="text-sm text-gray-500">{cat.resources.length} ressources</span>
              </div>
              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {cat.resources.map((res, idx) => (
-                   <div key={idx} className="bg-black/20 p-4 rounded-lg hover:bg-black/40 transition-colors flex items-start gap-3 group cursor-pointer border border-transparent hover:border-[#D4AF37]/20">
+                   <div key={idx} className="bg-black/20 p-4 rounded-lg hover:bg-black/40 transition-colors flex items-start gap-3 group cursor-pointer border border-transparent hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                       <div className="mt-1">{getIcon(res.type)}</div>
                       <div className="flex-1">
-                         <h4 className="text-white font-medium text-sm group-hover:text-[#D4AF37] transition-colors">{res.title}</h4>
+                         <h4 className="text-white font-medium text-sm group-hover:text-[var(--school-accent)] transition-colors">{res.title}</h4>
                          <p className="text-sm text-gray-500 mt-1">{res.date}</p>
                       </div>
                       <Download className="w-4 h-4 text-gray-600 group-hover:text-white transition-colors opacity-0 group-hover:opacity-100" />

@@ -21,13 +21,13 @@ const FormationDetailView = ({ formation }) => {
 
        <div className="p-4 md:p-6 space-y-4">
           {formation.modules.map((mod, modIdx) => (
-             <div key={mod.id} className="border border-white/10 rounded-lg overflow-hidden bg-[#192734] transition-all hover:border-[#D4AF37]/30">
+             <div key={mod.id} className="border border-white/10 rounded-lg overflow-hidden bg-[#192734] transition-all hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
                 <div 
                    className="p-4 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors"
                    onClick={() => toggleModule(mod.id)}
                 >
                    <div className="flex items-center gap-4">
-                      <div className="w-8 h-8 rounded-full bg-[#0F1419] border border-white/10 flex items-center justify-center text-[#D4AF37] font-bold text-sm">
+                      <div className="w-8 h-8 rounded-full bg-[#0F1419] border border-white/10 flex items-center justify-center text-[var(--school-accent)] font-bold text-sm">
                          {modIdx + 1}
                       </div>
                       <div>
@@ -47,7 +47,7 @@ const FormationDetailView = ({ formation }) => {
                          </div>
                          <Progress value={30} className="h-1 bg-gray-700" indicatorClassName="bg-blue-500" />
                       </div>
-                      {expandedModule === mod.id ? <ChevronDown className="w-5 h-5 text-[#D4AF37]" /> : <ChevronRight className="w-5 h-5 text-gray-500" />}
+                      {expandedModule === mod.id ? <ChevronDown className="w-5 h-5 text-[var(--school-accent)]" /> : <ChevronRight className="w-5 h-5 text-gray-500" />}
                    </div>
                 </div>
 
@@ -66,7 +66,7 @@ const FormationDetailView = ({ formation }) => {
                                   onClick={() => toggleWeek(week.id)}
                                >
                                   <div className="flex items-center gap-3">
-                                     {expandedWeek === week.id ? <ChevronDown className="w-4 h-4 text-[#D4AF37]" /> : <ChevronRight className="w-4 h-4 text-gray-500" />}
+                                     {expandedWeek === week.id ? <ChevronDown className="w-4 h-4 text-[var(--school-accent)]" /> : <ChevronRight className="w-4 h-4 text-gray-500" />}
                                      <span className="text-sm font-medium text-gray-200">{week.title}</span>
                                      <span className="text-sm text-gray-500 ml-2">({week.days.length} jours)</span>
                                   </div>
@@ -80,14 +80,14 @@ const FormationDetailView = ({ formation }) => {
                                         exit={{ height: 0 }}
                                         className="overflow-hidden bg-[#0a0e12]"
                                      >
-                                        <div className="pl-16 pr-6 py-2 space-y-1 border-l-2 border-[#D4AF37]/20 ml-12 mb-2">
+                                        <div className="pl-16 pr-6 py-2 space-y-1 border-l-2 border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] ml-12 mb-2">
                                            {week.days.map(day => (
                                               <div key={day.id} className="flex justify-between items-center py-2 px-3 rounded hover:bg-white/5 group transition-all">
                                                  <div className="flex items-center gap-3">
                                                     {Math.random() > 0.7 ? (
                                                        <CheckCircle className="w-4 h-4 text-green-500" />
                                                     ) : (
-                                                       <PlayCircle className="w-4 h-4 text-gray-500 group-hover:text-[#D4AF37]" />
+                                                       <PlayCircle className="w-4 h-4 text-gray-500 group-hover:text-[var(--school-accent)]" />
                                                     )}
                                                     <div>
                                                        <p className="text-sm text-gray-300 group-hover:text-white transition-colors">{day.title}</p>
@@ -98,7 +98,7 @@ const FormationDetailView = ({ formation }) => {
                                                     </div>
                                                  </div>
                                                  <Link to={`/classroom/video/${formation.id}/${mod.id}/${week.id}/${day.id}`}>
-                                                    <Button size="sm" variant="outline" className="h-7 text-xs border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black">
+                                                    <Button size="sm" variant="outline" className="h-7 text-xs border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] hover:bg-[var(--school-accent)] hover:text-black">
                                                        Accéder
                                                     </Button>
                                                  </Link>

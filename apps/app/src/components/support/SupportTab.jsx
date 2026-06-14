@@ -24,11 +24,11 @@ const SupportTab = () => {
        >
         <div>
           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <HelpCircle className="text-[#D4AF37]" /> Support & Problèmes
+            <HelpCircle className="text-[var(--school-accent)]" /> Support & Problèmes
           </h2>
           <p className="text-gray-400 text-sm">Suivi des tickets et demandes d'assistance.</p>
         </div>
-        <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500">
+        <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
           <Plus className="w-4 h-4 mr-2" /> Nouveau Ticket
         </Button>
       </motion.div>
@@ -45,7 +45,7 @@ const SupportTab = () => {
             type="button"
             variant={filter === item.key ? 'default' : 'outline'}
             onClick={() => setFilter(item.key)}
-            className={filter === item.key ? 'bg-[#D4AF37] text-black hover:bg-[#c4a030]' : 'border-white/10 text-gray-300 hover:text-white'}
+            className={filter === item.key ? 'bg-[var(--school-accent)] text-black hover:bg-[#c4a030]' : 'border-white/10 text-gray-300 hover:text-white'}
           >
             {item.label}
           </Button>
@@ -104,7 +104,7 @@ const SupportTab = () => {
                  <TableRow className="border-white/5">
                    <TableCell colSpan={6} className="text-center py-10">
                      <div className="inline-flex flex-col items-center gap-2">
-                       <HelpCircle className="w-7 h-7 text-[#D4AF37]" />
+                       <HelpCircle className="w-7 h-7 text-[var(--school-accent)]" />
                        <p className="text-white font-medium">Aucun ticket dans ce filtre</p>
                        <p className="text-xs text-gray-500">Change le filtre ou crée un nouveau ticket.</p>
                      </div>

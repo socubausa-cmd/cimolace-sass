@@ -39,7 +39,7 @@ export function StudioSection({
             className="max-w-xl"
           >
             <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-gray-300 mb-5">
-              <span className="text-[#D4AF37]">
+              <span className="text-[var(--school-accent)]">
                 {String(index + 1).padStart(2, '0')}
               </span>
               <span className="text-gray-500">/</span>
@@ -78,7 +78,7 @@ export function StudioSection({
               onClick={() => onCreate(section.path)}
               className={cn(
                 'rounded-xl text-base font-semibold px-6 h-12',
-                'bg-[#D4AF37] text-black hover:bg-[#e5c04a]',
+                'bg-[var(--school-accent)] text-black hover:bg-[#e5c04a]',
                 'shadow-[0_8px_40px_rgba(212,175,55,0.25)]'
               )}
             >
@@ -96,7 +96,7 @@ export function StudioSection({
             <motion.div
               animate={isActive ? { y: [-5, 5, -5] } : { y: 0 }}
               transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-              className="overflow-hidden rounded-3xl border border-[#D4AF37]/15 bg-[#0f0d0b]/85 p-6 backdrop-blur-xl md:p-8"
+              className="overflow-hidden rounded-3xl border border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] bg-[#0f0d0b]/85 p-6 backdrop-blur-xl md:p-8"
             >
               <div className="absolute -right-20 -top-20 w-52 h-52 rounded-full blur-3xl bg-white/10" />
               <div className="relative">

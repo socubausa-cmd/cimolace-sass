@@ -52,7 +52,7 @@ const ModuleContentPage = () => {
               key={week.id}
               onClick={() => setActiveWeek(week.week_number)}
               className={`w-full text-left p-3 rounded-lg text-sm flex items-center gap-3 transition-colors ${
-                activeWeek === week.week_number ? 'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30' : 'hover:bg-white/5 text-gray-400'
+                activeWeek === week.week_number ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]' : 'hover:bg-white/5 text-gray-400'
               }`}
             >
               <div className="w-6 h-6 rounded-full border border-current flex items-center justify-center text-xs font-bold shrink-0">
@@ -69,7 +69,7 @@ const ModuleContentPage = () => {
         {currentContent ? (
           <>
             <div className="mb-8 border-b border-white/5 pb-8">
-              <span className="text-[#D4AF37] font-bold text-sm uppercase tracking-wide">Semaine {currentContent.week_number}</span>
+              <span className="text-[var(--school-accent)] font-bold text-sm uppercase tracking-wide">Semaine {currentContent.week_number}</span>
               <h1 className="text-3xl font-serif font-bold mt-2">{currentContent.title}</h1>
             </div>
 
@@ -102,7 +102,7 @@ const ModuleContentPage = () => {
                 Précédent
               </Button>
               <Button 
-                className="bg-[#D4AF37] text-black"
+                className="bg-[var(--school-accent)] text-black"
                 onClick={() => setActiveWeek(prev => Math.min(prev + 1, content.length))}
               >
                 {activeWeek === content.length ? 'Terminer Module' : 'Suivant'}

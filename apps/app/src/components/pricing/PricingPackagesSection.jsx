@@ -23,7 +23,7 @@ const PricingPackagesSection = () => {
             transition={{ duration: 0.8 }}
           >
             <h2 className="text-3xl md:text-5xl font-serif font-bold text-white mb-4">
-              Nos Formules <span className="text-[#D4AF37]">Prorascience</span>
+              Nos Formules <span className="text-[var(--school-accent)]">Prorascience</span>
             </h2>
             <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto font-light leading-relaxed">
               De l'initiation théorique à la maîtrise opérative complète.

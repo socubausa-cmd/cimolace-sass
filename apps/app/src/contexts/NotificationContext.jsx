@@ -74,7 +74,7 @@ export const NotificationProvider = ({ children }) => {
     toast({
       title: (
         <div className="flex items-center gap-2">
-           <Bell className="w-4 h-4 text-[#D4AF37]" />
+           <Bell className="w-4 h-4 text-[var(--school-accent)]" />
            <span>{notification.title}</span>
         </div>
       ),

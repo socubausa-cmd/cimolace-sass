@@ -40,7 +40,7 @@ export const DemoModeProvider = ({ children }) => {
         title: "Mode Démo Activé",
         description: "Vous explorez l'espace étudiant avec des données fictives.",
         variant: "default",
-        className: "bg-[#D4AF37] text-black border-none"
+        className: "bg-[var(--school-accent)] text-black border-none"
       });
     } else {
       setIsDemoMode(false);

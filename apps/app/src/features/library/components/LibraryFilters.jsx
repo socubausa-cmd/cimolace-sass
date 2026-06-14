@@ -49,7 +49,7 @@ function ChipGroup({ options, value, onChange }) {
           className={cn(
             'rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors',
             value === opt.id
-              ? 'border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#D4AF37]'
+              ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)]'
               : 'border-white/10 text-white/45 hover:border-white/20 hover:text-white/70',
           )}
         >
@@ -77,7 +77,7 @@ export default function LibraryFilters({ filters, onFilter, onReset, stats }) {
           value={filters.search}
           onChange={(e) => onFilter('search', e.target.value)}
           placeholder="Rechercher..."
-          className="w-full rounded-lg border border-white/10 bg-white/[0.04] py-2 pl-8 pr-3 text-[12px] text-white/80 placeholder-white/25 outline-none focus:border-[#D4AF37]/30"
+          className="w-full rounded-lg border border-white/10 bg-white/[0.04] py-2 pl-8 pr-3 text-[12px] text-white/80 placeholder-white/25 outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]"
         />
         {filters.search && (
           <button
@@ -119,7 +119,7 @@ export default function LibraryFilters({ filters, onFilter, onReset, stats }) {
           {stats?.total ?? 0} résultat(s) — {stats?.personal ?? 0} perso · {stats?.community ?? 0} communauté
         </span>
         {hasActiveFilters && (
-          <button onClick={onReset} className="flex items-center gap-1 text-[10px] text-[#D4AF37]/60 hover:text-[#D4AF37]">
+          <button onClick={onReset} className="flex items-center gap-1 text-[10px] text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] hover:text-[var(--school-accent)]">
             <X className="h-3 w-3" />
             Reset
           </button>

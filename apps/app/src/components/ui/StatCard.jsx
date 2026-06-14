@@ -14,7 +14,7 @@ const StatCard = ({ icon: Icon, label, value, trend, trendValue, color = "blue",
     green: "from-green-500/12 to-green-600/5 border-green-500/25 text-green-300",
     red: "from-red-500/12 to-red-600/5 border-red-500/25 text-red-300",
     yellow: "from-yellow-500/12 to-yellow-600/5 border-yellow-500/25 text-yellow-300",
-    gold: "from-[#D4AF37]/15 to-[#D4AF37]/5 border-[#D4AF37]/30 text-[#D4AF37]",
+    gold: "from-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] to-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)]",
   };
 
   return (

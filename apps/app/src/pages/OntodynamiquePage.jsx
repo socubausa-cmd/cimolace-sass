@@ -24,25 +24,25 @@ const SectionBox = ({ color, title, children }) => (
 );
 
 const LawBox = ({ title, children }) => (
-  <div className="bg-[#D4AF37]/[0.08] border border-[#D4AF37]/20 rounded-xl p-5 my-4">
+  <div className="bg-[var(--school-accent)]/[0.08] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] rounded-xl p-5 my-4">
     <div className="flex items-center gap-2 mb-2">
-      <Scale className="w-4 h-4 text-[#D4AF37]" />
-      <span className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">{title}</span>
+      <Scale className="w-4 h-4 text-[var(--school-accent)]" />
+      <span className="text-xs font-bold text-[var(--school-accent)] uppercase tracking-wider">{title}</span>
     </div>
     <p className="text-gray-200 leading-relaxed font-medium">{children}</p>
   </div>
 );
 
 const BQ = ({ children }) => (
-  <div className="border-l-4 border-[#D4AF37] pl-5 py-3 my-5">
-    <p className="text-lg font-serif italic text-[#D4AF37]/90 leading-relaxed">{children}</p>
+  <div className="border-l-4 border-[var(--school-accent)] pl-5 py-3 my-5">
+    <p className="text-lg font-serif italic text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)] leading-relaxed">{children}</p>
   </div>
 );
 
 const DT = ({ headers, rows }) => (
   <div className="overflow-x-auto my-4">
     <table className="w-full text-sm border-collapse">
-      <thead><tr>{headers.map((h, i) => <th key={i} className="text-left text-[#D4AF37] text-xs uppercase tracking-wider py-3 px-3 border-b border-white/10 bg-[#D4AF37]/5">{h}</th>)}</tr></thead>
+      <thead><tr>{headers.map((h, i) => <th key={i} className="text-left text-[var(--school-accent)] text-xs uppercase tracking-wider py-3 px-3 border-b border-white/10 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]">{h}</th>)}</tr></thead>
       <tbody>{rows.map((row, i) => <tr key={i} className="border-b border-white/5 hover:bg-white/[0.02]">{row.map((cell, j) => <td key={j} className="py-3 px-3 text-gray-300">{cell}</td>)}</tr>)}</tbody>
     </table>
   </div>
@@ -144,7 +144,7 @@ const OntodynamiquePage = () => {
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold uppercase tracking-widest border border-emerald-500/20">
               <Atom className="w-3.5 h-3.5" /> Partie V
             </span>
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] text-xs font-bold uppercase tracking-widest border border-[#D4AF37]/20">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] text-xs font-bold uppercase tracking-widest border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
               <BookOpen className="w-3.5 h-3.5" /> Histoire du Cosmos
             </span>
           </div>
@@ -152,7 +152,7 @@ const OntodynamiquePage = () => {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400">Ontodynamique</span>
           </h1>
           <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto">Mécanique Différentielle et Géométrie des Cordes Énergétiques</p>
-          <p className="text-gray-500 text-base">Par le <span className="text-[#D4AF37] font-semibold">5ᵉ Manikongo</span> — NGOWAZULU / ISNA</p>
+          <p className="text-gray-500 text-base">Par le <span className="text-[var(--school-accent)] font-semibold">5ᵉ Manikongo</span> — NGOWAZULU / ISNA</p>
           <div className="bg-[#192734]/80 border border-white/5 rounded-xl p-5 max-w-lg mx-auto">
             <p className="text-base font-serif italic text-gray-300">« L'Énergie n\'est pas une substance. C\'est la résistance du Firmament entre Espace et Temps. »</p>
           </div>
@@ -211,7 +211,7 @@ const OntodynamiquePage = () => {
           <p className="text-gray-300 leading-relaxed">Les grandeurs D, I, H, τ, Ω, r sont des mesures quantitatives qui émergent de l'interaction entre les trois constantes. Elles ne remplacent pas E-T-Énergie mais les quantifient dans des contextes spécifiques.</p>
           <div className="bg-[#192734] border border-white/5 rounded-xl p-5">
             <p className="text-sm text-gray-400 mb-2 font-bold">Analogie pédagogique :</p>
-            <p className="text-gray-300">E-T-Énergie = les <span className="text-[#D4AF37] font-semibold">trois couleurs primaires</span> (rouge, bleu, jaune). D, I, H = les <span className="text-white font-semibold">nuances dérivées</span> (orange, violet, vert). Les primaires sont CONSTANTES, les nuances sont DÉRIVÉES mais nécessaires pour décrire la richesse du réel.</p>
+            <p className="text-gray-300">E-T-Énergie = les <span className="text-[var(--school-accent)] font-semibold">trois couleurs primaires</span> (rouge, bleu, jaune). D, I, H = les <span className="text-white font-semibold">nuances dérivées</span> (orange, violet, vert). Les primaires sont CONSTANTES, les nuances sont DÉRIVÉES mais nécessaires pour décrire la richesse du réel.</p>
           </div>
 
           <h3 className="text-xl font-serif font-bold text-white mt-6">24.3 — Relation Formelle</h3>
@@ -254,7 +254,7 @@ const OntodynamiquePage = () => {
           <p className="text-gray-300 leading-relaxed">Les cordes vibratoires sont les premières manifestations de l'Énergie après la brisure de symétrie. Elles ne sont pas des objets mais des <span className="text-white font-semibold">tensions dynamiques entre Espace et Temps</span>. Leur géométrie dépend du régime de pression.</p>
 
           <h3 className="text-xl font-serif font-bold text-white mt-6">25.1 — Origine des Cordes : Tension E-T</h3>
-          <p className="text-gray-300 leading-relaxed">Lorsque Espace et Temps se séparent à partir de P₀, une tension apparaît. Cette tension = Énergie = Firmament. Les cordes sont les <span className="text-[#D4AF37] font-semibold">lignes de force</span> de cette tension.</p>
+          <p className="text-gray-300 leading-relaxed">Lorsque Espace et Temps se séparent à partir de P₀, une tension apparaît. Cette tension = Énergie = Firmament. Les cordes sont les <span className="text-[var(--school-accent)] font-semibold">lignes de force</span> de cette tension.</p>
           <div className="bg-[#192734] border border-white/5 rounded-xl p-5">
             <p className="text-sm text-gray-400 mb-2 font-bold">Analogie : Corde de guitare</p>
             <p className="text-gray-300">Une corde tendue entre deux points A (Espace) et B (Temps). Elle vibre selon le degré de tension. Plus la tension est forte, plus les modes de vibration sont riches.</p>
@@ -367,7 +367,7 @@ const OntodynamiquePage = () => {
           <h3 className="text-xl font-serif font-bold text-white mt-6">26.2 — Le Moteur Différentiel</h3>
           <p className="text-gray-300 leading-relaxed">Tout mouvement cosmique résulte du déséquilibre entre D et I. L'énergie de ce mouvement est le différentiel Δ = |D − I|.</p>
           <div className="bg-[#192734] border border-white/10 rounded-xl p-5 text-center my-4">
-            <p className="text-xl font-mono text-[#D4AF37] font-bold">Δ = |D − I|</p>
+            <p className="text-xl font-mono text-[var(--school-accent)] font-bold">Δ = |D − I|</p>
             <p className="text-sm text-gray-500 mt-2">L'énergie du mouvement ontologique</p>
           </div>
           <DT
@@ -391,7 +391,7 @@ const OntodynamiquePage = () => {
           <p className="text-gray-300 leading-relaxed">Les particules que la physique considère comme « fondamentales » ne sont pas des points sans structure. Ce sont des <span className="text-white font-semibold">agrégats de cordes énergétiques</span> dont la géométrie d'assemblage détermine les propriétés observées.</p>
 
           <h3 className="text-xl font-serif font-bold text-white mt-6">27.1 — Le mécanisme d'agrégation</h3>
-          <p className="text-gray-300 leading-relaxed">Quand des cordes fermées (Régime 3) entrent en résonance — c'est-à-dire quand leurs modes de vibration sont compatibles — elles se lient par <span className="text-[#D4AF37] font-semibold">attraction différentielle</span>. Cette liaison forme un réseau stable (Régime 4).</p>
+          <p className="text-gray-300 leading-relaxed">Quand des cordes fermées (Régime 3) entrent en résonance — c'est-à-dire quand leurs modes de vibration sont compatibles — elles se lient par <span className="text-[var(--school-accent)] font-semibold">attraction différentielle</span>. Cette liaison forme un réseau stable (Régime 4).</p>
           <div className="bg-[#192734] border border-emerald-500/20 rounded-xl p-5">
             <p className="text-sm text-gray-400 font-bold mb-2">Processus d'agrégation :</p>
             <div className="space-y-2 text-sm text-gray-300">
@@ -464,9 +464,9 @@ const OntodynamiquePage = () => {
           <p className="text-gray-300 leading-relaxed">Le cosmos ne produit pas toutes les géométries possibles avec la même probabilité. Il y a une <span className="text-white font-semibold">sélection progressive</span> — un mécanisme ontologique qui favorise certaines configurations et en élimine d'autres.</p>
 
           <h3 className="text-xl font-serif font-bold text-white mt-6">29.1 — La Variance Différentielle</h3>
-          <p className="text-gray-300 leading-relaxed">La variance différentielle mesure la <span className="text-[#D4AF37] font-semibold">dispersion des différentiels Δ</span> dans un système. Une variance élevée = beaucoup de configurations en compétition. Une variance faible = le système a convergé vers des configurations stables.</p>
+          <p className="text-gray-300 leading-relaxed">La variance différentielle mesure la <span className="text-[var(--school-accent)] font-semibold">dispersion des différentiels Δ</span> dans un système. Une variance élevée = beaucoup de configurations en compétition. Une variance faible = le système a convergé vers des configurations stables.</p>
           <div className="bg-[#192734] border border-white/10 rounded-xl p-5 text-center my-4">
-            <p className="text-xl font-mono text-[#D4AF37] font-bold">Var(Δ) = ⟨Δ²⟩ − ⟨Δ⟩²</p>
+            <p className="text-xl font-mono text-[var(--school-accent)] font-bold">Var(Δ) = ⟨Δ²⟩ − ⟨Δ⟩²</p>
             <p className="text-sm text-gray-500 mt-2">Variance des différentiels ontologiques</p>
           </div>
 
@@ -504,7 +504,7 @@ const OntodynamiquePage = () => {
           <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent mx-auto" />
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/dialogue-physique"><Button variant="outline" className="border-blue-500/30 hover:bg-blue-500/10 text-blue-400 h-12 px-8 text-base"><BookOpen className="w-5 h-5 mr-2" /> Livre II — Physique</Button></Link>
-            <Link to="/fond-de-tout"><Button variant="outline" className="border-[#D4AF37]/30 hover:bg-[#D4AF37]/10 text-[#D4AF37] h-12 px-8 text-base"><BookOpen className="w-5 h-5 mr-2" /> Livre I — Le Fond</Button></Link>
+            <Link to="/fond-de-tout"><Button variant="outline" className="border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] h-12 px-8 text-base"><BookOpen className="w-5 h-5 mr-2" /> Livre I — Le Fond</Button></Link>
             <Link to="/formations/catalogue"><Button className="bg-emerald-500 text-white hover:bg-emerald-600 gap-2 h-12 px-8 text-base font-bold"><GraduationCap className="w-5 h-5" /> Formations</Button></Link>
           </div>
         </section>

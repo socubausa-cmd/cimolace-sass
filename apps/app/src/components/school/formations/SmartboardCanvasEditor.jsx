@@ -467,13 +467,13 @@ export default function SmartboardCanvasEditor({
   }, [graphicSearch]);
 
   const inp =
-    'w-full rounded-lg border border-white/15 bg-[#0d1525] px-2 py-1.5 text-[11px] text-white placeholder:text-gray-600 outline-none focus:border-[#D4AF37]/50';
+    'w-full rounded-lg border border-white/15 bg-[#0d1525] px-2 py-1.5 text-[11px] text-white placeholder:text-gray-600 outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]';
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-gradient-to-b from-[#0a1120] to-[#070d18] text-white font-sans">
       {/* Barre type Canva */}
       <div className="flex h-11 flex-shrink-0 items-center gap-2 border-b border-white/10 px-3 bg-black/30">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]">Studio</span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--school-accent)]">Studio</span>
         <div className="h-5 w-px bg-white/15" />
         <button
           type="button"
@@ -519,7 +519,7 @@ export default function SmartboardCanvasEditor({
                 type="button"
                 onClick={() => setActiveTool(t.id)}
                 className={`flex flex-1 min-w-[56px] flex-col items-center gap-0.5 rounded-lg py-1.5 text-[9px] font-semibold ${
-                  activeTool === t.id ? 'bg-[#D4AF37]/15 text-[#D4AF37]' : 'text-gray-500 hover:bg-white/5'
+                  activeTool === t.id ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)]' : 'text-gray-500 hover:bg-white/5'
                 }`}
               >
                 <span className="text-sm">{t.icon}</span>
@@ -541,7 +541,7 @@ export default function SmartboardCanvasEditor({
                     key={key}
                     type="button"
                     onClick={() => addObject('template', key)}
-                    className="w-full rounded-lg border border-white/10 bg-[#0d1525] px-2 py-2 text-left text-[11px] text-gray-200 hover:border-[#D4AF37]/40"
+                    className="w-full rounded-lg border border-white/10 bg-[#0d1525] px-2 py-2 text-left text-[11px] text-gray-200 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]"
                   >
                     {tpl.name}
                   </button>
@@ -565,7 +565,7 @@ export default function SmartboardCanvasEditor({
                       textAlign: 'center',
                     })
                   }
-                  className="w-full rounded-lg bg-[#D4AF37] py-2 text-[11px] font-bold text-black"
+                  className="w-full rounded-lg bg-[var(--school-accent)] py-2 text-[11px] font-bold text-black"
                 >
                   + Zone de texte
                 </button>
@@ -590,7 +590,7 @@ export default function SmartboardCanvasEditor({
                     key={row.label}
                     type="button"
                     onClick={() => addObject('text', row.props)}
-                    className="w-full rounded-lg border border-white/10 px-2 py-1.5 text-left text-[11px] hover:border-[#D4AF37]/35"
+                    className="w-full rounded-lg border border-white/10 px-2 py-1.5 text-left text-[11px] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]"
                   >
                     {row.label}
                   </button>
@@ -621,7 +621,7 @@ export default function SmartboardCanvasEditor({
                       type="button"
                       disabled={!selectedId || selectedObj?.type !== 'text'}
                       onClick={() => selectedId && updateObject(selectedId, { fontFamily: f.family })}
-                      className="w-full truncate rounded border border-white/10 bg-[#0d1525] px-2 py-1 text-left text-[10px] hover:border-[#D4AF37]/40 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="w-full truncate rounded border border-white/10 bg-[#0d1525] px-2 py-1 text-left text-[10px] hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] disabled:cursor-not-allowed disabled:opacity-40"
                       style={{ fontFamily: f.family }}
                       title={f.family}
                     >
@@ -650,7 +650,7 @@ export default function SmartboardCanvasEditor({
                     key={s.label}
                     type="button"
                     onClick={() => addObject(s.type, s.props)}
-                    className="w-full rounded-lg border border-white/10 px-2 py-2 text-left text-[11px] hover:border-[#D4AF37]/35"
+                    className="w-full rounded-lg border border-white/10 px-2 py-2 text-left text-[11px] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]"
                   >
                     {s.label}
                   </button>
@@ -672,7 +672,7 @@ export default function SmartboardCanvasEditor({
                       key={`${g.icon}-${i}`}
                       type="button"
                       onClick={() => addObject('text', { text: g.icon, fontSize: 40, width: 72, height: 72, textAlign: 'center', color: '#333' })}
-                      className="flex h-9 w-9 items-center justify-center rounded border border-white/10 text-lg hover:border-[#D4AF37]/50"
+                      className="flex h-9 w-9 items-center justify-center rounded border border-white/10 text-lg hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]"
                       title={g.category}
                     >
                       {g.icon}
@@ -685,7 +685,7 @@ export default function SmartboardCanvasEditor({
             {activeTool === 'images' && (
               <div className="space-y-2">
                 <label
-                  className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#D4AF37]/40 bg-[#D4AF37]/5 py-8 text-center text-[11px] text-[#D4AF37] ${
+                  className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] py-8 text-center text-[11px] text-[var(--school-accent)] ${
                     imageUploading ? 'pointer-events-none opacity-50' : ''
                   }`}
                 >
@@ -738,7 +738,7 @@ export default function SmartboardCanvasEditor({
                     <div
                       key={o.id}
                       className={`flex items-center gap-1 rounded-lg border px-1 py-1 text-[10px] ${
-                        selectedId === o.id ? 'border-[#D4AF37]/60 bg-[#D4AF37]/10' : 'border-white/10 bg-[#0d1525]'
+                        selectedId === o.id ? 'border-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]' : 'border-white/10 bg-[#0d1525]'
                       }`}
                     >
                       <button type="button" className="flex-1 truncate text-left" onClick={() => setSelectedId(o.id)}>
@@ -815,7 +815,7 @@ export default function SmartboardCanvasEditor({
               type="button"
               onClick={() => setRightTab('props')}
               className={`flex flex-1 items-center justify-center gap-1 py-2 text-[10px] font-bold uppercase ${
-                rightTab === 'props' ? 'text-[#D4AF37] border-b-2 border-[#D4AF37]' : 'text-gray-500'
+                rightTab === 'props' ? 'text-[var(--school-accent)] border-b-2 border-[var(--school-accent)]' : 'text-gray-500'
               }`}
             >
               Propriétés
@@ -824,7 +824,7 @@ export default function SmartboardCanvasEditor({
               type="button"
               onClick={() => setRightTab('layers')}
               className={`flex flex-1 items-center justify-center gap-1 py-2 text-[10px] font-bold uppercase ${
-                rightTab === 'layers' ? 'text-[#D4AF37] border-b-2 border-[#D4AF37]' : 'text-gray-500'
+                rightTab === 'layers' ? 'text-[var(--school-accent)] border-b-2 border-[var(--school-accent)]' : 'text-gray-500'
               }`}
             >
               <Layers className="h-3 w-3" /> Calques
@@ -839,7 +839,7 @@ export default function SmartboardCanvasEditor({
                     type="button"
                     onClick={() => setSelectedId(o.id)}
                     className={`w-full truncate rounded border px-2 py-1.5 text-left ${
-                      selectedId === o.id ? 'border-[#D4AF37]/50 bg-[#D4AF37]/10' : 'border-white/10'
+                      selectedId === o.id ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]' : 'border-white/10'
                     }`}
                   >
                     {o.type === 'text' ? o.text?.slice(0, 40) : o.type}

@@ -15,14 +15,14 @@ const PublicNgowazuluPage = () => {
 
       <section className="border-b border-white/10 px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-5xl">
-          <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Pôle Temple</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Pôle Temple</p>
           <h1 className="mt-4 text-4xl font-semibold sm:text-6xl">Ngowazulu — transformer ce que vous ne pouviez pas résoudre seul</h1>
           <p className="mt-6 max-w-3xl text-gray-300">
             Ngowazulu propose une prise en charge sérieuse des blocages profonds: consultation, stratégie d'intervention
             et suivi encadré. Chaque dossier est traité avec méthode, confidentialité et responsabilité.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link to="/services-spirituels#ngowazulu" className="rounded-xl bg-[#D4AF37] px-6 py-3 font-semibold text-black hover:bg-[#e5c04a]">
+            <Link to="/services-spirituels#ngowazulu" className="rounded-xl bg-[var(--school-accent)] px-6 py-3 font-semibold text-black hover:bg-[#e5c04a]">
               Voir les services
             </Link>
             <Link to="/nous-contacter" className="rounded-xl border border-white/20 px-6 py-3 hover:bg-white/10">

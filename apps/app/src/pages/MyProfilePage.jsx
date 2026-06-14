@@ -23,12 +23,12 @@ const MyProfilePage = () => {
 
       <div className="max-w-4xl mx-auto px-6">
         <div className="bg-[#192734] border border-white/10 rounded-2xl overflow-hidden">
-          <div className="h-32 bg-gradient-to-r from-[#D4AF37]/20 to-purple-900/20" />
+          <div className="h-32 bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-purple-900/20" />
 
           <div className="px-8 pb-8">
             <div className="flex justify-between items-end -mt-12 mb-6">
               <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-[#0F1419] p-1 border-2 border-[#D4AF37]">
+                <div className="w-24 h-24 rounded-full bg-[#0F1419] p-1 border-2 border-[var(--school-accent)]">
                   {user.avatar_url ? (
                     <img
                       src={user.avatar_url}
@@ -50,7 +50,7 @@ const MyProfilePage = () => {
             </div>
 
             <h1 className="text-2xl font-bold text-white mb-1">{user.name || 'Membre'}</h1>
-            <p className="text-[#D4AF37] text-sm font-medium uppercase tracking-wide mb-6">{user.role || 'Membre'}</p>
+            <p className="text-[var(--school-accent)] text-sm font-medium uppercase tracking-wide mb-6">{user.role || 'Membre'}</p>
 
             <div className="grid md:grid-cols-2 gap-6 pt-6 border-t border-white/5">
               <div className="space-y-4">
@@ -67,7 +67,7 @@ const MyProfilePage = () => {
                 <div className="flex items-center gap-3 text-gray-300">
                   <Shield className="w-5 h-5 text-gray-500 shrink-0" />
                   Compte&nbsp;:
-                  <span className="bg-[#D4AF37]/10 text-[#D4AF37] px-2 py-0.5 rounded text-xs font-bold border border-[#D4AF37]/20 capitalize">
+                  <span className="bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] px-2 py-0.5 rounded text-xs font-bold border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] capitalize">
                     {user.status || 'actif'}
                   </span>
                 </div>

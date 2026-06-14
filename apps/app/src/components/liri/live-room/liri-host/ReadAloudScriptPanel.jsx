@@ -48,7 +48,7 @@ export function ReadAloudScriptPanel({
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-0.5">
         {!hideTitleLabel ? (
           <div className="flex items-center gap-2">
-            <BookMarked className="h-3.5 w-3.5 text-[#D4AF37]/80" />
+            <BookMarked className="h-3.5 w-3.5 text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]" />
             <p className={cn(railTitleClass, 'text-[10px] font-semibold uppercase tracking-[0.12em] text-white/55')}>
               Script à dire
             </p>
@@ -62,7 +62,7 @@ export function ReadAloudScriptPanel({
             onClick={() => setMode('summary')}
             className={cn(
               'rounded-md px-2 py-0.5 text-[9px] font-medium transition-colors',
-              mode === 'summary' ? 'bg-[#D4AF37]/25 text-[#f5dd8a]' : 'text-white/45 hover:text-white/75',
+              mode === 'summary' ? 'bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] text-[#f5dd8a]' : 'text-white/45 hover:text-white/75',
             )}
           >
             Résumé
@@ -72,7 +72,7 @@ export function ReadAloudScriptPanel({
             onClick={() => setMode('verbatim')}
             className={cn(
               'rounded-md px-2 py-0.5 text-[9px] font-medium transition-colors',
-              mode === 'verbatim' ? 'bg-[#D4AF37]/25 text-[#f5dd8a]' : 'text-white/45 hover:text-white/75',
+              mode === 'verbatim' ? 'bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] text-[#f5dd8a]' : 'text-white/45 hover:text-white/75',
             )}
           >
             Mot à mot

@@ -467,7 +467,7 @@ export default function StudioIsnaPipelinePage() {
         <div className="grid gap-4 lg:grid-cols-[290px_minmax(0,1fr)]">
           <aside className="rounded-2xl border border-white/10 bg-[#0c1324] p-3">
             <p className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
-              <GraduationCap className="h-3.5 w-3.5 text-[#D4AF37]" />
+              <GraduationCap className="h-3.5 w-3.5 text-[var(--school-accent)]" />
               Pipeline
             </p>
             <div className="space-y-2">

@@ -41,7 +41,7 @@ export function RaisedHandsPanel({
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          <span className="rounded-md bg-[#D4AF37]/15 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[#D4AF37]">
+          <span className="rounded-md bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[var(--school-accent)]">
             {n}
           </span>
           <ChevronRight className={cn('h-4 w-4 text-white/35 transition-transform', expanded && 'rotate-90')} />
@@ -66,7 +66,7 @@ export function RaisedHandsPanel({
                   {h.avatar_url ? (
                     <img src={h.avatar_url} alt="" className="h-8 w-8 shrink-0 rounded-full border border-white/10 object-cover" />
                   ) : (
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/12 text-[10px] font-bold text-[#D4AF37]">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[10px] font-bold text-[var(--school-accent)]">
                       {(h.name || '?').slice(0, 1).toUpperCase()}
                     </div>
                   )}
@@ -79,7 +79,7 @@ export function RaisedHandsPanel({
                   <button
                     type="button"
                     onClick={() => onGrantSpeech?.(h.userId)}
-                    className="h-8 min-w-0 flex-1 rounded-lg bg-[#D4AF37] text-[10px] font-semibold text-black hover:bg-[#e5c04a]"
+                    className="h-8 min-w-0 flex-1 rounded-lg bg-[var(--school-accent)] text-[10px] font-semibold text-black hover:bg-[#e5c04a]"
                   >
                     Donner la parole
                   </button>

@@ -35,7 +35,7 @@ const ClassroomPageContent = () => {
     <div className="min-h-screen bg-[#0F1419] pb-20">
        {/* Hero / Header */}
        <div className="bg-gradient-to-b from-[#192734] to-[#0F1419] pt-28 pb-16 px-4 border-b border-white/5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
           
           <div className="max-w-7xl mx-auto relative z-10">
              <Link to="/formations">
@@ -65,10 +65,10 @@ const ClassroomPageContent = () => {
                 <div className="w-full md:w-64 bg-black/20 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
                    <div className="flex justify-between text-sm mb-2">
                       <span className="text-gray-400">Progression Semaine</span>
-                      <span className="text-[#D4AF37] font-bold">45%</span>
+                      <span className="text-[var(--school-accent)] font-bold">45%</span>
                    </div>
                    <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
-                      <div className="bg-gradient-to-r from-[#D4AF37] to-yellow-300 h-full w-[45%]"></div>
+                      <div className="bg-gradient-to-r from-[var(--school-accent)] to-yellow-300 h-full w-[45%]"></div>
                    </div>
                 </div>
              </div>
@@ -130,7 +130,7 @@ const ClassroomPageContent = () => {
           </div>
 
           <div className="text-center pt-8">
-             <Link to="/classroom/archive" className="text-gray-500 hover:text-[#D4AF37] text-sm underline underline-offset-4 transition-colors">
+             <Link to="/classroom/archive" className="text-gray-500 hover:text-[var(--school-accent)] text-sm underline underline-offset-4 transition-colors">
                 Voir les semaines précédentes (Archives)
              </Link>
           </div>

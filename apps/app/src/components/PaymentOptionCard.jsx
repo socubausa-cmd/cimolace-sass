@@ -28,10 +28,10 @@ const PaymentOptionCard = ({
   return (
     <motion.div 
       whileHover={{ y: -8, transition: { duration: 0.3 } }}
-      className={`relative bg-[#192734] rounded-2xl p-6 border ${isRecommended ? 'border-[#D4AF37] shadow-lg shadow-[#D4AF37]/10' : 'border-white/5'} flex flex-col h-full overflow-hidden group`}
+      className={`relative bg-[#192734] rounded-2xl p-6 border ${isRecommended ? 'border-[var(--school-accent)] shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]' : 'border-white/5'} flex flex-col h-full overflow-hidden group`}
     >
       {isRecommended && (
-        <div className="absolute top-0 right-0 bg-[#D4AF37] text-black text-xs font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider z-10">
+        <div className="absolute top-0 right-0 bg-[var(--school-accent)] text-black text-xs font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider z-10">
           Meilleure Offre
         </div>
       )}
@@ -42,7 +42,7 @@ const PaymentOptionCard = ({
         <h3 className="text-2xl font-bold text-white mb-4 font-serif">{title}</h3>
         
         <div className="flex items-baseline gap-2 mb-1">
-          <span className="text-4xl font-bold text-[#D4AF37]">{price}€</span>
+          <span className="text-4xl font-bold text-[var(--school-accent)]">{price}€</span>
           {displayPeriod && <span className="text-gray-400 font-medium">{displayPeriod}</span>}
         </div>
         
@@ -76,7 +76,7 @@ const PaymentOptionCard = ({
         <ul className="space-y-3">
           {displayFeatures.map((feature, idx) => (
             <li key={idx} className="flex items-start gap-3 text-sm text-gray-300">
-              <Check className="w-5 h-5 text-[#D4AF37] shrink-0" />
+              <Check className="w-5 h-5 text-[var(--school-accent)] shrink-0" />
               <span>{feature}</span>
             </li>
           ))}
@@ -90,7 +90,7 @@ const PaymentOptionCard = ({
             onClick={onSelect}
             className={`w-full py-6 text-base font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-2 group/btn ${
               isRecommended 
-                ? 'bg-[#D4AF37] text-black hover:bg-yellow-500' 
+                ? 'bg-[var(--school-accent)] text-black hover:bg-yellow-500' 
                 : 'bg-white/10 text-white hover:bg-white/20'
             }`}
           >
@@ -102,7 +102,7 @@ const PaymentOptionCard = ({
             <Button 
               className={`w-full py-6 text-base font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-2 group/btn ${
                 isRecommended 
-                  ? 'bg-[#D4AF37] text-black hover:bg-yellow-500' 
+                  ? 'bg-[var(--school-accent)] text-black hover:bg-yellow-500' 
                   : 'bg-white/10 text-white hover:bg-white/20'
               }`}
             >
@@ -117,7 +117,7 @@ const PaymentOptionCard = ({
       </div>
 
       {/* Background decoration */}
-      <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-[#D4AF37]/5 rounded-full blur-3xl group-hover:bg-[#D4AF37]/10 transition-colors duration-500 pointer-events-none"></div>
+      <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-3xl group-hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] transition-colors duration-500 pointer-events-none"></div>
     </motion.div>
   );
 };

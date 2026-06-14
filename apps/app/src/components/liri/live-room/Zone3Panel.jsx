@@ -47,7 +47,7 @@ function MembresTab({ members, privilegedSeats, onGrantSeat, isHost, currentUser
             className={cn(
               'flex items-center gap-2.5 px-2 py-1.5 rounded-xl transition-colors',
               isPrivileged
-                ? 'bg-[#D4AF37]/8 border border-[#D4AF37]/18'
+                ? 'bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_18%,transparent)]'
                 : 'hover:bg-white/[0.04] border border-transparent'
             )}
           >
@@ -56,7 +56,7 @@ function MembresTab({ members, privilegedSeats, onGrantSeat, isHost, currentUser
               {m.avatar_url ? (
                 <img src={m.avatar_url} alt={m.name} className="w-7 h-7 rounded-full object-cover" />
               ) : (
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#D4AF37]/28 to-[#1a2540] flex items-center justify-center text-[10px] font-bold text-[#D4AF37]">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] to-[#1a2540] flex items-center justify-center text-[10px] font-bold text-[var(--school-accent)]">
                   {initials}
                 </div>
               )}
@@ -72,7 +72,7 @@ function MembresTab({ members, privilegedSeats, onGrantSeat, isHost, currentUser
               <p className="text-[9px] text-gray-500 capitalize truncate">{m.role || 'membre'}</p>
             </div>
 
-            {isPrivileged && <Crown className="w-3 h-3 text-[#D4AF37] flex-shrink-0" />}
+            {isPrivileged && <Crown className="w-3 h-3 text-[var(--school-accent)] flex-shrink-0" />}
 
             {/* Host can invite non-privileged members */}
             {isHost && !isSelf && !isPrivileged && (
@@ -82,7 +82,7 @@ function MembresTab({ members, privilegedSeats, onGrantSeat, isHost, currentUser
                   const nextPos = [1, 2, 3, 4].find((p) => !privilegedSeats.some((s) => s.position === p)) || 1;
                   onGrantSeat?.(m, nextPos);
                 }}
-                className="flex-shrink-0 h-6 w-6 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/22 text-[#D4AF37] flex items-center justify-center hover:bg-[#D4AF37]/20 transition-colors"
+                className="flex-shrink-0 h-6 w-6 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] text-[var(--school-accent)] flex items-center justify-center hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors"
                 title="Inviter en salle privilégiée"
               >
                 <UserPlus className="w-3 h-3" />
@@ -126,7 +126,7 @@ function SallePrivilegieeTab({ seats, members, onGrantSeat, onRevokeSeat, isHost
               className={cn(
                 'relative rounded-2xl p-2.5 flex flex-col items-center gap-1 min-h-[86px] transition-all border cursor-pointer',
                 seat
-                  ? 'bg-[#D4AF37]/7 border-[#D4AF37]/22'
+                  ? 'bg-[color-mix(in_srgb,var(--school-accent)_7%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_22%,transparent)]'
                   : isHost
                     ? 'bg-white/[0.025] border-white/10 border-dashed hover:bg-white/[0.05] hover:border-white/20'
                     : 'bg-white/[0.025] border-white/10 border-dashed cursor-default'
@@ -141,16 +141,16 @@ function SallePrivilegieeTab({ seats, members, onGrantSeat, onRevokeSeat, isHost
               {seat ? (
                 <>
                   {seat.avatar_url ? (
-                    <img src={seat.avatar_url} alt={seat.name} className="w-9 h-9 rounded-full object-cover ring-1 ring-[#D4AF37]/35 mt-1" />
+                    <img src={seat.avatar_url} alt={seat.name} className="w-9 h-9 rounded-full object-cover ring-1 ring-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] mt-1" />
                   ) : (
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#D4AF37]/28 to-[#1a2540] flex items-center justify-center text-xs font-bold text-[#D4AF37] ring-1 ring-[#D4AF37]/30 mt-1">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] to-[#1a2540] flex items-center justify-center text-xs font-bold text-[var(--school-accent)] ring-1 ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] mt-1">
                       {initials}
                     </div>
                   )}
                   <p className="text-[9px] text-white/80 truncate w-full text-center font-medium">
                     {(seat.name || 'Membre').split(' ')[0]}
                   </p>
-                  <span className="flex items-center gap-0.5 text-[7px] text-[#D4AF37]/60">
+                  <span className="flex items-center gap-0.5 text-[7px] text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]">
                     <Crown className="w-2 h-2" /> Intervenant
                   </span>
                   {isHost && (
@@ -190,11 +190,11 @@ function SallePrivilegieeTab({ seats, members, onGrantSeat, onRevokeSeat, isHost
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 6 }}
             transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-            className="min-h-0 overflow-hidden rounded-xl border border-[#D4AF37]/28 bg-[#0a0c12]/98 shadow-[inset_0_1px_0_rgba(212,175,55,0.08)] ring-1 ring-[#D4AF37]/10"
+            className="min-h-0 overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-[#0a0c12]/98 shadow-[inset_0_1px_0_rgba(212,175,55,0.08)] ring-1 ring-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
           >
             <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-2.5">
               <p className="text-[11px] font-semibold text-white/88">
-                Inviter en place <span className="text-[#D4AF37]">#{pickingForPos}</span>
+                Inviter en place <span className="text-[var(--school-accent)]">#{pickingForPos}</span>
               </p>
               <button
                 type="button"
@@ -217,9 +217,9 @@ function SallePrivilegieeTab({ seats, members, onGrantSeat, onRevokeSeat, isHost
                       onGrantSeat?.(m, pickingForPos);
                       setPickingForPos(null);
                     }}
-                    className="flex w-full items-center gap-2.5 rounded-xl border border-transparent bg-white/[0.03] p-2 text-left transition-all hover:border-[#D4AF37]/25 hover:bg-[#D4AF37]/8"
+                    className="flex w-full items-center gap-2.5 rounded-xl border border-transparent bg-white/[0.03] p-2 text-left transition-all hover:border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)]"
                   >
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#D4AF37]/28 to-[#1a2540] text-[10px] font-bold text-[#D4AF37]">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] to-[#1a2540] text-[10px] font-bold text-[var(--school-accent)]">
                       {initials}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -284,7 +284,7 @@ function MainsLeveesTab({ raisedHands, onLowerHand, onGrantSeat, isHost, privile
                     onGrantSeat?.(member, nextPos);
                     onLowerHand?.(h.userId);
                   }}
-                  className="h-6 px-2 rounded-lg bg-[#D4AF37]/14 border border-[#D4AF37]/28 text-[9px] text-[#D4AF37] hover:bg-[#D4AF37]/22 transition-colors"
+                  className="h-6 px-2 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] text-[9px] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] transition-colors"
                 >
                   Inviter
                 </button>
@@ -440,7 +440,7 @@ export default function Zone3Panel({
                         className={cn(
                           'absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full border px-1 text-[8px] font-bold',
                           active
-                            ? 'border-[#D4AF37] bg-[#D4AF37] text-black'
+                            ? 'border-[var(--school-accent)] bg-[var(--school-accent)] text-black'
                             : tab.alert
                               ? 'border-amber-500 bg-amber-500 text-black'
                               : 'border-white/10 bg-white/18 text-white/75',

@@ -16,7 +16,7 @@ const nodeBox = 'rounded-xl border border-white/15 bg-[#0F1419]/90 text-white px
 function FlowNode({ title, subtitle, tone = 'gray' }) {
   const toneClass =
     tone === 'amber'
-      ? 'border-[#D4AF37]/40 text-[#D4AF37]'
+      ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)]'
       : tone === 'emerald'
         ? 'border-emerald-500/40 text-emerald-300'
         : 'border-white/15 text-gray-200';
@@ -32,12 +32,12 @@ const nodeTypes = {
   triggerNode: ({ data }) => (
     <div className="relative">
       <FlowNode title={`Trigger: ${data.title}`} subtitle={data.subtitle} tone="amber" />
-      <Handle type="source" position={Position.Right} id="out" className="!bg-[#D4AF37] !w-2 !h-2" />
+      <Handle type="source" position={Position.Right} id="out" className="!bg-[var(--school-accent)] !w-2 !h-2" />
     </div>
   ),
   conditionNode: ({ data }) => (
     <div className="relative">
-      <Handle type="target" position={Position.Left} id="in" className="!bg-[#D4AF37] !w-2 !h-2" />
+      <Handle type="target" position={Position.Left} id="in" className="!bg-[var(--school-accent)] !w-2 !h-2" />
       <FlowNode title={`Condition: ${data.title}`} subtitle={data.subtitle} tone="gray" />
       <Handle type="source" position={Position.Right} id="yes" className="!bg-emerald-400 !w-2 !h-2 !top-[34%]" />
       <Handle type="source" position={Position.Right} id="no" className="!bg-amber-400 !w-2 !h-2 !top-[66%]" />

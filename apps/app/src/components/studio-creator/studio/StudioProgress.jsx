@@ -26,7 +26,7 @@ export function StudioProgress({ steps, currentStep, onStepClick, stepStates = {
               whileTap={isClickable ? { scale: 0.98 } : undefined}
               className={cn(
                 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all',
-                isActive && 'bg-[#D4AF37]/20 text-[#D4AF37]',
+                isActive && 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]',
                 isCompleted && 'text-gray-400 hover:text-white',
                 !isActive && !isCompleted && 'text-gray-500',
                 isClickable && 'cursor-pointer',
@@ -37,8 +37,8 @@ export function StudioProgress({ steps, currentStep, onStepClick, stepStates = {
               <span
                 className={cn(
                   'w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium',
-                  isActive && 'bg-[#D4AF37] text-black',
-                  isCompleted && 'bg-[#D4AF37]/30 text-[#D4AF37]',
+                  isActive && 'bg-[var(--school-accent)] text-black',
+                  isCompleted && 'bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)]',
                   !isActive && !isCompleted && 'bg-white/5',
                   hasError && 'bg-red-500/20 text-red-300'
                 )}
@@ -61,7 +61,7 @@ export function StudioProgress({ steps, currentStep, onStepClick, stepStates = {
             </motion.button>
             {i < steps.length - 1 && (
               <motion.div
-                className="h-px w-4 bg-[#D4AF37]/25"
+                className="h-px w-4 bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]"
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: isCompleted ? 1 : 0.35 }}
                 transition={{ duration: 0.2 }}

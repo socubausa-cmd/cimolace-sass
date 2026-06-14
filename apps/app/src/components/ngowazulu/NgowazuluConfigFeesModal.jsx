@@ -18,16 +18,16 @@ export default function NgowazuluConfigFeesModal({ open, onOpenChange }) {
       <DialogContent className="max-w-lg border-amber-500/25 bg-[#121A25]/98">
         <DialogHeader>
           <DialogTitle className="text-xl font-serif text-white pr-6">
-            Frais de configuration — <span className="text-[#D4AF37]">premier achat</span>
+            Frais de configuration — <span className="text-[var(--school-accent)]">premier achat</span>
           </DialogTitle>
           <DialogDescription asChild>
             <div className="text-left text-sm text-gray-300 space-y-4 pt-2">
               <p>
                 Les frais d&apos;ouverture du service de protection spirituel <span className="text-white font-medium">ne sont pas un produit</span>{' '}
-                à ajouter au panier à part. Il s&apos;agit de <span className="text-[#D4AF37]">frais de configuration</span> facturés{' '}
+                à ajouter au panier à part. Il s&apos;agit de <span className="text-[var(--school-accent)]">frais de configuration</span> facturés{' '}
                 <span className="text-white font-medium">une seule fois</span>, lors de votre première souscription à un contrat mentorat Ngowazulu.
               </p>
-              <div className="rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4 text-amber-100 space-y-2">
+              <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-4 text-amber-100 space-y-2">
                 <p className="font-semibold text-white">Montant : 100 EUR (unique)</p>
                 <p className="text-xs leading-relaxed text-amber-100/95">
                   Ils couvrent la cérémonie d&apos;inauguration, la présentation du dossier au temple et l&apos;activation du cadre de protection.
@@ -50,7 +50,7 @@ export default function NgowazuluConfigFeesModal({ open, onOpenChange }) {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="sm:justify-end gap-2">
-          <Button type="button" className="bg-[#D4AF37] text-black hover:bg-amber-500 font-bold" onClick={() => onOpenChange?.(false)}>
+          <Button type="button" className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-bold" onClick={() => onOpenChange?.(false)}>
             J&apos;ai compris
           </Button>
         </DialogFooter>

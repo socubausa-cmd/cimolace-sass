@@ -125,19 +125,19 @@ export default function SplitScreenCoursePreview({
                   whileTap={{ scale: 0.97 }}
                   className={`relative shrink-0 rounded-xl border px-3 py-2.5 text-left transition-all min-w-[140px] max-w-[200px] ${
                     isActive
-                      ? 'border-[#D4AF37]/50 bg-[#D4AF37]/10 shadow-[0_0_16px_rgba(212,175,55,0.15)]'
+                      ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] shadow-[0_0_16px_rgba(212,175,55,0.15)]'
                       : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/8'
                   }`}
                 >
                   {/* Chapter number */}
                   <div className="flex items-center gap-2 mb-1">
                     <span className={`text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center ${
-                      isActive ? 'bg-[#D4AF37] text-black' : 'bg-white/10 text-gray-400'
+                      isActive ? 'bg-[var(--school-accent)] text-black' : 'bg-white/10 text-gray-400'
                     }`}>
                       {idx + 1}
                     </span>
                     {hasAi && (
-                      <span className="text-[9px] text-[#D4AF37]/70 font-semibold uppercase tracking-wider">IA</span>
+                      <span className="text-[9px] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] font-semibold uppercase tracking-wider">IA</span>
                     )}
                   </div>
 
@@ -156,7 +156,7 @@ export default function SplitScreenCoursePreview({
                   {isActive && Number.isFinite(start) && Number.isFinite(end) && end > start && (
                     <div className="mt-2 h-1 rounded-full bg-white/10 overflow-hidden">
                       <motion.div
-                        className="h-full bg-[#D4AF37] rounded-full"
+                        className="h-full bg-[var(--school-accent)] rounded-full"
                         style={{ width: `${chPct}%` }}
                         transition={{ duration: 0.1 }}
                       />
@@ -164,7 +164,7 @@ export default function SplitScreenCoursePreview({
                   )}
 
                   {isActive && (
-                    <ChevronRight className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#D4AF37]/60" />
+                    <ChevronRight className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]" />
                   )}
                 </motion.button>
               );

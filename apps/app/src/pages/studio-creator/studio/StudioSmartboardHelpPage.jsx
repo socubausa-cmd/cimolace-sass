@@ -12,20 +12,20 @@ export default function StudioSmartboardHelpPage() {
         <div className="mb-8 flex flex-wrap items-center gap-3">
           <Link
             to="/studio"
-            className="inline-flex items-center gap-1 rounded-lg border border-white/12 px-2 py-1 text-[11px] text-white/70 hover:border-[#D4AF37]/35 hover:text-[#D4AF37]"
+            className="inline-flex items-center gap-1 rounded-lg border border-white/12 px-2 py-1 text-[11px] text-white/70 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:text-[var(--school-accent)]"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
             Studio
           </Link>
           <Link
             to="/studio/smartboard-designer"
-            className="inline-flex items-center gap-1 rounded-lg border border-[#D4AF37]/30 bg-[#1a1510] px-2 py-1 text-[11px] text-[#f5dd8a] hover:bg-[#D4AF37]/15"
+            className="inline-flex items-center gap-1 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[#1a1510] px-2 py-1 text-[11px] text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]"
           >
             Ouvrir le designer
           </Link>
         </div>
 
-        <h1 className="font-serif text-2xl font-semibold text-[#D4AF37] md:text-3xl">SmartBoard Designer — aide</h1>
+        <h1 className="font-serif text-2xl font-semibold text-[var(--school-accent)] md:text-3xl">SmartBoard Designer — aide</h1>
         <p className="mt-2 text-sm text-white/55">
           L'éditeur principal est désormais entièrement <strong className="text-white/80">Konva</strong> (scènes 1037×750, objets
           manipulables, exports PDF / PPTX / texte, Course Copilot).
@@ -72,7 +72,7 @@ export default function StudioSmartboardHelpPage() {
             <code className="rounded bg-white/10 px-1 text-[12px]">live_scenes</code>) : slides « Architect » avec{' '}
             <code className="rounded bg-white/10 px-1 text-[12px]">ia_data</code> (lecture progressive), éléments positionnels, ou médias
             importés depuis le{' '}
-            <Link className="text-[#D4AF37] hover:underline" to="/studio/live">
+            <Link className="text-[var(--school-accent)] hover:underline" to="/studio/live">
               constructeur de live
             </Link>
             .
@@ -82,7 +82,7 @@ export default function StudioSmartboardHelpPage() {
             fiche 1037×750 et le plan Course Copilot : ce n'est pas le même format que les slides{' '}
             <code className="rounded bg-white/10 px-1 text-[11px]">ia_data</code> du wizard. Pour l'ordre des scènes et l\'import brouillon
             → session, utilisez la{' '}
-            <Link className="text-[#D4AF37] hover:underline" to="/studio/live-preparation">
+            <Link className="text-[var(--school-accent)] hover:underline" to="/studio/live-preparation">
               préparation live
             </Link>
             .
@@ -97,7 +97,7 @@ export default function StudioSmartboardHelpPage() {
           <ul className="space-y-2 text-[13px] text-white/70">
             <li>
               Designer :{' '}
-              <Link className="text-[#D4AF37] hover:underline" to="/studio/smartboard-designer">
+              <Link className="text-[var(--school-accent)] hover:underline" to="/studio/smartboard-designer">
                 /studio/smartboard-designer
               </Link>{' '}
               (alias <code className="rounded bg-white/10 px-1 text-[11px]">/studio/smartboard-konva</code>). L'ancienne route{' '}
@@ -108,7 +108,7 @@ export default function StudioSmartboardHelpPage() {
             </li>
             <li>
               Préparation live (scènes, import brouillon) :{' '}
-              <Link className="text-[#D4AF37] hover:underline" to="/studio/live-preparation">
+              <Link className="text-[var(--school-accent)] hover:underline" to="/studio/live-preparation">
                 /studio/live-preparation
               </Link>
               .

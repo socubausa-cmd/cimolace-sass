@@ -44,7 +44,7 @@ const GammaIntegration = ({ data, onChange, onSave }) => {
   return (
     <div className="space-y-6 p-4 bg-[#192734] rounded-lg border border-white/10 h-full flex flex-col">
       <div className="flex items-center gap-2 pb-4 border-b border-white/10">
-         <Globe className="w-5 h-5 text-[#D4AF37]" />
+         <Globe className="w-5 h-5 text-[var(--school-accent)]" />
          <h3 className="text-lg font-bold text-white">Intégration Gamma App</h3>
       </div>
 
@@ -90,7 +90,7 @@ const GammaIntegration = ({ data, onChange, onSave }) => {
                         className="bg-[#0F1419] border-white/10 text-white font-mono text-xs h-24" 
                      />
                   )}
-                  <Button onClick={handlePreview} size="icon" className="bg-[#D4AF37] text-black hover:bg-yellow-500 shrink-0">
+                  <Button onClick={handlePreview} size="icon" className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 shrink-0">
                      <RefreshCw className="w-4 h-4"/>
                   </Button>
                </div>
@@ -106,7 +106,7 @@ const GammaIntegration = ({ data, onChange, onSave }) => {
             )}
 
             <div className="pt-4">
-                <Button onClick={() => onSave(localData)} disabled={!localData.embedUrl} className="w-full bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold">
+                <Button onClick={() => onSave(localData)} disabled={!localData.embedUrl} className="w-full bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold">
                    <Check className="w-4 h-4 mr-2"/> Valider l'intégration
                 </Button>
             </div>
@@ -114,7 +114,7 @@ const GammaIntegration = ({ data, onChange, onSave }) => {
 
          {/* Preview Area */}
          <div className="flex flex-col">
-            <Label className="mb-2 text-[#D4AF37]">Aperçu en temps réel</Label>
+            <Label className="mb-2 text-[var(--school-accent)]">Aperçu en temps réel</Label>
             <div className="bg-[#0F1419] rounded-lg border border-white/10 overflow-hidden flex-1 min-h-[400px] relative">
                {localData.embedUrl && !error ? (
                   <iframe 

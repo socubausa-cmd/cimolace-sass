@@ -82,7 +82,7 @@ const ChooseAccountTypePage = () => {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center bg-[#0B0B0F] text-white">
         <div className="flex flex-col items-center gap-3 text-white/60">
-          <LiriWordmark size="compact" className="text-[#D4AF37]/90" />
+          <LiriWordmark size="compact" className="text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]" />
           <p className="text-[12px]">Ouverture du choix de compte…</p>
         </div>
       </div>
@@ -106,7 +106,7 @@ const ChooseAccountTypePage = () => {
   return (
     <div className="min-h-screen overflow-hidden bg-[#0F1419] text-white">
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute left-1/2 top-1/4 h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-[#D4AF37]/5 blur-[120px]" />
+        <div className="absolute left-1/2 top-1/4 h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] blur-[120px]" />
         <div className="absolute bottom-1/4 right-1/4 h-[300px] w-[300px] rounded-full bg-indigo-500/5 blur-[100px]" />
       </div>
 
@@ -123,7 +123,7 @@ const ChooseAccountTypePage = () => {
             transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
             className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2"
           >
-            <Sparkles className="h-4 w-4 text-[#D4AF37]" />
+            <Sparkles className="h-4 w-4 text-[var(--school-accent)]" />
             <span className="text-sm text-gray-400">Multi-rôles</span>
           </motion.div>
           <h1 className="bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text font-serif text-3xl font-bold text-transparent md:text-5xl">
@@ -157,14 +157,14 @@ const ChooseAccountTypePage = () => {
                   {isFocused ? (
                     <motion.div
                       layoutId="role-pill-bg"
-                      className="absolute inset-0 rounded-xl border border-[#D4AF37]/30 bg-gradient-to-r from-[#D4AF37]/20 to-[#D4AF37]/5"
+                      className="absolute inset-0 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]"
                       initial={false}
                       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                     />
                   ) : null}
                   <motion.div
                     className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-lg ${
-                      isFocused ? 'bg-[#D4AF37] text-black' : 'bg-white/5 text-gray-400'
+                      isFocused ? 'bg-[var(--school-accent)] text-black' : 'bg-white/5 text-gray-400'
                     }`}
                     animate={{
                       scale: isFocused ? 1.05 : 1,
@@ -186,7 +186,7 @@ const ChooseAccountTypePage = () => {
                     <motion.div
                       initial={{ opacity: 0, x: -5 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="relative z-10 text-[#D4AF37]"
+                      className="relative z-10 text-[var(--school-accent)]"
                     >
                       <ChevronRight className="h-5 w-5" />
                     </motion.div>
@@ -216,12 +216,12 @@ const ChooseAccountTypePage = () => {
                     transition={{ delay: 0.1 }}
                     className="mb-4 flex items-center gap-3"
                   >
-                    <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[#D4AF37]/20">
-                      <CurrentDetailIcon className="h-7 w-7 text-[#D4AF37]" />
+                    <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
+                      <CurrentDetailIcon className="h-7 w-7 text-[var(--school-accent)]" />
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-white">{currentOption.title}</h2>
-                      <span className="text-sm font-medium text-[#D4AF37]">{currentOption.badge}</span>
+                      <span className="text-sm font-medium text-[var(--school-accent)]">{currentOption.badge}</span>
                     </div>
                   </motion.div>
                   <motion.p
@@ -241,7 +241,7 @@ const ChooseAccountTypePage = () => {
                 >
                   <Button
                     size="lg"
-                    className="group bg-[#D4AF37] px-8 py-6 text-base font-bold text-black shadow-lg shadow-[#D4AF37]/20 transition-all hover:bg-[#bfa345] hover:shadow-[#D4AF37]/30"
+                    className="group bg-[var(--school-accent)] px-8 py-6 text-base font-bold text-black shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-all hover:bg-[#bfa345] hover:shadow-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]"
                     onClick={() => chooseRole(currentOption.id)}
                   >
                     Ouvrir ce tableau de bord

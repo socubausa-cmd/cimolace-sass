@@ -45,7 +45,7 @@ export default function LivesLibraryContent({ variant = 'default' }) {
         </div>
       ) : (
         <div className="space-y-2 pb-1">
-          <LiriWordmark size="kicker" className="text-[#D4AF37]/80" />
+          <LiriWordmark size="kicker" className="text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]" />
           <h2 className="font-serif text-lg text-[#faf3e6] tracking-tight">Lives & replays</h2>
           <p className="text-xs text-white/42">
             En invité : accès aux directs et rediffusions. Un lien reçu ? Collez-le dans « Connexion » →{' '}
@@ -66,7 +66,7 @@ export default function LivesLibraryContent({ variant = 'default' }) {
             mobile ? 'text-base' : 'text-2xl mb-6',
           )}
         >
-          <Calendar className={cn('text-[#D4AF37]', mobile ? 'h-4 w-4' : 'h-6 w-6')} />
+          <Calendar className={cn('text-[var(--school-accent)]', mobile ? 'h-4 w-4' : 'h-6 w-6')} />
           À venir
         </h3>
         <div className={cn('grid gap-4', mobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6')}>
@@ -75,11 +75,11 @@ export default function LivesLibraryContent({ variant = 'default' }) {
               key={live.id}
               className={cn(
                 'border-white/10',
-                mobile ? 'bg-black/40 border-[#D4AF37]/20' : 'bg-[#192734]',
+                mobile ? 'bg-black/40 border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]' : 'bg-[#192734]',
               )}
             >
               <CardContent className={cn(mobile ? 'p-4' : 'p-6')}>
-                <Badge className="bg-[#D4AF37] text-black mb-3 text-[10px]">Programmé</Badge>
+                <Badge className="bg-[var(--school-accent)] text-black mb-3 text-[10px]">Programmé</Badge>
                 <h4 className={cn('font-bold text-white mb-1', mobile ? 'text-base' : 'text-xl mb-2')}>
                   {live.title}
                 </h4>
@@ -95,7 +95,7 @@ export default function LivesLibraryContent({ variant = 'default' }) {
                   className={cn(
                     'w-full',
                     mobile
-                      ? 'border border-[#D4AF37]/45 bg-gradient-to-r from-[#D4AF37]/18 to-[#6b5a14]/20 text-[#fff4dc] hover:from-[#D4AF37]/28 hover:to-[#6b5a14]/28'
+                      ? 'border border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] to-[#6b5a14]/20 text-[#fff4dc] hover:from-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] hover:to-[#6b5a14]/28'
                       : 'bg-white/10 hover:bg-white/20 border border-white/10',
                   )}
                 >
@@ -119,7 +119,7 @@ export default function LivesLibraryContent({ variant = 'default' }) {
             mobile ? 'text-base' : 'text-2xl mb-6',
           )}
         >
-          <PlayCircle className={cn('text-[#D4AF37]', mobile ? 'h-4 w-4' : 'h-6 w-6')} />
+          <PlayCircle className={cn('text-[var(--school-accent)]', mobile ? 'h-4 w-4' : 'h-6 w-6')} />
           Replays
         </h3>
         <div className={cn('grid gap-4', mobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6')}>
@@ -127,8 +127,8 @@ export default function LivesLibraryContent({ variant = 'default' }) {
             <Card
               key={live.id}
               className={cn(
-                'border-white/10 group cursor-pointer hover:border-[#D4AF37]/40 transition-colors overflow-hidden',
-                mobile ? 'bg-black/40 border-[#D4AF37]/15' : 'bg-[#192734]',
+                'border-white/10 group cursor-pointer hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors overflow-hidden',
+                mobile ? 'bg-black/40 border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]' : 'bg-[#192734]',
               )}
             >
               <div className="aspect-video bg-black relative">

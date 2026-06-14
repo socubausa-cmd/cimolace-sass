@@ -58,9 +58,9 @@ export const HeroParallax = ({ products, header }) => {
 export const Header = () => {
   return (
     <div className="max-w-7xl relative mx-auto py-20 md:py-40 px-4 w-full left-0 top-0">
-      <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Plateforme africaine premium</p>
+      <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Plateforme africaine premium</p>
       <h1 className="mt-5 text-3xl md:text-7xl font-bold text-white">
-        ISNA <span className="text-[#D4AF37]">·</span> PRORASCIENCE
+        ISNA <span className="text-[var(--school-accent)]">·</span> PRORASCIENCE
       </h1>
       <p className="max-w-2xl text-base md:text-xl mt-8 text-neutral-200">
         L&apos;initiation augmentée par la science et la haute technologie : ISNA pour comprendre,

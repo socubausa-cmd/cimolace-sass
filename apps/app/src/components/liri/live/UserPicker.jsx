@@ -47,7 +47,7 @@ export function UserPicker({ selected = [], onChange, placeholder = 'Rechercher 
           return (
             <span
               key={p.id}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#D4AF37]/20 text-[#D4AF37] text-sm"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] text-sm"
             >
               {p.name || p.email || String(p.id).slice(0, 8)}
               <button type="button" onClick={() => removeUser(p.id)} className="hover:opacity-80">
@@ -90,9 +90,9 @@ export function UserPicker({ selected = [], onChange, placeholder = 'Rechercher 
                 key={p.id}
                 type="button"
                 onClick={() => addUser(p)}
-                className="w-full flex items-center gap-3 px-4 py-2 hover:bg-[#D4AF37]/10 text-left text-white text-sm"
+                className="w-full flex items-center gap-3 px-4 py-2 hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-left text-white text-sm"
               >
-                <UserPlus className="w-4 h-4 text-[#D4AF37]/80 flex-shrink-0" />
+                <UserPlus className="w-4 h-4 text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)] flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="font-medium truncate">{p.name || 'Sans nom'}</div>
                   <div className="text-xs text-gray-400 truncate">{p.email}</div>

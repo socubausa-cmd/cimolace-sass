@@ -392,10 +392,10 @@ const Header = () => {
                     to={item.to}
                     className={`relative inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
                       isPathActive(item.to)
-                        ? 'text-[#D4AF37]'
+                        ? 'text-[var(--school-accent)]'
                         : item.id === 'ngowazulu'
-                          ? 'text-[#D4AF37] border border-[#D4AF37]/35 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20'
-                          : 'text-gray-300 hover:text-[#D4AF37] hover:bg-white/5'
+                          ? 'text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]'
+                          : 'text-gray-300 hover:text-[var(--school-accent)] hover:bg-white/5'
                     }`}
                   >
                     <item.icon className="w-4 h-4" />
@@ -403,7 +403,7 @@ const Header = () => {
                     {isPathActive(item.to) ? (
                       <motion.span
                         layoutId="header-active-indicator"
-                        className="absolute inset-0 -z-10 rounded-lg bg-gradient-to-r from-[#D4AF37]/25 to-[#D4AF37]/10 border border-[#D4AF37]/30"
+                        className="absolute inset-0 -z-10 rounded-lg bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] to-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]"
                         transition={{ type: 'spring', stiffness: 450, damping: 35 }}
                       />
                     ) : null}
@@ -442,11 +442,11 @@ const Header = () => {
                 asChild
                 variant="outline"
                 size="sm"
-                className="shrink-0 border-[#D4AF37]/55 bg-[#D4AF37]/12 text-[#f0d78c] hover:bg-[#D4AF37]/22 hover:text-white shadow-[inset_0_0_0_1px_rgba(212,175,55,0.35)]"
+                className="shrink-0 border-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[#f0d78c] hover:bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] hover:text-white shadow-[inset_0_0_0_1px_rgba(212,175,55,0.35)]"
                 title="Calendrier — prendre rendez-vous avec le secrétariat"
               >
                 <Link to="/appointment/request" className="inline-flex items-center gap-2 font-semibold">
-                  <Calendar className="w-4 h-4 text-[#D4AF37]" aria-hidden />
+                  <Calendar className="w-4 h-4 text-[var(--school-accent)]" aria-hidden />
                   <span className="hidden xl:inline">Prendre RDV</span>
                   <span className="xl:hidden">RDV</span>
                 </Link>
@@ -512,11 +512,11 @@ const Header = () => {
                 variant="ghost"
                 size="icon"
                 onClick={toggleCart}
-                className="relative text-gray-400 hover:text-[#D4AF37] hover:bg-white/5 rounded-full"
+                className="relative text-gray-400 hover:text-[var(--school-accent)] hover:bg-white/5 rounded-full"
               >
                 <ShoppingBag className="w-5 h-5" />
                 {getCartCount() > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-[#D4AF37] text-black text-xs">
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-[var(--school-accent)] text-black text-xs">
                     {getCartCount()}
                   </Badge>
                 )}
@@ -525,10 +525,10 @@ const Header = () => {
               {isAuthenticated ? (
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2 text-white bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
-                    <User className="w-4 h-4 text-[#D4AF37]" />
+                    <User className="w-4 h-4 text-[var(--school-accent)]" />
                     <span className="text-sm hidden xl:inline">{user?.email}</span>
                     {isMultiRoleUser ? (
-                      <span className="text-[10px] uppercase tracking-wide text-[#D4AF37]">
+                      <span className="text-[10px] uppercase tracking-wide text-[var(--school-accent)]">
                         {roleLabelMap[effectiveRole] || 'Role'}
                       </span>
                     ) : null}
@@ -563,7 +563,7 @@ const Header = () => {
                 asChild
                 variant="outline"
                 size="icon"
-                className="border-[#D4AF37]/50 bg-[#D4AF37]/12 text-[#D4AF37] hover:bg-[#D4AF37]/25 shrink-0 h-10 w-10"
+                className="border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] shrink-0 h-10 w-10"
                 title="Prendre rendez-vous"
               >
                 <Link to="/appointment/request" aria-label="Ouvrir le calendrier de réservation">
@@ -610,11 +610,11 @@ const Header = () => {
                 variant="ghost"
                 size="icon"
                 onClick={toggleCart}
-                className="relative text-gray-400 hover:text-[#D4AF37] hover:bg-white/5 rounded-full"
+                className="relative text-gray-400 hover:text-[var(--school-accent)] hover:bg-white/5 rounded-full"
               >
                 <ShoppingBag className="w-5 h-5" />
                  {getCartCount() > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center bg-[#D4AF37] text-black text-[10px]">
+                  <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center bg-[var(--school-accent)] text-black text-[10px]">
                     {getCartCount()}
                   </Badge>
                 )}
@@ -648,7 +648,7 @@ const Header = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25, ease: 'easeOut' }}
           onClick={() => setIsImmersiveNavOpen(true)}
-          className="fixed bottom-5 right-5 z-[130] rounded-full border border-[#D4AF37]/45 bg-[#D4AF37]/20 backdrop-blur-md px-4 py-2 text-xs font-semibold tracking-wide text-[#D4AF37] shadow-[0_10px_30px_rgba(0,0,0,0.35)] hover:bg-[#D4AF37]/30"
+          className="fixed bottom-5 right-5 z-[130] rounded-full border border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] backdrop-blur-md px-4 py-2 text-xs font-semibold tracking-wide text-[var(--school-accent)] shadow-[0_10px_30px_rgba(0,0,0,0.35)] hover:bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]"
         >
           Parcours IA
         </motion.button>

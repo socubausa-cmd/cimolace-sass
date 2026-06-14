@@ -56,7 +56,7 @@ export const Input = memo(
         <input
           type={type}
           className={cn(
-            'flex h-11 w-full rounded-[10px] border-none bg-[#0d1626] px-3.5 py-2 text-sm text-white shadow-[0px_0px_1px_1px_#1d2a3d] transition duration-400 placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-[2px] focus-visible:ring-[#D4AF37]/40 disabled:cursor-not-allowed disabled:opacity-50 group-hover/input:shadow-none',
+            'flex h-11 w-full rounded-[10px] border-none bg-[#0d1626] px-3.5 py-2 text-sm text-white shadow-[0px_0px_1px_1px_#1d2a3d] transition duration-400 placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-[2px] focus-visible:ring-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] disabled:cursor-not-allowed disabled:opacity-50 group-hover/input:shadow-none',
             className,
           )}
           ref={ref}
@@ -238,7 +238,7 @@ export const Label = memo(function Label({ className, ...props }: React.LabelHTM
 
 export const BottomGradient = () => (
   <>
-    <span className="absolute -bottom-px inset-x-0 block h-px w-full bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-0 transition duration-500 group-hover/btn:opacity-100" />
+    <span className="absolute -bottom-px inset-x-0 block h-px w-full bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent opacity-0 transition duration-500 group-hover/btn:opacity-100" />
     <span className="absolute -bottom-px inset-x-10 mx-auto block h-px w-1/2 bg-gradient-to-r from-transparent via-[#e5c04a] to-transparent opacity-0 blur-sm transition duration-500 group-hover/btn:opacity-100" />
   </>
 );
@@ -350,7 +350,7 @@ export const AnimatedForm = memo(function AnimatedForm({
                     <button
                       type="button"
                       onClick={() => setVisible((v) => !v)}
-                      className="absolute inset-y-0 right-0 z-30 flex items-center pr-3 text-neutral-400 hover:text-[#D4AF37]"
+                      className="absolute inset-y-0 right-0 z-30 flex items-center pr-3 text-neutral-400 hover:text-[var(--school-accent)]"
                       aria-label={visible ? 'Masquer' : 'Afficher'}
                     >
                       {visible ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
@@ -365,7 +365,7 @@ export const AnimatedForm = memo(function AnimatedForm({
         {forgotLabel && onForgot && (
           <BoxReveal duration={0.3}>
             <div className="mb-4 text-right">
-              <button type="button" onClick={onForgot} className="text-xs font-medium text-[#D4AF37] hover:underline">
+              <button type="button" onClick={onForgot} className="text-xs font-medium text-[var(--school-accent)] hover:underline">
                 {forgotLabel}
               </button>
             </div>
@@ -382,7 +382,7 @@ export const AnimatedForm = memo(function AnimatedForm({
           <button
             type="submit"
             disabled={submitting}
-            className="group/btn relative block h-11 w-full rounded-xl bg-[#D4AF37] font-bold tracking-wide text-black shadow-[0px_1px_0px_0px_#ffffff40_inset] outline-none transition hover:bg-[#e5c04a] disabled:opacity-60"
+            className="group/btn relative block h-11 w-full rounded-xl bg-[var(--school-accent)] font-bold tracking-wide text-black shadow-[0px_1px_0px_0px_#ffffff40_inset] outline-none transition hover:bg-[#e5c04a] disabled:opacity-60"
           >
             {submitting ? 'Connexion…' : <>{submitButton} &rarr;</>}
             <BottomGradient />

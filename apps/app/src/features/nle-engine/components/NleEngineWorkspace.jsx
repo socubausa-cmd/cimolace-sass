@@ -125,11 +125,11 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
   }, []);
 
   return (
-    <div className="rounded-2xl border border-[#D4AF37]/25 bg-[#0a0f18] overflow-hidden">
+    <div className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#0a0f18] overflow-hidden">
       <div className="flex flex-wrap items-center gap-3 border-b border-white/10 bg-black/30 px-4 py-3">
-        <Clapperboard className="h-5 w-5 text-[#D4AF37]" />
+        <Clapperboard className="h-5 w-5 text-[var(--school-accent)]" />
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] uppercase tracking-wider text-[#D4AF37]/70 font-semibold">Moteur NLE</p>
+          <p className="text-[11px] uppercase tracking-wider text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] font-semibold">Moteur NLE</p>
           <p className="text-xs text-white/50">Pistes vidéo/audio, clips, marqueurs — export FFmpeg aligné sur ce plan</p>
         </div>
         <div className="flex items-center gap-2">
@@ -177,7 +177,7 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
               onValueChange={(v) => setPixelsPerSecond(Array.isArray(v) ? v[0] : v)}
             />
             <span className="text-[10px] font-mono text-white/50">{pixelsPerSecond}px/s</span>
-            <span className="ml-auto text-[11px] font-mono text-[#D4AF37]/90">
+            <span className="ml-auto text-[11px] font-mono text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">
               {formatTc(currentTime)} / {formatTc(duration)}
             </span>
           </div>
@@ -199,7 +199,7 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
               ))}
             </div>
             <div
-              className="absolute top-0 bottom-0 w-px bg-[#D4AF37] z-10 pointer-events-none"
+              className="absolute top-0 bottom-0 w-px bg-[var(--school-accent)] z-10 pointer-events-none"
               style={{ left: `${playheadPct}%` }}
             />
           </div>
@@ -235,7 +235,7 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
                             tr.type === 'video'
                               ? 'bg-blue-500/25 border-blue-400/40 hover:bg-blue-500/35'
                               : 'bg-emerald-500/20 border-emerald-400/35 hover:bg-emerald-500/30',
-                            active && 'ring-2 ring-[#D4AF37]/80'
+                            active && 'ring-2 ring-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]'
                           )}
                           style={{ left: `${left}%`, width: `${width}%` }}
                           onPointerDown={(e) => onClipPointerDown(e, tr.id, c)}
@@ -278,7 +278,7 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
 
           {selectedClip ? (
             <div className="space-y-2 rounded-lg border border-white/10 bg-black/30 p-3">
-              <p className="text-[11px] font-semibold text-[#D4AF37]/90">Clip sélectionné</p>
+              <p className="text-[11px] font-semibold text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">Clip sélectionné</p>
               <Input
                 className="h-8 bg-[#0F1419] border-white/10 text-xs"
                 value={selectedClip.label}
@@ -440,7 +440,7 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
                     <span className="truncate">{m.label || '—'}</span>
                     <button
                       type="button"
-                      className="text-[#D4AF37]/80 hover:underline shrink-0"
+                      className="text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)] hover:underline shrink-0"
                       onClick={() => onSeek(m.timeSec)}
                     >
                       {formatTc(m.timeSec)}

@@ -29,7 +29,7 @@ export default function ImmersiveLiveStageBackdrop({ parallax = { x: 0, y: 0 }, 
       />
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-[18%] left-[16%] h-[min(26rem,48vw)] w-[min(26rem,48vw)] rounded-full bg-white/[0.055] blur-[110px]" />
-        <div className="absolute bottom-[-10%] right-[4%] h-[min(22rem,42vw)] w-[min(22rem,42vw)] rounded-full bg-[#D4AF37]/[0.13] blur-[100px]" />
+        <div className="absolute bottom-[-10%] right-[4%] h-[min(22rem,42vw)] w-[min(22rem,42vw)] rounded-full bg-[var(--school-accent)]/[0.13] blur-[100px]" />
         {isLiriHost ? (
           <>
             <div className="absolute bottom-[-6%] left-1/2 h-[5.5rem] w-[min(24rem,55vw)] -translate-x-1/2 rounded-full bg-orange-500/[0.08] blur-[40px]" />
@@ -47,7 +47,7 @@ export default function ImmersiveLiveStageBackdrop({ parallax = { x: 0, y: 0 }, 
             isLiriHost
               ? 'absolute top-[38%] -left-[4%] h-[16rem] w-[16rem] rounded-full bg-violet-600/[0.09] blur-[88px]'
               : isArena
-                ? 'absolute top-[38%] -left-[4%] h-[16rem] w-[16rem] rounded-full bg-[#D4AF37]/[0.07] blur-[88px]'
+                ? 'absolute top-[38%] -left-[4%] h-[16rem] w-[16rem] rounded-full bg-[var(--school-accent)]/[0.07] blur-[88px]'
                 : 'absolute top-[38%] -left-[4%] h-[16rem] w-[16rem] rounded-full bg-violet-500/[0.09] blur-[88px]'
           }
         />

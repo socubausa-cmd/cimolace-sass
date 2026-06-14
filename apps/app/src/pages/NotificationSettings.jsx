@@ -48,7 +48,7 @@ const NotificationSettings = () => {
            </Card>
            
            <div className="flex justify-end">
-              <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500">Enregistrer</Button>
+              <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">Enregistrer</Button>
            </div>
         </div>
      </OwnerDashboardLayout>

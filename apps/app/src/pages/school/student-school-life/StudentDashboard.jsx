@@ -37,14 +37,14 @@ const safeFormat = (dateInput, formatStr) => {
 
 // ── Carte générique dashboard ─────────────────────────────────────────────────
 const DashboardCard = ({ title, icon: Icon, children, link, linkText = 'Voir tout' }) => (
-  <Card className="bg-[#192734] border-white/10 hover:border-[#D4AF37]/30 transition-all duration-300 shadow-lg">
+  <Card className="bg-[#192734] border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all duration-300 shadow-lg">
     <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-white/5">
       <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-        <Icon className="w-5 h-5 text-[#D4AF37]" />
+        <Icon className="w-5 h-5 text-[var(--school-accent)]" />
         {title}
       </CardTitle>
       {link && (
-        <Link to={link} className="text-xs text-[#D4AF37] hover:underline flex items-center gap-1">
+        <Link to={link} className="text-xs text-[var(--school-accent)] hover:underline flex items-center gap-1">
           {linkText} <ArrowRight className="w-3 h-3" />
         </Link>
       )}
@@ -123,7 +123,7 @@ const StudentDashboard = () => {
           </p>
         </div>
         <div className="text-right hidden md:block">
-          <p className="text-sm text-[#D4AF37] font-bold">{safeFormat(new Date(), 'EEEE d MMMM yyyy')}</p>
+          <p className="text-sm text-[var(--school-accent)] font-bold">{safeFormat(new Date(), 'EEEE d MMMM yyyy')}</p>
           <p className="text-sm text-slate-500">Année Académique 2025-2026</p>
         </div>
       </div>
@@ -176,7 +176,7 @@ const StudentDashboard = () => {
           <div className="space-y-4">
             {notifications.slice(0, 3).map((notif) => (
               <div key={notif.id} className="flex gap-3 items-start p-2 rounded hover:bg-white/5 transition-colors">
-                <div className="w-2 h-2 mt-2 rounded-full bg-[#D4AF37] flex-shrink-0" />
+                <div className="w-2 h-2 mt-2 rounded-full bg-[var(--school-accent)] flex-shrink-0" />
                 <div>
                   <p className="text-sm text-white line-clamp-2">{notif.message}</p>
                   <p className="text-xs text-slate-500 mt-1">{safeFormat(notif.date, 'dd MMM')}</p>
@@ -215,7 +215,7 @@ const StudentDashboard = () => {
               return (
                 <div key={fmt.id} className="group cursor-pointer">
                   <div className="flex justify-between text-sm mb-1.5">
-                    <span className="text-white group-hover:text-[#D4AF37] transition-colors font-medium line-clamp-1">
+                    <span className="text-white group-hover:text-[var(--school-accent)] transition-colors font-medium line-clamp-1">
                       {fmt.title}
                     </span>
                     <span className="text-slate-400 ml-2 shrink-0">{pct}%</span>
@@ -223,7 +223,7 @@ const StudentDashboard = () => {
                   <Progress
                     value={pct}
                     className="h-1.5 bg-gray-700"
-                    indicatorClassName={pct === 100 ? 'bg-green-500' : 'bg-[#D4AF37]'}
+                    indicatorClassName={pct === 100 ? 'bg-green-500' : 'bg-[var(--school-accent)]'}
                   />
                 </div>
               );
@@ -263,7 +263,7 @@ const StudentDashboard = () => {
             {/* Prochaines semaines du calendrier */}
             {upcomingWeeks.slice(0, 2).map((w) => (
               <div key={w.id} className="flex gap-3">
-                <div className="flex flex-col items-center bg-[#D4AF37]/10 p-2 rounded text-[#D4AF37] min-w-[50px]">
+                <div className="flex flex-col items-center bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-2 rounded text-[var(--school-accent)] min-w-[50px]">
                   <span className="text-xs font-bold uppercase">{safeFormat(w.week_start, 'MMM')}</span>
                   <span className="text-xl font-bold">{safeFormat(w.week_start, 'dd')}</span>
                 </div>
@@ -280,7 +280,7 @@ const StudentDashboard = () => {
             {/* Événements agenda */}
             {upcomingWeeks.length === 0 && agenda.slice(0, 2).map((item) => (
               <div key={item.id} className="flex gap-3">
-                <div className="flex flex-col items-center bg-[#D4AF37]/10 p-2 rounded text-[#D4AF37] min-w-[50px]">
+                <div className="flex flex-col items-center bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-2 rounded text-[var(--school-accent)] min-w-[50px]">
                   <span className="text-xs font-bold uppercase">{safeFormat(item.date, 'MMM')}</span>
                   <span className="text-xl font-bold">{safeFormat(item.date, 'dd')}</span>
                 </div>

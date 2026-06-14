@@ -124,7 +124,7 @@ export default function ValidationChecklist({ projectQuality, className }) {
             return (
               <div key={cat} className="mb-2">
                 <div className="mb-1 flex items-center justify-between">
-                  <p className="text-[8px] font-semibold uppercase tracking-wider text-[#D4AF37]/70">
+                  <p className="text-[8px] font-semibold uppercase tracking-wider text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">
                     {cat}
                   </p>
                   <span className="text-[8px] text-white/30">{catDone}/{items.length}</span>

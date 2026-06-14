@@ -15,13 +15,13 @@ function Message({ msg }) {
     <div className={cn('flex gap-2', isUser && 'flex-row-reverse')}>
       <div className={cn(
         'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px]',
-        isUser ? 'bg-white/10' : 'bg-[#D4AF37]/20',
+        isUser ? 'bg-white/10' : 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]',
       )}>
-        {isUser ? <User className="h-3 w-3 text-white/60" /> : <Bot className="h-3 w-3 text-[#D4AF37]" />}
+        {isUser ? <User className="h-3 w-3 text-white/60" /> : <Bot className="h-3 w-3 text-[var(--school-accent)]" />}
       </div>
       <div className={cn(
         'max-w-[80%] rounded-xl px-3 py-2 text-[12px] leading-relaxed',
-        isUser ? 'bg-white/8 text-white/80' : 'bg-[#D4AF37]/10 text-white/85',
+        isUser ? 'bg-white/8 text-white/80' : 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-white/85',
       )}>
         {msg.content}
       </div>
@@ -86,7 +86,7 @@ export default function AIChatPanel({ className }) {
     <div className={cn('flex flex-col bg-[#07090f]', className)}>
       {/* Header */}
       <div className="flex shrink-0 items-center gap-2 border-b border-white/8 px-3 py-2">
-        <Bot className="h-4 w-4 text-[#D4AF37]" />
+        <Bot className="h-4 w-4 text-[var(--school-accent)]" />
         <span className="text-[12px] font-semibold text-white">Coach LIRI</span>
         {coachFeedback && (
           <span className={cn(
@@ -108,12 +108,12 @@ export default function AIChatPanel({ className }) {
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3">
         {coachMessages.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-6 text-center">
-            <Sparkles className="h-8 w-8 text-[#D4AF37]/30" />
+            <Sparkles className="h-8 w-8 text-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]" />
             <p className="text-[11px] text-white/30">Coach LIRI observe ton slide et te donne des retours pedagogiques en temps reel.</p>
             <button
               onClick={handleAutoEval}
               disabled={coachBusy || !activeSlide}
-              className="flex items-center gap-1.5 rounded-lg border border-[#D4AF37]/30 px-3 py-1.5 text-[11px] text-[#D4AF37] hover:bg-[#D4AF37]/10 disabled:opacity-40"
+              className="flex items-center gap-1.5 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] px-3 py-1.5 text-[11px] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] disabled:opacity-40"
             >
               <Sparkles className="h-3 w-3" />
               Analyser le slide
@@ -123,7 +123,7 @@ export default function AIChatPanel({ className }) {
           coachMessages.map((msg) => <Message key={msg.id} msg={msg} />)
         )}
         {coachBusy && (
-          <div className="flex items-center gap-2 text-[11px] text-[#D4AF37]/60">
+          <div className="flex items-center gap-2 text-[11px] text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
             Coach analyse...
           </div>
@@ -139,12 +139,12 @@ export default function AIChatPanel({ className }) {
           onKeyDown={handleKeyDown}
           placeholder="Demande au Coach..."
           rows={2}
-          className="flex-1 resize-none rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-[12px] text-white/80 placeholder-white/25 outline-none focus:border-[#D4AF37]/30"
+          className="flex-1 resize-none rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-[12px] text-white/80 placeholder-white/25 outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]"
         />
         <button
           onClick={handleSend}
           disabled={!input.trim() || coachBusy}
-          className="flex h-full w-8 shrink-0 items-center justify-center rounded-lg bg-[#D4AF37]/20 text-[#D4AF37] transition-colors hover:bg-[#D4AF37]/30 disabled:opacity-40"
+          className="flex h-full w-8 shrink-0 items-center justify-center rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] transition-colors hover:bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] disabled:opacity-40"
         >
           {coachBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
         </button>

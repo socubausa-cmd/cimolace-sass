@@ -101,7 +101,7 @@ export default function QuickAppointmentModal({
             className={cn(
               'relative w-full max-w-md overflow-hidden shadow-2xl',
               'max-h-[min(94dvh,900px)] sm:max-h-none',
-              'rounded-t-[1.35rem] border border-[#D4AF37]/20 border-b-0 bg-[#0a0908]/98 sm:rounded-2xl sm:border sm:border-white/10 sm:border-b sm:bg-[#0D1117]',
+              'rounded-t-[1.35rem] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border-b-0 bg-[#0a0908]/98 sm:rounded-2xl sm:border sm:border-white/10 sm:border-b sm:bg-[#0D1117]',
             )}
             onClick={(e) => e.stopPropagation()}
           >
@@ -118,8 +118,8 @@ export default function QuickAppointmentModal({
               <div className="min-w-0">
                 <JourneySectionLabel className="mb-1">Messagerie</JourneySectionLabel>
                 <div className="mb-1 flex items-center gap-2">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#D4AF37]/25 to-amber-600/10 ring-1 ring-[#D4AF37]/30">
-                    <Calendar className="h-4 w-4 text-[#D4AF37]" />
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] to-amber-600/10 ring-1 ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
+                    <Calendar className="h-4 w-4 text-[var(--school-accent)]" />
                   </div>
                   <h2 className="text-base font-semibold text-white">Organiser un rendez-vous</h2>
                 </div>
@@ -146,10 +146,10 @@ export default function QuickAppointmentModal({
                 <button
                   type="button"
                   onClick={() => setStep('propose')}
-                  className="group flex w-full items-center gap-4 rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/8 p-4 text-left transition-all hover:border-[#D4AF37]/45 hover:bg-[#D4AF37]/12 active:scale-[0.99]"
+                  className="group flex w-full items-center gap-4 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] p-4 text-left transition-all hover:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] active:scale-[0.99]"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/15 flex items-center justify-center shrink-0">
-                    <Clock className="w-5 h-5 text-[#D4AF37]" />
+                  <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] flex items-center justify-center shrink-0">
+                    <Clock className="w-5 h-5 text-[var(--school-accent)]" />
                   </div>
                   <div className="flex-1">
                     <p className="text-white text-sm font-medium">Je propose des créneaux</p>
@@ -186,7 +186,7 @@ export default function QuickAppointmentModal({
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="Ex: Suivi formation, Question spirituelle..."
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-[#D4AF37]/40"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]"
                     autoFocus
                   />
                 </div>
@@ -203,7 +203,7 @@ export default function QuickAppointmentModal({
                           onClick={() => toggleQuickSlot(offset)}
                           className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm transition-all ${
                             active
-                              ? 'border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#D4AF37]'
+                              ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
                               : 'border-white/10 bg-white/3 text-white/60 hover:border-white/20'
                           }`}
                         >
@@ -222,7 +222,7 @@ export default function QuickAppointmentModal({
                         type="datetime-local"
                         value={customSlot}
                         onChange={(e) => setCustomSlot(e.target.value)}
-                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-[#D4AF37]/40"
+                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]"
                       />
                       <button
                         onClick={addCustomSlot}
@@ -238,7 +238,7 @@ export default function QuickAppointmentModal({
                 {selectedSlots.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {selectedSlots.map((s) => (
-                      <span key={s} className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] text-xs">
+                      <span key={s} className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] text-xs">
                         {new Date(s).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                         <button onClick={() => setSelectedSlots((p) => p.filter((x) => x !== s))}>
                           <X className="w-3 h-3" />
@@ -256,7 +256,7 @@ export default function QuickAppointmentModal({
                     type="button"
                     onClick={handlePropose}
                     disabled={busy || !subject.trim() || selectedSlots.length === 0}
-                    className="flex min-h-[3rem] flex-1 items-center justify-center gap-2 rounded-xl bg-[#D4AF37] text-sm font-bold text-black transition-colors hover:bg-amber-400 disabled:opacity-40"
+                    className="flex min-h-[3rem] flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--school-accent)] text-sm font-bold text-black transition-colors hover:bg-amber-400 disabled:opacity-40"
                   >
                     <Send className="w-4 h-4" />
                     {busy ? 'Envoi...' : 'Envoyer la proposition'}
@@ -274,7 +274,7 @@ export default function QuickAppointmentModal({
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="Ex: Consultation, Suivi de formation..."
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-[#D4AF37]/40"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]"
                     autoFocus
                   />
                 </div>

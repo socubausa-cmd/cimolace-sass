@@ -48,7 +48,7 @@ export function LiriSectionLabel({ children, className }) {
   return (
     <p
       className={cn(
-        'font-display text-[10px] font-semibold uppercase tracking-[0.24em] text-[#D4AF37]/85',
+        'font-display text-[10px] font-semibold uppercase tracking-[0.24em] text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)]',
         className,
       )}
     >
@@ -67,9 +67,9 @@ export function LiriGoldCard({ children, className, variant = 'default' }) {
       className={cn(
         'relative overflow-hidden rounded-3xl backdrop-blur-md',
         variant === 'hero' &&
-          'border border-[#D4AF37]/50 bg-gradient-to-br from-[#1c1814]/95 via-black/55 to-[#0a0806]/90 shadow-[0_0_48px_-12px_rgba(212,175,55,0.32),inset_0_1px_0_rgba(255,220,150,0.12)]',
+          'border border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-gradient-to-br from-[#1c1814]/95 via-black/55 to-[#0a0806]/90 shadow-[0_0_48px_-12px_rgba(212,175,55,0.32),inset_0_1px_0_rgba(255,220,150,0.12)]',
         variant === 'default' &&
-          'border border-[#D4AF37]/32 bg-black/38 shadow-[0_0_36px_-10px_rgba(212,175,55,0.22)]',
+          'border border-[color-mix(in_srgb,var(--school-accent)_32%,transparent)] bg-black/38 shadow-[0_0_36px_-10px_rgba(212,175,55,0.22)]',
         variant === 'subtle' &&
           'border border-white/[0.09] bg-white/[0.035] shadow-[inset_0_1px_0_rgba(212,175,55,0.06)]',
         className,
@@ -78,11 +78,11 @@ export function LiriGoldCard({ children, className, variant = 'default' }) {
       {variant === 'hero' ? (
         <>
           <div
-            className="pointer-events-none absolute -right-10 -top-16 h-44 w-44 rounded-full bg-[#D4AF37]/10 blur-3xl"
+            className="pointer-events-none absolute -right-10 -top-16 h-44 w-44 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] blur-3xl"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/35 to-transparent"
+            className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] to-transparent"
             aria-hidden
           />
         </>

@@ -78,14 +78,14 @@ export function AudioScenePanel({
   return (
     <div
       className={cn(
-        'rounded-2xl border border-[#D4AF37]/25 bg-[#070a10]/90 p-4 text-white shadow-[0_24px_60px_-28px_rgba(0,0,0,0.85)] backdrop-blur-xl',
+        'rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#070a10]/90 p-4 text-white shadow-[0_24px_60px_-28px_rgba(0,0,0,0.85)] backdrop-blur-xl',
         className,
       )}
     >
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Volume2 className="h-4 w-4 text-[#D4AF37]" />
-          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#D4AF37]/90">
+          <Volume2 className="h-4 w-4 text-[var(--school-accent)]" />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">
             LIRI Audio Scenes
           </span>
         </div>
@@ -110,7 +110,7 @@ export function AudioScenePanel({
                 className={cn(
                   'w-full rounded-lg px-2 py-1.5 text-left text-[11px] transition',
                   i === index
-                    ? 'bg-[#D4AF37]/22 text-[#f5dd8a]'
+                    ? 'bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] text-[#f5dd8a]'
                     : 'text-white/75 hover:bg-white/[0.06]',
                 )}
               >
@@ -146,7 +146,7 @@ export function AudioScenePanel({
             </button>
             <button
               type="button"
-              className="inline-flex h-9 items-center gap-1 rounded-xl bg-[#D4AF37]/90 px-3 text-[11px] font-semibold text-black hover:bg-[#D4AF37]"
+              className="inline-flex h-9 items-center gap-1 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_90%,transparent)] px-3 text-[11px] font-semibold text-black hover:bg-[var(--school-accent)]"
               onClick={() => void playCurrent()}
             >
               <Play className="h-3.5 w-3.5" /> Lancer
@@ -184,7 +184,7 @@ export function AudioScenePanel({
           <div className="mb-3 flex flex-wrap gap-2">
             <button
               type="button"
-              className="inline-flex h-9 items-center gap-1 rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-3 text-[11px] text-[#f5dd8a] hover:bg-[#D4AF37]/18"
+              className="inline-flex h-9 items-center gap-1 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-3 text-[11px] text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)]"
               onClick={() => duck()}
             >
               <Mic2 className="h-3.5 w-3.5" /> Ducking
@@ -213,7 +213,7 @@ export function AudioScenePanel({
                 setMaster(v);
                 setMasterVolume(v);
               }}
-              className="h-1.5 w-full accent-[#D4AF37]"
+              className="h-1.5 w-full accent-[var(--school-accent)]"
             />
           </div>
 
@@ -232,7 +232,7 @@ export function AudioScenePanel({
                 setPlaybackFactor(v);
                 setScenePlaybackFactor(v);
               }}
-              className="h-1.5 w-full accent-[#D4AF37]"
+              className="h-1.5 w-full accent-[var(--school-accent)]"
             />
           </div>
 

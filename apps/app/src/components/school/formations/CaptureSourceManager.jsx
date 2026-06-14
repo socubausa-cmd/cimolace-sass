@@ -146,9 +146,9 @@ export default function CaptureSourceManager({ onSelectSource }) {
 
       {/* Architecture note */}
       <div className="rounded-xl border border-white/5 bg-white/2 px-4 py-3 flex items-start gap-3">
-        <Wifi className="w-4 h-4 text-[#D4AF37] mt-0.5 flex-shrink-0" />
+        <Wifi className="w-4 h-4 text-[var(--school-accent)] mt-0.5 flex-shrink-0" />
         <p className="text-xs text-gray-500 leading-relaxed">
-          <span className="text-[#D4AF37] font-medium">Capture Source Manager</span> — La vidéo peut venir de n'importe quelle source.
+          <span className="text-[var(--school-accent)] font-medium">Capture Source Manager</span> — La vidéo peut venir de n'importe quelle source.
           Le montage, l'analyse IA et la génération SmartBoard se font toujours dans ce studio web.
         </p>
       </div>

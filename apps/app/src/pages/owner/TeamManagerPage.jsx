@@ -102,7 +102,7 @@ const MemberPermissionsDialog = ({ member, overrides, onAdd, onRemove, loading }
               </SelectContent>
             </Select>
           </div>
-          <Button size="sm" className="bg-[#D4AF37] text-black" onClick={() => onAdd(newKey || availableKeys[0], newGranted)} disabled={loading}>
+          <Button size="sm" className="bg-[var(--school-accent)] text-black" onClick={() => onAdd(newKey || availableKeys[0], newGranted)} disabled={loading}>
             Ajouter
           </Button>
         </div>
@@ -113,7 +113,7 @@ const MemberPermissionsDialog = ({ member, overrides, onAdd, onRemove, loading }
 
 const getRoleBadgeClass = (role) => {
   const r = String(role || '').toLowerCase();
-  if (r === 'owner') return 'bg-[#D4AF37]/20 text-[#D4AF37]';
+  if (r === 'owner') return 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]';
   if (r === 'admin') return 'bg-purple-500/20 text-purple-400';
   if (r === 'teacher') return 'bg-blue-500/20 text-blue-400';
   if (r === 'secretariat') return 'bg-emerald-500/20 text-emerald-400';
@@ -209,7 +209,7 @@ const TeamManagerPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-[#D4AF37]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--school-accent)]" />
       </div>
     );
   }
@@ -224,12 +224,12 @@ const TeamManagerPage = () => {
       <section className="premium-panel p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-            <Users className="w-5 h-5 text-[#D4AF37]" />
+            <Users className="w-5 h-5 text-[var(--school-accent)]" />
             Membres de l'équipe
           </h2>
           <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-[#D4AF37] text-black hover:bg-[#b5952f] gap-2">
+              <Button className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f] gap-2">
                 <UserPlus className="w-4 h-4" /> Inviter
               </Button>
             </DialogTrigger>
@@ -292,7 +292,7 @@ const TeamManagerPage = () => {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setInviteOpen(false)}>Annuler</Button>
-                <Button onClick={handleInvite} disabled={inviteLoading} className="bg-[#D4AF37] text-black">
+                <Button onClick={handleInvite} disabled={inviteLoading} className="bg-[var(--school-accent)] text-black">
                   {inviteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Envoyer'}
                 </Button>
               </DialogFooter>
@@ -334,7 +334,7 @@ const TeamManagerPage = () => {
       {/* Bloc B — Invitations en attente */}
       <section className="premium-panel p-6">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-          <Mail className="w-5 h-5 text-[#D4AF37]" />
+          <Mail className="w-5 h-5 text-[var(--school-accent)]" />
           Invitations en attente
         </h2>
         {invitations.length === 0 ? (
@@ -364,7 +364,7 @@ const TeamManagerPage = () => {
                   }}>
                     <Send className="w-4 h-4" />
                   </Button>
-                  <Button size="sm" variant="ghost" className="text-[#D4AF37] hover:text-[#b5952f]" title="Prolonger la validité" onClick={async () => {
+                  <Button size="sm" variant="ghost" className="text-[var(--school-accent)] hover:text-[#b5952f]" title="Prolonger la validité" onClick={async () => {
                     const { error } = await resendInvitation(inv.id);
                     if (error) toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
                     else toast({ title: 'Validité prolongée de 7 jours' });
@@ -393,7 +393,7 @@ const TeamManagerPage = () => {
           </DialogHeader>
           {linkDialogLoading ? (
             <div className="flex items-center gap-2 py-4">
-              <Loader2 className="w-5 h-5 animate-spin text-[#D4AF37]" />
+              <Loader2 className="w-5 h-5 animate-spin text-[var(--school-accent)]" />
               <span className="text-gray-400">Génération du lien…</span>
             </div>
           ) : linkDialogData.link ? (
@@ -409,7 +409,7 @@ const TeamManagerPage = () => {
                 />
                 <Button
                   size="sm"
-                  className="bg-[#D4AF37] text-black shrink-0"
+                  className="bg-[var(--school-accent)] text-black shrink-0"
                   onClick={() => {
                     navigator.clipboard?.writeText(linkDialogData.link);
                     toast({ title: 'Lien copié' });
@@ -428,12 +428,12 @@ const TeamManagerPage = () => {
         <section className="premium-panel p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Link2 className="w-5 h-5 text-[#D4AF37]" />
+              <Link2 className="w-5 h-5 text-[var(--school-accent)]" />
               Liens privilégiés
             </h2>
             <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-[#D4AF37] text-black hover:bg-[#b5952f] gap-2">
+                <Button className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f] gap-2">
                   <Link2 className="w-4 h-4" /> Créer un lien
                 </Button>
               </DialogTrigger>
@@ -496,7 +496,7 @@ const TeamManagerPage = () => {
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setLinkOpen(false)}>Annuler</Button>
-                  <Button onClick={handleCreateLink} disabled={linkLoading} className="bg-[#D4AF37] text-black">
+                  <Button onClick={handleCreateLink} disabled={linkLoading} className="bg-[var(--school-accent)] text-black">
                     {linkLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Créer'}
                   </Button>
                 </DialogFooter>
@@ -535,7 +535,7 @@ const TeamManagerPage = () => {
       {/* Bloc D — Rôles et permissions */}
       <section className="premium-panel p-6">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-          <Shield className="w-5 h-5 text-[#D4AF37]" />
+          <Shield className="w-5 h-5 text-[var(--school-accent)]" />
           Rôles et permissions
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -590,7 +590,7 @@ const TeamManagerPage = () => {
       {/* Bloc E — Journal d'audit */}
       <section className="premium-panel p-6">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-          <History className="w-5 h-5 text-[#D4AF37]" />
+          <History className="w-5 h-5 text-[var(--school-accent)]" />
           Journal des changements d'accès
         </h2>
         {auditLogs.length === 0 ? (
@@ -600,7 +600,7 @@ const TeamManagerPage = () => {
             {auditLogs.map((log) => (
               <div key={log.id} className="flex items-center justify-between py-2 px-3 bg-[#0F1419] rounded-lg text-sm">
                 <div>
-                  <span className="text-[#D4AF37] font-medium">{log.action}</span>
+                  <span className="text-[var(--school-accent)] font-medium">{log.action}</span>
                   <span className="text-gray-400 ml-2">{log.resource_type}</span>
                   {log.changes?.email && <span className="text-gray-500 ml-2">→ {log.changes.email}</span>}
                 </div>

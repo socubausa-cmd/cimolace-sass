@@ -53,8 +53,8 @@ const QuizPlayerInterface = ({ quiz, onComplete, onCancel }) => {
      return (
         <Card className="bg-[#192734] border-white/10 max-w-2xl mx-auto mt-10 text-white">
            <CardContent className="p-8 text-center space-y-6">
-              <div className="w-20 h-20 rounded-full bg-[#D4AF37]/20 flex items-center justify-center mx-auto">
-                 <CheckCircle className="w-10 h-10 text-[#D4AF37]"/>
+              <div className="w-20 h-20 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center mx-auto">
+                 <CheckCircle className="w-10 h-10 text-[var(--school-accent)]"/>
               </div>
               <div>
                  <h2 className="text-2xl font-bold mb-2">{quiz.title}</h2>
@@ -65,7 +65,7 @@ const QuizPlayerInterface = ({ quiz, onComplete, onCancel }) => {
                  <span>~{quiz.questions.length * 2} Minutes</span>
                  <span>Passage: 60%</span>
               </div>
-              <Button onClick={handleStart} className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold px-8 py-6 text-lg w-full max-w-sm">
+              <Button onClick={handleStart} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold px-8 py-6 text-lg w-full max-w-sm">
                  Commencer le Quiz
               </Button>
            </CardContent>
@@ -120,7 +120,7 @@ const QuizPlayerInterface = ({ quiz, onComplete, onCancel }) => {
                        <RefreshCcw className="w-4 h-4 mr-2"/> Réessayer
                     </Button>
                  )}
-                 <Button onClick={() => onComplete(results)} className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold px-8">
+                 <Button onClick={() => onComplete(results)} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold px-8">
                     {passed ? 'Continuer' : 'Terminer'}
                  </Button>
               </div>
@@ -137,7 +137,7 @@ const QuizPlayerInterface = ({ quiz, onComplete, onCancel }) => {
              <span>Question {currentQIndex + 1} sur {quiz.questions.length}</span>
              <span>{Math.round(progress)}%</span>
           </div>
-          <Progress value={progress} className="h-2 bg-white/10" indicatorClassName="bg-[#D4AF37]" />
+          <Progress value={progress} className="h-2 bg-white/10" indicatorClassName="bg-[var(--school-accent)]" />
        </div>
 
        <AnimatePresence mode="wait">
@@ -153,8 +153,8 @@ const QuizPlayerInterface = ({ quiz, onComplete, onCancel }) => {
                    
                    <RadioGroup value={answers[currentQIndex]?.toString()} onValueChange={handleAnswer} className="space-y-4">
                       {currentQ.options.map((opt, oIdx) => (
-                         <div key={oIdx} className={`flex items-center space-x-3 p-4 rounded-lg border transition-all cursor-pointer ${answers[currentQIndex] === oIdx ? 'border-[#D4AF37] bg-[#D4AF37]/10' : 'border-white/10 hover:bg-white/5'}`}>
-                            <RadioGroupItem value={oIdx.toString()} id={`opt-${oIdx}`} className="border-white/50 text-[#D4AF37]" />
+                         <div key={oIdx} className={`flex items-center space-x-3 p-4 rounded-lg border transition-all cursor-pointer ${answers[currentQIndex] === oIdx ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]' : 'border-white/10 hover:bg-white/5'}`}>
+                            <RadioGroupItem value={oIdx.toString()} id={`opt-${oIdx}`} className="border-white/50 text-[var(--school-accent)]" />
                             <Label htmlFor={`opt-${oIdx}`} className="flex-1 cursor-pointer text-base">{opt}</Label>
                          </div>
                       ))}
@@ -176,7 +176,7 @@ const QuizPlayerInterface = ({ quiz, onComplete, onCancel }) => {
           <Button 
              onClick={nextQuestion} 
              disabled={answers[currentQIndex] === undefined}
-             className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold"
+             className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"
           >
              {currentQIndex === quiz.questions.length - 1 ? 'Terminer' : 'Suivant'} <ArrowRight className="w-4 h-4 ml-2"/>
           </Button>

@@ -161,7 +161,7 @@ export function LiveClassroomView({ liveSessionId, session, isTeacher, onLeave }
   if (!tokenData) {
     return (
       <div className="flex-1 flex items-center justify-center bg-[#0F1419]">
-        <Loader2 className="w-12 h-12 animate-spin text-[#D4AF37]" />
+        <Loader2 className="w-12 h-12 animate-spin text-[var(--school-accent)]" />
       </div>
     );
   }
@@ -201,7 +201,7 @@ export function LiveClassroomView({ liveSessionId, session, isTeacher, onLeave }
           {isTeacher && (
             <>
               <div className="flex items-center gap-2">
-                <Hand className="w-4 h-4 text-[#D4AF37]" />
+                <Hand className="w-4 h-4 text-[var(--school-accent)]" />
                 <span className="text-sm text-gray-300">{handRaises.length} main(s) levée(s)</span>
                 {handRaises.length > 0 && (
                   <span className="text-xs text-gray-500">({handRaises.map((h) => h.userName || 'Élève').join(', ')})</span>
@@ -210,21 +210,21 @@ export function LiveClassroomView({ liveSessionId, session, isTeacher, onLeave }
               <Button
                 size="sm"
                 variant="outline"
-                className="border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                className="border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                 onClick={() => setInviteOpen(true)}
               >
                 <UserPlus className="w-4 h-4 mr-2" /> Inviter
               </Button>
               <div className="flex items-center gap-2">
-                <EyeOff className={cn('w-4 h-4', visibilityMode === 'secret' && 'text-[#D4AF37]')} />
+                <EyeOff className={cn('w-4 h-4', visibilityMode === 'secret' && 'text-[var(--school-accent)]')} />
                 <Switch
                   id="visibility-mode"
                   checked={visibilityMode === 'public'}
                   onCheckedChange={handleToggleVisibility}
                   disabled={switchingVisibility}
-                  className="data-[state=checked]:bg-[#D4AF37]"
+                  className="data-[state=checked]:bg-[var(--school-accent)]"
                 />
-                <Eye className={cn('w-4 h-4', visibilityMode === 'public' && 'text-[#D4AF37]')} />
+                <Eye className={cn('w-4 h-4', visibilityMode === 'public' && 'text-[var(--school-accent)]')} />
                 <Label htmlFor="visibility-mode" className="text-sm text-gray-400 cursor-pointer">
                   {visibilityMode === 'secret' ? 'Secret' : 'Public'}
                 </Label>
@@ -237,7 +237,7 @@ export function LiveClassroomView({ liveSessionId, session, isTeacher, onLeave }
                 <Button
                   size="sm"
                   variant="outline"
-                  className="border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                  className="border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                   onClick={() => setInviteOpen(true)}
                 >
                   <UserPlus className="w-4 h-4 mr-2" /> Inviter
@@ -246,7 +246,7 @@ export function LiveClassroomView({ liveSessionId, session, isTeacher, onLeave }
               <Button
                 size="sm"
                 variant="outline"
-                className="border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                className="border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                 onClick={async () => {
                   broadcastHandRaise(true, { userId: user?.id, userName: user?.name || user?.email });
                   await supabase.from('hand_raise_events').insert({ live_session_id: liveSessionId, user_id: user?.id });
@@ -257,7 +257,7 @@ export function LiveClassroomView({ liveSessionId, session, isTeacher, onLeave }
             </>
           )}
         </div>
-        <Button variant="ghost" size="sm" className="text-gray-400 hover:text-[#D4AF37]" onClick={() => setChatOpen((o) => !o)}>
+        <Button variant="ghost" size="sm" className="text-gray-400 hover:text-[var(--school-accent)]" onClick={() => setChatOpen((o) => !o)}>
           <MessageSquare className="w-4 h-4 mr-1" /> {chatOpen ? 'Masquer chat' : 'Afficher chat'}
         </Button>
       </div>
@@ -276,7 +276,7 @@ export function LiveClassroomView({ liveSessionId, session, isTeacher, onLeave }
             <Button
               onClick={handleInvite}
               disabled={inviteSelected.length === 0 || inviting}
-              className="w-full bg-[#D4AF37] text-black"
+              className="w-full bg-[var(--school-accent)] text-black"
             >
               {inviting ? <Loader2 className="w-4 h-4 animate-spin" /> : `Inviter (${inviteSelected.length})`}
             </Button>

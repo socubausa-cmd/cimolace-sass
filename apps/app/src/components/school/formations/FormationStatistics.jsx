@@ -65,9 +65,9 @@ const FormationStatistics = ({ formation }) => {
           <CardContent className="p-6 flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Progression Moy.</p>
-              <h3 className="text-2xl font-bold text-[#D4AF37]">{avgProgress}%</h3>
+              <h3 className="text-2xl font-bold text-[var(--school-accent)]">{avgProgress}%</h3>
             </div>
-            <div className="p-3 bg-[#D4AF37]/10 rounded-full text-[#D4AF37]"><Clock size={20}/></div>
+            <div className="p-3 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-full text-[var(--school-accent)]"><Clock size={20}/></div>
           </CardContent>
         </Card>
         <Card className="bg-[#151a21]/80 backdrop-blur border-white/10">

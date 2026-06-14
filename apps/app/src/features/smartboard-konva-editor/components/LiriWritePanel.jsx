@@ -22,7 +22,7 @@ function ToolBtn({ active, onClick, title, children }) {
       className={cn(
         'flex h-6 w-6 items-center justify-center rounded-md text-[10px] transition-colors',
         active
-          ? 'bg-[#D4AF37]/20 text-[#f5dd8a]'
+          ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[#f5dd8a]'
           : 'text-white/45 hover:bg-white/[0.07] hover:text-white/80',
       )}
     >
@@ -64,8 +64,8 @@ export default function LiriWritePanel({ className }) {
     <div className={cn('flex min-h-0 flex-col overflow-hidden', className)}>
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between border-b border-white/[0.07] bg-[#0a0c14] px-2.5 py-1.5">
-        <span className="inline-flex items-end gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-[#D4AF37]/70">
-          <LiriWordmark size="footer" className="text-[#D4AF37]/70" subtleGlow />
+        <span className="inline-flex items-end gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">
+          <LiriWordmark size="footer" className="text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]" subtleGlow />
           <span>WRITE</span>
         </span>
         <button

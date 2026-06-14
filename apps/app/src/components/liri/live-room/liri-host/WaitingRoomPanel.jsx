@@ -32,7 +32,7 @@ export function WaitingRoomPanel({
         className="flex w-full items-center justify-between gap-2 border-b border-white/[0.06] px-2.5 py-2 text-left transition-colors hover:bg-white/[0.04]"
       >
         <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-200 ring-1 ring-[#D4AF37]/30">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-200 ring-1 ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
             <DoorOpen className="h-3.5 w-3.5" />
           </span>
           <div className="min-w-0">
@@ -41,7 +41,7 @@ export function WaitingRoomPanel({
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          <span className="rounded-md bg-[#D4AF37]/15 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[#D4AF37]">
+          <span className="rounded-md bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[var(--school-accent)]">
             {readOnly ? 0 : n}
           </span>
           <ChevronRight className={cn('h-4 w-4 text-white/35 transition-transform', expanded && 'rotate-90')} />
@@ -72,7 +72,7 @@ export function WaitingRoomPanel({
                       className="h-8 w-8 shrink-0 rounded-full border border-white/10 object-cover"
                     />
                   ) : (
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[10px] font-bold text-[#D4AF37]">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[10px] font-bold text-[var(--school-accent)]">
                       {(entry.profiles?.name || '?').slice(0, 1).toUpperCase()}
                     </div>
                   )}
@@ -102,7 +102,7 @@ export function WaitingRoomPanel({
                     <button
                       type="button"
                       onClick={() => onApprove(entry.id, { audioOnly: true })}
-                      className="h-7 rounded-lg border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-1.5 text-[9px] text-[#D4AF37] hover:bg-[#D4AF37]/18"
+                      className="h-7 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-1.5 text-[9px] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)]"
                       title="Auditeur"
                     >
                       🎧

@@ -81,8 +81,8 @@ const VideoFormationsPage = () => {
              {inProgress.length > 0 && (
                 <section>
                    <div className="flex items-center gap-3 mb-6">
-                      <h2 className="text-xl font-bold text-white uppercase tracking-wider text-[#D4AF37]">En Cours</h2>
-                      <div className="h-px bg-[#D4AF37]/30 flex-1"></div>
+                      <h2 className="text-xl font-bold text-white uppercase tracking-wider text-[var(--school-accent)]">En Cours</h2>
+                      <div className="h-px bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex-1"></div>
                    </div>
                    <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

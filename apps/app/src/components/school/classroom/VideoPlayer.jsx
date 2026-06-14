@@ -168,7 +168,7 @@ const VideoPlayer = ({ video, onEnded, onProgressUpdate }) => {
               max={duration || 100}
               step={1}
               onValueChange={handleSeek}
-              className="z-20 [&>.relative>.absolute]:bg-[#D4AF37] [&>.relative]:bg-white/20"
+              className="z-20 [&>.relative>.absolute]:bg-[var(--school-accent)] [&>.relative]:bg-white/20"
             />
             {/* Hover timestamp tooltip could go here */}
           </div>
@@ -176,12 +176,12 @@ const VideoPlayer = ({ video, onEnded, onProgressUpdate }) => {
           {/* Controls Row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button onClick={handlePlayPause} className="text-white hover:text-[#D4AF37] transition-colors">
+              <button onClick={handlePlayPause} className="text-white hover:text-[var(--school-accent)] transition-colors">
                 {isPlaying ? <Pause className="w-7 h-7 fill-current" /> : <Play className="w-7 h-7 fill-current" />}
               </button>
               
               <div className="flex items-center gap-2 group/volume">
-                <button onClick={toggleMute} className="text-white hover:text-[#D4AF37] transition-colors">
+                <button onClick={toggleMute} className="text-white hover:text-[var(--school-accent)] transition-colors">
                   {isMuted || volume === 0 ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
                 </button>
                 <div className="w-0 overflow-hidden group-hover/volume:w-24 transition-all duration-300">
@@ -209,12 +209,12 @@ const VideoPlayer = ({ video, onEnded, onProgressUpdate }) => {
                     {playbackSpeed}x
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-[#192734] border-[#D4AF37]/20 text-white">
+                <DropdownMenuContent align="end" className="bg-[#192734] border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-white">
                   {[0.5, 1, 1.25, 1.5, 2].map(speed => (
                     <DropdownMenuItem 
                       key={speed} 
                       onClick={() => changeSpeed(speed)}
-                      className={cn("cursor-pointer hover:bg-white/10 focus:bg-white/10", playbackSpeed === speed && "text-[#D4AF37]")}
+                      className={cn("cursor-pointer hover:bg-white/10 focus:bg-white/10", playbackSpeed === speed && "text-[var(--school-accent)]")}
                     >
                       {speed}x
                     </DropdownMenuItem>
@@ -229,12 +229,12 @@ const VideoPlayer = ({ video, onEnded, onProgressUpdate }) => {
                     {quality}
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-[#192734] border-[#D4AF37]/20 text-white">
+                <DropdownMenuContent align="end" className="bg-[#192734] border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-white">
                   {['1080p', '720p', '480p', 'Auto'].map(q => (
                     <DropdownMenuItem 
                       key={q} 
                       onClick={() => setQuality(q)}
-                      className={cn("cursor-pointer hover:bg-white/10 focus:bg-white/10", quality === q && "text-[#D4AF37]")}
+                      className={cn("cursor-pointer hover:bg-white/10 focus:bg-white/10", quality === q && "text-[var(--school-accent)]")}
                     >
                       {q}
                     </DropdownMenuItem>
@@ -242,7 +242,7 @@ const VideoPlayer = ({ video, onEnded, onProgressUpdate }) => {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <button onClick={toggleFullscreen} className="text-white hover:text-[#D4AF37] transition-colors">
+              <button onClick={toggleFullscreen} className="text-white hover:text-[var(--school-accent)] transition-colors">
                 {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
               </button>
             </div>
@@ -295,16 +295,16 @@ const VideoPlayer = ({ video, onEnded, onProgressUpdate }) => {
            
            {video.resources && video.resources.length > 0 && (
               <div className="border-t border-white/10 pt-4">
-                 <h4 className="text-sm font-bold text-[#D4AF37] uppercase tracking-wider mb-3">Ressources & Fichiers</h4>
+                 <h4 className="text-sm font-bold text-[var(--school-accent)] uppercase tracking-wider mb-3">Ressources & Fichiers</h4>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {video.resources.map((resource, idx) => (
                        <a 
                           key={idx} 
                           href={resource.url}
-                          className="flex items-center justify-between p-3 rounded-lg bg-[#0F1419] border border-white/5 hover:border-[#D4AF37]/50 hover:bg-white/5 transition-all group"
+                          className="flex items-center justify-between p-3 rounded-lg bg-[#0F1419] border border-white/5 hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] hover:bg-white/5 transition-all group"
                        >
                           <div className="flex items-center gap-3">
-                             <div className="p-2 bg-[#D4AF37]/10 rounded text-[#D4AF37]">
+                             <div className="p-2 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded text-[var(--school-accent)]">
                                 <Download className="w-4 h-4" />
                              </div>
                              <span className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">

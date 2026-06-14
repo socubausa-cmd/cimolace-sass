@@ -204,7 +204,7 @@ export default function CompanionCapturePage() {
       {/* Header */}
       <div className="w-full max-w-sm px-4 pt-6 pb-3">
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/20 flex items-center justify-center text-base">📱</div>
+          <div className="w-8 h-8 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center text-base">📱</div>
           <div>
             <h1 className="text-sm font-bold">Caméra Compagnon</h1>
             <p className="text-[10px] text-gray-500">Session : {sessionId.slice(0, 8)}…</p>
@@ -283,7 +283,7 @@ export default function CompanionCapturePage() {
                 <button
                   type="button"
                   onClick={startWebRTCStream}
-                  className="w-16 h-16 rounded-full bg-[#D4AF37] hover:bg-amber-400 flex items-center justify-center transition-colors shadow-lg"
+                  className="w-16 h-16 rounded-full bg-[var(--school-accent)] hover:bg-amber-400 flex items-center justify-center transition-colors shadow-lg"
                 >
                   <Wifi className="w-6 h-6 text-black" />
                 </button>
@@ -310,13 +310,13 @@ export default function CompanionCapturePage() {
       {/* Uploading */}
       {phase === 'uploading' && (
         <div className="w-full max-w-sm px-4 py-8 flex flex-col items-center gap-6">
-          <Loader2 className="w-12 h-12 text-[#D4AF37] animate-spin" />
+          <Loader2 className="w-12 h-12 text-[var(--school-accent)] animate-spin" />
           <div className="text-center">
             <p className="font-semibold">Envoi en cours…</p>
             <p className="text-xs text-gray-400 mt-1">{uploadProgress}%</p>
           </div>
           <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-            <div className="h-full bg-[#D4AF37] transition-all" style={{ width: `${uploadProgress}%` }} />
+            <div className="h-full bg-[var(--school-accent)] transition-all" style={{ width: `${uploadProgress}%` }} />
           </div>
         </div>
       )}
@@ -339,7 +339,7 @@ export default function CompanionCapturePage() {
       {/* Init */}
       {phase === 'init' && (
         <div className="w-full max-w-sm px-4 py-12 flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-[#D4AF37] animate-spin" />
+          <Loader2 className="w-10 h-10 text-[var(--school-accent)] animate-spin" />
           <p className="text-sm text-gray-400">Accès à la caméra…</p>
         </div>
       )}

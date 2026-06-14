@@ -409,7 +409,7 @@ export default function AdminBillingPage() {
                       }}
                       className={`h-9 px-3 rounded-lg border text-sm ${
                         dlqStatus === s
-                          ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-white'
+                          ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-white'
                           : 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5'
                       }`}
                       disabled={dlqLoading}
@@ -534,7 +534,7 @@ export default function AdminBillingPage() {
                   {allExternalSelected ? 'Tout deselectionner' : 'Tout selectionner'}
                 </Button>
                 <Button
-                  className="bg-[#D4AF37] text-black hover:bg-yellow-500"
+                  className="bg-[var(--school-accent)] text-black hover:bg-yellow-500"
                   onClick={handleAttachSelectedExternals}
                   disabled={bulkAttachRunning || selectedExternalIds.length === 0}
                 >
@@ -594,7 +594,7 @@ export default function AdminBillingPage() {
                     <div
                       key={row.id}
                       className={`premium-panel rounded-xl p-4 flex flex-col lg:flex-row lg:items-center gap-4 ${
-                        isSelected ? 'border border-[#D4AF37]/60' : 'border border-white/10'
+                        isSelected ? 'border border-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]' : 'border border-white/10'
                       }`}
                     >
                       <div className="flex items-start pt-1">
@@ -603,7 +603,7 @@ export default function AdminBillingPage() {
                           checked={isSelected}
                           onChange={() => toggleExternalSelection(row.id)}
                           disabled={bulkAttachRunning}
-                          className="h-4 w-4 accent-[#D4AF37]"
+                          className="h-4 w-4 accent-[var(--school-accent)]"
                         />
                       </div>
                       <div className="flex-1">
@@ -627,7 +627,7 @@ export default function AdminBillingPage() {
                         <Button
                           onClick={() => handleAttachExternal(row)}
                           disabled={attachLoadingId === row.id || bulkAttachRunning}
-                          className="bg-[#D4AF37] text-black hover:bg-yellow-500"
+                          className="bg-[var(--school-accent)] text-black hover:bg-yellow-500"
                         >
                           {attachLoadingId === row.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                           Rattacher auto

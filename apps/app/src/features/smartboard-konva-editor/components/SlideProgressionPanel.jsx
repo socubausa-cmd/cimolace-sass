@@ -41,7 +41,7 @@ export default function SlideProgressionPanel({
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          <Lightbulb className="h-4 w-4 shrink-0 text-[#D4AF37]" />
+          <Lightbulb className="h-4 w-4 shrink-0 text-[var(--school-accent)]" />
           <span className="text-[13px] font-bold text-white/90">Plan du slide</span>
           {scene?.stateInitial != null ? (
             hasLiveDraft ? (
@@ -74,7 +74,7 @@ export default function SlideProgressionPanel({
             const label = `Section ${sections.length + 1}`;
             onAddSection(label);
           }}
-          className="flex items-center gap-1 rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-2 py-1 text-[11px] text-[#f5dd8a] hover:bg-[#D4AF37]/20"
+          className="flex items-center gap-1 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-2 py-1 text-[11px] text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
         >
           <Plus className="h-3 w-3" />
           Ajouter
@@ -122,7 +122,7 @@ export default function SlideProgressionPanel({
               className={cn(
                 'group flex items-center gap-2 rounded-xl border px-3 py-2.5 transition-all',
                 isActive
-                  ? 'border-[#D4AF37]/45 bg-[#D4AF37]/12 shadow-[0_0_12px_rgba(212,175,55,0.15)]'
+                  ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] shadow-[0_0_12px_rgba(212,175,55,0.15)]'
                   : 'border-white/[0.08] bg-white/[0.025] hover:border-white/[0.15]',
                 dragIdx === idx && 'opacity-40',
               )}
@@ -134,7 +134,7 @@ export default function SlideProgressionPanel({
               <div className={cn(
                 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold',
                 isActive
-                  ? 'bg-[#D4AF37] text-[#0b0f1a]'
+                  ? 'bg-[var(--school-accent)] text-[#0b0f1a]'
                   : 'bg-white/[0.08] text-white/50',
               )}>
                 {letter}
@@ -152,7 +152,7 @@ export default function SlideProgressionPanel({
                     if (e.key === 'Escape') { setEditingId(null); setEditDraft(''); }
                     e.stopPropagation();
                   }}
-                  className="min-w-0 flex-1 rounded-lg border border-[#D4AF37]/40 bg-black/40 px-2 py-0.5 text-[12px] text-white focus:outline-none"
+                  className="min-w-0 flex-1 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-black/40 px-2 py-0.5 text-[12px] text-white focus:outline-none"
                 />
               ) : (
                 <button
@@ -174,7 +174,7 @@ export default function SlideProgressionPanel({
                   type="button"
                   title={`Assigner les objets selectionnes a cette section`}
                   onClick={() => selectedIds.forEach((id) => onSetObjectSection(id, sec.id))}
-                  className="shrink-0 text-white/30 opacity-0 transition-opacity group-hover:opacity-100 hover:text-[#D4AF37]"
+                  className="shrink-0 text-white/30 opacity-0 transition-opacity group-hover:opacity-100 hover:text-[var(--school-accent)]"
                 >
                   <BookmarkPlus className="h-3.5 w-3.5" />
                 </button>
@@ -189,7 +189,7 @@ export default function SlideProgressionPanel({
                   className={cn(
                     'shrink-0 transition-all',
                     isActive
-                      ? 'text-[#D4AF37]'
+                      ? 'text-[var(--school-accent)]'
                       : 'text-white/20 opacity-0 group-hover:opacity-100 hover:text-white/60',
                   )}
                 >
@@ -238,7 +238,7 @@ export default function SlideProgressionPanel({
         <button
           type="button"
           onClick={onSaveInitialState}
-          className="flex items-center gap-2 rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/[0.05] px-3 py-2 text-[12px] text-[#f5dd8a] hover:bg-[#D4AF37]/[0.12]"
+          className="flex items-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[var(--school-accent)]/[0.05] px-3 py-2 text-[12px] text-[#f5dd8a] hover:bg-[var(--school-accent)]/[0.12]"
         >
           <BookmarkPlus className="h-4 w-4" />
           Sauvegarder etat initial

@@ -144,7 +144,7 @@ function AppointmentHeroChrome() {
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -right-16 top-24 z-0 h-80 w-80 rounded-full bg-[#D4AF37]/12 blur-[110px]"
+        className="pointer-events-none absolute -right-16 top-24 z-0 h-80 w-80 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] blur-[110px]"
         aria-hidden
       />
     </>
@@ -164,7 +164,7 @@ function StepPills({ step }) {
             key={label}
             className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors md:px-4 md:py-2 md:text-[11px] ${
               active
-                ? 'border-[#D4AF37]/55 bg-[#D4AF37]/12 text-[#D4AF37]'
+                ? 'border-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[var(--school-accent)]'
                 : done
                   ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200/90'
                   : 'border-white/10 bg-white/[0.03] text-white/40'
@@ -194,13 +194,13 @@ function NarrativePanel({ step, reduce, viewState = 'form' }) {
         transition={{ duration: 0.45, ease: easePremium }}
         className="space-y-6"
       >
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-[#D4AF37] md:text-[11px]">
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-[var(--school-accent)] md:text-[11px]">
           <Sparkles className="h-3.5 w-3.5 md:h-4 md:w-4" />
           {copy.eyebrow}
         </div>
         <h1 className="font-serif text-3xl font-bold leading-[1.12] text-white md:text-4xl lg:text-5xl">
           {copy.title}{' '}
-          <span className="bg-gradient-to-r from-[#f5e6b8] via-[#D4AF37] to-[#c9a43a] bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[#f5e6b8] via-[var(--school-accent)] to-[#c9a43a] bg-clip-text text-transparent">
             {copy.titleGold}
           </span>
         </h1>
@@ -208,13 +208,13 @@ function NarrativePanel({ step, reduce, viewState = 'form' }) {
         <ul className="max-w-xl space-y-3 text-sm text-white/60">
           {copy.bullets.map((line) => (
             <li key={line} className="flex gap-3">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#D4AF37]/80" />
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]" />
               <span>{line}</span>
             </li>
           ))}
         </ul>
         <div className="flex flex-wrap items-center gap-2 pt-2 text-xs text-white/45">
-          <ShieldCheck className="h-4 w-4 text-[#D4AF37]" />
+          <ShieldCheck className="h-4 w-4 text-[var(--school-accent)]" />
           Données traitées dans le cadre ISNA · Prorascience
         </div>
       </motion.div>
@@ -235,10 +235,10 @@ function PromoMomentsTicker({ reduce, items }) {
         {loop.map((item, idx) => (
           <article
             key={`${item.title}-${idx}`}
-            className="inline-flex shrink-0 items-center gap-3 rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/8 px-3 py-2"
+            className="inline-flex shrink-0 items-center gap-3 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] px-3 py-2"
           >
-            <span className="inline-flex items-center gap-1 rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#D4AF37]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#D4AF37]" />
+            <span className="inline-flex items-center gap-1 rounded-full border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--school-accent)]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--school-accent)]" />
               {item.badge}
             </span>
             <div className="flex flex-col leading-tight">
@@ -410,7 +410,7 @@ const RequestAppointmentPage = () => {
     return shell(
       <div className="flex min-h-[100dvh] items-center justify-center px-6 text-center">
         <div className="space-y-3">
-          <CalendarClock className="mx-auto h-8 w-8 text-[#D4AF37]" />
+          <CalendarClock className="mx-auto h-8 w-8 text-[var(--school-accent)]" />
           <p className="text-sm text-white/60">Ouverture du moteur rendez-vous mobile…</p>
         </div>
       </div>
@@ -423,7 +423,7 @@ const RequestAppointmentPage = () => {
         <header className="sticky top-0 z-[60] border-b border-white/10 bg-[#070b12]/80 backdrop-blur-md">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
             <Link to="/" className="flex items-center gap-2 text-sm font-semibold tracking-wide text-white/90">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#D4AF37] text-black">I</span>
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--school-accent)] text-black">I</span>
               ISNA · PRORASCIENCE
             </Link>
             <Link
@@ -441,14 +441,14 @@ const RequestAppointmentPage = () => {
             animate={{ opacity: 1, y: 0 }}
             className="mx-auto max-w-md space-y-6 text-center"
           >
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-[#D4AF37]/35 bg-[#D4AF37]/10">
-              <CalendarClock className="h-8 w-8 text-[#D4AF37]" />
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
+              <CalendarClock className="h-8 w-8 text-[var(--school-accent)]" />
             </div>
             <h1 className="font-serif text-2xl font-bold text-white md:text-3xl">Rendez-vous ISNA</h1>
             <p className="text-white/65">Connectez-vous pour accéder au parcours guidé et au calendrier en direct.</p>
             <Button
               onClick={() => navigate('/login', { state: { from: { pathname: '/appointment/request' } } })}
-              className="h-12 bg-[#D4AF37] px-8 text-base font-bold text-black hover:bg-[#ebca5e]"
+              className="h-12 bg-[var(--school-accent)] px-8 text-base font-bold text-black hover:bg-[#ebca5e]"
             >
               Se connecter
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -483,7 +483,7 @@ const RequestAppointmentPage = () => {
                 `/paiements/payer?plan=${encodeURIComponent(NGOWAZULU_CONSULTATION_PLAN_SLUG)}&interval=one_time&next=${encodeURIComponent(NGOWAZULU_CONSULTATION_NEXT_PATH)}`
               )
             }
-            className="bg-[#D4AF37] font-semibold text-black hover:bg-[#ebca5e]"
+            className="bg-[var(--school-accent)] font-semibold text-black hover:bg-[#ebca5e]"
           >
             Aller au paiement
           </Button>
@@ -498,7 +498,7 @@ const RequestAppointmentPage = () => {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2 text-sm font-semibold tracking-wide text-white/90">
             <motion.span
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#D4AF37] text-black"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--school-accent)] text-black"
               animate={
                 reduce
                   ? undefined

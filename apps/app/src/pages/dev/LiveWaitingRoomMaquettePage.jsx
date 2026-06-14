@@ -61,10 +61,10 @@ const DEMO_AMBIENT_TRACKS = [
 
 function FakeAudioPreviewStrip() {
   return (
-    <ProrasciencePublicCard className="border-[#D4AF37]/25 bg-[#101729]">
+    <ProrasciencePublicCard className="border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#101729]">
       <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#D4AF37]/20">
-          <Volume2 className="h-4 w-4 text-[#D4AF37]" />
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
+          <Volume2 className="h-4 w-4 text-[var(--school-accent)]" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-[#ebca5e]">Aperçu audio actif</p>
@@ -72,7 +72,7 @@ function FakeAudioPreviewStrip() {
             Maquette : pas de flux réel — bloc pour caler le design.
           </p>
         </div>
-        <span className="flex-shrink-0 rounded-xl border border-[#D4AF37]/35 px-2 py-1 text-[10px] text-[#D4AF37]/90">
+        <span className="flex-shrink-0 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] px-2 py-1 text-[10px] text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">
           Factice
         </span>
       </div>
@@ -246,7 +246,7 @@ export default function LiveWaitingRoomMaquettePage() {
         </div>
 
         <div className="relative z-[2] mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-10">
-          <ProrasciencePublicCard className="mb-8 border-[#D4AF37]/20">
+          <ProrasciencePublicCard className="mb-8 border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
             <div className="mb-3 flex items-center gap-2 text-[#ebca5e]">
               <Palette className="h-4 w-4" />
               <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Maquette design</span>
@@ -257,7 +257,7 @@ export default function LiveWaitingRoomMaquettePage() {
             <select
               value={scenario}
               onChange={(e) => setScenario(e.target.value)}
-              className="w-full rounded-xl border border-white/12 bg-black/40 px-3 py-2.5 text-sm text-white outline-none transition-colors focus:border-[#D4AF37]/45 focus:ring-1 focus:ring-[#D4AF37]/25"
+              className="w-full rounded-xl border border-white/12 bg-black/40 px-3 py-2.5 text-sm text-white outline-none transition-colors focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]"
             >
               {SCENARIOS.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -322,11 +322,11 @@ export default function LiveWaitingRoomMaquettePage() {
             >
               <div className="space-y-4 text-center lg:text-left">
                 <div className="inline-flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.18em] text-[#D4AF37]">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.18em] text-[var(--school-accent)]">
                     <Sparkles className="h-3.5 w-3.5" />
                     Salle d&apos;attente
                   </div>
-                  <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/30 bg-black/35 px-3 py-1">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-black/35 px-3 py-1">
                     <Radio className="h-3 w-3 text-[#ebca5e]" />
                     <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#ebca5e]/95">
                       Live LIRI
@@ -344,7 +344,7 @@ export default function LiveWaitingRoomMaquettePage() {
                 </div>
 
                 <div className="flex items-center justify-center gap-2.5 pt-1 lg:justify-start">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#D4AF37]/35 bg-gradient-to-br from-[#D4AF37]/25 to-[#6f4cff]/10 text-xs font-bold text-[#ebca5e]">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] to-[#6f4cff]/10 text-xs font-bold text-[#ebca5e]">
                     {displayNameInitials(liveSession.profiles.name)}
                   </div>
                   <span className="text-xs text-white/50">
@@ -369,7 +369,7 @@ export default function LiveWaitingRoomMaquettePage() {
                     <Button
                       type="button"
                       disabled
-                      className="prs-cta-primary h-12 w-full rounded-2xl bg-[#D4AF37] text-sm font-bold text-black hover:bg-[#ebca5e]"
+                      className="prs-cta-primary h-12 w-full rounded-2xl bg-[var(--school-accent)] text-sm font-bold text-black hover:bg-[#ebca5e]"
                     >
                       <LogIn className="mr-2 h-4 w-4" />
                       Lancer la session
@@ -407,7 +407,7 @@ export default function LiveWaitingRoomMaquettePage() {
                     <Button
                       type="button"
                       disabled
-                      className="prs-cta-primary h-12 w-full rounded-2xl bg-[#D4AF37] text-sm font-bold text-black hover:bg-[#ebca5e]"
+                      className="prs-cta-primary h-12 w-full rounded-2xl bg-[var(--school-accent)] text-sm font-bold text-black hover:bg-[#ebca5e]"
                     >
                       <ArrowRight className="mr-2 h-4 w-4" />
                       Rejoindre maintenant
@@ -427,9 +427,9 @@ export default function LiveWaitingRoomMaquettePage() {
 
                 {!isHost && (!mockEntry || mockEntry.status === 'lobby') && scenario === 'password' ? (
                   <motion.div key="password" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-                    <ProrasciencePublicCard className="border-[#D4AF37]/20">
+                    <ProrasciencePublicCard className="border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                       <div className="mb-4 flex items-center gap-2">
-                        <KeyRound className="h-4 w-4 text-[#D4AF37]" />
+                        <KeyRound className="h-4 w-4 text-[var(--school-accent)]" />
                         <p className="text-sm font-semibold text-white">Mot de passe requis</p>
                       </div>
                       <div className="relative mb-3">
@@ -438,7 +438,7 @@ export default function LiveWaitingRoomMaquettePage() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="Mot de passe du live"
-                          className="h-10 w-full rounded-xl border border-white/12 bg-black/45 px-4 pr-10 text-sm text-white placeholder:text-white/25 outline-none transition-colors focus:border-[#D4AF37]/45"
+                          className="h-10 w-full rounded-xl border border-white/12 bg-black/45 px-4 pr-10 text-sm text-white placeholder:text-white/25 outline-none transition-colors focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]"
                         />
                         <button
                           type="button"
@@ -451,7 +451,7 @@ export default function LiveWaitingRoomMaquettePage() {
                       <Button
                         type="button"
                         disabled
-                        className="prs-cta-primary h-10 w-full rounded-xl bg-[#D4AF37] text-sm font-bold text-black hover:bg-[#ebca5e]"
+                        className="prs-cta-primary h-10 w-full rounded-xl bg-[var(--school-accent)] text-sm font-bold text-black hover:bg-[#ebca5e]"
                       >
                         <ArrowRight className="mr-2 h-4 w-4" />
                         Valider
@@ -467,10 +467,10 @@ export default function LiveWaitingRoomMaquettePage() {
                     animate={{ opacity: 1 }}
                     className="space-y-3"
                   >
-                    <ProrasciencePublicCard className="border-[#D4AF37]/20">
+                    <ProrasciencePublicCard className="border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                       <div className="mb-4 flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/15">
-                          <Lock className="h-4 w-4 text-[#D4AF37]" />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]">
+                          <Lock className="h-4 w-4 text-[var(--school-accent)]" />
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-white">Validation par l&apos;hôte</p>
@@ -480,7 +480,7 @@ export default function LiveWaitingRoomMaquettePage() {
                       <Button
                         type="button"
                         disabled
-                        className="prs-cta-primary h-10 w-full rounded-xl bg-[#D4AF37] text-sm font-bold text-black hover:bg-[#ebca5e]"
+                        className="prs-cta-primary h-10 w-full rounded-xl bg-[var(--school-accent)] text-sm font-bold text-black hover:bg-[#ebca5e]"
                       >
                         <Users className="mr-2 h-4 w-4" />
                         Demander l&apos;accès
@@ -523,7 +523,7 @@ export default function LiveWaitingRoomMaquettePage() {
                   </div>
                 )}
                 <div className="space-y-4 p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[#D4AF37]/90">Live</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">Live</p>
                   {showLiveDetails && liveSession.description ? (
                     <p className="text-sm leading-relaxed text-white/60">{liveSession.description}</p>
                   ) : null}
@@ -532,7 +532,7 @@ export default function LiveWaitingRoomMaquettePage() {
                       {liveSession.scheduled_at ? (
                         <div className="flex gap-2">
                           <dt className="flex shrink-0 items-center gap-1 font-medium text-white/55">
-                            <Calendar className="h-3.5 w-3.5 text-[#D4AF37]/80" />
+                            <Calendar className="h-3.5 w-3.5 text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]" />
                             Début prévu
                           </dt>
                           <dd className="text-white/70">
@@ -546,7 +546,7 @@ export default function LiveWaitingRoomMaquettePage() {
                       {liveSession.duration_minutes ? (
                         <div className="flex gap-2">
                           <dt className="flex shrink-0 items-center gap-1 font-medium text-white/55">
-                            <Clock className="h-3.5 w-3.5 text-[#D4AF37]/80" />
+                            <Clock className="h-3.5 w-3.5 text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]" />
                             Durée
                           </dt>
                           <dd className="text-white/70">{liveSession.duration_minutes} min</dd>

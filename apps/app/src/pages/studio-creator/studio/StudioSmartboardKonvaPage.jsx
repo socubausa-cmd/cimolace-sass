@@ -582,7 +582,7 @@ function DesignerTopBar({
             <>
               <Link to="/studio/smartboard-designer" className="hover:text-white/60 transition-colors">Designer</Link>
               <ChevronRight className="h-3 w-3 text-white/20" />
-              <span className="font-medium text-[#D4AF37]">Cinéma pédagogique</span>
+              <span className="font-medium text-[var(--school-accent)]">Cinéma pédagogique</span>
             </>
           ) : (
             <span className="text-cyan-400 font-medium">Designer</span>
@@ -595,12 +595,12 @@ function DesignerTopBar({
             className={cn(
               'h-6 w-6 flex items-center justify-center rounded-lg border shrink-0',
               cinemaPedagogy
-                ? 'bg-[#D4AF37]/15 border-[#D4AF37]/25'
+                ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]'
                 : 'bg-cyan-500/15 border-cyan-500/20',
             )}
           >
             {cinemaPedagogy ? (
-              <Film className="h-3 w-3 text-[#D4AF37]" />
+              <Film className="h-3 w-3 text-[var(--school-accent)]" />
             ) : (
               <LayoutGrid className="h-3 w-3 text-cyan-400" />
             )}
@@ -2562,7 +2562,7 @@ function ContextualPanel({ tool, onClose }) {
                           <button
                             type="button"
                             onClick={() => placeDesignerIaImageOnCanvas(h.url)}
-                            className="rounded border border-[#D4AF37]/35 bg-[#D4AF37]/12 px-2 py-0.5 text-[9px] font-medium text-[#ebca5e] hover:bg-[#D4AF37]/20"
+                            className="rounded border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] px-2 py-0.5 text-[9px] font-medium text-[#ebca5e] hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
                           >
                             Placer
                           </button>

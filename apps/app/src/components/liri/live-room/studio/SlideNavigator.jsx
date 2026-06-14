@@ -16,7 +16,7 @@ export default function SlideNavigator({ index, total, onPrev, onNext, onAdd }) 
       <button
         type="button"
         onClick={onAdd}
-        className="h-7 w-7 rounded-lg bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30"
+        className="h-7 w-7 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]"
         title="Ajouter une slide"
       >
         <Plus className="w-4 h-4 mx-auto" />

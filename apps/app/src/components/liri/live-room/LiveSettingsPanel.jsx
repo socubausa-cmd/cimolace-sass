@@ -105,7 +105,7 @@ function VideoTab({
               className={cn(
                 'h-10 rounded-xl text-[11px] flex items-center justify-center gap-1.5 border transition-colors',
                 fx.active
-                  ? 'bg-[#D4AF37]/15 border-[#D4AF37]/35 text-[#D4AF37]'
+                  ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)]'
                   : 'bg-white/[0.04] border-white/10 text-white/60 hover:bg-white/[0.08]'
               )}
             >
@@ -131,7 +131,7 @@ function VideoTab({
               onClick={() => onSelectVbg(bg.id)}
               className={cn(
                 'h-14 rounded-xl border-2 overflow-hidden flex items-center justify-center text-[10px] font-medium transition-all px-0.5',
-                vbg === bg.id ? 'border-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.4)]' : 'border-white/15 hover:border-white/35'
+                vbg === bg.id ? 'border-[var(--school-accent)] shadow-[0_0_10px_rgba(212,175,55,0.4)]' : 'border-white/15 hover:border-white/35'
               )}
               style={{ background: bg.color || '#111' }}
             >
@@ -177,7 +177,7 @@ function VideoTab({
                 max={200}
                 value={chromaSensitivity}
                 onChange={(e) => onChromaSensitivityChange?.(Number(e.target.value))}
-                className="w-full accent-[#D4AF37]"
+                className="w-full accent-[var(--school-accent)]"
               />
             </div>
           </div>
@@ -233,7 +233,7 @@ function AudioTab({ audioDevices, selectedMic, onSelectMic, noiseCancel, onToggl
               className={cn(
                 'h-10 rounded-xl text-[11px] flex items-center justify-center gap-1.5 border transition-colors',
                 fx.active
-                  ? 'bg-[#D4AF37]/15 border-[#D4AF37]/35 text-[#D4AF37]'
+                  ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)]'
                   : 'bg-white/[0.04] border-white/10 text-white/60 hover:bg-white/[0.08]'
               )}
             >
@@ -255,7 +255,7 @@ function AudioTab({ audioDevices, selectedMic, onSelectMic, noiseCancel, onToggl
               className={cn(
                 'h-12 rounded-xl flex flex-col items-center justify-center gap-0.5 border text-[10px] transition-all',
                 preset === p.id
-                  ? 'bg-[#D4AF37]/15 border-[#D4AF37]/40 text-[#D4AF37]'
+                  ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)]'
                   : 'bg-white/[0.03] border-white/10 text-white/60 hover:bg-white/[0.07]'
               )}
             >
@@ -279,7 +279,7 @@ function AudioTab({ audioDevices, selectedMic, onSelectMic, noiseCancel, onToggl
             <input
               type="range" min={0} max={100} value={bgVolume}
               onChange={(e) => onBgVolume(Number(e.target.value))}
-              className="flex-1 h-1 accent-[#D4AF37] cursor-pointer"
+              className="flex-1 h-1 accent-[var(--school-accent)] cursor-pointer"
             />
             <span className="text-[10px] text-white/50 w-7 text-right">{bgVolume}%</span>
           </div>
@@ -289,7 +289,7 @@ function AudioTab({ audioDevices, selectedMic, onSelectMic, noiseCancel, onToggl
         <button
           type="button"
           onClick={() => audioFileRef.current?.click()}
-          className="w-full h-9 rounded-xl bg-white/[0.04] border border-white/12 hover:border-[#D4AF37]/35 text-[11px] text-white/60 hover:text-[#D4AF37] flex items-center justify-center gap-2 transition-colors mb-2"
+          className="w-full h-9 rounded-xl bg-white/[0.04] border border-white/12 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[11px] text-white/60 hover:text-[var(--school-accent)] flex items-center justify-center gap-2 transition-colors mb-2"
         >
           <Upload className="w-3.5 h-3.5" />
           Téléverser un fichier audio
@@ -300,7 +300,7 @@ function AudioTab({ audioDevices, selectedMic, onSelectMic, noiseCancel, onToggl
         <button
           type="button"
           onClick={onCaptureSystemAudio}
-          className="w-full h-9 rounded-xl bg-white/[0.04] border border-white/12 hover:border-[#D4AF37]/35 text-[11px] text-white/60 hover:text-[#D4AF37] flex items-center justify-center gap-2 transition-colors"
+          className="w-full h-9 rounded-xl bg-white/[0.04] border border-white/12 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[11px] text-white/60 hover:text-[var(--school-accent)] flex items-center justify-center gap-2 transition-colors"
         >
           <Headphones className="w-3.5 h-3.5" />
           Partager le son de l'ordinateur
@@ -356,7 +356,7 @@ function SmartBoardTab({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="w-full h-10 rounded-xl bg-white/[0.05] border border-white/15 hover:border-[#D4AF37]/35 text-xs text-white/70 hover:text-[#D4AF37] flex items-center justify-center gap-2 transition-colors"
+          className="w-full h-10 rounded-xl bg-white/[0.05] border border-white/15 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-xs text-white/70 hover:text-[var(--school-accent)] flex items-center justify-center gap-2 transition-colors"
         >
           <Upload className="w-4 h-4" />
           Charger un fichier diapo (.json)
@@ -374,7 +374,7 @@ function SmartBoardTab({
             'w-full h-10 rounded-xl border text-xs flex items-center justify-center gap-2 transition-colors',
             sharingScreen
               ? 'bg-red-500/15 border-red-400/35 text-red-300'
-              : 'bg-white/[0.05] border-white/15 hover:border-[#D4AF37]/35 text-white/70 hover:text-[#D4AF37]'
+              : 'bg-white/[0.05] border-white/15 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-white/70 hover:text-[var(--school-accent)]'
           )}
         >
           <Monitor className="w-4 h-4" />
@@ -387,7 +387,7 @@ function SmartBoardTab({
         <button
           type="button"
           onClick={() => imgInputRef.current?.click()}
-          className="w-full h-10 rounded-xl bg-white/[0.05] border border-white/15 hover:border-[#D4AF37]/35 text-xs text-white/70 hover:text-[#D4AF37] flex items-center justify-center gap-2 transition-colors"
+          className="w-full h-10 rounded-xl bg-white/[0.05] border border-white/15 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-xs text-white/70 hover:text-[var(--school-accent)] flex items-center justify-center gap-2 transition-colors"
         >
           <ImageIcon className="w-4 h-4" />
           Afficher une image dans le SmartBoard
@@ -410,7 +410,7 @@ function SmartBoardTab({
                   className={cn(
                     'h-10 rounded-xl text-[11px] flex items-center justify-center gap-1.5 border transition-colors px-1',
                     on
-                      ? 'bg-[#D4AF37]/15 border-[#D4AF37]/35 text-[#D4AF37]'
+                      ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)]'
                       : 'bg-white/[0.04] border-white/10 text-white/50 hover:bg-white/[0.08]',
                   )}
                   title={s.hint || s.label}
@@ -610,7 +610,7 @@ export default function LiveSettingsPanel({
                 className={cn(
                   'w-full min-h-[2.75rem] rounded-xl text-xs font-medium flex items-center justify-between gap-2 px-3 py-2 border transition-colors text-left',
                   liriForceCompactLayout
-                    ? 'bg-[#D4AF37]/15 border-[#D4AF37]/35 text-[#D4AF37]'
+                    ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)]'
                     : 'bg-white/[0.04] border-white/10 text-white/70 hover:bg-white/[0.07]',
                 )}
               >

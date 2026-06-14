@@ -82,8 +82,8 @@ export function LiveChatPanel({ liveSessionId, userId, userName }) {
         <div className="space-y-2">
           {messages.map((m) => (
             <div key={m.id} className={m.user_id === userId ? 'flex justify-end' : ''}>
-              <div className={cn('max-w-[85%] rounded-lg px-3 py-2 text-sm', m.user_id === userId ? 'bg-[#D4AF37] text-black' : 'bg-[#192734] text-white')}>
-                {m.user_id !== userId && <div className="text-xs text-[#D4AF37] mb-0.5">{authors[m.user_id] || 'Participant'}</div>}
+              <div className={cn('max-w-[85%] rounded-lg px-3 py-2 text-sm', m.user_id === userId ? 'bg-[var(--school-accent)] text-black' : 'bg-[#192734] text-white')}>
+                {m.user_id !== userId && <div className="text-xs text-[var(--school-accent)] mb-0.5">{authors[m.user_id] || 'Participant'}</div>}
                 <div>{m.message}</div>
                 <div className="text-[10px] opacity-70 mt-1">{new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>
               </div>
@@ -100,7 +100,7 @@ export function LiveChatPanel({ liveSessionId, userId, userName }) {
           className="bg-[#192734] border-white/10 text-white flex-1"
           disabled={sending}
         />
-        <Button type="submit" size="icon" className="bg-[#D4AF37] text-black shrink-0" disabled={sending || !input?.trim()}>
+        <Button type="submit" size="icon" className="bg-[var(--school-accent)] text-black shrink-0" disabled={sending || !input?.trim()}>
           <Send className="w-4 h-4" />
         </Button>
       </form>

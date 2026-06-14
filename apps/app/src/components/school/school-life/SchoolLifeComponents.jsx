@@ -48,7 +48,7 @@ export const RegulationsSection = () => {
                 className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-[#D4AF37]/10 rounded-lg text-[#D4AF37]">
+                  <div className="p-2 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-lg text-[var(--school-accent)]">
                     <section.icon className="w-5 h-5" />
                   </div>
                   <span className="font-bold text-white">{section.title}</span>
@@ -78,7 +78,7 @@ export const RegulationsSection = () => {
         <div className="space-y-6">
           <div className="bg-[#192734] border border-white/10 rounded-xl p-6">
             <h3 className="text-lg font-bold text-white mb-4">Téléchargement</h3>
-            <Button className="w-full bg-[#D4AF37] text-black hover:bg-[#b5952f] mb-4">
+            <Button className="w-full bg-[var(--school-accent)] text-black hover:bg-[#b5952f] mb-4">
               <Download className="w-4 h-4 mr-2" /> Règlement Intérieur (PDF)
             </Button>
             <div className="flex items-start gap-3 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
@@ -98,11 +98,11 @@ export const RegulationsSection = () => {
             <h3 className="text-lg font-bold text-white mb-4">FAQ Règlement</h3>
             <div className="space-y-3">
               <details className="text-sm text-gray-400 cursor-pointer">
-                <summary className="hover:text-[#D4AF37]">Combien d'absences sont tolérées ?</summary>
+                <summary className="hover:text-[var(--school-accent)]">Combien d'absences sont tolérées ?</summary>
                 <p className="mt-2 pl-4 text-gray-500">Jusqu'à 3 absences justifiées par trimestre.</p>
               </details>
               <details className="text-sm text-gray-400 cursor-pointer">
-                <summary className="hover:text-[#D4AF37]">Code vestimentaire ?</summary>
+                <summary className="hover:text-[var(--school-accent)]">Code vestimentaire ?</summary>
                 <p className="mt-2 pl-4 text-gray-500">Tenue correcte exigée. Tenue blanche pour les cérémonies.</p>
               </details>
             </div>
@@ -164,7 +164,7 @@ export const EventsSection = () => {
             key={f}
             variant={filter === f ? 'default' : 'outline'}
             onClick={() => setFilter(f)}
-            className={cn('capitalize', filter === f ? 'bg-[#D4AF37] text-black' : 'border-white/10 text-gray-400')}
+            className={cn('capitalize', filter === f ? 'bg-[var(--school-accent)] text-black' : 'border-white/10 text-gray-400')}
           >
             {f === 'all' ? 'Tous' : f}
           </Button>
@@ -187,7 +187,7 @@ export const EventsSection = () => {
               whileHover={{ y: -5 }}
               className="bg-[#192734] border border-white/10 rounded-xl p-6 relative overflow-hidden group"
             >
-              <div className="text-sm text-[#D4AF37] font-bold mb-2 uppercase">{detectType(evt)}</div>
+              <div className="text-sm text-[var(--school-accent)] font-bold mb-2 uppercase">{detectType(evt)}</div>
               <h3 className="text-xl font-bold text-white mb-4">{evt.title}</h3>
               <div className="space-y-2 text-sm text-gray-400 mb-6">
                 <div className="flex items-center gap-2"><Calendar className="w-4 h-4" /> {safeDate(evt.start_at)}</div>
@@ -345,7 +345,7 @@ export const AnnouncementsSection = () => {
           return (
           <div
             key={ann.id}
-            className="bg-[#192734] border border-white/10 rounded-xl p-6 hover:border-[#D4AF37]/30 transition-all cursor-pointer"
+            className="bg-[#192734] border border-white/10 rounded-xl p-6 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all cursor-pointer"
             onClick={() => openDialog(ann.id)}
             role="presentation"
           >
@@ -371,7 +371,7 @@ export const AnnouncementsSection = () => {
                 {needsModal(ann) ? (
                   <Button
                     variant="link"
-                    className="text-[#D4AF37] p-0 h-auto text-xs"
+                    className="text-[var(--school-accent)] p-0 h-auto text-xs"
                     onClick={(e) => {
                       e.stopPropagation();
                       openDialog(ann.id);
@@ -401,13 +401,13 @@ export const AnnouncementsSection = () => {
                   <button
                     key={a.id}
                     onClick={() => openDialog(a.id)}
-                    className="w-full text-left p-4 bg-white/5 rounded-lg border border-white/5 hover:border-[#D4AF37]/30 transition-colors"
+                    className="w-full text-left p-4 bg-white/5 rounded-lg border border-white/5 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-colors"
                   >
                     <div className="flex items-center gap-2 mb-2">
                       {urgent ? (
                         <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
                       ) : (
-                        <Star className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                        <Star className="w-4 h-4 text-[var(--school-accent)] shrink-0" />
                       )}
                       <span className="font-bold text-white text-sm line-clamp-1">{a.title}</span>
                     </div>
@@ -423,7 +423,7 @@ export const AnnouncementsSection = () => {
            <h3 className="text-lg font-bold text-white mb-4">Contact Rapide</h3>
            <Input placeholder="Sujet" className="mb-3 bg-[#0F1419] border-white/10" />
            <textarea className="w-full bg-[#0F1419] border border-white/10 rounded-lg p-3 text-sm text-white mb-3" rows={3} placeholder="Votre message..."></textarea>
-           <Button className="w-full bg-[#D4AF37] text-black hover:bg-[#b5952f]" asChild>
+           <Button className="w-full bg-[var(--school-accent)] text-black hover:bg-[#b5952f]" asChild>
              <a href="/messages">Contacter le secrétariat</a>
            </Button>
         </div>
@@ -449,23 +449,23 @@ export const AnnouncementsSection = () => {
               href={dialogExtras.link_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#D4AF37] hover:underline inline-flex items-center gap-1"
+              className="text-[var(--school-accent)] hover:underline inline-flex items-center gap-1"
             >
               <ExternalLink className="h-4 w-4" /> Lien associé
             </a>
           ) : null}
           {dialogExtras.phone ? (
-            <a href={`tel:${String(dialogExtras.phone).replace(/\s/g, '')}`} className="text-[#D4AF37] hover:underline">
+            <a href={`tel:${String(dialogExtras.phone).replace(/\s/g, '')}`} className="text-[var(--school-accent)] hover:underline">
               {dialogExtras.phone}
             </a>
           ) : null}
           {dialogExtras.product_id ? (
-            <Link to={`/product/${dialogExtras.product_id}`} className="text-[#D4AF37] hover:underline">
+            <Link to={`/product/${dialogExtras.product_id}`} className="text-[var(--school-accent)] hover:underline">
               Voir le produit
             </Link>
           ) : null}
           {dialogExtras.module_id ? (
-            <Link to={`/curriculum/module/${dialogExtras.module_id}`} className="text-[#D4AF37] hover:underline">
+            <Link to={`/curriculum/module/${dialogExtras.module_id}`} className="text-[var(--school-accent)] hover:underline">
               Voir le module
             </Link>
           ) : null}
@@ -615,7 +615,7 @@ export const AttendanceSection = () => {
               <div className="bg-[#192734] border border-white/10 rounded-xl p-6">
                 <h3 className="text-lg font-bold text-white mb-4">Justifier une absence</h3>
                 <p className="text-sm text-gray-400 mb-4">Contactez le secrétariat pour toute demande de justification d'absence.</p>
-                <Button className="w-full bg-[#D4AF37] text-black hover:bg-[#b5952f]" asChild>
+                <Button className="w-full bg-[var(--school-accent)] text-black hover:bg-[#b5952f]" asChild>
                   <a href="/messages">Contacter le secrétariat</a>
                 </Button>
               </div>
@@ -720,13 +720,13 @@ export const DisciplineSection = () => {
 
           <div className="bg-[#192734] border border-white/10 rounded-xl p-6">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <Gavel className="w-5 h-5 text-[#D4AF37]" /> Procédure de Recours
+              <Gavel className="w-5 h-5 text-[var(--school-accent)]" /> Procédure de Recours
             </h3>
             <p className="text-gray-400 text-sm mb-4">
               Vous avez le droit de contester une décision disciplinaire dans les 5 jours suivant sa notification.
               Contactez le secrétariat pour toute contestation.
             </p>
-            <Button className="bg-[#D4AF37] text-black hover:bg-[#b5952f]" asChild>
+            <Button className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f]" asChild>
               <a href="/messages">Contacter le secrétariat</a>
             </Button>
           </div>

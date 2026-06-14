@@ -44,7 +44,7 @@ export default function SmartboardPedagogyStudioPanel(props) {
             className={cn(
               'flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 text-[9px] font-semibold uppercase tracking-wide transition-colors',
               sub === id
-                ? 'bg-[#D4AF37]/15 text-[#f5dd8a]'
+                ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f5dd8a]'
                 : 'text-white/35 hover:bg-white/[0.04] hover:text-white/65',
             )}
           >

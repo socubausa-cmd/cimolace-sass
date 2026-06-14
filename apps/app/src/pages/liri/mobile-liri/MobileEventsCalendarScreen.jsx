@@ -28,7 +28,7 @@ const TYPE_STYLES = {
   appointment: 'bg-emerald-500/15 text-emerald-200 border-emerald-500/25',
   exam: 'bg-violet-500/15 text-violet-200 border-violet-500/25',
   school: 'bg-sky-500/15 text-sky-200 border-sky-500/25',
-  calendar: 'bg-[#D4AF37]/12 text-[#f0e6c8] border-[#D4AF37]/28',
+  calendar: 'bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[#f0e6c8] border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)]',
 };
 
 function typeLabel(t) {
@@ -79,7 +79,7 @@ export default function MobileEventsCalendarScreen() {
     <LiriMobileScreenShell contentClassName="overflow-y-auto [scrollbar-width:thin] pb-6">
       <div className="flex items-start justify-between gap-2 pt-1 pb-3">
         <div>
-          <LiriWordmark size="kicker" className="text-[#D4AF37]/80" />
+          <LiriWordmark size="kicker" className="text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]" />
           <h1 className="font-serif text-lg text-[#faf3e6] tracking-tight">Agenda & événements</h1>
           <p className="text-xs text-white/45 mt-0.5">École, calendrier, vos rendez-vous et lives</p>
         </div>
@@ -87,7 +87,7 @@ export default function MobileEventsCalendarScreen() {
           type="button"
           variant="outline"
           size="icon"
-          className="h-9 w-9 shrink-0 border-[#D4AF37]/35 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+          className="h-9 w-9 shrink-0 border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
           disabled={loading}
           onClick={() => refresh()}
           aria-label="Actualiser"
@@ -107,7 +107,7 @@ export default function MobileEventsCalendarScreen() {
             <ChevronLeft className="h-5 w-5" />
           </button>
           <div className="text-center min-w-0 flex-1">
-            <p className="text-[11px] text-[#D4AF37]/80 font-medium">Semaine du</p>
+            <p className="text-[11px] text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)] font-medium">Semaine du</p>
             <p className="text-sm font-semibold text-white truncate">{safeFmt(weekStart, 'd MMMM yyyy')}</p>
             {displayedWeekCount > 0 ? (
               <p className="text-[10px] text-white/40 mt-0.5">
@@ -137,12 +137,12 @@ export default function MobileEventsCalendarScreen() {
                 key={idx}
                 className={cn(
                   'min-h-[72px] rounded-lg border p-1 flex flex-col',
-                  today ? 'border-[#D4AF37]/50 bg-[#D4AF37]/8' : 'border-white/8 bg-black/25',
+                  today ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)]' : 'border-white/8 bg-black/25',
                 )}
               >
                 <div className="text-center mb-1">
                   <div className="text-[8px] text-white/40 uppercase leading-none">{safeFmt(day, 'EEE')}</div>
-                  <div className={cn('text-xs font-bold leading-tight', today ? 'text-[#D4AF37]' : 'text-white/90')}>
+                  <div className={cn('text-xs font-bold leading-tight', today ? 'text-[var(--school-accent)]' : 'text-white/90')}>
                     {safeFmt(day, 'd')}
                   </div>
                 </div>
@@ -175,11 +175,11 @@ export default function MobileEventsCalendarScreen() {
         <p className="text-sm text-white/45 py-8 text-center">Chargement…</p>
       ) : filteredForWeek.length === 0 ? (
         <LiriGoldCard className="p-5 text-center">
-          <CalendarIcon className="h-10 w-10 text-[#D4AF37]/30 mx-auto mb-2" />
+          <CalendarIcon className="h-10 w-10 text-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] mx-auto mb-2" />
           <p className="text-sm text-white/55">Aucun événement cette semaine.</p>
           <Link
             to={LIRI_MOBILE.live}
-            className="inline-flex mt-3 text-xs font-semibold text-[#D4AF37] hover:underline"
+            className="inline-flex mt-3 text-xs font-semibold text-[var(--school-accent)] hover:underline"
           >
             Voir les lives & replays
           </Link>
@@ -212,7 +212,7 @@ export default function MobileEventsCalendarScreen() {
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[10px] uppercase tracking-wide text-[#D4AF37]/70">{typeLabel(ev.type)}</p>
+                    <p className="text-[10px] uppercase tracking-wide text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">{typeLabel(ev.type)}</p>
                     <p className="text-sm font-semibold text-white/95 leading-snug">{ev.title}</p>
                     <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/45">
                       <span className="inline-flex items-center gap-1">
@@ -229,7 +229,7 @@ export default function MobileEventsCalendarScreen() {
                     {ev.href ? (
                       <Link
                         to={ev.href}
-                        className="mt-2 inline-flex text-xs font-semibold text-[#D4AF37] hover:underline"
+                        className="mt-2 inline-flex text-xs font-semibold text-[var(--school-accent)] hover:underline"
                       >
                         Ouvrir →
                       </Link>
@@ -239,7 +239,7 @@ export default function MobileEventsCalendarScreen() {
                         href={ev.videoUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-2 inline-flex text-xs font-semibold text-[#D4AF37] hover:underline"
+                        className="mt-2 inline-flex text-xs font-semibold text-[var(--school-accent)] hover:underline"
                       >
                         Rejoindre la visio →
                       </a>

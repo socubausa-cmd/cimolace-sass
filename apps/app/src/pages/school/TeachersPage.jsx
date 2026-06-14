@@ -100,7 +100,7 @@ const TeachersPage = () => {
             transition={{ duration: 0.8 }}
           >
             <h1 className="text-4xl lg:text-6xl font-serif font-bold text-white mb-6">
-              Le Collège des <span className="text-[#D4AF37]">Maîtres</span>
+              Le Collège des <span className="text-[var(--school-accent)]">Maîtres</span>
             </h1>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
               "Le véritable maître n'est pas celui qui a le plus de disciples, mais celui qui forme le plus de maîtres."
@@ -133,30 +133,30 @@ const TeachersPage = () => {
                 <div className="col-span-1">
                   <div className="w-full aspect-square bg-[#0F1419] rounded-lg border border-white/10 flex items-center justify-center mb-4">
                      {/* Placeholder for teacher image if available, using initials here */}
-                     <span className="text-4xl font-serif font-bold text-[#D4AF37]">{teacher.name.charAt(0)}</span>
+                     <span className="text-4xl font-serif font-bold text-[var(--school-accent)]">{teacher.name.charAt(0)}</span>
                   </div>
                   <div className="text-center">
-                    <span className="inline-block px-3 py-1 bg-[#D4AF37]/20 text-[#D4AF37] rounded-full text-xs font-bold uppercase tracking-wider">
+                    <span className="inline-block px-3 py-1 bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] rounded-full text-xs font-bold uppercase tracking-wider">
                       {teacher.title}
                     </span>
                   </div>
                 </div>
                 <div className="md:col-span-2 space-y-6">
                   <div>
-                    <h4 className="text-[#D4AF37] font-bold mb-2">Spécialité</h4>
+                    <h4 className="text-[var(--school-accent)] font-bold mb-2">Spécialité</h4>
                     <p className="text-gray-300">{teacher.specialty}</p>
                   </div>
                   <div>
-                    <h4 className="text-[#D4AF37] font-bold mb-2">Biographie</h4>
+                    <h4 className="text-[var(--school-accent)] font-bold mb-2">Biographie</h4>
                     <p className="text-gray-300 italic">"{teacher.bio}"</p>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <h4 className="text-[#D4AF37] font-bold mb-2">Expérience</h4>
+                      <h4 className="text-[var(--school-accent)] font-bold mb-2">Expérience</h4>
                       <p className="text-gray-400 text-sm">{teacher.experience}</p>
                     </div>
                     <div>
-                      <h4 className="text-[#D4AF37] font-bold mb-2">Approche</h4>
+                      <h4 className="text-[var(--school-accent)] font-bold mb-2">Approche</h4>
                       <p className="text-gray-400 text-sm">{teacher.approach}</p>
                     </div>
                   </div>
@@ -182,7 +182,7 @@ const TeachersPage = () => {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-serif font-bold text-white mb-4">Nos Valeurs Fondamentales</h2>
-            <div className="w-24 h-1 bg-[#D4AF37] mx-auto rounded-full"></div>
+            <div className="w-24 h-1 bg-[var(--school-accent)] mx-auto rounded-full"></div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
@@ -190,9 +190,9 @@ const TeachersPage = () => {
               <motion.div 
                 key={idx}
                 whileHover={{ y: -10 }}
-                className="bg-[#0F1419] p-6 rounded-xl border border-white/5 text-center shadow-lg hover:border-[#D4AF37]/30 transition-all"
+                className="bg-[#0F1419] p-6 rounded-xl border border-white/5 text-center shadow-lg hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all"
               >
-                <div className="w-12 h-12 mx-auto bg-[#D4AF37]/10 rounded-full flex items-center justify-center text-[#D4AF37] mb-4">
+                <div className="w-12 h-12 mx-auto bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-full flex items-center justify-center text-[var(--school-accent)] mb-4">
                   <val.icon className="w-6 h-6" />
                 </div>
                 <h3 className="text-white font-bold mb-2">{val.title}</h3>
@@ -205,14 +205,14 @@ const TeachersPage = () => {
 
       {/* Continuing Education */}
       <section className="max-w-4xl mx-auto px-6 py-20 text-center">
-        <div className="bg-gradient-to-br from-[#192734] to-[#0F1419] p-10 rounded-2xl border border-[#D4AF37]/20 shadow-2xl">
-          <Award className="w-12 h-12 text-[#D4AF37] mx-auto mb-6" />
+        <div className="bg-gradient-to-br from-[#192734] to-[#0F1419] p-10 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] shadow-2xl">
+          <Award className="w-12 h-12 text-[var(--school-accent)] mx-auto mb-6" />
           <h2 className="text-2xl font-serif font-bold text-white mb-4">Formation Continue</h2>
           <p className="text-gray-300 mb-8">
             Nos enseignants suivent eux-mêmes un programme de formation continue rigoureux sous la direction du Fondateur, 
             garantissant ainsi la pureté et l'actualisation constante de l\'enseignement dispensé.
           </p>
-          <button className="px-8 py-3 bg-[#D4AF37] text-black font-bold rounded hover:bg-[#b5952f] transition-colors">
+          <button className="px-8 py-3 bg-[var(--school-accent)] text-black font-bold rounded hover:bg-[#b5952f] transition-colors">
             Rejoindre l'Académie
           </button>
         </div>

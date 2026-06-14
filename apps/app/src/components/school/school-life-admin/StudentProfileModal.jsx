@@ -189,7 +189,7 @@ const StudentProfileModal = ({ student, isOpen, onClose, dataSync }) => {
         {/* Header */}
         <div className="p-6 border-b border-white/10 bg-[#192734] flex flex-col md:flex-row justify-between gap-6 shrink-0">
            <div className="flex items-start gap-4">
-              <Avatar className="h-20 w-20 border-2 border-[#D4AF37] shadow-lg shadow-black/50">
+              <Avatar className="h-20 w-20 border-2 border-[var(--school-accent)] shadow-lg shadow-black/50">
                 <AvatarImage src={student.avatar} />
                 <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
               </Avatar>
@@ -198,7 +198,7 @@ const StudentProfileModal = ({ student, isOpen, onClose, dataSync }) => {
                  <div className="flex flex-wrap gap-2 items-center text-sm">
                     <span className="text-gray-400">{student.email}</span>
                     <span className="text-gray-600">•</span>
-                    <span className="text-[#D4AF37] font-medium capitalize">{yearLabel}</span>
+                    <span className="text-[var(--school-accent)] font-medium capitalize">{yearLabel}</span>
                  </div>
                  <div className="flex flex-wrap gap-2 mt-2 items-center">
                     <Badge className={student.status === 'active' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}>
@@ -319,7 +319,7 @@ const StudentProfileModal = ({ student, isOpen, onClose, dataSync }) => {
 };
 
 const TabTrig = ({ value, icon: Icon, label }) => (
-  <TabsTrigger value={value} className="data-[state=active]:bg-[#D4AF37] data-[state=active]:text-black text-gray-400 px-4 py-2 rounded-md transition-all gap-2">
+  <TabsTrigger value={value} className="data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-black text-gray-400 px-4 py-2 rounded-md transition-all gap-2">
      <Icon className="w-4 h-4" /> <span className="hidden md:inline">{label}</span>
   </TabsTrigger>
 );

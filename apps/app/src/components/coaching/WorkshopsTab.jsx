@@ -33,18 +33,18 @@ const WorkshopsTab = () => {
        >
         <div>
           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Users className="text-[#D4AF37]" /> Ateliers
+            <Users className="text-[var(--school-accent)]" /> Ateliers
           </h2>
           <p className="text-gray-400 text-sm">Gérez les ateliers collectifs et les inscriptions.</p>
         </div>
-        <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500">
+        <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
           <Plus className="w-4 h-4 mr-2" /> Créer Atelier
         </Button>
       </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total ateliers', value: stats.total, icon: Sparkles, color: 'text-[#D4AF37]' },
+          { label: 'Total ateliers', value: stats.total, icon: Sparkles, color: 'text-[var(--school-accent)]' },
           { label: 'A venir', value: stats.upcoming, icon: Calendar, color: 'text-blue-400' },
           { label: 'Complets', value: stats.full, icon: CheckCircle2, color: 'text-green-400' },
           { label: 'Taux remplissage', value: `${stats.occupancyPct}%`, icon: Users, color: 'text-purple-400' },
@@ -75,10 +75,10 @@ const WorkshopsTab = () => {
          </div>
          {workshops.length === 0 ? (
            <CardContent className="p-10 text-center">
-             <Users className="w-8 h-8 text-[#D4AF37] mx-auto mb-3" />
+             <Users className="w-8 h-8 text-[var(--school-accent)] mx-auto mb-3" />
              <p className="text-white font-semibold">Aucun atelier pour le moment</p>
              <p className="text-gray-400 text-sm mt-1">Crée ton premier atelier pour activer la programmation collective.</p>
-             <Button className="mt-4 bg-[#D4AF37] text-black hover:bg-[#c4a030]">
+             <Button className="mt-4 bg-[var(--school-accent)] text-black hover:bg-[#c4a030]">
                <Plus className="w-4 h-4 mr-2" /> Créer le premier atelier
              </Button>
            </CardContent>
@@ -108,7 +108,7 @@ const WorkshopsTab = () => {
                         {w.enrolledCount} / {w.spots}
                      </TableCell>
                      <TableCell>
-                        <Badge variant="outline" className="border-[#D4AF37] text-[#D4AF37]">{w.level}</Badge>
+                        <Badge variant="outline" className="border-[var(--school-accent)] text-[var(--school-accent)]">{w.level}</Badge>
                      </TableCell>
                      <TableCell>
                         <Badge className="bg-blue-600 capitalize">{w.status}</Badge>

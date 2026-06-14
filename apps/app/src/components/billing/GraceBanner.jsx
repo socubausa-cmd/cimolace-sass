@@ -31,11 +31,11 @@ export default function GraceBanner() {
           </div>
         </div>
         {directCheckoutUrl ? (
-          <Button asChild size="sm" className="bg-[#D4AF37] text-black hover:bg-[#bfa345] font-bold">
+          <Button asChild size="sm" className="bg-[var(--school-accent)] text-black hover:bg-[#bfa345] font-bold">
             <a href={directCheckoutUrl} target="_blank" rel="noreferrer">Régulariser maintenant</a>
           </Button>
         ) : (
-          <Button asChild size="sm" className="bg-[#D4AF37] text-black hover:bg-[#bfa345] font-bold">
+          <Button asChild size="sm" className="bg-[var(--school-accent)] text-black hover:bg-[#bfa345] font-bold">
             <Link to={renewalPath}>Régulariser maintenant</Link>
           </Button>
         )}

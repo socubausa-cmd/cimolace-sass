@@ -62,7 +62,7 @@ const RedeemPrivilegedLinkPage = () => {
   if (authLoading || loading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-[#D4AF37]" />
+        <Loader2 className="w-12 h-12 animate-spin text-[var(--school-accent)]" />
       </div>
     );
   }
@@ -75,7 +75,7 @@ const RedeemPrivilegedLinkPage = () => {
         <p className="text-gray-400 text-center max-w-md">{message}</p>
         <Button
           onClick={() => navigate(shouldUseLiriMobileLogin() ? ELEVE_MOBILE.home : '/dashboard')}
-          className="bg-[#D4AF37] text-black"
+          className="bg-[var(--school-accent)] text-black"
         >
           {shouldUseLiriMobileLogin() ? 'Ouvrir LIRI mobile' : 'Aller au tableau de bord'}
         </Button>

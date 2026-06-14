@@ -136,7 +136,7 @@ export default function LiveMemberVideoPreviewModal({
             {memberSchoolLifeEnabled ? (
               <div className="flex max-h-[38vh] w-full shrink-0 flex-col overflow-hidden border-t border-white/[0.1] bg-[#080910]/98 sm:max-h-none sm:w-[min(100%,340px)] sm:border-l sm:border-t-0">
                 <div className="shrink-0 border-b border-white/[0.06] px-3 py-2">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#D4AF37]/95">Vie scolaire</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[color-mix(in_srgb,var(--school-accent)_95%,transparent)]">Vie scolaire</p>
                   <p className="text-[9px] text-white/35">Résumé, présences, événements</p>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:rgba(200,150,12,0.2)_transparent]">

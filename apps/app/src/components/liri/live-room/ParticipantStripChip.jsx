@@ -119,10 +119,10 @@ export default function ParticipantStripChip({
       className={cn(
         'relative h-[56px] rounded-xl overflow-hidden border transition-colors',
         fillSlot ? 'min-w-0 w-full' : 'w-[80px] shrink-0',
-        isPromoted ? 'border-[#D4AF37]/55 ring-1 ring-[#D4AF37]/30' : 'border-white/12',
+        isPromoted ? 'border-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] ring-1 ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]' : 'border-white/12',
         seatRole === 'host'
           && 'rounded-[13px] border-2 border-amber-400/40 bg-gradient-to-br from-[#2a1f40]/90 to-[#15102a]/95 shadow-[inset_0_0_24px_-8px_rgba(0,0,0,0.45)]',
-        (onOpenPreview || (canPromote && onPromote)) ? 'cursor-pointer hover:border-[#D4AF37]/40' : '',
+        (onOpenPreview || (canPromote && onPromote)) ? 'cursor-pointer hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]' : '',
       )}
     >
       <video
@@ -163,7 +163,7 @@ export default function ParticipantStripChip({
         </span>
       ) : null}
       {isPromoted && (
-        <span className="absolute top-0.5 left-0.5 z-[4] text-[7px] font-bold uppercase tracking-wide px-1 py-0.5 rounded bg-[#D4AF37] text-black">
+        <span className="absolute top-0.5 left-0.5 z-[4] text-[7px] font-bold uppercase tracking-wide px-1 py-0.5 rounded bg-[var(--school-accent)] text-black">
           Scène
         </span>
       )}
@@ -175,7 +175,7 @@ export default function ParticipantStripChip({
       type="button"
       onClick={onClick}
       className={cn(
-        'border-0 bg-transparent p-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]/50',
+        'border-0 bg-transparent p-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]',
         fillSlot ? 'h-full w-full min-w-0' : 'shrink-0',
       )}
       title={titleText}

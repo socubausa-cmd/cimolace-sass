@@ -73,7 +73,7 @@ export function PrivateChatOverlay({ onSend, sending = false }) {
           type="button"
           disabled={sending || !text.trim()}
           onClick={() => void submit()}
-          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#D4AF37] text-black disabled:opacity-40"
+          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[var(--school-accent)] text-black disabled:opacity-40"
           aria-label="Envoyer"
         >
           <Send className="h-4 w-4" />

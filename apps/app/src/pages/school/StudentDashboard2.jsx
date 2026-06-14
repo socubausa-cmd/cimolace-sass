@@ -48,13 +48,13 @@ const StudentDashboard2 = () => {
   const completedCount = progress.filter(p => p.status === 'completed').length;
   const inProgressModule = progress.find(p => p.status === 'in_progress');
 
-  if (loading) return <div className="min-h-screen bg-[#0F1419] flex items-center justify-center"><div className="w-12 h-12 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div></div>;
+  if (loading) return <div className="min-h-screen bg-[#0F1419] flex items-center justify-center"><div className="w-12 h-12 border-4 border-[var(--school-accent)] border-t-transparent rounded-full animate-spin"></div></div>;
 
   return (
     <div className="min-h-screen bg-[#0F1419] text-white pt-24 pb-20 px-6">
        <Helmet><title>Tableau de Bord 2ème Année | PRORASCIENCE</title></Helmet>
        <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-serif font-bold mb-8">Tableau de Bord - <span className="text-[#D4AF37]">Niveau Avancé</span></h1>
+          <h1 className="text-3xl font-serif font-bold mb-8">Tableau de Bord - <span className="text-[var(--school-accent)]">Niveau Avancé</span></h1>
 
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
@@ -66,24 +66,24 @@ const StudentDashboard2 = () => {
           <div className="grid lg:grid-cols-3 gap-8">
              <div className="lg:col-span-2 space-y-8">
                 {/* Current Module */}
-                <div className="bg-[#192734] border border-[#D4AF37]/30 rounded-xl p-6 relative overflow-hidden">
-                   <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                <div className="bg-[#192734] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] rounded-xl p-6 relative overflow-hidden">
+                   <div className="absolute top-0 right-0 w-32 h-32 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full -translate-y-1/2 translate-x-1/2"></div>
                    <h2 className="text-xl font-bold mb-4">Module Actuel</h2>
                    {inProgressModule ? (
                       <div>
-                         <h3 className="text-2xl font-bold text-[#D4AF37] mb-2">{inProgressModule.second_year_modules?.title}</h3>
+                         <h3 className="text-2xl font-bold text-[var(--school-accent)] mb-2">{inProgressModule.second_year_modules?.title}</h3>
                          <div className="w-full bg-black/40 h-2 rounded-full mb-4">
-                            <div className="bg-[#D4AF37] h-full rounded-full" style={{ width: `${inProgressModule.progress_percentage}%` }}></div>
+                            <div className="bg-[var(--school-accent)] h-full rounded-full" style={{ width: `${inProgressModule.progress_percentage}%` }}></div>
                          </div>
                          <Link to={`/curriculum/module-2/${inProgressModule.module_id}`}>
-                            <Button className="bg-[#D4AF37] text-black font-bold">Continuer</Button>
+                            <Button className="bg-[var(--school-accent)] text-black font-bold">Continuer</Button>
                          </Link>
                       </div>
                    ) : (
                       <div className="text-gray-400">
                          <p className="mb-4">Aucun module en cours. Prêt à commencer le prochain ?</p>
                          <Link to="/curriculum/second-year">
-                            <Button variant="outline" className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10">Consulter le Programme</Button>
+                            <Button variant="outline" className="border-[var(--school-accent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">Consulter le Programme</Button>
                          </Link>
                       </div>
                    )}
@@ -93,7 +93,7 @@ const StudentDashboard2 = () => {
                 <div>
                    <div className="flex justify-between items-center mb-4">
                       <h2 className="text-xl font-bold">Journal de Pratique Récent</h2>
-                      <Link to="/student/practice-journal" className="text-sm text-[#D4AF37] hover:underline">Tout voir</Link>
+                      <Link to="/student/practice-journal" className="text-sm text-[var(--school-accent)] hover:underline">Tout voir</Link>
                    </div>
                    <div className="space-y-4">
                       {journalEntries.length > 0 ? journalEntries.map(entry => (

@@ -14,10 +14,10 @@ const ClassroomHomePage = () => {
     <div className="min-h-screen bg-[#0F1419] flex flex-col items-center py-12 px-4 md:px-8">
        {/* Header */}
        <div className="text-center mb-16 space-y-4 max-w-2xl">
-          <div className="inline-flex items-center justify-center p-4 rounded-full bg-[#D4AF37]/10 mb-2 ring-1 ring-[#D4AF37]/30 shadow-[0_0_30px_-5px_rgba(212,175,55,0.3)]">
-             <GraduationCap className="w-10 h-10 text-[#D4AF37]" />
+          <div className="inline-flex items-center justify-center p-4 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] mb-2 ring-1 ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] shadow-[0_0_30px_-5px_rgba(212,175,55,0.3)]">
+             <GraduationCap className="w-10 h-10 text-[var(--school-accent)]" />
           </div>
-          <h1 className="text-4xl md:text-6xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-[#D4AF37] to-white">
+          <h1 className="text-4xl md:text-6xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-[var(--school-accent)] to-white">
              Aller en classe
           </h1>
           <p className="text-lg text-gray-400">
@@ -29,7 +29,7 @@ const ClassroomHomePage = () => {
        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-6xl">
           
           {/* Card 1: Live Classes */}
-          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-[#1e3a8a]/20 to-[#D4AF37]/10 rounded-2xl p-1 shadow-lg hover:shadow-[0_0_40px_-10px_rgba(30,58,138,0.5)] transition-all duration-500 group">
+          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-[#1e3a8a]/20 to-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-2xl p-1 shadow-lg hover:shadow-[0_0_40px_-10px_rgba(30,58,138,0.5)] transition-all duration-500 group">
              <div className="absolute inset-0 bg-[#0F1419] m-[1px] rounded-2xl z-0"></div>
              <div className="relative z-10 p-8 h-full flex flex-col">
                 <div className="flex justify-between items-start mb-6">
@@ -71,7 +71,7 @@ const ClassroomHomePage = () => {
           </Card>
 
           {/* Card 2: Progressive Learning */}
-          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-[#065f46]/20 to-[#D4AF37]/10 rounded-2xl p-1 shadow-lg hover:shadow-[0_0_40px_-10px_rgba(6,95,70,0.5)] transition-all duration-500 group">
+          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-[#065f46]/20 to-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-2xl p-1 shadow-lg hover:shadow-[0_0_40px_-10px_rgba(6,95,70,0.5)] transition-all duration-500 group">
              <div className="absolute inset-0 bg-[#0F1419] m-[1px] rounded-2xl z-0"></div>
              <div className="relative z-10 p-8 h-full flex flex-col">
                 <div className="flex justify-between items-start mb-6">
@@ -91,13 +91,13 @@ const ClassroomHomePage = () => {
                       <span className="text-white font-bold">145</span>
                    </div>
                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-400 flex items-center gap-2"><Clock className="w-4 h-4 text-[#D4AF37]" /> Heures de contenu</span>
+                      <span className="text-gray-400 flex items-center gap-2"><Clock className="w-4 h-4 text-[var(--school-accent)]" /> Heures de contenu</span>
                       <span className="text-white font-bold">320h</span>
                    </div>
                    <div className="w-full bg-white/5 rounded-full h-2 mt-2">
-                      <div className="bg-gradient-to-r from-green-500 to-[#D4AF37] h-2 rounded-full w-[45%] shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
+                      <div className="bg-gradient-to-r from-green-500 to-[var(--school-accent)] h-2 rounded-full w-[45%] shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
                    </div>
-                   <div className="text-right text-xs text-[#D4AF37]">Progression globale: 45%</div>
+                   <div className="text-right text-xs text-[var(--school-accent)]">Progression globale: 45%</div>
                 </div>
 
                 <div className="mt-auto">

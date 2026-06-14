@@ -6,7 +6,7 @@ import { useBilling } from '@/contexts/BillingContext';
 
 const Loader = () => (
   <div className="flex h-screen w-full items-center justify-center bg-[#0F1419]">
-    <Loader2 className="h-8 w-8 animate-spin text-[#D4AF37]" />
+    <Loader2 className="h-8 w-8 animate-spin text-[var(--school-accent)]" />
   </div>
 );
 

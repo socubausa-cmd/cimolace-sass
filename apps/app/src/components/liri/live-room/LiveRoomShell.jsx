@@ -72,7 +72,7 @@ function immersiveInitials(name) {
 
 /** Panneau « arène » bordure or / halo (mockup premium) */
 const immersiveArenaPanelClass =
-  'rounded-2xl border border-[#D4AF37]/40 bg-[#070a10]/92 shadow-[0_0_42px_-14px_rgba(212,175,55,0.28),inset_0_1px_0_0_rgba(212,175,55,0.12)] backdrop-blur-md';
+  'rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[#070a10]/92 shadow-[0_0_42px_-14px_rgba(212,175,55,0.28),inset_0_1px_0_0_rgba(212,175,55,0.12)] backdrop-blur-md';
 
 // ─── Inline member panel (top-right) ou feuille basse (mobile étroit) ─────────
 function MembersPanel({ open, participants, activeId, onPromote, onClose, readOnly, sheetLayout = false }) {
@@ -121,7 +121,7 @@ function MembersPanel({ open, participants, activeId, onPromote, onClose, readOn
               <button
                 type="button"
                 onClick={() => { onPromote?.(p.id); onClose?.(); }}
-                className="min-h-8 sm:h-5 w-full rounded-lg bg-white/[0.04] border border-white/10 hover:border-[#D4AF37]/35 hover:text-[#D4AF37] text-[9px] text-gray-300"
+                className="min-h-8 sm:h-5 w-full rounded-lg bg-white/[0.04] border border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:text-[var(--school-accent)] text-[9px] text-gray-300"
               >
                 Monter
               </button>
@@ -213,7 +213,7 @@ function CoursePlanRailBlock({
             );
             const boxClass = cn(
               'w-full rounded-lg border px-2 py-1.5 text-left transition-colors',
-              active ? 'border-[#D4AF37]/45 bg-[#D4AF37]/10' : 'border-white/10 bg-white/[0.03]',
+              active ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]' : 'border-white/10 bg-white/[0.03]',
               isHost && 'hover:bg-white/[0.05]',
             );
             if (!isHost) {
@@ -1000,7 +1000,7 @@ export default function LiveRoomShell({
     ? 'rounded-2xl border border-sky-400/22 bg-black/[0.05] shadow-[inset_0_1px_0_0_rgba(56,189,248,0.12)]'
     : glassPanel;
   const zone3Shell = liriGuestLayout
-    ? 'rounded-2xl border border-[#D4AF37]/28 bg-black/[0.06] shadow-[inset_0_1px_0_0_rgba(212,175,55,0.12)]'
+    ? 'rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-black/[0.06] shadow-[inset_0_1px_0_0_rgba(212,175,55,0.12)]'
     : glassPanel;
   const guestMainVideoPanelLabel = (() => {
     const pl = mainDisplayParticipant?.panelLabel || 'Flux entrant';
@@ -1133,7 +1133,7 @@ export default function LiveRoomShell({
             ) : null}
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            <span className="text-[9px] font-semibold tabular-nums text-[#D4AF37]/85">
+            <span className="text-[9px] font-semibold tabular-nums text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)]">
               {isHost ? arenaHostActivityFeed.length : 0}
             </span>
             {isHost && arenaHostActivityFeed.length > 0 && onArenaHostActivityFeedClear ? (
@@ -1164,7 +1164,7 @@ export default function LiveRoomShell({
                   className={cn(
                     'shrink-0 rounded-lg border px-2 py-0.5 text-[8px] font-medium transition-colors',
                     active
-                      ? 'border-[#D4AF37]/45 bg-[#D4AF37]/12 text-[#f5dd8a]'
+                      ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[#f5dd8a]'
                       : 'border-white/10 bg-white/[0.03] text-white/50 hover:border-white/18 hover:text-white/75',
                   )}
                 >
@@ -1181,8 +1181,8 @@ export default function LiveRoomShell({
               <p className="mt-1 text-[9px] text-white/28">0 notification</p>
             </div>
           ) : arenaHostActivityFeed.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-[#D4AF37]/22 bg-black/25 px-2 py-5 text-center">
-              <p className="text-[10px] text-[#D4AF37]/55">0 notification</p>
+            <div className="rounded-lg border border-dashed border-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] bg-black/25 px-2 py-5 text-center">
+              <p className="text-[10px] text-[color-mix(in_srgb,var(--school-accent)_55%,transparent)]">0 notification</p>
               <p className="mt-1 text-[9px] text-white/35">Aucun événement récent</p>
             </div>
           ) : arenaNotifFiltered.length === 0 ? (
@@ -1191,7 +1191,7 @@ export default function LiveRoomShell({
               <button
                 type="button"
                 onClick={() => setArenaNotifFilter('all')}
-                className="mt-2 text-[9px] font-medium text-[#D4AF37]/85 underline decoration-[#D4AF37]/40 underline-offset-2 hover:text-[#f5dd8a]"
+                className="mt-2 text-[9px] font-medium text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)] underline decoration-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] underline-offset-2 hover:text-[#f5dd8a]"
               >
                 Afficher tout
               </button>
@@ -1245,7 +1245,7 @@ export default function LiveRoomShell({
               <button
                 type="button"
                 onClick={() => onNeuronqToggleQa?.(!neuronqQaMode)}
-                className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.03] text-[10px] text-white/85 hover:bg-[#D4AF37]/10"
+                className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.03] text-[10px] text-white/85 hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
               >
                 {neuronqQaMode ? 'Fermer le mode Q&R' : 'Activer le mode Q&R'}
               </button>
@@ -1280,12 +1280,12 @@ export default function LiveRoomShell({
             )}
           >
             <div className="flex shrink-0 items-center gap-3 px-0.5 pt-0.5">
-              <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#D4AF37]/35 via-[#1a1510] to-black text-base font-semibold tracking-tight text-[#fdf6dd] shadow-[0_0_24px_-4px_rgba(212,175,55,0.55)] ring-2 ring-[#D4AF37]/55 ring-offset-2 ring-offset-[#070a10] font-serif">
+              <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] via-[#1a1510] to-black text-base font-semibold tracking-tight text-[#fdf6dd] shadow-[0_0_24px_-4px_rgba(212,175,55,0.55)] ring-2 ring-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] ring-offset-2 ring-offset-[#070a10] font-serif">
                 {immersiveInitials(remoteName)}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-serif text-base font-semibold text-[#D4AF37] md:text-lg">{remoteName}</p>
-                <p className="text-[10px] leading-snug text-[#D4AF37]/65">
+                <p className="truncate font-serif text-base font-semibold text-[var(--school-accent)] md:text-lg">{remoteName}</p>
+                <p className="text-[10px] leading-snug text-[color-mix(in_srgb,var(--school-accent)_65%,transparent)]">
                   {remoteWaiting ? 'Connexion en cours…' : (mainDisplayParticipant?.panelSubtitle || 'Flux vidéo actif')}
                 </p>
               </div>
@@ -1314,8 +1314,8 @@ export default function LiveRoomShell({
                 />
               </div>
             </div>
-            <div className="shrink-0 rounded-xl border border-[#D4AF37]/20 bg-black/35 p-2">
-              <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#D4AF37]/80">
+            <div className="shrink-0 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-black/35 p-2">
+              <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">
                 Membres privilégiés
               </p>
               <div className="grid grid-cols-2 gap-1">
@@ -1327,10 +1327,10 @@ export default function LiveRoomShell({
                       key={pos}
                       className={cn(
                         'flex h-11 items-center gap-1.5 rounded-lg border px-1.5',
-                        seat ? 'border-[#D4AF37]/35 bg-[#D4AF37]/10' : 'border-white/10 bg-white/[0.04]',
+                        seat ? 'border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]' : 'border-white/10 bg-white/[0.04]',
                       )}
                     >
-                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-black/40 text-[9px] font-medium text-[#D4AF37]/90">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-black/40 text-[9px] font-medium text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">
                         {initial}
                       </div>
                       <div className="min-w-0">
@@ -1403,7 +1403,7 @@ export default function LiveRoomShell({
                 onClick={() => isHost && seat?.userId && onZone3RevokeSeat?.(pos)}
                 className={cn(
                   'h-14 rounded-lg border text-left px-1.5 transition-all flex items-center gap-1.5',
-                  seat ? 'border-[#D4AF37]/45 bg-[#D4AF37]/10 text-white' : 'border-white/10 bg-white/[0.03] text-white/45',
+                  seat ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-white' : 'border-white/10 bg-white/[0.03] text-white/45',
                   !isHost && 'opacity-80 cursor-default',
                 )}
               >
@@ -1434,12 +1434,12 @@ export default function LiveRoomShell({
           <div className={cn('p-1.5', glassSub)} onDoubleClick={() => openDevModal('hands')}>
             <div className="mb-1 flex items-center justify-between gap-2">
               <p className={cn(railTitle, 'uppercase tracking-wide text-white/70 text-[11px]')}>Mains levées</p>
-              <span className="text-[9px] font-semibold tabular-nums text-[#D4AF37]/85">{raisedHandsOnly.length}</span>
+              <span className="text-[9px] font-semibold tabular-nums text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)]">{raisedHandsOnly.length}</span>
             </div>
             <div className="max-h-[min(28vh,240px)] min-h-[5rem] space-y-1.5 overflow-y-auto overflow-x-hidden pr-0.5 [scrollbar-width:thin]">
               {raisedHandsOnly.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-[#D4AF37]/22 bg-black/25 px-2 py-5 text-center">
-                  <p className="text-[10px] text-[#D4AF37]/55">Aucune main levée</p>
+                <div className="rounded-lg border border-dashed border-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] bg-black/25 px-2 py-5 text-center">
+                  <p className="text-[10px] text-[color-mix(in_srgb,var(--school-accent)_55%,transparent)]">Aucune main levée</p>
                   <p className="mt-1 text-[9px] text-white/35">0 main levée</p>
                 </div>
               ) : (
@@ -1449,13 +1449,13 @@ export default function LiveRoomShell({
                       key={String(h.userId)}
                       type="button"
                       onClick={() => promoteHandToPrivileged(h.userId)}
-                      className="flex h-9 w-full items-center justify-between gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-1.5 text-left hover:border-[#D4AF37]/30 hover:bg-[#D4AF37]/12"
+                      className="flex h-9 w-full items-center justify-between gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-1.5 text-left hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]"
                     >
                       <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-[9px] text-white/85">
                         {(h.name || 'Membre').slice(0, 1).toUpperCase()}
                       </span>
                       <span className="min-w-0 flex-1 truncate text-[10px] text-white/85">{h.name || 'Membre'}</span>
-                      <span className="flex-shrink-0 text-[9px] text-[#D4AF37]">Monter</span>
+                      <span className="flex-shrink-0 text-[9px] text-[var(--school-accent)]">Monter</span>
                     </button>
                   ) : (
                     <div
@@ -1477,7 +1477,7 @@ export default function LiveRoomShell({
           <div className={cn('p-1.5', glassSub)}>
             <div className="mb-1 flex items-center justify-between gap-2">
               <p className={cn(railTitle, 'uppercase tracking-wide text-white/70 text-[11px]')}>Salle d&apos;attente</p>
-              <span className="text-[9px] font-semibold tabular-nums text-[#D4AF37]/85">
+              <span className="text-[9px] font-semibold tabular-nums text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)]">
                 {isHost ? arenaWaitingEntries.length : 0}
               </span>
             </div>
@@ -1488,8 +1488,8 @@ export default function LiveRoomShell({
                   <p className="mt-1 text-[9px] text-white/28">0 personne en attente</p>
                 </div>
               ) : arenaWaitingEntries.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-[#D4AF37]/22 bg-black/25 px-2 py-5 text-center">
-                  <p className="text-[10px] text-[#D4AF37]/55">Aucune personne en attente</p>
+                <div className="rounded-lg border border-dashed border-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] bg-black/25 px-2 py-5 text-center">
+                  <p className="text-[10px] text-[color-mix(in_srgb,var(--school-accent)_55%,transparent)]">Aucune personne en attente</p>
                   <p className="mt-1 text-[9px] text-white/35">0 en salle d&apos;attente</p>
                 </div>
               ) : (
@@ -1506,7 +1506,7 @@ export default function LiveRoomShell({
                           className="h-7 w-7 flex-shrink-0 rounded-full border border-white/10 object-cover"
                         />
                       ) : (
-                        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[10px] font-bold text-[#D4AF37]">
+                        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[10px] font-bold text-[var(--school-accent)]">
                           {(entry.profiles?.name || '?').slice(0, 1).toUpperCase()}
                         </div>
                       )}
@@ -1539,7 +1539,7 @@ export default function LiveRoomShell({
                         <button
                           type="button"
                           onClick={() => onArenaApproveWaiting(entry.id, { audioOnly: true })}
-                          className="h-7 rounded-lg border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-1.5 text-[9px] text-[#D4AF37] hover:bg-[#D4AF37]/18"
+                          className="h-7 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-1.5 text-[9px] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)]"
                           title="Auditeur"
                         >
                           🎧
@@ -1582,12 +1582,12 @@ export default function LiveRoomShell({
                 <button
                   type="button"
                   onClick={() => onNeuronqToggleQa?.(!neuronqQaMode)}
-                  className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.03] text-[10px] text-white/85 hover:bg-[#D4AF37]/10"
+                  className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.03] text-[10px] text-white/85 hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                 >
                   {neuronqQaMode ? 'Fermer le mode Q&R' : 'Activer le mode Q&R'}
                 </button>
               ) : showNeuronq && !isHost && neuronqQaMode ? (
-                <div className="flex h-9 w-full items-center justify-center rounded-lg border border-[#D4AF37]/25 bg-[#D4AF37]/8 px-2 text-[10px] text-[#D4AF37]/95">
+                <div className="flex h-9 w-full items-center justify-center rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] px-2 text-[10px] text-[color-mix(in_srgb,var(--school-accent)_95%,transparent)]">
                   Mode Q&R (hôte)
                 </div>
               ) : null}
@@ -1606,12 +1606,12 @@ export default function LiveRoomShell({
                   <Bell className="h-3 w-3" />
                   Mains levées
                 </span>
-                <span className="text-[10px] font-semibold tabular-nums text-[#D4AF37]">{raisedHandsOnly.length}</span>
+                <span className="text-[10px] font-semibold tabular-nums text-[var(--school-accent)]">{raisedHandsOnly.length}</span>
               </div>
               {showNeuronq ? (
                 <div className="flex h-9 items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-2">
                   <span className="text-[10px] text-white/80">Q&R en attente</span>
-                  <span className="text-[10px] font-semibold tabular-nums text-[#D4AF37]">{neuronqPendingCount}</span>
+                  <span className="text-[10px] font-semibold tabular-nums text-[var(--school-accent)]">{neuronqPendingCount}</span>
                 </div>
               ) : null}
               <div className="flex h-9 items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-2">
@@ -1622,12 +1622,12 @@ export default function LiveRoomShell({
                 <button
                   type="button"
                   onClick={() => onNeuronqToggleQa?.(!neuronqQaMode)}
-                  className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.03] text-[10px] text-white/85 hover:bg-[#D4AF37]/10"
+                  className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.03] text-[10px] text-white/85 hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                 >
                   {neuronqQaMode ? 'Fermer le mode Q&R' : 'Activer le mode Q&R'}
                 </button>
               ) : showNeuronq && !isHost && neuronqQaMode ? (
-                <div className="flex h-9 w-full items-center justify-center rounded-lg border border-[#D4AF37]/25 bg-[#D4AF37]/8 px-2 text-[10px] text-[#D4AF37]/95">
+                <div className="flex h-9 w-full items-center justify-center rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] px-2 text-[10px] text-[color-mix(in_srgb,var(--school-accent)_95%,transparent)]">
                   Mode Q&R (hôte)
                 </div>
               ) : null}
@@ -1637,7 +1637,7 @@ export default function LiveRoomShell({
           <div className={cn('p-1.5', glassSub)} onDoubleClick={() => openDevModal('hands')}>
             <div className="mb-1 flex items-center justify-between gap-2">
               <p className={cn(railTitle, 'uppercase tracking-wide text-white/70 text-[11px]')}>Mains levées</p>
-              <span className="text-[9px] font-semibold tabular-nums text-[#D4AF37]/85">{raisedHandsOnly.length}</span>
+              <span className="text-[9px] font-semibold tabular-nums text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)]">{raisedHandsOnly.length}</span>
             </div>
             <div className="max-h-[min(24vh,200px)] min-h-[4rem] space-y-1.5 overflow-y-auto overflow-x-hidden pr-0.5 [scrollbar-width:thin]">
               {raisedHandsOnly.length === 0 ? (
@@ -1652,13 +1652,13 @@ export default function LiveRoomShell({
                       key={String(h.userId)}
                       type="button"
                       onClick={() => promoteHandToPrivileged(h.userId)}
-                      className="flex h-9 w-full items-center justify-between gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-1.5 text-left hover:border-[#D4AF37]/30 hover:bg-[#D4AF37]/12"
+                      className="flex h-9 w-full items-center justify-between gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-1.5 text-left hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]"
                     >
                       <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-[9px] text-white/85">
                         {(h.name || 'Membre').slice(0, 1).toUpperCase()}
                       </span>
                       <span className="min-w-0 flex-1 truncate text-[10px] text-white/85">{h.name || 'Membre'}</span>
-                      <span className="flex-shrink-0 text-[9px] text-[#D4AF37]">Monter</span>
+                      <span className="flex-shrink-0 text-[9px] text-[var(--school-accent)]">Monter</span>
                     </button>
                   ) : (
                     <div
@@ -1702,10 +1702,10 @@ export default function LiveRoomShell({
               immersiveArenaPanelClass,
             )}
           >
-            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[#D4AF37]/25 bg-black/35 px-2.5 py-1.5">
+            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-black/35 px-2.5 py-1.5">
               <div className="min-w-0">
-                <p className="font-serif text-xs font-semibold text-[#D4AF37] sm:text-sm">Écran intelligent</p>
-                <p className="truncate text-[9px] text-[#D4AF37]/55">
+                <p className="font-serif text-xs font-semibold text-[var(--school-accent)] sm:text-sm">Écran intelligent</p>
+                <p className="truncate text-[9px] text-[color-mix(in_srgb,var(--school-accent)_55%,transparent)]">
                   Diaporama, partage d'écran, Web, images — bandeau de scènes ci-dessous
                 </p>
               </div>
@@ -1893,7 +1893,7 @@ export default function LiveRoomShell({
                       <button
                         type="button"
                         onClick={() => setMembersOpen(true)}
-                        className="shrink-0 border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]/50 rounded-xl"
+                        className="shrink-0 border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] rounded-xl"
                         title="Voir tous les membres"
                       >
                         <ArenaStripOverflowTile
@@ -1928,7 +1928,7 @@ export default function LiveRoomShell({
                         onClick={() => setMemberPreview({ id: p.id, name: p.name, isLocal: !!p.isLocal })}
                         className={cn(
                           'h-8 px-2 rounded-xl text-[11px] border whitespace-nowrap inline-flex items-center gap-1.5 flex-shrink-0',
-                          activeP ? 'border-[#D4AF37]/45 bg-[#D4AF37]/14 text-[#f5dd8a]' : 'border-white/10 bg-white/[0.03] text-white/70'
+                          activeP ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] text-[#f5dd8a]' : 'border-white/10 bg-white/[0.03] text-white/70'
                         )}
                       >
                         <span className="h-5 w-5 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-[9px]">
@@ -2089,12 +2089,12 @@ export default function LiveRoomShell({
         <div className={cn(railColumn, zone3Shell, '!pt-3 !overflow-hidden')}>
           <div className={cn('flex min-h-0 flex-1 flex-col gap-2 p-2 sm:p-2.5', immersiveArenaPanelClass)}>
             <div className="flex shrink-0 items-center gap-3 px-0.5 pt-0.5">
-              <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#D4AF37]/35 via-[#1a1510] to-black text-base font-semibold tracking-tight text-[#fdf6dd] shadow-[0_0_24px_-4px_rgba(212,175,55,0.55)] ring-2 ring-[#D4AF37]/55 ring-offset-2 ring-offset-[#070a10] font-serif">
+              <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] via-[#1a1510] to-black text-base font-semibold tracking-tight text-[#fdf6dd] shadow-[0_0_24px_-4px_rgba(212,175,55,0.55)] ring-2 ring-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] ring-offset-2 ring-offset-[#070a10] font-serif">
                 {immersiveInitials(selfName)}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-serif text-base font-semibold text-[#D4AF37] md:text-lg">{selfName}</p>
-                <p className="text-[10px] leading-snug text-[#D4AF37]/65">
+                <p className="truncate font-serif text-base font-semibold text-[var(--school-accent)] md:text-lg">{selfName}</p>
+                <p className="text-[10px] leading-snug text-[color-mix(in_srgb,var(--school-accent)_65%,transparent)]">
                   {miniDisplayParticipant?.panelSubtitle || 'Votre retour caméra'}
                 </p>
               </div>
@@ -2124,8 +2124,8 @@ export default function LiveRoomShell({
                 />
               </div>
             </div>
-            <div className="shrink-0 rounded-xl border border-[#D4AF37]/20 bg-black/35 px-2 py-2 text-center">
-              <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-[#D4AF37]/80">
+            <div className="shrink-0 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-black/35 px-2 py-2 text-center">
+              <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">
                 Prévisualisation locale
               </p>
               <p className="mt-0.5 text-[10px] text-white/35">Même format que l'interlocuteur</p>
@@ -2143,7 +2143,7 @@ export default function LiveRoomShell({
       >
         <div>
           <p className={cn(railTitle, 'text-sm')}>Zone 3 — Passif & cours</p>
-          <p className={cn('text-[13px]', liriGuestLayout ? 'text-[#D4AF37]/50' : 'text-white/55')}>
+          <p className={cn('text-[13px]', liriGuestLayout ? 'text-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]' : 'text-white/55')}>
             {liriGuestLayout
               ? 'Prévisualisation locale, plan du cours, script & membres'
               : 'Prévisualisation locale, plan, script, membres'}
@@ -2238,7 +2238,7 @@ export default function LiveRoomShell({
                       key={`${idx}-${s?.id || s?.title || 'slide'}`}
                       className={cn(
                         'w-full rounded-lg border px-2 py-1.5 text-left transition-colors opacity-95',
-                        active ? 'border-[#D4AF37]/45 bg-[#D4AF37]/10' : 'border-white/10 bg-white/[0.03]',
+                        active ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]' : 'border-white/10 bg-white/[0.03]',
                       )}
                     >
                       {row}
@@ -2252,7 +2252,7 @@ export default function LiveRoomShell({
                     onClick={() => goToSlide(idx)}
                     className={cn(
                       'w-full rounded-lg border px-2 py-1.5 text-left transition-colors',
-                      active ? 'border-[#D4AF37]/45 bg-[#D4AF37]/10' : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.05]',
+                      active ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]' : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.05]',
                     )}
                   >
                     {row}
@@ -2297,7 +2297,7 @@ export default function LiveRoomShell({
                       Section {i + 1} — {sec.title || sec.name || 'Bloc'}
                     </span>
                     {sec.slide_index != null ? (
-                      <span className="rounded bg-[#D4AF37]/15 px-1 py-0.5 text-[8px] font-bold text-[#D4AF37] tabular-nums">
+                      <span className="rounded bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] px-1 py-0.5 text-[8px] font-bold text-[var(--school-accent)] tabular-nums">
                         Slide {Number(sec.slide_index) + 1}
                       </span>
                     ) : null}
@@ -2319,7 +2319,7 @@ export default function LiveRoomShell({
                     className={cn(
                       'w-full rounded-lg border p-2.5 transition-colors text-left',
                       scriptCurrentSection?.id === sec.id
-                        ? 'border-[#D4AF37]/40 bg-[#D4AF37]/8 hover:bg-[#D4AF37]/12'
+                        ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]'
                         : 'border-white/10 bg-white/[0.03] hover:border-sky-500/30 hover:bg-sky-500/08',
                     )}
                   >
@@ -2333,7 +2333,7 @@ export default function LiveRoomShell({
                   className={cn(
                     'rounded-lg border p-2.5 transition-colors',
                     scriptCurrentSection?.id === sec.id
-                      ? 'border-[#D4AF37]/40 bg-[#D4AF37]/8'
+                      ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)]'
                       : 'border-white/10 bg-white/[0.03]',
                   )}
                 >
@@ -2341,7 +2341,7 @@ export default function LiveRoomShell({
                 </div>
               );
             })}
-            <div className="rounded-lg border border-[#D4AF37]/25 bg-[#D4AF37]/8 p-2.5">
+            <div className="rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] p-2.5">
               <p className="text-[10px] text-[#f5dd8a] mb-1 flex items-center gap-1 font-medium"><BookOpen className="w-3 h-3" />Rétention</p>
               {retentionHints.length > 0 ? (
                 <ul className="space-y-1.5">
@@ -2370,10 +2370,10 @@ export default function LiveRoomShell({
           <button
             type="button"
             onClick={() => setMembersOverviewOpen(true)}
-            className="h-7 px-2 rounded-lg border border-white/12 bg-white/[0.04] hover:bg-[#D4AF37]/12 hover:border-[#D4AF37]/30 text-[9px] text-white/75 flex items-center gap-1 flex-shrink-0"
+            className="h-7 px-2 rounded-lg border border-white/12 bg-white/[0.04] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[9px] text-white/75 flex items-center gap-1 flex-shrink-0"
             title="Vue grille des membres"
           >
-            <Users className="w-3 h-3 text-[#D4AF37]/90" />
+            <Users className="w-3 h-3 text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]" />
             <span className="tabular-nums">{stripMembers.length}</span>
           </button>
         </div>
@@ -2390,12 +2390,12 @@ export default function LiveRoomShell({
                   name: m.name,
                   isLocal: Boolean(currentUserId && uid === String(currentUserId)),
                 })}
-                className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-1.5 py-1.5 min-w-0 text-left hover:border-[#D4AF37]/35 hover:bg-[#D4AF37]/8 transition-colors"
+                className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-1.5 py-1.5 min-w-0 text-left hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] transition-colors"
               >
                 {m.avatar_url ? (
                   <img src={m.avatar_url} alt="" className="h-9 w-9 rounded-lg object-cover flex-shrink-0 border border-white/10" />
                 ) : (
-                  <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-[#D4AF37]/28 to-[#1a2540] flex items-center justify-center text-[10px] font-bold text-[#D4AF37] flex-shrink-0 border border-white/10">
+                  <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] to-[#1a2540] flex items-center justify-center text-[10px] font-bold text-[var(--school-accent)] flex-shrink-0 border border-white/10">
                     {initials}
                   </div>
                 )}
@@ -2413,7 +2413,7 @@ export default function LiveRoomShell({
         <button
           type="button"
           onClick={() => setMembersOverviewOpen(true)}
-          className="h-11 w-full shrink-0 rounded-xl border border-[#D4AF37]/35 bg-[#D4AF37]/12 hover:bg-[#D4AF37]/18 text-[11px] font-semibold uppercase tracking-wide text-[#f5dd8a] transition-colors"
+          className="h-11 w-full shrink-0 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] text-[11px] font-semibold uppercase tracking-wide text-[#f5dd8a] transition-colors"
         >
           Membre(s) connecté(s)
         </button>
@@ -2480,7 +2480,7 @@ export default function LiveRoomShell({
                 onClick={() => setZone3Open((v) => !v)}
                 className={cn(
                   'h-6 w-6 rounded-full border flex items-center justify-center transition-colors',
-                  zone3Open ? 'border-[#D4AF37]/45 bg-[#D4AF37]/14 text-[#f5dd8a]' : 'border-white/12 bg-black/55 text-white/60 hover:text-white'
+                  zone3Open ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] text-[#f5dd8a]' : 'border-white/12 bg-black/55 text-white/60 hover:text-white'
                 )}
                 title="Panneau interactif"
               >
@@ -2525,11 +2525,11 @@ export default function LiveRoomShell({
                     <div className="rounded-xl border border-white/15 bg-black/20 p-3 min-h-[180px]">
                       <p className="text-[12px] text-white/90 mb-2">Etat live</p>
                       <div className="space-y-1.5 text-[11px] text-white/70">
-                        <p>Scene: <span className="text-[#D4AF37]">{activeScene}</span></p>
-                        <p>Slides: <span className="text-[#D4AF37]">{slideIndex + 1}/{totalSlides}</span></p>
-                        <p>Membres: <span className="text-[#D4AF37]">{participants.length}</span></p>
-                        <p>Mains levees: <span className="text-[#D4AF37]">{zone3RaisedHands.length}</span></p>
-                        <p>QA pending: <span className="text-[#D4AF37]">{neuronqPendingCount}</span></p>
+                        <p>Scene: <span className="text-[var(--school-accent)]">{activeScene}</span></p>
+                        <p>Slides: <span className="text-[var(--school-accent)]">{slideIndex + 1}/{totalSlides}</span></p>
+                        <p>Membres: <span className="text-[var(--school-accent)]">{participants.length}</span></p>
+                        <p>Mains levees: <span className="text-[var(--school-accent)]">{zone3RaisedHands.length}</span></p>
+                        <p>QA pending: <span className="text-[var(--school-accent)]">{neuronqPendingCount}</span></p>
                       </div>
                     </div>
                   </div>
@@ -2550,11 +2550,11 @@ export default function LiveRoomShell({
                       </div>
                     </div>
                   </div>
-                  <div className="md:col-span-2 rounded-2xl border border-[#D4AF37]/28 bg-[#D4AF37]/10 p-4 flex items-center justify-between">
+                  <div className="md:col-span-2 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-4 flex items-center justify-between">
                     <div className="text-[11px] text-white/82">
                       Mode immersion: composant isole en modal avec arriere-plan floute, pour revue detaillee en developpement.
                     </div>
-                    <button type="button" onClick={closeDevModal} className="h-9 px-3 rounded-xl border border-[#D4AF37]/35 bg-[#D4AF37]/16 text-[#f5dd8a] text-[11px] flex items-center gap-1.5">
+                    <button type="button" onClick={closeDevModal} className="h-9 px-3 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_16%,transparent)] text-[#f5dd8a] text-[11px] flex items-center gap-1.5">
                       <Maximize2 className="w-3.5 h-3.5" />
                       Fermer preview
                     </button>
@@ -2674,7 +2674,7 @@ export default function LiveRoomShell({
               }}
             >
               {dragOverSlot === slot && dragSlot && dragSlot !== slot && (
-                <div className="absolute inset-0 rounded-2xl border border-dashed border-[#D4AF37]/35 bg-[#D4AF37]/5 pointer-events-none z-20" />
+                <div className="absolute inset-0 rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] pointer-events-none z-20" />
               )}
               {renderByZone[zoneSlots[slot]]?.()}
             </div>
@@ -2686,7 +2686,7 @@ export default function LiveRoomShell({
             className={cn(
               'absolute left-[22%] top-1/2 -translate-y-1/2 -translate-x-1/2 h-10 w-1 rounded-full transition-all opacity-0 hover:opacity-100',
               resizing === 'left'
-                ? 'bg-[#D4AF37]/70 opacity-100'
+                ? 'bg-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] opacity-100'
                 : 'bg-white/20'
             )}
             style={{ left: `${colSizes.left}%` }}
@@ -2698,7 +2698,7 @@ export default function LiveRoomShell({
             className={cn(
               'absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-10 w-1 rounded-full transition-all opacity-0 hover:opacity-100',
               resizing === 'right'
-                ? 'bg-[#D4AF37]/70 opacity-100'
+                ? 'bg-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] opacity-100'
                 : 'bg-white/20'
             )}
             style={{ left: `${colSizes.left + colSizes.center}%` }}
@@ -2891,7 +2891,7 @@ export default function LiveRoomShell({
           className="pointer-events-none absolute inset-x-0 bottom-0 z-[4] h-[min(38vh,320px)]"
           aria-hidden
         >
-          <div className="absolute inset-0 bg-gradient-to-t from-[#D4AF37]/[0.14] via-indigo-500/[0.06] to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--school-accent)]/[0.14] via-indigo-500/[0.06] to-transparent" />
           <div className="absolute left-1/2 bottom-0 h-[min(28vh,240px)] w-[min(120%,720px)] -translate-x-1/2 translate-y-1/3 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.14)_0%,rgba(212,175,55,0.12)_40%,transparent_68%)] blur-[1px]" />
         </div>
         ) : null}

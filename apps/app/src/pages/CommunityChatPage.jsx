@@ -84,7 +84,7 @@ const CommunityChatPage = () => {
       <div className="min-h-screen bg-[#0F1419] flex items-center justify-center p-6">
         <div className="text-center">
           <p className="text-gray-400 mb-4">Vous n'êtes pas membre de cette communauté.</p>
-          <Button onClick={() => navigate('/community')} className="bg-[#D4AF37] text-black">
+          <Button onClick={() => navigate('/community')} className="bg-[var(--school-accent)] text-black">
             Retour aux communautés
           </Button>
         </div>
@@ -118,7 +118,7 @@ const CommunityChatPage = () => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {loading ? (
           <div className="flex justify-center py-16">
-            <Loader2 className="w-10 h-10 animate-spin text-[#D4AF37]" />
+            <Loader2 className="w-10 h-10 animate-spin text-[var(--school-accent)]" />
           </div>
         ) : (
           <AnimatePresence mode="popLayout">
@@ -134,12 +134,12 @@ const CommunityChatPage = () => {
                   <div
                     className={`max-w-[80%] rounded-2xl px-4 py-2 ${
                       isOwn
-                        ? 'bg-[#D4AF37] text-black'
+                        ? 'bg-[var(--school-accent)] text-black'
                         : 'bg-[#151a21] border border-white/10'
                     }`}
                   >
                     {!isOwn && (
-                      <p className="text-xs font-medium text-[#D4AF37] mb-0.5">
+                      <p className="text-xs font-medium text-[var(--school-accent)] mb-0.5">
                         {m.author?.name || 'Inconnu'}
                       </p>
                     )}
@@ -173,7 +173,7 @@ const CommunityChatPage = () => {
             <Button
               onClick={handleSend}
               disabled={!input.trim() || sending}
-              className="bg-[#D4AF37] text-black hover:bg-amber-500 px-6"
+              className="bg-[var(--school-accent)] text-black hover:bg-amber-500 px-6"
             >
               {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </Button>

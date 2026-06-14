@@ -36,7 +36,7 @@ export function MasterScriptBlocksPanel({
   const Block = ({ icon: Icon, label, children, className }) => (
     <div className={cn('rounded-lg border border-white/10 bg-white/[0.03] p-2', className)}>
       <p className="mb-1 flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wide text-white/45">
-        <Icon className="h-3 w-3 text-[#D4AF37]/75" />
+        <Icon className="h-3 w-3 text-[color-mix(in_srgb,var(--school-accent)_75%,transparent)]" />
         {label}
       </p>
       <div className="text-[11px] leading-relaxed text-white/88">{children}</div>

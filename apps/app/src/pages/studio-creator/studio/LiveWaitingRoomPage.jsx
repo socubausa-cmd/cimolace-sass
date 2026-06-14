@@ -135,7 +135,7 @@ function WaitingRoomProgramRibbon({
 
   return (
     <ProrasciencePublicCard className="border-white/10 bg-white/[0.03] text-left">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-[#D4AF37]/90">Déroulé</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">Déroulé</p>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {sessionLive && startedAt && elapsedLabel ? (
           <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-medium text-emerald-200/95">
@@ -191,7 +191,7 @@ export function Countdown({ scheduledAt }) {
 
   const pad = (n) => String(n).padStart(2, '0');
   return (
-    <div className="flex items-center gap-1 text-[#D4AF37]">
+    <div className="flex items-center gap-1 text-[var(--school-accent)]">
       <Clock className="w-4 h-4" />
       <span className="font-mono text-lg font-bold">
         {diff.h > 0 && `${pad(diff.h)}:`}{pad(diff.m)}:{pad(diff.s)}
@@ -257,7 +257,7 @@ function AudioPreview({ sessionId, enabled }) {
 
   return (
     <div className="rounded-2xl border border-white/10 bg-[#101729]/95 p-4 shadow-[0_16px_45px_rgba(0,0,0,0.3)] flex items-start gap-3 backdrop-blur-sm">
-      <div className="w-9 h-9 rounded-full bg-[#D4AF37]/20 flex items-center justify-center flex-shrink-0 ring-1 ring-[#D4AF37]/25">
+      <div className="w-9 h-9 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center flex-shrink-0 ring-1 ring-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]">
         <Volume2 className="w-4 h-4 text-[#ebca5e]" />
       </div>
       <div className="flex-1 min-w-0">
@@ -270,7 +270,7 @@ function AudioPreview({ sessionId, enabled }) {
       <button
         type="button"
         onClick={toggle}
-        className="flex-shrink-0 h-8 px-3 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/35 text-[#ebca5e] text-xs hover:bg-[#D4AF37]/25 transition-colors"
+        className="flex-shrink-0 h-8 px-3 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[#ebca5e] text-xs hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] transition-colors"
       >
         {playing ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
       </button>
@@ -297,10 +297,10 @@ export function WaitingStatus({ entry, onCancel }) {
     },
     audio_only: {
       icon: Mic,
-      iconClass: 'text-[#D4AF37]',
+      iconClass: 'text-[var(--school-accent)]',
       title: 'Accès audio accordé',
       desc: 'Vous pouvez écouter la séance. L\'hôte peut vous donner accès complet à tout moment.',
-      color: 'border-[#D4AF37]/20 bg-[#D4AF37]/5',
+      color: 'border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]',
     },
     rejected: {
       icon: XCircle,
@@ -810,7 +810,7 @@ export default function LiveWaitingRoomPage() {
     return (
       <ProrasciencePublicPageShell simpleNav navTitle="Salle d&apos;attente">
         <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4">
-          <Loader2 className="h-8 w-8 animate-spin text-[#D4AF37]" />
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--school-accent)]" />
         </div>
       </ProrasciencePublicPageShell>
     );
@@ -863,11 +863,11 @@ export default function LiveWaitingRoomPage() {
           {/* En-tête session — aligné hero Prorascience */}
           <div className="space-y-4 text-center lg:text-left">
             <div className="inline-flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.18em] text-[#D4AF37]">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.18em] text-[var(--school-accent)]">
                 <Sparkles className="h-3.5 w-3.5" />
                 Salle d&apos;attente
               </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/30 bg-black/35 px-3 py-1">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-black/35 px-3 py-1">
                 <Radio className="h-3 w-3 text-[#ebca5e]" />
                 <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#ebca5e]/95">
                   Live LIRI
@@ -891,7 +891,7 @@ export default function LiveWaitingRoomPage() {
                 {liveSession.profiles.avatar_url ? (
                   <img src={liveSession.profiles.avatar_url} alt="" className="h-8 w-8 rounded-full border border-white/12 object-cover" />
                 ) : (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#D4AF37]/35 bg-gradient-to-br from-[#D4AF37]/25 to-[#6f4cff]/10 text-xs font-bold text-[#ebca5e]">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] to-[#6f4cff]/10 text-xs font-bold text-[#ebca5e]">
                     {displayNameInitials(liveSession.profiles.name)}
                   </div>
                 )}
@@ -952,7 +952,7 @@ export default function LiveWaitingRoomPage() {
                 <Button
                   type="button"
                   onClick={joinDirect}
-                  className="prs-cta-primary h-12 w-full rounded-2xl bg-[#D4AF37] text-sm font-bold text-black hover:bg-[#ebca5e]"
+                  className="prs-cta-primary h-12 w-full rounded-2xl bg-[var(--school-accent)] text-sm font-bold text-black hover:bg-[#ebca5e]"
                 >
                   <LogIn className="mr-2 h-4 w-4" />
                   Lancer la session
@@ -994,7 +994,7 @@ export default function LiveWaitingRoomPage() {
                   <Button
                     type="button"
                     onClick={joinDirect}
-                    className="prs-cta-primary h-12 w-full rounded-2xl bg-[#D4AF37] text-sm font-bold text-black hover:bg-[#ebca5e]"
+                    className="prs-cta-primary h-12 w-full rounded-2xl bg-[var(--school-accent)] text-sm font-bold text-black hover:bg-[#ebca5e]"
                   >
                     <ArrowRight className="mr-2 h-4 w-4" />
                     Rejoindre maintenant
@@ -1012,9 +1012,9 @@ export default function LiveWaitingRoomPage() {
             {/* Mot de passe */}
             {!isHost && (!entry || entry.status === 'lobby') && (accessMode === 'password' || accessMode === 'double') && (
               <motion.div key="password" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-                <ProrasciencePublicCard className="border-[#D4AF37]/20">
+                <ProrasciencePublicCard className="border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                   <div className="mb-4 flex items-center gap-2">
-                    <KeyRound className="h-4 w-4 text-[#D4AF37]" />
+                    <KeyRound className="h-4 w-4 text-[var(--school-accent)]" />
                     <p className="text-sm font-semibold text-white">Mot de passe requis</p>
                   </div>
                   <div className="relative mb-3">
@@ -1024,7 +1024,7 @@ export default function LiveWaitingRoomPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && submitPassword()}
                       placeholder="Mot de passe du live"
-                      className="h-10 w-full rounded-xl border border-white/12 bg-black/45 px-4 pr-10 text-sm text-white placeholder:text-white/25 outline-none transition-colors focus:border-[#D4AF37]/45"
+                      className="h-10 w-full rounded-xl border border-white/12 bg-black/45 px-4 pr-10 text-sm text-white placeholder:text-white/25 outline-none transition-colors focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]"
                     />
                     <button
                       type="button"
@@ -1039,7 +1039,7 @@ export default function LiveWaitingRoomPage() {
                     type="button"
                     onClick={submitPassword}
                     disabled={submitting || !password.trim()}
-                    className="prs-cta-primary h-10 w-full rounded-xl bg-[#D4AF37] text-sm font-bold text-black hover:bg-[#ebca5e] disabled:opacity-50"
+                    className="prs-cta-primary h-10 w-full rounded-xl bg-[var(--school-accent)] text-sm font-bold text-black hover:bg-[#ebca5e] disabled:opacity-50"
                   >
                     {submitting ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -1056,10 +1056,10 @@ export default function LiveWaitingRoomPage() {
             {!isHost && (!entry || entry.status === 'lobby') && (accessMode === 'manual' || (accessMode === 'double' && !password)) && accessMode !== 'password' && (
               <motion.div key="manual" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
                 {sessionLive ? (
-                  <ProrasciencePublicCard className="border-[#D4AF37]/20">
+                  <ProrasciencePublicCard className="border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                     <div className="mb-4 flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/15">
-                        <Lock className="h-4 w-4 text-[#D4AF37]" />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]">
+                        <Lock className="h-4 w-4 text-[var(--school-accent)]" />
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-white">Validation par l&apos;hôte</p>
@@ -1070,7 +1070,7 @@ export default function LiveWaitingRoomPage() {
                       type="button"
                       onClick={requestEntry}
                       disabled={submitting}
-                      className="prs-cta-primary h-10 w-full rounded-xl bg-[#D4AF37] text-sm font-bold text-black hover:bg-[#ebca5e] disabled:opacity-50"
+                      className="prs-cta-primary h-10 w-full rounded-xl bg-[var(--school-accent)] text-sm font-bold text-black hover:bg-[#ebca5e] disabled:opacity-50"
                     >
                       {submitting ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -1117,7 +1117,7 @@ export default function LiveWaitingRoomPage() {
                 </div>
               )}
               <div className="space-y-4 p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#D4AF37]/90">Live</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">Live</p>
                 {showLiveDetails && liveSession?.description ? (
                   <p className="text-sm leading-relaxed text-white/60">{liveSession.description}</p>
                 ) : null}
@@ -1126,7 +1126,7 @@ export default function LiveWaitingRoomPage() {
                     {liveSession?.scheduled_at ? (
                       <div className="flex gap-2">
                         <dt className="flex shrink-0 items-center gap-1 font-medium text-white/55">
-                          <Calendar className="h-3.5 w-3.5 text-[#D4AF37]/80" />
+                          <Calendar className="h-3.5 w-3.5 text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]" />
                           Début prévu
                         </dt>
                         <dd className="text-white/70">
@@ -1140,7 +1140,7 @@ export default function LiveWaitingRoomPage() {
                     {liveSession?.duration_minutes ? (
                       <div className="flex gap-2">
                         <dt className="flex shrink-0 items-center gap-1 font-medium text-white/55">
-                          <Clock className="h-3.5 w-3.5 text-[#D4AF37]/80" />
+                          <Clock className="h-3.5 w-3.5 text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]" />
                           Durée
                         </dt>
                         <dd className="text-white/70">{liveSession.duration_minutes} min</dd>

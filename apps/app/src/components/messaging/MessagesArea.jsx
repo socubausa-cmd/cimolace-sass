@@ -31,7 +31,7 @@ const MessageBubble = ({ message, isMe, showAvatar }) => {
           <div 
             className={`px-4 py-2 rounded-2xl text-sm relative shadow-sm ${
               isMe 
-                ? 'bg-[#D4AF37] text-black rounded-br-none' 
+                ? 'bg-[var(--school-accent)] text-black rounded-br-none' 
                 : 'bg-[#192734] text-gray-100 border border-white/10 rounded-bl-none'
             }`}
           >

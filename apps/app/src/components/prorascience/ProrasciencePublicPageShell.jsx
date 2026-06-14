@@ -96,7 +96,7 @@ export function ProrasciencePublicPageShell({
       <div className="pointer-events-none fixed inset-0 prs-bg-grid opacity-[0.85]" aria-hidden />
       <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden>
         <div className="prs-orb absolute -left-20 top-16 h-80 w-80 rounded-full bg-[#6f4cff]" />
-        <div className="prs-orb alt absolute right-8 top-24 h-96 w-96 rounded-full bg-[#D4AF37]" />
+        <div className="prs-orb alt absolute right-8 top-24 h-96 w-96 rounded-full bg-[var(--school-accent)]" />
         <div className="prs-orb absolute bottom-8 left-1/3 h-72 w-72 rounded-full bg-[#0fb3ff]" />
         <div
           className="prs-light-rays pointer-events-none absolute left-1/2 top-[6%] h-[125vh] w-[125vh] -translate-x-1/2"

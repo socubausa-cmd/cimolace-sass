@@ -16,7 +16,7 @@ const SCHOOL = isnaTenantConfig.branding.name;
 const SubSection = ({ letter, title, children }) => (
   <div className="mb-10">
     <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-      <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] text-sm font-bold border border-[#D4AF37]/20">
+      <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] text-sm font-bold border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
         {letter}
       </span>
       {title}
@@ -27,15 +27,15 @@ const SubSection = ({ letter, title, children }) => (
 
 const BulletItem = ({ children }) => (
   <li className="flex items-start gap-2.5 text-base text-gray-300 leading-relaxed">
-    <span className="text-[#D4AF37] mt-0.5 shrink-0">▸</span>
+    <span className="text-[var(--school-accent)] mt-0.5 shrink-0">▸</span>
     <span>{children}</span>
   </li>
 );
 
 const NumberedStep = ({ number, title, description }) => (
   <div className="flex gap-4 items-start">
-    <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center shrink-0 mt-0.5">
-      <span className="text-sm font-bold text-[#D4AF37]">{number}</span>
+    <div className="w-8 h-8 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center shrink-0 mt-0.5">
+      <span className="text-sm font-bold text-[var(--school-accent)]">{number}</span>
     </div>
     <div>
       <p className="text-base font-semibold text-white">{title}</p>
@@ -65,7 +65,7 @@ const CoachingPage = () => {
       <>
         {m[1]}
         <br />
-        <span className="text-[#D4AF37]">{m[2]}</span>
+        <span className="text-[var(--school-accent)]">{m[2]}</span>
       </>
     );
   }, [c.title]);
@@ -100,7 +100,7 @@ const CoachingPage = () => {
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
             {c.lead}
           </p>
-          <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto" />
+          <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent mx-auto" />
           <p className="text-sm text-gray-600 uppercase tracking-widest">{c.line}</p>
         </div>
       </section>
@@ -156,7 +156,7 @@ const CoachingPage = () => {
                 'Notes et observations du therapeute',
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2 text-sm text-gray-300 bg-white/[0.02] border border-white/5 rounded-lg p-3">
-                  <FileText className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                  <FileText className="w-4 h-4 text-[var(--school-accent)] shrink-0" />
                   <span>{item}</span>
                 </div>
               ))}
@@ -217,7 +217,7 @@ const CoachingPage = () => {
 
         {/* ═══════════ CTA ═══════════ */}
         <section className="bg-gradient-to-br from-[#192734] to-[#0f1216] rounded-3xl p-10 md:p-16 text-center border border-white/10 relative overflow-hidden shadow-2xl">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
           <div className="relative z-10 max-w-2xl mx-auto space-y-8">
             <h2 className="text-3xl font-bold font-serif text-white">Devenir therapeute spirituel ?</h2>
             <p className="text-gray-300 text-lg">
@@ -226,7 +226,7 @@ const CoachingPage = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a href="/appointment/request">
-                <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-lg font-bold">
+                <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 gap-2 h-12 px-8 text-lg font-bold">
                   <MessageCircle className="w-5 h-5" /> Prendre rendez-vous
                 </Button>
               </a>

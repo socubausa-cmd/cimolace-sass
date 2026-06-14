@@ -75,7 +75,7 @@ const ProductDetailPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0F1419] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#D4AF37]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--school-accent)]" />
       </div>
     );
   }
@@ -126,7 +126,7 @@ const ProductDetailPage = () => {
                   <button 
                     key={idx}
                     onClick={() => setMainImage(img.url)}
-                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${mainImage === img.url ? 'border-[#D4AF37]' : 'border-transparent hover:border-white/20'}`}
+                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${mainImage === img.url ? 'border-[var(--school-accent)]' : 'border-transparent hover:border-white/20'}`}
                   >
                     <img src={img.url} alt={`View ${idx}`} className="w-full h-full object-cover" />
                   </button>
@@ -139,7 +139,7 @@ const ProductDetailPage = () => {
           <div className="space-y-6">
             <div>
               {product.ribbon_text && (
-                <Badge className="bg-[#D4AF37] text-black hover:bg-[#b5952f] mb-2">
+                <Badge className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f] mb-2">
                   {product.ribbon_text}
                 </Badge>
               )}
@@ -147,7 +147,7 @@ const ProductDetailPage = () => {
                 {product.title}
               </h1>
               <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center text-[#D4AF37]">
+                <div className="flex items-center text-[var(--school-accent)]">
                   <Star className="w-4 h-4 fill-current" />
                   <Star className="w-4 h-4 fill-current" />
                   <Star className="w-4 h-4 fill-current" />
@@ -160,7 +160,7 @@ const ProductDetailPage = () => {
               </div>
             </div>
 
-            <div className="text-3xl font-bold text-[#D4AF37]">
+            <div className="text-3xl font-bold text-[var(--school-accent)]">
               {selectedVariant && formatCurrency(selectedVariant.price_in_cents, { code: selectedVariant.currency })}
             </div>
 
@@ -186,7 +186,7 @@ const ProductDetailPage = () => {
                         }}
                         className={`px-4 py-2 rounded-md border text-sm transition-all ${
                           selectedVariant?.id === v.id 
-                            ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37]' 
+                            ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]' 
                             : 'border-white/10 bg-[#192734] text-gray-400 hover:border-white/30'
                         }`}
                       >
@@ -227,7 +227,7 @@ const ProductDetailPage = () => {
                   </div>
 
                   <Button 
-                    className="flex-1 h-12 bg-[#D4AF37] hover:bg-[#b5952f] text-black font-bold text-lg"
+                    className="flex-1 h-12 bg-[var(--school-accent)] hover:bg-[#b5952f] text-black font-bold text-lg"
                     onClick={handleAddToCart}
                     disabled={isOutOfStock || !product.purchasable}
                   >

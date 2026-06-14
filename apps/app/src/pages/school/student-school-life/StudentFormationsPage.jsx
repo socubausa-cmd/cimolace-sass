@@ -21,7 +21,7 @@ const FormationCard = ({ formation, type, index = 0 }) => (
     whileTap={{ scale: 0.98 }}
     className="h-full"
   >
-    <Card className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#151a21]/80 backdrop-blur-xl hover:border-[#D4AF37]/40 transition-all duration-300 group h-full flex flex-col">
+    <Card className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#151a21]/80 backdrop-blur-xl hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-all duration-300 group h-full flex flex-col">
       <div className="relative h-40 overflow-hidden">
         <motion.img
           src={formation.thumbnail || "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=1000&auto=format&fit=crop"}
@@ -43,7 +43,7 @@ const FormationCard = ({ formation, type, index = 0 }) => (
       </div>
 
       <CardHeader className="pb-2">
-        <h3 className="text-xl font-bold text-white group-hover:text-[#D4AF37] transition-colors line-clamp-2">
+        <h3 className="text-xl font-bold text-white group-hover:text-[var(--school-accent)] transition-colors line-clamp-2">
           {formation.title}
         </h3>
         <p className="text-sm text-gray-400 line-clamp-2">{formation.description}</p>
@@ -54,9 +54,9 @@ const FormationCard = ({ formation, type, index = 0 }) => (
           <div className="space-y-2">
             <div className="flex justify-between text-sm text-gray-400">
               <span>Progression</span>
-              <span className="text-[#D4AF37] font-medium">{formation.progress || 0}%</span>
+              <span className="text-[var(--school-accent)] font-medium">{formation.progress || 0}%</span>
             </div>
-            <Progress value={formation.progress || 0} className="h-2" indicatorClassName="bg-[#D4AF37]" />
+            <Progress value={formation.progress || 0} className="h-2" indicatorClassName="bg-[var(--school-accent)]" />
             {(formation.totalModules || formation.totalWeeks) ? (
               <div className="flex justify-between text-sm text-gray-500 mt-2">
                 {formation.totalModules ? <span>{formation.completedModules || 0}/{formation.totalModules} Modules</span> : <span />}
@@ -76,7 +76,7 @@ const FormationCard = ({ formation, type, index = 0 }) => (
             {formation.finalScore ? (
               <div className="flex items-center justify-between p-3 rounded-xl bg-green-500/10 border border-green-500/20">
                 <span className="text-sm text-gray-400">Note Finale</span>
-                <span className="text-[#D4AF37] font-bold">{formation.finalScore}</span>
+                <span className="text-[var(--school-accent)] font-bold">{formation.finalScore}</span>
               </div>
             ) : null}
           </div>
@@ -94,7 +94,7 @@ const FormationCard = ({ formation, type, index = 0 }) => (
         {type === 'in_progress' && (
           <Link to={`/formation/${formation.id}/learn`} className="w-full">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button className="w-full bg-[#D4AF37] text-black hover:bg-amber-500 gap-2 shadow-lg shadow-[#D4AF37]/20">
+              <Button className="w-full bg-[var(--school-accent)] text-black hover:bg-amber-500 gap-2 shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                 <PlayCircle className="w-4 h-4" /> Continuer le cours
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -104,7 +104,7 @@ const FormationCard = ({ formation, type, index = 0 }) => (
         {type === 'completed' && (
           <Link to={`/formation/${formation.id}/learn`} className="w-full">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button variant="outline" className="w-full border-[#D4AF37]/50 text-[#D4AF37] hover:bg-[#D4AF37]/10 gap-2">
+              <Button variant="outline" className="w-full border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] gap-2">
                 <BookOpen className="w-4 h-4" /> Revoir le cours
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -170,7 +170,7 @@ const StudentFormationsPage = () => {
         animate={{ opacity: 1 }}
         className="flex flex-col items-center justify-center py-24 gap-4"
       >
-        <Loader2 className="w-10 h-10 animate-spin text-[#D4AF37]" />
+        <Loader2 className="w-10 h-10 animate-spin text-[var(--school-accent)]" />
         <p className="text-gray-400">Chargement de vos formations…</p>
       </motion.div>
     );
@@ -180,7 +180,7 @@ const StudentFormationsPage = () => {
     <div className="relative min-h-[60vh]">
       {/* Ambient background */}
       <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[#D4AF37]/5 rounded-full blur-[100px]" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[100px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] bg-emerald-500/5 rounded-full blur-[80px]" />
       </div>
 
@@ -199,7 +199,7 @@ const StudentFormationsPage = () => {
               transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-3"
             >
-              <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+              <Sparkles className="w-4 h-4 text-[var(--school-accent)]" />
               <span className="text-xs text-gray-400">Apprentissage</span>
             </motion.div>
             <h1 className="text-2xl md:text-3xl font-serif font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-400">
@@ -224,7 +224,7 @@ const StudentFormationsPage = () => {
             </motion.div>
             <Link to="/formations/catalogue">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button className="bg-[#D4AF37] text-black hover:bg-amber-500 font-bold gap-1.5 shrink-0 shadow-lg shadow-[#D4AF37]/20">
+                <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-bold gap-1.5 shrink-0 shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                   <GraduationCap className="w-4 h-4" /> Catalogue
                 </Button>
               </motion.div>
@@ -245,10 +245,10 @@ const StudentFormationsPage = () => {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#D4AF37]/20 to-amber-500/10 border border-[#D4AF37]/30 flex items-center justify-center"
+                className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-amber-500/10 border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center"
                 whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(212,175,55,0.2)' }}
               >
-                <GraduationCap className="w-12 h-12 text-[#D4AF37]" />
+                <GraduationCap className="w-12 h-12 text-[var(--school-accent)]" />
               </motion.div>
               <div>
                 <h3 className="text-xl font-serif font-bold text-white mb-2">Aucune formation inscrite</h3>
@@ -256,7 +256,7 @@ const StudentFormationsPage = () => {
               </div>
               <Link to="/formations/catalogue">
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button className="bg-[#D4AF37] text-black hover:bg-amber-500 font-bold gap-2 h-12 px-8 shadow-lg shadow-[#D4AF37]/20">
+                  <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-bold gap-2 h-12 px-8 shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                     <GraduationCap className="w-5 h-5" /> Voir le catalogue <ArrowRight className="w-4 h-4" />
                   </Button>
                 </motion.div>
@@ -333,7 +333,7 @@ const StudentFormationsPage = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: i * 0.06 }}
-                        className="cursor-pointer rounded-2xl border border-white/10 bg-[#151a21]/80 p-5 hover:border-[#D4AF37]/40 transition-colors"
+                        className="cursor-pointer rounded-2xl border border-white/10 bg-[#151a21]/80 p-5 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
                         onClick={() => navigate(`/student-school-life/cours/${f.courseId}`)}
                       >
                         <div className="mb-3 inline-block rounded-full bg-blue-900/40 px-2 py-0.5 text-xs text-blue-300">
@@ -341,7 +341,7 @@ const StudentFormationsPage = () => {
                         </div>
                         <h3 className="font-bold text-white mb-1 line-clamp-2">{f.title}</h3>
                         {f.description && <p className="text-xs text-gray-400 line-clamp-2">{f.description}</p>}
-                        <div className="mt-4 flex items-center gap-1 text-xs text-[#D4AF37] font-medium">
+                        <div className="mt-4 flex items-center gap-1 text-xs text-[var(--school-accent)] font-medium">
                           <PlayCircle className="h-3.5 w-3.5" /> Commencer →
                         </div>
                       </motion.div>

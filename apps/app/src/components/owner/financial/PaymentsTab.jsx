@@ -134,7 +134,7 @@ const PaymentsTab = () => {
        >
         <div>
            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-             <CreditCard className="text-[#D4AF37]" /> Paiements
+             <CreditCard className="text-[var(--school-accent)]" /> Paiements
            </h2>
            <p className="text-gray-400 text-sm">
              Source: transactions Supabase en temps reel
@@ -168,15 +168,15 @@ const PaymentsTab = () => {
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[#D4AF37]/30 transition-all">
+            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
                 <p className="text-gray-400 text-xs uppercase">Total Encaissé</p>
-                <p className="text-2xl font-bold text-[#D4AF37]">{stats.totalLabel || `${stats.total.toLocaleString()} EUR`}</p>
+                <p className="text-2xl font-bold text-[var(--school-accent)]">{stats.totalLabel || `${stats.total.toLocaleString()} EUR`}</p>
               </CardContent>
             </Card>
             </motion.div>
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[#D4AF37]/30 transition-all">
+            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
                 <p className="text-gray-400 text-xs uppercase">Nombre Transactions</p>
                 <p className="text-2xl font-bold text-white">{stats.count}</p>
@@ -185,7 +185,7 @@ const PaymentsTab = () => {
             </Card>
             </motion.div>
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[#D4AF37]/30 transition-all">
+            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
                 <p className="text-gray-400 text-xs uppercase">En Attente</p>
                 <p className="text-2xl font-bold text-orange-400">{stats.pending}</p>
@@ -243,7 +243,7 @@ const PaymentsTab = () => {
                       <TableRow key={pay.id} className="border-white/5 hover:bg-white/5">
                         <TableCell className="font-mono text-white text-xs">{pay.reference}</TableCell>
                         <TableCell className="text-gray-300 font-medium">{pay.studentName}</TableCell>
-                        <TableCell className="text-[#D4AF37] font-bold">{pay.amount} {pay.currency || 'EUR'}</TableCell>
+                        <TableCell className="text-[var(--school-accent)] font-bold">{pay.amount} {pay.currency || 'EUR'}</TableCell>
                         <TableCell className="text-gray-400 text-xs">{pay.provider}</TableCell>
                         <TableCell className="text-gray-400 text-xs">{format(new Date(pay.created_at), 'dd/MM/yyyy')}</TableCell>
                         <TableCell>

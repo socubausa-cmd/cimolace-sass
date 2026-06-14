@@ -142,7 +142,7 @@ export default function DashboardLiveSessionsPanel({ className, sessions: contro
                     {badgeLabel}
                   </span>
                   {isHost ? (
-                    <span className="text-[10px] font-medium uppercase tracking-wide text-[#D4AF37]/90">
+                    <span className="text-[10px] font-medium uppercase tracking-wide text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">
                       Vous animez
                     </span>
                   ) : null}
@@ -197,7 +197,7 @@ export default function DashboardLiveSessionsPanel({ className, sessions: contro
                 {isHost && joinLive && !isImmersive ? (
                   <Link
                     to={`/studio/live-preparation/${s.id}`}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-3 py-2 text-sm font-medium text-[#f5dd8a] hover:bg-[#D4AF37]/20 transition-colors"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-3 py-2 text-sm font-medium text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors"
                   >
                     <Clapperboard className="h-4 w-4" />
                     Studio

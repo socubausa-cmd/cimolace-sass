@@ -569,7 +569,7 @@ export default function SlideAnnotationOverlay({
           className={cn(
             'flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[11px] font-semibold shadow-lg backdrop-blur-md transition-colors',
             annotateOpen
-              ? 'border-[#D4AF37]/50 bg-[#D4AF37]/20 text-[#f5e6a8]'
+              ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[#f5e6a8]'
               : 'border-white/15 bg-black/55 text-white/80 hover:bg-black/70',
           )}
           title={annotateOpen ? 'Fermer les outils d\'annotation' : 'Annoter sur la projection'}
@@ -583,7 +583,7 @@ export default function SlideAnnotationOverlay({
             <p className="text-[10px] text-white/45 px-0.5 leading-snug">
               Dessin visible par les participants (même proportions sur tous les écrans). Fermez pour cliquer sur la slide ou le PDF.
             </p>
-            <div className="flex flex-col gap-1 rounded-lg border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-2 py-1.5">
+            <div className="flex flex-col gap-1 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] px-2 py-1.5">
               <div className="flex flex-wrap items-end gap-1.5 text-[9px] font-semibold uppercase tracking-wide text-[#e8c76b]/90">
                 <LiriWordmark size="footer" className="text-[#e8c76b]/90" subtleGlow />
                 <span>· mode crayon</span>
@@ -596,7 +596,7 @@ export default function SlideAnnotationOverlay({
                   className={cn(
                     'flex flex-1 items-center justify-center gap-1 rounded-lg border px-2 py-1 text-[9px] font-medium transition-colors',
                     editDomain === LIRI_INK_EDIT_DOMAIN.HANDWRITING
-                      ? 'border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#f5e6a8]'
+                      ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f5e6a8]'
                       : 'border-white/10 bg-white/[0.04] text-white/55 hover:text-white/80',
                   )}
                 >
@@ -610,7 +610,7 @@ export default function SlideAnnotationOverlay({
                   className={cn(
                     'flex flex-1 items-center justify-center gap-1 rounded-lg border px-2 py-1 text-[9px] font-medium transition-colors',
                     editDomain === LIRI_INK_EDIT_DOMAIN.SKETCH
-                      ? 'border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#f5e6a8]'
+                      ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f5e6a8]'
                       : 'border-white/10 bg-white/[0.04] text-white/55 hover:text-white/80',
                   )}
                 >
@@ -680,7 +680,7 @@ export default function SlideAnnotationOverlay({
                   className={cn(
                     'w-8 h-8 rounded-lg flex items-center justify-center border transition-all',
                     tool === id
-                      ? 'bg-[#D4AF37]/25 border-[#D4AF37]/45 text-[#D4AF37]'
+                      ? 'bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] text-[var(--school-accent)]'
                       : 'bg-white/[0.06] border-white/10 text-white/55 hover:text-white',
                   )}
                 >
@@ -702,7 +702,7 @@ export default function SlideAnnotationOverlay({
                     type="button"
                     title={label}
                     onClick={() => insertPresetShape(id)}
-                    className="flex flex-1 min-w-[4.5rem] items-center justify-center gap-1 rounded-lg border border-white/10 bg-white/[0.05] px-1.5 py-1 text-[8px] text-white/65 hover:border-[#D4AF37]/35 hover:text-[#D4AF37]"
+                    className="flex flex-1 min-w-[4.5rem] items-center justify-center gap-1 rounded-lg border border-white/10 bg-white/[0.05] px-1.5 py-1 text-[8px] text-white/65 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:text-[var(--school-accent)]"
                   >
                     <Ic className="h-3 w-3 shrink-0 opacity-80" />
                     {label.split(' ')[0]}

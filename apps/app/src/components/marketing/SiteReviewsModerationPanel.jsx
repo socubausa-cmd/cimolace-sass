@@ -16,7 +16,7 @@ const STATUS_OPTIONS = [
 
 function ReviewStars({ rating }) {
   const value = Math.max(1, Math.min(5, Number(rating) || 0));
-  return <span className="text-[#D4AF37]">{'★'.repeat(value)}</span>;
+  return <span className="text-[var(--school-accent)]">{'★'.repeat(value)}</span>;
 }
 
 export default function SiteReviewsModerationPanel() {
@@ -163,7 +163,7 @@ export default function SiteReviewsModerationPanel() {
               onClick={() => setStatusFilter(opt.value)}
               className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
                 statusFilter === opt.value
-                  ? 'border-[#D4AF37] bg-[#D4AF37]/20 text-[#D4AF37]'
+                  ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]'
                   : 'border-white/10 text-gray-300 hover:bg-white/5'
               }`}
             >

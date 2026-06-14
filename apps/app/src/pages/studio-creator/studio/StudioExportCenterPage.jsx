@@ -57,9 +57,9 @@ const EXPORT_FORMATS = [
     label: 'Guide Professeur',
     description: 'PDF complet avec notes prof, scripts et sections',
     icon: BookOpen,
-    color: 'text-[#D4AF37]',
-    bg: 'bg-[#D4AF37]/10',
-    border: 'border-[#D4AF37]/20',
+    color: 'text-[var(--school-accent)]',
+    bg: 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]',
+    border: 'border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]',
   },
 ];
 
@@ -114,7 +114,7 @@ function ExportCard({ format, slides, projectTitle }) {
         className={cn(
           'flex items-center justify-center gap-2 rounded-lg py-2 text-[12px] font-semibold transition-colors disabled:opacity-40',
           format.id === 'teacher-pdf'
-            ? 'bg-[#D4AF37] text-black hover:bg-[#e5c448]'
+            ? 'bg-[var(--school-accent)] text-black hover:bg-[#e5c448]'
             : 'border border-white/15 text-white hover:bg-white/5',
         )}
       >
@@ -142,11 +142,11 @@ export default function StudioExportCenterPage() {
     <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#05070c] text-white">
       {/* Header */}
       <div className="flex shrink-0 items-center gap-3 border-b border-white/8 bg-[#080a12] px-4 py-2.5">
-        <Link to="/studio" className="flex items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] text-white/60 hover:text-[#D4AF37]">
+        <Link to="/studio" className="flex items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] text-white/60 hover:text-[var(--school-accent)]">
           <ChevronLeft className="h-3.5 w-3.5" />Studio
         </Link>
         <div className="h-5 w-px bg-white/10" />
-        <Download className="h-4 w-4 text-[#D4AF37]" />
+        <Download className="h-4 w-4 text-[var(--school-accent)]" />
         <h1 className="text-[14px] font-bold text-white">Export Center</h1>
       </div>
 
@@ -159,12 +159,12 @@ export default function StudioExportCenterPage() {
               <input
                 value={projectTitle}
                 onChange={(e) => setProjectTitle(e.target.value)}
-                className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[13px] text-white outline-none focus:border-[#D4AF37]/40"
+                className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[13px] text-white outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]"
               />
             </div>
             <div className="flex gap-6 text-center">
               <div>
-                <div className="text-[20px] font-bold text-[#D4AF37]">{slides.length}</div>
+                <div className="text-[20px] font-bold text-[var(--school-accent)]">{slides.length}</div>
                 <div className="text-[10px] text-white/40">Slides</div>
               </div>
               <div>

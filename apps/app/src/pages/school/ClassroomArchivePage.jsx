@@ -22,15 +22,15 @@ const ClassroomArchivePage = () => {
                 </Button>
              </Link>
              <h1 className="text-3xl font-serif font-bold text-white flex items-center gap-3">
-                <Archive className="w-8 h-8 text-[#D4AF37]" /> Archives des cours
+                <Archive className="w-8 h-8 text-[var(--school-accent)]" /> Archives des cours
              </h1>
           </div>
 
           <div className="grid gap-4">
              {MOCK_ARCHIVES.map((week) => (
-                <Card key={week.id} className="bg-[#192734] border-white/10 p-6 flex items-center justify-between hover:border-[#D4AF37]/30 transition-all group">
+                <Card key={week.id} className="bg-[#192734] border-white/10 p-6 flex items-center justify-between hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all group">
                    <div>
-                      <h3 className="text-lg font-bold text-white group-hover:text-[#D4AF37] transition-colors">{week.title}</h3>
+                      <h3 className="text-lg font-bold text-white group-hover:text-[var(--school-accent)] transition-colors">{week.title}</h3>
                       <div className="flex gap-4 text-sm text-gray-400 mt-1">
                          <span>Complété le {week.date}</span>
                          <span className="flex items-center gap-1 text-green-400"><CheckCircle className="w-3 h-3" /> Validé</span>

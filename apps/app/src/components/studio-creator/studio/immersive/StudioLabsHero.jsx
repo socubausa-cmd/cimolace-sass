@@ -40,7 +40,7 @@ export function StudioLabsHero({ isActive, index, total, onEnterView }) {
             <strong className="text-white/90">lives</strong> — outils distincts, expérience unifiée.
           </p>
           <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/30 backdrop-blur-xl px-3 py-1 text-[11px] text-white/50">
-            <span className="text-[#D4AF37]">{String(index + 1).padStart(2, '0')}</span>
+            <span className="text-[var(--school-accent)]">{String(index + 1).padStart(2, '0')}</span>
             <span>/</span>
             <span>{String(total).padStart(2, '0')}</span>
           </div>
@@ -112,8 +112,8 @@ export function StudioLabsHero({ isActive, index, total, onEnterView }) {
             whileTap={{ scale: 0.99 }}
             className={cn(
               'relative text-left rounded-3xl border p-8 md:p-10 transition-all overflow-hidden group backdrop-blur-xl cursor-pointer',
-              'border-[#D4AF37]/30 bg-gradient-to-br from-[#1a1510]/90 via-[#0a0908]/95 to-[#060504]',
-              'hover:border-[#D4AF37]/50 hover:shadow-[0_15px_60px_rgba(212,175,55,0.22)]',
+              'border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-gradient-to-br from-[#1a1510]/90 via-[#0a0908]/95 to-[#060504]',
+              'hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] hover:shadow-[0_15px_60px_rgba(212,175,55,0.22)]',
             )}
           >
             <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
@@ -122,7 +122,7 @@ export function StudioLabsHero({ isActive, index, total, onEnterView }) {
                 <div className="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center text-amber-200">
                   <Clapperboard className="w-7 h-7" />
                 </div>
-                <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-[#D4AF37]/90">
+                <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">
                   Laboratoire 2
                 </span>
               </div>
@@ -140,7 +140,7 @@ export function StudioLabsHero({ isActive, index, total, onEnterView }) {
               <div className="flex flex-wrap items-center gap-3">
                 <Button
                   type="button"
-                  className="rounded-xl bg-[#D4AF37] text-black hover:bg-[#e5c04a]"
+                  className="rounded-xl bg-[var(--school-accent)] text-black hover:bg-[#e5c04a]"
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate('/studio/live-lab');

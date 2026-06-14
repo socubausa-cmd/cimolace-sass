@@ -60,7 +60,7 @@ const ModuleDetailPageY2 = () => {
       <div className="bg-[#192734] border-b border-white/5 py-12 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex gap-4 items-center mb-4">
-            <Badge variant="outline" className="border-[#D4AF37] text-[#D4AF37] uppercase">{module.type}</Badge>
+            <Badge variant="outline" className="border-[var(--school-accent)] text-[var(--school-accent)] uppercase">{module.type}</Badge>
             <span className="text-gray-400 font-mono text-sm">{module.code}</span>
           </div>
           <h1 className="text-4xl font-serif font-bold mb-6">{module.title}</h1>
@@ -68,11 +68,11 @@ const ModuleDetailPageY2 = () => {
           
           <div className="flex flex-wrap gap-8 text-sm">
             <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-[#D4AF37]" />
+              <Clock className="w-5 h-5 text-[var(--school-accent)]" />
               <span className="text-gray-300">{module.duration_weeks} Semaines ({module.duration_hours}h)</span>
             </div>
             <div className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-[#D4AF37]" />
+              <BookOpen className="w-5 h-5 text-[var(--school-accent)]" />
               <span className="text-gray-300">{module.access_level?.join(', ')}</span>
             </div>
           </div>
@@ -86,12 +86,12 @@ const ModuleDetailPageY2 = () => {
           {/* Objectives */}
           <section>
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <CheckCircle className="w-6 h-6 text-[#D4AF37]" /> Objectifs Pédagogiques
+              <CheckCircle className="w-6 h-6 text-[var(--school-accent)]" /> Objectifs Pédagogiques
             </h2>
             <ul className="space-y-3">
               {module.learning_objectives?.map((obj, i) => (
                 <li key={i} className="flex gap-3 text-gray-300">
-                  <span className="block w-1.5 h-1.5 rounded-full bg-[#D4AF37] mt-2.5 shrink-0"></span>
+                  <span className="block w-1.5 h-1.5 rounded-full bg-[var(--school-accent)] mt-2.5 shrink-0"></span>
                   {obj}
                 </li>
               ))}
@@ -136,7 +136,7 @@ const ModuleDetailPageY2 = () => {
 
             <div className="space-y-3">
               {module.price > 0 && (
-                <Button onClick={handleAddToCart} className="w-full bg-[#D4AF37] text-black hover:bg-[#b5952f] font-bold">
+                <Button onClick={handleAddToCart} className="w-full bg-[var(--school-accent)] text-black hover:bg-[#b5952f] font-bold">
                   <ShoppingCart className="w-4 h-4 mr-2" /> Ajouter au Panier
                 </Button>
               )}

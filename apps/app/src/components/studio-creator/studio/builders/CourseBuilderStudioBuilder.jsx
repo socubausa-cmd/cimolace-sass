@@ -191,7 +191,7 @@ function StepTranscript({ draft, updateDraft }) {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-semibold text-white">Transcription</h2>
-      <Button onClick={run} disabled={loading || !draft.video_url} className="bg-[#D4AF37] text-black hover:bg-yellow-500">
+      <Button onClick={run} disabled={loading || !draft.video_url} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
         {loading ? 'Génération...' : 'Générer transcription'}
       </Button>
       <Textarea
@@ -264,7 +264,7 @@ function StepFinalize({ draft, onSubmit, creating }) {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-semibold text-white">Prêt à lancer la post-production</h2>
-      <Card className="bg-[#0F1419] border-[#D4AF37]/30">
+      <Card className="bg-[#0F1419] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
         <CardContent className="p-4 text-sm text-gray-200 space-y-1">
           <p>Titre: {draft.title || '—'}</p>
           <p>Durée: {draft.duration_seconds ? `${Math.round(draft.duration_seconds)}s` : '—'}</p>
@@ -277,7 +277,7 @@ function StepFinalize({ draft, onSubmit, creating }) {
         <strong className="text-white/55">SmartBoard Designer</strong> avec la post-production (transcription, pipeline…)
         sur ce contenu. La page post-prod plein écran reste disponible via le hub studio.
       </p>
-      <Button onClick={onSubmit} disabled={creating} className="bg-[#D4AF37] text-black hover:bg-yellow-500">
+      <Button onClick={onSubmit} disabled={creating} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
         {creating ? 'Création...' : 'Créer et ouvrir le studio'}
       </Button>
     </div>
@@ -304,19 +304,19 @@ function Preview({ draft }) {
       </div>
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="rounded-lg border border-white/10 bg-[#0F1419]/60 p-3">
-          <Upload className="w-4 h-4 text-[#D4AF37] mb-1" />
+          <Upload className="w-4 h-4 text-[var(--school-accent)] mb-1" />
           Durée: {draft?.duration_seconds ? `${Math.round(draft.duration_seconds)}s` : '—'}
         </div>
         <div className="rounded-lg border border-white/10 bg-[#0F1419]/60 p-3">
-          <FileText className="w-4 h-4 text-[#D4AF37] mb-1" />
+          <FileText className="w-4 h-4 text-[var(--school-accent)] mb-1" />
           Transcript: {transcriptCount}
         </div>
         <div className="rounded-lg border border-white/10 bg-[#0F1419]/60 p-3">
-          <Scissors className="w-4 h-4 text-[#D4AF37] mb-1" />
+          <Scissors className="w-4 h-4 text-[var(--school-accent)] mb-1" />
           Segments: {segmentsCount}
         </div>
         <div className="rounded-lg border border-white/10 bg-[#0F1419]/60 p-3">
-          <Sparkles className="w-4 h-4 text-[#D4AF37] mb-1" />
+          <Sparkles className="w-4 h-4 text-[var(--school-accent)] mb-1" />
           Mode: SmartBoard
         </div>
       </div>

@@ -102,7 +102,7 @@ const PublicFormationsPage = () => {
         <div className="premium-panel rounded-2xl border border-white/10 p-6 md:p-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <Badge className="bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 mb-3">Catalogue public</Badge>
+              <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] mb-3">Catalogue public</Badge>
               <h1 className="text-3xl md:text-4xl font-bold">Cours publies</h1>
               <p className="text-gray-400 mt-2">
                 {formations.length} cours publies actuellement.
@@ -115,7 +115,7 @@ const PublicFormationsPage = () => {
                 </Button>
               </Link>
               <Link to="/forfaits">
-                <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500">Voir les abonnements</Button>
+                <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">Voir les abonnements</Button>
               </Link>
             </div>
           </div>
@@ -160,7 +160,7 @@ const PublicFormationsPage = () => {
               const isOneTime = access.mode === 'one_time';
 
               return (
-                <Card key={formation.id} className="premium-panel border-white/10 hover:border-[#D4AF37]/30 transition-all">
+                <Card key={formation.id} className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
                   <CardHeader className="space-y-3">
                     <div className="flex items-center justify-between gap-2">
                       <Badge className="bg-white/10 text-gray-300 border border-white/10">
@@ -176,25 +176,25 @@ const PublicFormationsPage = () => {
                   <CardContent className="space-y-4">
                     <div className="text-xs text-gray-500 flex items-center gap-3">
                       <span className="inline-flex items-center gap-1">
-                        <BookOpen className="w-3.5 h-3.5 text-[#D4AF37]" />
+                        <BookOpen className="w-3.5 h-3.5 text-[var(--school-accent)]" />
                         {formation.cycle || 'Cursus'}
                       </span>
                       <span className="inline-flex items-center gap-1">
-                        <CalendarClock className="w-3.5 h-3.5 text-[#D4AF37]" />
+                        <CalendarClock className="w-3.5 h-3.5 text-[var(--school-accent)]" />
                         {formation.duration_weeks ? `${formation.duration_weeks} semaines` : 'duree variable'}
                       </span>
                     </div>
 
                     {isEnrolled ? (
                       <Link to={`/formation/${formation.id}/learn`}>
-                        <Button className="w-full bg-[#D4AF37] text-black hover:bg-yellow-500">
+                        <Button className="w-full bg-[var(--school-accent)] text-black hover:bg-yellow-500">
                           Acceder au cours
                         </Button>
                       </Link>
                     ) : isSubscription ? (
                       hasSubscriptionAccess ? (
                         <Button
-                          className="w-full bg-[#D4AF37] text-black hover:bg-yellow-500"
+                          className="w-full bg-[var(--school-accent)] text-black hover:bg-yellow-500"
                           disabled={actionLoadingId === formation.id}
                           onClick={() => handleEnrollFreeOrSubscription(formation)}
                         >
@@ -203,7 +203,7 @@ const PublicFormationsPage = () => {
                         </Button>
                       ) : (
                         <Link to="/forfaits">
-                          <Button className="w-full bg-[#D4AF37] text-black hover:bg-yellow-500">
+                          <Button className="w-full bg-[var(--school-accent)] text-black hover:bg-yellow-500">
                             <Lock className="w-4 h-4 mr-2" />
                             S'abonner pour acceder
                           </Button>
@@ -211,14 +211,14 @@ const PublicFormationsPage = () => {
                       )
                     ) : isOneTime ? (
                       <Link to={`/formation/${formation.id}`}>
-                        <Button className="w-full bg-[#D4AF37] text-black hover:bg-yellow-500">
+                        <Button className="w-full bg-[var(--school-accent)] text-black hover:bg-yellow-500">
                           Payer le module
                           {access.standalonePrice != null ? ` (${Number(access.standalonePrice).toLocaleString()} ${access.standaloneCurrency})` : ''}
                         </Button>
                       </Link>
                     ) : (
                       <Button
-                        className="w-full bg-[#D4AF37] text-black hover:bg-yellow-500"
+                        className="w-full bg-[var(--school-accent)] text-black hover:bg-yellow-500"
                         disabled={actionLoadingId === formation.id}
                         onClick={() => handleEnrollFreeOrSubscription(formation)}
                       >

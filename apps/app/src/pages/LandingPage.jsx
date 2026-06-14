@@ -326,7 +326,7 @@ const LandingPage = () => {
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#060910]/90 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <Link to="/" className="text-sm font-semibold tracking-[0.2em] uppercase text-[#D4AF37]">
+            <Link to="/" className="text-sm font-semibold tracking-[0.2em] uppercase text-[var(--school-accent)]">
               {isnaTenantConfig.branding.name}
             </Link>
             <nav className="hidden items-center gap-6 text-sm text-gray-300 lg:flex">
@@ -340,7 +340,7 @@ const LandingPage = () => {
               <Link to="/nous-contacter" className="rounded-lg border border-white/20 px-3 py-2 text-xs sm:text-sm hover:bg-white/5">
                 Nous contacter
               </Link>
-              <Link to="/app" className="rounded-lg bg-[#D4AF37] px-3 py-2 text-xs font-semibold text-black sm:text-sm hover:bg-[#e5c04a]">
+              <Link to="/app" className="rounded-lg bg-[var(--school-accent)] px-3 py-2 text-xs font-semibold text-black sm:text-sm hover:bg-[#e5c04a]">
                 Accès membre
               </Link>
             </div>
@@ -364,7 +364,7 @@ const LandingPage = () => {
           products={PARALLAX_PRODUCTS}
           header={
             <div className="relative z-10 mx-auto max-w-7xl px-4 w-full">
-              <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Plateforme africaine premium</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Plateforme africaine premium</p>
               <h1 className="mt-5 max-w-5xl text-4xl font-semibold leading-tight text-white sm:text-6xl lg:text-7xl">
                 Recevez les yeux pour voir et les oreilles pour comprendre.
               </h1>
@@ -373,7 +373,7 @@ const LandingPage = () => {
                 classes LIRI, chat immersif, certification et temple moderne Ngowazulu dans une expérience digitale afro-futuriste.
               </p>
               <div className="mt-10 flex flex-wrap gap-3">
-                <a href="#produits" className="rounded-xl bg-[#D4AF37] px-6 py-3 font-semibold text-black hover:bg-[#e5c04a] inline-flex items-center gap-2">
+                <a href="#produits" className="rounded-xl bg-[var(--school-accent)] px-6 py-3 font-semibold text-black hover:bg-[#e5c04a] inline-flex items-center gap-2">
                   Découvrir la plateforme <ArrowRight className="w-4 h-4" />
                 </a>
                 <Link to="/app" className="rounded-xl border border-white/20 px-6 py-3 hover:bg-white/10">
@@ -386,7 +386,7 @@ const LandingPage = () => {
               <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {TRUST_METRICS.map((item) => (
                   <div key={item.label} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                    <p className="text-2xl font-semibold text-[#D4AF37]">{item.value}</p>
+                    <p className="text-2xl font-semibold text-[var(--school-accent)]">{item.value}</p>
                     <p className="text-xs uppercase tracking-wider text-gray-400">{item.label}</p>
                   </div>
                 ))}
@@ -398,7 +398,7 @@ const LandingPage = () => {
 
       <section id="univers" className="border-b border-white/10 bg-[#070d18] px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Site public complet</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Site public complet</p>
           <h2 className="mt-4 text-3xl font-semibold sm:text-5xl">Deux univers, deux promesses, une même exigence</h2>
           <p className="mt-4 max-w-4xl text-gray-300">
             Le site grand public PRORASCIENCE s'articule en deux côtés distincts:
@@ -416,8 +416,8 @@ const LandingPage = () => {
                 Explorer le côté PRORASCIENCE
               </a>
             </article>
-            <article className="rounded-3xl border border-[#D4AF37]/35 bg-[#D4AF37]/10 p-7">
-              <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]">Côté NGOWAZULU</p>
+            <article className="rounded-3xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-7">
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--school-accent)]">Côté NGOWAZULU</p>
               <h3 className="mt-2 text-2xl font-semibold text-white">Transformer ce qui vous bloque</h3>
               <p className="mt-3 text-sm text-gray-200">
                 Consultations, interventions, culte, hôpital traditionnel et communauté encadrée.
@@ -432,7 +432,7 @@ const LandingPage = () => {
 
       <section className="border-b border-white/10 bg-[#060b14] px-4 py-16 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Get the highlights</p>
+          <p className="text-xs uppercase tracking-[0.22em] text-[var(--school-accent)]">Get the highlights</p>
           <h2 className="mt-4 text-3xl font-semibold sm:text-5xl">Les points essentiels à retenir en 20 secondes</h2>
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {PRODUCT_HIGHLIGHTS.map((item) => (
@@ -447,7 +447,7 @@ const LandingPage = () => {
 
       <section id="hightech" className="border-b border-white/10 bg-[#070d18] px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Acte I · Technologie d'apprentissage</p>
+          <p className="text-xs uppercase tracking-[0.22em] text-[var(--school-accent)]">Acte I · Technologie d'apprentissage</p>
           <h2 className="mt-4 text-3xl font-semibold sm:text-5xl">L'apprentissage à distance, version haute intensité</h2>
           <p className="mt-4 max-w-4xl text-gray-300">
             PRORASCIENCE commence par une base technologique forte: LIRI, chat immersif, Smartboard, Neuron QR
@@ -463,8 +463,8 @@ const LandingPage = () => {
           </div>
 
           <div className="mt-10 grid gap-4 lg:grid-cols-2">
-            <article className="rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-6">
-              <p className="text-xs uppercase tracking-[0.18em] text-[#D4AF37]">Dynamic prompt engine</p>
+            <article className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-6">
+              <p className="text-xs uppercase tracking-[0.18em] text-[var(--school-accent)]">Dynamic prompt engine</p>
               <p className="mt-3 text-sm text-gray-200">Simulation d'expérience “AI studio” inspirée des pages SaaS dynamiques.</p>
               <div className="mt-4 rounded-xl border border-white/15 bg-black/30 p-4 text-sm text-white min-h-[72px] flex items-center">
                 {DYNAMIC_PROMPTS[activePromptIndex]}
@@ -475,7 +475,7 @@ const LandingPage = () => {
             </article>
 
             <article className="rounded-2xl border border-white/10 bg-white/5 p-6">
-              <p className="text-xs uppercase tracking-[0.18em] text-[#D4AF37]">Dynamic performance bars</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-[var(--school-accent)]">Dynamic performance bars</p>
               <div className="mt-4 space-y-4 text-sm">
                 <div>
                   <div className="mb-1 flex items-center justify-between text-gray-300">
@@ -483,7 +483,7 @@ const LandingPage = () => {
                     <span>{dynamicLevel.immersion}%</span>
                   </div>
                   <div className="h-2 rounded-full bg-white/10">
-                    <div className="h-2 rounded-full bg-[#D4AF37] transition-all duration-500" style={{ width: `${dynamicLevel.immersion}%` }} />
+                    <div className="h-2 rounded-full bg-[var(--school-accent)] transition-all duration-500" style={{ width: `${dynamicLevel.immersion}%` }} />
                   </div>
                 </div>
                 <div>
@@ -512,7 +512,7 @@ const LandingPage = () => {
 
       <section id="science" className="border-b border-white/10 bg-[#090f1a] px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Acte II · Narration scientifique</p>
+          <p className="text-xs uppercase tracking-[0.22em] text-[var(--school-accent)]">Acte II · Narration scientifique</p>
           <h2 className="mt-4 text-3xl font-semibold sm:text-5xl">Expliquer ce qui était fait dans l'ignorance</h2>
           <p className="mt-4 max-w-4xl text-gray-300">
             La promesse PRORASCIENCE est simple: on ne vous demande pas de croire, on vous apprend à comprendre.
@@ -521,12 +521,12 @@ const LandingPage = () => {
           <div className="mt-8 grid gap-4 lg:grid-cols-3">
             {SCIENCE_NARRATIVE.map((item) => (
               <article key={item.title} className="rounded-2xl border border-white/10 bg-black/20 p-6">
-                <p className="text-xs uppercase tracking-wider text-[#D4AF37]">{item.title}</p>
+                <p className="text-xs uppercase tracking-wider text-[var(--school-accent)]">{item.title}</p>
                 <p className="mt-3 text-sm text-gray-200">{item.text}</p>
               </article>
             ))}
           </div>
-          <div className="mt-8 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-6">
+          <div className="mt-8 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-6">
             <p className="text-sm text-gray-200">
               Exemple de rupture pédagogique: libation, kola, gestes rituels et causalité énergétique sont abordés avec une grille
               rationnelle, des modèles explicatifs et une mise en pratique encadrée.
@@ -561,7 +561,7 @@ const LandingPage = () => {
 
       <section id="produits" className="border-b border-white/10 bg-[#080d17] px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Présentation produit</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Présentation produit</p>
           <h2 className="mt-4 text-3xl sm:text-5xl font-semibold">Take a closer look</h2>
           <p className="mt-4 max-w-3xl text-gray-300">
             Une présentation en style “product page” : un bloc = une capacité business, avec bénéfice clair.
@@ -584,7 +584,7 @@ const LandingPage = () => {
 
       <section id="institution" className="border-b border-white/10 bg-[#0b111b] px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Socle institutionnel</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Socle institutionnel</p>
           <h2 className="mt-4 text-3xl sm:text-5xl font-semibold">Une école initiatique documentée, structurée et transmissible</h2>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <article className="rounded-2xl border border-white/10 bg-white/5 p-6">
@@ -606,8 +606,8 @@ const LandingPage = () => {
               </p>
             </article>
           </div>
-          <div className="mt-8 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-6">
-            <p className="text-xs uppercase tracking-[0.18em] text-[#D4AF37]">Positionnement de marque</p>
+          <div className="mt-8 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-6">
+            <p className="text-xs uppercase tracking-[0.18em] text-[var(--school-accent)]">Positionnement de marque</p>
             <p className="mt-3 max-w-5xl text-sm text-gray-200 sm:text-base">
               PRORASCIENCE n&apos;est ni une simple école en ligne, ni un service spirituel générique. C&apos;est une architecture
               de transformation qui relie la compréhension (ISNA) et l&apos;intervention (Ngowazulu), avec des standards
@@ -647,7 +647,7 @@ const LandingPage = () => {
       <section id="isna" className="border-b border-white/10 bg-[#090d16] px-4 py-20 sm:px-6">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2 items-center">
           <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">ISNA · École initiatique</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">ISNA · École initiatique</p>
             <h2 className="mt-4 text-3xl font-semibold sm:text-5xl">Former des profils qui comprennent avant d'agir</h2>
             <p className="mt-5 text-gray-300">
               ISNA transforme les pratiques en expertise transmissible: pédagogie structurée, suivi, outils immersifs, et résultats mesurables.
@@ -660,18 +660,18 @@ const LandingPage = () => {
                 'Certification progressive des compétences',
               ].map((item) => (
                 <li key={item} className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#D4AF37]" />
+                  <CheckCircle2 className="w-4 h-4 text-[var(--school-accent)]" />
                   {item}
                 </li>
               ))}
             </ul>
             <div className="mt-7 rounded-xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs uppercase tracking-wider text-[#D4AF37]">Promesse ISNA</p>
+              <p className="text-xs uppercase tracking-wider text-[var(--school-accent)]">Promesse ISNA</p>
               <p className="mt-2 text-sm text-gray-300">
                 Passer de &quot;je reproduis des gestes&quot; à &quot;je comprends, j&apos;explique et je transmets&quot;.
               </p>
             </div>
-            <Link to="/isna" className="mt-8 inline-block rounded-lg bg-[#D4AF37] px-5 py-2.5 font-semibold text-black hover:bg-[#e5c04a]">
+            <Link to="/isna" className="mt-8 inline-block rounded-lg bg-[var(--school-accent)] px-5 py-2.5 font-semibold text-black hover:bg-[#e5c04a]">
               Voir toute l'offre ISNA
             </Link>
           </div>
@@ -691,7 +691,7 @@ const LandingPage = () => {
             className="w-full h-[420px] object-cover rounded-3xl border border-white/10"
           />
           <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Ngowazulu · Temple moderne</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Ngowazulu · Temple moderne</p>
             <h2 className="mt-4 max-w-4xl text-3xl font-semibold sm:text-5xl">
               Un espace de transformation profonde, ancré dans une vision africaine contemporaine
             </h2>
@@ -712,12 +712,12 @@ const LandingPage = () => {
               ))}
             </div>
             <div className="mt-7 rounded-xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs uppercase tracking-wider text-[#D4AF37]">Promesse Ngowazulu</p>
+              <p className="text-xs uppercase tracking-wider text-[var(--school-accent)]">Promesse Ngowazulu</p>
               <p className="mt-2 text-sm text-gray-300">
                 Vous venez pour résoudre une impasse réelle, avec une méthode, une équipe et un suivi responsable.
               </p>
             </div>
-            <Link to="/temple-ngowazulu" className="mt-8 inline-block rounded-lg bg-[#D4AF37] px-5 py-2.5 font-semibold text-black hover:bg-[#e5c04a]">
+            <Link to="/temple-ngowazulu" className="mt-8 inline-block rounded-lg bg-[var(--school-accent)] px-5 py-2.5 font-semibold text-black hover:bg-[#e5c04a]">
               Voir toute l'offre Ngowazulu
             </Link>
           </div>
@@ -742,7 +742,7 @@ const LandingPage = () => {
 
       <section id="ngowazulu-side" className="border-b border-white/10 bg-[#090d16] px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Côté NGOWAZULU</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Côté NGOWAZULU</p>
           <h2 className="mt-4 text-3xl font-semibold sm:text-5xl">Narration produit NGOWAZULU</h2>
           <p className="mt-4 max-w-4xl text-gray-300">
             Ici, la promesse est transformationnelle: traiter des cas réels, avec confidentialité,
@@ -761,7 +761,7 @@ const LandingPage = () => {
 
       <section className="border-b border-white/10 bg-[#0b111b] px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Acte III · Univers Ngowazulu</p>
+          <p className="text-xs uppercase tracking-[0.22em] text-[var(--school-accent)]">Acte III · Univers Ngowazulu</p>
           <h2 className="mt-4 text-3xl font-semibold sm:text-5xl">Temple, communauté, culte, hôpital : un système vivant</h2>
           <p className="mt-4 max-w-4xl text-gray-300">
             Ngowazulu ne se limite pas à une consultation ponctuelle. C&apos;est un pôle d&apos;intervention continue
@@ -780,7 +780,7 @@ const LandingPage = () => {
 
       <section id="innovation" className="border-b border-white/10 bg-[#090d16] px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Innovation & avantages</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Innovation & avantages</p>
           <h2 className="mt-4 text-3xl font-semibold sm:text-5xl">Fast runs in the family — version PRORASCIENCE</h2>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
@@ -822,7 +822,7 @@ const LandingPage = () => {
 
       <section className="border-b border-white/10 bg-[#0a0f19] px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Expérience client</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Expérience client</p>
           <h2 className="mt-4 text-3xl font-semibold sm:text-5xl">Ce que ressent un membre en entrant dans l'écosystème</h2>
           <div className="mt-8 grid gap-4 lg:grid-cols-4">
             {[
@@ -841,7 +841,7 @@ const LandingPage = () => {
 
       <section className="border-b border-white/10 bg-[#070b14] px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Comparatif de valeur</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Comparatif de valeur</p>
           <h2 className="mt-4 text-3xl font-semibold sm:text-5xl">Ancien modèle vs PRORASCIENCE</h2>
           <div className="mt-8 grid gap-4 lg:grid-cols-2">
             <article className="rounded-2xl border border-red-500/25 bg-red-500/5 p-6">
@@ -867,7 +867,7 @@ const LandingPage = () => {
       <section id="fondateur" className="border-b border-white/10 px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-7xl grid gap-8 lg:grid-cols-2 items-center">
           <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Le fondateur</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Le fondateur</p>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold">Une vision : relier connaissance, conscience et impact</h2>
             <p className="mt-5 text-gray-300">
               Le fondateur de PRORASCIENCE porte une ambition claire : structurer l'initiation africaine dans un modèle moderne,
@@ -893,12 +893,12 @@ const LandingPage = () => {
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Preuve sociale réelle</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Preuve sociale réelle</p>
             <h2 className="mt-4 text-3xl font-semibold sm:text-5xl">Témoignages vérifiables de nos membres</h2>
           </div>
           <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-right">
             <p className="text-xs uppercase tracking-wider text-gray-400">Note moyenne</p>
-            <p className="text-2xl font-semibold text-[#D4AF37]">
+            <p className="text-2xl font-semibold text-[var(--school-accent)]">
               {Number(reviewSummary?.global?.average || 0).toFixed(1)} / 5
             </p>
             <p className="text-xs text-gray-400">{Number(reviewSummary?.global?.total || 0)} avis publiés</p>
@@ -912,7 +912,7 @@ const LandingPage = () => {
             ) : featuredReviews.length ? (
               featuredReviews.map((item) => (
                 <article key={item.id} className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                  <p className="text-[#D4AF37]">{renderStars(item.rating)}</p>
+                  <p className="text-[var(--school-accent)]">{renderStars(item.rating)}</p>
                   <p className="mt-3 text-sm text-gray-200">"{item.review_text}"</p>
                   <div className="mt-4 text-xs text-gray-400">
                     <p className="font-medium text-white">
@@ -980,7 +980,7 @@ const LandingPage = () => {
             <button
               type="submit"
               disabled={submitState.status === 'submitting'}
-              className="w-full rounded-lg bg-[#D4AF37] px-4 py-2 text-sm font-semibold text-black hover:bg-[#e5c04a] disabled:opacity-60"
+              className="w-full rounded-lg bg-[var(--school-accent)] px-4 py-2 text-sm font-semibold text-black hover:bg-[#e5c04a] disabled:opacity-60"
             >
               {submitState.status === 'submitting' ? 'Envoi...' : 'Envoyer mon témoignage'}
             </button>
@@ -996,7 +996,7 @@ const LandingPage = () => {
 
       <section id="offres" className="px-4 py-20 sm:px-6">
       <div className="mx-auto max-w-6xl">
-        <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37]">Tarifs & accès</p>
+        <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Tarifs & accès</p>
         <h2 className="mt-4 text-3xl font-semibold sm:text-5xl">Choisissez votre accompagnement</h2>
         <p className="mt-4 max-w-3xl text-gray-300">
           ISNA pour apprendre et structurer, Ngowazulu pour être accompagné et transformer.
@@ -1006,7 +1006,7 @@ const LandingPage = () => {
         {/* Pôle École — ISNA + Consultation Ngowazulu */}
         <div className="mt-10 grid gap-5 md:grid-cols-2">
           <article className="flex flex-col rounded-3xl border border-white/10 bg-white/5 p-7">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]">Pôle École — ISNA</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-[var(--school-accent)]">Pôle École — ISNA</p>
             <h3 className="mt-2 text-2xl font-semibold">Académie ISNA</h3>
             <p className="mt-3 text-sm text-gray-300">Programmes structurés, modules, progression encadrée et accompagnement pédagogique.</p>
             <p className="mt-4 text-3xl font-semibold text-white">
@@ -1017,31 +1017,31 @@ const LandingPage = () => {
               <button
                 type="button"
                 onClick={() => setBillingCycle('monthly')}
-                className={`rounded-full px-3 py-1 transition-colors ${billingCycle === 'monthly' ? 'bg-[#D4AF37] text-black' : 'text-gray-300 hover:text-white'}`}
+                className={`rounded-full px-3 py-1 transition-colors ${billingCycle === 'monthly' ? 'bg-[var(--school-accent)] text-black' : 'text-gray-300 hover:text-white'}`}
               >
                 Mensuel
               </button>
               <button
                 type="button"
                 onClick={() => setBillingCycle('annual')}
-                className={`rounded-full px-3 py-1 transition-colors ${billingCycle === 'annual' ? 'bg-[#D4AF37] text-black' : 'text-gray-300 hover:text-white'}`}
+                className={`rounded-full px-3 py-1 transition-colors ${billingCycle === 'annual' ? 'bg-[var(--school-accent)] text-black' : 'text-gray-300 hover:text-white'}`}
               >
                 Annuel
               </button>
             </div>
             <div className="mt-auto pt-6">
-              <Link to="/t/isna/signup" className="inline-block rounded-lg bg-[#D4AF37] px-5 py-2.5 font-semibold text-black hover:bg-[#e5c04a]">
+              <Link to="/t/isna/signup" className="inline-block rounded-lg bg-[var(--school-accent)] px-5 py-2.5 font-semibold text-black hover:bg-[#e5c04a]">
                 Rejoindre l'académie
               </Link>
             </div>
           </article>
-          <article className="flex flex-col rounded-3xl border border-[#D4AF37]/35 bg-[#D4AF37]/10 p-7">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]">Pôle Temple — Ngowazulu</p>
+          <article className="flex flex-col rounded-3xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-7">
+            <p className="text-xs uppercase tracking-[0.2em] text-[var(--school-accent)]">Pôle Temple — Ngowazulu</p>
             <h3 className="mt-2 text-2xl font-semibold">Consultation individuelle</h3>
             <p className="mt-3 text-sm text-gray-200">Séance de 90 minutes : diagnostic des blocages, priorisation des urgences et plan d'action personnalisé.</p>
             <p className="mt-4 text-3xl font-semibold text-white">90 min<span className="ml-1 text-sm font-normal text-gray-300"> · sur rendez-vous</span></p>
             <div className="mt-auto flex flex-wrap gap-3 pt-6">
-              <Link to={NGOWAZULU_CONSULTATION_NEXT_PATH} className="inline-block rounded-lg bg-[#D4AF37] px-5 py-2.5 font-semibold text-black hover:bg-[#e5c04a]">
+              <Link to={NGOWAZULU_CONSULTATION_NEXT_PATH} className="inline-block rounded-lg bg-[var(--school-accent)] px-5 py-2.5 font-semibold text-black hover:bg-[#e5c04a]">
                 Réserver une consultation
               </Link>
               <Link to="/t/isna/paiement?type=don" className="inline-block rounded-lg border border-white/20 px-5 py-2.5 font-semibold hover:bg-white/10">
@@ -1053,7 +1053,7 @@ const LandingPage = () => {
 
         {/* Pôle Temple — Mentorat Ngowazulu (abonnement mensuel) */}
         <div className="mt-12">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]">Mentorat Ngowazulu — abonnement mensuel</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[var(--school-accent)]">Mentorat Ngowazulu — abonnement mensuel</p>
           <h3 className="mt-2 text-2xl font-semibold sm:text-3xl">Quatre paliers d'accompagnement</h3>
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {ngowazuluMentoratOffers.map((offer) => (
@@ -1070,7 +1070,7 @@ const LandingPage = () => {
                 <p className="mt-3 flex-1 text-xs leading-relaxed text-gray-400">{offer.detailIntro}</p>
                 <Link
                   to={`/t/isna/paiement?plan=${offer.slug}`}
-                  className="mt-5 inline-block rounded-lg bg-[#D4AF37] px-4 py-2.5 text-center text-sm font-semibold text-black hover:bg-[#e5c04a]"
+                  className="mt-5 inline-block rounded-lg bg-[var(--school-accent)] px-4 py-2.5 text-center text-sm font-semibold text-black hover:bg-[#e5c04a]"
                 >
                   S'abonner
                 </Link>
@@ -1099,7 +1099,7 @@ const LandingPage = () => {
             Accédez à l'espace applicatif uniquement via connexion membre.
           </p>
           <div className="mt-8 flex flex-wrap gap-3 justify-center">
-            <Link to="/app" className="rounded-xl bg-[#D4AF37] px-6 py-3 font-semibold text-black hover:bg-[#e5c04a]">
+            <Link to="/app" className="rounded-xl bg-[var(--school-accent)] px-6 py-3 font-semibold text-black hover:bg-[#e5c04a]">
               Aller à l'accès membre
             </Link>
             <Link to="/signup" className="rounded-xl border border-white/20 px-6 py-3 hover:bg-white/10">

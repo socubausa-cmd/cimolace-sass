@@ -168,7 +168,7 @@ const FormationGuideSection = () => {
             href="/appointment/request"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#D4AF37] text-black font-bold text-sm hover:bg-yellow-500 transition-all duration-200 hover:scale-[1.02] shadow-lg"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--school-accent)] text-black font-bold text-sm hover:bg-yellow-500 transition-all duration-200 hover:scale-[1.02] shadow-lg"
           >
             <User className="w-4 h-4" />
             Prendre rendez-vous avec un conseiller

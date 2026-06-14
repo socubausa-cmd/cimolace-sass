@@ -36,12 +36,12 @@ const SchoolVitrinePage = () => {
         <div className="relative max-w-7xl mx-auto px-6">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300">
-              <BookOpen className="w-4 h-4 text-[#D4AF37]" />
+              <BookOpen className="w-4 h-4 text-[var(--school-accent)]" />
               Initiation aux Sciences Nocturnes Africaines
             </div>
 
             <h1 className="mt-6 text-4xl md:text-6xl font-serif font-bold leading-tight">
-              {SCHOOL} <span className="text-[#D4AF37]">· LIRI</span>
+              {SCHOOL} <span className="text-[var(--school-accent)]">· LIRI</span>
             </h1>
 
             <p className="mt-6 text-lg md:text-xl text-gray-300 leading-relaxed">
@@ -50,7 +50,7 @@ const SchoolVitrinePage = () => {
 
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
               <Link to="/signup">
-                <Button className="bg-[#D4AF37] text-black hover:bg-[#bfa345] font-bold h-12 px-8">
+                <Button className="bg-[var(--school-accent)] text-black hover:bg-[#bfa345] font-bold h-12 px-8">
                   Devenir membre
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
@@ -77,7 +77,7 @@ const SchoolVitrinePage = () => {
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-[#192734] border border-white/5 rounded-2xl p-8">
-              <div className="w-12 h-12 rounded-xl bg-[#D4AF37]/10 text-[#D4AF37] flex items-center justify-center mb-5">
+              <div className="w-12 h-12 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] flex items-center justify-center mb-5">
                 <Target className="w-6 h-6" />
               </div>
               <h2 className="text-xl font-bold mb-2">Mission</h2>
@@ -85,14 +85,14 @@ const SchoolVitrinePage = () => {
                 Restaurer la dignité intellectuelle et spirituelle par une connaissance rigoureuse.
               </p>
               <div className="mt-6">
-                <Link to="/a-propos" className="text-[#D4AF37] text-sm font-medium hover:underline">
+                <Link to="/a-propos" className="text-[var(--school-accent)] text-sm font-medium hover:underline">
                   En savoir plus
                 </Link>
               </div>
             </div>
 
             <div className="bg-[#192734] border border-white/5 rounded-2xl p-8">
-              <div className="w-12 h-12 rounded-xl bg-[#D4AF37]/10 text-[#D4AF37] flex items-center justify-center mb-5">
+              <div className="w-12 h-12 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] flex items-center justify-center mb-5">
                 <Eye className="w-6 h-6" />
               </div>
               <h2 className="text-xl font-bold mb-2">Vision</h2>
@@ -100,14 +100,14 @@ const SchoolVitrinePage = () => {
                 Unifier la physique et la métaphysique dans une structure cohérente de connaissance.
               </p>
               <div className="mt-6">
-                <Link to="/a-propos" className="text-[#D4AF37] text-sm font-medium hover:underline">
+                <Link to="/a-propos" className="text-[var(--school-accent)] text-sm font-medium hover:underline">
                   Lire la vision
                 </Link>
               </div>
             </div>
 
             <div className="bg-[#192734] border border-white/5 rounded-2xl p-8">
-              <div className="w-12 h-12 rounded-xl bg-[#D4AF37]/10 text-[#D4AF37] flex items-center justify-center mb-5">
+              <div className="w-12 h-12 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] flex items-center justify-center mb-5">
                 <GraduationCap className="w-6 h-6" />
               </div>
               <h2 className="text-xl font-bold mb-2">Programmes</h2>
@@ -115,7 +115,7 @@ const SchoolVitrinePage = () => {
                 Des parcours structurés : savoir théorique, pratique opérative, accompagnement.
               </p>
               <div className="mt-6">
-                <Link to="/formations" className="text-[#D4AF37] text-sm font-medium hover:underline">
+                <Link to="/formations" className="text-[var(--school-accent)] text-sm font-medium hover:underline">
                   Explorer les formations
                 </Link>
               </div>
@@ -129,7 +129,7 @@ const SchoolVitrinePage = () => {
           <div className="grid md:grid-cols-3 gap-6">
             <Link to="/equipe" className="bg-[#192734] border border-white/5 rounded-2xl p-8 hover:bg-white/5 transition-colors">
               <div className="flex items-center gap-3 text-lg font-bold">
-                <Users className="w-5 h-5 text-[#D4AF37]" />
+                <Users className="w-5 h-5 text-[var(--school-accent)]" />
                 Notre équipe
               </div>
               <p className="mt-3 text-sm text-gray-400">Rencontrez les gardiens du savoir et le corps professoral.</p>
@@ -137,7 +137,7 @@ const SchoolVitrinePage = () => {
 
             <Link to="/faq" className="bg-[#192734] border border-white/5 rounded-2xl p-8 hover:bg-white/5 transition-colors">
               <div className="flex items-center gap-3 text-lg font-bold">
-                <HelpCircle className="w-5 h-5 text-[#D4AF37]" />
+                <HelpCircle className="w-5 h-5 text-[var(--school-accent)]" />
                 FAQ
               </div>
               <p className="mt-3 text-sm text-gray-400">Admission, cursus, forfaits, certifications.</p>
@@ -145,7 +145,7 @@ const SchoolVitrinePage = () => {
 
             <Link to="/nous-contacter" className="bg-[#192734] border border-white/5 rounded-2xl p-8 hover:bg-white/5 transition-colors">
               <div className="flex items-center gap-3 text-lg font-bold">
-                <Mail className="w-5 h-5 text-[#D4AF37]" />
+                <Mail className="w-5 h-5 text-[var(--school-accent)]" />
                 Contact
               </div>
               <p className="mt-3 text-sm text-gray-400">Posez vos questions et contactez le secrétariat.</p>
@@ -163,7 +163,7 @@ const SchoolVitrinePage = () => {
                 Accédez aux ouvrages fondateurs, aux programmes et aux voies d'accompagnement. Ces liens aident aussi Google à découvrir toutes les pages importantes.
               </p>
             </div>
-            <Link to="/bibliotheque" className="text-[#D4AF37] font-semibold hover:underline">
+            <Link to="/bibliotheque" className="text-[var(--school-accent)] font-semibold hover:underline">
               Voir la Bibliothèque
             </Link>
           </div>
@@ -171,7 +171,7 @@ const SchoolVitrinePage = () => {
           <div className="mt-10 grid md:grid-cols-3 gap-6">
             <Link to="/bibliotheque" className="bg-[#192734] border border-white/5 rounded-2xl p-8 hover:bg-white/5 transition-colors">
               <div className="flex items-center gap-3 text-lg font-bold">
-                <BookOpen className="w-5 h-5 text-[#D4AF37]" />
+                <BookOpen className="w-5 h-5 text-[var(--school-accent)]" />
                 {`Bibliothèque — ${SCHOOL}`}
               </div>
               <p className="mt-3 text-sm text-gray-400">Tous les livres, séries, filtres et accès de lecture.</p>
@@ -233,7 +233,7 @@ const SchoolVitrinePage = () => {
             </p>
             <div className="mt-8">
               <Link to="/signup">
-                <Button className="bg-[#D4AF37] text-black hover:bg-[#bfa345] font-bold h-12 px-8">
+                <Button className="bg-[var(--school-accent)] text-black hover:bg-[#bfa345] font-bold h-12 px-8">
                   Devenir membre
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>

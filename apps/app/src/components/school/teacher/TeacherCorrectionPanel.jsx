@@ -52,13 +52,13 @@ const TeacherCorrectionPanel = () => {
     <div className="flex flex-col gap-4 min-h-0 max-w-[1600px] mx-auto w-full">
       <div className="rounded-xl border border-white/10 bg-[#15202B]/80 p-4">
         <h1 className="text-lg font-bold text-white flex items-center gap-2">
-          <ClipboardList className="w-5 h-5 text-[#D4AF37]" />
+          <ClipboardList className="w-5 h-5 text-[var(--school-accent)]" />
           Corrections de rédactions
         </h1>
         <p className="text-sm text-gray-400 mt-1">
           Interface pour <strong className="text-gray-300">noter les travaux écrits</strong> des élèves (compréhension,
           clarté, effort) et laisser un commentaire. Les entrées proviennent du{' '}
-          <span className="text-[#D4AF37]">mock pédagogique local</span> (DataSync) — branchez une table Supabase
+          <span className="text-[var(--school-accent)]">mock pédagogique local</span> (DataSync) — branchez une table Supabase
           (devoirs / soumissions) pour la production.
         </p>
       </div>
@@ -90,7 +90,7 @@ const TeacherCorrectionPanel = () => {
                   }}
                   className={`p-4 rounded-lg cursor-pointer transition-colors border ${
                     selectedSubmission && subKey(selectedSubmission) === subKey(sub)
-                      ? 'bg-[#D4AF37] text-black border-[#D4AF37]'
+                      ? 'bg-[var(--school-accent)] text-black border-[var(--school-accent)]'
                       : 'bg-[#0F1419] text-gray-300 hover:bg-white/5 border-white/10'
                   }`}
                 >

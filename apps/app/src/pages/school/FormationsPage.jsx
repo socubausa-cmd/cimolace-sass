@@ -51,9 +51,9 @@ const FormationsPage = () => {
         
         <div className="relative max-w-7xl mx-auto text-center space-y-8 animate-in fade-in-up duration-1000">
           <h1 className="text-5xl md:text-7xl font-serif font-bold text-white tracking-tight leading-tight">
-            École de <span className="text-[#D4AF37] relative inline-block">
+            École de <span className="text-[var(--school-accent)] relative inline-block">
               {isnaTenantConfig.branding.name}
-              <svg className="absolute w-full h-3 -bottom-1 left-0 text-[#D4AF37] opacity-60" viewBox="0 0 100 10" preserveAspectRatio="none">
+              <svg className="absolute w-full h-3 -bottom-1 left-0 text-[var(--school-accent)] opacity-60" viewBox="0 0 100 10" preserveAspectRatio="none">
                  <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="2" fill="none" />
               </svg>
             </span>
@@ -83,7 +83,7 @@ const FormationsPage = () => {
         <section>
            <div className="text-center mb-12">
             <h2 className="text-3xl font-bold font-serif mb-4 flex items-center justify-center gap-3">
-              <span className="text-[#D4AF37]">✦</span> Guide d'Orientation <span className="text-[#D4AF37]">✦</span>
+              <span className="text-[var(--school-accent)]">✦</span> Guide d'Orientation <span className="text-[var(--school-accent)]">✦</span>
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">Avant de choisir un forfait, comprenez la philosophie qui structure notre école. Chaque niveau correspond à un degré d'engagement différent.</p>
           </div>
@@ -114,7 +114,7 @@ const FormationsPage = () => {
         {/* Separator */}
         <div className="flex items-center justify-center opacity-30">
           <div className="h-px bg-white w-full max-w-xs"></div>
-          <span className="px-4 text-2xl text-[#D4AF37]">═══</span>
+          <span className="px-4 text-2xl text-[var(--school-accent)]">═══</span>
           <div className="h-px bg-white w-full max-w-xs"></div>
         </div>
 
@@ -129,7 +129,7 @@ const FormationsPage = () => {
 
         {/* CTA Footer */}
         <section className="bg-gradient-to-br from-[#192734] to-[#0f1216] rounded-3xl p-10 md:p-16 text-center border border-white/10 relative overflow-hidden shadow-2xl">
-           <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
+           <div className="absolute top-0 right-0 w-96 h-96 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2"></div>
            
            <div className="relative z-10 max-w-2xl mx-auto space-y-8">

@@ -109,7 +109,7 @@ const InventoryItemForm = ({ isOpen, onClose, onSave, initialData }) => {
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} className="border-white/10 text-white">Annuler</Button>
-          <Button onClick={handleSubmit} className="bg-[#D4AF37] text-black hover:bg-yellow-500">Enregistrer</Button>
+          <Button onClick={handleSubmit} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">Enregistrer</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

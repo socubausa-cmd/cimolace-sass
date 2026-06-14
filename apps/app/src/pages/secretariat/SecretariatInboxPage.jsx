@@ -631,7 +631,7 @@ const SecretariatInboxPage = () => {
       transition={{ delay: index * 0.04 }}
       whileHover={{ scale: 1.01, x: 4 }}
       whileTap={{ scale: 0.99 }}
-      className="flex items-start gap-3 p-4 rounded-2xl border border-white/10 bg-[#151a21]/60 backdrop-blur-sm hover:border-[#D4AF37]/30 hover:bg-white/5 transition-all cursor-pointer"
+      className="flex items-start gap-3 p-4 rounded-2xl border border-white/10 bg-[#151a21]/60 backdrop-blur-sm hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:bg-white/5 transition-all cursor-pointer"
     >
       {children}
     </motion.div>
@@ -664,7 +664,7 @@ const SecretariatInboxPage = () => {
             {item.booking_reference ? ` · ${item.booking_reference}` : ''}
           </p>
           {item._secretary_name ? (
-            <p className="text-xs text-[#D4AF37]/80 mt-1">Secrétaire proposée : {item._secretary_name}</p>
+            <p className="text-xs text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)] mt-1">Secrétaire proposée : {item._secretary_name}</p>
           ) : null}
           {item._teacher_name ? (
             <p className="text-xs text-gray-500 mt-0.5">Enseignant : {item._teacher_name}</p>
@@ -732,7 +732,7 @@ const SecretariatInboxPage = () => {
       </MessageCard>
       <div className="flex flex-wrap gap-2 pl-14">
         {item.video_meeting_url ? (
-          <Button size="sm" className="bg-[#D4AF37] text-black hover:bg-[#c9a432]" asChild>
+          <Button size="sm" className="bg-[var(--school-accent)] text-black hover:bg-[#c9a432]" asChild>
             <a href={item.video_meeting_url} target="_blank" rel="noreferrer">
               <Video className="w-4 h-4 mr-1" /> Rejoindre
             </a>
@@ -758,7 +758,7 @@ const SecretariatInboxPage = () => {
         type="button"
         onClick={() => setSelectedTriageKey(it.key)}
         className={`w-full text-left rounded-2xl border transition-colors ${
-          active ? 'border-[#D4AF37]/50 bg-[#D4AF37]/10' : 'border-white/10 bg-[#151a21]/60 hover:border-white/20'
+          active ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]' : 'border-white/10 bg-[#151a21]/60 hover:border-white/20'
         }`}
       >
         <div className="flex items-start gap-3 p-4">
@@ -796,7 +796,7 @@ const SecretariatInboxPage = () => {
     return (
       <div className="rounded-2xl border border-white/10 bg-[#151a21]/80 p-5 space-y-4">
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-[#D4AF37]" />
+          <Filter className="w-4 h-4 text-[var(--school-accent)]" />
           <h3 className="font-semibold text-white">Détail</h3>
         </div>
         <p className="text-sm text-gray-300">{it.subtitle}</p>
@@ -843,7 +843,7 @@ const SecretariatInboxPage = () => {
       </Helmet>
 
       <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[#D4AF37]/5 rounded-full blur-[100px]" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[100px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] bg-violet-500/5 rounded-full blur-[80px]" />
       </div>
 
@@ -858,10 +858,10 @@ const SecretariatInboxPage = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
-            className="p-3 bg-[#D4AF37]/10 rounded-2xl border border-[#D4AF37]/20"
+            className="p-3 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
             whileHover={{ scale: 1.05, boxShadow: '0 0 25px rgba(212,175,55,0.2)' }}
           >
-            <Inbox className="w-7 h-7 text-[#D4AF37]" />
+            <Inbox className="w-7 h-7 text-[var(--school-accent)]" />
           </motion.div>
           <div>
             <motion.div
@@ -870,7 +870,7 @@ const SecretariatInboxPage = () => {
               transition={{ delay: 0.2 }}
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-2"
             >
-              <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+              <Sparkles className="w-4 h-4 text-[var(--school-accent)]" />
               <span className="text-xs text-gray-400">Centre de communication</span>
             </motion.div>
             <h1 className="text-2xl md:text-3xl font-serif font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-400">
@@ -878,7 +878,7 @@ const SecretariatInboxPage = () => {
             </h1>
             <p className="text-gray-400 text-sm mt-1">
               Un seul espace : canaux séparés — chat, courrier{' '}
-              <span className="text-[#D4AF37] font-mono text-xs">{vitrineEmail}</span>, appels, réservation.
+              <span className="text-[var(--school-accent)] font-mono text-xs">{vitrineEmail}</span>, appels, réservation.
             </p>
             <p className="text-gray-500 text-xs mt-2 max-w-3xl">
               <strong className="text-gray-400">Tous</strong> priorise l&apos;action (non lus, urgents, RDV imminents).{' '}
@@ -907,7 +907,7 @@ const SecretariatInboxPage = () => {
           <TabsContent value="tous" className="mt-0">
             {loading ? (
               <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-10 h-10 animate-spin text-[#D4AF37]" />
+                <Loader2 className="w-10 h-10 animate-spin text-[var(--school-accent)]" />
               </div>
             ) : (
               <div className="grid grid-cols-1 xl:grid-cols-[200px_minmax(0,1fr)_minmax(260px,320px)] gap-4">
@@ -924,7 +924,7 @@ const SecretariatInboxPage = () => {
                         setSelectedTriageKey(null);
                       }}
                       className={`w-full text-left text-xs rounded-lg px-3 py-2 transition-colors ${
-                        triageFilter === f.id ? 'bg-[#D4AF37]/20 text-white border border-[#D4AF37]/40' : 'text-gray-400 hover:bg-white/5'
+                        triageFilter === f.id ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-white border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]' : 'text-gray-400 hover:bg-white/5'
                       }`}
                     >
                       {f.label}
@@ -987,7 +987,7 @@ const SecretariatInboxPage = () => {
             </div>
             {loading ? (
               <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-10 h-10 animate-spin text-[#D4AF37]" />
+                <Loader2 className="w-10 h-10 animate-spin text-[var(--school-accent)]" />
               </div>
             ) : (
               <div className="space-y-8">
@@ -1021,7 +1021,7 @@ const SecretariatInboxPage = () => {
                                 href={item.video_room_url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-[10px] text-[#D4AF37] hover:underline"
+                                className="text-[10px] text-[var(--school-accent)] hover:underline"
                               >
                                 Rejoindre
                               </a>
@@ -1084,7 +1084,7 @@ const SecretariatInboxPage = () => {
             </div>
             {loading ? (
               <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-10 h-10 animate-spin text-[#D4AF37]" />
+                <Loader2 className="w-10 h-10 animate-spin text-[var(--school-accent)]" />
               </div>
             ) : (
               <div className="space-y-6">
@@ -1115,7 +1115,7 @@ const SecretariatInboxPage = () => {
                     type="button"
                     variant={rdvView === 'list' ? 'default' : 'ghost'}
                     size="sm"
-                    className={rdvView === 'list' ? 'bg-[#D4AF37] text-black' : ''}
+                    className={rdvView === 'list' ? 'bg-[var(--school-accent)] text-black' : ''}
                     onClick={() => setRdvView('list')}
                   >
                     <LayoutList className="w-4 h-4 mr-1" /> Liste
@@ -1124,20 +1124,20 @@ const SecretariatInboxPage = () => {
                     type="button"
                     variant={rdvView === 'calendar' ? 'default' : 'ghost'}
                     size="sm"
-                    className={rdvView === 'calendar' ? 'bg-[#D4AF37] text-black' : ''}
+                    className={rdvView === 'calendar' ? 'bg-[var(--school-accent)] text-black' : ''}
                     onClick={() => setRdvView('calendar')}
                   >
                     <LayoutGrid className="w-4 h-4 mr-1" /> Calendrier
                   </Button>
                 </div>
-                <Button size="sm" variant="outline" className="border-[#D4AF37]/40 text-[#D4AF37]" asChild>
+                <Button size="sm" variant="outline" className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)]" asChild>
                   <a href="/secretariat-space/calendrier">Calendrier complet</a>
                 </Button>
               </div>
             </div>
             {loading ? (
               <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-10 h-10 animate-spin text-[#D4AF37]" />
+                <Loader2 className="w-10 h-10 animate-spin text-[var(--school-accent)]" />
               </div>
             ) : rdvPrevu.length > 0 ? (
               rdvView === 'calendar' ? (
@@ -1211,7 +1211,7 @@ const SecretariatInboxPage = () => {
               <Button variant="ghost" onClick={() => setConfirmDialog(null)}>
                 Annuler
               </Button>
-              <Button className="bg-[#D4AF37] text-black hover:bg-[#c9a432]" onClick={() => void submitConfirmDialog()}>
+              <Button className="bg-[var(--school-accent)] text-black hover:bg-[#c9a432]" onClick={() => void submitConfirmDialog()}>
                 Confirmer
               </Button>
             </DialogFooter>

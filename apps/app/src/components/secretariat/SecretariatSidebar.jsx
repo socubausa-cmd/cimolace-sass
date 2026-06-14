@@ -45,14 +45,14 @@ const SecretariatSidebar = () => {
     <div className="flex flex-col h-full bg-[#0F1419] border-r border-white/10">
       <div className="p-6 border-b border-white/10">
         <div className="flex items-center gap-4 mb-2">
-          <div className="w-12 h-12 rounded-full bg-[#D4AF37] flex items-center justify-center text-black font-bold text-xl shadow-lg shadow-[#D4AF37]/20">
+          <div className="w-12 h-12 rounded-full bg-[var(--school-accent)] flex items-center justify-center text-black font-bold text-xl shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
             {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'S'}
           </div>
           <div>
             <h3 className="font-serif font-bold text-white truncate max-w-[150px]">
               {user?.name || user?.email?.split('@')[0] || 'Secrétariat'}
             </h3>
-            <span className="text-xs text-[#D4AF37] uppercase tracking-wider">Espace Secrétariat</span>
+            <span className="text-xs text-[var(--school-accent)] uppercase tracking-wider">Espace Secrétariat</span>
           </div>
         </div>
       </div>
@@ -67,7 +67,7 @@ const SecretariatSidebar = () => {
               cn(
                 'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group',
                 isActive
-                  ? 'bg-gradient-to-r from-[#D4AF37]/20 to-transparent text-[#D4AF37] border-l-2 border-[#D4AF37]'
+                  ? 'bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-transparent text-[var(--school-accent)] border-l-2 border-[var(--school-accent)]'
                   : 'text-gray-400 hover:text-white hover:bg-white/5',
               )
             }
@@ -100,7 +100,7 @@ const SecretariatSidebar = () => {
       <div className="lg:hidden fixed bottom-6 right-6 z-50">
         <Button
           onClick={() => setIsOpen(!isOpen)}
-          className="w-12 h-12 rounded-full bg-[#D4AF37] text-black shadow-xl hover:bg-[#b5952f]"
+          className="w-12 h-12 rounded-full bg-[var(--school-accent)] text-black shadow-xl hover:bg-[#b5952f]"
         >
           {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </Button>

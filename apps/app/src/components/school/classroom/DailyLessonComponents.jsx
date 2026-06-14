@@ -23,10 +23,10 @@ export const DayNavigationControls = ({ currentDay, totalDays, onNext, onPrev, c
        </Button>
 
        <div className="flex flex-col items-center">
-          <span className="text-[#D4AF37] font-bold text-lg uppercase tracking-wider">{currentDayLabel}</span>
+          <span className="text-[var(--school-accent)] font-bold text-lg uppercase tracking-wider">{currentDayLabel}</span>
           <div className="flex gap-1 mt-1">
              {Array.from({ length: totalDays }).map((_, i) => (
-                <div key={i} className={`w-2 h-2 rounded-full ${i === currentDay ? 'bg-[#D4AF37]' : i < currentDay ? 'bg-green-500' : 'bg-gray-700'}`}></div>
+                <div key={i} className={`w-2 h-2 rounded-full ${i === currentDay ? 'bg-[var(--school-accent)]' : i < currentDay ? 'bg-green-500' : 'bg-gray-700'}`}></div>
              ))}
           </div>
        </div>
@@ -67,19 +67,19 @@ export const RetainedContentBlock = ({ content }) => {
   return (
     <Card className="bg-gradient-to-br from-[#1e293b] to-[#0f172a] border-white/10 p-6 shadow-lg">
        <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
-          <div className="p-2 bg-[#D4AF37]/20 rounded-lg">
-             <BookOpen className="w-6 h-6 text-[#D4AF37]" />
+          <div className="p-2 bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] rounded-lg">
+             <BookOpen className="w-6 h-6 text-[var(--school-accent)]" />
           </div>
           <h3 className="text-xl font-bold text-white">À retenir</h3>
        </div>
 
        <div className="space-y-6">
-          <div className="text-gray-300 leading-relaxed italic border-l-4 border-[#D4AF37] pl-4">
+          <div className="text-gray-300 leading-relaxed italic border-l-4 border-[var(--school-accent)] pl-4">
              {content.summary}
           </div>
 
           <div>
-             <h4 className="text-sm font-bold text-[#D4AF37] uppercase tracking-wider mb-3">Points Clés</h4>
+             <h4 className="text-sm font-bold text-[var(--school-accent)] uppercase tracking-wider mb-3">Points Clés</h4>
              <ul className="space-y-2">
                 {content.keyPoints.map((point, idx) => (
                    <li key={idx} className="flex items-start gap-3 text-gray-300">
@@ -93,7 +93,7 @@ export const RetainedContentBlock = ({ content }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              {content.definitions.map((def, idx) => (
                 <div key={idx} className="bg-black/20 p-4 rounded-lg border border-white/5">
-                   <span className="font-bold text-[#D4AF37] block mb-1">{def.term}</span>
+                   <span className="font-bold text-[var(--school-accent)] block mb-1">{def.term}</span>
                    <span className="text-sm text-gray-400">{def.def}</span>
                 </div>
              ))}
@@ -135,7 +135,7 @@ export const StudentNotebookBlock = ({ initialContent, question, minLength = 50,
                value={content}
                onChange={(e) => setContent(e.target.value)}
                placeholder="Écris ce que tu as retenu..."
-               className="min-h-[150px] bg-[#0F1419] border-white/10 text-white focus:border-[#D4AF37]"
+               className="min-h-[150px] bg-[#0F1419] border-white/10 text-white focus:border-[var(--school-accent)]"
             />
             <div className="flex justify-between mt-2 text-xs">
                <span className={content.length < minLength ? "text-red-400" : "text-green-400"}>
@@ -231,7 +231,7 @@ export const DailyQuizBlock = ({ quiz, onComplete }) => {
                         ? (idx === currentQuestion.correctAnswer ? "bg-green-500/20 border-green-500" : (selectedOption === idx.toString() ? "bg-red-500/20 border-red-500" : "border-white/10"))
                         : "border-white/10 hover:bg-white/5"
                   }`}>
-                     <RadioGroupItem value={idx.toString()} id={`opt-${idx}`} className="border-white/30 text-[#D4AF37]" />
+                     <RadioGroupItem value={idx.toString()} id={`opt-${idx}`} className="border-white/30 text-[var(--school-accent)]" />
                      <Label htmlFor={`opt-${idx}`} className="text-gray-300 cursor-pointer flex-1">{opt}</Label>
                   </div>
                ))}
@@ -246,7 +246,7 @@ export const DailyQuizBlock = ({ quiz, onComplete }) => {
 
          <div className="flex justify-end">
             {!showFeedback ? (
-               <Button onClick={handleValidate} disabled={!selectedOption} className="bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold">
+               <Button onClick={handleValidate} disabled={!selectedOption} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold">
                   Valider
                </Button>
             ) : (

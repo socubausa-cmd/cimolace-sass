@@ -22,7 +22,7 @@ export default function CourseSmartboardPanel({
               {aiContent?.chapter_title || segment?.label || 'Segment'}
             </h3>
           </div>
-          <div className="inline-flex items-center h-7 px-2 rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/15 text-[#D4AF37] text-[11px] font-medium">
+          <div className="inline-flex items-center h-7 px-2 rounded-full border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] text-[11px] font-medium">
             <Sparkles className="w-3.5 h-3.5 mr-1" />
             {mode === 'masterclass' ? 'Masterclass' : mode === 'reformulation' ? 'Reformulation' : 'Pedagogique'}
           </div>

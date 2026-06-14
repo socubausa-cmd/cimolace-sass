@@ -175,15 +175,15 @@ export default function LivePrimaryVideoStage({
               <motion.div
                 animate={{ scale: [1, 1.22, 1], opacity: [0.18, 0.06, 0.18] }}
                 transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute h-24 w-24 rounded-full bg-[#D4AF37]/30"
+                className="absolute h-24 w-24 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]"
               />
               <motion.div
                 animate={{ scale: [1, 1.14, 1], opacity: [0.28, 0.1, 0.28] }}
                 transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
-                className="absolute h-20 w-20 rounded-full bg-[#D4AF37]/40"
+                className="absolute h-20 w-20 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]"
               />
-              <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-gradient-to-br from-[#D4AF37]/30 to-[#1f2d41]">
-                <span className="text-lg font-bold text-[#D4AF37]">
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] to-[#1f2d41]">
+                <span className="text-lg font-bold text-[var(--school-accent)]">
                   {(waitingName || '?').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
                 </span>
               </div>
@@ -213,7 +213,7 @@ export default function LivePrimaryVideoStage({
         <div className="mb-0.5 flex items-center gap-1.5">
           <p className="text-sm text-white/95 drop-shadow-md">{title}</p>
           {privileged && (
-            <span className="flex h-4 items-center gap-0.5 rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/20 px-1.5 text-[8px] font-semibold text-[#D4AF37]">
+            <span className="flex h-4 items-center gap-0.5 rounded-full border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] px-1.5 text-[8px] font-semibold text-[var(--school-accent)]">
               ★ Intervenant
             </span>
           )}
@@ -234,7 +234,7 @@ export default function LivePrimaryVideoStage({
 
       {(segActive || chromaKey) && (
         <div className="absolute right-3 top-3 z-[7] flex h-5 items-center gap-1.5 rounded-full border border-white/15 bg-black/45 px-2 backdrop-blur-md">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#D4AF37]" />
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--school-accent)]" />
           <span className="text-[9px] text-white/75">
             {chromaKey && !useSegCanvas ? 'Fond vert' : blur ? 'Flou IA' : vbg === 'immersive' ? 'Transparence IA' : vbg === 'blur' ? 'Flou (fond)' : `VBG: ${vbg}`}
           </span>

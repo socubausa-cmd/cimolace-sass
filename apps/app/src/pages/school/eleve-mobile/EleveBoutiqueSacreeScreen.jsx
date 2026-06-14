@@ -96,7 +96,7 @@ export default function EleveBoutiqueSacreeScreen() {
           </div>
 
           <SectionCard
-            className="border-[#D4AF37]/20"
+            className="border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
             style={{
               background: `linear-gradient(165deg, ${GOLD}18 0%, rgba(9, 10, 16, 0.96) 55%)`,
             }}

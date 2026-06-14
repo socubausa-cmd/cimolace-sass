@@ -85,7 +85,7 @@ const PricingPositionPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0F1419] font-sans text-gray-300 selection:bg-[#D4AF37]/30 pb-20">
+    <div className="min-h-screen bg-[#0F1419] font-sans text-gray-300 selection:bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] pb-20">
       <Helmet>
         <title>Positionnement Prix Prorascience - Europe</title>
         <meta name="description" content="Découvrez la stratégie tarifaire officielle et transparente de l'École Prorascience en Europe." />
@@ -94,7 +94,7 @@ const PricingPositionPage = () => {
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#15202B] via-[#0F1419] to-[#0F1419] z-0" />
-        <div className="absolute top-0 right-0 p-64 bg-[#D4AF37]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+        <div className="absolute top-0 right-0 p-64 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
         
         <div className="max-w-5xl mx-auto relative z-10 text-center">
           <motion.div
@@ -102,13 +102,13 @@ const PricingPositionPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 border border-[#D4AF37]/30 rounded-full bg-[#D4AF37]/10 backdrop-blur-sm">
-              <Euro className="w-4 h-4 text-[#D4AF37]" />
-              <span className="text-[#D4AF37] text-sm font-bold tracking-widest uppercase">Transparence Officielle</span>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] backdrop-blur-sm">
+              <Euro className="w-4 h-4 text-[var(--school-accent)]" />
+              <span className="text-[var(--school-accent)] text-sm font-bold tracking-widest uppercase">Transparence Officielle</span>
             </div>
             <h1 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6">
               Positionnement Prix<br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-yellow-200">Prorascience – Europe</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] to-yellow-200">Prorascience – Europe</span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto font-light leading-relaxed">
               Une stratégie tarifaire cohérente, conçue pour allier excellence académique et accessibilité, adaptée au marché européen de la formation spirituelle.
@@ -123,7 +123,7 @@ const PricingPositionPage = () => {
           initial={{ opacity: 0 }} 
           whileInView={{ opacity: 1 }} 
           viewport={{ once: true }}
-          className="bg-[#192734] border-l-4 border-[#D4AF37] rounded-r-xl p-8 md:p-12 shadow-xl"
+          className="bg-[#192734] border-l-4 border-[var(--school-accent)] rounded-r-xl p-8 md:p-12 shadow-xl"
         >
           <h2 className="text-2xl font-serif font-bold text-white mb-4">Logique Générale de Prix</h2>
           <p className="text-lg text-gray-300 leading-relaxed text-justify">
@@ -148,9 +148,9 @@ const PricingPositionPage = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="bg-[#15202B] p-8 rounded-2xl border border-white/5 hover:border-[#D4AF37]/30 transition-colors group"
+              className="bg-[#15202B] p-8 rounded-2xl border border-white/5 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-colors group"
             >
-              <obj.icon className="w-10 h-10 text-[#D4AF37] mb-6 group-hover:scale-110 transition-transform" />
+              <obj.icon className="w-10 h-10 text-[var(--school-accent)] mb-6 group-hover:scale-110 transition-transform" />
               <h3 className="text-xl font-bold text-white mb-3">{obj.title}</h3>
               <p className="text-gray-400 leading-relaxed">{obj.desc}</p>
             </motion.div>
@@ -163,14 +163,14 @@ const PricingPositionPage = () => {
         {/* Formation Académique */}
         <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>
           <div className="flex items-center gap-4 mb-8">
-            <BookOpen className="w-8 h-8 text-[#D4AF37]" />
+            <BookOpen className="w-8 h-8 text-[var(--school-accent)]" />
             <h2 className="text-3xl font-serif font-bold text-white">Formation Académique</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {academicPricing.map((item, i) => (
               <motion.div key={i} variants={itemVariants} className="bg-[#192734] rounded-xl p-6 border border-white/10 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-16 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                <div className="text-sm font-bold text-[#D4AF37] uppercase tracking-wider mb-2">{item.year}</div>
+                <div className="text-sm font-bold text-[var(--school-accent)] uppercase tracking-wider mb-2">{item.year}</div>
                 <h3 className="text-2xl font-bold text-white mb-4">{item.level}</h3>
                 <div className="text-3xl font-bold text-white mb-4">{item.price}</div>
                 <p className="text-gray-400 text-sm border-t border-white/10 pt-4">{item.desc}</p>
@@ -206,21 +206,21 @@ const PricingPositionPage = () => {
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="bg-gradient-to-br from-[#192734] to-[#15202B] rounded-2xl p-8 border border-[#D4AF37]/20"
+            className="bg-gradient-to-br from-[#192734] to-[#15202B] rounded-2xl p-8 border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
           >
             <div className="flex items-center gap-3 mb-6">
-              <Star className="w-6 h-6 text-[#D4AF37]" />
+              <Star className="w-6 h-6 text-[var(--school-accent)]" />
               <h2 className="text-2xl font-bold text-white">Mentorat Spirituel</h2>
             </div>
             <div className="space-y-6">
               <div className="bg-black/20 p-4 rounded-xl border border-white/5">
                 <h4 className="text-gray-400 text-sm uppercase font-bold mb-1">Mensuel</h4>
-                <p className="text-3xl font-bold text-[#D4AF37]">150€ - 300€ <span className="text-sm text-gray-500 font-normal">/ mois</span></p>
+                <p className="text-3xl font-bold text-[var(--school-accent)]">150€ - 300€ <span className="text-sm text-gray-500 font-normal">/ mois</span></p>
                 <p className="text-sm text-gray-400 mt-2">Suivi régulier, transmission d'expérience.</p>
               </div>
               <div className="bg-black/20 p-4 rounded-xl border border-white/5">
                 <h4 className="text-gray-400 text-sm uppercase font-bold mb-1">Annuel</h4>
-                <p className="text-3xl font-bold text-[#D4AF37]">1500€ - 2500€ <span className="text-sm text-gray-500 font-normal">/ an</span></p>
+                <p className="text-3xl font-bold text-[var(--school-accent)]">1500€ - 2500€ <span className="text-sm text-gray-500 font-normal">/ an</span></p>
                 <p className="text-sm text-gray-400 mt-2">Engagement long terme, relation maître-disciple.</p>
               </div>
             </div>
@@ -272,7 +272,7 @@ const PricingPositionPage = () => {
               <tr className="bg-[#192734]">
                 <th className="p-4 text-gray-400 font-medium border-b border-white/10">Offre</th>
                 <th className="p-4 text-white font-bold border-b border-white/10">Format</th>
-                <th className="p-4 text-[#D4AF37] font-bold border-b border-white/10">Prix Moyen</th>
+                <th className="p-4 text-[var(--school-accent)] font-bold border-b border-white/10">Prix Moyen</th>
                 <th className="p-4 text-gray-400 font-medium border-b border-white/10">Positionnement</th>
               </tr>
             </thead>
@@ -287,7 +287,7 @@ const PricingPositionPage = () => {
                 <tr key={i} className={`border-b border-white/5 hover:bg-white/5 ${i % 2 === 0 ? 'bg-transparent' : 'bg-white/[0.02]'}`}>
                   <td className="p-4 text-white font-medium">{row.name}</td>
                   <td className="p-4 text-gray-300">{row.format}</td>
-                  <td className="p-4 text-[#D4AF37] font-bold">{row.price}</td>
+                  <td className="p-4 text-[var(--school-accent)] font-bold">{row.price}</td>
                   <td className="p-4 text-gray-400">{row.pos}</td>
                 </tr>
               ))}
@@ -301,9 +301,9 @@ const PricingPositionPage = () => {
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
             {progressionSteps.map((step, i) => (
               <div key={i} className="relative group">
-                <div className="h-full bg-[#192734] border border-white/10 rounded-xl p-4 hover:border-[#D4AF37]/50 transition-colors flex flex-col justify-between min-h-[160px]">
+                <div className="h-full bg-[#192734] border border-white/10 rounded-xl p-4 hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] transition-colors flex flex-col justify-between min-h-[160px]">
                   <div>
-                    <div className="text-2xl font-bold text-[#D4AF37]/20 mb-2">{step.step}</div>
+                    <div className="text-2xl font-bold text-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] mb-2">{step.step}</div>
                     <h3 className="text-white font-bold text-base mb-2">{step.title}</h3>
                   </div>
                   <p className="text-sm text-gray-400">{step.desc}</p>
@@ -338,7 +338,7 @@ const PricingPositionPage = () => {
         {/* FAQ Section */}
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-3 mb-8 justify-center">
-            <HelpCircle className="w-8 h-8 text-[#D4AF37]" />
+            <HelpCircle className="w-8 h-8 text-[var(--school-accent)]" />
             <h2 className="text-3xl font-serif font-bold text-white">Questions Fréquentes</h2>
           </div>
           <div className="space-y-4">
@@ -366,7 +366,7 @@ const PricingPositionPage = () => {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-6">
             <Link to="/contact">
-               <Button className="bg-[#D4AF37] text-black hover:bg-yellow-500 gap-2 h-12 px-8">
+               <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 gap-2 h-12 px-8">
                 <MessageCircle className="w-5 h-5" />
                 Discuter de mon budget
               </Button>

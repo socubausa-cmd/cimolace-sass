@@ -4,11 +4,11 @@ import { cva } from 'class-variance-authority';
 import React from 'react';
 
 const buttonVariants = cva(
-	'inline-flex items-center justify-center rounded-xl text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]/45 focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-50',
+	'inline-flex items-center justify-center rounded-xl text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-50',
 	{
 		variants: {
 			variant: {
-				default: 'bg-gradient-to-r from-[#D4AF37] to-[#e8c45a] text-black hover:brightness-105 shadow-[0_8px_22px_rgba(212,175,55,0.2)]',
+				default: 'bg-gradient-to-r from-[var(--school-accent)] to-[#e8c45a] text-black hover:brightness-105 shadow-[0_8px_22px_rgba(212,175,55,0.2)]',
 				/** Violet plein (accent app mobile / Live Studio) — sans dégradé or du default */
 				accent:
 					'bg-none bg-[#7B61FF] text-white hover:bg-[#9485ff] shadow-[0_8px_28px_-6px_rgba(123,97,255,0.45)] focus-visible:ring-[#7B61FF]/45',
@@ -19,7 +19,7 @@ const buttonVariants = cva(
 				secondary:
           'bg-[#192734] text-white hover:bg-[#223244]',
 				ghost: 'text-gray-300 hover:bg-white/5 hover:text-white',
-				link: 'text-[#D4AF37] underline-offset-4 hover:underline',
+				link: 'text-[var(--school-accent)] underline-offset-4 hover:underline',
 			},
 			size: {
 				default: 'h-10 px-4 py-2',

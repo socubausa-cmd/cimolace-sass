@@ -333,7 +333,7 @@ const OwnerFormationsTab = () => {
         <Dialog open={!!previewFormationId} onOpenChange={(open) => { if (!open) setPreviewFormationId(null); }}>
           <DialogContent className="max-w-[98vw] w-full h-[95vh] bg-[#0F1419] border-white/10 p-0 overflow-hidden [&>button]:hidden">
             <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-[#151a21]/95 backdrop-blur-xl border-b border-white/10">
-              <span className="text-sm font-medium text-[#D4AF37]">Aperçu formation</span>
+              <span className="text-sm font-medium text-[var(--school-accent)]">Aperçu formation</span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -369,7 +369,7 @@ const OwnerFormationsTab = () => {
     <div className="relative min-h-[60vh]">
       {/* Ambient background */}
       <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[#D4AF37]/5 rounded-full blur-[100px]" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[100px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] bg-indigo-500/5 rounded-full blur-[80px]" />
       </div>
 
@@ -388,14 +388,14 @@ const OwnerFormationsTab = () => {
             transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10"
           >
-            <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+            <Sparkles className="w-4 h-4 text-[var(--school-accent)]" />
             <span className="text-xs text-gray-400">Catalogue</span>
           </motion.div>
           <div>
             <h2 className="text-2xl md:text-3xl font-serif font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-400">
               Mes Formations
             </h2>
-            <Badge variant="outline" className="mt-1 text-[#D4AF37] border-[#D4AF37]/30 bg-[#D4AF37]/10">
+            <Badge variant="outline" className="mt-1 text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
               {formations.length} Total
             </Badge>
           </div>
@@ -442,7 +442,7 @@ const OwnerFormationsTab = () => {
             <Button
               onClick={() => navigate('/studio')}
               variant="outline"
-              className="border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10 whitespace-nowrap"
+              className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] whitespace-nowrap"
             >
               <Sparkles className="h-4 w-4 mr-2" /> Studio Créateur
             </Button>
@@ -450,7 +450,7 @@ const OwnerFormationsTab = () => {
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button
               onClick={() => { setSelectedFormation(null); setViewMode('create'); }}
-              className="bg-[#D4AF37] text-black hover:bg-amber-500 font-bold whitespace-nowrap shadow-lg shadow-[#D4AF37]/20"
+              className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-bold whitespace-nowrap shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
             >
               <Plus className="h-4 w-4 mr-2" /> Créer
             </Button>
@@ -550,11 +550,11 @@ const OwnerFormationsTab = () => {
               animate={{ opacity: 1 }}
               className="col-span-full text-center py-16 text-gray-500 rounded-2xl border border-dashed border-white/10 bg-white/5"
             >
-              <BookOpen className="w-10 h-10 text-[#D4AF37] mx-auto mb-3" />
+              <BookOpen className="w-10 h-10 text-[var(--school-accent)] mx-auto mb-3" />
               <p className="text-white font-semibold">Aucune formation trouvée</p>
               <p className="text-sm text-gray-500 mt-1">Ajuste les filtres ou crée une nouvelle formation.</p>
               <Button
-                className="mt-4 bg-[#D4AF37] text-black hover:bg-amber-500"
+                className="mt-4 bg-[var(--school-accent)] text-black hover:bg-amber-500"
                 onClick={() => { setSelectedFormation(null); setViewMode('create'); }}
               >
                 <Plus className="w-4 h-4 mr-2" /> Créer une formation
@@ -572,7 +572,7 @@ const OwnerFormationsTab = () => {
                 whileTap={{ scale: 0.98 }}
               >
                 <Card
-                  className="rounded-2xl overflow-hidden border border-white/10 bg-[#151a21]/80 backdrop-blur-xl hover:border-[#D4AF37]/40 transition-all group cursor-pointer"
+                  className="rounded-2xl overflow-hidden border border-white/10 bg-[#151a21]/80 backdrop-blur-xl hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-all group cursor-pointer"
                   onClick={() => openDetails(formation)}
                 >
                   {/* Thumbnail Image */}
@@ -596,7 +596,7 @@ const OwnerFormationsTab = () => {
                       <Badge className="bg-black/50 text-white backdrop-blur-xl border border-white/10">
                         {formation.year}
                       </Badge>
-                      <Badge className="bg-black/50 text-[#D4AF37] backdrop-blur-xl border border-[#D4AF37]/30">
+                      <Badge className="bg-black/50 text-[var(--school-accent)] backdrop-blur-xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
                         {getAccessLabel(formation)}
                       </Badge>
                     </div>
@@ -616,7 +616,7 @@ const OwnerFormationsTab = () => {
                   </div>
 
                   <CardContent className="p-5">
-                    <h3 className="text-lg font-bold text-white mb-2 line-clamp-1 group-hover:text-[#D4AF37] transition-colors" title={formation.title}>
+                    <h3 className="text-lg font-bold text-white mb-2 line-clamp-1 group-hover:text-[var(--school-accent)] transition-colors" title={formation.title}>
                       {formation.title}
                     </h3>
                     <div className="flex items-center justify-between gap-3 text-sm text-gray-400 mb-4">
@@ -666,7 +666,7 @@ const OwnerFormationsTab = () => {
                     </div>
 
                     <div className="mt-4 pt-4 border-t border-white/5 text-center">
-                      <span className="text-xs text-gray-500 group-hover:text-[#D4AF37]/80 transition-colors">
+                      <span className="text-xs text-gray-500 group-hover:text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)] transition-colors">
                         Cliquer pour voir les détails
                       </span>
                     </div>

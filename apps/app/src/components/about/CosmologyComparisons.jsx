@@ -61,8 +61,8 @@ export const FiveModelsTable = () => {
         </thead>
         <tbody className="divide-y divide-white/5">
           {models.map((row, index) => (
-            <tr key={index} className={`hover:bg-white/5 transition-colors ${row.name === "PRORASCIENCE" ? "bg-[#D4AF37]/5" : "bg-[#192734]"}`}>
-              <td className={`px-6 py-4 font-bold border-r border-white/5 ${row.name === "PRORASCIENCE" ? "text-[#D4AF37]" : "text-white"}`}>
+            <tr key={index} className={`hover:bg-white/5 transition-colors ${row.name === "PRORASCIENCE" ? "bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]" : "bg-[#192734]"}`}>
+              <td className={`px-6 py-4 font-bold border-r border-white/5 ${row.name === "PRORASCIENCE" ? "text-[var(--school-accent)]" : "text-white"}`}>
                 {row.name}
               </td>
               <td className="px-6 py-4 text-gray-300 border-r border-white/5">{row.founders}</td>
@@ -72,7 +72,7 @@ export const FiveModelsTable = () => {
               <td className="px-6 py-4 text-gray-300">
                 <span className={`px-2 py-1 rounded text-xs font-bold ${
                   row.status.includes("Dominant") ? "bg-green-500/10 text-green-500" :
-                  row.status.includes("Africaine") ? "bg-[#D4AF37]/10 text-[#D4AF37]" :
+                  row.status.includes("Africaine") ? "bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]" :
                   "bg-blue-500/10 text-blue-400"
                 }`}>
                   {row.status}
@@ -122,7 +122,7 @@ export const ThreeModelsComparison = () => {
             <th className="px-6 py-5 font-bold tracking-wider w-1/4">Critère de Comparaison</th>
             <th className="px-6 py-5 font-bold tracking-wider w-1/4">Modèle Standard</th>
             <th className="px-6 py-5 font-bold tracking-wider w-1/4">Modèle Janus (JPP)</th>
-            <th className="px-6 py-5 text-[#D4AF37] bg-[#D4AF37]/10 font-bold tracking-wider border-b-2 border-[#D4AF37] w-1/4">PRORASCIENCE</th>
+            <th className="px-6 py-5 text-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] font-bold tracking-wider border-b-2 border-[var(--school-accent)] w-1/4">PRORASCIENCE</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-white/5">
@@ -131,7 +131,7 @@ export const ThreeModelsComparison = () => {
               <td className="px-6 py-4 font-medium text-white border-r border-white/5">{row.criteria}</td>
               <td className="px-6 py-4 text-gray-400 border-r border-white/5">{row.standard}</td>
               <td className="px-6 py-4 text-gray-400 border-r border-white/5">{row.janus}</td>
-              <td className="px-6 py-4 text-[#D4AF37] font-bold bg-[#D4AF37]/5 border-r border-white/5 shadow-[inset_0_0_10px_rgba(212,175,55,0.05)]">
+              <td className="px-6 py-4 text-[var(--school-accent)] font-bold bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] border-r border-white/5 shadow-[inset_0_0_10px_rgba(212,175,55,0.05)]">
                 {row.prora}
               </td>
             </tr>

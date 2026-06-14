@@ -60,7 +60,7 @@ const PricingDocumentation = () => {
           {[
             { title: "Salle Virtuelle", price: "30€", period: "/mois", color: "text-blue-400", border: "border-blue-500/30" },
             { title: "Salle Numérique", price: "45€", period: "/mois", color: "text-purple-400", border: "border-purple-500/30" },
-            { title: "Cycle Académique", price: "55€", period: "/mois", color: "text-[#D4AF37]", border: "border-[#D4AF37]/30", featured: true }
+            { title: "Cycle Académique", price: "55€", period: "/mois", color: "text-[var(--school-accent)]", border: "border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]", featured: true }
           ].map((item, idx) => (
             <Card key={idx} className={`bg-[#151a21] ${item.border} ${item.featured ? 'shadow-lg shadow-yellow-900/10 scale-105' : ''}`}>
               <CardContent className="flex flex-col items-center justify-center py-8 text-center">
@@ -90,12 +90,12 @@ const PricingDocumentation = () => {
               <TableBody>
                 <TableRow className="border-white/10 hover:bg-white/5">
                   <TableCell className="font-medium text-white">Atelier Virtuel</TableCell>
-                  <TableCell className="text-right text-[#D4AF37] font-bold">25€</TableCell>
+                  <TableCell className="text-right text-[var(--school-accent)] font-bold">25€</TableCell>
                   <TableCell className="text-right text-gray-400 text-xs">Salle Virtuelle</TableCell>
                 </TableRow>
                 <TableRow className="border-white/10 hover:bg-white/5">
                   <TableCell className="font-medium text-white">Atelier Numérique</TableCell>
-                  <TableCell className="text-right text-[#D4AF37] font-bold">35€</TableCell>
+                  <TableCell className="text-right text-[var(--school-accent)] font-bold">35€</TableCell>
                   <TableCell className="text-right text-gray-400 text-xs">Salle Numérique</TableCell>
                 </TableRow>
               </TableBody>
@@ -138,16 +138,16 @@ const PricingDocumentation = () => {
                   <div className="font-bold text-white text-lg">Academy Pro</div>
                   <div className="text-sm text-gray-400">Accès complet + Ateliers</div>
                 </TableCell>
-                <TableCell className="text-center text-xl font-bold text-[#D4AF37]">95€</TableCell>
+                <TableCell className="text-center text-xl font-bold text-[var(--school-accent)]">95€</TableCell>
                 <TableCell className="text-center text-gray-500 line-through">125€</TableCell>
                 <TableCell className="text-center text-green-400 font-medium">-24%</TableCell>
               </TableRow>
               <TableRow className="border-white/10 bg-gradient-to-r from-yellow-900/10 to-transparent">
                 <TableCell>
-                  <div className="font-bold text-[#D4AF37] text-lg">Academy Pro+</div>
+                  <div className="font-bold text-[var(--school-accent)] text-lg">Academy Pro+</div>
                   <div className="text-sm text-gray-400">Tout inclus + Coaching groupe</div>
                 </TableCell>
-                <TableCell className="text-center text-xl font-bold text-[#D4AF37]">110€</TableCell>
+                <TableCell className="text-center text-xl font-bold text-[var(--school-accent)]">110€</TableCell>
                 <TableCell className="text-center text-gray-500 line-through">160€</TableCell>
                 <TableCell className="text-center text-green-400 font-medium">-31%</TableCell>
               </TableRow>

@@ -22,7 +22,7 @@ const ProgressionSection = ({ data }) => {
                <div>
                   <h3 className="text-xl font-bold text-white">Progression Globale</h3>
                   <p className="text-gray-400 text-sm mb-2">Année en cours</p>
-                  <Progress value={progression.overall} className="h-2 bg-white/10" indicatorClassName="bg-[#D4AF37]" />
+                  <Progress value={progression.overall} className="h-2 bg-white/10" indicatorClassName="bg-[var(--school-accent)]" />
                </div>
             </CardContent>
           </Card>
@@ -46,7 +46,7 @@ const ProgressionSection = ({ data }) => {
 
        {/* 2. Modules Detail */}
        <div className="space-y-4">
-          <h3 className="text-lg font-bold text-white border-l-4 border-[#D4AF37] pl-3">Détail par Module</h3>
+          <h3 className="text-lg font-bold text-white border-l-4 border-[var(--school-accent)] pl-3">Détail par Module</h3>
           <Accordion type="single" collapsible className="space-y-4">
             {progression.modules.map((module, idx) => (
               <AccordionItem key={module.id} value={module.id} className="border border-white/10 rounded-lg bg-[#192734] px-4">
@@ -55,14 +55,14 @@ const ProgressionSection = ({ data }) => {
                     <div className="flex items-center gap-3">
                        {module.status === 'completed' ? <CheckCircle className="text-green-500 w-5 h-5"/> : 
                         module.status === 'locked' ? <Lock className="text-gray-500 w-5 h-5"/> : 
-                        <Unlock className="text-[#D4AF37] w-5 h-5"/>}
+                        <Unlock className="text-[var(--school-accent)] w-5 h-5"/>}
                        <div className="text-left">
                           <p className={`font-bold ${module.status === 'locked' ? 'text-gray-500' : 'text-white'}`}>{module.title}</p>
                           <p className="text-sm text-gray-400">{module.weeks?.length || 0} semaines</p>
                        </div>
                     </div>
                     <div className="flex items-center gap-4">
-                       <Progress value={module.percentage} className="w-24 h-2 bg-black/40" indicatorClassName={module.status === 'completed' ? 'bg-green-500' : 'bg-[#D4AF37]'} />
+                       <Progress value={module.percentage} className="w-24 h-2 bg-black/40" indicatorClassName={module.status === 'completed' ? 'bg-green-500' : 'bg-[var(--school-accent)]'} />
                        <span className="text-sm font-mono text-gray-400 w-12 text-right">{module.percentage}%</span>
                     </div>
                   </div>
@@ -73,13 +73,13 @@ const ProgressionSection = ({ data }) => {
                          <div key={week.id} className="bg-black/20 p-3 rounded border border-white/5">
                             <div className="flex justify-between items-center mb-2">
                                <span className="font-bold text-gray-300">{week.title}</span>
-                               <span className="text-xs text-[#D4AF37]">{week.progress}%</span>
+                               <span className="text-xs text-[var(--school-accent)]">{week.progress}%</span>
                             </div>
                             <div className="space-y-1">
                                {week.days.map((day, dIdx) => (
                                   <div key={day.id} className="flex items-center gap-2 text-sm text-gray-500">
                                      {day.status === 'completed' ? <CheckCircle className="w-3 h-3 text-green-500"/> : 
-                                      day.status === 'in_progress' ? <PlayCircle className="w-3 h-3 text-[#D4AF37]"/> : 
+                                      day.status === 'in_progress' ? <PlayCircle className="w-3 h-3 text-[var(--school-accent)]"/> : 
                                       <Lock className="w-3 h-3 text-gray-700"/>}
                                      <span className={day.status === 'locked' ? 'line-through opacity-50' : ''}>{day.title}</span>
                                   </div>

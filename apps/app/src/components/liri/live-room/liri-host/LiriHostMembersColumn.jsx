@@ -27,9 +27,9 @@ export function LiriHostMembersColumn({
         'gap-2 !pt-[7rem] pb-2 pl-0.5 pr-1 sm:pr-1.5',
       )}
     >
-      <div className="flex shrink-0 items-center justify-between gap-2 rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/[0.07] px-2.5 py-2">
+      <div className="flex shrink-0 items-center justify-between gap-2 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[var(--school-accent)]/[0.07] px-2.5 py-2">
         <div className="flex min-w-0 items-center gap-2">
-          <Users className="h-4 w-4 shrink-0 text-[#D4AF37]" />
+          <Users className="h-4 w-4 shrink-0 text-[var(--school-accent)]" />
           <div className="min-w-0">
             <p className={cn(railTitleClass, 'text-[11px] font-semibold text-[#f5dd8a]')}>
               Membres & sièges privilégiés
@@ -46,7 +46,7 @@ export function LiriHostMembersColumn({
             className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-white/12 bg-black/35 px-2 text-[10px] text-white/80 hover:bg-white/10"
             title="Revenir au plan de cours et au script"
           >
-            <BookOpen className="h-3.5 w-3.5 text-[#D4AF37]" />
+            <BookOpen className="h-3.5 w-3.5 text-[var(--school-accent)]" />
             <span className="hidden sm:inline">Cours</span>
             <X className="h-3 w-3 opacity-60 sm:hidden" />
           </button>
@@ -71,7 +71,7 @@ export function LiriHostMembersColumn({
                   onClick={() => isHost && seat?.userId && onZone3RevokeSeat?.(pos)}
                   className={cn(
                     'flex h-14 items-center gap-1.5 rounded-lg border px-1.5 text-left transition-all',
-                    seat ? 'border-[#D4AF37]/45 bg-[#D4AF37]/10 text-white' : 'border-white/10 bg-white/[0.03] text-white/45',
+                    seat ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-white' : 'border-white/10 bg-white/[0.03] text-white/45',
                     !isHost && 'cursor-default opacity-80',
                   )}
                 >
@@ -97,10 +97,10 @@ export function LiriHostMembersColumn({
               <button
                 type="button"
                 onClick={onOpenMembersOverview}
-                className="flex h-7 items-center gap-1 rounded-lg border border-white/12 bg-white/[0.04] px-2 text-[9px] text-white/75 hover:border-[#D4AF37]/30 hover:bg-[#D4AF37]/10"
+                className="flex h-7 items-center gap-1 rounded-lg border border-white/12 bg-white/[0.04] px-2 text-[9px] text-white/75 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                 title="Vue grille complète"
               >
-                <Users className="h-3 w-3 text-[#D4AF37]" />
+                <Users className="h-3 w-3 text-[var(--school-accent)]" />
                 <span className="tabular-nums">{memberCount ?? stripMembers.length}</span>
               </button>
             ) : null}
@@ -116,7 +116,7 @@ export function LiriHostMembersColumn({
                   className={cn(
                     'flex min-h-[3rem] items-stretch gap-0.5 rounded-lg border p-0.5',
                     activeP
-                      ? 'border-[#D4AF37]/45 bg-[#D4AF37]/14'
+                      ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)]'
                       : 'border-white/10 bg-white/[0.04]',
                   )}
                 >
@@ -141,7 +141,7 @@ export function LiriHostMembersColumn({
                         className="h-9 w-9 shrink-0 rounded-lg border border-white/10 object-cover"
                       />
                     ) : (
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-gradient-to-br from-[#D4AF37]/28 to-[#1a2540] text-[10px] font-bold text-[#D4AF37]">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] to-[#1a2540] text-[10px] font-bold text-[var(--school-accent)]">
                         {initials}
                       </div>
                     )}
@@ -154,7 +154,7 @@ export function LiriHostMembersColumn({
                     <button
                       type="button"
                       onClick={() => onPromoteParticipant(uid)}
-                      className="shrink-0 self-center rounded-md border border-[#D4AF37]/35 bg-[#D4AF37]/10 px-1.5 py-1 text-[8px] font-semibold text-[#D4AF37] hover:bg-[#D4AF37]/20"
+                      className="shrink-0 self-center rounded-md border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-1.5 py-1 text-[8px] font-semibold text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
                     >
                       Antenne
                     </button>

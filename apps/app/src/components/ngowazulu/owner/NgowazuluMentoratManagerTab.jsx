@@ -272,7 +272,7 @@ export default function NgowazuluMentoratManagerTab() {
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-white font-serif flex items-center gap-2">
-            <Flame className="w-7 h-7 text-[#D4AF37]" />
+            <Flame className="w-7 h-7 text-[var(--school-accent)]" />
             Ngowazulu — Ateliers & mentorat
           </h2>
           <p className="text-sm text-gray-400 mt-1 max-w-2xl">
@@ -290,7 +290,7 @@ export default function NgowazuluMentoratManagerTab() {
         <Card className="premium-panel border-white/10 xl:col-span-1">
           <CardHeader>
             <CardTitle className="text-white text-base flex items-center gap-2">
-              <Users className="w-4 h-4 text-[#D4AF37]" />
+              <Users className="w-4 h-4 text-[var(--school-accent)]" />
               Clients mentorat actifs
             </CardTitle>
           </CardHeader>
@@ -308,7 +308,7 @@ export default function NgowazuluMentoratManagerTab() {
                   type="button"
                   onClick={() => setSelected(s)}
                   className={`w-full text-left rounded-xl border p-3 transition-colors ${
-                    selected?.id === s.id ? 'border-[#D4AF37] bg-[#D4AF37]/10' : 'border-white/10 bg-black/20 hover:border-white/20'
+                    selected?.id === s.id ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]' : 'border-white/10 bg-black/20 hover:border-white/20'
                   }`}
                 >
                   <p className="text-white font-medium text-sm">{s.profile?.name || s.profile?.email || s.user_id}</p>
@@ -331,11 +331,11 @@ export default function NgowazuluMentoratManagerTab() {
             </div>
           ) : (
             <>
-              <Card className="premium-panel border-[#D4AF37]/25">
+              <Card className="premium-panel border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]">
                 <CardHeader>
                   <CardTitle className="text-white text-lg">
                     {selected.profile?.name || selected.profile?.email} —{' '}
-                    <span className="text-[#D4AF37]">{offer?.commercialName || planSlug}</span>
+                    <span className="text-[var(--school-accent)]">{offer?.commercialName || planSlug}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
@@ -344,7 +344,7 @@ export default function NgowazuluMentoratManagerTab() {
                     <p className="text-white text-xl font-bold mt-1">
                       {usedInContract} / {activeContract?.sessions_quota ?? '—'}
                     </p>
-                    <p className="text-[#D4AF37] text-sm font-semibold mt-1">
+                    <p className="text-[var(--school-accent)] text-sm font-semibold mt-1">
                       Restant : {remainingInPeriod != null ? remainingInPeriod : '—'}
                     </p>
                     <p className="text-gray-500 text-xs mt-1">Rencontres non annulées sur la période du contrat actif</p>
@@ -356,7 +356,7 @@ export default function NgowazuluMentoratManagerTab() {
                   </div>
                   <div className="rounded-lg border border-white/10 bg-black/20 p-3">
                     <p className="text-gray-500 text-xs uppercase">1ʳᵉ semaine (planification)</p>
-                    <p className="text-[#D4AF37] font-semibold mt-1">{activeContract?.week1_starts_on || '—'}</p>
+                    <p className="text-[var(--school-accent)] font-semibold mt-1">{activeContract?.week1_starts_on || '—'}</p>
                     <p className="text-gray-500 text-xs mt-1">Ancrage pour organiser les rencontres</p>
                   </div>
                 </CardContent>
@@ -395,7 +395,7 @@ export default function NgowazuluMentoratManagerTab() {
                     <Label className="text-gray-400">Notes internes</Label>
                     <Input value={contractNotes} onChange={(e) => setContractNotes(e.target.value)} className="bg-[#0F1419] border-white/10" placeholder="Optionnel" />
                   </div>
-                  <Button onClick={saveContract} disabled={savingContract} className="bg-[#D4AF37] text-black font-bold">
+                  <Button onClick={saveContract} disabled={savingContract} className="bg-[var(--school-accent)] text-black font-bold">
                     {savingContract ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
                     Enregistrer la période
                   </Button>

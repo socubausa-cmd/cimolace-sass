@@ -57,7 +57,7 @@ const STATUS_CONFIG = {
   pending:     { label: 'En attente de validation', color: 'bg-amber-500/20 text-amber-200 border-amber-500/30',   dot: 'bg-amber-400' },
   confirmed:   { label: 'Confirmé',                 color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', dot: 'bg-emerald-400' },
   scheduled:   { label: 'Planifié',                 color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', dot: 'bg-emerald-400' },
-  preparing:   { label: 'En cours de préparation',  color: 'bg-[#D4AF37]/15 text-[#D4AF37] border-[#D4AF37]/35',      dot: 'bg-[#D4AF37]' },
+  preparing:   { label: 'En cours de préparation',  color: 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]',      dot: 'bg-[var(--school-accent)]' },
   ready:       { label: 'Prêt à démarrer',          color: 'bg-violet-500/20 text-violet-300 border-violet-500/30', dot: 'bg-violet-400', pulse: true },
   in_progress: { label: 'Séance en cours',          color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', dot: 'bg-emerald-400', pulse: true },
   chat_started: { label: 'Chat en cours',           color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', dot: 'bg-emerald-400', pulse: true },
@@ -98,16 +98,16 @@ function PlanSection({ plan }) {
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 overflow-hidden shadow-[0_0_40px_rgba(212,175,55,0.06)]"
+      className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] overflow-hidden shadow-[0_0_40px_rgba(212,175,55,0.06)]"
     >
       <button
         onClick={() => setExpanded(e => !e)}
-        className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[#D4AF37]/10 transition-colors"
+        className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] transition-colors"
       >
         <div className="flex items-center gap-2.5">
-          <List className="w-4 h-4 text-[#D4AF37]" />
+          <List className="w-4 h-4 text-[var(--school-accent)]" />
           <span className="font-semibold text-white">Plan de l'entretien</span>
-          <Badge className="bg-[#D4AF37]/15 text-[#D4AF37] border-[#D4AF37]/35 text-xs">
+          <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-xs">
             {plan.length} étapes
           </Badge>
         </div>
@@ -167,12 +167,12 @@ function SmartRoomPreview({ roomType }) {
         {features.map(f => (
           <div key={f.id} className={`flex flex-col items-center gap-2 rounded-xl border px-3 py-4 text-center transition-all ${
             f.active
-              ? 'border-[#D4AF37]/30 bg-[#D4AF37]/8 text-[#D4AF37]'
+              ? 'border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] text-[var(--school-accent)]'
               : 'border-white/8 bg-white/3 text-gray-600'
           }`}>
             <f.icon className="w-5 h-5" />
             <span className="text-[11px] font-medium leading-tight">{f.label}</span>
-            {f.active && <Zap className="w-2.5 h-2.5 text-[#D4AF37]/60" />}
+            {f.active && <Zap className="w-2.5 h-2.5 text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]" />}
           </div>
         ))}
       </div>
@@ -230,9 +230,9 @@ const PreparationModule = React.memo(function PreparationModule({ appointmentId,
   ];
 
   return (
-    <div className="rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 overflow-hidden">
-      <div className="px-5 py-4 border-b border-[#D4AF37]/10 flex items-center gap-2">
-        <Target className="w-4 h-4 text-[#D4AF37]" />
+    <div className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] overflow-hidden">
+      <div className="px-5 py-4 border-b border-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] flex items-center gap-2">
+        <Target className="w-4 h-4 text-[var(--school-accent)]" />
         <p className="font-semibold text-white text-sm">Préparez votre séance</p>
       </div>
       <div className="p-5 space-y-4">
@@ -240,7 +240,7 @@ const PreparationModule = React.memo(function PreparationModule({ appointmentId,
         <ul className="space-y-2">
           {checklist.map((item, i) => (
             <li key={i} className="flex items-center gap-2.5 text-sm text-gray-300">
-              <CheckCircle2 className="w-4 h-4 text-[#D4AF37]/60 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] shrink-0" />
               {item}
             </li>
           ))}
@@ -258,12 +258,12 @@ const PreparationModule = React.memo(function PreparationModule({ appointmentId,
               placeholder={loading ? 'Chargement de votre note…' : 'Questions, objectifs, points importants à aborder…'}
               rows={3}
               disabled={loading}
-              className="w-full resize-none rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#D4AF37]/40 disabled:opacity-70"
+              className="w-full resize-none rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] disabled:opacity-70"
             />
             <button
               onClick={handleSave}
               disabled={loading || saving || !note.trim()}
-              className="flex items-center gap-1.5 text-xs font-medium text-[#D4AF37] disabled:opacity-40"
+              className="flex items-center gap-1.5 text-xs font-medium text-[var(--school-accent)] disabled:opacity-40"
             >
               {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
               {saved ? 'Note sauvegardée' : 'Sauvegarder la note'}
@@ -582,7 +582,7 @@ const ImmersiveWaitingRoomPage = () => {
           target="_blank"
           rel="noreferrer"
           whileTap={{ scale: 0.98 }}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#D4AF37] py-3.5 text-sm font-bold text-black shadow-[0_0_28px_rgba(212,175,55,0.28)]"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--school-accent)] py-3.5 text-sm font-bold text-black shadow-[0_0_28px_rgba(212,175,55,0.28)]"
         >
           <Video className="h-4 w-4" /> Rejoindre le live
         </motion.a>
@@ -590,7 +590,7 @@ const ImmersiveWaitingRoomPage = () => {
     }
     if (canJoin && chatInviteId) {
       return (
-        <Button asChild className="h-auto w-full rounded-xl bg-[#D4AF37] py-3.5 text-sm font-bold text-black hover:bg-amber-500">
+        <Button asChild className="h-auto w-full rounded-xl bg-[var(--school-accent)] py-3.5 text-sm font-bold text-black hover:bg-amber-500">
           <Link to="/messages">
             <MessageSquare className="mr-2 h-4 w-4" /> Ouvrir le chat immersif
           </Link>
@@ -626,7 +626,7 @@ const ImmersiveWaitingRoomPage = () => {
     <div className="relative min-h-screen overflow-x-hidden bg-[#070b12] text-white">
       {/* Ambient orbs */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <div className="absolute -top-32 left-1/4 h-[36rem] w-[36rem] rounded-full bg-[#D4AF37]/[0.07] blur-[120px]" />
+        <div className="absolute -top-32 left-1/4 h-[36rem] w-[36rem] rounded-full bg-[var(--school-accent)]/[0.07] blur-[120px]" />
         <div className="absolute bottom-0 right-1/4 h-[28rem] w-[28rem] rounded-full bg-violet-600/[0.06] blur-[100px]" />
       </div>
       {/* Subtle grid overlay */}
@@ -646,8 +646,8 @@ const ImmersiveWaitingRoomPage = () => {
             className="flex flex-col items-center gap-5"
           >
             <div className="relative">
-              <div className="h-16 w-16 rounded-2xl bg-[#D4AF37] flex items-center justify-center text-black font-bold text-2xl shadow-[0_0_40px_rgba(212,175,55,0.35)]">I</div>
-              <Loader2 className="absolute -bottom-1 -right-1 h-5 w-5 animate-spin text-[#D4AF37]" />
+              <div className="h-16 w-16 rounded-2xl bg-[var(--school-accent)] flex items-center justify-center text-black font-bold text-2xl shadow-[0_0_40px_rgba(212,175,55,0.35)]">I</div>
+              <Loader2 className="absolute -bottom-1 -right-1 h-5 w-5 animate-spin text-[var(--school-accent)]" />
             </div>
             <p className="text-sm text-gray-400 tracking-wide">Chargement de votre espace d&apos;attente…</p>
           </motion.div>
@@ -662,14 +662,14 @@ const ImmersiveWaitingRoomPage = () => {
         <div className="flex min-h-screen flex-col">
           <header className="sticky top-0 z-20 flex items-center justify-between border-b border-white/8 bg-[#070b12]/80 px-6 py-4 backdrop-blur-xl">
             <Link to="/" className="flex items-center gap-2 text-sm font-semibold tracking-wide text-white/90">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#D4AF37] text-black font-bold shadow-[0_0_18px_rgba(212,175,55,0.3)]">I</span>
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--school-accent)] text-black font-bold shadow-[0_0_18px_rgba(212,175,55,0.3)]">I</span>
               ISNA · PRORASCIENCE
             </Link>
           </header>
           <div className="flex flex-1 items-center justify-center px-6 py-20">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md space-y-6 text-center">
-              <div className="mx-auto inline-flex h-20 w-20 items-center justify-center rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 shadow-[0_0_40px_rgba(212,175,55,0.12)]">
-                <CalendarClock className="h-9 w-9 text-[#D4AF37]" />
+              <div className="mx-auto inline-flex h-20 w-20 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] shadow-[0_0_40px_rgba(212,175,55,0.12)]">
+                <CalendarClock className="h-9 w-9 text-[var(--school-accent)]" />
               </div>
               <div>
                 <h1 className="mb-2 text-3xl font-bold tracking-tight">Aucun rendez-vous trouvé</h1>
@@ -678,7 +678,7 @@ const ImmersiveWaitingRoomPage = () => {
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-                <Button asChild className="bg-[#D4AF37] text-black font-bold hover:bg-[#ebca5e] shadow-[0_0_24px_rgba(212,175,55,0.25)]">
+                <Button asChild className="bg-[var(--school-accent)] text-black font-bold hover:bg-[#ebca5e] shadow-[0_0_24px_rgba(212,175,55,0.25)]">
                   <Link to="/appointment/request"><CalendarClock className="mr-2 h-4 w-4" /> Prendre rendez-vous</Link>
                 </Button>
                 <Button asChild variant="outline" className="border-white/15 text-white hover:bg-white/5">
@@ -704,7 +704,7 @@ const ImmersiveWaitingRoomPage = () => {
         >
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 text-sm font-semibold tracking-wide text-white/90">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#D4AF37] text-black font-bold">I</span>
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--school-accent)] text-black font-bold">I</span>
             ISNA · PRORASCIENCE
           </Link>
 
@@ -712,8 +712,8 @@ const ImmersiveWaitingRoomPage = () => {
           <div className="flex items-center gap-3">
             {data?.secretary && (
               <div className="hidden sm:flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10">
-                  <User className="h-3.5 w-3.5 text-[#D4AF37]" />
+                <div className="flex h-7 w-7 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
+                  <User className="h-3.5 w-3.5 text-[var(--school-accent)]" />
                 </div>
                 <div>
                   <p className="text-xs font-medium text-white leading-none">{data.secretary.display_name}</p>
@@ -738,14 +738,14 @@ const ImmersiveWaitingRoomPage = () => {
             <div>
               {/* Eyebrow */}
               <div className="mb-5 flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-1.5 text-xs uppercase tracking-[0.18em] text-[#D4AF37]">
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-1.5 text-xs uppercase tracking-[0.18em] text-[var(--school-accent)]">
                   <Sparkles className="h-3.5 w-3.5" /> Espace d&apos;attente immersif
                 </span>
                 {displayRef && (
                   <span className="font-mono text-xs text-gray-600">RÉF. <span className="text-gray-400">{displayRef}</span></span>
                 )}
                 {isPrimeHour && (
-                  <Badge className="border-[#D4AF37]/40 bg-[#D4AF37]/10 text-[#D4AF37] gap-1 text-[11px]">
+                  <Badge className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] gap-1 text-[11px]">
                     <Zap className="h-3 w-3" /> Prime Hours
                   </Badge>
                 )}
@@ -753,12 +753,12 @@ const ImmersiveWaitingRoomPage = () => {
 
               {/* Title */}
               <h1 className="mb-2 text-3xl font-bold leading-[1.1] tracking-tight sm:text-4xl">
-                {status === 'pending'      ? <><span className="text-white">Demande</span>{' '}<span className="text-[#D4AF37]">en cours</span><br /><span className="text-white">de traitement</span></> :
-                 status === 'preparing'    ? <><span className="text-white">Préparation</span>{' '}<span className="text-[#D4AF37]">en cours…</span></> :
-                 status === 'ready'        ? <><span className="text-[#D4AF37]">Votre séance</span><br /><span className="text-white">est prête !</span></> :
-                 status === 'in_progress'  ? <><span className="text-[#D4AF37]">Séance</span>{' '}<span className="text-white">en cours</span></> :
-                 status === 'rescheduled'  ? <><span className="text-white">Rendez-vous</span>{' '}<span className="text-[#D4AF37]">reprogrammé</span></> :
-                                            <><span className="text-white">Votre espace</span>{' '}<span className="text-[#D4AF37]">d&apos;attente</span></>}
+                {status === 'pending'      ? <><span className="text-white">Demande</span>{' '}<span className="text-[var(--school-accent)]">en cours</span><br /><span className="text-white">de traitement</span></> :
+                 status === 'preparing'    ? <><span className="text-white">Préparation</span>{' '}<span className="text-[var(--school-accent)]">en cours…</span></> :
+                 status === 'ready'        ? <><span className="text-[var(--school-accent)]">Votre séance</span><br /><span className="text-white">est prête !</span></> :
+                 status === 'in_progress'  ? <><span className="text-[var(--school-accent)]">Séance</span>{' '}<span className="text-white">en cours</span></> :
+                 status === 'rescheduled'  ? <><span className="text-white">Rendez-vous</span>{' '}<span className="text-[var(--school-accent)]">reprogrammé</span></> :
+                                            <><span className="text-white">Votre espace</span>{' '}<span className="text-[var(--school-accent)]">d&apos;attente</span></>}
               </h1>
 
               <p className="text-base leading-relaxed text-white/45">
@@ -771,8 +771,8 @@ const ImmersiveWaitingRoomPage = () => {
 
             {/* ── Ecran central chat immersif ── */}
             {!isCancelled && (
-              <div className="relative overflow-hidden rounded-3xl border border-[#D4AF37]/25 bg-gradient-to-br from-[#1a1510]/95 via-[#10141a]/95 to-[#0a0908] p-4 sm:p-5">
-                <p className="mb-3 text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-[#D4AF37]/90">
+              <div className="relative overflow-hidden rounded-3xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-gradient-to-br from-[#1a1510]/95 via-[#10141a]/95 to-[#0a0908] p-4 sm:p-5">
+                <p className="mb-3 text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">
                   Studio immersive
                 </p>
                 <div className="relative flex min-h-[180px] items-center justify-center rounded-2xl border border-white/15 bg-[#06090f]">
@@ -785,8 +785,8 @@ const ImmersiveWaitingRoomPage = () => {
                     </div>
                   ) : (
                     <div className="relative z-[1] text-center">
-                      <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#D4AF37]" />
-                      <p className="mt-2 text-sm font-semibold text-[#D4AF37]">Studio immersive</p>
+                      <Loader2 className="mx-auto h-8 w-8 animate-spin text-[var(--school-accent)]" />
+                      <p className="mt-2 text-sm font-semibold text-[var(--school-accent)]">Studio immersive</p>
                       <p className="mt-1 text-xs text-gray-400">Chargement de l'écran central...</p>
                     </div>
                   )}
@@ -794,7 +794,7 @@ const ImmersiveWaitingRoomPage = () => {
                 <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl border border-white/10 bg-black/25 p-2.5 text-[11px] text-gray-300">
                   <p><span className="text-gray-500">Statut:</span> <span className="capitalize text-white">{status}</span></p>
                   <p><span className="text-gray-500">Canal:</span> <span className="text-white">{immersiveLiveReady ? 'chat/live actif' : 'préparation'}</span></p>
-                  <p className="col-span-2"><span className="text-gray-500">Référence:</span> <span className="font-mono text-[#D4AF37]">{displayRef || '—'}</span></p>
+                  <p className="col-span-2"><span className="text-gray-500">Référence:</span> <span className="font-mono text-[var(--school-accent)]">{displayRef || '—'}</span></p>
                 </div>
               </div>
             )}
@@ -805,7 +805,7 @@ const ImmersiveWaitingRoomPage = () => {
                   <AlertCircle className="mx-auto mb-3 h-10 w-10 text-red-400" />
                   <p className="mb-1 text-lg font-semibold text-red-300">Ce rendez-vous a été annulé</p>
                   <p className="mb-6 text-sm text-gray-500">Vous pouvez en créer un nouveau à tout moment.</p>
-                  <Button asChild className="bg-[#D4AF37] text-black font-bold hover:bg-[#ebca5e] shadow-[0_0_24px_rgba(212,175,55,0.25)]">
+                  <Button asChild className="bg-[var(--school-accent)] text-black font-bold hover:bg-[#ebca5e] shadow-[0_0_24px_rgba(212,175,55,0.25)]">
                     <Link to="/appointment/request"><CalendarClock className="mr-2 h-4 w-4" /> Reprogrammer un entretien</Link>
                   </Button>
                 </div>
@@ -813,19 +813,19 @@ const ImmersiveWaitingRoomPage = () => {
 
             {/* ── Countdown ── */}
             {countdown && !countdown.isPast && scheduledAt && ['pending','confirmed','scheduled','preparing','ready'].includes(status) && (
-              <div className="relative overflow-hidden rounded-3xl border border-[#D4AF37]/25 bg-gradient-to-br from-[#D4AF37]/[0.07] via-transparent to-transparent px-5 py-5 sm:px-7 sm:py-6">
+              <div className="relative overflow-hidden rounded-3xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-gradient-to-br from-[var(--school-accent)]/[0.07] via-transparent to-transparent px-5 py-5 sm:px-7 sm:py-6">
                 {/* top glow line */}
-                <div className="pointer-events-none absolute inset-x-8 top-0 h-px rounded-full bg-gradient-to-r from-transparent via-[#D4AF37]/70 to-transparent" />
-                <p className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#D4AF37]">
+                <div className="pointer-events-none absolute inset-x-8 top-0 h-px rounded-full bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] to-transparent" />
+                <p className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--school-accent)]">
                   <Timer className="h-4 w-4" /> Compte à rebours
                 </p>
                 <div className="flex flex-wrap items-end justify-center gap-3 sm:gap-6">
                   <CountdownUnit value={countdown.days}  label="jours"  />
-                  <span className="mb-4 text-5xl font-thin text-[#D4AF37]/30">:</span>
+                  <span className="mb-4 text-5xl font-thin text-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">:</span>
                   <CountdownUnit value={countdown.hours} label="heures" />
-                  <span className="mb-4 text-5xl font-thin text-[#D4AF37]/30">:</span>
+                  <span className="mb-4 text-5xl font-thin text-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">:</span>
                   <CountdownUnit value={countdown.mins}  label="min"    />
-                  <span className="mb-4 text-5xl font-thin text-[#D4AF37]/30">:</span>
+                  <span className="mb-4 text-5xl font-thin text-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">:</span>
                   <CountdownUnit value={countdown.secs}  label="sec"    />
                 </div>
               </div>
@@ -835,11 +835,11 @@ const ImmersiveWaitingRoomPage = () => {
             {!isCancelled && (
               <div className="space-y-4">
                 {/* Subject */}
-                <div className="relative overflow-hidden rounded-2xl border border-[#D4AF37]/20 bg-white/[0.03] px-5 py-5">
-                  <div className="pointer-events-none absolute left-0 inset-y-0 w-1 rounded-l-2xl bg-gradient-to-b from-[#D4AF37]/80 via-[#D4AF37]/40 to-transparent" />
+                <div className="relative overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-white/[0.03] px-5 py-5">
+                  <div className="pointer-events-none absolute left-0 inset-y-0 w-1 rounded-l-2xl bg-gradient-to-b from-[color-mix(in_srgb,var(--school-accent)_80%,transparent)] via-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] to-transparent" />
                   <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/10">
-                      <BookOpen className="h-5 w-5 text-[#D4AF37]" />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
+                      <BookOpen className="h-5 w-5 text-[var(--school-accent)]" />
                     </div>
                     <div>
                       <p className="mb-0.5 text-[11px] uppercase tracking-[0.14em] text-gray-500">Sujet de l&apos;entretien</p>
@@ -852,9 +852,9 @@ const ImmersiveWaitingRoomPage = () => {
                 {/* Info grid */}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {scheduledAt && (
-                    <div className="flex items-start gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 hover:border-[#D4AF37]/20 transition-colors">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20">
-                        <CalendarClock className="h-4.5 w-4.5 text-[#D4AF37]" />
+                    <div className="flex items-start gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
+                        <CalendarClock className="h-4.5 w-4.5 text-[var(--school-accent)]" />
                       </div>
                       <div>
                         <p className="mb-0.5 text-[11px] uppercase tracking-[0.14em] text-gray-500">Date & heure</p>
@@ -862,9 +862,9 @@ const ImmersiveWaitingRoomPage = () => {
                       </div>
                     </div>
                   )}
-                  <div className="flex items-start gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 hover:border-[#D4AF37]/20 transition-colors">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20">
-                      <Globe className="h-4.5 w-4.5 text-[#D4AF37]" />
+                  <div className="flex items-start gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
+                      <Globe className="h-4.5 w-4.5 text-[var(--school-accent)]" />
                     </div>
                     <div>
                       <p className="mb-0.5 text-[11px] uppercase tracking-[0.14em] text-gray-500">Fuseau horaire</p>
@@ -872,9 +872,9 @@ const ImmersiveWaitingRoomPage = () => {
                     </div>
                   </div>
                   {data?.secretary && (
-                    <div className="flex items-start gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 hover:border-[#D4AF37]/20 transition-colors">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20">
-                        <User className="h-4.5 w-4.5 text-[#D4AF37]" />
+                    <div className="flex items-start gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
+                        <User className="h-4.5 w-4.5 text-[var(--school-accent)]" />
                       </div>
                       <div>
                         <p className="mb-0.5 text-[11px] uppercase tracking-[0.14em] text-gray-500">Secrétaire assignée</p>
@@ -887,9 +887,9 @@ const ImmersiveWaitingRoomPage = () => {
                     </div>
                   )}
                   {scheduledAt && countdown && !countdown.isPast && (
-                    <div className="flex items-start gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 hover:border-[#D4AF37]/20 transition-colors">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20">
-                        <Clock className="h-4.5 w-4.5 text-[#D4AF37]" />
+                    <div className="flex items-start gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
+                        <Clock className="h-4.5 w-4.5 text-[var(--school-accent)]" />
                       </div>
                       <div>
                         <p className="mb-0.5 text-[11px] uppercase tracking-[0.14em] text-gray-500">Jours restants</p>
@@ -915,13 +915,13 @@ const ImmersiveWaitingRoomPage = () => {
                 {canJoin && joinUrl ? (
                   <a
                     href={joinUrl} target="_blank" rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#D4AF37] px-7 py-3.5 text-sm font-bold text-black shadow-[0_0_24px_rgba(212,175,55,0.25)]"
+                    className="inline-flex items-center gap-2 rounded-xl bg-[var(--school-accent)] px-7 py-3.5 text-sm font-bold text-black shadow-[0_0_24px_rgba(212,175,55,0.25)]"
                   >
                     <Video className="h-4 w-4" /> Rejoindre le live <ArrowRight className="h-4 w-4" />
                   </a>
                 ) : canJoin && chatInviteId ? (
                   <div>
-                    <Button asChild className="h-auto rounded-xl bg-[#D4AF37] px-7 py-3.5 text-sm font-bold text-black hover:bg-[#ebca5e] shadow-[0_0_24px_rgba(212,175,55,0.25)]">
+                    <Button asChild className="h-auto rounded-xl bg-[var(--school-accent)] px-7 py-3.5 text-sm font-bold text-black hover:bg-[#ebca5e] shadow-[0_0_24px_rgba(212,175,55,0.25)]">
                       <Link to="/messages"><MessageSquare className="mr-2 h-4 w-4" /> Ouvrir le chat immersif <ArrowRight className="ml-2 h-4 w-4" /></Link>
                     </Button>
                   </div>
@@ -945,14 +945,14 @@ const ImmersiveWaitingRoomPage = () => {
               {/* ── Parcours de session ── */}
               <div className="space-y-3 rounded-2xl border border-white/8 bg-white/[0.03] p-3.5">
                 <p className="text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">Parcours de session</p>
-                <div className="rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-3">
+                <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] p-3">
                   <div className="mb-2 flex items-center justify-between">
-                    <p className="text-xs font-semibold text-[#D4AF37]">Niveau {progressUi.level} / {progressUi.steps.length || 4}</p>
+                    <p className="text-xs font-semibold text-[var(--school-accent)]">Niveau {progressUi.level} / {progressUi.steps.length || 4}</p>
                     <p className="text-[11px] font-medium text-white/70">{progressUi.percent}%</p>
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#D4AF37]/70 via-[#D4AF37] to-[#ebca5e]"
+                      className="h-full rounded-full bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] via-[var(--school-accent)] to-[#ebca5e]"
                       style={{ width: `${progressUi.percent}%` }}
                     />
                   </div>
@@ -969,7 +969,7 @@ const ImmersiveWaitingRoomPage = () => {
                           isDone
                             ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
                             : isActive
-                              ? 'border-[#D4AF37]/40 bg-[#D4AF37]/10 text-[#D4AF37]'
+                              ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
                               : 'border-white/10 bg-white/[0.02] text-gray-500'
                         }`}
                       >
@@ -991,7 +991,7 @@ const ImmersiveWaitingRoomPage = () => {
                     { label: 'Rappel 1h avant', active: countdown.days === 0 && countdown.hours === 0 && !countdown.isPast },
                     { label: 'Session prête',   active: countdown.isNow || ['ready','in_progress'].includes(status) },
                   ].map(({ label, active }) => (
-                    <div key={label} className={`flex items-center gap-2 rounded-xl border px-3 py-3 text-xs font-medium transition-all ${active ? 'border-[#D4AF37]/40 bg-[#D4AF37]/10 text-[#D4AF37]' : 'border-white/8 bg-white/[0.03] text-gray-500'}`}>
+                    <div key={label} className={`flex items-center gap-2 rounded-xl border px-3 py-3 text-xs font-medium transition-all ${active ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]' : 'border-white/8 bg-white/[0.03] text-gray-500'}`}>
                       {active ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> : <Circle className="h-3.5 w-3.5 shrink-0" />}
                       {label}
                     </div>
@@ -1028,7 +1028,7 @@ const ImmersiveWaitingRoomPage = () => {
         <JourneyMobileDock primary={mobileDockPrimary} secondary={mobileDockSecondary} />
 
         <footer className="border-t border-white/5 py-6 text-center text-xs text-gray-600">
-          <span className="text-[#D4AF37]/60">ISNA · Prorascience</span> — École Métaphysique Africaine · Espace entretien privé
+          <span className="text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]">ISNA · Prorascience</span> — École Métaphysique Africaine · Espace entretien privé
         </footer>
 
       </div>

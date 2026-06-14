@@ -92,7 +92,7 @@ const ProjectorMode = ({ slides, initialSlide = 0, onClose }) => {
           >
              {/* Left/Center Text */}
              <div className={`flex-1 space-y-6 ${currentSlide.image ? 'md:text-left' : 'text-center'}`}>
-                <h1 className="text-4xl md:text-6xl font-serif font-bold text-[#D4AF37] leading-tight">
+                <h1 className="text-4xl md:text-6xl font-serif font-bold text-[var(--school-accent)] leading-tight">
                    {currentSlide.title}
                 </h1>
                 <div 
@@ -117,7 +117,7 @@ const ProjectorMode = ({ slides, initialSlide = 0, onClose }) => {
 
       {/* Bottom Controls */}
       <div className="p-6 bg-gradient-to-t from-black/90 to-transparent z-20 space-y-4">
-         <Progress value={progress} className="h-1 bg-white/10" indicatorClassName="bg-[#D4AF37]" />
+         <Progress value={progress} className="h-1 bg-white/10" indicatorClassName="bg-[var(--school-accent)]" />
          
          <div className="flex justify-between items-center">
             <span className="text-sm font-mono text-gray-400">
@@ -128,7 +128,7 @@ const ProjectorMode = ({ slides, initialSlide = 0, onClose }) => {
                <Button variant="outline" size="icon" onClick={handlePrev} disabled={currentIndex === 0} className="rounded-full border-white/20 hover:bg-white/10 text-white">
                   <ChevronLeft className="w-5 h-5"/>
                </Button>
-               <Button variant="outline" size="icon" onClick={() => setIsPlaying(!isPlaying)} className={`rounded-full border-white/20 hover:bg-white/10 ${isPlaying ? 'text-[#D4AF37]' : 'text-white'}`}>
+               <Button variant="outline" size="icon" onClick={() => setIsPlaying(!isPlaying)} className={`rounded-full border-white/20 hover:bg-white/10 ${isPlaying ? 'text-[var(--school-accent)]' : 'text-white'}`}>
                   {isPlaying ? <Pause className="w-5 h-5"/> : <Play className="w-5 h-5"/>}
                </Button>
                <Button variant="outline" size="icon" onClick={handleNext} disabled={currentIndex === slides.length - 1} className="rounded-full border-white/20 hover:bg-white/10 text-white">

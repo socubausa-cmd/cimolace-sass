@@ -38,11 +38,11 @@ const ClassroomMenu = () => {
         type="button"
         onClick={() => setIsOpen((v) => !v)}
         className={`flex items-center gap-1.5 px-3 py-2 text-[0.8rem] xl:text-sm font-medium transition-all duration-300 rounded-lg group ${
-          isOpen || activeCount > 0 ? 'text-[#D4AF37] bg-white/5' : 'text-gray-300 hover:text-white hover:bg-white/5'
+          isOpen || activeCount > 0 ? 'text-[var(--school-accent)] bg-white/5' : 'text-gray-300 hover:text-white hover:bg-white/5'
         }`}
       >
         <div className="relative">
-          <BookOpen className={`w-4 h-4 xl:w-5 xl:h-5 ${isOpen || activeCount > 0 ? 'text-[#D4AF37]' : 'text-gray-500 group-hover:text-white'}`} />
+          <BookOpen className={`w-4 h-4 xl:w-5 xl:h-5 ${isOpen || activeCount > 0 ? 'text-[var(--school-accent)]' : 'text-gray-500 group-hover:text-white'}`} />
           {activeCount > 0 && (
             <span className="absolute -top-2 -right-2 flex h-4 w-4">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -54,7 +54,7 @@ const ClassroomMenu = () => {
         </div>
         <span className="uppercase tracking-tight font-bold whitespace-nowrap hidden lg:inline">Aller en classe</span>
         <ChevronDown 
-          className={`w-3 h-3 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#D4AF37]' : 'text-gray-600'}`} 
+          className={`w-3 h-3 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[var(--school-accent)]' : 'text-gray-600'}`} 
         />
       </button>
 
@@ -70,7 +70,7 @@ const ClassroomMenu = () => {
             <div className="bg-[#192734]/95 border border-white/10 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] overflow-hidden backdrop-blur-md ring-1 ring-black/5">
               
               {/* Decorative top border */}
-              <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-80"></div>
+              <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-[var(--school-accent)] to-transparent opacity-80"></div>
               
               <div className="p-3">
                 <div className="mb-2 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider flex justify-between items-center">
@@ -86,10 +86,10 @@ const ClassroomMenu = () => {
                       <Link 
                         key={cls.id} 
                         to={`/classroom/${cls.id}`}
-                        className="block p-3 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 hover:bg-[#D4AF37]/20 transition-colors group"
+                        className="block p-3 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors group"
                       >
                         <div className="flex justify-between items-start mb-1">
-                          <h4 className="text-sm font-bold text-white group-hover:text-[#D4AF37] transition-colors">{cls.title}</h4>
+                          <h4 className="text-sm font-bold text-white group-hover:text-[var(--school-accent)] transition-colors">{cls.title}</h4>
                           <Badge variant="outline" className="text-[10px] border-red-500/50 text-red-400 bg-red-500/10 px-1.5 py-0.5 h-auto">En cours</Badge>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-300 mb-2">
@@ -99,7 +99,7 @@ const ClassroomMenu = () => {
                           <div className="flex items-center gap-1">
                              <Users className="w-3 h-3" /> {cls.participants} présents
                           </div>
-                          <div className="flex items-center gap-1 text-[#D4AF37]">
+                          <div className="flex items-center gap-1 text-[var(--school-accent)]">
                              Rejoindre <Video className="w-3 h-3" />
                           </div>
                         </div>
@@ -122,7 +122,7 @@ const ClassroomMenu = () => {
                         <div key={cls.id} className="p-2 rounded hover:bg-white/5 transition-colors">
                            <div className="flex justify-between items-center">
                               <h5 className="text-sm text-gray-300 font-medium truncate max-w-[180px]">{cls.title}</h5>
-                              <span className="text-xs text-[#D4AF37] font-mono">
+                              <span className="text-xs text-[var(--school-accent)] font-mono">
                                  {format(new Date(cls.startTime), 'HH:mm')}
                               </span>
                            </div>
@@ -136,7 +136,7 @@ const ClassroomMenu = () => {
                 )}
 
                 <div className="mt-3 pt-2 border-t border-white/10">
-                  <Link to="/vie-scolaire?tab=calendar" className="block text-center text-xs text-[#D4AF37] hover:text-white transition-colors py-1">
+                  <Link to="/vie-scolaire?tab=calendar" className="block text-center text-xs text-[var(--school-accent)] hover:text-white transition-colors py-1">
                     Voir tout l'emploi du temps
                   </Link>
                 </div>

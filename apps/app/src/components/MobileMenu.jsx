@@ -16,10 +16,10 @@ const MobileMenuSection = ({ label, icon: Icon, submenu, onClose }) => {
         className={`flex w-full items-center justify-between px-1 py-3.5 font-display text-[15px] font-medium tracking-tight text-gray-100 transition-colors active:bg-white/5 ${isOpen ? 'bg-white/[0.03]' : ''}`}
       >
         <div className="flex items-center gap-3">
-          {Icon && <Icon className={`w-5 h-5 ${isOpen ? 'text-[#D4AF37]' : 'text-gray-500'}`} />}
-          <span className={`text-[13px] font-semibold uppercase tracking-[0.12em] ${isOpen ? 'text-[#D4AF37]' : 'text-white/90'}`}>{label}</span>
+          {Icon && <Icon className={`w-5 h-5 ${isOpen ? 'text-[var(--school-accent)]' : 'text-gray-500'}`} />}
+          <span className={`text-[13px] font-semibold uppercase tracking-[0.12em] ${isOpen ? 'text-[var(--school-accent)]' : 'text-white/90'}`}>{label}</span>
         </div>
-        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#D4AF37]' : ''}`} />
+        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[var(--school-accent)]' : ''}`} />
       </button>
       
       <AnimatePresence>
@@ -36,7 +36,7 @@ const MobileMenuSection = ({ label, icon: Icon, submenu, onClose }) => {
                   key={`${item.path}-${idx}`}
                   to={item.path}
                   onClick={onClose}
-                  className="flex items-center gap-3 py-3 px-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-md transition-all border-l-2 border-transparent hover:border-[#D4AF37]"
+                  className="flex items-center gap-3 py-3 px-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-md transition-all border-l-2 border-transparent hover:border-[var(--school-accent)]"
                 >
                   {item.icon && <item.icon className="w-4 h-4 opacity-70" />}
                   <span>{item.label}</span>
@@ -89,7 +89,7 @@ const MobileMenu = ({
                   <span className="font-display text-2xl font-semibold tracking-tight text-white">
                     Prorascience
                   </span>
-                  <span className="text-[0.65rem] font-medium uppercase tracking-[0.28em] text-[#D4AF37]/90">
+                  <span className="text-[0.65rem] font-medium uppercase tracking-[0.28em] text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">
                     Portail en ligne
                   </span>
                   <span className="text-[10px] font-medium text-white/45">Espace membre : application LIRI</span>
@@ -108,7 +108,7 @@ const MobileMenu = ({
                 {showDashboardButton ? (
                   <div className="mb-4">
                     <Link to={dashboardPath} onClick={onClose}>
-                      <Button className="w-full bg-gradient-to-r from-[#D4AF37] to-amber-600 text-black font-bold border-none gap-2 h-12">
+                      <Button className="w-full bg-gradient-to-r from-[var(--school-accent)] to-amber-600 text-black font-bold border-none gap-2 h-12">
                          <LayoutDashboard className="w-4 h-4" />
                          Tableau de bord
                       </Button>
@@ -118,8 +118,8 @@ const MobileMenu = ({
 
                 <div className="mb-4">
                   <Link to="/appointment/request" onClick={onClose}>
-                    <Button className="w-full gap-2 h-12 font-bold border-2 border-[#D4AF37]/60 bg-[#D4AF37]/15 text-[#f5e6b8] hover:bg-[#D4AF37]/25 hover:text-white shadow-[0_0_20px_rgba(212,175,55,0.15)]">
-                      <Calendar className="w-5 h-5 text-[#D4AF37]" />
+                    <Button className="w-full gap-2 h-12 font-bold border-2 border-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f5e6b8] hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] hover:text-white shadow-[0_0_20px_rgba(212,175,55,0.15)]">
+                      <Calendar className="w-5 h-5 text-[var(--school-accent)]" />
                       Prendre rendez-vous (calendrier)
                     </Button>
                   </Link>
@@ -134,11 +134,11 @@ const MobileMenu = ({
                       onClick={onClose}
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-white transition-colors ${
                         link.id === 'ngowazulu'
-                          ? 'bg-[#D4AF37]/10 border-[#D4AF37]/40 hover:bg-[#D4AF37]/20'
+                          ? 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]'
                           : 'bg-white/5 border-white/10 hover:bg-white/10'
                       }`}
                     >
-                      <link.icon className={`w-5 h-5 ${link.id === 'ngowazulu' ? 'text-[#f5d97a]' : 'text-[#D4AF37]'}`} />
+                      <link.icon className={`w-5 h-5 ${link.id === 'ngowazulu' ? 'text-[#f5d97a]' : 'text-[var(--school-accent)]'}`} />
                       <span className="font-semibold text-sm">{link.label}</span>
                     </Link>
                   ))}
@@ -157,7 +157,7 @@ const MobileMenu = ({
               <div className="mt-8 pt-6 border-t border-white/10 space-y-4">
                 <Button
                   variant="outline"
-                  className="w-full justify-center gap-2 border-[#D4AF37]/35 text-[#D4AF37] hover:bg-[#D4AF37]/10 h-12"
+                  className="w-full justify-center gap-2 border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] h-12"
                   onClick={() => {
                     onClose();
                     if (typeof onOpenImmersiveNav === 'function') onOpenImmersiveNav();
@@ -221,7 +221,7 @@ const MobileMenu = ({
                       </Button>
                     </Link>
                     <Link to="/signup" onClick={onClose}>
-                      <Button className="w-full bg-[#D4AF37] text-black hover:bg-yellow-500 font-bold h-12">
+                      <Button className="w-full bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold h-12">
                         S'inscrire
                       </Button>
                     </Link>

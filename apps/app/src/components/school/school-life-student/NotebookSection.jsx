@@ -64,7 +64,7 @@ const NotebookSection = ({ data }) => {
                         <div 
                           key={entry.id} 
                           onClick={() => handleSelect(entry)}
-                          className={`py-2 px-3 text-sm cursor-pointer flex justify-between items-center transition-colors border-l-2 ${selectedEntry?.id === entry.id ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'}`}
+                          className={`py-2 px-3 text-sm cursor-pointer flex justify-between items-center transition-colors border-l-2 ${selectedEntry?.id === entry.id ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-white' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'}`}
                         >
                           <span className="truncate">{entry.dayTitle}</span>
                           {entry.grades && <Badge variant="outline" className="text-[10px] h-5 px-1 border-green-500/30 text-green-500">Noté</Badge>}
@@ -93,7 +93,7 @@ const NotebookSection = ({ data }) => {
               <div className="p-6 space-y-8">
                  {/* Student Answer */}
                  <div className="space-y-2">
-                   <h3 className="text-[#D4AF37] font-bold flex items-center gap-2"><FileText className="w-4 h-4"/> Réponse de l'élève</h3>
+                   <h3 className="text-[var(--school-accent)] font-bold flex items-center gap-2"><FileText className="w-4 h-4"/> Réponse de l'élève</h3>
                    <div className="bg-black/20 p-4 rounded-lg border border-white/5 text-gray-300 leading-relaxed font-serif">
                      "{selectedEntry.content}"
                    </div>
@@ -147,7 +147,7 @@ const NotebookSection = ({ data }) => {
                     </div>
 
                     <div className="flex justify-end pt-2">
-                       <Button onClick={handleSaveGrade} className="bg-[#D4AF37] text-black font-bold hover:bg-yellow-500 gap-2">
+                       <Button onClick={handleSaveGrade} className="bg-[var(--school-accent)] text-black font-bold hover:bg-yellow-500 gap-2">
                           <Save className="w-4 h-4" /> Enregistrer la note
                        </Button>
                     </div>

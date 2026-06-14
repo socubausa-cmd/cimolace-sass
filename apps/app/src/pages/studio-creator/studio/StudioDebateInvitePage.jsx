@@ -62,7 +62,7 @@ export default function StudioDebateInvitePage() {
 
   return (
     <div className="min-h-screen bg-[#090D14] text-white flex flex-col items-center justify-center px-4 py-12">
-      <Link to="/studio" className="absolute top-6 left-4 sm:left-8 text-sm text-white/45 hover:text-[#D4AF37] inline-flex items-center gap-2">
+      <Link to="/studio" className="absolute top-6 left-4 sm:left-8 text-sm text-white/45 hover:text-[var(--school-accent)] inline-flex items-center gap-2">
         <ArrowLeft className="w-4 h-4" />
         Studio
       </Link>

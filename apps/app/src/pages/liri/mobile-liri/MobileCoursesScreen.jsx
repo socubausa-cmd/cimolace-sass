@@ -58,8 +58,8 @@ export default function MobileCoursesScreen() {
             transition={{ delay: 0.05 * i }}
           >
             <Link to={item.to}>
-              <LiriGoldCard className="flex items-center gap-3 p-4 active:scale-[0.99] transition-transform border-[#D4AF37]/28">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#D4AF37]/35 bg-gradient-to-br from-[#D4AF37]/14 to-transparent shadow-[0_0_20px_-8px_rgba(212,175,55,0.25)]">
+              <LiriGoldCard className="flex items-center gap-3 p-4 active:scale-[0.99] transition-transform border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)]">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] to-transparent shadow-[0_0_20px_-8px_rgba(212,175,55,0.25)]">
                   <item.icon className="h-6 w-6 text-[#e8c547]" strokeWidth={1.75} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -76,7 +76,7 @@ export default function MobileCoursesScreen() {
       <Link
         to={LIRI_MOBILE.home}
         className={cn(
-          'mt-6 flex items-center justify-center gap-2 text-xs text-[#D4AF37]/80',
+          'mt-6 flex items-center justify-center gap-2 text-xs text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]',
         )}
       >
         <BookOpen className="h-3.5 w-3.5" />

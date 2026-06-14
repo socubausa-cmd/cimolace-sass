@@ -70,7 +70,7 @@ const VerifyOwnerAccountPage = () => {
                     <span className="col-span-2 font-medium">{ownerInfo?.email || 'Masqué'}</span>
                     
                     <span className="text-gray-500">Rôle:</span>
-                    <span className="col-span-2 font-medium uppercase text-[#D4AF37]">{ownerInfo?.role || 'owner'}</span>
+                    <span className="col-span-2 font-medium uppercase text-[var(--school-accent)]">{ownerInfo?.role || 'owner'}</span>
                     
                     <span className="text-gray-500">ID:</span>
                     <span className="col-span-2 font-mono text-sm text-gray-400 truncate">{ownerInfo?.id}</span>
@@ -79,7 +79,7 @@ const VerifyOwnerAccountPage = () => {
 
                 <div className="flex justify-end pt-2">
                   <Link to="/login">
-                    <Button className="bg-[#D4AF37] hover:bg-[#b5952f] text-black">
+                    <Button className="bg-[var(--school-accent)] hover:bg-[#b5952f] text-black">
                       <LogIn className="w-4 h-4 mr-2" /> Tester la Connexion
                     </Button>
                   </Link>
@@ -105,7 +105,7 @@ const VerifyOwnerAccountPage = () => {
 
                 <div className="flex flex-col gap-3 pt-4">
                   <Link to="/create-owner-account">
-                    <Button className="w-full bg-[#D4AF37] hover:bg-[#b5952f] text-black font-bold">
+                    <Button className="w-full bg-[var(--school-accent)] hover:bg-[#b5952f] text-black font-bold">
                       Créer un Compte Propriétaire Maintenant
                     </Button>
                   </Link>

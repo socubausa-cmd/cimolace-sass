@@ -135,7 +135,7 @@ const SignupPage = () => {
       {/* ── LEFT PANEL – branding ── */}
       <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-12 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0F1419] via-[#192734] to-[#0F1419]" />
-        <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-[#D4AF37]/5 rounded-full blur-[150px]" />
+        <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[150px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-violet-900/10 rounded-full blur-[120px]" />
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMC4yIiBzdHJva2Utb3BhY2l0eT0iMC4wNSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-40" />
 
@@ -148,7 +148,7 @@ const SignupPage = () => {
             />
             <div>
               <span className="block font-serif text-2xl font-bold text-white tracking-wider">PRORASCIENCE</span>
-              <span className="block text-[0.65rem] text-[#D4AF37] tracking-[0.4em] uppercase mt-0.5">Academy · ISNA</span>
+              <span className="block text-[0.65rem] text-[var(--school-accent)] tracking-[0.4em] uppercase mt-0.5">Academy · ISNA</span>
             </div>
           </Link>
         </div>
@@ -160,12 +160,12 @@ const SignupPage = () => {
                 <h2 className="text-3xl font-serif font-bold text-white leading-snug mb-2">
                   {planLabel ? (
                     <>Une dernière étape<br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-yellow-400">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] to-yellow-400">
                       pour rejoindre {planLabel}
                     </span></>
                   ) : (
                     <>Créez votre compte<br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-yellow-400">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] to-yellow-400">
                       pour finaliser l&apos;inscription
                     </span></>
                   )}
@@ -176,7 +176,7 @@ const SignupPage = () => {
               <>
                 <h2 className="text-3xl font-serif font-bold text-white leading-snug mb-2">
                   Rejoignez l&apos;élite<br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-yellow-400">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] to-yellow-400">
                     de la connaissance
                   </span>
                 </h2>
@@ -188,20 +188,20 @@ const SignupPage = () => {
           <div className="space-y-3 pt-2">
             {PERKS.map(({ icon: Icon, text }) => (
               <div key={text} className="flex items-center gap-3">
-                <Icon className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                <Icon className="w-4 h-4 text-[var(--school-accent)] shrink-0" />
                 <span className="text-sm text-gray-300">{text}</span>
               </div>
             ))}
           </div>
 
           {isPaidFlow ? (
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 mt-4">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]" />
-              <span className="text-[#D4AF37] text-xs font-bold uppercase tracking-widest">Inscription · Paiement sécurisé</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] mt-4">
+              <ShieldCheck className="w-3.5 h-3.5 text-[var(--school-accent)]" />
+              <span className="text-[var(--school-accent)] text-xs font-bold uppercase tracking-widest">Inscription · Paiement sécurisé</span>
             </div>
           ) : (
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 mt-4">
-              <span className="text-[#D4AF37] text-xs font-bold uppercase tracking-widest">Accès gratuit · Immédiat</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] mt-4">
+              <span className="text-[var(--school-accent)] text-xs font-bold uppercase tracking-widest">Accès gratuit · Immédiat</span>
             </div>
           )}
         </div>
@@ -227,7 +227,7 @@ const SignupPage = () => {
                 className="h-11 w-auto max-w-[min(260px,82vw)] object-contain py-1"
               />
               <span className="font-serif text-2xl font-bold text-white tracking-wider">PRORASCIENCE</span>
-              <span className="text-[0.6rem] text-[#D4AF37] tracking-[0.3em] uppercase">Academy</span>
+              <span className="text-[0.6rem] text-[var(--school-accent)] tracking-[0.3em] uppercase">Academy</span>
             </Link>
           </div>
 
@@ -286,7 +286,7 @@ const SignupPage = () => {
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input id="fullName" name="fullName" placeholder="Prénom Nom"
                   value={formData.fullName} onChange={handleChange}
-                  className={`pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/30 ${formErrors.fullName ? 'border-red-500' : ''}`}
+                  className={`pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] ${formErrors.fullName ? 'border-red-500' : ''}`}
                 />
               </div>
               {formErrors.fullName && <p className="text-xs text-red-400">{formErrors.fullName}</p>}
@@ -298,7 +298,7 @@ const SignupPage = () => {
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input id="email" name="email" type="email" autoComplete="email" placeholder="exemple@email.com"
                   value={formData.email} onChange={handleChange}
-                  className={`pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/30 ${formErrors.email ? 'border-red-500' : ''}`}
+                  className={`pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] ${formErrors.email ? 'border-red-500' : ''}`}
                 />
               </div>
               {formErrors.email && <p className="text-xs text-red-400">{formErrors.email}</p>}
@@ -310,7 +310,7 @@ const SignupPage = () => {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input id="password" name="password" type="password" autoComplete="new-password" placeholder="••••••••"
                   value={formData.password} onChange={handleChange}
-                  className={`pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/30 ${formErrors.password ? 'border-red-500' : ''}`}
+                  className={`pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] ${formErrors.password ? 'border-red-500' : ''}`}
                 />
               </div>
               {formErrors.password && <p className="text-xs text-red-400">{formErrors.password}</p>}
@@ -329,14 +329,14 @@ const SignupPage = () => {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password" placeholder="••••••••"
                   value={formData.confirmPassword} onChange={handleChange}
-                  className={`pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/30 ${formErrors.confirmPassword ? 'border-red-500' : ''}`}
+                  className={`pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] ${formErrors.confirmPassword ? 'border-red-500' : ''}`}
                 />
               </div>
               {formErrors.confirmPassword && <p className="text-xs text-red-400">{formErrors.confirmPassword}</p>}
             </div>
 
             <Button type="submit"
-              className="w-full h-11 bg-[#D4AF37] hover:bg-[#bfa345] text-black font-bold text-base tracking-wide mt-2"
+              className="w-full h-11 bg-[var(--school-accent)] hover:bg-[#bfa345] text-black font-bold text-base tracking-wide mt-2"
               disabled={isLoading}
             >
               {isLoading
@@ -352,7 +352,7 @@ const SignupPage = () => {
             Déjà inscrit ?{' '}
             <Link
               to={redirectParam ? `/login?redirect=${encodeURIComponent(redirectParam)}` : '/login'}
-              className="text-[#D4AF37] hover:underline font-medium"
+              className="text-[var(--school-accent)] hover:underline font-medium"
             >Se connecter</Link>
           </p>
         </motion.div>

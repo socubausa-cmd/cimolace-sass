@@ -46,8 +46,8 @@ const SchoolLifePage = ({ embedded = false }) => {
       <div className="space-y-8 pb-8">
         <Helmet><title>{`Vie Scolaire | ${isnaTenantConfig.branding.name}`}</title></Helmet>
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-[#D4AF37]/10 rounded-xl border border-[#D4AF37]/20">
-            <Users className="w-6 h-6 text-[#D4AF37]" />
+          <div className="p-2 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
+            <Users className="w-6 h-6 text-[var(--school-accent)]" />
           </div>
           <div>
             <h1 className="text-2xl font-serif font-bold text-white">Vie Scolaire</h1>
@@ -95,8 +95,8 @@ const SchoolLifePage = ({ embedded = false }) => {
         </div>
         
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <div className="inline-block p-3 bg-[#D4AF37]/10 rounded-2xl border border-[#D4AF37]/30 mb-4">
-             <Users className="w-8 h-8 text-[#D4AF37]" />
+          <div className="inline-block p-3 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] mb-4">
+             <Users className="w-8 h-8 text-[var(--school-accent)]" />
           </div>
           <h1 className="text-4xl md:text-5xl font-serif font-bold text-white mb-4 tracking-tight">
             Bureau de la Vie Scolaire

@@ -74,7 +74,7 @@ const LiveClassesSection = () => {
        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredClasses.length > 0 ? (
              filteredClasses.map(cls => (
-                <Card key={cls.id} className="bg-[#192734] border-white/10 overflow-hidden hover:border-[#D4AF37]/50 transition-all duration-300 group">
+                <Card key={cls.id} className="bg-[#192734] border-white/10 overflow-hidden hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] transition-all duration-300 group">
                    <div className="p-6 space-y-4">
                       <div className="flex justify-between items-start">
                          {getStatusBadge(cls.status)}
@@ -84,7 +84,7 @@ const LiveClassesSection = () => {
                       </div>
 
                       <div>
-                         <h3 className="text-xl font-bold text-white mb-2 group-hover:text-[#D4AF37] transition-colors line-clamp-2">{cls.title}</h3>
+                         <h3 className="text-xl font-bold text-white mb-2 group-hover:text-[var(--school-accent)] transition-colors line-clamp-2">{cls.title}</h3>
                          <p className="text-sm text-gray-400 mb-1">{cls.formation}</p>
                          <div className="flex items-center gap-2 mt-3">
                             <img src={cls.instructorAvatar} alt={cls.instructor} className="w-6 h-6 rounded-full border border-white/10" />
@@ -110,7 +110,7 @@ const LiveClassesSection = () => {
                            </Button>
                          </Link>
                       ) : (
-                         <Button className="flex-1 bg-[#D4AF37] text-black hover:bg-yellow-500 gap-2 font-bold" disabled={cls.status === 'terminee'}>
+                         <Button className="flex-1 bg-[var(--school-accent)] text-black hover:bg-yellow-500 gap-2 font-bold" disabled={cls.status === 'terminee'}>
                             {cls.status === 'terminee' ? 'Revoir le Replay' : "S'inscrire / Rappel"}
                          </Button>
                       )}

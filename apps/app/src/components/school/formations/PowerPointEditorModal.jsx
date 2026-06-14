@@ -51,14 +51,14 @@ const PowerPointEditorModal = ({ isOpen, onClose, onSave }) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-[#192734] border-white/10 text-white max-w-4xl h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><Presentation className="w-5 h-5 text-[#D4AF37]"/> Éditeur PowerPoint / Support</DialogTitle>
+          <DialogTitle className="flex items-center gap-2"><Presentation className="w-5 h-5 text-[var(--school-accent)]"/> Éditeur PowerPoint / Support</DialogTitle>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setData({...data, type: val === 'gamma' ? 'gamma' : 'slides'}); }} className="flex-1 flex flex-col overflow-hidden">
           <TabsList className="bg-[#0F1419] border border-white/10 w-full shrink-0">
-            <TabsTrigger value="create" className="flex-1 data-[state=active]:bg-[#D4AF37] data-[state=active]:text-black">Créer Slides</TabsTrigger>
-            <TabsTrigger value="import" className="flex-1 data-[state=active]:bg-[#D4AF37] data-[state=active]:text-black">Importer PPT</TabsTrigger>
-            <TabsTrigger value="gamma" className="flex-1 data-[state=active]:bg-[#D4AF37] data-[state=active]:text-black">Lien Gamma</TabsTrigger>
+            <TabsTrigger value="create" className="flex-1 data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-black">Créer Slides</TabsTrigger>
+            <TabsTrigger value="import" className="flex-1 data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-black">Importer PPT</TabsTrigger>
+            <TabsTrigger value="gamma" className="flex-1 data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-black">Lien Gamma</TabsTrigger>
           </TabsList>
 
           <div className="flex-1 overflow-y-auto py-4">
@@ -71,7 +71,7 @@ const PowerPointEditorModal = ({ isOpen, onClose, onSave }) => {
                 {data.slides.map((slide, idx) => (
                    <div key={idx} className="bg-[#0F1419] p-4 rounded-lg border border-white/10 space-y-3">
                       <div className="flex justify-between items-center">
-                         <span className="text-sm font-bold text-[#D4AF37]">Slide {idx + 1}</span>
+                         <span className="text-sm font-bold text-[var(--school-accent)]">Slide {idx + 1}</span>
                          <Button size="icon" variant="ghost" className="h-6 w-6 text-red-400" onClick={() => removeSlide(idx)}><Trash className="w-3 h-3"/></Button>
                       </div>
                       <Input placeholder="Titre de la slide" value={slide.title} onChange={e => updateSlide(idx, 'title', e.target.value)} className="bg-[#192734] border-white/10" />
@@ -103,7 +103,7 @@ const PowerPointEditorModal = ({ isOpen, onClose, onSave }) => {
 
         <DialogFooter className="mt-4 shrink-0">
            <Button variant="ghost" onClick={onClose} className="text-white">Annuler</Button>
-           <Button onClick={handleSave} className="bg-[#D4AF37] text-black hover:bg-yellow-500">Enregistrer</Button>
+           <Button onClick={handleSave} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">Enregistrer</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

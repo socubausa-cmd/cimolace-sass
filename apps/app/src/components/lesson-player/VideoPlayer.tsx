@@ -199,7 +199,7 @@ const LessonVideoPlayer = forwardRef<LessonVideoPlayerHandle, Props>(
                   return (
                     <div
                       key={`${m.kind}-${m.timeSeconds}-${idx}`}
-                      className={m.kind === 'chapter' ? 'absolute w-0.5 h-2 bg-[#D4AF37]' : 'absolute w-1.5 h-1.5 rounded-full bg-blue-400'}
+                      className={m.kind === 'chapter' ? 'absolute w-0.5 h-2 bg-[var(--school-accent)]' : 'absolute w-1.5 h-1.5 rounded-full bg-blue-400'}
                       style={{ left }}
                     />
                   );

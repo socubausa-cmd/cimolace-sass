@@ -11,7 +11,7 @@ const EventCard = ({ event }) => {
   const getIcon = (type) => {
     switch(type) {
       case 'live': return <Video className="w-5 h-5 text-blue-400" />;
-      case 'evaluation': return <GraduationCap className="w-5 h-5 text-[#D4AF37]" />;
+      case 'evaluation': return <GraduationCap className="w-5 h-5 text-[var(--school-accent)]" />;
       default: return <Users className="w-5 h-5 text-purple-400" />;
     }
   };
@@ -37,7 +37,7 @@ const EventCard = ({ event }) => {
           <div className="flex-shrink-0">
              {event.link && !isEventPast && (
                <a href={event.link} target="_blank" rel="noopener noreferrer">
-                 <Button size="sm" className="bg-[#D4AF37] text-black hover:bg-yellow-500">
+                 <Button size="sm" className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
                    Rejoindre
                  </Button>
                </a>
@@ -57,7 +57,7 @@ const EventsSection = ({ data }) => {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2 space-y-6">
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
-          <CalendarIcon className="w-5 h-5 text-[#D4AF37]" /> Événements à venir
+          <CalendarIcon className="w-5 h-5 text-[var(--school-accent)]" /> Événements à venir
         </h2>
         {upcomingEvents.length > 0 ? (
           upcomingEvents.map(evt => <EventCard key={evt.id} event={evt} />)

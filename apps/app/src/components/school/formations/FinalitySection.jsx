@@ -12,13 +12,13 @@ const FinalitySection = () => {
              <span className="text-4xl">🎓</span>
           </div>
           <h2 className="text-3xl md:text-5xl font-serif font-bold text-white tracking-tight">
-            Finalité des formations <span className="text-[#D4AF37]">Prorascience</span>
+            Finalité des formations <span className="text-[var(--school-accent)]">Prorascience</span>
           </h2>
           <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed font-light">
             Notre école ne se contente pas de transmettre un savoir. Elle vise à bâtir des architectures intérieures solides, capables de soutenir une haute fréquence spirituelle tout en restant ancrées dans le réel.
           </p>
           <div className="flex justify-center items-center opacity-50 my-8">
-             <span className="text-[#D4AF37] text-3xl font-light tracking-[0.5em]">⸻</span>
+             <span className="text-[var(--school-accent)] text-3xl font-light tracking-[0.5em]">⸻</span>
           </div>
        </div>
 
@@ -85,13 +85,13 @@ const FinalitySection = () => {
        </div>
 
        <div className="flex justify-center items-center opacity-50 my-10">
-           <span className="text-[#D4AF37] text-3xl font-light tracking-[0.5em]">⸻</span>
+           <span className="text-[var(--school-accent)] text-3xl font-light tracking-[0.5em]">⸻</span>
        </div>
 
        {/* Final Objectives 🎯 */}
        <div className="bg-gradient-to-br from-[#151a21] to-[#0d1117] border border-white/10 rounded-2xl p-8 md:p-12 shadow-2xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-40 bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/10 transition-colors duration-700"></div>
-          <div className="absolute bottom-0 left-0 p-32 bg-[#D4AF37]/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 group-hover:bg-[#D4AF37]/10 transition-colors duration-700"></div>
+          <div className="absolute bottom-0 left-0 p-32 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 group-hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] transition-colors duration-700"></div>
           
           <div className="relative z-10">
              <div className="flex flex-col md:flex-row gap-8 items-start">
@@ -104,15 +104,15 @@ const FinalitySection = () => {
                    </h3>
                    <ul className="space-y-5">
                       <li className="flex items-start gap-4 text-gray-300">
-                         <span className="text-[#D4AF37] mt-1.5 text-xl">●</span>
+                         <span className="text-[var(--school-accent)] mt-1.5 text-xl">●</span>
                          <span className="text-lg">Développer une <strong className="text-white">autonomie spirituelle totale</strong>, libre de toute dépendance extérieure ou gouroutisme.</span>
                       </li>
                       <li className="flex items-start gap-4 text-gray-300">
-                         <span className="text-[#D4AF37] mt-1.5 text-xl">●</span>
+                         <span className="text-[var(--school-accent)] mt-1.5 text-xl">●</span>
                          <span className="text-lg">Maîtriser les <strong className="text-white">arts opératifs</strong> pour influencer positivement sa réalité, celle de ses proches et celle de ses futurs consultants.</span>
                       </li>
                       <li className="flex items-start gap-4 text-gray-300">
-                         <span className="text-[#D4AF37] mt-1.5 text-xl">●</span>
+                         <span className="text-[var(--school-accent)] mt-1.5 text-xl">●</span>
                          <span className="text-lg">Incarner une <strong className="text-white">éthique irréprochable</strong>, garante de la puissance, de la légitimité et de la sécurité du praticien.</span>
                       </li>
                    </ul>
@@ -123,7 +123,7 @@ const FinalitySection = () => {
 
        {/* Summary 🔑 */}
        <div className="text-center pt-8 pb-4">
-          <div className="inline-flex items-center gap-3 px-8 py-4 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-full text-[#D4AF37] font-semibold hover:bg-[#D4AF37]/20 transition-colors cursor-default">
+          <div className="inline-flex items-center gap-3 px-8 py-4 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] rounded-full text-[var(--school-accent)] font-semibold hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors cursor-default">
              <Key className="w-6 h-6" />
              <span className="text-lg">En résumé : Prorascience est l'école de la Souveraineté et de l\'Excellence.</span>
           </div>

@@ -47,7 +47,7 @@ const OwnerCertificatesManagement = () => {
          className="flex justify-between items-center"
        >
           <h2 className="text-2xl font-bold text-white">Gestion des Certificats</h2>
-          <Button onClick={handleGenerateMock} className="bg-[#D4AF37] text-black hover:bg-yellow-500">
+          <Button onClick={handleGenerateMock} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
              <Plus className="w-4 h-4 mr-2" /> Générer Certificat
           </Button>
        </motion.div>
@@ -84,10 +84,10 @@ const OwnerCertificatesManagement = () => {
           </div>
           {certificates.length === 0 ? (
             <CardContent className="p-10 text-center">
-              <Eye className="w-8 h-8 text-[#D4AF37] mx-auto mb-3" />
+              <Eye className="w-8 h-8 text-[var(--school-accent)] mx-auto mb-3" />
               <p className="text-white font-semibold">Aucun certificat généré</p>
               <p className="text-gray-400 text-sm mt-1">Génère ton premier certificat pour démarrer.</p>
-              <Button onClick={handleGenerateMock} className="mt-4 bg-[#D4AF37] text-black hover:bg-[#c4a030]">
+              <Button onClick={handleGenerateMock} className="mt-4 bg-[var(--school-accent)] text-black hover:bg-[#c4a030]">
                 <Plus className="w-4 h-4 mr-2" /> Générer le premier certificat
               </Button>
             </CardContent>

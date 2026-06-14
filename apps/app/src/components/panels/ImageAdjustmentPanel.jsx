@@ -31,7 +31,7 @@ function Slider({ label, value, min, max, step = 1, onChange, unit = '' }) {
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-[#D4AF37]"
+        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-[var(--school-accent)]"
       />
     </div>
   );
@@ -45,7 +45,7 @@ function Toggle({ label, value, onChange }) {
         onClick={() => onChange(!value)}
         className={cn(
           'relative h-5 w-9 rounded-full transition-colors',
-          value ? 'bg-[#D4AF37]' : 'bg-white/15',
+          value ? 'bg-[var(--school-accent)]' : 'bg-white/15',
         )}
       >
         <span className={cn(
@@ -95,7 +95,7 @@ export default function ImageAdjustmentPanel({ adjustments = DEFAULT_ADJUSTMENTS
               className={cn(
                 'rounded-md border px-2 py-1 text-[10px] transition-colors',
                 adjustments.lut === lut.id
-                  ? 'border-[#D4AF37]/40 bg-[#D4AF37]/15 text-[#D4AF37]'
+                  ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)]'
                   : 'border-white/10 text-white/40 hover:border-white/20 hover:text-white/60',
               )}
             >

@@ -113,8 +113,8 @@ export default function ImmersivePhoneCompanionPage() {
     <div className="min-h-screen bg-[#050b14] text-white flex flex-col items-center px-4 py-8">
       <div className="w-full max-w-sm">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/20 flex items-center justify-center">
-            <Smartphone className="w-5 h-5 text-[#D4AF37]" />
+          <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center">
+            <Smartphone className="w-5 h-5 text-[var(--school-accent)]" />
           </div>
           <div>
             <h1 className="text-base font-bold">Appareil pour le live</h1>
@@ -124,7 +124,7 @@ export default function ImmersivePhoneCompanionPage() {
 
         {phase === 'connecting' || phase === 'init' ? (
           <div className="flex flex-col items-center gap-4 py-12">
-            <Loader2 className="w-10 h-10 text-[#D4AF37] animate-spin" />
+            <Loader2 className="w-10 h-10 text-[var(--school-accent)] animate-spin" />
             <p className="text-sm text-white/50">Connexion à la salle…</p>
           </div>
         ) : null}
@@ -138,7 +138,7 @@ export default function ImmersivePhoneCompanionPage() {
               <button
                 type="button"
                 onClick={() => void connect()}
-                className="mt-3 text-xs text-[#D4AF37] underline"
+                className="mt-3 text-xs text-[var(--school-accent)] underline"
               >
                 Réessayer
               </button>
@@ -149,12 +149,12 @@ export default function ImmersivePhoneCompanionPage() {
         {phase === 'ready' ? (
           <div className="space-y-3">
             <p className="text-xs text-white/50 text-center mb-4">
-              Choisissez ce que vous envoyez. Sur le PC, ouvrez la scène <strong className="text-[#D4AF37]">Cam 2</strong> puis sélectionnez <strong>Téléphone (QR)</strong>.
+              Choisissez ce que vous envoyez. Sur le PC, ouvrez la scène <strong className="text-[var(--school-accent)]">Cam 2</strong> puis sélectionnez <strong>Téléphone (QR)</strong>.
             </p>
             <button
               type="button"
               onClick={() => void startCamera('user')}
-              className="w-full h-11 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/35 text-sm text-[#f5dd8a] flex items-center justify-center gap-2"
+              className="w-full h-11 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-sm text-[#f5dd8a] flex items-center justify-center gap-2"
             >
               <Camera className="w-4 h-4" />
               Caméra avant (selfie)
@@ -162,7 +162,7 @@ export default function ImmersivePhoneCompanionPage() {
             <button
               type="button"
               onClick={() => void startCamera('environment')}
-              className="w-full h-11 rounded-xl bg-[#D4AF37]/12 border border-[#D4AF37]/28 text-sm text-[#f0e6bc] flex items-center justify-center gap-2"
+              className="w-full h-11 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] text-sm text-[#f0e6bc] flex items-center justify-center gap-2"
             >
               <Camera className="w-4 h-4" />
               Caméra arrière

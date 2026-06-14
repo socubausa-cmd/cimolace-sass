@@ -81,17 +81,17 @@ const AdminCurriculumPage = () => {
           />
           
           <TabsContent value="years" className="mt-6">
-             <div className="flex justify-end mb-4"><Button size="sm" className="bg-[#D4AF37] text-black"><Plus className="w-4 h-4 mr-2"/> Nouvelle Année</Button></div>
+             <div className="flex justify-end mb-4"><Button size="sm" className="bg-[var(--school-accent)] text-black"><Plus className="w-4 h-4 mr-2"/> Nouvelle Année</Button></div>
              <DataTable columns={yearColumns} data={academicYears} />
           </TabsContent>
 
           <TabsContent value="trimesters" className="mt-6">
-             <div className="flex justify-end mb-4"><Button size="sm" className="bg-[#D4AF37] text-black"><Plus className="w-4 h-4 mr-2"/> Nouveau Trimestre</Button></div>
+             <div className="flex justify-end mb-4"><Button size="sm" className="bg-[var(--school-accent)] text-black"><Plus className="w-4 h-4 mr-2"/> Nouveau Trimestre</Button></div>
              <DataTable columns={trimesterColumns} data={trimesters} />
           </TabsContent>
           
           <TabsContent value="modules" className="mt-6">
-             <div className="flex justify-end mb-4"><Button size="sm" className="bg-[#D4AF37] text-black"><Plus className="w-4 h-4 mr-2"/> Nouveau Module</Button></div>
+             <div className="flex justify-end mb-4"><Button size="sm" className="bg-[var(--school-accent)] text-black"><Plus className="w-4 h-4 mr-2"/> Nouveau Module</Button></div>
              <DataTable columns={moduleColumns} data={modules} searchFields={['title', 'code']} />
           </TabsContent>
        </Tabs>

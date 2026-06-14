@@ -131,7 +131,7 @@ export default function StudioDebatePrepPage() {
       <div className="max-w-lg mx-auto px-4 py-10 md:py-14">
         <Link
           to={isDebater ? '/studio/debate-builder#debater-invites' : `/studio/debate-builder/${debateId}`}
-          className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-[#D4AF37] transition-colors mb-6"
+          className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-[var(--school-accent)] transition-colors mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
           {isDebater ? 'Mes invitations (débats)' : 'Fiche débat'}

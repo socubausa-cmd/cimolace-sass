@@ -42,7 +42,7 @@ const LiveChat = () => {
                         <span className="text-xs font-bold text-gray-400">{msg.sender}</span>
                         <span className="text-[10px] text-gray-600">{msg.time}</span>
                      </div>
-                     <div className={`p-2 rounded-lg text-sm max-w-[85%] ${msg.isMe ? 'bg-[#D4AF37] text-black' : 'bg-[#1F2937] text-white'}`}>
+                     <div className={`p-2 rounded-lg text-sm max-w-[85%] ${msg.isMe ? 'bg-[var(--school-accent)] text-black' : 'bg-[#1F2937] text-white'}`}>
                         {msg.message}
                      </div>
                   </div>
@@ -52,7 +52,7 @@ const LiveChat = () => {
          <div className="p-3 border-t border-white/10 bg-[#15202B]">
             <form onSubmit={sendMessage} className="flex gap-2">
                <Input value={input} onChange={e => setInput(e.target.value)} placeholder="Message..." className="bg-transparent border-white/20 text-white" />
-               <Button size="icon" type="submit" className="bg-[#D4AF37] text-black hover:bg-yellow-500"><Send className="w-4 h-4" /></Button>
+               <Button size="icon" type="submit" className="bg-[var(--school-accent)] text-black hover:bg-yellow-500"><Send className="w-4 h-4" /></Button>
             </form>
          </div>
       </div>
@@ -117,7 +117,7 @@ const LiveClassroomPage = () => {
               <button
                 onClick={handleStartSession}
                 disabled={starting}
-                className="px-6 py-3 bg-[#D4AF37] text-black font-bold rounded-lg hover:bg-amber-500 disabled:opacity-50"
+                className="px-6 py-3 bg-[var(--school-accent)] text-black font-bold rounded-lg hover:bg-amber-500 disabled:opacity-50"
               >
                 {starting ? 'Ouverture...' : 'Démarrer la session'}
               </button>
@@ -229,15 +229,15 @@ const LiveClassroomPage = () => {
                    
                    <div className="w-px h-8 bg-white/10 mx-2"></div>
 
-                   <Button variant="ghost" size="icon" className="text-gray-400 hover:text-[#D4AF37] rounded-full">
+                   <Button variant="ghost" size="icon" className="text-gray-400 hover:text-[var(--school-accent)] rounded-full">
                       <Monitor className="w-5 h-5" />
                    </Button>
-                   <Button variant="ghost" size="icon" className="text-gray-400 hover:text-[#D4AF37] rounded-full">
+                   <Button variant="ghost" size="icon" className="text-gray-400 hover:text-[var(--school-accent)] rounded-full">
                       <Hand className="w-5 h-5" />
                    </Button>
                    <div className="w-px h-8 bg-white/10 mx-2"></div>
                    <div className="flex lg:hidden gap-2">
-                      <Button variant="ghost" size="icon" className="text-gray-400 hover:text-[#D4AF37] rounded-full" onClick={() => setActiveSidebarTab('chat')}>
+                      <Button variant="ghost" size="icon" className="text-gray-400 hover:text-[var(--school-accent)] rounded-full" onClick={() => setActiveSidebarTab('chat')}>
                          <MessageSquare className="w-5 h-5" />
                       </Button>
                    </div>
@@ -270,7 +270,7 @@ const LiveClassroomPage = () => {
                    <ParticipantsPanel />
                 </TabsContent>
                 <TabsContent value="resources" className="flex-1 m-0 p-4">
-                   <textarea className="w-full h-full bg-[#0F1419] rounded-lg border border-white/10 p-4 text-white resize-none focus:outline-none focus:border-[#D4AF37]" placeholder="Vos notes personnelles..." />
+                   <textarea className="w-full h-full bg-[#0F1419] rounded-lg border border-white/10 p-4 text-white resize-none focus:outline-none focus:border-[var(--school-accent)]" placeholder="Vos notes personnelles..." />
                 </TabsContent>
              </Tabs>
           </div>

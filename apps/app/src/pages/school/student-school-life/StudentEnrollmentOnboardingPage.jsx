@@ -32,7 +32,7 @@ const StudentEnrollmentOnboardingPage = () => {
   if (billingLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#0F1419] text-white">
-        <Loader2 className="h-8 w-8 animate-spin text-[#D4AF37]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[var(--school-accent)]" />
       </div>
     );
   }
@@ -107,10 +107,10 @@ const StudentEnrollmentOnboardingPage = () => {
   return (
     <div className="min-h-screen bg-[#0F1419] text-white px-4 py-10">
       <div className="mx-auto max-w-3xl space-y-6">
-        <Card className="premium-panel border border-[#D4AF37]/25 bg-[#151a21]/95">
+        <Card className="premium-panel border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#151a21]/95">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl">
-              <ShieldCheck className="h-6 w-6 text-[#D4AF37]" />
+              <ShieldCheck className="h-6 w-6 text-[var(--school-accent)]" />
               Finaliser mon dossier eleve
             </CardTitle>
             <p className="text-sm text-gray-400">
@@ -158,7 +158,7 @@ const StudentEnrollmentOnboardingPage = () => {
               </div>
 
               <div className="flex flex-wrap items-center gap-3 pt-2">
-                <Button type="submit" disabled={submitting} className="bg-[#D4AF37] text-black hover:bg-amber-500">
+                <Button type="submit" disabled={submitting} className="bg-[var(--school-accent)] text-black hover:bg-amber-500">
                   {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
                   Valider mon dossier
                 </Button>
@@ -174,7 +174,7 @@ const StudentEnrollmentOnboardingPage = () => {
 
         <div className="rounded-xl border border-white/10 bg-[#151a21]/70 p-4 text-sm text-gray-400">
           <p className="flex items-center gap-2 text-gray-200">
-            <PenLine className="h-4 w-4 text-[#D4AF37]" />
+            <PenLine className="h-4 w-4 text-[var(--school-accent)]" />
             Les informations sont utilisees pour l edition de vos certificats et la verification de votre identite.
           </p>
         </div>

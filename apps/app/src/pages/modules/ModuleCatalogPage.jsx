@@ -97,7 +97,7 @@ const ModuleCatalogPage = () => {
             <p className="text-gray-400">Perfectionnez votre maîtrise avec nos modules spécialisés à la carte.</p>
           </div>
           <Link to="/modules/panier">
-            <Button variant="outline" className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10 gap-2">
+            <Button variant="outline" className="border-[var(--school-accent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] gap-2">
               <ShoppingCart className="w-4 h-4" /> Panier
             </Button>
           </Link>
@@ -121,7 +121,7 @@ const ModuleCatalogPage = () => {
                 key={type}
                 variant={filterType === type ? 'default' : 'ghost'}
                 onClick={() => setFilterType(type)}
-                className={`capitalize ${filterType === type ? 'bg-[#D4AF37] text-black' : 'text-gray-400'}`}
+                className={`capitalize ${filterType === type ? 'bg-[var(--school-accent)] text-black' : 'text-gray-400'}`}
               >
                 {type === 'all' ? 'Tous' : type}
               </Button>
@@ -135,7 +135,7 @@ const ModuleCatalogPage = () => {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-24">
             {filteredModules.map((module) => (
-              <div key={module.id} className="bg-[#192734] border border-white/5 rounded-xl overflow-hidden hover:border-[#D4AF37]/30 transition-all group flex flex-col">
+              <div key={module.id} className="bg-[#192734] border border-white/5 rounded-xl overflow-hidden hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all group flex flex-col">
                 <div className="p-6 flex-1">
                   <div className="flex justify-between items-start mb-4">
                     <Badge variant="outline" className={`${getTypeColor(module.type)} uppercase text-xs font-bold px-2 py-0.5 border`}>
@@ -144,7 +144,7 @@ const ModuleCatalogPage = () => {
                     <span className="text-xs font-mono text-gray-500">{module.code}</span>
                   </div>
                   
-                  <h3 className="text-xl font-bold mb-2 group-hover:text-[#D4AF37] transition-colors line-clamp-2">
+                  <h3 className="text-xl font-bold mb-2 group-hover:text-[var(--school-accent)] transition-colors line-clamp-2">
                     {module.title}
                   </h3>
                   <p className="text-gray-400 text-sm mb-6 line-clamp-3">
@@ -152,8 +152,8 @@ const ModuleCatalogPage = () => {
                   </p>
 
                   <div className="flex gap-4 text-sm text-gray-400 mb-6">
-                    <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-[#D4AF37]" /> {module.duration_weeks} sem.</span>
-                    <span className="flex items-center gap-1"><BookOpen className="w-3 h-3 text-[#D4AF37]" /> {module.duration_hours}h</span>
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-[var(--school-accent)]" /> {module.duration_weeks} sem.</span>
+                    <span className="flex items-center gap-1"><BookOpen className="w-3 h-3 text-[var(--school-accent)]" /> {module.duration_hours}h</span>
                   </div>
 
                   <div className="flex flex-wrap gap-2 mb-4">
@@ -182,7 +182,7 @@ const ModuleCatalogPage = () => {
                     </Link>
                     {module.price > 0 ? (
                       <Button 
-                        className="w-full bg-[#D4AF37] text-black hover:bg-[#b5952f]"
+                        className="w-full bg-[var(--school-accent)] text-black hover:bg-[#b5952f]"
                         onClick={() => handleAddToCart(module)}
                       >
                         Ajouter
@@ -202,16 +202,16 @@ const ModuleCatalogPage = () => {
         {/* CTA Section - 3ème Année */}
         <div className="mt-12 relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-900 via-[#1a237e] to-purple-900 border border-white/10 shadow-2xl">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#D4AF37]/10 rounded-full blur-3xl -ml-16 -mb-16 pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-full blur-3xl -ml-16 -mb-16 pointer-events-none"></div>
           
           <div className="relative z-10 p-10 md:p-14 flex flex-col items-center text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-blue-100 mb-6 backdrop-blur-sm">
-              <Star className="w-4 h-4 text-[#D4AF37]" />
+              <Star className="w-4 h-4 text-[var(--school-accent)]" />
               <span className="text-sm font-bold tracking-widest uppercase">Vers la Maîtrise Ultime</span>
             </div>
             
             <h2 className="text-3xl md:text-5xl font-serif font-bold text-white mb-6">
-              Prochaine Étape : <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#F2D06B]">3ème Année</span>
+              Prochaine Étape : <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] to-[#F2D06B]">3ème Année</span>
             </h2>
             
             <p className="text-xl text-blue-100 max-w-3xl mb-10 leading-relaxed">
@@ -227,14 +227,14 @@ const ModuleCatalogPage = () => {
                 { text: "Contribuer à l'égrégore mondial", icon: Globe }
               ].map((item, i) => (
                 <div key={i} className="flex flex-col items-center p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-all">
-                  <item.icon className="w-8 h-8 text-[#D4AF37] mb-3" />
+                  <item.icon className="w-8 h-8 text-[var(--school-accent)] mb-3" />
                   <span className="font-medium text-blue-50">{item.text}</span>
                 </div>
               ))}
             </div>
 
             <Link to="/year3-modules">
-              <Button className="bg-[#D4AF37] text-black hover:bg-white hover:text-black font-bold text-lg px-10 py-6 rounded-full shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all transform hover:-translate-y-1">
+              <Button className="bg-[var(--school-accent)] text-black hover:bg-white hover:text-black font-bold text-lg px-10 py-6 rounded-full shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all transform hover:-translate-y-1">
                 Accéder à la 3ème Année <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>

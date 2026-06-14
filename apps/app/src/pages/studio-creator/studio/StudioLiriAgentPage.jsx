@@ -14,7 +14,7 @@ export default function StudioLiriAgentPage() {
       <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-white/10 bg-[#0a0c10]/95 px-4 py-3 backdrop-blur-md">
         <Link
           to="/studio"
-          className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-white/80 transition-colors hover:border-[#D4AF37]/40 hover:text-[#D4AF37]"
+          className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-white/80 transition-colors hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] hover:text-[var(--school-accent)]"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Retour au studio

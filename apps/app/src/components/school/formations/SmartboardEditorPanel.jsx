@@ -27,7 +27,7 @@ function TabBtn({ tab, active, onClick }) {
       type="button"
       onClick={onClick}
       className={`flex flex-col items-center gap-0.5 px-2 py-2 rounded-lg text-[10px] font-semibold transition-colors flex-shrink-0 min-w-[52px] ${
-        active ? 'bg-[#D4AF37]/20 text-[#D4AF37]' : 'text-gray-400 hover:text-white hover:bg-white/5'
+        active ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]' : 'text-gray-400 hover:text-white hover:bg-white/5'
       }`}
     >
       <span className="text-sm leading-none">{tab.icon}</span>
@@ -81,7 +81,7 @@ export default function SmartboardEditorPanel({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/20 backdrop-blur-xl">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+          <Sparkles className="w-3.5 h-3.5 text-[var(--school-accent)]" />
           <span className="text-xs font-bold text-white">Éditeur SmartBoard</span>
         </div>
         <div className="flex items-center gap-2">
@@ -119,7 +119,7 @@ export default function SmartboardEditorPanel({
                   key={tpl.id}
                   type="button"
                   onClick={() => onApplyTemplate?.(tpl)}
-                  className="group relative rounded-xl overflow-hidden border border-white/10 hover:border-[#D4AF37]/60 transition-all text-left"
+                  className="group relative rounded-xl overflow-hidden border border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] transition-all text-left"
                 >
                   <div
                     className="h-16 w-full flex items-center justify-center"
@@ -132,7 +132,7 @@ export default function SmartboardEditorPanel({
                     <p className="text-[9px] text-gray-500 leading-tight truncate">{tpl.description}</p>
                   </div>
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
-                    <span className="text-[10px] font-bold text-white bg-[#D4AF37] rounded-full px-2 py-0.5">Appliquer</span>
+                    <span className="text-[10px] font-bold text-white bg-[var(--school-accent)] rounded-full px-2 py-0.5">Appliquer</span>
                   </div>
                 </button>
               );
@@ -170,12 +170,12 @@ export default function SmartboardEditorPanel({
                         key={bg_.id}
                         type="button"
                         onClick={() => onBgChange?.(bg_.css)}
-                        className={`relative h-12 rounded-lg border-2 transition-all hover:scale-105 ${bg === bg_.css ? 'border-[#D4AF37]' : 'border-white/10 hover:border-white/30'}`}
+                        className={`relative h-12 rounded-lg border-2 transition-all hover:scale-105 ${bg === bg_.css ? 'border-[var(--school-accent)]' : 'border-white/10 hover:border-white/30'}`}
                         style={{ background: bg_.css }}
                         title={bg_.label}
                       >
                         {bg === bg_.css && (
-                          <span className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-[#D4AF37] flex items-center justify-center">
+                          <span className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-[var(--school-accent)] flex items-center justify-center">
                             <Check className="w-2 h-2 text-black" />
                           </span>
                         )}
@@ -199,11 +199,11 @@ export default function SmartboardEditorPanel({
                   key={preset.id}
                   type="button"
                   onClick={() => {/* future: apply typo to selected text block */}}
-                  className="w-full text-left rounded-xl border border-white/8 bg-[#0d1525] p-3 hover:border-[#D4AF37]/40 transition-colors group"
+                  className="w-full text-left rounded-xl border border-white/8 bg-[#0d1525] p-3 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors group"
                 >
                   <div className="flex items-baseline justify-between mb-1">
                     <span style={preset.previewStyle} className="text-white">{preset.preview}</span>
-                    <span className="text-[9px] text-gray-500 group-hover:text-[#D4AF37] transition-colors">{preset.label}</span>
+                    <span className="text-[9px] text-gray-500 group-hover:text-[var(--school-accent)] transition-colors">{preset.label}</span>
                   </div>
                   <p className="text-[9px] text-gray-600">{preset.description}</p>
                 </button>
@@ -240,7 +240,7 @@ export default function SmartboardEditorPanel({
                             key={i}
                             type="button"
                             onClick={() => onAddIcon?.(icon)}
-                            className="w-7 h-7 flex items-center justify-center rounded-md text-sm hover:bg-[#D4AF37]/20 transition-colors"
+                            className="w-7 h-7 flex items-center justify-center rounded-md text-sm hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors"
                             title={`Ajouter ${icon}`}
                           >
                             {icon}
@@ -336,7 +336,7 @@ export default function SmartboardEditorPanel({
                               }}
                               className={`w-full text-left flex items-center justify-between rounded-lg px-3 py-2 text-xs transition-colors border ${
                                 bulletStyle === dec.element
-                                  ? 'border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#D4AF37]'
+                                  ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
                                   : 'border-white/5 bg-white/2 text-gray-300 hover:border-white/20 hover:bg-white/5'
                               }`}
                             >
@@ -368,7 +368,7 @@ export default function SmartboardEditorPanel({
                 <label htmlFor="sb-edge-feather" className="text-[10px] font-semibold text-gray-300">
                   Intensité du fondu des bords
                 </label>
-                <span className="text-[10px] tabular-nums text-[#D4AF37] font-mono">{edgeFeatherPercent}%</span>
+                <span className="text-[10px] tabular-nums text-[var(--school-accent)] font-mono">{edgeFeatherPercent}%</span>
               </div>
               <input
                 id="sb-edge-feather"
@@ -378,7 +378,7 @@ export default function SmartboardEditorPanel({
                 step={1}
                 value={edgeFeatherPercent}
                 onChange={(e) => onEdgeFeatherChange?.(Number(e.target.value))}
-                className="w-full h-1.5 accent-[#D4AF37] cursor-pointer"
+                className="w-full h-1.5 accent-[var(--school-accent)] cursor-pointer"
               />
               <div className="flex justify-between text-[9px] text-gray-600">
                 <span>0 — bords nets</span>
@@ -387,7 +387,7 @@ export default function SmartboardEditorPanel({
               <button
                 type="button"
                 onClick={() => onEdgeFeatherChange?.(DEFAULT_SMARTBOARD_EDGE_FEATHER)}
-                className="w-full mt-1 text-[10px] py-1.5 rounded-lg border border-white/10 text-gray-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/35 transition-colors"
+                className="w-full mt-1 text-[10px] py-1.5 rounded-lg border border-white/10 text-gray-400 hover:text-[var(--school-accent)] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] transition-colors"
               >
                 Réinitialiser au réglage LIRI par défaut ({DEFAULT_SMARTBOARD_EDGE_FEATHER}%)
               </button>
@@ -407,7 +407,7 @@ export default function SmartboardEditorPanel({
                   onClick={() => onLayoutChange?.(lp.id.replace('layout_', ''))}
                   className={`w-full text-left flex items-center gap-3 rounded-xl border px-4 py-3 transition-colors ${
                     layout === lp.id.replace('layout_', '')
-                      ? 'border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#D4AF37]'
+                      ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
                       : 'border-white/8 bg-[#0d1525] text-gray-300 hover:border-white/25'
                   }`}
                 >
@@ -429,7 +429,7 @@ export default function SmartboardEditorPanel({
                 <input
                   value={title}
                   onChange={(e) => onTitleChange?.(e.target.value)}
-                  className="w-full bg-[#0d1525] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#D4AF37]/50 transition-colors"
+                  className="w-full bg-[#0d1525] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] transition-colors"
                   placeholder="Titre du chapitre"
                 />
               </div>
@@ -445,7 +445,7 @@ export default function SmartboardEditorPanel({
                         next[i] = e.target.value;
                         onPointsChange?.(next);
                       }}
-                      className="flex-1 bg-[#0d1525] border border-white/8 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-[#D4AF37]/40 transition-colors"
+                      className="flex-1 bg-[#0d1525] border border-white/8 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
                       placeholder={`Point ${i + 1}`}
                     />
                     <button
@@ -460,7 +460,7 @@ export default function SmartboardEditorPanel({
                 <button
                   type="button"
                   onClick={() => onPointsChange?.([...(points || []), ''])}
-                  className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-[#D4AF37] transition-colors mt-1"
+                  className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-[var(--school-accent)] transition-colors mt-1"
                 >
                   <Plus className="w-3 h-3" /> Ajouter un point
                 </button>

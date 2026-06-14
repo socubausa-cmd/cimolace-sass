@@ -99,7 +99,7 @@ function StepDots({ step }) {
             className={cn(
               'flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full border px-2 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em]',
               active
-                ? 'border-[#D4AF37]/55 bg-[#D4AF37]/15 text-[#D4AF37]'
+                ? 'border-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)]'
                 : done
                   ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-300'
                   : 'border-white/10 bg-white/[0.035] text-white/35',
@@ -309,7 +309,7 @@ export default function EleveAppointmentRequestScreen() {
           </p>
           <Link
             to={`${ELEVE_MOBILE.login}?${new URLSearchParams({ redirect: ELEVE_MOBILE.appointmentRequest }).toString()}`}
-            className="mt-6 rounded-full bg-[#D4AF37] px-6 py-3 text-[14px] font-extrabold text-black"
+            className="mt-6 rounded-full bg-[var(--school-accent)] px-6 py-3 text-[14px] font-extrabold text-black"
           >
             Se connecter
           </Link>
@@ -353,8 +353,8 @@ export default function EleveAppointmentRequestScreen() {
               <motion.div key="subject" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }}>
                 <AppCard>
                   <div className="flex items-start gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10">
-                      <MessageCircle className="h-5 w-5 text-[#D4AF37]" />
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
+                      <MessageCircle className="h-5 w-5 text-[var(--school-accent)]" />
                     </div>
                     <div>
                       <p className="text-[17px] font-extrabold text-white">Quel est le sujet ?</p>
@@ -374,7 +374,7 @@ export default function EleveAppointmentRequestScreen() {
                         className={cn(
                           'rounded-2xl border p-3 text-left transition',
                           topic === t.id
-                            ? 'border-[#D4AF37]/55 bg-[#D4AF37]/12'
+                            ? 'border-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]'
                             : 'border-white/10 bg-white/[0.035]',
                         )}
                       >
@@ -389,7 +389,7 @@ export default function EleveAppointmentRequestScreen() {
                     <input
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
-                      className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-black/25 px-4 text-[14px] text-white outline-none focus:border-[#D4AF37]/45"
+                      className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-black/25 px-4 text-[14px] text-white outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]"
                       placeholder="Ex. choisir un module, parler au secrétariat..."
                     />
                   </label>
@@ -399,7 +399,7 @@ export default function EleveAppointmentRequestScreen() {
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       rows={4}
-                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-[14px] text-white outline-none focus:border-[#D4AF37]/45"
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-[14px] text-white outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]"
                       placeholder="Contexte, questions, urgence..."
                     />
                   </label>
@@ -425,7 +425,7 @@ export default function EleveAppointmentRequestScreen() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       inputMode="email"
-                      className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-black/25 px-4 text-[14px] text-white outline-none focus:border-[#D4AF37]/45"
+                      className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-black/25 px-4 text-[14px] text-white outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]"
                       placeholder="nom@email.com"
                     />
                   </label>
@@ -435,7 +435,7 @@ export default function EleveAppointmentRequestScreen() {
                       value={whatsapp}
                       onChange={(e) => setWhatsapp(e.target.value)}
                       inputMode="tel"
-                      className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-black/25 px-4 text-[14px] text-white outline-none focus:border-[#D4AF37]/45"
+                      className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-black/25 px-4 text-[14px] text-white outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]"
                       placeholder="+241..."
                     />
                   </label>
@@ -444,7 +444,7 @@ export default function EleveAppointmentRequestScreen() {
                     onClick={() => setConsent((v) => !v)}
                     className="mt-4 flex w-full items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3 text-left"
                   >
-                    <span className={cn('mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border', consent ? 'border-[#D4AF37] bg-[#D4AF37] text-black' : 'border-white/20')}>
+                    <span className={cn('mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border', consent ? 'border-[var(--school-accent)] bg-[var(--school-accent)] text-black' : 'border-white/20')}>
                       {consent ? <Check className="h-3.5 w-3.5" /> : null}
                     </span>
                     <span className="text-[12px] leading-relaxed text-white/55">
@@ -486,7 +486,7 @@ export default function EleveAppointmentRequestScreen() {
                           onClick={() => setSelectedDate(key)}
                           className={cn(
                             'w-[72px] shrink-0 rounded-2xl border px-2 py-2 text-center',
-                            active ? 'border-[#D4AF37]/65 bg-[#D4AF37] text-black' : 'border-white/10 bg-white/[0.035] text-white/55',
+                            active ? 'border-[color-mix(in_srgb,var(--school-accent)_65%,transparent)] bg-[var(--school-accent)] text-black' : 'border-white/10 bg-white/[0.035] text-white/55',
                           )}
                         >
                           <p className="text-[10px] font-bold uppercase">{d.toLocaleDateString('fr-FR', { weekday: 'short' })}</p>
@@ -498,7 +498,7 @@ export default function EleveAppointmentRequestScreen() {
 
                   <div className="mt-4 flex items-center justify-between">
                     <p className="text-[12px] font-semibold text-white/55">Créneaux disponibles</p>
-                    <button type="button" onClick={() => loadSlots()} className="text-[12px] font-semibold text-[#D4AF37]">
+                    <button type="button" onClick={() => loadSlots()} className="text-[12px] font-semibold text-[var(--school-accent)]">
                       Actualiser
                     </button>
                   </div>
@@ -524,7 +524,7 @@ export default function EleveAppointmentRequestScreen() {
                             onClick={() => setSelectedSlot(s)}
                             className={cn(
                               'rounded-2xl border px-2 py-3 text-center text-[12px] font-bold',
-                              active ? 'border-[#D4AF37]/70 bg-[#D4AF37] text-black' : 'border-white/10 bg-white/[0.035] text-white/70',
+                              active ? 'border-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] bg-[var(--school-accent)] text-black' : 'border-white/10 bg-white/[0.035] text-white/70',
                             )}
                           >
                             {formatSlot(s.slotUtc)}
@@ -541,8 +541,8 @@ export default function EleveAppointmentRequestScreen() {
               <motion.div key="summary" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }}>
                 <AppCard>
                   <div className="flex items-start gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10">
-                      <ShieldCheck className="h-5 w-5 text-[#D4AF37]" />
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
+                      <ShieldCheck className="h-5 w-5 text-[var(--school-accent)]" />
                     </div>
                     <div>
                       <p className="text-[17px] font-extrabold text-white">Confirmer</p>
@@ -576,7 +576,7 @@ export default function EleveAppointmentRequestScreen() {
             onClick={step === 4 ? submit : continueNext}
             className={cn(
               'flex h-12 w-full items-center justify-center rounded-2xl text-[14px] font-extrabold transition active:scale-[0.99]',
-              canContinue || step === 4 ? 'bg-[#D4AF37] text-black' : 'bg-white/[0.06] text-white/30',
+              canContinue || step === 4 ? 'bg-[var(--school-accent)] text-black' : 'bg-white/[0.06] text-white/30',
             )}
           >
             {booking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}

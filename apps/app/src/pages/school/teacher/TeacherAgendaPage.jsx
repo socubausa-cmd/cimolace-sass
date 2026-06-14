@@ -92,7 +92,7 @@ const TeacherAgendaPage = () => {
                 </SelectTrigger>
                 <SelectContent className="bg-[#151a21] border-white/10 rounded-xl z-[1100]">
                   {teachers.map((t) => (
-                    <SelectItem key={t.id} value={t.id} className="focus:bg-[#D4AF37]/10 focus:text-[#D4AF37] rounded-lg">
+                    <SelectItem key={t.id} value={t.id} className="focus:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] focus:text-[var(--school-accent)] rounded-lg">
                       {t.name || t.email || t.id}
                     </SelectItem>
                   ))}
@@ -110,7 +110,7 @@ const TeacherAgendaPage = () => {
             Aujourd&apos;hui
           </Button>
           <Button
-            className="bg-[#D4AF37] text-black hover:bg-[#e5c04a] hover:shadow-lg hover:shadow-[#D4AF37]/25 rounded-xl transition-all duration-200 active:scale-[0.98]"
+            className="bg-[var(--school-accent)] text-black hover:bg-[#e5c04a] hover:shadow-lg hover:shadow-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] rounded-xl transition-all duration-200 active:scale-[0.98]"
             onClick={() => navigate('/studio')}
           >
             <Plus className="w-4 h-4 mr-2" /> Studio
@@ -131,8 +131,8 @@ const TeacherAgendaPage = () => {
       )}
 
       {todayEvents.length > 0 && (
-        <div className="rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-5 shadow-lg shadow-[#D4AF37]/5">
-          <h3 className="font-bold text-[#D4AF37] mb-3 flex items-center gap-2">
+        <div className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] p-5 shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]">
+          <h3 className="font-bold text-[var(--school-accent)] mb-3 flex items-center gap-2">
             <Clock className="w-4 h-4" /> {todayEvents.length} événement(s) aujourd&apos;hui
           </h3>
           <div className="flex flex-wrap gap-2">
@@ -141,11 +141,11 @@ const TeacherAgendaPage = () => {
                 key={e.key || e.id}
                 type="button"
                 onClick={() => openEventDetail(e)}
-                className="flex items-center gap-2 bg-[#0F1419]/50 rounded-lg px-3 py-2 text-left hover:bg-[#0F1419] hover:ring-1 hover:ring-[#D4AF37]/40 transition-colors w-full"
+                className="flex items-center gap-2 bg-[#0F1419]/50 rounded-lg px-3 py-2 text-left hover:bg-[#0F1419] hover:ring-1 hover:ring-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors w-full"
               >
                 <span className="text-xs text-gray-400">{safeFormat(e.scheduled_at, 'HH:mm')}</span>
                 <span className="text-sm text-white flex-1 truncate">{e.title}</span>
-                <Video className="w-3 h-3 text-[#D4AF37] shrink-0" />
+                <Video className="w-3 h-3 text-[var(--school-accent)] shrink-0" />
               </button>
             ))}
           </div>
@@ -170,12 +170,12 @@ const TeacherAgendaPage = () => {
               key={day}
               className={cn(
                 'min-h-[120px] p-2 rounded-lg border',
-                isSameDay(day, new Date()) ? 'border-[#D4AF37] bg-[#D4AF37]/5' : 'border-white/5 bg-black/20'
+                isSameDay(day, new Date()) ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]' : 'border-white/5 bg-black/20'
               )}
             >
               <div className="text-center mb-2">
                 <div className="text-xs text-gray-400 uppercase">{safeFormat(day, 'EEE')}</div>
-                <div className={cn('text-lg font-bold', isSameDay(day, new Date()) ? 'text-[#D4AF37]' : 'text-white')}>
+                <div className={cn('text-lg font-bold', isSameDay(day, new Date()) ? 'text-[var(--school-accent)]' : 'text-white')}>
                   {safeFormat(day, 'd')}
                 </div>
               </div>
@@ -188,8 +188,8 @@ const TeacherAgendaPage = () => {
                       type="button"
                       onClick={() => openEventDetail(e)}
                       className={cn(
-                        'text-xs p-1 rounded truncate w-full text-left hover:ring-1 hover:ring-[#D4AF37]/50',
-                        e.source === 'live_sessions' ? 'bg-purple-500/20 text-purple-300' : 'bg-[#D4AF37]/20 text-[#D4AF37]'
+                        'text-xs p-1 rounded truncate w-full text-left hover:ring-1 hover:ring-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]',
+                        e.source === 'live_sessions' ? 'bg-purple-500/20 text-purple-300' : 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]'
                       )}
                     >
                       {e.title}
@@ -210,10 +210,10 @@ const TeacherAgendaPage = () => {
             tabIndex={0}
             onClick={() => openEventDetail(e)}
             onKeyDown={(ev) => ev.key === 'Enter' && openEventDetail(e)}
-            className="flex flex-col md:flex-row items-start md:items-center p-5 bg-[#151a21]/80 backdrop-blur-sm rounded-2xl border border-white/10 hover:border-[#D4AF37]/30 hover:shadow-lg hover:shadow-[#D4AF37]/5 transition-all duration-200 cursor-pointer"
+            className="flex flex-col md:flex-row items-start md:items-center p-5 bg-[#151a21]/80 backdrop-blur-sm rounded-2xl border border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:shadow-lg hover:shadow-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] transition-all duration-200 cursor-pointer"
           >
             <div className="flex flex-col items-center justify-center bg-black/20 rounded p-3 min-w-[80px] mr-4">
-              <span className="text-sm font-bold text-[#D4AF37] uppercase">{safeFormat(e.scheduled_at, 'MMM')}</span>
+              <span className="text-sm font-bold text-[var(--school-accent)] uppercase">{safeFormat(e.scheduled_at, 'MMM')}</span>
               <span className="text-2xl font-bold text-white">{safeFormat(e.scheduled_at, 'dd')}</span>
             </div>
             <div className="flex-grow">
@@ -221,7 +221,7 @@ const TeacherAgendaPage = () => {
                 <span
                   className={cn(
                     'text-xs px-2 py-0.5 rounded',
-                    e.source === 'live_sessions' ? 'bg-purple-500/20 text-purple-400' : 'bg-[#D4AF37]/20 text-[#D4AF37]'
+                    e.source === 'live_sessions' ? 'bg-purple-500/20 text-purple-400' : 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]'
                   )}
                 >
                   {e.source === 'live_sessions' ? 'Live' : 'RDV'}
@@ -234,7 +234,7 @@ const TeacherAgendaPage = () => {
                   <Clock className="w-4 h-4" /> {safeFormat(e.scheduled_at, 'HH:mm')}
                 </span>
                 {e.student && (
-                  <span className="flex items-center gap-1 text-[#D4AF37]">
+                  <span className="flex items-center gap-1 text-[var(--school-accent)]">
                     <User className="w-4 h-4" /> {e.student.name}
                   </span>
                 )}
@@ -242,13 +242,13 @@ const TeacherAgendaPage = () => {
             </div>
             <div className="mt-4 md:mt-0 flex flex-col gap-2" onClick={(ev) => ev.stopPropagation()}>
               {e.source === 'live_sessions' ? (
-                <Button className="bg-[#D4AF37] text-black hover:bg-amber-500" asChild>
+                <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500" asChild>
                   <Link to={`/live/${e.id}`}>
                     <Video className="w-4 h-4 mr-2" /> {e.status === 'live' ? 'Rejoindre' : 'Ouvrir'}
                   </Link>
                 </Button>
               ) : null}
-              <Button variant="outline" size="sm" className="border-[#D4AF37]/40 text-[#D4AF37]" onClick={() => openEventDetail(e)}>
+              <Button variant="outline" size="sm" className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)]" onClick={() => openEventDetail(e)}>
                 Détails & studio
               </Button>
             </div>

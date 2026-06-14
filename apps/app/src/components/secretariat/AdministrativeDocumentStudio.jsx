@@ -97,7 +97,7 @@ function ToolBtn({ active, onClick, title, children }) {
       className={cn(
         'flex h-8 w-8 items-center justify-center rounded-md text-[11px] transition-colors',
         active
-          ? 'bg-[#D4AF37]/20 text-[#f5dd8a]'
+          ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[#f5dd8a]'
           : 'text-white/45 hover:bg-white/[0.07] hover:text-white/80',
       )}
     >
@@ -213,7 +213,7 @@ export default function AdministrativeDocumentStudio() {
     editorProps: {
       attributes: {
         class:
-          'outline-none min-h-[240px] text-inherit leading-inherit text-gray-900 [&_h2]:text-[1.12em] [&_h2]:font-bold [&_h2]:text-gray-900 [&_h2]:mb-2 [&_h3]:text-[1.05em] [&_h3]:font-semibold [&_h3]:text-gray-800 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_p]:mb-2 [&_hr]:my-4 [&_hr]:border-gray-300 [&_table]:w-full [&_table]:border-collapse [&_table]:my-3 [&_td]:border [&_th]:border [&_td]:border-gray-300 [&_th]:border-gray-300 [&_td]:align-top [&_th]:align-top [&_td]:px-2 [&_th]:px-2 [&_td]:py-1.5 [&_th]:py-1.5 [&_th]:bg-gray-100 [&_th]:font-semibold [&_.tableWrapper]:max-w-full [&_.tableWrapper]:overflow-x-auto [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-sm [&_img]:my-2 [&_p.longia-text-animated]:border-l-4 [&_p.longia-text-animated]:border-[#D4AF37]/45 [&_p.longia-text-animated]:bg-gradient-to-r [&_p.longia-text-animated]:from-[#D4AF37]/[0.07] [&_p.longia-text-animated]:to-transparent [&_p.longia-text-animated]:pl-3 [&_p.longia-text-animated]:py-1 [&_p.longia-text-animated]:animate-pulse',
+          'outline-none min-h-[240px] text-inherit leading-inherit text-gray-900 [&_h2]:text-[1.12em] [&_h2]:font-bold [&_h2]:text-gray-900 [&_h2]:mb-2 [&_h3]:text-[1.05em] [&_h3]:font-semibold [&_h3]:text-gray-800 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_p]:mb-2 [&_hr]:my-4 [&_hr]:border-gray-300 [&_table]:w-full [&_table]:border-collapse [&_table]:my-3 [&_td]:border [&_th]:border [&_td]:border-gray-300 [&_th]:border-gray-300 [&_td]:align-top [&_th]:align-top [&_td]:px-2 [&_th]:px-2 [&_td]:py-1.5 [&_th]:py-1.5 [&_th]:bg-gray-100 [&_th]:font-semibold [&_.tableWrapper]:max-w-full [&_.tableWrapper]:overflow-x-auto [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-sm [&_img]:my-2 [&_p.longia-text-animated]:border-l-4 [&_p.longia-text-animated]:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] [&_p.longia-text-animated]:bg-gradient-to-r [&_p.longia-text-animated]:from-[var(--school-accent)]/[0.07] [&_p.longia-text-animated]:to-transparent [&_p.longia-text-animated]:pl-3 [&_p.longia-text-animated]:py-1 [&_p.longia-text-animated]:animate-pulse',
       },
     },
     onUpdate({ editor: ed }) {
@@ -623,7 +623,7 @@ export default function AdministrativeDocumentStudio() {
             type="button"
             disabled={cloudBusy || !user?.id}
             onClick={handleSaveCloud}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[#D4AF37]/40 px-3 py-2 text-xs text-[#f5dd8a] hover:bg-[#D4AF37]/10 disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] px-3 py-2 text-xs text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] disabled:opacity-40"
             title={!user?.id ? 'Connexion requise' : 'Enregistrer sur le serveur'}
           >
             <Upload className="h-3.5 w-3.5" /> {cloudBusy ? '…' : 'Enregistrer nuage'}
@@ -632,7 +632,7 @@ export default function AdministrativeDocumentStudio() {
             type="button"
             disabled={exporting}
             onClick={handleExportPdf}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#D4AF37] px-3 py-2 text-xs font-semibold text-black hover:bg-[#c9a532] disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--school-accent)] px-3 py-2 text-xs font-semibold text-black hover:bg-[#c9a532] disabled:opacity-50"
           >
             <FileDown className="h-3.5 w-3.5" /> {exporting ? 'PDF…' : 'Exporter PDF'}
           </button>
@@ -713,7 +713,7 @@ export default function AdministrativeDocumentStudio() {
           />
           <LongiaAdminDocumentPanel editor={editor} documentTitle={title} />
           <div className="space-y-3 rounded-xl border border-white/10 bg-black/25 p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]/80">Pages</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">Pages</p>
           <div className="flex flex-wrap gap-1">
             {pages.map((p, idx) => (
               <button
@@ -723,7 +723,7 @@ export default function AdministrativeDocumentStudio() {
                 className={cn(
                   'min-w-[2.25rem] rounded-md px-2 py-1 text-xs font-medium',
                   idx === activePageIndex
-                    ? 'bg-[#D4AF37]/25 text-[#f5dd8a] border border-[#D4AF37]/40'
+                    ? 'bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] text-[#f5dd8a] border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]'
                     : 'bg-[#0d1525] text-gray-400 border border-white/10 hover:border-white/20',
                 )}
               >
@@ -757,7 +757,7 @@ export default function AdministrativeDocumentStudio() {
             <button
               type="button"
               onClick={splitTrailingToNewPage}
-              className="inline-flex w-full items-center justify-center gap-1 rounded-md border border-[#D4AF37]/30 bg-[#D4AF37]/5 px-2 py-1.5 text-[11px] text-[#f5dd8a] hover:bg-[#D4AF37]/15"
+              className="inline-flex w-full items-center justify-center gap-1 rounded-md border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] px-2 py-1.5 text-[11px] text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]"
               title="Découpe après le bloc actif : tout ce qui suit va sur une nouvelle page"
             >
               <Split className="h-3.5 w-3.5" />
@@ -769,7 +769,7 @@ export default function AdministrativeDocumentStudio() {
           </div>
 
           <div className="border-t border-white/10 pt-3 space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]/80">Style du corps</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">Style du corps</p>
             <p className="text-[9px] text-gray-600">S'applique à l\'aperçu page et à l\'export PDF.</p>
             <label className="block text-[9px] uppercase text-gray-500">Police</label>
             <select
@@ -793,7 +793,7 @@ export default function AdministrativeDocumentStudio() {
                 max={28}
                 value={documentStyle.fontSize}
                 onChange={(e) => setDocumentStyle((s) => ({ ...s, fontSize: Number(e.target.value) }))}
-                className="w-full accent-[#D4AF37]"
+                className="w-full accent-[var(--school-accent)]"
               />
             </div>
             <div className="flex flex-col gap-1">
@@ -810,7 +810,7 @@ export default function AdministrativeDocumentStudio() {
                 onChange={(e) =>
                   setDocumentStyle((s) => ({ ...s, lineHeight: Number(e.target.value) / 100 }))
                 }
-                className="w-full accent-[#D4AF37]"
+                className="w-full accent-[var(--school-accent)]"
               />
             </div>
           </div>
@@ -932,8 +932,8 @@ export default function AdministrativeDocumentStudio() {
           </div>
 
           {inTable ? (
-            <div className="flex flex-wrap items-center gap-1 rounded-lg border border-[#D4AF37]/35 bg-[#D4AF37]/5 px-2 py-1.5">
-              <span className="w-full shrink-0 text-[9px] font-bold uppercase tracking-wider text-[#D4AF37]/90">
+            <div className="flex flex-wrap items-center gap-1 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] px-2 py-1.5">
+              <span className="w-full shrink-0 text-[9px] font-bold uppercase tracking-wider text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">
                 Tableau (curseur dans une cellule)
               </span>
               <QuickBtn

@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 
 const AnnouncementCard = ({ announcement, onToggleRead }) => (
-  <Card className={cn("mb-4 transition-all hover:shadow-md border-white/10 bg-[#192734]", announcement.isRead ? "opacity-75" : "border-l-4 border-l-[#D4AF37]")}>
+  <Card className={cn("mb-4 transition-all hover:shadow-md border-white/10 bg-[#192734]", announcement.isRead ? "opacity-75" : "border-l-4 border-l-[var(--school-accent)]")}>
     <CardContent className="p-4">
       <div className="flex justify-between items-start gap-4">
         <div className="flex-1">
@@ -37,7 +37,7 @@ const AnnouncementCard = ({ announcement, onToggleRead }) => (
           size="icon" 
           onClick={() => onToggleRead(announcement.id)}
           title={announcement.isRead ? "Marquer comme non-lu" : "Marquer comme lu"}
-          className="text-gray-400 hover:text-[#D4AF37]"
+          className="text-gray-400 hover:text-[var(--school-accent)]"
         >
           {announcement.isRead ? <CheckCheck className="w-5 h-5 text-green-500" /> : <Eye className="w-5 h-5" />}
         </Button>
@@ -66,7 +66,7 @@ const AnnouncementsSection = ({ data, onUpdate }) => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-             <Bell className="w-6 h-6 text-[#D4AF37]" />
+             <Bell className="w-6 h-6 text-[var(--school-accent)]" />
              Annonces
            </h2>
            <p className="text-gray-400">Restez informé des dernières nouvelles.</p>
