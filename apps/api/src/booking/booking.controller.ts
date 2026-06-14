@@ -48,6 +48,18 @@ export class BookingController {
     return this.booking.listSlots(tenant.id, from, to);
   }
 
+  // Créneaux intelligents (slotGrid + recommandations) — AVANT slots/:id.
+  @Get('slots/availability')
+  slotAvailability(
+    @CurrentTenant() tenant: TenantContext,
+    @Query('windowStart') windowStart: string,
+    @Query('windowEnd') windowEnd: string,
+    @Query('timezone') timezone?: string,
+    @Query('country') country?: string,
+  ) {
+    return this.booking.slotAvailability(tenant, { timezone, country, windowStart, windowEnd });
+  }
+
   @Get('slots/:id')
   getSlot(@Param('id') id: string, @CurrentTenant() tenant: TenantContext) {
     return this.booking.getSlot(id, tenant.id);

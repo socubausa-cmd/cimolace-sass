@@ -147,6 +147,8 @@ const bookingUnwrap = (r: any) => (r?.data && typeof r.data === "object" && "dat
 export const bookingApi = {
   availableSecretaries: (params?: { timezone?: string; country?: string; when?: string }) =>
     api.get<any>("/booking/available-secretaries", { params }).then(bookingUnwrap),
+  slotAvailability: (params: { timezone?: string; country?: string; windowStart: string; windowEnd: string }) =>
+    api.get<any>("/booking/slots/availability", { params }).then(bookingUnwrap),
   startLiveFromAppointment: (appointmentId: string) =>
     api.post<any>(`/booking/appointments/${appointmentId}/start-live`).then(bookingUnwrap),
   getPreparation: (appointmentId: string) =>

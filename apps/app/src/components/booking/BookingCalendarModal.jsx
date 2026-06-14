@@ -355,16 +355,14 @@ export function BookingCalendarModal({
         }
         const windowStart = new Date(`${selectedDate}T00:00:00`);
         const windowEnd = new Date(`${selectedDate}T23:30:00`);
-        const qs = new URLSearchParams({
+        // API NestJS v2 (availabilityEngine) — même forme que la fonction Netlify v1.
+        const { bookingApi } = await import('@/lib/api');
+        const payload = await bookingApi.slotAvailability({
           timezone: requesterTimezone,
-          country: requesterCountry || '',
-          channel: bookingChannel,
+          country: requesterCountry || undefined,
           windowStart: windowStart.toISOString(),
           windowEnd: windowEnd.toISOString(),
         });
-        const res = await fetch(`/.netlify/functions/booking-available-slots?${qs.toString()}`);
-        const payload = await res.json();
-        if (!res.ok) throw new Error(payload?.error || 'Impossible de charger les créneaux');
         const primary = Array.isArray(payload?.slots) ? payload.slots : [];
         const fallback = Array.isArray(payload?.fallbackSlots) ? payload.fallbackSlots : [];
         const merged = [...primary, ...fallback];
