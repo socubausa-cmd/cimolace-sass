@@ -95,7 +95,7 @@ Migré vers v2 : `available-secretaries` (moteur de matching), `cancel`, `resche
 
 | Appel Netlify v1 | Endpoint v2 actuel | Manque (à enrichir backend) |
 |---|---|---|
-| `booking-available-slots` | `GET /booking/slots` (lignes brutes) | calcul du **slotGrid**, **dispo par région**, `schoolOpen`, fallback inter-zones, format `slotUtc`/`secretariatId` |
+| ~~`booking-available-slots`~~ | **`GET /booking/slots/availability`** (`availabilityEngine` porté) | ✅ **FAIT** — slotGrid + dispo région + fallback + `schoolOpen`, front rebranché (parité de forme). QA navigateur à confirmer. |
 | `booking-request-appointment` | `POST /booking/appointments` (slotId → ligne) | **assignation secrétaire**, notifications email/WhatsApp, `bookingReference`, `queuePosition`, `secretariatName` |
 | `booking-my-appointments` | `GET /booking/appointments` | forme attendue par la modale (détails visiteur) |
 | `booking-appointment-ics` | `GET /booking/appointments/:id/ics` | OK côté API ; reste le **téléchargement blob** côté front |
