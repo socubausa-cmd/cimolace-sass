@@ -1447,7 +1447,9 @@ isLiriHostDevPreviewRoute;
           } />
           <Route path="/secretariat-space/*" element={
             <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']}>
-              <SecretariatPortalPage />
+              <ErrorBoundary logTag="SecretariatPortal" showDetailsInDev>
+                <SecretariatPortalPage />
+              </ErrorBoundary>
             </ProtectedRoleRoute>
           } />
           
@@ -1911,7 +1913,9 @@ isLiriHostDevPreviewRoute;
 
           <Route path="/owner-dashboard" element={
             <ProtectedOwnerRoute>
-              <OwnerDashboard />
+              <ErrorBoundary logTag="OwnerDashboard" showDetailsInDev>
+                <OwnerDashboard />
+              </ErrorBoundary>
             </ProtectedOwnerRoute>
           } />
 
