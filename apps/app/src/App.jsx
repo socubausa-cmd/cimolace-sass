@@ -5,8 +5,11 @@ import { getCachedHostTenant } from '@/lib/tenantResolver';
 
 /** Redirige "/" vers la bonne destination selon le contexte :
  *  1. access_token dans le hash (magic link / recovery) → /auth/callback
- *  2. prorascience.org apex → vitrine publique ISNA /t/isna
- *  3. tout autre host → /login
+ *  2. domaine custom d'un tenant → sa vitrine /t/:slug
+ *  3. cimolace.space (SaaS racine) → back-office plateforme /cimolace
+ *  4. prorascience.org apex → vitrine publique du tenant ISNA /t/isna
+ *  5. tout autre host → /login
+ *  Cimolace est la plateforme ; ISNA n'est qu'un tenant. Cf. CIMOLACE_ARCHITECTURE_SOURCE_OF_TRUTH.md.
  */
 function RootRedirect() {
   const hash = typeof window !== 'undefined' ? window.location.hash : '';
@@ -15,7 +18,9 @@ function RootRedirect() {
   // Domaine custom d'un tenant (résolu via tenant_domains, en cache) → sa vitrine. Multi-tenant.
   const hostTenant = getCachedHostTenant(host);
   if (hostTenant) return <Navigate to={`/t/${hostTenant}`} replace />;
-  // Fallback domaine fondateur (cf. docs/CIMOLACE_ARCHITECTURE.md §7 — à généraliser).
+  // Racine SaaS Cimolace → espace plateforme (et non un tenant). Modèle v2 unifié.
+  if (CIMOLACE_PUBLIC_HOSTS.has(host)) return <Navigate to="/cimolace" replace />;
+  // Domaine fondateur ISNA (un tenant parmi d'autres).
   if (host === 'prorascience.org' || host === 'www.prorascience.org') return <Navigate to={`/t/${DEFAULT_TENANT_SLUG}`} replace />;
   return <Navigate to="/login" replace />;
 }
