@@ -27,47 +27,55 @@ const nav = [
   { to: '/audit',         icon: Shield,          label: 'Audit & RGPD' },
 ];
 
-// Strategy C — MEDOS-first, tenant-co-branded (Figma-workspace model).
-// The sidebar keeps the engine identity (MEDOS name + stethoscope icon) so
-// a multi-tenant practitioner doesn't lose orientation when switching tenants.
-// The tenant logo + name live in the header band, and the accent color
-// flows from --brand-primary (tenant or MEDOS default).
+// Co-branding — tenant-first when a tenant brand is resolved, MEDOS-default
+// otherwise. Once a tenant brand loads (name ≠ engine default), the tenant
+// (logo + name) becomes the primary sidebar identity and the MEDOS engine name
+// is demoted to a discreet footer attribution — so an embedded practitioner
+// surface (e.g. inside zahirwellness.com) reads as a native section, not a
+// third-party tool. With no tenant context, the MEDOS engine identity stays.
+// Accent color always flows from --brand-primary (tenant brand_colors).
 export function Layout() {
   const loc = useLocation();
   const branding = useBranding();
+  const hasTenantBrand = !branding.loading && branding.name !== 'MEDOS';
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <aside style={{ width: 240, background: '#1e293b', color: '#e2e8f0', padding: '20px 0' }}>
+      <aside style={{ width: 240, background: '#1e293b', color: '#e2e8f0', padding: '20px 0', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '0 20px 16px', borderBottom: '1px solid #334155', marginBottom: 12 }}>
-          {/* Engine identity — stays "MEDOS" regardless of tenant */}
-          <h1 style={{ fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Stethoscope size={22} /> MedOS
-          </h1>
-          {/* Tenant co-branding — visible directly under the engine name so
-              the practitioner sees which cabinet they're working in. */}
-          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #334155', display: 'flex', alignItems: 'center', gap: 8 }}>
-            {branding.logoUrl ? (
-              <img
-                src={branding.logoUrl}
-                alt={branding.name}
-                style={{ width: 24, height: 24, borderRadius: 4, objectFit: 'contain', background: '#fff', padding: 2 }}
-              />
-            ) : (
-              <span
-                style={{
-                  width: 24, height: 24, borderRadius: 4, background: 'var(--brand-primary)',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#fff', fontSize: 11, fontWeight: 700,
-                }}
-              >
-                {branding.name.slice(0, 1).toUpperCase()}
-              </span>
-            )}
-            <span style={{ fontSize: 12, color: '#cbd5e1', fontWeight: 500 }}>{branding.name}</span>
-          </div>
+          {branding.loading ? (
+            /* Reserve space while branding resolves — avoids a MEDOS→tenant flash. */
+            <div style={{ height: 30 }} />
+          ) : hasTenantBrand ? (
+            /* Tenant-first identity — the cabinet's own brand leads. */
+            <h1 style={{ fontSize: 17, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10, margin: 0, lineHeight: 1.2 }}>
+              {branding.logoUrl ? (
+                <img
+                  src={branding.logoUrl}
+                  alt={branding.name}
+                  style={{ width: 30, height: 30, borderRadius: 7, objectFit: 'contain', background: '#fff', padding: 2, flexShrink: 0 }}
+                />
+              ) : (
+                <span
+                  style={{
+                    width: 30, height: 30, borderRadius: 7, background: 'var(--brand-primary)',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#fff', fontSize: 13, fontWeight: 700, flexShrink: 0,
+                  }}
+                >
+                  {branding.name.slice(0, 1).toUpperCase()}
+                </span>
+              )}
+              <span>{branding.name}</span>
+            </h1>
+          ) : (
+            /* Engine default — no tenant brand resolved. */
+            <h1 style={{ fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
+              <Stethoscope size={22} /> MedOS
+            </h1>
+          )}
         </div>
-        <nav>
+        <nav style={{ flex: 1 }}>
           {nav.map((item) => {
             const isActive = loc.pathname.startsWith(item.to);
             return (
@@ -76,7 +84,7 @@ export function Layout() {
                 to={item.to}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px',
-                  background: isActive ? '#334155' : 'transparent',
+                  background: isActive ? (hasTenantBrand ? 'var(--brand-primary-soft)' : '#334155') : 'transparent',
                   color: isActive ? '#fff' : '#94a3b8',
                   fontSize: 14, fontWeight: 500,
                   borderLeft: isActive ? '3px solid var(--brand-primary)' : '3px solid transparent',
@@ -87,6 +95,12 @@ export function Layout() {
             );
           })}
         </nav>
+        {hasTenantBrand && (
+          /* Discreet engine attribution — honest co-brand without the loud wordmark. */
+          <div style={{ padding: '14px 20px 0', margin: '12px 0 0', borderTop: '1px solid #334155', fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Stethoscope size={13} /> Propulsé par MedOS
+          </div>
+        )}
       </aside>
       <main style={{ flex: 1, padding: 32, overflow: 'auto' }}>
         <Outlet />
