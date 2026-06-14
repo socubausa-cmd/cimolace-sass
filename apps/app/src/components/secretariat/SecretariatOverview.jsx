@@ -35,7 +35,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import DashboardLiveSessionsPanel from '@/components/live/DashboardLiveSessionsPanel';
+import DashboardLiveSessionsPanel from '@/components/liri/live/DashboardLiveSessionsPanel';
 
 const isMissingRelationError = (error) => {
   const code = String(error?.code || '');

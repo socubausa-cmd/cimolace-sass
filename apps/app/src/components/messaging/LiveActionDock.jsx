@@ -8,7 +8,7 @@ import {
   MessageSquare, Mic, Video, MonitorUp, Sparkles,
   PhoneOff, Settings, HelpCircle, Smartphone,
 } from 'lucide-react';
-import { SmartboardNavigatorSceneIcon } from '@/components/live-room/SmartboardNavigatorSceneIcon';
+import { SmartboardNavigatorSceneIcon } from '@/components/liri/live-room/SmartboardNavigatorSceneIcon';
 import { cn } from '@/lib/utils';
 
 // ─── DockItem ─────────────────────────────────────────────────────────────────

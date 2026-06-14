@@ -14,9 +14,9 @@ import { useToast } from '@/components/ui/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Sub-components
-import FormationDetailsPageView from '@/components/formations/FormationDetailsPageView';
-import OwnerFormationBuilder from '@/components/formations/OwnerFormationBuilder';
-import { SupabaseCoursePlayerContent } from '@/components/formations/CoursePlayerInterface';
+import FormationDetailsPageView from '@/components/school/formations/FormationDetailsPageView';
+import OwnerFormationBuilder from '@/components/school/formations/OwnerFormationBuilder';
+import { SupabaseCoursePlayerContent } from '@/components/school/formations/CoursePlayerInterface';
 
 const OwnerFormationsTab = () => {
   const navigate = useNavigate();

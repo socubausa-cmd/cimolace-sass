@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Calendar, Trash, Plus, MapPin, Clock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import AnnouncementManager from '@/components/school-life/AnnouncementManager';
+import AnnouncementManager from '@/components/school/school-life/AnnouncementManager';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
