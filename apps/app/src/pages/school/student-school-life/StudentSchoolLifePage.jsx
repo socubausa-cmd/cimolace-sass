@@ -1,5 +1,5 @@
-import React, { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
+import { Routes, Route, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom';
 const TenantCourseDetailPage = lazy(() => import('@/pages/tenant/TenantCourseDetailPage'));
 import { Helmet } from 'react-helmet';
 import StudentSchoolLifeSidebar from '@/components/school/student/StudentSchoolLifeSidebar';
@@ -78,19 +78,26 @@ function StudentBookReaderRoute() {
 
 // Main Wrapper Layout for Student School Life Area
 const StudentSchoolLifePage = () => {
+  const location = useLocation();
+  // Le forum réduit la sidebar en mode icônes pour centrer la conversation.
+  const isForum = location.pathname.includes('/forum');
+  const [collapsed, setCollapsed] = useState(isForum);
+  // Auto : réduit en entrant sur le forum, étend en sortant (l'utilisateur peut surcharger via le bouton tiroir).
+  useEffect(() => { setCollapsed(isForum); }, [isForum]);
+
   return (
     <div style={{ minHeight: '100dvh', background: '#0B0B0F', display: 'flex' }}>
       <Helmet><title>Espace Étudiant | PRORASCIENCE</title></Helmet>
 
-      {/* Sidebar */}
-      <StudentSchoolLifeSidebar />
+      {/* Sidebar (mode icônes sur le forum, bouton tiroir pour étendre) */}
+      <StudentSchoolLifeSidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
 
-      {/* Main Content Area — lg:pl-[220px] offsets content past the fixed sidebar */}
+      {/* Main Content Area — décalage adapté à la largeur de la sidebar */}
       <main
         style={{ flex: 1, overflowX: 'hidden', minHeight: '100dvh' }}
-        className="lg:pl-[250px]"
+        className={collapsed ? 'lg:pl-[92px]' : 'lg:pl-[250px]'}
       >
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 24px 48px' }}>
+        <div style={{ maxWidth: isForum ? 1480 : 1280, margin: '0 auto', padding: '28px 24px 48px' }}>
           <Routes>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<StudentDashboardPage />} />
