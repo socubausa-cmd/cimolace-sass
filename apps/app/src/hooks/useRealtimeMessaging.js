@@ -1,15 +1,65 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { supabase } from '@/lib/customSupabaseClient';
-import { ensureFreshSession, isRetryableMessagingFetchError, sleep } from '@/lib/supabaseResilience';
+import { messagingApi } from '@/lib/api-v2';
+
+/**
+ * Messagerie élève — temps réel par POLLING COURT sur l'API NestJS.
+ *
+ * Pourquoi pas Supabase Realtime ? La table `public.messages` (prod) a RLS activé mais
+ * AUCUNE policy, n'est PAS dans la publication `supabase_realtime`, et reste 100 %
+ * `service_role`. Le seul accès fonctionnel est l'API (`/messaging/*`). On interroge donc
+ * l'API de façon adaptative (fil ouvert : 5 s ; liste : 20 s ; caché : ~60 s ; focus : immédiat).
+ * Détail + alternatives → docs/MESSAGERIE_TEMPS_REEL_DECISION.md
+ *
+ * Le schéma RÉEL est un modèle CONVERSATION (`conversation_id` + `recipient_id`), pas un DM
+ * plat. On mappe `recipient_id → receiver_id` à la frontière pour garder le contrat public
+ * attendu par les écrans (`{ id, sender_id, receiver_id, content, is_read, created_at }` +
+ * conversations dérivées `{ participantId, unreadCount, lastMessage, … }`).
+ */
+
+const ACTIVE_POLL_MS = 5000; // fil ouvert (1 conversation)
+const LIST_POLL_MS = 20000; // liste complète + badges non-lus
+const HIDDEN_POLL_MS = 60000; // onglet caché : refresh complet ralenti
+const FETCH_ERROR_LOG_MS = 15000; // throttle des logs d'erreur
+const NETWORK_BACKOFF_MS = 120000; // pause après échecs réseau répétés
+
+// Messages système auto-envoyés par l'invite live — non affichés dans le chat.
+const INVITE_PATTERNS = [
+  /^invitation studio immersive/i,
+  /^📹.*invitation/i,
+  /^\[live_invite\]/i,
+  /^🎬.*invite/i,
+];
+
+function isSystemInviteMsg(msg) {
+  return INVITE_PATTERNS.some((rx) => rx.test(String(msg?.content || '').trim()));
+}
+
+/** Normalise une ligne API (modèle conversation) vers la forme plate attendue par l'UI. */
+function normalizeRow(row) {
+  return {
+    id: row.id,
+    conversation_id: row.conversation_id ?? null,
+    sender_id: row.sender_id,
+    // Mapping clé : le schéma prod a `recipient_id`, l'UI attend `receiver_id`.
+    receiver_id: row.recipient_id ?? row.receiver_id ?? null,
+    subject: row.subject ?? null,
+    content: row.content,
+    is_read: row.is_read ?? false,
+    created_at: row.created_at,
+  };
+}
+
+const byCreatedAtAsc = (a, b) => new Date(a.created_at) - new Date(b.created_at);
 
 export function useRealtimeMessaging(userId, profilesMap = {}) {
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tableExists, setTableExists] = useState(true);
+  // L'API existe toujours ; conservé pour le contrat (écrans qui testent `=== false`).
+  const [tableExists] = useState(true);
 
   const profilesRef = useRef(profilesMap);
-  const channelRef = useRef(null);
+  const messagesRef = useRef([]);
   const notifiedIdsRef = useRef(new Set());
   const audioUnlockedRef = useRef(false);
   const audioCtxRef = useRef(null);
@@ -17,9 +67,20 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
   const consecutiveFetchFailuresRef = useRef(0);
   const pollBackoffUntilRef = useRef(0);
 
-  useEffect(() => { profilesRef.current = profilesMap; }, [profilesMap]);
+  // Bridge modèle participant ↔ conversation.
+  const peerConvMapRef = useRef({}); // { [peerUserId]: conversationId } — dernière conv par pair
+  const activePeerRef = useRef(null); // pair du fil actuellement ouvert (poll rapide)
 
-  /** Audio + optionnellement permission notifications — uniquement après un geste (Safari / Chrome). */
+  // Overrides optimistes (pas d'endpoint API pour read/delete/edit) — évitent que le
+  // polling ne réannule l'état local pendant la session.
+  const readOverridesRef = useRef(new Set());
+  const deletedOverridesRef = useRef(new Set());
+  const editOverridesRef = useRef(new Map());
+
+  useEffect(() => { profilesRef.current = profilesMap; }, [profilesMap]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+
+  // ── Audio + permission notifications (uniquement après un geste — Safari/Chrome) ──
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
     const unlock = () => {
@@ -92,6 +153,14 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
     }
   }, [playIncomingSound, userId]);
 
+  /** Notifie pour les messages entrants nouveaux (présents dans `next`, absents avant). */
+  const notifyNewIncoming = useCallback((nextMsgs) => {
+    const prevIds = new Set(messagesRef.current.map((m) => m.id));
+    for (const m of nextMsgs) {
+      if (!prevIds.has(m.id)) notifyIncomingMessage(m);
+    }
+  }, [notifyIncomingMessage]);
+
   const deriveConversations = useCallback(
     (msgs, pMap) => {
       if (!userId) return [];
@@ -99,6 +168,7 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
 
       msgs.forEach((msg) => {
         const otherId = msg.sender_id === userId ? msg.receiver_id : msg.sender_id;
+        if (!otherId) return; // message de groupe (recipient null) — pas de fil 1:1 dérivable
         if (!convMap[otherId]) {
           const profile = pMap[otherId];
           convMap[otherId] = {
@@ -122,7 +192,7 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
 
       return Object.values(convMap)
         .map((conv) => {
-          conv.messages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+          conv.messages.sort(byCreatedAtAsc);
           conv.lastMessage = conv.messages[conv.messages.length - 1] || null;
           return conv;
         })
@@ -135,132 +205,154 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
     [userId]
   );
 
-  const fetchMessages = useCallback(async () => {
-    if (!userId) return null;
-    const withTimeout = (promise, timeoutMs) =>
-      Promise.race([
-        promise,
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error(`messages query timeout after ${timeoutMs}ms`)), timeoutMs)
-        ),
-      ]);
+  // ── Helpers data ────────────────────────────────────────────────────────────
 
-    const runPair = async (limit, timeoutMs) =>
-      Promise.all([
-        withTimeout(
-          supabase
-            .from('messages')
-            .select('id, sender_id, receiver_id, content, is_read, created_at')
-            .eq('sender_id', userId)
-            .order('created_at', { ascending: false })
-            .limit(limit),
-          timeoutMs
-        ).catch((e) => ({ data: null, error: e })),
-        withTimeout(
-          supabase
-            .from('messages')
-            .select('id, sender_id, receiver_id, content, is_read, created_at')
-            .eq('receiver_id', userId)
-            .order('created_at', { ascending: false })
-            .limit(limit),
-          timeoutMs
-        ).catch((e) => ({ data: null, error: e })),
-      ]);
-
-    // Deux requêtes indexées en parallèle (sender / receiver) + JWT frais + retries réseau.
-    try {
-      const limits = [100, 100, 40];
-      const timeouts = [22000, 30000, 38000];
-      let sentRes;
-      let recvRes;
-      for (let attempt = 0; attempt < 3; attempt += 1) {
-        await ensureFreshSession(supabase, 90);
-        [sentRes, recvRes] = await runPair(limits[attempt], timeouts[attempt]);
-        if (sentRes?.data || recvRes?.data) break;
-        const canRetry =
-          attempt < 2 &&
-          (isRetryableMessagingFetchError(sentRes?.error) ||
-            isRetryableMessagingFetchError(recvRes?.error));
-        if (!canRetry) break;
-        await sleep(450 + attempt * 400);
-      }
-
-      const sentErr = sentRes?.error;
-      const recvErr = recvRes?.error;
-
-      // Table inexistante
-      for (const err of [sentErr, recvErr]) {
-        if (err?.code === '42P01' || err?.message?.includes('relation') || err?.message?.includes('schema cache')) {
-          setTableExists(false);
-          console.warn('[messaging] Table messages non trouvée. Créez-la dans Supabase.');
-          return [];
-        }
-      }
-
-      // Les deux ont échoué (timeout réseau)
-      if (!sentRes?.data && !recvRes?.data) {
-        const now = Date.now();
-        if (now - lastFetchErrorLogAtRef.current > 15000) {
-          lastFetchErrorLogAtRef.current = now;
-          console.error('[messaging] fetch exception:', sentErr?.message || recvErr?.message);
-        }
-        return null;
-      }
-
-      const mergedMap = new Map();
-      for (const row of [...(sentRes?.data || []), ...(recvRes?.data || [])]) {
-        if (row?.id) mergedMap.set(row.id, row);
-      }
-      setTableExists(true);
-      // Filtrer les anciens messages système auto-envoyés par l'invite live
-      // (ex: "Invitation studio immersive de X.") — ne pas les afficher dans le chat.
-      const INVITE_PATTERNS = [
-        /^invitation studio immersive/i,
-        /^📹.*invitation/i,
-        /^\[live_invite\]/i,
-        /^🎬.*invite/i,
-      ];
-      const isSystemInviteMsg = (msg) =>
-        INVITE_PATTERNS.some((rx) => rx.test(String(msg?.content || '').trim()));
-
-      return Array.from(mergedMap.values())
-        .filter((m) => !isSystemInviteMsg(m))
-        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-    } catch (err) {
-      const now = Date.now();
-      if (now - lastFetchErrorLogAtRef.current > 15000) {
-        lastFetchErrorLogAtRef.current = now;
-        console.error('[messaging] fetch exception:', err?.message || err);
-      }
-      return null;
+  const logFetchError = useCallback((e) => {
+    const now = Date.now();
+    if (now - lastFetchErrorLogAtRef.current > FETCH_ERROR_LOG_MS) {
+      lastFetchErrorLogAtRef.current = now;
+      console.error('[messaging] fetch error:', e?.message || e);
     }
+  }, []);
+
+  const registerFailure = useCallback(() => {
+    consecutiveFetchFailuresRef.current += 1;
+    if (consecutiveFetchFailuresRef.current >= 3) {
+      consecutiveFetchFailuresRef.current = 0;
+      pollBackoffUntilRef.current = Date.now() + NETWORK_BACKOFF_MS;
+    }
+  }, []);
+
+  /** Normalise + applique les overrides + filtre les messages système. */
+  const prepareRows = useCallback((rows) => {
+    const out = [];
+    for (const raw of rows) {
+      const m = normalizeRow(raw);
+      if (!m.id) continue;
+      if (deletedOverridesRef.current.has(m.id)) continue;
+      if (isSystemInviteMsg(m)) continue;
+      let mm = m;
+      if (readOverridesRef.current.has(m.id) && !mm.is_read) mm = { ...mm, is_read: true };
+      const edited = editOverridesRef.current.get(m.id);
+      if (edited != null) mm = { ...mm, content: edited };
+      out.push(mm);
+    }
+    return out;
+  }, []);
+
+  /** Indexe `peer → conversationId` (dernière conv par pair) à partir de messages préparés. */
+  const indexPeerConvs = useCallback((msgs) => {
+    const map = { ...peerConvMapRef.current };
+    const latestAt = {};
+    for (const m of msgs) {
+      const peer = m.sender_id === userId ? m.receiver_id : m.sender_id;
+      if (!peer || !m.conversation_id) continue;
+      const t = new Date(m.created_at || 0).getTime();
+      if (!(peer in latestAt) || t >= latestAt[peer]) {
+        latestAt[peer] = t;
+        map[peer] = m.conversation_id;
+      }
+    }
+    peerConvMapRef.current = map;
   }, [userId]);
 
-  const applyMessages = useCallback((msgs, pMap) => {
-    const sorted = [...msgs].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-    setMessages(sorted);
-    setConversations(deriveConversations(sorted, pMap));
-  }, [deriveConversations]);
+  /** Récupère TOUS les messages (liste des conversations + messages de chacune). */
+  const fetchAllMessages = useCallback(async () => {
+    if (!userId) return null;
+    try {
+      const convs = await messagingApi.listConversations();
+      const list = Array.isArray(convs) ? convs : [];
+      if (list.length === 0) return [];
+
+      const perConv = await Promise.all(
+        list.map((c) =>
+          messagingApi
+            .getConversation(c.id)
+            .then((r) => (Array.isArray(r) ? r : []))
+            .catch(() => null)
+        )
+      );
+      // Toutes les sous-requêtes ont échoué → échec réseau (ne pas écraser l'état).
+      if (perConv.every((r) => r === null)) return null;
+
+      const dedup = new Map();
+      for (const m of prepareRows(perConv.filter(Boolean).flat())) {
+        dedup.set(m.id, m);
+      }
+      const merged = Array.from(dedup.values());
+      indexPeerConvs(merged);
+      merged.sort(byCreatedAtAsc);
+      return merged;
+    } catch (e) {
+      logFetchError(e);
+      return null;
+    }
+  }, [userId, prepareRows, indexPeerConvs, logFetchError]);
+
+  /** Récupère les messages d'UNE conversation (poll rapide du fil ouvert). */
+  const fetchConversation = useCallback(async (convId) => {
+    if (!convId) return null;
+    try {
+      const r = await messagingApi.getConversation(convId);
+      return prepareRows(Array.isArray(r) ? r : []);
+    } catch (e) {
+      logFetchError(e);
+      return null;
+    }
+  }, [prepareRows, logFetchError]);
+
+  // ── Application des résultats à l'état ───────────────────────────────────────
+
+  const applyFull = useCallback((msgs) => {
+    notifyNewIncoming(msgs);
+    messagesRef.current = msgs;
+    setMessages(msgs);
+    setConversations(deriveConversations(msgs, profilesRef.current));
+  }, [notifyNewIncoming, deriveConversations]);
+
+  /** Fusionne un sous-ensemble (une conversation) sans perdre les autres fils. */
+  const applyMerge = useCallback((incoming) => {
+    if (!incoming || !incoming.length) return;
+    const byId = new Map(messagesRef.current.map((m) => [m.id, m]));
+    let changed = false;
+    for (const m of incoming) {
+      const ex = byId.get(m.id);
+      if (!ex) {
+        byId.set(m.id, m);
+        changed = true;
+      } else if (ex.content !== m.content || ex.is_read !== m.is_read) {
+        byId.set(m.id, { ...ex, ...m });
+        changed = true;
+      }
+    }
+    if (!changed) return;
+    const next = Array.from(byId.values()).sort(byCreatedAtAsc);
+    notifyNewIncoming(next);
+    messagesRef.current = next;
+    setMessages(next);
+    setConversations(deriveConversations(next, profilesRef.current));
+  }, [notifyNewIncoming, deriveConversations]);
 
   const refresh = useCallback(async () => {
-    const msgs = await fetchMessages();
+    const msgs = await fetchAllMessages();
     if (msgs === null) {
-      // Avoid infinite spinner when initial query fails.
+      registerFailure();
       setLoading(false);
       return;
     }
-    applyMessages(msgs, profilesRef.current);
+    consecutiveFetchFailuresRef.current = 0;
+    applyFull(msgs);
     setLoading(false);
-  }, [fetchMessages, applyMessages]);
+  }, [fetchAllMessages, applyFull, registerFailure]);
 
-  // Recalcule conversations quand profilesMap se peuple
+  // Recalcule conversations quand profilesMap se peuple (noms/avatars).
   useEffect(() => {
     if (Object.keys(profilesMap).length > 0) {
-      setConversations(deriveConversations(messages, profilesMap));
+      setConversations(deriveConversations(messagesRef.current, profilesMap));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profilesMap]);
 
+  // ── Polling adaptatif (le « temps réel ») ────────────────────────────────────
   useEffect(() => {
     if (!userId) {
       setLoading(false);
@@ -270,149 +362,128 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
     setLoading(true);
     refresh();
 
-    const channel = supabase
-      .channel(`messages:user:${userId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
-        const msg = payload.new;
-        if (!msg || (msg.sender_id !== userId && msg.receiver_id !== userId)) return;
-        notifyIncomingMessage(msg);
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === msg.id)) return prev;
-          const next = [...prev, msg].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-          setConversations(deriveConversations(next, profilesRef.current));
-          return next;
-        });
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, (payload) => {
-        const updated = payload.new;
-        if (!updated) return;
-        setMessages((prev) => {
-          if (!prev.some((m) => m.id === updated.id)) return prev;
-          const next = prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m));
-          setConversations(deriveConversations(next, profilesRef.current));
-          return next;
-        });
-      })
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, (payload) => {
-        const id = payload.old?.id;
-        if (!id) return;
-        setMessages((prev) => {
-          if (!prev.some((m) => m.id === id)) return prev;
-          const next = prev.filter((m) => m.id !== id);
-          setConversations(deriveConversations(next, profilesRef.current));
-          return next;
-        });
-      })
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          // Re-fetch dès que le canal est actif pour rattraper les messages manqués
-          refresh();
-        }
-      });
-
-    channelRef.current = channel;
-
-    // Polling safety net (lighter cadence)
-    const pollInterval = setInterval(async () => {
+    // Poll rapide : la conversation actuellement ouverte (1 requête).
+    const fast = setInterval(() => {
       if (Date.now() < pollBackoffUntilRef.current) return;
-      const msgs = await fetchMessages();
-      if (msgs === null) {
-        consecutiveFetchFailuresRef.current += 1;
-        // Réseau dégradé: réduire la pression API pendant 2 minutes.
-        if (consecutiveFetchFailuresRef.current >= 3) {
-          consecutiveFetchFailuresRef.current = 0;
-          pollBackoffUntilRef.current = Date.now() + 120000;
-        }
-        return;
-      }
-      consecutiveFetchFailuresRef.current = 0;
-      setMessages((prev) => {
-        const next = [...msgs].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        // Comparer les IDs et contenus pour détecter INSERT, UPDATE, DELETE
-        const prevIds = new Set(prev.map((m) => m.id));
-        const nextIds = new Set(next.map((m) => m.id));
-        const hasDiff =
-          prev.length !== next.length ||
-          next.some((m) => !prevIds.has(m.id)) ||
-          prev.some((m) => !nextIds.has(m.id)) ||
-          next.some((m) => {
-            const old = prev.find((p) => p.id === m.id);
-            return old && (old.content !== m.content || old.is_read !== m.is_read);
-          });
-        if (!hasDiff) return prev;
-        setConversations(deriveConversations(next, profilesRef.current));
-        return next;
+      if (typeof document !== 'undefined' && document.hidden) return;
+      const peer = activePeerRef.current;
+      if (!peer) return;
+      const convId = peerConvMapRef.current[peer];
+      if (!convId) return;
+      fetchConversation(convId).then((rows) => {
+        if (rows === null) { registerFailure(); return; }
+        consecutiveFetchFailuresRef.current = 0;
+        applyMerge(rows);
       });
-    }, 60000);
+    }, ACTIVE_POLL_MS);
 
-    const handleFocus = () => refresh();
-    window.addEventListener('focus', handleFocus);
+    // Poll liste : refresh complet (fils + badges non-lus). Ralenti si onglet caché.
+    let lastListAt = 0;
+    const list = setInterval(async () => {
+      if (Date.now() < pollBackoffUntilRef.current) return;
+      const hidden = typeof document !== 'undefined' && document.hidden;
+      const now = Date.now();
+      if (hidden && now - lastListAt < HIDDEN_POLL_MS) return;
+      lastListAt = now;
+      const msgs = await fetchAllMessages();
+      if (msgs === null) { registerFailure(); return; }
+      consecutiveFetchFailuresRef.current = 0;
+      applyFull(msgs);
+    }, LIST_POLL_MS);
+
+    const onFocus = () => refresh();
+    const onVisibility = () => { if (!document.hidden) refresh(); };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
 
     return () => {
-      supabase.removeChannel(channel);
-      channelRef.current = null;
-      clearInterval(pollInterval);
-      window.removeEventListener('focus', handleFocus);
+      clearInterval(fast);
+      clearInterval(list);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
+
+  // ── Actions ──────────────────────────────────────────────────────────────────
 
   const sendMessage = useCallback(async (receiverId, content) => {
     if (!userId || !receiverId || !content?.trim()) return null;
-    const { data, error } = await supabase
-      .from('messages')
-      .insert({ sender_id: userId, receiver_id: receiverId, content: content.trim() })
-      .select()
-      .single();
-    if (error) {
-      console.error('[messaging] send error:', error.message);
+    let row;
+    try {
+      // L'API crée/retrouve la conversation côté serveur (find_or_create_conversation).
+      row = await messagingApi.send({ recipientId: receiverId, content: content.trim() });
+    } catch (e) {
+      console.error('[messaging] send error:', e?.message || e);
       return null;
     }
+    if (!row || !row.id) return null;
+
+    // Message neuf : normalisation directe (aucun override à appliquer, et on ne le passe
+    // PAS par le filtre d'affichage des invites — sinon un envoi légitime renverrait null).
+    const m = normalizeRow({ ...row, recipient_id: row.recipient_id ?? receiverId });
+
+    activePeerRef.current = receiverId;
+    if (m.conversation_id) peerConvMapRef.current[receiverId] = m.conversation_id;
+    applyMerge([m]);
+    return m;
+  }, [userId, prepareRows, applyMerge]);
+
+  /**
+   * Marque des messages comme lus. Optimiste LOCAL uniquement : il n'existe pas d'endpoint
+   * API de lecture à ce jour (voir docs/MESSAGERIE_TEMPS_REEL_DECISION.md). Accepte des ids
+   * ou des objets message.
+   */
+  const markAsRead = useCallback((items) => {
+    const ids = (Array.isArray(items) ? items : [])
+      .map((x) => (x && typeof x === 'object' ? x.id : x))
+      .filter(Boolean);
+    if (!ids.length) return;
+    const idSet = new Set(ids);
+    ids.forEach((id) => readOverridesRef.current.add(id));
     setMessages((prev) => {
-      if (prev.some((m) => m.id === data.id)) return prev;
-      const next = [...prev, data].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      let changed = false;
+      const next = prev.map((m) => {
+        if (idSet.has(m.id) && !m.is_read) { changed = true; return { ...m, is_read: true }; }
+        return m;
+      });
+      if (!changed) return prev;
+      messagesRef.current = next;
       setConversations(deriveConversations(next, profilesRef.current));
       return next;
     });
-    return data;
-  }, [userId, deriveConversations]);
+  }, [deriveConversations]);
 
-  const markAsRead = useCallback(async (messageIds) => {
-    if (!messageIds?.length) return;
-    await supabase.from('messages').update({ is_read: true }).in('id', messageIds).eq('receiver_id', userId);
-    setMessages((prev) => {
-      const next = prev.map((m) => (messageIds.includes(m.id) ? { ...m, is_read: true } : m));
-      setConversations(deriveConversations(next, profilesRef.current));
-      return next;
-    });
-  }, [userId, deriveConversations]);
-
+  /** Suppression optimiste LOCALE (pas d'endpoint API ; override anti-résurrection). */
   const deleteMessage = useCallback(async (messageId) => {
     if (!userId || !messageId) return false;
-    const { error } = await supabase.from('messages').delete().eq('id', messageId).eq('sender_id', userId);
-    if (error) { console.error('[messaging] delete error:', error.message); return false; }
+    deletedOverridesRef.current.add(messageId);
     setMessages((prev) => {
+      if (!prev.some((m) => m.id === messageId)) return prev;
       const next = prev.filter((m) => m.id !== messageId);
+      messagesRef.current = next;
       setConversations(deriveConversations(next, profilesRef.current));
       return next;
     });
     return true;
   }, [userId, deriveConversations]);
 
+  /** Édition optimiste LOCALE (pas d'endpoint API ; override anti-réannulation). */
   const editMessage = useCallback(async (messageId, newContent) => {
     if (!userId || !messageId || !newContent?.trim()) return null;
-    const { data, error } = await supabase
-      .from('messages').update({ content: newContent.trim() })
-      .eq('id', messageId).eq('sender_id', userId).select().maybeSingle();
-    if (error) { console.error('[messaging] edit error:', error.message); return null; }
-    if (data) {
-      setMessages((prev) => {
-        const next = prev.map((m) => (m.id === data.id ? { ...m, ...data } : m));
-        setConversations(deriveConversations(next, profilesRef.current));
-        return next;
+    const content = newContent.trim();
+    editOverridesRef.current.set(messageId, content);
+    let result = null;
+    setMessages((prev) => {
+      if (!prev.some((m) => m.id === messageId)) return prev;
+      const next = prev.map((m) => {
+        if (m.id === messageId) { result = { ...m, content }; return result; }
+        return m;
       });
-    }
-    return data;
+      messagesRef.current = next;
+      setConversations(deriveConversations(next, profilesRef.current));
+      return next;
+    });
+    return result || { id: messageId, content };
   }, [userId, deriveConversations]);
 
   const getConversationMessages = useCallback((participantId) => {
@@ -424,47 +495,25 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
     );
   }, [messages, userId]);
 
-  // Fetch ciblé pour une conversation spécifique (garantit les données fraîches)
+  /**
+   * Fetch ciblé d'une conversation (à l'ouverture d'un fil) + enregistre le pair actif
+   * pour que le poll rapide le rafraîchisse. Si la conversation est inconnue (1ʳᵉ ouverture),
+   * un refresh complet la découvre ; si aucun message n'existe encore, rien à charger.
+   */
   const fetchAndMergeConversation = useCallback(async (participantId) => {
     if (!userId || !participantId) return;
-    try {
-      await ensureFreshSession(supabase, 90);
-      const q = () =>
-        supabase
-          .from('messages')
-          .select('id, sender_id, receiver_id, content, is_read, created_at')
-          .or(
-            `and(sender_id.eq.${userId},receiver_id.eq.${participantId}),and(sender_id.eq.${participantId},receiver_id.eq.${userId})`
-          )
-          .order('created_at', { ascending: false })
-          .limit(240);
-
-      let { data, error } = await q();
-      if (error && isRetryableMessagingFetchError(error)) {
-        await supabase.auth.refreshSession();
-        await sleep(400);
-        ({ data, error } = await q());
-      }
-      if (error || !data) return;
-
-      setMessages((prev) => {
-        const existingIds = new Set(prev.map((m) => m.id));
-        const newOnes = data.filter((m) => !existingIds.has(m.id));
-        const updated = prev.map((m) => {
-          const fresh = data.find((d) => d.id === m.id);
-          return fresh ? { ...m, ...fresh } : m;
-        });
-        const merged = [...updated, ...newOnes].sort(
-          (a, b) => new Date(a.created_at) - new Date(b.created_at)
-        );
-        if (merged.length === prev.length && newOnes.length === 0) return prev;
-        setConversations(deriveConversations(merged, profilesRef.current));
-        return merged;
-      });
-    } catch (err) {
-      console.error('[messaging] fetchAndMergeConversation error:', err);
+    activePeerRef.current = participantId;
+    let convId = peerConvMapRef.current[participantId];
+    if (!convId) {
+      const msgs = await fetchAllMessages();
+      if (msgs !== null) { consecutiveFetchFailuresRef.current = 0; applyFull(msgs); }
+      convId = peerConvMapRef.current[participantId];
+      if (!convId) return; // pas encore de conversation (aucun message) — normal
+      return; // applyFull a déjà fusionné les messages de ce pair
     }
-  }, [userId, deriveConversations]);
+    const rows = await fetchConversation(convId);
+    if (rows !== null) applyMerge(rows);
+  }, [userId, fetchAllMessages, applyFull, fetchConversation, applyMerge]);
 
   return {
     messages,
