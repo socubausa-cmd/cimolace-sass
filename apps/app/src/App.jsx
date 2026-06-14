@@ -799,8 +799,11 @@ const AppContent = () => {
   /**
    * Salle / cours live en maquette (UI seule) — mêmes écrans que l'app élève, sans dépendre d'un build avec Supabase
    * (démos web, partage de maquette, vitrine). Les autres `/m/eleve/*` restent bloqués sans API.
+   * DEV uniquement : ces routes ne sont pas montées en prod (cf. <Route path="live/maquette"> gardé par import.meta.env.DEV),
+   * donc aucun bypass Supabase ni vue hôte LIRI ne doit être exposé publiquement.
    */
-  const isLiriEleveMaquetteRoute = location.pathname.startsWith('/m/eleve/live/maquette');
+  const isLiriEleveMaquetteRoute =
+    import.meta.env.DEV && location.pathname.startsWith('/m/eleve/live/maquette');
 
   /**
    * Pages vitrine / marketing **sans** besoin d'API pour afficher l'écran (texte, images, liens).
@@ -887,18 +890,20 @@ const AppContent = () => {
             /dev/owner-shell
           </a>
         </p>
-        <p className="mt-3 text-xs text-white/40">
-          Maquette salle <span className="text-white/55">élève</span> (LIVE + diapos, sans compte) :{' '}
-          <a
-            href="/m/eleve/live/maquette/host"
-            className="text-violet-300/90 underline-offset-2 hover:underline"
-          >
-            /m/eleve/live/maquette/host
-          </a>
-          {isEleveLiriContext && !isLiriEleveMaquetteRoute ? (
-            <span className="ml-1 text-emerald-400/90">— ouvrez ce lien : il fonctionne sans variables Supabase.</span>
-          ) : null}
-        </p>
+        {import.meta.env.DEV && (
+          <p className="mt-3 text-xs text-white/40">
+            Maquette salle <span className="text-white/55">élève</span> (LIVE + diapos, sans compte) :{' '}
+            <a
+              href="/m/eleve/live/maquette/host"
+              className="text-violet-300/90 underline-offset-2 hover:underline"
+            >
+              /m/eleve/live/maquette/host
+            </a>
+            {isEleveLiriContext && !isLiriEleveMaquetteRoute ? (
+              <span className="ml-1 text-emerald-400/90">— ouvrez ce lien : il fonctionne sans variables Supabase.</span>
+            ) : null}
+          </p>
+        )}
       </div>
     );
   }
@@ -1224,11 +1229,14 @@ isLiriHostDevPreviewRoute;
             <Route path="live/termine" element={<EleveLiveTermineScreen />} />
             <Route path="live/waiting" element={<EleveLiveWaitingScreen />} />
             <Route path="live/chat" element={<EleveLiveSessionChatScreen />} />
-            <Route path="live/maquette" element={<Outlet />}>
-              <Route index element={<EleveLiveRoomShellMaquette />} />
-              <Route path="alpha" element={<EleveLiveRoomImmersiveAlpha />} />
-              <Route path="host" element={<LiriMobileHostView />} />
-            </Route>
+            {/* Maquettes live (UI seule, sans auth) — DEV uniquement : jamais montées en prod (pas de vue hôte LIRI exposée publiquement). */}
+            {import.meta.env.DEV && (
+              <Route path="live/maquette" element={<Outlet />}>
+                <Route index element={<EleveLiveRoomShellMaquette />} />
+                <Route path="alpha" element={<EleveLiveRoomImmersiveAlpha />} />
+                <Route path="host" element={<LiriMobileHostView />} />
+              </Route>
+            )}
             <Route path="live" element={<EleveLiveScreen />} />
             <Route path="cours/:courseId" element={<EleveCoursePage />} />
             <Route path="billing/checkout/:id" element={<EleveBillingCheckoutScreen />} />
