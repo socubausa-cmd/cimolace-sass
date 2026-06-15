@@ -41,6 +41,35 @@ export function LiriPortalPage() {
   const [now, setNow] = useState(() => new Date());
   const [stats, setStats] = useState<Stats | null>(null);
   const [lives, setLives] = useState<Live[]>([]);
+  const [starting, setStarting] = useState(false);
+
+  // « Démarrer » = réunion instantanée façon Zoom : crée une session live à la volée,
+  // la démarre, et ouvre directement le LiveHostPage (coque LIRI neutre). Repli = wizard.
+  const startInstantMeeting = async () => {
+    if (starting) return;
+    setStarting(true);
+    try {
+      const h = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
+      const res = await fetch(`${base}/lives`, {
+        method: 'POST',
+        headers: h,
+        body: JSON.stringify({ title: 'Réunion instantanée', scheduled_at: new Date().toISOString(), price_cents: 0, currency: 'EUR' }),
+      });
+      const j = await res.json().catch(() => ({}));
+      // Dépile l'enveloppe ({data:{data:{id}}} via l'intercepteur global) jusqu'à la session.
+      let d: any = j;
+      while (d && typeof d === 'object' && !('id' in d) && 'data' in d) d = d.data;
+      const id = d?.id;
+      if (!id) throw new Error('reunion sans id');
+      // Démarrage immédiat (best-effort — l'hôte peut aussi démarrer depuis l'arène).
+      try { await fetch(`${base}/lives/${id}/start`, { method: 'POST', headers: h }); } catch { /* noop */ }
+      nav(`/live/host/${id}?tenant=${encodeURIComponent(slug)}`);
+    } catch {
+      nav('/dashboard/lives/new'); // repli : wizard de création classique
+    } finally {
+      setStarting(false);
+    }
+  };
 
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 30_000); return () => clearInterval(t); }, []);
 
@@ -198,10 +227,10 @@ export function LiriPortalPage() {
               {QUICK.map((q) => {
                 const Icon = q.icon;
                 return (
-                  <button key={q.label} onClick={() => nav(q.to)} className="group relative flex w-24 flex-col items-center gap-2.5">
+                  <button key={q.label} onClick={() => (q.hero ? startInstantMeeting() : nav(q.to))} disabled={q.hero && starting} className="group relative flex w-24 flex-col items-center gap-2.5 disabled:cursor-wait disabled:opacity-70">
                     {q.badge && <span className="absolute -top-2 right-2 z-10 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[9px] font-bold text-white" style={{ background: 'var(--coral)' }}>{q.badge}</span>}
                     <span className={`lp-tr grid h-24 w-24 place-items-center rounded-[26px] lp-soft lp-lift ${q.hero ? 'text-white lp-ember' : 'lp-line border lp-panel lp-coral lp-hovbtn'}`}><Icon size={q.hero ? 32 : 30} /></span>
-                    <span className={`text-[13px] font-medium ${q.hero ? 'lp-ink' : 'lp-muted'}`}>{q.label}</span>
+                    <span className={`text-[13px] font-medium ${q.hero ? 'lp-ink' : 'lp-muted'}`}>{q.hero && starting ? 'Création…' : q.label}</span>
                   </button>
                 );
               })}
