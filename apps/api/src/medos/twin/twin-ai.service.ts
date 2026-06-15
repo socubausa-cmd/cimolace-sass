@@ -207,6 +207,7 @@ export class TwinAiService {
         const tokens: number = j?.usage?.completion_tokens ?? 0;
         const parsed = this.tryParseJson<T>(text);
         if (parsed !== undefined) {
+          this.logger.log(`LLM via ${p.name}:${p.model} (${tokens} tokens)`);
           return { data: parsed, model: `${p.name}:${p.model}`, tokens };
         }
         lastErr = `${p.name}: JSON non exploitable (finish=${j?.choices?.[0]?.finish_reason ?? 'n/a'})`;
@@ -219,7 +220,9 @@ export class TwinAiService {
     // Dernier repli : Anthropic (content blocks).
     if (this.config.get<string>('ANTHROPIC_API_KEY')) {
       try {
-        return await this.callClaudeRaw<T>(system, [{ type: 'text', text: user }], maxTokens);
+        const r = await this.callClaudeRaw<T>(system, [{ type: 'text', text: user }], maxTokens);
+        this.logger.log(`LLM via anthropic:${this.model}`);
+        return r;
       } catch (e) {
         lastErr = `anthropic: ${(e as Error).message}`;
       }
