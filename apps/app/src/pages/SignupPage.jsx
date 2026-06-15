@@ -9,6 +9,7 @@ import { Loader2, Mail, Lock, User, AlertCircle, CheckCircle2, ShieldCheck, Cred
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
+import { safeReturnToFromQuery } from '@/lib/returnToNavigation';
 
 const SignupPage = () => {
   const [searchParams] = useSearchParams();
@@ -45,7 +46,8 @@ const SignupPage = () => {
     setSubmitError('');
     setGoogleLoading(true);
     try {
-      const redirectTo = searchParams.get('redirect') || ELEVE_MOBILE.home;
+      // Anti open-redirect : ne garde que les chemins internes sûrs.
+      const redirectTo = safeReturnToFromQuery(searchParams.get('redirect')) || ELEVE_MOBILE.home;
       // Stores the next path so AuthCallbackPage redirects correctly
       try { localStorage.setItem('oauth_next_path', redirectTo); } catch { /* ignore */ }
       const { error } = await loginWithOAuth('google', redirectTo);
@@ -91,8 +93,9 @@ const SignupPage = () => {
       }
 
       // Redirige vers le paramètre `redirect` (lien d'invitation, paiement, etc.)
-      // ou par défaut vers les forfaits pour que le nouvel inscrit choisisse un plan
-      const redirectTo = searchParams.get('redirect') || '/forfaits';
+      // ou par défaut vers les forfaits pour que le nouvel inscrit choisisse un plan.
+      // Anti open-redirect : ne garde que les chemins internes sûrs.
+      const redirectTo = safeReturnToFromQuery(searchParams.get('redirect')) || '/forfaits';
       navigate(redirectTo);
 
     } catch (err) {

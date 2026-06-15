@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Loader2, ArrowLeft, ShoppingCart, Check, Star, AlertCircle, Minus, Plus } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { SafeHtml } from '@/components/common/SafeHtml';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -166,9 +167,9 @@ const ProductDetailPage = () => {
 
             <Separator className="bg-white/10" />
 
-            <div 
+            <SafeHtml
               className="prose prose-invert max-w-none text-gray-300"
-              dangerouslySetInnerHTML={{ __html: product.description }}
+              html={product.description}
             />
 
             <div className="space-y-4 pt-4">
@@ -244,7 +245,7 @@ const ProductDetailPage = () => {
                  {product.additional_info.map((info) => (
                    <div key={info.id} className="bg-[#192734] p-4 rounded-lg border border-white/5">
                      <h3 className="font-bold text-white mb-2">{info.title}</h3>
-                     <div className="text-sm text-gray-400" dangerouslySetInnerHTML={{__html: info.description}} />
+                     <SafeHtml className="text-sm text-gray-400" html={info.description} />
                    </div>
                  ))}
               </div>

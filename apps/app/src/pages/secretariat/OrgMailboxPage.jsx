@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 import { useOrgMailbox, PIPELINE, getSuggestedOffer } from '@/hooks/useOrgMailbox';
 import { useVitrineContactEmail } from '@/contexts/VitrineContactEmailContext';
+import DOMPurify from 'dompurify';
 
 const FILTER_PILLS = [
   { value: 'all', label: 'Tous' },
@@ -389,9 +390,19 @@ const OrgMailboxPage = ({ embedded = false }) => {
                               </div>
                               <div className="p-4 text-sm text-gray-300 max-h-[320px] overflow-y-auto">
                                 {item.data.body_html ? (
-                                  <div
-                                    className="prose prose-invert prose-sm max-w-none [&_a]:text-[var(--school-accent)]"
-                                    dangerouslySetInnerHTML={{ __html: item.data.body_html }}
+                                  // Email ENTRANT = non fiable. Double défense :
+                                  // 1) DOMPurify assainit le HTML ;
+                                  // 2) rendu dans une <iframe sandbox> SANS allow-scripts
+                                  //    (isolation d'origine, aucun JS exécuté).
+                                  <iframe
+                                    title={`Email de ${item.data.from_email || 'expéditeur inconnu'}`}
+                                    sandbox=""
+                                    referrerPolicy="no-referrer"
+                                    className="w-full min-h-[200px] bg-white rounded-md"
+                                    srcDoc={`<!doctype html><html><head><meta charset="utf-8"><base target="_blank"><style>body{margin:0;padding:8px;font:14px/1.5 system-ui,sans-serif;color:#111;word-break:break-word}img{max-width:100%;height:auto}a{color:#1d4ed8}</style></head><body>${DOMPurify.sanitize(
+                                      String(item.data.body_html || ''),
+                                      { USE_PROFILES: { html: true } }
+                                    )}</body></html>`}
                                   />
                                 ) : (
                                   <pre className="whitespace-pre-wrap font-sans text-gray-300">

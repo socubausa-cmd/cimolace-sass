@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, ShoppingCart, Star, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { SafeHtml } from '@/components/common/SafeHtml';
 
 const ProductsList = () => {
   const [products, setProducts] = useState([]);
@@ -104,9 +105,9 @@ const ProductsList = () => {
           </CardHeader>
 
           <CardContent className="flex-grow">
-            <div 
+            <SafeHtml
               className="text-sm text-gray-400 line-clamp-3 mb-4"
-              dangerouslySetInnerHTML={{ __html: product.description }} 
+              html={product.description}
             />
             <div className="text-xl font-bold text-[var(--school-accent)]">
               {formatCurrency(product.price_in_cents, { code: product.currency })}

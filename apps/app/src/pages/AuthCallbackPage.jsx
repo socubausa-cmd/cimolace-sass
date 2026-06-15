@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
+import { safeReturnToFromQuery } from '@/lib/returnToNavigation';
 
 const AuthCallbackPage = () => {
   const location = useLocation();
@@ -48,25 +49,36 @@ const AuthCallbackPage = () => {
   }, []);
 
   const nextPath = useMemo(() => {
+    // Anti open-redirect : on n'autorise QUE les chemins internes sûrs.
+    // safeReturnToFromQuery rejette '//', '://', 'javascript:' et les espaces.
+    // La valeur stockée est un chemin brut → on l'encode pour que le
+    // decodeURIComponent interne soit neutre sur les chemins normaux.
+    const safeInternal = (raw) => {
+      if (!raw || typeof raw !== 'string') return null;
+      return safeReturnToFromQuery(encodeURIComponent(raw));
+    };
+
     // Primary: localStorage key written by loginWithOAuth before redirect
     try {
       const stored = localStorage.getItem('oauth_next_path');
-      if (stored && stored.startsWith('/')) {
+      if (stored) {
         localStorage.removeItem('oauth_next_path');
-        return stored;
+        const safe = safeInternal(stored);
+        if (safe) return safe;
       }
     } catch { /* ignore */ }
     try {
       const stored = sessionStorage.getItem('oauth_next_path');
-      if (stored && stored.startsWith('/')) {
+      if (stored) {
         sessionStorage.removeItem('oauth_next_path');
-        return stored;
+        const safe = safeInternal(stored);
+        if (safe) return safe;
       }
     } catch { /* ignore */ }
-    // Fallback: ?next= query param (legacy / direct link)
+    // Fallback: ?next= query param (legacy / direct link) — déjà URL-encodé.
     const params = new URLSearchParams(location.search);
-    const next = params.get('next');
-    if (next && next.startsWith('/')) return next;
+    const next = safeReturnToFromQuery(params.get('next'));
+    if (next) return next;
     return '/dashboard';
   }, [location.search]);
 
@@ -78,7 +90,10 @@ const AuthCallbackPage = () => {
       redirectedRef.current = true;
       if (debugEnabled) console.log('[AuthCallback] redirect triggered, reason:', reason);
       setDebugState('session_ok_redirect');
-      window.location.replace(nextPath);
+      // Garde finale anti open-redirect au point d'usage (defense-in-depth) :
+      // nextPath est déjà validé, mais on re-vérifie avant la navigation.
+      const target = safeReturnToFromQuery(encodeURIComponent(nextPath)) || '/';
+      window.location.replace(target);
     };
 
     // Hard timeout: if no session after 15s, show error
