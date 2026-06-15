@@ -1,16 +1,28 @@
+import { activeTenantConfig } from '@/lib/tenant/activeTenantConfig';
+
+/**
+ * Fallback = identité du tenant FONDATEUR (seam `activeTenantConfig`), pas un
+ * générique « Mon École ». Tant que la résolution runtime par tenant n'est pas
+ * branchée (Phase 2), un contexte tenant absent (routes globales /forfaits,
+ * /dashboard…) retombe sur le nom du fondateur (Prorascience) au lieu d'un nom
+ * neutre. On hérite NOM + identité ; on GARDE les couleurs sombres de l'app
+ * (la config fondateur peut porter un thème clair de vitrine → casserait le shell).
+ */
+const FOUNDER = (activeTenantConfig && activeTenantConfig.branding) || {};
+
 const FALLBACK_BRANDING = {
-  name: 'Mon École',
-  fullName: 'Mon École',
-  logo: '/logos/isna-logo.png',
-  favicon: '/favicons/isna-favicon.ico',
+  name: FOUNDER.name || 'Mon École',
+  fullName: FOUNDER.fullName || FOUNDER.name || 'Mon École',
+  logo: FOUNDER.logo || '/logos/isna-logo.png',
+  favicon: FOUNDER.favicon || '/favicons/isna-favicon.ico',
   primaryColor: '#0b1115',
   secondaryColor: '#162331',
   accentColor: '#7c3aed',
   backgroundColor: '#0b1115',
-  domain: '',
-  publicSiteOrigin: '',
-  vitrineContactEmail: '',
-  shortName: 'École',
+  domain: FOUNDER.domain || '',
+  publicSiteOrigin: FOUNDER.publicSiteOrigin || '',
+  vitrineContactEmail: FOUNDER.vitrineContactEmail || '',
+  shortName: FOUNDER.name || 'École',
   zones: {
     header: true,
     footer: true,
