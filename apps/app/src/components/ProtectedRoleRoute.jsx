@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { getEffectiveRole } from '@/lib/accountRoleMode';
 
 const ProtectedRoleRoute = ({ children, allowedRoles = [], redirectTo = '/dashboard', allowTenantRole = false }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, tenantRole } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -28,7 +28,8 @@ const ProtectedRoleRoute = ({ children, allowedRoles = [], redirectTo = '/dashbo
     // Les routes tenant-scoped (ex: /studio pour la téléconsult) passent allowTenantRole
     // pour l'accepter aussi. Périmètre limité : l'autorisation fine reste la RLS sur la
     // session (un owner d'un autre tenant passe le garde mais ne peut charger la session).
-    const tenantRole = String(user?.tenant_role || '').toLowerCase();
+    // `tenantRole` vient du contexte auth (décodé du JWT de session) → fiable dès loading=false,
+    // sans attendre que `user` soit complété (corrige la race de rebond au cold-reload).
     const ok =
       normalizedAllowed.includes(role) ||
       (allowTenantRole && tenantRole && normalizedAllowed.includes(tenantRole));

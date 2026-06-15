@@ -487,9 +487,18 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Rôle tenant FIABLE pour les gardes : décodé du JWT de `session` (posé AVANT le fetch profil,
+  // donc présent dès loading=false), repli sur user.tenant_role. Évite la RACE au cold-reload où
+  // les gardes s'exécutent avant que `user` (mis APRÈS ensureVisitorProfile) ne porte tenant_role
+  // → sinon /messages et /liri rebondissent vers l'espace école.
+  const tenantRole = String(
+    decodeJwtClaims(session?.access_token).app_metadata?.tenant_role || user?.tenant_role || '',
+  ).toLowerCase();
+
   const value = {
     user,
     session,
+    tenantRole,
     loading,
     error,
     signup,

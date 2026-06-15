@@ -606,7 +606,7 @@ const PageLoader = () => (
 const LazyShell = ({ children }) => <Suspense fallback={null}>{children}</Suspense>;
 
 const DashboardRedirect = () => {
-  const { user, loading, supabase: authSupabase } = useAuth();
+  const { user, loading, tenantRole, supabase: authSupabase } = useAuth();
   const { loading: billingLoading, status, inGrace } = useBilling();
   const [slowLoad, setSlowLoad] = useState(false);
 
@@ -662,7 +662,7 @@ const DashboardRedirect = () => {
     // Zoom), pas l'espace prospect école. Les écoles (owner/teacher/student GLOBAUX) ne
     // passent pas ici — elles ont déjà été routées plus haut. Loop-safe : la garde /liri
     // accepte ces tenant_role (allowTenantRole).
-    if (['owner', 'admin', 'practitioner', 'clinic_admin'].includes(String(user?.tenant_role || '').toLowerCase())) {
+    if (['owner', 'admin', 'practitioner', 'clinic_admin'].includes(tenantRole)) {
       return <Navigate to="/liri" replace />;
     }
     if (isPremiumActive && !user?.student_profile_completed) return <Navigate to="/onboarding/eleve" replace />;
@@ -727,7 +727,7 @@ const ProtectedStudentJourneyRoute = ({ children }) => {
 };
 
 const ProtectedImmersiveMessagingRoute = ({ children }) => {
-  const { user, loading, supabase: authSupabase } = useAuth();
+  const { user, loading, tenantRole, supabase: authSupabase } = useAuth();
   const { loading: billingLoading, status, inGrace } = useBilling();
   const [checkingVisitorAccess, setCheckingVisitorAccess] = useState(false);
   const [visitorCanChat, setVisitorCanChat] = useState(false);
@@ -783,7 +783,6 @@ const ProtectedImmersiveMessagingRoute = ({ children }) => {
   // Membre actif d'un tenant LIRI/MedOS : son vrai rôle est dans le JWT (tenant_role), pas le
   // rôle global (souvent 'visitor'). La messagerie inter-membres est tenant-scoped (isolation
   // garantie côté API), donc tout membre d'un tenant y a accès. Additif → l'accès école inchangé.
-  const tenantRole = String(user?.tenant_role || '').toLowerCase();
   const isLiriMember = ['owner', 'admin', 'practitioner', 'clinic_admin', 'teacher', 'secretariat'].includes(tenantRole);
   if (isStaffRole || isPremiumActive || isLiriMember || (role === 'visitor' && visitorCanChat)) return children;
 
