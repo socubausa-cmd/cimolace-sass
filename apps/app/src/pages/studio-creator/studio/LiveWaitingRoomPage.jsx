@@ -23,6 +23,7 @@ import {
   ProrasciencePublicPageShell,
   ProrasciencePublicCard,
 } from '@/components/prorascience/ProrasciencePublicPageShell';
+import { useTenantBranding } from '@/hooks/useTenantBranding';
 import LiveHostMessagingPanel from '@/components/liri/live-room/LiveHostMessagingPanel';
 import LiveHostFooterMessaging from '@/components/liri/live-room/LiveHostFooterMessaging';
 import AmbientAudioLayer from '@/components/liri/live-room/AmbientAudioLayer';
@@ -343,6 +344,28 @@ export default function LiveWaitingRoomPage() {
   const navigate      = useNavigate();
   const { user, session: authSession } = useAuth();
   const { toast } = useToast();
+
+  // Branding tenant (accent couleur) appliqué à la salle d'attente — sinon l'accent ISNA
+  // par défaut s'affiche pour un invité d'un autre tenant (ex. zahirwellness). Scopé au
+  // montage de cette page (les variables sont restaurées au démontage).
+  const { cssVars } = useTenantBranding();
+  useEffect(() => {
+    if (!cssVars || typeof document === 'undefined') return undefined;
+    const root = document.documentElement;
+    const prev = {};
+    Object.entries(cssVars).forEach(([k, v]) => {
+      if (typeof k === 'string' && k.startsWith('--')) {
+        prev[k] = root.style.getPropertyValue(k);
+        root.style.setProperty(k, String(v));
+      }
+    });
+    return () => {
+      Object.entries(prev).forEach(([k, v]) => {
+        if (v) root.style.setProperty(k, v);
+        else root.style.removeProperty(k);
+      });
+    };
+  }, [cssVars]);
 
   const [loading,     setLoading]    = useState(true);
   const [error,       setError]      = useState(null);
