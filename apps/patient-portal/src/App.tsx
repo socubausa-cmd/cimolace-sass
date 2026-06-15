@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuth } from './lib/auth';
 import { PatientLogin } from './pages/Login';
+import { InviteAccept } from './pages/InviteAccept';
 import { Landing } from './pages/Landing';
 import { PatientDashboard } from './pages/Dashboard';
 import { MyRecords } from './pages/MyRecords';
@@ -25,6 +26,7 @@ function AppRoutes() {
     return (
       <Routes>
         <Route path="/connexion" element={<PatientLogin />} />
+        <Route path="/invite/accept" element={<InviteAccept />} />
         <Route path="/" element={<Landing />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -32,6 +34,7 @@ function AppRoutes() {
   }
   return (
     <Routes>
+      <Route path="/invite/accept" element={<InviteAccept />} />
       <Route element={<PatientLayout />}>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<PatientDashboard />} />
