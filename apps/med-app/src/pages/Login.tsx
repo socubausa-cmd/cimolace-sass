@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { useBranding } from '../lib/branding';
-import { Stethoscope, LogIn } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 
 export function LoginPage() {
   const { signIn, signUp, loading } = useAuth();
@@ -51,7 +51,7 @@ export function LoginPage() {
               style={{ height: 48, objectFit: 'contain' }}
             />
           ) : (
-            <Stethoscope size={40} color="var(--brand-primary)" />
+            <img src="/brand/nganga-logo.png" alt="Nganga" style={{ height: 84, objectFit: 'contain' }} />
           )}
           <h1 style={{ fontSize: 24, fontWeight: 700, marginTop: 12 }}>
             Nganga
