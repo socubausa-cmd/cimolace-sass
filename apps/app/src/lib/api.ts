@@ -469,13 +469,6 @@ export const medosApi = {
         `/med/me/notes/${noteId}/read`,
       )
       .then(unwrap),
-  // Formulaires côté patient (self-service) — @Roles('patient')
-  listMyForms: () =>
-    api.get<ApiEnvelope<MedForm[]>>("/med/me/forms").then(unwrap),
-  submitMyFormResponse: (formId: string, responses: Record<string, unknown>) =>
-    api
-      .post<ApiEnvelope<MedFormResponse>>(`/med/me/forms/${formId}/responses`, { responses })
-      .then(unwrap),
 
   // Forms (Phase 1B)
   listForms: () =>

@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { medosApi, tenantsApi, type MedNote } from '../lib/api';
-import { PatientFormsView } from './PatientFormsView';
 
 type PortalView =
   | 'today'
@@ -445,7 +444,17 @@ export function MedosPatientPortal() {
             />
           )}
 
-          {view === 'forms' && <PatientFormsView />}
+          {view === 'forms' && (
+            <PlaceholderPanel
+              title="Formulaires a completer"
+              description="Les formulaires sont le premier vrai workflow patient : intake, consentement, suivi post-consultation et questionnaires specialises."
+              items={[
+                { title: 'Intake patient general', detail: 'Antecedents, allergies, motif de consultation', status: 'MVP' },
+                { title: 'Consentement eclaire', detail: 'Signature electronique, IP, timestamp et version du texte', status: 'MVP' },
+                { title: 'PHQ-9', detail: 'Score automatique et revue praticien', status: 'Phase 2' },
+              ]}
+            />
+          )}
 
           {view === 'journal' && (
             <PlaceholderPanel
