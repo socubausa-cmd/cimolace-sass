@@ -3,6 +3,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { SupabaseService } from '../../supabase/supabase.service';
@@ -47,6 +48,53 @@ type UploadedLabFile = {
 
 const ENGINE_VERSION = 'v1';
 const GRAPH_VERSION = 'v1';
+
+/**
+ * Disclaimer patient — attaché côté serveur à CHAQUE réponse de l'assistant,
+ * INDÉPENDAMMENT du LLM (impossible à omettre). Repris tel quel de
+ * getMyTwinState pour cohérence du portail patient.
+ */
+const PATIENT_ASSISTANT_DISCLAIMER =
+  'Ces informations sont à visée éducative et de suivi, elles ne constituent pas un ' +
+  "diagnostic médical et ne remplacent pas l'avis de votre praticien.";
+
+/**
+ * Encart urgences préfixé à la réponse quand une alerte est détectée
+ * (par le pré-filtre déterministe OU par le LLM). Ne nomme aucune marque.
+ */
+const PATIENT_ASSISTANT_EMERGENCY_NOTICE =
+  "Si vous êtes en situation d'urgence (douleur dans la poitrine, difficulté à respirer, " +
+  'faiblesse soudaine, trouble de la parole, perte de connaissance, saignement important, ou ' +
+  'pensées de vous faire du mal), appelez immédiatement le 15 ou le 112 et contactez votre praticien. ' +
+  "Ne restez pas seul·e et ne tardez pas.";
+
+/**
+ * Pré-filtre déterministe d'escalade (DOUBLE FILET). Regex FR sur le message +
+ * l'historique : un symptôme d'alerte force escalate=true et l'encart urgences
+ * MÊME si le LLM est indisponible (503) — jamais avalé par une panne IA.
+ * Accents optionnels pour robustesse de saisie.
+ */
+const EMERGENCY_PATTERNS: RegExp[] = [
+  /douleur[s]?\s+(thoraciqu|dans la poitrine|a la poitrine|à la poitrine)/i,
+  /\b(thoraciqu|poitrine)\w*/i,
+  /(mal|difficult\w*|du mal)\s+(a|à)\s+respir/i,
+  /\b(respir\w*|essouffl\w*|etouff\w*|étouff\w*|suffoq\w*)\b/i,
+  /\bparalys\w*/i,
+  /\b(avc|a\.?v\.?c)\b/i,
+  /\b(faiblesse\s+soudaine|engourdissement\s+soudain)/i,
+  /(troubl\w*|difficult\w*)\s+(de\s+)?(la\s+)?(parole|elocution|élocution)/i,
+  /\b(je\s+n.?arrive\s+plus\s+a\s+parler|j.?arrive\s+plus\s+a\s+parler)/i,
+  /\b(perte\s+de\s+connaissance|evanoui\w*|évanoui\w*|syncope|malaise)\b/i,
+  /\b(saigne\w*|saignement\w*|hemorragie\w*|hémorragie\w*)\b/i,
+  /\bsang\b.*\b(beaucoup|abondant|partout|ne\s+s.?arr)/i,
+  /\b(suicid\w*|me\s+suicider|en\s+finir|me\s+faire\s+du\s+mal|mettre\s+fin\s+a\s+mes\s+jours)\b/i,
+];
+
+/** True si l'un des motifs d'urgence apparaît dans le texte agrégé. */
+function detectEmergency(text: string): boolean {
+  const haystack = (text || '').normalize('NFC');
+  return EMERGENCY_PATTERNS.some((re) => re.test(haystack));
+}
 
 @Injectable()
 export class TwinService {
@@ -559,7 +607,7 @@ export class TwinService {
         .limit(50),
       this.db
         .from('med_alerts')
-        .select('id,severity,message,created_at')
+        .select('id,severity,message_fr,created_at')
         .eq('patient_id', patientId)
         .eq('status', 'open')
         .order('created_at', { ascending: false }),
@@ -590,13 +638,163 @@ export class TwinService {
       score: latestWheel.get(d)?.score ?? null,
     }));
 
+    // La colonne en DB est `message_fr` ; on l'expose sous `message` pour
+    // respecter le contrat front (TwinAlert.message).
+    const alerts = (alertsRes.data ?? []).map((a: any) => ({
+      id: a.id,
+      severity: a.severity,
+      message: a.message_fr ?? '',
+      created_at: a.created_at,
+    }));
+
     return {
       organs_scores,
       wheel,
       events: eventsRes.data ?? [],
-      alerts: alertsRes.data ?? [],
+      alerts,
       disclaimer:
         "Ces données sont indicatives, à des fins de suivi pédagogique. Elles ne constituent pas un diagnostic médical et ne remplacent pas l'avis d'un professionnel de santé.",
+    };
+  }
+
+  /**
+   * Assistant santé PÉDAGOGIQUE du patient connecté (Chantier 4).
+   *
+   * Résolution STRICTEMENT patient-scoped : le patientId n'arrive JAMAIS du
+   * client — on résout med_patients via (tenant_id, patient_user_id) comme
+   * getMyTwinState (404 sinon). On construit le même contexte pseudonymisé que
+   * le copilote (buildAiContext) ENRICHI de la roue + des alertes ouvertes.
+   *
+   * DOUBLE FILET escalade : un pré-filtre déterministe (regex FR sur
+   * message+historique) force l'encart urgences + escalate=true MÊME si le LLM
+   * est indisponible. Sur 503 LLM sans alerte → on repropage le 503. Le
+   * disclaimer FR est attaché à CHAQUE réponse, indépendamment du LLM.
+   *
+   * Renvoie toujours { reply, disclaimer, suggestions, escalate }.
+   */
+  async assistantForMe(
+    tenant: TenantContext,
+    userId: string,
+    message: string,
+    history: Array<{ role: 'user' | 'assistant'; content: string }> = [],
+  ): Promise<{
+    reply: string;
+    disclaimer: string;
+    suggestions: string[];
+    escalate: boolean;
+  }> {
+    // 1) Résolution patient (pattern getMyTwinState) — 404 si pas de dossier.
+    const { data: patient } = await this.db
+      .from('med_patients')
+      .select('id')
+      .eq('tenant_id', tenant.id)
+      .eq('patient_user_id', userId)
+      .maybeSingle();
+    if (!patient) throw new NotFoundException('Aucun dossier patient lié à ce compte');
+    const patientId = patient.id;
+
+    // 2) Pré-filtre déterministe d'alerte (message + historique).
+    const safeHistory = (history ?? []).slice(-6);
+    const aggregated = [message, ...safeHistory.map((h) => h.content)].join('\n');
+    const preFilterEscalate = detectEmergency(aggregated);
+
+    // 3) Contexte IA pseudonymisé + roue + alertes ouvertes (comme getMyTwinState).
+    const [ctx, wheelRes, alertsRes] = await Promise.all([
+      this.buildAiContext(tenant, patientId),
+      this.db
+        .from('med_transformation_wheel')
+        .select('domain,score,measured_at')
+        .eq('patient_id', patientId)
+        .order('measured_at', { ascending: false }),
+      this.db
+        .from('med_alerts')
+        .select('severity,message_fr,status,created_at')
+        .eq('patient_id', patientId)
+        .eq('status', 'open')
+        .order('created_at', { ascending: false }),
+    ]);
+
+    const latestWheel = new Map<string, any>();
+    for (const r of wheelRes.data ?? []) {
+      if (!latestWheel.has(r.domain)) latestWheel.set(r.domain, r);
+    }
+    const wheel = TwinService.WHEEL_DOMAINS.map((d) => ({
+      domain: d,
+      score: (latestWheel.get(d)?.score ?? null) as number | null,
+    }));
+    // La colonne en DB est `message_fr` (cf. computeScores/insert + ClinicalAlert).
+    // On la mappe sur `message` pour le bloc d'alertes passé au LLM.
+    const openAlerts = (alertsRes.data ?? [])
+      .map((a: any) => ({
+        severity: a.severity,
+        message: a.message_fr ?? '',
+      }))
+      .filter((a: { message: string }) => a.message);
+
+    const started = Date.now();
+
+    // 4) Appel LLM avec filet sur indisponibilité (503).
+    let reply: string;
+    let suggestions: string[] = [];
+    let llmEscalate = false;
+    try {
+      const res = await this.ai.patientAssistant(ctx, message, safeHistory, {
+        wheel,
+        openAlerts,
+      });
+      reply = (res.data?.reply ?? '').toString().trim();
+      suggestions = Array.isArray(res.data?.suggestions)
+        ? res.data.suggestions.filter((s: any) => typeof s === 'string').slice(0, 3)
+        : [];
+      llmEscalate = res.data?.escalate === true;
+      // Audit : métadonnées + hash de l'entrée (pas de PII en clair).
+      await this.logAgentRun(tenant, patientId, null, 'patient_assistant', {
+        input_hash: createHash('sha256').update(aggregated).digest('hex'),
+        model: res.model,
+        tokens: res.tokens,
+        latency_ms: Date.now() - started,
+        output: { escalate: llmEscalate || preFilterEscalate, suggestions },
+      });
+    } catch (e: any) {
+      // LLM indisponible : si une alerte est détectée par le pré-filtre, on
+      // répond quand même (orientation urgences). Sinon on repropage le 503.
+      await this.logAgentRun(tenant, patientId, null, 'patient_assistant', {
+        input_hash: createHash('sha256').update(aggregated).digest('hex'),
+        latency_ms: Date.now() - started,
+        error: e?.message ?? 'llm_unavailable',
+        output: { escalate: preFilterEscalate, llm_unavailable: true },
+      });
+      if (preFilterEscalate) {
+        return {
+          reply: PATIENT_ASSISTANT_EMERGENCY_NOTICE,
+          disclaimer: PATIENT_ASSISTANT_DISCLAIMER,
+          suggestions: [],
+          escalate: true,
+        };
+      }
+      throw e instanceof ServiceUnavailableException
+        ? e
+        : new ServiceUnavailableException(
+            "L'assistant est momentanément indisponible. Votre suivi reste consultable.",
+          );
+    }
+
+    // 5) Escalade = pré-filtre OU LLM. On préfixe l'encart urgences.
+    const escalate = preFilterEscalate || llmEscalate;
+    if (!reply) {
+      reply = escalate
+        ? PATIENT_ASSISTANT_EMERGENCY_NOTICE
+        : "Je n'ai pas pu formuler de réponse cette fois-ci. Reformulez votre question ou rapprochez-vous de votre praticien.";
+    } else if (escalate && !reply.startsWith(PATIENT_ASSISTANT_EMERGENCY_NOTICE)) {
+      reply = `${PATIENT_ASSISTANT_EMERGENCY_NOTICE}\n\n${reply}`;
+    }
+
+    return {
+      reply,
+      disclaimer: PATIENT_ASSISTANT_DISCLAIMER,
+      // En cas d'alerte, on ne propose pas de relance — on oriente vers l'urgence.
+      suggestions: escalate ? [] : suggestions,
+      escalate,
     };
   }
 
