@@ -13,7 +13,7 @@ import { Type } from 'class-transformer';
 
 class FormFieldDto {
   @IsString() id: string;
-  @IsString() @IsIn(['text','textarea','number','select','checkbox','date','file']) type: string;
+  @IsString() @IsIn(['text','textarea','number','select','checkbox','multi','date','file']) type: string;
   @IsString() label: string;
   @IsBoolean() @IsOptional() required?: boolean;
   @IsArray() @IsOptional() options?: string[];
