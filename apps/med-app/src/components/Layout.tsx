@@ -37,7 +37,7 @@ const nav = [
 export function Layout() {
   const loc = useLocation();
   const branding = useBranding();
-  const hasTenantBrand = !branding.loading && branding.name !== 'MEDOS';
+  const hasTenantBrand = !branding.loading && branding.name !== 'Nganga';
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -65,7 +65,7 @@ export function Layout() {
           ) : (
             /* Engine default — no tenant brand resolved. */
             <h1 style={{ fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
-              <Stethoscope size={22} /> MedOS
+              <Stethoscope size={22} /> Nganga
             </h1>
           )}
         </div>
@@ -92,7 +92,7 @@ export function Layout() {
         {hasTenantBrand && (
           /* Discreet engine attribution — honest co-brand without the loud wordmark. */
           <div style={{ padding: '14px 20px 0', margin: '12px 0 0', borderTop: '1px solid var(--zw-side-border)', fontSize: 11, color: 'var(--zw-side-text-dim)', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Stethoscope size={13} /> Propulsé par MedOS
+            <Stethoscope size={13} /> Propulsé par Nganga
           </div>
         )}
       </aside>

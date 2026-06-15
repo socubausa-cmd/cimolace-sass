@@ -54,7 +54,7 @@ export function LoginPage() {
             <Stethoscope size={40} color="var(--brand-primary)" />
           )}
           <h1 style={{ fontSize: 24, fontWeight: 700, marginTop: 12 }}>
-            MedOS
+            Nganga
           </h1>
           <p style={{ color: 'var(--zw-text-muted)', marginTop: 4 }}>
             {isSignUp ? 'Créer mon compte praticien' : 'Espace praticien'}
