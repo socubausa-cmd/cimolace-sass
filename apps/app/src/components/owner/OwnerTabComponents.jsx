@@ -9,9 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 
 /* Thème CLAIR « Wix Studio » — surface blanche, aligné sur OwnerDashboardOverview. */
 const LT_CARD = {
-  background: '#FFFFFF',
-  border: '1px solid rgba(0,0,0,0.08)',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+  background: 'var(--lt-card-bg)',
+  border: '1px solid var(--lt-card-border)',
+  boxShadow: 'var(--lt-card-shadow)',
 };
 
 // --- DASHBOARD TAB ---
@@ -24,23 +24,23 @@ export const DashboardTab = ({ stats }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border-0" style={LT_CARD}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm" style={{ color: '#71717A' }}>Étudiants Actifs</CardTitle>
+            <CardTitle className="text-sm" style={{ color: 'var(--lt-muted)' }}>Étudiants Actifs</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold" style={{ color: '#18181B' }}>{safeStats.activeStudents || 0}</div>
+            <div className="text-3xl font-bold" style={{ color: 'var(--lt-text)' }}>{safeStats.activeStudents || 0}</div>
           </CardContent>
         </Card>
         <Card className="border-0" style={LT_CARD}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm" style={{ color: '#71717A' }}>Formations Actives</CardTitle>
+            <CardTitle className="text-sm" style={{ color: 'var(--lt-muted)' }}>Formations Actives</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold" style={{ color: '#8A6D1A' }}>{safeStats.activeFormations || 0}</div>
+            <div className="text-3xl font-bold" style={{ color: 'var(--lt-gold-ink)' }}>{safeStats.activeFormations || 0}</div>
           </CardContent>
         </Card>
         <Card className="border-0" style={LT_CARD}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm" style={{ color: '#71717A' }}>Revenus (Simulé)</CardTitle>
+            <CardTitle className="text-sm" style={{ color: 'var(--lt-muted)' }}>Revenus (Simulé)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-emerald-600">{safeStats.revenue || 0}€</div>
@@ -50,7 +50,7 @@ export const DashboardTab = ({ stats }) => {
 
       <Card className="border-0" style={LT_CARD}>
         <CardHeader>
-          <CardTitle style={{ color: '#18181B' }}>Aperçu Rapide</CardTitle>
+          <CardTitle style={{ color: 'var(--lt-text)' }}>Aperçu Rapide</CardTitle>
           <CardDescription className="text-zinc-500">Vue d'ensemble de l'activité récente (Mode Local Storage)</CardDescription>
         </CardHeader>
         <CardContent>
@@ -78,13 +78,14 @@ export const FormationsTab = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold" style={{ color: '#18181B' }}>Gestion des Formations</h2>
+        <h2 className="text-xl font-bold" style={{ color: 'var(--lt-text)' }}>Gestion des Formations</h2>
         <div className="flex gap-2">
           <Input
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             placeholder="Nouvelle formation..."
-            className="w-64 bg-[#F4F5F7] border-black/10 text-zinc-900 placeholder:text-zinc-400"
+            className="w-64 bg-[var(--lt-inner-bg)] border-[var(--lt-border)] placeholder:text-zinc-400"
+            style={{ color: 'var(--lt-text)' }}
           />
           <Button onClick={handleAdd} className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-semibold">
             <Plus className="w-4 h-4 mr-2" /> Ajouter
@@ -93,16 +94,16 @@ export const FormationsTab = () => {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-10"><Loader2 className="animate-spin" style={{ color: '#8A6D1A' }} /></div>
+        <div className="flex justify-center py-10"><Loader2 className="animate-spin" style={{ color: 'var(--lt-gold-ink)' }} /></div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {safeData.map((formation) => (
             <Card key={formation.id} className="border-0 transition-all" style={LT_CARD}>
               <CardContent className="flex items-center justify-between p-6">
                 <div>
-                  <h3 className="font-bold text-lg" style={{ color: '#18181B' }}>{formation.title}</h3>
+                  <h3 className="font-bold text-lg" style={{ color: 'var(--lt-text)' }}>{formation.title}</h3>
                   <div className="flex gap-2 mt-2 items-center">
-                     <Badge variant="outline" className={formation.status === 'active' ? 'text-emerald-700 border-emerald-300 bg-emerald-50' : 'text-zinc-500 border-black/10'}>
+                     <Badge variant="outline" className={formation.status === 'active' ? 'text-emerald-700 border-emerald-300 bg-emerald-50' : 'text-zinc-500 border-[var(--lt-border)]'}>
                        {formation.status}
                      </Badge>
                      <span className="text-sm text-zinc-500">{formation.students} étudiants</span>
@@ -110,7 +111,7 @@ export const FormationsTab = () => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                   <Button size="icon" variant="ghost" className="text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100">
+                   <Button size="icon" variant="ghost" className="text-zinc-500 hover:opacity-80">
                      <Edit className="w-4 h-4" />
                    </Button>
                    <Button size="icon" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => deleteItem(formation.id)}>
@@ -120,7 +121,7 @@ export const FormationsTab = () => {
               </CardContent>
             </Card>
           ))}
-          {safeData.length === 0 && <p className="text-center py-10" style={{ color: '#71717A' }}>Aucune formation trouvée.</p>}
+          {safeData.length === 0 && <p className="text-center py-10" style={{ color: 'var(--lt-muted)' }}>Aucune formation trouvée.</p>}
         </div>
       )}
     </div>
@@ -134,18 +135,18 @@ export const AccompanimentTab = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold" style={{ color: '#18181B' }}>Suivi Mentoring & Coaching</h2>
+      <h2 className="text-xl font-bold" style={{ color: 'var(--lt-text)' }}>Suivi Mentoring & Coaching</h2>
       <Card className="border-0" style={LT_CARD}>
         <CardHeader>
-           <CardTitle style={{ color: '#18181B' }}>Sessions Récentes</CardTitle>
+           <CardTitle style={{ color: 'var(--lt-text)' }}>Sessions Récentes</CardTitle>
         </CardHeader>
         <CardContent>
-           {loading ? <Loader2 className="animate-spin" style={{ color: '#8A6D1A' }} /> : (
+           {loading ? <Loader2 className="animate-spin" style={{ color: 'var(--lt-gold-ink)' }} /> : (
              <div className="space-y-4">
                {safeData.map(item => (
-                 <div key={item.id} className="flex justify-between items-center border-b border-black/[0.06] pb-4 last:border-0">
+                 <div key={item.id} className="flex justify-between items-center border-b border-[var(--lt-border)] pb-4 last:border-0">
                     <div>
-                      <p className="font-medium" style={{ color: '#18181B' }}>{item.type} - {item.student}</p>
+                      <p className="font-medium" style={{ color: 'var(--lt-text)' }}>{item.type} - {item.student}</p>
                       <p className="text-sm text-zinc-500">{item.date}</p>
                     </div>
                     <Badge className={item.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
@@ -176,16 +177,16 @@ export const SchoolLifeTab = () => {
    return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold" style={{ color: '#18181B' }}>Vie Scolaire (Événements & Annonces)</h2>
+        <h2 className="text-xl font-bold" style={{ color: 'var(--lt-text)' }}>Vie Scolaire (Événements & Annonces)</h2>
         <Dialog>
           <DialogTrigger asChild>
              <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-semibold"><Plus className="w-4 h-4 mr-2"/> Ajouter</Button>
           </DialogTrigger>
-          <DialogContent className="bg-white border-black/10 text-zinc-900">
+          <DialogContent className="bg-[var(--lt-card-bg)] border-[var(--lt-border)]" style={{ color: 'var(--lt-text)' }}>
              <DialogHeader><DialogTitle>Nouvel Événement</DialogTitle></DialogHeader>
              <div className="space-y-4 py-4">
-               <Input placeholder="Titre" className="bg-[#F4F5F7] border-black/10 text-zinc-900 placeholder:text-zinc-400" value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} />
-               <Input type="date" className="bg-[#F4F5F7] border-black/10 text-zinc-900" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} />
+               <Input placeholder="Titre" className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] placeholder:text-zinc-400" style={{ color: 'var(--lt-text)' }} value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} />
+               <Input type="date" className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)]" style={{ color: 'var(--lt-text)' }} value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} />
                <Button onClick={handleAdd} className="w-full bg-[var(--school-accent)] text-black hover:bg-amber-500 font-semibold">Créer</Button>
              </div>
           </DialogContent>
@@ -193,7 +194,7 @@ export const SchoolLifeTab = () => {
       </div>
 
       <div className="grid gap-4">
-        {loading ? <Loader2 className="animate-spin mx-auto" style={{ color: '#8A6D1A' }} /> :
+        {loading ? <Loader2 className="animate-spin mx-auto" style={{ color: 'var(--lt-gold-ink)' }} /> :
            safeData.map(item => (
              <div key={item.id} className="flex items-center justify-between p-4 rounded-[14px]" style={LT_CARD}>
                 <div className="flex items-center gap-4">
@@ -201,7 +202,7 @@ export const SchoolLifeTab = () => {
                       <Calendar className="w-5 h-5" />
                    </div>
                    <div>
-                     <h4 className="font-bold" style={{ color: '#18181B' }}>{item.title}</h4>
+                     <h4 className="font-bold" style={{ color: 'var(--lt-text)' }}>{item.title}</h4>
                      <p className="text-sm text-zinc-500">{item.date}</p>
                    </div>
                 </div>

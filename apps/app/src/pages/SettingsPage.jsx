@@ -12,12 +12,12 @@ import { useResolvedTenantSlug } from '@/hooks/useResolvedTenantSlug';
 
 const SETTINGS_TABS = new Set(['general', 'academic', 'payments', 'security', 'notifications', 'integrations']);
 
-/* Thème CLAIR « Wix Studio » — aligné sur OwnerDashboardOverview. */
-const LT_GOLD_INK = '#8A6D1A';
+/* Teinte du back-office (crème ⇄ sombre) — aligné sur OwnerDashboardOverview. */
+const LT_GOLD_INK = 'var(--lt-gold-ink)';
 const lightPanel = {
-  background: '#FFFFFF',
-  border: '1px solid rgba(0,0,0,0.08)',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+  background: 'var(--lt-card-bg)',
+  border: '1px solid var(--lt-card-border)',
+  boxShadow: 'var(--lt-card-shadow)',
   borderRadius: 14,
 };
 
@@ -71,7 +71,7 @@ const SettingsPage = () => {
           <div className="space-y-4">
             <div
               className="flex flex-wrap items-center justify-between gap-3 p-4"
-              style={{ ...lightPanel, border: '1px solid rgba(212,175,55,0.35)', background: '#FFFDF6' }}
+              style={{ ...lightPanel, border: '1px solid rgba(212,175,55,0.35)', background: 'var(--lt-inner-bg)' }}
             >
               <p className="text-sm text-zinc-600">
                 Lien encaissement pour le tenant résolu depuis ce domaine{' '}
@@ -133,7 +133,7 @@ const SettingsPage = () => {
             onChange={handleSettingsTab}
             options={settingsOptions}
             layoutId="settings-segment-pill"
-            railClassName="!bg-[#F4F5F7] !border-black/5"
+            railClassName="!bg-[var(--lt-inner-bg)] !border-[var(--lt-border)]"
             optionClassName="!text-zinc-500 [&.text-white]:!text-zinc-900 hover:!bg-black/[0.03]"
           />
 

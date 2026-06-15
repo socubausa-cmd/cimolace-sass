@@ -39,20 +39,20 @@ function StepEditor({ step, data, onChange, onRemoveContent }) {
   const [open, setOpen] = useState(Boolean(data?.content));
 
   return (
-    <div className="rounded-xl border border-black/[0.08] bg-white overflow-hidden">
+    <div className="rounded-xl border border-[var(--lt-border)] bg-[var(--lt-card-bg)] overflow-hidden">
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F5F7] transition-colors text-left"
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--lt-inner-bg)] transition-colors text-left"
       >
         <div className="flex items-center gap-2.5">
           <span className="text-base">{step.icon}</span>
-          <span className="text-sm font-medium text-[#18181B]">{step.label}</span>
+          <span className="text-sm font-medium text-[var(--lt-text)]">{step.label}</span>
           {data?.duration_min && (
-            <span className="text-[10px] text-[#71717A] border border-black/[0.08] rounded px-1.5 py-0.5">{data.duration_min} min</span>
+            <span className="text-[10px] text-[var(--lt-muted)] border border-[var(--lt-border)] rounded px-1.5 py-0.5">{data.duration_min} min</span>
           )}
           {data?.content && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
         </div>
-        {open ? <ChevronUp className="w-4 h-4 text-[#71717A]" /> : <ChevronDown className="w-4 h-4 text-[#71717A]" />}
+        {open ? <ChevronUp className="w-4 h-4 text-[var(--lt-muted)]" /> : <ChevronDown className="w-4 h-4 text-[var(--lt-muted)]" />}
       </button>
 
       <AnimatePresence>
@@ -64,19 +64,19 @@ function StepEditor({ step, data, onChange, onRemoveContent }) {
                 onChange={e => onChange({ ...data, step: step.step, title: step.label, content: e.target.value })}
                 placeholder={step.placeholder}
                 rows={2}
-                className="w-full resize-none rounded-lg bg-[#F4F5F7] border border-black/[0.08] px-3 py-2 text-sm text-[#18181B] placeholder-[#A1A1AA] focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] transition-colors"
+                className="w-full resize-none rounded-lg bg-[var(--lt-inner-bg)] border border-[var(--lt-border)] px-3 py-2 text-sm text-[var(--lt-text)] placeholder-[#A1A1AA] focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] transition-colors"
               />
               <div className="flex items-center gap-3">
-                <label className="text-xs text-[#71717A]">Durée :</label>
+                <label className="text-xs text-[var(--lt-muted)]">Durée :</label>
                 <input
                   type="number"
                   min={1} max={60}
                   value={data?.duration_min || ''}
                   onChange={e => onChange({ ...data, step: step.step, title: step.label, duration_min: Number(e.target.value) || undefined })}
                   placeholder="min"
-                  className="w-16 rounded-lg bg-[#F4F5F7] border border-black/[0.08] px-2 py-1 text-sm text-[#18181B] text-center focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]"
+                  className="w-16 rounded-lg bg-[var(--lt-inner-bg)] border border-[var(--lt-border)] px-2 py-1 text-sm text-[var(--lt-text)] text-center focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]"
                 />
-                <span className="text-xs text-[#71717A]">minutes</span>
+                <span className="text-xs text-[var(--lt-muted)]">minutes</span>
                 {data?.content && (
                   <button onClick={() => onRemoveContent(step.step)} className="ml-auto text-xs text-red-600 hover:text-red-700 flex items-center gap-1">
                     <Trash2 className="w-3 h-3" /> Effacer
@@ -187,7 +187,7 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
 
   if (!loaded) {
     return (
-      <div className="flex items-center justify-center py-8 text-[#71717A]">
+      <div className="flex items-center justify-center py-8 text-[var(--lt-muted)]">
         <Loader2 className="w-5 h-5 animate-spin mr-2" /> Chargement…
       </div>
     );
@@ -196,17 +196,17 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
   const currentStatus = String(appointment?.status || '');
 
   return (
-    <div className="space-y-4 p-4 bg-[#F4F5F7]">
+    <div className="space-y-4 p-4 bg-[var(--lt-inner-bg)]">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <List className="w-4 h-4 text-[#8A6D1A]" />
-        <p className="text-sm font-semibold text-[#18181B]">Studio de préparation</p>
-        <span className="ml-auto text-[10px] text-[#71717A] border border-black/[0.08] rounded px-2 py-0.5">§3 & §8</span>
+        <List className="w-4 h-4 text-[var(--lt-gold-ink)]" />
+        <p className="text-sm font-semibold text-[var(--lt-text)]">Studio de préparation</p>
+        <span className="ml-auto text-[10px] text-[var(--lt-muted)] border border-[var(--lt-border)] rounded px-2 py-0.5">§3 & §8</span>
       </div>
 
       {/* Type de salle */}
       <div className="space-y-1.5">
-        <label className="text-xs text-[#71717A] uppercase tracking-wider">Type de salle</label>
+        <label className="text-xs text-[var(--lt-muted)] uppercase tracking-wider">Type de salle</label>
         <div className="flex gap-2">
           {ROOM_TYPES.map(rt => (
             <button
@@ -214,8 +214,8 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
               onClick={() => setRoomType(rt.value)}
               className={`flex-1 flex flex-col items-center gap-1.5 rounded-xl border py-3 text-xs font-medium transition-all ${
                 roomType === rt.value
-                  ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#8A6D1A]'
-                  : 'border-black/[0.08] bg-white text-[#71717A] hover:border-black/25'
+                  ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--lt-gold-ink)]'
+                  : 'border-[var(--lt-border)] bg-[var(--lt-card-bg)] text-[var(--lt-muted)] hover:border-black/25'
               }`}
             >
               <rt.icon className="w-4 h-4" />
@@ -227,7 +227,7 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
 
       {/* Plan de l'entretien */}
       <div className="space-y-1.5">
-        <label className="text-xs text-[#71717A] uppercase tracking-wider flex items-center gap-1.5">
+        <label className="text-xs text-[var(--lt-muted)] uppercase tracking-wider flex items-center gap-1.5">
           <Plus className="w-3 h-3" /> Plan de l'entretien
           <span className="text-[#A1A1AA]">(cliquer pour développer)</span>
         </label>
@@ -246,7 +246,7 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
 
       {/* Notes internes */}
       <div className="space-y-1.5">
-        <label className="text-xs text-[#71717A] uppercase tracking-wider flex items-center gap-1.5">
+        <label className="text-xs text-[var(--lt-muted)] uppercase tracking-wider flex items-center gap-1.5">
           <FileText className="w-3 h-3" /> Notes internes
         </label>
         <textarea
@@ -254,12 +254,12 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
           onChange={e => setNotes(e.target.value)}
           placeholder="Observations, contexte, points de vigilance avant la séance…"
           rows={2}
-          className="w-full resize-none rounded-xl bg-white border border-black/[0.08] px-3 py-2.5 text-sm text-[#18181B] placeholder-[#A1A1AA] focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] transition-colors"
+          className="w-full resize-none rounded-xl bg-[var(--lt-card-bg)] border border-[var(--lt-border)] px-3 py-2.5 text-sm text-[var(--lt-text)] placeholder-[#A1A1AA] focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] transition-colors"
         />
       </div>
 
       {/* Activer la Smart Room */}
-      <div className="flex items-center gap-3 rounded-xl border border-black/[0.08] bg-white px-4 py-3">
+      <div className="flex items-center gap-3 rounded-xl border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-4 py-3">
         <button
           onClick={() => setIsReady(r => !r)}
           className={`w-10 h-5 rounded-full transition-all flex items-center px-0.5 ${isReady ? 'bg-[var(--school-accent)]' : 'bg-zinc-300'}`}
@@ -267,15 +267,15 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
           <motion.div className="w-4 h-4 rounded-full bg-white shadow" animate={{ x: isReady ? 20 : 0 }} transition={{ type: 'spring', stiffness: 300 }} />
         </button>
         <div>
-          <p className="text-sm text-[#18181B] font-medium">Séance prête</p>
-          <p className="text-xs text-[#71717A]">Active le bouton "Rejoindre" pour le client</p>
+          <p className="text-sm text-[var(--lt-text)] font-medium">Séance prête</p>
+          <p className="text-xs text-[var(--lt-muted)]">Active le bouton "Rejoindre" pour le client</p>
         </div>
       </div>
 
       {/* Changer le statut */}
       {['confirmed','scheduled','preparing'].includes(currentStatus) && (
         <div className="space-y-1.5">
-          <label className="text-xs text-[#71717A] uppercase tracking-wider">Changer le statut</label>
+          <label className="text-xs text-[var(--lt-muted)] uppercase tracking-wider">Changer le statut</label>
           <div className="flex gap-2">
             {[
               { value: 'preparing', label: 'En préparation', color: 'blue'   },
@@ -289,7 +289,7 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
                     ? opt.color === 'blue'
                       ? 'bg-blue-50 border-blue-400 text-blue-700'
                       : 'bg-violet-50 border-violet-400 text-violet-700'
-                    : 'bg-white border-black/[0.08] text-[#71717A] hover:border-black/25'
+                    : 'bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-[var(--lt-muted)] hover:border-black/25'
                 }`}
               >
                 {opt.label}

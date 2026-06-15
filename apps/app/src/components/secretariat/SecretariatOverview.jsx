@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminDashboard } from '@/hooks/useAdmin';
+import { useShellTint } from '@/lib/useShellTint';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +48,8 @@ const SecretariatOverview = () => {
   const { stats: dashboardStats, activities, loading, error, refresh } = useAdminDashboard();
   const { supabase: supabaseClient, session, user } = useAuth();
   const { toast } = useToast();
+  const [tint] = useShellTint();
+  const chartDark = tint === 'dark'; // recharts : les attributs SVG stroke ne résolvent pas var() → bascule JS
   const [administrativeQueue, setAdministrativeQueue] = useState([]);
   const [taskLoading, setTaskLoading] = useState({});
   const [recentlyProcessed, setRecentlyProcessed] = useState([]);
@@ -237,13 +240,13 @@ const SecretariatOverview = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header - même style que Owner */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-[14px] border border-black/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 rounded-[14px] border border-[var(--lt-card-border)] shadow-[var(--lt-card-shadow)]" style={{ background: 'var(--lt-card-bg)' }}>
         <div>
-          <h1 className="text-2xl font-bold text-[#18181B] flex items-center gap-2">Aperçu Secrétariat <span className="text-[#D4AF37]">.</span></h1>
-          <p className="text-[#52525B] text-sm mt-1 capitalize">{format(currentDate, 'EEEE d MMMM yyyy • HH:mm', { locale: fr })}</p>
+          <h1 className="text-2xl font-bold text-[var(--lt-text)] flex items-center gap-2">Aperçu Secrétariat <span className="text-[var(--lt-gold)]">.</span></h1>
+          <p className="text-[var(--lt-sub)] text-sm mt-1 capitalize">{format(currentDate, 'EEEE d MMMM yyyy • HH:mm', { locale: fr })}</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-          <Button variant="outline" onClick={handleRefresh} className="border-black/[0.08] bg-white text-[#18181B] hover:bg-[#F4F5F7] w-full sm:w-auto" disabled={loading}>
+          <Button variant="outline" onClick={handleRefresh} className="border-[var(--lt-border)] text-[var(--lt-text)] hover:opacity-80 w-full sm:w-auto" style={{ background: 'var(--lt-card-bg)' }} disabled={loading}>
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} /> Actualiser
           </Button>
           <Button onClick={handleExport} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold w-full sm:w-auto">
@@ -258,11 +261,11 @@ const SecretariatOverview = () => {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {statCards.map((stat, idx) => (
           <motion.div key={idx} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}>
-            <Card className="bg-white border-black/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] transition-all group">
+            <Card className="border-[var(--lt-card-border)] shadow-[var(--lt-card-shadow)] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] transition-all group" style={{ background: 'var(--lt-card-bg)' }}>
               <CardContent className="p-5 flex items-center justify-between">
                 <div>
-                  <p className="text-[#71717A] text-xs font-medium uppercase tracking-wider">{stat.title}</p>
-                  <p className="text-2xl font-bold text-[#18181B] mt-1 group-hover:text-[#8A6D1A] transition-colors">{stat.value}</p>
+                  <p className="text-[var(--lt-muted)] text-xs font-medium uppercase tracking-wider">{stat.title}</p>
+                  <p className="text-2xl font-bold text-[var(--lt-text)] mt-1 group-hover:text-[var(--lt-gold-ink)] transition-colors">{stat.value}</p>
                 </div>
                 <div className={`p-3 rounded-xl ${stat.bg}`}>
                   <stat.icon className={`w-6 h-6 ${stat.color}`} />
@@ -275,10 +278,10 @@ const SecretariatOverview = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chart */}
-        <Card className="lg:col-span-2 bg-white border-black/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+        <Card className="lg:col-span-2 border-[var(--lt-card-border)] shadow-[var(--lt-card-shadow)]" style={{ background: 'var(--lt-card-bg)' }}>
           <CardHeader>
-            <CardTitle className="text-[#18181B] flex items-center gap-2">
-              <Activity className="w-5 h-5 text-[#8A6D1A]" /> Tendances d'Activité (7 jours)
+            <CardTitle className="text-[var(--lt-text)] flex items-center gap-2">
+              <Activity className="w-5 h-5 text-[var(--lt-gold-ink)]" /> Tendances d'Activité (7 jours)
             </CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">
@@ -290,10 +293,12 @@ const SecretariatOverview = () => {
                     <stop offset="95%" stopColor="#D4AF37" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
-                <XAxis dataKey="date" stroke="#71717A" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#71717A" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '8px', color: '#18181B', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'} vertical={false} />
+                <XAxis dataKey="date" stroke={chartDark ? '#8E8E93' : '#71717A'} fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke={chartDark ? '#8E8E93' : '#71717A'} fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={chartDark
+                  ? { backgroundColor: '#16161E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#F4F4F5', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }
+                  : { backgroundColor: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '8px', color: '#18181B', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} />
                 <Area type="monotone" dataKey="count" stroke="#D4AF37" strokeWidth={2} fillOpacity={1} fill="url(#colorSecActivity)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -302,34 +307,34 @@ const SecretariatOverview = () => {
 
         {/* Demandes à traiter + Alertes */}
         <div className="space-y-6">
-          <Card className="bg-white border-black/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+          <Card className="border-[var(--lt-card-border)] shadow-[var(--lt-card-shadow)]" style={{ background: 'var(--lt-card-bg)' }}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-[#18181B] flex items-center gap-2 text-base">
-                <FileCheck className="w-4 h-4 text-[#8A6D1A]" /> Demandes à traiter
+              <CardTitle className="text-[var(--lt-text)] flex items-center gap-2 text-base">
+                <FileCheck className="w-4 h-4 text-[var(--lt-gold-ink)]" /> Demandes à traiter
                 {administrativeQueue.length > 0 && <Badge className="ml-auto bg-[var(--school-accent)] text-black">{administrativeQueue.length}</Badge>}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[220px] pr-4">
                 {queueLoading ? (
-                  <div className="flex items-center justify-center py-8 text-[#52525B]">
+                  <div className="flex items-center justify-center py-8 text-[var(--lt-sub)]">
                     <RefreshCw className="w-6 h-6 animate-spin" />
                   </div>
                 ) : administrativeQueue.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 text-[#71717A]">
+                  <div className="flex flex-col items-center justify-center py-8 text-[var(--lt-muted)]">
                     <CheckCircle className="w-10 h-10 mb-2 opacity-25" />
                     <p className="text-sm">Aucune demande urgente</p>
                   </div>
                 ) : (
                   administrativeQueue.map((task) => (
-                    <div key={task.id} className="p-3 rounded-lg border border-black/[0.08] bg-[#F4F5F7] mb-2 flex items-start justify-between gap-2">
+                    <div key={task.id} className="p-3 rounded-lg border border-[var(--lt-border)] mb-2 flex items-start justify-between gap-2" style={{ background: 'var(--lt-inner-bg)' }}>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-3 text-xs text-[#52525B]">
-                          {task.type === 'facturation' ? <CreditCard className="w-3.5 h-3.5 text-amber-600" /> : <AlertTriangle className="w-3.5 h-3.5 text-[#8A6D1A]" />}
+                        <div className="flex items-center gap-3 text-xs text-[var(--lt-sub)]">
+                          {task.type === 'facturation' ? <CreditCard className="w-3.5 h-3.5 text-amber-600" /> : <AlertTriangle className="w-3.5 h-3.5 text-[var(--lt-gold-ink)]" />}
                           {task.type}
                         </div>
-                        <p className="text-[#18181B] font-medium truncate">{task.title}</p>
-                        <p className="text-[#52525B] text-xs truncate">{task.subject}</p>
+                        <p className="text-[var(--lt-text)] font-medium truncate">{task.title}</p>
+                        <p className="text-[var(--lt-sub)] text-xs truncate">{task.subject}</p>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <Button
@@ -340,7 +345,7 @@ const SecretariatOverview = () => {
                         >
                           {taskLoading[task.id] ? <RefreshCw className="w-3 h-3 animate-spin" /> : task.actionLabel}
                         </Button>
-                        <Button size="sm" variant="ghost" className="text-[#71717A] h-8 hover:bg-black/[0.05]" onClick={() => handleDismissTask(task)}>
+                        <Button size="sm" variant="ghost" className="text-[var(--lt-muted)] h-8 hover:bg-black/[0.05]" onClick={() => handleDismissTask(task)}>
                           <XCircle className="w-4 h-4" />
                         </Button>
                       </div>
@@ -351,9 +356,9 @@ const SecretariatOverview = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white border-black/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+          <Card className="border-[var(--lt-card-border)] shadow-[var(--lt-card-shadow)]" style={{ background: 'var(--lt-card-bg)' }}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-[#18181B] flex items-center gap-2 text-base">
+              <CardTitle className="text-[var(--lt-text)] flex items-center gap-2 text-base">
                 <Bell className="w-4 h-4 text-red-500" /> Alertes
                 {alerts.length > 0 && <Badge variant="destructive" className="ml-auto">{alerts.length}</Badge>}
               </CardTitle>
@@ -361,7 +366,7 @@ const SecretariatOverview = () => {
             <CardContent>
               <ScrollArea className="h-[120px] pr-4">
                 {alerts.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-6 text-[#71717A]">
+                  <div className="flex flex-col items-center justify-center py-6 text-[var(--lt-muted)]">
                     <CheckCircle className="w-8 h-8 mb-2 opacity-25" />
                     <p className="text-sm">Tout semble normal</p>
                   </div>
@@ -383,18 +388,18 @@ const SecretariatOverview = () => {
           </Card>
 
           {recentlyProcessed.length > 0 && (
-            <Card className="bg-white border-black/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+            <Card className="border-[var(--lt-card-border)] shadow-[var(--lt-card-shadow)]" style={{ background: 'var(--lt-card-bg)' }}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-[#18181B] flex items-center gap-2 text-base">
-                  <History className="w-4 h-4 text-[#8A6D1A]" /> Dernières actions
+                <CardTitle className="text-[var(--lt-text)] flex items-center gap-2 text-base">
+                  <History className="w-4 h-4 text-[var(--lt-gold-ink)]" /> Dernières actions
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
                   {recentlyProcessed.slice(0, 4).map((item) => (
-                    <li key={item.id} className="text-sm text-[#52525B] flex justify-between gap-2">
-                      <span><span className="text-[#8A6D1A]">{item.type}</span> — {item.subject}</span>
-                      <span className="text-[#71717A] text-xs">{item.processedAt}</span>
+                    <li key={item.id} className="text-sm text-[var(--lt-sub)] flex justify-between gap-2">
+                      <span><span className="text-[var(--lt-gold-ink)]">{item.type}</span> — {item.subject}</span>
+                      <span className="text-[var(--lt-muted)] text-xs">{item.processedAt}</span>
                     </li>
                   ))}
                 </ul>
@@ -405,15 +410,15 @@ const SecretariatOverview = () => {
       </div>
 
       {/* Activité récente */}
-      <Card className="bg-white border-black/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+      <Card className="border-[var(--lt-card-border)] shadow-[var(--lt-card-shadow)]" style={{ background: 'var(--lt-card-bg)' }}>
         <CardHeader>
-          <CardTitle className="text-[#18181B]">Activité Récente</CardTitle>
+          <CardTitle className="text-[var(--lt-text)]">Activité Récente</CardTitle>
           {error ? <p className="text-xs text-red-600">Erreur: {String(error?.message || error)}</p> : null}
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-[#52525B]">
-              <thead className="text-sm text-[#71717A] uppercase bg-[#F4F5F7]">
+            <table className="w-full text-sm text-left text-[var(--lt-sub)]">
+              <thead className="text-sm text-[var(--lt-muted)] uppercase" style={{ background: 'var(--lt-inner-bg)' }}>
                 <tr>
                   <th className="px-6 py-3">Action</th>
                   <th className="px-6 py-3">Utilisateur / Élément</th>
@@ -423,21 +428,21 @@ const SecretariatOverview = () => {
               </thead>
               <tbody>
                 {recentActivities.map((act) => (
-                  <tr key={act.id} className="border-b border-black/[0.06] hover:bg-[#F4F5F7]">
-                    <td className="px-6 py-4 font-medium text-[#18181B]">{act.description}</td>
+                  <tr key={act.id} className="border-b border-[var(--lt-border)] hover:opacity-80">
+                    <td className="px-6 py-4 font-medium text-[var(--lt-text)]">{act.description}</td>
                     <td className="px-6 py-4">
-                      {act.details?.user && <div className="text-[#18181B]">{act.details.user}</div>}
-                      {act.details?.item && <div className="text-[#8A6D1A] text-xs">{act.details.item}</div>}
+                      {act.details?.user && <div className="text-[var(--lt-text)]">{act.details.user}</div>}
+                      {act.details?.item && <div className="text-[var(--lt-gold-ink)] text-xs">{act.details.item}</div>}
                     </td>
                     <td className="px-6 py-4">{format(new Date(act.timestamp), 'dd MMM HH:mm', { locale: fr })}</td>
                     <td className="px-6 py-4">
-                      <Badge variant="outline" className="border-black/[0.08] bg-[#F4F5F7] text-[#52525B]">{act.type.replace(/_/g, ' ')}</Badge>
+                      <Badge variant="outline" className="border-[var(--lt-border)] text-[var(--lt-sub)]" style={{ background: 'var(--lt-inner-bg)' }}>{act.type.replace(/_/g, ' ')}</Badge>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {recentActivities.length === 0 && <div className="text-center py-8 text-[#71717A]">Aucune activité récente.</div>}
+            {recentActivities.length === 0 && <div className="text-center py-8 text-[var(--lt-muted)]">Aucune activité récente.</div>}
           </div>
         </CardContent>
       </Card>

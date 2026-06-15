@@ -9,24 +9,27 @@ import { Search, FileText, Loader2, RefreshCw } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
+import { useShellTint } from '@/lib/useShellTint';
 
 const HOVER_LIFT = { y: -3 };
 const TAP_SOFT = { scale: 0.995 };
 const TRANSITION_FAST = { duration: 0.2, ease: 'easeOut' };
 
 /* Thème CLAIR « Wix Studio » — aligné sur OwnerDashboardOverview. */
-const LT_TEXT = '#18181B';
-const LT_SUB = '#52525B';
-const LT_MUTED = '#71717A';
-const LT_BORDER = 'rgba(0,0,0,0.08)';
-const LT_GOLD_INK = '#8A6D1A';
+const LT_TEXT = 'var(--lt-text)';
+const LT_SUB = 'var(--lt-sub)';
+const LT_MUTED = 'var(--lt-muted)';
+const LT_BORDER = 'var(--lt-border)';
+const LT_GOLD_INK = 'var(--lt-gold-ink)';
 const cardSurface = {
-  background: '#FFFFFF',
-  border: `1px solid ${LT_BORDER}`,
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+  background: 'var(--lt-card-bg)',
+  border: '1px solid var(--lt-card-border)',
+  boxShadow: 'var(--lt-card-shadow)',
 };
 
 const RecoveryTab = () => {
+  const [tint] = useShellTint();
+  const chartDark = tint === 'dark';
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -110,6 +113,9 @@ const RecoveryTab = () => {
   ];
 
   const COLORS = ['#4ade80', '#D4AF37', '#f87171'];
+  const chartTooltipStyle = chartDark
+    ? { backgroundColor: '#16161E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#F4F4F5', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }
+    : { backgroundColor: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '10px', color: '#18181B', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' };
   const showSkeleton = loading && rows.length === 0;
 
   return (
@@ -130,7 +136,8 @@ const RecoveryTab = () => {
            <Button
              onClick={() => void refresh()}
              variant="outline"
-             className="bg-white text-zinc-700 border-black/10 hover:bg-zinc-50 transition-all duration-200"
+             className="bg-[var(--lt-card-bg)] text-zinc-700 border-[var(--lt-border)] hover:opacity-80 transition-all duration-200"
+             style={{ color: LT_SUB }}
            >
              <RefreshCw className="w-4 h-4 mr-2"/> Actualiser
            </Button>
@@ -208,8 +215,8 @@ const RecoveryTab = () => {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '10px', color: '#18181B', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} />
-                    <Legend wrapperStyle={{ color: '#52525B', fontSize: 12 }} />
+                    <Tooltip contentStyle={chartTooltipStyle} />
+                    <Legend wrapperStyle={{ color: chartDark ? '#A1A1AA' : '#52525B', fontSize: 12 }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -219,7 +226,7 @@ const RecoveryTab = () => {
               <div className="p-4 flex justify-between items-center" style={{ borderBottom: `1px solid ${LT_BORDER}` }}>
                 <div className="relative w-64">
                   <Search className="absolute left-2 top-2.5 h-4 w-4" style={{ color: LT_MUTED }} />
-                  <Input placeholder="Rechercher facture..." className="pl-8 bg-[#F4F5F7] border-black/10 text-zinc-900 placeholder:text-zinc-400" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                  <Input placeholder="Rechercher facture..." className="pl-8 bg-[var(--lt-inner-bg)] border-[var(--lt-border)] placeholder:text-zinc-400" style={{ color: LT_TEXT }} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                 </div>
               </div>
               <div className="max-h-[500px] overflow-y-auto">
@@ -227,8 +234,8 @@ const RecoveryTab = () => {
                   <div className="p-8 flex items-center justify-center" style={{ color: LT_MUTED }}><Loader2 className="w-4 h-4 mr-2 animate-spin" />Chargement...</div>
                 ) : null}
                 <Table>
-                  <TableHeader className="bg-[#F8F8FA]">
-                    <TableRow className="border-black/[0.06] hover:bg-transparent">
+                  <TableHeader className="bg-[var(--lt-inner-bg)]">
+                    <TableRow className="border-[var(--lt-border)] hover:bg-transparent">
                       <TableHead className="text-zinc-500">N° Facture</TableHead>
                       <TableHead className="text-zinc-500">Étudiant</TableHead>
                       <TableHead className="text-zinc-500">Total</TableHead>
@@ -240,13 +247,13 @@ const RecoveryTab = () => {
                   </TableHeader>
                   <TableBody>
                     {!loading && filteredData.length === 0 ? (
-                      <TableRow className="border-black/[0.06]">
+                      <TableRow className="border-[var(--lt-border)]">
                         <TableCell colSpan={7} className="text-center py-10" style={{ color: LT_MUTED }}>
                           Aucune facture pour cette recherche.
                         </TableCell>
                       </TableRow>
                     ) : filteredData.map((inv) => (
-                      <TableRow key={inv.id} className="border-black/[0.06] hover:bg-zinc-50">
+                      <TableRow key={inv.id} className="border-[var(--lt-border)] hover:opacity-80">
                         <TableCell className="font-mono text-xs" style={{ color: LT_TEXT }}>{inv.invoiceNumber}</TableCell>
                         <TableCell className="font-medium" style={{ color: LT_TEXT }}>{inv.studentName}</TableCell>
                         <TableCell style={{ color: LT_TEXT }}>{inv.totalAmount} EUR</TableCell>
@@ -260,7 +267,7 @@ const RecoveryTab = () => {
                         <TableCell className="text-right space-x-2">
                           {inv.invoiceUrl ? (
                             <a href={inv.invoiceUrl} target="_blank" rel="noreferrer">
-                              <Button size="sm" variant="ghost" className="h-7 border border-black/10 text-zinc-700 hover:bg-zinc-50">Ouvrir</Button>
+                              <Button size="sm" variant="ghost" className="h-7 border border-[var(--lt-border)] text-zinc-700 hover:opacity-80" style={{ color: LT_SUB }}>Ouvrir</Button>
                             </a>
                           ) : (
                             <span className="text-xs" style={{ color: LT_MUTED }}>Pas de lien</span>

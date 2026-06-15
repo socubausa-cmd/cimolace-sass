@@ -53,13 +53,13 @@ function StepBadge({ step, currentIdx, idx }) {
     <div className="flex flex-col items-center gap-1 flex-1">
       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${
         done   ? 'bg-emerald-50 border-emerald-500 text-emerald-700' :
-        active ? 'bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] border-[var(--school-accent)] text-[#8A6D1A]' :
-                 'bg-[#F4F5F7] border-black/[0.12] text-[#A1A1AA]'
+        active ? 'bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] border-[var(--school-accent)] text-[var(--lt-gold-ink)]' :
+                 'bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[#A1A1AA]'
       }`}>
         {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : idx + 1}
       </div>
       <p className={`text-[10px] text-center leading-tight ${
-        active ? 'text-[#8A6D1A]' : done ? 'text-emerald-600' : 'text-[#A1A1AA]'
+        active ? 'text-[var(--lt-gold-ink)]' : done ? 'text-emerald-600' : 'text-[#A1A1AA]'
       }`}>{step.label}</p>
     </div>
   );
@@ -140,11 +140,11 @@ export default function SessionFlowPanel({ appointment, session, onStatusChange 
   };
 
   return (
-    <div className="rounded-[14px] border border-black/[0.08] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+    <div className="rounded-[14px] border border-[var(--lt-border)] bg-[var(--lt-card-bg)] shadow-[var(--lt-card-shadow)] overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-2.5 px-4 py-3 border-b border-black/[0.06] bg-[#F4F5F7]">
-        <Sparkles className="w-4 h-4 text-[#8A6D1A]" />
-        <p className="text-sm font-semibold text-[#18181B]">Centre de commandes — Session</p>
+      <div className="flex items-center gap-2.5 px-4 py-3 border-b border-[var(--lt-border)] bg-[var(--lt-inner-bg)]">
+        <Sparkles className="w-4 h-4 text-[var(--lt-gold-ink)]" />
+        <p className="text-sm font-semibold text-[var(--lt-text)]">Centre de commandes — Session</p>
         {!isEnded && (
           <span className="ml-auto text-[10px] rounded-full px-2 py-0.5 bg-emerald-50 border border-emerald-200 text-emerald-700">
             En cours
@@ -173,17 +173,17 @@ export default function SessionFlowPanel({ appointment, session, onStatusChange 
         </div>
 
         {/* Infos RDV */}
-        <div className="rounded-xl bg-[#F4F5F7] border border-black/[0.06] px-3 py-2.5 space-y-1">
+        <div className="rounded-xl bg-[var(--lt-inner-bg)] border border-[var(--lt-border)] px-3 py-2.5 space-y-1">
           {appointment.reason && (
-            <p className="text-xs text-[#52525B] truncate">
-              <span className="text-[#71717A]">Sujet :</span> {appointment.reason}
+            <p className="text-xs text-[var(--lt-sub)] truncate">
+              <span className="text-[var(--lt-muted)]">Sujet :</span> {appointment.reason}
             </p>
           )}
           {appointment.booking_reference && (
-            <p className="text-xs text-[#71717A] font-mono">Réf. {appointment.booking_reference}</p>
+            <p className="text-xs text-[var(--lt-muted)] font-mono">Réf. {appointment.booking_reference}</p>
           )}
           {appointment.scheduled_at && (
-            <p className="text-xs text-[#71717A] flex items-center gap-1">
+            <p className="text-xs text-[var(--lt-muted)] flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {new Date(appointment.scheduled_at).toLocaleString('fr-FR', {
                 weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
@@ -213,7 +213,7 @@ export default function SessionFlowPanel({ appointment, session, onStatusChange 
         {!isEnded && (
           <button
             onClick={() => setShowPrep(p => !p)}
-            className="w-full flex items-center justify-between text-xs text-[#52525B] hover:text-[#8A6D1A] border border-black/[0.08] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] rounded-lg px-3 py-2 transition-colors"
+            className="w-full flex items-center justify-between text-xs text-[var(--lt-sub)] hover:text-[var(--lt-gold-ink)] border border-[var(--lt-border)] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] rounded-lg px-3 py-2 transition-colors"
           >
             <span className="flex items-center gap-1.5">
               <span>📋</span> Studio de préparation
@@ -241,7 +241,7 @@ export default function SessionFlowPanel({ appointment, session, onStatusChange 
             {curIdx === 1 && appointment.immersive_chat_id && (
               <Button
                 variant="outline"
-                className="w-full border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] text-[#8A6D1A] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] flex items-center gap-2"
+                className="w-full border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] text-[var(--lt-gold-ink)] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] flex items-center gap-2"
                 onClick={() => window.open(`/messagerie?inviteId=${appointment.immersive_chat_id}`, '_blank')}
               >
                 <MessageCircle className="w-4 h-4" /> Rejoindre le chat
@@ -301,7 +301,7 @@ export default function SessionFlowPanel({ appointment, session, onStatusChange 
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm text-emerald-700">
               <CheckCircle2 className="w-4 h-4" /> Session terminée avec succès.
-              <button onClick={() => setShowPost(true)} className="ml-auto text-xs text-[#52525B] hover:text-[#18181B] underline">
+              <button onClick={() => setShowPost(true)} className="ml-auto text-xs text-[var(--lt-sub)] hover:text-[var(--lt-text)] underline">
                 Rapport
               </button>
             </div>
@@ -322,14 +322,14 @@ export default function SessionFlowPanel({ appointment, session, onStatusChange 
                 }}
                 disabled={!!loading}
                 variant="outline"
-                className="w-full border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[#8A6D1A] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] flex items-center gap-2 text-sm"
+                className="w-full border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--lt-gold-ink)] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] flex items-center gap-2 text-sm"
               >
                 {loading === 'survey' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
                 Envoyer l'enquête de satisfaction
               </Button>
             )}
             {surveySent && (
-              <div className="flex items-center gap-2 text-xs text-[#8A6D1A]">
+              <div className="flex items-center gap-2 text-xs text-[var(--lt-gold-ink)]">
                 <Star className="w-3.5 h-3.5" /> Enquête envoyée à l'élève.
               </div>
             )}
@@ -350,7 +350,7 @@ export default function SessionFlowPanel({ appointment, session, onStatusChange 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden border-t border-black/[0.08]"
+            className="overflow-hidden border-t border-[var(--lt-border)]"
           >
             <AppointmentPreparationPanel
               appointment={appointment}
@@ -371,7 +371,7 @@ export default function SessionFlowPanel({ appointment, session, onStatusChange 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden border-t border-black/[0.08]"
+            className="overflow-hidden border-t border-[var(--lt-border)]"
           >
             <PostSessionPanel
               appointment={appointment}

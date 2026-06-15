@@ -223,8 +223,8 @@ const SecretariatCalendarPage = () => {
       </div>
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold text-[#18181B] flex items-center gap-2">
-            <Calendar className="w-6 h-6 text-[#8A6D1A]" />
+          <h2 className="text-2xl font-bold text-[var(--lt-text)] flex items-center gap-2">
+            <Calendar className="w-6 h-6 text-[var(--lt-gold-ink)]" />
             Calendrier des rendez-vous
           </h2>
           <div className="flex flex-wrap gap-2">
@@ -257,7 +257,7 @@ const SecretariatCalendarPage = () => {
             </motion.span>
           </div>
         </div>
-        <Button onClick={refresh} variant="outline" className="border-black/[0.08] bg-white text-[#18181B] hover:bg-[#F4F5F7] transition-all hover:-translate-y-0.5" disabled={loading}>
+        <Button onClick={refresh} variant="outline" className="border-[var(--lt-border)] bg-[var(--lt-card-bg)] text-[var(--lt-text)] hover:opacity-80 transition-all hover:-translate-y-0.5" disabled={loading}>
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Actualiser'}
         </Button>
       </div>
@@ -271,10 +271,10 @@ const SecretariatCalendarPage = () => {
       <SecretariatRescheduleQueue onProcessed={refresh} />
 
       {/* Filtres */}
-      <div className="rounded-[14px] border border-black/[0.08] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-3 flex flex-wrap gap-3 items-center">
-        <Filter className="w-4 h-4 text-[#71717A]" />
+      <div className="rounded-[14px] border border-[var(--lt-border)] bg-[var(--lt-card-bg)] shadow-[var(--lt-card-shadow)] p-3 flex flex-wrap gap-3 items-center">
+        <Filter className="w-4 h-4 text-[var(--lt-muted)]" />
         <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-[180px] bg-[#F4F5F7] border-black/[0.08] text-[#18181B]">
+          <SelectTrigger className="w-[180px] bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)]">
             <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>
@@ -287,7 +287,7 @@ const SecretariatCalendarPage = () => {
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-[180px] bg-[#F4F5F7] border-black/[0.08] text-[#18181B]">
+          <SelectTrigger className="w-[180px] bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)]">
             <SelectValue placeholder="Statut" />
           </SelectTrigger>
           <SelectContent>
@@ -315,43 +315,43 @@ const SecretariatCalendarPage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <motion.div whileHover={{ y: -2, scale: 1.01 }} className="rounded-[14px] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-4 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-          <p className="text-xs text-[#8A6D1A] uppercase tracking-wider">Demandes en attente</p>
-          <p className="text-2xl font-bold text-[#18181B]">{pendingRequests.length}</p>
+        <motion.div whileHover={{ y: -2, scale: 1.01 }} className="rounded-[14px] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-4 py-3 shadow-[var(--lt-card-shadow)]">
+          <p className="text-xs text-[var(--lt-gold-ink)] uppercase tracking-wider">Demandes en attente</p>
+          <p className="text-2xl font-bold text-[var(--lt-text)]">{pendingRequests.length}</p>
         </motion.div>
         <motion.div whileHover={{ y: -2, scale: 1.01 }} className="rounded-[14px] border border-blue-200 bg-blue-50 px-4 py-3">
           <p className="text-xs text-blue-700 uppercase tracking-wider">Zone AF+EU</p>
-          <p className="text-2xl font-bold text-[#18181B]">{pendingByRegion.AF_EU}</p>
+          <p className="text-2xl font-bold text-[var(--lt-text)]">{pendingByRegion.AF_EU}</p>
         </motion.div>
         <motion.div whileHover={{ y: -2, scale: 1.01 }} className="rounded-[14px] border border-violet-200 bg-violet-50 px-4 py-3">
           <p className="text-xs text-violet-700 uppercase tracking-wider">Zone US</p>
-          <p className="text-2xl font-bold text-[#18181B]">{pendingByRegion.US}</p>
+          <p className="text-2xl font-bold text-[var(--lt-text)]">{pendingByRegion.US}</p>
         </motion.div>
         <motion.div whileHover={{ y: -2, scale: 1.01 }} className="rounded-[14px] border border-emerald-200 bg-emerald-50 px-4 py-3">
           <p className="text-xs text-emerald-700 uppercase tracking-wider">SLA online</p>
-          <p className="text-2xl font-bold text-[#18181B]">{slaByRegion.onlineAll}</p>
+          <p className="text-2xl font-bold text-[var(--lt-text)]">{slaByRegion.onlineAll}</p>
         </motion.div>
       </div>
 
       {/* Rendez-vous du jour */}
       {todayEvents.length > 0 && (
         <div className="rounded-[14px] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] p-4">
-          <h3 className="font-bold text-[#8A6D1A] mb-3 flex items-center gap-2">
+          <h3 className="font-bold text-[var(--lt-gold-ink)] mb-3 flex items-center gap-2">
             <CheckCircle className="w-4 h-4" /> {todayEvents.length} rendez-vous aujourd&apos;hui
           </h3>
           <div className="flex flex-wrap gap-2">
             {todayEvents.map((e) => (
-              <motion.div key={e.id} whileHover={{ y: -1 }} className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-black/[0.08]">
-                <span className="text-xs text-[#52525B]">{new Date(e.start_date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
-                <span className="text-sm text-[#18181B]">{e.title}</span>
+              <motion.div key={e.id} whileHover={{ y: -1 }} className="flex items-center gap-2 bg-[var(--lt-card-bg)] rounded-lg px-3 py-2 border border-[var(--lt-border)]">
+                <span className="text-xs text-[var(--lt-sub)]">{new Date(e.start_date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                <span className="text-sm text-[var(--lt-text)]">{e.title}</span>
                 {e.type === 'live' ? (
-                  <Button size="sm" variant="ghost" className="h-7 px-2 text-[#8A6D1A]" asChild>
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-[var(--lt-gold-ink)]" asChild>
                     <Link to={`/live/${e.id}`}>
                       <Video className="w-3 h-3" />
                     </Link>
                   </Button>
                 ) : e.video_meeting_url ? (
-                  <Button size="sm" variant="ghost" className="h-7 px-2 text-[#8A6D1A]" onClick={() => window.open(e.video_meeting_url, '_blank')}>
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-[var(--lt-gold-ink)]" onClick={() => window.open(e.video_meeting_url, '_blank')}>
                     <Video className="w-3 h-3" />
                   </Button>
                 ) : null}
@@ -371,12 +371,12 @@ const SecretariatCalendarPage = () => {
               <motion.div
                 key={r.id}
                 whileHover={{ x: 2 }}
-                className="flex items-center justify-between bg-white rounded-xl border border-black/[0.08] p-3"
+                className="flex items-center justify-between bg-[var(--lt-card-bg)] rounded-xl border border-[var(--lt-border)] p-3"
               >
                 <div>
-                  <p className="font-medium text-[#18181B]">{r.student?.name || r.student?.email || 'Élève'}</p>
-                  <p className="text-sm text-[#52525B]">{r.reason || 'Demande d\'entretien'}</p>
-                  <p className="text-xs text-[#71717A] mt-1">
+                  <p className="font-medium text-[var(--lt-text)]">{r.student?.name || r.student?.email || 'Élève'}</p>
+                  <p className="text-sm text-[var(--lt-sub)]">{r.reason || 'Demande d\'entretien'}</p>
+                  <p className="text-xs text-[var(--lt-muted)] mt-1">
                     Ref: {String(r.booking_reference || r.id).slice(0, 8).toUpperCase()} • Zone {r.visitor_region || 'AF_EU'} • File {r.queue_position || 1}
                   </p>
                 </div>
@@ -395,7 +395,7 @@ const SecretariatCalendarPage = () => {
       )}
 
       {/* FullCalendar */}
-      <div className="bg-white border border-black/[0.08] rounded-[14px] overflow-hidden p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+      <div className="bg-[var(--lt-card-bg)] border border-[var(--lt-border)] rounded-[14px] overflow-hidden p-4 shadow-[var(--lt-card-shadow)]">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
           initialView="timeGridWeek"
@@ -435,9 +435,9 @@ const SecretariatCalendarPage = () => {
 
       <style>{`
         .secretariat-calendar {
-          --fc-border-color: rgba(0,0,0,0.08);
+          --fc-border-color: var(--lt-border);
           --fc-page-bg-color: transparent;
-          --fc-neutral-bg-color: #F4F5F7;
+          --fc-neutral-bg-color: var(--lt-inner-bg);
           --fc-today-bg-color: color-mix(in srgb, var(--school-accent) 8%, transparent);
           --fc-list-event-hover-bg-color: color-mix(in srgb, var(--school-accent) 12%, transparent);
         }
@@ -446,39 +446,39 @@ const SecretariatCalendarPage = () => {
         }
         .secretariat-calendar .fc-toolbar-title {
           font-size: 1.25rem;
-          color: #18181B;
+          color: var(--lt-text);
         }
         .secretariat-calendar .fc-button {
-          background: #F4F5F7 !important;
-          border-color: rgba(0,0,0,0.12) !important;
-          color: #18181B !important;
+          background: var(--lt-inner-bg) !important;
+          border-color: var(--lt-border) !important;
+          color: var(--lt-text) !important;
           border-radius: 0.65rem !important;
           transition: all 180ms ease !important;
         }
         .secretariat-calendar .fc-button:hover {
           background: color-mix(in srgb, var(--school-accent) 14%, transparent) !important;
-          border-color: #D4AF37 !important;
-          color: #8A6D1A !important;
+          border-color: var(--lt-gold) !important;
+          color: var(--lt-gold-ink) !important;
           transform: translateY(-1px);
         }
         .secretariat-calendar .fc-button-active {
           background: color-mix(in srgb, var(--school-accent) 22%, transparent) !important;
-          border-color: #D4AF37 !important;
-          color: #8A6D1A !important;
+          border-color: var(--lt-gold) !important;
+          color: var(--lt-gold-ink) !important;
         }
         .secretariat-calendar .fc-col-header-cell {
-          background: #F4F5F7;
-          color: #52525B;
+          background: var(--lt-inner-bg);
+          color: var(--lt-sub);
           font-size: 0.75rem;
         }
         .secretariat-calendar .fc-timegrid-slot {
           height: 2.5rem;
         }
         .secretariat-calendar .fc-timegrid-slot-label {
-          color: #71717A;
+          color: var(--lt-muted);
         }
         .secretariat-calendar .fc-daygrid-day-number {
-          color: #52525B;
+          color: var(--lt-sub);
         }
         .secretariat-calendar .fc-event {
           cursor: pointer;
@@ -492,16 +492,16 @@ const SecretariatCalendarPage = () => {
 
       {/* Modal détail événement */}
       <Dialog open={!!eventModal} onOpenChange={() => setEventModal(null)}>
-        <DialogContent className="bg-white border-black/[0.08] text-[#18181B] max-w-md">
+        <DialogContent className="bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-[var(--lt-text)] max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-[#18181B]">Détail</DialogTitle>
+            <DialogTitle className="text-[var(--lt-text)]">Détail</DialogTitle>
           </DialogHeader>
           {eventModal && (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <span className={cn(
                   'text-xs px-2 py-0.5 rounded font-medium',
-                  eventModal.type === 'appointment' && 'bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] text-[#8A6D1A]',
+                  eventModal.type === 'appointment' && 'bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] text-[var(--lt-gold-ink)]',
                   eventModal.type === 'live' && 'bg-purple-50 text-purple-700',
                   eventModal.type === 'coaching' && 'bg-blue-50 text-blue-700',
                   eventModal.type === 'request' && 'bg-amber-50 text-amber-700',
@@ -513,16 +513,16 @@ const SecretariatCalendarPage = () => {
                   {eventModal.type === 'request' && 'Demande'}
                   {eventModal.type === 'school_event' && 'Evenement'}
                 </span>
-                <span className="text-xs text-[#71717A]">{eventModal.status}</span>
+                <span className="text-xs text-[var(--lt-muted)]">{eventModal.status}</span>
               </div>
-              <p className="font-medium text-[#18181B]">{eventModal.title}</p>
-              <p className="text-sm text-[#52525B]">
+              <p className="font-medium text-[var(--lt-text)]">{eventModal.title}</p>
+              <p className="text-sm text-[var(--lt-sub)]">
                 {new Date(eventModal.start_date).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
               </p>
-              {eventModal.location ? <p className="text-sm text-[#52525B]">Lieu: <span className="text-[#18181B]">{eventModal.location}</span></p> : null}
-              {eventModal.description ? <p className="text-sm text-[#52525B]">{eventModal.description}</p> : null}
-              {eventModal.student && <p className="text-sm text-[#8A6D1A] flex items-center gap-1"><User className="w-4 h-4" /> {eventModal.student.name || eventModal.student.email}</p>}
-              {eventModal.teacher && !eventModal.student && <p className="text-sm text-[#8A6D1A] flex items-center gap-1"><User className="w-4 h-4" /> {eventModal.teacher.name}</p>}
+              {eventModal.location ? <p className="text-sm text-[var(--lt-sub)]">Lieu: <span className="text-[var(--lt-text)]">{eventModal.location}</span></p> : null}
+              {eventModal.description ? <p className="text-sm text-[var(--lt-sub)]">{eventModal.description}</p> : null}
+              {eventModal.student && <p className="text-sm text-[var(--lt-gold-ink)] flex items-center gap-1"><User className="w-4 h-4" /> {eventModal.student.name || eventModal.student.email}</p>}
+              {eventModal.teacher && !eventModal.student && <p className="text-sm text-[var(--lt-gold-ink)] flex items-center gap-1"><User className="w-4 h-4" /> {eventModal.teacher.name}</p>}
               <div className="flex gap-2 pt-2">
                 {eventModal.type === 'live' && (
                   <Button asChild className="bg-[var(--school-accent)] text-black">
@@ -532,7 +532,7 @@ const SecretariatCalendarPage = () => {
                   </Button>
                 )}
                 {eventModal.video_meeting_url && eventModal.type !== 'live' && (
-                  <Button variant="outline" className="border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[#8A6D1A] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]" onClick={() => window.open(eventModal.video_meeting_url, '_blank')}>
+                  <Button variant="outline" className="border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--lt-gold-ink)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]" onClick={() => window.open(eventModal.video_meeting_url, '_blank')}>
                     <Video className="w-4 h-4 mr-2" /> Rejoindre
                   </Button>
                 )}
@@ -557,19 +557,19 @@ const SecretariatCalendarPage = () => {
       </Dialog>
 
       <Dialog open={!!confirmModal} onOpenChange={() => setConfirmModal(null)}>
-        <DialogContent className="bg-white border-black/[0.08] text-[#18181B] max-w-md">
+        <DialogContent className="bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-[var(--lt-text)] max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-[#18181B]">Confirmer le rendez-vous</DialogTitle>
+            <DialogTitle className="text-[var(--lt-text)]">Confirmer le rendez-vous</DialogTitle>
           </DialogHeader>
           {confirmModal && (
             <div className="space-y-4">
-              <p className="text-sm text-[#52525B]">
-                Élève : <span className="text-[#18181B]">{confirmModal.student?.name || confirmModal.student?.email}</span>
+              <p className="text-sm text-[var(--lt-sub)]">
+                Élève : <span className="text-[var(--lt-text)]">{confirmModal.student?.name || confirmModal.student?.email}</span>
               </p>
               <div>
-                <Label className="text-[#52525B]">Secretariat assigne</Label>
+                <Label className="text-[var(--lt-sub)]">Secretariat assigne</Label>
                 <Select value={confirmForm.assigned_teacher_id} onValueChange={(v) => setConfirmForm((p) => ({ ...p, assigned_teacher_id: v }))}>
-                  <SelectTrigger className="bg-[#F4F5F7] border-black/[0.08] text-[#18181B] mt-1">
+                  <SelectTrigger className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)] mt-1">
                     <SelectValue placeholder="Choisir un secretariat" />
                   </SelectTrigger>
                   <SelectContent>
@@ -580,22 +580,22 @@ const SecretariatCalendarPage = () => {
                 </Select>
               </div>
               <div>
-                <Label className="text-[#52525B]">Date et heure</Label>
+                <Label className="text-[var(--lt-sub)]">Date et heure</Label>
                 <Input
                   type="datetime-local"
                   value={confirmForm.scheduled_at}
                   onChange={(e) => setConfirmForm((p) => ({ ...p, scheduled_at: e.target.value }))}
-                  className="bg-[#F4F5F7] border-black/[0.08] text-[#18181B] mt-1"
+                  className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)] mt-1"
                 />
               </div>
               <div>
-                <Label className="text-[#52525B]">Lien de session video (optionnel)</Label>
+                <Label className="text-[var(--lt-sub)]">Lien de session video (optionnel)</Label>
                 <Input
                   type="url"
                   placeholder="https://... (laisser vide pour demarrer en chat immersif)"
                   value={confirmForm.video_meeting_url}
                   onChange={(e) => setConfirmForm((p) => ({ ...p, video_meeting_url: e.target.value }))}
-                  className="bg-[#F4F5F7] border-black/[0.08] text-[#18181B] mt-1"
+                  className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)] mt-1"
                 />
               </div>
             </div>
@@ -613,7 +613,7 @@ const SecretariatCalendarPage = () => {
             >
               Demarrer maintenant
             </Button>
-            <Button variant="outline" onClick={() => setConfirmModal(null)} className="border-black/[0.08] text-[#18181B] hover:bg-[#F4F5F7]">Annuler</Button>
+            <Button variant="outline" onClick={() => setConfirmModal(null)} className="border-[var(--lt-border)] text-[var(--lt-text)] hover:opacity-80">Annuler</Button>
             <Button onClick={handleConfirm} className="bg-[var(--school-accent)] text-black hover:bg-amber-500">
               Confirmer
             </Button>

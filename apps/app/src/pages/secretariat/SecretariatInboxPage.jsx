@@ -72,10 +72,10 @@ class LazyChunkErrorBoundary extends Component {
     if (this.state.reloading) return null;
     if (this.state.hasError) {
       return (
-        <div className="flex flex-col items-center justify-center h-48 gap-3 text-[#71717A]">
+        <div className="flex flex-col items-center justify-center h-48 gap-3 text-[var(--lt-muted)]">
           <p className="text-sm">Mise à jour disponible.</p>
           <button
-            className="text-xs px-3 py-1.5 rounded border border-black/[0.12] hover:bg-black/[0.04]"
+            className="text-xs px-3 py-1.5 rounded border border-[var(--lt-border)] hover:bg-black/[0.04]"
             onClick={() => { sessionStorage.removeItem('chunk_reload_v1'); window.location.reload(); }}
           >
             Recharger
@@ -631,7 +631,7 @@ const SecretariatInboxPage = () => {
       transition={{ delay: index * 0.04 }}
       whileHover={{ scale: 1.01, x: 4 }}
       whileTap={{ scale: 0.99 }}
-      className="flex items-start gap-3 p-4 rounded-[14px] border border-black/[0.08] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:bg-[#F4F5F7] transition-all cursor-pointer"
+      className="flex items-start gap-3 p-4 rounded-[14px] border border-[var(--lt-border)] bg-[var(--lt-card-bg)] shadow-[var(--lt-card-shadow)] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:opacity-80 transition-all cursor-pointer"
     >
       {children}
     </motion.div>
@@ -647,11 +647,11 @@ const SecretariatInboxPage = () => {
           <Calendar className="w-5 h-5" />
         </motion.div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-[#18181B] truncate">
+          <p className="font-semibold text-[var(--lt-text)] truncate">
             {item._student_name || item.visitor_name || 'Demande de rendez-vous'}
           </p>
-          <p className="text-sm text-[#52525B] truncate">{item.subject || item.reason || item.description || '—'}</p>
-          <p className="text-xs text-[#71717A] mt-1">
+          <p className="text-sm text-[var(--lt-sub)] truncate">{item.subject || item.reason || item.description || '—'}</p>
+          <p className="text-xs text-[var(--lt-muted)] mt-1">
             {item.preferred_date_start || item.preferred_date
               ? format(
                   new Date(item.preferred_date_start || item.preferred_date),
@@ -664,10 +664,10 @@ const SecretariatInboxPage = () => {
             {item.booking_reference ? ` · ${item.booking_reference}` : ''}
           </p>
           {item._secretary_name ? (
-            <p className="text-xs text-[#8A6D1A] mt-1">Secrétaire proposée : {item._secretary_name}</p>
+            <p className="text-xs text-[var(--lt-gold-ink)] mt-1">Secrétaire proposée : {item._secretary_name}</p>
           ) : null}
           {item._teacher_name ? (
-            <p className="text-xs text-[#71717A] mt-0.5">Enseignant : {item._teacher_name}</p>
+            <p className="text-xs text-[var(--lt-muted)] mt-0.5">Enseignant : {item._teacher_name}</p>
           ) : null}
         </div>
         <Badge variant="outline" className="shrink-0 border-amber-300 bg-amber-50 text-amber-700">
@@ -699,7 +699,7 @@ const SecretariatInboxPage = () => {
         >
           Refuser
         </Button>
-        <Button size="sm" variant="ghost" className="text-[#52525B] hover:bg-black/[0.04]" onClick={() => navigate(`/secretariat-space/calendrier?request=${item.id}`)}>
+        <Button size="sm" variant="ghost" className="text-[var(--lt-sub)] hover:bg-black/[0.04]" onClick={() => navigate(`/secretariat-space/calendrier?request=${item.id}`)}>
           Ouvrir fiche
         </Button>
       </div>
@@ -716,11 +716,11 @@ const SecretariatInboxPage = () => {
           <CalendarCheck className="w-5 h-5" />
         </motion.div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-[#18181B]">{item.title}</p>
-          <p className="text-sm text-[#52525B]">
+          <p className="font-semibold text-[var(--lt-text)]">{item.title}</p>
+          <p className="text-sm text-[var(--lt-sub)]">
             {item.scheduled_at ? format(new Date(item.scheduled_at), "EEEE d MMM yyyy 'à' HH:mm", { locale: fr }) : '--'}
           </p>
-          <p className="text-xs text-[#71717A]">
+          <p className="text-xs text-[var(--lt-muted)]">
             {item.type ? APPOINTMENT_TYPE_LABEL[item.type] || item.type : 'RDV'}
             {item.duration_minutes ? ` · ${item.duration_minutes} min` : ''}
             {item._teacher_name ? ` · ${item._teacher_name}` : ''}
@@ -758,7 +758,7 @@ const SecretariatInboxPage = () => {
         type="button"
         onClick={() => setSelectedTriageKey(it.key)}
         className={`w-full text-left rounded-[14px] border transition-colors ${
-          active ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]' : 'border-black/[0.08] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:border-black/20'
+          active ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]' : 'border-[var(--lt-border)] bg-[var(--lt-card-bg)] shadow-[var(--lt-card-shadow)] hover:border-black/20'
         }`}
       >
         <div className="flex items-start gap-3 p-4">
@@ -769,13 +769,13 @@ const SecretariatInboxPage = () => {
           />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium text-[#18181B] truncate">{it.title}</span>
-              <Badge variant="outline" className="text-[10px] border-black/15 text-[#52525B]">
+              <span className="font-medium text-[var(--lt-text)] truncate">{it.title}</span>
+              <Badge variant="outline" className="text-[10px] border-black/15 text-[var(--lt-sub)]">
                 {it.badge}
               </Badge>
             </div>
-            <p className="text-sm text-[#52525B] truncate">{it.subtitle}</p>
-            <p className="text-xs text-[#71717A] mt-1">
+            <p className="text-sm text-[var(--lt-sub)] truncate">{it.subtitle}</p>
+            <p className="text-xs text-[var(--lt-muted)] mt-1">
               {it.date ? format(new Date(it.date), "d MMM yyyy 'à' HH:mm", { locale: fr }) : ''}
             </p>
           </div>
@@ -787,19 +787,19 @@ const SecretariatInboxPage = () => {
   const renderTriageDetail = () => {
     if (!selectedTriage) {
       return (
-        <div className="rounded-[14px] border border-dashed border-black/[0.12] bg-[#F4F5F7] p-8 text-center text-[#71717A] text-sm">
+        <div className="rounded-[14px] border border-dashed border-[var(--lt-border)] bg-[var(--lt-inner-bg)] p-8 text-center text-[var(--lt-muted)] text-sm">
           Sélectionnez une ligne pour voir le détail et les actions.
         </div>
       );
     }
     const it = selectedTriage;
     return (
-      <div className="rounded-[14px] border border-black/[0.08] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-5 space-y-4">
+      <div className="rounded-[14px] border border-[var(--lt-border)] bg-[var(--lt-card-bg)] shadow-[var(--lt-card-shadow)] p-5 space-y-4">
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-[#8A6D1A]" />
-          <h3 className="font-semibold text-[#18181B]">Détail</h3>
+          <Filter className="w-4 h-4 text-[var(--lt-gold-ink)]" />
+          <h3 className="font-semibold text-[var(--lt-text)]">Détail</h3>
         </div>
-        <p className="text-sm text-[#52525B]">{it.subtitle}</p>
+        <p className="text-sm text-[var(--lt-sub)]">{it.subtitle}</p>
         <div className="flex flex-wrap gap-2">
           {it.kind === 'mail_unread' && (
             <Button size="sm" onClick={() => setInboxTab('emails')}>
@@ -861,30 +861,30 @@ const SecretariatInboxPage = () => {
             className="p-3 bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]"
             whileHover={{ scale: 1.05, boxShadow: '0 0 25px rgba(212,175,55,0.18)' }}
           >
-            <Inbox className="w-7 h-7 text-[#8A6D1A]" />
+            <Inbox className="w-7 h-7 text-[var(--lt-gold-ink)]" />
           </motion.div>
           <div>
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F4F5F7] border border-black/[0.08] mb-2"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--lt-inner-bg)] border border-[var(--lt-border)] mb-2"
             >
-              <Sparkles className="w-4 h-4 text-[#8A6D1A]" />
-              <span className="text-xs text-[#52525B]">Centre de communication</span>
+              <Sparkles className="w-4 h-4 text-[var(--lt-gold-ink)]" />
+              <span className="text-xs text-[var(--lt-sub)]">Centre de communication</span>
             </motion.div>
-            <h1 className="text-2xl md:text-3xl font-serif font-bold text-[#18181B]">
+            <h1 className="text-2xl md:text-3xl font-serif font-bold text-[var(--lt-text)]">
               Messagerie unifiée
             </h1>
-            <p className="text-[#52525B] text-sm mt-1">
+            <p className="text-[var(--lt-sub)] text-sm mt-1">
               Un seul espace : canaux séparés — chat, courrier{' '}
-              <span className="text-[#8A6D1A] font-mono text-xs">{vitrineEmail}</span>, appels, réservation.
+              <span className="text-[var(--lt-gold-ink)] font-mono text-xs">{vitrineEmail}</span>, appels, réservation.
             </p>
-            <p className="text-[#71717A] text-xs mt-2 max-w-3xl">
-              <strong className="text-[#52525B]">Tous</strong> priorise l&apos;action (non lus, urgents, RDV imminents).{' '}
-              <strong className="text-[#52525B]">Emails</strong> = IMAP intégré.{' '}
-              <strong className="text-[#52525B]">Demandes RDV</strong> = file Smart Booking.{' '}
-              <strong className="text-[#52525B]">RDV prévus</strong> = agenda confirmé.
+            <p className="text-[var(--lt-muted)] text-xs mt-2 max-w-3xl">
+              <strong className="text-[var(--lt-sub)]">Tous</strong> priorise l&apos;action (non lus, urgents, RDV imminents).{' '}
+              <strong className="text-[var(--lt-sub)]">Emails</strong> = IMAP intégré.{' '}
+              <strong className="text-[var(--lt-sub)]">Demandes RDV</strong> = file Smart Booking.{' '}
+              <strong className="text-[var(--lt-sub)]">RDV prévus</strong> = agenda confirmé.
             </p>
           </div>
         </motion.div>
@@ -907,12 +907,12 @@ const SecretariatInboxPage = () => {
           <TabsContent value="tous" className="mt-0">
             {loading ? (
               <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-10 h-10 animate-spin text-[#8A6D1A]" />
+                <Loader2 className="w-10 h-10 animate-spin text-[var(--lt-gold-ink)]" />
               </div>
             ) : (
               <div className="grid grid-cols-1 xl:grid-cols-[200px_minmax(0,1fr)_minmax(260px,320px)] gap-4">
-                <aside className="space-y-2 rounded-[14px] border border-black/[0.08] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-3 h-fit">
-                  <p className="text-[10px] uppercase tracking-wider text-[#71717A] px-1 flex items-center gap-1">
+                <aside className="space-y-2 rounded-[14px] border border-[var(--lt-border)] bg-[var(--lt-card-bg)] shadow-[var(--lt-card-shadow)] p-3 h-fit">
+                  <p className="text-[10px] uppercase tracking-wider text-[var(--lt-muted)] px-1 flex items-center gap-1">
                     <Filter className="w-3 h-3" /> Filtres
                   </p>
                   {TRIAGE_FILTERS.map((f) => (
@@ -924,13 +924,13 @@ const SecretariatInboxPage = () => {
                         setSelectedTriageKey(null);
                       }}
                       className={`w-full text-left text-xs rounded-lg px-3 py-2 transition-colors ${
-                        triageFilter === f.id ? 'bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] text-[#8A6D1A] border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]' : 'text-[#52525B] hover:bg-[#F4F5F7]'
+                        triageFilter === f.id ? 'bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] text-[var(--lt-gold-ink)] border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]' : 'text-[var(--lt-sub)] hover:opacity-80'
                       }`}
                     >
                       {f.label}
                     </button>
                   ))}
-                  <p className="text-[10px] text-[#71717A] px-1 pt-2">
+                  <p className="text-[10px] text-[var(--lt-muted)] px-1 pt-2">
                     {filteredTriage.length} élément{filteredTriage.length > 1 ? 's' : ''} · tri par priorité
                   </p>
                 </aside>
@@ -938,7 +938,7 @@ const SecretariatInboxPage = () => {
                   {filteredTriage.length > 0 ? (
                     filteredTriage.map((it, i) => renderTriageRow(it, i))
                   ) : (
-                    <div className="text-center py-16 text-[#71717A] rounded-[14px] border border-dashed border-black/[0.12] bg-[#F4F5F7]">
+                    <div className="text-center py-16 text-[var(--lt-muted)] rounded-[14px] border border-dashed border-[var(--lt-border)] bg-[var(--lt-inner-bg)]">
                       Rien à traiter avec ce filtre. Les formulaires site et le courrier apparaissent ici lorsqu&apos;il y a du
                       nouveau contenu.
                     </div>
@@ -950,17 +950,17 @@ const SecretariatInboxPage = () => {
           </TabsContent>
 
           <TabsContent value="chat" className="mt-0">
-            <p className="text-xs text-[#71717A] mb-2">
+            <p className="text-xs text-[var(--lt-muted)] mb-2">
               Messagerie conversationnelle (DM, visiteurs, membres) — pas le courrier{' '}
               <span className="font-mono">infos@</span>.
             </p>
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-[14px] border border-black/[0.08] overflow-hidden bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] min-h-[480px]"
+              className="rounded-[14px] border border-[var(--lt-border)] overflow-hidden bg-[var(--lt-card-bg)] shadow-[var(--lt-card-shadow)] min-h-[480px]"
             >
               <LazyChunkErrorBoundary>
-                <Suspense fallback={<div className="flex items-center justify-center h-48 text-[#71717A] text-sm">Chargement…</div>}>
+                <Suspense fallback={<div className="flex items-center justify-center h-48 text-[var(--lt-muted)] text-sm">Chargement…</div>}>
                   <MessagingPage embedded />
                 </Suspense>
               </LazyChunkErrorBoundary>
@@ -968,7 +968,7 @@ const SecretariatInboxPage = () => {
           </TabsContent>
 
           <TabsContent value="emails" className="mt-0">
-            <p className="text-xs text-[#71717A] mb-2">
+            <p className="text-xs text-[var(--lt-muted)] mb-2">
               Courrier professionnel IMAP (threads, non lus, assignation CRM) — distinct du chat.
             </p>
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
@@ -980,19 +980,19 @@ const SecretariatInboxPage = () => {
             <div className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 flex gap-2 text-sm text-violet-800">
               <Video className="w-5 h-5 shrink-0 text-violet-500" />
               <p>
-                <strong className="text-[#18181B]">Sessions live / visio</strong> à venir (table{' '}
+                <strong className="text-[var(--lt-text)]">Sessions live / visio</strong> à venir (table{' '}
                 <span className="font-mono text-xs">live_sessions</span>).
-                Complété par les <strong className="text-[#18181B]">indices téléphone</strong> des formulaires contact.
+                Complété par les <strong className="text-[var(--lt-text)]">indices téléphone</strong> des formulaires contact.
               </p>
             </div>
             {loading ? (
               <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-10 h-10 animate-spin text-[#8A6D1A]" />
+                <Loader2 className="w-10 h-10 animate-spin text-[var(--lt-gold-ink)]" />
               </div>
             ) : (
               <div className="space-y-8">
                 <div>
-                  <h3 className="text-xs uppercase tracking-wider text-[#71717A] mb-3">Live & visio à venir</h3>
+                  <h3 className="text-xs uppercase tracking-wider text-[var(--lt-muted)] mb-3">Live & visio à venir</h3>
                   {liveSessions.length > 0 ? (
                     <div className="space-y-3">
                       {liveSessions.map((item, i) => (
@@ -1001,12 +1001,12 @@ const SecretariatInboxPage = () => {
                             <Video className="w-5 h-5" />
                           </motion.div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-[#18181B]">{item.title || 'Session live'}</p>
-                            <p className="text-sm text-[#52525B]">
+                            <p className="font-semibold text-[var(--lt-text)]">{item.title || 'Session live'}</p>
+                            <p className="text-sm text-[var(--lt-sub)]">
                               {item._teacher_name ? `${item._teacher_name} · ` : ''}
                               {item.session_type || 'live'}
                             </p>
-                            <p className="text-xs text-[#71717A] mt-1">
+                            <p className="text-xs text-[var(--lt-muted)] mt-1">
                               {item.scheduled_at
                                 ? format(new Date(item.scheduled_at), "EEEE d MMM yyyy 'à' HH:mm", { locale: fr })
                                 : '--'}
@@ -1021,7 +1021,7 @@ const SecretariatInboxPage = () => {
                                 href={item.video_room_url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-[10px] text-[#8A6D1A] hover:underline"
+                                className="text-[10px] text-[var(--lt-gold-ink)] hover:underline"
                               >
                                 Rejoindre
                               </a>
@@ -1031,11 +1031,11 @@ const SecretariatInboxPage = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-[#71717A] py-4">Aucune session live programmée.</p>
+                    <p className="text-sm text-[var(--lt-muted)] py-4">Aucune session live programmée.</p>
                   )}
                 </div>
                 <div>
-                  <h3 className="text-xs uppercase tracking-wider text-[#71717A] mb-3">Indices téléphone (formulaires)</h3>
+                  <h3 className="text-xs uppercase tracking-wider text-[var(--lt-muted)] mb-3">Indices téléphone (formulaires)</h3>
                   {contactCallHints.length > 0 ? (
                     <div className="space-y-3">
                       {contactCallHints.map((item, i) => (
@@ -1044,9 +1044,9 @@ const SecretariatInboxPage = () => {
                             <Phone className="w-5 h-5" />
                           </motion.div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-[#18181B]">{item.from}</p>
-                            <p className="text-sm text-[#52525B]">{item.phone}</p>
-                            <p className="text-xs text-[#71717A] mt-1">
+                            <p className="font-semibold text-[var(--lt-text)]">{item.from}</p>
+                            <p className="text-sm text-[var(--lt-sub)]">{item.phone}</p>
+                            <p className="text-xs text-[var(--lt-muted)] mt-1">
                               {item.time ? format(new Date(item.time), "d MMM HH:mm", { locale: fr }) : '--'}
                             </p>
                           </div>
@@ -1057,11 +1057,11 @@ const SecretariatInboxPage = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-[#71717A] py-2">Aucun indice formulaire.</p>
+                    <p className="text-sm text-[var(--lt-muted)] py-2">Aucun indice formulaire.</p>
                   )}
                 </div>
                 {liveSessions.length === 0 && contactCallHints.length === 0 ? (
-                  <div className="text-center py-8 text-[#71717A] rounded-[14px] border border-dashed border-black/[0.12] bg-[#F4F5F7]">
+                  <div className="text-center py-8 text-[var(--lt-muted)] rounded-[14px] border border-dashed border-[var(--lt-border)] bg-[var(--lt-inner-bg)]">
                     Aucune communication vocale / visio listée pour le moment.
                   </div>
                 ) : null}
@@ -1071,8 +1071,8 @@ const SecretariatInboxPage = () => {
 
           <TabsContent value="demandes_rdv" className="mt-0 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs text-[#71717A]">File d&apos;entrée Smart Booking — une ligne = une demande à traiter.</p>
-              <label className="flex items-center gap-2 text-xs text-[#52525B] cursor-pointer">
+              <p className="text-xs text-[var(--lt-muted)]">File d&apos;entrée Smart Booking — une ligne = une demande à traiter.</p>
+              <label className="flex items-center gap-2 text-xs text-[var(--lt-sub)] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={showCancelledRdv}
@@ -1084,18 +1084,18 @@ const SecretariatInboxPage = () => {
             </div>
             {loading ? (
               <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-10 h-10 animate-spin text-[#8A6D1A]" />
+                <Loader2 className="w-10 h-10 animate-spin text-[var(--lt-gold-ink)]" />
               </div>
             ) : (
               <div className="space-y-6">
                 {rdvDemandes.length > 0 ? rdvDemandes.map((item, i) => renderDemandeRdvRow(item, i)) : (
-                  <div className="text-center py-12 text-[#71717A] rounded-[14px] border border-dashed border-black/[0.12] bg-[#F4F5F7]">
+                  <div className="text-center py-12 text-[var(--lt-muted)] rounded-[14px] border border-dashed border-[var(--lt-border)] bg-[var(--lt-inner-bg)]">
                     Aucune demande active.
                   </div>
                 )}
                 {showCancelledRdv && rdvCancelled.length > 0 ? (
-                  <div className="space-y-3 pt-4 border-t border-black/[0.08]">
-                    <p className="text-xs text-[#71717A] uppercase tracking-wider">Annulées</p>
+                  <div className="space-y-3 pt-4 border-t border-[var(--lt-border)]">
+                    <p className="text-xs text-[var(--lt-muted)] uppercase tracking-wider">Annulées</p>
                     {rdvCancelled.map((item, i) => renderDemandeRdvRow(item, i))}
                   </div>
                 ) : null}
@@ -1105,12 +1105,12 @@ const SecretariatInboxPage = () => {
 
           <TabsContent value="rdv_prevus" className="mt-0 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-xs text-[#71717A] max-w-xl">
+              <p className="text-xs text-[var(--lt-muted)] max-w-xl">
                 Agenda validé (table <span className="font-mono">appointments</span>). Basculez liste / mini-calendrier ; le
                 calendrier complet reste sur la page dédiée.
               </p>
               <div className="flex flex-wrap items-center gap-2">
-                <div className="flex rounded-lg border border-black/[0.08] overflow-hidden">
+                <div className="flex rounded-lg border border-[var(--lt-border)] overflow-hidden">
                   <Button
                     type="button"
                     variant={rdvView === 'list' ? 'default' : 'ghost'}
@@ -1130,14 +1130,14 @@ const SecretariatInboxPage = () => {
                     <LayoutGrid className="w-4 h-4 mr-1" /> Calendrier
                   </Button>
                 </div>
-                <Button size="sm" variant="outline" className="border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] text-[#8A6D1A] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]" asChild>
+                <Button size="sm" variant="outline" className="border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] text-[var(--lt-gold-ink)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]" asChild>
                   <a href="/secretariat-space/calendrier">Calendrier complet</a>
                 </Button>
               </div>
             </div>
             {loading ? (
               <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-10 h-10 animate-spin text-[#8A6D1A]" />
+                <Loader2 className="w-10 h-10 animate-spin text-[var(--lt-gold-ink)]" />
               </div>
             ) : rdvPrevu.length > 0 ? (
               rdvView === 'calendar' ? (
@@ -1151,7 +1151,7 @@ const SecretariatInboxPage = () => {
                 <div className="space-y-6">{rdvPrevu.map((item, i) => renderRdvPrevuRow(item, i))}</div>
               )
             ) : (
-              <div className="text-center py-16 text-[#71717A] rounded-[14px] border border-dashed border-black/[0.12] bg-[#F4F5F7]">
+              <div className="text-center py-16 text-[var(--lt-muted)] rounded-[14px] border border-dashed border-[var(--lt-border)] bg-[var(--lt-inner-bg)]">
                 Aucun rendez-vous confirmé à venir.
               </div>
             )}
@@ -1159,32 +1159,32 @@ const SecretariatInboxPage = () => {
         </Tabs>
 
         <Dialog open={!!confirmDialog} onOpenChange={(open) => !open && setConfirmDialog(null)}>
-          <DialogContent className="bg-white border-black/[0.08] text-[#18181B] max-w-md">
+          <DialogContent className="bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-[var(--lt-text)] max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-[#18181B]">Confirmer le rendez-vous</DialogTitle>
+              <DialogTitle className="text-[var(--lt-text)]">Confirmer le rendez-vous</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-2">
-              <p className="text-sm text-[#52525B]">
+              <p className="text-sm text-[var(--lt-sub)]">
                 {confirmDialog?._student_name || confirmDialog?.visitor_name || 'Demande'} — définissez le créneau et le
                 secrétariat assigné (Smart Booking).
               </p>
               <div className="space-y-2">
-                <Label htmlFor="confirm-sched" className="text-[#52525B]">Date et heure</Label>
+                <Label htmlFor="confirm-sched" className="text-[var(--lt-sub)]">Date et heure</Label>
                 <Input
                   id="confirm-sched"
                   type="datetime-local"
                   value={confirmForm.scheduled_at}
                   onChange={(e) => setConfirmForm((f) => ({ ...f, scheduled_at: e.target.value }))}
-                  className="bg-[#F4F5F7] border-black/[0.08] text-[#18181B]"
+                  className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)]"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[#52525B]">Secrétaire / staff assigné</Label>
+                <Label className="text-[var(--lt-sub)]">Secrétaire / staff assigné</Label>
                 <Select
                   value={confirmForm.assigned_teacher_id}
                   onValueChange={(v) => setConfirmForm((f) => ({ ...f, assigned_teacher_id: v }))}
                 >
-                  <SelectTrigger className="bg-[#F4F5F7] border-black/[0.08] text-[#18181B]">
+                  <SelectTrigger className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)]">
                     <SelectValue placeholder="Choisir un profil" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1197,18 +1197,18 @@ const SecretariatInboxPage = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm-video" className="text-[#52525B]">Lien visio (optionnel)</Label>
+                <Label htmlFor="confirm-video" className="text-[var(--lt-sub)]">Lien visio (optionnel)</Label>
                 <Input
                   id="confirm-video"
                   value={confirmForm.video_meeting_url}
                   onChange={(e) => setConfirmForm((f) => ({ ...f, video_meeting_url: e.target.value }))}
                   placeholder="https://..."
-                  className="bg-[#F4F5F7] border-black/[0.08] text-[#18181B]"
+                  className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)]"
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="ghost" onClick={() => setConfirmDialog(null)} className="text-[#52525B] hover:bg-[#F4F5F7]">
+              <Button variant="ghost" onClick={() => setConfirmDialog(null)} className="text-[var(--lt-sub)] hover:opacity-80">
                 Annuler
               </Button>
               <Button className="bg-[var(--school-accent)] text-black hover:bg-[#c9a432]" onClick={() => void submitConfirmDialog()}>

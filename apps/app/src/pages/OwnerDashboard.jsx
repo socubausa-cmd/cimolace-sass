@@ -118,9 +118,9 @@ const OwnerDashboard = () => {
          <div className="mb-6 flex justify-end">
             <div
               className="px-3 py-3 rounded-[14px] min-w-[280px]"
-              style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+              style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)' }}
             >
-              <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#71717A' }}>Année scolaire</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--lt-muted)' }}>Année scolaire</p>
               <PremiumSegmentedSelector
                 value={currentYear}
                 onChange={setSchoolYear}
@@ -131,7 +131,7 @@ const OwnerDashboard = () => {
                 layoutId="owner-dashboard-school-year-segment-pill"
                 compact
                 showChevron={false}
-                railClassName="!bg-[#F4F5F7] !border-black/5"
+                railClassName="!bg-[var(--lt-inner-bg)] !border-[var(--lt-border)]"
                 optionClassName="!text-zinc-500 [&.text-white]:!text-zinc-900 hover:!bg-black/[0.03]"
               />
             </div>
@@ -189,7 +189,7 @@ const FinanceSection = () => {
            options={financeOptions}
            layoutId="owner-finance-segment-pill"
            className="max-w-4xl"
-           railClassName="!bg-[#F4F5F7] !border-black/5"
+           railClassName="!bg-[var(--lt-inner-bg)] !border-[var(--lt-border)]"
            optionClassName="!text-zinc-500 [&.text-white]:!text-zinc-900 hover:!bg-black/[0.03]"
          />
          <AnimatePresence mode="wait">
@@ -247,7 +247,7 @@ const FinanceSection = () => {
              >
                <div
                  className="p-4 rounded-[14px]"
-                 style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+                 style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)' }}
                >
                  <TenantPayoutProvidersForm />
                </div>

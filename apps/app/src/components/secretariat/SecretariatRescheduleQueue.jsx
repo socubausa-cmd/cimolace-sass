@@ -86,7 +86,7 @@ export function SecretariatRescheduleQueue({ onProcessed }) {
 
   if (loading) {
     return (
-      <div className="rounded-[14px] border border-violet-200 bg-violet-50 p-6 flex items-center justify-center gap-2 text-[#52525B]">
+      <div className="rounded-[14px] border border-violet-200 bg-violet-50 p-6 flex items-center justify-center gap-2 text-[var(--lt-sub)]">
         <Loader2 className="w-5 h-5 animate-spin text-violet-500" />
         <span className="text-sm">Chargement des demandes de report…</span>
       </div>
@@ -108,7 +108,8 @@ export function SecretariatRescheduleQueue({ onProcessed }) {
           type="button"
           variant="outline"
           size="sm"
-          className="border-black/[0.12] bg-white text-[#52525B] hover:bg-[#F4F5F7]"
+          className="border-[var(--lt-border)] text-[var(--lt-sub)] hover:opacity-80"
+          style={{ background: 'var(--lt-card-bg)' }}
           onClick={() => void load()}
         >
           <RefreshCw className="w-4 h-4 mr-1" />
@@ -123,21 +124,22 @@ export function SecretariatRescheduleQueue({ onProcessed }) {
           <motion.div
             key={r.id}
             layout
-            className="rounded-xl border border-black/[0.08] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 space-y-3"
+            className="rounded-xl border border-[var(--lt-card-border)] shadow-[var(--lt-card-shadow)] p-4 space-y-3"
+            style={{ background: 'var(--lt-card-bg)' }}
           >
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
               <div>
-                <p className="font-medium text-[#18181B]">
+                <p className="font-medium text-[var(--lt-text)]">
                   {r.student?.name || r.student?.email || 'Participant'}
                 </p>
-                <p className="text-xs text-[#71717A]">
+                <p className="text-xs text-[var(--lt-muted)]">
                   Réf.{' '}
-                  <span className="font-mono text-[#8A6D1A]">
+                  <span className="font-mono text-[var(--lt-gold-ink)]">
                     {String(r.appointment?.bookingReference || r.appointmentId || '').slice(0, 14).toUpperCase()}
                   </span>
                 </p>
-                <p className="text-sm text-[#52525B] mt-1">
-                  <span className="text-[#71717A]">Créneau actuel :</span>{' '}
+                <p className="text-sm text-[var(--lt-sub)] mt-1">
+                  <span className="text-[var(--lt-muted)]">Créneau actuel :</span>{' '}
                   {r.appointment?.scheduledAt
                     ? new Date(r.appointment.scheduledAt).toLocaleString('fr-FR', {
                         dateStyle: 'medium',
@@ -146,7 +148,7 @@ export function SecretariatRescheduleQueue({ onProcessed }) {
                     : '—'}
                 </p>
                 <p className="text-sm text-emerald-700 mt-1">
-                  <span className="text-[#71717A]">Proposition :</span>{' '}
+                  <span className="text-[var(--lt-muted)]">Proposition :</span>{' '}
                   {r.proposedScheduledAt
                     ? new Date(r.proposedScheduledAt).toLocaleString('fr-FR', {
                         dateStyle: 'medium',
@@ -154,18 +156,18 @@ export function SecretariatRescheduleQueue({ onProcessed }) {
                       })
                     : '—'}
                 </p>
-                <p className="text-sm text-[#52525B] mt-2">
-                  <span className="text-[#71717A]">Justification :</span> {r.justification}
+                <p className="text-sm text-[var(--lt-sub)] mt-2">
+                  <span className="text-[var(--lt-muted)]">Justification :</span> {r.justification}
                 </p>
               </div>
             </div>
             <div>
-              <Label className="text-xs text-[#71717A]">Note interne (optionnelle, visible dans la notification)</Label>
+              <Label className="text-xs text-[var(--lt-muted)]">Note interne (optionnelle, visible dans la notification)</Label>
               <Textarea
                 value={notes[r.id] || ''}
                 onChange={(e) => setNotes((prev) => ({ ...prev, [r.id]: e.target.value }))}
                 placeholder="Ex. créneau validé avec le secrétariat AF…"
-                className="mt-1 bg-[#F4F5F7] border-black/[0.08] text-[#18181B] text-sm min-h-[64px]"
+                className="mt-1 bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)] text-sm min-h-[64px]"
                 rows={2}
               />
             </div>

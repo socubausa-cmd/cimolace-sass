@@ -380,7 +380,7 @@ const OwnerFormationsTab = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 p-5 rounded-[14px]"
-        style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+        style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)' }}
       >
         <div className="flex items-center gap-4 w-full xl:w-auto">
           <motion.div
@@ -389,14 +389,14 @@ const OwnerFormationsTab = () => {
             transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]"
           >
-            <Sparkles className="w-4 h-4" style={{ color: '#8A6D1A' }} />
-            <span className="text-xs" style={{ color: '#8A6D1A' }}>Catalogue</span>
+            <Sparkles className="w-4 h-4" style={{ color: 'var(--lt-gold-ink)' }} />
+            <span className="text-xs" style={{ color: 'var(--lt-gold-ink)' }}>Catalogue</span>
           </motion.div>
           <div>
-            <h2 className="text-2xl md:text-3xl font-serif font-bold tracking-tight" style={{ color: '#18181B' }}>
+            <h2 className="text-2xl md:text-3xl font-serif font-bold tracking-tight" style={{ color: 'var(--lt-text)' }}>
               Mes Formations
             </h2>
-            <Badge variant="outline" className="mt-1 border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]" style={{ color: '#8A6D1A' }}>
+            <Badge variant="outline" className="mt-1 border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]" style={{ color: 'var(--lt-gold-ink)' }}>
               {formations.length} Total
             </Badge>
           </div>
@@ -414,11 +414,11 @@ const OwnerFormationsTab = () => {
               placeholder="Rechercher..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-white border-black/10 text-zinc-900 placeholder:text-zinc-400"
+              className="pl-9 bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-[var(--lt-text)] placeholder:text-zinc-400"
             />
           </motion.div>
           <Select value={filterYear} onValueChange={setFilterYear}>
-            <SelectTrigger className="w-[140px] bg-white border-black/10 text-zinc-900">
+            <SelectTrigger className="w-[140px] bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-[var(--lt-text)]">
               <SelectValue placeholder="Année" />
             </SelectTrigger>
             <SelectContent>
@@ -429,7 +429,7 @@ const OwnerFormationsTab = () => {
             </SelectContent>
           </Select>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[120px] bg-white border-black/10 text-zinc-900">
+            <SelectTrigger className="w-[120px] bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-[var(--lt-text)]">
               <SelectValue placeholder="Statut" />
             </SelectTrigger>
             <SelectContent>
@@ -461,7 +461,7 @@ const OwnerFormationsTab = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total formations', value: formationStats.total, color: 'text-zinc-900' },
+          { label: 'Total formations', value: formationStats.total, color: 'text-[var(--lt-text)]' },
           { label: 'Publiees', value: formationStats.published, color: 'text-emerald-600' },
           { label: 'Brouillons', value: formationStats.draft, color: 'text-amber-600' },
           { label: 'Archivees', value: formationStats.archived, color: 'text-zinc-500' },
@@ -473,7 +473,7 @@ const OwnerFormationsTab = () => {
             transition={{ delay: index * 0.06 }}
             whileHover={{ y: -2 }}
           >
-            <Card className="border-0" style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <Card className="border-0" style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)' }}>
               <CardContent className="p-4">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">{item.label}</p>
                 <p className={`text-2xl font-bold tabular-nums mt-1 ${item.color}`}>{item.value}</p>
@@ -499,7 +499,7 @@ const OwnerFormationsTab = () => {
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
-                  className="rounded-[14px] overflow-hidden border border-black/[0.08] bg-white animate-pulse"
+                  className="rounded-[14px] overflow-hidden border border-[var(--lt-border)] bg-[var(--lt-card-bg)] animate-pulse"
                 >
                   <div className="h-48 bg-black/[0.05]" />
                   <div className="p-5 space-y-3">
@@ -538,7 +538,7 @@ const OwnerFormationsTab = () => {
               </div>
               <Button
                 variant="outline"
-                className="bg-white border-black/10 text-zinc-700 hover:bg-zinc-50"
+                className="bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-zinc-700 hover:opacity-80"
                 onClick={() => refresh()}
               >
                 Réessayer
@@ -549,10 +549,10 @@ const OwnerFormationsTab = () => {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="col-span-full text-center py-16 rounded-[14px] border border-dashed border-black/15 bg-white"
+              className="col-span-full text-center py-16 rounded-[14px] border border-dashed border-[var(--lt-border)] bg-[var(--lt-card-bg)]"
             >
-              <BookOpen className="w-10 h-10 mx-auto mb-3" style={{ color: '#8A6D1A' }} />
-              <p className="font-semibold" style={{ color: '#18181B' }}>Aucune formation trouvée</p>
+              <BookOpen className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--lt-gold-ink)' }} />
+              <p className="font-semibold" style={{ color: 'var(--lt-text)' }}>Aucune formation trouvée</p>
               <p className="text-sm text-zinc-500 mt-1">Ajuste les filtres ou crée une nouvelle formation.</p>
               <Button
                 className="mt-4 bg-[var(--school-accent)] text-black hover:bg-amber-500 font-semibold"
@@ -573,12 +573,12 @@ const OwnerFormationsTab = () => {
                 whileTap={{ scale: 0.98 }}
               >
                 <Card
-                  className="rounded-[14px] overflow-hidden border border-black/[0.08] bg-white hover:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.18)] transition-all group cursor-pointer"
-                  style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+                  className="rounded-[14px] overflow-hidden border border-[var(--lt-border)] bg-[var(--lt-card-bg)] hover:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.18)] transition-all group cursor-pointer"
+                  style={{ boxShadow: 'var(--lt-card-shadow)' }}
                   onClick={() => openDetails(formation)}
                 >
                   {/* Thumbnail Image */}
-                  <div className="h-48 bg-zinc-100 relative overflow-hidden">
+                  <div className="h-48 bg-[var(--lt-inner-bg)] relative overflow-hidden">
                     {formation.thumbnail ? (
                       <motion.img
                         src={formation.thumbnail}
@@ -588,7 +588,7 @@ const OwnerFormationsTab = () => {
                         transition={{ duration: 0.5 }}
                       />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 bg-[#F4F5F7]">
+                      <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 bg-[var(--lt-inner-bg)]">
                         <ImageIcon className="w-12 h-12 mb-2 opacity-60" />
                         <span className="text-xs">{formation.title}</span>
                       </div>
@@ -618,7 +618,7 @@ const OwnerFormationsTab = () => {
                   </div>
 
                   <CardContent className="p-5">
-                    <h3 className="text-lg font-bold mb-2 line-clamp-1 transition-colors group-hover:text-[#8A6D1A]" style={{ color: '#18181B' }} title={formation.title}>
+                    <h3 className="text-lg font-bold mb-2 line-clamp-1 transition-colors group-hover:text-[var(--lt-gold-ink)]" style={{ color: 'var(--lt-text)' }} title={formation.title}>
                       {formation.title}
                     </h3>
                     <div className="flex items-center justify-between gap-3 text-sm text-zinc-500 mb-4">
@@ -631,14 +631,14 @@ const OwnerFormationsTab = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+                            className="text-zinc-500 hover:opacity-80"
                             disabled={structureLoading && structureLoadingId === formation.id}
                             onClick={(e) => e.stopPropagation()}
                           >
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-white border-black/10 text-zinc-700">
+                        <DropdownMenuContent align="end" className="bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-zinc-700">
                           {formation.status !== 'published' ? (
                             <DropdownMenuItem onClick={() => handleSetStatus(formation, 'published')}>
                               <BookOpen className="w-4 h-4 mr-2" /> Publier
@@ -667,8 +667,8 @@ const OwnerFormationsTab = () => {
                       </DropdownMenu>
                     </div>
 
-                    <div className="mt-4 pt-4 border-t border-black/[0.06] text-center">
-                      <span className="text-xs text-zinc-400 transition-colors group-hover:text-[#8A6D1A]">
+                    <div className="mt-4 pt-4 border-t border-[var(--lt-border)] text-center">
+                      <span className="text-xs text-zinc-400 transition-colors group-hover:text-[var(--lt-gold-ink)]">
                         Cliquer pour voir les détails
                       </span>
                     </div>
@@ -682,7 +682,7 @@ const OwnerFormationsTab = () => {
 
       {/* Delete Confirmation */}
       <Dialog open={alertConfig.open} onOpenChange={(val) => !val && setAlertConfig({ ...alertConfig, open: false })}>
-        <DialogContent className="bg-white border border-black/10 text-zinc-900">
+        <DialogContent className="bg-[var(--lt-card-bg)] border border-[var(--lt-border)] text-[var(--lt-text)]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600"><AlertTriangle className="h-5 w-5"/> Suppression irréversible</DialogTitle>
             <DialogDescription className="text-zinc-500 pt-2">
@@ -690,7 +690,7 @@ const OwnerFormationsTab = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-4">
-            <Button variant="ghost" onClick={() => setAlertConfig({ open: false })} className="text-zinc-600 hover:bg-zinc-100">Annuler</Button>
+            <Button variant="ghost" onClick={() => setAlertConfig({ open: false })} className="text-zinc-600 hover:opacity-80">Annuler</Button>
             <Button variant="destructive" onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Supprimer définitivement</Button>
           </DialogFooter>
         </DialogContent>

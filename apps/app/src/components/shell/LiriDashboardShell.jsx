@@ -21,6 +21,7 @@
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useShellTint } from '../../lib/useShellTint';
 
 /* ─── Tokens (référence student-school-life) ─── */
 const T = {
@@ -40,7 +41,7 @@ const T = {
 
 /* ─── Palette CLAIRE partagée (inspirée Wix Studio) — affecte SEULEMENT le contenu central. ─── */
 const L = {
-  canvas: '#F4F5F7',                 // fond zone centrale
+  canvas: '#F4EFE3',                 // fond crème (réf utilisateur) — cf. .liri-light-content dans liri-brand-theme.css
   card: '#FFFFFF',                   // surfaces/cartes
   cardBorder: 'rgba(0,0,0,0.08)',    // bord 1px des cartes
   cardShadow: '0 1px 3px rgba(0,0,0,0.06)',
@@ -76,6 +77,17 @@ const IconLogout = () => (
   <svg viewBox="0 0 20 20" width={14} height={14} fill="none">
     <path d="M14 8l3 3-3 3M7 11h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     <path d="M11 5H5a1 1 0 00-1 1v10a1 1 0 001 1h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+const IconSun = () => (
+  <svg viewBox="0 0 20 20" width={17} height={17} fill="none">
+    <circle cx="10" cy="10" r="3.4" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M10 2.4v2.2M10 15.4v2.2M2.4 10h2.2M15.4 10h2.2M4.9 4.9l1.5 1.5M13.6 13.6l1.5 1.5M15.1 4.9l-1.5 1.5M6.4 13.6l-1.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+const IconMoon = () => (
+  <svg viewBox="0 0 20 20" width={17} height={17} fill="none">
+    <path d="M10 2.5a5 5 0 0 0 7.5 7.5 7.5 7.5 0 1 1-7.5-7.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
   </svg>
 );
 
@@ -199,6 +211,11 @@ export default function LiriDashboardShell({
 
   const toggle = () => { userOverride.current = true; setCollapsed((c) => !c); };
 
+  // Teinte de la zone de contenu : crème (« light ») ou sombre historique (« dark »), basculable.
+  // Le bouton n'apparaît que sur les surfaces light-capable (prop lightContent). La sidebar reste sombre.
+  const [tint, toggleTint] = useShellTint();
+  const isLight = lightContent && tint === 'light';
+
   const onItem = (item) => {
     if (item.href) onNavigate?.(item.href);
     else onTabChange?.(item.id);
@@ -258,19 +275,39 @@ export default function LiriDashboardShell({
       </AnimatePresence>
 
       {/* Contenu */}
-      <main style={{ flex: 1, overflowX: 'hidden', minHeight: '100dvh', background: lightContent ? L.canvas : 'transparent' }} className={collapsed ? 'lg:pl-[92px]' : 'lg:pl-[250px]'}>
-        <header style={lightContent
+      <main style={{ flex: 1, overflowX: 'hidden', minHeight: '100dvh', background: isLight ? L.canvas : 'transparent' }} className={`${lightContent ? (isLight ? 'liri-light-content ' : 'liri-dark-content ') : ''}${collapsed ? 'lg:pl-[92px]' : 'lg:pl-[250px]'}`}>
+        <header style={isLight
           ? { position: 'sticky', top: 0, zIndex: 30, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '0 24px', background: L.topbar, borderBottom: `1px solid ${L.topbarBorder}` }
           : { position: 'sticky', top: 0, zIndex: 30, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '0 24px', background: 'rgba(11,11,15,0.72)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${T.border}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-            <button type="button" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Ouvrir le menu" style={{ background: 'none', border: 'none', color: lightContent ? L.t2 : T.t2, cursor: 'pointer' }}><IconMenu /></button>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: lightContent ? L.t1 : T.t1, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h2>
+            <button type="button" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Ouvrir le menu" style={{ background: 'none', border: 'none', color: isLight ? L.t2 : T.t2, cursor: 'pointer' }}><IconMenu /></button>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: isLight ? L.t1 : T.t1, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h2>
           </div>
-          {topbarRight}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+            {lightContent && (
+              <button
+                type="button"
+                onClick={toggleTint}
+                aria-label={isLight ? 'Passer au thème sombre' : 'Passer au thème crème'}
+                title={isLight ? 'Thème sombre' : 'Thème crème'}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 40, height: 40, borderRadius: 11, cursor: 'pointer', flexShrink: 0,
+                  background: isLight ? '#FFFFFF' : 'rgba(255,255,255,0.06)',
+                  border: `1px solid ${isLight ? L.cardBorder : T.border}`,
+                  color: isLight ? L.t2 : T.t2,
+                  transition: 'background 150ms ease, color 150ms ease, border-color 150ms ease',
+                }}
+              >
+                {isLight ? <IconMoon /> : <IconSun />}
+              </button>
+            )}
+            {topbarRight}
+          </div>
         </header>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 20px 40px' }}>
-          {lightContent ? (
-            // Mode clair : pas de panneau sombre. Conteneur transparent — les enfants
+          {isLight ? (
+            // Mode clair (crème) : pas de panneau sombre. Conteneur transparent — les enfants
             // fournissent leurs propres cartes blanches (palette L partagée).
             <div style={{ minHeight: 440 }}>
               {children}

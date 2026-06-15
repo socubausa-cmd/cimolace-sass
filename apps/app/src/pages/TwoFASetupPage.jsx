@@ -24,7 +24,7 @@ const TwoFASetupPage = () => {
   return (
      <OwnerDashboardLayout activeTab="settings" onTabChange={() => {}}>
         <div className="max-w-2xl mx-auto py-10">
-           <Card className="border-0" style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+           <Card className="border-0" style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)' }}>
               <CardHeader>
                  <CardTitle className="text-zinc-900 text-2xl">Configuration 2FA</CardTitle>
                  <CardDescription className="text-zinc-500">Sécurisez votre compte avec l'authentification à deux facteurs.</CardDescription>
@@ -32,7 +32,7 @@ const TwoFASetupPage = () => {
               <CardContent>
                  {step === 1 && (
                     <div className="space-y-6 text-center py-4">
-                       <div className="w-20 h-20 bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] rounded-full flex items-center justify-center mx-auto" style={{ color: '#8A6D1A' }}>
+                       <div className="w-20 h-20 bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] rounded-full flex items-center justify-center mx-auto" style={{ color: 'var(--lt-gold-ink)' }}>
                           <Smartphone className="w-10 h-10" />
                        </div>
                        <div>
@@ -50,7 +50,7 @@ const TwoFASetupPage = () => {
                        </div>
                        <div>
                           <p className="text-sm text-zinc-500">Scannez ce code avec votre application.</p>
-                          <p className="text-sm text-zinc-700 mt-2 font-mono bg-zinc-100 border border-black/[0.06] p-2 rounded">KEY: AB12 CD34 EF56 GH78</p>
+                          <p className="text-sm text-zinc-700 mt-2 font-mono bg-zinc-100 border border-[var(--lt-border)] p-2 rounded">KEY: AB12 CD34 EF56 GH78</p>
                        </div>
                        <Button onClick={() => setStep(3)} className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-semibold w-full">J'ai scanné le code</Button>
                     </div>
@@ -63,7 +63,8 @@ const TwoFASetupPage = () => {
                           <Input
                              value={code}
                              onChange={(e) => setCode(e.target.value)}
-                             className="bg-[#F4F5F7] border-black/10 text-zinc-900 text-center text-2xl tracking-widest"
+                             className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-center text-2xl tracking-widest"
+                             style={{ color: 'var(--lt-text)' }}
                              placeholder="000 000"
                              maxLength={6}
                           />
@@ -90,7 +91,7 @@ const TwoFASetupPage = () => {
                              <div>2345-6789</div><div>9876-5432</div>
                           </div>
                        </div>
-                       <Button onClick={() => window.history.back()} variant="outline" className="bg-white border-black/10 text-zinc-700 hover:bg-zinc-50 w-full">Retour aux paramètres</Button>
+                       <Button onClick={() => window.history.back()} variant="outline" className="bg-[var(--lt-card-bg)] border-[var(--lt-border)] hover:opacity-80 w-full" style={{ color: 'var(--lt-sub)' }}>Retour aux paramètres</Button>
                     </div>
                  )}
               </CardContent>

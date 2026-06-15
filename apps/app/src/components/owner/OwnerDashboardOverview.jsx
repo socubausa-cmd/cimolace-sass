@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { Link } from 'react-router-dom';
 import { useAdminDashboard } from '@/hooks/useAdmin';
+import { useShellTint } from '@/lib/useShellTint';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Users, BookOpen, GraduationCap, Video, FileText, CreditCard, Clock3, Download, RefreshCw, Activity, CheckCircle, XCircle, Plus, Bell, Sparkles, Link2, Workflow, CalendarDays } from 'lucide-react';
@@ -24,25 +25,27 @@ const FADE_UP = { duration: 0.22, ease: 'easeOut' };
 /*  Canvas (#F4F5F7) fourni par le shell ; ici surfaces blanches.     */
 /*  La sidebar LORI dark/gold et le branding ISNA ne changent PAS.    */
 /* ------------------------------------------------------------------ */
-const LT_TEXT = '#18181B'; // primaire (AA sur blanc)
-const LT_SUB = '#52525B'; // secondaire
-const LT_MUTED = '#71717A'; // atténué (labels)
-const LT_BORDER = 'rgba(0,0,0,0.08)';
-const LT_GOLD = '#D4AF37'; // accent ISNA (parcimonieux)
-const LT_GOLD_INK = '#8A6D1A'; // or assombri = lisible AA sur blanc (texte/lien)
+// Teinte pilotée par le bouton du shell via variables CSS (cf. liri-brand-theme.css).
+// Clair (défaut) = crème/blanc ; sombre = cartes #16161E + texte clair. Un seul jeu de styles.
+const LT_TEXT = 'var(--lt-text)'; // primaire
+const LT_SUB = 'var(--lt-sub)'; // secondaire
+const LT_MUTED = 'var(--lt-muted)'; // atténué (labels)
+const LT_BORDER = 'var(--lt-border)';
+const LT_GOLD = 'var(--lt-gold)'; // accent ISNA décoratif
+const LT_GOLD_INK = 'var(--lt-gold-ink)'; // or lisible (texte/lien) selon la teinte
 
-// Surface « panneau » (en-tête, graphe, alertes, tableau) — blanc contenu.
+// Surface « panneau » (en-tête, graphe, alertes, tableau).
 const panelSurface = {
-  background: '#FFFFFF',
-  border: `1px solid ${LT_BORDER}`,
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+  background: 'var(--lt-card-bg)',
+  border: '1px solid var(--lt-card-border)',
+  boxShadow: 'var(--lt-card-shadow)',
 };
 
 // Surface « carte liste » (cartes stats, tuiles actions) — identique, contenue.
 const cardSurface = {
-  background: '#FFFFFF',
-  border: `1px solid ${LT_BORDER}`,
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+  background: 'var(--lt-card-bg)',
+  border: '1px solid var(--lt-card-border)',
+  boxShadow: 'var(--lt-card-shadow)',
 };
 
 // Palette de tons — puce d'icône colorée (on la GARDE, ressort sur blanc).
@@ -96,6 +99,8 @@ function QuickAction({ icon: Icon, label, tone = 'violet', to, full, onClick }) 
 
 const OwnerDashboardOverview = () => {
   const { stats: dashboardStats, activities, loading, error, refresh } = useAdminDashboard();
+  const [tint] = useShellTint();
+  const chartDark = tint === 'dark'; // recharts : les attributs SVG stroke ne résolvent pas var() → bascule JS
   const [details, setDetails] = useState({
     totalModules: 0,
     totalVideos: 0,
@@ -286,8 +291,8 @@ const OwnerDashboardOverview = () => {
           <button
             onClick={handleRefresh}
             disabled={loading}
-            className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-[10px] border bg-white px-3.5 text-[13px] font-semibold transition-colors hover:bg-zinc-50 disabled:opacity-50"
-            style={{ borderColor: LT_BORDER, color: LT_SUB }}
+            className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-[10px] border px-3.5 text-[13px] font-semibold transition-colors hover:opacity-80 disabled:opacity-50"
+            style={{ background: 'var(--lt-card-bg)', borderColor: LT_BORDER, color: LT_SUB }}
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Actualiser
           </button>
@@ -362,13 +367,15 @@ const OwnerDashboardOverview = () => {
                     <stop offset="95%" stopColor="#7c5cff" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
-                <XAxis dataKey="date" stroke="#71717A" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#71717A" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'} vertical={false} />
+                <XAxis dataKey="date" stroke={chartDark ? '#8E8E93' : '#71717A'} fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke={chartDark ? '#8E8E93' : '#71717A'} fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
                 <Tooltip
-                  cursor={{ stroke: 'rgba(0,0,0,0.12)' }}
-                  contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '10px', color: '#18181B', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-                  labelStyle={{ color: '#52525B' }}
+                  cursor={{ stroke: chartDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.12)' }}
+                  contentStyle={chartDark
+                    ? { backgroundColor: '#16161E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#F4F4F5', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }
+                    : { backgroundColor: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '10px', color: '#18181B', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                  labelStyle={{ color: chartDark ? '#A1A1AA' : '#52525B' }}
                 />
                 <Area type="monotone" dataKey="count" stroke="#7c5cff" strokeWidth={2} fillOpacity={1} fill="url(#colorActivity)" />
               </AreaChart>

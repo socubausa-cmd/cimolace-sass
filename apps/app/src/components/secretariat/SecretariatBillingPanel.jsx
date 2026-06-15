@@ -232,17 +232,17 @@ export default function SecretariatBillingPanel() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-[14px] border border-black/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 rounded-[14px] border border-[var(--lt-card-border)] shadow-[var(--lt-card-shadow)]" style={{ background: 'var(--lt-card-bg)' }}>
         <div>
-          <h1 className="text-2xl font-bold text-[#18181B] flex items-center gap-2">
-            <CreditCard className="w-6 h-6 text-[#8A6D1A]" /> Suivi des paiements
+          <h1 className="text-2xl font-bold text-[var(--lt-text)] flex items-center gap-2">
+            <CreditCard className="w-6 h-6 text-[var(--lt-gold-ink)]" /> Suivi des paiements
           </h1>
-          <p className="text-[#52525B] text-sm mt-1">
+          <p className="text-[var(--lt-sub)] text-sm mt-1">
             Vue complète de qui a payé, qui est en retard, et qui n'a pas d\'abonnement.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-          <Button variant="outline" onClick={load} disabled={loading} className="border-black/[0.08] bg-white text-[#18181B] hover:bg-[#F4F5F7] w-full sm:w-auto">
+          <Button variant="outline" onClick={load} disabled={loading} className="border-[var(--lt-border)] text-[var(--lt-text)] hover:opacity-80 w-full sm:w-auto" style={{ background: 'var(--lt-card-bg)' }}>
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} /> Actualiser
           </Button>
           <Button onClick={handleExport} className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-bold w-full sm:w-auto">
@@ -260,10 +260,10 @@ export default function SecretariatBillingPanel() {
           { label: 'Expirés',         value: stats.expired,  color: 'text-orange-600' },
           { label: 'Sans abonnement', value: stats.no_sub,   color: 'text-zinc-500' },
         ].map((s, i) => (
-          <Card key={i} className="bg-white border-black/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+          <Card key={i} className="border-[var(--lt-card-border)] shadow-[var(--lt-card-shadow)]" style={{ background: 'var(--lt-card-bg)' }}>
             <CardContent className="p-4 text-center">
               <p className={`text-3xl font-bold ${s.color}`}>{s.value}</p>
-              <p className="text-xs text-[#52525B] mt-1">{s.label}</p>
+              <p className="text-xs text-[var(--lt-sub)] mt-1">{s.label}</p>
             </CardContent>
           </Card>
         ))}
@@ -272,24 +272,25 @@ export default function SecretariatBillingPanel() {
       {/* Filters & search */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#71717A]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--lt-muted)]" />
           <Input
             placeholder="Rechercher par nom ou email…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-white border-black/[0.08] text-[#18181B] placeholder:text-[#71717A]"
+            className="pl-9 bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-[var(--lt-text)] placeholder:text-[var(--lt-muted)]"
           />
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <Filter className="w-4 h-4 text-[#71717A] shrink-0" />
+          <Filter className="w-4 h-4 text-[var(--lt-muted)] shrink-0" />
           {FILTER_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setFilter(opt.value)}
+              style={filter === opt.value ? undefined : { background: 'var(--lt-card-bg)' }}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                 filter === opt.value
                   ? 'bg-[var(--school-accent)] text-black border-[var(--school-accent)]'
-                  : 'bg-white text-[#52525B] border-black/[0.08] hover:border-black/20'
+                  : 'text-[var(--lt-sub)] border-[var(--lt-border)] hover:border-black/20'
               }`}
             >
               {opt.label}
@@ -299,20 +300,20 @@ export default function SecretariatBillingPanel() {
       </div>
 
       {/* Table */}
-      <Card className="bg-white border-black/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+      <Card className="border-[var(--lt-card-border)] shadow-[var(--lt-card-shadow)]" style={{ background: 'var(--lt-card-bg)' }}>
         <CardHeader className="pb-2">
-          <CardTitle className="text-[#18181B] text-base">
+          <CardTitle className="text-[var(--lt-text)] text-base">
             {filtered.length} étudiant{filtered.length !== 1 ? 's' : ''}
             {filter !== 'all' && ` · Filtre: ${FILTER_OPTIONS.find((o) => o.value === filter)?.label}`}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex items-center justify-center py-16 text-[#52525B]">
+            <div className="flex items-center justify-center py-16 text-[var(--lt-sub)]">
               <RefreshCw className="w-6 h-6 animate-spin mr-2" /> Chargement…
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16 text-[#71717A]">
+            <div className="text-center py-16 text-[var(--lt-muted)]">
               <Users className="w-10 h-10 mx-auto mb-2 opacity-25" />
               <p>Aucun étudiant trouvé.</p>
             </div>
@@ -329,25 +330,26 @@ export default function SecretariatBillingPanel() {
                     key={student.id}
                     type="button"
                     onClick={() => openDetail(student)}
-                    className="w-full rounded-xl border border-black/[0.08] bg-[#F4F5F7] p-4 text-left transition-colors active:bg-black/[0.04]"
+                    className="w-full rounded-xl border border-[var(--lt-border)] p-4 text-left transition-colors active:bg-black/[0.04]"
+                    style={{ background: 'var(--lt-inner-bg)' }}
                   >
                     <div className="flex items-start gap-3">
                       <Avatar className="w-10 h-10 shrink-0">
                         <AvatarImage src={student.avatar_url} />
-                        <AvatarFallback className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[#8A6D1A] text-xs">
+                        <AvatarFallback className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--lt-gold-ink)] text-xs">
                           {(student.name || student.email || '?')[0].toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1 space-y-2">
                         <div>
-                          <p className="text-[#18181B] font-medium leading-tight truncate">{student.name || '—'}</p>
-                          <p className="text-[#71717A] text-xs truncate">{student.email}</p>
+                          <p className="text-[var(--lt-text)] font-medium leading-tight truncate">{student.name || '—'}</p>
+                          <p className="text-[var(--lt-muted)] text-xs truncate">{student.email}</p>
                         </div>
                         <Badge className={cn('border text-xs', sc.color)}>
                           <Icon className={cn('w-3 h-3 mr-1', sc.iconColor)} />
                           {sc.label}
                         </Badge>
-                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-[#52525B]">
+                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-[var(--lt-sub)]">
                           <span className="truncate max-w-full">
                             Plan : {student.subscription?.plan_id || '—'}
                           </span>
@@ -359,7 +361,7 @@ export default function SecretariatBillingPanel() {
                               {formatDistanceToNow(new Date(student.lastPayment.created_at), { addSuffix: true, locale: fr })}
                             </span>
                           ) : (
-                            <span className="text-[#71717A]">Jamais payé</span>
+                            <span className="text-[var(--lt-muted)]">Jamais payé</span>
                           )}
                           {pc ? <span className={pc.color}>{pc.label}</span> : null}
                         </div>
@@ -371,7 +373,7 @@ export default function SecretariatBillingPanel() {
             </div>
             <div className="hidden lg:block overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-xs text-[#71717A] uppercase bg-[#F4F5F7]">
+                <thead className="text-xs text-[var(--lt-muted)] uppercase" style={{ background: 'var(--lt-inner-bg)' }}>
                   <tr>
                     <th className="px-4 py-3">Étudiant</th>
                     <th className="px-4 py-3">Statut abonnement</th>
@@ -393,20 +395,20 @@ export default function SecretariatBillingPanel() {
                     return (
                       <tr
                         key={student.id}
-                        className="border-b border-black/[0.06] hover:bg-[#F4F5F7] cursor-pointer transition-colors"
+                        className="border-b border-[var(--lt-border)] hover:opacity-80 cursor-pointer transition-colors"
                         onClick={() => openDetail(student)}
                       >
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             <Avatar className="w-8 h-8">
                               <AvatarImage src={student.avatar_url} />
-                              <AvatarFallback className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[#8A6D1A] text-xs">
+                              <AvatarFallback className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--lt-gold-ink)] text-xs">
                                 {(student.name || student.email || '?')[0].toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="text-[#18181B] font-medium leading-tight">{student.name || '—'}</p>
-                              <p className="text-[#71717A] text-xs">{student.email}</p>
+                              <p className="text-[var(--lt-text)] font-medium leading-tight">{student.name || '—'}</p>
+                              <p className="text-[var(--lt-muted)] text-xs">{student.email}</p>
                             </div>
                           </div>
                         </td>
@@ -416,41 +418,41 @@ export default function SecretariatBillingPanel() {
                             {sc.label}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3 text-[#52525B]">
+                        <td className="px-4 py-3 text-[var(--lt-sub)]">
                           {student.subscription?.plan_id || '—'}
                         </td>
                         <td className="px-4 py-3">
                           {expAt ? (
-                            <span className={isExpiringSoon ? 'text-amber-600 font-medium' : 'text-[#52525B]'}>
+                            <span className={isExpiringSoon ? 'text-amber-600 font-medium' : 'text-[var(--lt-sub)]'}>
                               {format(new Date(expAt), 'dd/MM/yyyy')}
                               {isExpiringSoon && <span className="ml-1 text-xs">(bientôt)</span>}
                             </span>
                           ) : (
-                            <span className="text-[#71717A]">—</span>
+                            <span className="text-[var(--lt-muted)]">—</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-[#52525B] text-xs">
+                        <td className="px-4 py-3 text-[var(--lt-sub)] text-xs">
                           {student.lastPayment?.created_at
                             ? formatDistanceToNow(new Date(student.lastPayment.created_at), { addSuffix: true, locale: fr })
-                            : <span className="text-[#71717A]">Jamais payé</span>}
+                            : <span className="text-[var(--lt-muted)]">Jamais payé</span>}
                         </td>
                         <td className="px-4 py-3">
                           {student.lastPayment ? (
                             <div>
-                              <span className="text-[#18181B] font-medium">
+                              <span className="text-[var(--lt-text)] font-medium">
                                   {(student.lastPayment.amount_cents / 100).toFixed(0)} {student.lastPayment.currency || ''}
                               </span>
                               {pc && <p className={`text-xs ${pc.color}`}>{pc.label}</p>}
                             </div>
                           ) : (
-                            <span className="text-[#71717A]">—</span>
+                            <span className="text-[var(--lt-muted)]">—</span>
                           )}
                         </td>
                         <td className="px-4 py-3">
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="text-[#8A6D1A] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-xs h-7 px-2"
+                            className="text-[var(--lt-gold-ink)] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-xs h-7 px-2"
                             onClick={(e) => { e.stopPropagation(); openDetail(student); }}
                           >
                             Détails →
@@ -471,57 +473,58 @@ export default function SecretariatBillingPanel() {
       {selected && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/30 backdrop-blur-[2px]" onClick={() => setSelected(null)}>
           <div
-            className="h-full w-full max-lg:max-w-none max-w-md bg-[#F4F5F7] border-l border-black/[0.08] shadow-2xl flex flex-col"
+            className="h-full w-full max-lg:max-w-none max-w-md border-l border-[var(--lt-border)] shadow-2xl flex flex-col"
+            style={{ background: 'var(--lt-inner-bg)' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="p-6 border-b border-black/[0.08] flex items-center justify-between bg-white">
+            <div className="p-6 border-b border-[var(--lt-border)] flex items-center justify-between" style={{ background: 'var(--lt-card-bg)' }}>
               <div className="flex items-center gap-3">
                 <Avatar className="w-10 h-10">
                   <AvatarImage src={selected.avatar_url} />
-                  <AvatarFallback className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[#8A6D1A]">
+                  <AvatarFallback className="bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--lt-gold-ink)]">
                     {(selected.name || selected.email || '?')[0].toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-[#18181B] font-bold">{selected.name || '—'}</p>
-                  <p className="text-[#52525B] text-xs">{selected.email}</p>
-                  {selected.phone && <p className="text-[#71717A] text-xs">{selected.phone}</p>}
+                  <p className="text-[var(--lt-text)] font-bold">{selected.name || '—'}</p>
+                  <p className="text-[var(--lt-sub)] text-xs">{selected.email}</p>
+                  {selected.phone && <p className="text-[var(--lt-muted)] text-xs">{selected.phone}</p>}
                 </div>
               </div>
-              <button onClick={() => setSelected(null)} className="text-[#71717A] hover:text-[#18181B] p-1">
+              <button onClick={() => setSelected(null)} className="text-[var(--lt-muted)] hover:text-[var(--lt-text)] p-1">
                 <XCircle className="w-5 h-5" />
               </button>
             </div>
 
             {/* Subscription summary */}
-            <div className="p-4 border-b border-black/[0.08]">
-              <h3 className="text-[#71717A] text-xs uppercase tracking-wider mb-3">Abonnement actuel</h3>
+            <div className="p-4 border-b border-[var(--lt-border)]">
+              <h3 className="text-[var(--lt-muted)] text-xs uppercase tracking-wider mb-3">Abonnement actuel</h3>
               {selected.subscription ? (
-                <div className="bg-white border border-black/[0.08] rounded-lg p-3 space-y-2">
+                <div className="border border-[var(--lt-border)] rounded-lg p-3 space-y-2" style={{ background: 'var(--lt-card-bg)' }}>
                   <div className="flex items-center justify-between">
-                    <span className="text-[#52525B] text-sm">Statut</span>
+                    <span className="text-[var(--lt-sub)] text-sm">Statut</span>
                     <Badge className={`border text-xs ${STATUS_CONFIG[selected.subStatus]?.color}`}>
                       {STATUS_CONFIG[selected.subStatus]?.label}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[#52525B] text-sm">Plan</span>
-                    <span className="text-[#18181B] text-sm font-medium">{selected.subscription.plan_id || '—'}</span>
+                    <span className="text-[var(--lt-sub)] text-sm">Plan</span>
+                    <span className="text-[var(--lt-text)] text-sm font-medium">{selected.subscription.plan_id || '—'}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[#52525B] text-sm">Prix</span>
-                    <span className="text-[#71717A] text-sm">—</span>
+                    <span className="text-[var(--lt-sub)] text-sm">Prix</span>
+                    <span className="text-[var(--lt-muted)] text-sm">—</span>
                   </div>
                   {selected.subscription.current_period_start && (
                     <div className="flex items-center justify-between">
-                      <span className="text-[#52525B] text-sm">Démarré le</span>
-                      <span className="text-[#52525B] text-sm">{format(new Date(selected.subscription.current_period_start), 'dd MMM yyyy', { locale: fr })}</span>
+                      <span className="text-[var(--lt-sub)] text-sm">Démarré le</span>
+                      <span className="text-[var(--lt-sub)] text-sm">{format(new Date(selected.subscription.current_period_start), 'dd MMM yyyy', { locale: fr })}</span>
                     </div>
                   )}
                   {selected.subscription.current_period_end && (
                     <div className="flex items-center justify-between">
-                      <span className="text-[#52525B] text-sm">Expire le</span>
+                      <span className="text-[var(--lt-sub)] text-sm">Expire le</span>
                       <span className={`text-sm font-medium ${new Date(selected.subscription.current_period_end) < new Date() ? 'text-red-600' : 'text-emerald-600'}`}>
                         {format(new Date(selected.subscription.current_period_end), 'dd MMM yyyy', { locale: fr })}
                       </span>
@@ -529,7 +532,7 @@ export default function SecretariatBillingPanel() {
                   )}
                 </div>
               ) : (
-                <div className="bg-white border border-black/[0.08] rounded-lg p-3 text-center text-[#71717A] text-sm">
+                <div className="border border-[var(--lt-border)] rounded-lg p-3 text-center text-[var(--lt-muted)] text-sm" style={{ background: 'var(--lt-card-bg)' }}>
                   Aucun abonnement enregistré
                 </div>
               )}
@@ -537,36 +540,36 @@ export default function SecretariatBillingPanel() {
 
             {/* Payment history */}
             <div className="flex-1 overflow-hidden flex flex-col p-4">
-              <h3 className="text-[#71717A] text-xs uppercase tracking-wider mb-3">Historique des paiements</h3>
+              <h3 className="text-[var(--lt-muted)] text-xs uppercase tracking-wider mb-3">Historique des paiements</h3>
               {detailLoading ? (
-                <div className="flex items-center justify-center py-8 text-[#52525B]">
+                <div className="flex items-center justify-center py-8 text-[var(--lt-sub)]">
                   <RefreshCw className="w-5 h-5 animate-spin mr-2" /> Chargement…
                 </div>
               ) : (
                 <ScrollArea className="flex-1">
                   {studentPayments.length === 0 ? (
-                    <div className="text-center py-8 text-[#71717A]">
+                    <div className="text-center py-8 text-[var(--lt-muted)]">
                       <CreditCard className="w-8 h-8 mx-auto mb-2 opacity-25" />
                       <p className="text-sm">Aucun paiement enregistré</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
                       {studentPayments.map((pay) => {
-                        const ps = PAYMENT_STATUS_CONFIG[pay.payment_status] || { label: pay.payment_status, color: 'text-[#52525B]' };
+                        const ps = PAYMENT_STATUS_CONFIG[pay.payment_status] || { label: pay.payment_status, color: 'text-[var(--lt-sub)]' };
                         const isConfirmed = String(pay.payment_status || '').toLowerCase() === 'confirmed';
                         const notSentBySchool = isConfirmed && !pay.invoice_sent_at;
                         const studentReported = isConfirmed && pay.invoice_student_not_received_at;
                         return (
-                          <div key={pay.id} className="bg-white border border-black/[0.08] rounded-lg p-3 flex flex-col gap-2">
+                          <div key={pay.id} className="border border-[var(--lt-border)] rounded-lg p-3 flex flex-col gap-2" style={{ background: 'var(--lt-card-bg)' }}>
                             <div className="flex items-start justify-between gap-2">
                               <div>
-                                <p className="text-[#18181B] text-sm font-medium">
+                                <p className="text-[var(--lt-text)] text-sm font-medium">
                                   {(Number(pay.amount_cents || 0) / 100).toFixed(0)} {pay.currency || 'XAF'}
                                 </p>
-                                <p className="text-[#71717A] text-xs">
+                                <p className="text-[var(--lt-muted)] text-xs">
                                   {pay.provider || '—'}
                                 </p>
-                                <p className="text-[#71717A] text-xs">
+                                <p className="text-[var(--lt-muted)] text-xs">
                                   {format(new Date(pay.created_at), 'dd MMM yyyy HH:mm', { locale: fr })}
                                 </p>
                               </div>
@@ -592,7 +595,7 @@ export default function SecretariatBillingPanel() {
                                   type="button"
                                   size="sm"
                                   variant="outline"
-                                  className="h-7 text-[10px] border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] text-[#8A6D1A] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]"
+                                  className="h-7 text-[10px] border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] text-[var(--lt-gold-ink)] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]"
                                   disabled={!session?.access_token || resendPaymentId === pay.id}
                                   onClick={() => resendInvoiceForPayment(pay.id)}
                                 >

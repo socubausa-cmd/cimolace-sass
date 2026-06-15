@@ -9,24 +9,27 @@ import { Search, CreditCard, Check, X, Loader2, RefreshCw } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
+import { useShellTint } from '@/lib/useShellTint';
 
 const HOVER_LIFT = { y: -3 };
 const TAP_SOFT = { scale: 0.995 };
 const TRANSITION_FAST = { duration: 0.2, ease: 'easeOut' };
 
 /* Thème CLAIR « Wix Studio » — aligné sur OwnerDashboardOverview. */
-const LT_TEXT = '#18181B';
-const LT_SUB = '#52525B';
-const LT_MUTED = '#71717A';
-const LT_BORDER = 'rgba(0,0,0,0.08)';
-const LT_GOLD_INK = '#8A6D1A'; // or lisible AA sur blanc
+const LT_TEXT = 'var(--lt-text)';
+const LT_SUB = 'var(--lt-sub)';
+const LT_MUTED = 'var(--lt-muted)';
+const LT_BORDER = 'var(--lt-border)';
+const LT_GOLD_INK = 'var(--lt-gold-ink)'; // or lisible AA sur blanc
 const cardSurface = {
-  background: '#FFFFFF',
-  border: `1px solid ${LT_BORDER}`,
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+  background: 'var(--lt-card-bg)',
+  border: '1px solid var(--lt-card-border)',
+  boxShadow: 'var(--lt-card-shadow)',
 };
 
 const PaymentsTab = () => {
+  const [tint] = useShellTint();
+  const chartDark = tint === 'dark';
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -134,6 +137,10 @@ const PaymentsTab = () => {
     await refresh();
   };
 
+  const chartAxis = chartDark ? '#8E8E93' : '#71717A';
+  const chartTooltipStyle = chartDark
+    ? { backgroundColor: '#16161E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#F4F4F5', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }
+    : { backgroundColor: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '10px', color: '#18181B', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' };
   const showSkeleton = loading && payments.length === 0;
 
   return (
@@ -157,7 +164,8 @@ const PaymentsTab = () => {
            <Button
              onClick={() => void refresh()}
              variant="outline"
-             className="bg-white text-zinc-700 border-black/10 hover:bg-zinc-50 transition-all duration-200"
+             className="bg-[var(--lt-card-bg)] text-zinc-700 border-[var(--lt-border)] hover:opacity-80 transition-all duration-200"
+             style={{ color: LT_SUB }}
            >
              <RefreshCw className="w-4 h-4 mr-2"/> Actualiser
            </Button>
@@ -213,8 +221,8 @@ const PaymentsTab = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={methodData} layout="vertical">
                     <XAxis type="number" hide />
-                    <YAxis dataKey="name" type="category" width={100} stroke="#71717A" fontSize={12} />
-                    <Tooltip cursor={{ fill: 'rgba(0,0,0,0.03)' }} contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '10px', color: '#18181B', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} />
+                    <YAxis dataKey="name" type="category" width={100} stroke={chartAxis} fontSize={12} />
+                    <Tooltip cursor={{ fill: chartDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }} contentStyle={chartTooltipStyle} />
                     <Bar dataKey="value" fill="#D4AF37" radius={[0, 4, 4, 0]} barSize={20} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -225,7 +233,7 @@ const PaymentsTab = () => {
               <div className="p-4 flex justify-between items-center" style={{ borderBottom: `1px solid ${LT_BORDER}` }}>
                 <div className="relative w-64">
                   <Search className="absolute left-2 top-2.5 h-4 w-4" style={{ color: LT_MUTED }} />
-                  <Input placeholder="Rechercher paiement..." className="pl-8 bg-[#F4F5F7] border-black/10 text-zinc-900 placeholder:text-zinc-400" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                  <Input placeholder="Rechercher paiement..." className="pl-8 bg-[var(--lt-inner-bg)] border-[var(--lt-border)] placeholder:text-zinc-400" style={{ color: LT_TEXT }} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                 </div>
               </div>
               <div className="max-h-[500px] overflow-y-auto">
@@ -233,8 +241,8 @@ const PaymentsTab = () => {
                   <div className="p-8 flex items-center justify-center" style={{ color: LT_MUTED }}><Loader2 className="w-4 h-4 mr-2 animate-spin" />Chargement...</div>
                 ) : null}
                 <Table>
-                  <TableHeader className="bg-[#F8F8FA]">
-                    <TableRow className="border-black/[0.06] hover:bg-transparent">
+                  <TableHeader className="bg-[var(--lt-inner-bg)]">
+                    <TableRow className="border-[var(--lt-border)] hover:bg-transparent">
                       <TableHead className="text-zinc-500">Référence</TableHead>
                       <TableHead className="text-zinc-500">Étudiant</TableHead>
                       <TableHead className="text-zinc-500">Montant</TableHead>
@@ -246,13 +254,13 @@ const PaymentsTab = () => {
                   </TableHeader>
                   <TableBody>
                     {!loading && filteredData.length === 0 ? (
-                      <TableRow className="border-black/[0.06]">
+                      <TableRow className="border-[var(--lt-border)]">
                         <TableCell colSpan={7} className="text-center py-10" style={{ color: LT_MUTED }}>
                           Aucune transaction pour cette recherche.
                         </TableCell>
                       </TableRow>
                     ) : filteredData.map((pay) => (
-                      <TableRow key={pay.id} className="border-black/[0.06] hover:bg-zinc-50">
+                      <TableRow key={pay.id} className="border-[var(--lt-border)] hover:opacity-80">
                         <TableCell className="font-mono text-xs" style={{ color: LT_TEXT }}>{pay.reference}</TableCell>
                         <TableCell className="font-medium" style={{ color: LT_TEXT }}>{pay.studentName}</TableCell>
                         <TableCell className="font-bold" style={{ color: LT_GOLD_INK }}>{pay.amount} {pay.currency || 'EUR'}</TableCell>

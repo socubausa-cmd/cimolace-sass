@@ -9,15 +9,16 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { AnimatePresence, motion } from 'framer-motion';
 
-/* Thème CLAIR « Wix Studio » — aligné sur OwnerDashboardOverview. */
-const LT_TEXT = '#18181B';
-const LT_SUB = '#52525B';
-const LT_MUTED = '#71717A';
-const LT_BORDER = 'rgba(0,0,0,0.08)';
+/* Teinte du back-office (crème ⇄ sombre) — aligné sur OwnerDashboardOverview. */
+const LT_TEXT = 'var(--lt-text)';
+const LT_SUB = 'var(--lt-sub)';
+const LT_MUTED = 'var(--lt-muted)';
+const LT_BORDER = 'var(--lt-border)';
+const LT_GOLD = 'var(--lt-gold)';
 const panelSurface = {
-  background: '#FFFFFF',
-  border: `1px solid ${LT_BORDER}`,
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+  background: 'var(--lt-card-bg)',
+  border: `1px solid var(--lt-card-border)`,
+  boxShadow: 'var(--lt-card-shadow)',
 };
 
 const ReportsPage = () => {
@@ -150,7 +151,7 @@ const ReportsPage = () => {
                     <Card className="border-0" style={panelSurface}>
                        <CardHeader><CardTitle style={{ color: LT_TEXT }}>Nouveaux Inscrits (6 derniers mois)</CardTitle></CardHeader>
                        <CardContent>
-                         <SimpleBarChart data={studentGrowthData} xKey="name" dataKey="count" color="#D4AF37" />
+                         <SimpleBarChart data={studentGrowthData} xKey="name" dataKey="count" color={LT_GOLD} />
                        </CardContent>
                     </Card>
                  </div>
@@ -167,7 +168,7 @@ const ReportsPage = () => {
         <h1 className="text-2xl font-bold tracking-tight" style={{ color: LT_TEXT }}>Rapports &amp; Analytique</h1>
         <div className="flex gap-3">
           <Select value={reportType} onValueChange={setReportType}>
-            <SelectTrigger className="w-[200px] bg-white border-black/10 text-zinc-900">
+            <SelectTrigger className="w-[200px] bg-[var(--lt-card-bg)] border-[var(--lt-border)]" style={{ color: LT_TEXT }}>
               <SelectValue placeholder="Type de rapport" />
             </SelectTrigger>
             <SelectContent>
@@ -176,7 +177,7 @@ const ReportsPage = () => {
               <SelectItem value="formations">Performance Formations</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" className="bg-white border-black/10 text-zinc-700 hover:bg-zinc-50">
+          <Button variant="outline" className="bg-[var(--lt-card-bg)] border-[var(--lt-border)] hover:opacity-80" style={{ color: LT_SUB }}>
             <Download className="w-4 h-4 mr-2" /> Exporter PDF
           </Button>
         </div>

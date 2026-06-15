@@ -97,8 +97,8 @@ function ToolBtn({ active, onClick, title, children }) {
       className={cn(
         'flex h-8 w-8 items-center justify-center rounded-md text-[11px] transition-colors',
         active
-          ? 'bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] text-[#8A6D1A]'
-          : 'text-[#71717A] hover:bg-black/[0.05] hover:text-[#18181B]',
+          ? 'bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] text-[var(--lt-gold-ink)]'
+          : 'text-[var(--lt-muted)] hover:bg-black/[0.05] hover:text-[var(--lt-text)]',
       )}
     >
       {children}
@@ -117,8 +117,8 @@ function QuickBtn({ onClick, title, children, disabled }) {
       }}
       title={title}
       className={cn(
-        'rounded border border-black/[0.08] bg-white px-2 py-0.5 text-[10px] text-[#52525B] hover:bg-[#F4F5F7] hover:text-[#18181B]',
-        disabled && 'opacity-40 cursor-not-allowed hover:bg-white',
+        'rounded border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-2 py-0.5 text-[10px] text-[var(--lt-sub)] hover:bg-[var(--lt-inner-bg)] hover:text-[var(--lt-text)]',
+        disabled && 'opacity-40 cursor-not-allowed hover:bg-[var(--lt-card-bg)]',
       )}
     >
       {children}
@@ -581,7 +581,7 @@ export default function AdministrativeDocumentStudio() {
 
   if (!editor) {
     return (
-      <div className="flex min-h-[320px] items-center justify-center text-[#71717A] text-sm">
+      <div className="flex min-h-[320px] items-center justify-center text-[var(--lt-muted)] text-sm">
         Chargement de l'éditeur…
       </div>
     );
@@ -593,11 +593,11 @@ export default function AdministrativeDocumentStudio() {
     editor.isActive('tableHeader');
 
   return (
-    <div className="flex flex-col gap-4 text-[#18181B]">
+    <div className="flex flex-col gap-4 text-[var(--lt-text)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 flex-1">
-          <h1 className="text-lg font-semibold text-[#18181B]">Document administratif (A4)</h1>
-          <p className="text-xs text-[#71717A] mt-1">
+          <h1 className="text-lg font-semibold text-[var(--lt-text)]">Document administratif (A4)</h1>
+          <p className="text-xs text-[var(--lt-muted)] mt-1">
             Pages multiples, en-tête / pied globaux, modèles en un clic, saut de page manuel, PDF, sauvegarde locale et
             option nuage (compte connecté).
           </p>
@@ -606,7 +606,7 @@ export default function AdministrativeDocumentStudio() {
           <button
             type="button"
             onClick={resetAll}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-black/[0.12] bg-white px-3 py-2 text-xs text-[#52525B] hover:bg-[#F4F5F7]"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-3 py-2 text-xs text-[var(--lt-sub)] hover:bg-[var(--lt-inner-bg)]"
           >
             <RotateCcw className="h-3.5 w-3.5" /> Réinitialiser
           </button>
@@ -614,7 +614,7 @@ export default function AdministrativeDocumentStudio() {
             type="button"
             disabled={cloudBusy || !user?.id}
             onClick={handleLoadCloud}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-black/[0.12] bg-white px-3 py-2 text-xs text-[#52525B] hover:bg-[#F4F5F7] disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-3 py-2 text-xs text-[var(--lt-sub)] hover:bg-[var(--lt-inner-bg)] disabled:opacity-40"
             title={!user?.id ? 'Connexion requise' : 'Charger la dernière version en ligne'}
           >
             <Download className="h-3.5 w-3.5" /> Charger nuage
@@ -623,7 +623,7 @@ export default function AdministrativeDocumentStudio() {
             type="button"
             disabled={cloudBusy || !user?.id}
             onClick={handleSaveCloud}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] px-3 py-2 text-xs text-[#8A6D1A] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] px-3 py-2 text-xs text-[var(--lt-gold-ink)] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] disabled:opacity-40"
             title={!user?.id ? 'Connexion requise' : 'Enregistrer sur le serveur'}
           >
             <Upload className="h-3.5 w-3.5" /> {cloudBusy ? '…' : 'Enregistrer nuage'}
@@ -660,7 +660,7 @@ export default function AdministrativeDocumentStudio() {
             <button
               type="button"
               onClick={() => setRemoteOffer(null)}
-              className="rounded-md border border-black/[0.12] bg-white px-2.5 py-1 text-[11px] text-[#52525B] hover:bg-[#F4F5F7]"
+              className="rounded-md border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-2.5 py-1 text-[11px] text-[var(--lt-sub)] hover:bg-[var(--lt-inner-bg)]"
             >
               Ignorer
             </button>
@@ -672,14 +672,14 @@ export default function AdministrativeDocumentStudio() {
         type="text"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="w-full max-w-xl rounded-lg border border-black/[0.08] bg-white px-3 py-2 text-sm text-[#18181B] placeholder:text-[#A1A1AA]"
+        className="w-full max-w-xl rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-3 py-2 text-sm text-[var(--lt-text)] placeholder:text-[#A1A1AA]"
         placeholder="Titre du dossier"
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-[#71717A]">Modèle</span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--lt-muted)]">Modèle</span>
         <select
-          className="max-w-xs rounded-lg border border-black/[0.08] bg-white px-2 py-1.5 text-[11px] text-[#18181B]"
+          className="max-w-xs rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-2 py-1.5 text-[11px] text-[var(--lt-text)]"
           defaultValue=""
           onChange={(e) => {
             const v = e.target.value;
@@ -712,8 +712,8 @@ export default function AdministrativeDocumentStudio() {
             onOpenAssistant={() => setAssistantModalOpen(true)}
           />
           <LongiaAdminDocumentPanel editor={editor} documentTitle={title} />
-          <div className="space-y-3 rounded-xl border border-black/[0.08] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A6D1A]">Pages</p>
+          <div className="space-y-3 rounded-xl border border-[var(--lt-border)] bg-[var(--lt-card-bg)] shadow-[var(--lt-card-shadow)] p-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--lt-gold-ink)]">Pages</p>
           <div className="flex flex-wrap gap-1">
             {pages.map((p, idx) => (
               <button
@@ -723,8 +723,8 @@ export default function AdministrativeDocumentStudio() {
                 className={cn(
                   'min-w-[2.25rem] rounded-md px-2 py-1 text-xs font-medium',
                   idx === activePageIndex
-                    ? 'bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] text-[#8A6D1A] border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]'
-                    : 'bg-[#F4F5F7] text-[#52525B] border border-black/[0.08] hover:border-black/20',
+                    ? 'bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] text-[var(--lt-gold-ink)] border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]'
+                    : 'bg-[var(--lt-inner-bg)] text-[var(--lt-sub)] border border-[var(--lt-border)] hover:border-black/20',
                 )}
               >
                 {idx + 1}
@@ -735,14 +735,14 @@ export default function AdministrativeDocumentStudio() {
             <button
               type="button"
               onClick={addPage}
-              className="inline-flex items-center gap-1 rounded-md border border-black/[0.12] bg-[#F4F5F7] px-2 py-1.5 text-[11px] text-[#52525B] hover:bg-black/[0.05]"
+              className="inline-flex items-center gap-1 rounded-md border border-[var(--lt-border)] bg-[var(--lt-inner-bg)] px-2 py-1.5 text-[11px] text-[var(--lt-sub)] hover:bg-black/[0.05]"
             >
               <Plus className="h-3.5 w-3.5" /> Nouvelle page
             </button>
             <button
               type="button"
               onClick={duplicatePage}
-              className="inline-flex items-center gap-1 rounded-md border border-black/[0.12] bg-[#F4F5F7] px-2 py-1.5 text-[11px] text-[#52525B] hover:bg-black/[0.05]"
+              className="inline-flex items-center gap-1 rounded-md border border-[var(--lt-border)] bg-[var(--lt-inner-bg)] px-2 py-1.5 text-[11px] text-[var(--lt-sub)] hover:bg-black/[0.05]"
             >
               <Copy className="h-3.5 w-3.5" /> Dupliquer
             </button>
@@ -757,7 +757,7 @@ export default function AdministrativeDocumentStudio() {
             <button
               type="button"
               onClick={splitTrailingToNewPage}
-              className="inline-flex w-full items-center justify-center gap-1 rounded-md border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] px-2 py-1.5 text-[11px] text-[#8A6D1A] hover:bg-[color-mix(in_srgb,var(--school-accent)_16%,transparent)]"
+              className="inline-flex w-full items-center justify-center gap-1 rounded-md border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] px-2 py-1.5 text-[11px] text-[var(--lt-gold-ink)] hover:bg-[color-mix(in_srgb,var(--school-accent)_16%,transparent)]"
               title="Découpe après le bloc actif : tout ce qui suit va sur une nouvelle page"
             >
               <Split className="h-3.5 w-3.5" />
@@ -768,14 +768,14 @@ export default function AdministrativeDocumentStudio() {
             </p>
           </div>
 
-          <div className="border-t border-black/[0.08] pt-3 space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A6D1A]">Style du corps</p>
+          <div className="border-t border-[var(--lt-border)] pt-3 space-y-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--lt-gold-ink)]">Style du corps</p>
             <p className="text-[9px] text-[#A1A1AA]">S'applique à l\'aperçu page et à l\'export PDF.</p>
-            <label className="block text-[9px] uppercase text-[#71717A]">Police</label>
+            <label className="block text-[9px] uppercase text-[var(--lt-muted)]">Police</label>
             <select
               value={documentStyle.fontFamily}
               onChange={(e) => setDocumentStyle((s) => ({ ...s, fontFamily: e.target.value }))}
-              className="w-full rounded-lg border border-black/[0.08] bg-white px-2 py-1.5 text-[11px] text-[#18181B]"
+              className="w-full rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-2 py-1.5 text-[11px] text-[var(--lt-text)]"
             >
               <option value="Georgia, serif">Georgia</option>
               <option value="'Times New Roman', Times, serif">Times New Roman</option>
@@ -783,7 +783,7 @@ export default function AdministrativeDocumentStudio() {
               <option value="system-ui, -apple-system, sans-serif">Système (sans-serif)</option>
             </select>
             <div className="flex flex-col gap-1">
-              <div className="flex items-center justify-between text-[9px] text-[#71717A]">
+              <div className="flex items-center justify-between text-[9px] text-[var(--lt-muted)]">
                 <span>Taille</span>
                 <span>{documentStyle.fontSize}px</span>
               </div>
@@ -797,7 +797,7 @@ export default function AdministrativeDocumentStudio() {
               />
             </div>
             <div className="flex flex-col gap-1">
-              <div className="flex items-center justify-between text-[9px] text-[#71717A]">
+              <div className="flex items-center justify-between text-[9px] text-[var(--lt-muted)]">
                 <span>Interligne</span>
                 <span>{documentStyle.lineHeight.toFixed(2)}</span>
               </div>
@@ -815,35 +815,35 @@ export default function AdministrativeDocumentStudio() {
             </div>
           </div>
 
-          <div className="border-t border-black/[0.08] pt-3 space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#71717A]">En-tête (toutes les pages)</p>
+          <div className="border-t border-[var(--lt-border)] pt-3 space-y-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--lt-muted)]">En-tête (toutes les pages)</p>
             <textarea
               value={header}
               onChange={(e) => setHeader(e.target.value)}
               rows={4}
-              className="w-full rounded-lg border border-black/[0.08] bg-white px-2 py-1.5 text-[11px] text-[#18181B] placeholder:text-[#A1A1AA]"
+              className="w-full rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-2 py-1.5 text-[11px] text-[var(--lt-text)] placeholder:text-[#A1A1AA]"
               placeholder={DEFAULT_HEADER}
             />
           </div>
           <div className="space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#71717A]">Pied de page</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--lt-muted)]">Pied de page</p>
             <textarea
               value={footer}
               onChange={(e) => setFooter(e.target.value)}
               rows={3}
-              className="w-full rounded-lg border border-black/[0.08] bg-white px-2 py-1.5 text-[11px] text-[#18181B]"
+              className="w-full rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-2 py-1.5 text-[11px] text-[var(--lt-text)]"
               placeholder={DEFAULT_FOOTER}
             />
             <p className="text-[9px] text-[#A1A1AA] leading-snug">
-              Placeholders : <code className="text-[#71717A]">{'{page}'}</code> et{' '}
-              <code className="text-[#71717A]">{'{total}'}</code>
+              Placeholders : <code className="text-[var(--lt-muted)]">{'{page}'}</code> et{' '}
+              <code className="text-[var(--lt-muted)]">{'{total}'}</code>
             </p>
           </div>
           </div>
         </div>
 
         <div className="space-y-2 min-w-0">
-          <div className="flex flex-wrap items-center gap-0.5 rounded-lg border border-black/[0.08] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-2 py-1.5">
+          <div className="flex flex-wrap items-center gap-0.5 rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] shadow-[var(--lt-card-shadow)] px-2 py-1.5">
             <ToolBtn
               active={editor.isActive('heading', { level: 2 })}
               onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
@@ -933,7 +933,7 @@ export default function AdministrativeDocumentStudio() {
 
           {inTable ? (
             <div className="flex flex-wrap items-center gap-1 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] px-2 py-1.5">
-              <span className="w-full shrink-0 text-[9px] font-bold uppercase tracking-wider text-[#8A6D1A]">
+              <span className="w-full shrink-0 text-[9px] font-bold uppercase tracking-wider text-[var(--lt-gold-ink)]">
                 Tableau (curseur dans une cellule)
               </span>
               <QuickBtn
@@ -987,8 +987,8 @@ export default function AdministrativeDocumentStudio() {
             </div>
           ) : null}
 
-          <div className="flex flex-wrap items-center gap-1 rounded-lg border border-black/[0.08] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-2 py-1.5">
-            <span className="w-full text-[9px] font-bold uppercase tracking-wider text-[#71717A]">Actions rapides</span>
+          <div className="flex flex-wrap items-center gap-1 rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] shadow-[var(--lt-card-shadow)] px-2 py-1.5">
+            <span className="w-full text-[9px] font-bold uppercase tracking-wider text-[var(--lt-muted)]">Actions rapides</span>
             <QuickBtn onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} title="Titre (niveau 2)">
               Titre
             </QuickBtn>

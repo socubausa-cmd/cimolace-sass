@@ -86,20 +86,20 @@ export default function AdminDocumentLibraryPanel({ editor, onApplyTemplate, onO
         <Library className="h-4 w-4 text-cyan-600" />
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wider text-cyan-700">Bibliothèque système</p>
-          <p className="text-[9px] text-[#71717A]">Templates · blocs · textes · actions</p>
+          <p className="text-[9px] text-[var(--lt-muted)]">Templates · blocs · textes · actions</p>
         </div>
       </div>
 
       <button
         type="button"
         onClick={onOpenAssistant}
-        className="mb-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] py-2 text-[10px] font-semibold text-[#8A6D1A] hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
+        className="mb-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] py-2 text-[10px] font-semibold text-[var(--lt-gold-ink)] hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
       >
         <Bot className="h-3.5 w-3.5" />
         Assistant (structure en 5 étapes)
       </button>
 
-      <p className="mb-1 text-[9px] font-semibold uppercase tracking-wider text-[#71717A]">Templates</p>
+      <p className="mb-1 text-[9px] font-semibold uppercase tracking-wider text-[var(--lt-muted)]">Templates</p>
       <div className="mb-3 flex flex-col gap-1">
         {templateLibrary.map((t) => (
           <button
@@ -107,7 +107,7 @@ export default function AdminDocumentLibraryPanel({ editor, onApplyTemplate, onO
             type="button"
             disabled={!!tplBusy}
             onClick={() => applyLibraryTemplate(t.id)}
-            className="rounded-lg border border-black/[0.08] bg-white px-2 py-1.5 text-left text-[10px] text-[#18181B] hover:border-cyan-400 disabled:opacity-50"
+            className="rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-2 py-1.5 text-left text-[10px] text-[var(--lt-text)] hover:border-cyan-400 disabled:opacity-50"
           >
             <span className="font-medium text-cyan-700">{t.name}</span>
             <span className="ml-2 text-[9px] text-[#A1A1AA]">{t.type}</span>
@@ -115,7 +115,7 @@ export default function AdminDocumentLibraryPanel({ editor, onApplyTemplate, onO
         ))}
       </div>
 
-      <p className="mb-1 flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider text-[#71717A]">
+      <p className="mb-1 flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider text-[var(--lt-muted)]">
         <Puzzle className="h-3 w-3" /> Blocs
       </p>
       <div className="mb-3 flex flex-wrap gap-1">
@@ -126,14 +126,14 @@ export default function AdminDocumentLibraryPanel({ editor, onApplyTemplate, onO
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => insertBlock(b.id)}
             title={b.default_content || b.type}
-            className="rounded border border-black/[0.08] bg-white px-1.5 py-0.5 text-[9px] text-[#52525B] hover:border-cyan-400"
+            className="rounded border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-1.5 py-0.5 text-[9px] text-[var(--lt-sub)] hover:border-cyan-400"
           >
             {b.label}
           </button>
         ))}
       </div>
 
-      <p className="mb-1 flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider text-[#71717A]">
+      <p className="mb-1 flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider text-[var(--lt-muted)]">
         <Quote className="h-3 w-3" /> Textes types
       </p>
       <div className="mb-3 max-h-28 space-y-1 overflow-y-auto pr-1 [scrollbar-width:thin]">
@@ -144,7 +144,7 @@ export default function AdminDocumentLibraryPanel({ editor, onApplyTemplate, onO
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => insertTextLine(line)}
-            className="block w-full rounded border border-transparent px-1 py-0.5 text-left text-[9px] leading-snug text-[#52525B] hover:border-black/[0.1] hover:bg-white"
+            className="block w-full rounded border border-transparent px-1 py-0.5 text-left text-[9px] leading-snug text-[var(--lt-sub)] hover:border-[var(--lt-border)] hover:bg-[var(--lt-card-bg)]"
           >
             {line}
           </button>
@@ -156,14 +156,14 @@ export default function AdminDocumentLibraryPanel({ editor, onApplyTemplate, onO
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => insertTextLine(line)}
-            className="block w-full rounded border border-transparent px-1 py-0.5 text-left text-[9px] leading-snug text-[#52525B] hover:border-black/[0.1] hover:bg-white"
+            className="block w-full rounded border border-transparent px-1 py-0.5 text-left text-[9px] leading-snug text-[var(--lt-sub)] hover:border-[var(--lt-border)] hover:bg-[var(--lt-card-bg)]"
           >
             {line}
           </button>
         ))}
       </div>
 
-      <p className="mb-1 text-[9px] font-semibold uppercase tracking-wider text-[#71717A]">Actions rapides (clés)</p>
+      <p className="mb-1 text-[9px] font-semibold uppercase tracking-wider text-[var(--lt-muted)]">Actions rapides (clés)</p>
       <div className="flex flex-wrap gap-1">
         {quickActions.map((q) => (
           <button
@@ -171,7 +171,7 @@ export default function AdminDocumentLibraryPanel({ editor, onApplyTemplate, onO
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => runQuickAction(q.id)}
-            className="rounded border border-black/[0.08] bg-white px-2 py-0.5 text-[9px] text-[#52525B] hover:bg-[#F4F5F7]"
+            className="rounded border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-2 py-0.5 text-[9px] text-[var(--lt-sub)] hover:bg-[var(--lt-inner-bg)]"
           >
             {q.label}
           </button>
