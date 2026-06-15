@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare, WandSparkles,
+  Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare, MessageCircle, WandSparkles,
   Library, Blocks, Settings2, Mic, ArrowUp, LogIn, CalendarPlus, PenTool,
   ShoppingBag, Clock, ChevronRight, Film, ChevronLeft, UserRound, Plus,
   Clapperboard, Radio, FilePenLine, BadgeDollarSign, Webhook,
@@ -116,6 +116,7 @@ export function LiriPortalPage() {
     { key: 'accueil', label: 'Accueil', icon: House, to: '/liri', active: true },
     { key: 'lives', label: 'Lives', icon: Video, to: '/dashboard/lives', live: liveNow.length > 0 },
     { key: 'forum', label: 'Forum', icon: MessagesSquare, to: '/dashboard', badge: 5 },
+    { key: 'messages', label: 'Messages', icon: MessageCircle, to: '/messages' },
     { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri' },
     { key: 'biblio', label: 'Biblio.', icon: Library, to: '/studio/liri/bibliotheque' },
     { key: 'brain', label: 'Brain', icon: Sparkles, to: '/dashboard/liri' },
@@ -123,7 +124,7 @@ export function LiriPortalPage() {
   const QUICK = [
     { label: 'Démarrer', icon: Video, hero: true, to: '/dashboard/lives/new' },
     { label: 'Rejoindre', icon: LogIn, to: '/dashboard/lives' },
-    { label: 'Converser', icon: MessagesSquare, badge: liveNow.length || undefined, to: '/dashboard/liri' },
+    { label: 'Converser', icon: MessageCircle, to: '/messages' },
     { label: 'Programmer', icon: CalendarPlus, to: '/dashboard/lives/new' },
     { label: 'SmartBoard', icon: PenTool, to: '/studio/smartboard' },
     { label: 'Acheter', icon: ShoppingBag, to: '/dashboard' },

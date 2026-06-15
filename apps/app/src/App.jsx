@@ -780,7 +780,12 @@ const ProtectedImmersiveMessagingRoute = ({ children }) => {
   const role = String(getEffectiveRole(user) || '').toLowerCase();
   const isStaffRole = ['owner', 'admin', 'secretariat', 'teacher', 'creator', 'commercial', 'support'].includes(role);
   const isPremiumActive = status === 'active' || (status === 'past_due' && inGrace);
-  if (isStaffRole || isPremiumActive || (role === 'visitor' && visitorCanChat)) return children;
+  // Membre actif d'un tenant LIRI/MedOS : son vrai rôle est dans le JWT (tenant_role), pas le
+  // rôle global (souvent 'visitor'). La messagerie inter-membres est tenant-scoped (isolation
+  // garantie côté API), donc tout membre d'un tenant y a accès. Additif → l'accès école inchangé.
+  const tenantRole = String(user?.tenant_role || '').toLowerCase();
+  const isLiriMember = ['owner', 'admin', 'practitioner', 'clinic_admin', 'teacher', 'secretariat'].includes(tenantRole);
+  if (isStaffRole || isPremiumActive || isLiriMember || (role === 'visitor' && visitorCanChat)) return children;
 
   return <Navigate to="/appointment/request?source=immersive-chat" replace />;
 };
@@ -975,6 +980,7 @@ const AppContent = () => {
     '/embed/',       // LIRI embed iframe — aucun shell
     '/handoff',      // handoff cross-domain (« Connexion à la salle ») — coque neutre, pas de shell école
     '/liri',         // accueil LIRI standalone (LiriPortalShell a son propre topbar) — pas de header école
+    '/messages',     // messagerie immersive (page plein écran, embarquée dans LIRI) — pas de header école
   ];
 
   // Routes live immersif — aucun shell app autour (plein écran total)
