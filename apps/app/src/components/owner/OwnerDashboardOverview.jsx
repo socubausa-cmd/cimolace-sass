@@ -15,42 +15,37 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { motion } from 'framer-motion';
 
-const HOVER_LIFT = { y: -4 };
+const HOVER_LIFT = { y: -3 };
 const TAP_SOFT = { scale: 0.99 };
 const FADE_UP = { duration: 0.22, ease: 'easeOut' };
 
 /* ------------------------------------------------------------------ */
-/*  Langage visuel « élève » — réf. src/pages/eleve-mobile/           */
-/*  eleveMobileScreensShared.js + vieScolaire/vieScolaireSharedUI.jsx */
+/*  Thème CLAIR « Wix Studio » — contenu du dashboard owner.          */
+/*  Canvas (#F4F5F7) fourni par le shell ; ici surfaces blanches.     */
+/*  La sidebar LORI dark/gold et le branding ISNA ne changent PAS.    */
 /* ------------------------------------------------------------------ */
-const EV_MUTED = '#8E8E93';
-const EV_ACCENT = '#7B61FF';
-const EV_LAVENDER = '#c4b5fd';
-const EV_CREAM = '#fbf3df';
-const EV_PAGE_AMBIENT =
-  'radial-gradient(50% 32% at 50% 0%, rgba(123, 97, 255, 0.14), transparent 70%)';
+const LT_TEXT = '#18181B'; // primaire (AA sur blanc)
+const LT_SUB = '#52525B'; // secondaire
+const LT_MUTED = '#71717A'; // atténué (labels)
+const LT_BORDER = 'rgba(0,0,0,0.08)';
+const LT_GOLD = '#D4AF37'; // accent ISNA (parcimonieux)
+const LT_GOLD_INK = '#8A6D1A'; // or assombri = lisible AA sur blanc (texte/lien)
 
-// Surface « panneau » (en-tête, graphe, alertes, tableau) — réf. pagePanelSurface()
+// Surface « panneau » (en-tête, graphe, alertes, tableau) — blanc contenu.
 const panelSurface = {
-  background: [
-    'radial-gradient(ellipse 100% 80% at 0% 0%, rgba(99, 102, 241, 0.12) 0%, transparent 55%)',
-    'linear-gradient(195deg, rgba(20, 22, 40, 0.96) 0%, rgba(8, 10, 20, 0.98) 100%)',
-  ].join(', '),
-  border: '1px solid rgba(165, 180, 252, 0.14)',
-  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 16px -4px rgba(0,0,0,0.4)',
+  background: '#FFFFFF',
+  border: `1px solid ${LT_BORDER}`,
+  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
 };
 
-// Surface « carte liste » (cartes stats, tuiles actions) — réf. listCardSurface()
+// Surface « carte liste » (cartes stats, tuiles actions) — identique, contenue.
 const cardSurface = {
-  background: [
-    'radial-gradient(ellipse 90% 70% at 8% 0%, rgba(123, 97, 255, 0.1) 0%, transparent 50%)',
-    'linear-gradient(198deg, rgba(22, 24, 38, 0.95) 0%, rgba(12, 14, 24, 0.99) 100%)',
-  ].join(', '),
-  border: '1px solid rgba(255,255,255,0.08)',
-  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 2px 14px -4px rgba(0,0,0,0.4)',
+  background: '#FFFFFF',
+  border: `1px solid ${LT_BORDER}`,
+  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
 };
 
-// Palette de tons — barre latérale dégradée + puce d'icône + halo coloré (réf. TONE de StatBox)
+// Palette de tons — puce d'icône colorée (on la GARDE, ressort sur blanc).
 const TONES = {
   violet: { from: '#7c5cff', to: '#5b3dcf', rgb: '124, 92, 255' },
   emerald: { from: '#10b981', to: '#047857', rgb: '16, 185, 129' },
@@ -62,10 +57,6 @@ const TONES = {
   green: { from: '#22c55e', to: '#15803d', rgb: '34, 197, 94' },
 };
 
-function toneGlow(rgb) {
-  return `0 0 24px -6px rgba(${rgb}, 0.22), inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 14px -4px rgba(0,0,0,0.4)`;
-}
-
 /** Tuile « action rapide » — puce d'icône dégradée + libellé, surface liste élève. */
 function QuickAction({ icon: Icon, label, tone = 'violet', to, full, onClick }) {
   const t = TONES[tone] || TONES.violet;
@@ -74,19 +65,19 @@ function QuickAction({ icon: Icon, label, tone = 'violet', to, full, onClick }) 
       whileHover={{ y: -2 }}
       whileTap={TAP_SOFT}
       transition={FADE_UP}
-      className="flex h-full items-center gap-2.5 rounded-[16px] p-2.5"
+      className="flex h-full cursor-pointer items-center gap-2.5 rounded-[12px] p-2.5 transition-colors hover:bg-black/[0.02]"
       style={cardSurface}
     >
       <div
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px]"
         style={{
           background: `linear-gradient(140deg, ${t.from} 0%, ${t.to} 100%)`,
-          boxShadow: `0 8px 18px -8px rgba(${t.rgb}, 0.55)`,
+          boxShadow: `0 4px 10px -4px rgba(${t.rgb}, 0.5)`,
         }}
       >
-        <Icon className="h-[17px] w-[17px] text-white" strokeWidth={2.2} />
+        <Icon className="h-[16px] w-[16px] text-white" strokeWidth={2.2} />
       </div>
-      <span className="truncate text-[12.5px] font-bold text-white/90">{label}</span>
+      <span className="truncate text-[12.5px] font-semibold" style={{ color: LT_TEXT }}>{label}</span>
     </motion.div>
   );
   if (to) {
@@ -186,9 +177,9 @@ const OwnerDashboardOverview = () => {
   const alerts = alertsRaw.filter((a) => !dismissedAlerts.includes(a.id));
   const dismissAlert = (id) => setDismissedAlerts((prev) => [...prev, id]);
   const getAlertColor = (severity) => {
-    if (severity === 'high') return 'border-red-500/30 bg-red-500/10 text-red-200';
-    if (severity === 'medium') return 'border-violet-500/30 bg-violet-500/10 text-violet-200';
-    return 'border-blue-500/30 bg-blue-500/10 text-blue-200';
+    if (severity === 'high') return 'border-red-200 bg-red-50 text-red-800';
+    if (severity === 'medium') return 'border-violet-200 bg-violet-50 text-violet-800';
+    return 'border-blue-200 bg-blue-50 text-blue-800';
   };
 
   const trendMap = (() => {
@@ -274,40 +265,38 @@ const OwnerDashboardOverview = () => {
   }));
 
   return (
-    <div
-      className="space-y-6 animate-in fade-in duration-500"
-      style={{ backgroundImage: EV_PAGE_AMBIENT }}
-    >
+    <div className="space-y-5 animate-in fade-in duration-500">
       {/* Header */}
       <div
-        className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 rounded-[20px] p-6"
+        className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 rounded-[14px] p-5"
         style={panelSurface}
       >
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-1.5">
-            Aperçu Rapide <span style={{ color: EV_LAVENDER }}>.</span>
+          <h1 className="text-xl font-bold tracking-tight flex items-center gap-1" style={{ color: LT_TEXT }}>
+            Aperçu Rapide <span style={{ color: LT_GOLD }}>.</span>
           </h1>
-          <p className="text-sm mt-1 capitalize" style={{ color: EV_MUTED }}>
+          <p className="text-[13px] mt-0.5 capitalize" style={{ color: LT_SUB }}>
             {format(currentDate, 'EEEE d MMMM yyyy • HH:mm', { locale: fr })}
           </p>
-          <p className="text-[11px] mt-1" style={{ color: EV_LAVENDER }}>
-            Source: Supabase live | build: owner-dashboard-eleve-20260614
+          <p className="text-[11px] mt-0.5" style={{ color: LT_MUTED }}>
+            Source : Supabase live
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleRefresh}
             disabled={loading}
-            className="inline-flex h-10 items-center gap-2 rounded-[14px] border border-white/10 bg-white/[0.04] px-4 text-[13px] font-bold text-white/80 transition-colors hover:bg-white/[0.08] disabled:opacity-50"
+            className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-[10px] border bg-white px-3.5 text-[13px] font-semibold transition-colors hover:bg-zinc-50 disabled:opacity-50"
+            style={{ borderColor: LT_BORDER, color: LT_SUB }}
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Actualiser
           </button>
           <button
             onClick={handleExport}
-            className="inline-flex h-10 items-center gap-2 rounded-[14px] px-4 text-[13px] font-bold text-white transition-transform active:scale-[0.98]"
+            className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-[10px] px-3.5 text-[13px] font-semibold text-white transition-transform active:scale-[0.98]"
             style={{
-              background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #3b41de 100%)`,
-              boxShadow: '0 8px 28px -6px rgba(123, 97, 255, 0.42), inset 0 1px 0 rgba(255,255,255,0.18)',
+              background: `linear-gradient(90deg, ${LT_GOLD_INK} 0%, #6F5614 100%)`,
+              boxShadow: '0 2px 8px -2px rgba(138, 109, 26, 0.45)',
             }}
           >
             <Download className="w-4 h-4" /> Rapport
@@ -316,44 +305,39 @@ const OwnerDashboardOverview = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {statCards.map((stat, idx) => {
           const t = TONES[stat.tone] || TONES.violet;
           return (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}
+              transition={{ delay: idx * 0.04 }}
               whileHover={HOVER_LIFT}
               whileTap={TAP_SOFT}
             >
               <div
-                className="relative flex min-h-[112px] flex-col justify-between overflow-hidden rounded-[20px] p-4"
-                style={{ ...cardSurface, boxShadow: toneGlow(t.rgb) }}
+                className="relative flex min-h-[92px] flex-col justify-between overflow-hidden rounded-[14px] p-3.5"
+                style={cardSurface}
               >
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute left-0 top-0 h-full w-[3px]"
-                  style={{ background: `linear-gradient(180deg, ${t.from} 0%, ${t.to}22 100%)` }}
-                />
-                <div className="flex items-start justify-between gap-2 pl-2">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: EV_MUTED }}>
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: LT_MUTED }}>
                     {stat.title}
                   </span>
                   <div
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px]"
                     style={{
                       background: `linear-gradient(140deg, ${t.from} 0%, ${t.to} 100%)`,
-                      boxShadow: `0 8px 20px -8px rgba(${t.rgb}, 0.55)`,
+                      boxShadow: `0 4px 12px -4px rgba(${t.rgb}, 0.5)`,
                     }}
                   >
-                    <stat.icon className="h-[18px] w-[18px] text-white" strokeWidth={2.1} />
+                    <stat.icon className="h-[16px] w-[16px] text-white" strokeWidth={2.1} />
                   </div>
                 </div>
                 <p
-                  className="mt-2 truncate pl-2 font-serif text-3xl font-extrabold tabular-nums leading-none tracking-tight"
-                  style={{ color: EV_CREAM }}
+                  className="mt-2 truncate text-[26px] font-bold tabular-nums leading-none tracking-tight"
+                  style={{ color: LT_TEXT }}
                 >
                   {stat.value}
                 </p>
@@ -363,54 +347,56 @@ const OwnerDashboardOverview = () => {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Main Chart Area */}
-        <div className="lg:col-span-2 rounded-[20px] p-6" style={panelSurface}>
-          <h2 className="text-white font-bold flex items-center gap-2 mb-4">
-            <Activity className="w-5 h-5" style={{ color: EV_ACCENT }} /> Tendances d'Activité (7 jours)
+        <div className="lg:col-span-2 rounded-[14px] p-5" style={panelSurface}>
+          <h2 className="font-semibold text-[15px] flex items-center gap-2 mb-4" style={{ color: LT_TEXT }}>
+            <Activity className="w-[18px] h-[18px]" style={{ color: LT_GOLD_INK }} /> Tendances d'Activité (7 jours)
           </h2>
-          <div className="h-[300px]">
+          <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={trendMap}>
                 <defs>
                   <linearGradient id="colorActivity" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7B61FF" stopOpacity={0.35}/>
-                    <stop offset="95%" stopColor="#7B61FF" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#7c5cff" stopOpacity={0.22}/>
+                    <stop offset="95%" stopColor="#7c5cff" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                <XAxis dataKey="date" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
+                <XAxis dataKey="date" stroke="#71717A" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#71717A" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#16161E', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: '#fff' }}
+                  cursor={{ stroke: 'rgba(0,0,0,0.12)' }}
+                  contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '10px', color: '#18181B', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                  labelStyle={{ color: '#52525B' }}
                 />
-                <Area type="monotone" dataKey="count" stroke="#7B61FF" strokeWidth={2} fillOpacity={1} fill="url(#colorActivity)" />
+                <Area type="monotone" dataKey="count" stroke="#7c5cff" strokeWidth={2} fillOpacity={1} fill="url(#colorActivity)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Alerts & Quick Actions */}
-        <div className="space-y-6">
-          <div className="rounded-[20px] p-5" style={panelSurface}>
-            <h3 className="text-white flex items-center gap-2 text-base font-bold mb-3">
-              <Bell className="w-4 h-4 text-red-400" /> Alertes Importantes
+        <div className="space-y-5">
+          <div className="rounded-[14px] p-4" style={panelSurface}>
+            <h3 className="flex items-center gap-2 text-[15px] font-semibold mb-3" style={{ color: LT_TEXT }}>
+              <Bell className="w-4 h-4 text-red-500" /> Alertes Importantes
               {alerts.length > 0 && <Badge variant="destructive" className="ml-auto">{alerts.length}</Badge>}
             </h3>
-            <ScrollArea className="h-[200px] pr-4">
+            <ScrollArea className="h-[200px] pr-3">
               {alerts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full py-8" style={{ color: EV_MUTED }}>
-                   <CheckCircle className="w-10 h-10 mb-2 opacity-20" />
-                   <p className="text-sm">Tout semble normal</p>
+                <div className="flex flex-col items-center justify-center h-full py-8" style={{ color: LT_MUTED }}>
+                   <CheckCircle className="w-9 h-9 mb-2" style={{ color: '#22c55e', opacity: 0.55 }} />
+                   <p className="text-[13px]">Tout semble normal</p>
                 </div>
               ) : (
                 alerts.map(alert => (
-                   <div key={alert.id} className={`p-3 rounded-[14px] border flex items-start justify-between gap-3 mb-2 backdrop-blur-sm ${getAlertColor(alert.severity)}`}>
+                   <div key={alert.id} className={`p-3 rounded-[10px] border flex items-start justify-between gap-3 mb-2 ${getAlertColor(alert.severity)}`}>
                       <div>
-                         <p className="font-bold text-sm">{alert.title}</p>
-                         <p className="text-xs opacity-80">{alert.message}</p>
+                         <p className="font-semibold text-[13px]">{alert.title}</p>
+                         <p className="text-xs opacity-90">{alert.message}</p>
                       </div>
-                      <button onClick={() => dismissAlert(alert.id)} className="hover:bg-black/10 p-1 rounded">
+                      <button onClick={() => dismissAlert(alert.id)} className="cursor-pointer rounded p-1 transition-colors hover:bg-black/10" aria-label="Ignorer l'alerte">
                          <XCircle className="w-4 h-4" />
                       </button>
                    </div>
@@ -419,8 +405,8 @@ const OwnerDashboardOverview = () => {
             </ScrollArea>
           </div>
 
-          <div className="rounded-[20px] p-5" style={panelSurface}>
-            <h3 className="text-white text-base font-bold mb-3">Actions Rapides</h3>
+          <div className="rounded-[14px] p-4" style={panelSurface}>
+            <h3 className="text-[15px] font-semibold mb-3" style={{ color: LT_TEXT }}>Actions Rapides</h3>
             <div className="grid grid-cols-2 gap-2">
               <QuickAction icon={Plus} label="Formation" tone="violet" />
               <QuickAction icon={Users} label="Etudiant" tone="blue" />
@@ -436,30 +422,30 @@ const OwnerDashboardOverview = () => {
       </div>
 
       {/* Recent Activity */}
-      <div className="rounded-[20px] p-6" style={panelSurface}>
-        <h2 className="text-white font-bold mb-1">Activité Récente</h2>
-        {error ? <p className="text-xs text-red-300 mb-2">Erreur données: {String(error?.message || error)}</p> : null}
+      <div className="rounded-[14px] p-5" style={panelSurface}>
+        <h2 className="font-semibold text-[15px] mb-3" style={{ color: LT_TEXT }}>Activité Récente</h2>
+        {error ? <p className="text-xs text-red-600 mb-2">Erreur données: {String(error?.message || error)}</p> : null}
         <div className="relative overflow-x-auto">
-          <table className="w-full text-sm text-left" style={{ color: EV_MUTED }}>
-            <thead className="text-sm uppercase bg-white/[0.03]" style={{ color: EV_MUTED }}>
+          <table className="w-full text-[13px] text-left">
+            <thead className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: LT_MUTED, backgroundColor: '#F8F8FA' }}>
               <tr>
-                <th className="px-6 py-3">Action</th>
-                <th className="px-6 py-3">Utilisateur / Élément</th>
-                <th className="px-6 py-3">Date</th>
-                <th className="px-6 py-3">Type</th>
+                <th className="px-4 py-2.5 rounded-l-[8px]">Action</th>
+                <th className="px-4 py-2.5">Utilisateur / Élément</th>
+                <th className="px-4 py-2.5">Date</th>
+                <th className="px-4 py-2.5 rounded-r-[8px]">Type</th>
               </tr>
             </thead>
             <tbody>
               {recentActivities.map((act) => (
-                <tr key={act.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                  <td className="px-6 py-4 font-medium text-white">{act.description}</td>
-                  <td className="px-6 py-4">
-                     {act.details?.user && <div className="text-white">{act.details.user}</div>}
-                     {act.details?.item && <div className="text-xs" style={{ color: EV_LAVENDER }}>{act.details.item}</div>}
+                <tr key={act.id} className="border-b transition-colors hover:bg-zinc-50" style={{ borderColor: LT_BORDER }}>
+                  <td className="px-4 py-3 font-medium" style={{ color: LT_TEXT }}>{act.description}</td>
+                  <td className="px-4 py-3">
+                     {act.details?.user && <div style={{ color: LT_TEXT }}>{act.details.user}</div>}
+                     {act.details?.item && <div className="text-xs" style={{ color: LT_GOLD_INK }}>{act.details.item}</div>}
                   </td>
-                  <td className="px-6 py-4">{format(new Date(act.timestamp), 'dd MMM HH:mm', { locale: fr })}</td>
-                  <td className="px-6 py-4">
-                     <Badge variant="outline" className="border-white/10 bg-white/5 text-gray-300">
+                  <td className="px-4 py-3" style={{ color: LT_SUB }}>{format(new Date(act.timestamp), 'dd MMM HH:mm', { locale: fr })}</td>
+                  <td className="px-4 py-3">
+                     <Badge variant="outline" className="border-zinc-200 bg-zinc-50 font-medium text-zinc-600">
                        {act.type.replace(/_/g, ' ')}
                      </Badge>
                   </td>
@@ -468,7 +454,7 @@ const OwnerDashboardOverview = () => {
             </tbody>
           </table>
           {recentActivities.length === 0 && (
-             <div className="text-center py-8" style={{ color: EV_MUTED }}>Aucune activité récente.</div>
+             <div className="text-center py-8 text-[13px]" style={{ color: LT_MUTED }}>Aucune activité récente.</div>
           )}
         </div>
       </div>

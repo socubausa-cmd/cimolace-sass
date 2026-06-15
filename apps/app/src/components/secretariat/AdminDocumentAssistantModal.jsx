@@ -55,24 +55,24 @@ export default function AdminDocumentAssistantModal({ open, onClose, onApply }) 
   const total = steps.length;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div
-        className="relative w-full max-w-lg rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#0a0c14] shadow-2xl"
+        className="relative w-full max-w-lg rounded-2xl border border-black/[0.08] bg-white shadow-2xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="admin-assistant-title"
       >
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+        <div className="flex items-center justify-between border-b border-black/[0.08] px-4 py-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-[var(--school-accent)]" />
-            <h2 id="admin-assistant-title" className="text-sm font-semibold text-white">
+            <Sparkles className="h-4 w-4 text-[#8A6D1A]" />
+            <h2 id="admin-assistant-title" className="text-sm font-semibold text-[#18181B]">
               Assistant LONGIA — document structuré
             </h2>
           </div>
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-lg p-1.5 text-white/40 hover:bg-white/10 hover:text-white"
+            className="rounded-lg p-1.5 text-[#71717A] hover:bg-black/[0.05] hover:text-[#18181B]"
             aria-label="Fermer"
           >
             <X className="h-4 w-4" />
@@ -80,13 +80,13 @@ export default function AdminDocumentAssistantModal({ open, onClose, onApply }) 
         </div>
 
         <div className="px-4 py-2">
-          <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-black/[0.08]">
             <div
-              className="h-full rounded-full bg-[color-mix(in_srgb,var(--school-accent)_80%,transparent)] transition-all"
+              className="h-full rounded-full bg-[var(--school-accent)] transition-all"
               style={{ width: `${((step + 1) / total) * 100}%` }}
             />
           </div>
-          <p className="text-[10px] text-white/40">
+          <p className="text-[10px] text-[#71717A]">
             Étape {step + 1} / {total} — {steps[step]?.label}
           </p>
         </div>
@@ -94,11 +94,11 @@ export default function AdminDocumentAssistantModal({ open, onClose, onApply }) 
         <div className="max-h-[min(60vh,420px)] overflow-y-auto px-4 pb-4">
           {step === 0 && (
             <div className="space-y-2">
-              <p className="text-[11px] text-white/60">Type de document (structure + blocs)</p>
+              <p className="text-[11px] text-[#52525B]">Type de document (structure + blocs)</p>
               <select
                 value={docType}
                 onChange={(e) => setDocType(e.target.value)}
-                className="w-full rounded-lg border border-white/15 bg-[#0d1525] px-3 py-2 text-[12px] text-white"
+                className="w-full rounded-lg border border-black/[0.08] bg-white px-3 py-2 text-[12px] text-[#18181B]"
               >
                 <option value="letter">Lettre administrative</option>
                 <option value="contract">Contrat / convention</option>
@@ -108,48 +108,48 @@ export default function AdminDocumentAssistantModal({ open, onClose, onApply }) 
           )}
           {step === 1 && (
             <div className="space-y-2">
-              <label className="text-[11px] text-white/70">Destinataire</label>
+              <label className="text-[11px] text-[#52525B]">Destinataire</label>
               <input
                 value={recipient}
                 onChange={(e) => setRecipient(e.target.value)}
                 placeholder="Nom, service ou organisation"
-                className="w-full rounded-lg border border-white/15 bg-[#0d1525] px-3 py-2 text-[12px] text-white placeholder:text-white/25"
+                className="w-full rounded-lg border border-black/[0.08] bg-white px-3 py-2 text-[12px] text-[#18181B] placeholder:text-[#A1A1AA]"
               />
             </div>
           )}
           {step === 2 && (
             <div className="space-y-2">
-              <label className="text-[11px] text-white/70">Objet</label>
+              <label className="text-[11px] text-[#52525B]">Objet</label>
               <input
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="Objet du courrier ou du dossier"
-                className="w-full rounded-lg border border-white/15 bg-[#0d1525] px-3 py-2 text-[12px] text-white placeholder:text-white/25"
+                className="w-full rounded-lg border border-black/[0.08] bg-white px-3 py-2 text-[12px] text-[#18181B] placeholder:text-[#A1A1AA]"
               />
             </div>
           )}
           {step === 3 && (
             <div className="space-y-2">
-              <label className="text-[11px] text-white/70">Contenu / consigne</label>
+              <label className="text-[11px] text-[#52525B]">Contenu / consigne</label>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={6}
                 placeholder="Décrivez le fond : contexte, demande, décision attendue…"
-                className="w-full rounded-lg border border-white/15 bg-[#0d1525] px-3 py-2 text-[12px] text-white placeholder:text-white/25"
+                className="w-full rounded-lg border border-black/[0.08] bg-white px-3 py-2 text-[12px] text-[#18181B] placeholder:text-[#A1A1AA]"
               />
             </div>
           )}
           {step === 4 && (
             <div className="space-y-2">
-              <label className="text-[11px] text-white/70">Signature (nom / fonction)</label>
+              <label className="text-[11px] text-[#52525B]">Signature (nom / fonction)</label>
               <input
                 value={signature}
                 onChange={(e) => setSignature(e.target.value)}
                 placeholder="Ex. : Marie Dupont — Directrice"
-                className="w-full rounded-lg border border-white/15 bg-[#0d1525] px-3 py-2 text-[12px] text-white placeholder:text-white/25"
+                className="w-full rounded-lg border border-black/[0.08] bg-white px-3 py-2 text-[12px] text-[#18181B] placeholder:text-[#A1A1AA]"
               />
-              <p className="text-[9px] leading-relaxed text-white/35">
+              <p className="text-[9px] leading-relaxed text-[#A1A1AA]">
                 Un document complet sera généré à partir des blocs (en-tête, objet, corps, formule, signatures). Vous
                 pourrez le modifier puis utiliser LONGIA pour reformuler des passages.
               </p>
@@ -157,11 +157,11 @@ export default function AdminDocumentAssistantModal({ open, onClose, onApply }) 
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-2 border-t border-white/10 px-4 py-3">
+        <div className="flex items-center justify-between gap-2 border-t border-black/[0.08] px-4 py-3">
           <button
             type="button"
             onClick={() => (step > 0 ? setStep(step - 1) : handleClose())}
-            className="inline-flex items-center gap-1 rounded-lg border border-white/15 px-3 py-2 text-[11px] text-white/70 hover:bg-white/5"
+            className="inline-flex items-center gap-1 rounded-lg border border-black/[0.12] bg-white px-3 py-2 text-[11px] text-[#52525B] hover:bg-[#F4F5F7]"
           >
             <ChevronLeft className="h-3.5 w-3.5" /> {step === 0 ? 'Annuler' : 'Précédent'}
           </button>

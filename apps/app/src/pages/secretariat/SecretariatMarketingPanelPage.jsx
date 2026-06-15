@@ -203,100 +203,100 @@ export default function SecretariatMarketingPanelPage() {
 
   return (
     <div className="space-y-4">
-      <div className="premium-panel p-5 space-y-4">
+      <div className="rounded-[14px] border border-black/[0.08] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-[var(--school-accent)]" />
+            <h2 className="text-xl font-bold text-[#18181B] flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-[#8A6D1A]" />
               Secrétariat Prorascience — Missions commerciales
             </h2>
-            <p className="text-sm text-gray-400">Le secrétariat est le premier point de conversion.</p>
+            <p className="text-sm text-[#52525B]">Le secrétariat est le premier point de conversion.</p>
           </div>
-          <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
+          <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#8A6D1A] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]">
             Prospect - Echange - Comprehension - Orientation - Conversion
           </Badge>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          <div className="rounded-lg border border-white/10 bg-[#0F1419]/70 p-3">
-            <p className="text-xs text-gray-500">Prospects traités</p>
-            <p className="text-white font-bold text-lg">{prospectsTreated}</p>
+          <div className="rounded-lg border border-black/[0.08] bg-[#F4F5F7] p-3">
+            <p className="text-xs text-[#71717A]">Prospects traités</p>
+            <p className="text-[#18181B] font-bold text-lg">{prospectsTreated}</p>
           </div>
-          <div className="rounded-lg border border-white/10 bg-[#0F1419]/70 p-3">
-            <p className="text-xs text-gray-500">Conversions</p>
-            <p className="text-white font-bold text-lg">{conversions}</p>
+          <div className="rounded-lg border border-black/[0.08] bg-[#F4F5F7] p-3">
+            <p className="text-xs text-[#71717A]">Conversions</p>
+            <p className="text-[#18181B] font-bold text-lg">{conversions}</p>
           </div>
-          <div className="rounded-lg border border-white/10 bg-[#0F1419]/70 p-3">
-            <p className="text-xs text-gray-500">Taux de conversion</p>
-            <p className="text-white font-bold text-lg">{conversionRateDisplay}%</p>
+          <div className="rounded-lg border border-black/[0.08] bg-[#F4F5F7] p-3">
+            <p className="text-xs text-[#71717A]">Taux de conversion</p>
+            <p className="text-[#18181B] font-bold text-lg">{conversionRateDisplay}%</p>
           </div>
-          <div className="rounded-lg border border-white/10 bg-[#0F1419]/70 p-3">
-            <p className="text-xs text-gray-500">Montant généré</p>
-            <p className="text-white font-bold text-lg">{metrics.revenue}</p>
+          <div className="rounded-lg border border-black/[0.08] bg-[#F4F5F7] p-3">
+            <p className="text-xs text-[#71717A]">Montant généré</p>
+            <p className="text-[#18181B] font-bold text-lg">{metrics.revenue}</p>
           </div>
         </div>
 
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
           {missionCards.map((mission) => (
-            <div key={mission.title} className="rounded-xl border border-white/10 bg-[#0F1419]/70 p-4">
-              <p className="text-sm font-semibold text-white flex items-center gap-2 mb-2">
-                <mission.icon className="w-4 h-4 text-[var(--school-accent)]" />
+            <div key={mission.title} className="rounded-xl border border-black/[0.08] bg-[#F4F5F7] p-4">
+              <p className="text-sm font-semibold text-[#18181B] flex items-center gap-2 mb-2">
+                <mission.icon className="w-4 h-4 text-[#8A6D1A]" />
                 {mission.title}
               </p>
               <div className="space-y-1">
                 {mission.points.map((point) => (
-                  <p key={`${mission.title}-${point}`} className="text-xs text-gray-400">
+                  <p key={`${mission.title}-${point}`} className="text-xs text-[#52525B]">
                     - {point}
                   </p>
                 ))}
               </div>
-              <p className="text-xs text-[var(--school-accent)] mt-3">{mission.note}</p>
+              <p className="text-xs text-[#8A6D1A] mt-3">{mission.note}</p>
             </div>
           ))}
         </div>
 
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
-          <p className="text-sm font-semibold text-white">Regle d or</p>
-          <p className="text-sm text-gray-300 mt-1">Chaque interaction doit mener a une decision.</p>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-semibold text-[#18181B]">Regle d or</p>
+          <p className="text-sm text-[#52525B] mt-1">Chaque interaction doit mener a une decision.</p>
           <div className="flex flex-wrap gap-2 mt-3">
-            <Badge className="bg-white/10 text-gray-200 border-white/10">convertir</Badge>
-            <Badge className="bg-white/10 text-gray-200 border-white/10">orienter</Badge>
-            <Badge className="bg-white/10 text-gray-200 border-white/10">accompagner</Badge>
-            <Badge className="bg-white/10 text-gray-200 border-white/10">vendre</Badge>
+            <Badge className="bg-white text-[#52525B] border-black/[0.08]">convertir</Badge>
+            <Badge className="bg-white text-[#52525B] border-black/[0.08]">orienter</Badge>
+            <Badge className="bg-white text-[#52525B] border-black/[0.08]">accompagner</Badge>
+            <Badge className="bg-white text-[#52525B] border-black/[0.08]">vendre</Badge>
           </div>
-          <p className="text-sm text-[var(--school-accent)] mt-3">Le secretariat ne gere pas les messages: il transforme les prospects en clients.</p>
+          <p className="text-sm text-[#8A6D1A] mt-3">Le secretariat ne gere pas les messages: il transforme les prospects en clients.</p>
         </div>
 
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4">
-          <p className="text-sm font-semibold text-white flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-red-300" />
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+          <p className="text-sm font-semibold text-[#18181B] flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-red-600" />
             Erreurs a eviter
           </p>
           <div className="grid md:grid-cols-2 gap-2 mt-2">
-            <p className="text-xs text-gray-300">- repondre sans ecouter</p>
-            <p className="text-xs text-gray-300">- proposer au hasard</p>
-            <p className="text-xs text-gray-300">- ne pas relancer</p>
-            <p className="text-xs text-gray-300">- manquer de clarte</p>
+            <p className="text-xs text-[#52525B]">- repondre sans ecouter</p>
+            <p className="text-xs text-[#52525B]">- proposer au hasard</p>
+            <p className="text-xs text-[#52525B]">- ne pas relancer</p>
+            <p className="text-xs text-[#52525B]">- manquer de clarte</p>
           </div>
         </div>
       </div>
 
-      <div className="premium-panel p-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="rounded-[14px] border border-black/[0.08] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Megaphone className="w-5 h-5 text-[var(--school-accent)]" />
+          <h2 className="text-xl font-bold text-[#18181B] flex items-center gap-2">
+            <Megaphone className="w-5 h-5 text-[#8A6D1A]" />
             Secretary Marketing Panel
           </h2>
-          <p className="text-sm text-gray-400">Relance leads, message direct et proposition rendez-vous.</p>
+          <p className="text-sm text-[#52525B]">Relance leads, message direct et proposition rendez-vous.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button asChild variant="outline" size="sm" className="border-violet-500/35 text-violet-200 hover:bg-violet-500/10">
+          <Button asChild variant="outline" size="sm" className="border-violet-300 text-violet-700 hover:bg-violet-50">
             <Link to="/admin/marketing">
               <Megaphone className="w-4 h-4 mr-1" />
               Growth Engine complet
             </Link>
           </Button>
-          <Button asChild variant="outline" size="sm" className="border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
+          <Button asChild variant="outline" size="sm" className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[#8A6D1A] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]">
             <Link to="/admin/marketing?tab=automation">
               <Workflow className="w-4 h-4 mr-1" />
               Automation
@@ -308,14 +308,14 @@ export default function SecretariatMarketingPanelPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher lead..."
-            className="w-52"
+            className="w-52 bg-white border-black/[0.08] text-[#18181B] placeholder:text-[#71717A]"
           />
-          <Button variant="outline" className="border-white/10 text-white hover:bg-white/5" onClick={loadLeads} disabled={loading}>
+          <Button variant="outline" className="border-black/[0.08] bg-white text-[#18181B] hover:bg-[#F4F5F7]" onClick={loadLeads} disabled={loading}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
           </Button>
           <Button
             variant="outline"
-            className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
+            className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[#8A6D1A] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]"
             onClick={async () => {
               try {
                 const payload = await authFetch('/api/response/followup/run', { method: 'POST' });
@@ -333,10 +333,10 @@ export default function SecretariatMarketingPanelPage() {
         </div>
       </div>
 
-      <div className="premium-panel p-5 space-y-4">
+      <div className="rounded-[14px] border border-black/[0.08] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-white font-semibold">Conversations qualifiees (Smart Response Engine)</h3>
-          <Badge className="bg-white/10 text-gray-200 border-white/10">{qualifiedThreads.length} threads</Badge>
+          <h3 className="text-[#18181B] font-semibold">Conversations qualifiees (Smart Response Engine)</h3>
+          <Badge className="bg-[#F4F5F7] text-[#52525B] border-black/[0.08]">{qualifiedThreads.length} threads</Badge>
         </div>
         <div className="grid lg:grid-cols-2 gap-4">
           <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
@@ -351,22 +351,22 @@ export default function SecretariatMarketingPanelPage() {
                 className={`w-full text-left rounded-lg border p-3 transition-colors ${
                   selectedThreadId === thread.id
                     ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]'
-                    : 'border-white/10 bg-[#0F1419]/60 hover:bg-white/5'
+                    : 'border-black/[0.08] bg-[#F4F5F7] hover:bg-black/[0.04]'
                 }`}
               >
-                <p className="text-sm text-white font-medium">{thread.visitor_name || thread.visitor_email || 'Prospect'}</p>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-sm text-[#18181B] font-medium">{thread.visitor_name || thread.visitor_email || 'Prospect'}</p>
+                <p className="text-xs text-[#52525B] mt-1">
                   {thread.last_intent || 'information'} | {thread.last_temperature || 'cold'} | {thread.status}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">{thread.recommended_offer || 'cursus'}</p>
+                <p className="text-xs text-[#71717A] mt-1">{thread.recommended_offer || 'cursus'}</p>
               </button>
             ))}
-            {!qualifiedThreads.length ? <p className="text-xs text-gray-500">Aucune conversation qualifiee.</p> : null}
+            {!qualifiedThreads.length ? <p className="text-xs text-[#71717A]">Aucune conversation qualifiee.</p> : null}
           </div>
 
-          <div className="rounded-lg border border-white/10 bg-[#0F1419]/70 p-3 space-y-3">
+          <div className="rounded-lg border border-black/[0.08] bg-[#F4F5F7] p-3 space-y-3">
             <div className="flex flex-wrap gap-2">
-              <Button asChild variant="outline" className="border-white/10 text-white hover:bg-white/5">
+              <Button asChild variant="outline" className="border-black/[0.08] bg-white text-[#18181B] hover:bg-[#F4F5F7]">
                 <Link to="/messages">Ouvrir chat immersif</Link>
               </Button>
               <Button asChild className="bg-[var(--school-accent)] text-black hover:bg-amber-500">
@@ -374,7 +374,7 @@ export default function SecretariatMarketingPanelPage() {
               </Button>
               <Button
                 variant="outline"
-                className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
+                className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[#8A6D1A] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]"
                 onClick={async () => {
                   if (!selectedThread) return;
                   try {
@@ -400,7 +400,7 @@ export default function SecretariatMarketingPanelPage() {
 
             {selectedThread ? (
               <>
-                <div className="rounded border border-white/10 bg-black/20 p-2 text-xs text-gray-300">
+                <div className="rounded border border-black/[0.08] bg-white p-2 text-xs text-[#52525B]">
                   <p>Prospect: {selectedThread.visitor_name || selectedThread.visitor_email || 'N/A'}</p>
                   <p>Besoin detecte: {selectedThread.last_intent || 'information'}</p>
                   <p>Niveau chaleur: {selectedThread.last_temperature || 'cold'}</p>
@@ -410,26 +410,27 @@ export default function SecretariatMarketingPanelPage() {
                 </div>
                 <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
                   {threadMessages.map((message) => (
-                    <div key={message.id} className="rounded border border-white/10 bg-black/20 p-2">
-                      <p className="text-[11px] text-gray-400">{message.sender_type}</p>
-                      <p className="text-xs text-gray-200 mt-1">{message.message}</p>
+                    <div key={message.id} className="rounded border border-black/[0.08] bg-white p-2">
+                      <p className="text-[11px] text-[#71717A]">{message.sender_type}</p>
+                      <p className="text-xs text-[#52525B] mt-1">{message.message}</p>
                     </div>
                   ))}
-                  {!threadMessages.length ? <p className="text-xs text-gray-500">Aucun message.</p> : null}
+                  {!threadMessages.length ? <p className="text-xs text-[#71717A]">Aucun message.</p> : null}
                 </div>
                 <div className="flex gap-2">
                   <Input
                     value={secretaryReply}
                     onChange={(e) => setSecretaryReply(e.target.value)}
                     placeholder="Reponse secretaire..."
+                    className="bg-white border-black/[0.08] text-[#18181B] placeholder:text-[#71717A]"
                   />
-                  <Button onClick={sendSecretaryReply} disabled={!secretaryReply.trim()}>
+                  <Button onClick={sendSecretaryReply} disabled={!secretaryReply.trim()} className="bg-[var(--school-accent)] text-black hover:bg-amber-500">
                     Repondre
                   </Button>
                 </div>
               </>
             ) : (
-              <p className="text-xs text-gray-500">Selectionnez une conversation pour afficher le dossier qualifie.</p>
+              <p className="text-xs text-[#71717A]">Selectionnez une conversation pour afficher le dossier qualifie.</p>
             )}
           </div>
         </div>
@@ -437,22 +438,22 @@ export default function SecretariatMarketingPanelPage() {
 
       <div className="space-y-2">
         {sorted.slice(0, 60).map((lead) => (
-          <div key={lead.id} className="premium-panel border border-white/10 p-4 rounded-xl flex flex-col lg:flex-row lg:items-center gap-3">
+          <div key={lead.id} className="border border-black/[0.08] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 rounded-[14px] flex flex-col lg:flex-row lg:items-center gap-3">
             <div className="flex-1">
-              <p className="text-sm text-white font-medium">{lead.name || lead.email || lead.phone || 'Lead'}</p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-sm text-[#18181B] font-medium">{lead.name || lead.email || lead.phone || 'Lead'}</p>
+              <p className="text-xs text-[#52525B] mt-1">
                 {lead.email || '-'} | score {lead.score} | {lead.status}
               </p>
               <div className="flex flex-wrap gap-1 mt-2">
                 {(lead.segments || []).map((s) => (
-                  <Badge key={`${lead.id}-${s}`} className="bg-white/10 text-gray-200 border-white/10">{s}</Badge>
+                  <Badge key={`${lead.id}-${s}`} className="bg-[#F4F5F7] text-[#52525B] border-black/[0.08]">{s}</Badge>
                 ))}
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
-                className="border-white/10 text-white hover:bg-white/5"
+                className="border-black/[0.08] bg-white text-[#18181B] hover:bg-[#F4F5F7]"
                 onClick={() => quickAction(lead, 'followup')}
                 disabled={processingLeadId === `${lead.id}-followup`}
               >
@@ -461,7 +462,7 @@ export default function SecretariatMarketingPanelPage() {
               </Button>
               <Button
                 variant="outline"
-                className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
+                className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[#8A6D1A] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]"
                 onClick={() => quickAction(lead, 'campaign')}
                 disabled={processingLeadId === `${lead.id}-campaign`}
               >

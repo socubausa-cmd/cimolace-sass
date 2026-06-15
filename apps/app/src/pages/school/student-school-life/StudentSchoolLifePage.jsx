@@ -20,6 +20,7 @@ import SchoolLifePage from '@/pages/school/SchoolLifePage';
 import BibliothequePage from '@/pages/BibliothequePage';
 import LibraryPage from '@/pages/LibraryPage';
 import { FormationForumContent } from '@/pages/school/FormationForumPage';
+import { SslThemeProvider, SSL_LIGHT_CLASS, ensureSslLightStyles } from './sslTheme';
 
 function StudentFormationForumRoute() {
   const { formationId } = useParams();
@@ -43,17 +44,27 @@ function StudentBookReaderRoute() {
   if (!Reader) return <Navigate to="/student-school-life/bibliotheque" replace />;
   return (
     <div className="student-book-reader">
-      {/* Le lecteur a son propre fond (#0F1419) qui ferait une "boîte" sur le shell.
-          On le rend transparent → le texte s'emboîte avec l'arrière-plan de l'espace élève. */}
+      {/* Le lecteur a son propre fond sombre (#0F1419) qui ferait une "boîte" sur le shell.
+          Espace élève = thème CLAIR → on le rend transparent (le texte s'emboîte sur le canvas clair)
+          et on force un texte lisible sur fond clair. */}
       <style>{`
-        .student-book-reader > div { background-color: transparent !important; min-height: auto !important; }
+        .student-book-reader > div { background-color: transparent !important; min-height: auto !important; color: #18181B !important; }
         /* Fond du lecteur transparent, SAUF la barre sticky de chapitres (qui doit couvrir le texte). */
         .student-book-reader [class*="0F1419" i]:not(.sticky) { background-color: transparent !important; }
-        /* Barre de chapitres : reste collée SOUS le header du shell (89px), fond opaque, au-dessus du contenu. */
+        /* Texte du lecteur : passer des tons clairs (conçus pour fond sombre) au sombre lisible. */
+        .student-book-reader .text-white,
+        .student-book-reader [class*="text-gray-1" i],
+        .student-book-reader [class*="text-gray-2" i],
+        .student-book-reader [class*="text-gray-3" i] { color: #18181B !important; }
+        .student-book-reader [class*="text-gray-4" i],
+        .student-book-reader [class*="text-gray-5" i] { color: #52525B !important; }
+        /* Barre de chapitres : collée SOUS le header du shell, fond clair translucide, au-dessus du contenu. */
         .student-book-reader .sticky {
           top: 96px !important;
-          background-color: rgba(11,11,15,0.96) !important;
+          background-color: rgba(244,245,247,0.92) !important;
           backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(0,0,0,0.08);
+          color: #18181B !important;
           z-index: 40 !important;
         }
       `}</style>
@@ -63,13 +74,13 @@ function StudentBookReaderRoute() {
         style={{
           display: 'inline-flex', alignItems: 'center', gap: 7,
           marginBottom: 18, padding: '8px 15px', borderRadius: 11,
-          background: 'rgba(212,175,55,0.10)', border: '1px solid rgba(212,175,55,0.30)',
-          color: '#D4AF37', fontSize: 13.5, fontWeight: 600, cursor: 'pointer',
+          background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.40)',
+          color: '#8A6D1A', fontSize: 13.5, fontWeight: 600, cursor: 'pointer',
         }}
       >
         <span style={{ fontSize: 16, lineHeight: 1 }}>←</span> Retour à la bibliothèque
       </button>
-      <Suspense fallback={<div style={{ padding: 48, textAlign: 'center', color: '#9ca3af' }}>Chargement du livre…</div>}>
+      <Suspense fallback={<div style={{ padding: 48, textAlign: 'center', color: '#71717A' }}>Chargement du livre…</div>}>
         <Reader />
       </Suspense>
     </div>
@@ -84,21 +95,26 @@ const StudentSchoolLifePage = () => {
   const [collapsed, setCollapsed] = useState(isForum);
   // Auto : réduit en entrant sur le forum, étend en sortant (l'utilisateur peut surcharger via le bouton tiroir).
   useEffect(() => { setCollapsed(isForum); }, [isForum]);
+  // Injecte le remap CSS clair (pages en utilitaires Tailwind/shadcn). Idempotent.
+  useEffect(() => { ensureSslLightStyles(); }, []);
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#0B0B0F', display: 'flex' }}>
-      <Helmet><title>Espace Étudiant | PRORASCIENCE</title></Helmet>
+    // Espace ÉLÈVE = thème CLAIR. La SIDEBAR (panneau flottant sombre/or) garde son
+    // propre fond et n'est PAS affectée — seul le contenu central passe au clair.
+    <SslThemeProvider mode="light">
+      <div className={SSL_LIGHT_CLASS} style={{ minHeight: '100dvh', background: '#F4F5F7', display: 'flex' }}>
+        <Helmet><title>Espace Étudiant | PRORASCIENCE</title></Helmet>
 
-      {/* Sidebar (mode icônes sur le forum, bouton tiroir pour étendre) */}
-      <StudentSchoolLifeSidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
+        {/* Sidebar (mode icônes sur le forum, bouton tiroir pour étendre) — reste SOMBRE */}
+        <StudentSchoolLifeSidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
 
-      {/* Main Content Area — décalage adapté à la largeur de la sidebar */}
-      <main
-        style={{ flex: 1, overflowX: 'hidden', minHeight: '100dvh' }}
-        className={collapsed ? 'lg:pl-[92px]' : 'lg:pl-[250px]'}
-      >
-        <div style={{ maxWidth: isForum ? 1480 : 1280, margin: '0 auto', padding: '28px 24px 48px' }}>
-          <Routes>
+        {/* Main Content Area — décalage adapté à la largeur de la sidebar */}
+        <main
+          style={{ flex: 1, overflowX: 'hidden', minHeight: '100dvh' }}
+          className={collapsed ? 'lg:pl-[92px]' : 'lg:pl-[250px]'}
+        >
+          <div style={{ maxWidth: isForum ? 1480 : 1280, margin: '0 auto', padding: '28px 24px 48px' }}>
+            <Routes>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<StudentDashboardPage />} />
             <Route path="formations" element={<StudentFormationsPage />} />
@@ -122,10 +138,11 @@ const StudentSchoolLifePage = () => {
             
             {/* Redirect /classroom inside this layout to the actual main classroom route outside this layout */}
             <Route path="classroom" element={<Navigate to="/classroom" replace />} />
-          </Routes>
-        </div>
-      </main>
-    </div>
+            </Routes>
+          </div>
+        </main>
+      </div>
+    </SslThemeProvider>
   );
 };
 

@@ -116,8 +116,11 @@ const OwnerDashboard = () => {
     <OwnerDashboardLayout activeTab={activeTab} onTabChange={handleTabChange}>
       {activeTab === 'dashboard' && (
          <div className="mb-6 flex justify-end">
-            <div className="premium-panel px-3 py-3 rounded-xl min-w-[280px]">
-              <p className="text-xs uppercase tracking-wider text-gray-400 mb-2">Annee scolaire</p>
+            <div
+              className="px-3 py-3 rounded-[14px] min-w-[280px]"
+              style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+            >
+              <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#71717A' }}>Année scolaire</p>
               <PremiumSegmentedSelector
                 value={currentYear}
                 onChange={setSchoolYear}
@@ -128,6 +131,8 @@ const OwnerDashboard = () => {
                 layoutId="owner-dashboard-school-year-segment-pill"
                 compact
                 showChevron={false}
+                railClassName="!bg-[#F4F5F7] !border-black/5"
+                optionClassName="!text-zinc-500 [&.text-white]:!text-zinc-900 hover:!bg-black/[0.03]"
               />
             </div>
          </div>
@@ -184,6 +189,8 @@ const FinanceSection = () => {
            options={financeOptions}
            layoutId="owner-finance-segment-pill"
            className="max-w-4xl"
+           railClassName="!bg-[#F4F5F7] !border-black/5"
+           optionClassName="!text-zinc-500 [&.text-white]:!text-zinc-900 hover:!bg-black/[0.03]"
          />
          <AnimatePresence mode="wait">
            {subTab === 'students' && (
@@ -238,7 +245,10 @@ const FinanceSection = () => {
                exit={{ opacity: 0, y: -8 }}
                transition={{ duration: 0.22, ease: 'easeOut' }}
              >
-               <div className="premium-panel p-4 rounded-xl border border-white/10">
+               <div
+                 className="p-4 rounded-[14px]"
+                 style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+               >
                  <TenantPayoutProvidersForm />
                </div>
              </motion.div>

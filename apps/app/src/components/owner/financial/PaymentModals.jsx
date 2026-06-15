@@ -7,16 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export const PaymentConfirmationModal = ({ isOpen, onClose, onConfirm, payment }) => (
   <Dialog open={isOpen} onOpenChange={onClose}>
-    <DialogContent className="bg-[#192734] border-white/10 text-white">
+    <DialogContent className="bg-white border-black/10 text-zinc-900">
       <DialogHeader>
         <DialogTitle>Confirmer le paiement</DialogTitle>
       </DialogHeader>
       <div className="py-4">
         <p>Êtes-vous sûr de vouloir confirmer le paiement de <strong>{payment?.amount}€</strong> de <strong>{payment?.studentName}</strong> ?</p>
-        <p className="text-sm text-gray-400 mt-2">Cette action mettra à jour le solde de l'étudiant.</p>
+        <p className="text-sm text-zinc-500 mt-2">Cette action mettra à jour le solde de l'étudiant.</p>
       </div>
       <DialogFooter>
-        <Button variant="outline" onClick={onClose} className="border-white/10 text-white">Annuler</Button>
+        <Button variant="outline" onClick={onClose} className="bg-white border-black/10 text-zinc-700 hover:bg-zinc-50">Annuler</Button>
         <Button onClick={onConfirm} className="bg-green-600 hover:bg-green-700 text-white">Confirmer</Button>
       </DialogFooter>
     </DialogContent>
@@ -34,7 +34,7 @@ export const PaymentRejectionModal = ({ isOpen, onClose, onReject, payment }) =>
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#192734] border-white/10 text-white">
+      <DialogContent className="bg-white border-black/10 text-zinc-900">
         <DialogHeader>
           <DialogTitle>Rejeter le paiement</DialogTitle>
         </DialogHeader>
@@ -43,7 +43,7 @@ export const PaymentRejectionModal = ({ isOpen, onClose, onReject, payment }) =>
           <div className="space-y-2">
              <Label>Motif du rejet</Label>
              <Select value={reason} onValueChange={setReason}>
-                <SelectTrigger className="bg-[#0F1419] border-white/10"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="bg-[#F4F5F7] border-black/10 text-zinc-900"><SelectValue /></SelectTrigger>
                 <SelectContent>
                    <SelectItem value="Montant incorrect">Montant incorrect</SelectItem>
                    <SelectItem value="Référence invalide">Référence invalide</SelectItem>
@@ -54,11 +54,11 @@ export const PaymentRejectionModal = ({ isOpen, onClose, onReject, payment }) =>
           </div>
           <div className="space-y-2">
              <Label>Message (optionnel)</Label>
-             <Textarea value={message} onChange={(e) => setMessage(e.target.value)} className="bg-[#0F1419] border-white/10" placeholder="Explication supplémentaire..." />
+             <Textarea value={message} onChange={(e) => setMessage(e.target.value)} className="bg-[#F4F5F7] border-black/10 text-zinc-900 placeholder:text-zinc-400" placeholder="Explication supplémentaire..." />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} className="border-white/10 text-white">Annuler</Button>
+          <Button variant="outline" onClick={onClose} className="bg-white border-black/10 text-zinc-700 hover:bg-zinc-50">Annuler</Button>
           <Button onClick={handleReject} className="bg-red-600 hover:bg-red-700 text-white">Rejeter</Button>
         </DialogFooter>
       </DialogContent>

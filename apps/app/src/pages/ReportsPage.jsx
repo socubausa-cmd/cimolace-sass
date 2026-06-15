@@ -9,6 +9,17 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { AnimatePresence, motion } from 'framer-motion';
 
+/* Thème CLAIR « Wix Studio » — aligné sur OwnerDashboardOverview. */
+const LT_TEXT = '#18181B';
+const LT_SUB = '#52525B';
+const LT_MUTED = '#71717A';
+const LT_BORDER = 'rgba(0,0,0,0.08)';
+const panelSurface = {
+  background: '#FFFFFF',
+  border: `1px solid ${LT_BORDER}`,
+  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+};
+
 const ReportsPage = () => {
   const [loading, setLoading] = useState(true);
   const [payments, setPayments] = useState([]);
@@ -105,21 +116,21 @@ const ReportsPage = () => {
            return (
               <div className="space-y-6 animate-in slide-in-from-bottom-5">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card className="bg-[#192734] border-white/10">
-                       <CardHeader><CardTitle className="text-white">Revenus Mensuels (Année Courante)</CardTitle></CardHeader>
+                    <Card className="border-0" style={panelSurface}>
+                       <CardHeader><CardTitle style={{ color: LT_TEXT }}>Revenus Mensuels (Année Courante)</CardTitle></CardHeader>
                        <CardContent>
                           <SimpleAreaChart data={revenueData} xKey="name" dataKey="revenue" />
                        </CardContent>
                     </Card>
-                    <Card className="bg-[#192734] border-white/10">
-                       <CardHeader><CardTitle className="text-white">État des Factures</CardTitle></CardHeader>
+                    <Card className="border-0" style={panelSurface}>
+                       <CardHeader><CardTitle style={{ color: LT_TEXT }}>État des Factures</CardTitle></CardHeader>
                        <CardContent>
                           <SimplePieChart data={invoiceData} nameKey="name" dataKey="value" />
                        </CardContent>
                     </Card>
                  </div>
-                 <Card className="bg-[#192734] border-white/10">
-                    <CardHeader><CardTitle className="text-white">Progression du Chiffre d'Affaires</CardTitle></CardHeader>
+                 <Card className="border-0" style={panelSurface}>
+                    <CardHeader><CardTitle style={{ color: LT_TEXT }}>Progression du Chiffre d'Affaires</CardTitle></CardHeader>
                     <CardContent>
                        <SimpleLineChart data={revenueData} xKey="name" dataKey="revenue" color="#22c55e" />
                     </CardContent>
@@ -130,14 +141,14 @@ const ReportsPage = () => {
            return (
               <div className="space-y-6 animate-in slide-in-from-bottom-5">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card className="bg-[#192734] border-white/10">
-                       <CardHeader><CardTitle className="text-white">Répartition des Étudiants</CardTitle></CardHeader>
+                    <Card className="border-0" style={panelSurface}>
+                       <CardHeader><CardTitle style={{ color: LT_TEXT }}>Répartition des Étudiants</CardTitle></CardHeader>
                        <CardContent>
                           <SimplePieChart data={studentStatusData} nameKey="name" dataKey="value" />
                        </CardContent>
                     </Card>
-                    <Card className="bg-[#192734] border-white/10">
-                       <CardHeader><CardTitle className="text-white">Nouveaux Inscrits (6 derniers mois)</CardTitle></CardHeader>
+                    <Card className="border-0" style={panelSurface}>
+                       <CardHeader><CardTitle style={{ color: LT_TEXT }}>Nouveaux Inscrits (6 derniers mois)</CardTitle></CardHeader>
                        <CardContent>
                          <SimpleBarChart data={studentGrowthData} xKey="name" dataKey="count" color="#D4AF37" />
                        </CardContent>
@@ -153,10 +164,10 @@ const ReportsPage = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h1 className="text-3xl font-bold text-white">Rapports & Analytique</h1>
-        <div className="flex gap-4">
+        <h1 className="text-2xl font-bold tracking-tight" style={{ color: LT_TEXT }}>Rapports &amp; Analytique</h1>
+        <div className="flex gap-3">
           <Select value={reportType} onValueChange={setReportType}>
-            <SelectTrigger className="w-[200px] bg-[#192734] border-white/10 text-white">
+            <SelectTrigger className="w-[200px] bg-white border-black/10 text-zinc-900">
               <SelectValue placeholder="Type de rapport" />
             </SelectTrigger>
             <SelectContent>
@@ -165,14 +176,14 @@ const ReportsPage = () => {
               <SelectItem value="formations">Performance Formations</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" className="border-white/10 text-white hover:bg-white/10">
+          <Button variant="outline" className="bg-white border-black/10 text-zinc-700 hover:bg-zinc-50">
             <Download className="w-4 h-4 mr-2" /> Exporter PDF
           </Button>
         </div>
       </div>
 
       {loading ? (
-        <div className="p-8 text-gray-400 flex items-center"><Loader2 className="w-4 h-4 mr-2 animate-spin" />Chargement des donnees reelles...</div>
+        <div className="p-8 flex items-center" style={{ color: LT_MUTED }}><Loader2 className="w-4 h-4 mr-2 animate-spin" />Chargement des donnees reelles...</div>
       ) : (
         <AnimatePresence mode="wait">
           <motion.div

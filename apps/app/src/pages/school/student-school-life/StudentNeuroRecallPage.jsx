@@ -3,21 +3,23 @@ import { Brain, RotateCcw, ListChecks, CheckCircle, Clock, Layers, ChevronLeft }
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { authStore } from '@/lib/auth-store';
 
-// ── Design tokens (match StudentForumRedesign / ISNA dark theme) ─────────────
+// ── Design tokens — thème CLAIR (Wix Studio) ─────────────────────────────────
+// Page « Neuro-recall » atteinte uniquement par l'élève (in-shell) → clair direct.
 const T = {
-  bg:       '#0b0b0f',
-  surface:  '#12111a',
-  card:     '#17161f',
-  border:   'rgba(255,255,255,0.07)',
-  gold:     '#D4AF37',
-  goldDim:  'rgba(212,175,55,0.10)',
-  goldMid:  'rgba(212,175,55,0.25)',
-  t1:       '#f0eeff',
-  t2:       '#9d9ab8',
-  t3:       '#6b6888',
-  success:  '#4ade80',
-  danger:   '#f87171',
-  warn:     '#fbbf24',
+  bg:       '#F4F5F7',
+  surface:  '#FFFFFF',
+  card:     '#FFFFFF',
+  border:   'rgba(0,0,0,0.08)',
+  gold:     '#8A6D1A', // doré lisible (texte/accents) sur blanc — AA
+  goldSolid:'#D4AF37', // doré vif pour remplissages (anneau, barres)
+  goldDim:  'rgba(212,175,55,0.14)',
+  goldMid:  'rgba(212,175,55,0.40)',
+  t1:       '#18181B',
+  t2:       '#52525B',
+  t3:       '#71717A',
+  success:  '#15803D',
+  danger:   '#DC2626',
+  warn:     '#B45309',
 };
 
 // ── API helpers ───────────────────────────────────────────────────────────────
@@ -137,7 +139,7 @@ function Flashcard({ card, flipped, onFlip }) {
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
           padding: '28px 32px',
-          boxShadow: `0 0 0 1px ${T.goldMid}, 0 8px 40px rgba(0,0,0,0.5)`,
+          boxShadow: `0 0 0 1px ${T.goldMid}, 0 8px 28px rgba(0,0,0,0.10)`,
         }}>
           <div style={{
             fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
@@ -181,7 +183,7 @@ function Flashcard({ card, flipped, onFlip }) {
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
           padding: '28px 32px',
-          boxShadow: `0 0 0 1px ${T.goldMid}, 0 8px 40px rgba(0,0,0,0.5)`,
+          boxShadow: `0 0 0 1px ${T.goldMid}, 0 8px 28px rgba(0,0,0,0.10)`,
         }}>
           <div style={{
             fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
@@ -242,7 +244,7 @@ function ProgressRing({ value, max, label, color = T.gold }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
       <svg width={90} height={90} viewBox="0 0 90 90" aria-label={`${label}: ${value} sur ${max}`}>
-        <circle cx={45} cy={45} r={radius} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={7} />
+        <circle cx={45} cy={45} r={radius} fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth={7} />
         <circle
           cx={45} cy={45} r={radius} fill="none"
           stroke={color} strokeWidth={7}
@@ -541,13 +543,13 @@ export default function StudentNeuroRecallPage() {
                 </div>
                 <div style={{
                   height: 4, borderRadius: 99,
-                  background: 'rgba(255,255,255,0.06)',
+                  background: 'rgba(0,0,0,0.07)',
                   overflow: 'hidden',
                 }}>
                   <div style={{
                     height: '100%',
                     width: `${((cardIdx) / queue.length) * 100}%`,
-                    background: `linear-gradient(90deg, ${T.gold}, #f0d060)`,
+                    background: `linear-gradient(90deg, ${T.goldSolid}, #f0d060)`,
                     borderRadius: 99,
                     transition: 'width 0.3s ease',
                   }} />

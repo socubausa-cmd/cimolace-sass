@@ -24,7 +24,9 @@ const OwnerDashboardLayout = ({ children, activeTab, onTabChange }) => {
       {
         section: 'Pilotage',
         items: [
-          { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+          // Label descriptif (aligné sur le secrétariat « Gestion élèves ») au lieu
+          // du générique « Dashboard » : évite une topbar redondante « Dashboard ».
+          { id: 'dashboard', icon: LayoutDashboard, label: "Vue d'ensemble" },
           { id: 'reports', icon: PieChart, label: 'Rapports' },
           { id: 'notifications', icon: Bell, label: 'Notifications' },
         ],
@@ -108,6 +110,7 @@ const OwnerDashboardLayout = ({ children, activeTab, onTabChange }) => {
       onLogout={handleLogout}
       title={allItems.find((i) => i.id === activeTab)?.label}
       topbarRight={<NotificationDropdown />}
+      lightContent
     >
       {children}
     </LiriDashboardShell>

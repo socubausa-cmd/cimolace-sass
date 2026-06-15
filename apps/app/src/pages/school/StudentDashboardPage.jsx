@@ -10,37 +10,13 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useStudentDashboardParityData } from '@/hooks/useStudentDashboardParityData';
 import { useStudentCurrentCourse } from '@/hooks/useStudentCurrentCourse';
 import { supabase } from '@/lib/customSupabaseClient';
+// Thème host-aware : `T` = tokens vivants (clair sous l'espace élève, sombre sous le portail prof).
+import { themeProxy as T, useSslThemeMode } from '@/pages/school/student-school-life/sslTheme';
 
-/* ─── Design tokens ─── */
-const T = {
-  bg:         '#0b0b0f',
-  surface:    '#12111a',
-  surface2:   '#192734',
-  surface3:   '#1e2840',
-  border:     'rgba(255,255,255,0.07)',
-  borderMid:  'rgba(255,255,255,0.12)',
-  gold:       '#D4AF37',
-  goldDim:    'rgba(212,175,55,0.12)',
-  goldMid:    'rgba(212,175,55,0.28)',
-  violet:     '#7C3AED',
-  violetDim:  'rgba(124,58,237,0.12)',
-  violetMid:  'rgba(124,58,237,0.28)',
-  cyan:       '#00E5FF',
-  teal:       '#14B8A6',
-  success:    '#22C55E',
-  successDim: 'rgba(34,197,94,0.10)',
-  warning:    '#F59E0B',
-  warningDim: 'rgba(245,158,11,0.10)',
-  danger:     '#EF4444',
-  dangerDim:  'rgba(239,68,68,0.10)',
-  t1: '#F5F5F7',
-  t2: 'rgba(245,245,247,0.65)',
-  t3: 'rgba(245,245,247,0.38)',
-  t4: 'rgba(245,245,247,0.16)',
-  mono: "'JetBrains Mono','Fira Code',monospace",
-};
-
-const ACCENTS = [T.violet, T.cyan, T.teal, T.gold, '#F43F5E', '#38BDF8'];
+// Accents décoratifs des cartes de formation. Host-aware via T pour le cyan/teal/or
+// (illisibles en clair s'ils restaient #00E5FF) : en SOMBRE on conserve les valeurs
+// d'origine (#00E5FF, #14B8A6, #D4AF37) → portail prof inchangé ; en CLAIR, variantes lisibles.
+const accentsFor = (t) => [t.violet, t.cyan, t.teal, t.gold, '#F43F5E', '#38BDF8'];
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 10 },
@@ -125,7 +101,8 @@ const StatCard = ({ label, value, sub, icon, color, bgColor, delay }) => {
 /* ═══════════════════════════ FORMATION ROW ════════════════════════════════ */
 const FormationRow = ({ f, index, delay, onClick }) => {
   const [hov, setHov] = useState(false);
-  const accent = ACCENTS[index % ACCENTS.length];
+  const accents = accentsFor(T);
+  const accent = accents[index % accents.length];
   const abbr = (f.title || 'F').slice(0, 2).toUpperCase();
   return (
     <motion.div {...fadeUp(delay)}
@@ -304,6 +281,7 @@ const EmptyState = ({ icon, text, action, onAction }) => (
 
 /* ═══════════════════════════ MAIN COMPONENT ═══════════════════════════════ */
 const StudentDashboardPage = () => {
+  useSslThemeMode(); // publie le mode (clair/sombre) pour `T` AVANT le rendu des sous-composants
   const navigate = useNavigate();
   const { user } = useAuth();
   const userId = user?.id;
@@ -391,7 +369,7 @@ const StudentDashboardPage = () => {
   /* ── Formations with accent colors ── */
   const formationsRich = formations.slice(0, 5).map((f, i) => ({
     ...f,
-    accentColor: ACCENTS[i % ACCENTS.length],
+    accentColor: accentsFor(T)[i % 6],
   }));
 
   const avgProgress = formationsRich.length

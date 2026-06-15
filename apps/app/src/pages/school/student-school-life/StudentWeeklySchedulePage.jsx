@@ -27,31 +27,35 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 
-// ── Design tokens (ISNA dark theme) ──────────────────────────────────────────
+// ── Design tokens — thème CLAIR (Wix Studio) ──────────────────────────────────
+// Cette page « Ma semaine » est routée séparément dans App.jsx et n'est atteinte
+// QUE par l'élève (aucun équivalent côté prof) → on la passe au clair directement,
+// même forme de tokens (badges/icônes colorés conservés ; cyan/teal/violet lisibles).
 const T = {
-  bg:       '#0b0b0f',
-  surface:  '#12111a',
-  card:     '#17161f',
-  border:   'rgba(255,255,255,0.07)',
-  borderMid:'rgba(255,255,255,0.12)',
-  gold:     '#D4AF37',
-  goldDim:  'rgba(212,175,55,0.10)',
-  goldMid:  'rgba(212,175,55,0.25)',
-  goldBright:'rgba(212,175,55,0.40)',
-  teal:     '#2dd4bf',
-  tealDim:  'rgba(45,212,191,0.12)',
-  tealMid:  'rgba(45,212,191,0.25)',
-  t1:       '#f0eeff',
-  t2:       '#9d9ab8',
-  t3:       '#6b6888',
-  success:  '#4ade80',
-  successDim:'rgba(74,222,128,0.12)',
-  danger:   '#f87171',
-  dangerDim: 'rgba(248,113,113,0.12)',
-  warn:     '#fbbf24',
-  warnDim:  'rgba(251,191,36,0.12)',
-  purple:   '#a78bfa',
-  purpleDim:'rgba(167,139,250,0.12)',
+  bg:       '#F4F5F7', // canvas
+  surface:  '#FFFFFF', // surfaces internes
+  card:     '#FFFFFF', // cartes
+  border:   'rgba(0,0,0,0.08)',
+  borderMid:'rgba(0,0,0,0.14)',
+  gold:     '#8A6D1A', // doré LISIBLE pour texte/accents sur blanc (AA)
+  goldSolid:'#D4AF37', // doré VIF pour remplissages (boutons/barres) — texte sombre dessus
+  goldDim:  'rgba(212,175,55,0.14)',
+  goldMid:  'rgba(212,175,55,0.40)',
+  goldBright:'rgba(212,175,55,0.55)',
+  teal:     '#0F766E',
+  tealDim:  'rgba(15,118,110,0.12)',
+  tealMid:  'rgba(15,118,110,0.28)',
+  t1:       '#18181B', // texte primaire
+  t2:       '#52525B', // texte secondaire
+  t3:       '#71717A', // texte atténué
+  success:  '#15803D',
+  successDim:'rgba(34,197,94,0.12)',
+  danger:   '#DC2626',
+  dangerDim: 'rgba(220,38,38,0.10)',
+  warn:     '#B45309',
+  warnDim:  'rgba(245,158,11,0.14)',
+  purple:   '#7C3AED',
+  purpleDim:'rgba(124,58,237,0.10)',
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -82,7 +86,7 @@ const PEDAGOGY_COLORS = {
   quiz_block:           { bg: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.35)', color: '#a78bfa' },
   mindmap_block:        { bg: 'rgba(45,212,191,0.15)', border: 'rgba(45,212,191,0.35)', color: '#2dd4bf' },
   summary_block:        { bg: 'rgba(156,163,175,0.15)', border: 'rgba(156,163,175,0.35)', color: '#9ca3af' },
-  generic:              { bg: 'rgba(255,255,255,0.06)', border: 'rgba(255,255,255,0.12)', color: '#9d9ab8' },
+  generic:              { bg: 'rgba(0,0,0,0.05)', border: 'rgba(0,0,0,0.12)', color: '#52525B' },
 };
 
 const PEDAGOGY_LABELS = {
@@ -204,7 +208,7 @@ function Skeleton({ width = '100%', height = 16, radius = 6 }) {
   return (
     <div style={{
       width, height, borderRadius: radius,
-      background: `linear-gradient(90deg, ${T.surface} 0%, rgba(255,255,255,0.06) ${50 + pct}%, ${T.surface} 100%)`,
+      background: `linear-gradient(90deg, ${T.surface} 0%, rgba(0,0,0,0.05) ${50 + pct}%, ${T.surface} 100%)`,
       backgroundSize: '200% 100%',
       flexShrink: 0,
     }} />
@@ -236,7 +240,7 @@ function StatusBadge({ status }) {
   const map = {
     termine:  { label: 'Terminé',  color: T.success, bg: T.successDim },
     en_cours: { label: 'En cours', color: T.warn,    bg: T.warnDim    },
-    a_faire:  { label: 'À faire',  color: T.t3,      bg: 'rgba(255,255,255,0.05)' },
+    a_faire:  { label: 'À faire',  color: T.t3,      bg: 'rgba(0,0,0,0.05)' },
   };
   const cfg = map[status] || map.a_faire;
   const Icon = status === 'termine' ? CheckCircle2 : status === 'en_cours' ? Loader2 : Circle;
@@ -265,7 +269,7 @@ function DurationChip({ minutes }) {
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 4,
       fontSize: 10, fontWeight: 500, color: T.t3,
-      background: 'rgba(255,255,255,0.04)',
+      background: 'rgba(0,0,0,0.04)',
       border: `1px solid ${T.border}`,
       borderRadius: 20, padding: '2px 8px',
       flexShrink: 0,
@@ -330,7 +334,7 @@ function VideoModal({ videoUrl, title, onClose }) {
           <button
             onClick={onClose}
             style={{
-              background: 'rgba(255,255,255,0.06)', border: 'none',
+              background: 'rgba(0,0,0,0.05)', border: 'none',
               borderRadius: 8, width: 30, height: 30, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.t2,
             }}
@@ -369,7 +373,7 @@ function ExpandedPanel({ block, onClose }) {
   return (
     <div style={{
       marginTop: 10, padding: '14px 16px',
-      background: 'rgba(255,255,255,0.03)',
+      background: 'rgba(0,0,0,0.03)',
       border: `1px solid ${T.border}`,
       borderRadius: 10,
     }}>
@@ -469,7 +473,7 @@ function QuizModal({ block, onClose }) {
           <button
             onClick={onClose}
             style={{
-              background: 'rgba(255,255,255,0.06)', border: 'none',
+              background: 'rgba(0,0,0,0.05)', border: 'none',
               borderRadius: 8, width: 30, height: 30, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.t2,
             }}
@@ -492,7 +496,7 @@ function QuizModal({ block, onClose }) {
             <div style={{ background: T.surface, borderRadius: 10, padding: '20px 0', marginBottom: 8 }}>
               <div style={{
                 width: `${((current + 1) / questions.length) * 100}%`,
-                height: 3, background: T.gold, borderRadius: 2, marginBottom: 18,
+                height: 3, background: T.goldSolid, borderRadius: 2, marginBottom: 18,
                 transition: 'width 0.3s ease',
               }} />
               <p style={{ color: T.t1, fontSize: 16, fontWeight: 600, lineHeight: 1.5, margin: '0 0 20px', padding: '0 20px' }}>
@@ -500,7 +504,7 @@ function QuizModal({ block, onClose }) {
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 20px' }}>
                 {(q.options || []).map((opt, i) => {
-                  let optBg = 'rgba(255,255,255,0.04)';
+                  let optBg = 'rgba(0,0,0,0.04)';
                   let optBorder = T.border;
                   let optColor = T.t2;
                   if (selected !== null) {
@@ -533,7 +537,7 @@ function QuizModal({ block, onClose }) {
                 <button
                   onClick={handleNext}
                   style={{
-                    background: T.gold, color: '#0b0b0f',
+                    background: T.goldSolid, color: '#18181B',
                     border: 'none', borderRadius: 8,
                     padding: '9px 22px', fontWeight: 700, fontSize: 13,
                     cursor: 'pointer',
@@ -656,7 +660,7 @@ function BlockCard({ block, onNavigate, onOpenVideo, onOpenQuiz }) {
         onClick={handleCTA}
         style={{
           width: '100%',
-          background: status === 'termine' ? 'rgba(255,255,255,0.04)' : T.goldDim,
+          background: status === 'termine' ? 'rgba(0,0,0,0.04)' : T.goldDim,
           border: `1px solid ${status === 'termine' ? T.border : T.goldMid}`,
           borderRadius: 7,
           padding: '7px 12px',
@@ -775,7 +779,7 @@ function WeekProgressBar({ days }) {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <div style={{ flex: 1, height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
+      <div style={{ flex: 1, height: 5, background: 'rgba(0,0,0,0.08)', borderRadius: 4, overflow: 'hidden' }}>
         <div style={{
           height: '100%', width: `${pct}%`,
           background: `linear-gradient(90deg, ${T.gold} 0%, ${T.teal} 100%)`,
@@ -1115,7 +1119,7 @@ export default function StudentWeeklySchedulePage() {
                 onClick={handlePrevWeek}
                 disabled={loading}
                 style={{
-                  background: 'rgba(255,255,255,0.05)', border: `1px solid ${T.border}`,
+                  background: 'rgba(0,0,0,0.05)', border: `1px solid ${T.border}`,
                   borderRadius: 7, width: 28, height: 28, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: T.t2, opacity: loading ? 0.4 : 1,
@@ -1134,7 +1138,7 @@ export default function StudentWeeklySchedulePage() {
                 onClick={handleNextWeek}
                 disabled={loading}
                 style={{
-                  background: 'rgba(255,255,255,0.05)', border: `1px solid ${T.border}`,
+                  background: 'rgba(0,0,0,0.05)', border: `1px solid ${T.border}`,
                   borderRadius: 7, width: 28, height: 28, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: T.t2, opacity: loading ? 0.4 : 1,

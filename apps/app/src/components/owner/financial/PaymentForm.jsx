@@ -53,19 +53,19 @@ const PaymentForm = ({ isOpen, onClose, onSave, initialData }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#192734] border-white/10 text-white sm:max-w-[500px]">
+      <DialogContent className="bg-white border-black/10 text-zinc-900 sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{initialData ? 'Modifier Paiement' : 'Enregistrer Paiement'}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
            <div className="grid gap-2">
              <Label>N° Paiement</Label>
-             <Input value={formData.paymentNumber} disabled className="bg-[#0F1419] border-white/10 opacity-50" />
+             <Input value={formData.paymentNumber} disabled className="bg-zinc-100 border-black/10 text-zinc-500" />
           </div>
           <div className="grid gap-2">
             <Label>Étudiant *</Label>
             <Select value={formData.studentId} onValueChange={(v) => setFormData({...formData, studentId: v})}>
-              <SelectTrigger className="bg-[#0F1419] border-white/10"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+              <SelectTrigger className="bg-[#F4F5F7] border-black/10 text-zinc-900 placeholder:text-zinc-400"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
               <SelectContent>
                 {students.map(s => (
                   <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
@@ -76,12 +76,12 @@ const PaymentForm = ({ isOpen, onClose, onSave, initialData }) => {
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label>Montant (€) *</Label>
-              <Input type="number" value={formData.amount} onChange={(e) => setFormData({...formData, amount: parseFloat(e.target.value)})} className="bg-[#0F1419] border-white/10" />
+              <Input type="number" value={formData.amount} onChange={(e) => setFormData({...formData, amount: parseFloat(e.target.value)})} className="bg-[#F4F5F7] border-black/10 text-zinc-900 placeholder:text-zinc-400" />
             </div>
             <div className="grid gap-2">
               <Label>Méthode *</Label>
               <Select value={formData.method} onValueChange={(v) => setFormData({...formData, method: v})}>
-                <SelectTrigger className="bg-[#0F1419] border-white/10"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="bg-[#F4F5F7] border-black/10 text-zinc-900 placeholder:text-zinc-400"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Virement">Virement</SelectItem>
                   <SelectItem value="Carte bancaire">Carte bancaire</SelectItem>
@@ -94,20 +94,20 @@ const PaymentForm = ({ isOpen, onClose, onSave, initialData }) => {
           </div>
           <div className="grid gap-2">
              <Label>Référence Transaction *</Label>
-             <Input value={formData.reference} onChange={(e) => setFormData({...formData, reference: e.target.value})} className="bg-[#0F1419] border-white/10" placeholder="Ex: VIR-12345" />
+             <Input value={formData.reference} onChange={(e) => setFormData({...formData, reference: e.target.value})} className="bg-[#F4F5F7] border-black/10 text-zinc-900 placeholder:text-zinc-400" placeholder="Ex: VIR-12345" />
           </div>
           <div className="grid gap-2">
             <Label>Note / Description</Label>
             <Textarea 
               value={formData.description} 
               onChange={(e) => setFormData({...formData, description: e.target.value})} 
-              className="bg-[#0F1419] border-white/10"
+              className="bg-[#F4F5F7] border-black/10 text-zinc-900 placeholder:text-zinc-400"
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} className="border-white/10 text-white">Annuler</Button>
-          <Button onClick={handleSubmit} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">Enregistrer</Button>
+          <Button variant="outline" onClick={onClose} className="bg-white border-black/10 text-zinc-700 hover:bg-zinc-50">Annuler</Button>
+          <Button onClick={handleSubmit} className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-semibold">Enregistrer</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -359,7 +359,7 @@ const OwnerFormationsTab = () => {
 
   if (pendingEditFormationId && !didAutoOpenRef.current) {
     return (
-      <div className="h-[60vh] flex items-center justify-center text-gray-300">
+      <div className="h-[60vh] flex items-center justify-center text-zinc-500">
         Ouverture du constructeur…
       </div>
     );
@@ -367,10 +367,10 @@ const OwnerFormationsTab = () => {
 
   return (
     <div className="relative min-h-[60vh]">
-      {/* Ambient background */}
+      {/* Ambient background (clair, très discret) */}
       <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[100px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] bg-indigo-500/5 rounded-full blur-[80px]" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[color-mix(in_srgb,var(--school-accent)_6%,transparent)] rounded-full blur-[100px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] bg-violet-500/[0.04] rounded-full blur-[80px]" />
       </div>
 
       <div className="space-y-6 relative">
@@ -379,23 +379,24 @@ const OwnerFormationsTab = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 p-5 rounded-2xl bg-[#151a21]/80 backdrop-blur-xl border border-white/10"
+        className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 p-5 rounded-[14px]"
+        style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
       >
         <div className="flex items-center gap-4 w-full xl:w-auto">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]"
           >
-            <Sparkles className="w-4 h-4 text-[var(--school-accent)]" />
-            <span className="text-xs text-gray-400">Catalogue</span>
+            <Sparkles className="w-4 h-4" style={{ color: '#8A6D1A' }} />
+            <span className="text-xs" style={{ color: '#8A6D1A' }}>Catalogue</span>
           </motion.div>
           <div>
-            <h2 className="text-2xl md:text-3xl font-serif font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-400">
+            <h2 className="text-2xl md:text-3xl font-serif font-bold tracking-tight" style={{ color: '#18181B' }}>
               Mes Formations
             </h2>
-            <Badge variant="outline" className="mt-1 text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
+            <Badge variant="outline" className="mt-1 border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]" style={{ color: '#8A6D1A' }}>
               {formations.length} Total
             </Badge>
           </div>
@@ -408,16 +409,16 @@ const OwnerFormationsTab = () => {
             transition={{ delay: 0.2 }}
             className="relative w-full max-w-xs"
           >
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
             <Input
               placeholder="Rechercher..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-[#0F1419]/80 backdrop-blur border-white/10 text-white"
+              className="pl-9 bg-white border-black/10 text-zinc-900 placeholder:text-zinc-400"
             />
           </motion.div>
           <Select value={filterYear} onValueChange={setFilterYear}>
-            <SelectTrigger className="w-[140px] bg-[#0F1419]/80 backdrop-blur border-white/10 text-white">
+            <SelectTrigger className="w-[140px] bg-white border-black/10 text-zinc-900">
               <SelectValue placeholder="Année" />
             </SelectTrigger>
             <SelectContent>
@@ -428,7 +429,7 @@ const OwnerFormationsTab = () => {
             </SelectContent>
           </Select>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[120px] bg-[#0F1419]/80 backdrop-blur border-white/10 text-white">
+            <SelectTrigger className="w-[120px] bg-white border-black/10 text-zinc-900">
               <SelectValue placeholder="Statut" />
             </SelectTrigger>
             <SelectContent>
@@ -460,10 +461,10 @@ const OwnerFormationsTab = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total formations', value: formationStats.total, color: 'text-white' },
-          { label: 'Publiees', value: formationStats.published, color: 'text-green-400' },
-          { label: 'Brouillons', value: formationStats.draft, color: 'text-amber-400' },
-          { label: 'Archivees', value: formationStats.archived, color: 'text-gray-300' },
+          { label: 'Total formations', value: formationStats.total, color: 'text-zinc-900' },
+          { label: 'Publiees', value: formationStats.published, color: 'text-emerald-600' },
+          { label: 'Brouillons', value: formationStats.draft, color: 'text-amber-600' },
+          { label: 'Archivees', value: formationStats.archived, color: 'text-zinc-500' },
         ].map((item, index) => (
           <motion.div
             key={item.label}
@@ -472,10 +473,10 @@ const OwnerFormationsTab = () => {
             transition={{ delay: index * 0.06 }}
             whileHover={{ y: -2 }}
           >
-            <Card className="premium-panel border-white/10">
+            <Card className="border-0" style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
               <CardContent className="p-4">
-                <p className="text-xs uppercase tracking-wide text-gray-400">{item.label}</p>
-                <p className={`text-2xl font-bold mt-1 ${item.color}`}>{item.value}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">{item.label}</p>
+                <p className={`text-2xl font-bold tabular-nums mt-1 ${item.color}`}>{item.value}</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -498,16 +499,16 @@ const OwnerFormationsTab = () => {
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
-                  className="rounded-2xl overflow-hidden border border-white/10 bg-[#151a21]/60 backdrop-blur animate-pulse"
+                  className="rounded-[14px] overflow-hidden border border-black/[0.08] bg-white animate-pulse"
                 >
-                  <div className="h-48 bg-white/5" />
+                  <div className="h-48 bg-black/[0.05]" />
                   <div className="p-5 space-y-3">
-                    <div className="h-4 bg-white/10 rounded w-3/4" />
-                    <div className="h-3 bg-white/5 rounded w-1/2" />
+                    <div className="h-4 bg-black/[0.08] rounded w-3/4" />
+                    <div className="h-3 bg-black/[0.05] rounded w-1/2" />
                     <div className="flex gap-2 pt-4">
-                      <div className="h-8 bg-white/5 rounded flex-1" />
-                      <div className="h-8 bg-white/5 rounded flex-1" />
-                      <div className="h-8 bg-white/5 rounded flex-1" />
+                      <div className="h-8 bg-black/[0.05] rounded flex-1" />
+                      <div className="h-8 bg-black/[0.05] rounded flex-1" />
+                      <div className="h-8 bg-black/[0.05] rounded flex-1" />
                     </div>
                   </div>
                 </motion.div>
@@ -516,7 +517,7 @@ const OwnerFormationsTab = () => {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="col-span-full text-center text-amber-400/80 text-sm pt-2 pb-4"
+                  className="col-span-full text-center text-amber-600 text-sm pt-2 pb-4"
                 >
                   Chargement toujours en cours (latence réseau ou serveur), merci de patienter…
                 </motion.div>
@@ -527,17 +528,17 @@ const OwnerFormationsTab = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="col-span-full flex flex-col items-center gap-4 py-14 text-center rounded-2xl border border-red-500/20 bg-red-500/5"
+              className="col-span-full flex flex-col items-center gap-4 py-14 text-center rounded-[14px] border border-red-200 bg-red-50"
             >
-              <AlertTriangle className="w-12 h-12 text-red-400" />
-              <div className="text-red-300 font-semibold text-sm max-w-sm">
+              <AlertTriangle className="w-12 h-12 text-red-500" />
+              <div className="text-red-700 font-semibold text-sm max-w-sm">
                 {String(error?.message || error) === 'formations_load_timeout'
                   ? 'Délai dépassé en attendant Supabase. Ton projet peut être actif : causes fréquentes = connexion instable, antivirus/VPN (HTTPS), ou variables VITE_SUPABASE_* différentes entre build et le projet visé. Regarde l\'onglet Réseau (F12) sur les requêtes vers supabase.co, puis réessaie.'
                   : String(error?.message || error)}
               </div>
               <Button
                 variant="outline"
-                className="border-white/10 text-white hover:bg-white/5"
+                className="bg-white border-black/10 text-zinc-700 hover:bg-zinc-50"
                 onClick={() => refresh()}
               >
                 Réessayer
@@ -548,13 +549,13 @@ const OwnerFormationsTab = () => {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="col-span-full text-center py-16 text-gray-500 rounded-2xl border border-dashed border-white/10 bg-white/5"
+              className="col-span-full text-center py-16 rounded-[14px] border border-dashed border-black/15 bg-white"
             >
-              <BookOpen className="w-10 h-10 text-[var(--school-accent)] mx-auto mb-3" />
-              <p className="text-white font-semibold">Aucune formation trouvée</p>
-              <p className="text-sm text-gray-500 mt-1">Ajuste les filtres ou crée une nouvelle formation.</p>
+              <BookOpen className="w-10 h-10 mx-auto mb-3" style={{ color: '#8A6D1A' }} />
+              <p className="font-semibold" style={{ color: '#18181B' }}>Aucune formation trouvée</p>
+              <p className="text-sm text-zinc-500 mt-1">Ajuste les filtres ou crée une nouvelle formation.</p>
               <Button
-                className="mt-4 bg-[var(--school-accent)] text-black hover:bg-amber-500"
+                className="mt-4 bg-[var(--school-accent)] text-black hover:bg-amber-500 font-semibold"
                 onClick={() => { setSelectedFormation(null); setViewMode('create'); }}
               >
                 <Plus className="w-4 h-4 mr-2" /> Créer une formation
@@ -572,11 +573,12 @@ const OwnerFormationsTab = () => {
                 whileTap={{ scale: 0.98 }}
               >
                 <Card
-                  className="rounded-2xl overflow-hidden border border-white/10 bg-[#151a21]/80 backdrop-blur-xl hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-all group cursor-pointer"
+                  className="rounded-[14px] overflow-hidden border border-black/[0.08] bg-white hover:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.18)] transition-all group cursor-pointer"
+                  style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
                   onClick={() => openDetails(formation)}
                 >
                   {/* Thumbnail Image */}
-                  <div className="h-48 bg-gray-800 relative overflow-hidden">
+                  <div className="h-48 bg-zinc-100 relative overflow-hidden">
                     {formation.thumbnail ? (
                       <motion.img
                         src={formation.thumbnail}
@@ -586,12 +588,12 @@ const OwnerFormationsTab = () => {
                         transition={{ duration: 0.5 }}
                       />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-gray-600 bg-[#0F1419]">
-                        <ImageIcon className="w-12 h-12 mb-2 opacity-50" />
+                      <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 bg-[#F4F5F7]">
+                        <ImageIcon className="w-12 h-12 mb-2 opacity-60" />
                         <span className="text-xs">{formation.title}</span>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#192734] via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
                     <div className="absolute top-3 right-3 flex gap-2">
                       <Badge className="bg-black/50 text-white backdrop-blur-xl border border-white/10">
                         {formation.year}
@@ -616,10 +618,10 @@ const OwnerFormationsTab = () => {
                   </div>
 
                   <CardContent className="p-5">
-                    <h3 className="text-lg font-bold text-white mb-2 line-clamp-1 group-hover:text-[var(--school-accent)] transition-colors" title={formation.title}>
+                    <h3 className="text-lg font-bold mb-2 line-clamp-1 transition-colors group-hover:text-[#8A6D1A]" style={{ color: '#18181B' }} title={formation.title}>
                       {formation.title}
                     </h3>
-                    <div className="flex items-center justify-between gap-3 text-sm text-gray-400 mb-4">
+                    <div className="flex items-center justify-between gap-3 text-sm text-zinc-500 mb-4">
                       <div className="flex items-center gap-2">
                         <Layers className="w-4 h-4" />
                         <span className="text-xs">Structure</span>
@@ -629,14 +631,14 @@ const OwnerFormationsTab = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-gray-300 hover:bg-white/5"
+                            className="text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
                             disabled={structureLoading && structureLoadingId === formation.id}
                             onClick={(e) => e.stopPropagation()}
                           >
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-[#192734] border-white/10">
+                        <DropdownMenuContent align="end" className="bg-white border-black/10 text-zinc-700">
                           {formation.status !== 'published' ? (
                             <DropdownMenuItem onClick={() => handleSetStatus(formation, 'published')}>
                               <BookOpen className="w-4 h-4 mr-2" /> Publier
@@ -665,8 +667,8 @@ const OwnerFormationsTab = () => {
                       </DropdownMenu>
                     </div>
 
-                    <div className="mt-4 pt-4 border-t border-white/5 text-center">
-                      <span className="text-xs text-gray-500 group-hover:text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)] transition-colors">
+                    <div className="mt-4 pt-4 border-t border-black/[0.06] text-center">
+                      <span className="text-xs text-zinc-400 transition-colors group-hover:text-[#8A6D1A]">
                         Cliquer pour voir les détails
                       </span>
                     </div>
@@ -680,15 +682,15 @@ const OwnerFormationsTab = () => {
 
       {/* Delete Confirmation */}
       <Dialog open={alertConfig.open} onOpenChange={(val) => !val && setAlertConfig({ ...alertConfig, open: false })}>
-        <DialogContent className="bg-[#151a21]/95 backdrop-blur-xl border border-white/10 text-white">
+        <DialogContent className="bg-white border border-black/10 text-zinc-900">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-500"><AlertTriangle className="h-5 w-5"/> Suppression irréversible</DialogTitle>
-            <DialogDescription className="text-gray-400 pt-2">
+            <DialogTitle className="flex items-center gap-2 text-red-600"><AlertTriangle className="h-5 w-5"/> Suppression irréversible</DialogTitle>
+            <DialogDescription className="text-zinc-500 pt-2">
               Êtes-vous sûr de vouloir supprimer la formation <strong>"{alertConfig.data?.title}"</strong> ? <br/>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-4">
-            <Button variant="ghost" onClick={() => setAlertConfig({ open: false })} className="text-gray-300">Annuler</Button>
+            <Button variant="ghost" onClick={() => setAlertConfig({ open: false })} className="text-zinc-600 hover:bg-zinc-100">Annuler</Button>
             <Button variant="destructive" onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Supprimer définitivement</Button>
           </DialogFooter>
         </DialogContent>

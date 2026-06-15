@@ -16,6 +16,8 @@
  *  - user, onLogout
  *  - title (titre courant), topbarRight (ex. cloche notifications)
  *  - autoCollapse (ex. forum) — réduit la sidebar, l'utilisateur peut surcharger
+ *  - lightContent (défaut false) — passe SEULEMENT la zone de contenu (main + topbar)
+ *    en mode clair (palette partagée Wix-like). La sidebar LORI reste sombre/or.
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -34,6 +36,19 @@ const T = {
   cyan: '#00E5FF',
   danger: '#EF4444',
   mono: "'JetBrains Mono','Fira Code',monospace",
+};
+
+/* ─── Palette CLAIRE partagée (inspirée Wix Studio) — affecte SEULEMENT le contenu central. ─── */
+const L = {
+  canvas: '#F4F5F7',                 // fond zone centrale
+  card: '#FFFFFF',                   // surfaces/cartes
+  cardBorder: 'rgba(0,0,0,0.08)',    // bord 1px des cartes
+  cardShadow: '0 1px 3px rgba(0,0,0,0.06)',
+  t1: '#18181B',                     // texte primaire
+  t2: '#52525B',                     // texte secondaire
+  t3: '#71717A',                     // texte atténué
+  topbar: '#FFFFFF',
+  topbarBorder: 'rgba(0,0,0,0.08)',
 };
 
 const DEFAULT_ACCENT = { color: '#7C3AED', dim: 'rgba(124,58,237,0.12)', mid: 'rgba(124,58,237,0.28)' };
@@ -171,7 +186,7 @@ const SidebarBody = ({ navGroups, activeTab, accent, collapsed, onItem, user, on
 export default function LiriDashboardShell({
   navGroups = [], activeTab, onTabChange, onNavigate,
   accent = DEFAULT_ACCENT, brandTitle = 'PRORASCIENCE', brandSubtitle = 'ADMIN',
-  user, onLogout, title, topbarRight = null, autoCollapse = false, children,
+  user, onLogout, title, topbarRight = null, autoCollapse = false, lightContent = false, children,
 }) {
   const [collapsed, setCollapsed] = useState(autoCollapse);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -243,20 +258,30 @@ export default function LiriDashboardShell({
       </AnimatePresence>
 
       {/* Contenu */}
-      <main style={{ flex: 1, overflowX: 'hidden', minHeight: '100dvh' }} className={collapsed ? 'lg:pl-[92px]' : 'lg:pl-[250px]'}>
-        <header style={{ position: 'sticky', top: 0, zIndex: 30, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '0 24px', background: 'rgba(11,11,15,0.72)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${T.border}` }}>
+      <main style={{ flex: 1, overflowX: 'hidden', minHeight: '100dvh', background: lightContent ? L.canvas : 'transparent' }} className={collapsed ? 'lg:pl-[92px]' : 'lg:pl-[250px]'}>
+        <header style={lightContent
+          ? { position: 'sticky', top: 0, zIndex: 30, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '0 24px', background: L.topbar, borderBottom: `1px solid ${L.topbarBorder}` }
+          : { position: 'sticky', top: 0, zIndex: 30, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '0 24px', background: 'rgba(11,11,15,0.72)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${T.border}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-            <button type="button" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Ouvrir le menu" style={{ background: 'none', border: 'none', color: T.t2, cursor: 'pointer' }}><IconMenu /></button>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: T.t1, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h2>
+            <button type="button" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Ouvrir le menu" style={{ background: 'none', border: 'none', color: lightContent ? L.t2 : T.t2, cursor: 'pointer' }}><IconMenu /></button>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: lightContent ? L.t1 : T.t1, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h2>
           </div>
           {topbarRight}
         </header>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 20px 40px' }}>
-          {/* Cadre contenant (comme l'ancien premium-panel) : regroupe le contenu
-              au lieu de l'éparpiller sur le fond nu. Bordure subtile, fond léger. */}
-          <div style={{ background: 'rgba(255,255,255,0.018)', border: `1px solid ${T.border}`, borderRadius: 20, padding: '20px 22px', minHeight: 440 }}>
-            {children}
-          </div>
+          {lightContent ? (
+            // Mode clair : pas de panneau sombre. Conteneur transparent — les enfants
+            // fournissent leurs propres cartes blanches (palette L partagée).
+            <div style={{ minHeight: 440 }}>
+              {children}
+            </div>
+          ) : (
+            // Cadre contenant (comme l'ancien premium-panel) : regroupe le contenu
+            // au lieu de l'éparpiller sur le fond nu. Bordure subtile, fond léger.
+            <div style={{ background: 'rgba(255,255,255,0.018)', border: `1px solid ${T.border}`, borderRadius: 20, padding: '20px 22px', minHeight: 440 }}>
+              {children}
+            </div>
+          )}
         </div>
       </main>
     </div>

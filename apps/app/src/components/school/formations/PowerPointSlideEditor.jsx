@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Image as ImageIcon, Plus, Trash, Play, Type } from 'lucide-react';
+import { SafeHtml } from '@/components/common/SafeHtml';
 
 const PowerPointSlideEditor = ({ slide, onChange, onSave, onCancel }) => {
   const [localSlide, setLocalSlide] = useState(slide || {
@@ -138,7 +139,7 @@ const PowerPointSlideEditor = ({ slide, onChange, onSave, onCancel }) => {
               <Label className="mb-2 block">Aperçu Rendu</Label>
               <div className="aspect-video bg-white text-black rounded overflow-hidden relative p-4 flex flex-col items-center justify-center text-center shadow-lg">
                  <h2 className="text-lg font-bold mb-2">{localSlide.title || 'Titre'}</h2>
-                 <div className="text-xs line-clamp-3" dangerouslySetInnerHTML={{__html: localSlide.content || 'Contenu...'}} />
+                 <SafeHtml className="text-xs line-clamp-3" html={localSlide.content || 'Contenu...'} />
                  {localSlide.image && <img src={localSlide.image} className="mt-2 h-16 object-contain" alt="mini" />}
               </div>
            </div>

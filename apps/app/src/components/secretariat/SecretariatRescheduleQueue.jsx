@@ -86,8 +86,8 @@ export function SecretariatRescheduleQueue({ onProcessed }) {
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-6 flex items-center justify-center gap-2 text-gray-400">
-        <Loader2 className="w-5 h-5 animate-spin text-violet-400" />
+      <div className="rounded-[14px] border border-violet-200 bg-violet-50 p-6 flex items-center justify-center gap-2 text-[#52525B]">
+        <Loader2 className="w-5 h-5 animate-spin text-violet-500" />
         <span className="text-sm">Chargement des demandes de report…</span>
       </div>
     );
@@ -98,9 +98,9 @@ export function SecretariatRescheduleQueue({ onProcessed }) {
   }
 
   return (
-    <div className="rounded-2xl border border-violet-500/30 bg-violet-500/5 p-4 space-y-3">
+    <div className="rounded-[14px] border border-violet-200 bg-violet-50 p-4 space-y-3">
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h3 className="font-bold text-violet-200 flex items-center gap-2">
+        <h3 className="font-bold text-violet-700 flex items-center gap-2">
           <CalendarClock className="w-5 h-5" />
           Demandes de report ({items.length})
         </h3>
@@ -108,14 +108,14 @@ export function SecretariatRescheduleQueue({ onProcessed }) {
           type="button"
           variant="outline"
           size="sm"
-          className="border-white/15 text-gray-300"
+          className="border-black/[0.12] bg-white text-[#52525B] hover:bg-[#F4F5F7]"
           onClick={() => void load()}
         >
           <RefreshCw className="w-4 h-4 mr-1" />
           Actualiser
         </Button>
       </div>
-      <p className="text-xs text-violet-200/70">
+      <p className="text-xs text-violet-700/80">
         Validez ou refusez le nouveau créneau proposé. Le participant reçoit une notification.
       </p>
       <div className="space-y-4">
@@ -123,21 +123,21 @@ export function SecretariatRescheduleQueue({ onProcessed }) {
           <motion.div
             key={r.id}
             layout
-            className="rounded-xl border border-white/10 bg-[#0F1419]/70 p-4 space-y-3"
+            className="rounded-xl border border-black/[0.08] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4 space-y-3"
           >
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
               <div>
-                <p className="font-medium text-white">
+                <p className="font-medium text-[#18181B]">
                   {r.student?.name || r.student?.email || 'Participant'}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#71717A]">
                   Réf.{' '}
-                  <span className="font-mono text-[var(--school-accent)]">
+                  <span className="font-mono text-[#8A6D1A]">
                     {String(r.appointment?.bookingReference || r.appointmentId || '').slice(0, 14).toUpperCase()}
                   </span>
                 </p>
-                <p className="text-sm text-gray-400 mt-1">
-                  <span className="text-gray-500">Créneau actuel :</span>{' '}
+                <p className="text-sm text-[#52525B] mt-1">
+                  <span className="text-[#71717A]">Créneau actuel :</span>{' '}
                   {r.appointment?.scheduledAt
                     ? new Date(r.appointment.scheduledAt).toLocaleString('fr-FR', {
                         dateStyle: 'medium',
@@ -145,8 +145,8 @@ export function SecretariatRescheduleQueue({ onProcessed }) {
                       })
                     : '—'}
                 </p>
-                <p className="text-sm text-emerald-200/90 mt-1">
-                  <span className="text-gray-500">Proposition :</span>{' '}
+                <p className="text-sm text-emerald-700 mt-1">
+                  <span className="text-[#71717A]">Proposition :</span>{' '}
                   {r.proposedScheduledAt
                     ? new Date(r.proposedScheduledAt).toLocaleString('fr-FR', {
                         dateStyle: 'medium',
@@ -154,18 +154,18 @@ export function SecretariatRescheduleQueue({ onProcessed }) {
                       })
                     : '—'}
                 </p>
-                <p className="text-sm text-gray-300 mt-2">
-                  <span className="text-gray-500">Justification :</span> {r.justification}
+                <p className="text-sm text-[#52525B] mt-2">
+                  <span className="text-[#71717A]">Justification :</span> {r.justification}
                 </p>
               </div>
             </div>
             <div>
-              <Label className="text-xs text-gray-500">Note interne (optionnelle, visible dans la notification)</Label>
+              <Label className="text-xs text-[#71717A]">Note interne (optionnelle, visible dans la notification)</Label>
               <Textarea
                 value={notes[r.id] || ''}
                 onChange={(e) => setNotes((prev) => ({ ...prev, [r.id]: e.target.value }))}
                 placeholder="Ex. créneau validé avec le secrétariat AF…"
-                className="mt-1 bg-[#0a0e14] border-white/10 text-sm min-h-[64px]"
+                className="mt-1 bg-[#F4F5F7] border-black/[0.08] text-[#18181B] text-sm min-h-[64px]"
                 rows={2}
               />
             </div>
@@ -174,7 +174,7 @@ export function SecretariatRescheduleQueue({ onProcessed }) {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="border-red-500/30 text-red-300 hover:bg-red-500/10"
+                className="border-red-300 text-red-700 hover:bg-red-50"
                 disabled={rowBusy(r.id)}
                 onClick={() => void decide(r.id, 'rejected')}
               >

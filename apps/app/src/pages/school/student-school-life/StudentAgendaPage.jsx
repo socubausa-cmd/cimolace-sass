@@ -10,22 +10,8 @@ import { format, startOfWeek, addDays, isSameDay, isValid } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { schoolEventsForStudentWindow } from '@/lib/studentSchoolDataQueries';
-
-/* ─── Thème ISNA (navy + or) ─── */
-const T = {
-  surface:   '#12111a',
-  surface2:  'rgba(25,39,52,0.5)',
-  border:    'rgba(255,255,255,0.07)',
-  borderMid: 'rgba(255,255,255,0.12)',
-  gold:      '#D4AF37',
-  goldDim:   'rgba(212,175,55,0.12)',
-  goldMid:   'rgba(212,175,55,0.28)',
-  t1: '#F5F5F7',
-  t2: 'rgba(245,245,247,0.65)',
-  t3: 'rgba(245,245,247,0.38)',
-  t4: 'rgba(245,245,247,0.16)',
-  mono: "'JetBrains Mono','Fira Code',monospace",
-};
+// Thème host-aware : `T` = tokens vivants (clair sous l'espace élève, sombre sous le portail prof).
+import { themeProxy as T, useSslThemeMode } from '@/pages/school/student-school-life/sslTheme';
 
 const TYPE_META = {
   live:  { label: 'Cours / live', col: '#D4AF37', bg: 'rgba(212,175,55,0.14)',  bd: 'rgba(212,175,55,0.30)' },
@@ -234,6 +220,7 @@ const EventRow = ({ ev, onJoin, onDetails, delay }) => {
 
 /* ═══════════════════════ PAGE ═══════════════════════ */
 const StudentAgendaPage = () => {
+  useSslThemeMode(); // publie le mode (clair/sombre) pour `T` AVANT le rendu des sous-composants
   const navigate = useNavigate();
   const { user } = useAuth();
   const { upcomingEvents, appointmentRequests, studentReports, loading, refresh } = useStudentAppointments(user?.id);

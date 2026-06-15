@@ -30,17 +30,17 @@ import {
 
 /* ── Statut config ─────────────────────────────────────────── */
 const STATUS_CONFIG = {
-  pending:      { label: 'En attente',    dot: 'bg-amber-400',   ring: 'border-amber-500/30  bg-amber-500/8'   },
-  confirmed:    { label: 'Confirmé',      dot: 'bg-emerald-400', ring: 'border-emerald-500/30 bg-emerald-500/8' },
-  scheduled:    { label: 'Planifié',      dot: 'bg-emerald-400', ring: 'border-emerald-500/30 bg-emerald-500/8' },
-  preparing:    { label: 'Préparation',   dot: 'bg-blue-400',    ring: 'border-blue-500/30    bg-blue-500/8'    },
-  ready:        { label: 'Prêt ✓',       dot: 'bg-violet-400',  ring: 'border-violet-500/30  bg-violet-500/8',  pulse: true },
-  in_progress:  { label: 'En cours',      dot: 'bg-emerald-400', ring: 'border-emerald-500/30 bg-emerald-500/8', pulse: true },
-  chat_started: { label: 'Chat',          dot: 'bg-emerald-400', ring: 'border-emerald-500/30 bg-emerald-500/8', pulse: true },
-  live_started: { label: 'Live',          dot: 'bg-violet-400',  ring: 'border-violet-500/30  bg-violet-500/8',  pulse: true },
-  completed:    { label: 'Terminé',       dot: 'bg-gray-500',    ring: 'border-white/10       bg-white/3'       },
-  no_show:      { label: 'Absent',        dot: 'bg-red-400',     ring: 'border-red-500/20     bg-red-500/5'     },
-  cancelled:    { label: 'Annulé',        dot: 'bg-red-400',     ring: 'border-red-500/20     bg-red-500/5'     },
+  pending:      { label: 'En attente',    dot: 'bg-amber-500',   ring: 'border-amber-200  bg-amber-50'   },
+  confirmed:    { label: 'Confirmé',      dot: 'bg-emerald-500', ring: 'border-emerald-200 bg-emerald-50' },
+  scheduled:    { label: 'Planifié',      dot: 'bg-emerald-500', ring: 'border-emerald-200 bg-emerald-50' },
+  preparing:    { label: 'Préparation',   dot: 'bg-blue-500',    ring: 'border-blue-200    bg-blue-50'    },
+  ready:        { label: 'Prêt ✓',       dot: 'bg-violet-500',  ring: 'border-violet-200  bg-violet-50',  pulse: true },
+  in_progress:  { label: 'En cours',      dot: 'bg-emerald-500', ring: 'border-emerald-200 bg-emerald-50', pulse: true },
+  chat_started: { label: 'Chat',          dot: 'bg-emerald-500', ring: 'border-emerald-200 bg-emerald-50', pulse: true },
+  live_started: { label: 'Live',          dot: 'bg-violet-500',  ring: 'border-violet-200  bg-violet-50',  pulse: true },
+  completed:    { label: 'Terminé',       dot: 'bg-zinc-400',    ring: 'border-black/[0.08]   bg-white'       },
+  no_show:      { label: 'Absent',        dot: 'bg-red-500',     ring: 'border-red-200     bg-red-50'     },
+  cancelled:    { label: 'Annulé',        dot: 'bg-red-500',     ring: 'border-red-200     bg-red-50'     },
 };
 
 const ACTIVE_STATUSES = ['pending','confirmed','scheduled','preparing','ready','in_progress','chat_started','live_started'];
@@ -76,33 +76,33 @@ function AppointmentCard({ appt, selected, onSelect }) {
       onClick={() => onSelect(appt)}
       className={`w-full text-left rounded-xl border px-4 py-3.5 transition-all flex items-center gap-3 ${
         selected
-          ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] shadow-[0_0_20px_rgba(212,175,55,0.1)]'
-          : `${conf.ring} hover:border-white/20`
+          ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] shadow-[0_1px_4px_rgba(212,175,55,0.18)]'
+          : `${conf.ring} hover:border-black/20`
       }`}
     >
       <StatusDot status={appt.status} />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-white truncate">{subject}</p>
+        <p className="text-sm font-medium text-[#18181B] truncate">{subject}</p>
         <div className="flex items-center gap-2 mt-0.5">
-          <p className="text-xs text-gray-500 truncate">{visitor}</p>
-          <span className="text-gray-700">·</span>
-          <p className="text-xs text-gray-500 shrink-0">{time}</p>
+          <p className="text-xs text-[#71717A] truncate">{visitor}</p>
+          <span className="text-[#A1A1AA]">·</span>
+          <p className="text-xs text-[#71717A] shrink-0">{time}</p>
         </div>
         <div className="flex items-center gap-1.5 mt-1">
           <span className={`text-[10px] rounded-full px-2 py-0.5 border font-medium ${
-            selected ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)]' :
-            `border-white/10 bg-white/5 text-gray-400`
+            selected ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#8A6D1A]' :
+            `border-black/[0.08] bg-[#F4F5F7] text-[#52525B]`
           }`}>
             {conf.label}
           </span>
           {appt.booking_reference && (
-            <span className="text-[10px] text-gray-600 font-mono">
+            <span className="text-[10px] text-[#A1A1AA] font-mono">
               {String(appt.booking_reference).slice(0, 8).toUpperCase()}
             </span>
           )}
         </div>
       </div>
-      <ChevronRight className={`w-4 h-4 shrink-0 transition-colors ${selected ? 'text-[var(--school-accent)]' : 'text-gray-600'}`} />
+      <ChevronRight className={`w-4 h-4 shrink-0 transition-colors ${selected ? 'text-[#8A6D1A]' : 'text-[#A1A1AA]'}`} />
     </motion.button>
   );
 }
@@ -270,22 +270,22 @@ export default function SecretariatAppointmentsPage() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <CalendarClock className="w-5 h-5 text-[var(--school-accent)]" />
+          <h2 className="text-xl font-bold text-[#18181B] flex items-center gap-2">
+            <CalendarClock className="w-5 h-5 text-[#8A6D1A]" />
             Rendez-vous actifs — {bookingChannel === BOOKING_CHANNEL_NGOWAZULU ? 'Ngowazulu' : 'Prorascience'}
           </h2>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-[#71717A] mt-0.5">
             {stats.active} actif{stats.active > 1 ? 's' : ''} · {stats.ready} prêt{stats.ready > 1 ? 's' : ''} · {stats.pending} en attente
           </p>
         </div>
-        <Button onClick={load} variant="outline" size="sm" className="border-white/10 text-white hover:bg-white/5" disabled={loading}>
+        <Button onClick={load} variant="outline" size="sm" className="border-black/[0.08] bg-white text-[#18181B] hover:bg-[#F4F5F7]" disabled={loading}>
           <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Actualiser
         </Button>
       </div>
 
       {loadError ? (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {loadError}
         </div>
       ) : null}
@@ -301,8 +301,8 @@ export default function SecretariatAppointmentsPage() {
             }}
             className={`text-xs rounded-lg border px-3 py-1.5 font-medium transition-all ${
               bookingChannel === BOOKING_CHANNEL_PRORASCIENCE
-                ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[var(--school-accent)]'
-                : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/25 hover:text-white'
+                ? 'bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[#8A6D1A]'
+                : 'bg-white border-black/[0.08] text-[#52525B] hover:border-black/25 hover:text-[#18181B]'
             }`}
           >
             Prorascience
@@ -315,20 +315,20 @@ export default function SecretariatAppointmentsPage() {
             }}
             className={`text-xs rounded-lg border px-3 py-1.5 font-medium transition-all ${
               bookingChannel === BOOKING_CHANNEL_NGOWAZULU
-                ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[var(--school-accent)]'
-                : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/25 hover:text-white'
+                ? 'bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[#8A6D1A]'
+                : 'bg-white border-black/[0.08] text-[#52525B] hover:border-black/25 hover:text-[#18181B]'
             }`}
           >
             Ngowazulu
           </button>
         </div>
         <div className="relative flex-1 min-w-[180px] max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#71717A]" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Rechercher sujet, visiteur, réf…"
-            className="w-full pl-8 pr-3 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
+            className="w-full pl-8 pr-3 py-2 rounded-xl bg-white border border-black/[0.08] text-sm text-[#18181B] placeholder-[#71717A] focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] transition-colors"
           />
         </div>
         <div className="flex gap-1 flex-wrap">
@@ -338,8 +338,8 @@ export default function SecretariatAppointmentsPage() {
               onClick={() => setFilter(opt.value)}
               className={`text-xs rounded-lg border px-3 py-1.5 font-medium transition-all ${
                 filter === opt.value
-                  ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[var(--school-accent)]'
-                  : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/25 hover:text-white'
+                  ? 'bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[#8A6D1A]'
+                  : 'bg-white border-black/[0.08] text-[#52525B] hover:border-black/25 hover:text-[#18181B]'
               }`}
             >
               {opt.label}
@@ -359,12 +359,12 @@ export default function SecretariatAppointmentsPage() {
           )}
         >
           {loading ? (
-            <div className="flex items-center justify-center py-16 text-gray-500">
+            <div className="flex items-center justify-center py-16 text-[#71717A]">
               <Loader2 className="w-5 h-5 animate-spin mr-2" /> Chargement…
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-600 gap-3">
-              <Inbox className="w-10 h-10 opacity-30" />
+            <div className="flex flex-col items-center justify-center py-16 text-[#71717A] gap-3">
+              <Inbox className="w-10 h-10 opacity-40" />
               <p className="text-sm">Aucun rendez-vous trouvé</p>
             </div>
           ) : (
@@ -384,7 +384,7 @@ export default function SecretariatAppointmentsPage() {
           className={cn(
             'lg:col-span-3',
             selected &&
-              'fixed inset-0 z-[60] flex flex-col overflow-hidden bg-[#0a0f14] pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(0.5rem,env(safe-area-inset-bottom))] px-3 sm:px-4 lg:static lg:z-auto lg:overflow-visible lg:bg-transparent lg:p-0',
+              'fixed inset-0 z-[60] flex flex-col overflow-hidden bg-[#F4F5F7] pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(0.5rem,env(safe-area-inset-bottom))] px-3 sm:px-4 lg:static lg:z-auto lg:overflow-visible lg:bg-transparent lg:p-0',
           )}
         >
           <AnimatePresence mode="wait">
@@ -402,13 +402,13 @@ export default function SecretariatAppointmentsPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="border-white/15 text-white hover:bg-white/10"
+                    className="border-black/[0.12] bg-white text-[#18181B] hover:bg-[#F4F5F7]"
                     onClick={() => setSelected(null)}
                   >
                     <ChevronLeft className="w-4 h-4 mr-1" />
                     Liste
                   </Button>
-                  <p className="min-w-0 truncate text-xs text-gray-400">
+                  <p className="min-w-0 truncate text-xs text-[#52525B]">
                     {selected.request?.subject || selected.request?.reason || selected.reason || 'Entretien'}
                   </p>
                 </div>
@@ -425,14 +425,14 @@ export default function SecretariatAppointmentsPage() {
                 key="empty"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="hidden lg:flex flex-col items-center justify-center h-full min-h-[300px] rounded-2xl border border-white/8 bg-white/3 text-gray-600 gap-4"
+                className="hidden lg:flex flex-col items-center justify-center h-full min-h-[300px] rounded-[14px] border border-black/[0.08] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] text-[#71717A] gap-4"
               >
-                <div className="w-14 h-14 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]" />
+                <div className="w-14 h-14 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-[#8A6D1A]" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-medium text-gray-400">Sélectionnez un rendez-vous</p>
-                  <p className="text-xs text-gray-600 mt-1">Le panneau de commandes s'affichera ici</p>
+                  <p className="text-sm font-medium text-[#52525B]">Sélectionnez un rendez-vous</p>
+                  <p className="text-xs text-[#71717A] mt-1">Le panneau de commandes s'affichera ici</p>
                 </div>
               </motion.div>
             )}
