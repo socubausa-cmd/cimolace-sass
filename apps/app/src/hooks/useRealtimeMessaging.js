@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { messagingApi } from '@/lib/api-v2';
+import { supabase } from '@/lib/customSupabaseClient';
+import { broadcastRealtime } from '@/lib/realtimeBroadcast';
 
 /**
  * Messagerie élève — temps réel par POLLING COURT sur l'API NestJS.
@@ -404,6 +406,22 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
     };
   }, [userId]);
 
+  // ── Réception INSTANTANÉE (broadcast Supabase) ───────────────────────────────
+  // Canal perso de l'inbox : un envoi pousse un signal `new_message` ici → on rafraîchit
+  // SANS attendre le poll (5–20 s). Éphémère, aucune table/publication requise. Le polling
+  // ci-dessus reste le filet si le WebSocket realtime est indisponible.
+  useEffect(() => {
+    if (!userId) return undefined;
+    let channel;
+    try {
+      channel = supabase.channel(`dm-inbox:${userId}`, { config: { broadcast: { self: false } } });
+      channel.on('broadcast', { event: 'new_message' }, () => { refresh(); }).subscribe();
+    } catch {
+      channel = null;
+    }
+    return () => { if (channel) { try { supabase.removeChannel(channel); } catch { /* noop */ } } };
+  }, [userId, refresh]);
+
   // ── Actions ──────────────────────────────────────────────────────────────────
 
   const sendMessage = useCallback(async (receiverId, content) => {
@@ -425,6 +443,18 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
     activePeerRef.current = receiverId;
     if (m.conversation_id) peerConvMapRef.current[receiverId] = m.conversation_id;
     applyMerge([m]);
+
+    // Réception INSTANTANÉE : pousse un signal vers l'inbox du destinataire (best-effort,
+    // canal éphémère). S'il échoue, le polling du destinataire récupère le message au poll suivant.
+    try {
+      const out = supabase.channel(`dm-inbox:${receiverId}`);
+      out.subscribe((status) => {
+        if (status !== 'SUBSCRIBED') return;
+        void broadcastRealtime(out, 'new_message', { from: userId });
+        setTimeout(() => { try { supabase.removeChannel(out); } catch { /* noop */ } }, 1500);
+      });
+    } catch { /* noop */ }
+
     return m;
   }, [userId, prepareRows, applyMerge]);
 
