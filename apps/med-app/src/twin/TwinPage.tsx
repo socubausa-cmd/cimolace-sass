@@ -8,7 +8,7 @@ import {
 import { twinApi, COLOR_HEX, COLOR_LABEL, type OrganColor } from './api';
 import {
   WheelPanel, MindmapPanel, TimelinePanel, LongitudinalPanel,
-  SimulatorPanel, LabReaderPanel, MetabolicMapPanel, CopilotPanel,
+  SimulatorPanel, ProjectionPanel, LabReaderPanel, MetabolicMapPanel, CopilotPanel,
 } from './panels';
 import { OnboardingTour } from './OnboardingTour';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
@@ -28,6 +28,7 @@ const TABS: Array<{ key: string; i18nKey: string }> = [
   { key: 'timeline', i18nKey: 'twin:tabs.timeline' },
   { key: 'longitudinal', i18nKey: 'twin:tabs.longitudinal' },
   { key: 'simulator', i18nKey: 'twin:tabs.simulator' },
+  { key: 'projection', i18nKey: 'twin:tabs.projection' },
   { key: 'copilot', i18nKey: 'twin:tabs.copilot' },
 ];
 
@@ -228,6 +229,7 @@ export function TwinPage() {
       {tab === 'timeline' && <TimelinePanel patientId={patientId} />}
       {tab === 'longitudinal' && <LongitudinalPanel patientId={patientId} />}
       {tab === 'simulator' && <SimulatorPanel patientId={patientId} />}
+      {tab === 'projection' && <ProjectionPanel patientId={patientId} />}
       {tab === 'copilot' && <CopilotPanel patientId={patientId} />}
       {tab === 'lab' && (
         <div style={{ display: 'grid', gap: 16 }}>

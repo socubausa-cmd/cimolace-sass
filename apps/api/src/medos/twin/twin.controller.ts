@@ -30,6 +30,7 @@ import {
   CreateLabDocumentDto,
   ImportStructuredBiomarkersDto,
   OrganAssistantDto,
+  ProjectionDto,
   UploadLabDocumentDto,
 } from './dto/twin.dto';
 import { TwinService } from './twin.service';
@@ -528,6 +529,18 @@ export class TwinController {
     @CurrentTenant() tenant: TenantContext,
   ) {
     return this.service.simulate(tenant, patientId, body.interventions || []);
+  }
+
+  // ── Projection temporelle du jumeau (projection-v1) — déterministe ─────
+  @Post(':patientId/projection')
+  @Roles(...STAFF)
+  @AuditResource({ resource: 'twin_analysis', action: 'create', idParam: 'patientId' })
+  projection(
+    @Param('patientId') patientId: string,
+    @Body() dto: ProjectionDto,
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.service.projection(tenant, patientId, dto);
   }
 
   // ── Root Cause Explorer (Module 16) — IA ──────────────────────────────

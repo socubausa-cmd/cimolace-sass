@@ -72,6 +72,7 @@ import { TwinService } from './twin/twin.service';
 import { TwinScoringService } from './twin/twin-scoring.service';
 import { TwinAiService } from './twin/twin-ai.service';
 import { TwinSimulationService } from './twin/twin-simulation.service';
+import { TwinProjectionService } from './twin/twin-projection.service';
 import { TwinGenomicsService } from './twin/twin-genomics.service';
 import { TwinMicrobiomeService } from './twin/twin-microbiome.service';
 import { TwinMetabolomicsService } from './twin/twin-metabolomics.service';
@@ -125,6 +126,7 @@ import { LiveModule } from '../live/live.module';
     TwinScoringService,
     TwinAiService,
     TwinSimulationService,
+    TwinProjectionService,
     TwinGenomicsService,
     TwinMicrobiomeService,
     TwinMetabolomicsService,

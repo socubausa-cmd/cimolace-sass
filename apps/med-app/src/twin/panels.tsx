@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { twinApi, WHEEL_LABELS, COLOR_HEX, type OrganColor, type LabDocument } from './api';
+import {
+  twinApi, WHEEL_LABELS, COLOR_HEX, type OrganColor, type LabDocument,
+  type ProjectionResult, type ProjectionBand, type ProjectionDriver,
+} from './api';
 import {
   Loader2, Sparkles, Users, FlaskConical, FileText, GitBranch, Clock, TrendingUp, Beaker, Search, Camera as CameraIcon, SlidersHorizontal,
+  TrendingDown, ShieldCheck, HeartPulse, Info,
 } from 'lucide-react';
 import { useCamera } from '../native/useCamera';
 import { BodyViewer } from './BodyViewer';
@@ -486,6 +490,364 @@ export function SimulatorPanel({ patientId }: { patientId: string }) {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+// ─── Projection temporelle du jumeau (projection-v1) ────────────────────────
+// Bandes de risque → couleur (cohérent avec colorFor : risque inverse de la vitalité).
+const BAND_HEX: Record<ProjectionBand, string> = {
+  low: '#22c55e',
+  moderate: '#eab308',
+  elevated: '#f97316',
+  high: '#ef4444',
+};
+const BAND_LABEL: Record<ProjectionBand, string> = {
+  low: 'Faible',
+  moderate: 'Modéré',
+  elevated: 'Élevé',
+  high: 'Critique',
+};
+// Libellés FR + couleur de tracé par scénario (palette stable, lisible superposée).
+const SCENARIO_META: Record<string, { label: string; color: string }> = {
+  status_quo: { label: 'Si rien ne change', color: '#64748b' },
+  weight_loss: { label: 'Perte de poids', color: '#0ea5e9' },
+  quit_smoking: { label: 'Arrêt du tabac', color: '#ef4444' },
+  better_sleep: { label: 'Sommeil amélioré', color: '#8b5cf6' },
+  more_activity: { label: 'Activité physique', color: '#22c55e' },
+  stress_reduction: { label: 'Gestion du stress', color: '#f59e0b' },
+  combined_optimal: { label: 'Programme global', color: '#0d9488' },
+};
+const scenLabel = (key: string) => SCENARIO_META[key]?.label ?? key;
+const scenColor = (key: string) => SCENARIO_META[key]?.color ?? 'var(--zw-violet)';
+const SYSTEM_LABELS: Record<string, string> = {
+  inflammation: 'Inflammation',
+  metabolism: 'Métabolisme',
+  hormones: 'Hormones',
+  oxidative_stress: 'Stress oxydatif',
+  toxicity: 'Toxicité',
+  cellular_energy: 'Énergie cellulaire',
+};
+const confColorFor = (level: ProjectionResult['confidence']['level']) =>
+  level === 'bonne' ? '#10b981' : level === 'moderee' ? '#f59e0b' : '#ef4444';
+
+export function ProjectionPanel({ patientId }: { patientId: string }) {
+  const [result, setResult] = useState<ProjectionResult | null>(null);
+  const [busy, setBusy] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  // Scénarios affichés sur la courbe (status_quo toujours actif, non désactivable).
+  const [active, setActive] = useState<Set<string>>(new Set(['status_quo']));
+
+  useEffect(() => {
+    let cancelled = false;
+    setBusy(true);
+    setErr(null);
+    // Défaut : tous les scénarios, horizons [1,5,10,20] (le serveur décide).
+    twinApi.projection(patientId, {})
+      .then((r) => {
+        if (cancelled) return;
+        setResult(r);
+        // Active par défaut le status quo + le 1er levier modifiable (lecture immédiate).
+        const lever = r.inputs.scenario_keys.find((k) => k !== 'status_quo');
+        setActive(new Set(lever ? ['status_quo', lever] : ['status_quo']));
+      })
+      .catch((e: any) => { if (!cancelled) setErr(e?.message || 'Projection indisponible'); })
+      .finally(() => { if (!cancelled) setBusy(false); });
+    return () => { cancelled = true; };
+  }, [patientId]);
+
+  function toggle(key: string) {
+    if (key === 'status_quo') return; // référence imposée
+    setActive((prev) => {
+      const s = new Set(prev);
+      s.has(key) ? s.delete(key) : s.add(key);
+      return s;
+    });
+  }
+
+  if (busy && !result) {
+    return (
+      <div style={panel}>
+        <h3 style={head}><TrendingUp size={15} color="var(--zw-violet)" /> Projection temporelle</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--zw-text-faint)', fontSize: 13, padding: '20px 0' }}>
+          <Loader2 size={16} className="spin" /> Calcul de la projection…
+        </div>
+      </div>
+    );
+  }
+  if (err || !result) {
+    return (
+      <div style={panel}>
+        <h3 style={head}><TrendingUp size={15} color="var(--zw-violet)" /> Projection temporelle</h3>
+        <p style={{ fontSize: 13, color: '#dc2626' }}>{err || 'Aucune donnée.'}</p>
+      </div>
+    );
+  }
+
+  const horizons = result.horizons;
+  const scenarioKeys = result.inputs.scenario_keys;
+  const lowConfidence = result.confidence.level === 'faible';
+
+  // ── Phrase signature : horizon 5 ans (sinon le plus proche), status quo ──
+  const signatureYear = horizons.find((h) => h.year === 5) ?? horizons[Math.min(1, horizons.length - 1)] ?? horizons[horizons.length - 1];
+  const signature = signatureYear?.scenarios['status_quo'];
+  const sigDelta = signature?.risk_delta_pct ?? 0;
+  const sigBand = signature?.band ?? 'moderate';
+
+  // ── Géométrie de la courbe SVG (technique LongitudinalPanel, multi-séries) ──
+  const W = 520, H = 200, padL = 34, padR = 14, padT = 14, padB = 26;
+  const innerW = W - padL - padR;
+  const innerH = H - padT - padB;
+  const years = horizons.map((h) => h.year);
+  const minYear = years.length ? Math.min(...years) : 0;
+  const maxYear = years.length ? Math.max(...years) : 1;
+  const yearSpan = Math.max(1, maxYear - minYear);
+  const xFor = (year: number) => padL + ((year - minYear) / yearSpan) * innerW;
+  const yFor = (risk: number) => padT + (1 - Math.max(0, Math.min(100, risk)) / 100) * innerH;
+  const shownScenarios = scenarioKeys.filter((k) => active.has(k));
+
+  // ── Espérance de vie / healthspan : focus sur le 1er levier actif ≠ statu quo ──
+  const focusScenario = shownScenarios.find((k) => k !== 'status_quo') ?? 'status_quo';
+  const leScenario = result.life_expectancy.scenarios[focusScenario];
+  const leStatusQuo = result.life_expectancy.scenarios['status_quo'];
+
+  return (
+    <div style={{ display: 'grid', gap: 16 }}>
+      {/* Disclaimer permanent — obligatoire, valeur renvoyée par l'API */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, fontSize: 12, color: '#92400e', lineHeight: 1.5 }}>
+        <ShieldCheck size={15} style={{ flexShrink: 0, marginTop: 1 }} /> {result.disclaimer}
+      </div>
+
+      {/* Hero — phrase signature */}
+      <div style={{ ...panel, background: `linear-gradient(135deg, ${BAND_HEX[sigBand]}10, #fff 60%)`, borderColor: BAND_HEX[sigBand] + '55' }}>
+        <h3 style={head}><HeartPulse size={15} color="var(--zw-violet)" /> Projection temporelle du jumeau</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            {sigDelta > 0 ? <TrendingUp size={30} color={BAND_HEX[sigBand]} /> : sigDelta < 0 ? <TrendingDown size={30} color="#10b981" /> : null}
+            <span style={{ fontSize: 52, fontWeight: 800, lineHeight: 1, color: sigDelta > 0 ? BAND_HEX[sigBand] : sigDelta < 0 ? '#10b981' : 'var(--zw-text-muted)' }}>
+              {sigDelta > 0 ? '+' : ''}{sigDelta}%
+            </span>
+          </div>
+          <p style={{ flex: 1, minWidth: 220, fontSize: 14, color: 'var(--zw-text-soft)', lineHeight: 1.5, margin: 0 }}>
+            Si votre mode de vie reste identique, votre <strong>risque fonctionnel</strong> pourrait
+            {sigDelta >= 0 ? ' augmenter ' : ' diminuer '}
+            de <strong style={{ color: sigDelta > 0 ? BAND_HEX[sigBand] : '#10b981' }}>{Math.abs(sigDelta)}%</strong> dans {signatureYear?.year ?? 5} ans.
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 18, marginTop: 14, flexWrap: 'wrap' }}>
+          <MiniStat label="Vitalité actuelle" value={`${result.current.vitality}`} suffix="/100" color={colorFor(result.current.vitality)} />
+          <MiniStat label="Risque fonctionnel actuel" value={`${result.current.composite_risk}`} suffix="/100" color={colorFor(100 - result.current.composite_risk)} />
+          <MiniStat label="Complétude des données" value={`${Math.round(result.current.data_completeness * 100)}`} suffix="%" color="var(--zw-text-muted)" />
+        </div>
+      </div>
+
+      {/* Sélecteur de scénarios (chips toggle) */}
+      <div style={panel}>
+        <h3 style={head}><Beaker size={15} color="#f97316" /> Scénarios — comparez l'effet du mode de vie</h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {scenarioKeys.map((key) => {
+            const on = active.has(key);
+            const fixed = key === 'status_quo';
+            const color = scenColor(key);
+            return (
+              <button
+                key={key}
+                onClick={() => toggle(key)}
+                disabled={fixed}
+                title={fixed ? 'Référence — toujours affichée' : undefined}
+                style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, border: '1px solid', cursor: fixed ? 'default' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, background: on ? color : '#fff', color: on ? '#fff' : 'var(--zw-text-soft)', borderColor: on ? color : 'var(--zw-border)', opacity: fixed && !on ? 0.7 : 1 }}
+              >
+                <span style={{ width: 9, height: 9, borderRadius: '50%', background: on ? '#fff' : color, flexShrink: 0 }} />
+                {scenLabel(key)}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Courbe multi-horizons */}
+      <div style={panel}>
+        <h3 style={head}><TrendingUp size={15} color="var(--zw-violet)" /> Trajectoire du risque fonctionnel</h3>
+        <div style={{ position: 'relative' }}>
+          <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block', width: '100%', height: 'auto', opacity: lowConfidence ? 0.5 : 1 }}>
+            {/* Grille horizontale + repères 0/50/100 */}
+            {[0, 25, 50, 75, 100].map((g) => (
+              <g key={g}>
+                <line x1={padL} y1={yFor(g)} x2={W - padR} y2={yFor(g)} stroke="var(--zw-border)" strokeWidth="1" strokeDasharray={g === 0 || g === 100 ? undefined : '3 3'} />
+                <text x={padL - 6} y={yFor(g) + 3} fontSize="9" textAnchor="end" fill="var(--zw-text-faint)">{g}</text>
+              </g>
+            ))}
+            {/* Axe X — années */}
+            {horizons.map((h) => (
+              <text key={h.year} x={xFor(h.year)} y={H - 8} fontSize="9.5" textAnchor="middle" fill="var(--zw-text-muted)">{h.year} an{h.year > 1 ? 's' : ''}</text>
+            ))}
+            {/* Point de départ (risque actuel) — ancrage visuel */}
+            <circle cx={xFor(minYear)} cy={yFor(result.current.composite_risk)} r="2.5" fill="var(--zw-text-faint)" />
+            {/* Une polyline par scénario sélectionné */}
+            {shownScenarios.map((key) => {
+              const color = scenColor(key);
+              const path = horizons
+                .map((h, i) => `${i === 0 ? 'M' : 'L'} ${xFor(h.year)} ${yFor(h.scenarios[key]?.composite_risk ?? 0)}`)
+                .join(' ');
+              return (
+                <g key={key}>
+                  <path d={path} fill="none" stroke={color} strokeWidth="2.4" strokeLinejoin="round" strokeLinecap="round" />
+                  {horizons.map((h) => (
+                    <circle key={h.year} cx={xFor(h.year)} cy={yFor(h.scenarios[key]?.composite_risk ?? 0)} r="3" fill={color} stroke="#fff" strokeWidth="1.5" />
+                  ))}
+                </g>
+              );
+            })}
+          </svg>
+          {lowConfidence && (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+              <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--zw-text-muted)', background: '#fff', border: '1px solid var(--zw-border)', borderRadius: 8, padding: '4px 10px', boxShadow: '0 2px 8px rgba(15,23,42,0.08)' }}>
+                Confiance faible — chiffres indicatifs, complétez le bilan
+              </span>
+            </div>
+          )}
+        </div>
+        {/* Légende */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 10 }}>
+          {shownScenarios.map((key) => (
+            <span key={key} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'var(--zw-text-soft)' }}>
+              <span style={{ width: 14, height: 3, borderRadius: 2, background: scenColor(key) }} /> {scenLabel(key)}
+            </span>
+          ))}
+        </div>
+        <p style={{ fontSize: 11, color: 'var(--zw-text-faint)', marginTop: 8, marginBottom: 0 }}>
+          Plus la courbe monte, plus le risque fonctionnel augmente. 0 = optimal, 100 = critique.
+        </p>
+      </div>
+
+      {/* Espérance de vie / healthspan */}
+      <div style={panel}>
+        <h3 style={head}><HeartPulse size={15} color="#10b981" /> Espérance de vie & années en bonne santé</h3>
+        <p style={{ fontSize: 11.5, color: 'var(--zw-text-faint)', marginTop: 0 }}>
+          Estimation de bien-être (cohorte ajustée), pas une espérance de vie individuelle.
+          Scénario comparé : <strong style={{ color: scenColor(focusScenario) }}>{scenLabel(focusScenario)}</strong>.
+        </p>
+        <div className="twin-projection-le" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
+          <LeTile label="Référence cohorte" value={result.life_expectancy.baseline} unit="ans" color="var(--zw-text-muted)" dim={lowConfidence} />
+          <LeTile label={`Estimation · ${scenLabel(focusScenario)}`} value={leScenario?.estimate_years ?? leStatusQuo?.estimate_years ?? result.life_expectancy.baseline} unit="ans" color="var(--brand-primary)" dim={lowConfidence} />
+          <LeTile
+            label="Gain vs statu quo"
+            value={leScenario?.delta_vs_status_quo_years ?? 0}
+            unit="ans"
+            signed
+            color={(leScenario?.delta_vs_status_quo_years ?? 0) > 0 ? '#10b981' : (leScenario?.delta_vs_status_quo_years ?? 0) < 0 ? '#ef4444' : 'var(--zw-text-muted)'}
+            dim={lowConfidence}
+          />
+          <LeTile label="Années en bonne santé" value={leScenario?.healthspan_years ?? leStatusQuo?.healthspan_years ?? 0} unit="ans" color="#0ea5e9" dim={lowConfidence} />
+        </div>
+      </div>
+
+      {/* Drivers — le « pourquoi » chiffré */}
+      <div style={panel}>
+        <h3 style={head}><Info size={15} color="var(--zw-violet)" /> Facteurs déterminants (à {result.inputs.horizon_focus} ans)</h3>
+        {result.drivers.length === 0 ? (
+          <p style={{ fontSize: 13, color: 'var(--zw-text-faint)' }}>Aucun facteur identifié — complétez le bilan et les biomarqueurs.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {result.drivers.map((d) => <DriverRow key={d.code} driver={d} />)}
+          </div>
+        )}
+      </div>
+
+      {/* Sous-systèmes au focus (statu quo) */}
+      {signatureYear && (
+        <div style={panel}>
+          <h3 style={head}><GitBranch size={15} color="#0ea5e9" /> Risque projeté par système (statu quo, {signatureYear.year} ans)</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
+            {Object.entries(signatureYear.scenarios['status_quo']?.systems ?? {}).map(([sys, risk]) => {
+              const r = Number(risk) || 0;
+              const c = colorFor(100 - r);
+              return (
+                <div key={sys} style={{ background: 'var(--zw-bg)', borderRadius: 8, padding: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: 'var(--zw-text-soft)', marginBottom: 4 }}>
+                    <span>{SYSTEM_LABELS[sys] ?? sys}</span><strong style={{ color: c }}>{r}</strong>
+                  </div>
+                  <div style={{ height: 5, background: 'var(--zw-bg-subtle)', borderRadius: 3 }}>
+                    <div style={{ width: `${r}%`, height: '100%', background: c, borderRadius: 3 }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Confiance + hypothèses */}
+      <div style={panel}>
+        <h3 style={head}><ShieldCheck size={15} color={confColorFor(result.confidence.level)} /> Niveau de confiance</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <div style={{ flex: 1, height: 8, background: 'var(--zw-bg-subtle)', borderRadius: 4 }}>
+            <div style={{ width: `${Math.round(result.confidence.score * 100)}%`, height: '100%', background: confColorFor(result.confidence.level), borderRadius: 4, transition: 'width 0.3s' }} />
+          </div>
+          <span style={{ fontSize: 12.5, fontWeight: 700, color: confColorFor(result.confidence.level), textTransform: 'capitalize' }}>
+            {result.confidence.level} · {Math.round(result.confidence.score * 100)}%
+          </span>
+        </div>
+        {result.confidence.reasons_fr.length > 0 && (
+          <ul style={{ margin: '6px 0 0', paddingLeft: 18, fontSize: 11.5, color: 'var(--zw-text-faint)', lineHeight: 1.6 }}>
+            {result.confidence.reasons_fr.map((reason, i) => <li key={i}>{reason}</li>)}
+          </ul>
+        )}
+        {result.assumptions_fr.length > 0 && (
+          <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed var(--zw-border)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--zw-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>Hypothèses du modèle</div>
+            <ul style={{ margin: 0, paddingLeft: 18, fontSize: 11.5, color: 'var(--zw-text-faint)', lineHeight: 1.6 }}>
+              {result.assumptions_fr.map((a, i) => <li key={i}>{a}</li>)}
+            </ul>
+          </div>
+        )}
+        <div style={{ fontSize: 10.5, color: 'var(--zw-text-faint)', marginTop: 10 }}>
+          Moteur {result.engine_version} · généré le {new Date(result.generated_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value, suffix, color }: { label: string; value: string; suffix?: string; color: string }) {
+  return (
+    <div>
+      <div style={{ fontSize: 20, fontWeight: 800, color, lineHeight: 1 }}>
+        {value}{suffix && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--zw-text-faint)' }}>{suffix}</span>}
+      </div>
+      <div style={{ fontSize: 11, color: 'var(--zw-text-muted)', marginTop: 3 }}>{label}</div>
+    </div>
+  );
+}
+
+function LeTile({ label, value, unit, color, signed, dim }: { label: string; value: number; unit: string; color: string; signed?: boolean; dim?: boolean }) {
+  const display = signed && value > 0 ? `+${value}` : `${value}`;
+  return (
+    <div style={{ background: 'var(--zw-bg)', borderRadius: 10, padding: 12, textAlign: 'center', opacity: dim ? 0.55 : 1 }}>
+      <div style={{ fontSize: 26, fontWeight: 800, color, lineHeight: 1 }}>
+        {display}<span style={{ fontSize: 12, fontWeight: 600, color: 'var(--zw-text-faint)', marginLeft: 3 }}>{unit}</span>
+      </div>
+      <div style={{ fontSize: 11, color: 'var(--zw-text-muted)', marginTop: 5, lineHeight: 1.3 }}>{label}</div>
+    </div>
+  );
+}
+
+function DriverRow({ driver }: { driver: ProjectionDriver }) {
+  const protect = driver.direction === 'protecteur';
+  const accent = protect ? '#10b981' : '#ef4444';
+  return (
+    <div style={{ padding: 10, background: 'var(--zw-bg)', borderRadius: 8, borderLeft: `3px solid ${accent}` }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, color: 'var(--zw-text)' }}>
+          {protect ? <TrendingDown size={13} color={accent} /> : <TrendingUp size={13} color={accent} />}
+          {driver.label_fr}
+          {driver.modifiable && (
+            <span style={{ fontSize: 9.5, fontWeight: 700, color: '#0369a1', background: '#e0f2fe', padding: '1px 7px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.03em' }}>modifiable</span>
+          )}
+        </span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: accent, background: accent + '1e', padding: '2px 9px', borderRadius: 999 }}>{driver.contribution_pct}%</span>
+      </div>
+      {driver.why_fr && <div style={{ fontSize: 11.5, color: 'var(--zw-text-muted)', marginTop: 4, lineHeight: 1.45 }}>{driver.why_fr}</div>}
     </div>
   );
 }

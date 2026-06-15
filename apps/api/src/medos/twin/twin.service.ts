@@ -14,6 +14,11 @@ import {
 } from './twin-scoring.service';
 import { TwinAiService, type PatientAiContext } from './twin-ai.service';
 import { TwinSimulationService, INTERVENTIONS } from './twin-simulation.service';
+import {
+  TwinProjectionService,
+  PROJECTION_VERSION,
+  SCENARIOS as PROJECTION_SCENARIOS,
+} from './twin-projection.service';
 import type {
   AddBiomarkersDto,
   CreateLabDocumentDto,
@@ -59,6 +64,7 @@ export class TwinService {
     private readonly scoring: TwinScoringService,
     private readonly ai: TwinAiService,
     private readonly simulation: TwinSimulationService,
+    private readonly projectionSvc: TwinProjectionService,
   ) {}
 
   /** Client Supabase non typé (tables twin hors du type Database de base). */
@@ -1459,6 +1465,93 @@ export class TwinService {
     const values = await this.listLatestBiomarkers(tenant, patientId);
     const result = this.simulation.simulate(organs.map((o) => o.code), biomarkers, values, interventionKeys);
     return { interventions: INTERVENTIONS, applied: interventionKeys, ...result };
+  }
+
+  // ── Projection temporelle du jumeau (projection-v1) — déterministe ─────
+  /**
+   * Projette le risque fonctionnel / l'espérance de vie sur plusieurs horizons
+   * selon des scénarios de mode de vie. Modèle HEURISTIQUE TRANSPARENT, 100 %
+   * déterministe (aucune IA). Toutes les données patient sont résolues
+   * server-side via le patientId (le front n'envoie aucune donnée patient).
+   */
+  async projection(
+    tenant: TenantContext,
+    patientId: string,
+    opts: { horizons_years?: number[]; scenario_keys?: string[]; horizon_focus?: number } = {},
+  ): Promise<any> {
+    const patient = await this.assertPatient(tenant, patientId);
+    const { organs, biomarkers } = await this.getReferential();
+    const values = await this.listLatestBiomarkers(tenant, patientId);
+    const organScores = this.scoring.computeAllOrganScores(
+      organs.map((o) => o.code),
+      biomarkers,
+      values,
+    );
+    const wheel = (await this.getWheel(tenant, patientId)).domains as Array<{
+      domain: string;
+      score: number | null;
+    }>;
+
+    const age = patient.date_of_birth
+      ? Math.floor(
+          (Date.now() - new Date(patient.date_of_birth).getTime()) / (365.25 * 864e5),
+        )
+      : null;
+    const sex: 'female' | 'male' | null =
+      patient.gender === 'female' || patient.gender === 'male' ? patient.gender : null;
+
+    // ── Normalisation / bornage des entrées (ICI, pas dans le moteur pur) ──
+    // Horizons : entiers, bornés 1..40, dédupliqués, triés, max 6 ; défaut [1,5,10,20].
+    const rawHorizons = Array.isArray(opts.horizons_years) ? opts.horizons_years : [];
+    let horizonsYears = Array.from(
+      new Set(
+        rawHorizons
+          .map((h) => Math.round(Number(h)))
+          .filter((h) => Number.isFinite(h) && h >= 1 && h <= 40),
+      ),
+    )
+      .sort((a, b) => a - b)
+      .slice(0, 6);
+    if (horizonsYears.length === 0) horizonsYears = [1, 5, 10, 20];
+
+    // Scénarios : sous-ensemble valide du catalogue ; défaut = status_quo + tous
+    // les leviers ; status_quo TOUJOURS forcé présent.
+    const validKeys = new Set(PROJECTION_SCENARIOS.map((s) => s.key));
+    const requested = Array.isArray(opts.scenario_keys) ? opts.scenario_keys : null;
+    let scenarioKeys: string[];
+    if (requested && requested.length > 0) {
+      scenarioKeys = requested.filter((k) => validKeys.has(k));
+    } else {
+      scenarioKeys = PROJECTION_SCENARIOS.map((s) => s.key);
+    }
+    if (!scenarioKeys.includes('status_quo')) scenarioKeys.unshift('status_quo');
+
+    // Horizon focus : borné aux horizons disponibles ; défaut = max(horizons).
+    const maxHorizon = horizonsYears[horizonsYears.length - 1];
+    let horizonFocus = Math.round(Number(opts.horizon_focus));
+    if (!Number.isFinite(horizonFocus) || horizonFocus <= 0) {
+      horizonFocus = maxHorizon;
+    } else {
+      // Cale sur l'horizon disponible le plus proche (≤ focus, sinon le min).
+      const eligible = horizonsYears.filter((h) => h <= horizonFocus);
+      horizonFocus = eligible.length ? eligible[eligible.length - 1] : horizonsYears[0];
+    }
+
+    return {
+      patient_id: patientId,
+      generated_at: new Date().toISOString(),
+      ...this.projectionSvc.project({
+        age,
+        sex,
+        organScores,
+        wheel,
+        biomarkerCount: values.length,
+        horizonsYears,
+        scenarioKeys,
+        horizonFocus,
+      }),
+      engine_version: PROJECTION_VERSION,
+    };
   }
 
   // ── Root Cause Explorer (Module 16) — IA ──────────────────────────────
