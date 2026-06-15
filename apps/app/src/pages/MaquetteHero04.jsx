@@ -40,7 +40,7 @@ const OFFRES = [
     price: '50', priceSuffix: '/90 min', currency: '€',
     features: ['Lecture des blocages', "Plan d'action personnalisé", 'Séance de 90 minutes', 'Compte-rendu & suivi'],
     buttonText: 'Réserver une séance', buttonVariant: 'secondary',
-    onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-consultation-90min'; },
+    onCtaClick: () => { window.location.href = '/paiement?plan=ngowazulu-consultation-90min'; },
   },
   {
     planName: 'Mentorat Essentiel',
@@ -48,7 +48,7 @@ const OFFRES = [
     price: '55', priceSuffix: '/mois', currency: '€',
     features: ['1 rencontre / mois', 'Suivi de fond espacé', 'Accès cours & lives LIRI', 'Stabilisation, budget maîtrisé'],
     buttonText: 'Choisir ce parcours', buttonVariant: 'secondary',
-    onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-mentorat-1x-month'; },
+    onCtaClick: () => { window.location.href = '/paiement?plan=ngowazulu-mentorat-1x-month'; },
   },
   {
     planName: 'Mentorat Confort',
@@ -56,7 +56,7 @@ const OFFRES = [
     price: '180', priceSuffix: '/mois', currency: '€', isPopular: true,
     features: ['1 rencontre / semaine', 'Suivi continu personnalisé', 'Accès cours & lives LIRI', 'Communauté encadrée'],
     buttonText: 'Choisir ce parcours', buttonVariant: 'primary',
-    onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-mentorat-1x-week'; },
+    onCtaClick: () => { window.location.href = '/paiement?plan=ngowazulu-mentorat-1x-week'; },
   },
   {
     planName: 'Mentorat Intensif',
@@ -64,7 +64,7 @@ const OFFRES = [
     price: '300', priceSuffix: '/mois', currency: '€',
     features: ['2 rencontres / semaine', 'Lecture fine (songes, aura)', 'Dynamiques lourdes & transitions', 'Accompagnement rapproché'],
     buttonText: 'Choisir ce parcours', buttonVariant: 'secondary',
-    onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-mentorat-2x-week'; },
+    onCtaClick: () => { window.location.href = '/paiement?plan=ngowazulu-mentorat-2x-week'; },
   },
   {
     planName: 'Mentorat Souverain',
@@ -72,7 +72,7 @@ const OFFRES = [
     price: '500', priceSuffix: '/mois', currency: '€',
     features: ["Jusqu'à 3 rencontres / semaine", 'Priorité & urgences', 'Interventions dédiées', 'Accompagnement total'],
     buttonText: 'Choisir ce parcours', buttonVariant: 'secondary',
-    onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-mentorat-urgent-3x-week'; },
+    onCtaClick: () => { window.location.href = '/paiement?plan=ngowazulu-mentorat-urgent-3x-week'; },
   },
 ];
 
@@ -144,8 +144,8 @@ export default function MaquetteHero04() {
                   </div>
                 </form>
                 <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-                  <a href="/t/isna/ecole" className="inline-flex items-center gap-1 font-semibold" style={gold}>Entrer à l&apos;École <ArrowRight className="h-4 w-4" /></a>
-                  <a href="/t/isna/temple" className="inline-flex items-center gap-1 font-semibold" style={gold}>Entrer au Temple <ArrowRight className="h-4 w-4" /></a>
+                  <a href="/ecole" className="inline-flex items-center gap-1 font-semibold" style={gold}>Entrer à l&apos;École <ArrowRight className="h-4 w-4" /></a>
+                  <a href="/temple" className="inline-flex items-center gap-1 font-semibold" style={gold}>Entrer au Temple <ArrowRight className="h-4 w-4" /></a>
                 </div>
               </div>
               <div
@@ -240,8 +240,8 @@ export default function MaquetteHero04() {
               </div>
             </form>
             <div className="mt-1 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-              <a href="/t/isna/ecole" className="inline-flex items-center gap-1 font-semibold" style={gold}>Entrer à l&apos;École <ArrowRight className="h-4 w-4" /></a>
-              <a href="/t/isna/temple" className="inline-flex items-center gap-1 font-semibold" style={gold}>Entrer au Temple <ArrowRight className="h-4 w-4" /></a>
+              <a href="/ecole" className="inline-flex items-center gap-1 font-semibold" style={gold}>Entrer à l&apos;École <ArrowRight className="h-4 w-4" /></a>
+              <a href="/temple" className="inline-flex items-center gap-1 font-semibold" style={gold}>Entrer au Temple <ArrowRight className="h-4 w-4" /></a>
             </div>
           </div>
         </div>
@@ -266,7 +266,7 @@ export default function MaquetteHero04() {
             }
             subheading="De « je reproduis des gestes » à « je comprends, j'explique, je transmets ». Pédagogie immersive, outils high-tech et certification progressive."
             ctaLabel="Découvrir l'École"
-            ctaHref="/t/isna/ecole"
+            ctaHref="/ecole"
             items={ECOLE_ITEMS}
           />
         </div>
@@ -291,7 +291,7 @@ export default function MaquetteHero04() {
               ))}
             </ul>
             <div className="mt-9">
-              <a href="/t/isna/temple" className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
+              <a href="/temple" className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
                 Entrer au Temple <ArrowRight className="h-4 w-4" />
               </a>
             </div>
@@ -308,9 +308,9 @@ export default function MaquetteHero04() {
         eyebrow="Au Temple · Ngowazulu"
         heading="Les services du Temple."
         items={[
-          { title: 'Consultation', desc: 'Diagnostic des blocages & orientation. 50 € · 1h30.', img: TEMPLE(2), href: '/t/isna/temple' },
-          { title: 'Culte & communion', desc: 'Le rythme communautaire en live. Dès 15 €/mois.', img: TEMPLE(6), href: '/t/isna/temple' },
-          { title: 'Interventions', desc: 'Exorcisme, rééquilibrage, hospitalisation spirituelle.', img: TEMPLE(3), href: '/t/isna/temple' },
+          { title: 'Consultation', desc: 'Diagnostic des blocages & orientation. 50 € · 1h30.', img: TEMPLE(2), href: '/temple' },
+          { title: 'Culte & communion', desc: 'Le rythme communautaire en live. Dès 15 €/mois.', img: TEMPLE(6), href: '/temple' },
+          { title: 'Interventions', desc: 'Exorcisme, rééquilibrage, hospitalisation spirituelle.', img: TEMPLE(3), href: '/temple' },
         ]}
       />
 

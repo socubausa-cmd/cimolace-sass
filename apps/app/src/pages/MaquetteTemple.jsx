@@ -9,12 +9,12 @@ const TEMPLE = (n) => `/ngowazulu/temple-${String(n).padStart(2, '0')}.jpg`;
 const gold = { color: 'var(--gold)' };
 
 export const TEMPLE_SERVICES = [
-  { title: 'Consultation', desc: 'Diagnostic des blocages, lecture énergétique et karmique, orientation. 50 € · 1h30.', img: TEMPLE(2), href: '/t/isna#offres' },
-  { title: 'Culte & communion', desc: 'Le rythme communautaire en live : ouverture du mois, prière, enseignement. Dès 15 €/mois.', img: TEMPLE(6), href: '/t/isna#offres' },
-  { title: 'Interventions', desc: 'Exorcisme, rééquilibrage, hospitalisation spirituelle — selon la gravité du cas.', img: TEMPLE(3), href: '/t/isna#offres' },
-  { title: 'Voyages initiatiques', desc: 'Rites de passage, sortie des anciens pactes, progression de conscience.', img: TEMPLE(8), href: '/t/isna#offres' },
-  { title: 'Mentorat spirituel', desc: 'Un Moniteur dédié : protection, guérison, élévation. De 55 à 500 €/mois.', img: TEMPLE(5), href: '/t/isna#offres' },
-  { title: 'NZO-WA-NKSKI', desc: 'La maison des remèdes : pharmacie spirituelle et éléments rituels validés.', img: TEMPLE(7), href: '/t/isna#offres' },
+  { title: 'Consultation', desc: 'Diagnostic des blocages, lecture énergétique et karmique, orientation. 50 € · 1h30.', img: TEMPLE(2), href: '/#offres' },
+  { title: 'Culte & communion', desc: 'Le rythme communautaire en live : ouverture du mois, prière, enseignement. Dès 15 €/mois.', img: TEMPLE(6), href: '/#offres' },
+  { title: 'Interventions', desc: 'Exorcisme, rééquilibrage, hospitalisation spirituelle — selon la gravité du cas.', img: TEMPLE(3), href: '/#offres' },
+  { title: 'Voyages initiatiques', desc: 'Rites de passage, sortie des anciens pactes, progression de conscience.', img: TEMPLE(8), href: '/#offres' },
+  { title: 'Mentorat spirituel', desc: 'Un Moniteur dédié : protection, guérison, élévation. De 55 à 500 €/mois.', img: TEMPLE(5), href: '/#offres' },
+  { title: 'NZO-WA-NKSKI', desc: 'La maison des remèdes : pharmacie spirituelle et éléments rituels validés.', img: TEMPLE(7), href: '/#offres' },
 ];
 
 const PARCOURS = [
@@ -40,10 +40,10 @@ export default function MaquetteTemple() {
             avec une méthode, une équipe et un suivi responsable.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <a href="/t/isna#offres" className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
+            <a href="/#offres" className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
               Prendre rendez-vous <ArrowRight className="h-4 w-4" />
             </a>
-            <a href="/t/isna#offres" className="rounded-full border px-7 py-3 text-sm font-semibold transition hover:bg-[var(--gold)] hover:text-[#0d0b09]" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
+            <a href="/#offres" className="rounded-full border px-7 py-3 text-sm font-semibold transition hover:bg-[var(--gold)] hover:text-[#0d0b09]" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
               Voir les offres
             </a>
           </div>
@@ -86,7 +86,7 @@ export default function MaquetteTemple() {
         title="La communion Ngowazulu"
         text="Culte en live immersif, ouverture et clôture du mois, prière et enseignement en temps réel. Dès 15 €/mois."
         ctaLabel="Rejoindre la communion"
-        ctaHref="/t/isna#offres"
+        ctaHref="/#offres"
       />
 
       <MaqFooter />

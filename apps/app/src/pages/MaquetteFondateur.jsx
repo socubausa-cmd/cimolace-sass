@@ -36,7 +36,7 @@ export default function MaquetteFondateur() {
             <h1 className="mq-display mt-4 text-4xl font-semibold leading-[0.95] sm:text-6xl">Le 5ᵉ Manikongo</h1>
             <p className="mt-3 text-sm" style={{ color: 'var(--muted)' }}>Badika Jel David — Recteur de l&apos;ISNA</p>
             <div className="mt-5">
-              <a href="/t/isna/mission" className="pointer-events-auto inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
+              <a href="/mission" className="pointer-events-auto inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
                 Notre mission <ArrowRight className="h-4 w-4" />
               </a>
             </div>

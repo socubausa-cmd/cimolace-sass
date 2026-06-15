@@ -17,13 +17,13 @@ export const MAQ_THEME = `
 
 // Liens de navigation partagés (header + footer). Ancres = sections de /t/isna ; routes = pages dédiées.
 export const MAQ_LINKS = [
-  { label: 'Doctrine', href: '/t/isna#doctrine' },
-  { label: 'Mission', href: '/t/isna/mission' },
-  { label: 'École', href: '/t/isna/ecole' },
-  { label: 'Programme', href: '/t/isna/programme' },
-  { label: 'Temple', href: '/t/isna/temple' },
-  { label: 'Fondateur', href: '/t/isna/fondateur' },
-  { label: 'Offres', href: '/t/isna#offres' },
+  { label: 'Doctrine', href: '/#doctrine' },
+  { label: 'Mission', href: '/mission' },
+  { label: 'École', href: '/ecole' },
+  { label: 'Programme', href: '/programme' },
+  { label: 'Temple', href: '/temple' },
+  { label: 'Fondateur', href: '/fondateur' },
+  { label: 'Offres', href: '/#offres' },
 ];
 
 // Navigation groupée (header avec menus déroulants). 3 univers + 1 lien.
@@ -31,24 +31,24 @@ export const MAQ_NAV = [
   {
     label: 'La doctrine',
     items: [
-      { label: 'La doctrine', href: '/t/isna#doctrine', desc: 'Science totale · 3 piliers · méthode', icon: Atom },
-      { label: 'Notre mission', href: '/t/isna/mission', desc: 'Restaurer la dignité', icon: Target },
-      { label: 'Le Fondateur', href: '/t/isna/fondateur', desc: 'Le 5ᵉ Manikongo', icon: Crown },
+      { label: 'La doctrine', href: '/#doctrine', desc: 'Science totale · 3 piliers · méthode', icon: Atom },
+      { label: 'Notre mission', href: '/mission', desc: 'Restaurer la dignité', icon: Target },
+      { label: 'Le Fondateur', href: '/fondateur', desc: 'Le 5ᵉ Manikongo', icon: Crown },
     ],
   },
   {
     label: "L'École",
     items: [
-      { label: "L'École · ISNA", href: '/t/isna/ecole', desc: 'Comprendre avant d’agir', icon: GraduationCap },
-      { label: 'Le plan du cours', href: '/t/isna/programme', desc: 'Le cursus en 4 phases', icon: BookOpen },
+      { label: "L'École · ISNA", href: '/ecole', desc: 'Comprendre avant d’agir', icon: GraduationCap },
+      { label: 'Le plan du cours', href: '/programme', desc: 'Le cursus en 4 phases', icon: BookOpen },
     ],
   },
   {
     label: 'Le Temple',
     items: [
-      { label: 'Le Temple · Ngowazulu', href: '/t/isna/temple', desc: 'L’hôpital de l’âme', icon: Landmark },
-      { label: 'Témoignages', href: '/t/isna#temoignages', desc: 'Des vies transformées', icon: Quote },
+      { label: 'Le Temple · Ngowazulu', href: '/temple', desc: 'L’hôpital de l’âme', icon: Landmark },
+      { label: 'Témoignages', href: '/#temoignages', desc: 'Des vies transformées', icon: Quote },
     ],
   },
-  { label: 'Offres', href: '/t/isna#offres' },
+  { label: 'Offres', href: '/#offres' },
 ];
