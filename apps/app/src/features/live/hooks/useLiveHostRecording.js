@@ -36,7 +36,13 @@ export function useLiveHostRecording({ sessionId, roomRef, toast }) {
           preferCurrentTab: true,
           selfBrowserSurface: 'include',
         })
-        .catch(() => null);
+        .catch((err) => {
+          // Feedback explicite au lieu d'un échec silencieux.
+          if (err?.name === 'NotAllowedError') setRecError('Partage annulé.');
+          else if (err?.name === 'NotSupportedError') setRecError("Navigateur incompatible avec l'enregistrement.");
+          else setRecError(err?.message || "Échec du partage d'écran.");
+          return null;
+        });
       if (tabStream) {
         tabStream.getVideoTracks().forEach((t) => {
           t.addEventListener('ended', () => {
