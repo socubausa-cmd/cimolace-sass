@@ -30,7 +30,7 @@ export function MaqFooter() {
             Créer un compte
           </a>
           <a
-            href="/t/isna/login"
+            href="/login"
             className="rounded-full border px-7 py-3 text-sm font-semibold transition hover:bg-[var(--gold)] hover:text-[#0d0b09]"
             style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}
           >

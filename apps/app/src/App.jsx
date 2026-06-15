@@ -124,8 +124,9 @@ function CimolaceDomainHandler() {
     if (host === PRORASCIENCE_ROOT || host === `www.${PRORASCIENCE_ROOT}`) {
       if (path === '/' || path === '') {
         navigate('/t/isna', { replace: true });
-      } else if (path === '/login') {
-        navigate('/t/isna/login', { replace: true });
+      } else if (path === '/t/isna/login') {
+        // Login ISNA = la page premium standalone LoginPage (/login), pas l'ancienne carte SchoolLoginPage.
+        navigate('/login', { replace: true });
       } else if (path === '/signup') {
         navigate('/t/isna/signup', { replace: true });
       } else if (path === '/formations' || path === '/catalogue' || path === '/forfaits') {

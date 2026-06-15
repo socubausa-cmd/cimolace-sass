@@ -72,7 +72,7 @@ export function MaqNav() {
 
         {/* CTAs */}
         <div className="hidden items-center gap-3 xl:flex">
-          <a href="/t/isna/login" className="text-[13px] font-semibold transition hover:text-[var(--gold)]" style={{ color: 'var(--fg)' }}>
+          <a href="/login" className="text-[13px] font-semibold transition hover:text-[var(--gold)]" style={{ color: 'var(--fg)' }}>
             Connexion
           </a>
           <a href="/t/isna/signup" className="rounded-full px-5 py-2 text-[13px] font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
@@ -112,7 +112,7 @@ export function MaqNav() {
               </div>
             ))}
             <div className="mt-4 flex gap-3">
-              <a href="/t/isna/login" className="flex-1 rounded-full border py-2.5 text-center text-sm font-semibold" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
+              <a href="/login" className="flex-1 rounded-full border py-2.5 text-center text-sm font-semibold" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
                 Connexion
               </a>
               <a href="/t/isna/signup" className="flex-1 rounded-full py-2.5 text-center text-sm font-semibold" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
