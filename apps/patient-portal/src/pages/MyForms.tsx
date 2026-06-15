@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ClipboardList, CheckCircle, X } from 'lucide-react';
+import { ClipboardList, CheckCircle, X, Bell } from 'lucide-react';
+import { patientApi, type FormAssignment } from '../lib/api';
+import { useBranding } from '../lib/branding';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
@@ -20,7 +22,12 @@ type FormDef = {
 };
 
 export function MyForms() {
+  const branding = useBranding();
   const [forms, setForms] = useState<FormDef[]>([]);
+  // Assignations « À remplir » : restent `null` tant que rien n'a été
+  // chargé OU si l'endpoint est indisponible (table non migrée) → la
+  // section n'est alors simplement pas rendue, sans erreur visible.
+  const [assignments, setAssignments] = useState<FormAssignment[] | null>(null);
   const [active, setActive] = useState<FormDef | null>(null);
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
@@ -41,14 +48,44 @@ export function MyForms() {
       .catch(() => {});
   }, []);
 
+  const fetchAssignments = useCallback(() => {
+    const t = localStorage.getItem('supabase_token');
+    if (!t) return;
+    // Dégradation gracieuse : si l'endpoint échoue (table absente / 503),
+    // on garde `null` → la section « À remplir » disparaît sans crash.
+    patientApi
+      .getMyAssignments()
+      .then((list) => setAssignments(Array.isArray(list) ? list : []))
+      .catch(() => setAssignments(null));
+  }, []);
+
   useEffect(() => {
     fetchForms();
-  }, [fetchForms]);
+    fetchAssignments();
+  }, [fetchForms, fetchAssignments]);
 
   function openForm(f: FormDef) {
     setActive(f);
     setAnswers({});
     setError(null);
+  }
+
+  // Ouvre un formulaire par son id en réutilisant le flux de remplissage
+  // existant. La définition complète (avec ses `fields`) vient de la liste
+  // `/med/me/forms` déjà chargée ; à défaut on ouvre une coquille basée sur
+  // le titre/description de l'assignation (la soumission reste possible).
+  function openFormById(formId: string, fallback?: { title: string; description?: string | null }) {
+    const full = forms.find((f) => f.id === formId);
+    if (full) {
+      openForm(full);
+      return;
+    }
+    openForm({
+      id: formId,
+      title: fallback?.title || 'Formulaire',
+      description: fallback?.description || undefined,
+      fields: [],
+    });
   }
 
   function setAnswer(key: string, value: unknown) {
@@ -94,6 +131,10 @@ export function MyForms() {
       setSuccess(`Reponse envoyee : « ${active.title} »`);
       setActive(null);
       fetchForms();
+      // Le backend bascule l'assignation `pending` correspondante en
+      // `completed` (hook best-effort) → on rafraîchit pour la retirer de
+      // l'encart « À remplir ».
+      fetchAssignments();
       setTimeout(() => setSuccess(null), 4000);
     } catch (err: any) {
       setError(err?.message || "Echec de l'envoi");
@@ -102,10 +143,15 @@ export function MyForms() {
     }
   }
 
+  // Assignations actives à mettre en avant. Le serveur exclut déjà les
+  // `cancelled` ; on cible le statut `pending` (non encore soumis) pour
+  // l'encart « À remplir ».
+  const pending = (assignments || []).filter((a) => a.status === 'pending');
+
   return (
     <div>
       <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-        <ClipboardList size={22} /> Formulaires a remplir
+        <ClipboardList size={22} color="var(--brand-primary)" /> Formulaires a remplir
       </h2>
 
       {success && (
@@ -114,7 +160,89 @@ export function MyForms() {
         </div>
       )}
 
-      {forms.length === 0 && <p style={{ color: '#94a3b8' }}>Aucun formulaire en attente.</p>}
+      {pending.length > 0 && (
+        <section
+          style={{
+            marginBottom: 24,
+            background: 'var(--brand-primary-soft)',
+            border: '1px solid var(--brand-primary)',
+            borderRadius: 12,
+            padding: 18,
+          }}
+        >
+          <h3
+            style={{
+              fontSize: 15,
+              fontWeight: 700,
+              margin: '0 0 12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              color: 'var(--brand-primary)',
+            }}
+          >
+            <Bell size={18} color="var(--brand-primary)" />
+            A remplir ({pending.length})
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {pending.map((a) => (
+              <div
+                key={a.id}
+                style={{
+                  background: '#fff',
+                  borderRadius: 10,
+                  padding: '14px 16px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: 12,
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h4 style={{ fontWeight: 600, margin: 0, fontSize: 15 }}>{a.form_title || 'Formulaire'}</h4>
+                  {a.form_description && (
+                    <p style={{ fontSize: 13, color: '#64748b', margin: '2px 0 0' }}>{a.form_description}</p>
+                  )}
+                  <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0' }}>
+                    Demandé le {new Date(a.assigned_at).toLocaleDateString('fr')}
+                  </p>
+                </div>
+                <button
+                  onClick={() => openFormById(a.form_id, { title: a.form_title, description: a.form_description })}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '8px 20px',
+                    background: 'var(--brand-primary)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                  }}
+                >
+                  <CheckCircle size={16} /> Remplir
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {pending.length > 0 && (
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>
+          Tous les formulaires
+        </h3>
+      )}
+
+      {forms.length === 0 && pending.length === 0 && (
+        <p style={{ color: '#94a3b8' }}>
+          Aucun formulaire en attente{branding.name ? ` chez ${branding.name}` : ''}.
+        </p>
+      )}
 
       {forms.map((f) => (
         <div
@@ -149,7 +277,7 @@ export function MyForms() {
               alignItems: 'center',
               gap: 6,
               padding: '8px 20px',
-              background: '#0f766e',
+              background: 'var(--brand-primary)',
               color: '#fff',
               border: 'none',
               borderRadius: 8,
@@ -246,7 +374,7 @@ export function MyForms() {
                 disabled={saving}
                 style={{
                   padding: '10px 18px',
-                  background: '#0f766e',
+                  background: 'var(--brand-primary)',
                   color: '#fff',
                   border: 'none',
                   borderRadius: 8,
@@ -313,7 +441,7 @@ function FieldRenderer({
             type="checkbox"
             checked={Boolean(value)}
             onChange={(e) => onChange(e.target.checked)}
-            style={{ marginTop: 3, accentColor: '#0d9488' }}
+            style={{ marginTop: 3, accentColor: 'var(--brand-primary)' }}
           />
           <span style={{ fontSize: 13, color: '#1e293b' }}>
             {field.label}
@@ -344,7 +472,7 @@ function FieldRenderer({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
             {(field.options || []).map((opt) => (
               <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer', fontSize: 13, color: '#1e293b' }}>
-                <input type="checkbox" checked={arr.includes(opt)} onChange={() => toggle(opt)} style={{ accentColor: '#0d9488', marginTop: 1 }} />
+                <input type="checkbox" checked={arr.includes(opt)} onChange={() => toggle(opt)} style={{ accentColor: 'var(--brand-primary)', marginTop: 1 }} />
                 {opt}
               </label>
             ))}

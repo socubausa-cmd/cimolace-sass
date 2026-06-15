@@ -62,6 +62,20 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   return ((j && typeof j === 'object' && 'data' in j ? j.data : j)) as T;
 }
 
+// ── Formulaires assignés — « À remplir » côté patient ─────────────────
+// Le praticien peut assigner un formulaire précis au patient ; la liste
+// ci-dessous ne renvoie que les assignations actives (statut `pending`,
+// les `cancelled` étant exclues côté serveur). Le patient est résolu
+// server-side via son JWT + X-Tenant-Slug (aucun id envoyé).
+export type FormAssignment = {
+  id: string;
+  form_id: string;
+  form_title: string;
+  form_description?: string | null;
+  status: string;
+  assigned_at: string;
+};
+
 // ── Bio Digital Twin — vue patient ────────────────────────────────────
 export type TwinOrganScore = {
   organ_code: string;
@@ -118,6 +132,14 @@ export type AssistantReply = {
 export const patientApi = {
   getMyTwin(): Promise<MyTwinState> {
     return getJson<MyTwinState>('/med/twin-me/state');
+  },
+
+  // GET /med/me/assignments — formulaires assignés au patient (statut
+  // `pending`/`completed`, `cancelled` exclus server-side). Renvoie `[]`
+  // tant que la table d'assignations n'est pas migrée (jamais 500 côté
+  // serveur), ce qui permet à l'appelant de masquer la section sans erreur.
+  getMyAssignments(): Promise<FormAssignment[]> {
+    return getJson<FormAssignment[]>('/med/me/assignments');
   },
 
   // POST /med/twin-me/assistant — le patient est résolu côté serveur via le
