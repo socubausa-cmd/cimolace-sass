@@ -1,8 +1,9 @@
 import { Feather } from '@expo/vector-icons';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
-import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 import { fetchDecks, fetchStats, type RecallDeck, type RecallStats } from './data';
 
@@ -18,6 +19,8 @@ interface Props {
  * État vide honnête si aucun deck (jamais de fausses maquettes).
  */
 export function NeuroRecallDeckList({ onOpenDeck }: Props) {
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
   const [decks, setDecks] = useState<RecallDeck[] | null>(null);
   const [stats, setStats] = useState<RecallStats | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -89,6 +92,8 @@ export function NeuroRecallDeckList({ onOpenDeck }: Props) {
 }
 
 function DeckRow({ deck, onPress }: { deck: RecallDeck; onPress: () => void }) {
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
   const when = deck.created_at ? formatDate(deck.created_at) : null;
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [s.card, pressed && s.pressed]}>
@@ -116,7 +121,7 @@ function formatDate(iso: string): string {
   return `${d.getDate()} ${MOIS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-const s = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   flex1: { flex: 1 },
   pressed: { opacity: 0.75 },
 

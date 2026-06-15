@@ -3,9 +3,11 @@
  * 100% native — Pressable + Feather, charte coral.
  */
 import { Feather } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 export type Tool = 'pen' | 'eraser' | 'rect' | 'circle' | 'text';
 
@@ -28,6 +30,8 @@ interface Props {
 }
 
 export function Toolbar({ tool, onToolChange, onUndo, canUndo, onClear }: Props) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   return (
     <View style={styles.bar}>
       <View style={styles.group}>
@@ -74,7 +78,7 @@ export function Toolbar({ tool, onToolChange, onUndo, canUndo, onClear }: Props)
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   bar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -116,6 +120,8 @@ export function PenSettings({
   onColor: (c: string) => void;
   onWidth: (w: number) => void;
 }) {
+  const { colors: C } = useTheme();
+  const ps = useMemo(() => makeStylesPs(C), [C]);
   return (
     <View style={ps.row}>
       <View style={ps.swatches}>
@@ -144,7 +150,7 @@ export function PenSettings({
   );
 }
 
-const ps = StyleSheet.create({
+const makeStylesPs = (C: LiriPalette) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',

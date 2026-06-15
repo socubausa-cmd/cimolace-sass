@@ -3,9 +3,11 @@
  * Le renommage se fait inline via TextInput sur la scène active.
  */
 import { Feather } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 import type { SbKonvaScene } from './types';
 
@@ -19,6 +21,8 @@ interface Props {
 }
 
 export function SceneRail({ scenes, activeId, onSelect, onAdd, onDelete, onRename }: Props) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   return (
     <View style={styles.wrap}>
       <FlatList
@@ -75,7 +79,7 @@ export function SceneRail({ scenes, activeId, onSelect, onAdd, onDelete, onRenam
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   wrap: { backgroundColor: C.rail, borderTopWidth: 1, borderTopColor: C.line },
   list: { paddingHorizontal: 12, paddingVertical: 10, gap: 8, alignItems: 'center' },
   chip: {

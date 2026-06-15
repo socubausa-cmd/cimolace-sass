@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 /** Libellé + couleur d'un statut de projet liri_projects. */
-function describe(status?: string): { label: string; color: string; tint: string } {
+function describe(status: string | undefined, C: LiriPalette): { label: string; color: string; tint: string } {
   switch ((status ?? '').toLowerCase()) {
     case 'complete':
     case 'ready':
@@ -22,7 +24,9 @@ function describe(status?: string): { label: string; color: string; tint: string
 
 /** Pastille de statut compacte (liste des projets). */
 export function StatusBadge({ status }: { status?: string }) {
-  const s = describe(status);
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
+  const s = describe(status, C);
   return (
     <View style={[styles.badge, { backgroundColor: s.tint }]}>
       <View style={[styles.dot, { backgroundColor: s.color }]} />
@@ -31,7 +35,7 @@ export function StatusBadge({ status }: { status?: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   badge: {
     flexDirection: 'row',
     alignItems: 'center',

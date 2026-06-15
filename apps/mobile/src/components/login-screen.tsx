@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -13,11 +13,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Ember } from '@/components/ember';
-import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
 import { useAuth } from '@/lib/auth';
+import { useTheme } from '@/lib/theme';
 
 export function LoginScreen() {
   const { signIn } = useAuth();
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -97,7 +100,7 @@ export function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', paddingHorizontal: 28 },

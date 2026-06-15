@@ -10,14 +10,15 @@ import {
 } from '@livekit/react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Track } from 'livekit-client';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import EleveLiveShell, { type ChatMessage } from '@/components/live-room/eleve-live-shell';
 import { type SmartboardSlide } from '@/components/live-host/immersive-smartboard';
 import { LIVE_DECK, fetchLiveDeck, slideAtIn } from '@/components/live-host/live-deck';
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 import { LIVEKIT_URL, endLive, fetchLiveToken, fetchSessionDeckId } from '@/lib/liri-api';
 
 type Role = 'host' | 'student';
@@ -31,6 +32,8 @@ type Role = 'host' | 'student';
  * native est démarrée avant la connexion et arrêtée à la sortie.
  */
 export default function LiveRoomNative() {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string; role?: string; title?: string }>();
   const sessionId = typeof params.id === 'string' ? params.id : '';
@@ -118,6 +121,8 @@ function RoomStage({
   title: string;
   onLeave: () => void;
 }) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const { localParticipant } = useLocalParticipant();
   const tracks = useTracks([Track.Source.Camera]);
   const [micOn, setMicOn] = useState(role === 'host');
@@ -338,6 +343,8 @@ function CtrlButton({
   label: string;
   onPress: () => void;
 }) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   return (
     <Pressable
       style={({ pressed }) => [styles.ctrl, !active && styles.ctrlOff, pressed && styles.pressed]}
@@ -349,7 +356,7 @@ function CtrlButton({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000' },
   fill: { flex: 1, backgroundColor: C.base, alignItems: 'center', justifyContent: 'center', padding: 36 },
   loadingTxt: { color: C.muted, fontSize: 14, marginTop: 14, fontFamily: F.sans },

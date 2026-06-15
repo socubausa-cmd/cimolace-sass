@@ -1,8 +1,9 @@
 import { Feather } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 /** Secondes restantes avant `deadline` (ISO), borné à 0. */
 function remainingSeconds(deadline: string | null): number | null {
@@ -23,6 +24,8 @@ function fmt(secs: number): string {
  * Décompte local rafraîchi chaque seconde ; aucune fausse valeur si pas de deadline.
  */
 export function TurnTimer({ deadline }: { deadline: string | null }) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const [secs, setSecs] = useState<number | null>(() => remainingSeconds(deadline));
 
   useEffect(() => {
@@ -53,7 +56,7 @@ export function TurnTimer({ deadline }: { deadline: string | null }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   wrap: {
     flexDirection: 'row',
     alignItems: 'center',

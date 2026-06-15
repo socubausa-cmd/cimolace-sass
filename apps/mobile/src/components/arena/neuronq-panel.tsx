@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -10,11 +10,12 @@ import {
   View,
 } from 'react-native';
 
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 import { neuronqText, type NeuronqQuestionRow } from './data';
 
-function statusTint(status: string | null): string {
+function statusTint(status: string | null, C: LiriPalette): string {
   if (status === 'answered') return C.emeraldB;
   if (status === 'skipped') return C.faint;
   return C.coral; // pending / autre
@@ -27,12 +28,14 @@ function statusLabel(status: string | null): string {
 }
 
 function QuestionRow({ q }: { q: NeuronqQuestionRow }) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   return (
     <View style={styles.qRow}>
-      <View style={[styles.qDot, { backgroundColor: statusTint(q.status) }]} />
+      <View style={[styles.qDot, { backgroundColor: statusTint(q.status, C) }]} />
       <View style={styles.qBody}>
         <Text style={styles.qText}>{neuronqText(q)}</Text>
-        <Text style={[styles.qStatus, { color: statusTint(q.status) }]}>
+        <Text style={[styles.qStatus, { color: statusTint(q.status, C) }]}>
           {statusLabel(q.status)}
         </Text>
       </View>
@@ -53,6 +56,8 @@ export function NeuronqPanel({
   canAsk: boolean;
   onSubmit: (text: string) => Promise<boolean>;
 }) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -122,7 +127,7 @@ export function NeuronqPanel({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   wrap: {
     backgroundColor: C.panel,
     borderRadius: 18,

@@ -4,8 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
 import { fetchCourses, fetchReplays, type Course, type Replay } from '@/lib/liri-api';
+import { useTheme } from '@/lib/theme';
 
 type IconName = React.ComponentProps<typeof Feather>['name'];
 
@@ -45,6 +46,8 @@ function courseToAsset(c: Course): Asset {
 
 export default function BibliothequeScreen() {
   const router = useRouter();
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const [cat, setCat] = useState<Cat>('Tout');
   const [replays, setReplays] = useState<Replay[] | null>(null);
   const [courses, setCourses] = useState<Course[] | null>(null);
@@ -159,7 +162,7 @@ export default function BibliothequeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1 },
   flex1: { flex: 1 },

@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -15,8 +15,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
 import { createLive, startLive } from '@/lib/liri-api';
+import { useTheme } from '@/lib/theme';
 
 /**
  * Arena — Débat : une session live structurée en débat (2 équipes).
@@ -25,6 +26,8 @@ import { createLive, startLive } from '@/lib/liri-api';
  */
 export default function CreerArenaScreen() {
   const router = useRouter();
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const [subject, setSubject] = useState('');
   const [teamA, setTeamA] = useState('Pour');
   const [teamB, setTeamB] = useState('Contre');
@@ -108,7 +111,7 @@ export default function CreerArenaScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1 },
   flex1: { flex: 1 },

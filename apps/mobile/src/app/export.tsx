@@ -1,9 +1,10 @@
 import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 /**
  * Export Center (natif) — sélection du format + lancement. L'UI de sélection est
@@ -20,6 +21,8 @@ const FORMATS: { id: string; label: string; desc: string; icon: IconName }[] = [
 ];
 
 export default function ExportScreen() {
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
   const [sel, setSel] = useState('pdf');
   return (
     <View style={s.root}>
@@ -47,7 +50,7 @@ export default function ExportScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1 },
   scroll: { padding: 18, paddingBottom: 36 },

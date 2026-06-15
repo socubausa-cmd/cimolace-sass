@@ -1,10 +1,12 @@
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import EleveLiveShell from '@/components/live-room/eleve-live-shell';
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 /**
  * Variante WEB de la salle live. LiveKit (WebRTC natif) n'est PAS importé ici —
@@ -15,6 +17,8 @@ import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
  * vidéo LiveKit vit dans LiveRoomNative.tsx (build natif).
  */
 export default function LiveRoomWeb() {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const router = useRouter();
   const params = useLocalSearchParams<{ title?: string; role?: string }>();
   const title = typeof params.title === 'string' && params.title ? params.title : 'Session live';
@@ -45,7 +49,7 @@ export default function LiveRoomWeb() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28 },
   card: {

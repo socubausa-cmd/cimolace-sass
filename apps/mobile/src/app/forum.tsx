@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 import { fetchForumTopics, type ForumTopic } from '@/lib/liri-api';
 
 type IconName = React.ComponentProps<typeof Feather>['name'];
@@ -48,6 +49,8 @@ function topicToThread(t: ForumTopic): Thread {
 
 export default function ForumScreen() {
   const router = useRouter();
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const [q, setQ] = useState('');
   const [topics, setTopics] = useState<ForumTopic[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -158,7 +161,7 @@ export default function ForumScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1 },
   flex1: { flex: 1 },

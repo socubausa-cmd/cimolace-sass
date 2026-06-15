@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 
-import { LiriColors as C } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 /**
  * Dégradé "ember" coral→clay (135°) — la signature chaleureuse du portail web
@@ -17,6 +17,7 @@ export function Ember({
   style?: StyleProp<ViewStyle>;
   children?: ReactNode;
 }) {
+  const { colors: C } = useTheme();
   return (
     <LinearGradient
       colors={[C.coral, C.clay]}

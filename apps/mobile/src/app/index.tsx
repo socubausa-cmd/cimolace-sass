@@ -5,7 +5,8 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Ember } from '@/components/ember';
-import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 import { fetchLives, fetchStats, quickStartLive, type Live, type Stats } from '@/lib/liri-api';
 
 const JOURS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
@@ -29,6 +30,8 @@ const QUICK: { label: string; icon: React.ComponentProps<typeof Feather>['name']
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 30_000);
@@ -238,7 +241,7 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },

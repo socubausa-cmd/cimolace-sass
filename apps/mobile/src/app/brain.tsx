@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -13,8 +13,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Ember } from '@/components/ember';
-import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
 import { hasToken, streamBrain } from '@/lib/liri-api';
+import { useTheme } from '@/lib/theme';
 
 interface Msg {
   id: string;
@@ -33,6 +34,8 @@ let seq = 0;
 const nextId = () => `m${seq++}`;
 
 export default function BrainScreen() {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [pending, setPending] = useState(false);
@@ -199,7 +202,7 @@ export default function BrainScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1 },
   flex: { flex: 1 },

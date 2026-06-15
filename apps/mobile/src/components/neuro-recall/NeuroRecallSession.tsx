@@ -1,8 +1,9 @@
 import { Feather } from '@expo/vector-icons';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 import { fetchDueCards, reviewCard, type RecallCard, type ReviewQuality } from './data';
 
@@ -14,8 +15,8 @@ interface Props {
 
 type IconName = React.ComponentProps<typeof Feather>['name'];
 
-/** Les 4 boutons de notation mappés sur quality 1-4. */
-const GRADES: { quality: ReviewQuality; label: string; icon: IconName; color: string }[] = [
+/** Les 4 boutons de notation mappés sur quality 1-4 (couleurs dépendantes de la teinte). */
+const makeGrades = (C: LiriPalette): { quality: ReviewQuality; label: string; icon: IconName; color: string }[] => [
   { quality: 1, label: 'À revoir', icon: 'rotate-ccw', color: C.live },
   { quality: 2, label: 'Difficile', icon: 'alert-triangle', color: '#c9803f' },
   { quality: 3, label: 'Correct', icon: 'check', color: C.coral },
@@ -29,6 +30,9 @@ const GRADES: { quality: ReviewQuality; label: string; icon: IconName; color: st
  * Animation flip via Animated.Value. Progression (index/total).
  */
 export function NeuroRecallSession({ deckId, onDone }: Props) {
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
+  const GRADES = useMemo(() => makeGrades(C), [C]);
   const [cards, setCards] = useState<RecallCard[] | null>(null);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -208,7 +212,7 @@ export function NeuroRecallSession({ deckId, onDone }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   flex1: { flex: 1 },
   pressed: { opacity: 0.78 },
 

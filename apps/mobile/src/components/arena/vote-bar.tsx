@@ -1,8 +1,9 @@
 import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 import type { VoteChoice } from './data';
 
@@ -23,6 +24,8 @@ export function VoteBar({
   myVote: VoteChoice | null;
   onVote: (choice: VoteChoice) => Promise<boolean>;
 }) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const [pending, setPending] = useState<VoteChoice | null>(null);
 
   const handle = async (choice: VoteChoice) => {
@@ -77,7 +80,7 @@ export function VoteBar({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   wrap: {
     backgroundColor: C.panel,
     borderRadius: 18,

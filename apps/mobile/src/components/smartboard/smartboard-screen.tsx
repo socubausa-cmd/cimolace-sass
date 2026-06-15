@@ -10,7 +10,7 @@
  */
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -23,7 +23,8 @@ import {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 import { BoardCanvas, type DrawPoint } from './BoardCanvas';
 import {
@@ -48,6 +49,8 @@ const HISTORY_LIMIT = 60;
 
 export default function SmartboardScreen() {
   const router = useRouter();
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const params = useLocalSearchParams<{ id?: string; title?: string }>();
   const initialId = typeof params.id === 'string' && params.id ? params.id : null;
 
@@ -193,7 +196,7 @@ export default function SmartboardScreen() {
     setLivePoints(null);
     setLiveShape(null);
     startRef.current = null;
-  }, [tool, livePoints, liveShape, penColor, penWidth, project.canvas.background, mutateActiveScene]);
+  }, [tool, livePoints, liveShape, penColor, penWidth, project.canvas.background, mutateActiveScene, C.panel]);
 
   const onTap = useCallback((p: DrawPoint) => {
     setTextValue('');
@@ -392,7 +395,7 @@ export default function SmartboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1 },
   loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },

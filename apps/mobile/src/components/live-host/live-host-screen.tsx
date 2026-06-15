@@ -22,7 +22,7 @@ import HostShell, {
 } from '@/components/live-host/host-shell';
 import { fetchLiveDeck } from '@/components/live-host/live-deck';
 import { type SmartboardSlide } from '@/components/live-host/immersive-smartboard';
-import { LiriColors as C } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 import { LIVEKIT_URL, endLive, fetchLiveToken, fetchSessionDeckId, startRecording, stopRecording } from '@/lib/liri-api';
 
 /**
@@ -34,6 +34,7 @@ import { LIVEKIT_URL, endLive, fetchLiveToken, fetchSessionDeckId, startRecordin
  * Sans `id`, affiche la coque en mode preview (mock).
  */
 export default function LiveHostScreen() {
+  const { colors: C } = useTheme();
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string; deck?: string }>();
   const sessionId = typeof params.id === 'string' ? params.id : '';
