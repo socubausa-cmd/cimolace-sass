@@ -2,6 +2,11 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { AuthService } from '../auth/auth.service';
 import { PawaPayService } from '../pawapay/pawapay.service';
+import {
+  verifyStripeSignature,
+  stripeFetchSubscription,
+  unixToIso,
+} from '../billing/stripe-rest.util';
 
 /**
  * Cycle de vie des abonnements mensuels Ngowazulu payés par PawaPay (Mobile Money).
@@ -82,74 +87,183 @@ export class SubscriptionRenewalService {
     if (status !== 'COMPLETED') return;
 
     const { data: deposit } = await this.ppDeposits
-      .select('user_id, kind, plan_slug')
+      .select('user_id, kind, plan_slug, tenant_id')
       .eq('deposit_id', depositId)
       .maybeSingle();
 
     if (deposit?.kind === 'subscription' && deposit.plan_slug) {
-      await this.createOrExtendSubscription(deposit.user_id, deposit.plan_slug);
+      await this.createOrExtendSubscription(deposit.user_id, deposit.plan_slug, {
+        tenantId: deposit.tenant_id,
+        provider: 'pawapay',
+      });
     }
     this.logger.log(`pawaPay COMPLETED traité — depositId=${depositId} kind=${deposit?.kind}`);
   }
 
-  /** Crée (ou prolonge de +1 mois) l'abonnement mensuel d'un utilisateur sur un plan. */
-  async createOrExtendSubscription(userId: string, planSlug: string): Promise<void> {
-    const { data: plan } = await this.subsPlanBySlug(planSlug);
+  /**
+   * Crée (ou prolonge de +1 mois) l'abonnement mensuel d'un utilisateur — schéma PROD réel
+   * (`billing_subscriptions`: provider / plan_id=key / current_period_*; `billing_plans` clé = `key`).
+   * Partagé pawaPay (app-driven) et Stripe (récurrent natif). Montant lu serveur depuis le plan.
+   */
+  async createOrExtendSubscription(
+    userId: string,
+    planSlug: string,
+    opts: {
+      tenantId?: string | null;
+      provider?: string; // 'pawapay' | 'stripe'
+      providerSubscriptionId?: string | null;
+      providerCustomerId?: string | null;
+      currentPeriodEnd?: string | null; // ISO (période Stripe faisant foi) ; sinon now+30j
+    } = {},
+  ): Promise<void> {
+    const provider = opts.provider ?? 'pawapay';
+
+    // Plan : schéma prod = billing_plans.key (pas .slug), price_cents, currency.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: plan } = await (this.supabase as any)
+      .from('billing_plans')
+      .select('key, price_cents, currency')
+      .eq('key', planSlug)
+      .maybeSingle();
     if (!plan) {
-      this.logger.warn(`createOrExtendSubscription : plan introuvable slug=${planSlug}`);
+      this.logger.warn(`createOrExtendSubscription : plan introuvable key=${planSlug}`);
       return;
     }
 
+    // tenant_id est NOT NULL : fourni, sinon on résout isna actif.
+    let tenantId = opts.tenantId ?? null;
+    if (!tenantId) {
+      const { data: t } = await this.supabase
+        .from('tenants')
+        .select('id')
+        .eq('slug', 'isna')
+        .eq('status', 'active')
+        .maybeSingle();
+      tenantId = t?.id ?? null;
+    }
+    if (!tenantId) {
+      this.logger.warn('createOrExtendSubscription : tenant_id introuvable — abandon');
+      return;
+    }
+
+    const now = new Date();
+
     const { data: existing } = await this.subs
-      .select('id, expires_at')
+      .select('id, current_period_end')
       .eq('user_id', userId)
-      .eq('plan_id', plan.id)
-      .eq('provider', 'pawapay')
+      .eq('plan_id', plan.key)
+      .eq('provider', provider)
       .in('status', ['active', 'past_due', 'pending'])
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    const now = new Date();
+    // Période : Stripe fournit la fin faisant foi ; sinon prolonge +30j depuis la fin courante/maintenant.
+    const computedEnd =
+      opts.currentPeriodEnd ??
+      this.addDaysISO(
+        existing?.current_period_end && new Date(existing.current_period_end) > now
+          ? new Date(existing.current_period_end)
+          : now,
+        SubscriptionRenewalService.PERIOD_DAYS,
+      );
+
     if (existing) {
-      // Prolonge à partir de la fin courante si elle est dans le futur, sinon à partir de maintenant
-      const from = existing.expires_at && new Date(existing.expires_at) > now ? new Date(existing.expires_at) : now;
-      const newExpiry = this.addDaysISO(from, SubscriptionRenewalService.PERIOD_DAYS);
-      await this.subs
-        .update({
-          status: 'active',
-          expires_at: newExpiry,
-          next_renewal_due_at: newExpiry,
-          last_reminder_sent_at: null,
-          reminder_stage: 'none',
-          updated_at: now.toISOString(),
-        })
-        .eq('id', existing.id);
-      this.logger.log(`Abonnement prolongé — user=${userId} plan=${planSlug} → ${newExpiry}`);
-    } else {
-      const expiry = this.addDaysISO(now, SubscriptionRenewalService.PERIOD_DAYS);
-      await this.subs.insert({
-        user_id: userId,
-        plan_id: plan.id,
+      const patch: Record<string, unknown> = {
         status: 'active',
-        provider: 'pawapay',
-        payment_method: 'mobile_money',
-        started_at: now.toISOString(),
-        expires_at: expiry,
-        next_renewal_due_at: expiry,
-        auto_renew_enabled: true,
-      });
-      this.logger.log(`Abonnement créé — user=${userId} plan=${planSlug} → ${expiry}`);
+        current_period_end: computedEnd,
+        updated_at: now.toISOString(),
+      };
+      if (opts.providerSubscriptionId) patch.provider_subscription_id = opts.providerSubscriptionId;
+      if (opts.providerCustomerId) patch.provider_customer_id = opts.providerCustomerId;
+      await this.subs.update(patch).eq('id', existing.id);
+      this.logger.log(`Abonnement prolongé — user=${userId} plan=${planSlug} (${provider}) → ${computedEnd}`);
+    } else {
+      const row: Record<string, unknown> = {
+        tenant_id: tenantId,
+        user_id: userId,
+        plan_id: plan.key,
+        provider,
+        status: 'active',
+        amount_cents: plan.price_cents ?? 0,
+        currency: plan.currency ?? 'EUR',
+        current_period_start: now.toISOString(),
+        current_period_end: computedEnd,
+      };
+      if (opts.providerSubscriptionId) row.provider_subscription_id = opts.providerSubscriptionId;
+      if (opts.providerCustomerId) row.provider_customer_id = opts.providerCustomerId;
+      await this.subs.insert(row);
+      this.logger.log(`Abonnement créé — user=${userId} plan=${planSlug} (${provider}) → ${computedEnd}`);
     }
   }
 
-  private async subsPlanBySlug(slug: string) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (this.supabase as any)
-      .from('billing_plans')
-      .select('id, slug, price_amount, price_currency')
-      .eq('slug', slug)
-      .maybeSingle();
+  // ── Webhook Stripe des offres élève ─────────────────────────────────────────
+  /**
+   * Traite le webhook Stripe (POST /offering-checkout/webhook/stripe), signature vérifiée.
+   * - checkout.session.completed (mode subscription) → crée/active l'abo mentorat (carte).
+   * - checkout.session.completed (mode payment)      → offrande/consultation one-off : log.
+   * - invoice.paid / invoice.payment_succeeded       → renouvellement Stripe : prolonge la période.
+   */
+  async handleStripeOfferingWebhook(rawBody: Buffer, signature?: string): Promise<void> {
+    const secret =
+      process.env.STRIPE_OFFERING_WEBHOOK_SECRET ||
+      process.env.STRIPE_WEBHOOK_SECRET ||
+      process.env.STRIPE_BILLING_WEBHOOK_SECRET;
+    if (!secret) {
+      this.logger.warn('Webhook Stripe offering : aucun secret configuré — ignoré');
+      return;
+    }
+    const event = verifyStripeSignature(rawBody, signature, secret);
+    if (!event) throw new BadRequestException('Signature Stripe invalide');
+
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data?.object ?? {};
+      const meta = session.metadata ?? {};
+      const userId: string | undefined = meta.user_id;
+      const planSlug: string | undefined = meta.plan_slug;
+
+      if (session.mode === 'subscription' && userId && planSlug) {
+        const stripeSubId: string | null = session.subscription || null;
+        const stripeSub = stripeSubId ? await stripeFetchSubscription(stripeSubId) : null;
+        await this.createOrExtendSubscription(userId, planSlug, {
+          tenantId: meta.tenant_id ?? null,
+          provider: 'stripe',
+          providerSubscriptionId: stripeSubId,
+          providerCustomerId: session.customer ?? null,
+          currentPeriodEnd: unixToIso(stripeSub?.current_period_end),
+        });
+        this.logger.log(`Stripe abo mentorat activé — user=${userId} plan=${planSlug} sub=${stripeSubId}`);
+      } else {
+        this.logger.log(
+          `Stripe paiement unique complété — kind=${meta.kind} user=${userId} session=${session.id}`,
+        );
+      }
+      return;
+    }
+
+    if (event.type === 'invoice.paid' || event.type === 'invoice.payment_succeeded') {
+      const invoice = event.data?.object ?? {};
+      // La 1re facture est déjà couverte par checkout.session.completed → pas de double prolongation.
+      if (invoice.billing_reason === 'subscription_create') return;
+      const stripeSubId = invoice.subscription;
+      if (!stripeSubId) return;
+      const { data: sub } = await this.subs
+        .select('id')
+        .eq('provider_subscription_id', stripeSubId)
+        .maybeSingle();
+      if (!sub) {
+        this.logger.warn(`invoice.paid : abonnement Stripe introuvable sub=${stripeSubId}`);
+        return;
+      }
+      const periodEnd =
+        unixToIso(invoice.lines?.data?.[0]?.period?.end) ??
+        this.addDaysISO(new Date(), SubscriptionRenewalService.PERIOD_DAYS);
+      await this.subs
+        .update({ status: 'active', current_period_end: periodEnd, updated_at: new Date().toISOString() })
+        .eq('id', sub.id);
+      this.logger.log(`Renouvellement Stripe — sub=${sub.id} → ${periodEnd}`);
+      return;
+    }
   }
 
   // ── Planificateur de renouvellement ─────────────────────────────────────────

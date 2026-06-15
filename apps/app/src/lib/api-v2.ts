@@ -138,6 +138,9 @@ export const checkoutApi = {
 export const offeringCheckoutApi = {
   createMobileMoney: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/offering-checkout/mobile-money', body).then(unwrap),
+  /** Paiement CARTE (Stripe Checkout) → renvoie { checkoutUrl } à ouvrir (redirect). */
+  createCard: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/offering-checkout/card', body).then(unwrap),
   getStatus: (depositId: string) =>
     apiV2.get<ApiEnvelope<any>>(`/offering-checkout/mobile-money/${depositId}/status`).then(unwrap),
   getProviders: (country?: string) =>

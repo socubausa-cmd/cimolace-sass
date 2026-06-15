@@ -43,10 +43,12 @@ export default function PaiementPage() {
     return { kind: 'donation', title: 'Paiement PRORASCIENCE', subtitle: 'Choisissez votre contribution', amountEditable: true, fixedLabel: null };
   }, [planSlug, typeParam]);
 
+  const [method, setMethod] = useState('card'); // 'card' (Stripe) | 'mobile_money' (PawaPay)
   const [amountEur, setAmountEur] = useState('');
   const [phone, setPhone] = useState('');
   const [provider, setProvider] = useState(PROVIDERS[0].code);
   const [status, setStatus] = useState({ state: 'idle', message: '', depositId: null });
+  const cardReturn = searchParams.get('card'); // 'success' | 'cancel' au retour de Stripe
 
   const country = useMemo(
     () => PROVIDERS.find((p) => p.code === provider)?.country || 'CMR',
@@ -57,23 +59,38 @@ export default function PaiementPage() {
     e.preventDefault();
     setStatus({ state: 'submitting', message: '', depositId: null });
     try {
-      const body = {
-        kind: offer.kind,
-        phoneNumber: phone.trim(),
-        provider,
-        country,
-      };
-      if (offer.kind === 'subscription') {
-        body.planSlug = planSlug;
-      } else {
-        const cents = Math.round(parseFloat(amountEur) * 100);
-        if (!cents || cents < 100) {
+      // Montant : calculé serveur pour un abonnement ; fourni pour offrande/consultation.
+      let amountCents;
+      if (offer.kind !== 'subscription') {
+        amountCents = Math.round(parseFloat(amountEur) * 100);
+        if (!amountCents || amountCents < 100) {
           setStatus({ state: 'error', message: 'Indiquez un montant valide (min 1,00 €).', depositId: null });
           return;
         }
-        body.amountCents = cents;
-        if (planSlug) body.planSlug = planSlug;
       }
+
+      // ── Carte bancaire (Stripe Checkout) → redirection ──
+      if (method === 'card') {
+        const base = `${window.location.origin}/t/${tenantSlug || DEFAULT_TENANT_SLUG}/paiement${planSlug ? `?plan=${encodeURIComponent(planSlug)}` : ''}`;
+        const sep = base.includes('?') ? '&' : '?';
+        const body = { kind: offer.kind };
+        if (offer.kind === 'subscription') body.planSlug = planSlug;
+        else { body.amountCents = amountCents; if (planSlug) body.planSlug = planSlug; }
+        body.successUrl = `${base}${sep}card=success&session_id={CHECKOUT_SESSION_ID}`;
+        body.cancelUrl = `${base}${sep}card=cancel`;
+        const res = await offeringCheckoutApi.createCard(body);
+        if (res?.checkoutUrl) {
+          window.location.href = res.checkoutUrl;
+          return;
+        }
+        setStatus({ state: 'error', message: 'Réponse de paiement carte invalide.', depositId: null });
+        return;
+      }
+
+      // ── Mobile Money (PawaPay) ──
+      const body = { kind: offer.kind, phoneNumber: phone.trim(), provider, country };
+      if (offer.kind === 'subscription') body.planSlug = planSlug;
+      else { body.amountCents = amountCents; if (planSlug) body.planSlug = planSlug; }
       const res = await offeringCheckoutApi.createMobileMoney(body);
       setStatus({
         state: 'success',
@@ -104,7 +121,7 @@ export default function PaiementPage() {
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-        <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Paiement Mobile Money</p>
+        <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">Paiement sécurisé</p>
         <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">{offer.title}</h1>
         <p className="mt-2 text-gray-300">{offer.subtitle}</p>
 
@@ -123,7 +140,49 @@ export default function PaiementPage() {
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        {cardReturn === 'success' && (
+          <div className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+            Paiement par carte confirmé.{' '}
+            {offer.kind === 'subscription' ? 'Votre abonnement est actif.' : 'Merci pour votre contribution.'}
+          </div>
+        )}
+        {cardReturn === 'cancel' && (
+          <div className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
+            Paiement par carte annulé. Vous pouvez réessayer ci-dessous.
+          </div>
+        )}
+
+        {/* Choix du moyen de paiement */}
+        <div className="mt-8 grid grid-cols-2 gap-3" role="tablist" aria-label="Moyen de paiement">
+          {[
+            { id: 'card', label: 'Carte bancaire', sub: 'Visa · Mastercard' },
+            { id: 'mobile_money', label: 'Mobile Money', sub: 'MTN · Orange' },
+          ].map((m) => {
+            const active = method === m.id;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => {
+                  setMethod(m.id);
+                  setStatus({ state: 'idle', message: '', depositId: null });
+                }}
+                className={`flex cursor-pointer flex-col items-start rounded-xl border px-4 py-3 text-left transition-colors ${
+                  active
+                    ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)]'
+                    : 'border-white/15 bg-white/5 hover:border-white/30'
+                }`}
+              >
+                <span className={`text-sm font-semibold ${active ? 'text-white' : 'text-gray-200'}`}>{m.label}</span>
+                <span className="text-xs text-gray-400">{m.sub}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <form onSubmit={handleSubmit} className="mt-6 space-y-5">
           {offer.amountEditable && (
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-200">Montant (EUR)</label>
@@ -140,36 +199,48 @@ export default function PaiementPage() {
             </div>
           )}
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-200">Opérateur Mobile Money</label>
-            <select value={provider} onChange={(e) => setProvider(e.target.value)} className={inputCls}>
-              {PROVIDERS.map((p) => (
-                <option key={p.code} value={p.code} className="bg-[#0b1115]">
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          {method === 'mobile_money' && (
+            <>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-200">Opérateur Mobile Money</label>
+                <select value={provider} onChange={(e) => setProvider(e.target.value)} className={inputCls}>
+                  {PROVIDERS.map((p) => (
+                    <option key={p.code} value={p.code} className="bg-[#0b1115]">
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-200">Numéro Mobile Money</label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+237 6XX XXX XXX"
-              className={inputCls}
-              required
-            />
-            <p className="mt-1 text-xs text-gray-500">Format international (E.164), ex : +237612345678</p>
-          </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-200">Numéro Mobile Money</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+237 6XX XXX XXX"
+                  className={inputCls}
+                  required
+                />
+                <p className="mt-1 text-xs text-gray-500">Format international (E.164), ex : +237612345678</p>
+              </div>
+            </>
+          )}
 
           <button
             type="submit"
             disabled={status.state === 'submitting'}
-            className="w-full rounded-lg bg-[var(--school-accent)] px-5 py-3 font-semibold text-black hover:bg-[#e5c04a] disabled:opacity-60"
+            className="w-full cursor-pointer rounded-lg bg-[var(--school-accent)] px-5 py-3 font-semibold text-black hover:bg-[#e5c04a] disabled:opacity-60"
           >
-            {status.state === 'submitting' ? 'Envoi en cours…' : 'Payer par Mobile Money'}
+            {status.state === 'submitting'
+              ? method === 'card'
+                ? 'Redirection vers le paiement…'
+                : 'Envoi en cours…'
+              : method === 'card'
+                ? offer.kind === 'subscription'
+                  ? "S'abonner par carte"
+                  : 'Payer par carte'
+                : 'Payer par Mobile Money'}
           </button>
         </form>
 
@@ -193,7 +264,9 @@ export default function PaiementPage() {
         )}
 
         <p className="mt-8 text-xs text-gray-500">
-          Paiement opéré par PawaPay (Mobile Money). Aucune donnée bancaire n'est stockée par PRORASCIENCE.
+          {method === 'card'
+            ? 'Paiement sécurisé par Stripe (carte). Aucune donnée bancaire n’est stockée par PRORASCIENCE.'
+            : 'Paiement opéré par PawaPay (Mobile Money). Aucune donnée bancaire n’est stockée par PRORASCIENCE.'}
         </p>
       </main>
     </div>

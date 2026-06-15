@@ -19,6 +19,7 @@ import { SkipResponseWrapper } from '../common/decorators/skip-response-wrapper.
 import { OfferingCheckoutService } from './offering-checkout.service';
 import { SubscriptionRenewalService } from './subscription-renewal.service';
 import { CreateOfferingDepositDto } from './create-offering-deposit.dto';
+import { CreateOfferingCardDto } from './create-offering-card.dto';
 
 /**
  * Paiement Mobile Money (pawaPay) des offres PRORASCIENCE / Ngowazulu :
@@ -35,6 +36,13 @@ export class OfferingCheckoutController {
   @UseGuards(JwtAuthGuard)
   create(@Body() dto: CreateOfferingDepositDto, @CurrentUser() user: AuthUser) {
     return this.svc.createMobileMoneyDeposit(user.id, dto);
+  }
+
+  /** Paiement CARTE (Stripe Checkout) — renvoie { checkoutUrl } à ouvrir côté client. */
+  @Post('card')
+  @UseGuards(JwtAuthGuard)
+  card(@Body() dto: CreateOfferingCardDto, @CurrentUser() user: AuthUser) {
+    return this.svc.createStripeCheckout(user.id, dto, user.email);
   }
 
   @Get('mobile-money/:depositId/status')
@@ -62,6 +70,21 @@ export class OfferingCheckoutController {
     @Headers('x-pawapay-signature') sig?: string,
   ) {
     await this.renewals.handlePawaPayCallback(req.rawBody ?? Buffer.alloc(0), sig);
+    return { received: true };
+  }
+
+  /**
+   * Webhook Stripe (offres élève) — pas de JWT, protégé par signature `stripe-signature`.
+   * rawBody: true activé dans main.ts. À enregistrer dans le dashboard Stripe :
+   * POST /offering-checkout/webhook/stripe (events: checkout.session.completed, invoice.paid).
+   */
+  @Post('webhook/stripe')
+  @SkipResponseWrapper()
+  async stripeWebhook(
+    @Req() req: RawBodyRequest<Request>,
+    @Headers('stripe-signature') sig?: string,
+  ) {
+    await this.renewals.handleStripeOfferingWebhook(req.rawBody ?? Buffer.alloc(0), sig);
     return { received: true };
   }
 
