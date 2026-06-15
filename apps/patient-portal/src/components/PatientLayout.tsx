@@ -12,6 +12,7 @@ import {
   Calendar,
   Shield,
   Activity,
+  Sparkles,
 } from 'lucide-react';
 import { useBranding } from '../lib/branding';
 
@@ -25,6 +26,7 @@ const nav = [
   { to: '/forms',         icon: ClipboardList,   label: 'Formulaires' },
   { to: '/health',        icon: Heart,           label: 'Suivi santé' },
   { to: '/sante/mon-corps', icon: Activity,      label: 'Mon corps' },
+  { to: '/sante/assistant', icon: Sparkles,      label: 'Assistant santé' },
   { to: '/programs',      icon: BookOpen,        label: 'Programmes' },
   { to: '/messages',      icon: MessageCircle,   label: 'Messages' },
   { to: '/privacy',       icon: Shield,          label: 'Confidentialité' },

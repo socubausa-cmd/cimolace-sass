@@ -24,7 +24,42 @@ async function getJson<T>(path: string): Promise<T> {
     }
     throw new Error(msg);
   }
-  return res.json() as Promise<T>;
+  const j = await res.json();
+  // L'API enveloppe les réponses dans { data: ... } (ResponseInterceptor) ;
+  // on dé-enveloppe comme le font les autres pages du portail (d.data || d).
+  return ((j && typeof j === 'object' && 'data' in j ? j.data : j)) as T;
+}
+
+// Erreur typée pour distinguer le 503 « assistant indisponible » du reste.
+export class ApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
+async function postJson<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(API + path, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    let msg = 'Erreur ' + res.status;
+    try {
+      const b = await res.json();
+      msg = b?.message || msg;
+    } catch {
+      // ignore
+    }
+    throw new ApiError(res.status, msg);
+  }
+  const j = await res.json();
+  // L'API enveloppe les réponses dans { data: ... } (ResponseInterceptor) ;
+  // on dé-enveloppe comme le font les autres pages du portail (d.data || d).
+  return ((j && typeof j === 'object' && 'data' in j ? j.data : j)) as T;
 }
 
 // ── Bio Digital Twin — vue patient ────────────────────────────────────
@@ -62,8 +97,35 @@ export type MyTwinState = {
   disclaimer: string;
 };
 
+// ── Assistant santé — chat pédagogique patient ────────────────────────
+export type AssistantTurn = {
+  role: 'user' | 'assistant';
+  content: string;
+};
+
+export type AssistantRequest = {
+  message: string;
+  history?: AssistantTurn[];
+};
+
+export type AssistantReply = {
+  reply: string;
+  disclaimer: string;
+  suggestions?: string[];
+  escalate?: boolean;
+};
+
 export const patientApi = {
   getMyTwin(): Promise<MyTwinState> {
     return getJson<MyTwinState>('/med/twin-me/state');
+  },
+
+  // POST /med/twin-me/assistant — le patient est résolu côté serveur via le
+  // JWT + X-Tenant-Slug (aucun patientId envoyé). `history` est tronqué côté
+  // serveur ; on n'envoie que ce qui est utile pour borner les tokens.
+  askAssistant(message: string, history: AssistantTurn[] = []): Promise<AssistantReply> {
+    const body: AssistantRequest = { message };
+    if (history.length > 0) body.history = history;
+    return postJson<AssistantReply>('/med/twin-me/assistant', body);
   },
 };
