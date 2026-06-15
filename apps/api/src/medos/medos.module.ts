@@ -8,6 +8,7 @@ import {
   MedosNoteController,
   MedosPatientMeController,
   MedosFormsController,
+  MedosFormAssignmentsController,
   MedosHealthController,
 } from './medos.controller';
 import { MedChartingController } from './med-charting.controller';
@@ -143,6 +144,9 @@ import { LiveModule } from '../live/live.module';
     MedosNoteController,
     MedosPatientMeController,
     MedosFormsController,
+    // Broad '/med' controller — registered AFTER the specific ones above so
+    // that med/patients/* and med/forms/* keep priority over its routes.
+    MedosFormAssignmentsController,
     MedosHealthController,
     MedChartingController,
     // Embedding & integration

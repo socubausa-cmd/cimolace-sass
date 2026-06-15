@@ -21,6 +21,7 @@ import { UpdatePatientDto } from './dto/update-patient.dto';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { CreateFormDto } from './dto/create-form.dto';
+import { AssignFormDto } from './dto/assign-form.dto';
 import { AuditResource } from './decorators/audit-resource.decorator';
 import { MedosEnabledGuard } from './medos-enabled.guard';
 import { MedosService } from './medos.service';
@@ -247,6 +248,17 @@ export class MedosPatientMeController {
   ) {
     return this.medosService.listMyAppointments(tenant, req.user.id);
   }
+
+  /** Lister les formulaires qui m'ont été assignés (patient self-service) */
+  @Get('assignments')
+  @Roles('patient')
+  @AuditResource({ resource: 'form_assignment', action: 'list' })
+  listMyAssignments(
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.medosService.listMyAssignments(tenant, req.user.id);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -317,6 +329,57 @@ export class MedosFormsController {
     @CurrentTenant() tenant: TenantContext,
   ) {
     return this.medosService.getFormResponses(tenant, formId);
+  }
+
+  /** Assigner un formulaire précis à un patient précis (staff) */
+  @Post(':formId/assign')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'practitioner', 'clinic_admin', 'receptionist')
+  assignForm(
+    @Param('formId') formId: string,
+    @Body() dto: AssignFormDto,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.medosService.assignForm(tenant, req.user.id, formId, dto);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Form assignments — staff-side cancel + per-patient listing.
+// Mounted on '/med' (not '/med/forms') because the cancel and per-patient
+// listing paths don't nest under a single form. Registered AFTER the more
+// specific controllers in the module so route matching stays unambiguous.
+// ---------------------------------------------------------------------------
+
+@ApiTags('MedOS — Assignations de formulaires')
+@ApiBearerAuth()
+@Controller('med')
+@UseGuards(JwtAuthGuard, TenantGuard, MedosEnabledGuard)
+export class MedosFormAssignmentsController {
+  constructor(private readonly medosService: MedosService) {}
+
+  /** Annuler une assignation (staff) */
+  @Post('form-assignments/:id/cancel')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'practitioner', 'clinic_admin', 'receptionist')
+  cancelAssignment(
+    @Param('id') id: string,
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.medosService.cancelAssignment(tenant, id);
+  }
+
+  /** Lister les assignations d'un patient (staff) */
+  @Get('patients/:patientId/assignments')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'practitioner', 'clinic_admin', 'receptionist')
+  @AuditResource({ resource: 'form_assignment', action: 'list', idParam: 'patientId' })
+  listPatientAssignments(
+    @Param('patientId') patientId: string,
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.medosService.listPatientAssignments(tenant, patientId);
   }
 }
 
