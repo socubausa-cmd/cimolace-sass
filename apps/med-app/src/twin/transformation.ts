@@ -98,21 +98,29 @@ const SCORING: Record<string, Scored> = {
 export type Answers = Record<string, string | string[]>;
 export type WheelScores = { lifestyle: Record<string, number>; functional: Record<string, number> };
 
-export function scoreResponses(answers: Answers): WheelScores {
+// Surcharge manuelle de la grille (éditée en back-office). Par question :
+// poids par option (ordinal), axes hygiène (life), axes fonctionnels (fn).
+export type ScoringOverride = Record<string, { values?: number[]; life?: string[]; fn?: string[] }>;
+
+export function scoreResponses(answers: Answers, override: ScoringOverride = {}): WheelScores {
   const life: Record<string, number[]> = {};
   const fn: Record<string, number[]> = {};
   const push = (bag: Record<string, number[]>, keys: string[], v: number) => keys.forEach((k) => (bag[k] ||= []).push(v));
 
   for (const q of QUESTIONS) {
-    const rule = SCORING[q.id];
-    if (!rule) continue;
+    const base = SCORING[q.id];
+    if (!base) continue;
+    const ov = override[q.id];
+    const lifeKeys = ov?.life ?? base.life;
+    const fnKeys = ov?.fn ?? base.fn;
     const a = answers[q.id];
     if (a == null || (Array.isArray(a) && a.length === 0)) continue;
 
     let v: number | null = null;
-    if (rule.kind === 'ordinal') {
+    if (base.kind === 'ordinal') {
+      const values = ov?.values ?? base.values;
       const i = q.options.indexOf(String(a));
-      if (i >= 0 && i < rule.values.length) v = rule.values[i];
+      if (i >= 0 && i < values.length) v = values[i];
     } else {
       const picked = Array.isArray(a) ? a : [a];
       const none = picked.some((p) => /^aucun/i.test(p));
@@ -121,8 +129,8 @@ export function scoreResponses(answers: Answers): WheelScores {
       v = none && hit === 0 ? 92 : Math.max(8, Math.round(100 - (hit / signs) * 100));
     }
     if (v == null) continue;
-    push(life, rule.life, v);
-    push(fn, rule.fn, v);
+    push(life, lifeKeys, v);
+    push(fn, fnKeys, v);
   }
 
   const avg = (xs?: number[]) => (xs && xs.length ? Math.round(xs.reduce((s, x) => s + x, 0) / xs.length) : null);
@@ -138,3 +146,23 @@ export function answeredCount(answers: Answers): number {
   return QUESTIONS.filter((q) => SCORING[q.id] && answers[q.id] != null && (!Array.isArray(answers[q.id]) || (answers[q.id] as string[]).length > 0)).length;
 }
 export const SCORED_TOTAL = Object.keys(SCORING).length;
+
+// ── Vue éditable de la grille (back-office) ─────────────────────────────────
+export type ScoringRow = {
+  id: string; label: string; kind: 'ordinal' | 'signs';
+  options: string[]; values: number[] | null; life: string[]; fn: string[];
+};
+
+/** Grille complète (défauts fusionnés avec l'override) pour l'éditeur. */
+export function getScoringRows(override: ScoringOverride = {}): ScoringRow[] {
+  return QUESTIONS.filter((q) => SCORING[q.id]).map((q) => {
+    const base = SCORING[q.id];
+    const ov = override[q.id];
+    return {
+      id: q.id, label: q.label, kind: base.kind, options: q.options,
+      values: base.kind === 'ordinal' ? (ov?.values ?? base.values) : null,
+      life: ov?.life ?? base.life,
+      fn: ov?.fn ?? base.fn,
+    };
+  });
+}

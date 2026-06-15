@@ -1,13 +1,15 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { twinApi, WHEEL_LABELS, COLOR_HEX, type OrganColor, type LabDocument } from './api';
 import {
-  Loader2, Sparkles, Users, FlaskConical, FileText, GitBranch, Clock, TrendingUp, Beaker, Search, Camera as CameraIcon,
+  Loader2, Sparkles, Users, FlaskConical, FileText, GitBranch, Clock, TrendingUp, Beaker, Search, Camera as CameraIcon, SlidersHorizontal,
 } from 'lucide-react';
 import { useCamera } from '../native/useCamera';
 import { BodyViewer } from './BodyViewer';
 import { FunctionalWheel, BilanModal } from './TransformationBilan';
-import { scoreResponses, type Answers } from './transformation';
+import { scoreResponses, type Answers, type ScoringOverride } from './transformation';
 import { ensureBilanForm, saveBilanResponse, loadLatestBilan } from './bilan-api';
+import { ScoringGridEditor } from './ScoringGridEditor';
+import { loadScoringConfig } from './scoring-config';
 
 const panel: React.CSSProperties = { background: '#fff', borderRadius: 14, border: '1px solid var(--zw-border)', padding: 18 };
 const head: React.CSSProperties = { fontSize: 14, fontWeight: 700, margin: 0, marginBottom: 12, color: 'var(--zw-text)', display: 'flex', alignItems: 'center', gap: 7 };
@@ -24,6 +26,8 @@ export function WheelPanel({ patientId }: { patientId: string }) {
   const [answers, setAnswers] = useState<Answers>({});
   const [selAxis, setSelAxis] = useState<string | null>(null);
   const [formId, setFormId] = useState<string | null>(null);
+  const [scoring, setScoring] = useState<ScoringOverride>(() => loadScoringConfig());
+  const [gridOpen, setGridOpen] = useState(false);
   const lsKey = 'twin_bilan_' + patientId;
 
   useEffect(() => {
@@ -34,12 +38,23 @@ export function WheelPanel({ patientId }: { patientId: string }) {
       const fid = await ensureBilanForm(); if (!fid) return; setFormId(fid);
       const ans = await loadLatestBilan(fid, patientId);
       if (ans && Object.keys(ans).length) {
-        const { functional: fn } = scoreResponses(ans);
+        const { functional: fn } = scoreResponses(ans, loadScoringConfig());
         setFunctional(fn); setAnswers(ans);
         try { localStorage.setItem(lsKey, JSON.stringify({ answers: ans, functional: fn })); } catch { /* noop */ }
       }
     })();
   }, [patientId, lsKey]);
+
+  // Recalcule la roue quand la grille de scoring est modifiée en back-office.
+  function applyScoring(ov: ScoringOverride) {
+    setScoring(ov);
+    if (Object.keys(answers).length) {
+      const { lifestyle, functional: fn } = scoreResponses(answers, ov);
+      setFunctional(fn);
+      const next = domains.map((d) => (lifestyle[d.domain] != null ? { ...d, score: lifestyle[d.domain] } : d));
+      setDomains(next); saveLifestyle(next);
+    }
+  }
 
   const cx = 150, cy = 150, R = 120;
   const pts = domains.map((d, i) => {
@@ -56,7 +71,7 @@ export function WheelPanel({ patientId }: { patientId: string }) {
   }
 
   function applyBilan(ans: Answers) {
-    const { lifestyle, functional: fn } = scoreResponses(ans);
+    const { lifestyle, functional: fn } = scoreResponses(ans, scoring);
     setFunctional(fn); setAnswers(ans);
     try { localStorage.setItem(lsKey, JSON.stringify({ answers: ans, functional: fn })); } catch { /* noop */ }
     const next = domains.map((d) => (lifestyle[d.domain] != null ? { ...d, score: lifestyle[d.domain] } : d));
@@ -80,6 +95,9 @@ export function WheelPanel({ patientId }: { patientId: string }) {
           </div>
           <button onClick={() => setBilanOpen(true)} style={{ fontSize: 12, padding: '6px 13px', background: 'var(--zw-violet)', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
             <Sparkles size={13} /> {hasBilan ? 'Refaire le bilan' : 'Remplir le bilan'}
+          </button>
+          <button onClick={() => setGridOpen(true)} title="Configurer la grille de scoring" style={{ fontSize: 12, padding: '6px 11px', background: 'var(--zw-bg-subtle)', color: 'var(--zw-text-soft)', border: '1px solid var(--zw-border)', borderRadius: 7, cursor: 'pointer', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <SlidersHorizontal size={13} /> Grille
           </button>
         </div>
       </div>
@@ -128,6 +146,7 @@ export function WheelPanel({ patientId }: { patientId: string }) {
       )}
 
       {bilanOpen && <BilanModal initial={answers} onClose={() => setBilanOpen(false)} onComplete={applyBilan} />}
+      {gridOpen && <ScoringGridEditor override={scoring} onClose={() => setGridOpen(false)} onSaved={applyScoring} />}
     </div>
   );
 }
