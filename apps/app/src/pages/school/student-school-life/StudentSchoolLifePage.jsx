@@ -21,6 +21,20 @@ import BibliothequePage from '@/pages/BibliothequePage';
 import LibraryPage from '@/pages/LibraryPage';
 import { FormationForumContent } from '@/pages/school/FormationForumPage';
 import { SslThemeProvider, SSL_LIGHT_CLASS, ensureSslLightStyles } from './sslTheme';
+import { useShellTint } from '@/lib/useShellTint';
+
+/* Icônes bascule de teinte (mêmes tracés que le shell back-office) */
+const SslIconSun = () => (
+  <svg viewBox="0 0 20 20" width={17} height={17} fill="none">
+    <circle cx="10" cy="10" r="3.4" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M10 2.4v2.2M10 15.4v2.2M2.4 10h2.2M15.4 10h2.2M4.9 4.9l1.5 1.5M13.6 13.6l1.5 1.5M15.1 4.9l-1.5 1.5M6.4 13.6l-1.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+const SslIconMoon = () => (
+  <svg viewBox="0 0 20 20" width={17} height={17} fill="none">
+    <path d="M10 2.5a5 5 0 0 0 7.5 7.5 7.5 7.5 0 1 1-7.5-7.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+  </svg>
+);
 
 function StudentFormationForumRoute() {
   const { formationId } = useParams();
@@ -97,13 +111,36 @@ const StudentSchoolLifePage = () => {
   useEffect(() => { setCollapsed(isForum); }, [isForum]);
   // Injecte le remap CSS clair (pages en utilitaires Tailwind/shadcn). Idempotent.
   useEffect(() => { ensureSslLightStyles(); }, []);
+  // Bascule de teinte partagée avec le back-office (clé localStorage commune). Défaut = crème clair.
+  const [tint, toggleTint] = useShellTint();
+  const isLight = tint !== 'dark';
 
   return (
     // Espace ÉLÈVE = thème CLAIR. La SIDEBAR (panneau flottant sombre/or) garde son
     // propre fond et n'est PAS affectée — seul le contenu central passe au clair.
-    <SslThemeProvider mode="light">
-      <div className={SSL_LIGHT_CLASS} style={{ minHeight: '100dvh', background: '#F4F5F7', display: 'flex' }}>
+    <SslThemeProvider mode={isLight ? 'light' : 'dark'}>
+      <div className={isLight ? SSL_LIGHT_CLASS : ''} style={{ minHeight: '100dvh', background: isLight ? '#F4EFE3' : '#0b0b0f', display: 'flex' }}>
         <Helmet><title>Espace Étudiant | PRORASCIENCE</title></Helmet>
+
+        {/* Bouton de bascule de teinte (crème ⇄ sombre) — flottant, clé partagée avec le back-office */}
+        <button
+          type="button"
+          onClick={toggleTint}
+          aria-label={isLight ? 'Passer au thème sombre' : 'Passer au thème crème'}
+          title={isLight ? 'Thème sombre' : 'Thème crème'}
+          style={{
+            position: 'fixed', top: 16, right: 20, zIndex: 50,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 40, height: 40, borderRadius: 11, cursor: 'pointer',
+            background: isLight ? '#FFFFFF' : 'rgba(255,255,255,0.06)',
+            border: `1px solid ${isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.10)'}`,
+            color: isLight ? '#52525B' : 'rgba(245,245,247,0.65)',
+            boxShadow: isLight ? '0 1px 3px rgba(0,0,0,0.08)' : '0 2px 8px rgba(0,0,0,0.4)',
+            transition: 'background 150ms ease, color 150ms ease, border-color 150ms ease',
+          }}
+        >
+          {isLight ? <SslIconMoon /> : <SslIconSun />}
+        </button>
 
         {/* Sidebar (mode icônes sur le forum, bouton tiroir pour étendre) — reste SOMBRE */}
         <StudentSchoolLifeSidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />

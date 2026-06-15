@@ -59,7 +59,7 @@ export const T_DARK = {
 /* ─────────────────────────── TOKENS CLAIRS (Wix Studio) ───────────────────────────
  * Même forme que T_DARK. Contraste AA garanti sur cartes blanches. */
 export const T_LIGHT = {
-  bg:         '#F4F5F7', // canvas zone contenu
+  bg:         '#F4EFE3', // canvas crème (réf user, aligné back-office)
   surface:    '#FFFFFF', // cartes / surfaces
   surface2:   '#FFFFFF',
   surface3:   '#F4F5F7', // état hover de ligne (légèrement creusé)
