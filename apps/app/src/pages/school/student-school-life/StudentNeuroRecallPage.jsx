@@ -447,7 +447,7 @@ export default function StudentNeuroRecallPage() {
             onClick={() => setTab(id)}
             style={{
               display: 'flex', alignItems: 'center', gap: 7,
-              padding: '9px 18px', borderRadius: 9, border: 'none', cursor: 'pointer',
+              padding: '9px 18px', borderRadius: 9, cursor: 'pointer',
               background: tab === id ? T.goldDim : 'transparent',
               border: tab === id ? `1px solid ${T.goldMid}` : '1px solid transparent',
               color: tab === id ? T.gold : T.t2,
