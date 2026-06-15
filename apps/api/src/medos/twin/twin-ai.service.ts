@@ -158,12 +158,107 @@ export class TwinAiService {
   }
 
   private async callClaude<T>(system: string, user: string, maxTokens = 1500): Promise<AiResult<T>> {
-    return this.callClaudeRaw<T>(system, [{ type: 'text', text: user }], maxTokens);
+    return this.completeJson<T>(system, user, maxTokens);
   }
 
   /**
-   * Variante bas-niveau acceptant un tableau de content blocks (texte + image
-   * base64). Sert pour la vision (M3 — OCR bilans image).
+   * Chaîne multi-fournisseurs pour les sorties JSON (copilote + assistant) :
+   * Mistral (EU) → Groq → DeepSeek → Anthropic. Les 3 premiers sont
+   * OpenAI-compatibles et utilisent le mode JSON natif (`response_format`), ce
+   * qui garantit un JSON valide. On essaie chaque fournisseur DONT LA CLÉ est
+   * configurée, dans l'ordre, jusqu'au 1er qui répond un JSON exploitable ;
+   * Anthropic est le dernier repli (format `messages` différent).
+   */
+  private async completeJson<T>(
+    system: string,
+    user: string,
+    maxTokens = 1500,
+  ): Promise<AiResult<T>> {
+    const chain = [
+      { name: 'mistral', keyEnv: 'MISTRAL_API_KEY', url: 'https://api.mistral.ai/v1/chat/completions', model: this.config.get<string>('MISTRAL_MODEL') || 'mistral-large-latest' },
+      { name: 'groq', keyEnv: 'GROQ_API_KEY', url: 'https://api.groq.com/openai/v1/chat/completions', model: this.config.get<string>('GROQ_MODEL') || 'llama-3.3-70b-versatile' },
+      { name: 'deepseek', keyEnv: 'DEEPSEEK_API_KEY', url: 'https://api.deepseek.com/v1/chat/completions', model: this.config.get<string>('DEEPSEEK_MODEL') || 'deepseek-chat' },
+    ];
+    let lastErr = 'aucun fournisseur configuré';
+    for (const p of chain) {
+      const key = this.config.get<string>(p.keyEnv);
+      if (!key) continue;
+      try {
+        const res = await fetch(p.url, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: p.model,
+            max_tokens: maxTokens,
+            messages: [
+              { role: 'system', content: system },
+              { role: 'user', content: user },
+            ],
+            response_format: { type: 'json_object' },
+          }),
+        });
+        if (!res.ok) {
+          lastErr = `${p.name} ${res.status}`;
+          this.logger.warn(`${lastErr}: ${(await res.text().catch(() => '')).slice(0, 200)}`);
+          continue;
+        }
+        const j: any = await res.json();
+        const text: string = j?.choices?.[0]?.message?.content ?? '';
+        const tokens: number = j?.usage?.completion_tokens ?? 0;
+        const parsed = this.tryParseJson<T>(text);
+        if (parsed !== undefined) {
+          return { data: parsed, model: `${p.name}:${p.model}`, tokens };
+        }
+        lastErr = `${p.name}: JSON non exploitable (finish=${j?.choices?.[0]?.finish_reason ?? 'n/a'})`;
+        this.logger.warn(lastErr);
+      } catch (e) {
+        lastErr = `${p.name}: ${(e as Error).message}`;
+        this.logger.warn(lastErr);
+      }
+    }
+    // Dernier repli : Anthropic (content blocks).
+    if (this.config.get<string>('ANTHROPIC_API_KEY')) {
+      try {
+        return await this.callClaudeRaw<T>(system, [{ type: 'text', text: user }], maxTokens);
+      } catch (e) {
+        lastErr = `anthropic: ${(e as Error).message}`;
+      }
+    }
+    this.logger.error(`Aucun fournisseur LLM exploitable — ${lastErr}`);
+    throw new ServiceUnavailableException(
+      `Assistant IA momentanément indisponible (${lastErr}). Le moteur de scores reste opérationnel.`,
+    );
+  }
+
+  /**
+   * Cascade de parsing tolérante : nettoie les fences, parse strict, sinon
+   * extrait le 1er bloc équilibré, répare un JSON tronqué, tolère les virgules
+   * traînantes. Renvoie undefined si rien n'est exploitable (ne jette pas).
+   */
+  private tryParseJson<T>(rawText: string): T | undefined {
+    const cleaned = rawText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    try {
+      return JSON.parse(cleaned) as T;
+    } catch {
+      const block = extractJsonBlock(cleaned);
+      const looseComma = (x: string | null) => (x ? x.replace(/,(\s*[}\]])/g, '$1') : null);
+      const repaired = repairTruncatedJson(block ?? cleaned);
+      for (const candidate of [block, looseComma(block), repaired, looseComma(repaired)]) {
+        if (!candidate) continue;
+        try {
+          return JSON.parse(candidate) as T;
+        } catch {
+          /* candidat suivant */
+        }
+      }
+      return undefined;
+    }
+  }
+
+  /**
+   * Appel Anthropic bas-niveau acceptant des content blocks (texte + image
+   * base64) — sert pour la VISION (M3 — OCR bilans image) et de dernier repli
+   * texte. (La vision n'est pas encore portée sur la chaîne OpenAI-compatible.)
    */
   private async callClaudeRaw<T>(
     system: string,
@@ -204,47 +299,19 @@ export class TwinAiService {
           .join('')
       : (result?.content?.[0]?.text ?? '');
     const tokens: number = result?.usage?.output_tokens ?? 0;
-    const stopReason: string = result?.stop_reason ?? '';
-    const cleaned = rawText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-    let data: T;
-    try {
-      data = JSON.parse(cleaned);
-    } catch {
-      // Robustesse : le modèle enrobe parfois le JSON de prose (« Voici
-      // l'analyse : {…} »), ou la sortie est coupée par max_tokens. On tente
-      // dans l'ordre : 1er bloc équilibré, puis réparation d'un JSON tronqué.
-      const block = extractJsonBlock(cleaned);
-      const looseComma = (x: string | null) =>
-        x ? x.replace(/,(\s*[}\]])/g, '$1') : null; // vire les virgules traînantes
-      const repaired = repairTruncatedJson(block ?? cleaned);
-      let parsed: T | undefined;
-      for (const candidate of [
-        block,
-        looseComma(block),
-        repaired,
-        looseComma(repaired),
-      ]) {
-        if (parsed !== undefined || !candidate) continue;
-        try {
-          parsed = JSON.parse(candidate) as T;
-        } catch {
-          /* essaie le candidat suivant */
-        }
-      }
-      if (parsed === undefined) {
-        this.logger.error(
-          `Réponse IA non parsable (stop_reason=${stopReason || 'n/a'}, ${tokens} tokens)`,
-          rawText.slice(0, 300),
-        );
-        throw new ServiceUnavailableException(
-          stopReason === 'max_tokens'
-            ? 'Réponse IA trop longue (tronquée) — réessayez.'
-            : `La réponse IA n'était pas un JSON valide.`,
-        );
-      }
-      data = parsed;
+    const parsed = this.tryParseJson<T>(rawText);
+    if (parsed === undefined) {
+      this.logger.error(
+        `Réponse IA non parsable (stop_reason=${result?.stop_reason ?? 'n/a'}, ${tokens} tokens)`,
+        rawText.slice(0, 300),
+      );
+      throw new ServiceUnavailableException(
+        result?.stop_reason === 'max_tokens'
+          ? 'Réponse IA trop longue (tronquée) — réessayez.'
+          : `La réponse IA n'était pas un JSON valide.`,
+      );
     }
-    return { data, model: this.model, tokens };
+    return { data: parsed, model: this.model, tokens };
   }
 
   private contextBlock(ctx: PatientAiContext): string {
