@@ -22,7 +22,9 @@ const unwrap = (d: any) => (d?.data !== undefined ? d.data : d);
 // Les choix multiples sont rendus en select ici ; le vrai remplissage riche
 // (multi) se fait dans le modal BilanModal — la réponse stocke les arrays.
 const BILAN_FIELDS = QUESTIONS.map((q) => ({
-  id: q.id, label: q.label, type: 'select' as const, required: false, options: q.options,
+  id: q.id, label: q.label,
+  type: q.type === 'multi' ? 'multi' : 'select',
+  required: false, options: q.options,
 }));
 
 let cached: string | null = null;

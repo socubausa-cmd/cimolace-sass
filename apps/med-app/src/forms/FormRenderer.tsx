@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { Asterisk, Check, Send, Upload } from 'lucide-react';
 
-export type FieldType = 'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox' | 'file';
+export type FieldType = 'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox' | 'multi' | 'file';
 
 export type FormField = {
   id: string;
@@ -128,6 +128,24 @@ function FieldControl({
           <span className="fr-check-txt">{field.placeholder || "J'accepte / Je confirme"}</span>
         </label>
       );
+    case 'multi': {
+      const arr = Array.isArray(value) ? (value as string[]) : [];
+      const toggle = (o: string) => onChange(arr.includes(o) ? arr.filter((x) => x !== o) : [...arr, o]);
+      return (
+        <div className="fr-multi">
+          {(field.options || []).filter((o) => o.trim()).map((o, i) => {
+            const on = arr.includes(o);
+            return (
+              <label key={i} className={`fr-check ${on ? 'fr-check-on' : ''}`}>
+                <input type="checkbox" disabled={disabled} checked={on} onChange={() => toggle(o)} />
+                <span className="fr-check-box sq">{on && <Check size={13} strokeWidth={3} />}</span>
+                <span className="fr-check-txt">{o}</span>
+              </label>
+            );
+          })}
+        </div>
+      );
+    }
     case 'file':
       return <FilePicker value={value} onChange={onChange} disabled={disabled} />;
     default:
@@ -181,6 +199,8 @@ const CSS = `
 .fr-check-box { width:22px; height:22px; border-radius:7px; border:2px solid var(--zw-border); display:flex; align-items:center; justify-content:center; color:#fff; transition:all .16s cubic-bezier(.2,.7,.3,1); flex-shrink:0; }
 .fr-check-on .fr-check-box { background:var(--fr-accent); border-color:var(--fr-accent); transform:scale(1.05); }
 .fr-check-txt { font-size:13.5px; color:var(--zw-text-soft); }
+.fr-check-box.sq { border-radius:6px; }
+.fr-multi { display:flex; flex-direction:column; gap:7px; }
 .fr-file { display:flex; align-items:center; gap:10px; padding:16px 14px; border:1.5px dashed var(--zw-border); border-radius:10px; background:#fcfbf9; color:var(--zw-text-muted); cursor:pointer; transition:all .16s; }
 .fr-file:hover { border-color:var(--fr-accent); color:var(--fr-accent); background:color-mix(in srgb, var(--fr-accent) 5%, #fcfbf9); }
 .fr-file-on { border-style:solid; border-color:var(--fr-accent); color:var(--zw-text); }

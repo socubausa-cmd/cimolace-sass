@@ -6,7 +6,7 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 type FieldDef = {
   key: string;
   label: string;
-  type: 'text' | 'textarea' | 'checkbox' | 'select' | 'signature' | 'number' | 'date';
+  type: 'text' | 'textarea' | 'checkbox' | 'select' | 'multi' | 'signature' | 'number' | 'date';
   required?: boolean;
   options?: string[];
 };
@@ -59,7 +59,7 @@ export function MyForms() {
     for (const field of form.fields || []) {
       if (!field.required) continue;
       const v = answers[field.key];
-      if (v == null || v === '' || v === false) {
+      if (v == null || v === '' || v === false || (Array.isArray(v) && v.length === 0)) {
         return `Champ obligatoire : ${field.label}`;
       }
     }
@@ -335,6 +335,23 @@ function FieldRenderer({
           </select>
         </label>
       );
+    case 'multi': {
+      const arr = Array.isArray(value) ? (value as string[]) : [];
+      const toggle = (o: string) => onChange(arr.includes(o) ? arr.filter((x) => x !== o) : [...arr, o]);
+      return (
+        <div>
+          {labelEl}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            {(field.options || []).map((opt) => (
+              <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer', fontSize: 13, color: '#1e293b' }}>
+                <input type="checkbox" checked={arr.includes(opt)} onChange={() => toggle(opt)} style={{ accentColor: '#0d9488', marginTop: 1 }} />
+                {opt}
+              </label>
+            ))}
+          </div>
+        </div>
+      );
+    }
     case 'signature':
       return (
         <label>

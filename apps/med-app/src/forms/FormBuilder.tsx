@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Type, AlignLeft, Hash, Calendar, List, CheckSquare, Upload,
+  Type, AlignLeft, Hash, Calendar, List, ListChecks, CheckSquare, Upload,
   Plus, Trash2, Copy, GripVertical, ChevronLeft, Check, Loader2, Monitor, Smartphone,
   Eye, Settings2, CircleAlert, X,
 } from 'lucide-react';
@@ -26,6 +26,7 @@ const TYPES: { value: FieldType; label: string; icon: typeof Type }[] = [
   { value: 'number', label: 'Nombre', icon: Hash },
   { value: 'date', label: 'Date', icon: Calendar },
   { value: 'select', label: 'Choix', icon: List },
+  { value: 'multi', label: 'Choix multiples', icon: ListChecks },
   { value: 'checkbox', label: 'Case à cocher', icon: CheckSquare },
   { value: 'file', label: 'Fichier', icon: Upload },
 ];
@@ -67,7 +68,7 @@ export function FormBuilder() {
 
   function addField(type: FieldType = 'text') {
     const _uid = uid.current++;
-    setFields((p) => [...p, { _uid, label: '', type, required: false, options: type === 'select' ? ['Option 1'] : undefined }]);
+    setFields((p) => [...p, { _uid, label: '', type, required: false, options: type === 'select' || type === 'multi' ? ['Option 1'] : undefined }]);
     setSelected(_uid);
     setError(null);
     setTab('config');
@@ -112,7 +113,7 @@ export function FormBuilder() {
       used.add(id);
       const field: any = { id, label: f.label.trim(), type: f.type };
       if (f.required) field.required = true;
-      if (f.type === 'select') field.options = (f.options || []).map((o) => o.trim()).filter(Boolean);
+      if (f.type === 'select' || f.type === 'multi') field.options = (f.options || []).map((o) => o.trim()).filter(Boolean);
       return field;
     });
     return out;
@@ -239,14 +240,14 @@ export function FormBuilder() {
                             <button
                               key={t.value}
                               className={`fb-typechip${f.type === t.value ? ' on' : ''}`}
-                              onClick={(e) => { e.stopPropagation(); patch(f._uid, { type: t.value, options: t.value === 'select' ? (f.options?.length ? f.options : ['Option 1']) : f.options }); }}
+                              onClick={(e) => { e.stopPropagation(); patch(f._uid, { type: t.value, options: (t.value === 'select' || t.value === 'multi') ? (f.options?.length ? f.options : ['Option 1']) : f.options }); }}
                             >
                               <t.icon size={14} /> {t.label}
                             </button>
                           ))}
                         </div>
 
-                        {f.type === 'select' && (
+                        {(f.type === 'select' || f.type === 'multi') && (
                           <div className="fb-opts">
                             {(f.options || []).map((o, oi) => (
                               <div className="fb-opt" key={oi}>
