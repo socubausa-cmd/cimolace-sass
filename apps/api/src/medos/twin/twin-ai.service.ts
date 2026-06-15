@@ -74,13 +74,77 @@ const PATIENT_SYSTEM =
  * Extrait le 1er bloc JSON équilibré (objet ou tableau) d'une chaîne, même si
  * le modèle l'a entouré de prose. Renvoie null si aucun bloc plausible.
  */
-function extractJsonBlock(s: string): string | null {
+export function extractJsonBlock(s: string): string | null {
   const candidates = ['{', '['].map((c) => s.indexOf(c)).filter((i) => i >= 0);
   if (!candidates.length) return null;
   const start = Math.min(...candidates);
   const end = Math.max(s.lastIndexOf('}'), s.lastIndexOf(']'));
   if (end <= start) return null;
   return s.slice(start, end + 1);
+}
+
+/**
+ * Répare au mieux un JSON TRONQUÉ (sortie LLM coupée par max_tokens) : ferme la
+ * chaîne ouverte et les `{`/`[` restants. Renvoie le JSON réparé SEULEMENT s'il
+ * parse — sinon null. Donc aucune régression possible (échec = comportement
+ * inchangé). Best-effort : la dernière valeur partielle peut être perdue.
+ */
+export function repairTruncatedJson(s: string): string | null {
+  const start = (() => {
+    const c = ['{', '['].map((ch) => s.indexOf(ch)).filter((i) => i >= 0);
+    return c.length ? Math.min(...c) : -1;
+  })();
+  if (start < 0) return null;
+  let inStr = false;
+  let esc = false;
+  const stack: string[] = [];
+  let lastComplete = -1; // fin (exclue) d'une valeur sûre (après } ] " ou chiffre)
+  for (let i = start; i < s.length; i++) {
+    const c = s[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === '\\') esc = true;
+      else if (c === '"') {
+        inStr = false;
+        lastComplete = i + 1;
+      }
+      continue;
+    }
+    if (c === '"') inStr = true;
+    else if (c === '{') stack.push('}');
+    else if (c === '[') stack.push(']');
+    else if (c === '}' || c === ']') {
+      stack.pop();
+      lastComplete = i + 1;
+    } else if (/[0-9eE.+-]/.test(c)) lastComplete = i + 1;
+    else if (c === 'e' || /[truefalsn]/.test(c)) lastComplete = i + 1;
+  }
+  // Repart de la dernière valeur complète pour jeter un token partiel traînant.
+  let body = lastComplete > start ? s.slice(start, lastComplete) : s.slice(start);
+  // Recompte la profondeur de structure sur le corps tronqué.
+  const depth: string[] = [];
+  let str = false;
+  let e2 = false;
+  for (const c of body) {
+    if (str) {
+      if (e2) e2 = false;
+      else if (c === '\\') e2 = true;
+      else if (c === '"') str = false;
+      continue;
+    }
+    if (c === '"') str = true;
+    else if (c === '{') depth.push('}');
+    else if (c === '[') depth.push(']');
+    else if (c === '}' || c === ']') depth.pop();
+  }
+  body = body.replace(/,\s*$/, '');
+  while (depth.length) body += depth.pop();
+  try {
+    JSON.parse(body);
+    return body;
+  } catch {
+    return null;
+  }
 }
 
 @Injectable()
@@ -140,26 +204,43 @@ export class TwinAiService {
           .join('')
       : (result?.content?.[0]?.text ?? '');
     const tokens: number = result?.usage?.output_tokens ?? 0;
+    const stopReason: string = result?.stop_reason ?? '';
     const cleaned = rawText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
     let data: T;
     try {
       data = JSON.parse(cleaned);
     } catch {
       // Robustesse : le modèle enrobe parfois le JSON de prose (« Voici
-      // l'analyse : {…} »). On retombe sur le 1er bloc objet/tableau équilibré
-      // avant d'abandonner — évite des 503 intermittents sur tout le copilote.
+      // l'analyse : {…} »), ou la sortie est coupée par max_tokens. On tente
+      // dans l'ordre : 1er bloc équilibré, puis réparation d'un JSON tronqué.
       const block = extractJsonBlock(cleaned);
+      const looseComma = (x: string | null) =>
+        x ? x.replace(/,(\s*[}\]])/g, '$1') : null; // vire les virgules traînantes
+      const repaired = repairTruncatedJson(block ?? cleaned);
       let parsed: T | undefined;
-      if (block) {
+      for (const candidate of [
+        block,
+        looseComma(block),
+        repaired,
+        looseComma(repaired),
+      ]) {
+        if (parsed !== undefined || !candidate) continue;
         try {
-          parsed = JSON.parse(block) as T;
+          parsed = JSON.parse(candidate) as T;
         } catch {
-          /* tombe dans l'échec ci-dessous */
+          /* essaie le candidat suivant */
         }
       }
       if (parsed === undefined) {
-        this.logger.error('Réponse IA non parsable', rawText.slice(0, 300));
-        throw new ServiceUnavailableException(`La réponse IA n'était pas un JSON valide.`);
+        this.logger.error(
+          `Réponse IA non parsable (stop_reason=${stopReason || 'n/a'}, ${tokens} tokens)`,
+          rawText.slice(0, 300),
+        );
+        throw new ServiceUnavailableException(
+          stopReason === 'max_tokens'
+            ? 'Réponse IA trop longue (tronquée) — réessayez.'
+            : `La réponse IA n'était pas un JSON valide.`,
+        );
       }
       data = parsed;
     }
@@ -290,7 +371,7 @@ export class TwinAiService {
     const user =
       this.contextBlock(ctx) +
       `\n\nGénère des hypothèses cliniques concurrentes (causes racines probables), chacune avec arguments pour/contre. Rappelle implicitement que ce ne sont pas des diagnostics.`;
-    return this.callClaude(system, user, 2000);
+    return this.callClaude(system, user, 4096);
   }
 
   /** Root Cause Explorer (M16) : causes racines classées par probabilité. */
@@ -307,7 +388,7 @@ export class TwinAiService {
     const user =
       this.contextBlock(ctx) +
       `\n\nRemonte aux causes racines les plus probables (ex: dysbiose, stress chronique, résistance insulinique…), avec les données qui les soutiennent.`;
-    return this.callClaude(system, user, 2000);
+    return this.callClaude(system, user, 4096);
   }
 
   /** Conseil de biologie multi-agents (M33) : 5 lentilles d'experts + consensus. */
@@ -327,7 +408,7 @@ export class TwinAiService {
     const user =
       this.contextBlock(ctx) +
       `\n\nFais délibérer le conseil et dégage un consensus clinique prudent (jamais un diagnostic).`;
-    return this.callClaude(system, user, 2500);
+    return this.callClaude(system, user, 5000);
   }
 
   /** Extraction de biomarqueurs depuis un texte de bilan (M3). */
