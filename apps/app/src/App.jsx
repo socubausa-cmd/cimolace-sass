@@ -657,6 +657,14 @@ const DashboardRedirect = () => {
   if (role === 'creator') return <Navigate to="/creator-dashboard" replace />;
 
   if (role === 'visitor') {
+    // Membre d'un tenant LIRI/MedOS : rôle global faible 'visitor' mais vrai rôle dans
+    // le JWT (tenant_role). Le « lancement » LIRI ouvre direct sur le home /liri (façon
+    // Zoom), pas l'espace prospect école. Les écoles (owner/teacher/student GLOBAUX) ne
+    // passent pas ici — elles ont déjà été routées plus haut. Loop-safe : la garde /liri
+    // accepte ces tenant_role (allowTenantRole).
+    if (['owner', 'admin', 'practitioner', 'clinic_admin'].includes(String(user?.tenant_role || '').toLowerCase())) {
+      return <Navigate to="/liri" replace />;
+    }
     if (isPremiumActive && !user?.student_profile_completed) return <Navigate to="/onboarding/eleve" replace />;
     if (isPremiumActive && user?.student_profile_completed) return <Navigate to="/student-school-life/dashboard" replace />;
     return <Navigate to="/prospect/entretien" replace />;
