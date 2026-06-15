@@ -71,6 +71,12 @@ const PATIENT_SYSTEM =
   'Schéma JSON attendu : {"reply": string, "suggestions": string[], "escalate": boolean}.';
 
 /**
+ * Rôle d'appel LLM — pilote le choix du modèle (routeur) : `chat` = rapide
+ * (assistant patient), `analysis` = plus capable (hypothèses cliniques).
+ */
+export type LlmRole = 'chat' | 'analysis';
+
+/**
  * Extrait le 1er bloc JSON équilibré (objet ou tableau) d'une chaîne, même si
  * le modèle l'a entouré de prose. Renvoie null si aucun bloc plausible.
  */
@@ -157,27 +163,39 @@ export class TwinAiService {
     return this.config.get<string>('TWIN_AI_MODEL') || 'claude-sonnet-4-6';
   }
 
-  private async callClaude<T>(system: string, user: string, maxTokens = 1500): Promise<AiResult<T>> {
-    return this.completeJson<T>(system, user, maxTokens);
+  private async callClaude<T>(
+    system: string,
+    user: string,
+    maxTokens = 1500,
+    role: LlmRole = 'chat',
+  ): Promise<AiResult<T>> {
+    return this.completeJson<T>(system, user, maxTokens, role);
   }
 
   /**
-   * Chaîne multi-fournisseurs pour les sorties JSON (copilote + assistant) :
-   * Mistral (EU) → Groq → DeepSeek → Anthropic. Les 3 premiers sont
-   * OpenAI-compatibles et utilisent le mode JSON natif (`response_format`), ce
-   * qui garantit un JSON valide. On essaie chaque fournisseur DONT LA CLÉ est
-   * configurée, dans l'ordre, jusqu'au 1er qui répond un JSON exploitable ;
-   * Anthropic est le dernier repli (format `messages` différent).
+   * Routeur multi-fournisseurs pour les sorties JSON (copilote + assistant).
+   * Ordre : Mistral (EU) → Groq → DeepSeek → Anthropic ; on prend le 1er
+   * fournisseur DONT LA CLÉ est configurée qui répond un JSON exploitable. Les
+   * 3 premiers sont OpenAI-compatibles + mode JSON natif. Le MODÈLE Mistral
+   * dépend du RÔLE : `chat` = rapide (patient ; `MISTRAL_MODEL`, déf. small),
+   * `analysis` = plus capable (hypothèses ; `MISTRAL_MODEL_ANALYSIS`, déf.
+   * medium). Anthropic = dernier repli (format `messages` différent).
    */
   private async completeJson<T>(
     system: string,
     user: string,
     maxTokens = 1500,
+    role: LlmRole = 'chat',
   ): Promise<AiResult<T>> {
+    const cfg = (k: string) => this.config.get<string>(k);
+    const mistralModel =
+      role === 'analysis'
+        ? cfg('MISTRAL_MODEL_ANALYSIS') || 'mistral-medium-latest'
+        : cfg('MISTRAL_MODEL') || 'mistral-small-latest';
     const chain = [
-      { name: 'mistral', keyEnv: 'MISTRAL_API_KEY', url: 'https://api.mistral.ai/v1/chat/completions', model: this.config.get<string>('MISTRAL_MODEL') || 'mistral-large-latest' },
-      { name: 'groq', keyEnv: 'GROQ_API_KEY', url: 'https://api.groq.com/openai/v1/chat/completions', model: this.config.get<string>('GROQ_MODEL') || 'llama-3.3-70b-versatile' },
-      { name: 'deepseek', keyEnv: 'DEEPSEEK_API_KEY', url: 'https://api.deepseek.com/v1/chat/completions', model: this.config.get<string>('DEEPSEEK_MODEL') || 'deepseek-chat' },
+      { name: 'mistral', keyEnv: 'MISTRAL_API_KEY', url: 'https://api.mistral.ai/v1/chat/completions', model: mistralModel },
+      { name: 'groq', keyEnv: 'GROQ_API_KEY', url: 'https://api.groq.com/openai/v1/chat/completions', model: cfg('GROQ_MODEL') || 'llama-3.3-70b-versatile' },
+      { name: 'deepseek', keyEnv: 'DEEPSEEK_API_KEY', url: 'https://api.deepseek.com/v1/chat/completions', model: cfg('DEEPSEEK_MODEL') || 'deepseek-chat' },
     ];
     let lastErr = 'aucun fournisseur configuré';
     for (const p of chain) {
@@ -362,7 +380,7 @@ export class TwinAiService {
       edges ? `\nArêtes du graphe biologique pertinentes:\n${edges}` : '',
       `\nExplique de façon clinique et prudente, en t'appuyant sur les biomarqueurs et le graphe. Donne 2-4 examens complémentaires pertinents.`,
     ].join('\n');
-    return this.callClaude(system, user, 1200);
+    return this.callClaude(system, user, 1200, 'chat');
   }
 
   /**
@@ -417,6 +435,7 @@ export class TwinAiService {
       PATIENT_SYSTEM,
       user,
       900,
+      'chat',
     );
   }
 
@@ -437,11 +456,12 @@ export class TwinAiService {
       DISCLAIMER +
       ' Schéma JSON attendu: {"hypotheses": [{"label_fr": string, "probability": number, ' +
       '"confidence": number, "reasoning_fr": string, "args_for": string[], "args_against": string[]}]}. ' +
-      'Classe par probabilité décroissante. Donne 3 à 5 hypothèses concurrentes.';
+      'Classe par probabilité décroissante. Donne 3 hypothèses concurrentes (4 max). ' +
+      'Sois CONCIS : reasoning_fr en 1 phrase, args_for et args_against = 2 items courts max chacun.';
     const user =
       this.contextBlock(ctx) +
       `\n\nGénère des hypothèses cliniques concurrentes (causes racines probables), chacune avec arguments pour/contre. Rappelle implicitement que ce ne sont pas des diagnostics.`;
-    return this.callClaude(system, user, 4096);
+    return this.callClaude(system, user, 4096, 'analysis');
   }
 
   /** Root Cause Explorer (M16) : causes racines classées par probabilité. */
@@ -458,7 +478,7 @@ export class TwinAiService {
     const user =
       this.contextBlock(ctx) +
       `\n\nRemonte aux causes racines les plus probables (ex: dysbiose, stress chronique, résistance insulinique…), avec les données qui les soutiennent.`;
-    return this.callClaude(system, user, 4096);
+    return this.callClaude(system, user, 4096, 'analysis');
   }
 
   /** Conseil de biologie multi-agents (M33) : 5 lentilles d'experts + consensus. */
@@ -478,7 +498,7 @@ export class TwinAiService {
     const user =
       this.contextBlock(ctx) +
       `\n\nFais délibérer le conseil et dégage un consensus clinique prudent (jamais un diagnostic).`;
-    return this.callClaude(system, user, 5000);
+    return this.callClaude(system, user, 5000, 'analysis');
   }
 
   /** Extraction de biomarqueurs depuis un texte de bilan (M3). */
