@@ -181,7 +181,7 @@ export class TwinAiService {
     ];
     let lastErr = 'aucun fournisseur configuré';
     for (const p of chain) {
-      const key = this.config.get<string>(p.keyEnv);
+      const key = this.config.get<string>(p.keyEnv)?.trim();
       if (!key) continue;
       try {
         const res = await fetch(p.url, {
@@ -268,7 +268,7 @@ export class TwinAiService {
     content: Array<Record<string, any>>,
     maxTokens = 1500,
   ): Promise<AiResult<T>> {
-    const apiKey = this.config.get<string>('ANTHROPIC_API_KEY');
+    const apiKey = this.config.get<string>('ANTHROPIC_API_KEY')?.trim();
     if (!apiKey) {
       throw new ServiceUnavailableException(
         'ANTHROPIC_API_KEY non configuré — analyse IA indisponible (le moteur de scores reste opérationnel).',
