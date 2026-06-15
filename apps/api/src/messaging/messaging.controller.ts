@@ -1,10 +1,10 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentTenant } from '../tenant/current-tenant.decorator';
 import { TenantGuard } from '../tenant/tenant.guard';
 import type { TenantContext } from '../tenant/tenant.types';
-import { CreateGroupDto, SendMessageDto } from './dto/messaging.dto';
+import { CreateGroupDto, EditMessageDto, SendMessageDto } from './dto/messaging.dto';
 import { MessagingService } from './messaging.service';
 
 @Controller('messaging')
@@ -26,4 +26,13 @@ export class MessagingController {
 
   @Post('groups/:id/members')
   addMember(@Param('id') id: string, @Body('userId') uid: string, @CurrentTenant() t: TenantContext) { return this.svc.addGroupMember(t.id, id, uid); }
+
+  @Patch('messages/:id')
+  editMessage(@Param('id') id: string, @Body() dto: EditMessageDto, @CurrentTenant() t: TenantContext, @Req() req: Request) { return this.svc.editMessage(t.id, (req as any).user.id, id, dto.content); }
+
+  @Delete('messages/:id')
+  deleteMessage(@Param('id') id: string, @CurrentTenant() t: TenantContext, @Req() req: Request) { return this.svc.deleteMessage(t.id, (req as any).user.id, id); }
+
+  @Post('conversations/:id/read')
+  markRead(@Param('id') id: string, @CurrentTenant() t: TenantContext, @Req() req: Request) { return this.svc.markConversationRead(t.id, (req as any).user.id, id); }
 }

@@ -470,6 +470,13 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
     if (!ids.length) return;
     const idSet = new Set(ids);
     ids.forEach((id) => readOverridesRef.current.add(id));
+    // Persistance serveur (best-effort, idempotent) : marque lues les conversations concernées.
+    const convIds = new Set();
+    for (const id of ids) {
+      const m = messagesRef.current.find((x) => x.id === id);
+      if (m?.conversation_id) convIds.add(m.conversation_id);
+    }
+    convIds.forEach((cid) => { messagingApi.markRead(cid).catch(() => {}); });
     setMessages((prev) => {
       let changed = false;
       const next = prev.map((m) => {
@@ -483,7 +490,7 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
     });
   }, [deriveConversations]);
 
-  /** Suppression optimiste LOCALE (pas d'endpoint API ; override anti-résurrection). */
+  /** Suppression optimiste locale (override anti-résurrection) PUIS persistance API. */
   const deleteMessage = useCallback(async (messageId) => {
     if (!userId || !messageId) return false;
     deletedOverridesRef.current.add(messageId);
@@ -494,10 +501,11 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
       setConversations(deriveConversations(next, profilesRef.current));
       return next;
     });
+    try { await messagingApi.deleteMessage(messageId); } catch (e) { console.error('[messaging] delete error:', e?.message || e); }
     return true;
   }, [userId, deriveConversations]);
 
-  /** Édition optimiste LOCALE (pas d'endpoint API ; override anti-réannulation). */
+  /** Édition optimiste locale (override anti-réannulation) PUIS persistance API. */
   const editMessage = useCallback(async (messageId, newContent) => {
     if (!userId || !messageId || !newContent?.trim()) return null;
     const content = newContent.trim();
@@ -513,6 +521,7 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
       setConversations(deriveConversations(next, profilesRef.current));
       return next;
     });
+    try { await messagingApi.editMessage(messageId, content); } catch (e) { console.error('[messaging] edit error:', e?.message || e); }
     return result || { id: messageId, content };
   }, [userId, deriveConversations]);
 

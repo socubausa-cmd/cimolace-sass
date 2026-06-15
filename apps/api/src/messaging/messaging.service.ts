@@ -50,4 +50,34 @@ export class MessagingService {
     const { error } = await (this.supabase.client as any).from('conversation_participants').upsert({ tenant_id: tenantId, conversation_id: conversationId, user_id: userId }, { onConflict: 'conversation_id,user_id' });
     if (error) throw new BadRequestException(error.message);
   }
+
+  /** Édite le contenu d'un message — réservé à l'auteur (sender_id), tenant-scopé. */
+  async editMessage(tenantId: string, userId: string, messageId: string, content: string) {
+    const { data, error } = await (this.supabase.client as any).from('messages')
+      .update({ content })
+      .eq('id', messageId).eq('sender_id', userId).eq('tenant_id', tenantId)
+      .select('*').single();
+    if (error) throw new BadRequestException(error.message);
+    if (!data) throw new NotFoundException('Message introuvable');
+    return data;
+  }
+
+  /** Supprime un message — réservé à l'auteur (sender_id), tenant-scopé. */
+  async deleteMessage(tenantId: string, userId: string, messageId: string) {
+    const { error } = await (this.supabase.client as any).from('messages')
+      .delete()
+      .eq('id', messageId).eq('sender_id', userId).eq('tenant_id', tenantId);
+    if (error) throw new BadRequestException(error.message);
+    return { ok: true };
+  }
+
+  /** Marque comme lus les messages REÇUS (recipient = userId) d'une conversation. */
+  async markConversationRead(tenantId: string, userId: string, conversationId: string) {
+    const { error } = await (this.supabase.client as any).from('messages')
+      .update({ is_read: true, read_at: new Date().toISOString() })
+      .eq('conversation_id', conversationId).eq('tenant_id', tenantId)
+      .eq('recipient_id', userId).eq('is_read', false);
+    if (error) throw new BadRequestException(error.message);
+    return { ok: true };
+  }
 }

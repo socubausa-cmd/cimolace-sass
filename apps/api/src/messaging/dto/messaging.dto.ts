@@ -10,3 +10,7 @@ export class CreateGroupDto {
   @IsString() @MaxLength(200) name: string;
   @IsOptional() @IsString() description?: string;
 }
+
+export class EditMessageDto {
+  @IsString() @MaxLength(10000) content: string;
+}
