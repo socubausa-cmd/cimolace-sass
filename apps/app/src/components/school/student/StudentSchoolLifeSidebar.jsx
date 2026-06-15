@@ -29,22 +29,50 @@ const T = {
   mono: "'JetBrains Mono','Fira Code',monospace",
 };
 
-/* ─── Nav items (flat, no sections) ─── */
-const NAV = [
-  { key: 'semaine-courante',    label: 'Ma semaine',        icon: '◫', path: 'semaine-courante' },
-  { key: 'dashboard',           label: 'Tableau de bord',  icon: '◈', path: 'dashboard'  },
-  { key: 'formations',          label: 'Mes Formations',   icon: '✦', path: 'formations' },
-  { key: 'vie-scolaire',        label: 'Vie Scolaire',     icon: '◎', path: 'vie-scolaire' },
-  { key: 'forum',               label: 'Forum',            icon: '◷', path: 'forum', badge: null },
-  { key: 'bibliotheque',        label: 'Bibliothèque',     icon: '⊷', path: 'bibliotheque' },
-  { key: 'bibliotheque-ressources', label: 'Ressources',   icon: '⊡', path: 'bibliotheque-ressources' },
-  { key: 'agenda',              label: 'Agenda',           icon: '◉', path: 'agenda'     },
-  { key: 'evaluations',         label: 'Évaluations',      icon: '⊛', path: 'evaluations' },
-  { key: 'notes',               label: 'Notes & Résultats',icon: '◈', path: 'notes'      },
-  { key: 'absences',            label: 'Absences',         icon: '!',  path: 'absences'   },
-  { key: 'documents',           label: 'Documents',        icon: '⊡', path: 'documents'  },
-  { key: 'profile',             label: 'Mon Profil',       icon: '⊙', path: 'profile'    },
+/* ─── Nav groupée en 5 familles (chunking) — mêmes clés/paths/icônes qu'avant ─── */
+const NAV_GROUPS = [
+  {
+    section: 'Mon parcours',
+    items: [
+      { key: 'semaine-courante', label: 'Ma semaine',      icon: '◫', path: 'semaine-courante' },
+      { key: 'dashboard',        label: 'Tableau de bord', icon: '◈', path: 'dashboard' },
+      { key: 'formations',       label: 'Mes Formations',  icon: '✦', path: 'formations' },
+    ],
+  },
+  {
+    section: 'Vie scolaire',
+    items: [
+      { key: 'vie-scolaire', label: 'Vie Scolaire', icon: '◎', path: 'vie-scolaire' },
+      { key: 'agenda',       label: 'Agenda',       icon: '◉', path: 'agenda' },
+      { key: 'absences',     label: 'Absences',     icon: '!', path: 'absences' },
+    ],
+  },
+  {
+    section: 'Évaluation',
+    items: [
+      { key: 'evaluations', label: 'Évaluations',       icon: '⊛', path: 'evaluations' },
+      { key: 'notes',       label: 'Notes & Résultats', icon: '◈', path: 'notes' },
+    ],
+  },
+  {
+    section: 'Ressources & communauté',
+    items: [
+      { key: 'bibliotheque',             label: 'Bibliothèque', icon: '⊷', path: 'bibliotheque' },
+      { key: 'bibliotheque-ressources',  label: 'Ressources',   icon: '⊡', path: 'bibliotheque-ressources' },
+      { key: 'documents',                label: 'Documents',    icon: '⊡', path: 'documents' },
+      { key: 'forum',                    label: 'Forum',        icon: '◷', path: 'forum', badge: null },
+    ],
+  },
+  {
+    section: 'Compte',
+    items: [
+      { key: 'profile', label: 'Mon Profil', icon: '⊙', path: 'profile' },
+    ],
+  },
 ];
+
+/* Liste aplatie (index d'animation + état actif) — dérivée des groupes, source unique. */
+const NAV = NAV_GROUPS.flatMap((g) => g.items);
 
 /* ─── SVG Logout icon ─── */
 const IconLogout = () => (
@@ -181,17 +209,31 @@ const SidebarContent = ({ onNavClick, collapsed = false }) => {
         )}
       </div>
 
-      {/* ── Nav ── */}
+      {/* ── Nav (5 familles) ── */}
       <nav style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-        {NAV.map((item, i) => (
-          <NavItem
-            key={item.key}
-            item={item}
-            isActive={activeKey === item.key || (item.key === 'dashboard' && activeKey === 'student-school-life')}
-            onClick={() => handleNav(item)}
-            index={i}
-            collapsed={collapsed}
-          />
+        {NAV_GROUPS.map((group, gi) => (
+          <div key={group.section} style={{ marginTop: gi === 0 ? 0 : 10 }}>
+            {/* En-tête de famille — masqué en mode réduit (icônes), filet discret à la place */}
+            {collapsed ? (
+              gi > 0 && <div style={{ height: 1, background: T.border, margin: '8px 6px' }}/>
+            ) : (
+              <div style={{
+                padding: '2px 10px 5px', fontFamily: T.mono, fontSize: 9,
+                letterSpacing: '0.11em', textTransform: 'uppercase',
+                color: T.t2, fontWeight: 700,
+              }}>{group.section}</div>
+            )}
+            {group.items.map((item) => (
+              <NavItem
+                key={item.key}
+                item={item}
+                isActive={activeKey === item.key || (item.key === 'dashboard' && activeKey === 'student-school-life')}
+                onClick={() => handleNav(item)}
+                index={NAV.findIndex((n) => n.key === item.key)}
+                collapsed={collapsed}
+              />
+            ))}
+          </div>
         ))}
 
         <div style={{ height: 1, background: T.border, margin: '8px 4px' }}/>
@@ -255,8 +297,8 @@ const StudentSchoolLifeSidebar = ({ collapsed = false, onToggle }) => {
     <aside
       className="hidden lg:flex"
       style={{
-        // Panneau flottant arrondi (façon Claude) : descend sous le header (89px), marges, arrondis.
-        position: 'fixed', top: 100, left: 14, bottom: 14,
+        // Panneau flottant arrondi (façon Claude) : plein écran (aucun header global au-dessus), marges, arrondis.
+        position: 'fixed', top: 14, left: 14, bottom: 14,
         width: collapsed ? 64 : 220, zIndex: 50,
         flexDirection: 'column',
         background: 'rgba(18,17,26,0.97)',

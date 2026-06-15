@@ -998,6 +998,12 @@ isLiriHostDevPreviewRoute;
   /** Espace propriétaire : layout plein écran sans barre globale (évite tout doublon LIRI / PRORASCIENCE). */
   const isOwnerDashboardShell = /^\/owner-dashboard(\/|$)/.test(location.pathname || '/');
 
+  /**
+   * Espace élève (sidebar LIRI plein écran) — même traitement que l'owner : aucune barre globale
+   * au-dessus (sinon double header empilé sur la sidebar). La page embarque son propre shell.
+   */
+  const isStudentSpaceShell = /^\/student-school-life(\/|$)/.test(location.pathname || '/');
+
   /** Pages « maquette » narratives /t/isna : elles embarquent leur propre header (MaqNav) dans un overlay `fixed inset-0` → pas de header global (évite le flash de l'ancien nav au chargement + le rendu fantôme dessous). Match EXACT pour épargner /t/isna/courses, /login, /signup, /paiement, /admin… */
   const isMaquetteRoute = [
     '/t/isna',
@@ -1017,6 +1023,7 @@ isLiriHostDevPreviewRoute;
     !isLiveArenaRoute &&
     !isEleveMobileRoute &&
     !isOwnerDashboardShell &&
+    !isStudentSpaceShell &&
     !hideHeaderRoutes.some(route => location.pathname.startsWith(route)) &&
     !mobileReelsShellActive &&
     !isCimolaceRoute &&
@@ -1027,6 +1034,7 @@ isLiriHostDevPreviewRoute;
     !isImmersiveEmbed &&
     !isLiveArenaRoute &&
     !isEleveMobileRoute &&
+    !isStudentSpaceShell &&
     !mobileReelsShellActive &&
     !isCimolaceRoute;
 
@@ -1116,14 +1124,14 @@ isLiriHostDevPreviewRoute;
           <ShoppingCart />
         </LazyShell>
       )}
-      {!isLiveArenaRoute && !isEleveMobileRoute && !isCimolaceRoute && !isAdminRoute && (
+      {!isLiveArenaRoute && !isEleveMobileRoute && !isCimolaceRoute && !isAdminRoute && !isStudentSpaceShell && (
         <LazyShell>
           <LiveAlertBanner />
         </LazyShell>
       )}
 
-      {/* Discovery Chat — affiché sur les pages publiques uniquement */}
-      {!isAdminRoute && !isImmersiveEmbed && !isLiveArenaRoute && !isEleveMobileRoute && !isCimolaceRoute && (
+      {/* Discovery Chat — pages publiques. Exclu de l'espace élève (collision avec le FAB de la sidebar). */}
+      {!isAdminRoute && !isImmersiveEmbed && !isLiveArenaRoute && !isEleveMobileRoute && !isCimolaceRoute && !isStudentSpaceShell && (
         <LazyShell>
           <DiscoveryChat />
         </LazyShell>
