@@ -49,11 +49,14 @@ export function LiriPortalPage() {
     if (starting) return;
     setStarting(true);
     try {
+      // host_user_id (colonne NOT NULL de live_sessions) = utilisateur courant = `sub` du JWT.
+      let hostId = '';
+      try { hostId = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub || ''; } catch { /* noop */ }
       const h = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
       const res = await fetch(`${base}/lives`, {
         method: 'POST',
         headers: h,
-        body: JSON.stringify({ title: 'Réunion instantanée', scheduled_at: new Date().toISOString(), price_cents: 0, currency: 'EUR' }),
+        body: JSON.stringify({ title: 'Réunion instantanée', host_user_id: hostId, scheduled_at: new Date().toISOString(), price_cents: 0, currency: 'EUR' }),
       });
       const j = await res.json().catch(() => ({}));
       // Dépile l'enveloppe ({data:{data:{id}}} via l'intercepteur global) jusqu'à la session.
@@ -65,7 +68,8 @@ export function LiriPortalPage() {
       try { await fetch(`${base}/lives/${id}/start`, { method: 'POST', headers: h }); } catch { /* noop */ }
       nav(`/live/host/${id}?tenant=${encodeURIComponent(slug)}`);
     } catch {
-      nav('/dashboard/lives/new'); // repli : wizard de création classique
+      // Échec rare : rester sur l'accueil LIRI avec un message (pas de route cassée).
+      if (typeof window !== 'undefined') window.alert('La réunion n’a pas pu démarrer. Réessayez dans un instant.');
     } finally {
       setStarting(false);
     }
