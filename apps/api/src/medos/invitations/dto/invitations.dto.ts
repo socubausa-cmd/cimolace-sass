@@ -9,6 +9,7 @@ import {
   Max,
   MaxLength,
   Min,
+  MinLength,
 } from 'class-validator';
 
 export class CreateInvitationDto {
@@ -57,7 +58,12 @@ export class AcceptInvitationDto {
   @MaxLength(200)
   token!: string;
 
-  @ApiProperty({ description: 'user_id Supabase qui accepte (nouveau ou existant)' })
-  @IsUUID()
-  accepted_by_user_id!: string;
+  @ApiProperty({
+    description: 'Mot de passe choisi par le patient (min. 8 caractères)',
+    minLength: 8,
+  })
+  @IsString()
+  @MinLength(8)
+  @MaxLength(200)
+  password!: string;
 }
