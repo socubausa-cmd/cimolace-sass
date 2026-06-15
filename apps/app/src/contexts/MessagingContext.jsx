@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
-import { supabase } from '@/lib/customSupabaseClient';
+import { apiV2 } from '@/lib/api-v2';
 import { useRealtimeMessaging } from '@/hooks/useRealtimeMessaging';
 
 const MessagingContext = createContext();
@@ -35,27 +35,38 @@ export const MessagingProvider = ({ children }) => {
 
   const loadProfiles = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, email, name, avatar_url, role, status, city, region, country')
-        .limit(400);
+      // Annuaire TENANT-SCOPÉ (isolation multi-tenant) : les membres du tenant COURANT,
+      // via l'API NestJS (TenantGuard + X-Tenant-Slug injecté par apiV2). On n'utilise PLUS
+      // `profiles` global — qui fuitait les membres des AUTRES tenants dans le sélecteur de
+      // destinataire (ex. un praticien Zahir voyait les comptes ISNA). Cf. /tenant-portal/members.
+      const res = await apiV2.get('/tenant-portal/members');
+      // Dépile l'enveloppe ({data:{data:[...]}} via l'intercepteur global) jusqu'au tableau.
+      let d = res?.data;
+      while (d && !Array.isArray(d) && typeof d === 'object' && 'data' in d) d = d.data;
+      const list = Array.isArray(d) ? d : [];
 
-      if (error) {
-        logProfilesIssue('error', error);
+      if (list.length === 0) {
+        console.warn('[MessagingContext] tenant members returned 0 rows');
         setProfilesLoading(false);
         return false;
       }
 
-      if (!data || data.length === 0) {
-        console.warn('[MessagingContext] profiles returned 0 rows');
-        setProfilesLoading(false);
-        return false;
-      }
-
-      const mapped = data.map((p) => ({
-        ...p,
-        name: p.name?.trim() || p.email?.split('@')[0] || 'Membre',
-      }));
+      const mapped = list.map((m) => {
+        const email = m.email || '';
+        const name = String(m.full_name || m.name || '').trim() || email.split('@')[0] || 'Membre';
+        return {
+          id: m.user_id || m.id,
+          email,
+          name,
+          avatar_url: m.avatar_url || null,
+          role: m.role || 'student',
+          // statut d'appartenance (active/invited) → présence indicative pour l'UI.
+          status: m.status === 'active' ? 'online' : (m.status || 'offline'),
+          city: m.city || null,
+          region: m.region || null,
+          country: m.country || null,
+        };
+      }).filter((p) => p.id);
       const map = {};
       mapped.forEach((p) => { map[p.id] = p; });
       setAllProfiles(mapped);
