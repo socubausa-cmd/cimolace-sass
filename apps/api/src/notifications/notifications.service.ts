@@ -35,21 +35,20 @@ export class NotificationsService {
   }
 
   async send(tenantId: string, userId: string, payload: { title: string; body: string; type: string }) {
-    const { data, error } = await this.supabase
-      .from("notifications")
-      .insert({
-        tenant_id: tenantId,
-        user_id: userId,
-        type: payload.type,
-        title: payload.title,
-        body: payload.body,
-        is_read: false,
-      })
-      .select()
-      .single();
-    // On JETTE l'erreur : les appelants (événements MEDOS) sont best-effort
-    // (try/catch → logger.warn) → tout échec devient VISIBLE, plus de silence.
+    const insert = (type: string) =>
+      this.supabase
+        .from("notifications")
+        .insert({ tenant_id: tenantId, user_id: userId, type, title: payload.title, body: payload.body, is_read: false })
+        .select()
+        .single();
+    let { data, error } = await insert(payload.type);
+    // La colonne `type` a une contrainte CHECK (valeurs limitées). Si le type
+    // sémantique (message, form_assignment, note_shared…) n'est pas autorisé,
+    // on retombe sur 'info' (valeur sûre) plutôt que de perdre la notification.
+    if (error && /check constraint|notifications_type_check/i.test(error.message)) {
+      ({ data, error } = await insert("info"));
+    }
     if (error) throw new Error(error.message);
-    return { ...(data as any), read: false };
+    return { ...(data as any), read: false, type: (data as any)?.type ?? payload.type };
   }
 }
