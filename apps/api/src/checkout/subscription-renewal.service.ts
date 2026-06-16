@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  OnApplicationBootstrap,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { AuthService } from '../auth/auth.service';
 import { PawaPayService } from '../pawapay/pawapay.service';
@@ -22,14 +28,36 @@ import {
  *    + webhook pawaPay configuré). Vérifié à la compilation + mapping des routes.
  */
 @Injectable()
-export class SubscriptionRenewalService {
+export class SubscriptionRenewalService implements OnApplicationBootstrap, OnModuleDestroy {
   private readonly logger = new Logger(SubscriptionRenewalService.name);
   private static readonly PERIOD_DAYS = 30;
+  private pollTimer?: ReturnType<typeof setInterval>;
 
   constructor(
     private readonly auth: AuthService,
     private readonly pawapay: PawaPayService,
   ) {}
+
+  /**
+   * Poller serveur : le compte PawaPay est PARTAGÉ (callback configuré sur un autre
+   * tenant — ex. afritrack), donc Cimolace ne reçoit PAS les callbacks. On interroge
+   * nous-mêmes le statut des dépôts en attente toutes les 60 s et on active l'abo sur
+   * COMPLETED. Substitut fiable du webhook. Désactivable via DISABLE_OFFERING_POLLER=1.
+   */
+  onApplicationBootstrap(): void {
+    if (process.env.DISABLE_OFFERING_POLLER === '1') return;
+    this.pollTimer = setInterval(() => {
+      this.pollPendingOfferingDeposits().catch((e) =>
+        this.logger.warn(`poller offering: ${(e as Error).message}`),
+      );
+    }, 60_000);
+    this.pollTimer.unref?.();
+    this.logger.log('Poller dépôts offering PawaPay armé (60 s)');
+  }
+
+  onModuleDestroy(): void {
+    if (this.pollTimer) clearInterval(this.pollTimer);
+  }
 
   private get supabase() {
     return this.auth.getClient();
@@ -264,6 +292,77 @@ export class SubscriptionRenewalService {
       this.logger.log(`Renouvellement Stripe — sub=${sub.id} → ${periodEnd}`);
       return;
     }
+  }
+
+  // ── Poller serveur des dépôts offering (callback indisponible, compte partagé) ──
+  /**
+   * Applique le statut distant d'un dépôt : met à jour, et sur COMPLETED (transition
+   * ATOMIQUE anti-double via WHERE status != COMPLETED) active/prolonge l'abo si
+   * kind=subscription. Idempotent — appelé par le poller ET par getStatus (front).
+   */
+  async applyDepositTerminal(
+    dep: {
+      deposit_id: string;
+      user_id: string;
+      kind?: string;
+      plan_slug?: string | null;
+      tenant_id?: string | null;
+      pawapay_status?: string;
+    },
+    remoteStatus: string,
+  ): Promise<void> {
+    if (!remoteStatus || remoteStatus === dep.pawapay_status) return;
+    if (remoteStatus !== 'COMPLETED') {
+      await this.ppDeposits.update({ pawapay_status: remoteStatus }).eq('deposit_id', dep.deposit_id);
+      return;
+    }
+    // COMPLETED : un seul appelant gagne la transition (le 2e met à jour 0 ligne → skip).
+    const { data: claimed } = await this.ppDeposits
+      .update({ pawapay_status: 'COMPLETED' })
+      .eq('deposit_id', dep.deposit_id)
+      .neq('pawapay_status', 'COMPLETED')
+      .select('deposit_id');
+    if (!claimed || claimed.length === 0) return; // déjà traité ailleurs
+    if (dep.kind === 'subscription' && dep.plan_slug) {
+      await this.createOrExtendSubscription(dep.user_id, dep.plan_slug, {
+        tenantId: dep.tenant_id ?? null,
+        provider: 'pawapay',
+      });
+    }
+  }
+
+  /**
+   * Interroge PawaPay pour chaque dépôt non terminal récent (48 h) et applique le statut.
+   * Substitut du callback (qui part chez un autre tenant). Borné + tolérant aux erreurs.
+   */
+  async pollPendingOfferingDeposits(
+    limit = 50,
+  ): Promise<{ scanned: number; completed: number; failed: number }> {
+    if (!this.pawapay.isConfigured) return { scanned: 0, completed: 0, failed: 0 };
+    const floor = this.addDaysISO(new Date(), -2);
+    const { data: pending } = await this.ppDeposits
+      .select('deposit_id, user_id, kind, plan_slug, tenant_id, pawapay_status')
+      .in('pawapay_status', ['PENDING', 'ACCEPTED', 'SUBMITTED'])
+      .gte('created_at', floor)
+      .limit(limit);
+    const rows: any[] = Array.isArray(pending) ? pending : [];
+    let completed = 0;
+    let failed = 0;
+    for (const dep of rows) {
+      try {
+        const remote = await this.pawapay.getDepositStatus(dep.deposit_id);
+        if (!remote?.status || remote.status === dep.pawapay_status) continue;
+        await this.applyDepositTerminal(dep, remote.status);
+        if (remote.status === 'COMPLETED') completed++;
+        else if (remote.status === 'FAILED' || remote.status === 'REJECTED') failed++;
+      } catch (e) {
+        this.logger.warn(`poll dépôt ${dep.deposit_id}: ${(e as Error).message}`);
+      }
+    }
+    if (rows.length) {
+      this.logger.log(`poll offering: scanned=${rows.length} completed=${completed} failed=${failed}`);
+    }
+    return { scanned: rows.length, completed, failed };
   }
 
   // ── Planificateur de renouvellement ─────────────────────────────────────────

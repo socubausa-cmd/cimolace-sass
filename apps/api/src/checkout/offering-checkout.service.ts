@@ -11,6 +11,7 @@ import { PawaPayService } from '../pawapay/pawapay.service';
 import { CreateOfferingDepositDto } from './create-offering-deposit.dto';
 import { CreateOfferingCardDto } from './create-offering-card.dto';
 import { isStripeConfigured, stripeCreateCheckoutSession } from '../billing/stripe-rest.util';
+import { SubscriptionRenewalService } from './subscription-renewal.service';
 
 /**
  * Montants des paliers mentorat Ngowazulu, en centimes EUR.
@@ -33,6 +34,7 @@ export class OfferingCheckoutService {
   constructor(
     private readonly auth: AuthService,
     private readonly pawapay: PawaPayService,
+    private readonly renewals: SubscriptionRenewalService,
   ) {}
 
   private get supabase() {
@@ -225,7 +227,7 @@ export class OfferingCheckoutService {
   /** Statut d'un dépôt (scopé à l'utilisateur). */
   async getStatus(depositId: string, userId: string) {
     const { data: deposit } = await this.ppDeposits
-      .select('deposit_id, user_id, pawapay_status')
+      .select('deposit_id, user_id, kind, plan_slug, tenant_id, pawapay_status')
       .eq('deposit_id', depositId)
       .eq('user_id', userId)
       .maybeSingle();
@@ -236,7 +238,8 @@ export class OfferingCheckoutService {
     const remote = await this.pawapay.getDepositStatus(depositId);
     const status = remote?.status ?? deposit.pawapay_status;
     if (remote && remote.status !== deposit.pawapay_status) {
-      await this.ppDeposits.update({ pawapay_status: remote.status }).eq('deposit_id', depositId);
+      // met à jour + active l'abo sur COMPLETED (le callback PawaPay va chez un autre tenant)
+      await this.renewals.applyDepositTerminal(deposit, remote.status);
     }
     return { depositId, status, isCompleted: status === 'COMPLETED' };
   }

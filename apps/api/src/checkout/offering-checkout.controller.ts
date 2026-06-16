@@ -101,4 +101,18 @@ export class OfferingCheckoutController {
     }
     return this.renewals.processDueRenewals();
   }
+
+  /**
+   * Poll manuel des dépôts offering en attente (substitut du callback PawaPay, qui pointe
+   * sur un autre tenant). Le poller in-process tourne déjà toutes les 60 s ; cet endpoint
+   * permet un déclenchement à la demande / via cron externe. Protégé par clé interne.
+   */
+  @Post('poll-pending')
+  pollPending(@Headers('x-internal-key') key?: string) {
+    const expected = process.env.INTERNAL_CRON_KEY;
+    if (!expected || key !== expected) {
+      throw new UnauthorizedException('Clé interne invalide');
+    }
+    return this.renewals.pollPendingOfferingDeposits();
+  }
 }
