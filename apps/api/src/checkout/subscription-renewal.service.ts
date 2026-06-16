@@ -273,8 +273,19 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
       const invoice = event.data?.object ?? {};
       // La 1re facture est déjà couverte par checkout.session.completed → pas de double prolongation.
       if (invoice.billing_reason === 'subscription_create') return;
-      const stripeSubId = invoice.subscription;
-      if (!stripeSubId) return;
+      // L'objet `invoice` a été restructuré selon la version d'API Stripe : on cherche l'ID
+      // d'abonnement aux emplacements connus (legacy + 2024+/clover) pour rester robuste.
+      const line0 = invoice.lines?.data?.[0] ?? {};
+      const stripeSubId =
+        invoice.subscription ??
+        invoice.parent?.subscription_details?.subscription ??
+        line0.parent?.subscription_item_details?.subscription ??
+        line0.subscription ??
+        null;
+      if (!stripeSubId) {
+        this.logger.warn('invoice.paid : aucun subscription id dans la facture (version API ?)');
+        return;
+      }
       const { data: sub } = await this.subs
         .select('id')
         .eq('provider_subscription_id', stripeSubId)
@@ -284,7 +295,8 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
         return;
       }
       const periodEnd =
-        unixToIso(invoice.lines?.data?.[0]?.period?.end) ??
+        unixToIso(line0.period?.end) ??
+        unixToIso(invoice.period_end) ??
         this.addDaysISO(new Date(), SubscriptionRenewalService.PERIOD_DAYS);
       await this.subs
         .update({ status: 'active', current_period_end: periodEnd, updated_at: new Date().toISOString() })
