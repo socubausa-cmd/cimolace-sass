@@ -657,6 +657,17 @@ const DashboardRedirect = () => {
   const role = getEffectiveRole(user);
   const isPremiumActive = status === 'active' || (status === 'past_due' && inGrace);
 
+  // Membre d'un tenant LIRI/MEDOS (owner/practitioner/… porté par le JWT `tenant_role`) avec un
+  // rôle GLOBAL faible (visitor/student/vide) : router DIRECT sur le portail LIRI, quel que soit
+  // ce rôle global. Sans ça, un owner dont `profiles.role` n'est pas exactement 'visitor' tombe
+  // sur /forfaits — la bascule owner→/liri n'existait que dans le bloc `role === 'visitor'`.
+  if (
+    ['owner', 'admin', 'practitioner', 'clinic_admin'].includes(tenantRole) &&
+    !['owner', 'admin', 'secretariat', 'teacher', 'creator'].includes(role)
+  ) {
+    return <Navigate to="/liri" replace />;
+  }
+
   if (role === 'owner' || role === 'admin') return <Navigate to="/owner-dashboard" replace />;
   if (role === 'secretariat') return <Navigate to="/secretariat-space/dashboard" replace />;
   if (role === 'teacher') return <Navigate to="/teacher-space/dashboard" replace />;

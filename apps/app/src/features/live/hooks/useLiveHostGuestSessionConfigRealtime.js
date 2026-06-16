@@ -37,7 +37,11 @@ export function useLiveHostGuestSessionConfigRealtime({
   }, [sessionId]);
 
   useEffect(() => {
-    if (!sessionId || !isGuestUi || teacherId == null) return;
+    // NE PLUS exiger teacherId : un live sans enseignant assigné (teacher_id NULL — ex. live
+    // instantané créé via host_user_id) laissait l'invité SANS abonnement → il ne recevait jamais
+    // status='ended' → restait connecté après l'arrêt de l'hôte. La garde isGuestUi + sessionId
+    // suffit pour la détection de fin + la config temps réel. (fix 2026-06-16)
+    if (!sessionId || !isGuestUi) return;
     const ch = supabase
       .channel(`live-session-config-${sessionId}`)
       .on(
@@ -141,5 +145,5 @@ export function useLiveHostGuestSessionConfigRealtime({
       supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- setters + refs stables ; aligné historique LiveHostPage
-  }, [sessionId, isGuestUi, teacherId, toast]);
+  }, [sessionId, isGuestUi, toast]);
 }

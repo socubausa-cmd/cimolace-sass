@@ -56,7 +56,10 @@ export function LiriPortalPage() {
       const res = await fetch(`${base}/lives`, {
         method: 'POST',
         headers: h,
-        body: JSON.stringify({ title: 'Réunion instantanée', host_user_id: hostId, scheduled_at: new Date().toISOString(), price_cents: 0, currency: 'EUR' }),
+        // teacher_id = host_user_id : sans enseignant assigné, plusieurs hooks INVITÉ (détection
+        // de fin de live, sync smartboard, canal aside) se gardent sur `teacher_id != null` et ne
+        // s'abonnent jamais → l'invité reste bloqué après l'arrêt. On le pose dès la création.
+        body: JSON.stringify({ title: 'Réunion instantanée', host_user_id: hostId, teacher_id: hostId, scheduled_at: new Date().toISOString(), price_cents: 0, currency: 'EUR' }),
       });
       const j = await res.json().catch(() => ({}));
       // Dépile l'enveloppe ({data:{data:{id}}} via l'intercepteur global) jusqu'à la session.
@@ -158,7 +161,7 @@ export function LiriPortalPage() {
     { label: 'Démarrer', icon: Video, hero: true, to: '/dashboard/lives/new' },
     { label: 'Rejoindre', icon: LogIn, to: '/dashboard/lives' },
     { label: 'Converser', icon: MessageCircle, to: '/messages' },
-    { label: 'Programmer', icon: CalendarPlus, to: '/dashboard/lives/new' },
+    { label: 'Programmer', icon: CalendarPlus, to: '/studio/live' },
     { label: 'SmartBoard', icon: PenTool, to: '/studio/smartboard' },
     { label: 'Acheter', icon: ShoppingBag, to: '/dashboard' },
   ];

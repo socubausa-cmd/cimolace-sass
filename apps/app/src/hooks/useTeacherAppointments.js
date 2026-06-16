@@ -253,18 +253,27 @@ export function useTeacherAppointments(teacherId) {
          déjà en base (livekit-send-invitations) avant le passage en status live. */
       const baseInsert = {
         teacher_id: effectiveTeacherId,
+        // host_user_id : colonne NOT NULL + la RLS INSERT live_sessions l'exige. = le créateur
+        // (pour un enseignant qui crée son live, créateur = teacher).
+        host_user_id: effectiveTeacherId,
         title: data.title,
         description: data.description,
-        session_type: data.session_type || 'classe',
+        // contrainte CHECK live_sessions_session_type_check : 'class' valide, 'classe' REJETÉ.
+        session_type: (data.session_type && data.session_type !== 'classe') ? data.session_type : 'class',
         scheduled_at: scheduledAt,
-        visibility_mode: data.visibility_mode || 'secret',
+        // (colonne `visibility_mode` retirée : elle N'EXISTE PAS dans le schéma — la visibilité
+        //  secret/public passe par `room_mode` / `config`, posés par le wizard. L'ancienne ligne
+        //  faisait échouer l'insert « column not found ».)
         status: 'scheduled',
         started_at: null,
         cover_image_url,
         duration_minutes,
         ambient_tracks_json,
         config: data.config || {},
-        ...(resolvedTenantId ? { cimolace_tenant_id: resolvedTenantId } : {}),
+        // La RLS INSERT exige `tenant_id` (= tenant du membre). ⚠️ La colonne s'appelle
+        // `tenant_id` — `cimolace_tenant_id` N'EXISTE PAS dans le schéma (l'ancien code la posait
+        // → insert en échec « column not found » → wizard ne créait jamais le live).
+        ...(resolvedTenantId ? { tenant_id: resolvedTenantId } : {}),
       };
 
       let insertResult = await supabase

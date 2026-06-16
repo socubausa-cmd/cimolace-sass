@@ -492,7 +492,13 @@ export const AuthProvider = ({ children }) => {
   // les gardes s'exécutent avant que `user` (mis APRÈS ensureVisitorProfile) ne porte tenant_role
   // → sinon /messages et /liri rebondissent vers l'espace école.
   const tenantRole = String(
-    decodeJwtClaims(session?.access_token).app_metadata?.tenant_role || user?.tenant_role || '',
+    decodeJwtClaims(session?.access_token).app_metadata?.tenant_role
+      // Repli SYNCHRONE sur le token persistant (localStorage) : présent dès le 1er render
+      // même quand la session Supabase (async) n'est pas encore hydratée. Sans ça, les gardes
+      // (ProtectedRoleRoute /liri) s'exécutent une fois avec tenantRole='' → rebond vers /dashboard
+      // → /forfaits pour un owner. (race cold-load confirmée 2026-06-15.)
+      || decodeJwtClaims(authStore.getToken()).app_metadata?.tenant_role
+      || user?.tenant_role || '',
   ).toLowerCase();
 
   const value = {
