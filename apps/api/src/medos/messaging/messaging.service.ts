@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service';
+import { NotificationsService } from '../../notifications/notifications.service';
 import type { TenantContext } from '../../tenant/tenant.types';
 import {
   CloseThreadDto,
@@ -49,7 +50,10 @@ export type MessageRow = {
 export class MessagingService {
   private readonly logger = new Logger(MessagingService.name);
 
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   private async checkPatientOwnership(
     patientId: string,
@@ -209,8 +213,8 @@ export class MessagingService {
     threadId: string,
     dto: SendMessageDto,
   ): Promise<MessageRow> {
-    // Vérifier accès au thread
-    await this.getThread(tenant, actorId, actorRole, threadId);
+    // Vérifier accès au thread (et récupérer la row pour résoudre le destinataire)
+    const thread = await this.getThread(tenant, actorId, actorRole, threadId);
 
     const now = new Date().toISOString();
     const senderRole =
@@ -249,6 +253,33 @@ export class MessagingService {
         status: senderRole === 'patient' ? 'awaiting_staff' : 'awaiting_patient',
       })
       .eq('id', threadId);
+
+    // In-app notification → the OTHER participant (best-effort: never break send).
+    try {
+      let recipientUserId: string | null = null;
+      if (senderRole === 'patient') {
+        // patient → staff : le praticien assigné (peut être null → skip).
+        recipientUserId = (thread as any).assigned_practitioner_id ?? null;
+      } else {
+        // staff → patient : résoudre le user du dossier patient.
+        const { data: pat } = await this.supabase.client
+          .from('med_patients')
+          .select('patient_user_id')
+          .eq('tenant_id', tenant.id)
+          .eq('id', (thread as any).patient_id)
+          .single();
+        recipientUserId = (pat as any)?.patient_user_id ?? null;
+      }
+      if (recipientUserId && recipientUserId !== actorId) {
+        await this.notifications.send(tenant.id, recipientUserId, {
+          title: 'Nouveau message',
+          body: dto.body.slice(0, 120),
+          type: 'message',
+        });
+      }
+    } catch (e) {
+      this.logger.warn(`notif message: ${(e as Error).message}`);
+    }
 
     return msg as MessageRow;
   }

@@ -13,6 +13,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { useBranding } from '../lib/branding';
+import { NotificationBell } from './NotificationBell';
 
 const nav = [
   { to: '/dashboard',     icon: LayoutDashboard, label: 'Dashboard' },
@@ -96,8 +97,24 @@ export function Layout() {
           </div>
         )}
       </aside>
-      <main style={{ flex: 1, padding: 32, overflow: 'auto' }}>
-        <Outlet />
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
+        {/* Topbar praticien — cloche de notifications alignée à droite. */}
+        <header
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            padding: '14px 32px',
+            borderBottom: '1px solid var(--zw-border)',
+            background: 'var(--zw-bg, #fff)',
+            flexShrink: 0,
+          }}
+        >
+          <NotificationBell />
+        </header>
+        <div style={{ flex: 1, padding: 32 }}>
+          <Outlet />
+        </div>
       </main>
     </div>
   );

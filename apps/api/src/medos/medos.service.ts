@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import type { TenantContext } from '../tenant/tenant.types';
 import type { CreatePatientDto } from './dto/create-patient.dto';
 import type { UpdatePatientDto } from './dto/update-patient.dto';
@@ -82,6 +83,7 @@ export class MedosService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly config: ConfigService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /**
@@ -695,6 +697,29 @@ export class MedosService {
       noteId,
       shared ? 'share' : 'unshare',
     );
+
+    // In-app notification → patient, only on share (best-effort).
+    try {
+      if (shared) {
+        const { data: pat } = await this.supabase.client
+          .from('med_patients')
+          .select('patient_user_id')
+          .eq('tenant_id', tenant.id)
+          .eq('id', (data as any).patient_id)
+          .single();
+        const patientUserId = (pat as any)?.patient_user_id as string | null;
+        if (patientUserId) {
+          await this.notifications.send(tenant.id, patientUserId, {
+            title: 'Nouvelle note partagée',
+            body: 'Votre praticien a partagé une note de consultation.',
+            type: 'note_shared',
+          });
+        }
+      }
+    } catch (e) {
+      this.logger.warn(`notif note_shared: ${(e as Error).message}`);
+    }
+
     return data as unknown as MedNoteRow;
   }
 
@@ -1086,7 +1111,7 @@ export class MedosService {
     // 1. Form must belong to the tenant.
     const { data: form } = await this.supabase.client
       .from('med_medical_forms')
-      .select('id')
+      .select('id, title')
       .eq('tenant_id', tenant.id)
       .eq('id', formId)
       .single();
@@ -1095,7 +1120,7 @@ export class MedosService {
     // 2. Patient must belong to the tenant.
     const { data: patient } = await this.supabase.client
       .from('med_patients')
-      .select('id')
+      .select('id, patient_user_id')
       .eq('tenant_id', tenant.id)
       .eq('id', dto.patient_id)
       .single();
@@ -1138,6 +1163,21 @@ export class MedosService {
       (data as any).id,
       'create',
     );
+
+    // In-app notification → patient (best-effort: never break the assignment).
+    try {
+      const patientUserId = (patient as any).patient_user_id as string | null;
+      if (patientUserId) {
+        await this.notifications.send(tenant.id, patientUserId, {
+          title: 'Nouveau formulaire à remplir',
+          body: ((form as any).title as string) ?? 'Formulaire',
+          type: 'form_assignment',
+        });
+      }
+    } catch (e) {
+      this.logger.warn(`notif form_assignment: ${(e as Error).message}`);
+    }
+
     return data as unknown as Record<string, unknown>;
   }
 

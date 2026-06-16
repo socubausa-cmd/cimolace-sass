@@ -82,11 +82,13 @@ import { TwinEnabledGuard } from './twin/twin-enabled.guard';
 // LiveKitModule directly anymore — that would re-introduce the bypass
 // the P5 refactor specifically eliminated.
 import { LiveModule } from '../live/live.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     TenantModule,
     LiveModule, // Liri — single authority for all video sessions
+    NotificationsModule, // in-app notifications (form assign / message / note share)
     // JwtModule pour signer/vérifier les embed-tokens (15 min lifetime).
     JwtModule.registerAsync({
       imports: [ConfigModule],
