@@ -488,6 +488,17 @@ export class TwinController {
     return this.service.saveWheel(tenant, patientId, body.scores || []);
   }
 
+  // « Prévenir le patient que son bilan est prêt » — déclencheur explicite
+  // (in-app + email tenant-brandé). Distinct de saveWheel pour éviter le spam.
+  @Post(':patientId/wheel/notify')
+  @Roles(...STAFF)
+  notifyBilan(
+    @Param('patientId') patientId: string,
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.service.notifyBilanReady(tenant, patientId);
+  }
+
   // ── Timeline santé 360 (Module 21) ────────────────────────────────────
   @Get(':patientId/events')
   @Roles(...STAFF)

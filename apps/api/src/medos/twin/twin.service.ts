@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { SupabaseService } from '../../supabase/supabase.service';
+import { NotificationsService } from '../../notifications/notifications.service';
 import type { TenantContext } from '../../tenant/tenant.types';
 import {
   TwinScoringService,
@@ -113,6 +114,7 @@ export class TwinService {
     private readonly ai: TwinAiService,
     private readonly simulation: TwinSimulationService,
     private readonly projectionSvc: TwinProjectionService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /** Client Supabase non typé (tables twin hors du type Database de base). */
@@ -1577,6 +1579,39 @@ export class TwinService {
       .map((s) => ({ tenant_id: tenant.id, patient_id: patientId, domain: s.domain, score: Math.round(s.score), source: 'questionnaire' }));
     if (rows.length > 0) await this.db.from('med_transformation_wheel').insert(rows);
     return this.getWheel(tenant, patientId);
+  }
+
+  /**
+   * « Bilan prêt » — déclencheur EXPLICITE (le praticien clique « prévenir le
+   * patient »), pas auto sur saveWheel (qui s'appelle plusieurs fois en brouillon
+   * → spam). Notifie le patient in-app + email tenant-brandé que sa roue de
+   * transformation est disponible à consulter. Best-effort : ne jette jamais.
+   */
+  async notifyBilanReady(
+    tenant: TenantContext,
+    patientId: string,
+  ): Promise<{ status: string }> {
+    await this.assertPatient(tenant, patientId);
+    const { data: pat } = await this.db
+      .from('med_patients')
+      .select('patient_user_id')
+      .eq('tenant_id', tenant.id)
+      .eq('id', patientId)
+      .single();
+    const uid = (pat as any)?.patient_user_id as string | null;
+    if (!uid) return { status: 'no_patient_account' }; // patient pas encore invité
+    try {
+      await this.notifications.send(tenant.id, uid, {
+        title: 'Votre bilan de transformation est prêt',
+        body: 'Votre praticien a finalisé votre roue de transformation. Découvrez vos résultats, vos points forts et vos axes de progrès dans votre espace santé.',
+        type: 'bilan_ready',
+        email: true,
+        actionUrl: `https://${tenant.slug}.patient.cimolace.space`,
+      });
+      return { status: 'sent' };
+    } catch {
+      return { status: 'failed' };
+    }
   }
 
   // ── Timeline santé 360 (Module 21) ────────────────────────────────────

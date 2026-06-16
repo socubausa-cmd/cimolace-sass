@@ -5,7 +5,7 @@ import {
 } from './api';
 import {
   Loader2, Sparkles, Users, FlaskConical, FileText, GitBranch, Clock, TrendingUp, Beaker, Search, Camera as CameraIcon, SlidersHorizontal,
-  TrendingDown, ShieldCheck, HeartPulse, Info,
+  TrendingDown, ShieldCheck, HeartPulse, Info, Send,
 } from 'lucide-react';
 import { useCamera } from '../native/useCamera';
 import { BodyViewer } from './BodyViewer';
@@ -32,7 +32,20 @@ export function WheelPanel({ patientId }: { patientId: string }) {
   const [formId, setFormId] = useState<string | null>(null);
   const [scoring, setScoring] = useState<ScoringOverride>(() => loadScoringConfig());
   const [gridOpen, setGridOpen] = useState(false);
+  const [notif, setNotif] = useState<'idle' | 'sending' | 'sent' | 'no_account' | 'error'>('idle');
   const lsKey = 'twin_bilan_' + patientId;
+
+  // « Prévenir le patient » — notifie (in-app + email tenant) que le bilan est prêt.
+  async function notifyBilanReady() {
+    setNotif('sending');
+    try {
+      const r: any = await twinApi.notifyBilan(patientId);
+      setNotif(r?.status === 'sent' ? 'sent' : r?.status === 'no_patient_account' ? 'no_account' : 'error');
+    } catch {
+      setNotif('error');
+    }
+    setTimeout(() => setNotif('idle'), 4500);
+  }
 
   useEffect(() => {
     twinApi.getWheel(patientId).then((d) => setDomains(d.domains || [])).catch(() => {});
@@ -100,6 +113,13 @@ export function WheelPanel({ patientId }: { patientId: string }) {
           <button onClick={() => setBilanOpen(true)} style={{ fontSize: 12, padding: '6px 13px', background: 'var(--zw-violet)', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
             <Sparkles size={13} /> {hasBilan ? 'Refaire le bilan' : 'Remplir le bilan'}
           </button>
+          {hasBilan && (
+            <button onClick={notifyBilanReady} disabled={notif === 'sending'}
+              title="Notifier le patient (in-app + email depuis le domaine du cabinet) que son bilan de transformation est prêt à consulter"
+              style={{ fontSize: 12, padding: '6px 13px', background: notif === 'sent' ? 'var(--brand-primary)' : 'var(--zw-bg-subtle)', color: notif === 'sent' ? '#fff' : 'var(--zw-text-soft)', border: '1px solid var(--zw-border)', borderRadius: 7, cursor: notif === 'sending' ? 'default' : 'pointer', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <Send size={13} /> {notif === 'sending' ? 'Envoi…' : notif === 'sent' ? 'Patient prévenu ✓' : notif === 'no_account' ? 'Patient non inscrit' : notif === 'error' ? 'Échec — réessayer' : 'Prévenir le patient'}
+            </button>
+          )}
           <button onClick={() => setGridOpen(true)} title="Configurer la grille de scoring" style={{ fontSize: 12, padding: '6px 11px', background: 'var(--zw-bg-subtle)', color: 'var(--zw-text-soft)', border: '1px solid var(--zw-border)', borderRadius: 7, cursor: 'pointer', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
             <SlidersHorizontal size={13} /> Grille
           </button>

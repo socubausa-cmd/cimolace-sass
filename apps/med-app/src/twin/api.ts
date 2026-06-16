@@ -79,6 +79,8 @@ export const twinApi = {
   getWheel: (pid: string) => get(`/med/twin/${pid}/wheel`),
   saveWheel: (pid: string, scores: Array<{ domain: string; score: number }>) =>
     post(`/med/twin/${pid}/wheel`, { scores }),
+  // Prévenir le patient (in-app + email tenant-brandé) que son bilan est prêt.
+  notifyBilan: (pid: string) => post(`/med/twin/${pid}/wheel/notify`),
   listEvents: (pid: string) => get(`/med/twin/${pid}/events`),
   createEvent: (pid: string, e: { event_type: string; title: string; occurred_at: string }) =>
     post(`/med/twin/${pid}/events`, e),
