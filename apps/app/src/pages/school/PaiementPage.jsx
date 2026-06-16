@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
@@ -6,15 +6,8 @@ import { offeringCheckoutApi } from '@/lib/api-v2';
 import { getNgowazuluMentoratOffer } from '@/config/ngowazuluMentoratOffers';
 import { NGOWAZULU_CONSULTATION_PLAN_SLUG } from '@/config/ngowazuluConsultation';
 
-/** Opérateurs Mobile Money courants (zone CEMAC / Afrique de l'Ouest). */
-const PROVIDERS = [
-  { code: 'MTN_MOMO_CMR', label: 'MTN MoMo (Cameroun)', country: 'CMR' },
-  { code: 'ORANGE_CMR', label: 'Orange Money (Cameroun)', country: 'CMR' },
-  { code: 'MTN_MOMO_CIV', label: 'MTN MoMo (Côte d’Ivoire)', country: 'CIV' },
-  { code: 'ORANGE_CIV', label: 'Orange Money (Côte d’Ivoire)', country: 'CIV' },
-  { code: 'MTN_MOMO_RWA', label: 'MTN MoMo (Rwanda)', country: 'RWA' },
-  { code: 'MTN_MOMO_GHA', label: 'MTN MoMo (Ghana)', country: 'GHA' },
-];
+// Les opérateurs Mobile Money sont chargés EN DIRECT depuis l'API (config PawaPay réelle
+// du compte marchand) — fini la liste figée qui proposait des opérateurs non activés.
 
 export default function PaiementPage() {
   const { tenantSlug } = useParams();
@@ -46,14 +39,50 @@ export default function PaiementPage() {
   const [method, setMethod] = useState('card'); // 'card' (Stripe) | 'mobile_money' (PawaPay)
   const [amountEur, setAmountEur] = useState('');
   const [phone, setPhone] = useState('');
-  const [provider, setProvider] = useState(PROVIDERS[0].code);
   const [status, setStatus] = useState({ state: 'idle', message: '', depositId: null });
   const cardReturn = searchParams.get('card'); // 'success' | 'cancel' au retour de Stripe
 
-  const country = useMemo(
-    () => PROVIDERS.find((p) => p.code === provider)?.country || 'CMR',
-    [provider],
-  );
+  // Opérateurs Mobile Money en direct (config PawaPay réelle) : pays → opérateurs.
+  const [mmConfig, setMmConfig] = useState(null); // { countries: [...] } | null
+  const [mmLoading, setMmLoading] = useState(false);
+  const [mmCountry, setMmCountry] = useState('');
+  const [mmOperator, setMmOperator] = useState('');
+
+  // Chargé à la 1re bascule vers Mobile Money (la carte n'en a pas besoin).
+  useEffect(() => {
+    if (method !== 'mobile_money' || mmConfig || mmLoading) return;
+    let cancelled = false;
+    setMmLoading(true);
+    Promise.race([
+      offeringCheckoutApi.getProviders(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000)),
+    ])
+      .then((cfg) => {
+        if (cancelled) return;
+        const countries = cfg?.countries ?? [];
+        setMmConfig(cfg ?? { countries: [] });
+        const def = countries.find((c) => c.country === 'CMR') ?? countries[0];
+        if (def) {
+          setMmCountry(def.country);
+          setMmOperator(def.providers?.[0]?.provider ?? '');
+        }
+      })
+      .catch(() => !cancelled && setMmConfig({ countries: [] }))
+      .finally(() => !cancelled && setMmLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [method, mmConfig, mmLoading]);
+
+  const mmCountries = mmConfig?.countries ?? [];
+  const mmOperators = mmCountries.find((c) => c.country === mmCountry)?.providers ?? [];
+
+  function onCountryChange(code) {
+    setMmCountry(code);
+    const entry = mmCountries.find((c) => c.country === code);
+    setMmOperator(entry?.providers?.[0]?.provider ?? '');
+    if (entry?.prefix && !phone.trim()) setPhone(`+${entry.prefix}`);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -88,7 +117,11 @@ export default function PaiementPage() {
       }
 
       // ── Mobile Money (PawaPay) ──
-      const body = { kind: offer.kind, phoneNumber: phone.trim(), provider, country };
+      if (!mmOperator || !mmCountry) {
+        setStatus({ state: 'error', message: 'Sélectionnez un pays et un opérateur Mobile Money.', depositId: null });
+        return;
+      }
+      const body = { kind: offer.kind, phoneNumber: phone.trim(), provider: mmOperator, country: mmCountry };
       if (offer.kind === 'subscription') body.planSlug = planSlug;
       else { body.amountCents = amountCents; if (planSlug) body.planSlug = planSlug; }
       const res = await offeringCheckoutApi.createMobileMoney(body);
@@ -201,35 +234,56 @@ export default function PaiementPage() {
 
           {method === 'mobile_money' && (
             <>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-200">Opérateur Mobile Money</label>
-                <select value={provider} onChange={(e) => setProvider(e.target.value)} className={inputCls}>
-                  {PROVIDERS.map((p) => (
-                    <option key={p.code} value={p.code} className="bg-[#0b1115]">
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {mmLoading ? (
+                <p className="text-sm text-gray-400">Chargement des opérateurs disponibles…</p>
+              ) : mmCountries.length === 0 ? (
+                <p className="text-sm text-red-300">
+                  Aucun opérateur Mobile Money disponible pour le moment. Essayez le paiement par carte.
+                </p>
+              ) : (
+                <>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-200">Pays</label>
+                    <select value={mmCountry} onChange={(e) => onCountryChange(e.target.value)} className={inputCls}>
+                      {mmCountries.map((c) => (
+                        <option key={c.country} value={c.country} className="bg-[#0b1115]">
+                          {c.displayName?.fr || c.displayName?.en || c.country}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-200">Numéro Mobile Money</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+237 6XX XXX XXX"
-                  className={inputCls}
-                  required
-                />
-                <p className="mt-1 text-xs text-gray-500">Format international (E.164), ex : +237612345678</p>
-              </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-200">Opérateur Mobile Money</label>
+                    <select value={mmOperator} onChange={(e) => setMmOperator(e.target.value)} className={inputCls}>
+                      {mmOperators.map((p) => (
+                        <option key={p.provider} value={p.provider} className="bg-[#0b1115]">
+                          {p.displayName || p.provider}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-200">Numéro Mobile Money</label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+237 6XX XXX XXX"
+                      className={inputCls}
+                      required
+                    />
+                    <p className="mt-1 text-xs text-gray-500">Format international (E.164), ex : +237612345678</p>
+                  </div>
+                </>
+              )}
             </>
           )}
 
           <button
             type="submit"
-            disabled={status.state === 'submitting'}
+            disabled={status.state === 'submitting' || (method === 'mobile_money' && mmOperators.length === 0)}
             className="w-full cursor-pointer rounded-lg bg-[var(--school-accent)] px-5 py-3 font-semibold text-black hover:bg-[#e5c04a] disabled:opacity-60"
           >
             {status.state === 'submitting'
