@@ -421,7 +421,7 @@ export default function LiveWaitingRoomPage() {
         const { data: sess, error: sErr } = await supabase
           .from('live_sessions')
           .select(
-            'id, title, description, teacher_id, status, scheduled_at, started_at, access_mode, cover_image_url, formation_id, duration_minutes, ambient_tracks_json, config, profiles:teacher_id(name, avatar_url)',
+            'id, title, description, teacher_id, status, scheduled_at, started_at, access_mode, cover_image_url, formation_id, duration_minutes, ambient_tracks_json, config',
           )
           .eq('id', sessionId)
           .maybeSingle();
@@ -431,6 +431,19 @@ export default function LiveWaitingRoomPage() {
           );
         }
         if (cancelled) return;
+        // Profil du formateur en requête séparée : PostgREST n'a PAS de FK déclarée
+        // live_sessions.teacher_id → profiles, donc la jointure embarquée
+        // `profiles:teacher_id(...)` faisait échouer TOUT le SELECT (« Could not find
+        // a relationship between live_sessions and teacher_id ») → la salle d'attente
+        // retombait sur « Session sans titre ».
+        if (sess.teacher_id) {
+          const { data: hostProfile } = await supabase
+            .from('profiles')
+            .select('name, avatar_url')
+            .eq('id', sess.teacher_id)
+            .maybeSingle();
+          sess.profiles = hostProfile || null;
+        }
         setSession(sess);
         setAmbientTracks(normalizeAmbientTracks(sess));
 
