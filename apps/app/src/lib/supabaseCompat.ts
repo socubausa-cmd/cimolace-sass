@@ -351,6 +351,8 @@ class QueryBuilder<T = any> {
       // COURSES
       case 'courses': {
         if (this.insertData) return apiCall(coursesApi.create(this.insertData));
+        if (this.updateData && id) return apiCall(coursesApi.update(id, this.updateData));
+        if (this.isDelete && id) return apiCall(coursesApi.delete(id));
         if (id) return apiCall(coursesApi.get(id));
         return apiCall(coursesApi.list());
       }
