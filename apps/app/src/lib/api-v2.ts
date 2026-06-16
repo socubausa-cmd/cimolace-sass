@@ -338,6 +338,12 @@ export const messagingApi = {
     apiV2.post<ApiEnvelope<any>>('/messaging/groups', body).then(unwrap),
   addGroupMember: (groupId: string, body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>(`/messaging/groups/${groupId}/members`, body).then(unwrap),
+  editMessage: (id: string, content: string) =>
+    apiV2.patch<ApiEnvelope<any>>(`/messaging/messages/${id}`, { content }).then(unwrap),
+  deleteMessage: (id: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/messaging/messages/${id}`).then(unwrap),
+  markRead: (conversationId: string) =>
+    apiV2.post<ApiEnvelope<any>>(`/messaging/conversations/${conversationId}/read`, {}).then(unwrap),
 };
 
 // ── Chat Engine ─────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare, WandSparkles,
+  Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare, MessageCircle, WandSparkles,
   Library, Blocks, Settings2, Mic, ArrowUp, LogIn, CalendarPlus, PenTool,
   ShoppingBag, Clock, ChevronRight, Film, ChevronLeft, UserRound, Plus,
   Clapperboard, Radio, FilePenLine, BadgeDollarSign, Webhook,
@@ -41,6 +41,39 @@ export function LiriPortalPage() {
   const [now, setNow] = useState(() => new Date());
   const [stats, setStats] = useState<Stats | null>(null);
   const [lives, setLives] = useState<Live[]>([]);
+  const [starting, setStarting] = useState(false);
+
+  // « Démarrer » = réunion instantanée façon Zoom : crée une session live à la volée,
+  // la démarre, et ouvre directement le LiveHostPage (coque LIRI neutre). Repli = wizard.
+  const startInstantMeeting = async () => {
+    if (starting) return;
+    setStarting(true);
+    try {
+      // host_user_id (colonne NOT NULL de live_sessions) = utilisateur courant = `sub` du JWT.
+      let hostId = '';
+      try { hostId = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub || ''; } catch { /* noop */ }
+      const h = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
+      const res = await fetch(`${base}/lives`, {
+        method: 'POST',
+        headers: h,
+        body: JSON.stringify({ title: 'Réunion instantanée', host_user_id: hostId, scheduled_at: new Date().toISOString(), price_cents: 0, currency: 'EUR' }),
+      });
+      const j = await res.json().catch(() => ({}));
+      // Dépile l'enveloppe ({data:{data:{id}}} via l'intercepteur global) jusqu'à la session.
+      let d: any = j;
+      while (d && typeof d === 'object' && !('id' in d) && 'data' in d) d = d.data;
+      const id = d?.id;
+      if (!id) throw new Error('reunion sans id');
+      // Démarrage immédiat (best-effort — l'hôte peut aussi démarrer depuis l'arène).
+      try { await fetch(`${base}/lives/${id}/start`, { method: 'POST', headers: h }); } catch { /* noop */ }
+      nav(`/live/host/${id}?tenant=${encodeURIComponent(slug)}`);
+    } catch {
+      // Échec rare : rester sur l'accueil LIRI avec un message (pas de route cassée).
+      if (typeof window !== 'undefined') window.alert('La réunion n’a pas pu démarrer. Réessayez dans un instant.');
+    } finally {
+      setStarting(false);
+    }
+  };
 
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 30_000); return () => clearInterval(t); }, []);
 
@@ -116,6 +149,7 @@ export function LiriPortalPage() {
     { key: 'accueil', label: 'Accueil', icon: House, to: '/liri', active: true },
     { key: 'lives', label: 'Lives', icon: Video, to: '/dashboard/lives', live: liveNow.length > 0 },
     { key: 'forum', label: 'Forum', icon: MessagesSquare, to: '/dashboard', badge: 5 },
+    { key: 'messages', label: 'Messages', icon: MessageCircle, to: '/messages' },
     { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri' },
     { key: 'biblio', label: 'Biblio.', icon: Library, to: '/studio/liri/bibliotheque' },
     { key: 'brain', label: 'Brain', icon: Sparkles, to: '/dashboard/liri' },
@@ -123,7 +157,7 @@ export function LiriPortalPage() {
   const QUICK = [
     { label: 'Démarrer', icon: Video, hero: true, to: '/dashboard/lives/new' },
     { label: 'Rejoindre', icon: LogIn, to: '/dashboard/lives' },
-    { label: 'Converser', icon: MessagesSquare, badge: liveNow.length || undefined, to: '/dashboard/liri' },
+    { label: 'Converser', icon: MessageCircle, to: '/messages' },
     { label: 'Programmer', icon: CalendarPlus, to: '/dashboard/lives/new' },
     { label: 'SmartBoard', icon: PenTool, to: '/studio/smartboard' },
     { label: 'Acheter', icon: ShoppingBag, to: '/dashboard' },
@@ -197,10 +231,10 @@ export function LiriPortalPage() {
               {QUICK.map((q) => {
                 const Icon = q.icon;
                 return (
-                  <button key={q.label} onClick={() => nav(q.to)} className="group relative flex w-24 flex-col items-center gap-2.5">
+                  <button key={q.label} onClick={() => (q.hero ? startInstantMeeting() : nav(q.to))} disabled={q.hero && starting} className="group relative flex w-24 flex-col items-center gap-2.5 disabled:cursor-wait disabled:opacity-70">
                     {q.badge && <span className="absolute -top-2 right-2 z-10 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[9px] font-bold text-white" style={{ background: 'var(--coral)' }}>{q.badge}</span>}
                     <span className={`lp-tr grid h-24 w-24 place-items-center rounded-[26px] lp-soft lp-lift ${q.hero ? 'text-white lp-ember' : 'lp-line border lp-panel lp-coral lp-hovbtn'}`}><Icon size={q.hero ? 32 : 30} /></span>
-                    <span className={`text-[13px] font-medium ${q.hero ? 'lp-ink' : 'lp-muted'}`}>{q.label}</span>
+                    <span className={`text-[13px] font-medium ${q.hero ? 'lp-ink' : 'lp-muted'}`}>{q.hero && starting ? 'Création…' : q.label}</span>
                   </button>
                 );
               })}

@@ -118,6 +118,8 @@ class QueryBuilder<T = any> {
   private isFilters: { field: string; value: null | boolean }[] = [];
   private gteFilters: { field: string; value: any }[] = [];
   private lteFilters: { field: string; value: any }[] = [];
+  private ltFilters: { field: string; value: any }[] = [];
+  private gtFilters: { field: string; value: any }[] = [];
   private neqFilters: { field: string; value: any }[] = [];
   private upsertData: any = null;
   private upsertOptions: any = null;
@@ -175,6 +177,16 @@ class QueryBuilder<T = any> {
 
   lte(field: string, value: any) {
     this.lteFilters.push({ field, value });
+    return this;
+  }
+
+  lt(field: string, value: any) {
+    this.ltFilters.push({ field, value });
+    return this;
+  }
+
+  gt(field: string, value: any) {
+    this.gtFilters.push({ field, value });
     return this;
   }
 
@@ -627,6 +639,12 @@ class QueryBuilder<T = any> {
     for (const f of this.lteFilters) {
       query = query.lte(f.field, f.value);
     }
+    for (const f of this.ltFilters) {
+      query = query.lt(f.field, f.value);
+    }
+    for (const f of this.gtFilters) {
+      query = query.gt(f.field, f.value);
+    }
     for (const f of this.neqFilters) {
       query = query.neq(f.field, f.value);
     }
@@ -682,6 +700,12 @@ class QueryBuilder<T = any> {
     }
     for (const filter of this.lteFilters) {
       data = data.filter((row) => row?.[filter.field] <= filter.value);
+    }
+    for (const filter of this.ltFilters) {
+      data = data.filter((row) => row?.[filter.field] < filter.value);
+    }
+    for (const filter of this.gtFilters) {
+      data = data.filter((row) => row?.[filter.field] > filter.value);
     }
     for (const filter of this.neqFilters) {
       data = data.filter((row) => row?.[filter.field] !== filter.value);
@@ -748,8 +772,11 @@ export const supabase = {
   // Data — routed through API
   from: (table: string) => new QueryBuilder(table),
 
-  // Realtime — stub for now (V1 live uses LiveKit, not Supabase Realtime)
-  channel: (_name: string) => new ChannelStub(),
+  // Realtime — délégué au VRAI client Supabase. Le live (chat, hand-raise, smartboard,
+  // présence, bus LONGIA) utilise des broadcasts/presence ÉPHÉMÈRES (peer-to-peer via le
+  // serveur realtime) → aucune table ni publication requise. Le JWT de la session est
+  // attaché automatiquement → scoppé RLS. (Avant : ChannelStub no-op → realtime mort partout.)
+  channel: (name: string, opts?: any) => realSupabase.channel(name, opts),
 
   // Edge functions — déléguées au vrai client (le JWT de la session est attaché automatiquement).
   // Débloque generate-transcript (ASR), generate-mindmap, et toutes les edge functions LIRI.
@@ -761,6 +788,8 @@ export const supabase = {
   // RPC — vrai client (les fonctions SECURITY DEFINER vérifient auth.uid() côté DB).
   rpc: realSupabase.rpc.bind(realSupabase),
 
-  // Utility
-  removeChannel: (_channel: any) => {},
+  // Utility — realtime délégué au vrai client
+  removeChannel: (channel: any) => realSupabase.removeChannel(channel),
+  removeAllChannels: () => realSupabase.removeAllChannels(),
+  getChannels: () => realSupabase.getChannels(),
 };

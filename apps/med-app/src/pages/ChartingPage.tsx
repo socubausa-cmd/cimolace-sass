@@ -182,7 +182,7 @@ export function ChartingPage() {
   // ─── Render ───────────────────────────────────────────────────────────────
 
   const statusColors: Record<JobStatus, string> = {
-    pending:      '#64748b',
+    pending:      'var(--zw-text-muted)',
     transcribing: '#f59e0b',
     generating:   '#3b82f6',
     completed:    '#22c55e',
@@ -201,16 +201,16 @@ export function ChartingPage() {
     <div style={{ maxWidth: 860, margin: '0 auto' }}>
       {/* Header */}
       <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--zw-text)', display: 'flex', alignItems: 'center', gap: 10 }}>
           <Mic size={26} color="var(--brand-primary)" /> Consultation IA — Note SOAP
         </h1>
-        <p style={{ color: '#64748b', marginTop: 6, fontSize: 14 }}>
+        <p style={{ color: 'var(--zw-text-muted)', marginTop: 6, fontSize: 14 }}>
           Transcription audio + génération automatique de note SOAP via Deepgram &amp; Claude
         </p>
       </div>
 
       {/* Form */}
-      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 28, marginBottom: 24 }}>
+      <div style={{ background: '#fff', border: '1px solid var(--zw-border)', borderRadius: 12, padding: 28, marginBottom: 24 }}>
 
         {/* Patient */}
         <div style={{ marginBottom: 20 }}>
@@ -237,8 +237,8 @@ export function ChartingPage() {
               onClick={() => setMode(m)}
               style={{
                 padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                background: mode === m ? 'var(--brand-primary)' : '#f1f5f9',
-                color: mode === m ? '#fff' : '#475569',
+                background: mode === m ? 'var(--brand-primary)' : 'var(--zw-bg-subtle)',
+                color: mode === m ? '#fff' : 'var(--zw-text-soft)',
                 border: 'none',
                 display: 'flex', alignItems: 'center', gap: 6,
               }}
@@ -255,8 +255,8 @@ export function ChartingPage() {
             <div
               onClick={() => fileInput.current?.click()}
               style={{
-                border: '2px dashed #cbd5e1', borderRadius: 10, padding: '28px 20px',
-                textAlign: 'center', cursor: 'pointer', background: audioFile ? '#f0fdf4' : '#f8fafc',
+                border: '2px dashed var(--zw-border-strong)', borderRadius: 10, padding: '28px 20px',
+                textAlign: 'center', cursor: 'pointer', background: audioFile ? '#f0fdf4' : 'var(--zw-bg)',
                 transition: 'border-color 0.2s',
               }}
             >
@@ -264,8 +264,8 @@ export function ChartingPage() {
                 <p style={{ color: '#16a34a', fontWeight: 600 }}>✓ {audioFile.name} ({(audioFile.size / 1024 / 1024).toFixed(2)} Mo)</p>
               ) : (
                 <>
-                  <Upload size={28} color="#94a3b8" style={{ margin: '0 auto 8px' }} />
-                  <p style={{ color: '#64748b', fontSize: 14 }}>Cliquer pour choisir un fichier audio</p>
+                  <Upload size={28} color="var(--zw-text-faint)" style={{ margin: '0 auto 8px' }} />
+                  <p style={{ color: 'var(--zw-text-muted)', fontSize: 14 }}>Cliquer pour choisir un fichier audio</p>
                 </>
               )}
             </div>
@@ -287,8 +287,8 @@ export function ChartingPage() {
               rows={8}
               style={{
                 width: '100%', boxSizing: 'border-box', padding: '12px 14px', fontSize: 14,
-                border: '1px solid #e2e8f0', borderRadius: 8, resize: 'vertical',
-                fontFamily: 'inherit', color: '#1e293b',
+                border: '1px solid var(--zw-border)', borderRadius: 8, resize: 'vertical',
+                fontFamily: 'inherit', color: 'var(--zw-text)',
               }}
             />
           </div>
@@ -306,7 +306,7 @@ export function ChartingPage() {
           onClick={startCharting}
           disabled={loading}
           style={{
-            marginTop: 24, padding: '12px 28px', background: loading ? '#94a3b8' : 'var(--brand-primary)',
+            marginTop: 24, padding: '12px 28px', background: loading ? 'var(--zw-text-faint)' : 'var(--brand-primary)',
             color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600,
             cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8,
           }}
@@ -317,7 +317,7 @@ export function ChartingPage() {
 
       {/* Job status */}
       {job && (
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 28 }}>
+        <div style={{ background: '#fff', border: '1px solid var(--zw-border)', borderRadius: 12, padding: 28 }}>
 
           {/* Status badge */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
@@ -336,7 +336,7 @@ export function ChartingPage() {
           {job.transcript && (
             <div style={{ marginBottom: 24 }}>
               <h3 style={sectionTitle}>Transcription</h3>
-              <p style={{ fontSize: 14, color: '#374151', background: '#f8fafc', padding: '12px 16px', borderRadius: 8, lineHeight: 1.7 }}>
+              <p style={{ fontSize: 14, color: '#374151', background: 'var(--zw-bg)', padding: '12px 16px', borderRadius: 8, lineHeight: 1.7 }}>
                 {job.transcript}
               </p>
             </div>
@@ -348,7 +348,7 @@ export function ChartingPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <h3 style={sectionTitle}>Note SOAP</h3>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={copyNote} style={actionBtn('#f1f5f9', '#475569')}>
+                  <button onClick={copyNote} style={actionBtn('var(--zw-bg-subtle)', 'var(--zw-text-soft)')}>
                     <Copy size={14} /> {copied ? 'Copié !' : 'Copier'}
                   </button>
                   <button onClick={insertIntoPatientFile} style={actionBtn('var(--brand-primary-soft)', 'var(--brand-primary)')}>
@@ -367,8 +367,8 @@ export function ChartingPage() {
                       {soapLabels[section]}
                     </span>
                   </div>
-                  <p style={{ fontSize: 14, color: '#1e293b', lineHeight: 1.7, paddingLeft: 8, borderLeft: `3px solid ${soapColors[section]}`, margin: 0 }}>
-                    {job.soapNote![section] || <em style={{ color: '#94a3b8' }}>Non renseigné</em>}
+                  <p style={{ fontSize: 14, color: 'var(--zw-text)', lineHeight: 1.7, paddingLeft: 8, borderLeft: `3px solid ${soapColors[section]}`, margin: 0 }}>
+                    {job.soapNote![section] || <em style={{ color: 'var(--zw-text-faint)' }}>Non renseigné</em>}
                   </p>
                 </div>
               ))}
@@ -394,11 +394,11 @@ const labelStyle: React.CSSProperties = {
 
 const selectStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', fontSize: 14,
-  border: '1px solid #e2e8f0', borderRadius: 8, background: '#fff', color: '#1e293b',
+  border: '1px solid var(--zw-border)', borderRadius: 8, background: '#fff', color: 'var(--zw-text)',
 };
 
 const sectionTitle: React.CSSProperties = {
-  fontSize: 15, fontWeight: 700, color: '#1e293b', margin: '0 0 12px',
+  fontSize: 15, fontWeight: 700, color: 'var(--zw-text)', margin: '0 0 12px',
 };
 
 const soapColors: Record<string, string> = {

@@ -39,7 +39,7 @@ function authHeaders(): HeadersInit {
 
 const actionColor: Record<string, string> = {
   create: '#10b981', read: '#0ea5e9', list: '#0ea5e9',
-  update: '#f59e0b', delete: '#dc2626', sign: '#7c3aed', share: '#0d9488',
+  update: '#f59e0b', delete: '#dc2626', sign: 'var(--zw-violet)', share: '#0d9488',
 };
 
 export function AuditPage() {
@@ -89,7 +89,7 @@ export function AuditPage() {
       <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
         <Shield size={22} /> Audit & RGPD
       </h2>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>
+      <p style={{ color: 'var(--zw-text-muted)', fontSize: 14, marginBottom: 24 }}>
         Journal des actions effectuees sur les donnees medicales (acces, modifications, exports) et demandes patient.
       </p>
 
@@ -115,7 +115,7 @@ export function AuditPage() {
       )}
 
       {/* Filters */}
-      <div style={{ background: '#fff', padding: 12, borderRadius: 10, border: '1px solid #e2e8f0', marginBottom: 12, display: 'flex', gap: 12, alignItems: 'center' }}>
+      <div style={{ background: '#fff', padding: 12, borderRadius: 10, border: '1px solid var(--zw-border)', marginBottom: 12, display: 'flex', gap: 12, alignItems: 'center' }}>
         <select value={filterResource} onChange={(e) => setFilterResource(e.target.value)} style={filterStyle}>
           <option value="">Toutes ressources</option>
           {RESOURCES.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -131,14 +131,14 @@ export function AuditPage() {
         >
           <RefreshCw size={14} className={loading ? 'spin' : ''} /> Rafraichir
         </button>
-        <span style={{ marginLeft: 'auto', fontSize: 12, color: '#64748b' }}>{entries.length} entrees</span>
+        <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--zw-text-muted)' }}>{entries.length} entrees</span>
       </div>
 
       {/* Audit log table */}
-      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
           <thead>
-            <tr style={{ background: '#f8fafc' }}>
+            <tr style={{ background: 'var(--zw-bg)' }}>
               <th style={th}>Quand</th>
               <th style={th}>Acteur</th>
               <th style={th}>Action</th>
@@ -150,36 +150,36 @@ export function AuditPage() {
           <tbody>
             {entries.length === 0 && (
               <tr>
-                <td colSpan={6} style={{ padding: 30, color: '#94a3b8', textAlign: 'center' }}>
+                <td colSpan={6} style={{ padding: 30, color: 'var(--zw-text-faint)', textAlign: 'center' }}>
                   Aucune entree dans le journal d'audit avec ces filtres.
                 </td>
               </tr>
             )}
             {entries.map((e) => (
-              <tr key={e.id} style={{ borderTop: '1px solid #f1f5f9' }}>
+              <tr key={e.id} style={{ borderTop: '1px solid var(--zw-bg-subtle)' }}>
                 <td style={td}>
                   <div style={{ fontWeight: 500 }}>{new Date(e.created_at).toLocaleDateString('fr')}</div>
-                  <div style={{ fontSize: 10, color: '#94a3b8' }}>{new Date(e.created_at).toLocaleTimeString('fr')}</div>
+                  <div style={{ fontSize: 10, color: 'var(--zw-text-faint)' }}>{new Date(e.created_at).toLocaleTimeString('fr')}</div>
                 </td>
                 <td style={td}>
-                  <code style={{ fontSize: 11, color: '#475569' }}>{e.actor_id ? e.actor_id.slice(0, 8) + '…' : 'système'}</code>
+                  <code style={{ fontSize: 11, color: 'var(--zw-text-soft)' }}>{e.actor_id ? e.actor_id.slice(0, 8) + '…' : 'système'}</code>
                 </td>
                 <td style={td}>
-                  <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: 10, fontWeight: 600, background: (actionColor[e.action] || '#64748b') + '22', color: actionColor[e.action] || '#64748b', textTransform: 'uppercase' }}>
+                  <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: 10, fontWeight: 600, background: (actionColor[e.action] || 'var(--zw-text-muted)') + '22', color: actionColor[e.action] || 'var(--zw-text-muted)', textTransform: 'uppercase' }}>
                     {e.action}
                   </span>
                 </td>
                 <td style={td}>
                   <div style={{ fontWeight: 500 }}>{e.resource}</div>
-                  <code style={{ fontSize: 10, color: '#94a3b8' }}>{e.resource_id ? e.resource_id.slice(0, 8) + '…' : '—'}</code>
+                  <code style={{ fontSize: 10, color: 'var(--zw-text-faint)' }}>{e.resource_id ? e.resource_id.slice(0, 8) + '…' : '—'}</code>
                 </td>
                 <td style={td}>
-                  <code style={{ fontSize: 11, color: '#64748b' }}>{e.ip_address || '—'}</code>
+                  <code style={{ fontSize: 11, color: 'var(--zw-text-muted)' }}>{e.ip_address || '—'}</code>
                 </td>
                 <td style={td}>
                   <button
                     onClick={() => setInspectEntry(e)}
-                    style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 4, padding: 4, cursor: 'pointer', color: '#475569' }}
+                    style={{ background: 'none', border: '1px solid var(--zw-border)', borderRadius: 4, padding: 4, cursor: 'pointer', color: 'var(--zw-text-soft)' }}
                     title="Inspecter"
                   >
                     <Eye size={12} />
@@ -201,13 +201,13 @@ export function AuditPage() {
             style={{ background: '#fff', borderRadius: 12, padding: 24, width: 'min(640px, 92vw)', maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}
           >
             <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, marginBottom: 12 }}>Detail audit</h3>
-            <pre style={{ background: '#0f172a', color: '#e2e8f0', padding: 12, borderRadius: 8, fontSize: 11, overflow: 'auto' }}>
+            <pre style={{ background: 'var(--zw-text)', color: 'var(--zw-border)', padding: 12, borderRadius: 8, fontSize: 11, overflow: 'auto' }}>
               {JSON.stringify(inspectEntry, null, 2)}
             </pre>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
               <button
                 onClick={() => setInspectEntry(null)}
-                style={{ padding: '8px 16px', background: '#0f172a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+                style={{ padding: '8px 16px', background: 'var(--zw-text)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
               >
                 Fermer
               </button>
@@ -222,11 +222,11 @@ export function AuditPage() {
 }
 
 const filterStyle: React.CSSProperties = {
-  padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: 6,
+  padding: '8px 10px', border: '1px solid var(--zw-border)', borderRadius: 6,
   fontSize: 13, background: '#fff', cursor: 'pointer',
 };
 const th: React.CSSProperties = {
   padding: '10px 12px', textAlign: 'left', fontSize: 11, fontWeight: 600,
-  color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5,
+  color: 'var(--zw-text-muted)', textTransform: 'uppercase', letterSpacing: 0.5,
 };
 const td: React.CSSProperties = { padding: '10px 12px', verticalAlign: 'top' };

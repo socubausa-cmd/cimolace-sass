@@ -12,6 +12,8 @@
 import React, {
   useEffect, useRef, useState, useCallback, useMemo,
 } from 'react';
+import { useVideoProcessor } from '@/lib/useVideoProcessor';
+import { useMicProcessor } from '@/lib/useMicProcessor';
 import { Capacitor } from '@capacitor/core';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -1441,6 +1443,20 @@ export default function LiveArenaPage() {
       setArenaPipStream(so instanceof MediaStream ? so : null);
     }
   }, []);
+
+  // Effets vidéo (flou / fond virtuel / chroma) + traitement micro APPLIQUÉS à la piste
+  // LiveKit publiée (aligné sur LiveHostPage). Sans ça, les effets restaient une simple
+  // prévisualisation locale, jamais diffusée aux participants distants.
+  useVideoProcessor(roomRef, {
+    chromaKey: videoChromaKey,
+    chromaColor: videoChromaColor,
+    chromaSens: videoChromaSens,
+    videoVbg,
+    videoBlur,
+    customBgUrl: videoCustomBgUrl,
+    onCanvasReady: handleArenaPipCanvasRef,
+  });
+  useMicProcessor(roomRef, { micGain, noiseReduction });
 
   const handleArenaVbgChange = useCallback((v) => {
     setVideoVbg(v);

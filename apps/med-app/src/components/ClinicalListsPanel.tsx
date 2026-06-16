@@ -18,7 +18,7 @@ const TABS: { key: Tab; label: string; icon: React.ComponentType<{ size?: number
   { key: 'medications',   label: 'Medicaments', icon: Pill,           color: '#f59e0b', route: 'medications' },
   { key: 'problems',      label: 'Problemes',   icon: Activity,       color: '#0ea5e9', route: 'problems' },
   { key: 'immunizations', label: 'Vaccins',     icon: Syringe,        color: '#10b981', route: 'immunizations' },
-  { key: 'lab-results',   label: 'Resultats labo', icon: FlaskConical, color: '#8b5cf6', route: 'lab-results' },
+  { key: 'lab-results',   label: 'Resultats labo', icon: FlaskConical, color: 'var(--zw-violet-soft)', route: 'lab-results' },
 ];
 
 type RowFn = (it: any) => { title: string; subtitle: string; meta?: string };
@@ -196,7 +196,7 @@ export function ClinicalListsPanel({ patientId }: { patientId: string }) {
   return (
     <div>
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, borderBottom: '1px solid #e2e8f0', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16, borderBottom: '1px solid var(--zw-border)', flexWrap: 'wrap' }}>
         {TABS.map((t) => {
           const TIcon = t.icon;
           const isActive = tab === t.key;
@@ -208,12 +208,12 @@ export function ClinicalListsPanel({ patientId }: { patientId: string }) {
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '8px 14px', background: 'none',
                 border: 'none', borderBottom: isActive ? `2px solid ${t.color}` : '2px solid transparent',
-                color: isActive ? t.color : '#64748b', fontSize: 13, fontWeight: 600,
+                color: isActive ? t.color : 'var(--zw-text-muted)', fontSize: 13, fontWeight: 600,
                 cursor: 'pointer', marginBottom: -1,
               }}
             >
-              <TIcon size={14} color={isActive ? t.color : '#64748b'} /> {t.label}
-              <span style={{ fontSize: 11, padding: '1px 6px', background: isActive ? t.color : '#e2e8f0', color: isActive ? '#fff' : '#64748b', borderRadius: 8 }}>
+              <TIcon size={14} color={isActive ? t.color : 'var(--zw-text-muted)'} /> {t.label}
+              <span style={{ fontSize: 11, padding: '1px 6px', background: isActive ? t.color : 'var(--zw-border)', color: isActive ? '#fff' : 'var(--zw-text-muted)', borderRadius: 8 }}>
                 {items[t.key].length}
               </span>
             </button>
@@ -236,7 +236,7 @@ export function ClinicalListsPanel({ patientId }: { patientId: string }) {
 
       {/* List */}
       {list.length === 0 ? (
-        <p style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: 20, background: '#f8fafc', borderRadius: 8 }}>
+        <p style={{ color: 'var(--zw-text-faint)', fontSize: 13, textAlign: 'center', padding: 20, background: 'var(--zw-bg)', borderRadius: 8 }}>
           Aucun element dans cette liste.
         </p>
       ) : (
@@ -244,11 +244,11 @@ export function ClinicalListsPanel({ patientId }: { patientId: string }) {
           {list.map((it: any) => {
             const r = ROW_RENDERER[tab](it);
             return (
-              <li key={it.id} style={{ display: 'flex', gap: 10, padding: '10px 12px', background: '#f8fafc', borderRadius: 8, marginBottom: 4 }}>
+              <li key={it.id} style={{ display: 'flex', gap: 10, padding: '10px 12px', background: 'var(--zw-bg)', borderRadius: 8, marginBottom: 4 }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{r.title}</div>
-                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{r.subtitle}</div>
-                  {r.meta && <div style={{ fontSize: 11, color: '#475569', marginTop: 2, fontStyle: 'italic' }}>{r.meta}</div>}
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--zw-text)' }}>{r.title}</div>
+                  <div style={{ fontSize: 12, color: 'var(--zw-text-muted)', marginTop: 2 }}>{r.subtitle}</div>
+                  {r.meta && <div style={{ fontSize: 11, color: 'var(--zw-text-soft)', marginTop: 2, fontStyle: 'italic' }}>{r.meta}</div>}
                 </div>
                 <button
                   onClick={() => handleDelete(it.id)}
@@ -283,7 +283,7 @@ export function ClinicalListsPanel({ patientId }: { patientId: string }) {
 
             {FORM_FIELDS[tab].map((f) => (
               <label key={f.key} style={{ display: 'block', marginBottom: 10 }}>
-                <span style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 4, fontWeight: 500 }}>
+                <span style={{ display: 'block', fontSize: 12, color: 'var(--zw-text-soft)', marginBottom: 4, fontWeight: 500 }}>
                   {f.label}{f.required && <span style={{ color: '#dc2626', marginLeft: 4 }}>*</span>}
                 </span>
                 {f.type === 'textarea' ? (
@@ -327,7 +327,7 @@ export function ClinicalListsPanel({ patientId }: { patientId: string }) {
                 type="button"
                 onClick={() => !saving && setModalOpen(false)}
                 disabled={saving}
-                style={{ padding: '10px 16px', background: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: saving ? 'not-allowed' : 'pointer' }}
+                style={{ padding: '10px 16px', background: '#fff', color: 'var(--zw-text-soft)', border: '1px solid var(--zw-border)', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: saving ? 'not-allowed' : 'pointer' }}
               >
                 Annuler
               </button>
@@ -347,6 +347,6 @@ export function ClinicalListsPanel({ patientId }: { patientId: string }) {
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0',
+  width: '100%', padding: '8px 10px', border: '1px solid var(--zw-border)',
   borderRadius: 6, fontSize: 13, background: '#fff', boxSizing: 'border-box',
 };

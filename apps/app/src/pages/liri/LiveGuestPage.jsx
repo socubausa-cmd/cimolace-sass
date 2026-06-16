@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useParams, Navigate } from 'react-router-dom';
 import LiveHostPage from '@/pages/liri/LiveHostPage';
 import { LiriLivePermissionsProvider } from '@/components/liri/liri-live/LiriLivePermissionsContext';
 import { useGuestCapabilities } from '@/hooks/useGuestCapabilities';
@@ -83,6 +83,36 @@ export default function LiveGuestPage() {
       action,
     });
   }, [sessionId, user?.id]);
+
+  // Gate d'accès : un invité REJETÉ par l'hôte ne doit pas voir l'arène (UX). La vraie
+  // barrière reste le serveur (token LiveKit refusé). Statut initial + rejet en direct.
+  const [guestRejected, setGuestRejected] = useState(false);
+  useEffect(() => {
+    if (!sessionId || !user?.id) return undefined;
+    let alive = true;
+    supabase
+      .from('live_waiting_room_entries')
+      .select('status')
+      .eq('live_session_id', sessionId)
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => { if (alive && data?.status === 'rejected') setGuestRejected(true); })
+      .catch(() => {});
+    const ch = supabase
+      .channel(`guest-gate:${sessionId}:${user.id}:${Math.random().toString(36).slice(2)}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'live_waiting_room_entries', filter: `live_session_id=eq.${sessionId}` },
+        (payload) => { if (payload?.new?.user_id === user.id && payload?.new?.status === 'rejected') setGuestRejected(true); },
+      )
+      .subscribe();
+    return () => { alive = false; try { supabase.removeChannel(ch); } catch { /* noop */ } };
+  }, [sessionId, user?.id]);
+
+  if (guestRejected) {
+    const search = typeof window !== 'undefined' ? window.location.search : '';
+    return <Navigate to={`/live/waiting/${sessionIdParam || sessionId}${search}`} replace />;
+  }
 
   return (
     <LiriLivePermissionsProvider

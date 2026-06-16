@@ -84,6 +84,9 @@ import LiveRoomShell from '@/components/liri/live-room/LiveRoomShell';
 import LiveSettingsPanel from '@/components/liri/live-room/LiveSettingsPanel';
 import QuickAppointmentModal from '@/components/messaging/QuickAppointmentModal';
 import PostCallReportModal from '@/components/messaging/PostCallReportModal';
+import ScheduleCallModal from '@/components/messaging/ScheduleCallModal';
+import { apiV2 } from '@/lib/api-v2';
+import { authStore } from '@/lib/auth-store';
 import PostLiveSummaryModal from '@/components/liri/live-room/PostLiveSummaryModal';
 import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -636,6 +639,7 @@ function ImmersiveComposer({
   onClearRecipient,
   onTyping,
   onToggleVideo,
+  onScheduleCall,
   liveActive,
   liveEnabled,
   liveActionsOpen,
@@ -957,6 +961,21 @@ function ImmersiveComposer({
           title={liveEnabled ? 'Basculer en live vidéo' : 'Sélectionnez une conversation pour lancer le live'}
         >
           <Video className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onScheduleCall?.()}
+          disabled={!selectedRecipient}
+          className={cn(
+            'flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all',
+            !selectedRecipient
+              ? 'bg-white/[0.03] text-gray-700 cursor-not-allowed'
+              : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
+          )}
+          aria-label="Programmer un appel"
+          title={selectedRecipient ? 'Programmer un appel' : 'Sélectionnez une conversation'}
+        >
+          <CalendarClock className="w-4 h-4" />
         </button>
         {liveActive ? (
           <button
@@ -2040,6 +2059,7 @@ const MessagingPage = () => {
   const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
   // Modal rapport post-appel
   const [postCallModal, setPostCallModal] = useState({ open: false, durationSeconds: 0 });
+  const [scheduleCallModal, setScheduleCallModal] = useState({ open: false });
   const callStartTimeRef = useRef(null);
   const [sonnerieOn, setSonnerieOn] = useState(() => {
     try { return localStorage.getItem('sonnerie-enabled') !== 'false'; } catch { return true; }
@@ -5674,6 +5694,7 @@ const MessagingPage = () => {
           onClearRecipient={handleClearRecipient}
           onTyping={handleTyping}
           onToggleVideo={toggleLiveExpanded}
+          onScheduleCall={() => setScheduleCallModal({ open: true })}
           liveActive={liveActive}
           liveEnabled={Boolean(selectedRecipient)}
           liveActionsOpen={liveActionsOpen}
@@ -5935,6 +5956,41 @@ const MessagingPage = () => {
       />
 
       {/* ── Modal RDV rapide (après déclin/timeout d'invitation) ── */}
+      <ScheduleCallModal
+        open={scheduleCallModal.open}
+        onClose={() => setScheduleCallModal({ open: false })}
+        recipientName={recipientProfile?.name}
+        onSchedule={async ({ title, description, startISO, endISO, callType, requireApproval }) => {
+          if (!currentUser?.id || !recipientId) return;
+          let liveId = null;
+          try {
+            const res = await apiV2.post('/lives', {
+              title,
+              description: description || '',
+              host_user_id: currentUser.id,
+              scheduled_at: startISO,
+              price_cents: 0,
+              currency: 'EUR',
+            });
+            let d = res?.data;
+            while (d && typeof d === 'object' && !('id' in d) && 'data' in d) d = d.data;
+            liveId = d?.id || null;
+          } catch (e) { console.error('[schedule-call] create live:', e?.message || e); }
+          const slug = authStore.getTenantSlug?.() || '';
+          const when = new Date(startISO).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+          const endTxt = endISO ? ` → ${new Date(endISO).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : '';
+          const typeLabel = callType === 'audio' ? '📞 Appel audio' : '📹 Appel vidéo';
+          const link = liveId
+            ? `${typeof window !== 'undefined' ? window.location.origin : ''}/live/host/${liveId}${slug ? `?tenant=${encodeURIComponent(slug)}` : ''}`
+            : '';
+          const lines = [`📅 ${typeLabel} programmé — « ${title} »`, `🗓️ ${when}${endTxt}`];
+          if (description) lines.push(description);
+          if (requireApproval) lines.push('🔒 Approbation requise pour rejoindre.');
+          if (link) lines.push(`Rejoindre : ${link}`);
+          else lines.push('(Le salon sera disponible au moment de l’appel.)');
+          await sendMessage(recipientId, lines.join('\n'));
+        }}
+      />
       <QuickAppointmentModal
         open={appointmentModalOpen}
         onClose={() => setAppointmentModalOpen(false)}

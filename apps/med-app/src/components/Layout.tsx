@@ -27,47 +27,49 @@ const nav = [
   { to: '/audit',         icon: Shield,          label: 'Audit & RGPD' },
 ];
 
-// Strategy C — MEDOS-first, tenant-co-branded (Figma-workspace model).
-// The sidebar keeps the engine identity (MEDOS name + stethoscope icon) so
-// a multi-tenant practitioner doesn't lose orientation when switching tenants.
-// The tenant logo + name live in the header band, and the accent color
-// flows from --brand-primary (tenant or MEDOS default).
+// Co-branding — tenant-first when a tenant brand is resolved, MEDOS-default
+// otherwise. Once a tenant brand loads (name ≠ engine default), the tenant
+// (logo + name) becomes the primary sidebar identity and the MEDOS engine name
+// is demoted to a discreet footer attribution — so an embedded practitioner
+// surface (e.g. inside zahirwellness.com) reads as a native section, not a
+// third-party tool. With no tenant context, the MEDOS engine identity stays.
+// Accent color always flows from --brand-primary (tenant brand_colors).
 export function Layout() {
   const loc = useLocation();
   const branding = useBranding();
+  const hasTenantBrand = !branding.loading && branding.name !== 'MEDOS';
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <aside style={{ width: 240, background: '#1e293b', color: '#e2e8f0', padding: '20px 0' }}>
-        <div style={{ padding: '0 20px 16px', borderBottom: '1px solid #334155', marginBottom: 12 }}>
-          {/* Engine identity — stays "MEDOS" regardless of tenant */}
-          <h1 style={{ fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Stethoscope size={22} /> MedOS
-          </h1>
-          {/* Tenant co-branding — visible directly under the engine name so
-              the practitioner sees which cabinet they're working in. */}
-          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #334155', display: 'flex', alignItems: 'center', gap: 8 }}>
-            {branding.logoUrl ? (
-              <img
-                src={branding.logoUrl}
-                alt={branding.name}
-                style={{ width: 24, height: 24, borderRadius: 4, objectFit: 'contain', background: '#fff', padding: 2 }}
-              />
-            ) : (
-              <span
-                style={{
-                  width: 24, height: 24, borderRadius: 4, background: 'var(--brand-primary)',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#fff', fontSize: 11, fontWeight: 700,
-                }}
-              >
-                {branding.name.slice(0, 1).toUpperCase()}
+      <aside style={{ width: 240, background: 'var(--zw-side-bg)', color: 'var(--zw-side-text)', padding: '20px 0', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '0 20px 16px', borderBottom: '1px solid var(--zw-side-border)', marginBottom: 12 }}>
+          {branding.loading ? (
+            /* Reserve space while branding resolves — avoids a MEDOS→tenant flash. */
+            <div style={{ height: 30 }} />
+          ) : hasTenantBrand ? (
+            /* Tenant-first — mirrors the Zahir admin brand block: logo in a white
+               rounded tile + serif name + small subtitle. */
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+              <span style={{ width: 44, height: 44, borderRadius: 12, background: '#fff', display: 'grid', placeItems: 'center', flexShrink: 0, padding: 5, boxSizing: 'border-box' }}>
+                {branding.logoUrl ? (
+                  <img src={branding.logoUrl} alt={branding.name} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+                ) : (
+                  <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--zw-side-accent)' }}>{branding.name.slice(0, 1).toUpperCase()}</span>
+                )}
               </span>
-            )}
-            <span style={{ fontSize: 12, color: '#cbd5e1', fontWeight: 500 }}>{branding.name}</span>
-          </div>
+              <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1, minWidth: 0 }}>
+                <b style={{ fontFamily: 'var(--zw-font-display)', fontWeight: 600, fontSize: 16, letterSpacing: '0.02em', color: 'var(--zw-side-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{branding.name}</b>
+                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.04em', marginTop: 2, color: 'var(--zw-side-accent)' }}>Espace praticien</span>
+              </span>
+            </div>
+          ) : (
+            /* Engine default — no tenant brand resolved. */
+            <h1 style={{ fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
+              <Stethoscope size={22} /> MedOS
+            </h1>
+          )}
         </div>
-        <nav>
+        <nav style={{ flex: 1 }}>
           {nav.map((item) => {
             const isActive = loc.pathname.startsWith(item.to);
             return (
@@ -76,10 +78,10 @@ export function Layout() {
                 to={item.to}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px',
-                  background: isActive ? '#334155' : 'transparent',
-                  color: isActive ? '#fff' : '#94a3b8',
+                  background: isActive ? 'var(--zw-side-active-bg)' : 'transparent',
+                  color: isActive ? '#fff' : 'var(--zw-side-text-dim)',
                   fontSize: 14, fontWeight: 500,
-                  borderLeft: isActive ? '3px solid var(--brand-primary)' : '3px solid transparent',
+                  borderLeft: isActive ? '3px solid var(--zw-side-accent)' : '3px solid transparent',
                 }}
               >
                 <item.icon size={18} /> {item.label}
@@ -87,6 +89,12 @@ export function Layout() {
             );
           })}
         </nav>
+        {hasTenantBrand && (
+          /* Discreet engine attribution — honest co-brand without the loud wordmark. */
+          <div style={{ padding: '14px 20px 0', margin: '12px 0 0', borderTop: '1px solid var(--zw-side-border)', fontSize: 11, color: 'var(--zw-side-text-dim)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Stethoscope size={13} /> Propulsé par MedOS
+          </div>
+        )}
       </aside>
       <main style={{ flex: 1, padding: 32, overflow: 'auto' }}>
         <Outlet />

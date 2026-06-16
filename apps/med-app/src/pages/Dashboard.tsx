@@ -52,10 +52,10 @@ function initials(p?: Patient): string {
   return fullName(p).split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase() || '?';
 }
 
-const panel: React.CSSProperties = { background: '#fff', borderRadius: 14, border: '1px solid #e8eaf0', padding: 20 };
-const panelHead: React.CSSProperties = { fontSize: 15, fontWeight: 700, margin: 0, marginBottom: 14, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 7 };
+const panel: React.CSSProperties = { background: '#fff', borderRadius: 14, border: '1px solid var(--zw-border)', padding: 20 };
+const panelHead: React.CSSProperties = { fontSize: 15, fontWeight: 700, margin: 0, marginBottom: 14, color: 'var(--zw-text)', display: 'flex', alignItems: 'center', gap: 7 };
 const seeAll: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12.5, fontWeight: 600, color: 'var(--brand-primary)', marginTop: 12, textDecoration: 'none' };
-const emptyTxt: React.CSSProperties = { fontSize: 13, color: '#94a3b8', textAlign: 'center', padding: '20px 0' };
+const emptyTxt: React.CSSProperties = { fontSize: 13, color: 'var(--zw-text-faint)', textAlign: 'center', padding: '20px 0' };
 
 export function MedOSDashboard() {
   const branding = useBranding();
@@ -93,24 +93,24 @@ export function MedOSDashboard() {
 
   const kpis = [
     { icon: Users, label: 'Patients', value: patients.length, to: '/patients', color: 'var(--brand-primary)', tint: 'var(--brand-primary-soft)' },
-    { icon: CalendarDays, label: 'RDV à venir', value: upcomingCount, to: '/appointments', color: '#0ea5e9', tint: '#0ea5e918' },
-    { icon: Clock, label: "RDV aujourd'hui", value: todayAppts.length, to: '/appointments', color: '#10b981', tint: '#10b98118' },
-    { icon: Pill, label: 'Ordonnances', value: prescriptions, to: '/prescriptions', color: '#f59e0b', tint: '#f59e0b18' },
+    { icon: CalendarDays, label: 'RDV à venir', value: upcomingCount, to: '/appointments', color: 'var(--zw-c1)', tint: 'var(--zw-c1-tint)' },
+    { icon: Clock, label: "RDV aujourd'hui", value: todayAppts.length, to: '/appointments', color: 'var(--zw-c2)', tint: 'var(--zw-c2-tint)' },
+    { icon: Pill, label: 'Ordonnances', value: prescriptions, to: '/prescriptions', color: 'var(--zw-c3)', tint: 'var(--zw-c3-tint)' },
   ];
 
   const quick = [
     { to: '/patients', label: 'Nouveau patient', icon: Users, brand: true, color: 'var(--brand-primary)' },
-    { to: '/charting', label: 'Consultation IA', icon: Mic, brand: false, color: '#10b981' },
-    { to: '/prescriptions', label: 'Ordonnance', icon: Pill, brand: false, color: '#f59e0b' },
-    { to: '/appointments', label: 'Rendez-vous', icon: CalendarDays, brand: false, color: '#0ea5e9' },
-    { to: '/forms', label: 'Formulaire', icon: ClipboardList, brand: false, color: '#8b5cf6' },
+    { to: '/charting', label: 'Consultation IA', icon: Mic, brand: false, color: 'var(--zw-c2)' },
+    { to: '/prescriptions', label: 'Ordonnance', icon: Pill, brand: false, color: 'var(--zw-c3)' },
+    { to: '/appointments', label: 'Rendez-vous', icon: CalendarDays, brand: false, color: 'var(--zw-c1)' },
+    { to: '/forms', label: 'Formulaire', icon: ClipboardList, brand: false, color: 'var(--zw-c4)' },
   ];
 
   return (
     <div>
       <div style={{ marginBottom: 22 }}>
-        <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0, color: '#0f172a' }}>Bonjour 👋</h2>
-        <p style={{ color: '#64748b', fontSize: 14, marginTop: 4 }}>
+        <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0, color: 'var(--zw-text)' }}>Bonjour 👋</h2>
+        <p style={{ color: 'var(--zw-text-muted)', fontSize: 14, marginTop: 4 }}>
           Votre espace praticien{branding?.name ? ` · ${branding.name}` : ''} — voici votre journée.
         </p>
       </div>
@@ -123,8 +123,8 @@ export function MedOSDashboard() {
               <k.icon size={21} color={k.color} />
             </div>
             <div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>{k.value}</div>
-              <div style={{ fontSize: 12.5, color: '#64748b', marginTop: 4 }}>{k.label}</div>
+              <div style={{ fontSize: 27, fontWeight: 700, color: 'var(--zw-text)', lineHeight: 1, fontFamily: 'var(--zw-font-display)' }}>{k.value}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--zw-text-muted)', marginTop: 4 }}>{k.label}</div>
             </div>
           </Link>
         ))}
@@ -139,16 +139,16 @@ export function MedOSDashboard() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {todayAppts.map((a) => (
-                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: '#f8fafc', borderRadius: 10 }}>
+                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: 'var(--zw-bg)', borderRadius: 10 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--brand-primary)', minWidth: 46 }}>
                     {new Date(a.scheduled_at).toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fullName(byId[a.patient_id])}</div>
-                    <div style={{ fontSize: 11.5, color: '#94a3b8' }}>{a.duration_minutes}min · {APP_TYPE_LABEL[a.appointment_type] || a.appointment_type}</div>
+                    <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--zw-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fullName(byId[a.patient_id])}</div>
+                    <div style={{ fontSize: 11.5, color: 'var(--zw-text-faint)' }}>{a.duration_minutes}min · {APP_TYPE_LABEL[a.appointment_type] || a.appointment_type}</div>
                   </div>
                   {a.appointment_type === 'teleconsult' && (
-                    <span style={{ fontSize: 10, fontWeight: 700, color: '#7c3aed', background: '#7c3aed15', padding: '3px 8px', borderRadius: 8 }}>VISIO</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--zw-c4)', background: 'var(--zw-c4-tint)', padding: '3px 8px', borderRadius: 8 }}>VISIO</span>
                   )}
                 </div>
               ))}
@@ -168,8 +168,8 @@ export function MedOSDashboard() {
                   <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--brand-primary-soft)', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12.5, fontWeight: 700, flexShrink: 0 }}>
                     {initials(p)}
                   </div>
-                  <div style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fullName(p)}</div>
-                  <ChevronRight size={15} color="#cbd5e1" />
+                  <div style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: 'var(--zw-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fullName(p)}</div>
+                  <ChevronRight size={15} color="var(--zw-border-strong)" />
                 </Link>
               ))}
             </div>
@@ -195,27 +195,27 @@ export function MedOSDashboard() {
         <div style={panel}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
             <div>
-              <h3 style={{ ...panelHead, marginBottom: 2 }}><Video size={16} color="#7c3aed" /> Consommation vidéo</h3>
-              <p style={{ fontSize: 11.5, color: '#94a3b8', margin: 0 }}>Via Liri — toutes sources confondues</p>
+              <h3 style={{ ...panelHead, marginBottom: 2 }}><Video size={16} color="var(--zw-c4)" /> Consommation vidéo</h3>
+              <p style={{ fontSize: 11.5, color: 'var(--zw-text-faint)', margin: 0 }}>Via Liri — toutes sources confondues</p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 26, fontWeight: 800, color: '#7c3aed', lineHeight: 1 }}>{consumption.total_minutes ?? 0}</div>
-              <div style={{ fontSize: 10.5, color: '#94a3b8', textTransform: 'uppercase' }}>minutes</div>
+              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--brand-primary)', lineHeight: 1, fontFamily: 'var(--zw-font-display)' }}>{consumption.total_minutes ?? 0}</div>
+              <div style={{ fontSize: 10.5, color: 'var(--zw-text-faint)', textTransform: 'uppercase' }}>minutes</div>
             </div>
           </div>
           {consumption.breakdown && consumption.breakdown.length > 0 && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
               {consumption.breakdown.map((b) => {
-                const meta = PURPOSE_META[b.purpose] || { label: b.purpose, icon: Video, color: '#64748b' };
+                const meta = PURPOSE_META[b.purpose] || { label: b.purpose, icon: Video, color: 'var(--zw-text-muted)' };
                 const Icon = meta.icon;
                 return (
-                  <div key={b.purpose} style={{ background: '#f8fafc', borderRadius: 10, padding: 12, display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <div key={b.purpose} style={{ background: 'var(--zw-bg)', borderRadius: 10, padding: 12, display: 'flex', gap: 10, alignItems: 'center' }}>
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: meta.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Icon size={16} color={meta.color} />
                     </div>
                     <div>
-                      <div style={{ fontSize: 11.5, color: '#475569', fontWeight: 500 }}>{meta.label}</div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{b.total_minutes} min</div>
+                      <div style={{ fontSize: 11.5, color: 'var(--zw-text-soft)', fontWeight: 500 }}>{meta.label}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--zw-text)' }}>{b.total_minutes} min</div>
                     </div>
                   </div>
                 );

@@ -215,17 +215,17 @@ export function PatientDetail() {
 
   return (
     <div>
-      <Link to="/patients" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#64748b', marginBottom: 16, fontSize: 14 }}>
+      <Link to="/patients" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--zw-text-muted)', marginBottom: 16, fontSize: 14 }}>
         <ArrowLeft size={14} /> Retour
       </Link>
-      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24, marginBottom: 20 }}>
+      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 24, marginBottom: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <h2 style={{ fontSize: 22, fontWeight: 700 }}>{patient.first_name} {patient.last_name}</h2>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <Link
               to={'/twin/' + id}
               title="Ouvrir le jumeau numérique (Bio Digital Twin)"
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'linear-gradient(135deg, var(--brand-primary), #7c3aed)', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'linear-gradient(135deg, var(--brand-primary), var(--zw-violet))', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}
             >
               <Activity size={14} /> Jumeau numérique
             </Link>
@@ -245,14 +245,14 @@ export function PatientDetail() {
             <button
               onClick={openEdit}
               title="Modifier le dossier"
-              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 12px', background: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 12px', background: '#fff', color: 'var(--zw-text-soft)', border: '1px solid var(--zw-border)', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
             >
               <Pencil size={14} /> Modifier
             </button>
             <button
               onClick={handleExport}
               title="Exporter le dossier (RGPD Art. 20)"
-              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 12px', background: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 12px', background: '#fff', color: 'var(--zw-text-soft)', border: '1px solid var(--zw-border)', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
             >
               <Download size={14} /> Export
             </button>
@@ -266,35 +266,35 @@ export function PatientDetail() {
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12, marginTop: 16 }}>
-          <div><span style={{ color: '#64748b', fontSize: 12 }}>Date de naissance</span><br />{patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString('fr') : '-'}</div>
-          <div><span style={{ color: '#64748b', fontSize: 12 }}>Genre</span><br />{patient.gender || '-'}</div>
-          <div><span style={{ color: '#64748b', fontSize: 12 }}>Groupe sanguin</span><br />{patient.blood_type || '-'}</div>
-          <div><span style={{ color: '#64748b', fontSize: 12 }}>Statut</span><br />{patient.status || 'actif'}</div>
+          <div><span style={{ color: 'var(--zw-text-muted)', fontSize: 12 }}>Date de naissance</span><br />{patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString('fr') : '-'}</div>
+          <div><span style={{ color: 'var(--zw-text-muted)', fontSize: 12 }}>Genre</span><br />{patient.gender || '-'}</div>
+          <div><span style={{ color: 'var(--zw-text-muted)', fontSize: 12 }}>Groupe sanguin</span><br />{patient.blood_type || '-'}</div>
+          <div><span style={{ color: 'var(--zw-text-muted)', fontSize: 12 }}>Statut</span><br />{patient.status || 'actif'}</div>
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
+        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 20 }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><FileText size={18} /> Notes de consultation</h3>
-          {notes.length === 0 && <p style={{ color: '#94a3b8', fontSize: 14 }}>Aucune note</p>}
+          {notes.length === 0 && <p style={{ color: 'var(--zw-text-faint)', fontSize: 14 }}>Aucune note</p>}
           {notes.map((n: any) => (
-            <div key={n.id} style={{ padding: '10px 0', borderTop: '1px solid #f1f5f9' }}>
+            <div key={n.id} style={{ padding: '10px 0', borderTop: '1px solid var(--zw-bg-subtle)' }}>
               <Link to={'/notes/' + n.id} style={{ fontWeight: 500, color: 'var(--brand-primary)' }}>Note du {new Date(n.created_at).toLocaleDateString('fr')}</Link>
               <span style={{ marginLeft: 8, fontSize: 11, padding: '1px 6px', borderRadius: 8, background: n.is_signed ? '#dcfce7' : '#fef3c7', color: n.is_signed ? '#166534' : '#92400e' }}>{n.is_signed ? 'Signée' : 'Brouillon'}</span>
             </div>
           ))}
           <Link to={'/patients/' + id + '/notes/new'} style={{ display: 'inline-block', marginTop: 12, padding: '8px 16px', background: '#10b981', color: '#fff', borderRadius: 6, fontSize: 13, fontWeight: 500 }}>+ Nouvelle note</Link>
         </div>
-        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
+        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 20 }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Activity size={18} /> Suivi sante</h3>
-          <Link to={'/health'} style={{ display: 'inline-block', padding: '8px 16px', background: '#8b5cf6', color: '#fff', borderRadius: 6, fontSize: 13, fontWeight: 500 }}>Voir le suivi</Link>
+          <Link to={'/health'} style={{ display: 'inline-block', padding: '8px 16px', background: 'var(--zw-violet-soft)', color: '#fff', borderRadius: 6, fontSize: 13, fontWeight: 500 }}>Voir le suivi</Link>
         </div>
       </div>
       {id && (
         <>
-          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, marginTop: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 20, marginTop: 16 }}>
             <ClinicalListsPanel patientId={id} />
           </div>
-          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, marginTop: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 20, marginTop: 16 }}>
             <AttachmentsPanel patientId={id} canTogglePatientVisibility />
           </div>
         </>
@@ -359,7 +359,7 @@ export function PatientDetail() {
             {editError && <div style={{ marginTop: 12, padding: 10, background: '#fef2f2', color: '#991b1b', borderRadius: 8, fontSize: 13 }}>{editError}</div>}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 20 }}>
-              <button type="button" onClick={() => !savingEdit && setEditOpen(false)} disabled={savingEdit} style={{ padding: '10px 16px', background: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: savingEdit ? 'not-allowed' : 'pointer' }}>
+              <button type="button" onClick={() => !savingEdit && setEditOpen(false)} disabled={savingEdit} style={{ padding: '10px 16px', background: '#fff', color: 'var(--zw-text-soft)', border: '1px solid var(--zw-border)', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: savingEdit ? 'not-allowed' : 'pointer' }}>
                 Annuler
               </button>
               <button type="submit" disabled={savingEdit} style={{ padding: '10px 18px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: savingEdit ? 'not-allowed' : 'pointer', opacity: savingEdit ? 0.7 : 1 }}>
@@ -390,7 +390,7 @@ export function PatientDetail() {
             {!inviteResult ? (
               <>
                 <label style={{ display: 'block', marginBottom: 12 }}>
-                  <span style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 4, fontWeight: 500 }}>Nom du patient *</span>
+                  <span style={{ display: 'block', fontSize: 12, color: 'var(--zw-text-soft)', marginBottom: 4, fontWeight: 500 }}>Nom du patient *</span>
                   <input
                     required
                     value={inviteForm.invited_name}
@@ -399,7 +399,7 @@ export function PatientDetail() {
                   />
                 </label>
                 <label style={{ display: 'block', marginBottom: 12 }}>
-                  <span style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 4, fontWeight: 500 }}>Email *</span>
+                  <span style={{ display: 'block', fontSize: 12, color: 'var(--zw-text-soft)', marginBottom: 4, fontWeight: 500 }}>Email *</span>
                   <input
                     type="email"
                     required
@@ -410,7 +410,7 @@ export function PatientDetail() {
                   />
                 </label>
                 <label style={{ display: 'block', marginBottom: 12 }}>
-                  <span style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 4, fontWeight: 500 }}>Message personnalisé (optionnel)</span>
+                  <span style={{ display: 'block', fontSize: 12, color: 'var(--zw-text-soft)', marginBottom: 4, fontWeight: 500 }}>Message personnalisé (optionnel)</span>
                   <textarea
                     rows={3}
                     value={inviteForm.custom_message}
@@ -431,7 +431,7 @@ export function PatientDetail() {
                     type="button"
                     onClick={() => !inviting && setInviteOpen(false)}
                     disabled={inviting}
-                    style={{ padding: '10px 16px', background: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: inviting ? 'not-allowed' : 'pointer' }}
+                    style={{ padding: '10px 16px', background: '#fff', color: 'var(--zw-text-soft)', border: '1px solid var(--zw-border)', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: inviting ? 'not-allowed' : 'pointer' }}
                   >
                     Annuler
                   </button>
@@ -446,7 +446,7 @@ export function PatientDetail() {
               </>
             ) : (
               <>
-                <p style={{ fontSize: 14, color: '#475569', marginBottom: 12 }}>
+                <p style={{ fontSize: 14, color: 'var(--zw-text-soft)', marginBottom: 12 }}>
                   ✓ Lien d'invitation genere. Copiez-le et envoyez-le au patient par votre canal habituel (email, SMS, WhatsApp).
                 </p>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
@@ -464,14 +464,14 @@ export function PatientDetail() {
                     {copied ? <><Check size={14} /> Copié</> : <><Copy size={14} /> Copier</>}
                   </button>
                 </div>
-                <p style={{ fontSize: 12, color: '#94a3b8', marginBottom: 16 }}>
+                <p style={{ fontSize: 12, color: 'var(--zw-text-faint)', marginBottom: 16 }}>
                   Lien valable 7 jours. Le patient devra créer un compte avec l'email <strong>{inviteForm.invited_email}</strong> et son dossier sera automatiquement lié.
                 </p>
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <button
                     type="button"
                     onClick={() => setInviteOpen(false)}
-                    style={{ padding: '10px 18px', background: '#0f172a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+                    style={{ padding: '10px 18px', background: 'var(--zw-text)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
                   >
                     Fermer
                   </button>
@@ -488,7 +488,7 @@ export function PatientDetail() {
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '8px 10px',
-  border: '1px solid #e2e8f0',
+  border: '1px solid var(--zw-border)',
   borderRadius: 6,
   fontSize: 14,
   background: '#fff',
@@ -498,7 +498,7 @@ const inputStyle: React.CSSProperties = {
 const editLabel: React.CSSProperties = {
   display: 'block',
   fontSize: 12,
-  color: '#475569',
+  color: 'var(--zw-text-soft)',
   marginBottom: 4,
   fontWeight: 500,
 };

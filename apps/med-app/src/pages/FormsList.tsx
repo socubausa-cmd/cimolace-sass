@@ -182,7 +182,7 @@ export function FormsList() {
         </h2>
         <button
           onClick={openBuilder}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#8b5cf6', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: 'var(--zw-violet-soft)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
         >
           <Plus size={16} /> Nouveau formulaire
         </button>
@@ -194,17 +194,17 @@ export function FormsList() {
             key={f.id}
             onClick={() => setPreviewOpen(f)}
             style={{
-              background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20,
+              background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 20,
               textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
-            <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0, color: '#0f172a' }}>{f.title}</h3>
-            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{f.description || 'Formulaire médical'}</p>
+            <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0, color: 'var(--zw-text)' }}>{f.title}</h3>
+            <p style={{ fontSize: 13, color: 'var(--zw-text-muted)', marginTop: 4 }}>{f.description || 'Formulaire médical'}</p>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
-              <span style={{ display: 'inline-block', fontSize: 11, padding: '2px 8px', borderRadius: 8, background: '#ede9fe', color: '#7c3aed' }}>
+              <span style={{ display: 'inline-block', fontSize: 11, padding: '2px 8px', borderRadius: 8, background: 'var(--zw-violet-bg)', color: 'var(--zw-violet)' }}>
                 {CATEGORIES.find((c) => c.value === f.category)?.label || f.category || 'Personnalisé'}
               </span>
-              <span style={{ fontSize: 11, color: '#94a3b8' }}>
+              <span style={{ fontSize: 11, color: 'var(--zw-text-faint)' }}>
                 {(f.fields || []).length} champ{(f.fields || []).length > 1 ? 's' : ''}
               </span>
             </div>
@@ -215,7 +215,7 @@ export function FormsList() {
             )}
           </button>
         ))}
-        {forms.length === 0 && <p style={{ color: '#94a3b8', gridColumn: '1/-1' }}>Aucun formulaire</p>}
+        {forms.length === 0 && <p style={{ color: 'var(--zw-text-faint)', gridColumn: '1/-1' }}>Aucun formulaire</p>}
       </div>
 
       {/* Builder modal */}
@@ -257,21 +257,21 @@ export function FormsList() {
               />
             </Field>
 
-            <h4 style={{ fontSize: 14, fontWeight: 600, margin: '16px 0 8px', color: '#475569' }}>
+            <h4 style={{ fontSize: 14, fontWeight: 600, margin: '16px 0 8px', color: 'var(--zw-text-soft)' }}>
               Champs ({fields.length})
             </h4>
 
             {fields.map((f, i) => (
-              <div key={i} style={{ background: '#f8fafc', padding: 12, borderRadius: 8, marginBottom: 8 }}>
+              <div key={i} style={{ background: 'var(--zw-bg)', padding: 12, borderRadius: 8, marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <button type="button" onClick={() => moveField(i, -1)} disabled={i === 0} style={navBtn}>▲</button>
                     <button type="button" onClick={() => moveField(i, 1)} disabled={i === fields.length - 1} style={navBtn}>▼</button>
                   </div>
-                  <GripVertical size={14} color="#94a3b8" />
-                  <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>Champ {i + 1}</span>
+                  <GripVertical size={14} color="var(--zw-text-faint)" />
+                  <span style={{ fontSize: 12, color: 'var(--zw-text-muted)', fontWeight: 600 }}>Champ {i + 1}</span>
                   <div style={{ flex: 1 }} />
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#475569', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--zw-text-soft)', cursor: 'pointer' }}>
                     <input type="checkbox" checked={f.required || false} onChange={(e) => updateField(i, { required: e.target.checked })} />
                     Obligatoire
                   </label>
@@ -308,7 +308,7 @@ export function FormsList() {
             <button
               type="button"
               onClick={addField}
-              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', background: '#fff', color: '#8b5cf6', border: '1px dashed #8b5cf6', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer', marginBottom: 16 }}
+              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', background: '#fff', color: 'var(--zw-violet-soft)', border: '1px dashed var(--zw-violet-soft)', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer', marginBottom: 16 }}
             >
               <Plus size={12} /> Ajouter un champ
             </button>
@@ -319,7 +319,7 @@ export function FormsList() {
               <button type="button" onClick={() => !saving && setNewOpen(false)} disabled={saving} style={cancelBtn(saving)}>
                 Annuler
               </button>
-              <button type="submit" disabled={saving} style={submitBtn('#8b5cf6', saving)}>
+              <button type="submit" disabled={saving} style={submitBtn('var(--zw-violet-soft)', saving)}>
                 {saving ? 'Création…' : 'Créer le formulaire'}
               </button>
             </div>
@@ -342,7 +342,7 @@ export function FormsList() {
                 <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <FileText size={18} /> {previewOpen.title}
                 </h3>
-                {previewOpen.description && <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0' }}>{previewOpen.description}</p>}
+                {previewOpen.description && <p style={{ fontSize: 13, color: 'var(--zw-text-muted)', margin: '4px 0 0' }}>{previewOpen.description}</p>}
               </div>
               <button type="button" onClick={() => setPreviewOpen(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
                 <X size={18} />
@@ -351,19 +351,19 @@ export function FormsList() {
 
             <ol style={{ paddingLeft: 0, listStyle: 'none', margin: 0 }}>
               {(previewOpen.fields || []).map((field, i) => (
-                <li key={i} style={{ padding: '10px 0', borderTop: i === 0 ? 'none' : '1px solid #f1f5f9' }}>
+                <li key={i} style={{ padding: '10px 0', borderTop: i === 0 ? 'none' : '1px solid var(--zw-bg-subtle)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ width: 24, height: 24, borderRadius: '50%', background: '#ede9fe', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600 }}>
+                    <span style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--zw-violet-bg)', color: 'var(--zw-violet)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600 }}>
                       {i + 1}
                     </span>
                     <strong style={{ fontSize: 13 }}>{field.label}</strong>
                     {field.required && <span style={{ color: '#dc2626' }}>*</span>}
-                    <span style={{ marginLeft: 'auto', fontSize: 10, padding: '1px 6px', background: '#f1f5f9', color: '#475569', borderRadius: 4, textTransform: 'uppercase' }}>
+                    <span style={{ marginLeft: 'auto', fontSize: 10, padding: '1px 6px', background: 'var(--zw-bg-subtle)', color: 'var(--zw-text-soft)', borderRadius: 4, textTransform: 'uppercase' }}>
                       {FIELD_TYPES.find((t) => t.value === field.type)?.label || field.type}
                     </span>
                   </div>
                   {field.type === 'select' && field.options && field.options.length > 0 && (
-                    <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4, marginLeft: 32 }}>
+                    <div style={{ fontSize: 11, color: 'var(--zw-text-faint)', marginTop: 4, marginLeft: 32 }}>
                       Options : {field.options.join(', ')}
                     </div>
                   )}
@@ -378,7 +378,7 @@ export function FormsList() {
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0',
+  width: '100%', padding: '8px 10px', border: '1px solid var(--zw-border)',
   borderRadius: 6, fontSize: 13, background: '#fff', boxSizing: 'border-box',
 };
 const errStyle: React.CSSProperties = {
@@ -386,14 +386,14 @@ const errStyle: React.CSSProperties = {
   color: '#991b1b', borderRadius: 8, fontSize: 13,
 };
 const navBtn: React.CSSProperties = {
-  fontSize: 9, padding: '1px 4px', background: '#fff', border: '1px solid #e2e8f0',
-  borderRadius: 3, cursor: 'pointer', color: '#475569', lineHeight: 1,
+  fontSize: 9, padding: '1px 4px', background: '#fff', border: '1px solid var(--zw-border)',
+  borderRadius: 3, cursor: 'pointer', color: 'var(--zw-text-soft)', lineHeight: 1,
 };
 
 function cancelBtn(saving: boolean): React.CSSProperties {
   return {
-    padding: '10px 16px', background: '#fff', color: '#475569',
-    border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14, fontWeight: 500,
+    padding: '10px 16px', background: '#fff', color: 'var(--zw-text-soft)',
+    border: '1px solid var(--zw-border)', borderRadius: 8, fontSize: 14, fontWeight: 500,
     cursor: saving ? 'not-allowed' : 'pointer',
   };
 }
@@ -408,7 +408,7 @@ function submitBtn(color: string, saving: boolean): React.CSSProperties {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label style={{ display: 'block', marginBottom: 12 }}>
-      <span style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 4, fontWeight: 500 }}>{label}</span>
+      <span style={{ display: 'block', fontSize: 12, color: 'var(--zw-text-soft)', marginBottom: 4, fontWeight: 500 }}>{label}</span>
       {children}
     </label>
   );

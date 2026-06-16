@@ -252,7 +252,9 @@ export function Appointments() {
       // (host) et patient (peer) sont dans la même room.
       const studio = (import.meta.env.VITE_STUDIO_URL as string) || 'https://app.cimolace.space';
       const slug = localStorage.getItem('tenant_slug') || '';
-      const next = `/studio/live-arena/${sessionId}?tenant=${encodeURIComponent(slug)}`;
+      // Coque neutre LIRI (LiriPortalShell, auth-only) plutôt que le shell studio
+      // école : la téléconsult MEDOS est un live LIRI standalone, séparé de l'Academy.
+      const next = `/live/host/${sessionId}?tenant=${encodeURIComponent(slug)}`;
       let url = `${studio}${next}`;
 
       // SSO handoff : le studio est une autre origine. On crée un code à usage
@@ -337,13 +339,13 @@ export function Appointments() {
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             onClick={() => { setError(null); setAvailOpen(true); }}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: '#fff', color: '#6366f1', border: '1px solid #6366f1', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: '#fff', color: 'var(--zw-indigo)', border: '1px solid var(--zw-indigo)', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
           >
             <Clock size={14} /> + Disponibilite
           </button>
           <button
             onClick={() => { setError(null); setApptOpen(true); }}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: 'var(--zw-indigo)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
           >
             <Plus size={16} /> Nouveau RDV
           </button>
@@ -359,7 +361,7 @@ export function Appointments() {
         <div>
           {/* KPI strip */}
           <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-            <KpiCard label="A venir" value={upcoming.length} color="#6366f1" />
+            <KpiCard label="A venir" value={upcoming.length} color="var(--zw-indigo)" />
             <KpiCard label="Cette semaine" value={appointments.filter((a) => {
               const d = new Date(a.scheduled_at).getTime();
               return d >= now && d < now + 7 * 24 * 3600 * 1000 && a.status !== 'cancelled';
@@ -368,7 +370,7 @@ export function Appointments() {
           </div>
 
           {/* Nav interne — sépare clairement à venir / passés */}
-          <div style={{ display: 'inline-flex', gap: 4, marginBottom: 16, background: '#f1f5f9', padding: 4, borderRadius: 10 }}>
+          <div style={{ display: 'inline-flex', gap: 4, marginBottom: 16, background: 'var(--zw-bg-subtle)', padding: 4, borderRadius: 10 }}>
             {([['upcoming', 'À venir', upcoming.length], ['past', 'Passés', past.length], ['all', 'Tous', appointments.length]] as const).map(([key, label, count]) => (
               <button
                 key={key}
@@ -378,18 +380,18 @@ export function Appointments() {
                   display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 8, border: 'none',
                   cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.15s',
                   background: tab === key ? '#fff' : 'transparent',
-                  color: tab === key ? '#6366f1' : '#64748b',
+                  color: tab === key ? 'var(--zw-indigo)' : 'var(--zw-text-muted)',
                   boxShadow: tab === key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
                 }}
               >
                 {label}
-                <span style={{ fontSize: 11, fontWeight: 700, minWidth: 16, textAlign: 'center', padding: '1px 6px', borderRadius: 10, background: tab === key ? '#eef2ff' : '#e2e8f0', color: tab === key ? '#6366f1' : '#64748b' }}>{count}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, minWidth: 16, textAlign: 'center', padding: '1px 6px', borderRadius: 10, background: tab === key ? '#eef2ff' : 'var(--zw-border)', color: tab === key ? 'var(--zw-indigo)' : 'var(--zw-text-muted)' }}>{count}</span>
               </button>
             ))}
           </div>
 
           {tabAppts.length === 0 && (
-            <p style={{ background: '#fff', padding: 24, borderRadius: 12, border: '1px solid #e2e8f0', color: '#94a3b8', textAlign: 'center' }}>
+            <p style={{ background: '#fff', padding: 24, borderRadius: 12, border: '1px solid var(--zw-border)', color: 'var(--zw-text-faint)', textAlign: 'center' }}>
               {tab === 'upcoming'
                 ? 'Aucun rendez-vous à venir.'
                 : tab === 'past'
@@ -402,7 +404,7 @@ export function Appointments() {
             const dayDate = new Date(day + 'T12:00:00');
             return (
               <div key={day} style={{ marginBottom: 16 }}>
-                <h3 style={{ fontSize: 13, fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+                <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--zw-text-soft)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
                   {dayDate.toLocaleDateString('fr', { weekday: 'long', day: '2-digit', month: 'long' })}
                 </h3>
                 {grouped[day].sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at)).map((appt) => {
@@ -412,16 +414,16 @@ export function Appointments() {
                       key={appt.id}
                       style={{
                         display: 'flex', alignItems: 'center', gap: 12,
-                        background: '#fff', borderRadius: 8, border: '1px solid #e2e8f0',
+                        background: '#fff', borderRadius: 8, border: '1px solid var(--zw-border)',
                         padding: 14, marginBottom: 6,
                       }}
                     >
-                      <div style={{ minWidth: 60, fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+                      <div style={{ minWidth: 60, fontSize: 14, fontWeight: 600, color: 'var(--zw-text)' }}>
                         {new Date(appt.scheduled_at).toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' })}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{patientName(p)}</div>
-                        <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+                        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--zw-text)' }}>{patientName(p)}</div>
+                        <div style={{ fontSize: 12, color: 'var(--zw-text-muted)', marginTop: 2 }}>
                           {appt.duration_minutes}min · {APP_TYPES.find((t) => t.value === appt.appointment_type)?.label || appt.appointment_type}
                           {appt.reason && ` · ${appt.reason}`}
                         </div>
@@ -431,7 +433,7 @@ export function Appointments() {
                         <button
                           onClick={() => startTeleconsult(appt.id)}
                           title="Démarrer la téléconsultation"
-                          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', background: 'var(--zw-violet)', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
                         >
                           <Video size={14} /> Démarrer
                         </button>
@@ -446,12 +448,12 @@ export function Appointments() {
         </div>
 
         {/* Availability sidebar */}
-        <aside style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 16, alignSelf: 'flex-start' }}>
+        <aside style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 16, alignSelf: 'flex-start' }}>
           <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
             <Clock size={14} /> Disponibilites recurrentes
           </h3>
           {availabilities.length === 0 && (
-            <p style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', padding: 12 }}>
+            <p style={{ fontSize: 12, color: 'var(--zw-text-faint)', textAlign: 'center', padding: 12 }}>
               Aucune disponibilite definie.<br/>
               Cliquez sur "+ Disponibilite" pour configurer vos creneaux hebdomadaires.
             </p>
@@ -461,14 +463,14 @@ export function Appointments() {
               key={a.id}
               style={{
                 display: 'flex', alignItems: 'center', gap: 8,
-                padding: 10, background: '#f8fafc', borderRadius: 8, marginBottom: 6, fontSize: 12,
+                padding: 10, background: 'var(--zw-bg)', borderRadius: 8, marginBottom: 6, fontSize: 12,
               }}
             >
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, color: '#0f172a' }}>
+                <div style={{ fontWeight: 600, color: 'var(--zw-text)' }}>
                   {a.weekday !== null ? WEEKDAYS[a.weekday] : a.specific_date || 'Ponctuel'}
                 </div>
-                <div style={{ color: '#64748b', marginTop: 2 }}>
+                <div style={{ color: 'var(--zw-text-muted)', marginTop: 2 }}>
                   {a.start_time} – {a.end_time} · slots {a.slot_duration_minutes}min
                 </div>
               </div>
@@ -504,7 +506,7 @@ export function Appointments() {
             </Field>
           </div>
           {error && <div style={errStyle}>{error}</div>}
-          <Actions onCancel={() => setAvailOpen(false)} saving={saving} submitLabel="Creer la disponibilite" submitColor="#6366f1" />
+          <Actions onCancel={() => setAvailOpen(false)} saving={saving} submitLabel="Creer la disponibilite" submitColor="var(--zw-indigo)" />
         </Modal>
       )}
 
@@ -534,7 +536,7 @@ export function Appointments() {
             <textarea rows={2} value={apptForm.reason} onChange={(e) => setApptForm({ ...apptForm, reason: e.target.value })} style={{ ...inputStyle, fontFamily: 'inherit', resize: 'vertical' }} placeholder="Première consultation, suivi, douleur cervicale…" />
           </Field>
           {error && <div style={errStyle}>{error}</div>}
-          <Actions onCancel={() => setApptOpen(false)} saving={saving} submitLabel="Planifier le RDV" submitColor="#6366f1" />
+          <Actions onCancel={() => setApptOpen(false)} saving={saving} submitLabel="Planifier le RDV" submitColor="var(--zw-indigo)" />
         </Modal>
       )}
     </div>
@@ -545,8 +547,8 @@ export function Appointments() {
 
 function KpiCard({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div style={{ flex: 1, background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 14 }}>
-      <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+    <div style={{ flex: 1, background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 14 }}>
+      <div style={{ fontSize: 11, color: 'var(--zw-text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
       <div style={{ fontSize: 24, fontWeight: 700, color, marginTop: 4 }}>{value}</div>
     </div>
   );
@@ -558,9 +560,9 @@ function ApptStatusBadge({ status }: { status: string }) {
     confirmed: { bg: '#dbeafe', fg: '#1e40af', label: 'Confirme' },
     completed: { bg: '#dcfce7', fg: '#166534', label: 'Termine' },
     cancelled: { bg: '#fecaca', fg: '#991b1b', label: 'Annule' },
-    no_show: { bg: '#f1f5f9', fg: '#475569', label: 'No-show' },
+    no_show: { bg: 'var(--zw-bg-subtle)', fg: 'var(--zw-text-soft)', label: 'No-show' },
   };
-  const c = config[status] || { bg: '#f1f5f9', fg: '#475569', label: status };
+  const c = config[status] || { bg: 'var(--zw-bg-subtle)', fg: 'var(--zw-text-soft)', label: status };
   return (
     <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: 10, fontWeight: 600, background: c.bg, color: c.fg, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
       {c.label}
@@ -594,7 +596,7 @@ function ActionBtn({ icon, title, color, onClick }: { icon: React.ReactNode; tit
     <button
       onClick={onClick}
       title={title}
-      style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 6, padding: 4, color, cursor: 'pointer' }}
+      style={{ background: 'none', border: '1px solid var(--zw-border)', borderRadius: 6, padding: 4, color, cursor: 'pointer' }}
     >
       {icon}
     </button>
@@ -604,7 +606,7 @@ function ActionBtn({ icon, title, color, onClick }: { icon: React.ReactNode; tit
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '8px 10px',
-  border: '1px solid #e2e8f0',
+  border: '1px solid var(--zw-border)',
   borderRadius: 6,
   fontSize: 13,
   background: '#fff',
@@ -619,7 +621,7 @@ const errStyle: React.CSSProperties = {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label style={{ display: 'block', marginBottom: 12 }}>
-      <span style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 4, fontWeight: 500 }}>{label}</span>
+      <span style={{ display: 'block', fontSize: 12, color: 'var(--zw-text-soft)', marginBottom: 4, fontWeight: 500 }}>{label}</span>
       {children}
     </label>
   );
@@ -659,7 +661,7 @@ function Actions({ onCancel, saving, submitLabel, submitColor }: { onCancel: () 
         type="button"
         onClick={onCancel}
         disabled={saving}
-        style={{ padding: '10px 16px', background: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: saving ? 'not-allowed' : 'pointer' }}
+        style={{ padding: '10px 16px', background: '#fff', color: 'var(--zw-text-soft)', border: '1px solid var(--zw-border)', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: saving ? 'not-allowed' : 'pointer' }}
       >
         Annuler
       </button>

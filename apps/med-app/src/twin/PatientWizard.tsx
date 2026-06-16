@@ -51,13 +51,13 @@ const WHEEL_DOMAINS: Array<{ key: string; label: string }> = [
 ];
 
 // ─── Styles partagés ──────────────────────────────────────────────────────
-const card: React.CSSProperties = { background: '#fff', borderRadius: 14, border: '1px solid #e8eaf0', padding: 24 };
+const card: React.CSSProperties = { background: '#fff', borderRadius: 14, border: '1px solid var(--zw-border)', padding: 24 };
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '9px 11px', border: '1px solid #e2e8f0',
+  width: '100%', padding: '9px 11px', border: '1px solid var(--zw-border)',
   borderRadius: 8, fontSize: 14, background: '#fff', boxSizing: 'border-box',
 };
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 12, color: '#475569', marginBottom: 5, fontWeight: 600,
+  display: 'block', fontSize: 12, color: 'var(--zw-text-soft)', marginBottom: 5, fontWeight: 600,
 };
 
 // UUID léger (le DTO API exige un UUID pour patient_user_id ; on en génère un
@@ -299,7 +299,7 @@ export function PatientWizard() {
           <ChevronLeft size={14} /> Retour
         </button>
         <h2 style={{
-          fontSize: 23, fontWeight: 800, margin: '4px 0 0', color: '#0f172a',
+          fontSize: 23, fontWeight: 800, margin: '4px 0 0', color: 'var(--zw-text)',
           display: 'flex', alignItems: 'center', gap: 9,
         }}>
           <Sparkles size={22} color="var(--brand-primary)" /> Nouveau patient — Onboarding Twin
@@ -310,7 +310,7 @@ export function PatientWizard() {
       <Stepper currentStep={step} />
 
       {/* Progress bar */}
-      <div style={{ height: 4, background: '#f1f5f9', borderRadius: 4, marginBottom: 20, overflow: 'hidden' }}>
+      <div style={{ height: 4, background: 'var(--zw-bg-subtle)', borderRadius: 4, marginBottom: 20, overflow: 'hidden' }}>
         <div style={{
           height: '100%',
           width: `${(step / 4) * 100}%`,
@@ -372,8 +372,8 @@ export function PatientWizard() {
           disabled={step === 1 || submitting}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            padding: '10px 18px', background: '#fff', color: '#475569',
-            border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 13.5,
+            padding: '10px 18px', background: '#fff', color: 'var(--zw-text-soft)',
+            border: '1px solid var(--zw-border)', borderRadius: 10, fontSize: 13.5,
             fontWeight: 600, cursor: step === 1 || submitting ? 'not-allowed' : 'pointer',
             opacity: step === 1 ? 0.5 : 1,
           }}
@@ -401,7 +401,7 @@ export function PatientWizard() {
             disabled={submitting}
             style={{
               display: 'flex', alignItems: 'center', gap: 7,
-              padding: '10px 18px', background: '#7c3aed', color: '#fff',
+              padding: '10px 18px', background: 'var(--zw-violet)', color: '#fff',
               border: 'none', borderRadius: 10, fontSize: 13.5, fontWeight: 700,
               cursor: submitting ? 'wait' : 'pointer',
             }}
@@ -433,8 +433,8 @@ function Stepper({ currentStep }: { currentStep: StepKey }) {
       {steps.map((s, i) => {
         const active = s.n === currentStep;
         const done = s.n < currentStep;
-        const color = done ? '#10b981' : active ? 'var(--brand-primary)' : '#cbd5e1';
-        const bg = done ? '#d1fae5' : active ? 'var(--brand-primary-soft)' : '#f1f5f9';
+        const color = done ? '#10b981' : active ? 'var(--brand-primary)' : 'var(--zw-border-strong)';
+        const bg = done ? '#d1fae5' : active ? 'var(--brand-primary-soft)' : 'var(--zw-bg-subtle)';
         return (
           <div key={s.n} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <div style={{
@@ -453,7 +453,7 @@ function Stepper({ currentStep }: { currentStep: StepKey }) {
               <span>{s.label}</span>
             </div>
             {i < steps.length - 1 && (
-              <ChevronRight size={14} color="#cbd5e1" />
+              <ChevronRight size={14} color="var(--zw-border-strong)" />
             )}
           </div>
         );
@@ -469,7 +469,7 @@ function Step1Identity({ identity, setIdentity }: {
 }) {
   return (
     <div>
-      <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, marginBottom: 14, color: '#0f172a' }}>
+      <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, marginBottom: 14, color: 'var(--zw-text)' }}>
         Informations administratives
       </h3>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -552,10 +552,10 @@ function Step2Symptoms({ selected, onToggle, other, setOther }: {
 }) {
   return (
     <div>
-      <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, marginBottom: 4, color: '#0f172a' }}>
+      <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, marginBottom: 4, color: 'var(--zw-text)' }}>
         Symptômes / motif de consultation
       </h3>
-      <p style={{ fontSize: 13, color: '#64748b', marginBottom: 14 }}>
+      <p style={{ fontSize: 13, color: 'var(--zw-text-muted)', marginBottom: 14 }}>
         Sélectionnez les symptômes rapportés par le patient. Vous pourrez compléter
         plus tard depuis le jumeau numérique.
       </p>
@@ -572,9 +572,9 @@ function Step2Symptoms({ selected, onToggle, other, setOther }: {
               style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 padding: '10px 12px',
-                background: active ? 'var(--brand-primary-soft)' : '#f8fafc',
-                color: active ? 'var(--brand-primary)' : '#475569',
-                border: active ? '1px solid var(--brand-primary)' : '1px solid #e2e8f0',
+                background: active ? 'var(--brand-primary-soft)' : 'var(--zw-bg)',
+                color: active ? 'var(--brand-primary)' : 'var(--zw-text-soft)',
+                border: active ? '1px solid var(--brand-primary)' : '1px solid var(--zw-border)',
                 borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: 'pointer',
                 textAlign: 'left',
               }}
@@ -633,10 +633,10 @@ function Step3Biomarkers({
         gap: 12, marginBottom: 14, flexWrap: 'wrap',
       }}>
         <div>
-          <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#0f172a' }}>
+          <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--zw-text)' }}>
             Biomarqueurs initiaux
           </h3>
-          <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0' }}>
+          <p style={{ fontSize: 13, color: 'var(--zw-text-muted)', margin: '4px 0 0' }}>
             Optionnel — alimente immédiatement le jumeau numérique.
           </p>
         </div>
@@ -645,8 +645,8 @@ function Step3Biomarkers({
           onClick={onDemo}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            padding: '8px 14px', background: '#fff', color: '#7c3aed',
-            border: '1px dashed #c4b5fd', borderRadius: 9, fontSize: 12.5,
+            padding: '8px 14px', background: '#fff', color: 'var(--zw-violet)',
+            border: '1px dashed var(--zw-violet-200)', borderRadius: 9, fontSize: 12.5,
             fontWeight: 600, cursor: 'pointer',
           }}
         >
@@ -655,7 +655,7 @@ function Step3Biomarkers({
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: '#f1f5f9', padding: 4, borderRadius: 10 }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'var(--zw-bg-subtle)', padding: 4, borderRadius: 10 }}>
         {(['quick', 'paste'] as const).map((m) => (
           <button
             key={m}
@@ -665,7 +665,7 @@ function Step3Biomarkers({
               flex: 1, padding: '8px 14px', borderRadius: 8, border: 'none',
               cursor: 'pointer', fontSize: 13, fontWeight: 600,
               background: mode === m ? '#fff' : 'transparent',
-              color: mode === m ? 'var(--brand-primary)' : '#64748b',
+              color: mode === m ? 'var(--brand-primary)' : 'var(--zw-text-muted)',
               boxShadow: mode === m ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
             }}
           >
@@ -681,7 +681,7 @@ function Step3Biomarkers({
           {QUICK_BIOMARKERS.map((b) => (
             <label key={b.code}>
               <span style={labelStyle}>
-                {b.label} {b.unit && <span style={{ color: '#94a3b8', fontWeight: 500 }}>({b.unit})</span>}
+                {b.label} {b.unit && <span style={{ color: 'var(--zw-text-faint)', fontWeight: 500 }}>({b.unit})</span>}
               </span>
               <input
                 type="number"
@@ -715,7 +715,7 @@ function Step3Biomarkers({
               disabled={extractBusy || !pasteText.trim()}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
-                padding: '8px 14px', background: '#7c3aed', color: '#fff',
+                padding: '8px 14px', background: 'var(--zw-violet)', color: '#fff',
                 border: 'none', borderRadius: 9, fontSize: 12.5, fontWeight: 600,
                 cursor: extractBusy || !pasteText.trim() ? 'not-allowed' : 'pointer',
                 opacity: !pasteText.trim() ? 0.5 : 1,
@@ -733,7 +733,7 @@ function Step3Biomarkers({
               <span style={{ fontSize: 12.5, color: '#dc2626' }}>{extractError}</span>
             )}
           </div>
-          <p style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 10 }}>
+          <p style={{ fontSize: 11.5, color: 'var(--zw-text-faint)', marginTop: 10 }}>
             Le bilan sera envoyé au moteur d'extraction IA lors de la création du patient.
           </p>
         </div>
@@ -749,10 +749,10 @@ function Step4Wheel({ scores, setScores }: {
 }) {
   return (
     <div>
-      <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, marginBottom: 4, color: '#0f172a' }}>
+      <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, marginBottom: 4, color: 'var(--zw-text)' }}>
         Roue de transformation — état initial
       </h3>
-      <p style={{ fontSize: 13, color: '#64748b', marginBottom: 18 }}>
+      <p style={{ fontSize: 13, color: 'var(--zw-text-muted)', marginBottom: 18 }}>
         Optionnel — Évaluez de 0 (problématique) à 100 (optimal) sur chaque domaine.
         Vous pouvez passer cette étape, des valeurs neutres seront utilisées.
       </p>
@@ -766,8 +766,8 @@ function Step4Wheel({ scores, setScores }: {
                 display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
                 marginBottom: 6,
               }}>
-                <span style={{ fontSize: 13.5, fontWeight: 600, color: '#1e293b' }}>{d.label}</span>
-                <span style={{ fontSize: 16, fontWeight: 800, color }}>{v} <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>/100</span></span>
+                <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--zw-text)' }}>{d.label}</span>
+                <span style={{ fontSize: 16, fontWeight: 800, color }}>{v} <span style={{ fontSize: 11, color: 'var(--zw-text-faint)', fontWeight: 600 }}>/100</span></span>
               </div>
               <input
                 type="range"

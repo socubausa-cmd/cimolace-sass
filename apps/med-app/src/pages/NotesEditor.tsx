@@ -46,7 +46,7 @@ export function NotesEditor() {
 
   return (
     <div>
-      <button onClick={() => navigate(-1)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#64748b', marginBottom: 16, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer' }}>
+      <button onClick={() => navigate(-1)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--zw-text-muted)', marginBottom: 16, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer' }}>
         <ArrowLeft size={14} /> Retour
       </button>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
@@ -57,10 +57,10 @@ export function NotesEditor() {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {fields.map(f => (
-          <div key={f.label} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 16 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 8 }}>{f.label}</label>
+          <div key={f.label} style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 16 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--zw-text-muted)', display: 'block', marginBottom: 8 }}>{f.label}</label>
             <textarea value={f.value} onChange={e => f.set(e.target.value)} placeholder={f.placeholder} rows={3}
-              style={{ width: '100%', padding: 10, border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 14, resize: 'vertical', fontFamily: 'inherit' }} />
+              style={{ width: '100%', padding: 10, border: '1px solid var(--zw-border)', borderRadius: 6, fontSize: 14, resize: 'vertical', fontFamily: 'inherit' }} />
           </div>
         ))}
       </div>

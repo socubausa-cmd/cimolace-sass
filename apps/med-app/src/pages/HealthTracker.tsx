@@ -16,7 +16,7 @@ export function HealthTracker() {
   const metrics = [
     { icon: Heart, label: 'Humeur', key: 'mood_score', unit: '/10', color: '#ef4444' },
     { icon: Activity, label: 'Energie', key: 'energy_level', unit: '/10', color: '#f59e0b' },
-    { icon: Moon, label: 'Sommeil', key: 'sleep_hours', unit: 'h', color: '#8b5cf6' },
+    { icon: Moon, label: 'Sommeil', key: 'sleep_hours', unit: 'h', color: 'var(--zw-violet-soft)' },
     { icon: Dumbbell, label: 'Exercice', key: 'exercise_minutes', unit: 'min', color: '#10b981' },
     { icon: Droplets, label: 'Eau', key: 'water_liters', unit: 'L', color: '#3b82f6' },
   ];
@@ -26,19 +26,19 @@ export function HealthTracker() {
       <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20 }}>Suivi sante</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
         {metrics.map(m => (
-          <div key={m.key} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div key={m.key} style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
             <m.icon size={20} color={m.color} />
-            <div><div style={{ fontSize: 12, color: '#64748b' }}>{m.label}</div>
-              <div style={{ fontSize: 18, fontWeight: 700 }}>{entries[entries.length - 1]?.[m.key] || '-'} <span style={{ fontSize: 12, color: '#94a3b8' }}>{m.unit}</span></div>
+            <div><div style={{ fontSize: 12, color: 'var(--zw-text-muted)' }}>{m.label}</div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>{entries[entries.length - 1]?.[m.key] || '-'} <span style={{ fontSize: 12, color: 'var(--zw-text-faint)' }}>{m.unit}</span></div>
             </div>
           </div>
         ))}
       </div>
-      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
+      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 20 }}>
         <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Historique</h3>
-        {entries.length === 0 && <p style={{ color: '#94a3b8' }}>Aucune entree de suivi</p>}
+        {entries.length === 0 && <p style={{ color: 'var(--zw-text-faint)' }}>Aucune entree de suivi</p>}
         {entries.slice(0, 10).map((e: any) => (
-          <div key={e.id} style={{ padding: '8px 0', borderTop: '1px solid #f1f5f9', fontSize: 13, color: '#64748b' }}>
+          <div key={e.id} style={{ padding: '8px 0', borderTop: '1px solid var(--zw-bg-subtle)', fontSize: 13, color: 'var(--zw-text-muted)' }}>
             {new Date(e.entry_date || e.created_at).toLocaleDateString('fr')} — Humeur: {e.mood_score || '-'}/10, Sommeil: {e.sleep_hours || '-'}h
           </div>
         ))}

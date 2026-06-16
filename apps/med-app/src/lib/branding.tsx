@@ -47,6 +47,17 @@ const ENGINE_DEFAULTS = {
   accent: '#0d9488',
 };
 
+/**
+ * Tenant theme registry. A tenant with an entry gets a full visual re-skin —
+ * the [data-zw-theme] attribute drives the CSS token overrides in index.css
+ * (warm palette, sidebar, serif fonts) plus a brand primary/accent override.
+ * Tenants without an entry render with the default MEDOS neutral theme.
+ * (Long-term: serve this from the branding API alongside brand_colors.)
+ */
+const TENANT_THEMES: Record<string, { theme: string; primary: string; accent: string; logo?: string }> = {
+  zahirwellness: { theme: 'zahir', primary: '#7a2a3b', accent: '#c9a96a', logo: '/brand/zahir-nahir-logo.png' },
+};
+
 const BrandingContext = createContext<Branding>({
   ...ENGINE_DEFAULTS,
   loading: true,
@@ -133,6 +144,10 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     const slug = resolveTenantSlug();
+    const themeCfg = slug ? TENANT_THEMES[slug] : undefined;
+    if (themeCfg && typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-zw-theme', themeCfg.theme);
+    }
     if (!slug) {
       setBranding((b) => ({ ...b, loading: false }));
       return;
@@ -152,10 +167,10 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
         const colors = (t.brand_colors || {}) as Record<string, string>;
         setBranding({
           name: t.name || ENGINE_DEFAULTS.name,
-          logoUrl: t.logo_url || null,
-          primary: colors.primary || ENGINE_DEFAULTS.primary,
+          logoUrl: themeCfg?.logo || t.logo_url || null,
+          primary: themeCfg?.primary || colors.primary || ENGINE_DEFAULTS.primary,
           accent:
-            colors.accent || colors.secondary || ENGINE_DEFAULTS.accent,
+            themeCfg?.accent || colors.accent || colors.secondary || ENGINE_DEFAULTS.accent,
           loading: false,
         });
       })

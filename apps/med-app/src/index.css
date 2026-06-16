@@ -1,6 +1,90 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; color: #0f172a; }
+
+/* ─── Design tokens (semantic) ─────────────────────────────────────────
+   Default = MEDOS neutral (slate). A tenant theme (set via the
+   [data-zw-theme] attribute by lib/branding) overrides these, so the engine
+   re-skins per tenant WITHOUT touching component code. Defaults equal the
+   original hardcoded values → tenants without a theme render identically. */
+:root {
+  --zw-text:          #0f172a;
+  --zw-text-soft:     #475569;
+  --zw-text-muted:    #64748b;
+  --zw-text-faint:    #94a3b8;
+  --zw-border:        #e2e8f0;
+  --zw-border-strong: #cbd5e1;
+  --zw-bg:            #f8fafc;
+  --zw-bg-subtle:     #f1f5f9;
+
+  /* Decorative accent ramp (Dashboard chips / quick-actions). Default = tech
+     palette; a tenant theme can warm these. *-tint = soft chip background. */
+  --zw-c1: #0ea5e9; --zw-c1-tint: #0ea5e918;
+  --zw-c2: #10b981; --zw-c2-tint: #10b98118;
+  --zw-c3: #f59e0b; --zw-c3-tint: #f59e0b18;
+  --zw-c4: #8b5cf6; --zw-c4-tint: #8b5cf618;
+  --zw-twin-bg: #7c3aed; --zw-twin-fg: #ffffff;
+  /* Twin / AI feature accents (violet family) */
+  --zw-violet: #7c3aed; --zw-violet-soft: #8b5cf6; --zw-violet-soft-tint: #8b5cf618;
+  --zw-violet-200: #c4b5fd; --zw-violet-bg: #ede9fe; --zw-indigo: #6366f1;
+
+  /* Sidebar shell */
+  --zw-side-bg:        #1e293b;
+  --zw-side-text:      #e2e8f0;
+  --zw-side-text-dim:  #94a3b8;
+  --zw-side-active-bg: #334155;
+  --zw-side-border:    #334155;
+  --zw-side-accent:    var(--brand-primary, #10b981);
+
+  --zw-font-body:    system-ui, -apple-system, sans-serif;
+  --zw-font-display: system-ui, -apple-system, sans-serif;
+}
+
+/* ─── Zahir Wellness theme — warm cream + burgundy + serif ───────────── */
+[data-zw-theme="zahir"] {
+  --zw-text:          #2b1b1f;   /* az-ink */
+  --zw-text-soft:     #5a4448;   /* az-ink-soft */
+  --zw-text-muted:    #8a7478;   /* az-muted */
+  --zw-text-faint:    #a89a9c;
+  --zw-border:        #ece2d3;   /* az-cream-dark */
+  --zw-border-strong: #ddccba;
+  --zw-bg:            #f6efe6;   /* az-cream */
+  --zw-bg-subtle:     #efe6d8;
+
+  /* Accent ramp aligned to the admin studio: blue / gold / warm-brown / bordeaux-soft */
+  --zw-c1: #4f6f8f; --zw-c1-tint: rgba(79, 111, 143, 0.12);
+  --zw-c2: #c9a96a; --zw-c2-tint: rgba(201, 169, 106, 0.16);
+  --zw-c3: #b07b2b; --zw-c3-tint: rgba(176, 123, 43, 0.14);
+  --zw-c4: #9b3b4e; --zw-c4-tint: rgba(155, 59, 78, 0.13);
+  --zw-twin-bg: #c9a96a; --zw-twin-fg: #2b1b1f;
+  /* Twin / AI accents -> bordeaux-soft family (on-brand) */
+  --zw-violet: #9b3b4e; --zw-violet-soft: #b0566a; --zw-violet-soft-tint: rgba(155, 59, 78, 0.12);
+  --zw-violet-200: #d9b3bd; --zw-violet-bg: #f3e6ea; --zw-indigo: #4f6f8f;
+
+  /* Sidebar = navy bleu de l'admin Zahir (--az-navy #0f2240 -> #0a1730). */
+  --zw-side-bg:        linear-gradient(180deg, #0f2240 0%, #0c1c38 55%, #0a1730 100%);
+  --zw-side-text:      #eef1f7;
+  --zw-side-text-dim:  rgba(238, 241, 247, 0.55);
+  --zw-side-active-bg: #1a3355;   /* az-navy-soft */
+  --zw-side-border:    rgba(255, 255, 255, 0.09);
+  --zw-side-accent:    #c9a96a;   /* gold */
+
+  --zw-font-body:    'Jost', system-ui, sans-serif;
+  --zw-font-display: 'Cormorant Garamond', 'Garamond', Georgia, serif;
+}
+
+body {
+  font-family: var(--zw-font-body);
+  background: var(--zw-bg);
+  color: var(--zw-text);
+}
 a { color: inherit; text-decoration: none; }
+
+/* Elegant serif for headings under a tenant theme (default theme untouched) */
+[data-zw-theme="zahir"] h1,
+[data-zw-theme="zahir"] h2,
+[data-zw-theme="zahir"] h3 {
+  font-family: var(--zw-font-display);
+  letter-spacing: 0.2px;
+}
 
 /* ─── Twin responsive helpers (Chantier 4) ──────────────────────────────
    Additive only — desktop layout untouched.

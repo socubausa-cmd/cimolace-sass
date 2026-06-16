@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { messagingApi } from '@/lib/api-v2';
+import { supabase } from '@/lib/customSupabaseClient';
+import { broadcastRealtime } from '@/lib/realtimeBroadcast';
 
 /**
  * Messagerie élève — temps réel par POLLING COURT sur l'API NestJS.
@@ -404,6 +406,22 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
     };
   }, [userId]);
 
+  // ── Réception INSTANTANÉE (broadcast Supabase) ───────────────────────────────
+  // Canal perso de l'inbox : un envoi pousse un signal `new_message` ici → on rafraîchit
+  // SANS attendre le poll (5–20 s). Éphémère, aucune table/publication requise. Le polling
+  // ci-dessus reste le filet si le WebSocket realtime est indisponible.
+  useEffect(() => {
+    if (!userId) return undefined;
+    let channel;
+    try {
+      channel = supabase.channel(`dm-inbox:${userId}`, { config: { broadcast: { self: false } } });
+      channel.on('broadcast', { event: 'new_message' }, () => { refresh(); }).subscribe();
+    } catch {
+      channel = null;
+    }
+    return () => { if (channel) { try { supabase.removeChannel(channel); } catch { /* noop */ } } };
+  }, [userId, refresh]);
+
   // ── Actions ──────────────────────────────────────────────────────────────────
 
   const sendMessage = useCallback(async (receiverId, content) => {
@@ -425,6 +443,18 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
     activePeerRef.current = receiverId;
     if (m.conversation_id) peerConvMapRef.current[receiverId] = m.conversation_id;
     applyMerge([m]);
+
+    // Réception INSTANTANÉE : pousse un signal vers l'inbox du destinataire (best-effort,
+    // canal éphémère). S'il échoue, le polling du destinataire récupère le message au poll suivant.
+    try {
+      const out = supabase.channel(`dm-inbox:${receiverId}`);
+      out.subscribe((status) => {
+        if (status !== 'SUBSCRIBED') return;
+        void broadcastRealtime(out, 'new_message', { from: userId });
+        setTimeout(() => { try { supabase.removeChannel(out); } catch { /* noop */ } }, 1500);
+      });
+    } catch { /* noop */ }
+
     return m;
   }, [userId, prepareRows, applyMerge]);
 
@@ -440,6 +470,13 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
     if (!ids.length) return;
     const idSet = new Set(ids);
     ids.forEach((id) => readOverridesRef.current.add(id));
+    // Persistance serveur (best-effort, idempotent) : marque lues les conversations concernées.
+    const convIds = new Set();
+    for (const id of ids) {
+      const m = messagesRef.current.find((x) => x.id === id);
+      if (m?.conversation_id) convIds.add(m.conversation_id);
+    }
+    convIds.forEach((cid) => { messagingApi.markRead(cid).catch(() => {}); });
     setMessages((prev) => {
       let changed = false;
       const next = prev.map((m) => {
@@ -453,7 +490,7 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
     });
   }, [deriveConversations]);
 
-  /** Suppression optimiste LOCALE (pas d'endpoint API ; override anti-résurrection). */
+  /** Suppression optimiste locale (override anti-résurrection) PUIS persistance API. */
   const deleteMessage = useCallback(async (messageId) => {
     if (!userId || !messageId) return false;
     deletedOverridesRef.current.add(messageId);
@@ -464,10 +501,11 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
       setConversations(deriveConversations(next, profilesRef.current));
       return next;
     });
+    try { await messagingApi.deleteMessage(messageId); } catch (e) { console.error('[messaging] delete error:', e?.message || e); }
     return true;
   }, [userId, deriveConversations]);
 
-  /** Édition optimiste LOCALE (pas d'endpoint API ; override anti-réannulation). */
+  /** Édition optimiste locale (override anti-réannulation) PUIS persistance API. */
   const editMessage = useCallback(async (messageId, newContent) => {
     if (!userId || !messageId || !newContent?.trim()) return null;
     const content = newContent.trim();
@@ -483,6 +521,7 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
       setConversations(deriveConversations(next, profilesRef.current));
       return next;
     });
+    try { await messagingApi.editMessage(messageId, content); } catch (e) { console.error('[messaging] edit error:', e?.message || e); }
     return result || { id: messageId, content };
   }, [userId, deriveConversations]);
 

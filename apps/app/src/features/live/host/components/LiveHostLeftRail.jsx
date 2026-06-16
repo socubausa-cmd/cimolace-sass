@@ -179,13 +179,14 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
             {phase === PHASE.LIVE && !lhStageFocusLayout ? (
               <>
                 <LiveHostInviteManagementPanel
-                  inviteUrl={
-                    sessionId
-                      ? typeof window !== 'undefined'
-                        ? `${window.location.origin}/live/${sessionId}`
-                        : `/live/${sessionId}`
-                      : ''
-                  }
+                  inviteUrl={(() => {
+                    if (!sessionId) return '';
+                    if (typeof window === 'undefined') return `/live/${sessionId}`;
+                    // Propage le tenant de la salle (?tenant=zahirwellness) pour que
+                    // l'invité voie le branding du tenant hôte, pas le défaut ISNA.
+                    const t = new URLSearchParams(window.location.search).get('tenant');
+                    return `${window.location.origin}/live/${sessionId}${t ? `?tenant=${encodeURIComponent(t)}` : ''}`;
+                  })()}
                   sessionTitle={sessionTitle}
                   hostDisplayName={user?.full_name || user?.email || 'Formateur'}
                   participantOnlineCount={Math.max(1, onlineMemberCount)}

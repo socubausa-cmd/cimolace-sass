@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { twinApi, WHEEL_LABELS, COLOR_HEX, type OrganColor, type LabDocument } from './api';
 import {
   Loader2, Sparkles, Users, FlaskConical, FileText, GitBranch, Clock, TrendingUp, Beaker, Search, Camera as CameraIcon,
 } from 'lucide-react';
 import { useCamera } from '../native/useCamera';
+import { BodyViewer } from './BodyViewer';
 
-const panel: React.CSSProperties = { background: '#fff', borderRadius: 14, border: '1px solid #e8eaf0', padding: 18 };
-const head: React.CSSProperties = { fontSize: 14, fontWeight: 700, margin: 0, marginBottom: 12, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 7 };
+const panel: React.CSSProperties = { background: '#fff', borderRadius: 14, border: '1px solid var(--zw-border)', padding: 18 };
+const head: React.CSSProperties = { fontSize: 14, fontWeight: 700, margin: 0, marginBottom: 12, color: 'var(--zw-text)', display: 'flex', alignItems: 'center', gap: 7 };
 const colorFor = (s: number): string => COLOR_HEX[(s >= 80 ? 'green' : s >= 60 ? 'yellow' : s >= 40 ? 'orange' : 'red') as OrganColor];
 
 // ─── Roue de transformation (Module 2) ─────────────────────────────────────
@@ -34,25 +35,25 @@ export function WheelPanel({ patientId }: { patientId: string }) {
     <div style={panel}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={head}>🌱 Roue de transformation</h3>
-        <button onClick={() => (editing ? save() : setEditing(true))} disabled={busy} style={{ fontSize: 12, padding: '5px 12px', background: editing ? 'var(--brand-primary)' : '#f1f5f9', color: editing ? '#fff' : '#475569', border: 'none', borderRadius: 7, cursor: 'pointer' }}>
+        <button onClick={() => (editing ? save() : setEditing(true))} disabled={busy} style={{ fontSize: 12, padding: '5px 12px', background: editing ? 'var(--brand-primary)' : 'var(--zw-bg-subtle)', color: editing ? '#fff' : 'var(--zw-text-soft)', border: 'none', borderRadius: 7, cursor: 'pointer' }}>
           {busy ? '…' : editing ? 'Enregistrer' : 'Éditer'}
         </button>
       </div>
       <div className="twin-wheel-grid" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 16, alignItems: 'center' }}>
         <svg className="twin-wheel-svg" width="300" height="300" viewBox="0 0 300 300" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '100%', height: 'auto' }}>
-          {[0.25, 0.5, 0.75, 1].map((f) => <circle key={f} cx={cx} cy={cy} r={R * f} fill="none" stroke="#e2e8f0" strokeWidth="1" />)}
-          {pts.map((p, i) => <line key={i} x1={cx} y1={cy} x2={p.ax} y2={p.ay} stroke="#e2e8f0" strokeWidth="1" />)}
-          <polygon points={poly} fill="rgba(124,58,237,0.18)" stroke="#7c3aed" strokeWidth="2" />
-          {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="#7c3aed" />)}
+          {[0.25, 0.5, 0.75, 1].map((f) => <circle key={f} cx={cx} cy={cy} r={R * f} fill="none" stroke="var(--zw-border)" strokeWidth="1" />)}
+          {pts.map((p, i) => <line key={i} x1={cx} y1={cy} x2={p.ax} y2={p.ay} stroke="var(--zw-border)" strokeWidth="1" />)}
+          <polygon points={poly} fill="rgba(124,58,237,0.18)" stroke="var(--zw-violet)" strokeWidth="2" />
+          {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="var(--zw-violet)" />)}
         </svg>
         <div className="twin-wheel-labels" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
           {domains.map((d, i) => (
-            <div key={d.domain} style={{ fontSize: 12, color: '#475569', display: 'flex', justifyContent: 'space-between', gap: 6 }}>
+            <div key={d.domain} style={{ fontSize: 12, color: 'var(--zw-text-soft)', display: 'flex', justifyContent: 'space-between', gap: 6 }}>
               <span>{WHEEL_LABELS[d.domain] || d.domain}</span>
               {editing ? (
-                <input type="number" min="0" max="100" value={d.score ?? 0} onChange={(e) => { const v = [...domains]; v[i] = { ...d, score: Number(e.target.value) }; setDomains(v); }} style={{ width: 50, fontSize: 12, padding: '1px 4px', border: '1px solid #e2e8f0', borderRadius: 4 }} />
+                <input type="number" min="0" max="100" value={d.score ?? 0} onChange={(e) => { const v = [...domains]; v[i] = { ...d, score: Number(e.target.value) }; setDomains(v); }} style={{ width: 50, fontSize: 12, padding: '1px 4px', border: '1px solid var(--zw-border)', borderRadius: 4 }} />
               ) : (
-                <strong style={{ color: d.score != null ? colorFor(d.score) : '#cbd5e1' }}>{d.score ?? '—'}</strong>
+                <strong style={{ color: d.score != null ? colorFor(d.score) : 'var(--zw-border-strong)' }}>{d.score ?? '—'}</strong>
               )}
             </div>
           ))}
@@ -62,7 +63,16 @@ export function WheelPanel({ patientId }: { patientId: string }) {
   );
 }
 
-// ─── Mindmap biologique + corrélations (Modules 8/9/17/22) ──────────────────
+// ─── Mindmap biologique + corrélations (Modules 8/9/17/22) — NAVIGABLE ──────
+const mmBtn: React.CSSProperties = {
+  width: 28, height: 28, borderRadius: 8, border: '1px solid var(--zw-border)', background: '#fff',
+  color: 'var(--zw-text-soft)', fontSize: 15, lineHeight: 1, cursor: 'pointer',
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+};
+const MM_W = 520, MM_H = 400;
+const TYPE_COLOR: Record<string, string> = { organ: '#0ea5e9', symptom: '#f59e0b', condition: '#ef4444', hormone: 'var(--zw-violet)', biomarker: '#10b981', system: 'var(--zw-text-muted)' };
+const TYPE_LABEL: Record<string, string> = { organ: 'Organe', symptom: 'Symptôme', condition: 'Condition', hormone: 'Hormone', biomarker: 'Biomarqueur', system: 'Système' };
+
 export function MindmapPanel({ patientId }: { patientId: string }) {
   const [graph, setGraph] = useState<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] });
   const [corr, setCorr] = useState<any>(null);
@@ -71,49 +81,179 @@ export function MindmapPanel({ patientId }: { patientId: string }) {
     twinApi.correlations(patientId).then(setCorr).catch(() => {});
   }, [patientId]);
 
-  const nodes = graph.nodes.slice(0, 16);
-  const cx = 250, cy = 170, R = 140;
-  const pos = new Map<string, { x: number; y: number }>();
-  nodes.forEach((n, i) => {
-    const a = (Math.PI * 2 * i) / nodes.length;
-    pos.set(n.ref_code, { x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) });
+  const nodes = useMemo(() => graph.nodes.slice(0, 16), [graph.nodes]);
+
+  // Draggable positions, seeded from a radial layout whenever the node set changes.
+  const [pos, setPos] = useState<Record<string, { x: number; y: number }>>({});
+  useEffect(() => {
+    const cx = MM_W / 2, cy = MM_H / 2, R = 150;
+    const p: Record<string, { x: number; y: number }> = {};
+    nodes.forEach((n, i) => {
+      const a = -Math.PI / 2 + (Math.PI * 2 * i) / Math.max(1, nodes.length);
+      p[n.ref_code] = { x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) };
+    });
+    setPos(p);
+  }, [nodes]);
+
+  const [view, setView] = useState({ tx: 0, ty: 0, k: 1 });
+  const [sel, setSel] = useState<string | null>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const drag = useRef<{ mode: 'pan' | 'node' | null; code?: string; lx: number; ly: number; moved: boolean }>({ mode: null, lx: 0, ly: 0, moved: false });
+
+  // screen → viewBox coordinates
+  const toVB = (cx: number, cy: number) => {
+    const r = svgRef.current?.getBoundingClientRect();
+    if (!r || !r.width) return { x: 0, y: 0 };
+    return { x: ((cx - r.left) / r.width) * MM_W, y: ((cy - r.top) / r.height) * MM_H };
+  };
+  const startPan = (e: React.PointerEvent) => {
+    svgRef.current?.setPointerCapture?.(e.pointerId);
+    const v = toVB(e.clientX, e.clientY);
+    drag.current = { mode: 'pan', lx: v.x, ly: v.y, moved: false };
+  };
+  const startNode = (e: React.PointerEvent, code: string) => {
+    e.stopPropagation();
+    svgRef.current?.setPointerCapture?.(e.pointerId);
+    const v = toVB(e.clientX, e.clientY);
+    drag.current = { mode: 'node', code, lx: v.x, ly: v.y, moved: false };
+  };
+  const onMove = (e: React.PointerEvent) => {
+    const d = drag.current;
+    if (!d.mode) return;
+    const v = toVB(e.clientX, e.clientY);
+    const dx = v.x - d.lx, dy = v.y - d.ly;
+    if (Math.abs(dx) > 1.2 || Math.abs(dy) > 1.2) d.moved = true;
+    if (d.mode === 'pan') setView((s) => ({ ...s, tx: s.tx + dx, ty: s.ty + dy }));
+    else if (d.code) setPos((p) => ({ ...p, [d.code!]: { x: (p[d.code!]?.x ?? 0) + dx / view.k, y: (p[d.code!]?.y ?? 0) + dy / view.k } }));
+    d.lx = v.x; d.ly = v.y;
+  };
+  const endDrag = () => {
+    const d = drag.current;
+    if (d.mode === 'node' && !d.moved && d.code) setSel((s) => (s === d.code ? null : d.code!));
+    else if (d.mode === 'pan' && !d.moved) setSel(null);
+    drag.current = { mode: null, lx: 0, ly: 0, moved: false };
+  };
+  const onWheel = (e: React.WheelEvent) => {
+    const v = toVB(e.clientX, e.clientY);
+    const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+    setView((s) => {
+      const k = Math.min(3, Math.max(0.4, s.k * factor));
+      const f = k / s.k;
+      return { k, tx: v.x - (v.x - s.tx) * f, ty: v.y - (v.y - s.ty) * f };
+    });
+  };
+  const zoomBy = (f: number) => setView((s) => {
+    const k = Math.min(3, Math.max(0.4, s.k * f));
+    const cx = MM_W / 2, cy = MM_H / 2, r = k / s.k;
+    return { k, tx: cx - (cx - s.tx) * r, ty: cy - (cy - s.ty) * r };
   });
-  const typeColor: Record<string, string> = { organ: '#0ea5e9', symptom: '#f59e0b', condition: '#ef4444', hormone: '#7c3aed', biomarker: '#10b981', system: '#64748b' };
+
+  const conn = useMemo(() => {
+    if (!sel) return null;
+    const s = new Set<string>([sel]);
+    graph.edges.forEach((e: any) => { if (e.from_code === sel) s.add(e.to_code); if (e.to_code === sel) s.add(e.from_code); });
+    return s;
+  }, [sel, graph.edges]);
+
+  const nodeByCode = useMemo(() => Object.fromEntries(graph.nodes.map((n: any) => [n.ref_code, n])), [graph.nodes]);
+  const selNode: any = sel ? nodeByCode[sel] : null;
+  const selEdges = useMemo(() => (sel ? graph.edges.filter((e: any) => e.from_code === sel || e.to_code === sel) : []), [sel, graph.edges]);
 
   return (
     <div style={panel}>
-      <h3 style={head}><GitBranch size={15} color="#7c3aed" /> Mindmap biologique & corrélations</h3>
-      <div className="twin-mindmap-scroll">
-        <svg
-          width="100%"
-          viewBox="0 0 500 340"
-          preserveAspectRatio="xMidYMid meet"
-          style={{ display: 'block', width: '100%', height: 'auto', maxHeight: 380, overflow: 'visible' }}
-        >
-          {graph.edges.map((e: any, i: number) => {
-            const a = pos.get(e.from_code), b = pos.get(e.to_code);
-            if (!a || !b) return null;
-            return <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#cbd5e1" strokeWidth={Math.max(1, (e.weight || 0.5) * 3)} opacity="0.6" />;
-          })}
-          {nodes.map((n: any) => {
-            const p = pos.get(n.ref_code); if (!p) return null;
-            return (
-              <g key={n.id}>
-                <circle cx={p.x} cy={p.y} r="7" fill={typeColor[n.node_type] || '#64748b'} />
-                <text x={p.x} y={p.y - 11} fontSize="11" textAnchor="middle" fill="#334155">{n.label_fr}</text>
-              </g>
-            );
-          })}
-        </svg>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, gap: 8 }}>
+        <h3 style={{ ...head, marginBottom: 0 }}><GitBranch size={15} color="var(--zw-violet)" /> Mindmap biologique & corrélations</h3>
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          <button onClick={() => zoomBy(1.15)} style={mmBtn} title="Zoom avant">+</button>
+          <button onClick={() => zoomBy(1 / 1.15)} style={mmBtn} title="Zoom arrière">−</button>
+          <button onClick={() => { setView({ tx: 0, ty: 0, k: 1 }); setSel(null); }} style={mmBtn} title="Réinitialiser la vue">⟲</button>
+        </div>
       </div>
+      <div style={{ position: 'relative', border: '1px solid var(--zw-border)', borderRadius: 12, background: 'var(--zw-bg-subtle)', overflow: 'hidden' }}>
+        <svg
+          ref={svgRef}
+          width="100%"
+          viewBox={`0 0 ${MM_W} ${MM_H}`}
+          preserveAspectRatio="xMidYMid meet"
+          style={{ display: 'block', width: '100%', height: 'auto', maxHeight: 460, touchAction: 'none', cursor: 'grab' }}
+          onPointerDown={startPan}
+          onPointerMove={onMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onWheel={onWheel}
+        >
+          <g transform={`translate(${view.tx} ${view.ty}) scale(${view.k})`}>
+            {graph.edges.map((e: any, i: number) => {
+              const a = pos[e.from_code], b = pos[e.to_code];
+              if (!a || !b) return null;
+              const touches = sel && (e.from_code === sel || e.to_code === sel);
+              const active = !conn || (conn.has(e.from_code) && conn.has(e.to_code));
+              return <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+                stroke={touches ? 'var(--zw-violet)' : 'var(--zw-border-strong)'}
+                strokeWidth={touches ? 2.2 : Math.max(1, (e.weight || 0.5) * 3)}
+                opacity={active ? (touches ? 0.95 : 0.5) : 0.1} />;
+            })}
+            {nodes.map((n: any) => {
+              const p = pos[n.ref_code]; if (!p) return null;
+              const dim = conn ? !conn.has(n.ref_code) : false;
+              const isSel = sel === n.ref_code;
+              return (
+                <g key={n.id} transform={`translate(${p.x} ${p.y})`} opacity={dim ? 0.22 : 1}
+                  style={{ cursor: 'pointer' }} onPointerDown={(ev) => startNode(ev, n.ref_code)}>
+                  <circle r={isSel ? 11 : 8} fill={TYPE_COLOR[n.node_type] || 'var(--zw-text-muted)'}
+                    stroke={isSel ? 'var(--zw-violet)' : '#fff'} strokeWidth={isSel ? 3 : 1.5} />
+                  <text y={-14} fontSize={11} fontWeight={isSel ? 700 : 500} textAnchor="middle"
+                    fill="var(--zw-text-soft)" style={{ pointerEvents: 'none', userSelect: 'none' }}>{n.label_fr}</text>
+                </g>
+              );
+            })}
+          </g>
+        </svg>
+        {selNode && (
+          <div style={{ position: 'absolute', top: 8, right: 8, width: 'min(290px, 84%)', maxHeight: 'calc(100% - 16px)', overflowY: 'auto', background: '#fff', border: '1px solid var(--zw-border)', borderRadius: 12, boxShadow: '0 12px 32px -10px rgba(42,16,23,0.3)', padding: 14, zIndex: 5 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+              <div style={{ minWidth: 0 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--zw-text-muted)' }}>
+                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: TYPE_COLOR[selNode.node_type] || 'var(--zw-text-muted)' }} />
+                  {TYPE_LABEL[selNode.node_type] || selNode.node_type}
+                </span>
+                <h4 style={{ fontFamily: 'var(--zw-font-display)', fontSize: 19, fontWeight: 700, margin: '3px 0 0', color: 'var(--zw-text)', lineHeight: 1.15 }}>{selNode.label_fr}</h4>
+              </div>
+              <button onClick={() => setSel(null)} title="Fermer" style={{ ...mmBtn, width: 24, height: 24, fontSize: 16, flexShrink: 0 }}>×</button>
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--zw-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 12 }}>Connexions ({selEdges.length})</div>
+            {selEdges.length === 0 ? (
+              <p style={{ fontSize: 12, color: 'var(--zw-text-faint)', marginTop: 4 }}>Aucune connexion référencée.</p>
+            ) : selEdges.map((e: any, i: number) => {
+              const otherCode = e.from_code === sel ? e.to_code : e.from_code;
+              const incoming = e.to_code === sel;
+              return (
+                <div key={i} style={{ padding: '8px 0', borderTop: i === 0 ? 'none' : '1px solid var(--zw-border)' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--zw-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ color: 'var(--zw-violet)' }}>{incoming ? '←' : '→'}</span>
+                    {nodeByCode[otherCode]?.label_fr || otherCode}
+                  </div>
+                  {e.label_fr && <div style={{ fontSize: 12, color: 'var(--zw-text-soft)', fontStyle: 'italic', marginTop: 2 }}>{e.label_fr}</div>}
+                  <div style={{ fontSize: 10.5, color: 'var(--zw-text-faint)', marginTop: 3 }}>
+                    force {Math.round((e.weight || 0) * 100)}%{e.evidence_level ? ` · preuve ${e.evidence_level}` : ''}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      <p style={{ fontSize: 11, color: 'var(--zw-text-faint)', marginTop: 6 }}>
+        Glissez pour déplacer · molette / +− pour zoomer · cliquez un nœud pour isoler ses liens{sel ? ' · cliquez le fond pour tout réafficher' : ''}
+      </p>
       {corr && (
         <div style={{ marginTop: 8 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>Corrélations détectées (données patient)</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--zw-text-soft)', marginBottom: 4 }}>Corrélations détectées (données patient)</div>
           {(corr.biomarker_organ || []).length === 0 ? (
-            <p style={{ fontSize: 12, color: '#94a3b8' }}>Aucune valeur anormale — saisissez des biomarqueurs.</p>
+            <p style={{ fontSize: 12, color: 'var(--zw-text-faint)' }}>Aucune valeur anormale — saisissez des biomarqueurs.</p>
           ) : (
             (corr.biomarker_organ || []).slice(0, 12).map((c: any, i: number) => (
-              <div key={i} style={{ fontSize: 12, color: '#475569', padding: '2px 0' }}>
+              <div key={i} style={{ fontSize: 12, color: 'var(--zw-text-soft)', padding: '2px 0' }}>
                 <strong>{c.from_label}</strong> ({c.flag}) → {c.to}
               </div>
             ))
@@ -144,20 +284,20 @@ export function TimelinePanel({ patientId }: { patientId: string }) {
     <div style={panel}>
       <h3 style={head}><Clock size={15} color="#0ea5e9" /> Timeline santé 360°</h3>
       <div className="twin-timeline-form" style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
-        <select value={form.event_type} onChange={(e) => setForm({ ...form, event_type: e.target.value })} style={{ padding: '6px 8px', border: '1px solid #e2e8f0', borderRadius: 7, fontSize: 12 }}>
+        <select value={form.event_type} onChange={(e) => setForm({ ...form, event_type: e.target.value })} style={{ padding: '6px 8px', border: '1px solid var(--zw-border)', borderRadius: 7, fontSize: 12 }}>
           {EVENT_TYPES.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
         </select>
-        <input placeholder="Titre" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} style={{ flex: 1, minWidth: 120, padding: '6px 8px', border: '1px solid #e2e8f0', borderRadius: 7, fontSize: 12 }} />
-        <input type="date" value={form.occurred_at} onChange={(e) => setForm({ ...form, occurred_at: e.target.value })} style={{ padding: '6px 8px', border: '1px solid #e2e8f0', borderRadius: 7, fontSize: 12 }} />
+        <input placeholder="Titre" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} style={{ flex: 1, minWidth: 120, padding: '6px 8px', border: '1px solid var(--zw-border)', borderRadius: 7, fontSize: 12 }} />
+        <input type="date" value={form.occurred_at} onChange={(e) => setForm({ ...form, occurred_at: e.target.value })} style={{ padding: '6px 8px', border: '1px solid var(--zw-border)', borderRadius: 7, fontSize: 12 }} />
         <button onClick={add} style={{ padding: '6px 12px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, cursor: 'pointer' }}>+ Ajouter</button>
       </div>
-      {events.length === 0 ? <p style={{ fontSize: 12, color: '#94a3b8' }}>Aucun événement.</p> : (
-        <div style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: 14 }}>
+      {events.length === 0 ? <p style={{ fontSize: 12, color: 'var(--zw-text-faint)' }}>Aucun événement.</p> : (
+        <div style={{ borderLeft: '2px solid var(--zw-border)', paddingLeft: 14 }}>
           {events.map((e) => (
             <div key={e.id} style={{ position: 'relative', marginBottom: 12 }}>
               <span style={{ position: 'absolute', left: -19, top: 3, width: 8, height: 8, borderRadius: '50%', background: '#0ea5e9' }} />
-              <div style={{ fontSize: 12.5, fontWeight: 600, color: '#1e293b' }}>{e.title}</div>
-              <div style={{ fontSize: 11, color: '#94a3b8' }}>{new Date(e.occurred_at).toLocaleDateString('fr')} · {EVENT_TYPES.find((t) => t.v === e.event_type)?.l || e.event_type}</div>
+              <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--zw-text)' }}>{e.title}</div>
+              <div style={{ fontSize: 11, color: 'var(--zw-text-faint)' }}>{new Date(e.occurred_at).toLocaleDateString('fr')} · {EVENT_TYPES.find((t) => t.v === e.event_type)?.l || e.event_type}</div>
             </div>
           ))}
         </div>
@@ -174,7 +314,7 @@ export function LongitudinalPanel({ patientId }: { patientId: string }) {
   return (
     <div style={panel}>
       <h3 style={head}><TrendingUp size={15} color="#10b981" /> Analyse longitudinale</h3>
-      {series.length === 0 ? <p style={{ fontSize: 12, color: '#94a3b8' }}>Pas encore d'historique (recalculez les scores à plusieurs dates).</p> : (
+      {series.length === 0 ? <p style={{ fontSize: 12, color: 'var(--zw-text-faint)' }}>Pas encore d'historique (recalculez les scores à plusieurs dates).</p> : (
         <div className="twin-longitudinal-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px,1fr))', gap: 12 }}>
           {series.map(([organ, pts]) => {
             const w = 160, h = 40, max = 100;
@@ -182,9 +322,9 @@ export function LongitudinalPanel({ patientId }: { patientId: string }) {
             const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${i * step} ${h - (p.score / max) * h}`).join(' ');
             const last = pts[pts.length - 1]?.score ?? 0;
             return (
-              <div key={organ} style={{ background: '#f8fafc', borderRadius: 8, padding: 10 }}>
+              <div key={organ} style={{ background: 'var(--zw-bg)', borderRadius: 8, padding: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-                  <span style={{ color: '#475569' }}>{organ}</span>
+                  <span style={{ color: 'var(--zw-text-soft)' }}>{organ}</span>
                   <strong style={{ color: colorFor(last) }}>{last}</strong>
                 </div>
                 <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: 'block' }}>
@@ -212,13 +352,19 @@ export function SimulatorPanel({ patientId }: { patientId: string }) {
   useEffect(() => { run([]); /* charge le catalogue */ }, [patientId]);
   function toggle(k: string) { const s = new Set(picked); s.has(k) ? s.delete(k) : s.add(k); setPicked(s); run([...s]); }
 
+  const projColor = (s: number): OrganColor => (s >= 80 ? 'green' : s >= 60 ? 'yellow' : s >= 40 ? 'orange' : 'red');
+  const projected = (result?.organ_deltas || []).map((d: any) => ({
+    code: d.organ_code, name_fr: '', position: null,
+    score: { score: d.after, color: projColor(d.after) },
+  }));
+
   return (
     <div style={panel}>
       <h3 style={head}><Beaker size={15} color="#f97316" /> Simulateur d'intervention</h3>
-      <p style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 0 }}>Scénario probabiliste — estimation, jamais une promesse de résultat.</p>
+      <p style={{ fontSize: 11.5, color: 'var(--zw-text-faint)', marginTop: 0 }}>Scénario probabiliste — estimation, jamais une promesse de résultat.</p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
         {interventions.map((i) => (
-          <button key={i.key} onClick={() => toggle(i.key)} style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, border: '1px solid', cursor: 'pointer', background: picked.has(i.key) ? '#7c3aed' : '#fff', color: picked.has(i.key) ? '#fff' : '#475569', borderColor: picked.has(i.key) ? '#7c3aed' : '#e2e8f0' }}>
+          <button key={i.key} onClick={() => toggle(i.key)} style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, border: '1px solid', cursor: 'pointer', background: picked.has(i.key) ? 'var(--zw-violet)' : '#fff', color: picked.has(i.key) ? '#fff' : 'var(--zw-text-soft)', borderColor: picked.has(i.key) ? 'var(--zw-violet)' : 'var(--zw-border)' }}>
             {i.label_fr}
           </button>
         ))}
@@ -228,16 +374,24 @@ export function SimulatorPanel({ patientId }: { patientId: string }) {
         <>
           <div className="twin-simulator-indices" style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
             {[['Vitalité', result.global_indices.vitality], ['Inflammation', -result.global_indices.inflammation_load], ['Métabolisme', result.global_indices.metabolic_health]].map(([l, v]: any) => (
-              <div key={l} style={{ flex: 1, background: '#f8fafc', borderRadius: 8, padding: 10, textAlign: 'center' }}>
-                <div style={{ fontSize: 18, fontWeight: 800, color: v > 0 ? '#10b981' : v < 0 ? '#ef4444' : '#64748b' }}>{v > 0 ? '+' : ''}{v}</div>
-                <div style={{ fontSize: 11, color: '#64748b' }}>{l}</div>
+              <div key={l} style={{ flex: 1, background: 'var(--zw-bg)', borderRadius: 8, padding: 10, textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 800, color: v > 0 ? '#10b981' : v < 0 ? '#ef4444' : 'var(--zw-text-muted)' }}>{v > 0 ? '+' : ''}{v}</div>
+                <div style={{ fontSize: 11, color: 'var(--zw-text-muted)' }}>{l}</div>
               </div>
             ))}
           </div>
+          {projected.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--zw-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Projection sur le corps</div>
+              <div style={{ height: 430 }}>
+                <BodyViewer organs={projected as any} selected={null} onSelect={() => {}} />
+              </div>
+            </div>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px,1fr))', gap: 8 }}>
             {(result.organ_deltas || []).filter((d: any) => d.delta !== 0).map((d: any) => (
-              <div key={d.organ_code} style={{ fontSize: 12, display: 'flex', justifyContent: 'space-between', background: '#f8fafc', borderRadius: 6, padding: '5px 8px' }}>
-                <span style={{ color: '#475569' }}>{d.organ_code}</span>
+              <div key={d.organ_code} style={{ fontSize: 12, display: 'flex', justifyContent: 'space-between', background: 'var(--zw-bg)', borderRadius: 6, padding: '5px 8px' }}>
+                <span style={{ color: 'var(--zw-text-soft)' }}>{d.organ_code}</span>
                 <span style={{ color: '#10b981', fontWeight: 600 }}>{d.before}→{d.after} (+{d.delta})</span>
               </div>
             ))}
@@ -466,16 +620,16 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
   }
 
   const dropStyle: React.CSSProperties = {
-    border: `2px dashed ${dragging ? 'var(--brand-primary, #7c3aed)' : '#cbd5e1'}`,
-    background: dragging ? 'rgba(124,58,237,0.06)' : '#f8fafc',
+    border: `2px dashed ${dragging ? 'var(--brand-primary, var(--zw-violet))' : 'var(--zw-border-strong)'}`,
+    background: dragging ? 'rgba(124,58,237,0.06)' : 'var(--zw-bg)',
     borderRadius: 10, padding: 16, textAlign: 'center', cursor: 'pointer',
-    fontSize: 12.5, color: '#475569', transition: 'all 0.15s', display: 'block',
+    fontSize: 12.5, color: 'var(--zw-text-soft)', transition: 'all 0.15s', display: 'block',
   };
 
   return (
     <div style={panel}>
       <h3 style={head}><FileText size={15} color="#0ea5e9" /> Lecteur de bilan / ordonnance (IA)</h3>
-      <p style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 0 }}>
+      <p style={{ fontSize: 11.5, color: 'var(--zw-text-faint)', marginTop: 0 }}>
         Uploadez un PDF, JPG ou PNG d'un compte-rendu — ou collez le texte ci-dessous. L'IA extrait les biomarqueurs.
       </p>
 
@@ -490,10 +644,10 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
           const f = e.dataTransfer.files?.[0]; if (f) pickFile(f);
         }}
       >
-        <div style={{ fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+        <div style={{ fontWeight: 600, color: 'var(--zw-text-soft)', marginBottom: 4 }}>
           {file ? `📎 ${file.name}` : 'Glissez un PDF / JPG / PNG ici, ou cliquez pour parcourir'}
         </div>
-        <div style={{ fontSize: 11, color: '#94a3b8' }}>
+        <div style={{ fontSize: 11, color: 'var(--zw-text-faint)' }}>
           PDF, JPG, PNG, WebP, GIF — max {LAB_READER_MAX_MB} Mo
         </div>
         <input
@@ -533,7 +687,7 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
           <button
             onClick={() => { setFile(null); setExtracted(null); setMsg(null); setErr(null); }}
             disabled={busy}
-            style={{ padding: '9px 12px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: 8, fontSize: 12, cursor: 'pointer' }}
+            style={{ padding: '9px 12px', background: 'var(--zw-bg-subtle)', color: 'var(--zw-text-soft)', border: 'none', borderRadius: 8, fontSize: 12, cursor: 'pointer' }}
           >
             Annuler
           </button>
@@ -541,8 +695,8 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
       )}
 
       {/* Connecteur CSV labo (déterministe, zéro IA) */}
-      <div style={{ marginTop: 10, padding: 10, background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 8 }}>
-        <div style={{ fontSize: 11.5, color: '#475569', fontWeight: 600, marginBottom: 6 }}>
+      <div style={{ marginTop: 10, padding: 10, background: 'var(--zw-bg-subtle)', border: '1px solid var(--zw-border)', borderRadius: 8 }}>
+        <div style={{ fontSize: 11.5, color: 'var(--zw-text-soft)', fontWeight: 600, marginBottom: 6 }}>
           Import CSV labo (déterministe — zéro IA)
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -568,12 +722,12 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
           </button>
         </div>
         {csvImportResult && (
-          <div style={{ marginTop: 8, fontSize: 11.5, color: '#475569' }}>
+          <div style={{ marginTop: 8, fontSize: 11.5, color: 'var(--zw-text-soft)' }}>
             <div style={{ color: '#10b981', fontWeight: 600 }}>{csvImportResult.imported} importé(s)</div>
             {csvImportResult.skipped.length > 0 && (
               <div style={{ marginTop: 4 }}>
                 <div style={{ color: '#dc2626', fontWeight: 600 }}>{csvImportResult.skipped.length} ignoré(s) :</div>
-                <ul style={{ margin: '2px 0 0 16px', padding: 0, fontSize: 11, color: '#64748b' }}>
+                <ul style={{ margin: '2px 0 0 16px', padding: 0, fontSize: 11, color: 'var(--zw-text-muted)' }}>
                   {csvImportResult.skipped.slice(0, 10).map((s, i) => (
                     <li key={i}>{s.code || '(vide)'} — {s.reason}</li>
                   ))}
@@ -589,30 +743,30 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
 
       {/* Séparateur visuel + textarea */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '14px 0 8px' }}>
-        <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
-        <span style={{ fontSize: 11, color: '#94a3b8' }}>OU collez le texte</span>
-        <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+        <div style={{ flex: 1, height: 1, background: 'var(--zw-border)' }} />
+        <span style={{ fontSize: 11, color: 'var(--zw-text-faint)' }}>OU collez le texte</span>
+        <div style={{ flex: 1, height: 1, background: 'var(--zw-border)' }} />
       </div>
-      <textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} placeholder="Ex: CRP 4.1 mg/L, TSH 3.3 mUI/L, Vitamine D 21 ng/mL…" style={{ width: '100%', boxSizing: 'border-box', padding: 10, border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12.5, fontFamily: 'inherit' }} />
-      <button onClick={runText} disabled={busy || !text.trim()} style={{ marginTop: 8, width: '100%', padding: 9, background: '#475569', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: busy ? 'wait' : 'pointer', opacity: !text.trim() ? 0.5 : 1 }}>
+      <textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} placeholder="Ex: CRP 4.1 mg/L, TSH 3.3 mUI/L, Vitamine D 21 ng/mL…" style={{ width: '100%', boxSizing: 'border-box', padding: 10, border: '1px solid var(--zw-border)', borderRadius: 8, fontSize: 12.5, fontFamily: 'inherit' }} />
+      <button onClick={runText} disabled={busy || !text.trim()} style={{ marginTop: 8, width: '100%', padding: 9, background: 'var(--zw-text-soft)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: busy ? 'wait' : 'pointer', opacity: !text.trim() ? 0.5 : 1 }}>
         {busy ? 'Extraction…' : 'Extraire depuis le texte'}
       </button>
 
       {/* Liste des valeurs extraites */}
       {extracted && extracted.length > 0 && (
         <div style={{ marginTop: 14 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 6, display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--zw-text-soft)', marginBottom: 6, display: 'flex', justifyContent: 'space-between' }}>
             <span>Valeurs extraites ({extracted.length})</span>
             {inserted && <span style={{ color: '#10b981' }}>✓ insérées</span>}
           </div>
-          <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 8, padding: 8, background: '#f8fafc' }}>
+          <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid var(--zw-border)', borderRadius: 8, padding: 8, background: 'var(--zw-bg)' }}>
             {extracted.map((v, i) => {
               const conf = typeof v.confidence === 'number' ? v.confidence : null;
-              const confColor = conf == null ? '#94a3b8' : conf >= 0.8 ? '#10b981' : conf >= 0.6 ? '#f59e0b' : '#ef4444';
+              const confColor = conf == null ? 'var(--zw-text-faint)' : conf >= 0.8 ? '#10b981' : conf >= 0.6 ? '#f59e0b' : '#ef4444';
               return (
-                <div key={`${v.biomarker_code}-${i}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '4px 0', borderBottom: i < extracted.length - 1 ? '1px solid #e2e8f0' : 'none' }}>
-                  <span style={{ color: '#1e293b', fontWeight: 600 }}>{v.biomarker_code}</span>
-                  <span style={{ color: '#475569' }}>
+                <div key={`${v.biomarker_code}-${i}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '4px 0', borderBottom: i < extracted.length - 1 ? '1px solid var(--zw-border)' : 'none' }}>
+                  <span style={{ color: 'var(--zw-text)', fontWeight: 600 }}>{v.biomarker_code}</span>
+                  <span style={{ color: 'var(--zw-text-soft)' }}>
                     {v.value}{v.unit ? ` ${v.unit}` : ''}
                     {conf != null && (
                       <span style={{ marginLeft: 8, fontSize: 10.5, color: confColor, fontWeight: 600 }}>
@@ -640,24 +794,24 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
       {err && <div style={{ marginTop: 8, fontSize: 12, color: '#dc2626' }}>{err}</div>}
 
       {/* ─── Audit trail : bilans uploadés ─────────────────────────────── */}
-      <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px dashed #e2e8f0' }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <FileText size={13} color="#64748b" />
+      <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px dashed var(--zw-border)' }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--zw-text-soft)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <FileText size={13} color="var(--zw-text-muted)" />
           Bilans uploadés
-          <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 400 }}>
+          <span style={{ fontSize: 11, color: 'var(--zw-text-faint)', fontWeight: 400 }}>
             ({history.filter((d) => d.status !== 'deleted').length})
           </span>
           <button
             onClick={loadHistory}
             disabled={historyLoading}
-            style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#7c3aed', fontSize: 11, cursor: 'pointer' }}
+            style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: 'var(--zw-violet)', fontSize: 11, cursor: 'pointer' }}
           >
             {historyLoading ? '…' : 'Rafraîchir'}
           </button>
         </div>
 
         {history.length === 0 && (
-          <div style={{ fontSize: 11.5, color: '#94a3b8', fontStyle: 'italic', textAlign: 'center', padding: '12px 0' }}>
+          <div style={{ fontSize: 11.5, color: 'var(--zw-text-faint)', fontStyle: 'italic', textAlign: 'center', padding: '12px 0' }}>
             Aucun bilan pour l'instant. Uploadez un PDF/image au-dessus.
           </div>
         )}
@@ -673,7 +827,7 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
               const statusColor =
                 d.status === 'extracted' ? '#10b981' :
                 d.status === 'failed' ? '#ef4444' :
-                d.status === 'deleted' ? '#94a3b8' :
+                d.status === 'deleted' ? 'var(--zw-text-faint)' :
                 '#f59e0b';
               const statusLabel =
                 d.status === 'extracted' ? 'Extrait' :
@@ -688,17 +842,17 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8,
                     padding: '8px 10px',
-                    background: isDeleted ? '#f8fafc' : '#fff',
-                    border: '1px solid #e2e8f0', borderRadius: 8,
+                    background: isDeleted ? 'var(--zw-bg)' : '#fff',
+                    border: '1px solid var(--zw-border)', borderRadius: 8,
                     opacity: isDeleted ? 0.55 : 1,
                   }}
                 >
                   <span style={{ fontSize: 18 }}>{icon}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--zw-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {d.original_filename || (isPdf ? 'Bilan PDF' : isImg ? 'Bilan image' : 'Texte collé')}
                     </div>
-                    <div style={{ fontSize: 10.5, color: '#94a3b8', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <div style={{ fontSize: 10.5, color: 'var(--zw-text-faint)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       <span>{date}</span>
                       {sizeKb !== null && <span>· {sizeKb >= 1024 ? `${(sizeKb / 1024).toFixed(1)} Mo` : `${sizeKb} Ko`}</span>}
                       {d.extraction_confidence !== null && (
@@ -711,7 +865,7 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
                     <button
                       onClick={() => openSigned(d.id)}
                       title="Voir le fichier source"
-                      style={{ padding: '5px 10px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                      style={{ padding: '5px 10px', background: 'var(--zw-violet)', color: '#fff', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
                     >
                       Voir
                     </button>
@@ -720,7 +874,7 @@ export function LabReaderPanel({ patientId, onChange }: { patientId: string; onC
                     <button
                       onClick={() => removeDoc(d.id)}
                       title="Supprimer (GDPR)"
-                      style={{ padding: '5px 8px', background: 'transparent', color: '#94a3b8', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}
+                      style={{ padding: '5px 8px', background: 'transparent', color: 'var(--zw-text-faint)', border: '1px solid var(--zw-border)', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}
                     >
                       ✕
                     </button>
@@ -747,15 +901,15 @@ export function MetabolicMapPanel({ state, refs }: { state: any; refs: any }) {
   const flagColor = (f: string) => (f === 'normal' ? '#10b981' : f === 'critical' ? '#ef4444' : '#f59e0b');
   return (
     <div style={panel}>
-      <h3 style={head}><FlaskConical size={15} color="#7c3aed" /> Carte métabolique</h3>
-      {Object.keys(groups).length === 0 ? <p style={{ fontSize: 12, color: '#94a3b8' }}>Aucune donnée.</p> : (
+      <h3 style={head}><FlaskConical size={15} color="var(--zw-violet)" /> Carte métabolique</h3>
+      {Object.keys(groups).length === 0 ? <p style={{ fontSize: 12, color: 'var(--zw-text-faint)' }}>Aucune donnée.</p> : (
         <div className="twin-metabolic-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px,1fr))', gap: 12 }}>
           {Object.entries(groups).map(([cat, items]) => (
-            <div key={cat} style={{ background: '#f8fafc', borderRadius: 8, padding: 10 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 6 }}>{cat}</div>
+            <div key={cat} style={{ background: 'var(--zw-bg)', borderRadius: 8, padding: 10 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--zw-text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>{cat}</div>
               {items.map((b) => (
                 <div key={b.biomarker_code} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '2px 0' }}>
-                  <span style={{ color: '#475569' }}>{b.ref?.name_fr || b.biomarker_code}</span>
+                  <span style={{ color: 'var(--zw-text-soft)' }}>{b.ref?.name_fr || b.biomarker_code}</span>
                   <span><strong>{b.value}</strong> <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: flagColor(b.flag), marginLeft: 4 }} /></span>
                 </div>
               ))}
@@ -790,14 +944,14 @@ export function CopilotPanel({ patientId }: { patientId: string }) {
     <div className="twin-copilot-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px,1fr))', gap: 16 }}>
       {/* Root Cause */}
       <div style={panel}>
-        <h3 style={head}><Sparkles size={15} color="#7c3aed" /> Root Cause Explorer</h3>
-        <button onClick={() => go('root')} disabled={!!busy} style={{ width: '100%', padding: 9, background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 10 }}>
+        <h3 style={head}><Sparkles size={15} color="var(--zw-violet)" /> Root Cause Explorer</h3>
+        <button onClick={() => go('root')} disabled={!!busy} style={{ width: '100%', padding: 9, background: 'var(--zw-violet)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 10 }}>
           {busy === 'root' ? <Loader2 size={14} className="spin" /> : 'Identifier les causes racines'}
         </button>
         {rootCauses.map((c, i) => (
           <div key={i} style={{ padding: 10, background: '#faf5ff', borderRadius: 8, marginBottom: 6 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}><strong style={{ fontSize: 13, color: '#1e293b' }}>{c.label_fr}</strong>{c.probability != null && <span style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed' }}>{Math.round(c.probability * 100)}%</span>}</div>
-            <div style={{ fontSize: 11.5, color: '#64748b', marginTop: 3 }}>{c.reasoning_fr}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}><strong style={{ fontSize: 13, color: 'var(--zw-text)' }}>{c.label_fr}</strong>{c.probability != null && <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--zw-violet)' }}>{Math.round(c.probability * 100)}%</span>}</div>
+            <div style={{ fontSize: 11.5, color: 'var(--zw-text-muted)', marginTop: 3 }}>{c.reasoning_fr}</div>
           </div>
         ))}
       </div>
@@ -810,9 +964,9 @@ export function CopilotPanel({ patientId }: { patientId: string }) {
         </button>
         {council && (
           <div>
-            <div style={{ padding: 10, background: '#eff6ff', borderRadius: 8, marginBottom: 8, fontSize: 12.5, color: '#1e293b' }}><strong>Consensus :</strong> {council.consensus_fr}</div>
+            <div style={{ padding: 10, background: '#eff6ff', borderRadius: 8, marginBottom: 8, fontSize: 12.5, color: 'var(--zw-text)' }}><strong>Consensus :</strong> {council.consensus_fr}</div>
             {(council.experts || []).map((e: any, i: number) => (
-              <div key={i} style={{ fontSize: 12, padding: '4px 0', borderBottom: '1px solid #f1f5f9' }}>
+              <div key={i} style={{ fontSize: 12, padding: '4px 0', borderBottom: '1px solid var(--zw-bg-subtle)' }}>
                 <strong style={{ color: '#0ea5e9' }}>{e.specialty_fr}</strong> — {e.key_recommendation_fr}
               </div>
             ))}
@@ -824,12 +978,12 @@ export function CopilotPanel({ patientId }: { patientId: string }) {
       <div style={panel}>
         <h3 style={head}><Search size={15} color="#10b981" /> Moteur scientifique (PubMed)</h3>
         <div className="twin-copilot-search" style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Ex: insulin resistance inflammation" style={{ flex: 1, padding: '7px 9px', border: '1px solid #e2e8f0', borderRadius: 7, fontSize: 12.5, minWidth: 0 }} />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Ex: insulin resistance inflammation" style={{ flex: 1, padding: '7px 9px', border: '1px solid var(--zw-border)', borderRadius: 7, fontSize: 12.5, minWidth: 0 }} />
           <button onClick={() => go('science')} disabled={!!busy || !query} style={{ padding: '7px 12px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer' }}>{busy === 'science' ? '…' : 'Rechercher'}</button>
         </div>
         {(science?.results || []).map((r: any) => (
-          <a key={r.pmid} href={r.url} target="_blank" rel="noreferrer" style={{ display: 'block', padding: '6px 0', borderBottom: '1px solid #f1f5f9', fontSize: 12, color: '#1e293b', textDecoration: 'none' }}>
-            {r.title} <span style={{ color: '#94a3b8' }}>· {r.source} {r.year}</span>
+          <a key={r.pmid} href={r.url} target="_blank" rel="noreferrer" style={{ display: 'block', padding: '6px 0', borderBottom: '1px solid var(--zw-bg-subtle)', fontSize: 12, color: 'var(--zw-text)', textDecoration: 'none' }}>
+            {r.title} <span style={{ color: 'var(--zw-text-faint)' }}>· {r.source} {r.year}</span>
           </a>
         ))}
       </div>

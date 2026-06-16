@@ -225,9 +225,9 @@ export function PrescriptionsList() {
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: 16 }}>
-        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', overflow: 'hidden' }}>
           {prescriptions.length === 0 && (
-            <p style={{ padding: 24, color: '#94a3b8', textAlign: 'center' }}>Aucune ordonnance</p>
+            <p style={{ padding: 24, color: 'var(--zw-text-faint)', textAlign: 'center' }}>Aucune ordonnance</p>
           )}
           {prescriptions.map((p) => {
             const pt = patients[p.patient_id];
@@ -239,14 +239,14 @@ export function PrescriptionsList() {
                 style={{
                   display: 'block', width: '100%', textAlign: 'left',
                   padding: 14, background: isActive ? '#fef3c7' : 'transparent',
-                  border: 'none', borderTop: '1px solid #f1f5f9', cursor: 'pointer',
+                  border: 'none', borderTop: '1px solid var(--zw-bg-subtle)', cursor: 'pointer',
                   borderLeft: isActive ? '3px solid #f59e0b' : '3px solid transparent',
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{patientName(pt)}</div>
-                    <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--zw-text)' }}>{patientName(pt)}</div>
+                    <div style={{ fontSize: 11, color: 'var(--zw-text-muted)', marginTop: 2 }}>
                       {new Date(p.created_at).toLocaleDateString('fr', { day: '2-digit', month: 'short', year: 'numeric' })}
                       {p.prescription_number && ` · #${p.prescription_number}`}
                     </div>
@@ -259,9 +259,9 @@ export function PrescriptionsList() {
         </div>
 
         {/* Detail */}
-        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, minHeight: 500 }}>
+        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 20, minHeight: 500 }}>
           {!selected ? (
-            <p style={{ color: '#94a3b8', textAlign: 'center', marginTop: 200 }}>
+            <p style={{ color: 'var(--zw-text-faint)', textAlign: 'center', marginTop: 200 }}>
               Sélectionnez une ordonnance pour voir son contenu
             </p>
           ) : (
@@ -271,7 +271,7 @@ export function PrescriptionsList() {
                   <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
                     {patientName(patients[selected.patient_id])}
                   </h3>
-                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                  <div style={{ fontSize: 12, color: 'var(--zw-text-muted)', marginTop: 4 }}>
                     {selected.prescription_number ? `Ordonnance #${selected.prescription_number}` : 'Brouillon'} ·{' '}
                     {new Date(selected.created_at).toLocaleDateString('fr')}
                     {selected.signed_at && ` · Signée le ${new Date(selected.signed_at).toLocaleDateString('fr')}`}
@@ -303,18 +303,18 @@ export function PrescriptionsList() {
                 </div>
               )}
 
-              <h4 style={{ fontSize: 14, fontWeight: 600, marginTop: 0, marginBottom: 8, color: '#475569' }}>
+              <h4 style={{ fontSize: 14, fontWeight: 600, marginTop: 0, marginBottom: 8, color: 'var(--zw-text-soft)' }}>
                 Lignes prescrites ({selected.items?.length || 0})
               </h4>
 
               {(!selected.items || selected.items.length === 0) ? (
-                <p style={{ color: '#94a3b8', fontSize: 13, padding: 20, textAlign: 'center', background: '#f8fafc', borderRadius: 8 }}>
+                <p style={{ color: 'var(--zw-text-faint)', fontSize: 13, padding: 20, textAlign: 'center', background: 'var(--zw-bg)', borderRadius: 8 }}>
                   Aucune ligne. Cette ordonnance est vide.
                 </p>
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
-                    <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                    <tr style={{ background: 'var(--zw-bg)', textAlign: 'left' }}>
                       <th style={th}>Médicament</th>
                       <th style={th}>Dosage</th>
                       <th style={th}>Fréquence</th>
@@ -323,10 +323,10 @@ export function PrescriptionsList() {
                   </thead>
                   <tbody>
                     {selected.items.map((it) => (
-                      <tr key={it.id} style={{ borderTop: '1px solid #f1f5f9' }}>
+                      <tr key={it.id} style={{ borderTop: '1px solid var(--zw-bg-subtle)' }}>
                         <td style={td}>
                           <strong>{it.drug_name}</strong>
-                          {it.notes && <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{it.notes}</div>}
+                          {it.notes && <div style={{ fontSize: 11, color: 'var(--zw-text-faint)', marginTop: 2 }}>{it.notes}</div>}
                           {it.is_substitutable === false && (
                             <span style={{ display: 'inline-block', marginTop: 4, fontSize: 10, padding: '1px 6px', background: '#fef2f2', color: '#991b1b', borderRadius: 4, fontWeight: 600 }}>
                               NON SUBSTITUABLE
@@ -343,7 +343,7 @@ export function PrescriptionsList() {
               )}
 
               {selected.validity_days && (
-                <div style={{ marginTop: 16, fontSize: 12, color: '#64748b' }}>
+                <div style={{ marginTop: 16, fontSize: 12, color: 'var(--zw-text-muted)' }}>
                   Validité : {selected.validity_days} jours
                 </div>
               )}
@@ -399,12 +399,12 @@ export function PrescriptionsList() {
               />
             </label>
 
-            <h4 style={{ fontSize: 14, fontWeight: 600, margin: '16px 0 8px', color: '#475569' }}>
+            <h4 style={{ fontSize: 14, fontWeight: 600, margin: '16px 0 8px', color: 'var(--zw-text-soft)' }}>
               Médicaments ({newItems.length})
             </h4>
 
             {newItems.map((it, i) => (
-              <div key={i} style={{ background: '#f8fafc', padding: 12, borderRadius: 8, marginBottom: 8 }}>
+              <div key={i} style={{ background: 'var(--zw-bg)', padding: 12, borderRadius: 8, marginBottom: 8 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 24px', gap: 8, marginBottom: 8 }}>
                   <input
                     placeholder="Médicament (ex: Paracétamol 1000mg) *"
@@ -451,7 +451,7 @@ export function PrescriptionsList() {
                     onChange={(e) => updateItem(i, 'notes', e.target.value)}
                     style={{ ...inputStyle, flex: 1 }}
                   />
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#475569', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--zw-text-soft)', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                     <input
                       type="checkbox"
                       checked={it.is_substitutable === false}
@@ -482,7 +482,7 @@ export function PrescriptionsList() {
                 type="button"
                 onClick={() => !saving && setNewOpen(false)}
                 disabled={saving}
-                style={{ padding: '10px 16px', background: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: saving ? 'not-allowed' : 'pointer' }}
+                style={{ padding: '10px 16px', background: '#fff', color: 'var(--zw-text-soft)', border: '1px solid var(--zw-border)', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: saving ? 'not-allowed' : 'pointer' }}
               >
                 Annuler
               </button>
@@ -504,7 +504,7 @@ export function PrescriptionsList() {
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '8px 10px',
-  border: '1px solid #e2e8f0',
+  border: '1px solid var(--zw-border)',
   borderRadius: 6,
   fontSize: 13,
   background: '#fff',
@@ -514,7 +514,7 @@ const inputStyle: React.CSSProperties = {
 const fieldLabel: React.CSSProperties = {
   display: 'block',
   fontSize: 12,
-  color: '#475569',
+  color: 'var(--zw-text-soft)',
   marginBottom: 4,
   fontWeight: 500,
 };
@@ -523,7 +523,7 @@ const th: React.CSSProperties = {
   padding: '8px 12px',
   fontSize: 11,
   fontWeight: 600,
-  color: '#64748b',
+  color: 'var(--zw-text-muted)',
   textTransform: 'uppercase',
   letterSpacing: 0.3,
 };
@@ -536,7 +536,7 @@ function StatusBadge({ status }: { status: string }) {
     signed: { bg: '#dcfce7', fg: '#166534', label: 'Signée', icon: <Check size={10} /> },
     cancelled: { bg: '#fecaca', fg: '#991b1b', label: 'Annulée' },
   };
-  const c = config[status] || { bg: '#f1f5f9', fg: '#475569', label: status };
+  const c = config[status] || { bg: 'var(--zw-bg-subtle)', fg: 'var(--zw-text-soft)', label: status };
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 12, fontSize: 10, fontWeight: 600, background: c.bg, color: c.fg, textTransform: 'uppercase' }}>
       {c.icon}{c.label}
