@@ -16,7 +16,7 @@ export function getInitialTint() {
     const v = localStorage.getItem(KEY);
     if (v === 'dark' || v === 'light') return v;
   } catch { /* SSR / accès refusé */ }
-  return 'light'; // crème par défaut
+  return 'dark'; // sombre par défaut (bascule vers crème via le bouton)
 }
 
 export function useShellTint() {

@@ -19,15 +19,15 @@ type ThemeValue = {
 };
 
 const ThemeContext = createContext<ThemeValue>({
-  mode: 'light',
-  isLight: true,
-  colors: PALETTES.light,
+  mode: 'dark',
+  isLight: false,
+  colors: PALETTES.dark,
   toggle: () => {},
   setMode: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setModeState] = useState<ThemeMode>('light'); // défaut crème
+  const [mode, setModeState] = useState<ThemeMode>('dark'); // défaut sombre (bascule vers crème via Réglages)
 
   // Restaure le choix persisté au démarrage.
   useEffect(() => {
