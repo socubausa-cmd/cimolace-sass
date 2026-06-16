@@ -83,12 +83,14 @@ import { TwinEnabledGuard } from './twin/twin-enabled.guard';
 // the P5 refactor specifically eliminated.
 import { LiveModule } from '../live/live.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { EmailEngineModule } from '../email-engine/email-engine.module';
 
 @Module({
   imports: [
     TenantModule,
     LiveModule, // Liri — single authority for all video sessions
     NotificationsModule, // in-app notifications (form assign / message / note share)
+    EmailEngineModule, // emails transactionnels par tenant (invitation, etc.)
     // JwtModule pour signer/vérifier les embed-tokens (15 min lifetime).
     JwtModule.registerAsync({
       imports: [ConfigModule],

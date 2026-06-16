@@ -713,6 +713,8 @@ export class MedosService {
             title: 'Nouvelle note partagée',
             body: 'Votre praticien a partagé une note de consultation.',
             type: 'note_shared',
+            email: true,
+            actionUrl: `https://${tenant.slug}.patient.cimolace.space`,
           });
         }
       }
@@ -1170,8 +1172,10 @@ export class MedosService {
       if (patientUserId) {
         await this.notifications.send(tenant.id, patientUserId, {
           title: 'Nouveau formulaire à remplir',
-          body: ((form as any).title as string) ?? 'Formulaire',
+          body: `Votre praticien vous a assigné : « ${((form as any).title as string) ?? 'Formulaire'} ». Merci de le compléter.`,
           type: 'form_assignment',
+          email: true,
+          actionUrl: `https://${tenant.slug}.patient.cimolace.space`,
         });
       }
     } catch (e) {

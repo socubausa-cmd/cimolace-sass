@@ -8,6 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { createHash, randomBytes } from 'crypto';
 import { SupabaseService } from '../../supabase/supabase.service';
+import { EmailEngineService } from '../../email-engine/email-engine.service';
 import type { TenantContext } from '../../tenant/tenant.types';
 import {
   AcceptInvitationDto,
@@ -23,7 +24,46 @@ export class InvitationsService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly config: ConfigService,
+    private readonly email: EmailEngineService,
   ) {}
+
+  /** Construit l'URL d'acceptation publique du portail patient (tenant). */
+  private acceptUrlFor(tenant: TenantContext, rawToken: string): string {
+    return `https://${tenant.slug}.patient.cimolace.space/invite/accept?token=${rawToken}`;
+  }
+
+  /**
+   * Envoie l'email d'invitation depuis le domaine du tenant (best-effort).
+   * C'est LE canal qui porte le lien d'accès du patient — émis en marque tenant.
+   */
+  private async sendInvitationEmail(
+    tenant: TenantContext,
+    toEmail: string,
+    invitedName: string | undefined,
+    acceptUrl: string,
+    customMessage?: string | null,
+  ) {
+    try {
+      const hello = invitedName ? `Bonjour ${invitedName},` : 'Bonjour,';
+      const extra = customMessage ? `<p style="font-style:italic">${customMessage}</p>` : '';
+      const html = this.email.brandedHtml({
+        title: `Votre espace santé ${tenant.name}`,
+        body: `${hello} votre praticien vous invite à activer votre espace santé personnel et sécurisé. ${extra} Cliquez ci-dessous pour choisir votre mot de passe et accéder à votre dossier. Ce lien expire dans 7 jours.`,
+        ctaLabel: 'Activer mon espace',
+        ctaUrl: acceptUrl,
+        brand: tenant.brand_colors?.primary,
+      });
+      const res = await this.email.sendRaw(
+        tenant.id,
+        toEmail,
+        `Votre espace santé ${tenant.name} — activez votre accès`,
+        html,
+      );
+      this.logger.log(`invite email → ${toEmail}: ${res.status}`);
+    } catch (e) {
+      this.logger.warn(`invite email échec: ${(e as Error).message}`);
+    }
+  }
 
   /**
    * Crée une invitation. Retourne le `raw_token` UNE SEULE FOIS — c'est lui
@@ -89,9 +129,20 @@ export class InvitationsService {
       );
     }
 
-    // TODO : déclencher l'envoi via apps/worker (Resend/Twilio).
-    // Pour le MVP, le staff reçoit le raw_token et l'envoie manuellement.
-    const acceptUrl = `https://${tenant.slug}.patient.cimolace.space/invite/accept?token=${rawToken}`;
+    const acceptUrl = this.acceptUrlFor(tenant, rawToken);
+
+    // Envoi automatique de l'email d'invitation depuis le domaine du tenant
+    // (best-effort). Le staff reçoit aussi raw_token/accept_url en repli manuel
+    // (ex. SMS, ou si Resend désactivé pour ce tenant).
+    if (dto.invited_email) {
+      await this.sendInvitationEmail(
+        tenant,
+        dto.invited_email,
+        dto.invited_name,
+        acceptUrl,
+        dto.custom_message,
+      );
+    }
 
     return {
       invitation: data as Record<string, unknown>,
@@ -135,9 +186,19 @@ export class InvitationsService {
       );
     }
 
+    // On RÉGÉNÈRE le token : le raw n'est jamais stocké (seul le hash l'est),
+    // donc le seul moyen d'émettre un lien fonctionnel au renvoi est d'en
+    // forger un neuf. L'ancien lien devient caduc (comportement attendu).
+    const random = randomBytes(24).toString('hex');
+    const rawToken = `inv_${tenant.slug}_${random}`;
+    const tokenPrefix = `inv_${tenant.slug}_${random.slice(0, 6)}…`;
+    const tokenHash = createHash('sha256').update(rawToken).digest('hex');
+
     const { data, error } = await (this.supabase.client as any)
       .from('med_patient_invitations')
       .update({
+        token_hash: tokenHash,
+        token_prefix: tokenPrefix,
         resent_count: (row.resent_count ?? 0) + 1,
         last_resent_at: new Date().toISOString(),
         status: 'sent',
@@ -148,6 +209,17 @@ export class InvitationsService {
       .single();
     if (error || !data)
       throw new InternalServerErrorException('Renvoi impossible');
+
+    // Renvoi de l'email depuis le domaine du tenant (best-effort).
+    if (row.invited_email) {
+      await this.sendInvitationEmail(
+        tenant,
+        row.invited_email,
+        row.invited_name ?? undefined,
+        this.acceptUrlFor(tenant, rawToken),
+        row.custom_message ?? null,
+      );
+    }
     return data as { id: string; resent_count: number };
   }
 

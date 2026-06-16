@@ -14,6 +14,80 @@ export class EmailEngineService {
     this.from = config.get<string>('RESEND_FROM') ?? 'noreply@cimolace.com';
   }
 
+  private get enabled() {
+    return !!this.resendKey && this.resendKey !== 'replace_me';
+  }
+
+  /**
+   * Expéditeur PAR TENANT. Chaque tenant émet depuis SON domaine vérifié
+   * (ex. zahirwellness.com) au lieu du global cimolace.com — c'est ce qui rend
+   * les emails « attachés » au tenant.
+   *
+   * Source de vérité = `tenants.metadata.email` :
+   *   { from: "Zahir Wellness <noreply@zahirwellness.com>" }   ← prioritaire
+   *   { domain: "zahirwellness.com" }                          ← dérive noreply@domaine
+   * Fallback = expéditeur global (RESEND_FROM). On NE dérive PAS depuis
+   * `primary_domain` (= sous-domaine du portail, non vérifié chez Resend → bounce).
+   */
+  async resolveFrom(tenantId: string): Promise<string> {
+    try {
+      const { data: t } = await (this.supabase.client as any)
+        .from('tenants')
+        .select('name, metadata')
+        .eq('id', tenantId)
+        .single();
+      const cfg = (t?.metadata?.email ?? {}) as { from?: string; domain?: string };
+      if (cfg.from) return cfg.from;
+      if (cfg.domain) return `${t?.name ?? 'Notification'} <noreply@${cfg.domain}>`;
+    } catch {
+      /* fallback global ci-dessous */
+    }
+    return this.from;
+  }
+
+  /**
+   * Envoi transactionnel direct (HTML inline, sans template en base) depuis le
+   * domaine du tenant. Best-effort : renvoie un statut, ne jette jamais.
+   * `{ status: 'disabled' }` si aucune clé Resend → l'appelant ne casse pas.
+   */
+  async sendRaw(
+    tenantId: string,
+    to: string,
+    subject: string,
+    html: string,
+  ): Promise<{ status: string; from?: string; code?: number; message?: string }> {
+    if (!this.enabled) return { status: 'disabled' };
+    if (!to) return { status: 'skipped', message: 'no recipient' };
+    const from = await this.resolveFrom(tenantId);
+    try {
+      const resp = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${this.resendKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from, to: [to], subject, html }),
+      });
+      return resp.ok ? { status: 'sent', from } : { status: 'failed', code: resp.status };
+    } catch (e) {
+      return { status: 'error', message: String(e) };
+    }
+  }
+
+  /**
+   * Gabarit HTML minimal, white-label (couleur de marque optionnelle). Sert aux
+   * emails d'événements (invitation, formulaire assigné, note partagée).
+   */
+  brandedHtml(opts: { title: string; body: string; ctaLabel?: string; ctaUrl?: string; brand?: string }) {
+    const accent = opts.brand || '#2f6f4f';
+    const cta = opts.ctaUrl
+      ? `<p style="margin:28px 0"><a href="${opts.ctaUrl}" style="background:${accent};color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:600;display:inline-block">${opts.ctaLabel ?? 'Ouvrir'}</a></p>`
+      : '';
+    return `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:520px;margin:0 auto;color:#1c2b24">
+      <h2 style="color:${accent};font-size:20px;margin:0 0 12px">${opts.title}</h2>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 8px">${opts.body}</p>
+      ${cta}
+      <p style="font-size:12px;color:#8a978f;margin-top:28px">Cet email vous est envoyé par votre espace santé.</p>
+    </div>`;
+  }
+
   async listTemplates(tenantId: string) {
     const { data } = await (this.supabase.client as any).from('email_templates').select('*').eq('tenant_id', tenantId);
     return data ?? [];
