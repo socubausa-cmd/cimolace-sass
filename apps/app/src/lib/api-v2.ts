@@ -667,3 +667,83 @@ export const catalogApi = {
   applyTemplate: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/catalog/apply-template', body).then(unwrap),
 };
+
+// ── Moyens de paiement (config par tenant) ──────────────────────────────────
+//
+// Back-office → Paramètres → Paiements. Chaque tenant configure SES clés pour
+// Stripe (carte) / PawaPay (mobile money) / Chariow (produits). Les secrets
+// partent EN CLAIR au backend (chiffrés AES-256-GCM côté serveur) et ne
+// reviennent JAMAIS en clair : la liste renvoie un masque { set, last4 } par
+// champ. Tenant résolu via le header X-Tenant-Slug (déjà injecté par l'intercepteur).
+
+/** Provider supporté — aligné sur le CHECK SQL + le DTO backend. */
+export type PaymentProvider =
+  | 'stripe'
+  | 'pawapay'
+  | 'chariow'
+  | 'paypal'
+  | 'cinetpay';
+
+/** Champ secret masqué tel que renvoyé par la liste/upsert. */
+export interface MaskedSecretField {
+  set: boolean;
+  last4: string;
+}
+
+/** Vue masquée d'un moyen de paiement configuré (aucun secret en clair). */
+export interface MaskedPaymentMethod {
+  provider: PaymentProvider;
+  enabled: boolean;
+  mode: string | null;
+  credentials: Record<string, MaskedSecretField>;
+  productMap: Record<string, string> | null;
+  lastTest: {
+    at: string | null;
+    ok: boolean | null;
+    message: string | null;
+  };
+  updatedAt: string | null;
+}
+
+/** Corps d'upsert — credentials EN CLAIR (chiffrés côté serveur). */
+export interface SavePaymentMethodBody {
+  provider: PaymentProvider;
+  mode?: string;
+  credentials: Record<string, string>;
+  productMap?: Record<string, string>;
+}
+
+export const paymentMethodsApi = {
+  /** Liste des moyens configurés du tenant (credentials masqués). */
+  list: () =>
+    apiV2
+      .get<ApiEnvelope<{ providers: MaskedPaymentMethod[] }>>('/billing/payment-methods')
+      .then(unwrap),
+  /** Upsert d'un moyen : chiffre les credentials → enabled=true → renvoie le masque. */
+  save: (body: SavePaymentMethodBody) =>
+    apiV2
+      .post<ApiEnvelope<MaskedPaymentMethod>>('/billing/payment-methods', body)
+      .then(unwrap),
+  /** Test de connexion RÉEL côté serveur ; met à jour last_test_* et renvoie {ok, message}. */
+  test: (provider: PaymentProvider) =>
+    apiV2
+      .post<ApiEnvelope<{ ok: boolean; message: string }>>(
+        `/billing/payment-methods/${provider}/test`,
+        {},
+      )
+      .then(unwrap),
+  /** Active / désactive un moyen. */
+  toggle: (provider: PaymentProvider, enabled: boolean) =>
+    apiV2
+      .patch<ApiEnvelope<MaskedPaymentMethod>>(`/billing/payment-methods/${provider}`, {
+        enabled,
+      })
+      .then(unwrap),
+  /** Supprime la config d'un moyen. */
+  remove: (provider: PaymentProvider) =>
+    apiV2
+      .delete<ApiEnvelope<{ ok: true; provider: PaymentProvider }>>(
+        `/billing/payment-methods/${provider}`,
+      )
+      .then(unwrap),
+};

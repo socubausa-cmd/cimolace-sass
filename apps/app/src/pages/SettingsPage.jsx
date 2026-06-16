@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import OwnerDashboardLayout from '@/components/owner/OwnerDashboardLayout';
 import { GeneralSettingsForm, SecuritySettingsForm, StripeSettingsForm } from '@/components/settings/SettingsForms';
 import TenantPayoutProvidersForm from '@/components/settings/TenantPayoutProvidersForm';
+import PaymentMethodsManager from '@/components/settings/PaymentMethodsManager';
 import { AnimatePresence, motion } from 'framer-motion';
 import PremiumSegmentedSelector from '@/components/ui/premium-segmented-selector';
 import { Settings, CalendarDays, CreditCard, Shield, Bell, Plug } from 'lucide-react';
@@ -69,6 +70,11 @@ const SettingsPage = () => {
       case 'payments':
         return (
           <div className="space-y-4">
+            {/* Nouveau gestionnaire des moyens de paiement (config tenant chiffrée). */}
+            <div className="p-4" style={lightPanel}>
+              <PaymentMethodsManager />
+            </div>
+
             <div
               className="flex flex-wrap items-center justify-between gap-3 p-4"
               style={{ ...lightPanel, border: '1px solid rgba(212,175,55,0.35)', background: 'var(--lt-inner-bg)' }}
@@ -107,6 +113,13 @@ const SettingsPage = () => {
               </p>
             </div>
             <div className="p-4" style={lightPanel}>
+              <div className="mb-4 border-b border-zinc-200 pb-3">
+                <h2 className="text-base font-semibold text-zinc-900">Encaissement avancé (legacy)</h2>
+                <p className="mt-0.5 text-sm text-zinc-500">
+                  URLs de webhooks à coller, payouts et politique d’isolement. Reste disponible le temps de la bascule
+                  vers le nouveau gestionnaire ci-dessus.
+                </p>
+              </div>
               <TenantPayoutProvidersForm initialTenantSlug={hostTenantSlug} />
             </div>
           </div>

@@ -14,18 +14,28 @@ export function isStripeConfigured(): boolean {
   return !!process.env.STRIPE_SECRET_KEY;
 }
 
-export function stripeAuth(): string {
-  return `Bearer ${process.env.STRIPE_SECRET_KEY ?? ''}`;
+/**
+ * En-tête Authorization Stripe.
+ * `secretKey` optionnel : si fourni (clé du TENANT), il prime sur l'env plateforme.
+ * Comportement par défaut inchangé (env) quand l'argument est omis.
+ */
+export function stripeAuth(secretKey?: string): string {
+  return `Bearer ${secretKey || process.env.STRIPE_SECRET_KEY || ''}`;
 }
 
-/** POST /v1/checkout/sessions (form-urlencoded). Renvoie { id, url }. Throw si !ok. */
+/**
+ * POST /v1/checkout/sessions (form-urlencoded). Renvoie { id, url }. Throw si !ok.
+ * `secretKey` optionnel : clé du tenant ; défaut = STRIPE_SECRET_KEY (env), donc
+ * 100 % rétro-compatible avec les appels existants qui ne le passent pas.
+ */
 export async function stripeCreateCheckoutSession(
   params: URLSearchParams,
+  secretKey?: string,
 ): Promise<{ id: string; url: string }> {
   const res = await fetch(`${STRIPE_API}/checkout/sessions`, {
     method: 'POST',
     headers: {
-      Authorization: stripeAuth(),
+      Authorization: stripeAuth(secretKey),
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: params.toString(),
