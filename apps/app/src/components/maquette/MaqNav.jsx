@@ -12,7 +12,7 @@ export function MaqNav() {
   return (
     <header className="sticky top-0 z-50 border-b backdrop-blur-md" style={{ borderColor: 'var(--border)', background: 'rgba(13,11,9,0.78)' }}>
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
-        <a href="/t/isna" className="mq-display text-lg font-semibold tracking-tight" style={{ color: 'var(--fg)' }}>
+        <a href="/" className="mq-display text-lg font-semibold tracking-tight" style={{ color: 'var(--fg)' }}>
           PROR<span style={gold}>A</span>SCIENCE
         </a>
 
@@ -72,10 +72,10 @@ export function MaqNav() {
 
         {/* CTAs */}
         <div className="hidden items-center gap-3 xl:flex">
-          <a href="/t/isna/login" className="text-[13px] font-semibold transition hover:text-[var(--gold)]" style={{ color: 'var(--fg)' }}>
+          <a href="/login" className="text-[13px] font-semibold transition hover:text-[var(--gold)]" style={{ color: 'var(--fg)' }}>
             Connexion
           </a>
-          <a href="/t/isna/signup" className="rounded-full px-5 py-2 text-[13px] font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
+          <a href="/signup" className="rounded-full px-5 py-2 text-[13px] font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
             Créer un compte
           </a>
         </div>
@@ -112,10 +112,10 @@ export function MaqNav() {
               </div>
             ))}
             <div className="mt-4 flex gap-3">
-              <a href="/t/isna/login" className="flex-1 rounded-full border py-2.5 text-center text-sm font-semibold" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
+              <a href="/login" className="flex-1 rounded-full border py-2.5 text-center text-sm font-semibold" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
                 Connexion
               </a>
-              <a href="/t/isna/signup" className="flex-1 rounded-full py-2.5 text-center text-sm font-semibold" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
+              <a href="/signup" className="flex-1 rounded-full py-2.5 text-center text-sm font-semibold" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
                 Créer un compte
               </a>
             </div>

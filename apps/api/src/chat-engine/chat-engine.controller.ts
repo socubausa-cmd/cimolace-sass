@@ -16,4 +16,8 @@ export class ChatEngineController {
   @Post('rooms/:id/messages') sendMessage(@Param('id') id: string, @Body('content') c: string, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.sendMessage(t.id, id, (r as any).user.id, c); }
   @Get('rooms/:id/messages') getMessages(@Param('id') id: string, @CurrentTenant() t: TenantContext) { return this.svc.getMessages(t.id, id); }
   @Get('rooms/:id/online') getOnline(@Param('id') id: string, @CurrentTenant() t: TenantContext) { return this.svc.getOnlineUsers(t.id, id); }
+  // DM 1-à-1 : ouvre/réutilise la room privée avec :userId (même moteur que le chat live/groupe).
+  @Post('direct/:userId') openDirect(@Param('userId') userId: string, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.openDirectRoom(t.id, (r as any).user.id, userId); }
+  // Chat du live : room logique 'live:<sessionId>' servie par le même moteur (backing live_session_chat).
+  @Post('live/:liveSessionId') openLive(@Param('liveSessionId') liveSessionId: string, @CurrentTenant() t: TenantContext) { return this.svc.openLiveRoom(t.id, liveSessionId); }
 }

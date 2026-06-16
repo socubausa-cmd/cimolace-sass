@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -10,7 +10,8 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 // ── EngineHeader ────────────────────────────────────────────────────────────
 
@@ -26,6 +27,8 @@ interface EngineHeaderProps {
  * Bouton retour Feather chevron-left à gauche, titre serif centré.
  */
 export function EngineHeader({ title, onBack }: EngineHeaderProps) {
+  const { colors: C } = useTheme();
+  const hdr = useMemo(() => makeHdr(C), [C]);
   return (
     <View style={hdr.row}>
       <Pressable
@@ -46,7 +49,7 @@ export function EngineHeader({ title, onBack }: EngineHeaderProps) {
   );
 }
 
-const hdr = StyleSheet.create({
+const makeHdr = (C: LiriPalette) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -90,10 +93,12 @@ interface EngineCardProps {
  * Utilisée pour encapsuler les blocs de données dans les moteurs.
  */
 export function EngineCard({ children, style }: EngineCardProps) {
+  const { colors: C } = useTheme();
+  const card = useMemo(() => makeCard(C), [C]);
   return <View style={[card.root, softShadow, style]}>{children}</View>;
 }
 
-const card = StyleSheet.create({
+const makeCard = (C: LiriPalette) => StyleSheet.create({
   root: {
     backgroundColor: C.panel,
     borderRadius: 18,
@@ -119,6 +124,8 @@ interface EmptyStateProps {
  * Ne présente jamais de fausses données.
  */
 export function EmptyState({ icon, title, subtitle }: EmptyStateProps) {
+  const { colors: C } = useTheme();
+  const empty = useMemo(() => makeEmpty(C), [C]);
   return (
     <View style={empty.root}>
       <View style={empty.iconBox}>
@@ -130,7 +137,7 @@ export function EmptyState({ icon, title, subtitle }: EmptyStateProps) {
   );
 }
 
-const empty = StyleSheet.create({
+const makeEmpty = (C: LiriPalette) => StyleSheet.create({
   root: {
     alignItems: 'center',
     paddingVertical: 40,
@@ -178,6 +185,8 @@ interface PrimaryButtonProps extends Omit<PressableProps, 'style'> {
  * À utiliser pour toutes les CTA primaires dans les moteurs.
  */
 export function PrimaryButton({ label, style, disabled, ...rest }: PrimaryButtonProps) {
+  const { colors: C } = useTheme();
+  const btn = useMemo(() => makeBtn(C), [C]);
   return (
     <Pressable
       {...rest}
@@ -196,7 +205,7 @@ export function PrimaryButton({ label, style, disabled, ...rest }: PrimaryButton
   );
 }
 
-const btn = StyleSheet.create({
+const makeBtn = (C: LiriPalette) => StyleSheet.create({
   root: {
     backgroundColor: C.coral,
     borderRadius: 14,

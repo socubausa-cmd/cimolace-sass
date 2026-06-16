@@ -14,6 +14,7 @@ import {
   regionStatus,
 } from './engine/secretary-matching';
 import { detectVisitorContext } from './engine/timezone-routing';
+import { buildAvailability } from './engine/availability';
 import type { TenantContext } from '../tenant/tenant.types';
 import type { CreateAppointmentDto, CreateSlotDto, SetPreparationDto, SubmitFeedbackDto, UpdateAppointmentDto } from './dto/booking.dto';
 
@@ -167,6 +168,32 @@ export class BookingService {
     return data ?? [];
   }
 
+  /**
+   * Annulation par le propriétaire du RDV (élève/visiteur) — sans rôle staff.
+   * Vérifie que le RDV appartient bien à l'utilisateur (student_id) avant d'annuler.
+   */
+  async cancelOwnAppointment(appointmentId: string, tenantId: string, userId: string) {
+    const { data: appt } = await (this.supabase.client as any)
+      .from('appointments')
+      .select('id, student_id')
+      .eq('id', appointmentId)
+      .eq('tenant_id', tenantId)
+      .single();
+    if (!appt) throw new NotFoundException('Rendez-vous introuvable');
+    if (appt.student_id && String(appt.student_id) !== String(userId)) {
+      throw new NotFoundException('Rendez-vous introuvable');
+    }
+    const { data, error } = await (this.supabase.client as any)
+      .from('appointments')
+      .update({ status: 'cancelled' })
+      .eq('id', appointmentId)
+      .eq('tenant_id', tenantId)
+      .select('*')
+      .single();
+    if (error || !data) throw new NotFoundException('Rendez-vous introuvable');
+    return data;
+  }
+
   async getAppointment(appointmentId: string, tenantId: string) {
     const { data, error } = await (this.supabase.client as any)
       .from('appointments')
@@ -177,6 +204,33 @@ export class BookingService {
 
     if (error || !data) throw new NotFoundException('Rendez-vous introuvable');
     return data;
+  }
+
+  // ── Prof → séance live avec un élève (action depuis le profil élève) ──────
+  // Réutilise le moteur Liri (LiveService). Le prof ouvre ensuite /live/host/:id ;
+  // l'élève est invité via le flux d'invitation live.
+  async scheduleLiveWithStudent(
+    tenant: TenantContext,
+    teacherId: string,
+    studentId: string,
+    opts: { title?: string; scheduledAt?: string } = {},
+  ) {
+    const { data: member } = await (this.supabase.client as any)
+      .from('tenant_memberships')
+      .select('user_id')
+      .eq('tenant_id', tenant.id)
+      .eq('user_id', studentId)
+      .maybeSingle();
+    if (!member) throw new NotFoundException('Élève introuvable dans ce tenant');
+
+    const live: any = await this.live.createSession(tenant.id, {
+      teacher_id: teacherId,
+      title: opts.title?.trim() || 'Séance live',
+      session_type: 'entretien',
+      scheduled_at: opts.scheduledAt || new Date().toISOString(),
+    });
+    if (!live?.id) throw new BadRequestException('Création de la séance live impossible');
+    return { ok: true, liveSessionId: live.id };
   }
 
   // ── Pont RDV → séance live (école) ───────────────────────────────────────
@@ -310,6 +364,89 @@ export class BookingService {
     }));
 
     return { context, strategy, statuses, secretaries: ranked };
+  }
+
+  /** Charge les secrétaires éligibles du tenant (rôle staff) avec leurs champs secrétariat. */
+  private async loadTenantSecretaries(tenantId: string) {
+    const { data: members } = await (this.supabase.client as any)
+      .from('tenant_memberships')
+      .select('user_id, role')
+      .eq('tenant_id', tenantId)
+      .in('role', ['secretariat', 'admin', 'owner']);
+    const ids = (members ?? []).map((m: any) => m.user_id).filter(Boolean);
+    if (ids.length === 0) return [];
+    const { data: rows } = await (this.supabase.client as any)
+      .from('profiles')
+      .select(
+        'id,name,email,timezone,country_code,secretariat_region,is_secretariat_active,is_secretariat_online,secretariat_last_seen_at,secretariat_sla_ms,availability_start_hour,availability_end_hour',
+      )
+      .in('id', ids);
+    return (rows ?? []).map((row: any) => {
+      const s = normalizeSecretaryProfile(row);
+      if (row.is_secretariat_active === null || row.is_secretariat_active === undefined) s.active = true;
+      return s;
+    });
+  }
+
+  // ── Créneaux intelligents (slotGrid + recommandations) ───────────────────
+  // Porté d'ISNA v1 (booking-available-slots + availabilityEngine).
+  async slotAvailability(
+    tenant: TenantContext,
+    opts: { timezone?: string; country?: string; windowStart: string; windowEnd: string },
+  ) {
+    const context = detectVisitorContext({ timezone: opts.timezone, country: opts.country });
+    const windowStart = new Date(opts.windowStart);
+    const windowEnd = new Date(opts.windowEnd);
+    if (
+      Number.isNaN(windowStart.getTime()) ||
+      Number.isNaN(windowEnd.getTime()) ||
+      windowEnd <= windowStart
+    ) {
+      throw new BadRequestException('Fenêtre invalide (windowStart/windowEnd requis)');
+    }
+
+    const secretaries = await this.loadTenantSecretaries(tenant.id);
+    if (secretaries.length === 0) {
+      return { context, slots: [], fallbackSlots: [], slotGrid: [], regionStatuses: [], schoolOpen: false };
+    }
+
+    // Réservés + charge : RDV du tenant assignés à un membre, créneau via booking_slots.
+    const { data: appts } = await (this.supabase.client as any)
+      .from('appointments')
+      .select('teacher_id, status, booking_slots(start_at)')
+      .eq('tenant_id', tenant.id)
+      .in('status', ['requested', 'scheduled', 'preparing', 'confirmed'])
+      .not('teacher_id', 'is', null)
+      .limit(500);
+    const reservedRows = (appts ?? [])
+      .map((a: any) => ({
+        assigned_teacher_id: a.teacher_id,
+        scheduled_at: a.booking_slots?.start_at ?? null,
+        status: a.status,
+      }))
+      .filter((r: any) => r.scheduled_at);
+    const queueRows = (appts ?? [])
+      .filter((a: any) => a.status === 'requested')
+      .map((a: any) => ({ assigned_teacher_id: a.teacher_id }));
+
+    const av = buildAvailability({
+      secretaries,
+      reservedRows,
+      queueRows,
+      visitorRegion: context.region,
+      visitorTimezone: context.timezone,
+      windowStart,
+      windowEnd,
+    });
+    const schoolOpen = av.regionStatuses.find((r) => r.region === context.region)?.schoolOpen || false;
+    return {
+      context,
+      slots: av.slots,
+      fallbackSlots: av.fallbackSlots,
+      slotGrid: av.slotGrid,
+      regionStatuses: av.regionStatuses,
+      schoolOpen,
+    };
   }
 
   // ── Préparation d'entretien (secrétariat) ────────────────────────────────

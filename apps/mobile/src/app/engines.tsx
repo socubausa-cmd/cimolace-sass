@@ -4,7 +4,8 @@ import { useMemo } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 import {
   CATEGORY_LABEL,
   ENGINES,
@@ -20,6 +21,8 @@ import {
  */
 export default function EnginesHub() {
   const router = useRouter();
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
   const stats = parityStats();
   const pct = Math.round(((stats.done + stats.partial * 0.5) / stats.total) * 100);
 
@@ -82,6 +85,8 @@ export default function EnginesHub() {
 }
 
 function Stat({ n, label, color }: { n: number; label: string; color: string }) {
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
   return (
     <View style={s.statCard}>
       <Text style={[s.statN, { color }]}>{n}</Text>
@@ -90,7 +95,7 @@ function Stat({ n, label, color }: { n: number; label: string; color: string }) 
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1 },
   pressed: { opacity: 0.7 },

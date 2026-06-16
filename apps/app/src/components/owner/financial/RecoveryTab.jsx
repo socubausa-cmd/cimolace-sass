@@ -9,12 +9,27 @@ import { Search, FileText, Loader2, RefreshCw } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
+import { useShellTint } from '@/lib/useShellTint';
 
 const HOVER_LIFT = { y: -3 };
 const TAP_SOFT = { scale: 0.995 };
 const TRANSITION_FAST = { duration: 0.2, ease: 'easeOut' };
 
+/* Thème CLAIR « Wix Studio » — aligné sur OwnerDashboardOverview. */
+const LT_TEXT = 'var(--lt-text)';
+const LT_SUB = 'var(--lt-sub)';
+const LT_MUTED = 'var(--lt-muted)';
+const LT_BORDER = 'var(--lt-border)';
+const LT_GOLD_INK = 'var(--lt-gold-ink)';
+const cardSurface = {
+  background: 'var(--lt-card-bg)',
+  border: '1px solid var(--lt-card-border)',
+  boxShadow: 'var(--lt-card-shadow)',
+};
+
 const RecoveryTab = () => {
+  const [tint] = useShellTint();
+  const chartDark = tint === 'dark';
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -98,6 +113,9 @@ const RecoveryTab = () => {
   ];
 
   const COLORS = ['#4ade80', '#D4AF37', '#f87171'];
+  const chartTooltipStyle = chartDark
+    ? { backgroundColor: '#16161E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#F4F4F5', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }
+    : { backgroundColor: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '10px', color: '#18181B', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' };
   const showSkeleton = loading && rows.length === 0;
 
   return (
@@ -109,16 +127,17 @@ const RecoveryTab = () => {
          className="flex justify-between items-center"
        >
         <div>
-           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-             <FileText className="text-[var(--school-accent)]" /> Recouvrement
+           <h2 className="text-2xl font-bold flex items-center gap-2" style={{ color: LT_TEXT }}>
+             <FileText style={{ color: LT_GOLD_INK }} /> Recouvrement
            </h2>
-           <p className="text-gray-400 text-sm">Source: paiements et factures provider (Supabase)</p>
+           <p className="text-sm" style={{ color: LT_SUB }}>Source: paiements et factures provider (Supabase)</p>
         </div>
         <div className="flex gap-2">
            <Button
              onClick={() => void refresh()}
              variant="outline"
-             className="border-white/10 text-white hover:bg-white/5 transition-all duration-200"
+             className="bg-[var(--lt-card-bg)] text-zinc-700 border-[var(--lt-border)] hover:opacity-80 transition-all duration-200"
+             style={{ color: LT_SUB }}
            >
              <RefreshCw className="w-4 h-4 mr-2"/> Actualiser
            </Button>
@@ -128,56 +147,56 @@ const RecoveryTab = () => {
       {showSkeleton ? (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="h-[104px] rounded-xl bg-white/10 animate-pulse" />
-            <div className="h-[104px] rounded-xl bg-white/10 animate-pulse" />
-            <div className="h-[104px] rounded-xl bg-white/10 animate-pulse" />
-            <div className="h-[104px] rounded-xl bg-white/10 animate-pulse" />
+            <div className="h-[104px] rounded-xl bg-black/[0.05] animate-pulse" />
+            <div className="h-[104px] rounded-xl bg-black/[0.05] animate-pulse" />
+            <div className="h-[104px] rounded-xl bg-black/[0.05] animate-pulse" />
+            <div className="h-[104px] rounded-xl bg-black/[0.05] animate-pulse" />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="h-80 rounded-xl bg-white/10 animate-pulse" />
-            <div className="lg:col-span-2 h-80 rounded-xl bg-white/10 animate-pulse" />
+            <div className="h-80 rounded-xl bg-black/[0.05] animate-pulse" />
+            <div className="lg:col-span-2 h-80 rounded-xl bg-black/[0.05] animate-pulse" />
           </div>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
+            <Card className="border-0 transition-all" style={cardSurface}>
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
-                <p className="text-gray-400 text-xs uppercase">Montant Total</p>
-                <p className="text-2xl font-bold text-white">{stats.totalAmount.toLocaleString()} EUR</p>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: LT_MUTED }}>Montant Total</p>
+                <p className="text-2xl font-bold tabular-nums" style={{ color: LT_TEXT }}>{stats.totalAmount.toLocaleString()} EUR</p>
               </CardContent>
             </Card>
             </motion.div>
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
+            <Card className="border-0 transition-all" style={cardSurface}>
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
-                <p className="text-gray-400 text-xs uppercase">Recouvré</p>
-                <p className="text-2xl font-bold text-green-400">{stats.recovered.toLocaleString()} EUR</p>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: LT_MUTED }}>Recouvré</p>
+                <p className="text-2xl font-bold tabular-nums text-emerald-600">{stats.recovered.toLocaleString()} EUR</p>
               </CardContent>
             </Card>
             </motion.div>
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
+            <Card className="border-0 transition-all" style={cardSurface}>
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
-                <p className="text-gray-400 text-xs uppercase">Reste à payer</p>
-                <p className="text-2xl font-bold text-red-400">{stats.pending.toLocaleString()} EUR</p>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: LT_MUTED }}>Reste à payer</p>
+                <p className="text-2xl font-bold tabular-nums text-red-600">{stats.pending.toLocaleString()} EUR</p>
               </CardContent>
             </Card>
             </motion.div>
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
+            <Card className="border-0 transition-all" style={cardSurface}>
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
-                <p className="text-gray-400 text-xs uppercase">Taux Recouvrement</p>
-                <p className="text-2xl font-bold text-[var(--school-accent)]">{stats.recoveryRate.toFixed(1)}%</p>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: LT_MUTED }}>Taux Recouvrement</p>
+                <p className="text-2xl font-bold tabular-nums" style={{ color: LT_GOLD_INK }}>{stats.recoveryRate.toFixed(1)}%</p>
               </CardContent>
             </Card>
             </motion.div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="premium-panel border-white/10 p-4 lg:col-span-1">
-              <h3 className="text-white font-bold mb-4">Statut des Factures</h3>
+            <Card className="border-0 p-4 lg:col-span-1" style={cardSurface}>
+              <h3 className="font-bold mb-4" style={{ color: LT_TEXT }}>Statut des Factures</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -196,50 +215,50 @@ const RecoveryTab = () => {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: '#0F1419', borderColor: '#333', color: '#fff' }} />
-                    <Legend wrapperStyle={{ color: '#e5e7eb', fontSize: 12 }} />
+                    <Tooltip contentStyle={chartTooltipStyle} />
+                    <Legend wrapperStyle={{ color: chartDark ? '#A1A1AA' : '#52525B', fontSize: 12 }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
             </Card>
 
-            <Card className="premium-panel border-white/10 lg:col-span-2">
-              <div className="p-4 border-b border-white/10 flex justify-between items-center">
+            <Card className="border-0 lg:col-span-2" style={cardSurface}>
+              <div className="p-4 flex justify-between items-center" style={{ borderBottom: `1px solid ${LT_BORDER}` }}>
                 <div className="relative w-64">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                  <Input placeholder="Rechercher facture..." className="pl-8 bg-[#0F1419] border-white/10" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                  <Search className="absolute left-2 top-2.5 h-4 w-4" style={{ color: LT_MUTED }} />
+                  <Input placeholder="Rechercher facture..." className="pl-8 bg-[var(--lt-inner-bg)] border-[var(--lt-border)] placeholder:text-zinc-400" style={{ color: LT_TEXT }} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                 </div>
               </div>
               <div className="max-h-[500px] overflow-y-auto">
                 {loading ? (
-                  <div className="p-8 flex items-center justify-center text-gray-400"><Loader2 className="w-4 h-4 mr-2 animate-spin" />Chargement...</div>
+                  <div className="p-8 flex items-center justify-center" style={{ color: LT_MUTED }}><Loader2 className="w-4 h-4 mr-2 animate-spin" />Chargement...</div>
                 ) : null}
                 <Table>
-                  <TableHeader className="bg-[#0F1419]">
-                    <TableRow className="border-white/10 hover:bg-transparent">
-                      <TableHead className="text-gray-400">N° Facture</TableHead>
-                      <TableHead className="text-gray-400">Étudiant</TableHead>
-                      <TableHead className="text-gray-400">Total</TableHead>
-                      <TableHead className="text-gray-400">Reste</TableHead>
-                      <TableHead className="text-gray-400">Échéance</TableHead>
-                      <TableHead className="text-gray-400">Statut</TableHead>
-                      <TableHead className="text-right text-gray-400">Actions</TableHead>
+                  <TableHeader className="bg-[var(--lt-inner-bg)]">
+                    <TableRow className="border-[var(--lt-border)] hover:bg-transparent">
+                      <TableHead className="text-zinc-500">N° Facture</TableHead>
+                      <TableHead className="text-zinc-500">Étudiant</TableHead>
+                      <TableHead className="text-zinc-500">Total</TableHead>
+                      <TableHead className="text-zinc-500">Reste</TableHead>
+                      <TableHead className="text-zinc-500">Échéance</TableHead>
+                      <TableHead className="text-zinc-500">Statut</TableHead>
+                      <TableHead className="text-right text-zinc-500">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {!loading && filteredData.length === 0 ? (
-                      <TableRow className="border-white/5">
-                        <TableCell colSpan={7} className="text-center py-10 text-gray-400">
+                      <TableRow className="border-[var(--lt-border)]">
+                        <TableCell colSpan={7} className="text-center py-10" style={{ color: LT_MUTED }}>
                           Aucune facture pour cette recherche.
                         </TableCell>
                       </TableRow>
                     ) : filteredData.map((inv) => (
-                      <TableRow key={inv.id} className="border-white/5 hover:bg-white/5">
-                        <TableCell className="font-mono text-white text-xs">{inv.invoiceNumber}</TableCell>
-                        <TableCell className="text-gray-300 font-medium">{inv.studentName}</TableCell>
-                        <TableCell className="text-white">{inv.totalAmount} EUR</TableCell>
-                        <TableCell className="text-red-300">{inv.pendingAmount} EUR</TableCell>
-                        <TableCell className="text-gray-400 text-xs">{format(new Date(inv.dueDate), 'dd/MM/yyyy')}</TableCell>
+                      <TableRow key={inv.id} className="border-[var(--lt-border)] hover:opacity-80">
+                        <TableCell className="font-mono text-xs" style={{ color: LT_TEXT }}>{inv.invoiceNumber}</TableCell>
+                        <TableCell className="font-medium" style={{ color: LT_TEXT }}>{inv.studentName}</TableCell>
+                        <TableCell style={{ color: LT_TEXT }}>{inv.totalAmount} EUR</TableCell>
+                        <TableCell className="text-red-600">{inv.pendingAmount} EUR</TableCell>
+                        <TableCell className="text-xs" style={{ color: LT_SUB }}>{format(new Date(inv.dueDate), 'dd/MM/yyyy')}</TableCell>
                         <TableCell>
                           {inv.status === 'paid' && <Badge className="bg-green-500">Payé</Badge>}
                           {inv.status === 'pending' && <Badge className="bg-yellow-500 text-black">En attente</Badge>}
@@ -248,10 +267,10 @@ const RecoveryTab = () => {
                         <TableCell className="text-right space-x-2">
                           {inv.invoiceUrl ? (
                             <a href={inv.invoiceUrl} target="_blank" rel="noreferrer">
-                              <Button size="sm" variant="ghost" className="h-7 border border-white/10 text-white">Ouvrir</Button>
+                              <Button size="sm" variant="ghost" className="h-7 border border-[var(--lt-border)] text-zinc-700 hover:opacity-80" style={{ color: LT_SUB }}>Ouvrir</Button>
                             </a>
                           ) : (
-                            <span className="text-xs text-gray-500">Pas de lien</span>
+                            <span className="text-xs" style={{ color: LT_MUTED }}>Pas de lien</span>
                           )}
                         </TableCell>
                       </TableRow>

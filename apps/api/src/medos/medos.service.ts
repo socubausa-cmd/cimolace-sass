@@ -153,7 +153,22 @@ export class MedosService {
       userId = created.id;
     }
 
-    // 3. Garantir le membership 'patient' sur ce tenant (idempotent)
+    // 3. Garantir le membership 'patient' — SANS JAMAIS rétrograder un membre
+    //    du staff. L'upsert (onConflict tenant_id,user_id) écraserait sinon le
+    //    rôle d'un owner/practitioner en 'patient' si son email est saisi comme
+    //    email patient → il perdrait l'accès au back-office (bug 403 vécu).
+    const MEMBERSHIP_STAFF = ['owner', 'practitioner', 'clinic_admin', 'receptionist'];
+    const { data: existingMem } = await (this.supabase.client as any)
+      .from('tenant_memberships')
+      .select('role')
+      .eq('tenant_id', tenantId)
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (existingMem && MEMBERSHIP_STAFF.includes((existingMem as any).role)) {
+      throw new BadRequestException(
+        "Cet email appartient à un membre de l'équipe — utilisez l'adresse personnelle du patient.",
+      );
+    }
     await (this.supabase.client as any)
       .from('tenant_memberships')
       .upsert(

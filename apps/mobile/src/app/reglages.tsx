@@ -1,15 +1,19 @@
 import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
 import { useAuth } from '@/lib/auth';
+import { useTheme } from '@/lib/theme';
 
 type IconName = React.ComponentProps<typeof Feather>['name'];
 
 export default function ReglagesScreen() {
   const { email, signOut } = useAuth();
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const initials = (email ?? 'IS').slice(0, 2).toUpperCase();
 
   // Préférences « Productivité » (vue Réglages du portail web).
@@ -30,6 +34,10 @@ export default function ReglagesScreen() {
               <Text style={styles.sub}>Espace Isna · LIRI v2.0</Text>
             </View>
           </View>
+
+          {/* Apparence — bascule de teinte crème ⇄ sombre */}
+          <Text style={styles.sectionTitle}>Apparence</Text>
+          <ThemeToggle />
 
           {/* Compte — liens */}
           <Text style={styles.sectionTitle}>Compte</Text>
@@ -85,6 +93,8 @@ function ToggleRow({
   value: boolean;
   onValueChange: (v: boolean) => void;
 }) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   return (
     <View style={styles.prefRow}>
       <View style={{ flex: 1 }}>
@@ -103,6 +113,8 @@ function ToggleRow({
 }
 
 function SelectRow({ label, hint, value }: { label: string; hint: string; value: string }) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   return (
     <Pressable style={({ pressed }) => [styles.prefRow, pressed && styles.pressed]}>
       <View style={{ flex: 1 }}>
@@ -117,7 +129,7 @@ function SelectRow({ label, hint, value }: { label: string; hint: string; value:
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1 },
   flex1: { flex: 1 },

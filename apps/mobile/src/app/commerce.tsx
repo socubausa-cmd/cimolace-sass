@@ -1,10 +1,11 @@
 import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import PaymentSheet, { type PaymentItem } from '@/components/commerce/payment-sheet';
-import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 /**
  * Commerce (natif) — Forfaits + Boutique. Paiement NATIF Mobile Money (PawaPay)
@@ -30,6 +31,8 @@ const BOUTIQUE = [
 ];
 
 export default function CommerceScreen() {
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
   const [tab, setTab] = useState<Tab>('forfaits');
   const [payItem, setPayItem] = useState<PaymentItem | null>(null);
 
@@ -125,7 +128,7 @@ export default function CommerceScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1 },
   pressed: { opacity: 0.7 },

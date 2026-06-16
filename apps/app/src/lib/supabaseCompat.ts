@@ -118,6 +118,8 @@ class QueryBuilder<T = any> {
   private isFilters: { field: string; value: null | boolean }[] = [];
   private gteFilters: { field: string; value: any }[] = [];
   private lteFilters: { field: string; value: any }[] = [];
+  private ltFilters: { field: string; value: any }[] = [];
+  private gtFilters: { field: string; value: any }[] = [];
   private neqFilters: { field: string; value: any }[] = [];
   private upsertData: any = null;
   private upsertOptions: any = null;
@@ -175,6 +177,16 @@ class QueryBuilder<T = any> {
 
   lte(field: string, value: any) {
     this.lteFilters.push({ field, value });
+    return this;
+  }
+
+  lt(field: string, value: any) {
+    this.ltFilters.push({ field, value });
+    return this;
+  }
+
+  gt(field: string, value: any) {
+    this.gtFilters.push({ field, value });
     return this;
   }
 
@@ -339,6 +351,8 @@ class QueryBuilder<T = any> {
       // COURSES
       case 'courses': {
         if (this.insertData) return apiCall(coursesApi.create(this.insertData));
+        if (this.updateData && id) return apiCall(coursesApi.update(id, this.updateData));
+        if (this.isDelete && id) return apiCall(coursesApi.delete(id));
         if (id) return apiCall(coursesApi.get(id));
         return apiCall(coursesApi.list());
       }
@@ -627,6 +641,12 @@ class QueryBuilder<T = any> {
     for (const f of this.lteFilters) {
       query = query.lte(f.field, f.value);
     }
+    for (const f of this.ltFilters) {
+      query = query.lt(f.field, f.value);
+    }
+    for (const f of this.gtFilters) {
+      query = query.gt(f.field, f.value);
+    }
     for (const f of this.neqFilters) {
       query = query.neq(f.field, f.value);
     }
@@ -682,6 +702,12 @@ class QueryBuilder<T = any> {
     }
     for (const filter of this.lteFilters) {
       data = data.filter((row) => row?.[filter.field] <= filter.value);
+    }
+    for (const filter of this.ltFilters) {
+      data = data.filter((row) => row?.[filter.field] < filter.value);
+    }
+    for (const filter of this.gtFilters) {
+      data = data.filter((row) => row?.[filter.field] > filter.value);
     }
     for (const filter of this.neqFilters) {
       data = data.filter((row) => row?.[filter.field] !== filter.value);

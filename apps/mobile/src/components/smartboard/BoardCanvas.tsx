@@ -9,7 +9,8 @@ import { Canvas, Circle, Fill, Group, Path, Rect, Skia, Text as SkText, matchFon
 import { useMemo, useRef } from 'react';
 import { PanResponder, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 
-import { LiriColors as C } from '@/constants/liri-theme';
+import { type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 import { SB_CANVAS_H, SB_CANVAS_W, strokePoints } from './model';
 import type { SbKonvaObjectBase } from './types';
@@ -64,6 +65,9 @@ export function BoardCanvas(props: Props) {
     onDrawEnd,
     onTap,
   } = props;
+
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
 
   const sizeRef = useRef({ w: SB_CANVAS_W, h: SB_CANVAS_H });
   const scaleRef = useRef(1);
@@ -169,6 +173,7 @@ export function BoardCanvas(props: Props) {
 
 /** Rendu d'un objet persistant (stylo/gomme/rect/cercle/texte). */
 function ObjectNode({ obj, scale }: { obj: SbKonvaObjectBase; scale: number }) {
+  const { colors: C } = useTheme();
   const style = obj.style as {
     stroke?: string;
     strokeWidth?: number;
@@ -249,7 +254,7 @@ function ObjectNode({ obj, scale }: { obj: SbKonvaObjectBase; scale: number }) {
   return null;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   wrap: { flex: 1, overflow: 'hidden' },
   frame: {
     position: 'absolute',

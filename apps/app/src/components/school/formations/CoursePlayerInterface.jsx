@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Lock, Unlock, CheckCircle, ArrowRight, Play, BookOpen, PenTool, ChevronRight, Menu, Heart, Video, Presentation, FileText, Sparkles, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VideoProgressProvider } from '@/components/school/classroom/VideoProgressTracker';
+import { SafeHtml } from '@/components/common/SafeHtml';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import VideoPlayer from '@/components/school/formations/VideoPlayer';
 import PowerPointViewer from '@/components/school/formations/PowerPointViewer';
@@ -142,7 +143,7 @@ const DemoCoursePlayerContent = () => {
                   <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
                     <BookOpen className="text-[var(--school-accent)]"/> Ce que tu dois retenir
                   </h2>
-                  <div className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: day.content.summary }} />
+                  <SafeHtml className="prose prose-invert max-w-none" html={day.content.summary} />
                </Card>
                <div className="mt-6 flex justify-end">
                   <Button onClick={() => setStep(3)} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">

@@ -10,29 +10,13 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/customSupabaseClient';
 import { format, isValid } from 'date-fns';
 import { fr } from 'date-fns/locale';
-
-// Design tokens navy + or (inline, conformes à la charte ISNA)
-const T = {
-  surface: '#12111a',
-  surface2: 'rgba(25,39,52,0.5)',
-  border: 'rgba(255,255,255,0.07)',
-  borderMid: 'rgba(255,255,255,0.12)',
-  gold: '#D4AF37',
-  goldDim: 'rgba(212,175,55,0.12)',
-  goldMid: 'rgba(212,175,55,0.28)',
-  success: '#22C55E',
-  warning: '#F59E0B',
-  danger: '#EF4444',
-  t1: '#F5F5F7',
-  t2: 'rgba(245,245,247,0.65)',
-  t3: 'rgba(245,245,247,0.38)',
-  t4: 'rgba(245,245,247,0.16)',
-  mono: "'JetBrains Mono','Fira Code',monospace",
-};
+// Thème host-aware : `T` = tokens vivants (clair sous l'espace élève, sombre sous le portail prof).
+import { themeProxy as T, useSslThemeMode } from '@/pages/school/student-school-life/sslTheme';
 
 const STORAGE_BUCKET = 'justificatifs';
 
 const StudentAbsencesPage = () => {
+  useSslThemeMode(); // publie le mode (clair/sombre) pour `T` AVANT le rendu des sous-composants
   const { isDemoMode, demoData, restrictedAction } = useDemoMode();
   const { user } = useAuth();
   const { rows, refresh } = useStudentAttendanceRecords(isDemoMode ? null : user?.id);

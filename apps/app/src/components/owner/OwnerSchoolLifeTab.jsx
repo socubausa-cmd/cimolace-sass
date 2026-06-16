@@ -24,12 +24,12 @@ const OwnerSchoolLifeTab = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Vie Scolaire</h2>
+      <h2 className="text-2xl font-bold" style={{ color: 'var(--lt-text)' }}>Vie Scolaire</h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column: Announcements Manager */}
         <div className="space-y-6">
-           <Card className="bg-[#192734] border-white/10 h-full">
+           <Card className="border-0 h-full" style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)' }}>
              <CardContent className="pt-6">
                 <AnnouncementManager />
              </CardContent>
@@ -38,10 +38,10 @@ const OwnerSchoolLifeTab = () => {
 
         {/* Right Column: Events Manager */}
         <div className="space-y-6">
-          <Card className="bg-[#192734] border-white/10 h-full">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-white/5">
-              <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-blue-400" /> Agenda & Événements
+          <Card className="border-0 h-full" style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)' }}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-[var(--lt-border)]">
+              <CardTitle className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--lt-text)' }}>
+                <Calendar className="h-5 w-5 text-blue-500" /> Agenda & Événements
               </CardTitle>
               <Button size="sm" onClick={() => setIsEventModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
                 <Plus className="h-3 w-3 mr-1" /> Ajouter
@@ -51,30 +51,30 @@ const OwnerSchoolLifeTab = () => {
               <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
                 {events.length > 0 ? (
                   events.map(event => (
-                    <div key={event.id} className="flex gap-3 p-3 bg-[#0F1419] rounded-lg border-l-4 border-blue-500 hover:bg-white/5 transition-colors group">
-                       <div className="flex flex-col items-center justify-center px-2 border-r border-white/10 pr-3 min-w-[60px]">
-                          <span className="text-sm text-gray-400 font-bold uppercase">{event.date ? format(new Date(event.date), 'MMM', { locale: fr }) : '---'}</span>
-                          <span className="text-xl font-bold text-white">{event.date ? format(new Date(event.date), 'dd') : '--'}</span>
+                    <div key={event.id} className="flex gap-3 p-3 bg-[var(--lt-inner-bg)] rounded-lg border-l-4 border-blue-500 hover:opacity-80 transition-colors group">
+                       <div className="flex flex-col items-center justify-center px-2 border-r border-[var(--lt-border)] pr-3 min-w-[60px]">
+                          <span className="text-sm text-zinc-500 font-bold uppercase">{event.date ? format(new Date(event.date), 'MMM', { locale: fr }) : '---'}</span>
+                          <span className="text-xl font-bold" style={{ color: 'var(--lt-text)' }}>{event.date ? format(new Date(event.date), 'dd') : '--'}</span>
                        </div>
                        <div className="flex-1 min-w-0">
-                         <h4 className="font-bold text-white truncate">{event.title}</h4>
-                         <div className="flex items-center gap-3 text-sm text-gray-400 mt-1">
+                         <h4 className="font-bold truncate" style={{ color: 'var(--lt-text)' }}>{event.title}</h4>
+                         <div className="flex items-center gap-3 text-sm text-zinc-500 mt-1">
                             {event.location && <span className="flex items-center gap-1"><MapPin className="h-3 w-3"/> {event.location}</span>}
                             {event.date && <span className="flex items-center gap-1"><Clock className="h-3 w-3"/> {format(new Date(event.date), 'HH:mm')}</span>}
                          </div>
                        </div>
-                       <Button 
-                         size="icon" 
-                         variant="ghost" 
-                         onClick={() => deleteEvent(event.id)} 
-                         className="h-8 w-8 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                       <Button
+                         size="icon"
+                         variant="ghost"
+                         onClick={() => deleteEvent(event.id)}
+                         className="h-8 w-8 text-zinc-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
                        >
                          <Trash className="h-4 w-4" />
                        </Button>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-gray-500">Aucun événement planifié.</div>
+                  <div className="text-center py-8 text-zinc-500">Aucun événement planifié.</div>
                 )}
               </div>
             </CardContent>
@@ -83,45 +83,45 @@ const OwnerSchoolLifeTab = () => {
       </div>
 
       <Dialog open={isEventModalOpen} onOpenChange={setIsEventModalOpen}>
-        <DialogContent className="bg-[#192734] border-white/10 text-white">
+        <DialogContent className="bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-[var(--lt-text)]">
           <DialogHeader>
             <DialogTitle>Nouvel Événement</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Titre</Label>
-              <Input 
-                value={newEvent.title} 
-                onChange={(e) => setNewEvent({...newEvent, title: e.target.value})} 
-                className="bg-[#0F1419] border-white/10"
+              <Input
+                value={newEvent.title}
+                onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
+                className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)] placeholder:text-zinc-400"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
                  <Label>Date & Heure</Label>
-                 <Input 
+                 <Input
                    type="datetime-local"
-                   value={newEvent.date} 
-                   onChange={(e) => setNewEvent({...newEvent, date: e.target.value})} 
-                   className="bg-[#0F1419] border-white/10 text-white"
+                   value={newEvent.date}
+                   onChange={(e) => setNewEvent({...newEvent, date: e.target.value})}
+                   className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)]"
                  />
                </div>
                <div className="space-y-2">
                  <Label>Lieu</Label>
-                 <Input 
-                   value={newEvent.location} 
-                   onChange={(e) => setNewEvent({...newEvent, location: e.target.value})} 
-                   className="bg-[#0F1419] border-white/10"
+                 <Input
+                   value={newEvent.location}
+                   onChange={(e) => setNewEvent({...newEvent, location: e.target.value})}
+                   className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)] placeholder:text-zinc-400"
                    placeholder="Zoom / Salle A"
                  />
                </div>
             </div>
             <div className="space-y-2">
               <Label>Description</Label>
-              <Input 
-                value={newEvent.description} 
-                onChange={(e) => setNewEvent({...newEvent, description: e.target.value})} 
-                className="bg-[#0F1419] border-white/10"
+              <Input
+                value={newEvent.description}
+                onChange={(e) => setNewEvent({...newEvent, description: e.target.value})}
+                className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)] placeholder:text-zinc-400"
               />
             </div>
           </div>

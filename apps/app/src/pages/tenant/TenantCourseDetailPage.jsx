@@ -9,6 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Play, CheckCircle, Lock, Loader2, BookOpen, ChevronDown, ChevronRight } from 'lucide-react';
 import { coursesApi } from '@/lib/api-v2';
 import TenantAdminShell from '@/components/admin/TenantAdminShell';
+import { SafeHtml } from '@/components/common/SafeHtml';
 
 // ── Design tokens navy + or ─────────────────────────────────────────────────────
 const T = {
@@ -85,10 +86,10 @@ function LessonPlayer({ lesson, onComplete, onClose }) {
               autoPlay
             />
           ) : lesson.content ? (
-            <div
+            <SafeHtml
               className="max-w-2xl rounded-xl p-8 prose prose-invert"
               style={{ background: T.surface2, color: T.t1, border: `1px solid ${T.border}` }}
-              dangerouslySetInnerHTML={{ __html: lesson.content }}
+              html={lesson.content}
             />
           ) : (
             <div className="flex flex-col items-center gap-3" style={{ color: T.t3 }}>

@@ -1,10 +1,13 @@
 import { AuthService } from "../auth/auth.service";
 import { PawaPayService } from "../pawapay/pawapay.service";
+import { WebhookService } from "../liri-public/webhook.service";
 export declare class BillingService {
     private auth;
     private pawapay;
-    constructor(auth: AuthService, pawapay: PawaPayService);
+    private tenantWebhooks;
+    constructor(auth: AuthService, pawapay: PawaPayService, tenantWebhooks: WebhookService);
     private get supabase();
+    private notifyTenant;
     getSubscription(tenantId: string): Promise<any>;
     createSubscription(tenantId: string, plan: string, provider: string): Promise<any>;
     getInvoices(tenantId: string): Promise<any[]>;
@@ -57,6 +60,7 @@ export declare class BillingService {
         status: any;
     }>;
     private supersedeOtherActiveSubscriptions;
+    private provisionPlanServices;
     private static ZERO_DECIMAL;
     createPayout(tenantId: string, createdBy: string | null, dto: {
         amountCents?: number;

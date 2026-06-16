@@ -138,6 +138,9 @@ export const checkoutApi = {
 export const offeringCheckoutApi = {
   createMobileMoney: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/offering-checkout/mobile-money', body).then(unwrap),
+  /** Paiement CARTE (Stripe Checkout) → renvoie { checkoutUrl } à ouvrir (redirect). */
+  createCard: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/offering-checkout/card', body).then(unwrap),
   getStatus: (depositId: string) =>
     apiV2.get<ApiEnvelope<any>>(`/offering-checkout/mobile-money/${depositId}/status`).then(unwrap),
   getProviders: (country?: string) =>
@@ -335,6 +338,12 @@ export const messagingApi = {
     apiV2.post<ApiEnvelope<any>>('/messaging/groups', body).then(unwrap),
   addGroupMember: (groupId: string, body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>(`/messaging/groups/${groupId}/members`, body).then(unwrap),
+  editMessage: (id: string, content: string) =>
+    apiV2.patch<ApiEnvelope<any>>(`/messaging/messages/${id}`, { content }).then(unwrap),
+  deleteMessage: (id: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/messaging/messages/${id}`).then(unwrap),
+  markRead: (conversationId: string) =>
+    apiV2.post<ApiEnvelope<any>>(`/messaging/conversations/${conversationId}/read`, {}).then(unwrap),
 };
 
 // ── Chat Engine ─────────────────────────────────────────────────────────────
@@ -657,4 +666,84 @@ export const catalogApi = {
     apiV2.post<ApiEnvelope<any>>('/catalog/tenant-services', body).then(unwrap),
   applyTemplate: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/catalog/apply-template', body).then(unwrap),
+};
+
+// ── Moyens de paiement (config par tenant) ──────────────────────────────────
+//
+// Back-office → Paramètres → Paiements. Chaque tenant configure SES clés pour
+// Stripe (carte) / PawaPay (mobile money) / Chariow (produits). Les secrets
+// partent EN CLAIR au backend (chiffrés AES-256-GCM côté serveur) et ne
+// reviennent JAMAIS en clair : la liste renvoie un masque { set, last4 } par
+// champ. Tenant résolu via le header X-Tenant-Slug (déjà injecté par l'intercepteur).
+
+/** Provider supporté — aligné sur le CHECK SQL + le DTO backend. */
+export type PaymentProvider =
+  | 'stripe'
+  | 'pawapay'
+  | 'chariow'
+  | 'paypal'
+  | 'cinetpay';
+
+/** Champ secret masqué tel que renvoyé par la liste/upsert. */
+export interface MaskedSecretField {
+  set: boolean;
+  last4: string;
+}
+
+/** Vue masquée d'un moyen de paiement configuré (aucun secret en clair). */
+export interface MaskedPaymentMethod {
+  provider: PaymentProvider;
+  enabled: boolean;
+  mode: string | null;
+  credentials: Record<string, MaskedSecretField>;
+  productMap: Record<string, string> | null;
+  lastTest: {
+    at: string | null;
+    ok: boolean | null;
+    message: string | null;
+  };
+  updatedAt: string | null;
+}
+
+/** Corps d'upsert — credentials EN CLAIR (chiffrés côté serveur). */
+export interface SavePaymentMethodBody {
+  provider: PaymentProvider;
+  mode?: string;
+  credentials: Record<string, string>;
+  productMap?: Record<string, string>;
+}
+
+export const paymentMethodsApi = {
+  /** Liste des moyens configurés du tenant (credentials masqués). */
+  list: () =>
+    apiV2
+      .get<ApiEnvelope<{ providers: MaskedPaymentMethod[] }>>('/billing/payment-methods')
+      .then(unwrap),
+  /** Upsert d'un moyen : chiffre les credentials → enabled=true → renvoie le masque. */
+  save: (body: SavePaymentMethodBody) =>
+    apiV2
+      .post<ApiEnvelope<MaskedPaymentMethod>>('/billing/payment-methods', body)
+      .then(unwrap),
+  /** Test de connexion RÉEL côté serveur ; met à jour last_test_* et renvoie {ok, message}. */
+  test: (provider: PaymentProvider) =>
+    apiV2
+      .post<ApiEnvelope<{ ok: boolean; message: string }>>(
+        `/billing/payment-methods/${provider}/test`,
+        {},
+      )
+      .then(unwrap),
+  /** Active / désactive un moyen. */
+  toggle: (provider: PaymentProvider, enabled: boolean) =>
+    apiV2
+      .patch<ApiEnvelope<MaskedPaymentMethod>>(`/billing/payment-methods/${provider}`, {
+        enabled,
+      })
+      .then(unwrap),
+  /** Supprime la config d'un moyen. */
+  remove: (provider: PaymentProvider) =>
+    apiV2
+      .delete<ApiEnvelope<{ ok: true; provider: PaymentProvider }>>(
+        `/billing/payment-methods/${provider}`,
+      )
+      .then(unwrap),
 };

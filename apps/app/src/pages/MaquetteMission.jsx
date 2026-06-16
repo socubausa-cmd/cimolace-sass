@@ -91,7 +91,7 @@ export default function MaquetteMission() {
             « L&apos;Afrique est le <span style={{ color: 'var(--gold)', fontStyle: 'italic' }}>laboratoire spirituel</span> de l&apos;humanité de demain. »
           </blockquote>
           <div className="mt-10">
-            <a href="/t/isna/programme" className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
+            <a href="/programme" className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
               Découvrir le programme <ArrowRight className="h-4 w-4" />
             </a>
           </div>

@@ -6,13 +6,17 @@
  */
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 export default function SmartboardWeb() {
   const router = useRouter();
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const params = useLocalSearchParams<{ title?: string }>();
   const title = typeof params.title === 'string' && params.title ? params.title : 'Tableau SmartBoard';
 
@@ -42,7 +46,7 @@ export default function SmartboardWeb() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28 },
   card: {

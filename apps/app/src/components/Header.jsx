@@ -16,6 +16,7 @@ import {
   Info,
   MessageCircle,
   Flame,
+  LayoutDashboard,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useCart } from '@/hooks/useCart';
@@ -24,7 +25,6 @@ import Logo from '@/components/Logo';
 import MobileMenu from '@/components/MobileMenu';
 import { Badge } from '@/components/ui/badge';
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
-import DashboardButton from '@/components/DashboardButton';
 import { resolveDashboardPath } from '@/lib/dashboardRoute';
 import { getEffectiveRole, hasMultiRoleAccess, setSelectedAccountRole } from '@/lib/accountRoleMode';
 import { useMessaging } from '@/contexts/MessagingContext';
@@ -92,6 +92,16 @@ const Header = () => {
   const isOwnerOrAdmin = role === 'owner' || role === 'admin';
   const isPremiumActive = status === 'active' || (status === 'past_due' && inGrace);
   const canUseImmersiveChat = isAuthenticated && (isStaffRole || isPremiumActive);
+
+  // « Tableau de bord » : un membre élève (visiteur premium déjà inscrit) doit atterrir sur son
+  // vrai espace, pas sur la page d'entretien vide (/prospect/entretien). Le resolver générique
+  // renvoie /prospect/entretien pour tout « visitor » ; on corrige ce cas ici (header uniquement).
+  const headerDashboardPath = useMemo(() => {
+    if (role === 'visitor' && isPremiumActive && user?.student_profile_completed) {
+      return '/student-school-life/dashboard';
+    }
+    return dashboardPath;
+  }, [role, isPremiumActive, user?.student_profile_completed, dashboardPath]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -263,18 +273,18 @@ const Header = () => {
     navigate(resolveDashboardPath({ ...user, role: nextRole }), { replace: true });
   };
 
+  // Nav globale dédoublonnée (~5 essentiels). « Formations » et « Forfaits » pointaient tous
+  // deux vers /forfaits → fusionnés en une seule entrée « Formations ». Le catalogue détaillé
+  // reste atteignable via la page Formations ; « Vie Étudiante » mène au vrai dashboard élève.
   const desktopLinks = useMemo(
     () => [
       { id: 'formations', label: 'Formations', icon: GraduationCap, to: '/forfaits' },
-      { id: 'catalog', label: 'Catalogue', icon: BookOpen, to: '/formations/catalogue' },
       { id: 'accompagnement', label: 'Accompagnement', icon: Users, to: '/accompagnement/coaching' },
       { id: 'vie-etudiante', label: 'Vie Étudiante', icon: School, to: '/student-school-life/dashboard' },
-      ...(isAuthenticated ? [{ id: 'communaute', label: 'Communauté', icon: MessageCircle, to: '/community' }] : []),
       { id: 'ressources', label: 'Ressources', icon: BookOpen, to: '/resources' },
-      { id: 'forfaits', label: 'Forfaits', icon: GraduationCap, to: '/forfaits' },
       { id: 'boutique', label: 'Boutique', icon: ShoppingBag, to: '/boutique' },
     ],
-    [isAuthenticated]
+    []
   );
 
   const quickLinks = desktopLinks.slice(0, 3);
@@ -436,8 +446,17 @@ const Header = () => {
                   </Button>
                 </>
               )}
-              {/* Dashboard Button (Visible when auth) */}
-              <DashboardButton />
+              {/* Tableau de bord (visible si connecté) — cible corrigée pour les membres élèves. */}
+              {isAuthenticated && (
+                <Link to={headerDashboardPath}>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button className="bg-gradient-to-r from-[var(--school-accent)] to-amber-600 hover:from-amber-500 hover:to-yellow-500 text-black font-bold shadow-lg shadow-amber-900/20 border-0 gap-2 transition-all duration-300">
+                      <LayoutDashboard className="w-4 h-4" />
+                      <span className="hidden sm:inline">Tableau de bord</span>
+                    </Button>
+                  </motion.div>
+                </Link>
+              )}
               <Button
                 asChild
                 variant="outline"
@@ -635,7 +654,7 @@ const Header = () => {
         onClose={() => setIsMobileMenuOpen(false)}
         menuSections={mobileSections}
         quickLinks={quickLinks}
-        dashboardPath={dashboardPath}
+        dashboardPath={headerDashboardPath}
         showDashboardButton={isAuthenticated}
         canUseImmersiveChat={canUseImmersiveChat}
         onOpenQuickChat={() => setIsQuickChatOpen(true)}

@@ -126,6 +126,17 @@ let LiveService = class LiveService {
         return { stopped: Boolean(rec), recordingId: rec?.id ?? null, recording_active: false };
     }
     async generateToken(sessionId, userId, role, tenantSlug) {
+        if (role !== "host") {
+            const { data: wr } = await this.supabase
+                .from("live_waiting_room_entries")
+                .select("status")
+                .eq("live_session_id", sessionId)
+                .eq("user_id", userId)
+                .maybeSingle();
+            if (wr?.status === "rejected") {
+                throw new common_1.ForbiddenException("Accès refusé par l'hôte de cette session.");
+            }
+        }
         let slug = tenantSlug ?? "";
         if (!slug) {
             const { data: session } = await this.supabase

@@ -8,25 +8,8 @@ import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useStudentNotesParityData } from '@/hooks/useStudentNotesParityData';
 import { supabase } from '@/lib/customSupabaseClient';
-
-/* ─── Thème ISNA (navy + or) ─── */
-const T = {
-  surface:   '#12111a',
-  surface2:  'rgba(25,39,52,0.5)',
-  border:    'rgba(255,255,255,0.07)',
-  borderMid: 'rgba(255,255,255,0.12)',
-  gold:      '#D4AF37',
-  goldDim:   'rgba(212,175,55,0.12)',
-  goldMid:   'rgba(212,175,55,0.28)',
-  success:   '#22C55E',
-  warning:   '#F59E0B',
-  danger:    '#EF4444',
-  t1: '#F5F5F7',
-  t2: 'rgba(245,245,247,0.65)',
-  t3: 'rgba(245,245,247,0.38)',
-  t4: 'rgba(245,245,247,0.16)',
-  mono: "'JetBrains Mono','Fira Code',monospace",
-};
+// Thème host-aware : `T` = tokens vivants (clair sous l'espace élève, sombre sous le portail prof).
+import { themeProxy as T, useSslThemeMode } from '@/pages/school/student-school-life/sslTheme';
 
 /* ─── Utilitaires ─── */
 const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -178,6 +161,7 @@ const GradeRow = ({ g, delay }) => {
 
 /* ═══════════════════════ PAGE ═══════════════════════ */
 const StudentNotesPage = () => {
+  useSslThemeMode(); // publie le mode (clair/sombre) pour `T` AVANT le rendu des sous-composants
   const { isDemoMode, demoData } = useDemoMode();
   const { user } = useAuth();
   // Classement (et secours notes) via le hook partagé — non modifié.

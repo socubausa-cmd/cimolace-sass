@@ -142,6 +142,38 @@ export const tenantApiKeysApi = {
     api.delete<ApiEnvelope<any>>(`/tenants/api-keys/${keyId}`).then(unwrap).then(peel),
 };
 
+// ── Booking (RDV, secrétariat, pont RDV→live) ───────────────────────────────
+const bookingUnwrap = (r: any) => (r?.data && typeof r.data === "object" && "data" in r.data ? r.data.data : r?.data);
+export const bookingApi = {
+  availableSecretaries: (params?: { timezone?: string; country?: string; when?: string }) =>
+    api.get<any>("/booking/available-secretaries", { params }).then(bookingUnwrap),
+  slotAvailability: (params: { timezone?: string; country?: string; windowStart: string; windowEnd: string }) =>
+    api.get<any>("/booking/slots/availability", { params }).then(bookingUnwrap),
+  startLiveFromAppointment: (appointmentId: string) =>
+    api.post<any>(`/booking/appointments/${appointmentId}/start-live`).then(bookingUnwrap),
+  scheduleLiveWithStudent: (studentId: string, body?: { title?: string; scheduledAt?: string }) =>
+    api.post<any>(`/booking/students/${studentId}/schedule-live`, body ?? {}).then(bookingUnwrap),
+  getPreparation: (appointmentId: string) =>
+    api.get<any>(`/booking/appointments/${appointmentId}/preparation`).then(bookingUnwrap),
+  setPreparation: (appointmentId: string, body: Record<string, unknown>) =>
+    api.post<any>(`/booking/appointments/${appointmentId}/preparation`, body).then(bookingUnwrap),
+  cancelAppointment: (appointmentId: string) =>
+    api.post<any>(`/booking/appointments/${appointmentId}/cancel`).then(bookingUnwrap),
+  requestReschedule: (body: { appointment_id: string; reason?: string; proposed_slots?: Array<{ start: string; end: string }> }) =>
+    api.post<any>("/booking/reschedule/request", body).then(bookingUnwrap),
+};
+
+// ── Chat / messagerie (moteur UNIQUE : live, groupes, DM) ───────────────────
+export const chatApi = {
+  openDirect: (userId: string) => api.post<any>(`/chat-engine/direct/${userId}`).then(bookingUnwrap),
+  // Chat du live (room logique 'live:<sessionId>') — même moteur que DM/groupes.
+  openLive: (liveSessionId: string) => api.post<any>(`/chat-engine/live/${liveSessionId}`).then(bookingUnwrap),
+  rooms: () => api.get<any>("/chat-engine/rooms").then(bookingUnwrap),
+  messages: (roomId: string) => api.get<any>(`/chat-engine/rooms/${encodeURIComponent(roomId)}/messages`).then(bookingUnwrap),
+  send: (roomId: string, content: string) =>
+    api.post<any>(`/chat-engine/rooms/${encodeURIComponent(roomId)}/messages`, { content }).then(bookingUnwrap),
+};
+
 // ── Back-office tenant : marketplace + support ──────────────────────────────
 export const tenantPortalApi = {
   marketplace: () => api.get<ApiEnvelope<any>>("/tenant-portal/marketplace").then(unwrap).then(peel),

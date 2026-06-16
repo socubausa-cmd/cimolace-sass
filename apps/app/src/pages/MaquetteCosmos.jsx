@@ -74,14 +74,14 @@ export default function MaquetteCosmos() {
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <a
-              href="/t/isna/ecole"
+              href="/ecole"
               className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold transition hover:brightness-110"
               style={{ background: 'var(--gold)', color: '#0d0b09' }}
             >
               Entrer à l&apos;École <ArrowRight className="h-4 w-4" />
             </a>
             <a
-              href="/t/isna/fondateur"
+              href="/fondateur"
               className="rounded-full border px-7 py-3.5 text-sm font-semibold transition hover:bg-[rgba(216,180,104,0.12)]"
               style={{ borderColor: 'rgba(255,255,255,0.15)', color: 'var(--muted)' }}
             >
@@ -200,14 +200,14 @@ export default function MaquetteCosmos() {
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <a
-              href="/t/isna/ecole"
+              href="/ecole"
               className="inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-sm font-semibold transition hover:brightness-110"
               style={{ background: 'var(--gold)', color: '#0d0b09' }}
             >
               L&apos;École ISNA <ArrowRight className="h-4 w-4" />
             </a>
             <a
-              href="/t/isna/temple"
+              href="/temple"
               className="rounded-full border px-8 py-3.5 text-sm font-semibold transition hover:bg-[rgba(216,180,104,0.12)]"
               style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}
             >

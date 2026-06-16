@@ -23,6 +23,7 @@ import {
   ProrasciencePublicPageShell,
   ProrasciencePublicCard,
 } from '@/components/prorascience/ProrasciencePublicPageShell';
+import { useTenantBranding } from '@/hooks/useTenantBranding';
 import LiveHostMessagingPanel from '@/components/liri/live-room/LiveHostMessagingPanel';
 import LiveHostFooterMessaging from '@/components/liri/live-room/LiveHostFooterMessaging';
 import AmbientAudioLayer from '@/components/liri/live-room/AmbientAudioLayer';
@@ -344,6 +345,28 @@ export default function LiveWaitingRoomPage() {
   const { user, session: authSession } = useAuth();
   const { toast } = useToast();
 
+  // Branding tenant (accent couleur) appliqué à la salle d'attente — sinon l'accent ISNA
+  // par défaut s'affiche pour un invité d'un autre tenant (ex. zahirwellness). Scopé au
+  // montage de cette page (les variables sont restaurées au démontage).
+  const { cssVars } = useTenantBranding();
+  useEffect(() => {
+    if (!cssVars || typeof document === 'undefined') return undefined;
+    const root = document.documentElement;
+    const prev = {};
+    Object.entries(cssVars).forEach(([k, v]) => {
+      if (typeof k === 'string' && k.startsWith('--')) {
+        prev[k] = root.style.getPropertyValue(k);
+        root.style.setProperty(k, String(v));
+      }
+    });
+    return () => {
+      Object.entries(prev).forEach(([k, v]) => {
+        if (v) root.style.setProperty(k, v);
+        else root.style.removeProperty(k);
+      });
+    };
+  }, [cssVars]);
+
   const [loading,     setLoading]    = useState(true);
   const [error,       setError]      = useState(null);
   const [liveSession, setSession]    = useState(null);
@@ -398,7 +421,7 @@ export default function LiveWaitingRoomPage() {
         const { data: sess, error: sErr } = await supabase
           .from('live_sessions')
           .select(
-            'id, title, description, teacher_id, status, scheduled_at, started_at, access_mode, waiting_room_enabled, waiting_room_audio_enabled, cover_image_url, formation_id, duration_minutes, ambient_tracks_json, config, profiles:teacher_id(name, avatar_url)',
+            'id, title, description, teacher_id, status, scheduled_at, started_at, access_mode, cover_image_url, formation_id, duration_minutes, ambient_tracks_json, config, profiles:teacher_id(name, avatar_url)',
           )
           .eq('id', sessionId)
           .maybeSingle();
@@ -509,8 +532,8 @@ export default function LiveWaitingRoomPage() {
         (payload) => {
           if (payload.new?.user_id === user.id) {
             setEntry(payload.new);
-            // Rediriger si accepté
-            if (payload.new.status === 'accepted') {
+            // Rediriger si admis (CHECK status : waiting/admitted/rejected/left)
+            if (payload.new.status === 'admitted') {
               setTimeout(() => navigate(`/live/${sessionId}`), 800);
             }
           }
@@ -560,7 +583,7 @@ export default function LiveWaitingRoomPage() {
     try {
       const { data: existing } = await supabase
         .from('live_waiting_room_entries')
-        .select('id, status, invitation_type, joined_waiting_at')
+        .select('id, status')
         .eq('live_session_id', sessionId)
         .eq('user_id', user.id)
         .maybeSingle();
@@ -570,10 +593,7 @@ export default function LiveWaitingRoomPage() {
       if (existing?.status === 'lobby') {
         const { data: up, error: upErr } = await supabase
           .from('live_waiting_room_entries')
-          .update({
-            status: 'waiting',
-            joined_waiting_at: new Date().toISOString(),
-          })
+          .update({ status: 'waiting' })
           .eq('id', existing.id)
           .select()
           .single();
@@ -588,8 +608,6 @@ export default function LiveWaitingRoomPage() {
             live_session_id: sessionId,
             user_id: user.id,
             status: 'waiting',
-            invitation_type: invitation?.invitation_type || 'individual',
-            joined_waiting_at: new Date().toISOString(),
           })
           .select()
           .single();
@@ -641,7 +659,25 @@ export default function LiveWaitingRoomPage() {
   }, [entry]);
 
   // ── Déterminer le mode d'affichage ─────────────────────────────────────────
-  const accessMode = liveSession?.access_mode || 'free';
+  // Normalise le vocabulaire d'accès. La DB n'émet que public / invite_only /
+  // password / subscription (CHECK live_sessions_access_mode_check) ; les CTA
+  // plus bas raisonnent sur le vocabulaire legacy free / manual / password.
+  // Sans ce mapping, un live « Validation hôte » (= invite_only, produit par le
+  // wizard) ou public n'affiche AUCUN bouton d'entrée.
+  const accessMode = useMemo(() => {
+    const raw = String(liveSession?.access_mode || 'free').toLowerCase();
+    const cfg = parseSessionConfig(liveSession?.config);
+    // Salle d'attente / validation hôte pilotée par la config du wizard.
+    const wantsApproval = cfg.manual_approval === true || cfg.waiting_room === true;
+    switch (raw) {
+      case 'password': return 'password';
+      case 'manual': case 'double': case 'free': return raw; // déjà legacy
+      case 'invite_only': return 'manual';                   // « Validation hôte »
+      case 'subscription': return 'manual';                  // live payant → validation/paywall
+      case 'public': return wantsApproval ? 'manual' : 'free'; // public modéré vs accès libre
+      default: return wantsApproval ? 'manual' : 'free';
+    }
+  }, [liveSession?.access_mode, liveSession?.config]);
   const isHost     = user?.id === liveSession?.teacher_id;
   const sessionLive = liveSession?.status === 'live';
 
@@ -695,35 +731,10 @@ export default function LiveWaitingRoomPage() {
   const showLiveDetails = rules?.show_live_details !== false;
   const showLivePlan = rules?.show_live_plan === true;
 
-  useEffect(() => {
-    if (!sessionId || !user?.id || !liveSession || isHost) return;
-    let cancelled = false;
-    (async () => {
-      const { data: row } = await supabase
-        .from('live_waiting_room_entries')
-        .select('id, status')
-        .eq('live_session_id', sessionId)
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (cancelled || row) return;
-      const { data: ins, error } = await supabase
-        .from('live_waiting_room_entries')
-        .insert({
-          live_session_id: sessionId,
-          user_id: user.id,
-          status: 'lobby',
-          invitation_type: invitation?.invitation_type || 'individual',
-          joined_waiting_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-      if (cancelled || error) return;
-      if (ins) setEntry(ins);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [sessionId, user?.id, liveSession, isHost, invitation?.invitation_type]);
+  // Auto-insert « lobby » retiré : 'lobby' n'appartient pas au CHECK status
+  // (waiting/admitted/rejected/left) et provoquait une violation à chaque
+  // arrivée d'un invité. L'entrée existante est déjà chargée par load() ;
+  // l'invité n'insère qu'au clic « Demander l'accès » (status='waiting').
 
   useEffect(() => {
     if (!sessionId || !user?.id || !liveSession) return;
@@ -961,14 +972,14 @@ export default function LiveWaitingRoomPage() {
             )}
 
             {/* File d'attente d'admission (pas le statut lobby = présence page uniquement) */}
-            {!isHost && entry && entry.status !== 'accepted' && entry.status !== 'lobby' && (
+            {!isHost && entry && entry.status !== 'admitted' && entry.status !== 'lobby' && (
               <motion.div key="entry" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <WaitingStatus entry={entry} onCancel={cancelRequest} />
               </motion.div>
             )}
 
-            {/* Accepté → redirection imminente */}
-            {!isHost && entry?.status === 'accepted' && (
+            {/* Admis → redirection imminente */}
+            {!isHost && entry?.status === 'admitted' && (
               <motion.div
                 key="accepted"
                 initial={{ opacity: 0, scale: 0.95 }}

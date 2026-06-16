@@ -2,8 +2,8 @@ import React from 'react';
 
 const PlaceholderTab = ({ name }) => (
   <div className="p-8 text-center">
-    <p className="text-gray-400 text-lg">{name}</p>
-    <p className="text-gray-600 text-sm mt-2">Section en cours de configuration.</p>
+    <p className="text-lg" style={{ color: '#18181B' }}>{name}</p>
+    <p className="text-sm mt-2" style={{ color: '#71717A' }}>Section en cours de configuration.</p>
   </div>
 );
 

@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 import {
   castVote,
@@ -51,6 +52,8 @@ const EMPTY_SNAPSHOT: ArenaSnapshot = {
  * sur le web), et on remplace la vidéo par un encart « app installée requise ».
  */
 export default function ArenaScreenWeb() {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const router = useRouter();
   const params = useLocalSearchParams<{ sessionId?: string }>();
   const sessionId = typeof params.sessionId === 'string' ? params.sessionId : '';
@@ -239,7 +242,7 @@ export default function ArenaScreenWeb() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   scroll: { paddingBottom: 32 },
 

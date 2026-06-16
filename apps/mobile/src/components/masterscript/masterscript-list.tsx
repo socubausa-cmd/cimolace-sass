@@ -1,10 +1,11 @@
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
-import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 import { fetchProjects, type MasterclassProjectSummary } from './data';
 import { StatusBadge } from './status-badge';
@@ -21,6 +22,8 @@ function shortDate(iso?: string): string {
 /** Écran liste des masterclass (GET /masterclass-factory/projects). */
 export function MasterscriptList() {
   const router = useRouter();
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const [projects, setProjects] = useState<MasterclassProjectSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -124,6 +127,8 @@ export function MasterscriptList() {
 
 /** État vide honnête : aucun projet (ou session non connectée → RLS = vide). */
 function EmptyState() {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   return (
     <View style={styles.empty}>
       <LinearGradient
@@ -143,7 +148,7 @@ function EmptyState() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: 6, paddingBottom: 14 },
   backBtn: {

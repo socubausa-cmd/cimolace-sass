@@ -14,8 +14,8 @@ const OwnerAccompanimentTab = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Accompagnement & Mentoring</h2>
-      
+      <h2 className="text-2xl font-bold" style={{ color: 'var(--lt-text)' }}>Accompagnement & Mentoring</h2>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <PremiumSegmentedSelector
           value={activeTab}
@@ -29,31 +29,33 @@ const OwnerAccompanimentTab = () => {
           className="mb-2"
           compact
           showChevron={false}
+          railClassName="!bg-[var(--lt-inner-bg)] !border-[var(--lt-border)]"
+          optionClassName="!text-zinc-500 [&.text-white]:!text-[var(--lt-text)] hover:!bg-black/[0.03]"
         />
 
         <TabsContent value="coaches" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {coaches.map(coach => (
-              <Card key={coach.id} className="bg-[#192734] border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] transition-all">
+              <Card key={coach.id} className="border-0 transition-all" style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)' }}>
                 <CardContent className="p-6 space-y-4">
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center text-[var(--school-accent)] font-bold">
+                    <div className="h-12 w-12 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center font-bold" style={{ color: 'var(--lt-gold-ink)' }}>
                       {coach.name.charAt(0)}
                     </div>
                     <div>
-                      <h3 className="font-bold text-white">{coach.name}</h3>
-                      <p className="text-sm text-gray-400">{coach.specialty}</p>
+                      <h3 className="font-bold" style={{ color: 'var(--lt-text)' }}>{coach.name}</h3>
+                      <p className="text-sm text-zinc-500">{coach.specialty}</p>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-300 line-clamp-2">{coach.bio}</p>
+                  <p className="text-sm text-zinc-600 line-clamp-2">{coach.bio}</p>
                   <div className="flex flex-wrap gap-2">
                     {coach.availability.slice(0, 2).map((a, i) => (
                       <Badge key={i} variant="secondary" className="text-xs">{a}</Badge>
                     ))}
                   </div>
-                  <div className="pt-4 border-t border-white/10 flex justify-between items-center text-sm">
-                    <span className="text-gray-500">{coach.assignedStudents.length} Étudiants</span>
-                    <Button variant="link" className="text-[var(--school-accent)] p-0 h-auto">Détails</Button>
+                  <div className="pt-4 border-t border-[var(--lt-border)] flex justify-between items-center text-sm">
+                    <span className="text-zinc-500">{coach.assignedStudents.length} Étudiants</span>
+                    <Button variant="link" className="p-0 h-auto" style={{ color: 'var(--lt-gold-ink)' }}>Détails</Button>
                   </div>
                 </CardContent>
               </Card>
@@ -62,27 +64,27 @@ const OwnerAccompanimentTab = () => {
         </TabsContent>
 
         <TabsContent value="services" className="mt-6">
-          <Card className="bg-[#192734] border-white/10">
+          <Card className="border-0" style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)' }}>
             <Table>
-              <TableHeader>
-                <TableRow className="border-white/10 hover:bg-transparent">
-                  <TableHead className="text-gray-400">Service</TableHead>
-                  <TableHead className="text-gray-400">Type</TableHead>
-                  <TableHead className="text-gray-400">Description</TableHead>
-                  <TableHead className="text-gray-400 text-right">Prix</TableHead>
+              <TableHeader className="bg-[var(--lt-inner-bg)]">
+                <TableRow className="border-[var(--lt-border)] hover:bg-transparent">
+                  <TableHead className="text-zinc-500">Service</TableHead>
+                  <TableHead className="text-zinc-500">Type</TableHead>
+                  <TableHead className="text-zinc-500">Description</TableHead>
+                  <TableHead className="text-zinc-500 text-right">Prix</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {coachingServices.map(service => (
-                  <TableRow key={service.id} className="border-white/5 hover:bg-white/5">
-                    <TableCell className="font-medium text-white">{service.name}</TableCell>
+                  <TableRow key={service.id} className="border-[var(--lt-border)] hover:opacity-80">
+                    <TableCell className="font-medium" style={{ color: 'var(--lt-text)' }}>{service.name}</TableCell>
                     <TableCell>
-                      {service.type === 'video_call' && <Video className="h-4 w-4 text-blue-400" />}
-                      {service.type === 'conference' && <Users className="h-4 w-4 text-purple-400" />}
-                      {service.type === 'message' && <MessageSquare className="h-4 w-4 text-green-400" />}
+                      {service.type === 'video_call' && <Video className="h-4 w-4 text-blue-500" />}
+                      {service.type === 'conference' && <Users className="h-4 w-4 text-violet-500" />}
+                      {service.type === 'message' && <MessageSquare className="h-4 w-4 text-emerald-500" />}
                     </TableCell>
-                    <TableCell className="text-gray-400">{service.description}</TableCell>
-                    <TableCell className="text-right text-[var(--school-accent)] font-bold">{service.price}€</TableCell>
+                    <TableCell className="text-zinc-500">{service.description}</TableCell>
+                    <TableCell className="text-right font-bold" style={{ color: 'var(--lt-gold-ink)' }}>{service.price}€</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -91,7 +93,7 @@ const OwnerAccompanimentTab = () => {
         </TabsContent>
 
         <TabsContent value="sessions" className="mt-6">
-           <div className="text-center py-10 text-gray-500 bg-[#192734] rounded-lg border border-white/10">
+           <div className="text-center py-10 text-zinc-500 rounded-[14px]" style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)' }}>
               Aucune session active pour le moment.
            </div>
         </TabsContent>

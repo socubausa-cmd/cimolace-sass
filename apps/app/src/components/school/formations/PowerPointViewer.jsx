@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Maximize } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { SafeHtml } from '@/components/common/SafeHtml';
 
 const PowerPointViewer = ({ powerpoint, onComplete }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -271,7 +272,7 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
                       <span>{currentSlide + 1}</span>
                     </div>
                     <h2 className="text-3xl font-bold mb-6 text-gray-900">{slide.title}</h2>
-                    <div className="prose max-w-none text-lg text-gray-700" dangerouslySetInnerHTML={{ __html: slide.content }} />
+                    <SafeHtml className="prose max-w-none text-lg text-gray-700" html={slide.content} />
                     {slide.image ? (
                       <img src={slide.image} alt="Slide visual" className="mt-6 max-h-64 object-contain mx-auto" />
                     ) : null}

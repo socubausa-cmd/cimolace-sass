@@ -252,7 +252,9 @@ export function Appointments() {
       // (host) et patient (peer) sont dans la même room.
       const studio = (import.meta.env.VITE_STUDIO_URL as string) || 'https://app.cimolace.space';
       const slug = localStorage.getItem('tenant_slug') || '';
-      const next = `/studio/live-arena/${sessionId}?tenant=${encodeURIComponent(slug)}`;
+      // Coque neutre LIRI (LiriPortalShell, auth-only) plutôt que le shell studio
+      // école : la téléconsult MEDOS est un live LIRI standalone, séparé de l'Academy.
+      const next = `/live/host/${sessionId}?tenant=${encodeURIComponent(slug)}`;
       let url = `${studio}${next}`;
 
       // SSO handoff : le studio est une autre origine. On crée un code à usage

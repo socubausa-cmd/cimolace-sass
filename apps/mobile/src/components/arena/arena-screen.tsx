@@ -19,7 +19,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 import { LIVEKIT_URL } from '@/lib/liri-api';
 
 import {
@@ -120,6 +121,8 @@ export default function ArenaScreen() {
 
 /** Vidéo distante (premier flux caméra publié dans la room). */
 function RemoteStage() {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const tracks = useTracks([Track.Source.Camera]);
   const remote = tracks.find((t) => !t.participant.isLocal) ?? tracks[0];
   const ref = remote && isTrackReference(remote) ? remote : undefined;
@@ -137,6 +140,8 @@ function RemoteStage() {
 
 /** Placeholder vidéo quand aucun token (LiveKit non disponible). */
 function StagePlaceholder() {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   return (
     <View style={[styles.stage, styles.stageOff]}>
       <Feather name="video-off" size={24} color={C.faint} />
@@ -154,6 +159,8 @@ function ArenaContent({
   hasVideo: boolean;
   onBack: () => void;
 }) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const [snapshot, setSnapshot] = useState<ArenaSnapshot>(EMPTY_SNAPSHOT);
   const [questions, setQuestions] = useState<NeuronqQuestionRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -339,7 +346,7 @@ function ArenaContent({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   scroll: { paddingBottom: 32 },
 

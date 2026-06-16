@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
 import {
   MOBILE_MONEY_PROVIDERS,
   createMobileMoneyDeposit,
@@ -22,6 +22,7 @@ import {
   type MobileMoneyProvider,
   type OfferingKind,
 } from '@/lib/liri-api';
+import { useTheme } from '@/lib/theme';
 
 /**
  * Feuille de paiement Mobile Money (PawaPay) NATIVE — parité avec le checkout web.
@@ -49,6 +50,8 @@ export default function PaymentSheet({
   item: PaymentItem | null;
   onClose: () => void;
 }) {
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
   const [provider, setProvider] = useState<MobileMoneyProvider>(MOBILE_MONEY_PROVIDERS[0]);
   const [phone, setPhone] = useState('');
   const [phase, setPhase] = useState<Phase>('form');
@@ -237,7 +240,7 @@ export default function PaymentSheet({
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
   backdropTap: { ...StyleSheet.absoluteFillObject },
   sheet: { backgroundColor: C.base, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 18, paddingTop: 8, maxHeight: '90%' },

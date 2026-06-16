@@ -7,32 +7,8 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useForumFavorites, useForumVotes } from '@/hooks/useForumNotifications';
-
-/* ─── Design Tokens ─── */
-const T = {
-  bg:         '#0b0b0f',
-  surface:    '#12111a',
-  surface2:   'rgba(25,39,52,0.5)',
-  surface3:   '#1e2840',
-  border:     'rgba(255,255,255,0.07)',
-  borderMid:  'rgba(255,255,255,0.12)',
-  gold:       '#D4AF37',
-  goldDim:    'rgba(212,175,55,0.12)',
-  goldMid:    'rgba(212,175,55,0.28)',
-  violet:     '#7C3AED',
-  violetDim:  'rgba(124,58,237,0.12)',
-  violetMid:  'rgba(124,58,237,0.28)',
-  cyan:       '#00E5FF',
-  cyanDim:    'rgba(0,229,255,0.08)',
-  success:    '#22C55E',
-  danger:     '#EF4444',
-  warning:    '#F59E0B',
-  t1:  '#F5F5F7',
-  t2:  'rgba(245,245,247,0.65)',
-  t3:  'rgba(245,245,247,0.38)',
-  t4:  'rgba(245,245,247,0.16)',
-  mono: "'JetBrains Mono','Fira Code',monospace",
-};
+// Thème host-aware : `T` = tokens vivants (clair sous l'espace élève, sombre sous le portail prof).
+import { themeProxy as T, useSslThemeMode, useSslTheme } from '@/pages/school/student-school-life/sslTheme';
 
 /* ─── Helpers ─── */
 const fmtSecs = (s) => {
@@ -457,7 +433,7 @@ const ForumSidebar = ({ formations, onNewQuestion, onSearch, searchVal }) => {
 
       {/* Nouvelle question CTA */}
       <div style={{
-        background: `linear-gradient(135deg, rgba(30,40,64,0.55), ${T.goldDim})`,
+        background: `linear-gradient(135deg, ${T.surface}, ${T.goldDim})`,
         border: `1px solid ${T.border}`,
         borderRadius: 14, padding: 16,
       }}>
@@ -647,16 +623,26 @@ const FeedTabs = ({ value, onChange, counts }) => (
   </div>
 );
 
-/* ─── Fond immersif — 3 ambiances testables ─── */
+/* ─── Fond immersif — 3 ambiances testables (host-aware clair/sombre) ─── */
 function ForumBg({ variant }) {
-  const base = 'linear-gradient(180deg, #0a0b12 0%, #08090f 58%, #060709 100%)';
-  const vignette = 'radial-gradient(135% 100% at 50% 22%, transparent 50%, rgba(0,0,0,0.55) 100%)';
+  const { isLight } = useSslTheme();
+  // Bases & halos adaptés au mode : clair = canvas Wix Studio + halos or/navy très doux ;
+  // sombre = backdrop nuit d'origine.
+  const base = isLight
+    ? 'linear-gradient(180deg, #F7F8FA 0%, #F4F5F7 58%, #EFF0F3 100%)'
+    : 'linear-gradient(180deg, #0a0b12 0%, #08090f 58%, #060709 100%)';
+  const vignette = isLight
+    ? 'radial-gradient(135% 100% at 50% 22%, transparent 60%, rgba(0,0,0,0.05) 100%)'
+    : 'radial-gradient(135% 100% at 50% 22%, transparent 50%, rgba(0,0,0,0.55) 100%)';
+  const goldBlob   = isLight ? 'rgba(212,175,55,0.14)' : 'rgba(212,175,55,0.20)';
+  const navyBlob   = isLight ? 'rgba(124,58,237,0.10)' : 'rgba(46,66,112,0.62)';
+  const goldBlob2  = isLight ? 'rgba(212,175,55,0.07)' : 'rgba(212,175,55,0.09)';
   if (variant === 'aurore') {
     return (
       <div aria-hidden style={{ position: 'absolute', inset: 0, background: base }}>
-        <div style={{ position:'absolute', width:'70vw', height:'70vw', top:'-24%', right:'-14%', borderRadius:'50%', background:'radial-gradient(circle, rgba(212,175,55,0.20), transparent 60%)', filter:'blur(34px)', animation:'forumAurora1 26s ease-in-out infinite' }}/>
-        <div style={{ position:'absolute', width:'64vw', height:'64vw', bottom:'-28%', left:'-18%', borderRadius:'50%', background:'radial-gradient(circle, rgba(46,66,112,0.62), transparent 60%)', filter:'blur(34px)', animation:'forumAurora2 33s ease-in-out infinite' }}/>
-        <div style={{ position:'absolute', width:'48vw', height:'48vw', top:'34%', left:'44%', borderRadius:'50%', background:'radial-gradient(circle, rgba(212,175,55,0.09), transparent 60%)', filter:'blur(42px)', animation:'forumAurora3 23s ease-in-out infinite' }}/>
+        <div style={{ position:'absolute', width:'70vw', height:'70vw', top:'-24%', right:'-14%', borderRadius:'50%', background:`radial-gradient(circle, ${goldBlob}, transparent 60%)`, filter:'blur(34px)', animation:'forumAurora1 26s ease-in-out infinite' }}/>
+        <div style={{ position:'absolute', width:'64vw', height:'64vw', bottom:'-28%', left:'-18%', borderRadius:'50%', background:`radial-gradient(circle, ${navyBlob}, transparent 60%)`, filter:'blur(34px)', animation:'forumAurora2 33s ease-in-out infinite' }}/>
+        <div style={{ position:'absolute', width:'48vw', height:'48vw', top:'34%', left:'44%', borderRadius:'50%', background:`radial-gradient(circle, ${goldBlob2}, transparent 60%)`, filter:'blur(42px)', animation:'forumAurora3 23s ease-in-out infinite' }}/>
         <div style={{ position:'absolute', inset:0, background: vignette }}/>
       </div>
     );
@@ -665,15 +651,15 @@ function ForumBg({ variant }) {
     const pattern = `url("data:image/svg+xml,${encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><g fill='none' stroke='#D4AF37' stroke-width='1'><path d='M30 2 L37 23 L58 30 L37 37 L30 58 L23 37 L2 30 L23 23 Z'/><circle cx='30' cy='30' r='8'/></g></svg>")}")`;
     return (
       <div aria-hidden style={{ position: 'absolute', inset: 0, background: base }}>
-        <div style={{ position:'absolute', inset:0, opacity:0.07, backgroundImage: pattern, backgroundSize:'54px 54px' }}/>
-        <div style={{ position:'absolute', inset:0, background:'radial-gradient(820px 620px at 50% 26%, rgba(212,175,55,0.12), transparent 60%)' }}/>
+        <div style={{ position:'absolute', inset:0, opacity: isLight ? 0.05 : 0.07, backgroundImage: pattern, backgroundSize:'54px 54px' }}/>
+        <div style={{ position:'absolute', inset:0, background:`radial-gradient(820px 620px at 50% 26%, ${goldBlob}, transparent 60%)` }}/>
         <div style={{ position:'absolute', inset:0, background: vignette }}/>
       </div>
     );
   }
   // halos (défaut)
   return (
-    <div aria-hidden style={{ position: 'absolute', inset: 0, background: `radial-gradient(1000px 720px at 88% -10%, rgba(212,175,55,0.15), transparent 55%), radial-gradient(940px 820px at 4% 114%, rgba(40,56,94,0.68), transparent 55%), ${base}` }}>
+    <div aria-hidden style={{ position: 'absolute', inset: 0, background: `radial-gradient(1000px 720px at 88% -10%, ${goldBlob}, transparent 55%), radial-gradient(940px 820px at 4% 114%, ${navyBlob}, transparent 55%), ${base}` }}>
       <div style={{ position:'absolute', inset:0, background: vignette }}/>
     </div>
   );
@@ -681,6 +667,7 @@ function ForumBg({ variant }) {
 
 /* ══════════════════════════ MAIN EXPORT ═══════════════════════════════════ */
 export default function StudentForumRedesign({ forumBasePath = '/student-school-life/forum' }) {
+  useSslThemeMode(); // publie le mode (clair/sombre) pour `T` AVANT le rendu des sous-composants
   const navigate = useNavigate();
 
   // Data

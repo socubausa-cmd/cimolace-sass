@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -14,8 +14,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
 import { generateMasterclass, type MasterclassResult } from '@/lib/liri-api';
+import { useTheme } from '@/lib/theme';
 
 const PHASES = [
   'Analyse du texte',
@@ -30,6 +31,8 @@ const PHASES = [
 
 export default function CreerMasterclassScreen() {
   const router = useRouter();
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const [title, setTitle] = useState('');
   const [source, setSource] = useState('');
   const [busy, setBusy] = useState(false);
@@ -160,7 +163,7 @@ export default function CreerMasterclassScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1 },
   flex1: { flex: 1 },

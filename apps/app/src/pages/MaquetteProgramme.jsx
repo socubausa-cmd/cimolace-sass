@@ -111,10 +111,10 @@ export default function MaquetteProgramme() {
             Déjà membre ? Connectez-vous.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <a href="/t/isna/signup" className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
+            <a href="/signup" className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
               Créer un compte <ArrowRight className="h-4 w-4" />
             </a>
-            <a href="/t/isna/login" className="rounded-full border px-7 py-3 text-sm font-semibold transition hover:bg-[var(--gold)] hover:text-[#0d0b09]" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
+            <a href="/login" className="rounded-full border px-7 py-3 text-sm font-semibold transition hover:bg-[var(--gold)] hover:text-[#0d0b09]" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
               Connexion
             </a>
           </div>

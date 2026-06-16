@@ -107,33 +107,33 @@ export default function LongiaAdminDocumentPanel({ editor, documentTitle }) {
   if (!editor) return null;
 
   return (
-    <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-gradient-to-b from-[#1a1410]/90 to-[#0d1525]/95 p-3 shadow-[0_0_24px_-8px_rgba(212,175,55,0.15)]">
+    <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_6%,var(--lt-card-bg))] p-3 shadow-[var(--lt-card-shadow)]">
       <div className="mb-3 flex items-center gap-2">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/25 to-violet-600/20">
-          <Sparkles className="h-4 w-4 text-[#f5dd8a]" />
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-200 to-violet-200">
+          <Sparkles className="h-4 w-4 text-[var(--lt-gold-ink)]" />
         </span>
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#f5dd8a]">LONGIA</p>
-          <p className="text-[9px] leading-snug text-white/50">Rédaction administrative — structure, composer, propositions</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--lt-gold-ink)]">LONGIA</p>
+          <p className="text-[9px] leading-snug text-[var(--lt-muted)]">Rédaction administrative — structure, composer, propositions</p>
         </div>
       </div>
 
-      <label className="mb-1 block text-[9px] font-semibold uppercase tracking-wider text-white/40">Thème ou consigne (optionnel)</label>
+      <label className="mb-1 block text-[9px] font-semibold uppercase tracking-wider text-[var(--lt-muted)]">Thème ou consigne (optionnel)</label>
       <input
         type="text"
         value={topicHint}
         onChange={(e) => setTopicHint(e.target.value)}
         placeholder="Ex. : convocation CA, demande de bourse, courrier aux familles…"
-        className="mb-3 w-full rounded-lg border border-white/10 bg-[#0a0c14] px-2.5 py-1.5 text-[11px] text-white/90 placeholder:text-white/25"
+        className="mb-3 w-full rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-2.5 py-1.5 text-[11px] text-[var(--lt-text)] placeholder:text-[#A1A1AA]"
       />
 
-      <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-white/35">Structure du texte</p>
+      <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-[var(--lt-muted)]">Structure du texte</p>
       <div className="mb-3 flex flex-wrap gap-1">
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-[#0d1525] px-2 py-1 text-[10px] text-white/85 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]"
+          className="inline-flex items-center gap-1 rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-2 py-1 text-[10px] text-[var(--lt-sub)] hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]"
           title="Titre"
         >
           <Heading2 className="h-3 w-3" /> Titre
@@ -142,7 +142,7 @@ export default function LongiaAdminDocumentPanel({ editor, documentTitle }) {
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-[#0d1525] px-2 py-1 text-[10px] text-white/85 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]"
+          className="inline-flex items-center gap-1 rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-2 py-1 text-[10px] text-[var(--lt-sub)] hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]"
           title="Sous-titre"
         >
           <Heading3 className="h-3 w-3" /> Sous-titre
@@ -151,20 +151,20 @@ export default function LongiaAdminDocumentPanel({ editor, documentTitle }) {
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().setParagraph().run()}
-          className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-[#0d1525] px-2 py-1 text-[10px] text-white/85 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]"
+          className="inline-flex items-center gap-1 rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-2 py-1 text-[10px] text-[var(--lt-sub)] hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]"
           title="Paragraphe"
         >
           <AlignLeft className="h-3 w-3" /> Texte
         </button>
       </div>
 
-      <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-white/35">Composer & mise en forme</p>
+      <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-[var(--lt-muted)]">Composer & mise en forme</p>
       <div className="mb-3 flex flex-wrap gap-1">
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={insertComposerBlock}
-          className="inline-flex items-center gap-1 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-2 py-1 text-[10px] text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]"
+          className="inline-flex items-center gap-1 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] px-2 py-1 text-[10px] text-[var(--lt-gold-ink)] hover:bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)]"
           title="Insère un paragraphe-type administratif (à modifier)"
         >
           <Layers className="h-3 w-3" /> Composer
@@ -173,21 +173,21 @@ export default function LongiaAdminDocumentPanel({ editor, documentTitle }) {
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={insertAnimatedParagraph}
-          className="inline-flex items-center gap-1 rounded-lg border border-violet-500/25 bg-violet-950/30 px-2 py-1 text-[10px] text-violet-200/90 hover:bg-violet-950/50"
+          className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-violet-50 px-2 py-1 text-[10px] text-violet-700 hover:bg-violet-100"
           title="Texte avec relief visuel (animation légère)"
         >
           <Zap className="h-3 w-3" /> Texte animé
         </button>
       </div>
 
-      <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-white/35">Texte intelligent (IA)</p>
+      <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-[var(--lt-muted)]">Texte intelligent (IA)</p>
       <div className="mb-3 flex flex-col gap-1.5">
         <button
           type="button"
           disabled={busy === 'compose'}
           onClick={() => invokeLongia('compose')}
           className={cn(
-            'inline-flex items-center justify-center gap-1.5 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] py-2 text-[10px] font-medium text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] disabled:opacity-45',
+            'inline-flex items-center justify-center gap-1.5 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] py-2 text-[10px] font-medium text-[var(--lt-gold-ink)] hover:bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] disabled:opacity-45',
           )}
         >
           {busy === 'compose' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
@@ -197,35 +197,35 @@ export default function LongiaAdminDocumentPanel({ editor, documentTitle }) {
           type="button"
           disabled={busy === 'intelligent'}
           onClick={() => invokeLongia('intelligent')}
-          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-white/12 bg-white/[0.06] py-2 text-[10px] font-medium text-white/85 hover:bg-white/10 disabled:opacity-45"
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] py-2 text-[10px] font-medium text-[var(--lt-sub)] hover:bg-[var(--lt-inner-bg)] disabled:opacity-45"
         >
           {busy === 'intelligent' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Type className="h-3.5 w-3.5" />}
           Adapter au sujet (sélection ou thème ci-dessus)
         </button>
       </div>
 
-      <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-white/35">5 propositions LONGIA</p>
+      <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-[var(--lt-muted)]">5 propositions LONGIA</p>
       <button
         type="button"
         disabled={busy === 'suggestions'}
         onClick={() => invokeLongia('suggestions')}
-        className="mb-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-950/25 py-2 text-[10px] font-semibold text-amber-100/95 hover:bg-amber-950/40 disabled:opacity-45"
+        className="mb-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 py-2 text-[10px] font-semibold text-amber-800 hover:bg-amber-100 disabled:opacity-45"
       >
         {busy === 'suggestions' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
         Générer 5 propositions
       </button>
 
       {suggestions.length > 0 ? (
-        <ul className="space-y-1.5 rounded-lg border border-white/8 bg-black/25 p-2">
+        <ul className="space-y-1.5 rounded-lg border border-[var(--lt-border)] bg-[var(--lt-inner-bg)] p-2">
           {suggestions.map((s, i) => (
             <li key={i}>
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => insertParagraphJson(s)}
-                className="w-full rounded-md border border-white/6 bg-[#0d1525]/80 px-2 py-1.5 text-left text-[10px] leading-snug text-white/80 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:text-white"
+                className="w-full rounded-md border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-2 py-1.5 text-left text-[10px] leading-snug text-[var(--lt-sub)] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:text-[var(--lt-text)]"
               >
-                <span className="mr-1 font-semibold text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">{i + 1}.</span>
+                <span className="mr-1 font-semibold text-[var(--lt-gold-ink)]">{i + 1}.</span>
                 {s}
               </button>
             </li>
@@ -233,9 +233,9 @@ export default function LongiaAdminDocumentPanel({ editor, documentTitle }) {
         </ul>
       ) : null}
 
-      {lastError ? <p className="mt-2 text-[9px] text-red-400/90">{lastError}</p> : null}
+      {lastError ? <p className="mt-2 text-[9px] text-red-600">{lastError}</p> : null}
 
-      <p className="mt-3 text-[8px] leading-relaxed text-white/30">
+      <p className="mt-3 text-[8px] leading-relaxed text-[#A1A1AA]">
         Astuce : sélectionnez un passage avant « Adapter au sujet » pour le faire reformuler par LONGIA. Le titre du dossier
         (champ en haut de page) est envoyé comme contexte.
       </p>

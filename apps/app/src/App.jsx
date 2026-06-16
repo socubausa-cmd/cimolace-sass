@@ -15,13 +15,13 @@ function RootRedirect() {
   const hash = typeof window !== 'undefined' ? window.location.hash : '';
   const host = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
   if (hash.includes('access_token')) return <Navigate to="/auth/callback" replace />;
-  // Domaine custom d'un tenant (résolu via tenant_domains, en cache) → sa vitrine. Multi-tenant.
+  // Domaine custom d'un tenant → SA vitrine, rendue en URL PROPRE (sans /t/:slug). Multi-tenant.
   const hostTenant = getCachedHostTenant(host);
-  if (hostTenant) return <Navigate to={`/t/${hostTenant}`} replace />;
+  if (hostTenant) return <TenantVitrineHome slug={hostTenant} />;
   // Racine SaaS Cimolace → espace plateforme (et non un tenant). Modèle v2 unifié.
   if (CIMOLACE_PUBLIC_HOSTS.has(host)) return <Navigate to="/cimolace" replace />;
-  // Domaine fondateur ISNA (un tenant parmi d'autres).
-  if (host === 'prorascience.org' || host === 'www.prorascience.org') return <Navigate to={`/t/${DEFAULT_TENANT_SLUG}`} replace />;
+  // Domaine fondateur (prorascience.org = tenant ISNA) → vitrine du fondateur en racine propre.
+  if (host === 'prorascience.org' || host === 'www.prorascience.org') return <TenantVitrineHome slug={DEFAULT_TENANT_SLUG} />;
   return <Navigate to="/login" replace />;
 }
 
@@ -122,14 +122,15 @@ function CimolaceDomainHandler() {
 
     // Apex + www prorascience.org → vitrine publique ISNA (tenant client)
     if (host === PRORASCIENCE_ROOT || host === `www.${PRORASCIENCE_ROOT}`) {
-      if (path === '/' || path === '') {
-        navigate('/t/isna', { replace: true });
-      } else if (path === '/login') {
-        navigate('/t/isna/login', { replace: true });
-      } else if (path === '/signup') {
-        navigate('/t/isna/signup', { replace: true });
-      } else if (path === '/formations' || path === '/catalogue' || path === '/forfaits') {
-        navigate('/t/isna/courses', { replace: true });
+      // prorascience.org = domaine PROPRE du tenant ISNA → URLs propres, jamais /t/isna visible.
+      // On STRIPE le préfixe /t/isna de toute URL (anciens liens, bookmarks) → chemin propre.
+      // La racine '/' rend la vitrine via RootRedirect ; /login,/signup,/forfaits,/admin… = routes propres existantes.
+      if (path === '/t/isna' || path === '/t/isna/') {
+        navigate('/', { replace: true });
+      } else if (path.startsWith('/t/isna/')) {
+        navigate(path.slice('/t/isna'.length) || '/', { replace: true });
+      } else if (path === '/formations' || path === '/catalogue') {
+        navigate('/forfaits', { replace: true });
       }
       return;
     }
@@ -237,17 +238,21 @@ const TENANT_VITRINES = {
   },
 };
 
-function TenantVitrineHome() {
+function TenantVitrineHome({ slug: slugProp } = {}) {
   const { tenantSlug } = useParams();
-  const Comp = TENANT_VITRINES[String(tenantSlug || '').toLowerCase()]?.home;
+  const slug = String(slugProp || tenantSlug || '').toLowerCase();
+  const Comp = TENANT_VITRINES[slug]?.home;
   return Comp ? <Comp /> : <SchoolVitrineTenantPage />;
 }
 
-function TenantVitrinePage() {
+function TenantVitrinePage({ slug: slugProp, page: pageProp } = {}) {
   const { tenantSlug, vitrinePage } = useParams();
-  const entry = TENANT_VITRINES[String(tenantSlug || '').toLowerCase()];
-  const Comp = entry?.pages?.[String(vitrinePage || '').toLowerCase()];
-  return Comp ? <Comp /> : <Navigate to={`/t/${tenantSlug}`} replace />;
+  const slug = String(slugProp || tenantSlug || '').toLowerCase();
+  const page = String(pageProp || vitrinePage || '').toLowerCase();
+  const entry = TENANT_VITRINES[slug];
+  const Comp = entry?.pages?.[page];
+  // Domaine custom (slug forcé via prop) : pas de retour vers /t/:slug → racine propre.
+  return Comp ? <Comp /> : <Navigate to={slugProp ? '/' : `/t/${tenantSlug}`} replace />;
 }
 const PublicHomePage = lazy(() => import('@/pages/PublicHomePage'));
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
@@ -514,6 +519,7 @@ const DashboardLiri = lazy(() => import('@/pages/liri/DashboardLiri').then((m) =
 // Portail LIRI — accueil/hub (rail Accueil/Lives/Forum/Studio/Biblio/Brain + stats live)
 const LiriPortalPage = lazy(() => import('@/pages/liri/LiriPortalPage').then((m) => ({ default: m.LiriPortalPage })));
 const LiriStudioHub = lazy(() => import('@/pages/dev/LiriStudioHub'));
+const LiriAdminShellDemo = lazy(() => import('@/pages/dev/LiriAdminShellDemo'));
 const MasterclassFactoryV2 = lazy(() => import('@/pages/dev/MasterclassFactoryV2'));
 const OrchestratorLiveV2 = lazy(() => import('@/pages/dev/OrchestratorLiveV2'));
 const SmartboardStreamingV2 = lazy(() => import('@/pages/dev/SmartboardStreamingV2'));
@@ -606,7 +612,7 @@ const PageLoader = () => (
 const LazyShell = ({ children }) => <Suspense fallback={null}>{children}</Suspense>;
 
 const DashboardRedirect = () => {
-  const { user, loading, supabase: authSupabase } = useAuth();
+  const { user, loading, tenantRole, supabase: authSupabase } = useAuth();
   const { loading: billingLoading, status, inGrace } = useBilling();
   const [slowLoad, setSlowLoad] = useState(false);
 
@@ -651,12 +657,31 @@ const DashboardRedirect = () => {
   const role = getEffectiveRole(user);
   const isPremiumActive = status === 'active' || (status === 'past_due' && inGrace);
 
+  // Membre d'un tenant LIRI/MEDOS (owner/practitioner/… porté par le JWT `tenant_role`) avec un
+  // rôle GLOBAL faible (visitor/student/vide) : router DIRECT sur le portail LIRI, quel que soit
+  // ce rôle global. Sans ça, un owner dont `profiles.role` n'est pas exactement 'visitor' tombe
+  // sur /forfaits — la bascule owner→/liri n'existait que dans le bloc `role === 'visitor'`.
+  if (
+    ['owner', 'admin', 'practitioner', 'clinic_admin'].includes(tenantRole) &&
+    !['owner', 'admin', 'secretariat', 'teacher', 'creator'].includes(role)
+  ) {
+    return <Navigate to="/liri" replace />;
+  }
+
   if (role === 'owner' || role === 'admin') return <Navigate to="/owner-dashboard" replace />;
   if (role === 'secretariat') return <Navigate to="/secretariat-space/dashboard" replace />;
   if (role === 'teacher') return <Navigate to="/teacher-space/dashboard" replace />;
   if (role === 'creator') return <Navigate to="/creator-dashboard" replace />;
 
   if (role === 'visitor') {
+    // Membre d'un tenant LIRI/MedOS : rôle global faible 'visitor' mais vrai rôle dans
+    // le JWT (tenant_role). Le « lancement » LIRI ouvre direct sur le home /liri (façon
+    // Zoom), pas l'espace prospect école. Les écoles (owner/teacher/student GLOBAUX) ne
+    // passent pas ici — elles ont déjà été routées plus haut. Loop-safe : la garde /liri
+    // accepte ces tenant_role (allowTenantRole).
+    if (['owner', 'admin', 'practitioner', 'clinic_admin'].includes(tenantRole)) {
+      return <Navigate to="/liri" replace />;
+    }
     if (isPremiumActive && !user?.student_profile_completed) return <Navigate to="/onboarding/eleve" replace />;
     if (isPremiumActive && user?.student_profile_completed) return <Navigate to="/student-school-life/dashboard" replace />;
     return <Navigate to="/prospect/entretien" replace />;
@@ -719,7 +744,7 @@ const ProtectedStudentJourneyRoute = ({ children }) => {
 };
 
 const ProtectedImmersiveMessagingRoute = ({ children }) => {
-  const { user, loading, supabase: authSupabase } = useAuth();
+  const { user, loading, tenantRole, supabase: authSupabase } = useAuth();
   const { loading: billingLoading, status, inGrace } = useBilling();
   const [checkingVisitorAccess, setCheckingVisitorAccess] = useState(false);
   const [visitorCanChat, setVisitorCanChat] = useState(false);
@@ -772,7 +797,11 @@ const ProtectedImmersiveMessagingRoute = ({ children }) => {
   const role = String(getEffectiveRole(user) || '').toLowerCase();
   const isStaffRole = ['owner', 'admin', 'secretariat', 'teacher', 'creator', 'commercial', 'support'].includes(role);
   const isPremiumActive = status === 'active' || (status === 'past_due' && inGrace);
-  if (isStaffRole || isPremiumActive || (role === 'visitor' && visitorCanChat)) return children;
+  // Membre actif d'un tenant LIRI/MedOS : son vrai rôle est dans le JWT (tenant_role), pas le
+  // rôle global (souvent 'visitor'). La messagerie inter-membres est tenant-scoped (isolation
+  // garantie côté API), donc tout membre d'un tenant y a accès. Additif → l'accès école inchangé.
+  const isLiriMember = ['owner', 'admin', 'practitioner', 'clinic_admin', 'teacher', 'secretariat'].includes(tenantRole);
+  if (isStaffRole || isPremiumActive || isLiriMember || (role === 'visitor' && visitorCanChat)) return children;
 
   return <Navigate to="/appointment/request?source=immersive-chat" replace />;
 };
@@ -965,6 +994,9 @@ const AppContent = () => {
     '/live/',
     '/dev/masterclass-factory',
     '/embed/',       // LIRI embed iframe — aucun shell
+    '/handoff',      // handoff cross-domain (« Connexion à la salle ») — coque neutre, pas de shell école
+    '/liri',         // accueil LIRI standalone (LiriPortalShell a son propre topbar) — pas de header école
+    '/messages',     // messagerie immersive (page plein écran, embarquée dans LIRI) — pas de header école
   ];
 
   // Routes live immersif — aucun shell app autour (plein écran total)
@@ -992,6 +1024,12 @@ isLiriHostDevPreviewRoute;
   /** Espace propriétaire : layout plein écran sans barre globale (évite tout doublon LIRI / PRORASCIENCE). */
   const isOwnerDashboardShell = /^\/owner-dashboard(\/|$)/.test(location.pathname || '/');
 
+  /**
+   * Espace élève (sidebar LIRI plein écran) — même traitement que l'owner : aucune barre globale
+   * au-dessus (sinon double header empilé sur la sidebar). La page embarque son propre shell.
+   */
+  const isStudentSpaceShell = /^\/student-school-life(\/|$)/.test(location.pathname || '/');
+
   /** Pages « maquette » narratives /t/isna : elles embarquent leur propre header (MaqNav) dans un overlay `fixed inset-0` → pas de header global (évite le flash de l'ancien nav au chargement + le rendu fantôme dessous). Match EXACT pour épargner /t/isna/courses, /login, /signup, /paiement, /admin… */
   const isMaquetteRoute = [
     '/t/isna',
@@ -1001,6 +1039,8 @@ isLiriHostDevPreviewRoute;
     '/t/isna/mission',
     '/t/isna/fondateur',
     '/t/isna/doctrine',
+    // Domaine custom (prorascience.org) : mêmes pages vitrine en URL PROPRE.
+    '/ecole', '/temple', '/programme', '/mission', '/fondateur', '/doctrine',
   ].includes((location.pathname || '/').replace(/\/+$/, '') || '/');
 
   const shouldShowHeader =
@@ -1009,6 +1049,7 @@ isLiriHostDevPreviewRoute;
     !isLiveArenaRoute &&
     !isEleveMobileRoute &&
     !isOwnerDashboardShell &&
+    !isStudentSpaceShell &&
     !hideHeaderRoutes.some(route => location.pathname.startsWith(route)) &&
     !mobileReelsShellActive &&
     !isCimolaceRoute &&
@@ -1019,6 +1060,7 @@ isLiriHostDevPreviewRoute;
     !isImmersiveEmbed &&
     !isLiveArenaRoute &&
     !isEleveMobileRoute &&
+    !isStudentSpaceShell &&
     !mobileReelsShellActive &&
     !isCimolaceRoute;
 
@@ -1108,14 +1150,14 @@ isLiriHostDevPreviewRoute;
           <ShoppingCart />
         </LazyShell>
       )}
-      {!isLiveArenaRoute && !isEleveMobileRoute && !isCimolaceRoute && !isAdminRoute && (
+      {!isLiveArenaRoute && !isEleveMobileRoute && !isCimolaceRoute && !isAdminRoute && !isStudentSpaceShell && (
         <LazyShell>
           <LiveAlertBanner />
         </LazyShell>
       )}
 
-      {/* Discovery Chat — affiché sur les pages publiques uniquement */}
-      {!isAdminRoute && !isImmersiveEmbed && !isLiveArenaRoute && !isEleveMobileRoute && !isCimolaceRoute && (
+      {/* Discovery Chat — pages publiques. Exclu de l'espace élève (collision avec le FAB de la sidebar). */}
+      {!isAdminRoute && !isImmersiveEmbed && !isLiveArenaRoute && !isEleveMobileRoute && !isCimolaceRoute && !isStudentSpaceShell && (
         <LazyShell>
           <DiscoveryChat />
         </LazyShell>
@@ -1208,6 +1250,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/dev/liri/masterclass-v2"  element={<ErrorBoundary logTag="MasterclassFactoryV2"  showDetailsInDev><MasterclassFactoryV2 /></ErrorBoundary>} />
           <Route path="/dev/liri/orchestrator-v2" element={<ErrorBoundary logTag="OrchestratorLiveV2"    showDetailsInDev><OrchestratorLiveV2 /></ErrorBoundary>} />
           <Route path="/dev/liri/streaming-v2"    element={<ErrorBoundary logTag="SmartboardStreamingV2" showDetailsInDev><SmartboardStreamingV2 /></ErrorBoundary>} />
+          <Route path="/dev/liri-admin-shell" element={<ErrorBoundary logTag="LiriAdminShellDemo" showDetailsInDev><LiriAdminShellDemo /></ErrorBoundary>} />
           <Route path="/dev/*" element={<DevLiriHostEntry />} />
           {/* LIRI mobile — UI dédiée, mêmes routes métier en cible */}
           {/* === App mobile « Élève » LIRI (sans Studio) — ErrorBoundary via layout */}
@@ -1425,7 +1468,7 @@ isLiriHostDevPreviewRoute;
             </ProtectedRoleRoute>
           } />
           <Route path="/liri" element={
-            <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student']}>
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole>
               <LiriPortalPage />
             </ProtectedLiriRoute>
           } />
@@ -1447,7 +1490,9 @@ isLiriHostDevPreviewRoute;
           } />
           <Route path="/secretariat-space/*" element={
             <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']}>
-              <SecretariatPortalPage />
+              <ErrorBoundary logTag="SecretariatPortal" showDetailsInDev>
+                <SecretariatPortalPage />
+              </ErrorBoundary>
             </ProtectedRoleRoute>
           } />
           
@@ -1911,7 +1956,9 @@ isLiriHostDevPreviewRoute;
 
           <Route path="/owner-dashboard" element={
             <ProtectedOwnerRoute>
-              <OwnerDashboard />
+              <ErrorBoundary logTag="OwnerDashboard" showDetailsInDev>
+                <OwnerDashboard />
+              </ErrorBoundary>
             </ProtectedOwnerRoute>
           } />
 
@@ -1936,6 +1983,14 @@ isLiriHostDevPreviewRoute;
               de :vitrinePage → pas de collision. Cf. docs/CIMOLACE_ARCHITECTURE.md §7. */}
           <Route path="/t/:tenantSlug" element={<TenantVitrineHome />} />
           <Route path="/t/:tenantSlug/:vitrinePage" element={<TenantVitrinePage />} />
+          {/* Domaine custom (prorascience.org) : vitrine + sous-pages en URLs PROPRES (tenant
+              fondateur), sans /t/:slug. CimolaceDomainHandler strippe les anciens /t/isna/* ici. */}
+          <Route path="/ecole" element={<TenantVitrinePage slug={DEFAULT_TENANT_SLUG} page="ecole" />} />
+          <Route path="/temple" element={<TenantVitrinePage slug={DEFAULT_TENANT_SLUG} page="temple" />} />
+          <Route path="/programme" element={<TenantVitrinePage slug={DEFAULT_TENANT_SLUG} page="programme" />} />
+          <Route path="/mission" element={<TenantVitrinePage slug={DEFAULT_TENANT_SLUG} page="mission" />} />
+          <Route path="/fondateur" element={<TenantVitrinePage slug={DEFAULT_TENANT_SLUG} page="fondateur" />} />
+          <Route path="/doctrine" element={<TenantVitrinePage slug={DEFAULT_TENANT_SLUG} page="doctrine" />} />
           <Route
             path="/t/:tenantSlug/login"
             element={<SchoolLoginPage />}

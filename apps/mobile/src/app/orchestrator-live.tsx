@@ -1,10 +1,11 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 import { fetchSmartboardDecks, linkSessionDeck, quickStartLive, type SmartboardDeckSummary } from '@/lib/liri-api';
 
 /**
@@ -23,6 +24,8 @@ const SOURCES: { id: string; label: string; icon: IconName }[] = [
 
 export default function OrchestratorLiveScreen() {
   const router = useRouter();
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
   const [live, setLive] = useState('cam');
   const [starting, setStarting] = useState(false);
 
@@ -129,7 +132,7 @@ export default function OrchestratorLiveScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1 },
   scroll: { padding: 18, paddingBottom: 36 },

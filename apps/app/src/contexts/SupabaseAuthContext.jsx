@@ -156,8 +156,16 @@ const maybeEnsureStudentMembership = (authUser) => {
  */
 const lastKnownRoleById = new Map();
 
-const buildUser = (authUser, profile) => {
+// Les claims custom (tenant_role, tenant_id) vivent dans le JWT (access token),
+// PAS dans authUser.app_metadata renvoyé par GoTrue → on décode le token.
+const decodeJwtClaims = (token) => {
+  try { return JSON.parse(atob(String(token || '').split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))) || {}; }
+  catch { return {}; }
+};
+
+const buildUser = (authUser, profile, accessToken) => {
   if (!authUser) return null;
+  const jwtMeta = decodeJwtClaims(accessToken).app_metadata || {};
   const meta = authUser.user_metadata || {};
   const profileRole = String(profile?.role || '').toLowerCase();
   if (profile?.id && profileRole) {
@@ -185,8 +193,8 @@ const buildUser = (authUser, profile) => {
     // Rôle DANS LE TENANT ACTIF (JWT app_metadata, posé à la création de session).
     // Un owner/practitioner d'un tenant (ex: zahirwellness) a un profiles.role GLOBAL
     // = 'visitor' ; ce champ porte son vrai rôle pour les gardes tenant-scoped (studio).
-    tenant_role: String(authUser.app_metadata?.tenant_role || '').toLowerCase(),
-    tenant_id: authUser.app_metadata?.tenant_id || null,
+    tenant_role: String(jwtMeta.tenant_role || authUser.app_metadata?.tenant_role || '').toLowerCase(),
+    tenant_id: jwtMeta.tenant_id || authUser.app_metadata?.tenant_id || null,
     metadata: profile?.metadata || {},
     cimolace_staff: Boolean(profile?.metadata?.cimolace_staff || meta.cimolace_staff || isDevCimolaceAdmin(authUser.email)),
     avatar_url: profile?.avatar_url || null,
@@ -292,7 +300,7 @@ export const AuthProvider = ({ children }) => {
         syncApiAuthToken(currentSession);
         if (currentSession?.user) {
           const profile = await withTimeout(ensureVisitorProfile(currentSession.user));
-          setUser(buildUser(currentSession.user, profile));
+          setUser(buildUser(currentSession.user, profile, currentSession.access_token));
           // Self-heal (coque élève only) : rattache l'élève au tenant courant s'il
           // ne l'est pas encore (inscriptions antérieures orphelines). Idempotent.
           maybeEnsureStudentMembership(currentSession.user);
@@ -316,7 +324,7 @@ export const AuthProvider = ({ children }) => {
         syncApiAuthToken(effectiveSession);
         if (effectiveSession?.user) {
           const profile = await withTimeout(ensureVisitorProfile(effectiveSession.user));
-          setUser(buildUser(effectiveSession.user, profile));
+          setUser(buildUser(effectiveSession.user, profile, effectiveSession.access_token));
           // Couvre l'inscription Google élève (session établie via AuthCallbackPage
           // → redirige vers /m/eleve → SIGNED_IN ici) ET le self-heal au 1er login.
           // Gaté sur la coque /m/eleve, idempotent, fire-and-forget.
@@ -355,10 +363,10 @@ export const AuthProvider = ({ children }) => {
         syncApiAuthToken(data.session);
         try {
           const profile = await withTimeout(ensureVisitorProfile(data.session.user));
-          setUser(buildUser(data.session.user, profile));
+          setUser(buildUser(data.session.user, profile, data.session.access_token));
         } catch (e) {
           console.warn('[auth] login profile fetch:', e?.message || e);
-          setUser(buildUser(data.session.user, null));
+          setUser(buildUser(data.session.user, null, data.session.access_token));
         }
         // Self-heal au login (coque élève only) : un élève inscrit avant ce
         // correctif (membership orpheline) est rattaché ici. Idempotent.
@@ -473,15 +481,30 @@ export const AuthProvider = ({ children }) => {
       if (!s?.user) return;
       setSession(s);
       const profile = await ensureVisitorProfile(s.user);
-      setUser(buildUser(s.user, profile));
+      setUser(buildUser(s.user, profile, s.access_token));
     } catch (e) {
       console.warn('[auth] refreshProfile:', e?.message || e);
     }
   }, []);
 
+  // Rôle tenant FIABLE pour les gardes : décodé du JWT de `session` (posé AVANT le fetch profil,
+  // donc présent dès loading=false), repli sur user.tenant_role. Évite la RACE au cold-reload où
+  // les gardes s'exécutent avant que `user` (mis APRÈS ensureVisitorProfile) ne porte tenant_role
+  // → sinon /messages et /liri rebondissent vers l'espace école.
+  const tenantRole = String(
+    decodeJwtClaims(session?.access_token).app_metadata?.tenant_role
+      // Repli SYNCHRONE sur le token persistant (localStorage) : présent dès le 1er render
+      // même quand la session Supabase (async) n'est pas encore hydratée. Sans ça, les gardes
+      // (ProtectedRoleRoute /liri) s'exécutent une fois avec tenantRole='' → rebond vers /dashboard
+      // → /forfaits pour un owner. (race cold-load confirmée 2026-06-15.)
+      || decodeJwtClaims(authStore.getToken()).app_metadata?.tenant_role
+      || user?.tenant_role || '',
+  ).toLowerCase();
+
   const value = {
     user,
     session,
+    tenantRole,
     loading,
     error,
     signup,

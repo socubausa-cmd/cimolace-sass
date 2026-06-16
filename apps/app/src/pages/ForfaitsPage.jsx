@@ -36,7 +36,6 @@ import {
 } from '@/components/prorascience/prorascienceMarketingHeroBits';
 import { ForfaitsHeroVoices } from '@/components/prorascience/ForfaitsHeroVoices';
 import { supabase } from '@/lib/customSupabaseClient';
-import { LiriWordmark } from '@/components/brand/LiriWordmark';
 import { cn } from '@/lib/utils';
 import { useBilling } from '@/contexts/BillingContext';
 import { Badge } from '@/components/ui/badge';
@@ -46,10 +45,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import PremiumSegmentedSelector from '@/components/ui/premium-segmented-selector';
 import {
+  CANONICAL_CYCLE_KEYS,
   CYCLE_SELECTOR_LABELS,
   INITIATION_PRODUCT_NAME,
   TIER_ORDER,
   cycleContent,
+  marketingForCycleKey,
 } from '@/data/cycleInitiationProduct';
 import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
@@ -199,6 +200,15 @@ const ForfaitsPage = () => {
 
   const cycles = useMemo(() => {
     const groups = new Map();
+    // Les 4 niveaux d'accès sont toujours présentés (même sans tarif actif en base) :
+    // on amorce la liste avec les cycles canoniques, puis on superpose les plans réels.
+    for (const key of CANONICAL_CYCLE_KEYS) {
+      groups.set(key, {
+        key,
+        label: CYCLE_SELECTOR_LABELS[key] || marketingForCycleKey(key).headline,
+        plansByInterval: {},
+      });
+    }
     for (const p of plans) {
       const intervalType = String(p.interval_type || '').toLowerCase();
       if (!INTERVAL_ORDER.includes(intervalType)) continue;
@@ -346,7 +356,8 @@ const ForfaitsPage = () => {
                 {INITIATION_PRODUCT_NAME}
               </p>
               <p className="mb-3 text-[10px] text-white/45 md:text-[11px]">
-                Quatre niveaux d&apos;accès — choisissez votre profondeur d&apos;initiation
+                Quatre cycles = quatre niveaux d&apos;accès aux 21 modules de la formation —
+                choisissez votre profondeur d&apos;initiation, le contenu reste le même socle.
               </p>
               <PremiumSegmentedSelector
                 value={activeCycle?.key || ''}
@@ -459,10 +470,7 @@ const ForfaitsPage = () => {
                     <React.Fragment key={`${activeCycle?.key}-p-${i}`}>
                       {part}
                       {i < arr.length - 1 ? (
-                        <LiriWordmark
-                          size="kicker"
-                          className="mx-0.5 inline-flex align-baseline text-[#ebca5e]"
-                        />
+                        <span className="font-semibold tracking-wide text-[#ebca5e]">LIRI</span>
                       ) : null}
                     </React.Fragment>
                   ))}
@@ -570,7 +578,7 @@ const ForfaitsPage = () => {
                     <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center gap-2 rounded-xl border border-white/15 bg-black/50 px-4 py-3 text-xs text-white/88 backdrop-blur-md">
                       <Globe2 className="h-4 w-4 shrink-0 text-[var(--school-accent)]" />
                       <span className="inline-flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
-                        <LiriWordmark size="kicker" className="inline-flex text-[#ebca5e]" />
+                        <span className="font-semibold tracking-wide text-[#ebca5e]">LIRI</span>
                         <span>
                           · immersion directe — cycle « {activeCycle?.label || heroContent.headline} » · accessible
                           depuis n&apos;importe quel pays
@@ -626,12 +634,16 @@ const ForfaitsPage = () => {
                   Number(cycle?.plansByInterval?.[interval]?.price_amount || Number.MAX_SAFE_INTEGER)
                 )
               );
-              const cyclePrice = Number.isFinite(minPrice) && minPrice < Number.MAX_SAFE_INTEGER ? minPrice : 0;
+              const hasPrice = Number.isFinite(minPrice) && minPrice < Number.MAX_SAFE_INTEGER;
+              const cyclePrice = hasPrice ? minPrice : 0;
               const currency =
                 cycle?.plansByInterval?.monthly?.price_currency ||
                 cycle?.plansByInterval?.quarterly?.price_currency ||
                 cycle?.plansByInterval?.yearly?.price_currency ||
                 'XAF';
+              const hasSelectablePlan = INTERVAL_ORDER.some((intervalType) =>
+                isPlanSelectable(cycle?.plansByInterval?.[intervalType])
+              );
 
               const nextCycle =
                 content.nextTierKey && cycles.find((c) => c.key === content.nextTierKey);
@@ -701,30 +713,44 @@ const ForfaitsPage = () => {
                           </div>
                           <div>
                             <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
-                              À partir de
+                              {hasPrice ? 'À partir de' : 'Tarif'}
                             </p>
                             <p className="text-xl font-bold tabular-nums text-[var(--school-accent)] md:text-2xl">
-                              {formatPrice(cyclePrice, currency)}
+                              {hasPrice ? formatPrice(cyclePrice, currency) : 'Sur demande'}
                             </p>
-                            <p className="text-[11px] text-white/40">Puis mensuel, trimestriel ou annuel</p>
+                            <p className="text-[11px] text-white/40">
+                              {hasPrice ? 'Puis mensuel, trimestriel ou annuel' : 'Contactez le secrétariat pour activer ce niveau'}
+                            </p>
                           </div>
                         </div>
-                        <Button
-                          onClick={() => reserveCycle(cycle.key)}
-                          disabled={
-                            !INTERVAL_ORDER.some((intervalType) =>
-                              isPlanSelectable(cycle?.plansByInterval?.[intervalType])
-                            )
-                          }
-                          className="h-12 w-full bg-[var(--school-accent)] font-bold text-black shadow-xl shadow-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] hover:bg-[#ebca5e] disabled:opacity-50 sm:w-auto sm:min-w-[200px]"
-                        >
-                          <CreditCard className="mr-2 h-4 w-4" />
-                          {INTERVAL_ORDER.some((intervalType) =>
-                            isPlanSelectable(cycle?.plansByInterval?.[intervalType])
-                          )
-                            ? 'Réserver ce niveau'
-                            : 'Niveau actif'}
-                        </Button>
+                        {hasSelectablePlan ? (
+                          <Button
+                            onClick={() => reserveCycle(cycle.key)}
+                            className="h-12 w-full bg-[var(--school-accent)] font-bold text-black shadow-xl shadow-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] hover:bg-[#ebca5e] sm:w-auto sm:min-w-[200px]"
+                          >
+                            <CreditCard className="mr-2 h-4 w-4" />
+                            Réserver ce niveau
+                          </Button>
+                        ) : hasPrice ? (
+                          <Button
+                            disabled
+                            className="h-12 w-full bg-[var(--school-accent)] font-bold text-black disabled:opacity-50 sm:w-auto sm:min-w-[200px]"
+                          >
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                            Niveau actif
+                          </Button>
+                        ) : (
+                          <Button
+                            asChild
+                            variant="outline"
+                            className="h-12 w-full border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] font-bold text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] sm:w-auto sm:min-w-[200px]"
+                          >
+                            <Link to={COUNSELLOR_URL}>
+                              <PhoneCall className="mr-2 h-4 w-4" />
+                              Demander ce niveau
+                            </Link>
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>

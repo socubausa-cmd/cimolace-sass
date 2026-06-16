@@ -12,6 +12,8 @@
 import React, {
   useEffect, useRef, useState, useCallback, useMemo,
 } from 'react';
+import { useVideoProcessor } from '@/lib/useVideoProcessor';
+import { useMicProcessor } from '@/lib/useMicProcessor';
 import { Capacitor } from '@capacitor/core';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -1442,6 +1444,20 @@ export default function LiveArenaPage() {
     }
   }, []);
 
+  // Effets vidéo (flou / fond virtuel / chroma) + traitement micro APPLIQUÉS à la piste
+  // LiveKit publiée (aligné sur LiveHostPage). Sans ça, les effets restaient une simple
+  // prévisualisation locale, jamais diffusée aux participants distants.
+  useVideoProcessor(roomRef, {
+    chromaKey: videoChromaKey,
+    chromaColor: videoChromaColor,
+    chromaSens: videoChromaSens,
+    videoVbg,
+    videoBlur,
+    customBgUrl: videoCustomBgUrl,
+    onCanvasReady: handleArenaPipCanvasRef,
+  });
+  useMicProcessor(roomRef, { micGain, noiseReduction });
+
   const handleArenaVbgChange = useCallback((v) => {
     setVideoVbg(v);
     if (v !== 'none') setVideoChromaKey(false);
@@ -2793,12 +2809,22 @@ export default function LiveArenaPage() {
   // ENVOYER un message chat
   // ───────────────────────────────────────────────────────────────────────────
   const sendChatMessage = useCallback(async (text) => {
-    if (!text?.trim() || !sessionId || !user?.id) return;
-    await supabase.from('live_session_chat').insert({
-      live_session_id: sessionId,
-      user_id:         user.id,
-      message:         text.trim(),
-    });
+    const t = String(text || '').trim();
+    if (!t || !sessionId || !user?.id) return;
+    // Moteur de messagerie UNIFIÉ : on envoie via chatApi (room logique 'live:<id>'),
+    // exactement comme les DM. Le backing reste live_session_chat → le realtime
+    // existant et toutes les surfaces live (mobile, waiting room) restent cohérents.
+    try {
+      const { chatApi } = await import('@/lib/api');
+      await chatApi.send(`live:${sessionId}`, t);
+    } catch {
+      // Repli direct (résilience live) si l'API est indisponible.
+      await supabase.from('live_session_chat').insert({
+        live_session_id: sessionId,
+        user_id:         user.id,
+        message:         t,
+      });
+    }
   }, [sessionId, user?.id]);
 
   const sendForumMessage = useCallback(async (raw) => {

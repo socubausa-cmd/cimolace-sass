@@ -2,6 +2,26 @@
 
 > ⚠️ **À LIRE EN PREMIER : [docs/REGLES_ARCHITECTURE_CIMOLACE.md](docs/REGLES_ARCHITECTURE_CIMOLACE.md)** — vocabulaire (Cimolace ≠ tenant ≠ moteur), structure `liri/ studio-creator/ school/`, et les **5 règles d'or** (Liri reste autonome — vérifié par ESLint · une seule coque `App.jsx` · pas d'import direct `@/tenants/isna` (passer par le seam `activeTenantConfig`) · pas de couleur `#D4AF37` en dur (utiliser `var(--school-accent)`) · catalogue = source backend). Ne pas re-confondre Cimolace / ISNA / Liri / Studio Créateur.
 
+## 🔒 DÉPLOIEMENT PROD (prorascience.org) — RÈGLE ANTI-RÉGRESSION MULTI-SESSIONS
+
+⚠️ **Plusieurs agents/sessions travaillent sur ce dépôt EN PARALLÈLE.** Sans discipline, un déploiement écrase le travail d'un autre (la prod a fait du « yo-yo » : le thème puis la messagerie disparaissaient à tour de rôle, car deux branches divergées déployaient sur le même prod). **Règles STRICTES — à respecter par TOUT agent :**
+
+1. **UN SEUL chemin de déploiement prod** : `~/Downloads/cimolace/apps/app` (Vercel projet `cimolace/app`, alias **prorascience.org**). Tous les autres checkouts (`/tmp/liri-src`, `/private/tmp/isna-*`, `~/cimolace-liri-fix`, `~/Downloads/isna-liri-fix`, racine `~/Downloads/cimolace/.vercel`) ont leur lien `.vercel` **neutralisé en `.vercel.disabled`** → **NE PAS les réactiver, NE PAS `vercel link` ailleurs.**
+
+2. **NE JAMAIS lancer `vercel --prod` à la main.** Toujours déployer via le garde-fou :
+   ```bash
+   bash ~/Downloads/cimolace/deploy-liri.sh
+   ```
+   Il **REFUSE de déployer si ta branche est en retard sur `origin/main`** (= régression du travail des autres), déploie, puis pose `origin/main = état déployé` (push fast-forward). → la prod **ne peut QUE avancer**.
+
+3. **AVANT toute fin de tâche / déploiement** : `git fetch origin main && git merge origin/main` (récupère le travail des sessions parallèles), puis `cd apps/app && npx vite build` pour valider.
+
+4. **`git push` = fast-forward UNIQUEMENT vers `origin/main`. JAMAIS `--force`** (écraserait le travail parallèle). Push rejeté (non-ff) → `git merge origin/main` d'abord, jamais forcer.
+
+5. **Railway (API `isna-api` → api.cimolace.space)** : MÊME piège. `~/.railway/config.json` est restreint au seul checkout `~/Downloads/cimolace`. Détecter un revert API : un endpoint récent repasse en `404` alors que le code est committé (c'est l'artefact déployé qui régresse).
+
+> Détails + historique des pièges phantom-deploy : fichier mémoire **`cimolace-appsapp-vercel-deploy`**.
+
 ## Architecture générale
 
 Monorepo npm workspaces. Six applications indépendantes, une API centrale.

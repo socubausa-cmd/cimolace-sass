@@ -53,16 +53,33 @@ export class PawaPayService {
    * Initie un dépôt (collecte depuis le wallet Mobile Money du client).
    * Retourne { depositId, status: 'ACCEPTED' } si accepté par pawaPay.
    * La confirmation finale arrivera via callback/webhook.
+   *
+   * `override` optionnel : permet d'utiliser le token / la base d'API du TENANT
+   * (config tenant_payment_providers) plutôt que ceux de l'env plateforme.
+   *   - omis  → comportement inchangé (token + base de l'env, garde assertConfigured).
+   *   - fourni avec apiToken → on bypasse assertConfigured (l'env peut être vide)
+   *     et on utilise le token (et éventuellement la base) du tenant.
    */
   async initiateDeposit(
     payload: PawaPayDepositRequest,
+    override?: { apiToken?: string; baseUrl?: string },
   ): Promise<PawaPayDepositInitResponse> {
-    this.assertConfigured();
+    const apiToken = override?.apiToken || this.apiToken;
+    const baseUrl = override?.baseUrl || this.baseUrl;
 
-    const response = await fetch(`${this.baseUrl}/v2/deposits`, {
+    // Si on s'appuie sur l'env (pas de token tenant), on garde la garde habituelle.
+    if (!override?.apiToken) {
+      this.assertConfigured();
+    } else if (!apiToken) {
+      throw new ServiceUnavailableException(
+        'Token PawaPay tenant manquant — dépôt impossible.',
+      );
+    }
+
+    const response = await fetch(`${baseUrl}/v2/deposits`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${this.apiToken}`,
+        Authorization: `Bearer ${apiToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),

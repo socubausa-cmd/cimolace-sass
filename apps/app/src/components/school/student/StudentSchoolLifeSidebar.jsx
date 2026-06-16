@@ -15,7 +15,7 @@ const T = {
   surface2:  '#192734',
   border:    'rgba(255,255,255,0.07)',
   borderMid: 'rgba(255,255,255,0.12)',
-  gold:      '#D4AF37',
+  gold:      'var(--school-accent)',
   goldDim:   'rgba(212,175,55,0.12)',
   goldMid:   'rgba(212,175,55,0.28)',
   violet:    '#7C3AED',
@@ -29,22 +29,50 @@ const T = {
   mono: "'JetBrains Mono','Fira Code',monospace",
 };
 
-/* ─── Nav items (flat, no sections) ─── */
-const NAV = [
-  { key: 'semaine-courante',    label: 'Ma semaine',        icon: '◫', path: 'semaine-courante' },
-  { key: 'dashboard',           label: 'Tableau de bord',  icon: '◈', path: 'dashboard'  },
-  { key: 'formations',          label: 'Mes Formations',   icon: '✦', path: 'formations' },
-  { key: 'vie-scolaire',        label: 'Vie Scolaire',     icon: '◎', path: 'vie-scolaire' },
-  { key: 'forum',               label: 'Forum',            icon: '◷', path: 'forum', badge: null },
-  { key: 'bibliotheque',        label: 'Bibliothèque',     icon: '⊷', path: 'bibliotheque' },
-  { key: 'bibliotheque-ressources', label: 'Ressources',   icon: '⊡', path: 'bibliotheque-ressources' },
-  { key: 'agenda',              label: 'Agenda',           icon: '◉', path: 'agenda'     },
-  { key: 'evaluations',         label: 'Évaluations',      icon: '⊛', path: 'evaluations' },
-  { key: 'notes',               label: 'Notes & Résultats',icon: '◈', path: 'notes'      },
-  { key: 'absences',            label: 'Absences',         icon: '!',  path: 'absences'   },
-  { key: 'documents',           label: 'Documents',        icon: '⊡', path: 'documents'  },
-  { key: 'profile',             label: 'Mon Profil',       icon: '⊙', path: 'profile'    },
+/* ─── Nav groupée en 5 familles (chunking) — mêmes clés/paths/icônes qu'avant ─── */
+const NAV_GROUPS = [
+  {
+    section: 'Mon parcours',
+    items: [
+      { key: 'semaine-courante', label: 'Ma semaine',      icon: '◫', path: 'semaine-courante' },
+      { key: 'dashboard',        label: 'Tableau de bord', icon: '◈', path: 'dashboard' },
+      { key: 'formations',       label: 'Mes Formations',  icon: '✦', path: 'formations' },
+    ],
+  },
+  {
+    section: 'Vie scolaire',
+    items: [
+      { key: 'vie-scolaire', label: 'Vie Scolaire', icon: '◎', path: 'vie-scolaire' },
+      { key: 'agenda',       label: 'Agenda',       icon: '◉', path: 'agenda' },
+      { key: 'absences',     label: 'Absences',     icon: '!', path: 'absences' },
+    ],
+  },
+  {
+    section: 'Évaluation',
+    items: [
+      { key: 'evaluations', label: 'Évaluations',       icon: '⊛', path: 'evaluations' },
+      { key: 'notes',       label: 'Notes & Résultats', icon: '◈', path: 'notes' },
+    ],
+  },
+  {
+    section: 'Ressources & communauté',
+    items: [
+      { key: 'bibliotheque',             label: 'Bibliothèque', icon: '⊷', path: 'bibliotheque' },
+      { key: 'bibliotheque-ressources',  label: 'Ressources',   icon: '⊡', path: 'bibliotheque-ressources' },
+      { key: 'documents',                label: 'Documents',    icon: '⊡', path: 'documents' },
+      { key: 'forum',                    label: 'Forum',        icon: '◷', path: 'forum', badge: null },
+    ],
+  },
+  {
+    section: 'Compte',
+    items: [
+      { key: 'profile', label: 'Mon Profil', icon: '⊙', path: 'profile' },
+    ],
+  },
 ];
+
+/* Liste aplatie (index d'animation + état actif) — dérivée des groupes, source unique. */
+const NAV = NAV_GROUPS.flatMap((g) => g.items);
 
 /* ─── SVG Logout icon ─── */
 const IconLogout = () => (
@@ -66,19 +94,27 @@ const IconClose = () => (
     <line x1="15" y1="5" x2="5"  y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
   </svg>
 );
+/* Chevron pour réduire/étendre le tiroir (« ‹ » plein / « › » réduit) */
+const IconChevron = ({ collapsed }) => (
+  <svg viewBox="0 0 20 20" width={16} height={16} fill="none" style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 150ms ease' }}>
+    <path d="M12 5l-5 5 5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
 
 /* ─── Single nav item ─── */
-const NavItem = ({ item, isActive, onClick, index }) => {
+const NavItem = ({ item, isActive, onClick, index, collapsed = false }) => {
   const [hov, setHov] = useState(false);
   return (
     <button
       onClick={onClick}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
+      title={collapsed ? item.label : undefined}
       style={{
         width: '100%',
         display: 'flex', alignItems: 'center', gap: 9,
-        padding: '7px 10px', borderRadius: 8,
+        justifyContent: collapsed ? 'center' : 'flex-start',
+        padding: collapsed ? '9px 0' : '7px 10px', borderRadius: 8,
         background: isActive ? T.goldDim : hov ? T.surface2 : 'none',
         border: `1px solid ${isActive ? T.goldMid : 'transparent'}`,
         color: isActive ? T.gold : hov ? T.t1 : T.t2,
@@ -96,11 +132,13 @@ const NavItem = ({ item, isActive, onClick, index }) => {
           width: 2, borderRadius: '0 2px 2px 0', background: T.gold,
         }}/>
       )}
-      <span style={{ fontSize: 12, flexShrink: 0, opacity: isActive ? 1 : 0.6 }}>{item.icon}</span>
-      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {item.label}
-      </span>
-      {item.badge != null && (
+      <span style={{ fontSize: collapsed ? 15 : 12, flexShrink: 0, opacity: isActive ? 1 : 0.6 }}>{item.icon}</span>
+      {!collapsed && (
+        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {item.label}
+        </span>
+      )}
+      {!collapsed && item.badge != null && (
         <div style={{
           fontFamily: T.mono, fontSize: 9, fontWeight: 700,
           background: T.violet, color: 'white',
@@ -112,7 +150,7 @@ const NavItem = ({ item, isActive, onClick, index }) => {
 };
 
 /* ─── Sidebar content (shared desktop/mobile) ─── */
-const SidebarContent = ({ onNavClick }) => {
+const SidebarContent = ({ onNavClick, collapsed = false }) => {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -139,44 +177,63 @@ const SidebarContent = ({ onNavClick }) => {
     <>
       {/* ── User card ── */}
       <div style={{
-        padding: '16px 14px 12px',
+        padding: collapsed ? '14px 0 12px' : '16px 14px 12px',
         borderBottom: `1px solid ${T.border}`,
         flexShrink: 0,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start', gap: 10 }}>
+          <div title={collapsed ? fullName : undefined} style={{
             width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
             background: 'linear-gradient(135deg,#7C3AED,#00E5FF)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontWeight: 700, fontSize: 14, color: 'white',
           }}>{initials}</div>
-          <div style={{ overflow: 'hidden' }}>
-            <div style={{ fontWeight: 600, fontSize: 13, color: T.t1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {fullName}
+          {!collapsed && (
+            <div style={{ overflow: 'hidden' }}>
+              <div style={{ fontWeight: 600, fontSize: 13, color: T.t1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {fullName}
+              </div>
+              <div style={{ fontFamily: T.mono, fontSize: 8, color: T.cyan, letterSpacing: '0.1em', fontWeight: 600 }}>
+                ESPACE DÉCOUVERTE
+              </div>
             </div>
-            <div style={{ fontFamily: T.mono, fontSize: 8, color: T.cyan, letterSpacing: '0.1em', fontWeight: 600 }}>
-              ESPACE DÉCOUVERTE
-            </div>
-          </div>
+          )}
         </div>
-        <div style={{
-          marginTop: 8, fontFamily: T.mono, fontSize: 8,
-          color: T.t3, letterSpacing: '0.10em',
-          background: T.surface2, border: `1px solid ${T.border}`,
-          borderRadius: 4, padding: '2px 6px', display: 'inline-block',
-        }}>PROFIL ÉLÈVE</div>
+        {!collapsed && (
+          <div style={{
+            marginTop: 8, fontFamily: T.mono, fontSize: 8,
+            color: T.t3, letterSpacing: '0.10em',
+            background: T.surface2, border: `1px solid ${T.border}`,
+            borderRadius: 4, padding: '2px 6px', display: 'inline-block',
+          }}>PROFIL ÉLÈVE</div>
+        )}
       </div>
 
-      {/* ── Nav ── */}
+      {/* ── Nav (5 familles) ── */}
       <nav style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-        {NAV.map((item, i) => (
-          <NavItem
-            key={item.key}
-            item={item}
-            isActive={activeKey === item.key || (item.key === 'dashboard' && activeKey === 'student-school-life')}
-            onClick={() => handleNav(item)}
-            index={i}
-          />
+        {NAV_GROUPS.map((group, gi) => (
+          <div key={group.section} style={{ marginTop: gi === 0 ? 0 : 10 }}>
+            {/* En-tête de famille — masqué en mode réduit (icônes), filet discret à la place */}
+            {collapsed ? (
+              gi > 0 && <div style={{ height: 1, background: T.border, margin: '8px 6px' }}/>
+            ) : (
+              <div style={{
+                padding: '2px 10px 5px', fontFamily: T.mono, fontSize: 9,
+                letterSpacing: '0.11em', textTransform: 'uppercase',
+                color: T.t2, fontWeight: 700,
+              }}>{group.section}</div>
+            )}
+            {group.items.map((item) => (
+              <NavItem
+                key={item.key}
+                item={item}
+                isActive={activeKey === item.key || (item.key === 'dashboard' && activeKey === 'student-school-life')}
+                onClick={() => handleNav(item)}
+                index={NAV.findIndex((n) => n.key === item.key)}
+                collapsed={collapsed}
+              />
+            ))}
+          </div>
         ))}
 
         <div style={{ height: 1, background: T.border, margin: '8px 4px' }}/>
@@ -184,9 +241,11 @@ const SidebarContent = ({ onNavClick }) => {
         {/* Logout */}
         <button
           onClick={handleLogout}
+          title={collapsed ? 'Déconnexion' : undefined}
           style={{
             width: '100%', display: 'flex', alignItems: 'center', gap: 9,
-            padding: '7px 10px', borderRadius: 8,
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            padding: collapsed ? '9px 0' : '7px 10px', borderRadius: 8,
             background: 'none', border: '1px solid transparent',
             color: T.danger, fontSize: 12.5, fontWeight: 500,
             textAlign: 'left', cursor: 'pointer', transition: 'all 150ms ease',
@@ -195,7 +254,7 @@ const SidebarContent = ({ onNavClick }) => {
           onMouseLeave={e => e.currentTarget.style.background = 'none'}
         >
           <IconLogout/>
-          Déconnexion
+          {!collapsed && 'Déconnexion'}
         </button>
       </nav>
 
@@ -213,17 +272,34 @@ const SidebarContent = ({ onNavClick }) => {
 };
 
 /* ═══════════════════════════ MAIN EXPORT ══════════════════════════════════ */
-const StudentSchoolLifeSidebar = () => {
+const StudentSchoolLifeSidebar = ({ collapsed = false, onToggle }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  /* ── Desktop sidebar (fixed, 220px) ── */
+  const ToggleBtn = (
+    <button
+      onClick={onToggle}
+      title={collapsed ? 'Étendre le menu' : 'Réduire le menu'}
+      aria-label={collapsed ? 'Étendre le menu' : 'Réduire le menu'}
+      style={{
+        background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 8,
+        width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: T.t2, cursor: 'pointer', flexShrink: 0, transition: 'all 150ms ease',
+      }}
+      onMouseEnter={e => { e.currentTarget.style.color = T.gold; }}
+      onMouseLeave={e => { e.currentTarget.style.color = T.t2; }}
+    >
+      <IconChevron collapsed={collapsed} />
+    </button>
+  );
+
+  /* ── Desktop sidebar (fixed, 220px / 64px réduit) ── */
   const desktopSidebar = (
     <aside
       className="hidden lg:flex"
       style={{
-        // Panneau flottant arrondi (façon Claude) : descend sous le header (89px), marges, arrondis.
-        position: 'fixed', top: 100, left: 14, bottom: 14,
-        width: 220, zIndex: 50,
+        // Panneau flottant arrondi (façon Claude) : plein écran (aucun header global au-dessus), marges, arrondis.
+        position: 'fixed', top: 14, left: 14, bottom: 14,
+        width: collapsed ? 64 : 220, zIndex: 50,
         flexDirection: 'column',
         background: 'rgba(18,17,26,0.97)',
         border: `1px solid ${T.border}`,
@@ -232,33 +308,44 @@ const StudentSchoolLifeSidebar = () => {
         WebkitBackdropFilter: 'blur(20px)',
         overflow: 'hidden',
         boxShadow: '0 16px 48px -16px rgba(0,0,0,0.55)',
+        transition: 'width 200ms cubic-bezier(0.4,0,0.2,1)',
       }}
     >
-      {/* LIRI logo strip */}
+      {/* LIRI logo strip + bouton tiroir */}
       <div style={{
-        padding: '14px 14px 12px',
+        padding: collapsed ? '14px 0 12px' : '14px 14px 12px',
         borderBottom: `1px solid ${T.border}`,
-        display: 'flex', alignItems: 'center', gap: 8,
+        display: 'flex', alignItems: 'center',
+        justifyContent: collapsed ? 'center' : 'space-between', gap: 8,
         flexShrink: 0,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 800, fontSize: 15, letterSpacing: '-0.02em' }}>
-          <span style={{ color: T.t1 }}>L</span>
-          <div style={{
-            width: 12, height: 12, borderRadius: '50%',
-            background: 'linear-gradient(135deg,#7C3AED,#00E5FF)',
-            flexShrink: 0, position: 'relative', top: -1,
-            boxShadow: '0 0 8px rgba(124,58,237,0.5)',
-          }}/>
-          <span style={{ color: T.t1 }}>RI</span>
-        </div>
-        <div style={{ width: 1, height: 16, background: T.border }}/>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: 12, color: T.t1, letterSpacing: '0.01em' }}>PRORASCIENCE</div>
-          <div style={{ fontFamily: T.mono, fontSize: 7, color: T.t3, letterSpacing: '0.12em' }}>ACADEMY</div>
-        </div>
+        {collapsed ? (
+          ToggleBtn
+        ) : (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 800, fontSize: 15, letterSpacing: '-0.02em' }}>
+                <span style={{ color: T.t1 }}>L</span>
+                <div style={{
+                  width: 12, height: 12, borderRadius: '50%',
+                  background: 'linear-gradient(135deg,#7C3AED,#00E5FF)',
+                  flexShrink: 0, position: 'relative', top: -1,
+                  boxShadow: '0 0 8px rgba(124,58,237,0.5)',
+                }}/>
+                <span style={{ color: T.t1 }}>RI</span>
+              </div>
+              <div style={{ width: 1, height: 16, background: T.border }}/>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 12, color: T.t1, letterSpacing: '0.01em' }}>PRORASCIENCE</div>
+                <div style={{ fontFamily: T.mono, fontSize: 7, color: T.t3, letterSpacing: '0.12em' }}>ACADEMY</div>
+              </div>
+            </div>
+            {ToggleBtn}
+          </>
+        )}
       </div>
 
-      <SidebarContent/>
+      <SidebarContent collapsed={collapsed}/>
     </aside>
   );
 

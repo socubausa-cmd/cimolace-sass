@@ -39,20 +39,20 @@ function StepEditor({ step, data, onChange, onRemoveContent }) {
   const [open, setOpen] = useState(Boolean(data?.content));
 
   return (
-    <div className="rounded-xl border border-white/8 bg-white/3 overflow-hidden">
+    <div className="rounded-xl border border-[var(--lt-border)] bg-[var(--lt-card-bg)] overflow-hidden">
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors text-left"
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--lt-inner-bg)] transition-colors text-left"
       >
         <div className="flex items-center gap-2.5">
           <span className="text-base">{step.icon}</span>
-          <span className="text-sm font-medium text-white">{step.label}</span>
+          <span className="text-sm font-medium text-[var(--lt-text)]">{step.label}</span>
           {data?.duration_min && (
-            <span className="text-[10px] text-gray-500 border border-white/10 rounded px-1.5 py-0.5">{data.duration_min} min</span>
+            <span className="text-[10px] text-[var(--lt-muted)] border border-[var(--lt-border)] rounded px-1.5 py-0.5">{data.duration_min} min</span>
           )}
-          {data?.content && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
+          {data?.content && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
         </div>
-        {open ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
+        {open ? <ChevronUp className="w-4 h-4 text-[var(--lt-muted)]" /> : <ChevronDown className="w-4 h-4 text-[var(--lt-muted)]" />}
       </button>
 
       <AnimatePresence>
@@ -64,21 +64,21 @@ function StepEditor({ step, data, onChange, onRemoveContent }) {
                 onChange={e => onChange({ ...data, step: step.step, title: step.label, content: e.target.value })}
                 placeholder={step.placeholder}
                 rows={2}
-                className="w-full resize-none rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
+                className="w-full resize-none rounded-lg bg-[var(--lt-inner-bg)] border border-[var(--lt-border)] px-3 py-2 text-sm text-[var(--lt-text)] placeholder-[#A1A1AA] focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] transition-colors"
               />
               <div className="flex items-center gap-3">
-                <label className="text-xs text-gray-500">Durée :</label>
+                <label className="text-xs text-[var(--lt-muted)]">Durée :</label>
                 <input
                   type="number"
                   min={1} max={60}
                   value={data?.duration_min || ''}
                   onChange={e => onChange({ ...data, step: step.step, title: step.label, duration_min: Number(e.target.value) || undefined })}
                   placeholder="min"
-                  className="w-16 rounded-lg bg-white/5 border border-white/10 px-2 py-1 text-sm text-white text-center focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]"
+                  className="w-16 rounded-lg bg-[var(--lt-inner-bg)] border border-[var(--lt-border)] px-2 py-1 text-sm text-[var(--lt-text)] text-center focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]"
                 />
-                <span className="text-xs text-gray-500">minutes</span>
+                <span className="text-xs text-[var(--lt-muted)]">minutes</span>
                 {data?.content && (
-                  <button onClick={() => onRemoveContent(step.step)} className="ml-auto text-xs text-red-400 hover:text-red-300 flex items-center gap-1">
+                  <button onClick={() => onRemoveContent(step.step)} className="ml-auto text-xs text-red-600 hover:text-red-700 flex items-center gap-1">
                     <Trash2 className="w-3 h-3" /> Effacer
                   </button>
                 )}
@@ -166,9 +166,28 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
     }
   };
 
+  /* Lancer la séance live à partir du rendez-vous (pont RDV→live). */
+  const [startingLive, setStartingLive] = useState(false);
+  const handleStartLive = async () => {
+    if (!appointment?.id || startingLive) return;
+    setStartingLive(true);
+    try {
+      const { bookingApi } = await import('@/lib/api');
+      const res = await bookingApi.startLiveFromAppointment(appointment.id);
+      const liveId = res?.liveSessionId;
+      if (!liveId) throw new Error('Séance non créée');
+      toast({ title: 'Séance prête', description: 'Ouverture de la salle hôte…' });
+      window.location.href = `/live/host/${liveId}`;
+    } catch (e) {
+      toast({ title: 'Erreur', description: e.message, variant: 'destructive' });
+    } finally {
+      setStartingLive(false);
+    }
+  };
+
   if (!loaded) {
     return (
-      <div className="flex items-center justify-center py-8 text-gray-500">
+      <div className="flex items-center justify-center py-8 text-[var(--lt-muted)]">
         <Loader2 className="w-5 h-5 animate-spin mr-2" /> Chargement…
       </div>
     );
@@ -177,17 +196,17 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
   const currentStatus = String(appointment?.status || '');
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 p-4 bg-[var(--lt-inner-bg)]">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <List className="w-4 h-4 text-[var(--school-accent)]" />
-        <p className="text-sm font-semibold text-white">Studio de préparation</p>
-        <span className="ml-auto text-[10px] text-gray-500 border border-white/10 rounded px-2 py-0.5">§3 & §8</span>
+        <List className="w-4 h-4 text-[var(--lt-gold-ink)]" />
+        <p className="text-sm font-semibold text-[var(--lt-text)]">Studio de préparation</p>
+        <span className="ml-auto text-[10px] text-[var(--lt-muted)] border border-[var(--lt-border)] rounded px-2 py-0.5">§3 & §8</span>
       </div>
 
       {/* Type de salle */}
       <div className="space-y-1.5">
-        <label className="text-xs text-gray-500 uppercase tracking-wider">Type de salle</label>
+        <label className="text-xs text-[var(--lt-muted)] uppercase tracking-wider">Type de salle</label>
         <div className="flex gap-2">
           {ROOM_TYPES.map(rt => (
             <button
@@ -195,8 +214,8 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
               onClick={() => setRoomType(rt.value)}
               className={`flex-1 flex flex-col items-center gap-1.5 rounded-xl border py-3 text-xs font-medium transition-all ${
                 roomType === rt.value
-                  ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)]'
-                  : 'border-white/10 bg-white/5 text-gray-500 hover:border-white/25'
+                  ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--lt-gold-ink)]'
+                  : 'border-[var(--lt-border)] bg-[var(--lt-card-bg)] text-[var(--lt-muted)] hover:border-black/25'
               }`}
             >
               <rt.icon className="w-4 h-4" />
@@ -208,9 +227,9 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
 
       {/* Plan de l'entretien */}
       <div className="space-y-1.5">
-        <label className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+        <label className="text-xs text-[var(--lt-muted)] uppercase tracking-wider flex items-center gap-1.5">
           <Plus className="w-3 h-3" /> Plan de l'entretien
-          <span className="text-gray-600">(cliquer pour développer)</span>
+          <span className="text-[#A1A1AA]">(cliquer pour développer)</span>
         </label>
         <div className="space-y-2">
           {PLAN_STEPS.map(step => (
@@ -227,7 +246,7 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
 
       {/* Notes internes */}
       <div className="space-y-1.5">
-        <label className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+        <label className="text-xs text-[var(--lt-muted)] uppercase tracking-wider flex items-center gap-1.5">
           <FileText className="w-3 h-3" /> Notes internes
         </label>
         <textarea
@@ -235,28 +254,28 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
           onChange={e => setNotes(e.target.value)}
           placeholder="Observations, contexte, points de vigilance avant la séance…"
           rows={2}
-          className="w-full resize-none rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
+          className="w-full resize-none rounded-xl bg-[var(--lt-card-bg)] border border-[var(--lt-border)] px-3 py-2.5 text-sm text-[var(--lt-text)] placeholder-[#A1A1AA] focus:outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] transition-colors"
         />
       </div>
 
       {/* Activer la Smart Room */}
-      <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+      <div className="flex items-center gap-3 rounded-xl border border-[var(--lt-border)] bg-[var(--lt-card-bg)] px-4 py-3">
         <button
           onClick={() => setIsReady(r => !r)}
-          className={`w-10 h-5 rounded-full transition-all flex items-center px-0.5 ${isReady ? 'bg-[var(--school-accent)]' : 'bg-white/20'}`}
+          className={`w-10 h-5 rounded-full transition-all flex items-center px-0.5 ${isReady ? 'bg-[var(--school-accent)]' : 'bg-zinc-300'}`}
         >
           <motion.div className="w-4 h-4 rounded-full bg-white shadow" animate={{ x: isReady ? 20 : 0 }} transition={{ type: 'spring', stiffness: 300 }} />
         </button>
         <div>
-          <p className="text-sm text-white font-medium">Séance prête</p>
-          <p className="text-xs text-gray-500">Active le bouton "Rejoindre" pour le client</p>
+          <p className="text-sm text-[var(--lt-text)] font-medium">Séance prête</p>
+          <p className="text-xs text-[var(--lt-muted)]">Active le bouton "Rejoindre" pour le client</p>
         </div>
       </div>
 
       {/* Changer le statut */}
       {['confirmed','scheduled','preparing'].includes(currentStatus) && (
         <div className="space-y-1.5">
-          <label className="text-xs text-gray-500 uppercase tracking-wider">Changer le statut</label>
+          <label className="text-xs text-[var(--lt-muted)] uppercase tracking-wider">Changer le statut</label>
           <div className="flex gap-2">
             {[
               { value: 'preparing', label: 'En préparation', color: 'blue'   },
@@ -268,9 +287,9 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
                 className={`flex-1 rounded-lg border py-2 text-xs font-medium transition-all ${
                   newStatus === opt.value
                     ? opt.color === 'blue'
-                      ? 'bg-blue-500/20 border-blue-500/50 text-blue-300'
-                      : 'bg-violet-500/20 border-violet-500/50 text-violet-300'
-                    : 'bg-white/5 border-white/10 text-gray-500 hover:border-white/25'
+                      ? 'bg-blue-50 border-blue-400 text-blue-700'
+                      : 'bg-violet-50 border-violet-400 text-violet-700'
+                    : 'bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-[var(--lt-muted)] hover:border-black/25'
                 }`}
               >
                 {opt.label}
@@ -288,6 +307,17 @@ export default function AppointmentPreparationPanel({ appointment, session, onSt
       >
         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
         {isReady ? 'Enregistrer & activer la salle' : 'Enregistrer la préparation'}
+      </Button>
+
+      {/* Pont RDV → séance live */}
+      <Button
+        onClick={handleStartLive}
+        disabled={startingLive}
+        variant="outline"
+        className="mt-2 w-full flex items-center justify-center gap-2"
+      >
+        {startingLive ? <Loader2 className="w-4 h-4 animate-spin" /> : <Video className="w-4 h-4" />}
+        Lancer la séance live
       </Button>
     </div>
   );

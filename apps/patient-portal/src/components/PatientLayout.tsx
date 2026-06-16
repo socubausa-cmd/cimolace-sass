@@ -12,8 +12,10 @@ import {
   Calendar,
   Shield,
   Activity,
+  Sparkles,
 } from 'lucide-react';
 import { useBranding } from '../lib/branding';
+import { NotificationBell } from './NotificationBell';
 
 const nav = [
   { to: '/dashboard',     icon: LayoutDashboard, label: 'Accueil' },
@@ -25,6 +27,7 @@ const nav = [
   { to: '/forms',         icon: ClipboardList,   label: 'Formulaires' },
   { to: '/health',        icon: Heart,           label: 'Suivi santé' },
   { to: '/sante/mon-corps', icon: Activity,      label: 'Mon corps' },
+  { to: '/sante/assistant', icon: Sparkles,      label: 'Assistant santé' },
   { to: '/programs',      icon: BookOpen,        label: 'Programmes' },
   { to: '/messages',      icon: MessageCircle,   label: 'Messages' },
   { to: '/privacy',       icon: Shield,          label: 'Confidentialité' },
@@ -124,8 +127,24 @@ export function PatientLayout() {
           Sécurisé · Conforme RGPD
         </div>
       </aside>
-      <main style={{ flex: 1, padding: 32, overflow: 'auto' }}>
-        <Outlet />
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
+        {/* Barre supérieure : cloche de notifications, présente sur chaque
+            page authentifiée. Reste générique (aucune attribution). */}
+        <header
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            padding: '16px 32px',
+            borderBottom: '1px solid #e2e8f0',
+            background: '#fff',
+          }}
+        >
+          <NotificationBell />
+        </header>
+        <div style={{ flex: 1, padding: 32 }}>
+          <Outlet />
+        </div>
       </main>
     </div>
   );

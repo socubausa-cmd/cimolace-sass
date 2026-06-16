@@ -3,7 +3,8 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 import { ChapterCard } from './chapter-card';
 import {
@@ -17,6 +18,8 @@ import {
 /** Écran lecture d'une masterclass (GET /masterclass-factory/projects/:id). */
 export function MasterscriptReader({ projectId }: { projectId: string }) {
   const router = useRouter();
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const [project, setProject] = useState<MasterclassProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState<string[]>([]);
@@ -158,6 +161,8 @@ export function MasterscriptReader({ projectId }: { projectId: string }) {
 
 /** État vide honnête du lecteur. */
 function EmptyReader({ title, text }: { title: string; text: string }) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   return (
     <View style={styles.empty}>
       <Feather name="book-open" size={28} color={C.faint} />
@@ -167,7 +172,7 @@ function EmptyReader({ title, text }: { title: string; text: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: 6, paddingBottom: 14 },
   backBtn: {

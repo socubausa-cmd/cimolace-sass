@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { User, FileText, Check, AlertCircle, MessageSquare, Layers, Calendar, BookOpen, ArrowRight } from 'lucide-react';
+import { User, FileText, Check, AlertCircle, Layers, Calendar, BookOpen, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import StudentQuickActions from '@/components/school/teacher/StudentQuickActions';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { generateClassroomData, generateStudentSubmissions } from '@/lib/mockClassroomData';
@@ -152,9 +153,7 @@ const TeacherClassroomPage = ({ defaultView = 'classroom' }) => {
                          <p className="text-sm text-gray-400">Participation pédagogique: active</p>
                        </div>
                      </div>
-                     <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold gap-2">
-                       <MessageSquare className="w-4 h-4" /> Message privé
-                     </Button>
+                     <StudentQuickActions student={selectedStudent} />
                    </div>
 
                   <Tabs value={studentPanelTab} onValueChange={setStudentPanelTab} className="flex-1 flex flex-col">

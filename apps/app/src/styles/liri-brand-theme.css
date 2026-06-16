@@ -152,13 +152,13 @@ body {
   color: var(--liri-text) !important;
 }
 
+/* Carte alignée sur le nouveau shell (back-office élève / LiriDashboardShell) :
+   surface opaque #192734, sans le verre flou de l'ancien design. */
 .premium-panel {
-  border-radius: 1rem;
-  border: 1px solid var(--liri-border);
-  background: color-mix(in srgb, var(--liri-surface) 70%, transparent);
-  backdrop-filter: blur(18px) saturate(1.15);
-  -webkit-backdrop-filter: blur(18px) saturate(1.15);
-  box-shadow: var(--liri-glow-hero);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: #192734;
+  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.5);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -195,6 +195,50 @@ body {
 #root .marketing-public-shell > main,
 #root .premium-app-shell main {
   background: transparent !important;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   BASCULE DE TEINTE du back-office (crème ⇄ sombre) — contrat de variables.
+   Le shell pose `liri-light-content` (crème) ou `liri-dark-content` (sombre)
+   sur le <main> selon le choix du bouton (cf. LiriDashboardShell + useShellTint).
+   Les composants de contenu lisent var(--lt-*) → un seul jeu de styles, 2 teintes.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Défauts CLAIRS (s'appliquent à tout le back-office tant que la teinte n'est pas sombre) */
+#root .premium-app-shell {
+  --lt-text: #18181B;
+  --lt-sub: #52525B;
+  --lt-muted: #71717A;
+  --lt-border: rgba(0, 0, 0, 0.08);
+  --lt-card-bg: #ffffff;
+  --lt-card-border: rgba(0, 0, 0, 0.08);
+  --lt-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --lt-inner-bg: #faf7f0;
+  --lt-gold: #d4af37;      /* or décoratif */
+  --lt-gold-ink: #8a6d1a;  /* or assombri = lisible AA sur clair (texte/lien) */
+}
+
+/* Mode CLAIR (crème) : peint le canvas — doit BATTRE le `transparent !important`
+   plus haut (sinon le fond sombre du premium-app-shell traverse le <main>).
+   `main.liri-light-content` (élément + classe) gagne en spécificité. */
+#root .premium-app-shell main.liri-light-content {
+  background: #f4efe3 !important;
+  background-image: none !important;
+}
+
+/* Mode SOMBRE : canvas transparent (fond premium-app-shell sombre visible) + override
+   des variables vers la palette sombre (cartes #16161E, texte clair, or lumineux). */
+#root .premium-app-shell main.liri-dark-content {
+  --lt-text: #f4f4f5;
+  --lt-sub: #a1a1aa;
+  --lt-muted: #8e8e93;
+  --lt-border: rgba(255, 255, 255, 0.08);
+  --lt-card-bg: #16161e;
+  --lt-card-border: rgba(255, 255, 255, 0.07);
+  --lt-card-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  --lt-inner-bg: #12121e;
+  --lt-gold: #d4af37;
+  --lt-gold-ink: #d4af37; /* or lumineux = lisible sur sombre */
 }
 
 /* Colonne principale (flex-1) à droite de la sidebar — pas de fond clair résiduel */

@@ -259,7 +259,7 @@ export default function SchoolLoginPage() {
             href={`/t/${tenantSlug}`}
             style={{ color: '#4b5563', fontSize: '12px', textDecoration: 'none' }}
           >
-            ← Retour à l'accueil de l\'école
+            ← Retour à l'accueil de l'école
           </a>
         </div>
       </div>

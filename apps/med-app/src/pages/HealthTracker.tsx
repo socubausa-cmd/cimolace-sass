@@ -9,8 +9,13 @@ export function HealthTracker() {
   useEffect(() => {
     const token = localStorage.getItem('supabase_token');
     if (!token) return;
+    // DÉFENSIF : entries DOIT rester un tableau. Sur une réponse non-array
+    // (404/erreur → objet), entries.slice() plantait TOUTE l'app (white-screen
+    // « a.slice is not a function »). On normalise toute réponse en tableau.
     fetch(API + '/med/health', { headers: { Authorization: 'Bearer ' + token, 'X-Tenant-Slug': localStorage.getItem('tenant_slug') || '' } })
-      .then(r => r.json()).then(d => setEntries(d.data || d || [])).catch(() => {});
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => setEntries(Array.isArray(d) ? d : Array.isArray(d?.data) ? d.data : []))
+      .catch(() => setEntries([]));
   }, []);
 
   const metrics = [

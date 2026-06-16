@@ -48,6 +48,18 @@ export class BookingController {
     return this.booking.listSlots(tenant.id, from, to);
   }
 
+  // Créneaux intelligents (slotGrid + recommandations) — AVANT slots/:id.
+  @Get('slots/availability')
+  slotAvailability(
+    @CurrentTenant() tenant: TenantContext,
+    @Query('windowStart') windowStart: string,
+    @Query('windowEnd') windowEnd: string,
+    @Query('timezone') timezone?: string,
+    @Query('country') country?: string,
+  ) {
+    return this.booking.slotAvailability(tenant, { timezone, country, windowStart, windowEnd });
+  }
+
   @Get('slots/:id')
   getSlot(@Param('id') id: string, @CurrentTenant() tenant: TenantContext) {
     return this.booking.getSlot(id, tenant.id);
@@ -75,6 +87,20 @@ export class BookingController {
     @Query('when') when?: string,
   ) {
     return this.booking.availableSecretaries(tenant, { timezone, country, when });
+  }
+
+  // ── Prof → séance live avec un élève (depuis le profil élève) ────────────
+  @Post('students/:studentId/schedule-live')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin', 'teacher', 'secretariat')
+  scheduleLiveWithStudent(
+    @Param('studentId') studentId: string,
+    @Body() body: { title?: string; scheduledAt?: string },
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
+  ) {
+    const userId = (req as any).user?.id;
+    return this.booking.scheduleLiveWithStudent(tenant, userId, studentId, body ?? {});
   }
 
   // ── Préparation d'entretien (secrétariat) ────────────────────────────────
@@ -139,6 +165,17 @@ export class BookingController {
     @CurrentTenant() tenant: TenantContext,
   ) {
     return this.booking.updateAppointment(id, tenant.id, dto);
+  }
+
+  // Annulation par le propriétaire (élève/visiteur) — pas de rôle staff,
+  // la propriété du RDV est vérifiée dans le service.
+  @Post('appointments/:id/cancel')
+  cancelOwnAppointment(
+    @Param('id') id: string,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
+  ) {
+    return this.booking.cancelOwnAppointment(id, tenant.id, (req as any).user.id);
   }
 
   // ── Feedback ─────────────────────────────────────────────────────────────

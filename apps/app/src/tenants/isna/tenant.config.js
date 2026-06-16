@@ -8,7 +8,7 @@
 export const isnaTenantConfig = {
   id: '4f6faaa8-43a0-46d6-b98a-99ea1154f9ea',
   slug: 'isna',
-  name: 'Institut Supérieur de Nutrition Alimentaire',
+  name: 'Prorascience',
   email: 'contact@isna.pro',
   status: 'active',
   
@@ -33,10 +33,10 @@ export const isnaTenantConfig = {
     maxTeachers: 20,
   },
   
-  // Branding ISNA
+  // Branding Prorascience (tenant « isna », domaine prorascience.org)
   branding: {
-    name: 'ISNA',
-    fullName: 'Institut Supérieur de Nutrition Alimentaire',
+    name: 'Prorascience',
+    fullName: 'Prorascience — Science Africaine Totale',
     logo: '/logos/isna-logo.png',
     primaryColor: '#1a5f7a',
     secondaryColor: '#2c3e50',

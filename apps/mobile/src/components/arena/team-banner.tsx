@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 import type { ActiveSide, DebateParticipantRow } from './data';
 
@@ -25,6 +27,8 @@ function TeamCol({
   score: number;
   active: boolean;
 }) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const tint = side === 'A' ? SIDE_A : SIDE_B;
   return (
     <View style={[styles.col, active && { borderColor: tint }]}>
@@ -58,6 +62,8 @@ export function TeamBanner({
   scoreB: number;
   activeSide: ActiveSide;
 }) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   return (
     <View style={styles.row}>
       <TeamCol side="A" members={teamA} score={scoreA} active={activeSide === 'A'} />
@@ -69,7 +75,7 @@ export function TeamBanner({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'stretch', gap: 8 },
   col: {
     flex: 1,

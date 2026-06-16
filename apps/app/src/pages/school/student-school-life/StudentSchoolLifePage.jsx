@@ -1,5 +1,5 @@
-import React, { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
+import { Routes, Route, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom';
 const TenantCourseDetailPage = lazy(() => import('@/pages/tenant/TenantCourseDetailPage'));
 import { Helmet } from 'react-helmet';
 import StudentSchoolLifeSidebar from '@/components/school/student/StudentSchoolLifeSidebar';
@@ -20,6 +20,21 @@ import SchoolLifePage from '@/pages/school/SchoolLifePage';
 import BibliothequePage from '@/pages/BibliothequePage';
 import LibraryPage from '@/pages/LibraryPage';
 import { FormationForumContent } from '@/pages/school/FormationForumPage';
+import { SslThemeProvider, SSL_LIGHT_CLASS, ensureSslLightStyles } from './sslTheme';
+import { useShellTint } from '@/lib/useShellTint';
+
+/* Icônes bascule de teinte (mêmes tracés que le shell back-office) */
+const SslIconSun = () => (
+  <svg viewBox="0 0 20 20" width={17} height={17} fill="none">
+    <circle cx="10" cy="10" r="3.4" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M10 2.4v2.2M10 15.4v2.2M2.4 10h2.2M15.4 10h2.2M4.9 4.9l1.5 1.5M13.6 13.6l1.5 1.5M15.1 4.9l-1.5 1.5M6.4 13.6l-1.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+const SslIconMoon = () => (
+  <svg viewBox="0 0 20 20" width={17} height={17} fill="none">
+    <path d="M10 2.5a5 5 0 0 0 7.5 7.5 7.5 7.5 0 1 1-7.5-7.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+  </svg>
+);
 
 function StudentFormationForumRoute() {
   const { formationId } = useParams();
@@ -43,17 +58,27 @@ function StudentBookReaderRoute() {
   if (!Reader) return <Navigate to="/student-school-life/bibliotheque" replace />;
   return (
     <div className="student-book-reader">
-      {/* Le lecteur a son propre fond (#0F1419) qui ferait une "boîte" sur le shell.
-          On le rend transparent → le texte s'emboîte avec l'arrière-plan de l'espace élève. */}
+      {/* Le lecteur a son propre fond sombre (#0F1419) qui ferait une "boîte" sur le shell.
+          Espace élève = thème CLAIR → on le rend transparent (le texte s'emboîte sur le canvas clair)
+          et on force un texte lisible sur fond clair. */}
       <style>{`
-        .student-book-reader > div { background-color: transparent !important; min-height: auto !important; }
+        .student-book-reader > div { background-color: transparent !important; min-height: auto !important; color: #18181B !important; }
         /* Fond du lecteur transparent, SAUF la barre sticky de chapitres (qui doit couvrir le texte). */
         .student-book-reader [class*="0F1419" i]:not(.sticky) { background-color: transparent !important; }
-        /* Barre de chapitres : reste collée SOUS le header du shell (89px), fond opaque, au-dessus du contenu. */
+        /* Texte du lecteur : passer des tons clairs (conçus pour fond sombre) au sombre lisible. */
+        .student-book-reader .text-white,
+        .student-book-reader [class*="text-gray-1" i],
+        .student-book-reader [class*="text-gray-2" i],
+        .student-book-reader [class*="text-gray-3" i] { color: #18181B !important; }
+        .student-book-reader [class*="text-gray-4" i],
+        .student-book-reader [class*="text-gray-5" i] { color: #52525B !important; }
+        /* Barre de chapitres : collée SOUS le header du shell, fond clair translucide, au-dessus du contenu. */
         .student-book-reader .sticky {
           top: 96px !important;
-          background-color: rgba(11,11,15,0.96) !important;
+          background-color: rgba(244,245,247,0.92) !important;
           backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(0,0,0,0.08);
+          color: #18181B !important;
           z-index: 40 !important;
         }
       `}</style>
@@ -63,13 +88,13 @@ function StudentBookReaderRoute() {
         style={{
           display: 'inline-flex', alignItems: 'center', gap: 7,
           marginBottom: 18, padding: '8px 15px', borderRadius: 11,
-          background: 'rgba(212,175,55,0.10)', border: '1px solid rgba(212,175,55,0.30)',
-          color: '#D4AF37', fontSize: 13.5, fontWeight: 600, cursor: 'pointer',
+          background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.40)',
+          color: '#8A6D1A', fontSize: 13.5, fontWeight: 600, cursor: 'pointer',
         }}
       >
         <span style={{ fontSize: 16, lineHeight: 1 }}>←</span> Retour à la bibliothèque
       </button>
-      <Suspense fallback={<div style={{ padding: 48, textAlign: 'center', color: '#9ca3af' }}>Chargement du livre…</div>}>
+      <Suspense fallback={<div style={{ padding: 48, textAlign: 'center', color: '#71717A' }}>Chargement du livre…</div>}>
         <Reader />
       </Suspense>
     </div>
@@ -78,20 +103,55 @@ function StudentBookReaderRoute() {
 
 // Main Wrapper Layout for Student School Life Area
 const StudentSchoolLifePage = () => {
+  const location = useLocation();
+  // Le forum réduit la sidebar en mode icônes pour centrer la conversation.
+  const isForum = location.pathname.includes('/forum');
+  const [collapsed, setCollapsed] = useState(isForum);
+  // Auto : réduit en entrant sur le forum, étend en sortant (l'utilisateur peut surcharger via le bouton tiroir).
+  useEffect(() => { setCollapsed(isForum); }, [isForum]);
+  // Injecte le remap CSS clair (pages en utilitaires Tailwind/shadcn). Idempotent.
+  useEffect(() => { ensureSslLightStyles(); }, []);
+  // Bascule de teinte partagée avec le back-office (clé localStorage commune). Défaut = crème clair.
+  const [tint, toggleTint] = useShellTint();
+  const isLight = tint !== 'dark';
+
   return (
-    <div style={{ minHeight: '100dvh', background: '#0B0B0F', display: 'flex' }}>
-      <Helmet><title>Espace Étudiant | PRORASCIENCE</title></Helmet>
+    // Espace ÉLÈVE = thème CLAIR. La SIDEBAR (panneau flottant sombre/or) garde son
+    // propre fond et n'est PAS affectée — seul le contenu central passe au clair.
+    <SslThemeProvider mode={isLight ? 'light' : 'dark'}>
+      <div className={isLight ? SSL_LIGHT_CLASS : ''} style={{ minHeight: '100dvh', background: isLight ? '#F4EFE3' : '#0b0b0f', display: 'flex' }}>
+        <Helmet><title>Espace Étudiant | PRORASCIENCE</title></Helmet>
 
-      {/* Sidebar */}
-      <StudentSchoolLifeSidebar />
+        {/* Bouton de bascule de teinte (crème ⇄ sombre) — flottant, clé partagée avec le back-office */}
+        <button
+          type="button"
+          onClick={toggleTint}
+          aria-label={isLight ? 'Passer au thème sombre' : 'Passer au thème crème'}
+          title={isLight ? 'Thème sombre' : 'Thème crème'}
+          style={{
+            position: 'fixed', top: 16, right: 20, zIndex: 50,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 40, height: 40, borderRadius: 11, cursor: 'pointer',
+            background: isLight ? '#FFFFFF' : 'rgba(255,255,255,0.06)',
+            border: `1px solid ${isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.10)'}`,
+            color: isLight ? '#52525B' : 'rgba(245,245,247,0.65)',
+            boxShadow: isLight ? '0 1px 3px rgba(0,0,0,0.08)' : '0 2px 8px rgba(0,0,0,0.4)',
+            transition: 'background 150ms ease, color 150ms ease, border-color 150ms ease',
+          }}
+        >
+          {isLight ? <SslIconMoon /> : <SslIconSun />}
+        </button>
 
-      {/* Main Content Area — lg:pl-[220px] offsets content past the fixed sidebar */}
-      <main
-        style={{ flex: 1, overflowX: 'hidden', minHeight: '100dvh' }}
-        className="lg:pl-[250px]"
-      >
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 24px 48px' }}>
-          <Routes>
+        {/* Sidebar (mode icônes sur le forum, bouton tiroir pour étendre) — reste SOMBRE */}
+        <StudentSchoolLifeSidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
+
+        {/* Main Content Area — décalage adapté à la largeur de la sidebar */}
+        <main
+          style={{ flex: 1, overflowX: 'hidden', minHeight: '100dvh' }}
+          className={collapsed ? 'lg:pl-[92px]' : 'lg:pl-[250px]'}
+        >
+          <div style={{ maxWidth: isForum ? 1480 : 1280, margin: '0 auto', padding: '28px 24px 48px' }}>
+            <Routes>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<StudentDashboardPage />} />
             <Route path="formations" element={<StudentFormationsPage />} />
@@ -115,10 +175,11 @@ const StudentSchoolLifePage = () => {
             
             {/* Redirect /classroom inside this layout to the actual main classroom route outside this layout */}
             <Route path="classroom" element={<Navigate to="/classroom" replace />} />
-          </Routes>
-        </div>
-      </main>
-    </div>
+            </Routes>
+          </div>
+        </main>
+      </div>
+    </SslThemeProvider>
   );
 };
 

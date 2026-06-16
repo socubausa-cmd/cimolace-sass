@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuth } from './lib/auth';
 import { PatientLogin } from './pages/Login';
+import { InviteAccept } from './pages/InviteAccept';
+import { ResetPassword } from './pages/ResetPassword';
 import { Landing } from './pages/Landing';
 import { PatientDashboard } from './pages/Dashboard';
 import { MyRecords } from './pages/MyRecords';
@@ -15,6 +17,7 @@ import { MyChartingNotes } from './pages/MyChartingNotes';
 import { MyAppointments } from './pages/MyAppointments';
 import { MyPrivacy } from './pages/MyPrivacy';
 import { HealthTwinPage } from './pages/HealthTwinPage';
+import { HealthAssistant } from './pages/HealthAssistant';
 import { PatientLayout } from './components/PatientLayout';
 const queryClient = new QueryClient();
 
@@ -25,6 +28,8 @@ function AppRoutes() {
     return (
       <Routes>
         <Route path="/connexion" element={<PatientLogin />} />
+        <Route path="/invite/accept" element={<InviteAccept />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/" element={<Landing />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -32,6 +37,8 @@ function AppRoutes() {
   }
   return (
     <Routes>
+      <Route path="/invite/accept" element={<InviteAccept />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<PatientLayout />}>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<PatientDashboard />} />
@@ -40,6 +47,7 @@ function AppRoutes() {
         <Route path="/forms" element={<MyForms />} />
         <Route path="/health" element={<MyHealth />} />
         <Route path="/sante/mon-corps" element={<HealthTwinPage />} />
+        <Route path="/sante/assistant" element={<HealthAssistant />} />
         <Route path="/programs" element={<MyPrograms />} />
         <Route path="/prescriptions" element={<MyPrescriptions />} />
         <Route path="/messages" element={<Messages />} />

@@ -23,14 +23,14 @@ export function MaqFooter() {
         </h2>
         <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
           <a
-            href="/t/isna/signup"
+            href="/signup"
             className="rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110"
             style={{ background: 'var(--gold)', color: '#0d0b09' }}
           >
             Créer un compte
           </a>
           <a
-            href="/t/isna/login"
+            href="/login"
             className="rounded-full border px-7 py-3 text-sm font-semibold transition hover:bg-[var(--gold)] hover:text-[#0d0b09]"
             style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}
           >
@@ -44,7 +44,7 @@ export function MaqFooter() {
           {MAQ_LINKS.map((l) => (
             <a key={l.label} href={l.href} className="transition hover:text-[var(--gold)]">{l.label}</a>
           ))}
-          <a href="/t/isna#acces" className="transition hover:text-[var(--gold)]">Contact</a>
+          <a href="/#acces" className="transition hover:text-[var(--gold)]">Contact</a>
         </nav>
         <div
           className="mt-12 flex flex-col items-center justify-between gap-4 border-t pt-8 text-[11px] tracking-widest sm:flex-row"

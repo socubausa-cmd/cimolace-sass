@@ -23,16 +23,16 @@ export default function SecretariatAppointmentsMiniCalendar({ items = [], onEven
           title: a.title || 'Rendez-vous',
           start: start.toISOString(),
           end: end.toISOString(),
-          backgroundColor: 'rgba(212, 175, 55, 0.35)',
-          borderColor: '#D4AF37',
-          textColor: '#f8fafc',
+          backgroundColor: 'rgba(212, 175, 55, 0.85)',
+          borderColor: '#B8941F',
+          textColor: '#3a2f0a',
           extendedProps: { item: a },
         };
       });
   }, [items]);
 
   return (
-    <div className="secretariat-mini-cal rounded-2xl border border-white/10 bg-[#0f1419]/80 overflow-hidden [&_.fc]:text-gray-200 [&_.fc-button]:bg-white/10 [&_.fc-button]:border-white/20 [&_.fc-button]:text-gray-200 [&_.fc-button:hover]:bg-white/15">
+    <div className="secretariat-mini-cal rounded-[14px] border border-[var(--lt-border)] shadow-[var(--lt-card-shadow)] overflow-hidden [&_.fc]:text-[var(--lt-text)] [&_.fc-toolbar-title]:text-[var(--lt-text)] [&_.fc-col-header-cell]:text-[var(--lt-sub)] [&_.fc-daygrid-day-number]:text-[var(--lt-sub)] [&_.fc-timegrid-slot-label]:text-[var(--lt-muted)] [&_.fc-button]:bg-[var(--lt-inner-bg)] [&_.fc-button]:border-[var(--lt-border)] [&_.fc-button]:text-[var(--lt-text)] [&_.fc-button:hover]:bg-black/[0.06] [&_.fc-button-active]:bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] [&_.fc-button-active]:text-[var(--lt-gold-ink)] [&_.fc-theme-standard_td]:border-[var(--lt-border)] [&_.fc-theme-standard_th]:border-[var(--lt-border)]" style={{ background: 'var(--lt-card-bg)' }}>
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
         initialView="timeGridWeek"

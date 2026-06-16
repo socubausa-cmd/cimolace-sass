@@ -53,19 +53,19 @@ const InvoiceForm = ({ isOpen, onClose, onSave, initialData }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#192734] border-white/10 text-white sm:max-w-[500px]">
+      <DialogContent className="bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-[var(--lt-text)] sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{initialData ? 'Modifier Facture' : 'Nouvelle Facture'}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
              <Label>N° Facture</Label>
-             <Input value={formData.invoiceNumber} disabled className="bg-[#0F1419] border-white/10 opacity-50" />
+             <Input value={formData.invoiceNumber} disabled className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-zinc-500" />
           </div>
           <div className="grid gap-2">
             <Label>Étudiant *</Label>
             <Select value={formData.studentId} onValueChange={(v) => setFormData({...formData, studentId: v})}>
-              <SelectTrigger className="bg-[#0F1419] border-white/10"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+              <SelectTrigger className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)] placeholder:text-zinc-400"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
               <SelectContent>
                 {students.map(s => (
                   <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
@@ -76,11 +76,11 @@ const InvoiceForm = ({ isOpen, onClose, onSave, initialData }) => {
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label>Montant Total (€) *</Label>
-              <Input type="number" value={formData.totalAmount} onChange={(e) => setFormData({...formData, totalAmount: parseFloat(e.target.value)})} className="bg-[#0F1419] border-white/10" />
+              <Input type="number" value={formData.totalAmount} onChange={(e) => setFormData({...formData, totalAmount: parseFloat(e.target.value)})} className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)] placeholder:text-zinc-400" />
             </div>
             <div className="grid gap-2">
               <Label>Date d'échéance *</Label>
-              <Input type="date" value={formData.dueDate ? format(new Date(formData.dueDate), 'yyyy-MM-dd') : ''} onChange={(e) => setFormData({...formData, dueDate: e.target.value})} className="bg-[#0F1419] border-white/10" />
+              <Input type="date" value={formData.dueDate ? format(new Date(formData.dueDate), 'yyyy-MM-dd') : ''} onChange={(e) => setFormData({...formData, dueDate: e.target.value})} className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)] placeholder:text-zinc-400" />
             </div>
           </div>
           <div className="grid gap-2">
@@ -88,14 +88,14 @@ const InvoiceForm = ({ isOpen, onClose, onSave, initialData }) => {
             <Textarea 
               value={formData.description} 
               onChange={(e) => setFormData({...formData, description: e.target.value})} 
-              className="bg-[#0F1419] border-white/10"
+              className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)] placeholder:text-zinc-400"
               placeholder="Détails de la facture..."
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} className="border-white/10 text-white">Annuler</Button>
-          <Button onClick={handleSubmit} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">Créer Facture</Button>
+          <Button variant="outline" onClick={onClose} className="bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-zinc-700 hover:opacity-80">Annuler</Button>
+          <Button onClick={handleSubmit} className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-semibold">Créer Facture</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

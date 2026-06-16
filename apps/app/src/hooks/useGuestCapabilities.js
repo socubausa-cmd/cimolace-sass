@@ -160,8 +160,11 @@ export function useGuestCapabilities(sessionId, opts = {}) {
   // Realtime : écoute les UPDATE sur live_sessions pour cette session
   useEffect(() => {
     if (!enabled || !sessionId) return undefined;
+    // Nom de canal UNIQUE par montage : évite de réutiliser un canal déjà `subscribe()`
+    // (le hook peut être monté 2× — LiveGuestPage + LiveHostPage — et un même topic réutilisé
+    // ferait crasher « cannot add postgres_changes callbacks after subscribe() »).
     const channel = supabase
-      .channel(`guest-caps:${sessionId}`)
+      .channel(`guest-caps:${sessionId}:${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'live_sessions', filter: `id=eq.${sessionId}` },
@@ -173,7 +176,7 @@ export function useGuestCapabilities(sessionId, opts = {}) {
       .subscribe();
 
     return () => {
-      try { channel.unsubscribe(); } catch { /* noop */ }
+      try { supabase.removeChannel(channel); } catch { /* noop */ }
     };
   }, [enabled, sessionId]);
 

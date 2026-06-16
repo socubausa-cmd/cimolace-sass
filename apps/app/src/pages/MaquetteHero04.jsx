@@ -40,7 +40,7 @@ const OFFRES = [
     price: '50', priceSuffix: '/90 min', currency: '€',
     features: ['Lecture des blocages', "Plan d'action personnalisé", 'Séance de 90 minutes', 'Compte-rendu & suivi'],
     buttonText: 'Réserver une séance', buttonVariant: 'secondary',
-    onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-consultation-90min'; },
+    onCtaClick: () => { window.location.href = '/paiement?plan=ngowazulu-consultation-90min'; },
   },
   {
     planName: 'Mentorat Essentiel',
@@ -48,7 +48,7 @@ const OFFRES = [
     price: '55', priceSuffix: '/mois', currency: '€',
     features: ['1 rencontre / mois', 'Suivi de fond espacé', 'Accès cours & lives LIRI', 'Stabilisation, budget maîtrisé'],
     buttonText: 'Choisir ce parcours', buttonVariant: 'secondary',
-    onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-mentorat-1x-month'; },
+    onCtaClick: () => { window.location.href = '/paiement?plan=ngowazulu-mentorat-1x-month'; },
   },
   {
     planName: 'Mentorat Confort',
@@ -56,7 +56,7 @@ const OFFRES = [
     price: '180', priceSuffix: '/mois', currency: '€', isPopular: true,
     features: ['1 rencontre / semaine', 'Suivi continu personnalisé', 'Accès cours & lives LIRI', 'Communauté encadrée'],
     buttonText: 'Choisir ce parcours', buttonVariant: 'primary',
-    onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-mentorat-1x-week'; },
+    onCtaClick: () => { window.location.href = '/paiement?plan=ngowazulu-mentorat-1x-week'; },
   },
   {
     planName: 'Mentorat Intensif',
@@ -64,7 +64,7 @@ const OFFRES = [
     price: '300', priceSuffix: '/mois', currency: '€',
     features: ['2 rencontres / semaine', 'Lecture fine (songes, aura)', 'Dynamiques lourdes & transitions', 'Accompagnement rapproché'],
     buttonText: 'Choisir ce parcours', buttonVariant: 'secondary',
-    onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-mentorat-2x-week'; },
+    onCtaClick: () => { window.location.href = '/paiement?plan=ngowazulu-mentorat-2x-week'; },
   },
   {
     planName: 'Mentorat Souverain',
@@ -72,7 +72,7 @@ const OFFRES = [
     price: '500', priceSuffix: '/mois', currency: '€',
     features: ["Jusqu'à 3 rencontres / semaine", 'Priorité & urgences', 'Interventions dédiées', 'Accompagnement total'],
     buttonText: 'Choisir ce parcours', buttonVariant: 'secondary',
-    onCtaClick: () => { window.location.href = '/t/isna/paiement?plan=ngowazulu-mentorat-urgent-3x-week'; },
+    onCtaClick: () => { window.location.href = '/paiement?plan=ngowazulu-mentorat-urgent-3x-week'; },
   },
 ];
 
@@ -129,23 +129,30 @@ export default function MaquetteHero04() {
               style={{ background: 'var(--panel)', borderColor: 'var(--border)' }}
             >
               <div className="w-full max-w-md">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.35em]" style={gold}>Espace membre</p>
-                <form onSubmit={(e) => e.preventDefault()} className="mt-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.35em]" style={gold}>Rejoindre l&apos;École en ligne</p>
+                <p className="mt-2 text-sm leading-snug" style={{ color: 'var(--fg)' }}>
+                  Sciences africaines en ligne&nbsp;: cours, lives en groupe et accompagnement personnalisé.
+                </p>
+                <form onSubmit={(e) => { e.preventDefault(); window.location.href = '/signup'; }} className="mt-4">
                   <div className="relative grid grid-cols-[1fr_auto] items-center gap-1.5 rounded-2xl border p-1.5" style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}>
                     <div className="relative">
                       <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2" style={{ color: 'var(--muted2)' }} />
                       <input type="email" required placeholder="Votre adresse e-mail" aria-label="Adresse e-mail" className="h-12 w-full bg-transparent pl-12 pr-2 text-sm outline-none" style={{ color: 'var(--fg)' }} />
                     </div>
                     <button type="submit" className="inline-flex h-12 items-center gap-2 rounded-xl px-5 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
-                      <span className="hidden sm:block">Commencer</span>
+                      <span className="hidden sm:block">Créer mon compte</span>
                       <ArrowRight className="hidden h-4 w-4 sm:block" />
                       <SendHorizonal className="h-5 w-5 sm:hidden" />
                     </button>
                   </div>
                 </form>
-                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-                  <a href="/t/isna/ecole" className="inline-flex items-center gap-1 font-semibold" style={gold}>Entrer à l&apos;École <ArrowRight className="h-4 w-4" /></a>
-                  <a href="/t/isna/temple" className="inline-flex items-center gap-1 font-semibold" style={gold}>Entrer au Temple <ArrowRight className="h-4 w-4" /></a>
+                <p className="mt-2.5 text-xs" style={{ color: 'var(--muted2)' }}>
+                  Gratuit pour commencer · sans engagement.
+                </p>
+                <div className="mt-4 text-sm">
+                  <a href="/ecole" className="inline-flex items-center gap-1 font-medium transition hover:text-[var(--gold)]" style={{ color: 'var(--muted)' }}>
+                    Découvrir l&apos;École et le Temple <ArrowRight className="h-4 w-4" />
+                  </a>
                 </div>
               </div>
               <div
@@ -167,7 +174,10 @@ export default function MaquetteHero04() {
           </div>
 
           {/* Manifeste */}
-          <p className="mx-auto mt-28 max-w-2xl text-center font-mono text-sm tracking-wide sm:text-base" style={{ color: 'var(--muted)' }}>
+          <p className="mx-auto mt-28 max-w-2xl text-center text-base font-medium leading-relaxed sm:text-lg" style={{ color: 'var(--fg)' }}>
+            L&apos;école en ligne des sciences africaines&nbsp;: cours structurés, lives en groupe et accompagnement personnalisé, jusqu&apos;à la maîtrise validée.
+          </p>
+          <p className="mx-auto mt-5 max-w-2xl text-center font-mono text-xs tracking-wide sm:text-sm" style={{ color: 'var(--muted)' }}>
             RECEVEZ LES YEUX POUR VOIR
             <br />
             ET LES OREILLES POUR COMPRENDRE —
@@ -175,13 +185,14 @@ export default function MaquetteHero04() {
             LA SCIENCE QUI UNIFIE <Highlight className="text-[#0d0b09]">LE VISIBLE ET L&apos;INVISIBLE</Highlight>.
           </p>
           <div className="mt-7 flex justify-center">
-            <button
-              type="button"
-              className="rounded-full px-8 py-3.5 text-sm font-semibold transition hover:brightness-110"
-              style={{ background: 'var(--gold)', color: '#0d0b09' }}
+            <a
+              href="/temple"
+              className="inline-flex items-center gap-1.5 text-sm font-medium underline-offset-4 transition hover:underline"
+              style={{ color: 'var(--muted)' }}
             >
-              Prendre rendez-vous
-            </button>
+              Besoin d&apos;un accompagnement&nbsp;? Prendre rendez-vous
+              <ArrowRight className="h-4 w-4" />
+            </a>
           </div>
 
           {/* Bas : cartes + intitulé */}
@@ -221,28 +232,23 @@ export default function MaquetteHero04() {
             />
           </div>
           <div className="flex flex-col justify-center gap-5 px-8 py-16 sm:px-14">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.4em]" style={gold}>Accès immédiat</p>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.4em]" style={gold}>Choisir sa porte</p>
             <h2 className="mq-display text-4xl font-semibold leading-[1.05] sm:text-5xl">Commencez votre initiation.</h2>
             <p className="max-w-md text-sm leading-relaxed sm:text-base" style={{ color: 'var(--muted)' }}>
-              Entrez votre e-mail : accès à l&apos;espace membre, suivi personnalisé — sans engagement.
+              Deux chemins, un même socle&nbsp;: l&apos;École pour comprendre, le Temple pour traverser. Choisissez par où entrer.
             </p>
-            <form onSubmit={(e) => e.preventDefault()} className="mt-1 max-w-md">
-              <div className="relative grid grid-cols-[1fr_auto] items-center gap-1.5 rounded-2xl border p-1.5" style={{ borderColor: 'var(--border)', background: 'var(--panel)' }}>
-                <div className="relative">
-                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2" style={{ color: 'var(--muted2)' }} />
-                  <input type="email" required placeholder="Votre adresse e-mail" aria-label="Adresse e-mail" className="h-12 w-full bg-transparent pl-12 pr-2 text-sm outline-none" style={{ color: 'var(--fg)' }} />
-                </div>
-                <button type="submit" className="inline-flex h-12 items-center gap-2 rounded-xl px-5 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
-                  <span className="hidden sm:block">Commencer</span>
-                  <ArrowRight className="hidden h-4 w-4 sm:block" />
-                  <SendHorizonal className="h-5 w-5 sm:hidden" />
-                </button>
-              </div>
-            </form>
-            <div className="mt-1 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-              <a href="/t/isna/ecole" className="inline-flex items-center gap-1 font-semibold" style={gold}>Entrer à l&apos;École <ArrowRight className="h-4 w-4" /></a>
-              <a href="/t/isna/temple" className="inline-flex items-center gap-1 font-semibold" style={gold}>Entrer au Temple <ArrowRight className="h-4 w-4" /></a>
+            <div className="mt-1 flex flex-col gap-3 sm:flex-row">
+              <a href="/ecole" className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
+                Entrer à l&apos;École <ArrowRight className="h-4 w-4" />
+              </a>
+              <a href="/temple" className="inline-flex items-center justify-center gap-2 rounded-full border px-7 py-3 text-sm font-semibold transition hover:bg-[var(--gold)] hover:text-[#0d0b09]" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
+                Entrer au Temple <ArrowRight className="h-4 w-4" />
+              </a>
             </div>
+            <p className="mt-1 text-sm" style={{ color: 'var(--muted2)' }}>
+              Vous préférez créer votre compte tout de suite&nbsp;?{' '}
+              <a href="/signup" className="font-semibold underline-offset-4 transition hover:underline" style={gold}>Créer mon compte</a>
+            </p>
           </div>
         </div>
       </section>
@@ -266,7 +272,7 @@ export default function MaquetteHero04() {
             }
             subheading="De « je reproduis des gestes » à « je comprends, j'explique, je transmets ». Pédagogie immersive, outils high-tech et certification progressive."
             ctaLabel="Découvrir l'École"
-            ctaHref="/t/isna/ecole"
+            ctaHref="/ecole"
             items={ECOLE_ITEMS}
           />
         </div>
@@ -291,7 +297,7 @@ export default function MaquetteHero04() {
               ))}
             </ul>
             <div className="mt-9">
-              <a href="/t/isna/temple" className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
+              <a href="/temple" className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
                 Entrer au Temple <ArrowRight className="h-4 w-4" />
               </a>
             </div>
@@ -308,9 +314,9 @@ export default function MaquetteHero04() {
         eyebrow="Au Temple · Ngowazulu"
         heading="Les services du Temple."
         items={[
-          { title: 'Consultation', desc: 'Diagnostic des blocages & orientation. 50 € · 1h30.', img: TEMPLE(2), href: '/t/isna/temple' },
-          { title: 'Culte & communion', desc: 'Le rythme communautaire en live. Dès 15 €/mois.', img: TEMPLE(6), href: '/t/isna/temple' },
-          { title: 'Interventions', desc: 'Exorcisme, rééquilibrage, hospitalisation spirituelle.', img: TEMPLE(3), href: '/t/isna/temple' },
+          { title: 'Consultation', desc: 'Diagnostic des blocages & orientation. 50 € · 1h30.', img: TEMPLE(2), href: '/temple' },
+          { title: 'Culte & communion', desc: 'Le rythme communautaire en live. Dès 15 €/mois.', img: TEMPLE(6), href: '/temple' },
+          { title: 'Interventions', desc: 'Exorcisme, rééquilibrage, hospitalisation spirituelle.', img: TEMPLE(3), href: '/temple' },
         ]}
       />
 

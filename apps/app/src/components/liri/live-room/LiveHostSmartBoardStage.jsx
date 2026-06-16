@@ -323,7 +323,9 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
     const onSub = (track, _pub, participant) => {
       if (!track || track.source !== Track.Source.ScreenShare) return;
       if (participant.identity === room.localParticipant.identity) return;
-      if (sharingScreenPropRef.current) return;
+      // (Retiré : `if (sharingScreenPropRef.current) return;` — bloquait TOUT écran distant
+      // dès que l'hôte partageait le sien, cassant les modes collaboratif/débat. La garde
+      // d'identité ci-dessus suffit déjà à éviter le doublon du partage LOCAL.)
       if (screenVideoRef.current) {
         track.attach(screenVideoRef.current);
         setRemoteScreenShareActive(true);

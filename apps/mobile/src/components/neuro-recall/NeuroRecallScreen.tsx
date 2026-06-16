@@ -1,9 +1,10 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LiriColors as C } from '@/constants/liri-theme';
+import { type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 import { EngineHeader } from '@/components/engine-kit';
 
 import { NeuroRecallDeckList } from './NeuroRecallDeckList';
@@ -26,6 +27,9 @@ export default function NeuroRecallScreen() {
 
   const [activeDeck, setActiveDeck] = useState<string | null>(initialDeck);
 
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
+
   // Retour : depuis une session → liste ; depuis la liste → écran précédent.
   const handleBack = () => {
     if (activeDeck) setActiveDeck(null);
@@ -46,7 +50,7 @@ export default function NeuroRecallScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1 },
 });

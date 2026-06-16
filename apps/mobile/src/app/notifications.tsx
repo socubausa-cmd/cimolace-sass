@@ -1,10 +1,11 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 import {
   fetchNotifications,
   markAllNotificationsRead,
@@ -14,7 +15,7 @@ import {
 
 type IconName = React.ComponentProps<typeof Feather>['name'];
 
-function iconFor(type?: string | null): { name: IconName; color: string } {
+function iconFor(type: string | null | undefined, C: LiriPalette): { name: IconName; color: string } {
   switch (type) {
     case 'live':
     case 'session':
@@ -48,6 +49,8 @@ function timeAgo(iso?: string | null): string {
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
   const [items, setItems] = useState<AppNotification[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -114,7 +117,7 @@ export default function NotificationsScreen() {
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.coral} />}
           >
             {list.map((n) => {
-              const ic = iconFor(n.type);
+              const ic = iconFor(n.type, C);
               return (
                 <Pressable
                   key={n.id}
@@ -140,7 +143,7 @@ export default function NotificationsScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1 },
   pressed: { opacity: 0.7 },

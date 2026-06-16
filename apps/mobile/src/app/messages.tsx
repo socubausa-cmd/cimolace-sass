@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -14,7 +14,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LiriColors as C, LiriFonts as F } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 import {
   fetchConversations,
   fetchThread,
@@ -38,6 +39,8 @@ function timeShort(iso?: string) {
 }
 
 export default function MessagesScreen() {
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
   const [me, setMe] = useState<string | null>(null);
   const [convs, setConvs] = useState<AppConversation[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -95,6 +98,8 @@ export default function MessagesScreen() {
 }
 
 function Thread({ me, conv, onBack }: { me: string | null; conv: AppConversation; onBack: () => void }) {
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
   const [msgs, setMsgs] = useState<AppMessage[] | null>(null);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
@@ -167,7 +172,7 @@ function Thread({ me, conv, onBack }: { me: string | null; conv: AppConversation
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1 },
   flex1: { flex: 1 },

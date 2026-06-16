@@ -28,6 +28,26 @@ export class CoursesService {
     return data;
   }
 
+  async updateCourse(tenantId: string, courseId: string, updates: Record<string, any>) {
+    // Whitelist des colonnes modifiables (n'altère pas tenant_id/id/created_by ; évite les colonnes inexistantes).
+    const allowed = ['title', 'description', 'category', 'price_cents', 'status'];
+    const patch: Record<string, any> = {};
+    for (const k of allowed) if (updates?.[k] !== undefined) patch[k] = updates[k];
+    if (Object.keys(patch).length === 0) return this.getCourse(tenantId, courseId);
+    const { data, error } = await (this.supabase.client as any)
+      .from('courses').update(patch).eq('id', courseId).eq('tenant_id', tenantId).select('*').single();
+    if (error) throw new BadRequestException(error.message);
+    if (!data) throw new NotFoundException('Cours introuvable');
+    return data;
+  }
+
+  async deleteCourse(tenantId: string, courseId: string) {
+    const { error } = await (this.supabase.client as any)
+      .from('courses').delete().eq('id', courseId).eq('tenant_id', tenantId);
+    if (error) throw new BadRequestException(error.message);
+    return { ok: true };
+  }
+
   async createModule(tenant: TenantContext, courseId: string, dto: CreateModuleDto) {
     await this.getCourse(tenant.id, courseId);
     const { data, error } = await (this.supabase.client as any).from('course_modules').insert({

@@ -1,8 +1,10 @@
 import { useLocalSearchParams } from 'expo-router';
+import { useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LiriColors as C } from '@/constants/liri-theme';
+import { type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 import { MasterscriptList } from './masterscript-list';
 import { MasterscriptReader } from './masterscript-reader';
@@ -14,6 +16,8 @@ import { MasterscriptReader } from './masterscript-reader';
  *   - présent → lecture du projet (accordéon chapitres + progression locale)
  */
 export default function MasterscriptScreen() {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const { projectId } = useLocalSearchParams<{ projectId?: string }>();
   const id = Array.isArray(projectId) ? projectId[0] : projectId;
 
@@ -24,6 +28,6 @@ export default function MasterscriptScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.base },
 });

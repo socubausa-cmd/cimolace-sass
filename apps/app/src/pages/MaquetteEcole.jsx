@@ -9,11 +9,11 @@ const TECH = (id) => `https://images.unsplash.com/photo-${id}?auto=format&fit=cr
 const gold = { color: 'var(--gold)' };
 
 const OUTILS = [
-  { title: 'LIRI Live Immersion', desc: 'Cours à distance en immersion, interaction directe, suivi contextuel.', img: TECH('1531297484001-80022131f5a1'), href: '/t/isna/programme' },
-  { title: 'Smartboard scientifique', desc: 'Les lois et mécanismes invisibles deviennent visibles : schémas, causalité, séquences.', img: TECH('1518770660439-4636190af475'), href: '/t/isna/programme' },
-  { title: 'Chat immersif', desc: 'Un guide conversationnel vers la bonne action au bon moment.', img: TECH('1517180102446-f3ece451e9d8'), href: '/t/isna/programme' },
-  { title: 'Neuron QR', desc: 'Le pont entre cours, capsule, exercice et validation terrain.', img: TECH('1498050108023-c5249f4df085'), href: '/t/isna/programme' },
-  { title: 'Certification progressive', desc: 'Une montée en compétence traçable, validée par étapes.', img: TECH('1460925895917-afdab827c52f'), href: '/t/isna/programme' },
+  { title: 'LIRI Live Immersion', desc: 'Cours à distance en immersion, interaction directe, suivi contextuel.', img: TECH('1531297484001-80022131f5a1'), href: '/programme' },
+  { title: 'Smartboard scientifique', desc: 'Les lois et mécanismes invisibles deviennent visibles : schémas, causalité, séquences.', img: TECH('1518770660439-4636190af475'), href: '/programme' },
+  { title: 'Chat immersif', desc: 'Un guide conversationnel vers la bonne action au bon moment.', img: TECH('1517180102446-f3ece451e9d8'), href: '/programme' },
+  { title: 'Neuron QR', desc: 'Le pont entre cours, capsule, exercice et validation terrain.', img: TECH('1498050108023-c5249f4df085'), href: '/programme' },
+  { title: 'Certification progressive', desc: 'Une montée en compétence traçable, validée par étapes.', img: TECH('1460925895917-afdab827c52f'), href: '/programme' },
 ];
 
 const RUPTURE = [
@@ -38,10 +38,10 @@ export default function MaquetteEcole() {
             vous êtes ici pour comprendre, maîtriser, puis évoluer.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <a href="/t/isna/programme" className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
+            <a href="/programme" className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
               Le plan du cours <ArrowRight className="h-4 w-4" />
             </a>
-            <a href="/t/isna/signup" className="rounded-full border px-7 py-3 text-sm font-semibold transition hover:bg-[var(--gold)] hover:text-[#0d0b09]" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
+            <a href="/signup" className="rounded-full border px-7 py-3 text-sm font-semibold transition hover:bg-[var(--gold)] hover:text-[#0d0b09]" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
               Créer un compte
             </a>
           </div>
@@ -84,7 +84,7 @@ export default function MaquetteEcole() {
         title="Présence réelle, à distance"
         text="Échanges en direct, suivi contextuel, expérience vivante — comme en présentiel."
         ctaLabel="Découvrir le plan du cours"
-        ctaHref="/t/isna/programme"
+        ctaHref="/programme"
       />
 
       <MaqFooter />

@@ -306,19 +306,19 @@ export function BookingCalendarModal({
         if (localData.recommended) setSelectedSecretary(localData.recommended);
         return;
       }
-      const qs = new URLSearchParams({
+      // API NestJS v2 (moteur secretaryMatching) — remplace la fonction Netlify v1.
+      const { bookingApi } = await import('@/lib/api');
+      const data = await bookingApi.availableSecretaries({
         timezone: requesterTimezone,
-        country: requesterCountry || '',
-        channel: bookingChannel,
+        country: requesterCountry || undefined,
       });
-      const res = await fetch(`/.netlify/functions/booking-available-secretaries?${qs.toString()}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'Impossible de charger les secrétaires');
-      setSecretaryRec(data.recommended || null);
-      setSecretaryAlts(data.alternatives || []);
-      setSecretaryStrategy(data.strategy || null);
+      const ranked = Array.isArray(data?.secretaries) ? data.secretaries : [];
+      const recommended = ranked[0] || null;
+      setSecretaryRec(recommended);
+      setSecretaryAlts(ranked.slice(1));
+      setSecretaryStrategy(data?.strategy?.strategy || data?.strategy || null);
       // Pré-sélectionner la recommandation
-      if (data.recommended) setSelectedSecretary(data.recommended);
+      if (recommended) setSelectedSecretary(recommended);
     } catch (e) {
       toast({ title: 'Secrétariat', description: e?.message || 'Réessayez.', variant: 'destructive' });
     } finally {
@@ -355,16 +355,14 @@ export function BookingCalendarModal({
         }
         const windowStart = new Date(`${selectedDate}T00:00:00`);
         const windowEnd = new Date(`${selectedDate}T23:30:00`);
-        const qs = new URLSearchParams({
+        // API NestJS v2 (availabilityEngine) — même forme que la fonction Netlify v1.
+        const { bookingApi } = await import('@/lib/api');
+        const payload = await bookingApi.slotAvailability({
           timezone: requesterTimezone,
-          country: requesterCountry || '',
-          channel: bookingChannel,
+          country: requesterCountry || undefined,
           windowStart: windowStart.toISOString(),
           windowEnd: windowEnd.toISOString(),
         });
-        const res = await fetch(`/.netlify/functions/booking-available-slots?${qs.toString()}`);
-        const payload = await res.json();
-        if (!res.ok) throw new Error(payload?.error || 'Impossible de charger les créneaux');
         const primary = Array.isArray(payload?.slots) ? payload.slots : [];
         const fallback = Array.isArray(payload?.fallbackSlots) ? payload.fallbackSlots : [];
         const merged = [...primary, ...fallback];
@@ -750,16 +748,9 @@ export function BookingCalendarModal({
         return;
       }
 
-      const res = await fetch('/.netlify/functions/booking-cancel-appointment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ appointmentId: visitorDetail.appointmentId }),
-      });
-      const payload = await res.json();
-      if (!res.ok) throw new Error(payload?.error || 'Annulation impossible');
+      // API NestJS v2 (PATCH statut) — remplace la fonction Netlify v1.
+      const { bookingApi } = await import('@/lib/api');
+      await bookingApi.cancelAppointment(visitorDetail.appointmentId);
       setCancelConfirmOpen(false);
       clearVisitorAppointmentSnapshot();
       setVisitorDetail(null);
@@ -803,20 +794,16 @@ export function BookingCalendarModal({
     }
     setRescheduleSubmitting(true);
     try {
-      const res = await fetch('/.netlify/functions/booking-reschedule-request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          appointmentId: visitorDetail.appointmentId,
-          proposedScheduledAt: proposed.toISOString(),
-          justification: rescheduleJustification.trim(),
-        }),
+      // API NestJS v2 (reschedule/request) — remplace la fonction Netlify v1.
+      const { bookingApi } = await import('@/lib/api');
+      await bookingApi.requestReschedule({
+        appointment_id: visitorDetail.appointmentId,
+        reason: rescheduleJustification.trim(),
+        proposed_slots: [{
+          start: proposed.toISOString(),
+          end: new Date(proposed.getTime() + 30 * 60 * 1000).toISOString(),
+        }],
       });
-      const payload = await res.json();
-      if (!res.ok) throw new Error(payload?.error || 'Envoi impossible');
       setRescheduleOpen(false);
       toast({
         title: 'Demande envoyée',

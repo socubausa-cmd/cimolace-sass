@@ -15,12 +15,22 @@ const common_1 = require("@nestjs/common");
 const crypto_1 = require("crypto");
 const auth_service_1 = require("../auth/auth.service");
 const pawapay_service_1 = require("../pawapay/pawapay.service");
+const webhook_service_1 = require("../liri-public/webhook.service");
+const plan_services_1 = require("./plan-services");
 let BillingService = BillingService_1 = class BillingService {
-    constructor(auth, pawapay) {
+    constructor(auth, pawapay, tenantWebhooks) {
         this.auth = auth;
         this.pawapay = pawapay;
+        this.tenantWebhooks = tenantWebhooks;
     }
     get supabase() { return this.auth.getClient(); }
+    notifyTenant(tenantId, event, data) {
+        if (!tenantId)
+            return;
+        this.tenantWebhooks
+            .emit(tenantId, event, data)
+            .catch((e) => console.warn(`[billing webhook] émission tenant_webhooks échouée: ${e.message}`));
+    }
     async getSubscription(tenantId) {
         const { data } = await this.supabase.from("subscriptions").select("*").eq("tenant_id", tenantId).single();
         return data;
@@ -85,6 +95,7 @@ let BillingService = BillingService_1 = class BillingService {
             .from("tenants")
             .update({ metadata: merged, updated_at: new Date().toISOString() })
             .eq("id", tenantId);
+        await this.provisionPlanServices(tenantId, plan.key);
         return { subscription, gating_enabled: true, plan: plan.key };
     }
     async collectSubscriptionViaPawaPay(tenantId, subscriptionId, dto) {
@@ -166,14 +177,30 @@ let BillingService = BillingService_1 = class BillingService {
         const { data: sub } = await sb.from("billing_subscriptions").select("*").eq("id", subscriptionId).eq("tenant_id", tenantId).maybeSingle();
         if (!sub)
             throw new common_1.NotFoundException("Abonnement introuvable");
-        const { data: plan } = await sb.from("billing_plans").select("stripe_price_id, label").eq("key", sub.plan_id).maybeSingle();
+        const { data: plan } = await sb
+            .from("billing_plans")
+            .select("stripe_price_id, label, price_cents, currency, billing_cycle")
+            .eq("key", sub.plan_id)
+            .maybeSingle();
         const priceId = plan?.stripe_price_id;
-        if (!priceId)
-            throw new common_1.BadRequestException("Aucun prix Stripe configuré pour ce plan (carte indisponible)");
+        const amountCents = Number(plan?.price_cents ?? sub?.amount_cents ?? 0);
+        if (!priceId && amountCents <= 0) {
+            throw new common_1.BadRequestException("Aucun prix configuré pour ce plan (carte indisponible)");
+        }
         const frontend = process.env.FRONTEND_URL || "https://app.cimolace.space";
         const params = new URLSearchParams();
         params.append("mode", "subscription");
-        params.append("line_items[0][price]", priceId);
+        if (priceId) {
+            params.append("line_items[0][price]", priceId);
+        }
+        else {
+            const currency = String(plan?.currency ?? sub?.currency ?? "EUR").toLowerCase();
+            const interval = String(plan?.billing_cycle ?? "monthly").toLowerCase() === "yearly" ? "year" : "month";
+            params.append("line_items[0][price_data][currency]", currency);
+            params.append("line_items[0][price_data][unit_amount]", String(amountCents));
+            params.append("line_items[0][price_data][recurring][interval]", interval);
+            params.append("line_items[0][price_data][product_data][name]", String(plan?.label ?? sub?.plan_id ?? "Abonnement Cimolace"));
+        }
         params.append("line_items[0][quantity]", "1");
         params.append("success_url", `${frontend}/cimolace/billing?card=success&session_id={CHECKOUT_SESSION_ID}&sub=${subscriptionId}`);
         params.append("cancel_url", `${frontend}/cimolace/billing?card=cancel`);
@@ -215,6 +242,7 @@ let BillingService = BillingService_1 = class BillingService {
             await sb.from("billing_subscriptions").update({ status: "active", provider_subscription_id: s.subscription ?? null, provider_customer_id: s.customer ?? null, current_period_end: end.toISOString(), updated_at: new Date().toISOString() }).eq("id", subscriptionId);
             await sb.from("billing_invoices").update({ status: "paid", provider: "stripe", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("subscription_id", subscriptionId).in("status", ["pending", "processing", "failed"]);
             await this.supersedeOtherActiveSubscriptions(tenantId, subscriptionId);
+            await this.provisionPlanServices(tenantId, sub.plan_id);
         }
         return { paid, status: paid ? "active" : sub.status };
     }
@@ -225,6 +253,29 @@ let BillingService = BillingService_1 = class BillingService {
             .eq("tenant_id", tenantId)
             .eq("status", "active")
             .neq("id", keepSubscriptionId);
+    }
+    async provisionPlanServices(tenantId, planKey) {
+        if (!tenantId || !planKey)
+            return;
+        try {
+            const sb = this.supabase;
+            const { data: plan } = await sb.from("billing_plans").select("features").eq("key", planKey).maybeSingle();
+            const services = (0, plan_services_1.resolvePlanServices)(planKey, plan?.features);
+            if (!services.length) {
+                console.warn(`[billing provisioning] aucun moteur mappé pour le plan "${planKey}" — rien activé`);
+                return;
+            }
+            const rows = services.map((service_key) => ({ tenant_id: tenantId, service_key, active: true }));
+            const { error } = await sb.from("tenant_services").upsert(rows, { onConflict: "tenant_id,service_key" });
+            if (error) {
+                console.warn(`[billing provisioning] upsert tenant_services échec (tenant=${tenantId}, plan=${planKey}): ${error.message}`);
+                return;
+            }
+            console.log(`[billing provisioning] ${services.length} moteur(s) activé(s) pour tenant=${tenantId} (plan=${planKey})`);
+        }
+        catch (e) {
+            console.warn(`[billing provisioning] échec (tenant=${tenantId}, plan=${planKey}): ${e.message}`);
+        }
     }
     async createPayout(tenantId, createdBy, dto) {
         const amountCents = Math.round(Number(dto?.amountCents) || 0);
@@ -420,11 +471,20 @@ let BillingService = BillingService_1 = class BillingService {
         if (patch.status === "active") {
             const { data: row } = await sb
                 .from("billing_subscriptions")
-                .select("id, tenant_id")
+                .select("id, tenant_id, plan_id, amount_cents, currency")
                 .eq(matchCol, matchVal)
                 .maybeSingle();
-            if (row?.tenant_id)
+            if (row?.tenant_id) {
                 await this.supersedeOtherActiveSubscriptions(row.tenant_id, row.id);
+                await this.provisionPlanServices(row.tenant_id, row.plan_id);
+                this.notifyTenant(row.tenant_id, "billing.subscription.activated", {
+                    subscription_id: row.id,
+                    plan_id: row.plan_id,
+                    amount_cents: row.amount_cents,
+                    currency: row.currency,
+                    current_period_end: patch.current_period_end ?? null,
+                });
+            }
         }
     }
     async onInvoicePaid(invoice) {
@@ -440,11 +500,20 @@ let BillingService = BillingService_1 = class BillingService {
         await this.supabase.from("billing_subscriptions").update(patch).eq("provider_subscription_id", subId);
         const { data: row } = await this.supabase
             .from("billing_subscriptions")
-            .select("id, tenant_id")
+            .select("id, tenant_id, plan_id")
             .eq("provider_subscription_id", subId)
             .maybeSingle();
-        if (row?.tenant_id)
+        if (row?.tenant_id) {
             await this.supersedeOtherActiveSubscriptions(row.tenant_id, row.id);
+            this.notifyTenant(row.tenant_id, "billing.invoice.paid", {
+                subscription_id: row.id,
+                plan_id: row.plan_id,
+                amount_cents: invoice.amount_paid ?? null,
+                currency: invoice.currency ?? null,
+                provider_invoice_id: invoice.id ?? null,
+                current_period_end: patch.current_period_end ?? null,
+            });
+        }
         await this.supabase
             .from("billing_invoices")
             .update({ status: "paid", provider: "stripe", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() })
@@ -458,6 +527,18 @@ let BillingService = BillingService_1 = class BillingService {
             .from("billing_subscriptions")
             .update({ status: "past_due", updated_at: new Date().toISOString() })
             .eq("provider_subscription_id", subId);
+        const { data: row } = await this.supabase
+            .from("billing_subscriptions")
+            .select("id, tenant_id, plan_id")
+            .eq("provider_subscription_id", subId)
+            .maybeSingle();
+        this.notifyTenant(row?.tenant_id, "billing.subscription.past_due", {
+            subscription_id: row?.id ?? null,
+            plan_id: row?.plan_id ?? null,
+            amount_cents: invoice.amount_due ?? null,
+            currency: invoice.currency ?? null,
+            provider_invoice_id: invoice.id ?? null,
+        });
     }
     async onSubscriptionUpdated(sub) {
         const patch = { status: this.mapStripeStatus(sub.status), updated_at: new Date().toISOString() };
@@ -472,12 +553,23 @@ let BillingService = BillingService_1 = class BillingService {
             .from("billing_subscriptions")
             .update({ status: "canceled", canceled_at: new Date().toISOString(), updated_at: new Date().toISOString() })
             .eq("provider_subscription_id", sub.id);
+        const { data: row } = await this.supabase
+            .from("billing_subscriptions")
+            .select("id, tenant_id, plan_id")
+            .eq("provider_subscription_id", sub.id)
+            .maybeSingle();
+        this.notifyTenant(row?.tenant_id, "billing.subscription.canceled", {
+            subscription_id: row?.id ?? null,
+            plan_id: row?.plan_id ?? null,
+        });
     }
 };
 exports.BillingService = BillingService;
 BillingService.ZERO_DECIMAL = new Set(["XAF", "XOF", "XPF", "BIF", "CLP", "DJF", "GNF", "JPY", "KMF", "KRW", "MGA", "PYG", "RWF", "UGX", "VND", "VUV"]);
 exports.BillingService = BillingService = BillingService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [auth_service_1.AuthService, pawapay_service_1.PawaPayService])
+    __metadata("design:paramtypes", [auth_service_1.AuthService,
+        pawapay_service_1.PawaPayService,
+        webhook_service_1.WebhookService])
 ], BillingService);
 //# sourceMappingURL=billing.service.js.map

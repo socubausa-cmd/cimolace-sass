@@ -141,10 +141,10 @@ const SecretariatDashboard = () => {
     <SecretariatDashboardLayout activeTab={activeTab} onTabChange={handleTabChange}>
       {activeTab === 'dashboard' && (
         <div className="mb-6 flex flex-col sm:flex-row sm:justify-end gap-2">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 bg-[#192734] p-2 rounded-lg border border-white/10 w-full sm:w-auto">
-            <span className="text-sm text-gray-400 sm:pl-2">Année scolaire</span>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 rounded-[14px] border border-[var(--lt-border)] shadow-[var(--lt-card-shadow)] w-full sm:w-auto" style={{ background: 'var(--lt-card-bg)' }}>
+            <span className="text-sm text-[var(--lt-sub)] sm:pl-2">Année scolaire</span>
             <Select value={currentYear} onValueChange={setSchoolYear}>
-              <SelectTrigger className="w-full sm:w-[140px] bg-[#0F1419] border-white/10 text-white h-9 sm:h-8 text-xs">
+              <SelectTrigger className="w-full sm:w-[140px] bg-[var(--lt-inner-bg)] border-[var(--lt-border)] text-[var(--lt-text)] h-9 sm:h-8 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

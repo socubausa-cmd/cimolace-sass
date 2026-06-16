@@ -8,12 +8,27 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Search, Package, Loader2, RefreshCw } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { motion } from 'framer-motion';
+import { useShellTint } from '@/lib/useShellTint';
 
 const HOVER_LIFT = { y: -3 };
 const TAP_SOFT = { scale: 0.995 };
 const TRANSITION_FAST = { duration: 0.2, ease: 'easeOut' };
 
+/* Thème CLAIR « Wix Studio » — aligné sur OwnerDashboardOverview. */
+const LT_TEXT = 'var(--lt-text)';
+const LT_SUB = 'var(--lt-sub)';
+const LT_MUTED = 'var(--lt-muted)';
+const LT_BORDER = 'var(--lt-border)';
+const LT_GOLD_INK = 'var(--lt-gold-ink)';
+const cardSurface = {
+  background: 'var(--lt-card-bg)',
+  border: '1px solid var(--lt-card-border)',
+  boxShadow: 'var(--lt-card-shadow)',
+};
+
 const InventoryTab = () => {
+  const [tint] = useShellTint();
+  const chartDark = tint === 'dark';
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -89,6 +104,10 @@ const InventoryTab = () => {
   ];
 
   const COLORS = ['#D4AF37', '#60a5fa', '#f87171', '#4ade80'];
+  const chartAxis = chartDark ? '#8E8E93' : '#71717A';
+  const chartTooltipStyle = chartDark
+    ? { backgroundColor: '#16161E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#F4F4F5', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }
+    : { backgroundColor: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '10px', color: '#18181B', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' };
   const showSkeleton = loading && inventory.length === 0;
 
   return (
@@ -101,16 +120,17 @@ const InventoryTab = () => {
         className="flex justify-between items-center"
       >
         <div>
-           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-             <Package className="text-[var(--school-accent)]" /> Inventaire
+           <h2 className="text-2xl font-bold flex items-center gap-2" style={{ color: LT_TEXT }}>
+             <Package style={{ color: LT_GOLD_INK }} /> Inventaire
            </h2>
-           <p className="text-gray-400 text-sm">Inventaire réel des forfaits et abonnés actifs</p>
+           <p className="text-sm" style={{ color: LT_SUB }}>Inventaire réel des forfaits et abonnés actifs</p>
         </div>
         <div className="flex gap-2">
            <Button
              onClick={() => void refresh()}
              variant="outline"
-             className="border-white/10 text-white hover:bg-white/5 transition-all duration-200"
+             className="bg-[var(--lt-card-bg)] text-zinc-700 border-[var(--lt-border)] hover:opacity-80 transition-all duration-200"
+             style={{ color: LT_SUB }}
            >
              <RefreshCw className="w-4 h-4 mr-2"/> Actualiser
            </Button>
@@ -120,50 +140,50 @@ const InventoryTab = () => {
       {showSkeleton ? (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="h-[104px] rounded-xl bg-white/10 animate-pulse" />
-            <div className="h-[104px] rounded-xl bg-white/10 animate-pulse" />
-            <div className="h-[104px] rounded-xl bg-white/10 animate-pulse" />
-            <div className="h-[104px] rounded-xl bg-white/10 animate-pulse" />
+            <div className="h-[104px] rounded-xl bg-black/[0.05] animate-pulse" />
+            <div className="h-[104px] rounded-xl bg-black/[0.05] animate-pulse" />
+            <div className="h-[104px] rounded-xl bg-black/[0.05] animate-pulse" />
+            <div className="h-[104px] rounded-xl bg-black/[0.05] animate-pulse" />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="h-80 rounded-xl bg-white/10 animate-pulse" />
-            <div className="h-80 rounded-xl bg-white/10 animate-pulse" />
+            <div className="h-80 rounded-xl bg-black/[0.05] animate-pulse" />
+            <div className="h-80 rounded-xl bg-black/[0.05] animate-pulse" />
           </div>
-          <div className="h-80 rounded-xl bg-white/10 animate-pulse" />
+          <div className="h-80 rounded-xl bg-black/[0.05] animate-pulse" />
         </div>
       ) : (
         <>
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
+            <Card className="border-0 transition-all" style={cardSurface}>
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
-                <p className="text-gray-400 text-xs uppercase">Total Articles</p>
-                <p className="text-2xl font-bold text-white">{stats.totalItems}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: LT_MUTED }}>Total Articles</p>
+                <p className="text-2xl font-bold tabular-nums" style={{ color: LT_TEXT }}>{stats.totalItems}</p>
               </CardContent>
             </Card>
             </motion.div>
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
+            <Card className="border-0 transition-all" style={cardSurface}>
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
-                <p className="text-gray-400 text-xs uppercase">Valeur Totale</p>
-                <p className="text-2xl font-bold text-[var(--school-accent)]">{stats.totalValue.toLocaleString()} EUR</p>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: LT_MUTED }}>Valeur Totale</p>
+                <p className="text-2xl font-bold tabular-nums" style={{ color: LT_GOLD_INK }}>{stats.totalValue.toLocaleString()} EUR</p>
               </CardContent>
             </Card>
             </motion.div>
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
+            <Card className="border-0 transition-all" style={cardSurface}>
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
-                <p className="text-gray-400 text-xs uppercase">Rupture de Stock</p>
-                <p className="text-2xl font-bold text-red-400">{stats.outOfStock}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: LT_MUTED }}>Rupture de Stock</p>
+                <p className="text-2xl font-bold tabular-nums text-red-600">{stats.outOfStock}</p>
               </CardContent>
             </Card>
             </motion.div>
             <motion.div whileHover={HOVER_LIFT} whileTap={TAP_SOFT} transition={TRANSITION_FAST}>
-            <Card className="premium-panel border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
+            <Card className="border-0 transition-all" style={cardSurface}>
               <CardContent className="p-4 h-[104px] flex flex-col justify-center">
-                <p className="text-gray-400 text-xs uppercase">Stock Faible</p>
-                <p className="text-2xl font-bold text-orange-400">{stats.lowStock}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: LT_MUTED }}>Stock Faible</p>
+                <p className="text-2xl font-bold tabular-nums text-amber-600">{stats.lowStock}</p>
               </CardContent>
             </Card>
             </motion.div>
@@ -171,8 +191,8 @@ const InventoryTab = () => {
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="premium-panel border-white/10 p-4">
-              <h3 className="text-white font-bold mb-4">Répartition par Catégorie</h3>
+            <Card className="border-0 p-4" style={cardSurface}>
+              <h3 className="font-bold mb-4" style={{ color: LT_TEXT }}>Répartition par Catégorie</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -181,20 +201,20 @@ const InventoryTab = () => {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: '#0F1419', borderColor: '#333' }} />
-                    <Legend />
+                    <Tooltip contentStyle={chartTooltipStyle} />
+                    <Legend wrapperStyle={{ color: chartDark ? '#A1A1AA' : '#52525B', fontSize: 12 }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
             </Card>
-            <Card className="premium-panel border-white/10 p-4">
-              <h3 className="text-white font-bold mb-4">État du Stock</h3>
+            <Card className="border-0 p-4" style={cardSurface}>
+              <h3 className="font-bold mb-4" style={{ color: LT_TEXT }}>État du Stock</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stockStatusData}>
-                    <XAxis dataKey="name" stroke="#888" />
-                    <YAxis stroke="#888" />
-                    <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ backgroundColor: '#0F1419', borderColor: '#333' }} />
+                    <XAxis dataKey="name" stroke={chartAxis} fontSize={12} />
+                    <YAxis stroke={chartAxis} fontSize={12} />
+                    <Tooltip cursor={{ fill: chartDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }} contentStyle={chartTooltipStyle} />
                     <Bar dataKey="value" fill="#D4AF37" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -203,49 +223,49 @@ const InventoryTab = () => {
           </div>
 
           {/* Data Table */}
-          <Card className="premium-panel border-white/10">
-            <div className="p-4 border-b border-white/10 flex justify-between items-center">
+          <Card className="border-0" style={cardSurface}>
+            <div className="p-4 flex justify-between items-center" style={{ borderBottom: `1px solid ${LT_BORDER}` }}>
               <div className="relative w-64">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                <Input placeholder="Rechercher..." className="pl-8 bg-[#0F1419] border-white/10" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                <Search className="absolute left-2 top-2.5 h-4 w-4" style={{ color: LT_MUTED }} />
+                <Input placeholder="Rechercher..." className="pl-8 bg-[var(--lt-inner-bg)] border-[var(--lt-border)] placeholder:text-zinc-400" style={{ color: LT_TEXT }} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
               </div>
             </div>
             <div className="max-h-[500px] overflow-y-auto">
               {loading ? (
-                <div className="p-8 flex items-center justify-center text-gray-400"><Loader2 className="w-4 h-4 mr-2 animate-spin" />Chargement...</div>
+                <div className="p-8 flex items-center justify-center" style={{ color: LT_MUTED }}><Loader2 className="w-4 h-4 mr-2 animate-spin" />Chargement...</div>
               ) : null}
               <Table>
-                <TableHeader className="bg-[#0F1419]">
-                  <TableRow className="border-white/10 hover:bg-transparent">
-                    <TableHead className="text-gray-400">Article</TableHead>
-                    <TableHead className="text-gray-400">Catégorie</TableHead>
-                    <TableHead className="text-gray-400">Qté</TableHead>
-                    <TableHead className="text-gray-400">Prix Unit.</TableHead>
-                    <TableHead className="text-gray-400">Valeur</TableHead>
-                    <TableHead className="text-gray-400">Statut</TableHead>
-                    <TableHead className="text-right text-gray-400">Actions</TableHead>
+                <TableHeader className="bg-[var(--lt-inner-bg)]">
+                  <TableRow className="border-[var(--lt-border)] hover:bg-transparent">
+                    <TableHead className="text-zinc-500">Article</TableHead>
+                    <TableHead className="text-zinc-500">Catégorie</TableHead>
+                    <TableHead className="text-zinc-500">Qté</TableHead>
+                    <TableHead className="text-zinc-500">Prix Unit.</TableHead>
+                    <TableHead className="text-zinc-500">Valeur</TableHead>
+                    <TableHead className="text-zinc-500">Statut</TableHead>
+                    <TableHead className="text-right text-zinc-500">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {!loading && filteredData.length === 0 ? (
-                    <TableRow className="border-white/5">
-                      <TableCell colSpan={7} className="text-center py-10 text-gray-400">
+                    <TableRow className="border-[var(--lt-border)]">
+                      <TableCell colSpan={7} className="text-center py-10" style={{ color: LT_MUTED }}>
                         Aucun article pour cette recherche.
                       </TableCell>
                     </TableRow>
                   ) : filteredData.map((item) => (
-                    <TableRow key={item.id} className="border-white/5 hover:bg-white/5">
-                      <TableCell className="font-medium text-white">{item.name}</TableCell>
-                      <TableCell className="text-gray-300">{item.category}</TableCell>
-                      <TableCell className="text-white">{item.quantity}</TableCell>
-                      <TableCell className="text-white">{item.unitPrice} EUR</TableCell>
-                      <TableCell className="text-[var(--school-accent)]">{(item.quantity * item.unitPrice).toLocaleString()} EUR</TableCell>
+                    <TableRow key={item.id} className="border-[var(--lt-border)] hover:opacity-80">
+                      <TableCell className="font-medium" style={{ color: LT_TEXT }}>{item.name}</TableCell>
+                      <TableCell style={{ color: LT_SUB }}>{item.category}</TableCell>
+                      <TableCell style={{ color: LT_TEXT }}>{item.quantity}</TableCell>
+                      <TableCell style={{ color: LT_TEXT }}>{item.unitPrice} EUR</TableCell>
+                      <TableCell style={{ color: LT_GOLD_INK }}>{(item.quantity * item.unitPrice).toLocaleString()} EUR</TableCell>
                       <TableCell>
                         {item.quantity === 0 ? <Badge variant="destructive">Rupture</Badge> :
-                          item.quantity <= item.minQuantity ? <Badge className="bg-orange-500 hover:bg-orange-600">Faible</Badge> :
-                            <Badge className="bg-green-500 hover:bg-green-600">En Stock</Badge>}
+                          item.quantity <= item.minQuantity ? <Badge className="bg-amber-500 hover:bg-amber-600 text-black">Faible</Badge> :
+                            <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white">En Stock</Badge>}
                       </TableCell>
-                      <TableCell className="text-right text-xs text-gray-500">{item.active ? 'Plan actif' : 'Plan inactif'}</TableCell>
+                      <TableCell className="text-right text-xs" style={{ color: LT_MUTED }}>{item.active ? 'Plan actif' : 'Plan inactif'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

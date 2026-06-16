@@ -7,6 +7,13 @@ import { useMockData } from '@/hooks/useMockData';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
+/* Thème CLAIR « Wix Studio » — surface blanche, aligné sur OwnerDashboardOverview. */
+const LT_CARD = {
+  background: 'var(--lt-card-bg)',
+  border: '1px solid var(--lt-card-border)',
+  boxShadow: 'var(--lt-card-shadow)',
+};
+
 // --- DASHBOARD TAB ---
 export const DashboardTab = ({ stats }) => {
   // Defensive check for stats object
@@ -15,39 +22,39 @@ export const DashboardTab = ({ stats }) => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-[#192734] border-white/10">
+        <Card className="border-0" style={LT_CARD}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-gray-400 text-sm">Étudiants Actifs</CardTitle>
+            <CardTitle className="text-sm" style={{ color: 'var(--lt-muted)' }}>Étudiants Actifs</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white">{safeStats.activeStudents || 0}</div>
+            <div className="text-3xl font-bold" style={{ color: 'var(--lt-text)' }}>{safeStats.activeStudents || 0}</div>
           </CardContent>
         </Card>
-        <Card className="bg-[#192734] border-white/10">
+        <Card className="border-0" style={LT_CARD}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-gray-400 text-sm">Formations Actives</CardTitle>
+            <CardTitle className="text-sm" style={{ color: 'var(--lt-muted)' }}>Formations Actives</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-[var(--school-accent)]">{safeStats.activeFormations || 0}</div>
+            <div className="text-3xl font-bold" style={{ color: 'var(--lt-gold-ink)' }}>{safeStats.activeFormations || 0}</div>
           </CardContent>
         </Card>
-        <Card className="bg-[#192734] border-white/10">
+        <Card className="border-0" style={LT_CARD}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-gray-400 text-sm">Revenus (Simulé)</CardTitle>
+            <CardTitle className="text-sm" style={{ color: 'var(--lt-muted)' }}>Revenus (Simulé)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-400">{safeStats.revenue || 0}€</div>
+            <div className="text-3xl font-bold text-emerald-600">{safeStats.revenue || 0}€</div>
           </CardContent>
         </Card>
       </div>
-      
-      <Card className="bg-[#192734] border-white/10">
+
+      <Card className="border-0" style={LT_CARD}>
         <CardHeader>
-          <CardTitle className="text-white">Aperçu Rapide</CardTitle>
-          <CardDescription>Vue d'ensemble de l\'activité récente (Mode Local Storage)</CardDescription>
+          <CardTitle style={{ color: 'var(--lt-text)' }}>Aperçu Rapide</CardTitle>
+          <CardDescription className="text-zinc-500">Vue d'ensemble de l'activité récente (Mode Local Storage)</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-400">Le système fonctionne actuellement en mode local. Toutes les données sont stockées dans le navigateur.</p>
+          <p className="text-zinc-500">Le système fonctionne actuellement en mode local. Toutes les données sont stockées dans le navigateur.</p>
         </CardContent>
       </Card>
     </div>
@@ -71,49 +78,50 @@ export const FormationsTab = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-white">Gestion des Formations</h2>
+        <h2 className="text-xl font-bold" style={{ color: 'var(--lt-text)' }}>Gestion des Formations</h2>
         <div className="flex gap-2">
-          <Input 
-            value={newTitle} 
-            onChange={(e) => setNewTitle(e.target.value)} 
-            placeholder="Nouvelle formation..." 
-            className="w-64 bg-[#0F1419] border-white/10 text-white"
+          <Input
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            placeholder="Nouvelle formation..."
+            className="w-64 bg-[var(--lt-inner-bg)] border-[var(--lt-border)] placeholder:text-zinc-400"
+            style={{ color: 'var(--lt-text)' }}
           />
-          <Button onClick={handleAdd} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
+          <Button onClick={handleAdd} className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-semibold">
             <Plus className="w-4 h-4 mr-2" /> Ajouter
           </Button>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-10"><Loader2 className="animate-spin text-[var(--school-accent)]" /></div>
+        <div className="flex justify-center py-10"><Loader2 className="animate-spin" style={{ color: 'var(--lt-gold-ink)' }} /></div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {safeData.map((formation) => (
-            <Card key={formation.id} className="bg-[#192734] border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all">
+            <Card key={formation.id} className="border-0 transition-all" style={LT_CARD}>
               <CardContent className="flex items-center justify-between p-6">
                 <div>
-                  <h3 className="font-bold text-white text-lg">{formation.title}</h3>
-                  <div className="flex gap-2 mt-2">
-                     <Badge variant="outline" className={formation.status === 'active' ? 'text-green-400 border-green-500/30' : 'text-gray-400 border-white/10'}>
+                  <h3 className="font-bold text-lg" style={{ color: 'var(--lt-text)' }}>{formation.title}</h3>
+                  <div className="flex gap-2 mt-2 items-center">
+                     <Badge variant="outline" className={formation.status === 'active' ? 'text-emerald-700 border-emerald-300 bg-emerald-50' : 'text-zinc-500 border-[var(--lt-border)]'}>
                        {formation.status}
                      </Badge>
-                     <span className="text-sm text-gray-500">{formation.students} étudiants</span>
-                     <span className="text-sm text-gray-500">{formation.price} €</span>
+                     <span className="text-sm text-zinc-500">{formation.students} étudiants</span>
+                     <span className="text-sm text-zinc-500">{formation.price} €</span>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                   <Button size="icon" variant="ghost" className="text-gray-400 hover:text-white">
+                   <Button size="icon" variant="ghost" className="text-zinc-500 hover:opacity-80">
                      <Edit className="w-4 h-4" />
                    </Button>
-                   <Button size="icon" variant="ghost" className="text-red-400 hover:text-red-300" onClick={() => deleteItem(formation.id)}>
+                   <Button size="icon" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => deleteItem(formation.id)}>
                      <Trash className="w-4 h-4" />
                    </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
-          {safeData.length === 0 && <p className="text-gray-500 text-center py-10">Aucune formation trouvée.</p>}
+          {safeData.length === 0 && <p className="text-center py-10" style={{ color: 'var(--lt-muted)' }}>Aucune formation trouvée.</p>}
         </div>
       )}
     </div>
@@ -127,21 +135,21 @@ export const AccompanimentTab = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-white">Suivi Mentoring & Coaching</h2>
-      <Card className="bg-[#192734] border-white/10">
+      <h2 className="text-xl font-bold" style={{ color: 'var(--lt-text)' }}>Suivi Mentoring & Coaching</h2>
+      <Card className="border-0" style={LT_CARD}>
         <CardHeader>
-           <CardTitle className="text-white">Sessions Récentes</CardTitle>
+           <CardTitle style={{ color: 'var(--lt-text)' }}>Sessions Récentes</CardTitle>
         </CardHeader>
         <CardContent>
-           {loading ? <Loader2 className="animate-spin text-[var(--school-accent)]" /> : (
+           {loading ? <Loader2 className="animate-spin" style={{ color: 'var(--lt-gold-ink)' }} /> : (
              <div className="space-y-4">
                {safeData.map(item => (
-                 <div key={item.id} className="flex justify-between items-center border-b border-white/5 pb-4 last:border-0">
+                 <div key={item.id} className="flex justify-between items-center border-b border-[var(--lt-border)] pb-4 last:border-0">
                     <div>
-                      <p className="text-white font-medium">{item.type} - {item.student}</p>
-                      <p className="text-sm text-gray-500">{item.date}</p>
+                      <p className="font-medium" style={{ color: 'var(--lt-text)' }}>{item.type} - {item.student}</p>
+                      <p className="text-sm text-zinc-500">{item.date}</p>
                     </div>
-                    <Badge className={item.status === 'completed' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}>
+                    <Badge className={item.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
                       {item.status}
                     </Badge>
                  </div>
@@ -169,36 +177,36 @@ export const SchoolLifeTab = () => {
    return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-white">Vie Scolaire (Événements & Annonces)</h2>
+        <h2 className="text-xl font-bold" style={{ color: 'var(--lt-text)' }}>Vie Scolaire (Événements & Annonces)</h2>
         <Dialog>
           <DialogTrigger asChild>
-             <Button className="bg-[var(--school-accent)] text-black"><Plus className="w-4 h-4 mr-2"/> Ajouter</Button>
+             <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-semibold"><Plus className="w-4 h-4 mr-2"/> Ajouter</Button>
           </DialogTrigger>
-          <DialogContent className="bg-[#192734] border-white/10 text-white">
+          <DialogContent className="bg-[var(--lt-card-bg)] border-[var(--lt-border)]" style={{ color: 'var(--lt-text)' }}>
              <DialogHeader><DialogTitle>Nouvel Événement</DialogTitle></DialogHeader>
              <div className="space-y-4 py-4">
-               <Input placeholder="Titre" className="bg-[#0F1419]" value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} />
-               <Input type="date" className="bg-[#0F1419]" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} />
-               <Button onClick={handleAdd} className="w-full bg-[var(--school-accent)] text-black">Créer</Button>
+               <Input placeholder="Titre" className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)] placeholder:text-zinc-400" style={{ color: 'var(--lt-text)' }} value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} />
+               <Input type="date" className="bg-[var(--lt-inner-bg)] border-[var(--lt-border)]" style={{ color: 'var(--lt-text)' }} value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} />
+               <Button onClick={handleAdd} className="w-full bg-[var(--school-accent)] text-black hover:bg-amber-500 font-semibold">Créer</Button>
              </div>
           </DialogContent>
         </Dialog>
       </div>
 
       <div className="grid gap-4">
-        {loading ? <Loader2 className="animate-spin text-[var(--school-accent)] mx-auto" /> : 
+        {loading ? <Loader2 className="animate-spin mx-auto" style={{ color: 'var(--lt-gold-ink)' }} /> :
            safeData.map(item => (
-             <div key={item.id} className="flex items-center justify-between p-4 bg-[#192734] rounded-lg border border-white/5">
+             <div key={item.id} className="flex items-center justify-between p-4 rounded-[14px]" style={LT_CARD}>
                 <div className="flex items-center gap-4">
-                   <div className={`p-2 rounded-full ${item.type === 'event' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'}`}>
+                   <div className={`p-2 rounded-full ${item.type === 'event' ? 'bg-blue-100 text-blue-600' : 'bg-violet-100 text-violet-600'}`}>
                       <Calendar className="w-5 h-5" />
                    </div>
                    <div>
-                     <h4 className="font-bold text-white">{item.title}</h4>
-                     <p className="text-sm text-gray-500">{item.date}</p>
+                     <h4 className="font-bold" style={{ color: 'var(--lt-text)' }}>{item.title}</h4>
+                     <p className="text-sm text-zinc-500">{item.date}</p>
                    </div>
                 </div>
-                <Button size="icon" variant="ghost" onClick={() => deleteItem(item.id)} className="text-red-400"><Trash className="w-4 h-4"/></Button>
+                <Button size="icon" variant="ghost" onClick={() => deleteItem(item.id)} className="text-red-500 hover:text-red-600 hover:bg-red-50"><Trash className="w-4 h-4"/></Button>
              </div>
            ))
         }

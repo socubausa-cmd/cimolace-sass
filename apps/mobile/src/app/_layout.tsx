@@ -6,9 +6,10 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View, type ColorValue } from 'react-native';
 
 import { LoginScreen } from '@/components/login-screen';
-import { LiriColors, LiriFonts } from '@/constants/liri-theme';
+import { LiriFonts } from '@/constants/liri-theme';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { setupLiveKit } from '@/lib/livekit-setup';
+import { ThemeProvider, useTheme } from '@/lib/theme';
 
 // WebRTC globals nécessaires au SDK LiveKit natif — appelé une seule fois.
 // Sur web/Expo Go : no-op (voir livekit-setup.web.ts).
@@ -30,20 +31,21 @@ const tab = (name: FeatherName) =>
 const fullScreen = { href: null, tabBarStyle: { display: 'none' as const } };
 
 function AppTabs() {
+  const { colors } = useTheme();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: LiriColors.coral,
-        tabBarInactiveTintColor: LiriColors.faint,
+        tabBarActiveTintColor: colors.coral,
+        tabBarInactiveTintColor: colors.faint,
         tabBarStyle: {
-          backgroundColor: LiriColors.rail,
-          borderTopColor: LiriColors.line,
+          backgroundColor: colors.rail,
+          borderTopColor: colors.line,
           borderTopWidth: 1,
           paddingTop: 6,
         },
         tabBarLabelStyle: { fontSize: 10.5, fontWeight: '600', fontFamily: LiriFonts.sans },
-        sceneStyle: { backgroundColor: LiriColors.base },
+        sceneStyle: { backgroundColor: colors.base },
       }}
     >
       {/* Onglets principaux — alignés sur le rail du portail web */}
@@ -83,10 +85,11 @@ function AppTabs() {
 /** Gate d'authentification : splash → login → app. */
 function Gate() {
   const { session, loading } = useAuth();
+  const { colors } = useTheme();
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: LiriColors.base, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={LiriColors.coral} />
+      <View style={{ flex: 1, backgroundColor: colors.base, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={colors.coral} />
       </View>
     );
   }
@@ -96,11 +99,18 @@ function Gate() {
   return session ? <AppTabs /> : <LoginScreen />;
 }
 
+function ThemedStatusBar() {
+  const { isLight } = useTheme();
+  return <StatusBar style={isLight ? 'dark' : 'light'} />;
+}
+
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <StatusBar style="light" />
-      <Gate />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <ThemedStatusBar />
+        <Gate />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

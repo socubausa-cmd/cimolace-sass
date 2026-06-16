@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { AuthService } from "../auth/auth.service";
 import { LiveKitService } from "../livekit/livekit.service";
 
@@ -154,6 +154,21 @@ export class LiveService {
     role: "host" | "student",
     tenantSlug?: string,
   ) {
+    // Garde-fou serveur : un invité explicitement REJETÉ par l'hôte ne reçoit pas de token
+    // LiveKit (la garde front est contournable via l'URL directe ; celle-ci est la vraie
+    // barrière). Fail-open : sans entrée de salle d'attente (live sans approbation), on délivre.
+    if (role !== "host") {
+      const { data: wr } = await this.supabase
+        .from("live_waiting_room_entries")
+        .select("status")
+        .eq("live_session_id", sessionId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if ((wr as any)?.status === "rejected") {
+        throw new ForbiddenException("Accès refusé par l'hôte de cette session.");
+      }
+    }
+
     // Récupérer la session pour obtenir le tenant_slug si non fourni
     let slug = tenantSlug ?? "";
     if (!slug) {

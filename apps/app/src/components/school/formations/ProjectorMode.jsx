@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Play, Pause, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { SafeHtml } from '@/components/common/SafeHtml';
 
 const animations = {
   fade: { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } },
@@ -95,9 +96,9 @@ const ProjectorMode = ({ slides, initialSlide = 0, onClose }) => {
                 <h1 className="text-4xl md:text-6xl font-serif font-bold text-[var(--school-accent)] leading-tight">
                    {currentSlide.title}
                 </h1>
-                <div 
+                <SafeHtml
                    className="prose prose-invert prose-lg md:prose-xl max-w-none"
-                   dangerouslySetInnerHTML={{ __html: currentSlide.content }}
+                   html={currentSlide.content}
                 />
              </div>
 

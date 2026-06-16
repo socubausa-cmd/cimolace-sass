@@ -1,8 +1,9 @@
 import { Feather } from '@expo/vector-icons';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { LiriColors as C, LiriFonts as F, softShadow } from '@/constants/liri-theme';
+import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 
 import type { MasterclassChapter } from './data';
 
@@ -29,6 +30,8 @@ export function ChapterCard({
   onToggle,
   onComplete,
 }: ChapterCardProps) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const anim = useRef(new Animated.Value(expanded ? 1 : 0)).current;
   const [mounted, setMounted] = useState(expanded);
 
@@ -150,6 +153,8 @@ function Label({
   text: string;
   accent?: boolean;
 }) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   return (
     <View style={styles.labelRow}>
       <Feather name={icon} size={13} color={accent ? C.coral : C.faint} />
@@ -170,6 +175,8 @@ function Section({
   text: string;
   accent?: boolean;
 }) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   return (
     <View style={[styles.section, accent && styles.sectionAccent]}>
       <Label icon={icon} text={label} accent={accent} />
@@ -178,7 +185,7 @@ function Section({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   card: {
     backgroundColor: C.panel,
     borderRadius: 16,
