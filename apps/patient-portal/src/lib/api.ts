@@ -129,9 +129,44 @@ export type AssistantReply = {
   escalate?: boolean;
 };
 
+// ── Notifications — cloche du portail patient ─────────────────────────
+// L'API expose `GET /notifications` (liste de l'utilisateur courant, max 50,
+// tri `created_at` desc) et `POST /notifications/:id/read` (marque lu, body
+// vide). Les deux routes sont gardées par JwtAuthGuard + TenantGuard : seuls
+// les headers `Authorization` + `X-Tenant-Slug` sont requis (déjà posés par
+// `authHeaders()`), `user.id` et `tenant.id` sont injectés côté serveur.
+// Réponses enveloppées `{ data }` → `getJson`/`postJson` les dé-enveloppent.
+export type Notification = {
+  id: string;
+  tenant_id: string;
+  user_id: string;
+  title: string;
+  body: string;
+  type: string;
+  read: boolean;
+  created_at: string;
+};
+
 export const patientApi = {
   getMyTwin(): Promise<MyTwinState> {
     return getJson<MyTwinState>('/med/twin-me/state');
+  },
+
+  // GET /notifications — notifications de l'utilisateur courant (résolu via
+  // le JWT + X-Tenant-Slug). Dégradation : l'appelant attrape l'erreur et
+  // affiche la cloche sans badge plutôt que de crasher.
+  getMyNotifications(): Promise<Notification[]> {
+    return getJson<Notification[]>('/notifications');
+  },
+
+  // POST /notifications/:id/read — marque une notification comme lue (c'est
+  // bien un POST côté API, pas un PATCH). Body vide ; renvoie la ligne mise
+  // à jour (`read: true`).
+  markNotificationRead(id: string): Promise<Notification> {
+    return postJson<Notification>(
+      `/notifications/${encodeURIComponent(id)}/read`,
+      {},
+    );
   },
 
   // GET /med/me/assignments — formulaires assignés au patient (statut
