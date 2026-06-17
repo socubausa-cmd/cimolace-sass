@@ -418,10 +418,17 @@ export default function LiveWaitingRoomPage() {
     async function load() {
       try {
         // Session
-        const { data: sess, error: sErr } = await supabase
+        // L'adaptateur supabaseCompat route `live_sessions` vers l'API NestJS
+        // (livesApi.get → GET /lives/:id), qui renvoie un DTO incomplet : `title`
+        // absent et `status` figé à la création → la salle d'attente retombait
+        // sur « Session sans titre / Planifié » même quand la DB dit autrement.
+        // On lit donc la table EN DIRECT via le vrai client Supabase (source de
+        // vérité = la base), comme les autres tables live_* de ce composant.
+        const directSb = (typeof globalThis !== 'undefined' && globalThis.__isnaV2SupabaseClient) || supabase;
+        const { data: sess, error: sErr } = await directSb
           .from('live_sessions')
           .select(
-            'id, title, description, teacher_id, status, scheduled_at, started_at, access_mode, cover_image_url, formation_id, duration_minutes, ambient_tracks_json, config, profiles:teacher_id(name, avatar_url)',
+            'id, title, description, teacher_id, status, scheduled_at, started_at, access_mode, cover_image_url, formation_id, duration_minutes, ambient_tracks_json, config',
           )
           .eq('id', sessionId)
           .maybeSingle();
@@ -431,8 +438,26 @@ export default function LiveWaitingRoomPage() {
           );
         }
         if (cancelled) return;
+        // La session est posée IMMÉDIATEMENT — sinon l'écran reste bloqué sur
+        // « Session sans titre ». Le profil du formateur est chargé À PART et
+        // SANS bloquer : PostgREST n'a pas de FK live_sessions.teacher_id →
+        // profiles, donc la jointure embarquée `profiles:teacher_id(...)` faisait
+        // échouer tout le SELECT ; et un `await` (~1 s) ici laissait le useEffect
+        // s'annuler (re-render) avant setSession.
         setSession(sess);
         setAmbientTracks(normalizeAmbientTracks(sess));
+        if (sess.teacher_id) {
+          supabase
+            .from('profiles')
+            .select('name, avatar_url')
+            .eq('id', sess.teacher_id)
+            .maybeSingle()
+            .then(({ data: hostProfile }) => {
+              if (!cancelled && hostProfile) {
+                setSession((prev) => (prev ? { ...prev, profiles: hostProfile } : prev));
+              }
+            });
+        }
 
         // Règles de visibilité
         const { data: r } = await supabase
