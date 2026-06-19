@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,9 +10,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { 
-  ArrowLeft, ArrowRight, Save, Plus, Trash, Video, FileText, 
+import {
+  ArrowLeft, ArrowRight, Save, Plus, Trash, Video, FileText,
   Presentation, CheckCircle, Image as ImageIcon, Upload, Calendar, Layout, Loader2, Menu, Copy,
+  BookOpen, GraduationCap, Users, Layers, MessageSquare, Star, LifeBuoy, User, ChevronRight, Eye,
 } from 'lucide-react';
 import ProgressivePlaylist from '@/components/school/classroom/ProgressivePlaylist';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -26,8 +27,9 @@ import VideoPlayer from './VideoPlayer';
 import PowerPointViewer from './PowerPointViewer';
 import MindMapNavigation from '@/components/lesson-player/MindMapNavigation';
 import TranscriptPanel from '@/components/lesson-player/TranscriptPanel';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { supabase } from '@/lib/customSupabaseClient';
+import '@/styles/formation-studio.css';
 
 const isUuid = (value) => {
   if (!value) return false;
@@ -472,8 +474,11 @@ const StepConfig = ({ config, update }) => (
 // --- MAIN BUILDER ---
 const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const prefersReducedMotion = useReducedMotion();
   const [step, setStep] = useState(1);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewCollapsed, setPreviewCollapsed] = useState(false);
   const [previewPath, setPreviewPath] = useState({ mIdx: 0, wIdx: 0, dIdx: 0 });
   const [isSaving, setIsSaving] = useState(false);
   const [activePreviewVideo, setActivePreviewVideo] = useState(null);
@@ -832,36 +837,80 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
     [modules]
   );
 
-  return (
-    <div className="min-h-screen flex flex-col bg-[#0B1118] relative">
-      {/* Ambient background */}
-      <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[100px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] bg-indigo-500/5 rounded-full blur-[80px]" />
-      </div>
+  const goTab = (tab) => navigate(`/owner-dashboard?tab=${tab}`);
+  const railNav = {
+    pedago: [
+      { icon: BookOpen, label: 'Formations', onClick: onCancel, active: true },
+      { icon: GraduationCap, label: 'Vie scolaire', onClick: () => goTab('school-life') },
+      { icon: Users, label: 'Coaching', onClick: () => goTab('coaching-mentoring') },
+      { icon: Layers, label: 'Ateliers', onClick: () => goTab('workshops') },
+    ],
+    commu: [
+      { icon: MessageSquare, label: 'Forum', onClick: () => goTab('forum') },
+      { icon: Star, label: 'Avis', onClick: () => goTab('reviews') },
+    ],
+  };
 
-      {/* Top Bar */}
-      <div className="flex items-center justify-between p-4 md:p-5 border-b border-white/10 bg-[#111823]/90 backdrop-blur-xl sticky top-0 z-20">
-         <div className="flex items-center gap-4 min-w-0">
-            <Button variant="ghost" size="icon" onClick={onCancel}><ArrowLeft className="w-5 h-5 text-gray-400"/></Button>
-            <div className="min-w-0">
-              <h2 className="text-lg md:text-xl font-bold text-white truncate">
-                {formation ? 'Modifier la formation' : 'Créer une formation'}
-              </h2>
-              <p className="text-xs text-gray-400 mt-0.5">Studio Formation — constructeur avancé</p>
-            </div>
-         </div>
-         <div className="flex gap-2">
+  return (
+    <div className="ofb-root">
+      {/* ===== RAIL : menu icônes repliable (façon Claude) ===== */}
+      <aside className="ofb-rail" aria-label="Navigation de l'école">
+        <button type="button" className="ofb-rail-logo" onClick={onCancel} title="Retour aux formations">
+          <span className="ofb-logo-dot" aria-hidden />
+          <span className="ofb-logo-txt">PRORASCIENCE</span>
+        </button>
+
+        <div className="ofb-nav-label">Pédagogie</div>
+        {railNav.pedago.map((it) => {
+          const Icon = it.icon;
+          return (
+            <button key={it.label} type="button" className={`ofb-nav-item${it.active ? ' active' : ''}`} onClick={it.onClick}>
+              <Icon className="ofb-i" /><span>{it.label}</span><span className="ofb-rail-tip">{it.label}</span>
+            </button>
+          );
+        })}
+
+        <div className="ofb-nav-label">Communauté</div>
+        {railNav.commu.map((it) => {
+          const Icon = it.icon;
+          return (
+            <button key={it.label} type="button" className="ofb-nav-item" onClick={it.onClick}>
+              <Icon className="ofb-i" /><span>{it.label}</span><span className="ofb-rail-tip">{it.label}</span>
+            </button>
+          );
+        })}
+
+        <div className="ofb-rail-spacer" />
+        <button type="button" className="ofb-nav-item" onClick={() => goTab('support')}>
+          <LifeBuoy className="ofb-i" /><span>Support</span><span className="ofb-rail-tip">Support</span>
+        </button>
+        <button type="button" className="ofb-nav-item" onClick={() => goTab('settings')}>
+          <User className="ofb-i" /><span>Mon compte</span><span className="ofb-rail-tip">Mon compte</span>
+        </button>
+      </aside>
+
+      {/* ===== MAIN ===== */}
+      <div className="ofb-main">
+        {/* Top bar */}
+        <div className="ofb-topbar">
+          <button type="button" className="ofb-back" onClick={onCancel} title="Retour" aria-label="Retour">
+            <ArrowLeft className="w-[18px] h-[18px]" />
+          </button>
+          <div className="ofb-title-wrap">
+            <h1>{formation ? 'Modifier la formation' : 'Créer une formation'}</h1>
+            <p>Studio Formation — constructeur avancé</p>
+          </div>
+          <div className="ofb-topbar-actions">
             <Button variant="outline" className="border-white/10 text-white hover:bg-white/5" onClick={() => setPreviewOpen(true)} disabled={isSaving}>
-              <Layout className="w-4 h-4 mr-2" /> Aperçu élève
+              <Eye className="w-4 h-4 mr-2" /> Aperçu élève
             </Button>
             <Button variant="outline" onClick={() => handleSave('draft')} disabled={isSaving} className="border-[var(--school-accent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">Brouillon</Button>
             <Button onClick={() => handleSave('published')} disabled={isSaving} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold gap-2">
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {isSaving ? 'Publication...' : 'Publier'}
             </Button>
-         </div>
-      </div>
+          </div>
+        </div>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-[98vw] w-full h-[92vh] bg-[#151a21]/95 backdrop-blur-xl border border-white/10 p-0 overflow-hidden">
@@ -1138,168 +1187,122 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
         </DialogContent>
       </Dialog>
 
-      {/* Progress Steps */}
-      <div className="relative px-4 md:px-8 py-5 bg-[#0D141F] border-b border-white/5">
-         <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-            {stepMeta.map((item, idx) => {
-              const isActive = step === item.id;
-              const isDone = step > item.id;
-              return (
-                <React.Fragment key={item.id}>
-                  <button
-                    type="button"
-                    onClick={() => setStep(item.id)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all whitespace-nowrap ${
-                      isActive
-                        ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
-                        : isDone
-                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-                          : 'border-white/10 bg-white/5 text-gray-400'
-                    }`}
-                  >
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                      isActive
-                        ? 'bg-[var(--school-accent)] text-black'
-                        : isDone
-                          ? 'bg-emerald-500 text-black'
-                          : 'bg-white/10 text-gray-300'
-                    }`}>
-                      {isDone ? <CheckCircle className="w-3.5 h-3.5" /> : item.id}
-                    </span>
-                    <span className="text-xs md:text-sm font-medium">{item.label}</span>
-                  </button>
-                  {idx < stepMeta.length - 1 ? (
-                    <div className={`h-px w-6 md:w-10 ${step > item.id ? 'bg-[var(--school-accent)]' : 'bg-white/10'}`} />
-                  ) : null}
-                </React.Fragment>
-              );
-            })}
-         </div>
-      </div>
-
-      {/* Content Area */}
-      <div className="flex-1 min-h-0 bg-gradient-to-b from-[#0B1118] to-[#0F1419]">
-        <div className="h-full max-w-[1700px] mx-auto p-4 md:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_320px] gap-4 md:gap-6">
-          {/* Left Sidebar */}
-          <aside className="hidden lg:block rounded-2xl border border-white/10 bg-[#121A25]/70 backdrop-blur-xl p-4 h-fit sticky top-28">
-            <div className="text-xs uppercase tracking-wider text-gray-500 mb-3">Étapes studio</div>
-            <div className="space-y-2">
-              {stepMeta.map((item) => {
-                const Icon = item.icon;
-                const active = step === item.id;
-                const done = step > item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setStep(item.id)}
-                    className={`w-full text-left rounded-xl border p-3 transition-all ${
-                      active
-                        ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]'
-                        : done
-                          ? 'border-emerald-500/30 bg-emerald-500/10'
-                          : 'border-white/10 bg-white/5 hover:bg-white/10'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                        active
-                          ? 'bg-[var(--school-accent)] text-black'
-                          : done
-                            ? 'bg-emerald-500 text-black'
-                            : 'bg-white/10 text-gray-300'
-                      }`}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className={`text-sm font-semibold ${active ? 'text-[var(--school-accent)]' : 'text-white'}`}>
-                          {item.label}
-                        </p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">{item.subtitle}</p>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </aside>
-
-          {/* Center Step */}
-          <ScrollArea className="rounded-2xl border border-white/10 bg-[#121A25]/70 backdrop-blur-xl">
-            <div className="p-4 md:p-6">
-              <div className="mb-4 pb-4 border-b border-white/10">
-                <p className="text-xs uppercase tracking-wider text-gray-500">Étape active</p>
-                <h3 className="text-lg md:text-xl font-semibold text-white mt-1">
-                  {currentStepMeta?.label}
-                </h3>
-                <p className="text-sm text-gray-400 mt-1">{currentStepMeta?.subtitle}</p>
-              </div>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={step}
-                  initial={{ opacity: 0, y: 12, scale: 0.995 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.995 }}
-                  transition={{ duration: 0.22, ease: 'easeOut' }}
+        {/* Stepper = SEULE navigation d'étapes (la colonne « Étapes studio » est supprimée) */}
+        <div className="ofb-stepper">
+          {stepMeta.map((item, idx) => {
+            const isActive = step === item.id;
+            const isDone = step > item.id;
+            return (
+              <React.Fragment key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => setStep(item.id)}
+                  className={`ofb-step${isActive ? ' active' : ''}${isDone ? ' done' : ''}`}
+                  aria-current={isActive ? 'step' : undefined}
                 >
+                  <span className="ofb-step-num">{isDone ? <CheckCircle /> : item.id}</span>
+                  <span className="ofb-step-label">{item.label}</span>
+                </button>
+                {idx < stepMeta.length - 1 ? (
+                  <span className={`ofb-step-line${step > item.id ? ' filled' : ''}`} aria-hidden />
+                ) : null}
+              </React.Fragment>
+            );
+          })}
+        </div>
+
+        {/* Content : stage dominant + aperçu repliable */}
+        <div className="ofb-content">
+          <section className="ofb-stage">
+            <div className="ofb-stage-head ofb-rise" key={`head-${step}`}>
+              <div className="ofb-eyebrow">{`Étape ${step} sur ${stepMeta.length}`}</div>
+              <h2>{currentStepMeta?.label}</h2>
+              <div className="ofb-sub">{currentStepMeta?.subtitle}</div>
+            </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={step}
+                initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
+                transition={{ duration: 0.45, ease: [0.22, 0.61, 0.36, 1] }}
+              >
                   {step === 1 && <StepGeneral data={data} billingPlans={billingPlans} update={(f, v) => setData({...data, [f]: v})} />}
                   {step === 2 && <StepStructure modules={modules} setModules={setModules} formationId={data?.id || formation?.id} />}
                   {step === 3 && <StepStructure modules={modules} setModules={setModules} formationId={data?.id || formation?.id} />}
                   {step === 4 && <StepQuizzes formation={data} onUpdate={setData} />}
                   {step === 5 && <StepConfig config={data.config} update={(f, v) => setData({...data, config: {...data.config, [f]: v}})} />}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          </ScrollArea>
+              </motion.div>
+            </AnimatePresence>
 
-          {/* Right Preview */}
-          <aside className="hidden xl:block rounded-2xl border border-white/10 bg-[#121A25]/70 backdrop-blur-xl p-4 h-fit sticky top-28">
-            <div className="text-xs uppercase tracking-wider text-gray-500 mb-3">Aperçu studio</div>
-            <div className="space-y-3">
-              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                <p className="text-xs text-gray-500">Formation</p>
-                <p className="text-sm font-semibold text-white mt-1 line-clamp-2">{data?.title || 'Sans titre'}</p>
-                <p className="text-xs text-gray-400 mt-1">{data?.category || 'Catégorie non définie'}</p>
+            {/* Pied flottant : progression + nav précédent/suivant */}
+            <div className="ofb-stage-foot">
+              <div className="ofb-foot-prog">
+                <div className="ofb-mini-bar"><i style={{ width: `${(step / stepMeta.length) * 100}%` }} /></div>
+                <span>Étape {step} sur {stepMeta.length}</span>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                  <p className="text-[11px] text-gray-500">Modules</p>
-                  <p className="text-lg font-bold text-white">{modules?.length || 0}</p>
+              <div className="ofb-foot-actions">
+                <Button disabled={step === 1} onClick={handleBack} variant="outline" className="border-white/10 text-white hover:bg-white/5">
+                  <ArrowLeft className="w-4 h-4 mr-2" /> Précédent
+                </Button>
+                <Button
+                  disabled={isSaving}
+                  onClick={step === 5 ? () => handleSave(data?.status || 'draft') : handleNext}
+                  className="bg-[var(--school-accent)] hover:bg-[#e5c04a] text-black gap-2 font-semibold"
+                >
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  {step === 5 ? (isSaving ? 'Enregistrement...' : 'Terminer') : 'Continuer'}
+                  {!isSaving ? <ArrowRight className="w-4 h-4 ml-2" /> : null}
+                </Button>
+              </div>
+            </div>
+          </section>
+
+          {/* Aperçu repliable (carte live + stats, mise à jour temps réel via l'état React) */}
+          <aside className={`ofb-preview${previewCollapsed ? ' collapsed' : ''}`}>
+            <div className="ofb-pv-head">
+              <span className="ofb-dotlive" aria-hidden />
+              <h3>Aperçu live</h3>
+            </div>
+            <div className="ofb-pv-body">
+              <div className="ofb-pv-card">
+                <div className="ofb-pv-cover">
+                  <span className="ofb-pv-badge">{data?.category || 'Sans catégorie'}</span>
                 </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                  <p className="text-[11px] text-gray-500">Semaines</p>
-                  <p className="text-lg font-bold text-white">{totalWeeks}</p>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                  <p className="text-[11px] text-gray-500">Jours</p>
-                  <p className="text-lg font-bold text-white">{totalDays}</p>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                  <p className="text-[11px] text-gray-500">Vidéos</p>
-                  <p className="text-lg font-bold text-white">{totalVideos}</p>
+                <div className="ofb-pv-content">
+                  <div className={`ofb-pv-title${data?.title ? '' : ' empty'}`}>{data?.title || 'Titre de la formation…'}</div>
+                  <div className="ofb-pv-cat">{data?.category || 'Catégorie non définie'}</div>
                 </div>
               </div>
+              <div className="ofb-pv-stats">
+                <div className="ofb-pv-stat"><div className="v">{modules?.length || 0}</div><div className="k">Modules</div></div>
+                <div className="ofb-pv-stat"><div className="v">{totalWeeks}</div><div className="k">Semaines</div></div>
+                <div className="ofb-pv-stat"><div className="v">{totalDays}</div><div className="k">Jours</div></div>
+                <div className="ofb-pv-stat"><div className="v">{totalVideos}</div><div className="k">Vidéos</div></div>
+              </div>
+            </div>
+            <div className="ofb-pv-foot">
               <Button
                 variant="outline"
-                className="w-full border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
+                className="w-full justify-center border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                 onClick={() => setPreviewOpen(true)}
               >
-                <Layout className="w-4 h-4 mr-2" />
-                Aperçu élève complet
+                <Eye className="w-4 h-4 mr-2" /> Aperçu élève complet
               </Button>
             </div>
           </aside>
-        </div>
-      </div>
 
-      {/* Footer Navigation */}
-      <div className="p-4 border-t border-white/10 bg-[#111823]/95 backdrop-blur-xl flex justify-between">
-         <Button disabled={step === 1} onClick={handleBack} variant="outline" className="border-white/10 text-white hover:bg-white/5"><ArrowLeft className="w-4 h-4 mr-2"/> Précédent</Button>
-         <Button disabled={isSaving} onClick={step === 5 ? () => handleSave(data?.status || 'draft') : handleNext} className="bg-[var(--school-accent)] hover:bg-[#e5c04a] text-black gap-2 font-semibold">
-           {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-           {step === 5 ? (isSaving ? 'Enregistrement...' : 'Terminer') : 'Suivant'}
-           {!isSaving ? <ArrowRight className="w-4 h-4 ml-2"/> : null}
-         </Button>
+          {/* Poignée de repli de l'aperçu (mode focus) */}
+          <button
+            type="button"
+            className={`ofb-pv-toggle${previewCollapsed ? ' collapsed' : ''}`}
+            onClick={() => setPreviewCollapsed((v) => !v)}
+            title={previewCollapsed ? "Afficher l'aperçu" : "Replier l'aperçu"}
+            aria-label={previewCollapsed ? "Afficher l'aperçu" : "Replier l'aperçu"}
+          >
+            <ChevronRight />
+          </button>
+        </div>
       </div>
     </div>
   );
