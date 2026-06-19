@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +13,7 @@ import { useToast } from '@/components/ui/use-toast';
 import {
   ArrowLeft, ArrowRight, Save, Plus, Trash, Video, FileText,
   Presentation, CheckCircle, Image as ImageIcon, Upload, Calendar, Layout, Loader2, Menu, Copy,
-  BookOpen, GraduationCap, Users, Layers, MessageSquare, Star, LifeBuoy, User, ChevronRight, Eye,
+  ChevronRight, Eye,
 } from 'lucide-react';
 import ProgressivePlaylist from '@/components/school/classroom/ProgressivePlaylist';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -474,7 +474,6 @@ const StepConfig = ({ config, update }) => (
 // --- MAIN BUILDER ---
 const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
   const [step, setStep] = useState(1);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -837,59 +836,11 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
     [modules]
   );
 
-  const goTab = (tab) => navigate(`/owner-dashboard?tab=${tab}`);
-  const railNav = {
-    pedago: [
-      { icon: BookOpen, label: 'Formations', onClick: onCancel, active: true },
-      { icon: GraduationCap, label: 'Vie scolaire', onClick: () => goTab('school-life') },
-      { icon: Users, label: 'Coaching', onClick: () => goTab('coaching-mentoring') },
-      { icon: Layers, label: 'Ateliers', onClick: () => goTab('workshops') },
-    ],
-    commu: [
-      { icon: MessageSquare, label: 'Forum', onClick: () => goTab('forum') },
-      { icon: Star, label: 'Avis', onClick: () => goTab('reviews') },
-    ],
-  };
-
   return (
+    // Le constructeur s'inscrit DANS le shell du dashboard (LiriDashboardShell) :
+    // pas de plein écran ni de rail propre → la sidebar du dashboard (le vrai menu
+    // de navigation) reste visible. .ofb-root = panneau studio dans la zone de contenu.
     <div className="ofb-root">
-      {/* ===== RAIL : menu icônes repliable (façon Claude) ===== */}
-      <aside className="ofb-rail" aria-label="Navigation de l'école">
-        <button type="button" className="ofb-rail-logo" onClick={onCancel} title="Retour aux formations">
-          <span className="ofb-logo-dot" aria-hidden />
-          <span className="ofb-logo-txt">PRORASCIENCE</span>
-        </button>
-
-        <div className="ofb-nav-label">Pédagogie</div>
-        {railNav.pedago.map((it) => {
-          const Icon = it.icon;
-          return (
-            <button key={it.label} type="button" className={`ofb-nav-item${it.active ? ' active' : ''}`} onClick={it.onClick}>
-              <Icon className="ofb-i" /><span>{it.label}</span><span className="ofb-rail-tip">{it.label}</span>
-            </button>
-          );
-        })}
-
-        <div className="ofb-nav-label">Communauté</div>
-        {railNav.commu.map((it) => {
-          const Icon = it.icon;
-          return (
-            <button key={it.label} type="button" className="ofb-nav-item" onClick={it.onClick}>
-              <Icon className="ofb-i" /><span>{it.label}</span><span className="ofb-rail-tip">{it.label}</span>
-            </button>
-          );
-        })}
-
-        <div className="ofb-rail-spacer" />
-        <button type="button" className="ofb-nav-item" onClick={() => goTab('support')}>
-          <LifeBuoy className="ofb-i" /><span>Support</span><span className="ofb-rail-tip">Support</span>
-        </button>
-        <button type="button" className="ofb-nav-item" onClick={() => goTab('settings')}>
-          <User className="ofb-i" /><span>Mon compte</span><span className="ofb-rail-tip">Mon compte</span>
-        </button>
-      </aside>
-
-      {/* ===== MAIN ===== */}
       <div className="ofb-main">
         {/* Top bar */}
         <div className="ofb-topbar">

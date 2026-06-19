@@ -23,9 +23,13 @@
   --ofb-radius: 16px;
   --ofb-ease: cubic-bezier(.22, .61, .36, 1);
 
-  position: fixed;
-  inset: 0;
-  z-index: 50;
+  /* Panneau studio INSCRIT dans le shell du dashboard (plus de plein écran) :
+     la sidebar/menu du dashboard reste visible autour. */
+  position: relative;
+  height: calc(100dvh - 124px);
+  min-height: 560px;
+  border-radius: var(--ofb-radius);
+  border: 1px solid var(--ofb-line-2);
   display: flex;
   color: var(--ofb-text);
   overflow: hidden;
@@ -36,72 +40,8 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* ============ RAIL (menu façon Claude) ============ */
-.ofb-rail {
-  position: absolute; left: 0; top: 0; bottom: 0;
-  width: 68px;
-  background: linear-gradient(180deg, #232838, #181b24);
-  border-right: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 12px 0 34px rgba(0, 0, 0, 0.35);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 16px 0;
-  gap: 6px;
-  z-index: 60;
-  overflow: hidden;
-  transition: width .32s var(--ofb-ease);
-}
-.ofb-rail:hover { width: 236px; align-items: stretch; padding-left: 12px; padding-right: 12px; }
-
-.ofb-rail-logo {
-  display: flex; align-items: center; gap: 10px; height: 40px; margin-bottom: 18px;
-  padding-left: 6px; overflow: hidden; white-space: nowrap;
-  background: none; border: 0; cursor: pointer; color: inherit; width: 100%;
-}
-.ofb-logo-dot {
-  width: 30px; height: 30px; flex: 0 0 30px; border-radius: 9px;
-  background: conic-gradient(from 130deg, var(--ofb-violet), var(--ofb-gold), var(--ofb-green), var(--ofb-violet));
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), 0 6px 18px color-mix(in srgb, var(--ofb-violet) 35%, transparent);
-}
-.ofb-logo-txt { font-weight: 700; letter-spacing: .5px; font-size: 13px; opacity: 0; transition: opacity .25s var(--ofb-ease) .05s; }
-.ofb-rail:hover .ofb-logo-txt { opacity: 1; }
-
-.ofb-nav-label {
-  font-size: 10px; letter-spacing: 1.4px; color: var(--ofb-faint); text-transform: uppercase;
-  padding: 0 8px; opacity: 0; height: 0; overflow: hidden; transition: opacity .2s var(--ofb-ease);
-}
-.ofb-rail:hover .ofb-nav-label { opacity: 1; height: auto; padding: 14px 8px 6px; }
-
-.ofb-nav-item {
-  display: flex; align-items: center; gap: 13px; height: 44px; border-radius: 11px;
-  color: #ccd1db; cursor: pointer; position: relative; width: 100%;
-  padding: 0; justify-content: center; background: none; border: 0; text-align: left;
-  transition: background .2s var(--ofb-ease), color .2s var(--ofb-ease), padding .3s var(--ofb-ease);
-}
-.ofb-rail:hover .ofb-nav-item { justify-content: flex-start; padding: 0 12px; }
-.ofb-nav-item svg { width: 20px; height: 20px; flex: 0 0 20px; }
-.ofb-nav-item span { font-size: 13.5px; white-space: nowrap; opacity: 0; transition: opacity .2s var(--ofb-ease); }
-.ofb-rail:hover .ofb-nav-item span { opacity: 1; }
-.ofb-nav-item:hover { background: var(--ofb-panel-2); color: var(--ofb-text); }
-.ofb-nav-item.active { color: var(--ofb-text); background: linear-gradient(90deg, var(--ofb-gold-soft), transparent); }
-.ofb-nav-item.active::before {
-  content: ""; position: absolute; left: -12px; top: 50%; transform: translateY(-50%);
-  width: 3px; height: 22px; border-radius: 0 3px 3px 0; background: var(--ofb-gold);
-}
-.ofb-rail-spacer { flex: 1; }
-.ofb-rail-tip {
-  position: absolute; left: 60px; top: 50%; transform: translateY(-50%) translateX(-6px);
-  background: #23262e; color: var(--ofb-text); font-size: 12px; padding: 6px 11px; border-radius: 8px;
-  white-space: nowrap; pointer-events: none; opacity: 0; transition: .18s var(--ofb-ease);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, .45); border: 1px solid var(--ofb-line-2); z-index: 80;
-}
-.ofb-rail:not(:hover) .ofb-nav-item:hover .ofb-rail-tip { opacity: 1; transform: translateY(-50%) translateX(0); }
-.ofb-rail:hover .ofb-rail-tip { display: none; }
-
 /* ============ MAIN ============ */
-/* margin-left = largeur du rail (qui est en overlay absolu, hors flux) */
-.ofb-main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; margin-left: 68px; }
+.ofb-main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
 
 /* Top bar */
 .ofb-topbar {
@@ -248,7 +188,6 @@
 /* Accessibilité : respect de prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   .ofb-root *,
-  .ofb-rail,
   .ofb-preview,
   .ofb-pv-toggle svg,
   .ofb-mini-bar i { transition: none !important; animation: none !important; }
