@@ -2,15 +2,13 @@
  * live-invitations.js — Invitation (email + WhatsApp) envoyée dès qu'un live est programmé.
  *
  * Poll les live_sessions programmées (futures) dont l'invitation n'a pas encore été
- * envoyée, et notifie chaque ÉLÈVE INVITÉ (live_session_participants role='student') :
- *   - EMAIL   : enfilé dans email_queue (→ jobs/email.js → Resend).
- *   - WhatsApp: envoyé via Twilio (lib/whatsapp.js), best-effort, si l'élève a un
- *               téléphone + a opté pour les rappels (profiles.notify_sms) + Twilio configuré.
+ * envoyée, et notifie selon les MOYENS DE DIFFUSION choisis par le créateur
+ * (live_visibility_rules) + la CHAÎNE WhatsApp de l'école (tenant_notification_settings,
+ * éditable no-code dans le back-office) :
+ *   - EMAIL élève   : si notify_email → email_queue (→ jobs/email.js → Resend).
+ *   - WhatsApp élève : si notify_whatsapp → Twilio (opt-in profiles.notify_sms + téléphone).
+ *   - Chaîne école   : si whatsapp_channel_enabled → 1 WhatsApp vers whatsapp_school_number.
  * Idempotent via live_sessions.invitations_sent_at.
- *
- * Le studio (useTeacherAppointments.createLiveSession) upsert les invités dans
- * live_session_participants. Complète live-reminders.js (qui ne couvrait que l'hôte
- * + le guest d'un rendez-vous) : un live de CLASSE notifie tous ses invités.
  */
 import { createClient } from '@supabase/supabase-js';
 import { sendWhatsApp, whatsappConfigured } from '../lib/whatsapp.js';
@@ -45,7 +43,7 @@ export async function pollLiveInvitations() {
 
   const { data: sessions } = await supabase
     .from('live_sessions')
-    .select('id, title, scheduled_at')
+    .select('id, title, scheduled_at, tenant_id')
     .eq('status', 'scheduled')
     .is('invitations_sent_at', null)
     .gte('scheduled_at', now.toISOString())
@@ -55,16 +53,6 @@ export async function pollLiveInvitations() {
 
   let sent = 0;
   for (const s of sessions) {
-    // Élèves invités : le studio upsert les invités dans live_session_participants.
-    const { data: parts } = await supabase
-      .from('live_session_participants')
-      .select('user_id, role')
-      .eq('live_session_id', s.id);
-
-    const studentIds = (parts || [])
-      .filter((p) => (p.role || 'student') === 'student')
-      .map((p) => p.user_id);
-
     const titleHtml = esc(s.title || 'Séance live');
     const titleText = s.title || 'Séance live';
     const when = (() => {
@@ -84,49 +72,76 @@ export async function pollLiveInvitations() {
     const wantEmail = rules ? rules.notify_email === true : true;
     const wantWhatsApp = rules ? rules.notify_whatsapp === true : false;
 
-    // Aucun canal choisi → marquer traité (idempotence) et passer.
-    if (!wantEmail && !wantWhatsApp) {
-      await supabase.from('live_sessions').update({ invitations_sent_at: new Date().toISOString() }).eq('id', s.id);
-      continue;
+    // Chaîne WhatsApp de l'école — numéro configuré NO-CODE dans le back-office
+    // (tenant_notification_settings). Notifié une seule fois par live.
+    const { data: ns } = await supabase
+      .from('tenant_notification_settings')
+      .select('whatsapp_school_number, whatsapp_channel_enabled')
+      .eq('tenant_id', s.tenant_id)
+      .maybeSingle();
+    const channelNumber = ns?.whatsapp_channel_enabled ? (ns.whatsapp_school_number || '') : '';
+    const wantChannel = Boolean(channelNumber && whatsappConfigured());
+
+    // ── Chaîne école (1 WhatsApp vers le numéro de l'école) ────────────────
+    if (wantChannel) {
+      try {
+        const res = await sendWhatsApp({ to: channelNumber, title: titleText, when, link });
+        if (res.status === 'sent') sent += 1;
+        else if (res.status !== 'disabled') console.warn('[live-invitations] channel whatsapp', res.status, res.error || '');
+      } catch (e) {
+        console.error('[live-invitations] channel whatsapp', String(e));
+      }
     }
 
-    const seenEmail = new Set();
-    const seenPhone = new Set();
-    for (const uid of studentIds) {
-      const p = await profileFor(uid);
-      if (!p) continue;
+    // ── Notifications individuelles aux élèves invités ─────────────────────
+    if (wantEmail || wantWhatsApp) {
+      const { data: parts } = await supabase
+        .from('live_session_participants')
+        .select('user_id, role')
+        .eq('live_session_id', s.id);
 
-      // EMAIL → email_queue (Resend) — si le créateur a choisi l'email
-      if (wantEmail && p.email && !seenEmail.has(p.email)) {
-        seenEmail.add(p.email);
-        const html =
-          `<p>Bonjour ${esc(p.name || '')},</p>` +
-          `<p>Vous êtes invité(e) à la séance live « <strong>${titleHtml}</strong> »` +
-          `${when ? ` prévue le <strong>${esc(when)}</strong>` : ''}.</p>` +
-          `<p>Le jour J, rejoignez la salle d'attente depuis ce lien :</p>` +
-          `<p><a href="${link}">Rejoindre la séance</a></p>`;
-        try {
-          await supabase.from('email_queue').insert({
-            to: p.email,
-            subject: `Invitation — ${titleText}`,
-            html_body: html,
-            status: 'pending',
-          });
-          sent += 1;
-        } catch (e) {
-          console.error('[live-invitations] email enqueue', String(e));
+      const studentIds = (parts || [])
+        .filter((p) => (p.role || 'student') === 'student')
+        .map((p) => p.user_id);
+
+      const seenEmail = new Set();
+      const seenPhone = new Set();
+      for (const uid of studentIds) {
+        const p = await profileFor(uid);
+        if (!p) continue;
+
+        // EMAIL → email_queue (Resend) — si le créateur a choisi l'email
+        if (wantEmail && p.email && !seenEmail.has(p.email)) {
+          seenEmail.add(p.email);
+          const html =
+            `<p>Bonjour ${esc(p.name || '')},</p>` +
+            `<p>Vous êtes invité(e) à la séance live « <strong>${titleHtml}</strong> »` +
+            `${when ? ` prévue le <strong>${esc(when)}</strong>` : ''}.</p>` +
+            `<p>Le jour J, rejoignez la salle d'attente depuis ce lien :</p>` +
+            `<p><a href="${link}">Rejoindre la séance</a></p>`;
+          try {
+            await supabase.from('email_queue').insert({
+              to: p.email,
+              subject: `Invitation — ${titleText}`,
+              html_body: html,
+              status: 'pending',
+            });
+            sent += 1;
+          } catch (e) {
+            console.error('[live-invitations] email enqueue', String(e));
+          }
         }
-      }
 
-      // WhatsApp → Twilio (si le créateur a choisi WhatsApp + opt-in notify_sms + téléphone + Twilio configuré)
-      if (wantWhatsApp && whatsappConfigured() && p.phone && p.notify_sms && !seenPhone.has(p.phone)) {
-        seenPhone.add(p.phone);
-        try {
-          const res = await sendWhatsApp({ to: p.phone, title: titleText, when, link });
-          if (res.status === 'sent') sent += 1;
-          else if (res.status !== 'disabled') console.warn('[live-invitations] whatsapp', res.status, res.error || '');
-        } catch (e) {
-          console.error('[live-invitations] whatsapp', String(e));
+        // WhatsApp élève → Twilio (si choisi + opt-in notify_sms + téléphone + Twilio configuré)
+        if (wantWhatsApp && whatsappConfigured() && p.phone && p.notify_sms && !seenPhone.has(p.phone)) {
+          seenPhone.add(p.phone);
+          try {
+            const res = await sendWhatsApp({ to: p.phone, title: titleText, when, link });
+            if (res.status === 'sent') sent += 1;
+            else if (res.status !== 'disabled') console.warn('[live-invitations] whatsapp', res.status, res.error || '');
+          } catch (e) {
+            console.error('[live-invitations] whatsapp', String(e));
+          }
         }
       }
     }
