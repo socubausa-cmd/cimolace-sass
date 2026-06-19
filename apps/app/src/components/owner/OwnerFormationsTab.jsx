@@ -102,27 +102,32 @@ const OwnerFormationsTab = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, formations, location?.search]);
 
+  // Re-sync de la formation en cours d'édition après un refetch de la liste.
+  // ⚠️ Anti-boucle React #185 (« Maximum update depth exceeded ») : on ne traite
+  // chaque RÉFÉRENCE de `formations` qu'UNE fois (syncedFormationsRef), et on lit la
+  // formation courante via le updater (prev) au lieu de la mettre en dépendance.
+  // Avant : setSelectedFormation créait un nouvel objet → selectedFormation changeait
+  // → l'effet (qui l'avait en dep) se redéclenchait à l'infini → crash #185.
+  const syncedFormationsRef = useRef(null);
   useEffect(() => {
     if (loading) return;
     if (viewMode !== 'edit') return;
-    if (!selectedFormation) return;
-    const refreshed = formations.find((f) => f.id === selectedFormation.id);
-    if (refreshed) {
-      setSelectedFormation((prev) => {
-        const prevModules = prev?.modules;
-        const refreshedModules = refreshed?.modules;
-        return {
-          ...prev,
-          ...refreshed,
-          modules: Array.isArray(refreshedModules)
-            ? refreshedModules
-            : Array.isArray(prevModules)
-              ? prevModules
-              : [],
-        };
-      });
-    }
-  }, [formations, loading, selectedFormation, viewMode]);
+    if (syncedFormationsRef.current === formations) return;
+    syncedFormationsRef.current = formations;
+    setSelectedFormation((prev) => {
+      if (!prev) return prev;
+      const refreshed = formations.find((f) => f.id === prev.id);
+      if (!refreshed) return prev;
+      const nextModules = Array.isArray(refreshed.modules)
+        ? refreshed.modules
+        : Array.isArray(prev.modules)
+          ? prev.modules
+          : [];
+      return { ...prev, ...refreshed, modules: nextModules };
+    });
+    // selectedFormation volontairement HORS des deps (lu via prev) — voir note anti-boucle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formations, loading, viewMode]);
 
   // Filter Logic
   const filteredFormations = formations.filter(f => {
