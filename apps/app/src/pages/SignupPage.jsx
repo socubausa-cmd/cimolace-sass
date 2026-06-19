@@ -38,7 +38,7 @@ const SignupPage = () => {
   const [formErrors, setFormErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { signup, loginWithOAuth } = useAuth();
+  const { signup, loginWithOAuth, ensureStudentMembership } = useAuth();
   const navigate = useNavigate();
   const [googleLoading, setGoogleLoading] = useState(false);
 
@@ -83,13 +83,23 @@ const SignupPage = () => {
     
     setIsLoading(true);
     try {
-      const { error } = await signup(formData.email, formData.password, {
+      const { data, error } = await signup(formData.email, formData.password, {
         full_name: formData.fullName,
         role: 'visitor'
       });
 
       if (error) {
         throw error;
+      }
+
+      // Rattachement tenant élève (idempotent, non bloquant). Sur une vitrine école
+      // (tenant courant résolu via le slug), tout nouvel inscrit est un élève :
+      // sans tenant_memberships active, les RLS pédagogiques le laissent orphelin
+      // (aucun cours / note / live visible). Hors contexte école (slug vide),
+      // ensureStudentMembership ne fait rien → flux visiteur générique préservé.
+      // La redirection /forfaits échappe au self-heal (gaté /m/eleve) d'où ce relais.
+      if (data?.session?.user) {
+        await ensureStudentMembership(data.session.user);
       }
 
       // Redirige vers le paramètre `redirect` (lien d'invitation, paiement, etc.)
