@@ -1176,6 +1176,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
         <div className="ofb-content">
           <section className="ofb-stage">
             <div className="ofb-stage-scroll">
+            <div className="ofb-stage-inner">
             <div className="ofb-stage-head ofb-rise" key={`head-${step}`}>
               <div className="ofb-eyebrow">{`Étape ${step} sur ${stepMeta.length}`}</div>
               <h2>{currentStepMeta?.label}</h2>
@@ -1196,6 +1197,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
                   {step === 5 && <StepConfig config={data.config} update={(f, v) => setData({...data, config: {...data.config, [f]: v}})} />}
               </motion.div>
             </AnimatePresence>
+            </div>
             </div>
 
             {/* Pied : progression + nav précédent/suivant (toujours visible) */}
