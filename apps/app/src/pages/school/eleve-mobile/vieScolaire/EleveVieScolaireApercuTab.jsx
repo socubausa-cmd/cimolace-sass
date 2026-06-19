@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -11,6 +11,7 @@ import {
   User,
   Sparkles,
   BookOpen,
+  Radio,
 } from 'lucide-react';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import {
@@ -24,12 +25,37 @@ import {
   listCardSurface,
   StatBox,
 } from './vieScolaireSharedUI.jsx';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { useLiveAlertsForUser } from '@/hooks/useLiveAlertsForUser';
+import {
+  orderHomeLiveSessions,
+  isHomeOnAirSession,
+  liveSessionPrimaryHref,
+  liveSessionPrimaryCtaLabel,
+} from '@/lib/liveAlertSessionUi';
+
+const fmtWhen = (iso) => {
+  try {
+    return new Date(iso).toLocaleString('fr-FR', {
+      weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+    });
+  } catch { return ''; }
+};
 
 /**
  * Sous-écran Aperçu (route index). Context : retour de `useVieScolaireData`.
  */
 export default function EleveVieScolaireApercuTab() {
   const data = useOutletContext();
+  // Lives à venir / en direct (vraie source temps réel, comme l'écran Live dédié) :
+  // surfacés ici pour que l'élève voie ses séances DEPUIS Vie scolaire, pas seulement
+  // depuis l'onglet Live. Hooks avant tout return conditionnel (règles des hooks).
+  const { user } = useAuth();
+  const liveSessions = useLiveAlertsForUser(user?.id);
+  const lives = useMemo(
+    () => orderHomeLiveSessions(liveSessions, user?.id),
+    [liveSessions, user?.id],
+  );
   if (!data) return null;
   const {
     loading,
@@ -96,6 +122,62 @@ export default function EleveVieScolaireApercuTab() {
           </div>
         ) : (
           <>
+            {lives.length > 0 ? (
+              <div className="mb-4">
+                <div className="mb-2 flex items-center gap-1.5">
+                  <Radio className="h-3.5 w-3.5 text-violet-300/90" />
+                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-white/45">
+                    Lives à venir
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {lives.slice(0, 3).map((s) => {
+                    const onAir = isHomeOnAirSession(s, user?.id);
+                    return (
+                      <Link
+                        key={s.id}
+                        to={liveSessionPrimaryHref(s, user?.id)}
+                        className="flex items-center gap-3 px-3.5 py-2.5 transition-transform active:scale-[0.99]"
+                        style={{ borderRadius: EV_R.lg, ...listCardSurface() }}
+                      >
+                        <div className="min-w-0 flex-1">
+                          {onAir ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-red-300">
+                              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
+                              En direct
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center rounded-full bg-violet-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-violet-200">
+                              À venir
+                            </span>
+                          )}
+                          <p className="mt-1 truncate text-[13px] font-bold text-[#fbf3df]">
+                            {s.title || 'Séance live'}
+                          </p>
+                          {!onAir && s.scheduled_at ? (
+                            <p className="mt-0.5 flex items-center gap-1 text-[11px]" style={{ color: EV_MUTED }}>
+                              <Clock className="h-3 w-3" /> {fmtWhen(s.scheduled_at)}
+                            </p>
+                          ) : null}
+                        </div>
+                        <span
+                          className="inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-bold text-white"
+                          style={{
+                            background: onAir
+                              ? 'linear-gradient(100deg,#ef4444 0%,#b91c1c 100%)'
+                              : `linear-gradient(100deg, ${EV_ACCENT} 0%, #3b3cde 100%)`,
+                            boxShadow: EV_SH.cta,
+                          }}
+                        >
+                          {liveSessionPrimaryCtaLabel(s, user?.id)}
+                          <ChevronRight className="h-3.5 w-3.5 opacity-80" />
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
             <div className="mb-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
               <StatBox label="Moy. (aperçu)" value={moyenneLabel} icon={Award} tone="amber" />
               <StatBox
