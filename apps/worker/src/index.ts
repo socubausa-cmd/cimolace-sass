@@ -13,6 +13,7 @@ import { pollZoomSync }               from './jobs/zoom-sync.js';
 import { pollShortGeneration }        from './jobs/short-generator.js';
 import { pollCourseRenderJobs }       from './jobs/courseRender.js';
 import { pollLiveReminders }          from './jobs/live-reminders.js';
+import { pollLiveInvitations }        from './jobs/live-invitations.js';
 
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
@@ -77,6 +78,18 @@ console.log('[worker] ✓ Email poller (15s)');
   }
 })();
 console.log('[worker] ✓ Live reminders poller (60s)');
+
+// ── Invitations live (120s) ──────────────────────────────────────────────
+(async () => {
+  while (true) {
+    try {
+      const count = await (pollLiveInvitations as () => Promise<number>)();
+      if (count > 0) console.log(`[worker] Live invitations: ${count} invitations enfilées`);
+    } catch (e: unknown) { console.error('[worker] Live invitations error:', (e as Error).message); }
+    await sleep(120_000);
+  }
+})();
+console.log('[worker] ✓ Live invitations poller (120s)');
 
 // ── AI generation (10s) ──────────────────────────────────────────────────
 (async () => {

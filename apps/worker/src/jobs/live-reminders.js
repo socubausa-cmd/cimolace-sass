@@ -63,12 +63,27 @@ export async function pollLiveReminders() {
       if (guest) recipients.push({ ...guest, link: `${APP_URL}/live/${s.id}`, cta: 'Rejoindre la séance' });
     }
 
+    // Élèves INVITÉS du live (live de classe) — pas seulement le guest d'un rendez-vous.
+    // Le studio upsert les invités dans live_session_participants (role='student').
+    const { data: parts } = await supabase
+      .from('live_session_participants')
+      .select('user_id, role')
+      .eq('live_session_id', s.id);
+    for (const p of parts || []) {
+      if ((p.role || 'student') !== 'student') continue;
+      const stu = await emailFor(p.user_id);
+      if (stu) recipients.push({ ...stu, link: `${APP_URL}/live/${s.id}`, cta: 'Rejoindre la séance' });
+    }
+
     const title = esc(s.title || 'Votre séance live');
     const when = (() => {
       try { return new Date(s.scheduled_at).toLocaleString('fr-FR'); } catch { return ''; }
     })();
 
+    const seen = new Set();
     for (const r of recipients) {
+      if (seen.has(r.email)) continue;
+      seen.add(r.email);
       const html =
         `<p>Bonjour ${esc(r.name)},</p>` +
         `<p>Votre séance « <strong>${title}</strong> » commence bientôt${when ? ` (${esc(when)})` : ''}.</p>` +
