@@ -59,6 +59,13 @@ h1, h2, h3, h4, h5, h6,
   font-family: var(--app-font-main) !important;
 }
 
+/* Densité GLOBALE du back-office admin : toute la zone de contenu du LiriDashboardShell
+   (Owner / Secrétariat / Admin / Réglages…) est réduite d'un cran pour corriger
+   l'impression « tout est trop grand », sans réécrire chaque page. Scopé au contenu
+   admin → n'affecte NI le site public NI la sidebar/topbar du shell. Calibrable via
+   --admin-density (1 = taille d'origine ; plus bas = plus compact). */
+.liri-shell-content { zoom: var(--admin-density, 0.9); }
+
 .font-display {
   font-family: var(--app-font-display);
   letter-spacing: -0.02em;

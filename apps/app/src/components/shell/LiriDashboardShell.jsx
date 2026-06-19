@@ -329,7 +329,7 @@ export default function LiriDashboardShell({
             {topbarRight}
           </div>
         </header>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 20px 40px' }}>
+        <div className="liri-shell-content" style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 20px 40px' }}>
           {isLight ? (
             // Mode clair (crème) : pas de panneau sombre. Conteneur transparent — les enfants
             // fournissent leurs propres cartes blanches (palette L partagée).
