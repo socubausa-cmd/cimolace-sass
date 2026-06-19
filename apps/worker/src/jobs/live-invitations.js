@@ -1,16 +1,19 @@
 /**
- * live-invitations.js — E-mail d'INVITATION envoyé dès qu'un live est programmé.
+ * live-invitations.js — Invitation (email + WhatsApp) envoyée dès qu'un live est programmé.
  *
- * Pattern : poll les live_sessions programmées (futures) dont l'invitation n'a pas
- * encore été envoyée, et enfile un e-mail vers chaque ÉLÈVE INVITÉ
- * (live_session_participants role='student') dans email_queue (→ jobs/email.js → Resend).
+ * Poll les live_sessions programmées (futures) dont l'invitation n'a pas encore été
+ * envoyée, et notifie chaque ÉLÈVE INVITÉ (live_session_participants role='student') :
+ *   - EMAIL   : enfilé dans email_queue (→ jobs/email.js → Resend).
+ *   - WhatsApp: envoyé via Twilio (lib/whatsapp.js), best-effort, si l'élève a un
+ *               téléphone + a opté pour les rappels (profiles.notify_sms) + Twilio configuré.
  * Idempotent via live_sessions.invitations_sent_at.
  *
- * Complète live-reminders.js (qui ne couvrait que l'hôte + le guest d'un rendez-vous) :
- * un live de CLASSE notifie désormais TOUS ses invités dès la programmation, pas
- * seulement 15 min avant. Le studio upsert les invités dans live_session_participants.
+ * Le studio (useTeacherAppointments.createLiveSession) upsert les invités dans
+ * live_session_participants. Complète live-reminders.js (qui ne couvrait que l'hôte
+ * + le guest d'un rendez-vous) : un live de CLASSE notifie tous ses invités.
  */
 import { createClient } from '@supabase/supabase-js';
+import { sendWhatsApp, whatsappConfigured } from '../lib/whatsapp.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
@@ -27,10 +30,14 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
-async function emailFor(userId) {
+async function profileFor(userId) {
   if (!userId) return null;
-  const { data } = await supabase.from('profiles').select('email, name').eq('id', userId).maybeSingle();
-  return data?.email ? { email: data.email, name: data.name || '' } : null;
+  const { data } = await supabase
+    .from('profiles')
+    .select('email, name, phone, notify_sms')
+    .eq('id', userId)
+    .maybeSingle();
+  return data || null;
 }
 
 export async function pollLiveInvitations() {
@@ -46,10 +53,9 @@ export async function pollLiveInvitations() {
 
   if (!sessions || sessions.length === 0) return 0;
 
-  let enqueued = 0;
+  let sent = 0;
   for (const s of sessions) {
-    // Élèves invités : le studio (useTeacherAppointments.createLiveSession) upsert les
-    // invités dans live_session_participants (role='student').
+    // Élèves invités : le studio upsert les invités dans live_session_participants.
     const { data: parts } = await supabase
       .from('live_session_participants')
       .select('user_id, role')
@@ -59,7 +65,8 @@ export async function pollLiveInvitations() {
       .filter((p) => (p.role || 'student') === 'student')
       .map((p) => p.user_id);
 
-    const title = esc(s.title || 'Séance live');
+    const titleHtml = esc(s.title || 'Séance live');
+    const titleText = s.title || 'Séance live';
     const when = (() => {
       try { return new Date(s.scheduled_at).toLocaleString('fr-FR'); } catch { return ''; }
     })();
@@ -67,33 +74,50 @@ export async function pollLiveInvitations() {
     // encore démarré, l'élève y patiente jusqu'à l'admission le jour J.
     const link = `${APP_URL}/live/waiting/${s.id}`;
 
-    const seen = new Set();
+    const seenEmail = new Set();
+    const seenPhone = new Set();
     for (const uid of studentIds) {
-      const r = await emailFor(uid);
-      if (!r || seen.has(r.email)) continue;
-      seen.add(r.email);
-      const html =
-        `<p>Bonjour ${esc(r.name)},</p>` +
-        `<p>Vous êtes invité(e) à la séance live « <strong>${title}</strong> »` +
-        `${when ? ` prévue le <strong>${esc(when)}</strong>` : ''}.</p>` +
-        `<p>Le jour J, rejoignez la salle d'attente depuis ce lien :</p>` +
-        `<p><a href="${link}">Rejoindre la séance</a></p>`;
-      try {
-        await supabase.from('email_queue').insert({
-          to: r.email,
-          subject: `Invitation — ${title}`,
-          html_body: html,
-          status: 'pending',
-        });
-        enqueued += 1;
-      } catch (e) {
-        console.error('[live-invitations] enqueue', String(e));
+      const p = await profileFor(uid);
+      if (!p) continue;
+
+      // EMAIL → email_queue (Resend)
+      if (p.email && !seenEmail.has(p.email)) {
+        seenEmail.add(p.email);
+        const html =
+          `<p>Bonjour ${esc(p.name || '')},</p>` +
+          `<p>Vous êtes invité(e) à la séance live « <strong>${titleHtml}</strong> »` +
+          `${when ? ` prévue le <strong>${esc(when)}</strong>` : ''}.</p>` +
+          `<p>Le jour J, rejoignez la salle d'attente depuis ce lien :</p>` +
+          `<p><a href="${link}">Rejoindre la séance</a></p>`;
+        try {
+          await supabase.from('email_queue').insert({
+            to: p.email,
+            subject: `Invitation — ${titleText}`,
+            html_body: html,
+            status: 'pending',
+          });
+          sent += 1;
+        } catch (e) {
+          console.error('[live-invitations] email enqueue', String(e));
+        }
+      }
+
+      // WhatsApp → Twilio (best-effort : opt-in notify_sms + téléphone + Twilio configuré)
+      if (whatsappConfigured() && p.phone && p.notify_sms && !seenPhone.has(p.phone)) {
+        seenPhone.add(p.phone);
+        try {
+          const res = await sendWhatsApp({ to: p.phone, title: titleText, when, link });
+          if (res.status === 'sent') sent += 1;
+          else if (res.status !== 'disabled') console.warn('[live-invitations] whatsapp', res.status, res.error || '');
+        } catch (e) {
+          console.error('[live-invitations] whatsapp', String(e));
+        }
       }
     }
 
-    // Idempotence : marqué même si 0 invité, pour ne pas reboucler.
+    // Idempotence : marqué même si 0 destinataire, pour ne pas reboucler.
     await supabase.from('live_sessions').update({ invitations_sent_at: new Date().toISOString() }).eq('id', s.id);
   }
 
-  return enqueued;
+  return sent;
 }
