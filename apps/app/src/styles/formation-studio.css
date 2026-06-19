@@ -38,9 +38,9 @@
 
 /* ============ RAIL (menu façon Claude) ============ */
 .ofb-rail {
+  position: absolute; left: 0; top: 0; bottom: 0;
   width: 68px;
-  flex: 0 0 68px;
-  background: color-mix(in srgb, var(--ofb-bg-soft) 60%, transparent);
+  background: var(--ofb-bg-soft);
   backdrop-filter: blur(14px);
   border-right: 1px solid var(--ofb-line);
   display: flex;
@@ -48,8 +48,8 @@
   align-items: center;
   padding: 16px 0;
   gap: 6px;
-  position: relative;
   z-index: 60;
+  overflow: hidden;
   transition: width .32s var(--ofb-ease);
 }
 .ofb-rail:hover { width: 236px; align-items: stretch; padding-left: 12px; padding-right: 12px; }
@@ -100,7 +100,8 @@
 .ofb-rail:hover .ofb-rail-tip { display: none; }
 
 /* ============ MAIN ============ */
-.ofb-main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
+/* margin-left = largeur du rail (qui est en overlay absolu, hors flux) */
+.ofb-main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; margin-left: 68px; }
 
 /* Top bar */
 .ofb-topbar {
@@ -232,11 +233,16 @@
 .ofb-pv-toggle svg { width: 16px; height: 16px; transition: transform .35s var(--ofb-ease); }
 .ofb-pv-toggle.collapsed svg { transform: rotate(180deg); }
 
-/* Responsive : sous lg, l'aperçu se replie d'office, le rail reste compact */
+/* Responsive : laptop étroit → marges réduites, l'aperçu RESTE une colonne
+   (jamais en overlay absolu qui débordait hors écran). */
 @media (max-width: 1024px) {
-  .ofb-preview { position: absolute; right: 0; top: 0; bottom: 0; z-index: 25; box-shadow: -20px 0 50px rgba(0,0,0,.5); }
-  .ofb-stage { padding: 24px 20px 110px; }
+  .ofb-stage-scroll { padding: 24px 24px; }
   .ofb-topbar, .ofb-stepper { padding-left: 16px; padding-right: 16px; }
+}
+/* Sous ~960px, l'aperçu prendrait trop de place → masqué proprement
+   (toujours accessible via le bouton « Aperçu élève » de la topbar). */
+@media (max-width: 960px) {
+  .ofb-preview, .ofb-pv-toggle { display: none; }
 }
 
 /* Accessibilité : respect de prefers-reduced-motion */
