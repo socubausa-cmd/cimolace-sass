@@ -79,6 +79,8 @@ export const twinApi = {
   getWheel: (pid: string) => get(`/med/twin/${pid}/wheel`),
   saveWheel: (pid: string, scores: Array<{ domain: string; score: number }>) =>
     post(`/med/twin/${pid}/wheel`, { scores }),
+  // Prévenir le patient (in-app + email tenant-brandé) que son bilan est prêt.
+  notifyBilan: (pid: string) => post(`/med/twin/${pid}/wheel/notify`),
   listEvents: (pid: string) => get(`/med/twin/${pid}/events`),
   createEvent: (pid: string, e: { event_type: string; title: string; occurred_at: string }) =>
     post(`/med/twin/${pid}/events`, e),
@@ -86,6 +88,18 @@ export const twinApi = {
   correlations: (pid: string) => get(`/med/twin/${pid}/correlations`),
   simulate: (pid: string, interventions: string[]) =>
     post(`/med/twin/${pid}/simulate`, { interventions }),
+  /**
+   * Projection temporelle du jumeau (moteur `projection-v1`, déterministe).
+   *
+   * Tous les champs sont optionnels — passer `{}` (ou rien) renvoie la
+   * projection par défaut (tous les scénarios, horizons [1, 5, 10, 20]).
+   * Aucune donnée patient n'est envoyée : age/sexe/scores/roue/biomarqueurs
+   * sont résolus côté serveur via le `patientId`.
+   */
+  projection: (
+    pid: string,
+    opts?: { horizons_years?: number[]; scenario_keys?: string[]; horizon_focus?: number },
+  ): Promise<ProjectionResult> => post(`/med/twin/${pid}/projection`, opts ?? {}),
   rootCause: (pid: string) => post(`/med/twin/${pid}/root-cause`),
   council: (pid: string) => post(`/med/twin/${pid}/council`),
   scientific: (query: string) => post('/med/twin/scientific', { query }),
@@ -341,6 +355,91 @@ export type EngineVersion = {
   deprecated_at: string | null;
   change_notes: string | null;
   is_active: boolean;
+};
+
+// ── Types projection temporelle (projection-v1) ────────────────────────
+/** Les 6 sous-systèmes du scoring fonctionnel (risque projeté 0-100). */
+export type ProjectionSystems = {
+  inflammation: number;
+  metabolism: number;
+  hormones: number;
+  oxidative_stress: number;
+  toxicity: number;
+  cellular_energy: number;
+};
+
+export type ProjectionBand = 'low' | 'moderate' | 'elevated' | 'high';
+
+/** Projection d'un scénario à un horizon donné. */
+export type ProjectionScenarioPoint = {
+  composite_risk: number; // 0-100
+  risk_delta_pct: number; // % signé vs risque actuel (phrase signature)
+  vitality: number; // 0-100
+  systems: ProjectionSystems;
+  band: ProjectionBand;
+};
+
+/** Une entrée par année demandée (1 | 5 | 10 | 20…). */
+export type ProjectionHorizon = {
+  year: number;
+  age_at_horizon: number | null;
+  scenarios: Record<string, ProjectionScenarioPoint>;
+};
+
+export type ProjectionLifeExpectancyScenario = {
+  estimate_years: number;
+  healthspan_years: number;
+  delta_vs_status_quo_years: number; // status_quo = 0
+};
+
+export type ProjectionDriverDirection = 'aggravant' | 'protecteur';
+export type ProjectionDriverSource = 'biomarker' | 'lifestyle' | 'organ_score' | 'demographic';
+
+/** Facteur explicatif au horizon_focus (le « pourquoi » chiffré). */
+export type ProjectionDriver = {
+  code: string;
+  label_fr: string;
+  contribution_pct: number; // somme ~100
+  direction: ProjectionDriverDirection;
+  why_fr: string;
+  source: ProjectionDriverSource;
+  modifiable: boolean;
+};
+
+export type ProjectionConfidenceLevel = 'faible' | 'moderee' | 'bonne';
+
+export type ProjectionConfidence = {
+  level: ProjectionConfidenceLevel;
+  score: number; // 0-1
+  reasons_fr: string[];
+};
+
+export type ProjectionResult = {
+  patient_id: string;
+  engine_version: string; // ex 'projection-v1'
+  generated_at: string; // ISO
+  inputs: {
+    age: number | null;
+    sex: 'female' | 'male' | null;
+    baseline_life_expectancy: number;
+    horizons_years: number[];
+    scenario_keys: string[];
+    horizon_focus: number;
+  };
+  current: {
+    vitality: number; // 0-100
+    composite_risk: number; // 0-100
+    data_completeness: number; // 0-1
+  };
+  horizons: ProjectionHorizon[];
+  life_expectancy: {
+    baseline: number;
+    scenarios: Record<string, ProjectionLifeExpectancyScenario>;
+  };
+  drivers: ProjectionDriver[];
+  confidence: ProjectionConfidence;
+  assumptions_fr: string[];
+  disclaimer: string; // valeur fixe (PROJECTION_DISCLAIMER)
 };
 
 export type OrganScoreSnapshot = {

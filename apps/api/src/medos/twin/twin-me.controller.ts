@@ -1,4 +1,4 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
@@ -8,6 +8,7 @@ import { CurrentTenant } from '../../tenant/current-tenant.decorator';
 import { TenantGuard } from '../../tenant/tenant.guard';
 import type { TenantContext } from '../../tenant/tenant.types';
 import { MedosEnabledGuard } from '../medos-enabled.guard';
+import { AssistantMessageDto } from './dto/assistant-message.dto';
 import { TwinEnabledGuard } from './twin-enabled.guard';
 import { TwinService } from './twin.service';
 
@@ -38,5 +39,21 @@ export class TwinMeController {
   @Roles('patient')
   state(@CurrentTenant() tenant: TenantContext, @Req() req: AuthRequest) {
     return this.service.getMyTwinState(tenant, req.user.id);
+  }
+
+  /**
+   * Assistant santé pédagogique du patient connecté.
+   *
+   * Le patient est résolu via le JWT (req.user.id) + X-Tenant-Slug (TenantGuard),
+   * jamais via le corps. Renvoie { reply, disclaimer, suggestions?, escalate? }.
+   */
+  @Post('assistant')
+  @Roles('patient')
+  assistant(
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+    @Body() body: AssistantMessageDto,
+  ) {
+    return this.service.assistantForMe(tenant, req.user.id, body.message, body.history ?? []);
   }
 }

@@ -5,8 +5,10 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { createHash, randomBytes } from 'crypto';
 import { SupabaseService } from '../../supabase/supabase.service';
+import { EmailEngineService } from '../../email-engine/email-engine.service';
 import type { TenantContext } from '../../tenant/tenant.types';
 import {
   AcceptInvitationDto,
@@ -19,7 +21,49 @@ const DEFAULT_EXPIRY_DAYS = 7;
 export class InvitationsService {
   private readonly logger = new Logger(InvitationsService.name);
 
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly config: ConfigService,
+    private readonly email: EmailEngineService,
+  ) {}
+
+  /** Construit l'URL d'acceptation publique du portail patient (tenant). */
+  private acceptUrlFor(tenant: TenantContext, rawToken: string): string {
+    return `https://${tenant.slug}.patient.cimolace.space/invite/accept?token=${rawToken}`;
+  }
+
+  /**
+   * Envoie l'email d'invitation depuis le domaine du tenant (best-effort).
+   * C'est LE canal qui porte le lien d'accès du patient — émis en marque tenant.
+   */
+  private async sendInvitationEmail(
+    tenant: TenantContext,
+    toEmail: string,
+    invitedName: string | undefined,
+    acceptUrl: string,
+    customMessage?: string | null,
+  ) {
+    try {
+      const hello = invitedName ? `Bonjour ${invitedName},` : 'Bonjour,';
+      const extra = customMessage ? `<p style="font-style:italic">${customMessage}</p>` : '';
+      const html = this.email.brandedHtml({
+        title: `Votre espace santé ${tenant.name}`,
+        body: `${hello} votre praticien vous invite à activer votre espace santé personnel et sécurisé. ${extra} Cliquez ci-dessous pour choisir votre mot de passe et accéder à votre dossier. Ce lien expire dans 7 jours.`,
+        ctaLabel: 'Activer mon espace',
+        ctaUrl: acceptUrl,
+        brand: tenant.brand_colors?.primary,
+      });
+      const res = await this.email.sendRaw(
+        tenant.id,
+        toEmail,
+        `Votre espace santé ${tenant.name} — activez votre accès`,
+        html,
+      );
+      this.logger.log(`invite email → ${toEmail}: ${res.status}`);
+    } catch (e) {
+      this.logger.warn(`invite email échec: ${(e as Error).message}`);
+    }
+  }
 
   /**
    * Crée une invitation. Retourne le `raw_token` UNE SEULE FOIS — c'est lui
@@ -85,9 +129,20 @@ export class InvitationsService {
       );
     }
 
-    // TODO : déclencher l'envoi via apps/worker (Resend/Twilio).
-    // Pour le MVP, le staff reçoit le raw_token et l'envoie manuellement.
-    const acceptUrl = `https://${tenant.slug}.medos.cimolace.space/invite/accept?token=${rawToken}`;
+    const acceptUrl = this.acceptUrlFor(tenant, rawToken);
+
+    // Envoi automatique de l'email d'invitation depuis le domaine du tenant
+    // (best-effort). Le staff reçoit aussi raw_token/accept_url en repli manuel
+    // (ex. SMS, ou si Resend désactivé pour ce tenant).
+    if (dto.invited_email) {
+      await this.sendInvitationEmail(
+        tenant,
+        dto.invited_email,
+        dto.invited_name,
+        acceptUrl,
+        dto.custom_message,
+      );
+    }
 
     return {
       invitation: data as Record<string, unknown>,
@@ -131,9 +186,19 @@ export class InvitationsService {
       );
     }
 
+    // On RÉGÉNÈRE le token : le raw n'est jamais stocké (seul le hash l'est),
+    // donc le seul moyen d'émettre un lien fonctionnel au renvoi est d'en
+    // forger un neuf. L'ancien lien devient caduc (comportement attendu).
+    const random = randomBytes(24).toString('hex');
+    const rawToken = `inv_${tenant.slug}_${random}`;
+    const tokenPrefix = `inv_${tenant.slug}_${random.slice(0, 6)}…`;
+    const tokenHash = createHash('sha256').update(rawToken).digest('hex');
+
     const { data, error } = await (this.supabase.client as any)
       .from('med_patient_invitations')
       .update({
+        token_hash: tokenHash,
+        token_prefix: tokenPrefix,
         resent_count: (row.resent_count ?? 0) + 1,
         last_resent_at: new Date().toISOString(),
         status: 'sent',
@@ -144,6 +209,17 @@ export class InvitationsService {
       .single();
     if (error || !data)
       throw new InternalServerErrorException('Renvoi impossible');
+
+    // Renvoi de l'email depuis le domaine du tenant (best-effort).
+    if (row.invited_email) {
+      await this.sendInvitationEmail(
+        tenant,
+        row.invited_email,
+        row.invited_name ?? undefined,
+        this.acceptUrlFor(tenant, rawToken),
+        row.custom_message ?? null,
+      );
+    }
     return data as { id: string; resent_count: number };
   }
 
@@ -167,15 +243,21 @@ export class InvitationsService {
   }
 
   /**
-   * Accepte une invitation. Cherche par hash du token brut, vérifie expiry,
-   * met à jour le statut + lie le patient_user_id au record patient.
+   * Accepte une invitation et active l'accès patient. Le patient choisit son
+   * mot de passe : on retrouve (ou crée) son compte Supabase à partir de
+   * l'email invité, on y pose le mot de passe, on garantit le membership
+   * 'patient' du tenant et on lie le compte au dossier. Le patient peut alors
+   * se connecter au portail avec email + mot de passe.
    *
-   * Endpoint NON authentifié — c'est le point d'entrée du patient invité.
+   * Endpoint NON authentifié — c'est le point d'entrée du patient invité
+   * (pas de session préalable, donc pas d'UUID à fournir : tout est dérivé du
+   * token + de l'email de l'invitation).
    */
   async accept(dto: AcceptInvitationDto): Promise<{
     invitation_id: string;
     patient_id: string;
     tenant_id: string;
+    email: string | null;
   }> {
     if (!dto.token.startsWith('inv_')) {
       throw new BadRequestException('Token invalide');
@@ -205,14 +287,124 @@ export class InvitationsService {
       throw new BadRequestException('Invitation expirée');
     }
 
-    // Lier patient_user_id au dossier patient
+    // Le dossier patient a-t-il déjà un compte auth ? (cas normal : createPatient
+    // l'a provisionné — passwordless — au moment de l'ajout du patient.)
+    const { data: patient } = await (this.supabase.client as any)
+      .from('med_patients')
+      .select('id, patient_user_id')
+      .eq('id', row.patient_id)
+      .eq('tenant_id', row.tenant_id)
+      .maybeSingle();
+
+    const email: string | null = (row.invited_email as string | null) ?? null;
+
+    const supabaseUrl = this.config.get<string>('SUPABASE_URL');
+    const serviceKey = this.config.get<string>('SUPABASE_SERVICE_ROLE_KEY');
+    if (!supabaseUrl || !serviceKey) {
+      throw new InternalServerErrorException('Supabase non configuré');
+    }
+    const adminHeaders = {
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+      'Content-Type': 'application/json',
+    };
+
+    // Résoudre le compte auth : déjà lié au dossier, sinon recherche/création
+    // par email (réplique la logique de MedosService.ensurePatientUser).
+    let userId: string | undefined =
+      ((patient as any)?.patient_user_id as string | null) ?? undefined;
+
+    if (!userId) {
+      if (!email) {
+        throw new BadRequestException(
+          "Cette invitation n'a pas d'email associé — impossible de créer un accès. Contactez votre praticien.",
+        );
+      }
+      const listRes = await fetch(
+        `${supabaseUrl}/auth/v1/admin/users?email=${encodeURIComponent(email)}`,
+        { headers: adminHeaders },
+      );
+      if (listRes.ok) {
+        const data = (await listRes.json()) as {
+          users?: { id: string; email?: string }[];
+        };
+        const existing = (data?.users || []).find(
+          (u) => u.email?.toLowerCase() === email.toLowerCase(),
+        );
+        if (existing) userId = existing.id;
+      }
+      if (!userId) {
+        const createRes = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
+          method: 'POST',
+          headers: adminHeaders,
+          body: JSON.stringify({
+            email,
+            password: dto.password,
+            email_confirm: true,
+            user_metadata: { created_via: 'medos-invite-accept' },
+          }),
+        });
+        if (!createRes.ok) {
+          const body = await createRes.text();
+          this.logger.error(
+            `accept create user failed: ${createRes.status} ${body}`,
+          );
+          throw new InternalServerErrorException(
+            'Création du compte impossible',
+          );
+        }
+        userId = ((await createRes.json()) as { id: string }).id;
+      }
+    }
+
+    // Poser / réinitialiser le mot de passe choisi + confirmer l'email.
+    const pwRes = await fetch(
+      `${supabaseUrl}/auth/v1/admin/users/${userId}`,
+      {
+        method: 'PUT',
+        headers: adminHeaders,
+        body: JSON.stringify({ password: dto.password, email_confirm: true }),
+      },
+    );
+    const pwText = await pwRes.text();
+    if (!pwRes.ok) {
+      this.logger.error(`accept set password failed: ${pwRes.status} ${pwText}`);
+      throw new InternalServerErrorException(
+        'Définition du mot de passe impossible',
+      );
+    }
+    // Email canonique du compte = l'identifiant de connexion réel. Il peut
+    // différer de invited_email si le dossier était déjà lié à un compte
+    // existant — c'est CET email que le patient doit utiliser pour se connecter.
+    let loginEmail: string | null = email;
+    try {
+      const u = JSON.parse(pwText) as { email?: string };
+      if (u?.email) loginEmail = u.email;
+    } catch {
+      /* garde invited_email en repli */
+    }
+
+    // Garantir le membership 'patient' sur ce tenant (idempotent).
+    await (this.supabase.client as any)
+      .from('tenant_memberships')
+      .upsert(
+        {
+          tenant_id: row.tenant_id,
+          user_id: userId,
+          role: 'patient',
+          status: 'active',
+        },
+        { onConflict: 'tenant_id,user_id' },
+      );
+
+    // Lier le compte au dossier patient.
     await (this.supabase.client as any)
       .from('med_patients')
-      .update({ patient_user_id: dto.accepted_by_user_id })
+      .update({ patient_user_id: userId })
       .eq('id', row.patient_id)
       .eq('tenant_id', row.tenant_id);
 
-    // Marquer l'invitation acceptée
+    // Marquer l'invitation acceptée.
     const { data: updated, error: upErr } = await (
       this.supabase.client as any
     )
@@ -220,20 +412,21 @@ export class InvitationsService {
       .update({
         status: 'accepted',
         accepted_at: new Date().toISOString(),
-        accepted_by_user_id: dto.accepted_by_user_id,
+        accepted_by_user_id: userId,
         opened_at: row.opened_at ?? new Date().toISOString(),
       })
       .eq('id', row.id)
       .select('id, tenant_id, patient_id')
       .single();
     if (upErr || !updated) {
-      throw new InternalServerErrorException("Acceptation impossible");
+      throw new InternalServerErrorException('Acceptation impossible');
     }
 
     return {
       invitation_id: (updated as any).id,
       patient_id: (updated as any).patient_id,
       tenant_id: (updated as any).tenant_id,
+      email: loginEmail,
     };
   }
 }

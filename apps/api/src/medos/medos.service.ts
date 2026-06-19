@@ -6,9 +6,11 @@ import {
   InternalServerErrorException,
   Logger,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import type { TenantContext } from '../tenant/tenant.types';
 import type { CreatePatientDto } from './dto/create-patient.dto';
 import type { UpdatePatientDto } from './dto/update-patient.dto';
@@ -81,6 +83,7 @@ export class MedosService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly config: ConfigService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /**
@@ -150,7 +153,22 @@ export class MedosService {
       userId = created.id;
     }
 
-    // 3. Garantir le membership 'patient' sur ce tenant (idempotent)
+    // 3. Garantir le membership 'patient' — SANS JAMAIS rétrograder un membre
+    //    du staff. L'upsert (onConflict tenant_id,user_id) écraserait sinon le
+    //    rôle d'un owner/practitioner en 'patient' si son email est saisi comme
+    //    email patient → il perdrait l'accès au back-office (bug 403 vécu).
+    const MEMBERSHIP_STAFF = ['owner', 'practitioner', 'clinic_admin', 'receptionist'];
+    const { data: existingMem } = await (this.supabase.client as any)
+      .from('tenant_memberships')
+      .select('role')
+      .eq('tenant_id', tenantId)
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (existingMem && MEMBERSHIP_STAFF.includes((existingMem as any).role)) {
+      throw new BadRequestException(
+        "Cet email appartient à un membre de l'équipe — utilisez l'adresse personnelle du patient.",
+      );
+    }
     await (this.supabase.client as any)
       .from('tenant_memberships')
       .upsert(
@@ -694,6 +712,31 @@ export class MedosService {
       noteId,
       shared ? 'share' : 'unshare',
     );
+
+    // In-app notification → patient, only on share (best-effort).
+    try {
+      if (shared) {
+        const { data: pat } = await this.supabase.client
+          .from('med_patients')
+          .select('patient_user_id')
+          .eq('tenant_id', tenant.id)
+          .eq('id', (data as any).patient_id)
+          .single();
+        const patientUserId = (pat as any)?.patient_user_id as string | null;
+        if (patientUserId) {
+          await this.notifications.send(tenant.id, patientUserId, {
+            title: 'Nouvelle note partagée',
+            body: 'Votre praticien a partagé une note de consultation.',
+            type: 'note_shared',
+            email: true,
+            actionUrl: `https://${tenant.slug}.patient.cimolace.space`,
+          });
+        }
+      }
+    } catch (e) {
+      this.logger.warn(`notif note_shared: ${(e as Error).message}`);
+    }
+
     return data as unknown as MedNoteRow;
   }
 
@@ -1008,7 +1051,242 @@ export class MedosService {
     }
 
     await this.writeAudit(tenant.id, userId, 'med_form_response', (data as any).id, 'submit');
+
+    // Best-effort: if a targeted assignment of this form to this patient is
+    // pending, mark it completed. Never let this affect the submission result
+    // (table may not be migrated yet, or no assignment may exist).
+    try {
+      const { error: assignErr } = await this.faTable()
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          response_id: (data as any).id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('tenant_id', tenant.id)
+        .eq('form_id', formId)
+        .eq('patient_id', patient.id)
+        .eq('status', 'pending');
+      if (assignErr && !this.isRelationMissing(assignErr)) {
+        this.logger.warn(
+          `Assignment completion skipped: ${assignErr.message}`,
+        );
+      }
+    } catch (e) {
+      // Assignment missing or table not migrated — ignore silently.
+      this.logger.debug?.(`Assignment completion hook ignored: ${String(e)}`);
+    }
+
     return data as unknown as Record<string, unknown>;
+  }
+
+  // -----------------------------------------------------------------------
+  // Targeted form assignments — send a precise form to a precise patient
+  // (med_form_assignments). Gracefully degrades to []/no-op/503 while the
+  // table migration is not yet applied (Postgres 42P01).
+  // -----------------------------------------------------------------------
+
+  /**
+   * True when a Supabase/Postgres error means the med_form_assignments table
+   * (or a referenced relation) does not exist yet. Lets every accessor degrade
+   * gracefully (empty list / no-op / 503) instead of returning a 500 before
+   * the migration is applied.
+   */
+  /**
+   * Query builder for med_form_assignments. The table is intentionally absent
+   * from the generated Supabase `Database` types until its migration ships, so
+   * the typed client would infer write payloads as `never`. We access it through
+   * an untyped client cast here; all callers still degrade via isRelationMissing.
+   */
+  private faTable() {
+    return (this.supabase.client as any).from('med_form_assignments');
+  }
+
+  private isRelationMissing(error: unknown): boolean {
+    const e = error as { code?: string; message?: string } | null | undefined;
+    if (!e) return false;
+    if (e.code === '42P01') return true;
+    const msg = (e.message ?? '').toLowerCase();
+    return (
+      msg.includes('does not exist') ||
+      msg.includes('med_form_assignments')
+    );
+  }
+
+  /**
+   * Assign a form to a patient (staff). Upserts on (tenant_id, form_id,
+   * patient_id): re-assigning resets the assignment to 'pending'. Verifies the
+   * form AND the patient belong to the tenant (404 otherwise). 503 — not 500 —
+   * while the table is missing.
+   */
+  async assignForm(
+    tenant: TenantContext,
+    actorId: string,
+    formId: string,
+    dto: { patient_id: string; note?: string },
+  ) {
+    // 1. Form must belong to the tenant.
+    const { data: form } = await this.supabase.client
+      .from('med_medical_forms')
+      .select('id, title')
+      .eq('tenant_id', tenant.id)
+      .eq('id', formId)
+      .single();
+    if (!form) throw new NotFoundException('Formulaire introuvable');
+
+    // 2. Patient must belong to the tenant.
+    const { data: patient } = await this.supabase.client
+      .from('med_patients')
+      .select('id, patient_user_id')
+      .eq('tenant_id', tenant.id)
+      .eq('id', dto.patient_id)
+      .single();
+    if (!patient) throw new NotFoundException('Patient introuvable');
+
+    // 3. Upsert the assignment.
+    const { data, error } = await this.faTable()
+      .upsert(
+        {
+          tenant_id: tenant.id,
+          form_id: formId,
+          patient_id: dto.patient_id,
+          status: 'pending',
+          note: dto.note ?? null,
+          assigned_by: actorId,
+          assigned_at: new Date().toISOString(),
+          completed_at: null,
+          response_id: null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'tenant_id,form_id,patient_id' },
+      )
+      .select('*')
+      .single();
+
+    if (error) {
+      if (this.isRelationMissing(error)) {
+        throw new ServiceUnavailableException(
+          'Assignations non disponibles (migration en attente)',
+        );
+      }
+      this.logger.error('assignForm', error.message);
+      throw new InternalServerErrorException('Erreur interne');
+    }
+
+    await this.writeAudit(
+      tenant.id,
+      actorId,
+      'med_form_assignment',
+      (data as any).id,
+      'create',
+    );
+
+    // In-app notification → patient (best-effort: never break the assignment).
+    try {
+      const patientUserId = (patient as any).patient_user_id as string | null;
+      if (patientUserId) {
+        await this.notifications.send(tenant.id, patientUserId, {
+          title: 'Nouveau formulaire à remplir',
+          body: `Votre praticien vous a assigné : « ${((form as any).title as string) ?? 'Formulaire'} ». Merci de le compléter.`,
+          type: 'form_assignment',
+          email: true,
+          actionUrl: `https://${tenant.slug}.patient.cimolace.space`,
+        });
+      }
+    } catch (e) {
+      this.logger.warn(`notif form_assignment: ${(e as Error).message}`);
+    }
+
+    return data as unknown as Record<string, unknown>;
+  }
+
+  /**
+   * Cancel an assignment (staff). Tenant-scoped. No-op gracefully when the
+   * table is missing. Returns { id }.
+   */
+  async cancelAssignment(
+    tenant: TenantContext,
+    id: string,
+  ): Promise<{ id: string }> {
+    const { data, error } = await this.faTable()
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+      .eq('tenant_id', tenant.id)
+      .eq('id', id)
+      .select('id')
+      .single();
+
+    if (error) {
+      if (this.isRelationMissing(error)) return { id };
+      // Row not found (PGRST116) is also a benign no-op for cancel.
+      if ((error as { code?: string }).code === 'PGRST116') return { id };
+      this.logger.error('cancelAssignment', error.message);
+      throw new InternalServerErrorException('Erreur interne');
+    }
+    return { id: (data as { id: string } | null)?.id ?? id };
+  }
+
+  /**
+   * List assignments for a given patient (staff view). Tenant-scoped, joins
+   * the form title. Degrades to [] when the table is missing.
+   */
+  async listPatientAssignments(tenant: TenantContext, patientId: string) {
+    const { data, error } = await this.faTable()
+      .select(
+        'id, form_id, status, assigned_at, completed_at, med_medical_forms(title)',
+      )
+      .eq('tenant_id', tenant.id)
+      .eq('patient_id', patientId)
+      .order('assigned_at', { ascending: false });
+
+    if (error) {
+      if (this.isRelationMissing(error)) return [];
+      this.logger.error('listPatientAssignments', error.message);
+      throw new InternalServerErrorException('Erreur interne');
+    }
+
+    return ((data ?? []) as any[]).map((row) => ({
+      id: row.id,
+      form_id: row.form_id,
+      form_title: row.med_medical_forms?.title ?? '—',
+      status: row.status,
+      assigned_at: row.assigned_at,
+      completed_at: row.completed_at,
+    }));
+  }
+
+  /**
+   * List the calling patient's own assignments (patient view). Resolves the
+   * med_patients row via userId like the other /med/me routes, excludes
+   * cancelled ones, and joins the form title + description. Degrades to []
+   * when the patient has no dossier or the table is missing.
+   */
+  async listMyAssignments(tenant: TenantContext, userId: string) {
+    const patient = await this.findPatientByUser(tenant.id, userId);
+    if (!patient) return [];
+
+    const { data, error } = await this.faTable()
+      .select(
+        'id, form_id, status, assigned_at, med_medical_forms(title, description)',
+      )
+      .eq('tenant_id', tenant.id)
+      .eq('patient_id', patient.id)
+      .neq('status', 'cancelled')
+      .order('assigned_at', { ascending: false });
+
+    if (error) {
+      if (this.isRelationMissing(error)) return [];
+      this.logger.error('listMyAssignments', error.message);
+      throw new InternalServerErrorException('Erreur interne');
+    }
+
+    return ((data ?? []) as any[]).map((row) => ({
+      id: row.id,
+      form_id: row.form_id,
+      form_title: row.med_medical_forms?.title ?? '—',
+      form_description: row.med_medical_forms?.description ?? null,
+      status: row.status,
+      assigned_at: row.assigned_at,
+    }));
   }
 
   /**

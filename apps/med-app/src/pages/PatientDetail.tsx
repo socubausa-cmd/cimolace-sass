@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, FileText, Activity, UserPlus, X, Copy, Check, Download, Trash2, Pencil } from 'lucide-react';
 import { AttachmentsPanel } from '../components/AttachmentsPanel';
 import { ClinicalListsPanel } from '../components/ClinicalListsPanel';
+import { FormAssignmentsPanel } from '../components/FormAssignmentsPanel';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
@@ -293,6 +294,9 @@ export function PatientDetail() {
         <>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 20, marginTop: 16 }}>
             <ClinicalListsPanel patientId={id} />
+          </div>
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 20, marginTop: 16 }}>
+            <FormAssignmentsPanel patientId={id} />
           </div>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 20, marginTop: 16 }}>
             <AttachmentsPanel patientId={id} canTogglePatientVisibility />

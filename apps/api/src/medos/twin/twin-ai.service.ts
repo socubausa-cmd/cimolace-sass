@@ -31,6 +31,128 @@ const DISCLAIMER =
   'pistes, toujours avec un niveau de confiance (0-1). Tu réponds en français, de façon ' +
   'concise et sourcée. Tu réponds STRICTEMENT en JSON valide, sans texte autour.';
 
+/**
+ * SYSTEM PROMPT de l'assistant PATIENT — DISTINCT du DISCLAIMER copilote.
+ *
+ * Le copilote (DISCLAIMER) s'adresse à un thérapeute et autorise hypothèses
+ * cliniques + niveaux de confiance. Côté PATIENT, c'est INTERDIT : pas de
+ * diagnostic, pas de maladie nommée comme certaine, pas de médicament/posologie.
+ * Cadre strictement pédagogique / bien-être, le PRATICIEN reste le référent.
+ *
+ * Sortie STRICTEMENT JSON {reply, suggestions, escalate} (imposé par le parsing
+ * JSON.parse de callClaude). Le contrôleur n'expose que `reply` au patient.
+ */
+const PATIENT_SYSTEM =
+  "Tu es un assistant santé PÉDAGOGIQUE qui s'adresse DIRECTEMENT au PATIENT, " +
+  'dans son espace personnel de suivi. Tu parles en français, avec un ton clair, ' +
+  'rassurant et accessible (pas de jargon inutile). ' +
+  "Tu t'appuies UNIQUEMENT sur les données de suivi fournies (scores d'organes, " +
+  'roue de transformation, biomarqueurs, tendances, alertes). Tu ne fabriques jamais ' +
+  'de données absentes. ' +
+  'RÈGLES ABSOLUES :\n' +
+  "(1) JAMAIS de diagnostic. Ne nomme JAMAIS une maladie comme certaine. Ne prescris RIEN : " +
+  'aucun médicament, aucune posologie, aucun dosage, aucun examen présenté comme une ordonnance. ' +
+  "Tu parles d'hygiène de vie (sommeil, alimentation, activité, stress), de compréhension des " +
+  'indicateurs, et de questions utiles à poser à son praticien.\n' +
+  "(2) Rappelle, quand c'est pertinent, que ces informations sont éducatives et que SON " +
+  'PRATICIEN RESTE SON RÉFÉRENT pour toute décision de santé.\n' +
+  '(3) ESCALADE : si le message évoque un signe d\'alerte (douleur thoracique, détresse ' +
+  'respiratoire, paralysie ou faiblesse soudaine, trouble de la parole, perte de connaissance, ' +
+  'saignement abondant, idées suicidaires ou de se faire du mal), mets escalate=true et écris une ' +
+  'réponse qui oriente IMMÉDIATEMENT vers le 15 ou le 112 et vers son praticien, SANS minimiser, ' +
+  "SANS analyser le reste, SANS poser de question. Sinon escalate=false.\n" +
+  '(4) Reste dans un cadre BIEN-ÊTRE et ÉDUCATION.\n' +
+  '(5) Réponds toujours en français.\n' +
+  "(6) Ne mentionne JAMAIS le moteur, l'IA, un fournisseur ou une marque interne. " +
+  "Tu es simplement « l'assistant de suivi » de la personne.\n" +
+  'Les `suggestions` sont 2 à 3 questions de relance courtes que le patient pourrait poser ' +
+  "ensuite — JAMAIS des examens à prescrire ni des conseils médicaux déguisés. " +
+  'Sortie STRICTEMENT en JSON valide, sans aucun texte autour. ' +
+  'Schéma JSON attendu : {"reply": string, "suggestions": string[], "escalate": boolean}.';
+
+/**
+ * Rôle d'appel LLM — pilote le choix du modèle (routeur) : `chat` = rapide
+ * (assistant patient), `analysis` = plus capable (hypothèses cliniques).
+ */
+export type LlmRole = 'chat' | 'analysis';
+
+/**
+ * Extrait le 1er bloc JSON équilibré (objet ou tableau) d'une chaîne, même si
+ * le modèle l'a entouré de prose. Renvoie null si aucun bloc plausible.
+ */
+export function extractJsonBlock(s: string): string | null {
+  const candidates = ['{', '['].map((c) => s.indexOf(c)).filter((i) => i >= 0);
+  if (!candidates.length) return null;
+  const start = Math.min(...candidates);
+  const end = Math.max(s.lastIndexOf('}'), s.lastIndexOf(']'));
+  if (end <= start) return null;
+  return s.slice(start, end + 1);
+}
+
+/**
+ * Répare au mieux un JSON TRONQUÉ (sortie LLM coupée par max_tokens) : ferme la
+ * chaîne ouverte et les `{`/`[` restants. Renvoie le JSON réparé SEULEMENT s'il
+ * parse — sinon null. Donc aucune régression possible (échec = comportement
+ * inchangé). Best-effort : la dernière valeur partielle peut être perdue.
+ */
+export function repairTruncatedJson(s: string): string | null {
+  const start = (() => {
+    const c = ['{', '['].map((ch) => s.indexOf(ch)).filter((i) => i >= 0);
+    return c.length ? Math.min(...c) : -1;
+  })();
+  if (start < 0) return null;
+  let inStr = false;
+  let esc = false;
+  const stack: string[] = [];
+  let lastComplete = -1; // fin (exclue) d'une valeur sûre (après } ] " ou chiffre)
+  for (let i = start; i < s.length; i++) {
+    const c = s[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === '\\') esc = true;
+      else if (c === '"') {
+        inStr = false;
+        lastComplete = i + 1;
+      }
+      continue;
+    }
+    if (c === '"') inStr = true;
+    else if (c === '{') stack.push('}');
+    else if (c === '[') stack.push(']');
+    else if (c === '}' || c === ']') {
+      stack.pop();
+      lastComplete = i + 1;
+    } else if (/[0-9eE.+-]/.test(c)) lastComplete = i + 1;
+    else if (c === 'e' || /[truefalsn]/.test(c)) lastComplete = i + 1;
+  }
+  // Repart de la dernière valeur complète pour jeter un token partiel traînant.
+  let body = lastComplete > start ? s.slice(start, lastComplete) : s.slice(start);
+  // Recompte la profondeur de structure sur le corps tronqué.
+  const depth: string[] = [];
+  let str = false;
+  let e2 = false;
+  for (const c of body) {
+    if (str) {
+      if (e2) e2 = false;
+      else if (c === '\\') e2 = true;
+      else if (c === '"') str = false;
+      continue;
+    }
+    if (c === '"') str = true;
+    else if (c === '{') depth.push('}');
+    else if (c === '[') depth.push(']');
+    else if (c === '}' || c === ']') depth.pop();
+  }
+  body = body.replace(/,\s*$/, '');
+  while (depth.length) body += depth.pop();
+  try {
+    JSON.parse(body);
+    return body;
+  } catch {
+    return null;
+  }
+}
+
 @Injectable()
 export class TwinAiService {
   private readonly logger = new Logger(TwinAiService.name);
@@ -41,20 +163,130 @@ export class TwinAiService {
     return this.config.get<string>('TWIN_AI_MODEL') || 'claude-sonnet-4-6';
   }
 
-  private async callClaude<T>(system: string, user: string, maxTokens = 1500): Promise<AiResult<T>> {
-    return this.callClaudeRaw<T>(system, [{ type: 'text', text: user }], maxTokens);
+  private async callClaude<T>(
+    system: string,
+    user: string,
+    maxTokens = 1500,
+    role: LlmRole = 'chat',
+  ): Promise<AiResult<T>> {
+    return this.completeJson<T>(system, user, maxTokens, role);
   }
 
   /**
-   * Variante bas-niveau acceptant un tableau de content blocks (texte + image
-   * base64). Sert pour la vision (M3 — OCR bilans image).
+   * Routeur multi-fournisseurs pour les sorties JSON (copilote + assistant).
+   * Ordre : Mistral (EU) → Groq → DeepSeek → Anthropic ; on prend le 1er
+   * fournisseur DONT LA CLÉ est configurée qui répond un JSON exploitable. Les
+   * 3 premiers sont OpenAI-compatibles + mode JSON natif. Le MODÈLE Mistral
+   * dépend du RÔLE : `chat` = rapide (patient ; `MISTRAL_MODEL`, déf. small),
+   * `analysis` = plus capable (hypothèses ; `MISTRAL_MODEL_ANALYSIS`, déf.
+   * medium). Anthropic = dernier repli (format `messages` différent).
+   */
+  private async completeJson<T>(
+    system: string,
+    user: string,
+    maxTokens = 1500,
+    role: LlmRole = 'chat',
+  ): Promise<AiResult<T>> {
+    const cfg = (k: string) => this.config.get<string>(k);
+    const mistralModel =
+      role === 'analysis'
+        ? cfg('MISTRAL_MODEL_ANALYSIS') || 'mistral-medium-latest'
+        : cfg('MISTRAL_MODEL') || 'mistral-small-latest';
+    const chain = [
+      { name: 'mistral', keyEnv: 'MISTRAL_API_KEY', url: 'https://api.mistral.ai/v1/chat/completions', model: mistralModel },
+      { name: 'groq', keyEnv: 'GROQ_API_KEY', url: 'https://api.groq.com/openai/v1/chat/completions', model: cfg('GROQ_MODEL') || 'llama-3.3-70b-versatile' },
+      { name: 'deepseek', keyEnv: 'DEEPSEEK_API_KEY', url: 'https://api.deepseek.com/v1/chat/completions', model: cfg('DEEPSEEK_MODEL') || 'deepseek-chat' },
+    ];
+    let lastErr = 'aucun fournisseur configuré';
+    for (const p of chain) {
+      const key = this.config.get<string>(p.keyEnv)?.trim();
+      if (!key) continue;
+      try {
+        const res = await fetch(p.url, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: p.model,
+            max_tokens: maxTokens,
+            messages: [
+              { role: 'system', content: system },
+              { role: 'user', content: user },
+            ],
+            response_format: { type: 'json_object' },
+          }),
+        });
+        if (!res.ok) {
+          lastErr = `${p.name} ${res.status}`;
+          this.logger.warn(`${lastErr}: ${(await res.text().catch(() => '')).slice(0, 200)}`);
+          continue;
+        }
+        const j: any = await res.json();
+        const text: string = j?.choices?.[0]?.message?.content ?? '';
+        const tokens: number = j?.usage?.completion_tokens ?? 0;
+        const parsed = this.tryParseJson<T>(text);
+        if (parsed !== undefined) {
+          this.logger.log(`LLM via ${p.name}:${p.model} (${tokens} tokens)`);
+          return { data: parsed, model: `${p.name}:${p.model}`, tokens };
+        }
+        lastErr = `${p.name}: JSON non exploitable (finish=${j?.choices?.[0]?.finish_reason ?? 'n/a'})`;
+        this.logger.warn(lastErr);
+      } catch (e) {
+        lastErr = `${p.name}: ${(e as Error).message}`;
+        this.logger.warn(lastErr);
+      }
+    }
+    // Dernier repli : Anthropic (content blocks).
+    if (this.config.get<string>('ANTHROPIC_API_KEY')) {
+      try {
+        const r = await this.callClaudeRaw<T>(system, [{ type: 'text', text: user }], maxTokens);
+        this.logger.log(`LLM via anthropic:${this.model}`);
+        return r;
+      } catch (e) {
+        lastErr = `anthropic: ${(e as Error).message}`;
+      }
+    }
+    this.logger.error(`Aucun fournisseur LLM exploitable — ${lastErr}`);
+    throw new ServiceUnavailableException(
+      `Assistant IA momentanément indisponible (${lastErr}). Le moteur de scores reste opérationnel.`,
+    );
+  }
+
+  /**
+   * Cascade de parsing tolérante : nettoie les fences, parse strict, sinon
+   * extrait le 1er bloc équilibré, répare un JSON tronqué, tolère les virgules
+   * traînantes. Renvoie undefined si rien n'est exploitable (ne jette pas).
+   */
+  private tryParseJson<T>(rawText: string): T | undefined {
+    const cleaned = rawText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    try {
+      return JSON.parse(cleaned) as T;
+    } catch {
+      const block = extractJsonBlock(cleaned);
+      const looseComma = (x: string | null) => (x ? x.replace(/,(\s*[}\]])/g, '$1') : null);
+      const repaired = repairTruncatedJson(block ?? cleaned);
+      for (const candidate of [block, looseComma(block), repaired, looseComma(repaired)]) {
+        if (!candidate) continue;
+        try {
+          return JSON.parse(candidate) as T;
+        } catch {
+          /* candidat suivant */
+        }
+      }
+      return undefined;
+    }
+  }
+
+  /**
+   * Appel Anthropic bas-niveau acceptant des content blocks (texte + image
+   * base64) — sert pour la VISION (M3 — OCR bilans image) et de dernier repli
+   * texte. (La vision n'est pas encore portée sur la chaîne OpenAI-compatible.)
    */
   private async callClaudeRaw<T>(
     system: string,
     content: Array<Record<string, any>>,
     maxTokens = 1500,
   ): Promise<AiResult<T>> {
-    const apiKey = this.config.get<string>('ANTHROPIC_API_KEY');
+    const apiKey = this.config.get<string>('ANTHROPIC_API_KEY')?.trim();
     if (!apiKey) {
       throw new ServiceUnavailableException(
         'ANTHROPIC_API_KEY non configuré — analyse IA indisponible (le moteur de scores reste opérationnel).',
@@ -88,15 +320,19 @@ export class TwinAiService {
           .join('')
       : (result?.content?.[0]?.text ?? '');
     const tokens: number = result?.usage?.output_tokens ?? 0;
-    const cleaned = rawText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-    let data: T;
-    try {
-      data = JSON.parse(cleaned);
-    } catch {
-      this.logger.error('Réponse IA non parsable', rawText.slice(0, 300));
-      throw new ServiceUnavailableException(`La réponse IA n'était pas un JSON valide.`);
+    const parsed = this.tryParseJson<T>(rawText);
+    if (parsed === undefined) {
+      this.logger.error(
+        `Réponse IA non parsable (stop_reason=${result?.stop_reason ?? 'n/a'}, ${tokens} tokens)`,
+        rawText.slice(0, 300),
+      );
+      throw new ServiceUnavailableException(
+        result?.stop_reason === 'max_tokens'
+          ? 'Réponse IA trop longue (tronquée) — réessayez.'
+          : `La réponse IA n'était pas un JSON valide.`,
+      );
     }
-    return { data, model: this.model, tokens };
+    return { data: parsed, model: this.model, tokens };
   }
 
   private contextBlock(ctx: PatientAiContext): string {
@@ -144,7 +380,63 @@ export class TwinAiService {
       edges ? `\nArêtes du graphe biologique pertinentes:\n${edges}` : '',
       `\nExplique de façon clinique et prudente, en t'appuyant sur les biomarqueurs et le graphe. Donne 2-4 examens complémentaires pertinents.`,
     ].join('\n');
-    return this.callClaude(system, user, 1200);
+    return this.callClaude(system, user, 1200, 'chat');
+  }
+
+  /**
+   * Assistant santé PATIENT (Chantier 4 — espace « Mon corps »).
+   *
+   * Réutilise tel quel le helper privé callClaude (fetch Anthropic + parsing
+   * JSON strict + 503). Le `user` est construit à partir du même contexte
+   * pseudonymisé que le copilote (contextBlock) ENRICHI de la roue de
+   * transformation et des alertes ouvertes, puis du fil (~6 derniers tours)
+   * et de la question courante.
+   *
+   * Le contexte chiffré sert au RAISONNEMENT du modèle ; les garde-fous
+   * (pas de diagnostic, escalade, FR, white-label) vivent dans PATIENT_SYSTEM.
+   * La sortie est STRICTEMENT JSON {reply, suggestions, escalate}.
+   */
+  async patientAssistant(
+    ctx: PatientAiContext,
+    message: string,
+    history: Array<{ role: 'user' | 'assistant'; content: string }> = [],
+    extras?: {
+      wheel?: Array<{ domain: string; score: number | null }>;
+      openAlerts?: Array<{ severity: string; message: string }>;
+    },
+  ): Promise<AiResult<{ reply: string; suggestions: string[]; escalate: boolean }>> {
+    const wheelBlock = (extras?.wheel ?? [])
+      .filter((w) => w.score != null)
+      .map((w) => `- ${w.domain}: ${w.score}/100`)
+      .join('\n');
+    const alertsBlock = (extras?.openAlerts ?? [])
+      .map((a) => `- [${a.severity}] ${a.message}`)
+      .join('\n');
+
+    // Fil tronqué aux ~6 derniers messages pour borner les tokens.
+    const recent = history.slice(-6);
+    const historyBlock = recent
+      .map((t) => `${t.role === 'user' ? 'Patient' : 'Assistant'}: ${t.content}`)
+      .join('\n');
+
+    const user = [
+      this.contextBlock(ctx),
+      wheelBlock ? `Roue de transformation (12 axes, /100) :\n${wheelBlock}` : '',
+      alertsBlock ? `Alertes de suivi ouvertes :\n${alertsBlock}` : '',
+      historyBlock ? `Conversation précédente :\n${historyBlock}` : '',
+      `Nouveau message du patient : ${message}`,
+      "Réponds de façon pédagogique et bienveillante, en t'appuyant uniquement sur ces données de suivi. " +
+        'Si les données sont pauvres, reste utile de façon générale et invite à compléter le suivi, sans rien inventer.',
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+
+    return this.callClaude<{ reply: string; suggestions: string[]; escalate: boolean }>(
+      PATIENT_SYSTEM,
+      user,
+      900,
+      'chat',
+    );
   }
 
   /** Hypothèses différentielles + causes racines (M16/M18). */
@@ -164,11 +456,12 @@ export class TwinAiService {
       DISCLAIMER +
       ' Schéma JSON attendu: {"hypotheses": [{"label_fr": string, "probability": number, ' +
       '"confidence": number, "reasoning_fr": string, "args_for": string[], "args_against": string[]}]}. ' +
-      'Classe par probabilité décroissante. Donne 3 à 5 hypothèses concurrentes.';
+      'Classe par probabilité décroissante. Donne 3 hypothèses concurrentes (4 max). ' +
+      'Sois CONCIS : reasoning_fr en 1 phrase, args_for et args_against = 2 items courts max chacun.';
     const user =
       this.contextBlock(ctx) +
       `\n\nGénère des hypothèses cliniques concurrentes (causes racines probables), chacune avec arguments pour/contre. Rappelle implicitement que ce ne sont pas des diagnostics.`;
-    return this.callClaude(system, user, 2000);
+    return this.callClaude(system, user, 4096, 'analysis');
   }
 
   /** Root Cause Explorer (M16) : causes racines classées par probabilité. */
@@ -185,7 +478,7 @@ export class TwinAiService {
     const user =
       this.contextBlock(ctx) +
       `\n\nRemonte aux causes racines les plus probables (ex: dysbiose, stress chronique, résistance insulinique…), avec les données qui les soutiennent.`;
-    return this.callClaude(system, user, 2000);
+    return this.callClaude(system, user, 4096, 'analysis');
   }
 
   /** Conseil de biologie multi-agents (M33) : 5 lentilles d'experts + consensus. */
@@ -205,7 +498,7 @@ export class TwinAiService {
     const user =
       this.contextBlock(ctx) +
       `\n\nFais délibérer le conseil et dégage un consensus clinique prudent (jamais un diagnostic).`;
-    return this.callClaude(system, user, 2500);
+    return this.callClaude(system, user, 5000, 'analysis');
   }
 
   /** Extraction de biomarqueurs depuis un texte de bilan (M3). */

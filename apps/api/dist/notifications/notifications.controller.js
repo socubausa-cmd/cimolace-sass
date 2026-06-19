@@ -21,9 +21,9 @@ let NotificationsController = class NotificationsController {
     constructor(svc) {
         this.svc = svc;
     }
-    async getAll(req) { return { data: await this.svc.getUserNotifications(req.tenant.id, req.user.id) }; }
-    async markRead(req, id) { return { data: await this.svc.markRead(req.tenant.id, id) }; }
-    async send(req, b) { return { data: await this.svc.send(req.tenant.id, b.user_id, b) }; }
+    async getAll(req) { return this.svc.getUserNotifications(req.tenant.id, req.user.id); }
+    async markRead(req, id) { return this.svc.markRead(req.tenant.id, id); }
+    async send(req, b) { return this.svc.send(req.tenant.id, b.user_id, b); }
 };
 exports.NotificationsController = NotificationsController;
 __decorate([

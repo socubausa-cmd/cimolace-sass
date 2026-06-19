@@ -8,6 +8,7 @@ import {
   MedosNoteController,
   MedosPatientMeController,
   MedosFormsController,
+  MedosFormAssignmentsController,
   MedosHealthController,
 } from './medos.controller';
 import { MedChartingController } from './med-charting.controller';
@@ -72,6 +73,7 @@ import { TwinService } from './twin/twin.service';
 import { TwinScoringService } from './twin/twin-scoring.service';
 import { TwinAiService } from './twin/twin-ai.service';
 import { TwinSimulationService } from './twin/twin-simulation.service';
+import { TwinProjectionService } from './twin/twin-projection.service';
 import { TwinGenomicsService } from './twin/twin-genomics.service';
 import { TwinMicrobiomeService } from './twin/twin-microbiome.service';
 import { TwinMetabolomicsService } from './twin/twin-metabolomics.service';
@@ -80,11 +82,15 @@ import { TwinEnabledGuard } from './twin/twin-enabled.guard';
 // LiveKitModule directly anymore — that would re-introduce the bypass
 // the P5 refactor specifically eliminated.
 import { LiveModule } from '../live/live.module';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { EmailEngineModule } from '../email-engine/email-engine.module';
 
 @Module({
   imports: [
     TenantModule,
     LiveModule, // Liri — single authority for all video sessions
+    NotificationsModule, // in-app notifications (form assign / message / note share)
+    EmailEngineModule, // emails transactionnels par tenant (invitation, etc.)
     // JwtModule pour signer/vérifier les embed-tokens (15 min lifetime).
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -125,6 +131,7 @@ import { LiveModule } from '../live/live.module';
     TwinScoringService,
     TwinAiService,
     TwinSimulationService,
+    TwinProjectionService,
     TwinGenomicsService,
     TwinMicrobiomeService,
     TwinMetabolomicsService,
@@ -141,6 +148,9 @@ import { LiveModule } from '../live/live.module';
     MedosNoteController,
     MedosPatientMeController,
     MedosFormsController,
+    // Broad '/med' controller — registered AFTER the specific ones above so
+    // that med/patients/* and med/forms/* keep priority over its routes.
+    MedosFormAssignmentsController,
     MedosHealthController,
     MedChartingController,
     // Embedding & integration

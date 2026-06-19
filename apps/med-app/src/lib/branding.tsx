@@ -41,7 +41,7 @@ const ENGINE_DEFAULTS = {
   // surface keeps the MEDOS engine identity visible (Strategy C: 60% MEDOS,
   // 40% tenant) so practitioners working across multiple tenants have a
   // stable visual anchor. Tenant logo/name appear in the co-brand band.
-  name: 'MEDOS',
+  name: 'Nganga',
   logoUrl: null as string | null,
   primary: '#3b82f6',
   accent: '#0d9488',

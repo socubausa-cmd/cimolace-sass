@@ -63,7 +63,7 @@ export function HandoffPage() {
       ) : (
         <div style={{ maxWidth: 360, textAlign: 'center', background: '#fff', border: '1px solid #fecaca', borderRadius: 12, padding: 20 }}>
           <p style={{ color: '#dc2626', fontWeight: 600, fontSize: 14, margin: 0 }}>{error}</p>
-          <p style={{ color: 'var(--zw-text-faint)', fontSize: 12, marginTop: 8 }}>Relancez l'accès MEDOS depuis votre site.</p>
+          <p style={{ color: 'var(--zw-text-faint)', fontSize: 12, marginTop: 8 }}>Relancez l'accès Nganga depuis votre site.</p>
         </div>
       )}
     </div>

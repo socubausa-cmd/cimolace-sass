@@ -7,6 +7,7 @@ export type AuditResourceType =
   | 'note'
   | 'form'
   | 'form_response'
+  | 'form_assignment'
   | 'health_entry'
   | 'prescription'
   | 'program'

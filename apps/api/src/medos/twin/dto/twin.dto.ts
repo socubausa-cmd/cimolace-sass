@@ -128,6 +128,44 @@ export class ImportStructuredBiomarkersDto {
 }
 
 /**
+ * Projection temporelle du jumeau (projection-v1). Tous les champs sont
+ * optionnels : le client peut envoyer {} pour la projection par défaut.
+ * AUCUNE donnée patient ici — age/sexe/scores sont résolus server-side via
+ * le patientId (comme simulate/state).
+ */
+export class ProjectionDto {
+  @ApiPropertyOptional({
+    type: [Number],
+    example: [1, 5, 10, 20],
+    description: 'Horizons en années (1..40, max 6). Défaut [1,5,10,20].',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(6)
+  @IsNumber({}, { each: true })
+  horizons_years?: number[];
+
+  @ApiPropertyOptional({
+    type: [String],
+    example: ['status_quo', 'quit_smoking'],
+    description: "Sous-ensemble du catalogue de scénarios. 'status_quo' toujours forcé.",
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(12)
+  @IsString({ each: true })
+  scenario_keys?: string[];
+
+  @ApiPropertyOptional({
+    example: 10,
+    description: 'Année sur laquelle calculer les drivers détaillés. Défaut = max(horizons).',
+  })
+  @IsOptional()
+  @IsNumber()
+  horizon_focus?: number;
+}
+
+/**
  * Métadonnées d'un upload de bilan (multipart). Le binaire arrive via
  * @UploadedFile() — ce DTO porte uniquement les champs textuels du formulaire.
  */

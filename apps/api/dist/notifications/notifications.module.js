@@ -10,12 +10,13 @@ exports.NotificationsModule = void 0;
 const common_1 = require("@nestjs/common");
 const auth_module_1 = require("../auth/auth.module");
 const tenant_module_1 = require("../tenant/tenant.module");
+const email_engine_module_1 = require("../email-engine/email-engine.module");
 const notifications_service_1 = require("./notifications.service");
 const notifications_controller_1 = require("./notifications.controller");
 let NotificationsModule = class NotificationsModule {
 };
 exports.NotificationsModule = NotificationsModule;
 exports.NotificationsModule = NotificationsModule = __decorate([
-    (0, common_1.Module)({ imports: [auth_module_1.AuthModule, tenant_module_1.TenantModule], controllers: [notifications_controller_1.NotificationsController], providers: [notifications_service_1.NotificationsService], exports: [notifications_service_1.NotificationsService] })
+    (0, common_1.Module)({ imports: [auth_module_1.AuthModule, tenant_module_1.TenantModule, email_engine_module_1.EmailEngineModule], controllers: [notifications_controller_1.NotificationsController], providers: [notifications_service_1.NotificationsService], exports: [notifications_service_1.NotificationsService] })
 ], NotificationsModule);
 //# sourceMappingURL=notifications.module.js.map

@@ -17,14 +17,16 @@ const billing_controller_1 = require("./billing.controller");
 const billing_webhook_controller_1 = require("./billing-webhook.controller");
 const billing_advanced_controller_1 = require("./billing-advanced.controller");
 const billing_advanced_service_1 = require("./billing-advanced.service");
+const webhook_service_1 = require("../liri-public/webhook.service");
+const tenant_payment_config_module_1 = require("./tenant-payment-config/tenant-payment-config.module");
 let BillingModule = class BillingModule {
 };
 exports.BillingModule = BillingModule;
 exports.BillingModule = BillingModule = __decorate([
     (0, common_1.Module)({
-        imports: [auth_module_1.AuthModule, tenant_module_1.TenantModule, supabase_module_1.SupabaseModule, pawapay_module_1.PawaPayModule],
+        imports: [auth_module_1.AuthModule, tenant_module_1.TenantModule, supabase_module_1.SupabaseModule, pawapay_module_1.PawaPayModule, tenant_payment_config_module_1.TenantPaymentConfigModule],
         controllers: [billing_controller_1.BillingController, billing_controller_1.AdminBillingController, billing_webhook_controller_1.BillingWebhookController, billing_advanced_controller_1.BillingAdvancedController],
-        providers: [billing_service_1.BillingService, billing_advanced_service_1.BillingAdvancedService],
+        providers: [billing_service_1.BillingService, billing_advanced_service_1.BillingAdvancedService, webhook_service_1.WebhookService],
         exports: [billing_service_1.BillingService, billing_advanced_service_1.BillingAdvancedService],
     })
 ], BillingModule);
