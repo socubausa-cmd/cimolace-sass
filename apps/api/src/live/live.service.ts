@@ -144,6 +144,13 @@ export class LiveService {
    * - role "host"    → canPublish + canSubscribe + roomAdmin, TTL 4h
    * - role "student" → canSubscribe only, TTL 1h
    *
+   * ⚠️ SÉCURITÉ : le rôle n'est JAMAIS celui demandé par le client (`requestedRole`
+   * n'est qu'un indice). Il est DÉRIVÉ ici de l'identité serveur — sinon n'importe
+   * quel élève appellerait POST /lives/:id/token { role:"host" } et obtiendrait
+   * canPublish + roomAdmin (publier sa caméra, couper les micros, admin de room).
+   * Host légitime = l'hôte déclaré de la session (live_sessions.host_user_id) OU
+   * un membre staff du tenant (owner/admin/teacher/secretariat/practitioner).
+   *
    * La room est créée (ou retrouvée) via ensureRoom avant l'émission du token.
    * Le nom de room est scopé par tenant : {tenantSlug}_{sessionId} pour
    * garantir l'isolation multi-tenant au niveau LiveKit.
@@ -151,12 +158,28 @@ export class LiveService {
   async generateToken(
     sessionId: string,
     userId: string,
-    role: "host" | "student",
-    tenantSlug?: string,
+    requestedRole?: "host" | "student",
+    tenant?: { id?: string; slug?: string; userRole?: string | null },
   ) {
-    // Garde-fou serveur : un invité explicitement REJETÉ par l'hôte ne reçoit pas de token
-    // LiveKit (la garde front est contournable via l'URL directe ; celle-ci est la vraie
-    // barrière). Fail-open : sans entrée de salle d'attente (live sans approbation), on délivre.
+    // Charger la session : hôte légitime + slug pour le nom de room (1 requête).
+    const { data: session } = await this.supabase
+      .from("live_sessions")
+      .select("host_user_id, tenant_id, tenants(slug)")
+      .eq("id", sessionId)
+      .single();
+    if (!session) throw new NotFoundException("Session introuvable");
+
+    // Rôle EFFECTIF tranché côté serveur (le body est ignoré pour la sécurité).
+    const STAFF = new Set(["owner", "admin", "teacher", "secretariat", "practitioner"]);
+    const isHost =
+      (session as any).host_user_id === userId ||
+      STAFF.has(String(tenant?.userRole ?? "").toLowerCase());
+    const role: "host" | "student" = isHost ? "host" : "student";
+
+    // Garde-fou serveur : un participant (non-host) explicitement REJETÉ par l'hôte
+    // ne reçoit pas de token LiveKit (la garde front est contournable via l'URL
+    // directe ; celle-ci est la vraie barrière). Fail-open : sans entrée de salle
+    // d'attente (live sans approbation), on délivre.
     if (role !== "host") {
       const { data: wr } = await this.supabase
         .from("live_waiting_room_entries")
@@ -169,29 +192,19 @@ export class LiveService {
       }
     }
 
-    // Récupérer la session pour obtenir le tenant_slug si non fourni
-    let slug = tenantSlug ?? "";
-    if (!slug) {
-      const { data: session } = await this.supabase
-        .from("live_sessions")
-        .select("tenant_id, tenants(slug)")
-        .eq("id", sessionId)
-        .single();
-      slug = (session as any)?.tenants?.slug ?? sessionId;
-    }
-
+    const slug = tenant?.slug ?? (session as any)?.tenants?.slug ?? sessionId;
     const roomName = LiveKitService.scopedRoomName(slug, sessionId);
 
     // Créer la room LiveKit si elle n'existe pas encore (idempotent)
     await this.liveKit.ensureRoom(roomName, sessionId, userId);
 
-    // Émettre le token selon le rôle
+    // Émettre le token selon le rôle EFFECTIF (pas celui demandé)
     const token =
       role === "host"
         ? await this.liveKit.generateHostToken(roomName, userId)
         : await this.liveKit.generateParticipantToken(roomName, userId);
 
-    return { token, room: roomName, role, userId };
+    return { token, room: roomName, role, userId, requestedRole: requestedRole ?? null };
   }
 
   /**
