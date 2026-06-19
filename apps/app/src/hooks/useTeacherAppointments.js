@@ -333,6 +333,31 @@ export function useTeacherAppointments(teacherId) {
         });
       }
 
+      // ── Moyens de diffusion choisis par le créateur ────────────────────────
+      // Persistés dans live_visibility_rules (lue par le worker de notifs + les
+      // écrans élève). AVANT, ces choix partaient UNIQUEMENT vers la fonction
+      // Netlify d'invitations (souvent indisponible) → perdus. RLS write OK pour le
+      // créateur (teacher_id=auth.uid()) ou un staff owner/admin/secretariat.
+      if (sessionId) {
+        try {
+          await supabase.from('live_visibility_rules').upsert(
+            {
+              live_session_id: sessionId,
+              is_public:
+                data.is_public === true
+                || String(data.visibility_mode || '').toLowerCase() === 'public',
+              notify_dashboard: data.notify_dashboard !== false,
+              notify_email: data.notify_email === true,
+              notify_whatsapp: data.notify_whatsapp === true,
+            },
+            { onConflict: 'live_session_id' },
+          );
+        } catch (e) {
+          // Non bloquant : la création du live ne doit pas échouer si la règle ne s'écrit pas.
+          if (import.meta.env.DEV) console.warn('[createLiveSession] visibility_rules', e?.message || e);
+        }
+      }
+
       // ── Invitations intelligentes (Smart Entry / LIRI) ─────────────────────
       let inviteEmailReport = null;
       if (sessionId) {

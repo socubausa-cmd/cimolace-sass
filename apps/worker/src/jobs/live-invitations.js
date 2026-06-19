@@ -74,14 +74,30 @@ export async function pollLiveInvitations() {
     // encore démarré, l'élève y patiente jusqu'à l'admission le jour J.
     const link = `${APP_URL}/live/waiting/${s.id}`;
 
+    // Moyens de diffusion CHOISIS PAR LE CRÉATEUR (live_visibility_rules, posés par
+    // le studio). Sans règle (lives legacy) : défaut email ON (ne pas régresser), WhatsApp OFF.
+    const { data: rules } = await supabase
+      .from('live_visibility_rules')
+      .select('notify_email, notify_whatsapp')
+      .eq('live_session_id', s.id)
+      .maybeSingle();
+    const wantEmail = rules ? rules.notify_email === true : true;
+    const wantWhatsApp = rules ? rules.notify_whatsapp === true : false;
+
+    // Aucun canal choisi → marquer traité (idempotence) et passer.
+    if (!wantEmail && !wantWhatsApp) {
+      await supabase.from('live_sessions').update({ invitations_sent_at: new Date().toISOString() }).eq('id', s.id);
+      continue;
+    }
+
     const seenEmail = new Set();
     const seenPhone = new Set();
     for (const uid of studentIds) {
       const p = await profileFor(uid);
       if (!p) continue;
 
-      // EMAIL → email_queue (Resend)
-      if (p.email && !seenEmail.has(p.email)) {
+      // EMAIL → email_queue (Resend) — si le créateur a choisi l'email
+      if (wantEmail && p.email && !seenEmail.has(p.email)) {
         seenEmail.add(p.email);
         const html =
           `<p>Bonjour ${esc(p.name || '')},</p>` +
@@ -102,8 +118,8 @@ export async function pollLiveInvitations() {
         }
       }
 
-      // WhatsApp → Twilio (best-effort : opt-in notify_sms + téléphone + Twilio configuré)
-      if (whatsappConfigured() && p.phone && p.notify_sms && !seenPhone.has(p.phone)) {
+      // WhatsApp → Twilio (si le créateur a choisi WhatsApp + opt-in notify_sms + téléphone + Twilio configuré)
+      if (wantWhatsApp && whatsappConfigured() && p.phone && p.notify_sms && !seenPhone.has(p.phone)) {
         seenPhone.add(p.phone);
         try {
           const res = await sendWhatsApp({ to: p.phone, title: titleText, when, link });
