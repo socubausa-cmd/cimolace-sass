@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,7 @@ import MindMapNavigation from '@/components/lesson-player/MindMapNavigation';
 import TranscriptPanel from '@/components/lesson-player/TranscriptPanel';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { supabase } from '@/lib/customSupabaseClient';
+import { ShellChromeContext } from '@/components/shell/LiriDashboardShell';
 import '@/styles/formation-studio.css';
 
 const isUuid = (value) => {
@@ -475,6 +476,15 @@ const StepConfig = ({ config, update }) => (
 const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
   const location = useLocation();
   const prefersReducedMotion = useReducedMotion();
+
+  // Mode studio focalisé : tant que le constructeur est ouvert, on demande au shell
+  // de replier sa sidebar en mode icônes (le menu reste là, ré-expansion au survol).
+  // No-op si le builder est rendu hors d'un LiriDashboardShell.
+  const shellChrome = useContext(ShellChromeContext);
+  useEffect(() => {
+    shellChrome?.requestStudioCollapse?.(true);
+    return () => shellChrome?.requestStudioCollapse?.(false);
+  }, [shellChrome]);
   const [step, setStep] = useState(1);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewCollapsed, setPreviewCollapsed] = useState(false);

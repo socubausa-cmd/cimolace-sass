@@ -19,9 +19,17 @@
  *  - lightContent (défaut false) — passe SEULEMENT la zone de contenu (main + topbar)
  *    en mode clair (palette partagée Wix-like). La sidebar LORI reste sombre/or.
  */
-import React, { useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useShellTint } from '../../lib/useShellTint';
+
+/**
+ * Contexte « chrome » du shell : permet à un enfant profond (ex. le studio
+ * « Créer une formation ») de demander le repli de la sidebar en mode icônes
+ * pendant qu'il est monté — pour libérer l'espace tout en gardant le menu
+ * accessible (ré-expansion au survol). No-op si rendu hors du shell.
+ */
+export const ShellChromeContext = createContext(null);
 
 /* ─── Tokens (référence student-school-life) ─── */
 const T = {
@@ -202,14 +210,25 @@ export default function LiriDashboardShell({
 }) {
   const [collapsed, setCollapsed] = useState(autoCollapse);
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Repli demandé par un enfant monté (ex. le studio « Créer une formation »).
+  const [studioCollapse, setStudioCollapse] = useState(false);
+  // Survol de la sidebar repliée → ré-expansion temporaire EN OVERLAY (façon Claude),
+  // sans décaler le contenu : le padding du <main> reste basé sur l'état logique `collapsed`.
+  const [hovered, setHovered] = useState(false);
   const userOverride = useRef(false);
 
-  // Auto-repli (ex. forum) tant que l'utilisateur n'a pas forcé via le bouton tiroir.
+  // Auto-repli (forum, ou studio constructeur) tant que l'utilisateur n'a pas forcé via le bouton tiroir.
   useEffect(() => {
-    if (!userOverride.current) setCollapsed(autoCollapse);
-  }, [autoCollapse]);
+    if (!userOverride.current) setCollapsed(autoCollapse || studioCollapse);
+  }, [autoCollapse, studioCollapse]);
 
-  const toggle = () => { userOverride.current = true; setCollapsed((c) => !c); };
+  const requestStudioCollapse = useCallback((on) => setStudioCollapse(!!on), []);
+  const chrome = useMemo(() => ({ requestStudioCollapse }), [requestStudioCollapse]);
+
+  const toggle = () => { userOverride.current = true; setHovered(false); setCollapsed((c) => !c); };
+
+  // État VISUEL de la sidebar : repliée, SAUF si on la survole pendant qu'elle est repliée.
+  const visualCollapsed = collapsed && !hovered;
 
   // Teinte de la zone de contenu : crème (« light ») ou sombre historique (« dark »), basculable.
   // Le bouton n'apparaît que sur les surfaces light-capable (prop lightContent). La sidebar reste sombre.
@@ -230,22 +249,27 @@ export default function LiriDashboardShell({
   );
 
   return (
+    <ShellChromeContext.Provider value={chrome}>
     <div style={{ minHeight: '100dvh', background: T.bg, display: 'flex' }}>
       <style>{`@keyframes liriShellSlideIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
         .no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{scrollbar-width:none}`}</style>
 
-      {/* Sidebar flottante (desktop) */}
-      <aside className="hidden lg:flex" style={{
+      {/* Sidebar flottante (desktop) — repliée en icônes, ré-expansion au survol (overlay) */}
+      <aside className="hidden lg:flex"
+        onMouseEnter={() => { if (collapsed) setHovered(true); }}
+        onMouseLeave={() => setHovered(false)}
+        style={{
         // top: 96 → passe SOUS le header global (« Mon École », 89px fixe) au lieu d'être caché dessous.
-        position: 'fixed', top: 96, left: 14, bottom: 14, width: collapsed ? 64 : 220, zIndex: 50,
+        position: 'fixed', top: 96, left: 14, bottom: 14, width: visualCollapsed ? 64 : 220, zIndex: 50,
         flexDirection: 'column', background: T.panel, border: `1px solid ${T.border}`, borderRadius: 18,
         backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', overflow: 'hidden',
-        boxShadow: '0 16px 48px -16px rgba(0,0,0,0.55)', transition: 'width 200ms cubic-bezier(0.4,0,0.2,1)',
+        boxShadow: hovered && collapsed ? '0 28px 64px -12px rgba(0,0,0,0.7)' : '0 16px 48px -16px rgba(0,0,0,0.55)',
+        transition: 'width 220ms cubic-bezier(0.4,0,0.2,1), box-shadow 220ms ease',
       }}>
-        <div style={{ padding: collapsed ? '14px 0 12px' : '14px 14px 12px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between', gap: 8, flexShrink: 0 }}>
-          {collapsed ? ToggleBtn : (<><LiriBrand title={brandTitle} subtitle={brandSubtitle} />{ToggleBtn}</>)}
+        <div style={{ padding: visualCollapsed ? '14px 0 12px' : '14px 14px 12px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: visualCollapsed ? 'center' : 'space-between', gap: 8, flexShrink: 0 }}>
+          {visualCollapsed ? ToggleBtn : (<><LiriBrand title={brandTitle} subtitle={brandSubtitle} />{ToggleBtn}</>)}
         </div>
-        <SidebarBody navGroups={navGroups} activeTab={activeTab} accent={accent} collapsed={collapsed} onItem={onItem} user={user} onLogout={onLogout} />
+        <SidebarBody navGroups={navGroups} activeTab={activeTab} accent={accent} collapsed={visualCollapsed} onItem={onItem} user={user} onLogout={onLogout} />
       </aside>
 
       {/* FAB mobile */}
@@ -322,5 +346,6 @@ export default function LiriDashboardShell({
         </div>
       </main>
     </div>
+    </ShellChromeContext.Provider>
   );
 }
