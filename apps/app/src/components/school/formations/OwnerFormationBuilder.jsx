@@ -1214,6 +1214,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
         {/* Content : stage dominant + aperçu repliable */}
         <div className="ofb-content">
           <section className="ofb-stage">
+            <div className="ofb-stage-scroll">
             <div className="ofb-stage-head ofb-rise" key={`head-${step}`}>
               <div className="ofb-eyebrow">{`Étape ${step} sur ${stepMeta.length}`}</div>
               <h2>{currentStepMeta?.label}</h2>
@@ -1234,8 +1235,9 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
                   {step === 5 && <StepConfig config={data.config} update={(f, v) => setData({...data, config: {...data.config, [f]: v}})} />}
               </motion.div>
             </AnimatePresence>
+            </div>
 
-            {/* Pied flottant : progression + nav précédent/suivant */}
+            {/* Pied : progression + nav précédent/suivant (toujours visible) */}
             <div className="ofb-stage-foot">
               <div className="ofb-foot-prog">
                 <div className="ofb-mini-bar"><i style={{ width: `${(step / stepMeta.length) * 100}%` }} /></div>
