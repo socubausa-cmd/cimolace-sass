@@ -40,9 +40,9 @@
 .ofb-rail {
   position: absolute; left: 0; top: 0; bottom: 0;
   width: 68px;
-  background: var(--ofb-bg-soft);
-  backdrop-filter: blur(14px);
-  border-right: 1px solid var(--ofb-line);
+  background: linear-gradient(180deg, #232838, #181b24);
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 12px 0 34px rgba(0, 0, 0, 0.35);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -69,13 +69,13 @@
 
 .ofb-nav-label {
   font-size: 10px; letter-spacing: 1.4px; color: var(--ofb-faint); text-transform: uppercase;
-  padding: 14px 8px 6px; opacity: 0; height: 0; overflow: hidden; transition: opacity .2s var(--ofb-ease);
+  padding: 0 8px; opacity: 0; height: 0; overflow: hidden; transition: opacity .2s var(--ofb-ease);
 }
-.ofb-rail:hover .ofb-nav-label { opacity: 1; height: auto; }
+.ofb-rail:hover .ofb-nav-label { opacity: 1; height: auto; padding: 14px 8px 6px; }
 
 .ofb-nav-item {
   display: flex; align-items: center; gap: 13px; height: 44px; border-radius: 11px;
-  color: var(--ofb-muted); cursor: pointer; position: relative; width: 100%;
+  color: #ccd1db; cursor: pointer; position: relative; width: 100%;
   padding: 0; justify-content: center; background: none; border: 0; text-align: left;
   transition: background .2s var(--ofb-ease), color .2s var(--ofb-ease), padding .3s var(--ofb-ease);
 }
