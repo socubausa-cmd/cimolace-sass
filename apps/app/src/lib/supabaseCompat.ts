@@ -359,11 +359,23 @@ class QueryBuilder<T = any> {
       case 'course_modules':
       case 'modules': {
         const courseFilter = this.filters.find(f => f.field === 'course_id');
-        if (courseFilter) return apiCall(coursesApi.listModules(String(courseFilter.value)));
+        // Lecture à plat par course_id → API dédiée (liste simple des modules).
+        if (courseFilter && !this.insertData && !this.updateData && !this.isDelete) {
+          return apiCall(coursesApi.listModules(String(courseFilter.value)));
+        }
         // .in('course_id', [...]) usage (e.g. StudentWeeklySchedulePage) → fallback to real Supabase
         const courseInFilter = this.inFilters.find(f => f.field === 'course_id');
         if (courseInFilter) return this.executeRealSupabase();
-        return ok([]);
+        // La table `modules` existe en DB (clé `formation_id`, RLS
+        // select=authenticated / manage=staff du tenant). L'ancien
+        // `return ok([])` avalait TOUTE opération sans filtre course_id :
+        //   • les insert/delete de saveStructure (le constructeur ne
+        //     sauvegardait jamais les modules) ;
+        //   • la lecture imbriquée par formation_id (fetchStructure →
+        //     constructeur ET player élève), d'où une structure vide
+        //     (« Aucun contenu ») alors que les données existent.
+        // On route donc vers le vrai Supabase.
+        return this.executeRealSupabase();
       }
       case 'course_lessons':
       case 'lessons': {
