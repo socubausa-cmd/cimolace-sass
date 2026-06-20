@@ -235,8 +235,9 @@ Deno.serve(async (req) => {
   try {
     const groqApiKey = Deno.env.get('GROQ_API_KEY') || '';
     const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY') || '';
-    if (!groqApiKey && !deepseekApiKey) {
-      return new Response(JSON.stringify({ error: 'Missing GROQ_API_KEY and DEEPSEEK_API_KEY secrets' }), {
+    const mistralApiKey = Deno.env.get('MISTRAL_API_KEY') || '';
+    if (!groqApiKey && !deepseekApiKey && !mistralApiKey) {
+      return new Response(JSON.stringify({ error: 'Missing GROQ_API_KEY, DEEPSEEK_API_KEY and MISTRAL_API_KEY secrets' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -244,6 +245,9 @@ Deno.serve(async (req) => {
 
     const deepseekBaseUrl = (Deno.env.get('DEEPSEEK_BASE_URL') || 'https://api.deepseek.com').replace(/\/+$/, '');
     const deepseekModel = Deno.env.get('DEEPSEEK_MODEL') || 'deepseek-chat';
+    // Mindmap = raisonnement hiérarchique structuré → on prend le modèle Mistral
+    // le plus capable. Surcharge possible via MISTRAL_MODEL_MINDMAP.
+    const mistralModel = Deno.env.get('MISTRAL_MODEL_MINDMAP') || Deno.env.get('MISTRAL_MODEL') || 'mistral-large-latest';
 
     const body = await req.json().catch(() => ({}));
     const transcript = Array.isArray(body?.transcript) ? (body.transcript as TranscriptLine[]) : [];
@@ -391,13 +395,45 @@ Deno.serve(async (req) => {
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
-      } catch (_dsErr) { /* fall through to structural fallback */ }
+      } catch (_dsErr) { /* fall through to Mistral */ }
+    }
+
+    // ── Fallback to Mistral (EU) if Groq + DeepSeek failed ───────────────────
+    if (!content && mistralApiKey) {
+      try {
+        const mAbort = new AbortController();
+        const mt = setTimeout(() => mAbort.abort('timeout'), 50_000);
+        const mRes = await fetch('https://api.mistral.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${mistralApiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: mistralModel,
+            temperature: 0.1,
+            messages,
+            max_tokens: 4000,
+            response_format: { type: 'json_object' },
+          }),
+          signal: mAbort.signal,
+        });
+        clearTimeout(mt);
+        if (mRes.ok) {
+          const mData = await mRes.json();
+          const c = String(mData?.choices?.[0]?.message?.content || '').trim();
+          if (c) {
+            content = c; modelUsed = 'mistral';
+            billingTrack.provider = 'mistral';
+            billingTrack.model = mistralModel;
+            billingTrack.tokens_in = mData?.usage?.prompt_tokens ?? 0;
+            billingTrack.tokens_out = mData?.usage?.completion_tokens ?? 0;
+          }
+        }
+      } catch (_mErr) { /* fall through to structural fallback */ }
     }
 
     if (!content) {
       const mindmap = buildFallbackMindmap(title || 'Plan', chapters, transcript);
       return new Response(
-        JSON.stringify({ mindmap, warning: 'Groq et DeepSeek indisponibles. Mindmap générée depuis les chapitres.' }),
+        JSON.stringify({ mindmap, warning: 'Groq, DeepSeek et Mistral indisponibles. Mindmap générée depuis les chapitres.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

@@ -318,13 +318,56 @@ Deno.serve(async (req: Request) => {
       return { content: c || null, error: c ? null : 'Empty response from DeepSeek' };
     }
 
+    async function callMistral(messages: Array<{ role: string; content: string }>): Promise<{ content: string | null; error: string | null }> {
+      const mistralApiKey = Deno.env.get('MISTRAL_API_KEY') || '';
+      if (!mistralApiKey) return { content: null, error: 'MISTRAL_API_KEY not set' };
+      // Explication d'un nœud = tâche courte → modèle Mistral rapide. Surcharge via MISTRAL_MODEL_EXPLANATION.
+      const mistralModel = Deno.env.get('MISTRAL_MODEL_EXPLANATION') || Deno.env.get('MISTRAL_MODEL') || 'mistral-small-latest';
+      const abort = new AbortController();
+      const t = setTimeout(() => abort.abort('timeout'), 55_000);
+      let res: Response;
+      try {
+        res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${mistralApiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: mistralModel,
+            temperature: 0.05,
+            messages,
+            max_tokens: 3500,
+            response_format: { type: 'json_object' },
+          }),
+          signal: abort.signal,
+        });
+      } catch (e) {
+        clearTimeout(t);
+        return { content: null, error: `Mistral timeout: ${String((e as Error)?.message || e)}` };
+      }
+      clearTimeout(t);
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        return { content: null, error: `Mistral error ${res.status}: ${txt}` };
+      }
+      const data = await res.json();
+      const c = String(data?.choices?.[0]?.message?.content || '').trim();
+      if (c) {
+        billingTrack.provider = 'mistral';
+        billingTrack.model = mistralModel;
+        billingTrack.tokens_in = data?.usage?.prompt_tokens ?? 0;
+        billingTrack.tokens_out = data?.usage?.completion_tokens ?? 0;
+      }
+      return { content: c || null, error: c ? null : 'Empty response from Mistral' };
+    }
+
     async function callLLM(messages: Array<{ role: string; content: string }>): Promise<{ content: string | null; error: string | null }> {
-      // Groq first (fast), OpenAI second, DeepSeek as final fallback
+      // Groq (fast) → OpenAI → DeepSeek → Mistral (EU) en dernier filet de sécurité
       const groqResult = await callGroq(messages);
       if (groqResult.content) return groqResult;
       const openaiResult = await callOpenAI(messages);
       if (openaiResult.content) return openaiResult;
-      return callDeepSeek(messages);
+      const deepseekResult = await callDeepSeek(messages);
+      if (deepseekResult.content) return deepseekResult;
+      return callMistral(messages);
     }
 
     // ── Step 3: Call GPT-4o mini ─────────────────────────────────────────────

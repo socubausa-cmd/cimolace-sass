@@ -190,9 +190,44 @@ Deno.serve(async (req: Request) => {
       }
     };
 
+    const callMistral = async () => {
+      const mistralKey = Deno.env.get('MISTRAL_API_KEY') || '';
+      if (!mistralKey) return null;
+      // Quiz = tâche légère → modèle Mistral rapide. Surcharge via MISTRAL_MODEL_QUIZ.
+      const mistralModel = Deno.env.get('MISTRAL_MODEL_QUIZ') || Deno.env.get('MISTRAL_MODEL') || 'mistral-small-latest';
+      const abort = new AbortController();
+      const t = setTimeout(() => abort.abort('timeout'), 30_000);
+      try {
+        const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${mistralKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: mistralModel,
+            temperature: 0.4,
+            messages,
+            max_tokens: 600,
+            response_format: { type: 'json_object' },
+          }),
+          signal: abort.signal,
+        });
+        clearTimeout(t);
+        if (!res.ok) return null;
+        const data = await res.json();
+        billingTrack.provider = 'mistral';
+        billingTrack.model = mistralModel;
+        billingTrack.tokens_in = data?.usage?.prompt_tokens ?? 0;
+        billingTrack.tokens_out = data?.usage?.completion_tokens ?? 0;
+        return String(data?.choices?.[0]?.message?.content || '').trim() || null;
+      } catch (_) {
+        clearTimeout(t);
+        return null;
+      }
+    };
+
     let content = await callGroq();
     if (!content) content = await callOpenAI();
     if (!content) content = await callDeepSeek();
+    if (!content) content = await callMistral();
 
     if (!content) {
       return new Response(JSON.stringify({ error: 'LLM unavailable' }), {

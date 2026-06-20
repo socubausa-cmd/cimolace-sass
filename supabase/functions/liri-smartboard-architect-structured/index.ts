@@ -76,6 +76,8 @@ Deno.serve(async (req: Request) => {
     messages: [{ role: 'user', content: userContent }],
     max_tokens: 2500,
     temperature: 0.25,
+    // Architecture de cours = raisonnement structuré → modèle Mistral capable.
+    mistralModel: 'mistral-large-latest',
   });
 
   const rawText = result?.text ?? undefined;

@@ -14,7 +14,7 @@ export type AiUsageInfo = {
 
 export type AiChainResult = {
   text: string | null;
-  provider: 'claude' | 'deepseek' | 'grok' | null;
+  provider: 'claude' | 'mistral' | 'deepseek' | 'grok' | null;
   usage?: AiUsageInfo;
 };
 
@@ -110,6 +110,10 @@ export async function aiChatClaudeDeepSeekGrok(opts: {
   max_tokens?: number;
   temperature?: number;
   claudeModel?: string;
+  /** Modèle Mistral (fallback EU). Choisir selon la tâche : `mistral-large-latest`
+   *  pour le raisonnement structuré (mindmap, architecture de cours),
+   *  `mistral-small-latest` pour le léger. Défaut : env MISTRAL_MODEL ou medium. */
+  mistralModel?: string;
   deepseekModel?: string;
   grokModel?: string;
   /** Coach live : ordre DeepSeek → Claude → Grok (réponses courtes, latence souvent meilleure). */
@@ -131,9 +135,16 @@ export async function aiChatClaudeDeepSeekGrok(opts: {
     (opts.grokModel != null && String(opts.grokModel).trim()) ||
     env('SMARTBOARD_GROK_MODEL') ||
     'grok-3-mini';
+  const mistralModel =
+    (opts.mistralModel != null && String(opts.mistralModel).trim()) ||
+    env('SMARTBOARD_MISTRAL_MODEL') ||
+    env('MISTRAL_MODEL') ||
+    'mistral-medium-latest';
 
   // @ts-ignore Deno
   const anthropicKey = String(Deno.env.get('ANTHROPIC_API_KEY') || '').trim();
+  // @ts-ignore Deno
+  const mistralKey = String(Deno.env.get('MISTRAL_API_KEY') || '').trim();
   // @ts-ignore Deno
   const deepseekKey = String(Deno.env.get('DEEPSEEK_API_KEY') || '').trim();
   // @ts-ignore Deno
@@ -207,9 +218,34 @@ export async function aiChatClaudeDeepSeekGrok(opts: {
     }
   };
 
+  const tryMistral = async (): Promise<AiChainResult | null> => {
+    if (!mistralKey) return null;
+    try {
+      const r = await callOpenAICompat({
+        baseUrl: 'https://api.mistral.ai/v1',
+        apiKey: mistralKey,
+        model: mistralModel,
+        system: opts.system,
+        messages: opts.messages,
+        max_tokens,
+        temperature,
+      });
+      return {
+        text: r.text,
+        provider: 'mistral',
+        usage: { provider: 'mistral', model: mistralModel, tokens_in: r.tokens_in, tokens_out: r.tokens_out },
+      };
+    } catch (e) {
+      console.warn('[aiChatClaudeDeepSeekGrok] Mistral failed:', (e as Error)?.message);
+      return null;
+    }
+  };
+
+  // Mistral (EU) placé juste après le primaire : si Claude (ou DeepSeek en mode
+  // coach) échoue, on bascule sur Mistral avant Grok.
   const order = opts.preferDeepseekFirst
-    ? [tryDeepseek, tryClaude, tryGrok]
-    : [tryClaude, tryDeepseek, tryGrok];
+    ? [tryDeepseek, tryClaude, tryMistral, tryGrok]
+    : [tryClaude, tryMistral, tryDeepseek, tryGrok];
 
   for (const fn of order) {
     const r = await fn();
@@ -222,12 +258,14 @@ export async function aiChatClaudeDeepSeekGrok(opts: {
 /** Résultat chaîne Claude → OpenAI → Groq → DeepSeek (liri-summary, liri-mindmap). */
 export type AiMultiProviderResult = {
   text: string | null;
-  provider: 'claude' | 'openai' | 'groq' | 'deepseek' | null;
+  provider: 'claude' | 'openai' | 'mistral' | 'groq' | 'deepseek' | null;
   usage?: AiUsageInfo;
 };
 
 /**
- * Aligné sur netlify `aiChat` : Claude → OpenAI → Groq → DeepSeek.
+ * Aligné sur netlify `aiChat` : Claude → OpenAI → Mistral → Groq → DeepSeek.
+ * Mistral (EU) est le filet de sécurité quand les deux primaires (Claude +
+ * OpenAI/ChatGPT) sont indisponibles. Choisir `mistralModel` selon la tâche.
  */
 export async function aiChat(opts: {
   system?: string;
@@ -235,6 +273,7 @@ export async function aiChat(opts: {
   max_tokens?: number;
   temperature?: number;
   claudeModel?: string;
+  mistralModel?: string;
   groqModel?: string;
   deepseekModel?: string;
 }): Promise<AiMultiProviderResult> {
@@ -245,6 +284,10 @@ export async function aiChat(opts: {
   const claudeModel =
     (opts.claudeModel != null && String(opts.claudeModel).trim()) || 'claude-haiku-4-5';
   const openaiModel = env('OPENAI_MODEL') || 'gpt-4o-mini';
+  const mistralModel =
+    (opts.mistralModel != null && String(opts.mistralModel).trim()) ||
+    env('MISTRAL_MODEL') ||
+    'mistral-medium-latest';
   const groqModel =
     (opts.groqModel != null && String(opts.groqModel).trim()) || 'llama-3.3-70b-versatile';
   const deepseekModel =
@@ -290,6 +333,29 @@ export async function aiChat(opts: {
       };
     } catch (e) {
       console.warn('[aiChat] OpenAI failed:', (e as Error)?.message);
+    }
+  }
+
+  // Mistral (EU) — filet de sécurité quand Claude + OpenAI sont tombés.
+  const mistralKey = env('MISTRAL_API_KEY');
+  if (mistralKey) {
+    try {
+      const r = await callOpenAICompat({
+        baseUrl: 'https://api.mistral.ai/v1',
+        apiKey: mistralKey,
+        model: mistralModel,
+        system: opts.system,
+        messages: opts.messages,
+        max_tokens,
+        temperature,
+      });
+      return {
+        text: r.text,
+        provider: 'mistral',
+        usage: { provider: 'mistral', model: mistralModel, tokens_in: r.tokens_in, tokens_out: r.tokens_out },
+      };
+    } catch (e) {
+      console.warn('[aiChat] Mistral failed:', (e as Error)?.message);
     }
   }
 
