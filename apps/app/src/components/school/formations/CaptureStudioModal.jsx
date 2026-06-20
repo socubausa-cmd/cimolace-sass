@@ -470,7 +470,9 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
   const chromaEnabledRef = useRef(chromaKeyEnabled);
   const chromaSensRef = useRef(chromaSensitivity);
 
-  useEffect(() => { currentSlideRef.current = currentSlide; }, [currentSlide]);
+  // NB: la synchro de currentSlideRef est placée plus bas, APRÈS la déclaration de
+  // `currentSlide`, pour éviter un ReferenceError TDZ (« Cannot access 'currentSlide'
+  // before initialization ») qui crashait l'étape Structure du constructeur.
   useEffect(() => { segmentsRef.current = segments; }, [segments]);
   useEffect(() => { activeSegIdxRef.current = activeSegmentIdx; }, [activeSegmentIdx]);
   useEffect(() => { completedPtsRef.current = completedPoints; }, [completedPoints]);
@@ -837,6 +839,9 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
         return base;
       })()
     : null;
+
+  // Synchronise le ref APRÈS la déclaration de `currentSlide` (corrige le TDZ ci-dessus).
+  useEffect(() => { currentSlideRef.current = currentSlide; }, [currentSlide]);
 
   const segDisplaySrc = activeSeg ? (sbCustomSlides[activeSeg.id] || activeSeg) : null;
   const showCanvasInfographic = Boolean(
