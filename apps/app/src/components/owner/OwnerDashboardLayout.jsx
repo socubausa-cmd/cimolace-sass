@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import {
   LayoutDashboard, BookOpen, HeartHandshake as Handshake, Calendar, Library, CreditCard,
   Building2, Users, Settings, Bell, HelpCircle, Users as UsersIcon, Award, PieChart,
-  Database, Users2, Sparkles, Link2, Megaphone, Flame, Star, ExternalLink, MessageCircle,
+  Database, Users2, Sparkles, Link2, Megaphone, Flame, Star, ExternalLink, MessageCircle, Tags,
 } from 'lucide-react';
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
 import { useResolvedTenantSlug } from '@/hooks/useResolvedTenantSlug';
@@ -54,6 +54,7 @@ const OwnerDashboardLayout = ({ children, activeTab, onTabChange }) => {
       {
         section: 'Finances',
         items: [
+          { id: 'catalog', icon: Tags, label: 'Catalogue & tarifs' },
           { id: 'payments', icon: CreditCard, label: 'Paiements' },
           { id: 'tenant-encaissement', icon: ExternalLink, label: 'Encaissement (URL tenant)', href: `/t/${payoutTenantSlug}/admin/settings` },
           { id: 'chariow-externes', icon: Link2, label: 'Chariow Externes', href: '/admin/billing?tab=external' },

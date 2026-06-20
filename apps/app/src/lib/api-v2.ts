@@ -747,3 +747,60 @@ export const paymentMethodsApi = {
       )
       .then(unwrap),
 };
+
+// ── Catalogue & tarifs (services + prix par tenant) ─────────────────────────
+//
+// Back-office → Catalogue & tarifs. Chaque tenant déclare SES services
+// vendables (cycles école, temple, consultations, mentorat, custom) avec leur
+// prix. Source de vérité pour la vitrine, le hub et le checkout élève. CRUD via
+// /billing/catalog. Tenant résolu par le header X-Tenant-Slug (intercepteur).
+//
+// NB : nommé `billingCatalogApi` car `catalogApi` (engines/templates) existe
+// déjà plus haut. Les méthodes gardent la forme list/create/update/remove.
+
+/** Catégorie de service — alignée sur le CHECK SQL + le DTO backend. */
+export type ServiceCategory =
+  | 'cycle'
+  | 'temple'
+  | 'consultation'
+  | 'mentorat'
+  | 'custom';
+
+/** Service du catalogue tel que renvoyé/écrit (camelCase). */
+export interface CatalogService {
+  key: string;
+  category: ServiceCategory;
+  label: string;
+  tagline: string | null;
+  description: string | null;
+  priceCents: number;
+  currency: string;
+  billingCycle: string; // 'month' | 'one_time' | 'year' (libre côté backend)
+  isActive: boolean;
+  sortOrder: number;
+  features: string[] | null;
+  metadata: Record<string, unknown> | null;
+}
+
+/** Corps de création — `key` peut être dérivé du label côté serveur. */
+export type CreateCatalogServiceBody = Partial<CatalogService> &
+  Pick<CatalogService, 'category' | 'label'>;
+
+export const billingCatalogApi = {
+  /** Liste des services du tenant (tous statuts confondus). */
+  list: () =>
+    apiV2.get<ApiEnvelope<CatalogService[]>>('/billing/catalog').then(unwrap),
+  /** Crée un service. */
+  create: (body: CreateCatalogServiceBody) =>
+    apiV2.post<ApiEnvelope<CatalogService>>('/billing/catalog', body).then(unwrap),
+  /** Met à jour un service (PATCH partiel : prix, statut, libellés…). */
+  update: (key: string, body: Partial<CatalogService>) =>
+    apiV2
+      .patch<ApiEnvelope<CatalogService>>(`/billing/catalog/${key}`, body)
+      .then(unwrap),
+  /** Supprime un service. */
+  remove: (key: string) =>
+    apiV2
+      .delete<ApiEnvelope<{ ok: true; key: string }>>(`/billing/catalog/${key}`)
+      .then(unwrap),
+};

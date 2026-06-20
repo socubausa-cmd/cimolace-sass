@@ -23,6 +23,7 @@ import NotificationCenter from '@/pages/NotificationCenter';
 import OwnerCertificatesManagement from '@/components/school/certificates/OwnerCertificatesManagement';
 import ReportsPage from '@/pages/ReportsPage';
 import SettingsPage from '@/pages/SettingsPage';
+import ServiceCatalogManager from '@/components/settings/ServiceCatalogManager';
 import TenantPayoutProvidersForm from '@/components/settings/TenantPayoutProvidersForm';
 import UsersAdminPage from '@/pages/admin/UsersPage';
 import TeamManagerPage from '@/pages/owner/TeamManagerPage';
@@ -103,6 +104,14 @@ const OwnerDashboard = () => {
         );
       }
       case 'payments': return <FinanceSection />;
+      case 'catalog': return (
+        <div
+          className="p-4"
+          style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)', borderRadius: 14 }}
+        >
+          <ServiceCatalogManager />
+        </div>
+      );
       case 'resources': return <ResourcesTab />;
       case 'school-info': return <SchoolInfoTab />;
       case 'team': return <TeamManagerPage />;
