@@ -206,7 +206,7 @@ const SidebarBody = ({ navGroups, activeTab, accent, collapsed, onItem, user, on
 export default function LiriDashboardShell({
   navGroups = [], activeTab, onTabChange, onNavigate,
   accent = DEFAULT_ACCENT, brandTitle = 'PRORASCIENCE', brandSubtitle = 'ADMIN',
-  user, onLogout, title, topbarRight = null, autoCollapse = false, lightContent = false, children,
+  user, onLogout, title, topbarRight = null, autoCollapse = true, lightContent = false, children,
 }) {
   const [collapsed, setCollapsed] = useState(autoCollapse);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -217,7 +217,9 @@ export default function LiriDashboardShell({
   const [hovered, setHovered] = useState(false);
   const userOverride = useRef(false);
 
-  // Auto-repli (forum, ou studio constructeur) tant que l'utilisateur n'a pas forcé via le bouton tiroir.
+  // Sidebar repliée en icônes PAR DÉFAUT sur tout le back-office (autoCollapse=true) —
+  // dépliée au survol, ou épinglée ouverte via le bouton tiroir (userOverride). Le studio
+  // (constructeur) la replie aussi de force. Look épuré demandé par l'utilisateur.
   useEffect(() => {
     if (!userOverride.current) setCollapsed(autoCollapse || studioCollapse);
   }, [autoCollapse, studioCollapse]);
