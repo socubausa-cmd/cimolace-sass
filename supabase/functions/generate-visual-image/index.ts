@@ -165,6 +165,143 @@ async function callImagenPredict(
   return { b64 };
 }
 
+/** Cherche récursivement un chunk `tool_file` (outil image_generation) et renvoie son file_id. */
+function extractMistralFileId(node: unknown): string | null {
+  if (!node || typeof node !== 'object') return null;
+  const obj = node as Record<string, unknown>;
+  const t = String(obj.type ?? '');
+  if ((t === 'tool_file' || t === 'tool_reference' || t === 'file') && typeof obj.file_id === 'string' && obj.file_id) {
+    return obj.file_id;
+  }
+  for (const v of Object.values(obj)) {
+    if (Array.isArray(v)) {
+      for (const item of v) {
+        const f = extractMistralFileId(item);
+        if (f) return f;
+      }
+    } else if (v && typeof v === 'object') {
+      const f = extractMistralFileId(v);
+      if (f) return f;
+    }
+  }
+  return null;
+}
+
+/**
+ * Génération d'image via l'API Agents/Conversations de Mistral + outil intégré
+ * `image_generation`. Étape 1 : POST /v1/conversations avec tools image_generation.
+ * Étape 2 : récupère les octets du fichier généré via GET /v1/files/{id}/content.
+ */
+async function callMistralImage(
+  finalPrompt: string,
+  mistralKey: string,
+  model: string,
+): Promise<{ bytes: ArrayBuffer; contentType: string } | { error: string }> {
+  let convRes: Response;
+  try {
+    convRes = await fetch('https://api.mistral.ai/v1/conversations', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${mistralKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        inputs: finalPrompt,
+        tools: [{ type: 'image_generation' }],
+      }),
+    });
+  } catch (e) {
+    return { error: `Mistral conversations réseau: ${String((e as Error)?.message || e)}` };
+  }
+  if (!convRes.ok) {
+    const t = await convRes.text().catch(() => String(convRes.status));
+    return { error: `Mistral conversations HTTP ${convRes.status}: ${t.slice(0, 200)}` };
+  }
+  const conv = (await convRes.json().catch(() => ({}))) as Record<string, unknown>;
+  const fileId = extractMistralFileId(conv);
+  if (!fileId) return { error: 'Mistral: aucun file_id image dans la réponse' };
+
+  let fileRes: Response;
+  try {
+    fileRes = await fetch(`https://api.mistral.ai/v1/files/${encodeURIComponent(fileId)}/content`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${mistralKey}`, Accept: 'application/octet-stream' },
+    });
+  } catch (e) {
+    return { error: `Mistral files content réseau: ${String((e as Error)?.message || e)}` };
+  }
+  if (!fileRes.ok) {
+    const t = await fileRes.text().catch(() => String(fileRes.status));
+    return { error: `Mistral files content HTTP ${fileRes.status}: ${t.slice(0, 200)}` };
+  }
+  const bytes = await fileRes.arrayBuffer();
+  if (!bytes || bytes.byteLength === 0) return { error: 'Mistral: image vide' };
+  const ct = fileRes.headers.get('content-type') || '';
+  return { bytes, contentType: ct.startsWith('image/') ? ct : 'image/png' };
+}
+
+/** Reformule le concept en prompt image via Groq (art-director LIRI). Renvoie le prompt brut si Groq indispo. */
+async function groqRefinePrompt(prompt: string, groqKey: string, forImagen: boolean): Promise<string> {
+  if (!groqKey) return prompt;
+  try {
+    const imagenEnglish = forImagen ? ' The final prompt must be in English only (Google Imagen requirement).' : '';
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 4096,
+        messages: [
+          { role: 'system', content: GROQ_LIRI_DIRECTOR_SYSTEM + imagenEnglish },
+          { role: 'user', content: `Create an image generation prompt from this concept:\n\n${prompt}` },
+        ],
+      }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const refined = data?.choices?.[0]?.message?.content?.trim();
+      if (refined) return refined;
+    }
+  } catch (_) { /* keep original */ }
+  return prompt;
+}
+
+/** Upload des octets image vers le storage + ligne DB, renvoie l'objet réponse JSON (ou null si échec). */
+async function storeImageBytes(
+  supabaseAdmin: SupabaseClient,
+  opts: {
+    userId: string | null;
+    bytes: ArrayBuffer;
+    contentType: string;
+    filePath: string;
+    prompt: string;
+    imageSize: string;
+    source: string;
+    providerLabel: string;
+    model: string;
+  },
+): Promise<Record<string, unknown> | null> {
+  const { userId, bytes, contentType, filePath, prompt, imageSize, source, providerLabel, model } = opts;
+  try {
+    if (userId) {
+      await supabaseAdmin.storage.from(CANVAS_BUCKET).upload(filePath, bytes, { contentType, upsert: true });
+      const { data: upPublic } = supabaseAdmin.storage.from(CANVAS_BUCKET).getPublicUrl(filePath);
+      const finalUrl = upPublic?.publicUrl;
+      if (!finalUrl) return null;
+      const rowId = await ensureDbRow(supabaseAdmin, userId, CANVAS_BUCKET, filePath, prompt, imageSize, source);
+      return { imageUrl: finalUrl, cached: false, size: imageSize, model, provider: providerLabel, persisted: true, id: rowId, storagePath: filePath };
+    }
+    await supabaseAdmin.storage.createBucket(CACHE_BUCKET, { public: false }).catch(() => {});
+    await supabaseAdmin.storage.from(CACHE_BUCKET).upload(filePath, bytes, { contentType, upsert: true });
+    const { data: upPublic } = supabaseAdmin.storage.from(CACHE_BUCKET).getPublicUrl(filePath);
+    const { data: upSigned } = await supabaseAdmin.storage.from(CACHE_BUCKET).createSignedUrl(filePath, 365 * 24 * 3600);
+    const finalUrl = upPublic?.publicUrl || upSigned?.signedUrl;
+    if (!finalUrl) return null;
+    return { imageUrl: finalUrl, cached: false, size: imageSize, model, provider: providerLabel, persisted: false };
+  } catch (e) {
+    console.error('storeImageBytes', e);
+    return null;
+  }
+}
+
 // @ts-ignore - Deno runtime
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -180,9 +317,13 @@ Deno.serve(async (req: Request) => {
     const xaiKey = Deno.env.get('XAI_API_KEY') || '';
     // @ts-ignore - Deno runtime — clé [Google AI Studio](https://aistudio.google.com/apikey) / Gemini API
     const geminiKey = String(Deno.env.get('GEMINI_API_KEY') || '').trim();
-    if (!openaiKey && !xaiKey && !geminiKey) {
+    // @ts-ignore - Deno runtime — Mistral (image via outil Agents image_generation)
+    const mistralKey = String(Deno.env.get('MISTRAL_API_KEY') || '').trim();
+    // @ts-ignore - Deno runtime — modèle orchestrateur de l'outil image_generation
+    const mistralImageModel = String(Deno.env.get('MISTRAL_IMAGE_MODEL') || 'mistral-medium-latest').trim();
+    if (!openaiKey && !xaiKey && !geminiKey && !mistralKey) {
       return jsonResponse({
-        error: 'Au moins une clé requise : OPENAI_API_KEY, XAI_API_KEY ou GEMINI_API_KEY (Imagen / Google AI Studio)',
+        error: 'Au moins une clé requise : MISTRAL_API_KEY, OPENAI_API_KEY, XAI_API_KEY ou GEMINI_API_KEY',
       }, 500);
     }
 
@@ -219,6 +360,51 @@ Deno.serve(async (req: Request) => {
       // @ts-ignore - Deno runtime
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
+
+    // ── Mistral (image_generation via API Agents) — fournisseur d'image par
+    //    DÉFAUT quand MISTRAL_API_KEY est présent et qu'aucun fournisseur n'est
+    //    explicitement forcé. DALL·E / Imagen / xAI ne servent qu'en REPLI si
+    //    l'appel Mistral échoue (code existant ci-dessous). ────────────────────
+    const wantsMistral = !!mistralKey && ['auto', 'mistral', 'mistralai'].includes(providerRaw);
+    if (wantsMistral) {
+      const mGenMode = 'mistral';
+      const mHashInput = userId
+        ? `${userId}\n${prompt}\n${imageSize}\n${mGenMode}`
+        : `${prompt}\n${imageSize}\n${mGenMode}`;
+      const mHash = await sha256Hex(mHashInput);
+      const mFilePath = userId ? `${userId}/ia-gen/${mGenMode}-${mHash}.png` : `${mGenMode}-${mHash}.png`;
+      const mBucket = userId ? CANVAS_BUCKET : CACHE_BUCKET;
+
+      // Cache (HEAD sur l'URL publique — fiable pour le bucket canvas public)
+      const { data: mPub } = supabaseAdmin.storage.from(mBucket).getPublicUrl(mFilePath);
+      if (mPub?.publicUrl) {
+        try {
+          const head = await fetch(mPub.publicUrl, { method: 'HEAD' });
+          if (head.ok) {
+            let rowId: string | null = null;
+            if (userId) rowId = await ensureDbRow(supabaseAdmin, userId, mBucket, mFilePath, prompt, imageSize, 'mistral');
+            return jsonResponse({
+              imageUrl: mPub.publicUrl, cached: true, size: imageSize, persisted: !!userId,
+              id: rowId, storagePath: userId ? mFilePath : undefined, provider: 'mistral-image',
+            });
+          }
+        } catch (_) { /* régénère */ }
+      }
+
+      const mPrompt = appendLiriDirectorSuffix(await groqRefinePrompt(prompt, groqKey, false));
+      const mr = await callMistralImage(mPrompt, mistralKey, mistralImageModel);
+      if (!('error' in mr)) {
+        const resp = await storeImageBytes(supabaseAdmin, {
+          userId, bytes: mr.bytes, contentType: mr.contentType, filePath: mFilePath,
+          prompt, imageSize, source: 'mistral', providerLabel: 'mistral-image', model: mistralImageModel,
+        });
+        if (resp) return jsonResponse(resp);
+        // upload échoué → on tente les autres fournisseurs
+      } else {
+        console.warn('[generate-visual-image] Mistral échec, repli DALL·E/Imagen:', (mr as { error: string }).error);
+      }
+      // Mistral indisponible/échec → poursuite vers le code existant (DALL·E / Imagen).
+    }
 
     const genMode = wantsImagen ? 'imagen' : 'dalle';
     const ext = wantsImagen ? 'png' : 'jpg';
@@ -269,40 +455,8 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // ── Groq refine (optionnel) ───────────────────────────────────────────
-    let finalPrompt = prompt;
-    if (groqKey) {
-      try {
-        const imagenEnglish = wantsImagen
-          ? ' The final prompt must be in English only (Google Imagen requirement).'
-          : '';
-        const refineRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'llama-3.3-70b-versatile',
-            max_tokens: 4096,
-            messages: [
-              {
-                role: 'system',
-                content: GROQ_LIRI_DIRECTOR_SYSTEM + imagenEnglish,
-              },
-              {
-                role: 'user',
-                content: `Create an image generation prompt from this concept:\n\n${prompt}`,
-              },
-            ],
-          }),
-        });
-        if (refineRes.ok) {
-          const refineData = await refineRes.json();
-          const refined = refineData?.choices?.[0]?.message?.content?.trim();
-          if (refined) finalPrompt = refined;
-        }
-      } catch (_) { /* keep original */ }
-    }
-
-    finalPrompt = appendLiriDirectorSuffix(finalPrompt);
+    // ── Groq refine (optionnel) + suffixe directeur LIRI ──────────────────
+    const finalPrompt = appendLiriDirectorSuffix(await groqRefinePrompt(prompt, groqKey, wantsImagen));
 
     // ── Google AI Studio / Imagen (Gemini API, même clé que GEMINI_API_KEY) ─
     if (wantsImagen) {
