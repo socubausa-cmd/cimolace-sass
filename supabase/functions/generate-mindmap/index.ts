@@ -73,6 +73,9 @@ type MindMapNode = {
   label: string;
   time?: string;
   timeSeconds?: number;
+  /** P1 — index du chapitre/section auquel la carte appartient (déduit de l'horodatage).
+   *  Rend la carte source unique : slide SmartBoard (groupé par chapitre) + nœud révision. */
+  chapterIndex?: number;
   summary?: string;
   explanation?: string;
   keyPoints?: string[];
@@ -224,6 +227,39 @@ const buildFallbackMindmap = (title: string, chapters: ChapterSegment[], transcr
   };
 };
 
+/** P1 — tague chaque nœud avec son chapitre (chapterIndex) d'après son horodatage,
+ *  pour que la même carte serve de slide SmartBoard (groupé par chapitre) ET de nœud
+ *  de révision. Un nœud sans horodatage propre hérite du chapitre de son parent. */
+function tagNodesWithChapter(root: MindMapNode, chapters: ChapterSegment[]): void {
+  const ranges = (chapters || [])
+    .map((c, idx) => {
+      const start = c?.startSeconds != null ? parseTimeToSeconds(c.startSeconds) : null;
+      const end = c?.endSeconds != null ? parseTimeToSeconds(c.endSeconds) : null;
+      return start != null ? { idx, start, end: end != null ? end : Number.MAX_SAFE_INTEGER } : null;
+    })
+    .filter((x): x is { idx: number; start: number; end: number } => Boolean(x))
+    .sort((a, b) => a.start - b.start);
+  if (!ranges.length) return;
+
+  const indexForTime = (sec: number | null): number | null => {
+    if (sec == null) return null;
+    for (const r of ranges) if (sec >= r.start && sec < r.end) return r.idx;
+    let best: number | null = null;
+    for (const r of ranges) if (r.start <= sec) best = r.idx;
+    return best ?? ranges[0].idx;
+  };
+
+  const walk = (n: MindMapNode, inherited: number | null): void => {
+    const sec = n.timeSeconds != null ? n.timeSeconds : parseTimeToSeconds(n.time ?? null);
+    const ci = indexForTime(sec);
+    const resolved = ci != null ? ci : inherited;
+    if (resolved != null) n.chapterIndex = resolved;
+    (n.children || []).forEach((c) => walk(c, resolved));
+  };
+  // le root reste global (pas de chapitre) ; on tague à partir des enfants.
+  (root.children || []).forEach((c) => walk(c, null));
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -286,8 +322,9 @@ Deno.serve(async (req) => {
       'RÈGLE N°2 : construis d\'abord les grands chapitres (niveau 1), puis les sous-concepts de chaque chapitre (niveau 2), puis les détails clés (niveau 3). ' +
       'RÈGLE N°3 : chaque concept nommé explicitement dans la transcription DOIT apparaître comme nœud. ' +
       'Output ONLY valid JSON, no markdown, no text outside JSON. ' +
-      'Schema: {id,label,time,summary,children:[...]}. Chaque nœud DOIT avoir id et label. ' +
-      'time : format mm:ss indiquant où ce concept apparaît dans la vidéo. summary : 1-2 phrases en français. Tout le texte en français.';
+      'Schema: {id,label,time,summary,keyPoints:[...],children:[...]}. Chaque nœud DOIT avoir id et label. ' +
+      'Chaque nœud est une CARTE qui sert À LA FOIS de slide pédagogique (SmartBoard) et de nœud de révision : il DOIT donc porter un summary (reformulation pédagogique claire et autonome, 1-2 phrases) et 2 à 4 keyPoints (points clés courts et concrets). ' +
+      'time : format mm:ss indiquant où ce concept apparaît dans la vidéo. Tout le texte en français.';
 
     const userPrompt = {
       task:
@@ -459,6 +496,9 @@ Deno.serve(async (req) => {
 
     // enforce size even if the model ignores instructions
     mindmap = pruneMindmap(mindmap, { maxDepth: 4, maxNodes: 60, maxChildrenPerNode: 10 });
+
+    // P1 — rattache chaque carte à son chapitre/section (slide SmartBoard ↔ nœud révision).
+    tagNodesWithChapter(mindmap, chapters);
 
     let billingInfo: Record<string, unknown> | undefined;
     if (ctx && billingTrack.provider) {
