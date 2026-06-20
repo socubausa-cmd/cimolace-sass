@@ -52,6 +52,24 @@ echo ""
 # ── 1. Secret Mistral (optionnel) ───────────────────────────────────────────
 #     Passe par un fichier temporaire 0600 pour éviter d'exposer la clé dans
 #     l'historique shell / la liste des processus (argv).
+#
+#     Si MISTRAL_API_KEY n'est pas dans l'env, on la récupère depuis les .env
+#     locaux (apps/api/.env l'utilise déjà pour le service twin-ai). La valeur
+#     n'est JAMAIS affichée — seul le fichier source l'est.
+if [ -z "${MISTRAL_API_KEY:-}" ]; then
+  for ENVF in "$ROOT/apps/api/.env" "$ROOT/.env.production" "$ROOT/.env"; do
+    [ -f "$ENVF" ] || continue
+    LINE="$(grep -E '^[[:space:]]*MISTRAL_API_KEY=' "$ENVF" | tail -1 || true)"
+    [ -n "$LINE" ] || continue
+    VAL="${LINE#*=}"; VAL="${VAL%\"}"; VAL="${VAL#\"}"; VAL="${VAL%\'}"; VAL="${VAL#\'}"
+    if [ -n "$VAL" ]; then
+      MISTRAL_API_KEY="$VAL"
+      echo "🔑 MISTRAL_API_KEY récupéré depuis ${ENVF#"$ROOT"/}"
+      break
+    fi
+  done
+fi
+
 if [ -n "${MISTRAL_API_KEY:-}" ]; then
   echo "🔑 Pose des secrets Mistral…"
   TMPENV="$(mktemp)"
