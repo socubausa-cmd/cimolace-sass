@@ -119,9 +119,17 @@ const safeId = (value: unknown, fallback: string): string => {
 
 const validateMindmap = (node: unknown, depth = 0): MindMapNode => {
   if (!isObject(node)) throw new Error('Mindmap invalide');
-  const id = String(node.id ?? '').trim();
-  const label = String(node.label ?? '').trim();
-  if (!id || !label) throw new Error('Mindmap invalide: id/label requis');
+  // Tolérant aux id/label manquants : on dérive un fallback déterministe au
+  // lieu de faire échouer TOUTE la génération (le modèle omet parfois l'id du
+  // root, ou emploie « title »/« name » au lieu de « label »). Auparavant un
+  // root sans id/label levait « id/label requis » AVANT que l'appelant ne
+  // puisse appliquer ses propres défauts (root.id='root', root.label=titre),
+  // d'où des 500 réguliers sur « Améliorer avec IA ». Le root sans label est
+  // laissé vide pour que l'appelant le remplace par le titre du cours.
+  const rawLabel = String(node.label ?? node.title ?? node.name ?? '').trim();
+  const rawId = String(node.id ?? '').trim();
+  const id = safeId(rawId || rawLabel, depth === 0 ? 'root' : `node-${depth}`);
+  const label = rawLabel || rawId;
 
   const out: MindMapNode = { id, label };
 
