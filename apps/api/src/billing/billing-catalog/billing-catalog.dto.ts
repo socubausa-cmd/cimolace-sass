@@ -39,6 +39,15 @@ export const BILLING_CYCLES = [
 export type BillingCycle = (typeof BILLING_CYCLES)[number];
 
 /**
+ * Modèle d'accès d'un service :
+ *   paid = payant (checkout) · free = gratuit (accès direct) · community = communauté (adhésion gratuite).
+ * Doit rester aligné sur `billing_plans.access_model`.
+ */
+export const ACCESS_MODELS = ['paid', 'free', 'community'] as const;
+
+export type AccessModel = (typeof ACCESS_MODELS)[number];
+
+/**
  * Body de POST /billing/catalog — création d'un service au catalogue du tenant.
  * `key` n'est PAS accepté ici : il est dérivé du label (slugify + suffixe court)
  * côté service pour garantir l'unicité tenant-scopée.
@@ -71,6 +80,11 @@ export class CreateCatalogServiceDto {
 
   @IsIn(BILLING_CYCLES)
   billingCycle!: BillingCycle;
+
+  // Modèle d'accès : payant (checkout) / gratuit / communauté. Défaut serveur = 'paid'.
+  @IsOptional()
+  @IsIn(ACCESS_MODELS)
+  accessModel?: AccessModel;
 
   // Ordre d'affichage dans le catalogue (croissant).
   @IsOptional()
@@ -124,6 +138,10 @@ export class UpdateCatalogServiceDto {
   @IsOptional()
   @IsIn(BILLING_CYCLES)
   billingCycle?: BillingCycle;
+
+  @IsOptional()
+  @IsIn(ACCESS_MODELS)
+  accessModel?: AccessModel;
 
   @IsOptional()
   @IsBoolean()

@@ -86,6 +86,13 @@ function cycleShort(value) {
   return BILLING_CYCLES.find((c) => c.value === value)?.short || '';
 }
 
+/* Modèle d'accès : payant (checkout) / gratuit (accès direct) / communauté (adhésion gratuite). */
+const ACCESS_MODELS = [
+  { value: 'paid', label: 'Payant' },
+  { value: 'free', label: 'Gratuit' },
+  { value: 'community', label: 'Communauté' },
+];
+
 /* Devises proposées (le champ reste libre côté backend). */
 const CURRENCIES = ['EUR', 'XAF', 'XOF', 'USD'];
 
@@ -228,6 +235,7 @@ const EMPTY_FORM = {
   amount: '',
   currency: 'EUR',
   billingCycle: 'monthly',
+  accessModel: 'paid',
   isActive: true,
 };
 
@@ -250,6 +258,7 @@ function ServiceDialog({ open, mode, service, onClose, onSaved, onDeleted }) {
         amount: centsToAmount(service.priceCents),
         currency: service.currency || 'EUR',
         billingCycle: service.billingCycle || 'monthly',
+        accessModel: service.accessModel || 'paid',
         isActive: service.isActive !== false,
       });
     } else {
@@ -282,6 +291,7 @@ function ServiceDialog({ open, mode, service, onClose, onSaved, onDeleted }) {
         priceCents: cents,
         currency: form.currency,
         billingCycle: form.billingCycle,
+        accessModel: form.accessModel,
         isActive: form.isActive,
       };
       if (isEdit) {
@@ -425,6 +435,28 @@ function ServiceDialog({ open, mode, service, onClose, onSaved, onDeleted }) {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* Modèle d'accès */}
+          <div className="grid gap-1.5">
+            <Label className="text-zinc-700">Accès</Label>
+            <Select value={form.accessModel} onValueChange={(v) => set({ accessModel: v })}>
+              <SelectTrigger className="bg-white text-zinc-900">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ACCESS_MODELS.map((a) => (
+                  <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-zinc-500">
+              {form.accessModel === 'free'
+                ? 'Accès direct, sans paiement (le prix est ignoré).'
+                : form.accessModel === 'community'
+                  ? 'Adhésion gratuite à un espace communautaire (ex. le Temple).'
+                  : 'Le membre paie pour accéder (carte ou mobile money).'}
+            </p>
           </div>
 
           {/* Description */}

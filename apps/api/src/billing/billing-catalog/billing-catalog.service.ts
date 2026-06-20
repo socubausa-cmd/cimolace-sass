@@ -27,6 +27,7 @@ export type CatalogService = {
   priceCents: number;
   currency: string | null;
   billingCycle: string | null;
+  accessModel: string;
   isActive: boolean;
   sortOrder: number;
   features: any[] | null;
@@ -35,7 +36,7 @@ export type CatalogService = {
 
 /** Colonnes sélectionnées partout (cohérence list/create/update). */
 const SELECT_COLS =
-  'key, category, label, tagline, description, price_cents, currency, billing_cycle, is_active, sort_order, features, metadata';
+  'key, category, label, tagline, description, price_cents, currency, billing_cycle, access_model, is_active, sort_order, features, metadata';
 
 @Injectable()
 export class BillingCatalogService {
@@ -59,6 +60,7 @@ export class BillingCatalogService {
       priceCents: typeof row.price_cents === 'number' ? row.price_cents : 0,
       currency: row.currency ?? null,
       billingCycle: row.billing_cycle ?? null,
+      accessModel: row.access_model ?? 'paid',
       isActive: !!row.is_active,
       sortOrder: typeof row.sort_order === 'number' ? row.sort_order : 0,
       features: (row.features as any[] | null) ?? null,
@@ -123,6 +125,7 @@ export class BillingCatalogService {
       price_cents: body.priceCents,
       currency: body.currency.toUpperCase(),
       billing_cycle: body.billingCycle,
+      access_model: body.accessModel ?? 'paid',
       is_active: true,
       sort_order: body.sortOrder ?? 0,
       features: body.features ?? null,
@@ -157,6 +160,7 @@ export class BillingCatalogService {
     if (body.priceCents !== undefined) patch.price_cents = body.priceCents;
     if (body.currency !== undefined) patch.currency = body.currency.toUpperCase();
     if (body.billingCycle !== undefined) patch.billing_cycle = body.billingCycle;
+    if (body.accessModel !== undefined) patch.access_model = body.accessModel;
     if (body.isActive !== undefined) patch.is_active = body.isActive;
     if (body.sortOrder !== undefined) patch.sort_order = body.sortOrder;
     if (body.features !== undefined) patch.features = body.features;
