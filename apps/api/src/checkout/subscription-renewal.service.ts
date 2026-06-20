@@ -204,8 +204,14 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
       };
       if (opts.providerSubscriptionId) patch.provider_subscription_id = opts.providerSubscriptionId;
       if (opts.providerCustomerId) patch.provider_customer_id = opts.providerCustomerId;
-      await this.subs.update(patch).eq('id', existing.id);
-      this.logger.log(`Abonnement prolongé — user=${userId} plan=${planSlug} (${provider}) → ${computedEnd}`);
+      const { error: updErr } = await this.subs.update(patch).eq('id', existing.id);
+      if (updErr) {
+        this.logger.error(
+          `Abonnement NON prolongé (update refusé) — user=${userId} plan=${planSlug} (${provider}): ${updErr.message}`,
+        );
+      } else {
+        this.logger.log(`Abonnement prolongé — user=${userId} plan=${planSlug} (${provider}) → ${computedEnd}`);
+      }
     } else {
       const row: Record<string, unknown> = {
         tenant_id: tenantId,
@@ -220,7 +226,13 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
       };
       if (opts.providerSubscriptionId) row.provider_subscription_id = opts.providerSubscriptionId;
       if (opts.providerCustomerId) row.provider_customer_id = opts.providerCustomerId;
-      await this.subs.insert(row);
+      const { error: insErr } = await this.subs.insert(row);
+      if (insErr) {
+        this.logger.error(
+          `Abonnement NON créé (insert refusé) — user=${userId} plan=${planSlug} (${provider}): ${insErr.message}`,
+        );
+        return;
+      }
       this.logger.log(`Abonnement créé — user=${userId} plan=${planSlug} (${provider}) → ${computedEnd}`);
     }
 
