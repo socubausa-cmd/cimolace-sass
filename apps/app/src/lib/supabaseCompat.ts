@@ -584,11 +584,20 @@ class QueryBuilder<T = any> {
       case 'live_invitations':
         return this.executeRealSupabase();
 
+      // ── Formation content (modules → weeks → days → contents) ────────────
+      //    La table existe en DB avec RLS (select=authenticated,
+      //    manage=staff du tenant). Elle était à tort listée plus bas parmi
+      //    les « tables qui n'existent pas », ce qui renvoyait toujours vide :
+      //    le constructeur perdait silencieusement chaque vidéo/quiz/PowerPoint
+      //    (INSERT de saveStructure avalé) et la post-production affichait
+      //    « Vidéo introuvable ». On route donc vers le vrai Supabase.
+      case 'formation_day_contents':
+        return this.executeRealSupabase();
+
       // ── Tables that don't exist in DB — return empty to stop 404 floods ──
       case 'live_notifications':
       case 'appointment_requests':
       case 'formations':
-      case 'formation_day_contents':
       case 'app_settings':
         return ok(this.singleFlag ? (null as any) : ([] as any));
 
