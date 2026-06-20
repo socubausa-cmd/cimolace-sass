@@ -34,11 +34,28 @@ import SecretariatBillingPanel from '@/components/secretariat/SecretariatBilling
 import NgowazuluMentoratManagerTab from '@/components/ngowazulu/owner/NgowazuluMentoratManagerTab';
 import NgowazuluOperationsPanel from '@/components/ngowazulu/admin/NgowazuluOperationsPanel';
 import SiteReviewsModerationPanel from '@/components/marketing/SiteReviewsModerationPanel';
-import { useAuth } from '@/hooks/useAuth';
-import { getEffectiveRole } from '@/lib/accountRoleMode';
-import StudentForumCommunityPage from '@/pages/school/student-school-life/StudentForumCommunityPage';
+import StudentForumRedesign from '@/pages/school/student-school-life/StudentForumRedesign';
+import { SslThemeProvider, SSL_LIGHT_CLASS, ensureSslLightStyles } from '@/pages/school/student-school-life/sslTheme';
 import { FormationForumContent } from '@/pages/school/FormationForumPage';
-import { formationForumUrlForRole } from '@/lib/forumDashboardPaths';
+
+/**
+ * Forum communauté de l'admin = MÊME forum riche que l'espace élève
+ * (StudentForumRedesign : votes, épingles, recherche, temps réel). On reproduit le
+ * thème CLAIR de l'espace élève (SslThemeProvider + classe + styles injectés) pour un
+ * rendu identique dans le dashboard clair. Les sous-pages (fil / nouvelle question)
+ * sont routées dans App.jsx sous /owner-dashboard/forum/* (forumBase dérivé de l'URL,
+ * donc « Retour au forum » revient sur l'onglet forum de l'admin).
+ */
+const OwnerForumPanel = () => {
+  useEffect(() => { ensureSslLightStyles(); }, []);
+  return (
+    <SslThemeProvider mode="light">
+      <div className={SSL_LIGHT_CLASS}>
+        <StudentForumRedesign forumBasePath="/owner-dashboard/forum" />
+      </div>
+    </SslThemeProvider>
+  );
+};
 
 const OwnerDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -46,7 +63,6 @@ const OwnerDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
 
   useEffect(() => {
     const params = new URLSearchParams(location?.search || '');
@@ -97,11 +113,7 @@ const OwnerDashboard = () => {
             />
           );
         }
-        return (
-          <StudentForumCommunityPage
-            formationForumHref={(fid, qid) => formationForumUrlForRole(getEffectiveRole(user), fid, qid)}
-          />
-        );
+        return <OwnerForumPanel />;
       }
       case 'payments': return <FinanceSection />;
       case 'catalog': return (
