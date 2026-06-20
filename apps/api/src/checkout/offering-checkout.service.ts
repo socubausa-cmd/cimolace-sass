@@ -70,6 +70,14 @@ export class OfferingCheckoutService {
     // 1) Montant — calculé serveur pour un abonnement, fourni pour consultation/don
     const { amountCents, planSlug, currency } = await this.resolveAmount(dto);
 
+    // 1.bis) Mobile money africain : l'opérateur règle en monnaie LOCALE (XOF/XAF…), jamais en EUR.
+    //        Zone CFA pegée à l'euro (taux fixe légal) → conversion EXACTE du prix EUR vers le CFA.
+    const { amount: depositAmount, currency: depositCurrency } = this.toMobileMoneyAmount(
+      amountCents,
+      currency,
+      dto.country,
+    );
+
     // 2) Tenant isna actif
     const { data: tenant } = await this.supabase
       .from('tenants')
@@ -101,8 +109,8 @@ export class OfferingCheckoutService {
       deposit_id: depositId,
       tenant_id: tenant.id,
       user_id: userId,
-      amount_cents: amountCents,
-      currency,
+      amount_cents: depositAmount,
+      currency: depositCurrency,
       provider: dto.provider,
       phone_number: dto.phoneNumber,
       country: dto.country.toUpperCase(),
@@ -124,8 +132,8 @@ export class OfferingCheckoutService {
     const result = await this.pawapay.initiateDeposit(
       {
         depositId,
-        amount: String(Math.round(amountCents)),
-        currency,
+        amount: String(depositAmount),
+        currency: depositCurrency,
         payer: {
           type: 'MMO',
           accountDetails: { phoneNumber: dto.phoneNumber, provider: dto.provider },
@@ -145,7 +153,56 @@ export class OfferingCheckoutService {
       .update({ pawapay_status: result.status })
       .eq('deposit_id', depositId);
 
-    return { depositId, status: result.status, amountCents, currency };
+    return { depositId, status: result.status, amountCents: depositAmount, currency: depositCurrency };
+  }
+
+  // Zone franc CFA : pegée à l'euro à un taux FIXE légal (1 € = 655,957 CFA). XOF = Afrique de
+  // l'Ouest (UEMOA), XAF = Afrique centrale (CEMAC). Le CFA n'a pas de décimales → unités entières.
+  private static readonly CFA_PEG = 655.957;
+  private static readonly XOF_COUNTRIES = new Set([
+    'BEN', 'BFA', 'CIV', 'GNB', 'MLI', 'NER', 'SEN', 'TGO',
+  ]);
+  private static readonly XAF_COUNTRIES = new Set([
+    'CMR', 'CAF', 'TCD', 'COG', 'GNQ', 'GAB',
+  ]);
+
+  /**
+   * Convertit le montant d'un plan vers la devise attendue par l'opérateur mobile money :
+   *  - zone CFA (XOF/XAF) + plan EUR → conversion exacte au peg (€→CFA, entier) ;
+   *  - plan déjà dans la devise cible → tel quel ;
+   *  - hors zone CFA avec un plan EUR → refus propre (pas de taux fiable) ; la carte reste dispo.
+   */
+  private toMobileMoneyAmount(
+    amountCents: number,
+    planCurrency: string,
+    countryRaw: string,
+  ): { amount: number; currency: string } {
+    const country = String(countryRaw || '').toUpperCase();
+    const cur = String(planCurrency || 'EUR').toUpperCase();
+    const cfa = OfferingCheckoutService.XOF_COUNTRIES.has(country)
+      ? 'XOF'
+      : OfferingCheckoutService.XAF_COUNTRIES.has(country)
+        ? 'XAF'
+        : null;
+
+    if (cfa) {
+      if (cur === 'EUR') {
+        return {
+          amount: Math.round((amountCents / 100) * OfferingCheckoutService.CFA_PEG),
+          currency: cfa,
+        };
+      }
+      if (cur === 'XOF' || cur === 'XAF') {
+        return { amount: Math.round(amountCents), currency: cfa };
+      }
+    }
+
+    if (cur === 'EUR') {
+      throw new BadRequestException(
+        `Mobile Money disponible en zone CFA (XOF/XAF) pour ce paiement. Pour ${country || 'ce pays'}, utilisez la carte bancaire.`,
+      );
+    }
+    return { amount: Math.round(amountCents), currency: cur };
   }
 
   /** Montant + planSlug d'une offre — partagé Mobile Money / Carte. Montant abo = serveur uniquement. */
