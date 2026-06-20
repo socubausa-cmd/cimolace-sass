@@ -291,13 +291,12 @@ Deno.serve(async (req) => {
 
     const userPrompt = {
       task:
-        'ÉTAPE 1 — Identifie TOUS les grands sujets/sections du cours dans l\'ordre chronologique (minimum 8 sections). ' +
+        'ÉTAPE 1 — Identifie les grandes sections du cours dans l\'ordre chronologique : autant qu\'en contient RÉELLEMENT la transcription (n\'en invente aucune, n\'impose aucun minimum). ' +
         'ÉTAPE 2 — Pour chaque section, liste ses sous-concepts explicitement nommés dans la transcription. ' +
         'ÉTAPE 3 — Pour chaque sous-concept important, ajoute ses éléments constitutifs si mentionnés. ' +
-        'OBLIGATOIRE : chaque concept nommé dans la transcription doit être un nœud. ' +
-        'Exemples de concepts qui DOIVENT apparaître si présents : Potentiel Zéro, Brisure de Symétrie, Loi de Variance Différentielle, Âme, Esprit, Conscience, Hyper-Chi, Impayo, Imana, Karma, Fibonacci, Après-vie, 12 théories, Différenciation. ' +
+        'OBLIGATOIRE : chaque concept, terme technique, règle, étape, définition ou exemple RÉELLEMENT nommé dans la transcription doit devenir un nœud — et tu n\'inventes RIEN qui n\'y figure pas (peu importe la matière : sciences, langue, religion, art, etc.). ' +
         'Pour chaque nœud : résumé 1-2 phrases en français + time mm:ss du moment où il apparaît dans la vidéo. ' +
-        'Limites : profondeur max 4, total nœuds 30-60, enfants par nœud max 10.',
+        'Limites : profondeur max 4, max 10 enfants par nœud ; adapte le nombre total de nœuds à la richesse réelle de la transcription (transcription courte → mindmap plus compacte) sans jamais gonfler artificiellement, et produis toujours au moins les sections et concepts réellement présents.',
       title: title || undefined,
       chapters: compactChapters,
       transcript: compactTranscript,
