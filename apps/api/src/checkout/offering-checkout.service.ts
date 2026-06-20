@@ -360,4 +360,34 @@ export class OfferingCheckoutService {
   async getProviders(country?: string) {
     return this.pawapay.getActiveConfig(country);
   }
+
+  /**
+   * Accès GRATUIT (modèle free/community) : débloque le service SANS paiement.
+   * Vérifie côté SERVEUR que le service est bien free/community (un service payant ne
+   * peut JAMAIS être réclamé gratuitement), puis pose un abonnement actif à 0 sur une
+   * période très longue → createOrExtendSubscription accorde aussi membership + rôle.
+   */
+  async claimFree(userId: string, planSlug?: string) {
+    if (!planSlug) throw new BadRequestException('planSlug requis');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: plan } = await (this.supabase as any)
+      .from('billing_plans')
+      .select('key, access_model, tenant_id, is_active')
+      .eq('key', planSlug)
+      .maybeSingle();
+    if (!plan || plan.is_active === false) {
+      throw new NotFoundException('Service introuvable ou inactif.');
+    }
+    if (plan.access_model !== 'free' && plan.access_model !== 'community') {
+      throw new BadRequestException('Ce service est payant — passez par le paiement.');
+    }
+    // ≈ 100 ans → l'accès gratuit n'expire pas.
+    const farFuture = new Date(Date.now() + 100 * 365 * 86_400_000).toISOString();
+    await this.renewals.createOrExtendSubscription(userId, planSlug, {
+      tenantId: plan.tenant_id ?? null,
+      provider: 'free',
+      currentPeriodEnd: farFuture,
+    });
+    return { ok: true, accessModel: plan.access_model, planSlug };
+  }
 }

@@ -145,6 +145,9 @@ export const offeringCheckoutApi = {
     apiV2.get<ApiEnvelope<any>>(`/offering-checkout/mobile-money/${depositId}/status`).then(unwrap),
   getProviders: (country?: string) =>
     apiV2.get<ApiEnvelope<any[]>>(`/offering-checkout/providers${country ? `?country=${encodeURIComponent(country)}` : ''}`).then(unwrap),
+  /** Accès GRATUIT (service free/community) → débloque sans paiement, renvoie { ok }. */
+  claimFree: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/offering-checkout/claim-free', body).then(unwrap),
 };
 
 // ── Marketing ───────────────────────────────────────────────────────────────

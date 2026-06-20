@@ -45,6 +45,13 @@ export class OfferingCheckoutController {
     return this.svc.createStripeCheckout(user.id, dto, user.email);
   }
 
+  /** Accès GRATUIT (service free/community) : débloque sans paiement. Vérifié côté serveur. */
+  @Post('claim-free')
+  @UseGuards(JwtAuthGuard)
+  claimFree(@Body() body: { planSlug?: string }, @CurrentUser() user: AuthUser) {
+    return this.svc.claimFree(user.id, body?.planSlug);
+  }
+
   @Get('mobile-money/:depositId/status')
   @UseGuards(JwtAuthGuard)
   status(@Param('depositId') depositId: string, @CurrentUser() user: AuthUser) {

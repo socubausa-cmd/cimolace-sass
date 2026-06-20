@@ -3,6 +3,7 @@ import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { offeringCheckoutApi } from '@/lib/api-v2';
+import { supabase } from '@/lib/customSupabaseClient';
 import { getNgowazuluMentoratOffer } from '@/config/ngowazuluMentoratOffers';
 import { NGOWAZULU_CONSULTATION_PLAN_SLUG } from '@/config/ngowazuluConsultation';
 
@@ -55,6 +56,34 @@ export default function PaiementPage() {
   const [phone, setPhone] = useState('');
   const [status, setStatus] = useState({ state: 'idle', message: '', depositId: null });
   const cardReturn = searchParams.get('card'); // 'success' | 'cancel' au retour de Stripe
+
+  // Modèle d'accès du service (lu depuis billing_plans) : free/community → débloqué SANS paiement.
+  const [accessModel, setAccessModel] = useState(null);
+  const [claiming, setClaiming] = useState(false);
+  useEffect(() => {
+    if (!planSlug) { setAccessModel('paid'); return undefined; }
+    let alive = true;
+    supabase
+      .from('billing_plans')
+      .select('access_model')
+      .eq('key', planSlug)
+      .maybeSingle()
+      .then(({ data }) => { if (alive) setAccessModel(data?.access_model || 'paid'); })
+      .catch(() => { if (alive) setAccessModel('paid'); });
+    return () => { alive = false; };
+  }, [planSlug]);
+  const isFreeAccess = accessModel === 'free' || accessModel === 'community';
+
+  const handleClaimFree = async () => {
+    setClaiming(true);
+    try {
+      await offeringCheckoutApi.claimFree({ planSlug });
+      window.location.assign('/student-school-life/dashboard');
+    } catch (err) {
+      setStatus({ state: 'error', message: err?.message || "Impossible de débloquer l'accès.", depositId: null });
+      setClaiming(false);
+    }
+  };
 
   // Opérateurs Mobile Money en direct (config PawaPay réelle) : pays → opérateurs.
   const [mmConfig, setMmConfig] = useState(null); // { countries: [...] } | null
@@ -151,6 +180,51 @@ export default function PaiementPage() {
 
   const inputCls =
     'w-full rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-white placeholder-gray-500 focus:border-[var(--school-accent)] focus:outline-none';
+
+  // Service gratuit / communauté → pas de paiement : on propose de débloquer l'accès directement.
+  if (isFreeAccess) {
+    return (
+      <div className="min-h-screen bg-[#070b14] text-white">
+        <Helmet>
+          <title>{offer.title} | PRORASCIENCE</title>
+        </Helmet>
+        <header className="border-b border-white/10 px-4 py-4 sm:px-6">
+          <div className="mx-auto flex max-w-3xl items-center justify-between">
+            <Link to={`/t/${tenantSlug || DEFAULT_TENANT_SLUG}`} className="text-sm text-gray-300 hover:text-white">
+              ← Retour
+            </Link>
+            <span className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">PRORASCIENCE</span>
+          </div>
+        </header>
+        <main className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6">
+          <p className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">
+            {accessModel === 'community' ? 'Communauté' : 'Accès offert'}
+          </p>
+          <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">{offer.title}</h1>
+          <p className="mt-3 text-gray-300">
+            {accessModel === 'community'
+              ? 'Rejoins gratuitement cet espace communautaire — aucun paiement nécessaire.'
+              : 'Cet accès est offert — aucun paiement nécessaire.'}
+          </p>
+          <button
+            type="button"
+            onClick={handleClaimFree}
+            disabled={claiming}
+            className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--school-accent)] px-6 py-3 font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60"
+          >
+            {claiming
+              ? 'Activation…'
+              : accessModel === 'community'
+                ? 'Rejoindre la communauté'
+                : 'Accéder gratuitement'}
+          </button>
+          {status.state === 'error' && (
+            <p className="mt-4 text-sm text-red-300">{status.message}</p>
+          )}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#070b14] text-white">
