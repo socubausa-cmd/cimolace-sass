@@ -684,7 +684,10 @@ const DashboardRedirect = () => {
     }
     if (isPremiumActive && !user?.student_profile_completed) return <Navigate to="/onboarding/eleve" replace />;
     if (isPremiumActive && user?.student_profile_completed) return <Navigate to="/student-school-life/dashboard" replace />;
-    return <Navigate to="/prospect/entretien" replace />;
+    // Vitrine douce : un visiteur inscrit (même sans abonnement) entre dans son tableau de bord —
+    // le hub d'offres + l'entretien gratuit l'y attendent, le contenu premium restant verrouillé en
+    // douceur à l'intérieur. (Avant : atterrissage cul-de-sac sur /prospect/entretien.)
+    return <Navigate to="/student-school-life/dashboard" replace />;
   }
 
   if (role === 'student' && isPremiumActive && !user?.student_profile_completed) {
@@ -694,7 +697,8 @@ const DashboardRedirect = () => {
     return <Navigate to="/student-school-life/dashboard" replace />;
   }
 
-  if (!isPremiumActive) return <Navigate to="/forfaits" replace />;
+  // Vitrine douce : pas d'abonnement actif ⇒ on entre quand même dans le tableau de bord
+  // (offres + upsell à l'intérieur) au lieu de rejeter vers /forfaits.
   return <Navigate to="/student-school-life/dashboard" replace />;
 };
 

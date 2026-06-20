@@ -366,8 +366,11 @@ export class BillingAdvancedService {
   async getSubscriptionStatus(userId: string | undefined) {
     if (!userId) throw new UnauthorizedException();
 
+    // Schéma PROD réel : current_period_end (pas expires_at), plan_id = clé texte. Pas d'embed
+    // billing_plans (plan_id n'est pas un FK uuid → l'embed PostgREST casserait la requête, ce qui
+    // renvoyait jusqu'ici subscription:null et fermait l'accès à tort).
     const subscriptionSelect =
-      'id,user_id,plan_id,status,provider,payment_method,started_at,expires_at,grace_ends_at,next_renewal_due_at,last_reminder_sent_at,reminder_stage,created_at,billing_plans(id,slug,name,interval_type,price_amount,price_currency)';
+      'id,user_id,plan_id,status,provider,amount_cents,currency,current_period_start,current_period_end,created_at';
 
     let subscription: AnyObj | null = null;
     const { data: prio } = await this.sb
@@ -375,7 +378,7 @@ export class BillingAdvancedService {
       .select(subscriptionSelect)
       .eq('user_id', userId)
       .in('status', ['active', 'past_due'])
-      .order('expires_at', { ascending: false, nullsFirst: false })
+      .order('current_period_end', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -1010,13 +1013,10 @@ Référence commande : ${args.orderId || args.paymentId}</p>
     }
     const now = Date.now();
     const graceDays = Number(this.config.get('BILLING_GRACE_DAYS') || 0);
-    const expiresMs = subscription.expires_at ? new Date(subscription.expires_at).getTime() : null;
-    const graceMs =
-      subscription.grace_ends_at != null
-        ? new Date(subscription.grace_ends_at).getTime()
-        : expiresMs != null
-          ? expiresMs + graceDays * 86_400_000
-          : null;
+    // Schéma PROD réel : fin de période = current_period_end (pas d'expires_at) ; pas de colonne
+    // grace_ends_at → période de grâce = fin + BILLING_GRACE_DAYS.
+    const expiresMs = subscription.current_period_end ? new Date(subscription.current_period_end).getTime() : null;
+    const graceMs = expiresMs != null ? expiresMs + graceDays * 86_400_000 : null;
 
     if (expiresMs && expiresMs > now) {
       const days = Math.max(0, Math.ceil((expiresMs - now) / 86_400_000));
@@ -1024,8 +1024,8 @@ Référence commande : ${args.orderId || args.paymentId}</p>
         status: 'active',
         visualState: days <= 7 ? 'expiring_soon' : 'active',
         daysRemaining: days,
-        expiresAt: subscription.expires_at,
-        graceEndsAt: subscription.grace_ends_at,
+        expiresAt: subscription.current_period_end,
+        graceEndsAt: null,
       };
     }
     if (graceMs && graceMs > now) {
@@ -1034,7 +1034,7 @@ Référence commande : ${args.orderId || args.paymentId}</p>
         status: 'grace_period',
         visualState: 'grace_period',
         daysRemaining: days,
-        expiresAt: subscription.expires_at,
+        expiresAt: subscription.current_period_end,
         graceEndsAt: new Date(graceMs).toISOString(),
       };
     }

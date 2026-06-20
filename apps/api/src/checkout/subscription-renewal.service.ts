@@ -223,6 +223,52 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
       await this.subs.insert(row);
       this.logger.log(`Abonnement créé — user=${userId} plan=${planSlug} (${provider}) → ${computedEnd}`);
     }
+
+    // Vitrine douce : un abonnement actif accorde l'accès — membership tenant (idempotente) +
+    // promotion visitor→student (jamais de downgrade). Sans ça, le contenu pédagogique RLS reste vide
+    // et la garde élève ne s'ouvre pas. Tolérant aux erreurs (ne casse jamais le fulfillment).
+    await this.grantStudentAccess(userId, tenantId);
+  }
+
+  /**
+   * Accorde l'accès élève après un paiement actif : pose une `tenant_memberships`
+   * (rôle student, idempotente — n'écrase jamais un rôle supérieur déjà présent) et
+   * promeut le rôle GLOBAL visitor→student. Best-effort : toute erreur est seulement loguée.
+   */
+  private async grantStudentAccess(userId: string, tenantId: string): Promise<void> {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const memberships = (this.supabase as any).from('tenant_memberships');
+      const { data: mem } = await memberships
+        .select('id, role, status')
+        .eq('tenant_id', tenantId)
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (!mem) {
+        await memberships.insert({
+          tenant_id: tenantId,
+          user_id: userId,
+          role: 'student',
+          status: 'active',
+        });
+      } else if (mem.status && mem.status !== 'active') {
+        await memberships.update({ status: 'active' }).eq('id', mem.id);
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: profile } = await (this.supabase as any)
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .maybeSingle();
+      const role = String(profile?.role || '').toLowerCase();
+      if (!role || role === 'visitor') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (this.supabase as any).from('profiles').update({ role: 'student' }).eq('id', userId);
+      }
+    } catch (e) {
+      this.logger.warn(`grantStudentAccess (user=${userId}): ${(e as Error).message}`);
+    }
   }
 
   // ── Webhook Stripe des offres élève ─────────────────────────────────────────

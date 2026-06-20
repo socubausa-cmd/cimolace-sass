@@ -12,6 +12,9 @@ import { useStudentCurrentCourse } from '@/hooks/useStudentCurrentCourse';
 import { supabase } from '@/lib/customSupabaseClient';
 // Thème host-aware : `T` = tokens vivants (clair sous l'espace élève, sombre sous le portail prof).
 import { themeProxy as T, useSslThemeMode } from '@/pages/school/student-school-life/sslTheme';
+import { useBilling } from '@/contexts/BillingContext';
+// Hub d'offres « vitrine douce » : affiché en haut du dashboard UNIQUEMENT pour les non-premium.
+import StudentOfferHub from '@/pages/school/student-school-life/StudentOfferHub';
 
 // Accents décoratifs des cartes de formation. Host-aware via T pour le cyan/teal/or
 // (illisibles en clair s'ils restaient #00E5FF) : en SOMBRE on conserve les valeurs
@@ -286,6 +289,11 @@ const StudentDashboardPage = () => {
   const { user } = useAuth();
   const userId = user?.id;
 
+  // Statut premium : un abonnement actif (ou past_due encore dans la période de grâce)
+  // masque le hub d'offres. Sinon → vitrine de conversion en haut du dashboard.
+  const { status, inGrace } = useBilling();
+  const isPremiumActive = status === 'active' || (status === 'past_due' && inGrace);
+
   const {
     formations = [],
     absences = [],
@@ -394,6 +402,9 @@ const StudentDashboardPage = () => {
         @keyframes dashSpin  { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
         @keyframes dashPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
       `}</style>
+
+      {/* ── Hub d'offres (vitrine douce) — non-premium uniquement ── */}
+      {!isPremiumActive && <StudentOfferHub />}
 
       {/* ── Header ── */}
       <motion.div {...fadeUp(0)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>

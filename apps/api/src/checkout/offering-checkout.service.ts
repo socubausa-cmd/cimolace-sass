@@ -68,7 +68,7 @@ export class OfferingCheckoutService {
    */
   async createMobileMoneyDeposit(userId: string, dto: CreateOfferingDepositDto) {
     // 1) Montant — calculé serveur pour un abonnement, fourni pour consultation/don
-    const { amountCents, planSlug } = this.resolveAmount(dto);
+    const { amountCents, planSlug, currency } = await this.resolveAmount(dto);
 
     // 2) Tenant isna actif
     const { data: tenant } = await this.supabase
@@ -97,7 +97,6 @@ export class OfferingCheckoutService {
 
     // 4) Persister AVANT l'appel pawaPay (point de vérité / idempotence réseau)
     const depositId = randomUUID();
-    const currency = 'EUR';
     const { error: insErr } = await this.ppDeposits.insert({
       deposit_id: depositId,
       tenant_id: tenant.id,
@@ -150,16 +149,33 @@ export class OfferingCheckoutService {
   }
 
   /** Montant + planSlug d'une offre — partagé Mobile Money / Carte. Montant abo = serveur uniquement. */
-  private resolveAmount(dto: {
+  private async resolveAmount(dto: {
     kind: 'subscription' | 'consultation' | 'donation';
     planSlug?: string;
     amountCents?: number;
-  }): { amountCents: number; planSlug: string | null } {
+  }): Promise<{ amountCents: number; planSlug: string | null; currency: string }> {
     if (dto.kind === 'subscription') {
       const planSlug = dto.planSlug ?? null;
-      const amt = planSlug ? NGOWAZULU_PLAN_AMOUNTS_EUR_CENTS[planSlug] : undefined;
-      if (!amt) throw new BadRequestException('Offre mentorat inconnue (planSlug invalide)');
-      return { amountCents: amt, planSlug };
+      if (!planSlug) throw new BadRequestException('planSlug requis pour un abonnement');
+      // 1) Paliers mentorat Ngowazulu en dur (source serveur historique, EUR).
+      const hard = NGOWAZULU_PLAN_AMOUNTS_EUR_CENTS[planSlug];
+      if (hard) return { amountCents: hard, planSlug, currency: 'EUR' };
+      // 2) Sinon, TOUT plan de billing_plans (cycles d'initiation / forfaits) : prix lu serveur
+      //    depuis la DB (jamais fourni par le client) → permet de brancher /forfaits sur ce moteur.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: plan } = await (this.supabase as any)
+        .from('billing_plans')
+        .select('key, price_cents, currency, is_active')
+        .eq('key', planSlug)
+        .maybeSingle();
+      if (!plan || plan.is_active === false || !plan.price_cents) {
+        throw new BadRequestException(`Offre inconnue ou inactive (planSlug=${planSlug})`);
+      }
+      return {
+        amountCents: plan.price_cents,
+        planSlug,
+        currency: String(plan.currency || 'EUR').toUpperCase(),
+      };
     }
     if (!dto.amountCents || dto.amountCents < 100) {
       throw new BadRequestException(
@@ -168,7 +184,7 @@ export class OfferingCheckoutService {
           : 'Montant de la consultation requis (min 1,00)',
       );
     }
-    return { amountCents: dto.amountCents, planSlug: dto.planSlug ?? null };
+    return { amountCents: dto.amountCents, planSlug: dto.planSlug ?? null, currency: 'EUR' };
   }
 
   /**
@@ -179,7 +195,7 @@ export class OfferingCheckoutService {
    * (POST /offering-checkout/webhook/stripe), comme pour pawaPay.
    */
   async createStripeCheckout(userId: string, dto: CreateOfferingCardDto, userEmail?: string) {
-    const { amountCents, planSlug } = this.resolveAmount(dto);
+    const { amountCents, planSlug, currency } = await this.resolveAmount(dto);
 
     const { data: tenant } = await this.supabase
       .from('tenants')
@@ -220,7 +236,7 @@ export class OfferingCheckoutService {
 
     const params = new URLSearchParams();
     params.append('mode', isSubscription ? 'subscription' : 'payment');
-    params.append('line_items[0][price_data][currency]', 'eur');
+    params.append('line_items[0][price_data][currency]', currency.toLowerCase());
     params.append('line_items[0][price_data][unit_amount]', String(amountCents));
     params.append('line_items[0][price_data][product_data][name]', productName);
     if (isSubscription) {
@@ -258,7 +274,7 @@ export class OfferingCheckoutService {
       checkoutUrl: session.url,
       sessionId: session.id,
       amountCents,
-      currency: 'EUR',
+      currency,
       mode: isSubscription ? 'subscription' : 'payment',
     };
   }

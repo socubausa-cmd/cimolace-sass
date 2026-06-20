@@ -181,7 +181,7 @@ const ForfaitsPage = () => {
       } else {
         // Compat shims: downstream code uses legacy field names (slug/name/price_amount etc.)
         setPlans(data
-          .filter((p) => !String(p?.key || '').toLowerCase().startsWith('ngowazulu-'))
+          .filter((p) => /^(autonome|academique|prive|privilegie)-/.test(String(p?.key || '').toLowerCase()))
           .map((p) => ({
             ...p,
             slug: p.key, name: p.label,
@@ -313,11 +313,18 @@ const ForfaitsPage = () => {
   };
   const closePaymentDialog = () => setPaymentCycleKey(null);
   const chooseInterval = (planId, intervalType) => {
-    const paymentPath = `/paiements/payer?plan=${encodeURIComponent(planId)}&interval=${encodeURIComponent(intervalType)}`;
+    // Brancher sur le moteur de paiement qui marche (Carte Stripe + Mobile Money via offering-checkout),
+    // au lieu de l'ancienne page /paiements/payer (fonction Netlify inexistante). On transmet la CLÉ du
+    // plan (billing_plans.key, ex. autonome-monthly) que le serveur résout en prix + devise.
+    const plan = paymentCycle?.plansByInterval?.[intervalType];
+    const planKey = plan?.key || plan?.slug || planId;
+    const cycleLabel = CYCLE_SELECTOR_LABELS[paymentCycleKey] || toCycleLabel(plan, paymentCycleKey);
+    const priceLabel = plan?.price_amount ? `${formatPrice(plan.price_amount, plan.price_currency)} / mois` : '';
+    const paymentPath = `/t/isna/paiement?plan=${encodeURIComponent(planKey)}&type=subscription`
+      + `${cycleLabel ? `&label=${encodeURIComponent(cycleLabel)}` : ''}`
+      + `${priceLabel ? `&priceLabel=${encodeURIComponent(priceLabel)}` : ''}`;
     if (!authUser) {
-      // Visiteur non connecté → inscription avec redirect direct vers paiement
-      // On passe aussi le nom lisible du cycle pour l'affichage sur la page d'inscription
-      const cycleLabel = CYCLE_SELECTOR_LABELS[paymentCycleKey] || '';
+      // Visiteur non connecté → inscription avec redirect direct vers le paiement.
       const signupUrl = `/signup?redirect=${encodeURIComponent(paymentPath)}${cycleLabel ? `&planLabel=${encodeURIComponent(cycleLabel)}` : ''}`;
       navigate(signupUrl);
     } else {

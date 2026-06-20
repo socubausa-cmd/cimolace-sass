@@ -33,8 +33,22 @@ export default function PaiementPage() {
         fixedLabel: mentorat.priceLabel,
       };
     }
+    // Cycle d'initiation / forfait école (billing_plans) — abonnement mensuel, montant calculé serveur.
+    // Reconnu via ?type=subscription ou via la clé de cycle (autonome-/academique-/prive-/privilegie-).
+    if (
+      typeParam === 'subscription' ||
+      /^(autonome|academique|prive|privilegie)-/.test(String(planSlug || '').toLowerCase())
+    ) {
+      return {
+        kind: 'subscription',
+        title: searchParams.get('label') || 'Forfait PRORASCIENCE',
+        subtitle: 'Cycle d’initiation — abonnement mensuel, accès complet',
+        amountEditable: false,
+        fixedLabel: searchParams.get('priceLabel') || null,
+      };
+    }
     return { kind: 'donation', title: 'Paiement PRORASCIENCE', subtitle: 'Choisissez votre contribution', amountEditable: true, fixedLabel: null };
-  }, [planSlug, typeParam]);
+  }, [planSlug, typeParam, searchParams]);
 
   const [method, setMethod] = useState('card'); // 'card' (Stripe) | 'mobile_money' (PawaPay)
   const [amountEur, setAmountEur] = useState('');
@@ -168,7 +182,9 @@ export default function PaiementPage() {
             <p className="text-sm text-gray-200">
               {offer.kind === 'donation'
                 ? 'Saisissez librement le montant de votre offrande.'
-                : 'Saisissez le montant convenu pour la consultation.'}
+                : offer.kind === 'consultation'
+                  ? 'Saisissez le montant convenu pour la consultation.'
+                  : 'Montant calculé automatiquement selon le forfait choisi.'}
             </p>
           )}
         </div>
