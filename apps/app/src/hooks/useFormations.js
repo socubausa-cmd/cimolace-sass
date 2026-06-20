@@ -207,24 +207,32 @@ export const useFormations = () => {
   }, [refresh]);
 
   const createFormation = useCallback(async (formation) => {
-    setError(null);
-    const payload = pickDbPayload(formation);
-    // Resolve tenant_id for multi-tenant insert
-    const tenantId = await resolveCimolaceTenantIdForInsert().catch(() => null);
-    const { data, error: err } = await supabase
-      .from('courses')
-      .insert({ ...payload, ...(tenantId ? { tenant_id: tenantId } : {}) })
-      .select(COURSES_SELECT)
-      .single();
+    try {
+      setError(null);
+      const payload = pickDbPayload(formation);
+      // Resolve tenant_id for multi-tenant insert
+      const tenantId = await resolveCimolaceTenantIdForInsert().catch(() => null);
+      const { data, error: err } = await supabase
+        .from('courses')
+        .insert({ ...payload, ...(tenantId ? { tenant_id: tenantId } : {}) })
+        .select(COURSES_SELECT)
+        .single();
 
-    if (err) {
-      setError(err);
-      return { data: null, error: err };
+      if (err) {
+        console.error('[createFormation] supabase insert error:', err?.message, err);
+        setError(err);
+        return { data: null, error: err };
+      }
+
+      const normalized = normalizeFormationForUI(data);
+      setFormations((prev) => [normalized, ...prev]);
+      return { data: normalized, error: null };
+    } catch (e) {
+      // Capture un éventuel throw synchrone (payload, résolution tenant…) au lieu de
+      // laisser remonter une rejection silencieuse masquée par TOAST_LIMIT.
+      console.error('[createFormation] threw before/at insert:', e);
+      return { data: null, error: { message: String(e?.message || e) } };
     }
-
-    const normalized = normalizeFormationForUI(data);
-    setFormations((prev) => [normalized, ...prev]);
-    return { data: normalized, error: null };
   }, []);
 
   const updateFormation = useCallback(async (id, updates) => {

@@ -633,9 +633,11 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
       const ok = await onSave(finalFormation);
       if (ok) {
         toast({ title: "Formation enregistrée", description: "Les modifications ont été sauvegardées." });
-      } else {
-        toast({ title: 'Erreur', description: "Impossible d'enregistrer la formation.", variant: 'destructive' });
       }
+      // Si !ok : le handler onSave a déjà affiché un toast d'erreur PRÉCIS (message
+      // Supabase). On NE le masque plus par un toast générique (TOAST_LIMIT=1 écrasait
+      // l'erreur réelle). On loggue aussi pour le diagnostic.
+      if (!ok) console.error('[OwnerFormationBuilder] onSave returned falsy for', finalFormation?.status);
     } catch (e) {
       toast({ title: 'Erreur', description: String(e?.message || e), variant: 'destructive' });
     } finally {
