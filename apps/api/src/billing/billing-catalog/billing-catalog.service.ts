@@ -128,8 +128,8 @@ export class BillingCatalogService {
       access_model: body.accessModel ?? 'paid',
       is_active: true,
       sort_order: body.sortOrder ?? 0,
-      features: body.features ?? null,
-      metadata: body.metadata ?? null,
+      features: body.features ?? [],
+      metadata: body.metadata ?? {},
     };
 
     const { data, error } = await this.sb
