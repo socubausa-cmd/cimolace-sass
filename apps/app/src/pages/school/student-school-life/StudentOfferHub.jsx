@@ -232,7 +232,7 @@ const StudentOfferHub = () => {
             'RDV à ton rythme',
           ]}
           ctaLabel="Réserver"
-          onCta={() => navigate('/temple-ngowazulu')}
+          onCta={() => navigate('/t/isna/paiement?plan=ngowazulu-consultation-90min&type=consultation&label=Consultation%2090%20min')}
           delay={240}
         />
       </div>
