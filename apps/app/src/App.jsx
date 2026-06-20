@@ -983,8 +983,7 @@ const AppContent = () => {
     '/auth/callback',
     '/creator-dashboard',
     '/teacher-dashboard',
-    '/owner-dashboard',
-    '/classroom/live/', 
+    '/classroom/live/',
     '/classroom/video',
     '/studio',
     '/dashboard/tools',
@@ -1021,12 +1020,13 @@ isLiriHostDevPreviewRoute;
   
   const isCimolaceRoute = location.pathname.startsWith('/cimolace');
 
-  /** Espace propriétaire : layout plein écran sans barre globale (évite tout doublon LIRI / PRORASCIENCE). */
-  const isOwnerDashboardShell = /^\/owner-dashboard(\/|$)/.test(location.pathname || '/');
+  // Espace propriétaire (/owner-dashboard) : on AFFICHE désormais l'entête globale, comme le
+  // secrétariat (parité demandée par l'utilisateur). La sidebar repliée en icônes par défaut
+  // évite le doublon de marque LIRI / PRORASCIENCE.
 
   /**
-   * Espace élève (sidebar LIRI plein écran) — même traitement que l'owner : aucune barre globale
-   * au-dessus (sinon double header empilé sur la sidebar). La page embarque son propre shell.
+   * Espace élève (sidebar LIRI plein écran) — aucune barre globale au-dessus (sinon double header
+   * empilé sur la sidebar). La page embarque son propre shell. (L'owner, lui, GARDE l'entête.)
    */
   const isStudentSpaceShell = /^\/student-school-life(\/|$)/.test(location.pathname || '/');
 
@@ -1048,7 +1048,6 @@ isLiriHostDevPreviewRoute;
     !isMarketingShellRoute &&
     !isLiveArenaRoute &&
     !isEleveMobileRoute &&
-    !isOwnerDashboardShell &&
     !isStudentSpaceShell &&
     !hideHeaderRoutes.some(route => location.pathname.startsWith(route)) &&
     !mobileReelsShellActive &&
