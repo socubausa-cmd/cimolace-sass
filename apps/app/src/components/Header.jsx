@@ -371,10 +371,9 @@ const Header = () => {
     return null;
   }
 
-  const ownerPath = String(location.pathname || '');
-  if (ownerPath === '/owner-dashboard' || ownerPath.startsWith('/owner-dashboard/')) {
-    return null;
-  }
+  // (Anciennement : return null sur /owner-dashboard pour éviter le doublon d'entête.
+  // Levé — parité avec le secrétariat : l'owner affiche désormais l'entête globale,
+  // la sidebar repliée par défaut évitant le doublon de marque.)
 
   return (
     <>
