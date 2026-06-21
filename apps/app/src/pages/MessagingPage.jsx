@@ -37,8 +37,14 @@ import {
   Smartphone,
   HelpCircle,
   Radio,
+  Hash,
+  Lock,
+  Globe,
+  Plus,
+  Unlock,
 } from 'lucide-react';
 import { useMessaging } from '@/contexts/MessagingContext';
+import { useMessagingTopics } from '@/hooks/useMessagingTopics';
 import { useTypingBroadcast } from '@/hooks/useTypingBroadcast';
 import { RoomEvent, Track } from 'livekit-client';
 import { useImmersiveLiveKit } from '@/hooks/useImmersiveLiveKit';
@@ -201,6 +207,56 @@ function formatDaySeparatorLabel(ts) {
   if (isToday(d)) return "Aujourd'hui";
   if (isYesterday(d)) return 'Hier';
   return format(d, 'EEEE d MMMM', { locale: fr });
+}
+
+/**
+ * Construit la timeline (séparateurs de jour + groupage par expéditeur) d'une liste de
+ * messages plats. Partagé par le fil DM 1:1 ET par le fil d'un Sujet (forum connecté),
+ * pour que les Sujets bénéficient du même rendu immersif sans dupliquer la logique.
+ */
+function buildMessageTimeline(msgs) {
+  const timeline = [];
+  for (let i = 0; i < msgs.length; i += 1) {
+    const msg = msgs[i];
+    const prev = i > 0 ? msgs[i - 1] : null;
+    const next = i < msgs.length - 1 ? msgs[i + 1] : null;
+
+    const currentDay = format(new Date(msg.created_at), 'yyyy-MM-dd');
+    const prevDay = prev ? format(new Date(prev.created_at), 'yyyy-MM-dd') : null;
+    if (currentDay !== prevDay) {
+      timeline.push({
+        kind: 'separator',
+        id: `sep-${currentDay}`,
+        label: formatDaySeparatorLabel(msg.created_at),
+      });
+    }
+
+    const prevSameSender =
+      prev &&
+      prev.sender_id === msg.sender_id &&
+      (new Date(msg.created_at).getTime() - new Date(prev.created_at).getTime()) < 5 * 60 * 1000 &&
+      format(new Date(prev.created_at), 'yyyy-MM-dd') === currentDay;
+    const nextSameSender =
+      next &&
+      next.sender_id === msg.sender_id &&
+      (new Date(next.created_at).getTime() - new Date(msg.created_at).getTime()) < 5 * 60 * 1000 &&
+      format(new Date(next.created_at), 'yyyy-MM-dd') === currentDay;
+
+    let groupPosition = 'single';
+    if (!prevSameSender && nextSameSender) groupPosition = 'start';
+    else if (prevSameSender && nextSameSender) groupPosition = 'middle';
+    else if (prevSameSender && !nextSameSender) groupPosition = 'end';
+
+    timeline.push({
+      kind: 'message',
+      id: msg.id,
+      index: i,
+      message: msg,
+      showIdentity: !prevSameSender,
+      groupPosition,
+    });
+  }
+  return timeline;
 }
 
 function isInviteAutoStartEligible(invite) {
@@ -654,6 +710,8 @@ function ImmersiveComposer({
   forumSending = false,
   /** Séparateur lumineux type maquette au-dessus de la barre */
   immersiveLiveComposerChrome = false,
+  /** SUJET : autorise l'envoi sans destinataire 1:1 (le fil cible est le sujet ouvert) */
+  allowSendWithoutRecipient = false,
 }) {
   const [text, setText] = useState('');
   const [recording, setRecording] = useState(false);
@@ -759,7 +817,7 @@ function ImmersiveComposer({
           ? `[image]${pendingImageSrc}`
           : trimmed;
     if (!payload) return;
-    if (!selectedRecipient) {
+    if (!selectedRecipient && !allowSendWithoutRecipient) {
       onOpenPicker?.();
       return;
     }
@@ -1798,6 +1856,200 @@ function liveDashboardNotifTypeLabel(type) {
   return type ? String(type) : 'Live';
 }
 
+// ── SUJETS (forum connecté) — composants additifs ─────────────────────────────
+
+/**
+ * Bandeau affiché EN HAUT du fil quand un Sujet est ouvert (au-dessus du chat existant).
+ * Titre du sujet + badge état (Ouvert/Clôturé) + bouton Clôturer/Rouvrir.
+ */
+function TopicBanner({ topic, onToggleStatus, onClose, busy = false }) {
+  if (!topic) return null;
+  const closed = topic.status === 'closed';
+  const isPublic = topic.visibility === 'public';
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative z-20 mx-4 md:mx-8 mt-3 mb-1 flex items-center justify-between gap-3 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] px-3.5 py-2.5 backdrop-blur-xl"
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]">
+          <Hash className="h-4 w-4 text-[var(--school-accent)]" />
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h2 className="truncate font-serif text-sm font-semibold text-[var(--school-accent)]">{topic.subject}</h2>
+            <span
+              className={cn(
+                'inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium',
+                closed
+                  ? 'border-white/12 bg-white/[0.04] text-gray-400'
+                  : 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300',
+              )}
+            >
+              <span className={cn('h-1.5 w-1.5 rounded-full', closed ? 'bg-gray-500' : 'bg-emerald-400')} />
+              {closed ? 'Clôturé' : 'Ouvert'}
+            </span>
+          </div>
+          <p className="mt-0.5 flex items-center gap-1 text-[10px] text-gray-500">
+            {isPublic ? <Globe className="h-2.5 w-2.5" /> : <Lock className="h-2.5 w-2.5" />}
+            {isPublic ? 'Sujet public — tous les membres' : 'Sujet privé'}
+          </p>
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center gap-1.5">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => onToggleStatus(closed ? 'open' : 'closed')}
+          className={cn(
+            'inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-[11px] font-medium transition-colors disabled:opacity-50',
+            closed
+              ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20'
+              : 'border-white/12 bg-white/[0.04] text-gray-300 hover:bg-white/10 hover:text-white',
+          )}
+          title={closed ? 'Rouvrir le sujet' : 'Clôturer le sujet'}
+        >
+          {closed ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+          {closed ? 'Rouvrir' : 'Clôturer'}
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex h-8 items-center rounded-lg border border-white/10 bg-white/[0.03] px-2 text-[11px] text-gray-300 hover:bg-white/5 hover:text-white"
+          title="Fermer le sujet"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+/** Modal « Créer un sujet » : titre + visibilité (public / privé). */
+function CreateTopicModal({ open, onClose, onCreate }) {
+  const [subject, setSubject] = useState('');
+  const [visibility, setVisibility] = useState('private');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (open) { setSubject(''); setVisibility('private'); setError(''); setSaving(false); }
+  }, [open]);
+
+  const submit = async () => {
+    const s = subject.trim();
+    if (!s) { setError('Donnez un titre au sujet.'); return; }
+    setSaving(true);
+    setError('');
+    const created = await onCreate({ subject: s, visibility });
+    setSaving(false);
+    if (created) {
+      onClose();
+    } else {
+      setError("Échec de la création du sujet. Réessayez.");
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm"
+            onClick={onClose}
+          />
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 16, scale: 0.97 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed left-1/2 top-1/2 z-[121] w-[min(92vw,440px)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/10 bg-[#0c1118]/97 p-5 backdrop-blur-2xl shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)]"
+          >
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]">
+                  <Hash className="h-5 w-5 text-[var(--school-accent)]" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-white">Créer un sujet</h3>
+                  <p className="text-[11px] text-gray-500">Un fil de discussion partagé, ouvert ou clôturable.</p>
+                </div>
+              </div>
+              <button onClick={onClose} className="text-gray-500 hover:text-white" aria-label="Fermer">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <label className="mb-1.5 block text-[11px] uppercase tracking-wider text-gray-500">Titre du sujet</label>
+            <input
+              autoFocus
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') void submit(); }}
+              placeholder="Ex. Préparation du live de jeudi"
+              maxLength={140}
+              className="mb-4 w-full rounded-xl border border-white/12 bg-black/25 px-3.5 py-2.5 text-sm text-white outline-none placeholder:text-gray-600 focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]"
+            />
+
+            <label className="mb-1.5 block text-[11px] uppercase tracking-wider text-gray-500">Visibilité</label>
+            <div className="mb-4 grid grid-cols-2 gap-2">
+              {[
+                { value: 'private', label: 'Privé', desc: 'Sur invitation', Icon: Lock },
+                { value: 'public', label: 'Public', desc: 'Tous les membres', Icon: Globe },
+              ].map((opt) => {
+                const active = visibility === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setVisibility(opt.value)}
+                    className={cn(
+                      'flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-colors',
+                      active
+                        ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]'
+                        : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.06]',
+                    )}
+                  >
+                    <opt.Icon className={cn('h-4 w-4', active ? 'text-[var(--school-accent)]' : 'text-gray-400')} />
+                    <div className="min-w-0">
+                      <p className={cn('text-sm font-medium', active ? 'text-[var(--school-accent)]' : 'text-gray-200')}>{opt.label}</p>
+                      <p className="text-[10px] text-gray-500">{opt.desc}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {error ? <p className="mb-3 text-[11px] text-red-300">{error}</p> : null}
+
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="h-9 rounded-lg border border-white/10 bg-white/[0.03] px-3.5 text-xs text-gray-300 hover:bg-white/5"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                disabled={saving || !subject.trim()}
+                onClick={() => void submit()}
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[var(--school-accent)] px-4 text-xs font-semibold text-black transition-colors hover:bg-[#e5c04a] disabled:opacity-50"
+              >
+                {saving ? 'Création…' : (<><Plus className="h-3.5 w-3.5" /> Créer le sujet</>)}
+              </button>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
 const MessagingPage = () => {
   const { users, currentUser, conversations, sendMessage, markAsRead, deleteMessage, editMessage, getConversationMessages, fetchAndMergeConversation, profiles, loading, reloadProfiles } =
     useMessaging();
@@ -1819,6 +2071,22 @@ const MessagingPage = () => {
   const [profilePanelOpen, setProfilePanelOpen] = useState(false);
   const [showConversationList, setShowConversationList] = useState(false);
   const [listMode, setListMode] = useState('compact');
+  // ── SUJETS (forum connecté) — chemin de données PARALLÈLE, additif au DM ──────
+  const {
+    topics,
+    activeTopic,
+    topicMessages,
+    topicMessagesLoading,
+    openTopic,
+    closeActiveTopicView,
+    createTopic: createTopicApi,
+    sendTopicMessage,
+    setActiveTopicStatus,
+  } = useMessagingTopics(currentUser?.id || null);
+  const [createTopicOpen, setCreateTopicOpen] = useState(false);
+  // Filtre de la liste des conversations : 'all' (DM) ou 'topics' (sujets).
+  const [convFilter, setConvFilter] = useState('all');
+  const [topicStatusBusy, setTopicStatusBusy] = useState(false);
   const [liveActive, setLiveActive] = useState(false);
   const [liveExpanded, setLiveExpanded] = useState(false);
   const [liveStage, setLiveStage] = useState('idle');
@@ -2130,7 +2398,7 @@ const MessagingPage = () => {
 
   // Auto-sélectionner la conversation avec des non-lus la plus récente
   useEffect(() => {
-    if (autoSelectedRef.current || selectedRecipient || conversations.length === 0 || loading) return;
+    if (autoSelectedRef.current || selectedRecipient || activeTopic || conversations.length === 0 || loading) return;
     const withUnread = conversations.find((c) => c.unreadCount > 0);
     const first = withUnread || conversations[0];
     if (!first) return;
@@ -2144,7 +2412,7 @@ const MessagingPage = () => {
       status: first.status,
       ...profile,
     });
-  }, [conversations, profiles, selectedRecipient, loading]);
+  }, [conversations, profiles, selectedRecipient, activeTopic, loading]);
 
   const recipientId = selectedRecipient?.id || null;
   const recipientProfile = recipientId ? profiles[recipientId] || selectedRecipient : null;
@@ -2237,50 +2505,10 @@ const MessagingPage = () => {
     return getConversationMessages(recipientId);
   }, [recipientId, getConversationMessages]);
 
-  const messageTimeline = useMemo(() => {
-    const timeline = [];
-    for (let i = 0; i < convMessages.length; i += 1) {
-      const msg = convMessages[i];
-      const prev = i > 0 ? convMessages[i - 1] : null;
-      const next = i < convMessages.length - 1 ? convMessages[i + 1] : null;
+  const messageTimeline = useMemo(() => buildMessageTimeline(convMessages), [convMessages]);
 
-      const currentDay = format(new Date(msg.created_at), 'yyyy-MM-dd');
-      const prevDay = prev ? format(new Date(prev.created_at), 'yyyy-MM-dd') : null;
-      if (currentDay !== prevDay) {
-        timeline.push({
-          kind: 'separator',
-          id: `sep-${currentDay}`,
-          label: formatDaySeparatorLabel(msg.created_at),
-        });
-      }
-
-      const prevSameSender =
-        prev &&
-        prev.sender_id === msg.sender_id &&
-        (new Date(msg.created_at).getTime() - new Date(prev.created_at).getTime()) < 5 * 60 * 1000 &&
-        format(new Date(prev.created_at), 'yyyy-MM-dd') === currentDay;
-      const nextSameSender =
-        next &&
-        next.sender_id === msg.sender_id &&
-        (new Date(next.created_at).getTime() - new Date(msg.created_at).getTime()) < 5 * 60 * 1000 &&
-        format(new Date(next.created_at), 'yyyy-MM-dd') === currentDay;
-
-      let groupPosition = 'single';
-      if (!prevSameSender && nextSameSender) groupPosition = 'start';
-      else if (prevSameSender && nextSameSender) groupPosition = 'middle';
-      else if (prevSameSender && !nextSameSender) groupPosition = 'end';
-
-      timeline.push({
-        kind: 'message',
-        id: msg.id,
-        index: i,
-        message: msg,
-        showIdentity: !prevSameSender,
-        groupPosition,
-      });
-    }
-    return timeline;
-  }, [convMessages]);
+  // SUJETS : la timeline du fil de sujet (forum connecté), même rendu que le DM.
+  const topicTimeline = useMemo(() => buildMessageTimeline(topicMessages), [topicMessages]);
 
   const liveParticipants = useMemo(() => {
     const hostId = immersiveHostUserId || currentUser?.id || null;
@@ -3063,6 +3291,8 @@ const MessagingPage = () => {
 
   const handleSelectConversation = useCallback(
     (conv) => {
+      // Ouvrir un DM ferme la vue Sujet (mutuellement exclusifs).
+      closeActiveTopicView();
       const profile = profiles[conv.participantId] || conv;
       setSelectedRecipient({
         id: conv.participantId,
@@ -3076,7 +3306,42 @@ const MessagingPage = () => {
       // Fetch ciblé suffisant (évite un rechargement complet lourd).
       fetchAndMergeConversation(conv.participantId);
     },
-    [profiles, fetchAndMergeConversation]
+    [profiles, fetchAndMergeConversation, closeActiveTopicView]
+  );
+
+  // ── SUJETS : handlers additifs ────────────────────────────────────────────────
+  const handleOpenTopic = useCallback(
+    (topic) => {
+      // Un Sujet est un fil de groupe (chat seul) : on stoppe tout live 1:1 en cours et
+      // on libère le destinataire DM pour basculer le centre sur le sujet.
+      if (liveActive) void stopLiveRoom();
+      setSelectedRecipient(null);
+      setActiveMessageIndex(-1);
+      setShowConversationList(false);
+      void openTopic(topic);
+    },
+    [liveActive, stopLiveRoom, openTopic]
+  );
+
+  const handleCreateTopic = useCallback(
+    async (payload) => {
+      const created = await createTopicApi(payload);
+      if (created) {
+        setConvFilter('topics');
+        handleOpenTopic(created);
+      }
+      return created;
+    },
+    [createTopicApi, handleOpenTopic]
+  );
+
+  const handleToggleTopicStatus = useCallback(
+    async (next) => {
+      setTopicStatusBusy(true);
+      await setActiveTopicStatus(next);
+      setTopicStatusBusy(false);
+    },
+    [setActiveTopicStatus]
   );
 
   const handleSend = useCallback(
@@ -4212,12 +4477,17 @@ const MessagingPage = () => {
   /** Live 1:1 : la barre du bas alimente le fil central (forum session), pas seulement la DM. */
   const composerSend = useCallback(
     async (content) => {
+      // SUJET ouvert : on écrit dans le fil de sujet (interdit si clôturé).
+      if (activeTopic) {
+        if (activeTopic.status === 'closed') return false;
+        return sendTopicMessage(content);
+      }
       if (liveActive && recipientId) {
         return sendLiveForumMessage(content);
       }
       return handleSend(content);
     },
-    [liveActive, recipientId, sendLiveForumMessage, handleSend],
+    [activeTopic, sendTopicMessage, liveActive, recipientId, sendLiveForumMessage, handleSend],
   );
 
   useEffect(() => {
@@ -5066,6 +5336,12 @@ const MessagingPage = () => {
                 </div>
               </button>
             </>
+          ) : activeTopic ? (
+            <div className="flex min-w-0 items-center gap-2">
+              <Hash className="h-4 w-4 shrink-0 text-[var(--school-accent)]" />
+              <h1 className="truncate font-serif text-sm font-semibold text-[var(--school-accent)]">{activeTopic.subject}</h1>
+              <span className="hidden text-[10px] text-gray-500 sm:inline">Sujet</span>
+            </div>
           ) : (
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]" />
@@ -5224,6 +5500,46 @@ const MessagingPage = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* ── SUJETS : filtre Tous / Sujets + création (additif) ── */}
+                <div className="mb-2 flex items-center gap-1.5 px-1">
+                  <button
+                    type="button"
+                    onClick={() => setConvFilter('all')}
+                    className={cn(
+                      'inline-flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-[11px] font-medium transition-colors',
+                      convFilter === 'all'
+                        ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[var(--school-accent)]'
+                        : 'border-white/10 bg-white/[0.03] text-gray-400 hover:text-white',
+                    )}
+                  >
+                    <MessageSquare className="h-3 w-3" /> Messages
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConvFilter('topics')}
+                    className={cn(
+                      'inline-flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-[11px] font-medium transition-colors',
+                      convFilter === 'topics'
+                        ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[var(--school-accent)]'
+                        : 'border-white/10 bg-white/[0.03] text-gray-400 hover:text-white',
+                    )}
+                  >
+                    <Hash className="h-3 w-3" /> Sujets
+                    {topics.length > 0 ? (
+                      <span className="rounded-full bg-white/10 px-1 text-[9px] text-gray-300">{topics.length}</span>
+                    ) : null}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCreateTopicOpen(true)}
+                    className="ml-auto inline-flex h-7 items-center gap-1 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-2 text-[11px] font-medium text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)]"
+                    title="Créer un sujet"
+                  >
+                    <Plus className="h-3 w-3" /> Sujet
+                  </button>
+                </div>
+
                 {liveDashboardNotifs.length > 0 ? (
                   <div className="mb-3 rounded-xl border border-emerald-500/25 bg-emerald-950/25 px-2 py-2">
                     <div className="mb-1.5 flex items-center justify-between px-1">
@@ -5296,37 +5612,142 @@ const MessagingPage = () => {
                     </ul>
                   </div>
                 ) : null}
-                <div className="space-y-1">
-                  {conversations.map((conv) => (
-                    <button
-                      key={conv.id}
-                      type="button"
-                      onClick={() => handleSelectConversation(conv)}
-                      className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-white/5 text-left"
-                    >
-                      <UserAvatar user={conv} size="sm" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs text-white truncate">{conv.name}</p>
-                        {listMode === 'detail' ? (
-                          <p className="text-[10px] text-gray-500 truncate">{conv.lastMessage?.content || '—'}</p>
-                        ) : null}
+                {convFilter === 'topics' ? (
+                  <div className="space-y-1">
+                    {topics.map((topic) => {
+                      const closed = topic.status === 'closed';
+                      const isOpenHere = activeTopic?.id === topic.id;
+                      return (
+                        <button
+                          key={topic.id}
+                          type="button"
+                          onClick={() => handleOpenTopic(topic)}
+                          className={cn(
+                            'w-full flex items-center gap-2 p-2 rounded-xl text-left transition-colors',
+                            isOpenHere ? 'bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]' : 'hover:bg-white/5',
+                          )}
+                        >
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
+                            <Hash className="h-3.5 w-3.5 text-[var(--school-accent)]" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-xs text-white">{topic.subject}</p>
+                            <p className="mt-0.5 flex items-center gap-1 text-[10px] text-gray-500">
+                              {topic.visibility === 'public' ? <Globe className="h-2.5 w-2.5" /> : <Lock className="h-2.5 w-2.5" />}
+                              {closed ? 'Clôturé' : 'Ouvert'}
+                            </p>
+                          </div>
+                          {topic.unread_count > 0 ? (
+                            <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--school-accent)] px-1 text-[9px] font-bold text-black">
+                              {topic.unread_count}
+                            </span>
+                          ) : (
+                            <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', closed ? 'bg-gray-600' : 'bg-emerald-400')} />
+                          )}
+                        </button>
+                      );
+                    })}
+                    {topics.length === 0 ? (
+                      <div className="py-4 text-center">
+                        <p className="text-xs text-gray-500">Aucun sujet pour l'instant</p>
+                        <button
+                          type="button"
+                          onClick={() => setCreateTopicOpen(true)}
+                          className="mt-2 inline-flex items-center gap-1 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] px-2.5 py-1.5 text-[11px] font-medium text-[var(--school-accent)]"
+                        >
+                          <Plus className="h-3 w-3" /> Créer un sujet
+                        </button>
                       </div>
-                      {conv.unreadCount > 0 ? (
-                        <span className="h-4 min-w-4 rounded-full bg-[var(--school-accent)] text-[9px] font-bold text-black flex items-center justify-center px-1">
-                          {conv.unreadCount}
-                        </span>
-                      ) : null}
-                    </button>
-                  ))}
-                  {conversations.length === 0 ? (
-                    <p className="text-xs text-gray-500 text-center py-3">Aucune conversation</p>
-                  ) : null}
-                </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {conversations.map((conv) => (
+                      <button
+                        key={conv.id}
+                        type="button"
+                        onClick={() => handleSelectConversation(conv)}
+                        className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-white/5 text-left"
+                      >
+                        <UserAvatar user={conv} size="sm" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-white truncate">{conv.name}</p>
+                          {listMode === 'detail' ? (
+                            <p className="text-[10px] text-gray-500 truncate">{conv.lastMessage?.content || '—'}</p>
+                          ) : null}
+                        </div>
+                        {conv.unreadCount > 0 ? (
+                          <span className="h-4 min-w-4 rounded-full bg-[var(--school-accent)] text-[9px] font-bold text-black flex items-center justify-center px-1">
+                            {conv.unreadCount}
+                          </span>
+                        ) : null}
+                      </button>
+                    ))}
+                    {conversations.length === 0 ? (
+                      <p className="text-xs text-gray-500 text-center py-3">Aucune conversation</p>
+                    ) : null}
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
 
-          {!selectedRecipient ? (
+          {activeTopic ? (
+            // ── SUJET (forum connecté) : bandeau + chat existant (timeline réutilisée) ──
+            <div className="absolute inset-0 flex flex-col">
+              <TopicBanner
+                topic={activeTopic}
+                busy={topicStatusBusy}
+                onToggleStatus={handleToggleTopicStatus}
+                onClose={closeActiveTopicView}
+              />
+              <div className="flex-1 overflow-y-auto px-0 py-2 space-y-0.5">
+                {topicMessagesLoading && topicMessages.length === 0 ? (
+                  <div className="flex h-full items-center justify-center">
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/15 border-t-[var(--school-accent)]" />
+                  </div>
+                ) : topicMessages.length === 0 ? (
+                  <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+                      <Hash className="h-7 w-7 text-[color-mix(in_srgb,var(--school-accent)_55%,transparent)]" />
+                    </div>
+                    <p className="text-sm text-gray-400">Aucun message dans ce sujet</p>
+                    <p className="mt-1 text-xs text-gray-600">
+                      {activeTopic.status === 'closed' ? 'Ce sujet est clôturé.' : 'Lancez la discussion ci-dessous.'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col pb-4">
+                    {topicTimeline.map((item) => {
+                      if (item.kind === 'separator') {
+                        return (
+                          <div key={item.id} className="flex justify-center py-2">
+                            <span className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[10px] text-gray-500">
+                              {item.label}
+                            </span>
+                          </div>
+                        );
+                      }
+                      const msg = item.message;
+                      return (
+                        <ImmersiveMessage
+                          key={msg.id}
+                          message={msg}
+                          isOwn={msg.sender_id === currentUser?.id}
+                          senderProfile={profiles[msg.sender_id] || (msg.sender_id === currentUser?.id ? currentUser : null)}
+                          isLatest={item.index === topicMessages.length - 1}
+                          justSent={msg.id === justSentId}
+                          groupPosition={item.groupPosition}
+                          showIdentity={item.showIdentity}
+                          isDarkTheme={isDarkTheme}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : !selectedRecipient ? (
             <EmptyState
               onOpenPicker={() => setPickerOpen(true)}
               conversations={conversations}
@@ -5717,15 +6138,20 @@ const MessagingPage = () => {
           onToggleVideo={toggleLiveExpanded}
           onScheduleCall={() => setScheduleCallModal({ open: true })}
           liveActive={liveActive}
-          liveEnabled={Boolean(selectedRecipient)}
+          liveEnabled={Boolean(selectedRecipient) && !activeTopic}
           liveActionsOpen={liveActionsOpen}
           onToggleLiveActions={() => setLiveActionsOpen((v) => !v)}
           liveSettingsOpen={liveSettingsOpen}
           onToggleLiveSettings={() => setLiveSettingsOpen((v) => !v)}
-          showQuickShareLinks={!liveActive}
-          messagePlaceholder={liveActive && recipientId ? 'Écris un message…' : undefined}
-          forumSending={liveActive && recipientId ? liveForumSending : false}
+          showQuickShareLinks={!liveActive && !activeTopic}
+          messagePlaceholder={
+            activeTopic
+              ? (activeTopic.status === 'closed' ? 'Sujet clôturé — rouvrez-le pour écrire' : `Message dans « ${activeTopic.subject} »…`)
+              : (liveActive && recipientId ? 'Écris un message…' : undefined)
+          }
+          forumSending={activeTopic ? activeTopic.status === 'closed' : (liveActive && recipientId ? liveForumSending : false)}
           immersiveLiveComposerChrome={Boolean(liveActive && recipientId)}
+          allowSendWithoutRecipient={Boolean(activeTopic)}
         />
         {/* ── LIVE BOTTOM BAR: Mac Dock (desktop) + Settings panel (toujours pour overlay mobile) ── */}
         {liveActive ? (
@@ -5928,6 +6354,13 @@ const MessagingPage = () => {
         onSelectConversation={handleSelectConversation}
         onReload={reloadProfiles}
         loading={loading}
+      />
+
+      {/* ── SUJETS : modal de création (titre + visibilité) ── */}
+      <CreateTopicModal
+        open={createTopicOpen}
+        onClose={() => setCreateTopicOpen(false)}
+        onCreate={handleCreateTopic}
       />
 
       <SearchPanel

@@ -347,6 +347,25 @@ export const messagingApi = {
     apiV2.delete<ApiEnvelope<any>>(`/messaging/messages/${id}`).then(unwrap),
   markRead: (conversationId: string) =>
     apiV2.post<ApiEnvelope<any>>(`/messaging/conversations/${conversationId}/read`, {}).then(unwrap),
+
+  // ── Sujets (topics) — socle « forum connecté » greffé sur la messagerie ──────
+  // Type de conversation `kind='topic'` (Phase A). Chemin de données PARALLÈLE au DM :
+  // un sujet est un groupe (sans pair fixe) → il ne passe PAS par le regroupement par
+  // pair de useRealtimeMessaging. Sous-module backend `messaging/topics`.
+  listTopics: (params?: Record<string, string>) =>
+    apiV2.get<ApiEnvelope<any[]>>('/messaging/topics', { params }).then(unwrap),
+  getTopic: (id: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/messaging/topics/${id}`).then(unwrap),
+  getTopicMessages: (id: string) =>
+    apiV2.get<ApiEnvelope<any[]>>(`/messaging/topics/${id}/messages`).then(unwrap),
+  createTopic: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/messaging/topics', body).then(unwrap),
+  sendTopicMessage: (id: string, content: string) =>
+    apiV2.post<ApiEnvelope<any>>(`/messaging/topics/${id}/messages`, { content }).then(unwrap),
+  closeTopic: (id: string) =>
+    apiV2.post<ApiEnvelope<any>>(`/messaging/topics/${id}/close`, {}).then(unwrap),
+  reopenTopic: (id: string) =>
+    apiV2.post<ApiEnvelope<any>>(`/messaging/topics/${id}/reopen`, {}).then(unwrap),
 };
 
 // ── Chat Engine ─────────────────────────────────────────────────────────────
