@@ -7,7 +7,7 @@ export function getLiveHostSessionRootStyle({ liveShell, lhLayoutCompact }) {
     display: 'flex',
     flexDirection: 'column',
     gap: `${liveShell.gap}px`,
-    background: liveShell.pageBg,
+    backgroundColor: liveShell.pageBg,
     backgroundImage: liveShell.pageMesh,
     overflow: 'hidden',
     fontFamily: 'system-ui,-apple-system,sans-serif',

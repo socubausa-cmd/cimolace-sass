@@ -20,7 +20,7 @@ export function LiveHostLiveSessionChrome({
       ...getLiveHostSessionRootStyle({ liveShell, lhLayoutCompact }),
       ...cssVars,
       ...liveShellVars,
-      background: 'var(--lh-page-bg, #262624)',
+      backgroundColor: 'var(--lh-page-bg, #262624)',
       backgroundImage: shellTheme.gridBackground?.backgroundImage,
       backgroundSize: shellTheme.gridBackground?.backgroundSize,
       fontFamily: 'var(--school-font-family, system-ui, -apple-system, sans-serif)',

@@ -26,7 +26,7 @@ export function LiveHostInvalidSessionScreen({ phaseError, liveShell, liriLiveUi
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: liveShell.pageBg,
+        backgroundColor: liveShell.pageBg,
         backgroundImage: liveShell.pageMesh,
         color: '#fff',
         fontFamily: 'system-ui,-apple-system,sans-serif',
