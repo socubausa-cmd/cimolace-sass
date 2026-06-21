@@ -16,6 +16,13 @@ export default class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, info) {
     const tag = this.props.logTag ? ` [${this.props.logTag}]` : '';
+    // Chunk périmé après déploiement (import dynamique d'une page lazy supprimée)
+    // → recharge une fois plutôt que d'afficher l'écran d'erreur.
+    const msg = String(error?.message || '');
+    const isChunkError = /dynamically imported module|Importing a module script failed|ChunkLoadError|error loading dynamically imported|Failed to fetch dynamically/i.test(msg);
+    if (isChunkError && typeof window !== 'undefined' && window.__reloadOnceForChunk?.()) {
+      return; // rechargement en cours
+    }
     console.error(`[ErrorBoundary]${tag}`, error, info?.componentStack || '');
   }
 
