@@ -201,7 +201,7 @@ export const LiveHostRightColumn = React.forwardRef(function LiveHostRightColumn
               type="button"
               onClick={() => setLiveRightRailOpen(false)}
               title="Fermer le panneau droit"
-              className="pointer-events-auto absolute right-2 top-2 z-[32] flex h-8 w-8 items-center justify-center rounded-lg border border-white/12 bg-[#0F1117]/90 text-white/65 shadow-sm backdrop-blur-sm transition hover:border-white/20 hover:bg-white/[0.07] hover:text-white/90"
+              className="pointer-events-auto absolute right-2 top-2 z-[32] flex h-8 w-8 items-center justify-center rounded-lg border border-white/12 bg-[#262624]/90 text-white/65 shadow-sm backdrop-blur-sm transition hover:border-white/20 hover:bg-white/[0.07] hover:text-white/90"
               aria-label="Fermer le panneau droit"
             >
               <ChevronRight className="h-4 w-4" aria-hidden />

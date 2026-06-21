@@ -358,7 +358,7 @@ export default function LiveStudioSettingsPanel({
                   'inset-0 min-[920px]:inset-y-0 min-[920px]:left-0 min-[920px]:right-[min(460px,100vw)] min-[920px]:w-auto min-[920px]:h-full',
                 )}
               >
-                <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/[0.09] bg-[#0a0b0f]/90 px-4 py-3">
+                <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/[0.09] bg-[#1f1e1c]/90 px-4 py-3">
                   <div className="min-w-0">
                     <p className="text-[12px] font-semibold text-white/95">Aperçu vidéo en direct</p>
                     <p className="mt-0.5 text-[10px] text-white/40">
@@ -426,7 +426,7 @@ export default function LiveStudioSettingsPanel({
                 />
               </div>
 
-              <div className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#0a0b0f] bg-[linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px)] [background-size:44px_44px] px-5 py-4 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.12)_transparent]">
+              <div className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[var(--lh-stage-bg)] bg-[linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px)] [background-size:44px_44px] px-5 py-4 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.12)_transparent]">
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={tab}

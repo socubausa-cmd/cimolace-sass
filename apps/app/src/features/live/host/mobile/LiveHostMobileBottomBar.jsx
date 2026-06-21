@@ -156,7 +156,7 @@ export function LiveHostMobileBottomBar({
               height: 10,
               borderRadius: '50%',
               background: '#e53e3e',
-              border: '2px solid #0f1117',
+              border: '2px solid #262624',
               animation: 'lh-pulse 1.2s ease-in-out infinite',
             }} />
           )}

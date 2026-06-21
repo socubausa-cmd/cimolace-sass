@@ -154,7 +154,7 @@ export function LiveHostMobileFabRail({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '2px solid #0f1117',
+              border: '2px solid #262624',
             }}>
               {fab.badge > 9 ? '9+' : fab.badge}
             </div>

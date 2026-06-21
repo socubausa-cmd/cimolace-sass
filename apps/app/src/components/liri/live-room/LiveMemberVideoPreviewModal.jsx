@@ -63,7 +63,7 @@ export default function LiveMemberVideoPreviewModal({
             </button>
 
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-              <div className="flex shrink-0 items-center gap-3 border-b border-white/[0.09] bg-[#0a0b0f]/98 px-4 py-3 pr-14">
+              <div className="flex shrink-0 items-center gap-3 border-b border-white/[0.09] bg-[#1f1e1c]/98 px-4 py-3 pr-14">
                 {avatar ? (
                   <img
                     src={avatar}
@@ -103,7 +103,7 @@ export default function LiveMemberVideoPreviewModal({
                   <div
                     className="flex h-full min-h-[200px] w-full flex-col items-center justify-center gap-2 p-8"
                     style={{
-                      background: `linear-gradient(160deg, ${member.color}18, #0a0b0f)`,
+                      background: `linear-gradient(160deg, ${member.color}18, #1f1e1c)`,
                     }}
                   >
                     {avatar ? (

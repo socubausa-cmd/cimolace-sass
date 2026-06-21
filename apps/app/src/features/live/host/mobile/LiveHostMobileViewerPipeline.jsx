@@ -69,7 +69,7 @@ export function LiveHostMobileViewerPipeline({
   const schoolName  = liveShell?.school_name || liveShell?.schoolName || '';
   const accentColor = liveShell?.primary_color || liveShell?.primaryColor || '#a78bfa';
   // Fond réel de l'école depuis liveShell (évite le bleu hardcodé)
-  const pageBg      = liveShell?.pageBg  || '#0f1117';
+  const pageBg      = liveShell?.pageBg  || 'var(--lh-page-bg, #262624)';
   const pageMesh    = liveShell?.pageMesh || '';
 
   // ── Render ─────────────────────────────────────────────────────────────────

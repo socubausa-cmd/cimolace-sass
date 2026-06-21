@@ -101,7 +101,7 @@ import {
 
 /** Fond « canvas » Smartboard Designer — grille alignée sur le shell studio */
 const SCENE_STAGE_GRID =
-  'bg-[#0a0b0f] bg-[linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px)] [background-size:44px_44px]';
+  'bg-[var(--lh-stage-bg)] bg-[linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px)] [background-size:44px_44px]';
 
 /** Barre d'outils / URL — même bandeau que les tiroirs designer */
 const SCENE_TOOLBAR = cn(designerShellHeader, 'min-h-0 flex-wrap gap-2 py-2.5 pl-3 pr-3');

@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { getLiveHostSessionRootStyle } from '@/features/live/host/liveHostSessionRootStyle';
+import { buildLiveShellCssVars } from '@/features/live/host/liveHostTheme';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
 
 /**
@@ -13,16 +14,18 @@ export function LiveHostLiveSessionChrome({
   children,
 }) {
   const { branding, cssVars, shellTheme } = useTenantBranding();
+  const liveShellVars = useMemo(() => buildLiveShellCssVars(liveShell, branding), [liveShell, branding]);
   const rootStyle = useMemo(
     () => ({
       ...getLiveHostSessionRootStyle({ liveShell, lhLayoutCompact }),
       ...cssVars,
-      background: 'var(--school-background, #0F1117)',
+      ...liveShellVars,
+      background: 'var(--lh-page-bg, #262624)',
       backgroundImage: shellTheme.gridBackground?.backgroundImage,
       backgroundSize: shellTheme.gridBackground?.backgroundSize,
       fontFamily: 'var(--school-font-family, system-ui, -apple-system, sans-serif)',
     }),
-    [liveShell, lhLayoutCompact, cssVars, shellTheme],
+    [liveShell, lhLayoutCompact, cssVars, shellTheme, liveShellVars],
   );
 
   return (

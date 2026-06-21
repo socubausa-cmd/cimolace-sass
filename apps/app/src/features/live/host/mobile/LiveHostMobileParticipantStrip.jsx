@@ -127,7 +127,7 @@ export function LiveHostMobileParticipantStrip({
                   height: 18,
                   borderRadius: '50%',
                   background: micEnabled ? 'rgba(72,187,120,0.9)' : 'rgba(229,62,62,0.9)',
-                  border: '2px solid #0f1117',
+                  border: '2px solid #262624',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',

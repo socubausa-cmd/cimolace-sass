@@ -90,7 +90,7 @@ export function LiveHostMobileMemberFullscreen({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: `linear-gradient(135deg, #0f1117, ${accentColor}20)`,
+        background: `linear-gradient(135deg, #262624, ${accentColor}20)`,
         zIndex: 1,
         pointerEvents: 'none',
       }}>

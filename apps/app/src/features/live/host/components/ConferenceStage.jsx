@@ -218,7 +218,7 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
   const cols = Math.max(1, Math.min(6, baseCols + (density === 's' ? 1 : density === 'l' ? -1 : 0)));
 
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 15, background: '#0a0b0f', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ position: 'absolute', inset: 0, zIndex: 15, background: 'var(--lh-stage-bg, #1f1e1c)', display: 'flex', flexDirection: 'column' }}>
       {isSharing ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', flexShrink: 0 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, color: '#fff' }}><MonitorUp size={16} color={ACCENT} />{`${screenSharerName} partage son écran`}</span>

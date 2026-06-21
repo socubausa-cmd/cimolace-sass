@@ -349,7 +349,7 @@ export default function LiveWhiteboardToolsSidebar({
                   'flex h-9 flex-col items-center justify-center gap-0.5 rounded-lg border text-[8px] font-medium transition-colors',
                   active
                     ? 'border-amber-500/45 bg-amber-500/[0.14] text-amber-50'
-                    : 'border-white/[0.08] bg-[#0a0b0f]/80 text-white/50 hover:border-white/14 hover:text-white/80',
+                    : 'border-white/[0.08] bg-[#1f1e1c]/80 text-white/50 hover:border-white/14 hover:text-white/80',
                 )}
               >
                 <Icon className="h-3.5 w-3.5" strokeWidth={2} />

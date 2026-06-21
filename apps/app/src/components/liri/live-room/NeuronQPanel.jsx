@@ -36,7 +36,7 @@ const neuronQShellFloatingCard =
   'flex max-h-[min(70vh,520px)] w-[min(92vw,440px)] flex-col overflow-hidden rounded-2xl border border-white/[0.09] bg-[#14131c]/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_32px_80px_-16px_rgba(0,0,0,0.85)] ring-1 ring-inset ring-white/[0.02]';
 
 const neuronQShellSheetShell =
-  'rounded-t-[26px] border border-white/[0.09] bg-[#0F1117] shadow-[0_-28px_80px_-12px_rgba(0,0,0,0.72)] ring-1 ring-inset ring-white/[0.03] overflow-hidden';
+  'rounded-t-[26px] border border-white/[0.09] bg-[var(--lh-page-bg)] shadow-[0_-28px_80px_-12px_rgba(0,0,0,0.72)] ring-1 ring-inset ring-white/[0.03] overflow-hidden';
 
 const neuronQIconWrap =
   'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-500/25 bg-amber-500/[0.1] text-amber-200 shadow-[0_0_20px_-8px_rgba(245,158,11,0.35)]';
@@ -121,7 +121,7 @@ export function NeuronQStudentModal({
             designerShellMainScroll,
             'flex-1 min-h-0 overscroll-contain px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]',
           ),
-        !isSheet && 'bg-[#0a0b0f]/40',
+        !isSheet && 'bg-[#1f1e1c]/40',
       )}
     >
       {step === 'write' ? (
@@ -282,7 +282,7 @@ export function NeuronQButton({ onClick, pendingOwnCount = 0, className }) {
       <HelpCircle className="h-3.5 w-3.5" strokeWidth={1.75} />
       Poser une question
       {pendingOwnCount > 0 && (
-        <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-400 px-0.5 text-[8px] font-bold text-[#0a0b0f]">
+        <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-400 px-0.5 text-[8px] font-bold text-[#1f1e1c]">
           {pendingOwnCount}
         </span>
       )}
@@ -304,7 +304,7 @@ export function NeuronQHostTab({ questions, onMarkAnswered, onMarkSkipped, qaMod
           'flex min-h-11 w-full items-center gap-2 rounded-xl border px-3 text-[11px] font-semibold transition-all sm:min-h-9',
           qaMode
             ? 'border-amber-500/35 bg-amber-500/12 text-amber-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
-            : 'border-white/[0.08] bg-[#0a0b0f]/80 text-white/60 hover:border-white/14 hover:bg-white/[0.04] hover:text-white/88',
+            : 'border-white/[0.08] bg-[#1f1e1c]/80 text-white/60 hover:border-white/14 hover:bg-white/[0.04] hover:text-white/88',
         )}
       >
         {qaMode ? <Pause className="h-3.5 w-3.5 shrink-0" /> : <Play className="h-3.5 w-3.5 shrink-0" />}
@@ -315,7 +315,7 @@ export function NeuronQHostTab({ questions, onMarkAnswered, onMarkSkipped, qaMod
         <div
           className={cn(
             designerShellEmbedPanel,
-            'flex h-28 flex-col items-center justify-center gap-2 border-dashed border-white/[0.06] bg-[#0a0b0f]/50',
+            'flex h-28 flex-col items-center justify-center gap-2 border-dashed border-white/[0.06] bg-[#1f1e1c]/50',
           )}
         >
           <HelpCircle className="h-6 w-6 text-white/22" strokeWidth={1.25} />
@@ -329,7 +329,7 @@ export function NeuronQHostTab({ questions, onMarkAnswered, onMarkSkipped, qaMod
           {pending.map((q) => (
             <div
               key={q.id}
-              className={cn(designerShellCardInset, 'space-y-1.5 border-amber-500/15 bg-[#0a0b0f]/90')}
+              className={cn(designerShellCardInset, 'space-y-1.5 border-amber-500/15 bg-[#1f1e1c]/90')}
             >
               <div className="flex items-center gap-2">
                 <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-amber-500/25 bg-amber-500/10 text-[9px] font-bold text-amber-200">
@@ -377,7 +377,7 @@ export function NeuronQHostTab({ questions, onMarkAnswered, onMarkSkipped, qaMod
               key={q.id}
               className={cn(
                 designerShellCardInset,
-                'flex items-start gap-2 border-white/[0.06] bg-[#0a0b0f]/60 py-2',
+                'flex items-start gap-2 border-white/[0.06] bg-[#1f1e1c]/60 py-2',
               )}
             >
               <Check className="mt-0.5 h-3 w-3 shrink-0 text-emerald-400/90" />

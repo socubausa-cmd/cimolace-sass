@@ -148,7 +148,7 @@ export const LiveHostLiriMobileBranch = ({
                 position: 'relative',
                 overflow: 'hidden',
                 minHeight: 0,
-                background: '#0a0b0f',
+                background: 'var(--lh-stage-bg, #1f1e1c)',
                 backgroundImage:
                   'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
                 backgroundSize: '44px 44px',

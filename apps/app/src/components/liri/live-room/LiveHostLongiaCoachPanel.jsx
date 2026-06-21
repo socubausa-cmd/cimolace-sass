@@ -481,7 +481,7 @@ export default function LiveHostLongiaCoachPanel({
           )}
         >
         {!threadHydrated ? (
-          <div className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center rounded-[inherit] bg-[#0a0b0f]/45 backdrop-blur-[2px]">
+          <div className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center rounded-[inherit] bg-[#1f1e1c]/45 backdrop-blur-[2px]">
             <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#14131c]/95 px-3 py-2 text-[10px] text-white/55">
               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
               Restauration du fil…

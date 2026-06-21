@@ -166,7 +166,7 @@ export function LiveHostMobileShell({
       style={{
         position: 'fixed',
         inset: 0,
-        background: '#0f1117',
+        background: 'var(--lh-page-bg, #262624)',
         overflow: 'hidden',
         fontFamily: 'var(--school-font-family, system-ui, -apple-system, sans-serif)',
         touchAction: 'none',

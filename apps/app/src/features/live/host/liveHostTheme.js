@@ -71,6 +71,7 @@ body.lh-sp-on .lh-sp-glow{box-shadow:0 0 0 1px rgba(200,150,12,.22),0 0 28px rgb
  *  glow coral, panneaux #30302e, lignes ivoire discrètes. (était #0F1117 bleu-Studio). */
 export const LH_DESIGN = {
   pageBg: '#262624',
+  stageBg: '#1f1e1c',
   pageMesh:
     'radial-gradient(ellipse 85% 55% at 50% -15%, rgba(217,119,87,0.06), transparent 58%), radial-gradient(ellipse 55% 40% at 100% 85%, rgba(226,85,63,0.05), transparent 52%), radial-gradient(ellipse 45% 32% at 0% 75%, rgba(194,104,63,0.04), transparent 48%)',
   panelBg: 'rgba(48,48,46,0.97)',
@@ -85,6 +86,24 @@ export const LH_DESIGN = {
 
 /** Invité — même shell que l'hôte (LH_DESIGN) pour cohérence visuelle ; garder un objet vide pour overrides ciblés futurs. */
 export const LH_GUEST_OVERRIDES = {};
+
+/**
+ * Variables CSS du shell live, posées UNE seule fois sur le conteneur racine de la session
+ * (héritées partout dans l'interface live → une seule couleur de fond cohérente, fini les
+ * « deux couleurs »). Défaut = LIRI officielle (LH_DESIGN) ; un tenant peut surcharger via
+ * `branding.live.*` (sinon hérite des valeurs LIRI) et la couleur d'accent suit
+ * `branding.accentColor`. Les composants consomment `var(--lh-stage-bg)` / `var(--lh-page-bg)`.
+ */
+export function buildLiveShellCssVars(liveShell, branding) {
+  const live = (branding && branding.live) || {};
+  return {
+    '--lh-page-bg': live.pageBg || liveShell.pageBg,
+    '--lh-stage-bg': live.stageBg || liveShell.stageBg,
+    '--lh-panel-bg': live.panelBg || liveShell.panelBg,
+    '--lh-strip-bg': live.stripBg || liveShell.stripBg,
+    '--lh-accent': live.accent || (branding && branding.accentColor) || '#d97857',
+  };
+}
 
 /** Cartes premium du panneau latéral droit (hôte/guest). */
 export const LH_SIDEBAR_CARD = {
