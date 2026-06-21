@@ -52,7 +52,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
         order: hostCompactColOrder.left,
         background: asStrip
           ? 'linear-gradient(180deg, rgba(26,22,18,.99) 0%, rgba(16,13,10,.995) 100%)'
-          : 'transparent',
+          : 'var(--lh-page-bg, #262624)',
         borderRadius: asStrip ? liveShell.panelRadius : 0,
         border: asStrip ? liveShell.panelBorder : 'none',
         padding: asStrip ? '10px 6px' : '16px',

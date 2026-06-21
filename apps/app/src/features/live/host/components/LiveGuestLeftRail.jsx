@@ -24,7 +24,7 @@ export function LiveGuestLeftRail({
       className="lh-sy lh-sp-dim"
       style={{
         order: hostCompactColOrder.left,
-        background: liveLeftGuestCollapsedStrip ? liveShell.panelBg : 'transparent',
+        background: liveLeftGuestCollapsedStrip ? liveShell.panelBg : 'var(--lh-page-bg, #262624)',
         borderRadius: liveLeftGuestCollapsedStrip ? liveShell.panelRadius : 0,
         border: liveLeftGuestCollapsedStrip ? liveShell.panelBorder : 'none',
         padding: liveLeftGuestCollapsedStrip ? '10px 6px' : '14px',
