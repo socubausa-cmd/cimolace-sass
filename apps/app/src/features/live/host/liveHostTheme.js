@@ -119,23 +119,22 @@ export function buildLiveShellCssVars(liveShell, branding) {
   };
 }
 
-/** Cartes premium du panneau latéral droit (hôte/guest). */
+/** Sections immersives du panneau latéral droit (hôte/guest) — aplaties (plus de cartes lourdes). */
 export const LH_SIDEBAR_CARD = {
-  border: '1px solid rgba(245,244,238,.09)',
-  background: 'rgba(48,48,46,0.95)',
+  border: '1px solid rgba(245,244,238,.05)',
+  background: 'rgba(255,255,255,.02)',
   borderRadius: '14px',
   padding: '12px',
-  boxShadow: 'inset 0 1px 0 rgba(255,255,255,.04), 0 10px 28px rgba(0,0,0,.24), 0 0 0 1px rgba(255,255,255,.02) inset',
-  backdropFilter: 'blur(8px)',
+  boxShadow: 'none',
+  backdropFilter: 'none',
 };
 
 export const LH_SIDEBAR_CARD_GLOW = {
   ...LH_SIDEBAR_CARD,
-  border: '1px solid rgba(217,119,87,.22)',
+  border: '1px solid rgba(212,163,106,.16)',
   background:
-    'radial-gradient(120% 90% at 12% -8%, rgba(217,119,87,.10), transparent 52%), #2b2926',
-  boxShadow:
-    'inset 0 1px 0 rgba(255,255,255,.05), 0 0 0 1px rgba(217,119,87,.10), 0 14px 36px rgba(0,0,0,.3)',
+    'radial-gradient(120% 90% at 12% -8%, rgba(212,163,106,.06), transparent 52%), rgba(255,255,255,.02)',
+  boxShadow: 'none',
 };
 
 /** Nom produit par rôle : pilote (lancement live) vs lien d'invitation. */

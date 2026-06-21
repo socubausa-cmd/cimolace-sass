@@ -81,7 +81,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
             onClick={() => setLiveLeftRailOpen(true)}
             title="Ouvrir le panneau gauche"
             aria-label="Ouvrir le panneau gauche"
-            className="flex items-center justify-center rounded-r-xl border border-l-0 border-white/12 bg-[#15131f]/95 px-1.5 py-6 text-white/70 shadow-[0_12px_30px_rgba(0,0,0,.4)] transition hover:border-amber-400/45 hover:text-white"
+            className="flex items-center justify-center rounded-r-xl border border-l-0 border-white/12 bg-white/[0.02] px-1.5 py-6 text-white/70 shadow-[0_12px_30px_rgba(0,0,0,.4)] transition hover:border-amber-400/45 hover:text-white"
           >
             <ChevronRight className="h-5 w-5" strokeWidth={2} aria-hidden />
           </button>
@@ -92,7 +92,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
             onClick={() => setLiveLeftRailOpen(true)}
             title="Agrandir le panneau gauche"
             aria-label="Agrandir le panneau gauche"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/22 bg-[#0a0814]/92 text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,.08)] transition hover:border-amber-400/45 hover:bg-[#100d1a]/95 hover:text-white"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/22 bg-white/[0.02] text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,.08)] transition hover:border-amber-400/45 hover:bg-white/[0.02] hover:text-white"
           >
             <ChevronRight className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
           </button>
@@ -119,7 +119,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
                 className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_rgba(255,255,255,.06)] transition ${
                   meshPanelOpen || (longiaHubOpen && longiaSignalSubDrawer === 'mesh')
                     ? 'border-amber-400/55 bg-amber-500/18 text-amber-100'
-                    : 'border-white/22 bg-[#0a0814]/92 text-[#d4a012] hover:border-amber-400/35 hover:text-amber-200'
+                    : 'border-white/22 bg-white/[0.02] text-[#d4a012] hover:border-amber-400/35 hover:text-amber-200'
                 }`}
               >
                 <Boxes className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
@@ -134,7 +134,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
                 className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_rgba(255,255,255,.06)] transition ${
                   longiaHubOpen && longiaSignalSubDrawer === 'host_coach'
                     ? 'border-amber-400/55 bg-amber-500/18 text-amber-100'
-                    : 'border-white/22 bg-[#0a0814]/92 text-amber-200/95 hover:border-amber-400/45 hover:text-amber-100'
+                    : 'border-white/22 bg-white/[0.02] text-amber-200/95 hover:border-amber-400/45 hover:text-amber-100'
                 }`}
               >
                 <Sparkles className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />

@@ -140,10 +140,10 @@ export default function LiveHostInviteManagementPanel({
   const waitingPreview = Array.isArray(waitingEntries) ? waitingEntries.slice(0, 4) : [];
 
   const cardClass =
-    'rounded-2xl border border-white/[0.07] bg-[#16161c]/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]';
+    'rounded-2xl border border-white/[0.07] bg-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]';
 
   return (
-    <div className="font-liri mb-2 shrink-0 space-y-3 rounded-2xl border border-white/[0.06] bg-[#0f0f12] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+    <div className="font-liri mb-2 shrink-0 space-y-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
       {/* EN DIRECT + durée */}
       {liveDuration ? (
         <div className="flex items-center gap-2">
@@ -415,7 +415,7 @@ export default function LiveHostInviteManagementPanel({
       </section>
 
       <Dialog open={qrOpen} onOpenChange={setQrOpen}>
-        <DialogContent className="max-w-[320px] border-white/15 bg-[#121218] text-white">
+        <DialogContent className="max-w-[320px] border-white/15 bg-white/[0.02] text-white">
           <DialogHeader>
             <DialogTitle className="text-white">QR code — rejoindre la session</DialogTitle>
             <DialogDescription className="text-white/55">
