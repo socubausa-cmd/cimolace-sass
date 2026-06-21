@@ -111,8 +111,9 @@ export default function LiveHostArenaLiveBar({
         />
       ) : isLive ? (
         <>
-          {/* Sélecteur de layout (caméra/panel/mur/conférence) masqué en focus formation : smartboard plein écran. */}
-          {!focusMode && (
+          {/* Sélecteur de layout (caméra/panel/mur/conférence) : déplacé dans le hub LONGIA,
+              retiré de la barre du bas pour un rendu immersif/épuré (façon maquette). */}
+          {hub && (
           <>
           <button
             type="button"
