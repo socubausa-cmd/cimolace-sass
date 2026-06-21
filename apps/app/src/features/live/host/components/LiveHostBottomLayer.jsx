@@ -99,15 +99,19 @@ export const LiveHostBottomLayer = ({
 }) => {
   return (
     <>
-      <LiveCompactRailToggles
-        phase={phase}
-        lhStageFocusLayout={lhStageFocusLayout}
-        lhLayoutCompact={lhLayoutCompact}
-        liveLeftRailOpen={liveLeftRailOpen}
-        liveRightRailOpen={liveRightRailOpen}
-        onOpenLeft={() => setLiveLeftRailOpen(true)}
-        onOpenRight={() => setLiveRightRailOpen(true)}
-      />
+      {/* Toggles compacts de rail : invité uniquement — l'hôte a ses poignées chevrons
+          (sinon doublon « deux temps » sur le bord droit). */}
+      {isGuestUi ? (
+        <LiveCompactRailToggles
+          phase={phase}
+          lhStageFocusLayout={lhStageFocusLayout}
+          lhLayoutCompact={lhLayoutCompact}
+          liveLeftRailOpen={liveLeftRailOpen}
+          liveRightRailOpen={liveRightRailOpen}
+          onOpenLeft={() => setLiveLeftRailOpen(true)}
+          onOpenRight={() => setLiveRightRailOpen(true)}
+        />
+      ) : null}
 
       <AmbientAudioLayer
         tracks={ambientTracks}
