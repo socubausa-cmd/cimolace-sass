@@ -3,6 +3,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { PHASE } from '@/features/live/host/liveHostConstants';
 import { devLogLiveHostEnded } from '@/features/live/host/liveHostUtils';
 import { updateLiveSession } from '@/services/liveProduction/liveSession';
+import { messagingApi } from '@/lib/api-v2';
 
 /**
  * STOP / Quitter : finalise l'enregistrement, termine la session en DB,
@@ -66,6 +67,16 @@ export function useLiveHostSessionStop({
           navigate(`/studio/live-preparation/${sessionId}`);
           return;
         }
+        // Phase D — consolidation post-live : recopie le chat éphémère du live
+        // (live_session_chat) dans le Sujet durable kind='topic' du live → reste
+        // consultable dans le forum après la session. Côté API : réservé encadrant
+        // (l'hôte l'est) + idempotent (sentinelle). Non bloquant : ne retarde ni la
+        // navigation ni le neurone, et un échec n'empêche pas de terminer le live.
+        void messagingApi
+          .publishLiveTopic({ liveSessionId: sessionId })
+          .catch((err) => {
+            console.warn('[LiveHost] publishLiveTopic (consolidation post-live) — échec non bloquant', err);
+          });
         void supabase.functions.invoke('neuro-recall-bootstrap', { body: { sessionId } }).catch(() => {});
         navigate(`/studio/live-post/${sessionId}`);
       } else {

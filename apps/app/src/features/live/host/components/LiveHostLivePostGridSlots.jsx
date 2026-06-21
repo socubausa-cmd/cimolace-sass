@@ -114,6 +114,8 @@ export function LiveHostLivePostGridSlots(p) {
         liveStripDockMembers={p.liveStripDockMembers}
         promotedId={p.promotedId}
         sessionId={p.sessionId}
+        sessionFormationId={p.sessionFormationId}
+        sessionTitle={p.sessionTitle}
         eleveAppChatUrl={p.eleveAppChatUrl}
         memberVideoPreview={p.memberVideoPreview}
         setMemberVideoPreview={p.setMemberVideoPreview}

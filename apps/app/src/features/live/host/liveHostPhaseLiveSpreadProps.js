@@ -364,6 +364,8 @@ const LIVE_HOST_POST_GRID_SLOTS_SPREAD_KEYS = [
   'kickParticipant',
   'broadcastHostCameraCommand',
   'sessionId',
+  'sessionFormationId',
+  'sessionTitle',
   'whisperThreads',
   'sendWhisper',
   'memberModalWhisperPickable',

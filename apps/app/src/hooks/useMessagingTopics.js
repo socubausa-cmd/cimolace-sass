@@ -169,6 +169,34 @@ export function useMessagingTopics(userId) {
     return created;
   }, [userId]);
 
+  /**
+   * Phase C — get-or-create IDEMPOTENT du Sujet d'un contexte (vidéo de cours), puis
+   * ouverture immédiate de son fil. ADDITIF : renvoie le Sujet normalisé (ou null si
+   * l'API échoue / refuse — 403 si non inscrit), SANS jamais lever : l'appelant (le
+   * lecteur) dégrade en silence et ne casse pas la lecture vidéo.
+   *
+   * body attendu côté API (camelCase, cf. GetOrCreateContextTopicDto) :
+   *   { contextType:'video', contextId:<video_id>, courseId:<course_id>, subject?:'…' }
+   */
+  const getOrCreateContextTopic = useCallback(async ({ contextType, contextId, courseId, subject } = {}) => {
+    if (!userId || !contextType || !contextId) return null;
+    const body = { contextType, contextId };
+    if (courseId) body.courseId = courseId;
+    const s = String(subject || '').trim();
+    if (s) body.subject = s;
+    let topic;
+    try {
+      topic = normalizeTopic(await messagingApi.getOrCreateTopicForContext(body));
+    } catch (e) {
+      if (import.meta?.env?.DEV) console.debug('[topics] for-context error:', e?.message || e);
+      return null;
+    }
+    if (!topic?.id) return null;
+    setTopics((prev) => (prev.some((t) => t.id === topic.id) ? prev : [topic, ...prev]));
+    await openTopic(topic);
+    return topic;
+  }, [userId, openTopic]);
+
   const sendTopicMessage = useCallback(async (content) => {
     const topicId = activeTopic?.id;
     const c = String(content || '').trim();
@@ -224,6 +252,7 @@ export function useMessagingTopics(userId) {
     openTopic,
     closeActiveTopicView,
     createTopic,
+    getOrCreateContextTopic,
     sendTopicMessage,
     setActiveTopicStatus,
   };

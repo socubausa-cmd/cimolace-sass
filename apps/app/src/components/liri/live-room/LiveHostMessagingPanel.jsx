@@ -4,7 +4,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronDown, Headphones, MessageCircle, Send, Shield, X, Globe, Link2 } from 'lucide-react';
+import { ChevronDown, Headphones, MessageCircle, MessagesSquare, Send, Shield, X, Globe, Link2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import LiveHostAsideAndMonitorBar from '@/components/liri/live-room/LiveHostAsideAndMonitorBar';
@@ -94,11 +94,21 @@ export default function LiveHostMessagingPanel({
    * Formateur hôte de la session uniquement : sans `true`, le routage média / aparté n'est pas proposé (invités, maquettes).
    */
   isLiveSessionHost = false,
+  /**
+   * Phase D — Sujet du live (fil PERSISTANT, ≠ chat éphémère). Objet fourni par le slot
+   * parent (get-or-create idempotent via l'API `for-context`) ; null = non disponible
+   * (invité, hors direct, ou accès refusé) → l'encart n'est pas rendu. Forme :
+   * { topic, messages, loading, error, input, setInput, sending, onSend, currentUserId }.
+   */
+  liveTopic = null,
 }) {
   const { toast } = useToast();
   const scrollRef = useRef(null);
+  const liveTopicScrollRef = useRef(null);
   const prevSecretPeerRef = useRef(null);
   const [secretRoutingOpen, setSecretRoutingOpen] = useState(false);
+  // Encart « Sujet du live » replié par défaut (le chat collectif reste l'usage premier).
+  const [liveTopicOpen, setLiveTopicOpen] = useState(false);
   const parentHandlesPreview = typeof onPreviewMemberChange === 'function';
   const [internalPreview, setInternalPreview] = useState(null);
   const fullscreenMember = parentHandlesPreview ? controlledPreview : internalPreview;
@@ -138,6 +148,14 @@ export default function LiveHostMessagingPanel({
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [open, msgs.length, forumTarget?.id]);
+
+  // Auto-scroll du fil « Sujet du live » (quand ouvert / nouveaux messages).
+  const liveTopicMsgCount = liveTopic?.messages?.length ?? 0;
+  useEffect(() => {
+    if (!open || !liveTopicOpen) return;
+    const el = liveTopicScrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [open, liveTopicOpen, liveTopicMsgCount]);
 
   useEffect(() => {
     if (!hostMediaRoutingAllowed) {
@@ -333,6 +351,130 @@ export default function LiveHostMessagingPanel({
                     Copier
                   </button>
                 </div>
+              </div>
+            ) : null}
+
+            {liveTopic && !forumTarget ? (
+              <div className="shrink-0 border-b border-cyan-500/15 bg-[#0a0e12]/95">
+                <button
+                  type="button"
+                  onClick={() => setLiveTopicOpen((v) => !v)}
+                  className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left transition-colors hover:bg-white/[0.03]"
+                  aria-expanded={liveTopicOpen}
+                >
+                  <span className="flex min-w-0 flex-1 items-center gap-2">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-950/40">
+                      <MessagesSquare className="h-4 w-4 text-cyan-200/90" aria-hidden />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="flex items-center gap-1.5 text-[8px] font-semibold uppercase tracking-[0.12em] text-white/55">
+                        Sujet du live — fil persistant
+                        {liveTopic.topic?.status === 'closed' ? (
+                          <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-wide text-white/50">Clôturé</span>
+                        ) : null}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[10px] leading-snug text-white/40">
+                        {liveTopic.error
+                          ? 'Indisponible — réservé aux membres du cours.'
+                          : liveTopic.topic?.subject || 'Questions et échanges conservés après le live'}
+                      </span>
+                    </span>
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      'h-4 w-4 shrink-0 text-white/45 transition-transform',
+                      liveTopicOpen && 'rotate-180',
+                    )}
+                    aria-hidden
+                  />
+                </button>
+
+                {liveTopicOpen ? (
+                  <div className="px-3 pb-3">
+                    {liveTopic.error ? (
+                      <div className="rounded-lg border border-white/10 bg-black/25 p-3 text-[11px] text-white/45">
+                        Le Sujet du live est momentanément indisponible. Il est réservé aux participants et à l&apos;équipe encadrante.
+                      </div>
+                    ) : (
+                      <>
+                        <div
+                          ref={liveTopicScrollRef}
+                          className="max-h-[240px] space-y-2.5 overflow-y-auto rounded-lg border border-white/[0.08] bg-black/25 p-2.5 [scrollbar-width:thin] [scrollbar-color:rgba(34,211,238,0.2)_transparent]"
+                        >
+                          {liveTopic.loading && !liveTopic.messages?.length ? (
+                            <p className="py-6 text-center text-[10px] text-white/35">Chargement du fil…</p>
+                          ) : !liveTopic.messages?.length ? (
+                            <p className="py-6 text-center text-[10px] text-white/35">
+                              Aucun message — lancez le fil. Il restera consultable après le live.
+                            </p>
+                          ) : (
+                            liveTopic.messages.map((m) => {
+                              const mine = m.sender_id && m.sender_id === liveTopic.currentUserId;
+                              return (
+                                <div key={m.id} className={cn('flex flex-col', mine ? 'items-end' : 'items-start')}>
+                                  <div
+                                    className={cn(
+                                      'max-w-[88%] whitespace-pre-wrap break-words rounded-2xl px-3 py-1.5 text-[12px] leading-relaxed',
+                                      mine ? 'bg-cyan-500/85 text-black' : 'bg-white/10 text-white/90',
+                                    )}
+                                  >
+                                    {m.content}
+                                  </div>
+                                  {m.created_at ? (
+                                    <span className="mt-0.5 px-1 text-[9px] tabular-nums text-white/30">
+                                      {new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  ) : null}
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+
+                        <div className="mt-2 flex items-center gap-2">
+                          <input
+                            value={liveTopic.input}
+                            onChange={(e) => liveTopic.setInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                liveTopic.onSend();
+                              }
+                            }}
+                            placeholder={
+                              liveTopic.topic?.status === 'closed'
+                                ? 'Fil clôturé.'
+                                : liveTopic.topic?.id
+                                  ? 'Écrire dans le Sujet du live…'
+                                  : 'Ouverture du fil…'
+                            }
+                            disabled={!liveTopic.topic?.id || liveTopic.topic?.status === 'closed'}
+                            className={cn(
+                              designerShellInput,
+                              'min-w-0 flex-1 text-[12px]',
+                              (!liveTopic.topic?.id || liveTopic.topic?.status === 'closed') && 'opacity-45',
+                            )}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => liveTopic.onSend()}
+                            disabled={
+                              !liveTopic.topic?.id ||
+                              liveTopic.sending ||
+                              !String(liveTopic.input || '').trim() ||
+                              liveTopic.topic?.status === 'closed'
+                            }
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-500/15 text-cyan-200 transition-colors hover:bg-cyan-500/25 disabled:cursor-not-allowed disabled:opacity-40"
+                            title="Envoyer dans le Sujet du live"
+                            aria-label="Envoyer dans le Sujet du live"
+                          >
+                            <Send className="h-4 w-4" strokeWidth={2} />
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : null}
               </div>
             ) : null}
 
