@@ -70,17 +70,8 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
         boxShadow: asStrip
           ? 'inset 0 0 0 1px rgba(255,255,255,.1), inset 0 1px 0 rgba(255,255,255,.06)'
           : 'inset 0 1px 0 rgba(255,255,255,0.04), 0 0 0 1px rgba(255,255,255,0.02) inset',
-        // Mode formation : épinglé au bord GAUCHE (hors flux) — languette/panneau rétractable.
-        ...(focusHost
-          ? {
-              position: 'fixed',
-              left: 0,
-              zIndex: 45,
-              ...(asStrip
-                ? { top: '50%', transform: 'translateY(-50%)', width: 'auto', maxHeight: '72vh', background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }
-                : { top: 72, bottom: 96, width: 320 }),
-            }
-          : {}),
+        // Languette repliée : centrée verticalement dans la fine colonne in-flow.
+        justifyContent: asStrip ? 'center' : undefined,
       }}
     >
       {asStrip ? (

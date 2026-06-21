@@ -170,17 +170,8 @@ export const LiveHostRightColumn = React.forwardRef(function LiveHostRightColumn
         alignSelf: 'stretch',
         boxShadow:
           'inset 0 1px 0 rgba(255,255,255,.04), 0 18px 42px rgba(0,0,0,.34), 0 0 0 1px rgba(255,255,255,.02) inset',
-        // Mode formation : épinglé au bord DROIT (hors flux) — languette/panneau rétractable.
-        ...(focusHost
-          ? {
-              position: 'fixed',
-              right: 0,
-              zIndex: 45,
-              ...(collapsed
-                ? { top: '50%', transform: 'translateY(-50%)', width: 'auto', maxHeight: '72vh', background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }
-                : { top: 72, bottom: 96, width: 340 }),
-            }
-          : {}),
+        // Languette repliée : centrée verticalement dans la fine colonne in-flow.
+        justifyContent: collapsed ? 'center' : undefined,
       }}
     >
       {collapsed ? (
