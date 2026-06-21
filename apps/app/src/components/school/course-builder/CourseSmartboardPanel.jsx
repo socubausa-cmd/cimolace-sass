@@ -8,6 +8,7 @@ export default function CourseSmartboardPanel({
   aiContent,
   mode = 'pedagogical',
   statusText = '',
+  unitLabel = 'Chapitre',
 }) {
   const start = Number(segment?.startSeconds);
   const end = Number(segment?.endSeconds);
@@ -36,7 +37,7 @@ export default function CourseSmartboardPanel({
       </div>
 
       <div className="flex-1 p-3 min-h-0">
-        <SmartboardSegmentRenderer segment={segment} aiContent={aiContent} mode={mode} className="h-full" />
+        <SmartboardSegmentRenderer segment={segment} aiContent={aiContent} mode={mode} className="h-full" unitLabel={unitLabel} />
       </div>
     </div>
   );

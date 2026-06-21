@@ -21,7 +21,7 @@ function formatTime(seconds) {
 }
 
 // Gamma-like full-screen slide component
-function GammaSlide({ segment, ai, mode, illustrationUrl }) {
+function GammaSlide({ segment, ai, mode, illustrationUrl, unitLabel = 'Chapitre' }) {
   const chapterTitle = String(ai?.chapter_title || segment?.label || 'Chapitre').trim();
   const subtitle = String(ai?.subtitle || '').trim();
   const summary =
@@ -84,7 +84,7 @@ function GammaSlide({ segment, ai, mode, illustrationUrl }) {
           <div className="flex items-center gap-2">
             <span className={`inline-flex items-center gap-1.5 h-7 px-3 rounded-full border text-xs font-semibold ${accent.bg} ${accent.text}`}>
               <Sparkles className="w-3 h-3" />
-              Chapitre {chapterNum}
+              {unitLabel} {chapterNum}
             </span>
             {mode === 'masterclass' && (
               <span className="inline-flex items-center gap-1 h-6 px-2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] text-[10px] font-semibold">
@@ -188,7 +188,7 @@ function GammaSlide({ segment, ai, mode, illustrationUrl }) {
   );
 }
 
-export default function SmartboardSegmentRenderer({ segment, aiContent, mode = 'pedagogical', className = '' }) {
+export default function SmartboardSegmentRenderer({ segment, aiContent, mode = 'pedagogical', className = '', unitLabel = 'Chapitre' }) {
   // If there's a fully structured slide_content_json from AI, keep using the parallax stage for it
   const hasCustomSlide = useMemo(() => {
     const raw = aiContent?.slide_content_json;
@@ -217,7 +217,7 @@ export default function SmartboardSegmentRenderer({ segment, aiContent, mode = '
 
   return (
     <div className={`relative h-full w-full ${className}`}>
-      <GammaSlide segment={segment} ai={aiContent} mode={mode} illustrationUrl={aiContent?.illustration_url || null} />
+      <GammaSlide segment={segment} ai={aiContent} mode={mode} illustrationUrl={aiContent?.illustration_url || null} unitLabel={unitLabel} />
     </div>
   );
 }

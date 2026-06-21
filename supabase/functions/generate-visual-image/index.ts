@@ -197,20 +197,32 @@ async function callMistralImage(
   mistralKey: string,
   model: string,
 ): Promise<{ bytes: ArrayBuffer; contentType: string } | { error: string }> {
-  let convRes: Response;
-  try {
-    convRes = await fetch('https://api.mistral.ai/v1/conversations', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${mistralKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        inputs: finalPrompt,
-        tools: [{ type: 'image_generation' }],
-      }),
-    });
-  } catch (e) {
-    return { error: `Mistral conversations réseau: ${String((e as Error)?.message || e)}` };
+  // Retry-sur-429 : Mistral rate-limite en rafale (génération de lots). Backoff
+  // 6s/12s avant de renoncer (le fournisseur d'image fiable de ce projet).
+  let convRes: Response | null = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      convRes = await fetch('https://api.mistral.ai/v1/conversations', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${mistralKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          inputs: finalPrompt,
+          tools: [{ type: 'image_generation' }],
+        }),
+      });
+    } catch (e) {
+      if (attempt === 2) return { error: `Mistral conversations réseau: ${String((e as Error)?.message || e)}` };
+      await new Promise((r) => setTimeout(r, 4000 * (attempt + 1)));
+      continue;
+    }
+    if (convRes.status === 429 && attempt < 2) {
+      await new Promise((r) => setTimeout(r, 6000 * (attempt + 1)));
+      continue;
+    }
+    break;
   }
+  if (!convRes) return { error: 'Mistral conversations: pas de réponse' };
   if (!convRes.ok) {
     const t = await convRes.text().catch(() => String(convRes.status));
     return { error: `Mistral conversations HTTP ${convRes.status}: ${t.slice(0, 200)}` };
@@ -401,7 +413,13 @@ Deno.serve(async (req: Request) => {
         if (resp) return jsonResponse(resp);
         // upload échoué → on tente les autres fournisseurs
       } else {
-        console.warn('[generate-visual-image] Mistral échec, repli DALL·E/Imagen:', (mr as { error: string }).error);
+        const mistralErr = (mr as { error: string }).error;
+        console.warn('[generate-visual-image] Mistral échec, repli DALL·E/Imagen:', mistralErr);
+        // Si Mistral est explicitement demandé, on renvoie SON erreur (pas de repli
+        // DALL·E/xAI qui ne sont pas accessibles sur ce projet → erreur trompeuse).
+        if (providerRaw === 'mistral' || providerRaw === 'mistralai') {
+          return jsonResponse({ imageUrl: null, error: `Mistral: ${mistralErr}`, size: imageSize }, 502);
+        }
       }
       // Mistral indisponible/échec → poursuite vers le code existant (DALL·E / Imagen).
     }
@@ -552,7 +570,6 @@ Deno.serve(async (req: Request) => {
           n: 1,
           size: imageSize,
           quality: 'hd',
-          response_format: 'url',
         }),
         signal: abort.signal,
       });
@@ -574,16 +591,18 @@ Deno.serve(async (req: Request) => {
     if (!dalleRes.ok) {
       const errJson = await dalleRes.json().catch(() => ({})) as Record<string, unknown>;
       const detail = (errJson?.error as { message?: string })?.message || String(dalleRes.status);
-      if ((dalleRes.status === 429 || dalleRes.status === 402) && xaiKey) {
+      // Repli xAI/Grok sur N'IMPORTE QUEL échec DALL·E (cette clé OpenAI n'a pas
+      // forcément accès à dall-e-3 ; xAI sert alors de fournisseur d'image fiable).
+      if (xaiKey) {
         try {
           const xaiRes = await fetch('https://api.x.ai/v1/images/generations', {
             method: 'POST',
             headers: { Authorization: `Bearer ${xaiKey}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              model: 'grok-2-image-1212',
+              // grok-2-image-1212 déprécié le 2026-02-24 → grok-imagine-image.
+              model: 'grok-imagine-image',
               prompt: finalPrompt,
               n: 1,
-              response_format: 'url',
             }),
           });
           if (xaiRes.ok) {

@@ -5,7 +5,7 @@ import supabase from '@/lib/customSupabaseClient';
 
 const signedUrlCache = new Map();
 
-const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate }, ref) => {
+const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }, ref) => {
   const inferredType = useMemo(() => {
     if (video?.type) return video.type;
     if (video?.storagePath) return 'upload';
@@ -152,23 +152,31 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate }, ref) => {
     // In a real app, you would wire up the custom controls to the video ref
     return (
       <div className="relative group bg-black rounded-lg overflow-hidden border border-white/10">
-        <video
-          ref={videoRef}
-          src={playableUrl}
-          className="w-full aspect-video"
-          controls
-          onEnded={onEnded}
-          onLoadedMetadata={(e) => {
-            const d = Number(e?.currentTarget?.duration);
-            if (Number.isFinite(d) && d > 0) setDuration(d);
-          }}
-          onTimeUpdate={(e) => {
-            if (draggingRef.current) return;
-            const t = Number(e?.currentTarget?.currentTime);
-            if (Number.isFinite(t)) setCurrentTime(t);
-            onTimeUpdate?.(t);
-          }}
-        />
+        <div className="relative">
+          <video
+            ref={videoRef}
+            src={playableUrl}
+            className="w-full aspect-video block"
+            controls
+            onEnded={onEnded}
+            onLoadedMetadata={(e) => {
+              const d = Number(e?.currentTarget?.duration);
+              if (Number.isFinite(d) && d > 0) setDuration(d);
+            }}
+            onTimeUpdate={(e) => {
+              if (draggingRef.current) return;
+              const t = Number(e?.currentTarget?.currentTime);
+              if (Number.isFinite(t)) setCurrentTime(t);
+              onTimeUpdate?.(t);
+            }}
+          />
+          {/* Tableau interactif superposé (moitié droite, desktop) — laisse le bas libre pour les contrôles natifs */}
+          {overlay ? (
+            <div className="hidden md:block absolute top-2 right-2 bottom-12 w-[44%] z-10">
+              {overlay}
+            </div>
+          ) : null}
+        </div>
 
         <div className="px-3 py-2 bg-[#0B0F14] border-t border-white/10">
           <div className="flex items-center justify-between text-xs text-gray-300 mb-2">

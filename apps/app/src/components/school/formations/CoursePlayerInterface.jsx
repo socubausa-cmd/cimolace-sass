@@ -25,12 +25,19 @@ import TranscriptPanel from '@/components/lesson-player/TranscriptPanel';
 import MindMapNavigation from '@/components/lesson-player/MindMapNavigation';
 import NodeExplanationPanel from '@/components/lesson-player/NodeExplanationPanel';
 import QuizPanel from '@/components/lesson-player/QuizPanel';
+import StudentSmartboardDeck from '@/components/school/course-builder/StudentSmartboardDeck';
 import QuestionPanel from '@/components/lesson-player/QuestionPanel';
 import { tsToSeconds } from '@/components/lesson-player/types';
 import NotesPanel from '@/components/lesson-player/NotesPanel';
 import { cn } from '@/lib/utils';
 import { formationForumUrlForRole } from '@/lib/forumDashboardPaths';
 import { getEffectiveRole } from '@/lib/accountRoleMode';
+import { useMessagingTopics } from '@/hooks/useMessagingTopics';
+
+// Phase C — un Sujet de contexte vidéo n'a de sens que pour un video_id UUID réel
+// (formation_day_contents.id). En fallback legacy (storagePath/url), on n'ouvre pas.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isUuid = (v) => typeof v === 'string' && UUID_RE.test(v);
 
 const withTimeout = async (promise, ms, label) => {
   let t;
@@ -300,6 +307,26 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
     return formationForumUrlForRole(role, formationKey);
   }, [formationKey, user]);
 
+  // ── Phase C — panneau « Discussion » (Sujet de contexte vidéo) ─────────────────
+  // ADDITIF : un fil de discussion par vidéo (kind='topic', visibility='context'),
+  // get-or-create idempotent à la 1re ouverture du panneau, réservé aux inscrits +
+  // encadrement (contrôle d'accès côté API). Chemin de données isolé du reste du
+  // lecteur : si l'API échoue/refuse, le panneau dégrade en silence, la vidéo continue.
+  const {
+    activeTopic: discussionTopic,
+    topicMessages: discussionMessages,
+    topicMessagesLoading: discussionLoading,
+    getOrCreateContextTopic,
+    sendTopicMessage: sendDiscussionMessage,
+    closeActiveTopicView: closeDiscussionView,
+  } = useMessagingTopics(user?.id);
+
+  const [discussionText, setDiscussionText] = useState('');
+  const [discussionSending, setDiscussionSending] = useState(false);
+  const [discussionError, setDiscussionError] = useState(false);
+  // Mémorise le video_id déjà résolu pour ne lancer le get-or-create qu'une fois par vidéo.
+  const discussionOpenedForRef = useRef(null);
+
   const canEditQuestion = (createdAt) => {
     if (!createdAt) return false;
     const created = new Date(createdAt).getTime();
@@ -402,6 +429,54 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
     if (keyed?.url === normalizedUrl) return keyed;
     return { ...keyed, url: normalizedUrl };
   }, [activeItem?.kind, activeItem?.payload]);
+
+  // Phase C — video_id du Sujet de discussion = formation_day_contents.id (UUID réel).
+  const discussionVideoId = useMemo(() => {
+    const vid = currentVideoMemo?.id || activeItem?.payload?.id || '';
+    return isUuid(vid) ? vid : null;
+  }, [currentVideoMemo?.id, activeItem?.payload?.id]);
+
+  // Réinitialise le fil de discussion quand on change de vidéo (chaque vidéo a son Sujet).
+  useEffect(() => {
+    discussionOpenedForRef.current = null;
+    setDiscussionText('');
+    setDiscussionError(false);
+    closeDiscussionView();
+  }, [discussionVideoId, closeDiscussionView]);
+
+  // À l'ouverture du panneau Discussion : get-or-create idempotent du Sujet de la vidéo
+  // courante, puis ouverture de son fil. Une seule fois par vidéo (ref de garde).
+  // Dégrade en silence : pas de course_id ou pas de video_id UUID → panneau vide informatif.
+  useEffect(() => {
+    if (activePanel !== 'discussion') return;
+    if (!user?.id || !discussionVideoId || !formationKey) return;
+    if (discussionOpenedForRef.current === discussionVideoId) return;
+    discussionOpenedForRef.current = discussionVideoId;
+    setDiscussionError(false);
+    (async () => {
+      const topic = await getOrCreateContextTopic({
+        contextType: 'video',
+        contextId: discussionVideoId,
+        courseId: formationKey,
+        subject: activeItem?.title ? `Questions — ${activeItem.title}` : undefined,
+      });
+      if (!topic) {
+        // Échec/refus (ex. 403 non inscrit) → on autorise une nouvelle tentative et on
+        // affiche l'état d'indisponibilité plutôt qu'un panneau cassé.
+        discussionOpenedForRef.current = null;
+        setDiscussionError(true);
+      }
+    })();
+  }, [activePanel, user?.id, discussionVideoId, formationKey, activeItem?.title, getOrCreateContextTopic]);
+
+  const handleSendDiscussion = async () => {
+    const c = String(discussionText || '').trim();
+    if (!c || discussionSending || !discussionTopic?.id) return;
+    setDiscussionSending(true);
+    const ok = await sendDiscussionMessage(c);
+    setDiscussionSending(false);
+    if (ok) setDiscussionText('');
+  };
 
   const seekVideoTo = (timeSeconds) => {
     if (!videoPlayerRef.current || typeof videoPlayerRef.current.seekTo !== 'function') return;
@@ -1305,7 +1380,28 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                     <div className="p-4 md:p-8 max-w-6xl mx-auto w-full">
                       {activePanel === 'video' ? (
                         <div className="space-y-6">
-                          <VideoPlayer ref={videoPlayerRef} video={currentVideoMemo} onEnded={handleVideoEnded} onTimeUpdate={setVideoCurrentTime} />
+                          <VideoPlayer
+                            ref={videoPlayerRef}
+                            video={currentVideoMemo}
+                            onEnded={handleVideoEnded}
+                            onTimeUpdate={setVideoCurrentTime}
+                            overlay={(() => {
+                              const mm = currentVideoMemo?.mindmap || null;
+                              const chs = Array.isArray(currentVideoMemo?.chapters) ? currentVideoMemo.chapters : [];
+                              if (!mm || !chs.length) return null;
+                              return (
+                                <StudentSmartboardDeck
+                                  variant="overlay"
+                                  mindmap={mm}
+                                  chapters={chs}
+                                  currentTime={videoCurrentTime}
+                                  onSeek={seekVideoTo}
+                                  syncToVideo
+                                  className="h-full"
+                                />
+                              );
+                            })()}
+                          />
                           <div className="flex items-center justify-end">
                             <Button
                               type="button"
@@ -1321,6 +1417,27 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               Like
                             </Button>
                           </div>
+                          {(() => {
+                            const mm = currentVideoMemo?.mindmap || null;
+                            const chs = Array.isArray(currentVideoMemo?.chapters) ? currentVideoMemo.chapters : [];
+                            if (!mm || !chs.length) return null;
+                            return (
+                              <div className="space-y-1.5 md:hidden">
+                                <div className="text-xs text-[var(--school-accent)] uppercase tracking-wider font-semibold">SmartBoard — les cartes du cours</div>
+                                <StudentSmartboardDeck
+                                  mindmap={mm}
+                                  chapters={chs}
+                                  currentTime={videoCurrentTime}
+                                  onSeek={seekVideoTo}
+                                  syncToVideo
+                                  mode="reformulation"
+                                  panelHeightClass="h-[420px]"
+                                />
+                                <p className="text-[11px] text-gray-500">Les slides défilent avec la vidéo. Tu peux aussi naviguer carte par carte.</p>
+                              </div>
+                            );
+                          })()}
+
                           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                             <div className="lg:col-span-2 border border-white/10 rounded-xl bg-[#151a21]/60 backdrop-blur p-5">
                               <div className="text-xs text-[var(--school-accent)] uppercase tracking-wider font-semibold mb-2">Résumé</div>
@@ -1471,6 +1588,17 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                 >
                                                   💬 Question
                                                 </button>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setMindmapTab('slides')}
+                                                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                                                    mindmapTab === 'slides'
+                                                      ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
+                                                      : 'text-gray-400 hover:text-white'
+                                                  }`}
+                                                >
+                                                  🃏 Slides
+                                                </button>
                                               </div>
                                               <div className="flex items-center gap-2">
                                                 <Button type="button" variant="outline" className="h-8 border-white/10 text-white hover:bg-white/5" onClick={() => setMindmapMinimized(true)}>Réduire</Button>
@@ -1512,6 +1640,28 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                     )}
                                                   </AnimatePresence>
                                                 </div>
+                                              </div>
+                                            )}
+                                            {mindmapTab === 'slides' && (
+                                              <div className="h-[calc(82vh-3rem)] overflow-y-auto p-3">
+                                                {(() => {
+                                                  const mm = currentVideoMemo?.mindmap || null;
+                                                  const chs = Array.isArray(currentVideoMemo?.chapters) ? currentVideoMemo.chapters : [];
+                                                  if (!mm || !chs.length) {
+                                                    return <div className="h-full flex items-center justify-center text-sm text-gray-500">Aucune carte disponible pour ce cours.</div>;
+                                                  }
+                                                  return (
+                                                    <StudentSmartboardDeck
+                                                      mindmap={mm}
+                                                      chapters={chs}
+                                                      currentTime={videoCurrentTime}
+                                                      onSeek={(t) => { seekVideoTo(t); }}
+                                                      syncToVideo={false}
+                                                      mode="reformulation"
+                                                      panelHeightClass="h-[calc(82vh-9rem)]"
+                                                    />
+                                                  );
+                                                })()}
                                               </div>
                                             )}
                                             {mindmapTab === 'quiz' && (
@@ -2231,6 +2381,106 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                           </div>
                         </div>
                       ) : null}
+
+                      {activePanel === 'discussion' ? (
+                        <div className="max-w-3xl mx-auto">
+                          <div className="border border-white/10 rounded-xl bg-white/5 p-5 space-y-4">
+                            <div>
+                              <div className="font-bold flex items-center gap-2">
+                                <BookOpen className="w-4 h-4 text-[var(--school-accent)]" />
+                                Discussion de la vidéo
+                              </div>
+                              <div className="text-sm text-gray-300 mt-1">
+                                Échange avec les autres inscrits et l'équipe enseignante autour de cette vidéo. Les messages restent visibles uniquement par les personnes ayant accès au cours.
+                              </div>
+                            </div>
+
+                            {!discussionVideoId ? (
+                              <div className="text-sm text-gray-400 border border-white/10 rounded-lg bg-black/20 p-4">
+                                La discussion sera disponible dès que cette vidéo sera enregistrée dans le cours.
+                              </div>
+                            ) : discussionError ? (
+                              <div className="text-sm text-gray-400 border border-white/10 rounded-lg bg-black/20 p-4">
+                                Discussion momentanément indisponible. Tu dois être inscrit à ce cours pour y participer.
+                              </div>
+                            ) : (
+                              <>
+                                <div className="border border-white/10 rounded-lg bg-black/20 p-3 max-h-[320px] overflow-auto space-y-3">
+                                  {discussionLoading && !discussionMessages.length ? (
+                                    <div className="text-xs text-gray-500 py-6 text-center">Chargement de la discussion…</div>
+                                  ) : !discussionMessages.length ? (
+                                    <div className="text-xs text-gray-500 py-6 text-center">
+                                      Aucun message pour l'instant. Lance la discussion !
+                                    </div>
+                                  ) : (
+                                    discussionMessages.map((m) => {
+                                      const mine = m.sender_id && m.sender_id === user?.id;
+                                      return (
+                                        <div key={m.id} className={cn('flex flex-col', mine ? 'items-end' : 'items-start')}>
+                                          <div
+                                            className={cn(
+                                              'max-w-[85%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap break-words',
+                                              mine
+                                                ? 'bg-[var(--school-accent)] text-black'
+                                                : 'bg-white/10 text-white',
+                                            )}
+                                          >
+                                            {m.content}
+                                          </div>
+                                          {m.created_at ? (
+                                            <div className="text-[10px] text-gray-500 mt-1 px-1">
+                                              {new Date(m.created_at).toLocaleString()}
+                                            </div>
+                                          ) : null}
+                                        </div>
+                                      );
+                                    })
+                                  )}
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Textarea
+                                    value={discussionText}
+                                    onChange={(e) => setDiscussionText(e.target.value)}
+                                    className="bg-[#0F1419] border-white/10 min-h-[90px] text-white"
+                                    placeholder={discussionTopic?.id ? 'Écris ton message…' : 'Ouverture de la discussion…'}
+                                    disabled={!discussionTopic?.id || discussionTopic?.status === 'closed'}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                                        e.preventDefault();
+                                        handleSendDiscussion();
+                                      }
+                                    }}
+                                  />
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="text-[11px] text-gray-500">
+                                      {discussionTopic?.status === 'closed'
+                                        ? 'Discussion clôturée.'
+                                        : 'Astuce : Cmd/Ctrl + Entrée pour envoyer.'}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Button
+                                        variant="outline"
+                                        onClick={() => setActivePanel('video')}
+                                        className="border-white/10 text-white hover:bg-white/5"
+                                      >
+                                        Retour
+                                      </Button>
+                                      <Button
+                                        onClick={handleSendDiscussion}
+                                        disabled={!discussionTopic?.id || discussionSending || !discussionText.trim() || discussionTopic?.status === 'closed'}
+                                        className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"
+                                      >
+                                        {discussionSending ? 'Envoi…' : 'Envoyer'}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                     <div className="h-20" />
                   </div>
@@ -2286,7 +2536,9 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                           ? 'Quiz'
                           : activePanel === 'questions'
                             ? 'Question'
-                            : 'Cahier'}
+                            : activePanel === 'discussion'
+                              ? 'Discussion'
+                              : 'Cahier'}
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -2343,6 +2595,27 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                       }
                     >
                       Question
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={activePanel === 'discussion' ? 'secondary' : 'outline'}
+                      onClick={() => {
+                        if (!questionsUnlocked) {
+                          setQuestionToast(getQuestionsLockedReason());
+                          return;
+                        }
+                        setActivePanel('discussion');
+                      }}
+                      aria-disabled={!questionsUnlocked}
+                      className={
+                        activePanel === 'discussion'
+                          ? 'bg-white/10 text-white'
+                          : !questionsUnlocked
+                            ? 'border-white/10 text-white/40 opacity-60 cursor-not-allowed'
+                            : 'border-white/10 text-white hover:bg-white/5'
+                      }
+                    >
+                      Discussion
                     </Button>
                   </div>
                 </div>
