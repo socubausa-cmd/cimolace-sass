@@ -1,18 +1,19 @@
 import { Capacitor } from '@capacitor/core';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 
-const MOBILE_BREAKPOINT = '(max-width: 1023px)';
-
 /**
  * Entrée **LIRI** (app membre) — distincte du seul portail vitrine. Voir `liriVitrineModel.js`.
  *
- * Petite vue (téléphone / tablette) ou app native : on préfère le parcours connexion LIRI élève.
+ * La coque LIRI `/m/eleve` (login + écran « installez l'app ») est réservée à
+ * l'app **native Capacitor**. Un navigateur mobile reste sur le web responsive
+ * (`/login`, `/student-school-life`…). Décision produit 2026-06-21 :
+ * « mobile web = web responsive, jamais la version coque/Capacitor ».
+ * (Avant : tout écran ≤1023px basculait sur la coque → « version capacitore » sur mobile web.)
  */
 export function shouldUseLiriMobileLogin() {
   if (typeof window === 'undefined') return false;
   try {
-    if (Capacitor.isNativePlatform()) return true;
-    return window.matchMedia(MOBILE_BREAKPOINT).matches;
+    return Capacitor.isNativePlatform();
   } catch {
     return false;
   }
