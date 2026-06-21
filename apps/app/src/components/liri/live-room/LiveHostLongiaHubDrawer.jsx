@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, ChevronUp, Eye, Minimize2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { designerShellChipGhost } from '@/lib/liriDesignerShellClasses';
 import {
   LIVE_DRAWER_BACKDROP_TRANSITION,
   LIVE_TAB_SPRING,
+  liveDrawerAsideLeft,
   liveDrawerFloatPanel,
 } from '@/lib/liveDrawerMotion';
 
@@ -107,7 +109,7 @@ export default function LiveHostLongiaHubDrawer({
     );
 
   const signalsPanelDesktop = (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-transparent px-3 py-3 [scrollbar-width:thin]">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent px-3 py-3 [scrollbar-width:thin]">
       {signalsBody}
     </div>
   );
@@ -118,85 +120,87 @@ export default function LiveHostLongiaHubDrawer({
     </div>
   );
 
-  /** Sidebar premium FLOTTANTE — ancrée à DROITE, glassmorphism chaud (or/ambre), slide depuis la droite.
-   *  Flotte au-dessus du canvas sans le pousser ni le redimensionner. */
+  /** Tiroir latéral classique — ancré à gauche. */
   if (!centralFocusMode) {
     return (
-      <motion.aside
-        initial={{ x: '112%', opacity: 0.5 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: '112%', opacity: 0 }}
-        transition={{ type: 'spring', stiffness: 240, damping: 30, mass: 0.9 }}
-        role="complementary"
-        aria-label="Hub LONGIA — signaux et salle"
-        className="fixed right-5 z-[90] flex flex-col overflow-hidden text-white"
-        style={{
-          top: 60,
-          width: 'min(340px, calc(100vw - 32px))',
-          height: 'calc(100vh - 120px)',
-          borderRadius: 24,
-          background:
-            'radial-gradient(130% 80% at 100% -10%, rgba(212,163,106,0.08), transparent 44%), linear-gradient(165deg, rgba(40,37,33,0.72) 0%, rgba(23,21,18,0.82) 100%)',
-          backdropFilter: 'blur(28px) saturate(150%)',
-          WebkitBackdropFilter: 'blur(28px) saturate(150%)',
-          border: '1px solid rgba(212,163,106,0.16)',
-          boxShadow:
-            '0 30px 90px rgba(0,0,0,0.58), 0 2px 0 rgba(255,255,255,0.05) inset, 0 0 0 1px rgba(255,255,255,0.03) inset',
-        }}
-      >
-        {/* En-tête : pastille dorée + titre serif, fine séparation */}
-        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/[0.06] px-4 pb-3 pt-4">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <div className="h-9 w-9 shrink-0 rounded-2xl bg-gradient-to-br from-amber-300/90 to-amber-700/80 ring-1 ring-amber-200/25 shadow-[0_4px_18px_rgba(212,163,106,0.4)]" />
-            <div className="min-w-0">
-              <p className="text-[8.5px] font-bold uppercase tracking-[0.2em] text-amber-200/55">Signaux &amp; salle</p>
+      <>
+        {/* Voile visuel seulement : sans pointer-events, sinon il capte tous les clics
+            au-dessus du plateau (bouton LONGIA, Mesh, etc.) qui sont en z-index plus bas. */}
+        <div
+          role="presentation"
+          aria-hidden
+          className="pointer-events-none fixed top-0 right-0 bottom-0 z-[85] bg-black/50 lg:bg-black/40"
+          style={{ left: `min(100vw, ${drawerWidthPx}px)` }}
+        />
+        <motion.aside
+          {...liveDrawerAsideLeft}
+          className={cn(
+            'live-studio-premium live-studio-pane-left fixed left-0 top-0 z-[90] flex h-[100dvh] shrink-0 flex-col text-white',
+            'shadow-[16px_0_48px_rgba(0,0,0,.55)] ring-1 ring-inset ring-white/[0.02]',
+          )}
+          style={{
+            width: `min(100vw, ${drawerWidthPx}px)`,
+            maxWidth: `min(100vw, ${drawerWidthPx}px)`,
+          }}
+        >
+          {/* En-tête aligné shell Studio Live Creator (live-studio-pane-head) */}
+          <header className="live-studio-pane-head flex shrink-0 items-start justify-between gap-3 px-3 py-2.5">
+            <div className="min-w-0 flex-1 space-y-0.5 pt-0.5">
+              <p className="live-studio-pane-head-title">Signaux & salle</p>
               <h2
-                className="truncate text-[15px] font-semibold leading-tight tracking-[0.04em] text-[#e9d2a6]"
+                className="truncate text-[13px] font-semibold leading-snug tracking-[0.04em] text-[#e3c79a]"
                 style={{ fontFamily: 'Georgia, "Times New Roman", ui-serif, serif' }}
               >
                 LONGIA · HUB
               </h2>
             </div>
-          </div>
-          <div className="flex shrink-0 items-center gap-1.5">
-            {typeof onOpenLayoutPreview === 'function' ? (
+            <div className="flex shrink-0 items-center gap-1.5">
+              {typeof onOpenLayoutPreview === 'function' ? (
+                <button
+                  type="button"
+                  onClick={onOpenLayoutPreview}
+                  title="Aperçu des vues — mobile et projecteur"
+                  aria-label="Aperçu des vues mobile et projecteur"
+                  className={cn(
+                    designerShellChipGhost,
+                    'flex h-9 w-9 items-center justify-center rounded-xl border p-0 transition-colors',
+                    layoutPreviewHubActive
+                      ? 'border-amber-400/45 bg-amber-500/15 text-amber-100'
+                      : 'border-white/12 text-white/70 hover:border-amber-400/35 hover:bg-amber-500/10 hover:text-amber-100',
+                  )}
+                >
+                  <Eye className="h-4 w-4" strokeWidth={2} aria-hidden />
+                </button>
+              ) : null}
               <button
                 type="button"
-                onClick={onOpenLayoutPreview}
-                title="Aperçu des vues — mobile et projecteur"
-                aria-label="Aperçu des vues mobile et projecteur"
+                onClick={onClose}
                 className={cn(
-                  'flex h-9 w-9 items-center justify-center rounded-xl border transition-colors',
-                  layoutPreviewHubActive
-                    ? 'border-amber-400/45 bg-amber-500/15 text-amber-100'
-                    : 'border-white/[0.08] bg-white/[0.04] text-white/60 hover:border-amber-400/35 hover:bg-amber-500/10 hover:text-amber-100',
+                  designerShellChipGhost,
+                  'shrink-0 rounded-xl border border-white/12 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-white/80 hover:border-white/18 hover:bg-white/[0.07] hover:text-white/95',
                 )}
               >
-                <Eye className="h-4 w-4" strokeWidth={2} aria-hidden />
+                Fermer
               </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={onClose}
-              title="Fermer le hub LONGIA"
-              aria-label="Fermer le hub LONGIA"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-white/55 transition-colors hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-100"
+            </div>
+          </header>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key="signals"
+              role="region"
+              aria-label="Signaux LONGIA"
+              className="flex min-h-0 flex-1 flex-col overflow-hidden"
+              initial={{ opacity: 0, y: 12, scaleY: 0.982 }}
+              animate={{ opacity: 1, y: 0, scaleY: 1 }}
+              exit={{ opacity: 0, y: -10, scaleY: 0.99 }}
+              transition={LIVE_TAB_SPRING}
+              style={{ transformOrigin: '50% 0%' }}
             >
-              <X className="h-4 w-4" strokeWidth={2} />
-            </button>
-          </div>
-        </header>
-        <motion.div
-          role="region"
-          aria-label="Signaux LONGIA"
-          className="flex min-h-0 flex-1 flex-col overflow-hidden"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={LIVE_TAB_SPRING}
-        >
-          {signalsPanelDesktop}
-        </motion.div>
-      </motion.aside>
+              {signalsPanelDesktop}
+            </motion.div>
+          </AnimatePresence>
+        </motion.aside>
+      </>
     );
   }
 
