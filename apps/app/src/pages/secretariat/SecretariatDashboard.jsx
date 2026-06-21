@@ -28,16 +28,16 @@ import NgowazuluMentoratManagerTab from '@/components/ngowazulu/owner/NgowazuluM
 import NgowazuluOperationsPanel from '@/components/ngowazulu/admin/NgowazuluOperationsPanel';
 import SiteReviewsModerationPanel from '@/components/marketing/SiteReviewsModerationPanel';
 import AdministrativeDocumentStudio from '@/components/secretariat/AdministrativeDocumentStudio';
-import StudentForumRedesign from '@/pages/school/student-school-life/StudentForumRedesign';
+import CommunicationShell from '@/components/school/CommunicationShell';
 import { SslThemeProvider, SSL_LIGHT_CLASS, ensureSslLightStyles } from '@/pages/school/student-school-life/sslTheme';
 import { useShellTint } from '@/lib/useShellTint';
 import { FormationForumContent } from '@/pages/school/FormationForumPage';
 import { FORUM_COMMUNITY_PATH } from '@/lib/forumDashboardPaths';
 
 /**
- * Forum communauté du secrétariat = MÊME forum riche immersif que l'élève et l'admin
- * (StudentForumRedesign), suivant la teinte partagée (sombre par défaut). Les sous-pages
- * (fil / nouvelle question) sont routées dans App.jsx sous /secretariat-space/forum/*.
+ * Communication du secrétariat = MÊME shell unifié que l'élève et l'admin
+ * (CommunicationShell : onglets Forum + Messagerie immersive), suivant la teinte partagée
+ * (sombre par défaut). Sous-pages forum (fil / nouvelle question) routées dans App.jsx.
  */
 const SecretariatForumPanel = () => {
   useEffect(() => { ensureSslLightStyles(); }, []);
@@ -46,7 +46,7 @@ const SecretariatForumPanel = () => {
   return (
     <SslThemeProvider mode={isLight ? 'light' : 'dark'}>
       <div className={isLight ? SSL_LIGHT_CLASS : ''}>
-        <StudentForumRedesign forumBasePath="/secretariat-space/forum" />
+        <CommunicationShell forumBasePath="/secretariat-space/forum" />
       </div>
     </SslThemeProvider>
   );

@@ -12,7 +12,7 @@ import StudentNotesPage from './StudentNotesPage';
 import StudentAbsencesPage from './StudentAbsencesPage';
 import StudentDocumentsPage from './StudentDocumentsPage';
 import StudentForumCommunityPage from './StudentForumCommunityPage';
-import StudentForumRedesign from './StudentForumRedesign';
+import CommunicationShell from '@/components/school/CommunicationShell';
 import StudentNeuroRecallPage from './StudentNeuroRecallPage';
 import ForumNewQuestionPage from './ForumNewQuestionPage';
 import ForumThreadPage from './ForumThreadPage';
@@ -163,7 +163,7 @@ const StudentSchoolLifePage = () => {
             <Route path="documents" element={<StudentDocumentsPage />} />
             <Route path="neuro-recall" element={<StudentNeuroRecallPage />} />
             <Route path="forum/formation/:formationId" element={<StudentFormationForumRoute />} />
-            <Route path="forum" element={<StudentForumRedesign />} />
+            <Route path="forum" element={<CommunicationShell forumBasePath="/student-school-life/forum" />} />
             <Route path="forum/new" element={<ForumNewQuestionPage />} />
             <Route path="forum/thread/:threadId" element={<ForumThreadPage />} />
             <Route path="vie-scolaire" element={<SchoolLifePage embedded />} />

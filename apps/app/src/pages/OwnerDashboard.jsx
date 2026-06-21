@@ -34,7 +34,7 @@ import SecretariatBillingPanel from '@/components/secretariat/SecretariatBilling
 import NgowazuluMentoratManagerTab from '@/components/ngowazulu/owner/NgowazuluMentoratManagerTab';
 import NgowazuluOperationsPanel from '@/components/ngowazulu/admin/NgowazuluOperationsPanel';
 import SiteReviewsModerationPanel from '@/components/marketing/SiteReviewsModerationPanel';
-import StudentForumRedesign from '@/pages/school/student-school-life/StudentForumRedesign';
+import CommunicationShell from '@/components/school/CommunicationShell';
 import { SslThemeProvider, SSL_LIGHT_CLASS, ensureSslLightStyles } from '@/pages/school/student-school-life/sslTheme';
 import { useShellTint } from '@/lib/useShellTint';
 import { FormationForumContent } from '@/pages/school/FormationForumPage';
@@ -56,7 +56,7 @@ const OwnerForumPanel = () => {
   return (
     <SslThemeProvider mode={isLight ? 'light' : 'dark'}>
       <div className={isLight ? SSL_LIGHT_CLASS : ''}>
-        <StudentForumRedesign forumBasePath="/owner-dashboard/forum" />
+        <CommunicationShell forumBasePath="/owner-dashboard/forum" />
       </div>
     </SslThemeProvider>
   );
