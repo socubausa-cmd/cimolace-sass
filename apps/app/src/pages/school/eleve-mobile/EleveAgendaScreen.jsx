@@ -11,6 +11,7 @@ import {
   Video,
   GraduationCap,
   BookOpen,
+  PlayCircle,
 } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, isValid, addWeeks } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -39,6 +40,7 @@ const TYPE_STYLES = {
   exam: 'bg-violet-500/15 text-violet-100 border-violet-500/30',
   school: 'bg-sky-500/12 text-sky-100 border-sky-500/25',
   calendar: 'bg-[rgba(123,97,255,0.2)] text-violet-100 border-violet-500/35',
+  course_video: 'bg-teal-500/14 text-teal-100 border-teal-500/30',
 };
 
 /** Halos (lun–ven, idx 0–4) : bleu → indigo → violet — se détachent du fond noir. */
@@ -90,6 +92,8 @@ function typeLabel(t) {
       return 'Examen';
     case 'calendar':
       return 'Planning';
+    case 'course_video':
+      return 'Vidéo du cours';
     default:
       return 'Événement';
   }
@@ -385,6 +389,8 @@ export default function EleveAgendaScreen() {
                           <GraduationCap className="h-4 w-4" />
                         ) : ev.type === 'live' ? (
                           <Video className="h-4 w-4" />
+                        ) : ev.type === 'course_video' ? (
+                          <PlayCircle className="h-4 w-4" />
                         ) : ev.type === 'exam' ? (
                           <BookOpen className="h-4 w-4" />
                         ) : (

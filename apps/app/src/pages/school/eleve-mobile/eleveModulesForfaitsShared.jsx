@@ -212,11 +212,19 @@ export { EV_MUTED };
 
 export async function fetchPublishedFormationsForModules() {
   // Source réelle : table `courses` (la table `formations` n'existe pas dans ce tenant).
-  // On lit aussi les vraies colonnes d'accès (price_cents/is_free) pour que le
-  // badge des modules reflète l'accès réel et non la simple existence d'un cours.
-  const { data, error } = await supabase
+  // ⚠️ Schéma prod réel : `courses` n'a que tenant_id/category/price_cents/status
+  //    (PAS de `is_free`/`currency` → on ne lit que les colonnes existantes).
+  // ⚠️ Routage : `supabase.from('courses')` (supabaseCompat) part vers l'API NestJS
+  //    `coursesApi.list()` qui scope par tenant du CONTEXTE de requête et renvoyait
+  //    vide pour « Tous les cours ». On lit donc le catalogue en SUPABASE DIRECT
+  //    (client réel exposé par supabaseCompat) : RLS `courses_tenant_read` + filtre
+  //    `published`. → un membre du tenant école voit ses cours publiés.
+  const realClient =
+    (typeof window !== 'undefined' && window.__isnaV2SupabaseClient) || supabase;
+  const { data, error } = await realClient
     .from('courses')
-    .select('id,title,description,category,price_cents,is_free,currency')
+    .select('id,title,description,category,price_cents')
+    .eq('status', 'published')
     .order('title', { ascending: true })
     .limit(40);
   if (error) return [];

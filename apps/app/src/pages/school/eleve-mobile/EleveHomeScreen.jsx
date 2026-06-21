@@ -7,17 +7,13 @@ import {
   MessageCircle,
   Users,
   CalendarDays,
-  CalendarRange,
   ChevronRight,
   Play,
   ShieldCheck,
   BadgeCheck,
-  Brain,
   PlayCircle,
-  Layers,
-  ShoppingBag,
-  GraduationCap,
   School,
+  User,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useDataSync } from '@/contexts/DataSyncContext';
@@ -59,6 +55,13 @@ import {
 import { cn } from '@/lib/utils';
 import { LiriPageFooterLine, LiriWordmark } from '@/components/brand/LiriWordmark';
 
+/**
+ * Gris secondaire de l'accueil — plus clair que `EV_MUTED` (#8E8E93) pour remonter le
+ * contraste du texte secondaire sur fond #0B0B0F (≈ 4.7:1 → ≈ 7:1, lisible). Local à cet
+ * écran ; on ne touche pas le token partagé `EV_MUTED`.
+ */
+const EV_MUTED_HOME = '#B9B9C2';
+
 function homeHeroCardSurface() {
   return {
     background: [
@@ -93,7 +96,7 @@ function HelloHero({ firstName }) {
           <p className="text-[20px] font-extrabold leading-[1.15] tracking-tight text-white sm:text-[22px]">
             Bonjour, {firstName || 'ÉLÈVE'} ! <span className="inline-block">👋</span>
           </p>
-          <p className="mt-2 text-[12.5px] leading-[1.45] sm:text-[13px]" style={{ color: EV_MUTED }}>
+          <p className="mt-2 text-[12.5px] leading-[1.45] sm:text-[13px]" style={{ color: '#D6D6DE' }}>
             Prêt à apprendre aujourd&apos;hui ? Continue ton parcours et rejoins ton prochain live.
           </p>
           <Link
@@ -531,7 +534,7 @@ function UpcomingItem({ icon: Icon, accent, when, title, sub, prof, profInitial,
             {when}
           </p>
           <p className="mt-0.5 truncate text-[14px] font-bold text-white">{title}</p>
-          <p className="truncate text-[11.5px]" style={{ color: EV_MUTED }}>
+          <p className="truncate text-[11.5px]" style={{ color: EV_MUTED_HOME }}>
             {sub}
           </p>
           {prof ? (
@@ -542,7 +545,7 @@ function UpcomingItem({ icon: Icon, accent, when, title, sub, prof, profInitial,
               >
                 {profInitial || prof[0]}
               </span>
-              <span className="text-[10.5px]" style={{ color: EV_MUTED }}>
+              <span className="text-[10.5px]" style={{ color: EV_MUTED_HOME }}>
                 {prof}
               </span>
             </div>
@@ -731,9 +734,9 @@ export default function EleveHomeScreen() {
 
         <div className="px-4 pb-2 pt-0.5">
           <div className="mb-1 min-w-0">
-            <LiriWordmark size="kicker" className="text-white/40" />
+            <LiriWordmark size="kicker" className="text-white/60" />
             <h1 className="mt-0.5 text-[22px] font-extrabold leading-tight tracking-[-0.02em] text-white">Accueil</h1>
-            <p className="mt-1 text-[13px] font-medium" style={{ color: EV_MUTED }}>
+            <p className="mt-1 text-[13px] font-medium" style={{ color: EV_MUTED_HOME }}>
               Tableau de bord · apprendre, vivre, grandir
             </p>
           </div>
@@ -742,8 +745,25 @@ export default function EleveHomeScreen() {
         <div className="px-4 pb-4">
           <HelloHero firstName={firstName} />
 
+          {/*
+            P6 — Accueil minimaliste : UNE seule grille d'accès, sans redondance.
+            Les 3 anciennes grilles (Accès rapide / Espaces LIRI / Mon École = 13 entrées)
+            multipliaient les doublons (Live ×3, Calendrier + Agenda, Classe / Espace élève /
+            Vie scolaire, Cours / Modules). On garde l'essentiel et on fusionne :
+              • Modules → Cours (bibliotheque)
+              • Classe + Espace élève → Vie scolaire
+              • Calendrier → Agenda (un seul calendrier)
+            Le reste (Neuron, Forfaits, Boutique) reste accessible via Vie scolaire / la
+            bibliothèque et le menu de parité — pas besoin de l'exposer sur l'accueil.
+          */}
           <EleveSectionTitle className="!mb-3">Accès rapide</EleveSectionTitle>
-          <div className="mb-6 grid grid-cols-5 gap-1.5 sm:gap-2">
+          <div className="mb-7 grid grid-cols-4 gap-2.5">
+            <QuickTile
+              to={ELEVE_MOBILE.bibliotheque}
+              icon={BookOpen}
+              label="Cours"
+              accent="blue"
+            />
             <QuickTile
               to={ELEVE_MOBILE.live}
               icon={Radio}
@@ -753,21 +773,9 @@ export default function EleveHomeScreen() {
               soon={liveSoon}
             />
             <QuickTile
-              to={ELEVE_MOBILE.bibliotheque}
-              icon={BookOpen}
-              label="Cours"
-              accent="blue"
-            />
-            <QuickTile
-              to={ELEVE_MOBILE.messages}
-              icon={MessageCircle}
-              label="Messages"
-              accent="green"
-            />
-            <QuickTile
-              to={ELEVE_MOBILE.classe}
-              icon={Users}
-              label="Classe"
+              to={ELEVE_MOBILE.vieScolaire}
+              icon={School}
+              label="Vie scolaire"
               accent="purple"
             />
             <QuickTile
@@ -776,15 +784,11 @@ export default function EleveHomeScreen() {
               label="Agenda"
               accent="orange"
             />
-          </div>
-
-          <EleveSectionTitle className="!mb-3">Espaces LIRI</EleveSectionTitle>
-          <div className="mb-6 grid grid-cols-5 gap-1.5 sm:gap-2">
             <QuickTile
-              to={ELEVE_MOBILE.neuron}
-              icon={Brain}
-              label="Neuron IA"
-              accent="purple"
+              to={ELEVE_MOBILE.messages}
+              icon={MessageCircle}
+              label="Messages"
+              accent="green"
             />
             <QuickTile
               to={ELEVE_MOBILE.replays}
@@ -793,50 +797,10 @@ export default function EleveHomeScreen() {
               accent="teal"
             />
             <QuickTile
-              to={ELEVE_MOBILE.forfaits}
-              icon={Layers}
-              label="Forfaits"
-              accent="orange"
-            />
-            <QuickTile
-              to={ELEVE_MOBILE.modules}
-              icon={BookOpen}
-              label="Modules"
+              to={ELEVE_MOBILE.profile}
+              icon={User}
+              label="Profil"
               accent="blue"
-            />
-            <QuickTile
-              to={ELEVE_MOBILE.shop}
-              icon={ShoppingBag}
-              label="Boutique"
-              accent="green"
-            />
-          </div>
-
-          <EleveSectionTitle className="!mb-3">Mon École</EleveSectionTitle>
-          <div className="mb-6 grid grid-cols-3 gap-1.5 sm:gap-2">
-            <QuickTile
-              to={ELEVE_MOBILE.calendrierAnnuel}
-              icon={CalendarRange}
-              label="Calendrier"
-              accent="purple"
-            />
-            <QuickTile
-              to={ELEVE_MOBILE.vieScolaire}
-              icon={School}
-              label="Vie scolaire"
-              accent="blue"
-            />
-            {/*
-              P5(a) — consolidation : « Espace élève » (etudiant) double l'aperçu de Vie scolaire
-              (mêmes données : moyenne, absences, formations). On pointe cette entrée vers la cible
-              canonique `vieScolaire`. L'espace étudiant détaillé reste accessible via le menu de
-              parité web (VieScolaireWebParityMenu) et ses routes /m/eleve/etudiant/*.
-            */}
-            <QuickTile
-              to={ELEVE_MOBILE.vieScolaire}
-              icon={GraduationCap}
-              label="Espace élève"
-              accent="orange"
             />
           </div>
 
@@ -883,11 +847,11 @@ export default function EleveHomeScreen() {
           </div>
 
           {agendaLoading ? (
-            <p className="mb-4 text-[12.5px] font-medium" style={{ color: EV_MUTED }}>
+            <p className="mb-4 text-[12.5px] font-medium" style={{ color: EV_MUTED_HOME }}>
               Chargement de l'agenda…
             </p>
           ) : upcomingFromAgenda.length === 0 ? (
-            <p className="mb-4 text-[12.5px] font-medium" style={{ color: EV_MUTED }}>
+            <p className="mb-4 text-[12.5px] font-medium" style={{ color: EV_MUTED_HOME }}>
               Aucun événement bientôt (école, cours ou rendez-vous) — le secrétariat et ton planning
               alimentent cette liste.
             </p>

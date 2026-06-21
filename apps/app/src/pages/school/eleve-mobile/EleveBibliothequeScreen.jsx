@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -25,6 +25,7 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useLiriMobileEnrollmentPreview } from '@/hooks/useLiriMobileEnrollmentPreview';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { EV_BG, EV_MUTED, EV_LINE, EV_R } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
+import { fetchPublishedFormationsForModules } from '@/pages/school/eleve-mobile/eleveModulesForfaitsShared';
 
 /** Même filet d'atmosphère que l'agenda (aligné `EleveMobileShell`). */
 const PAGE_AMBIENT =
@@ -89,50 +90,6 @@ function longiaRowSurface() {
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px -4px rgba(99, 102, 241, 0.15)',
   };
 }
-
-const DEMO_IN_PROGRESS = [
-  {
-    id: 'd1',
-    to: ELEVE_MOBILE.bibliotheque,
-    title: 'Physique – Terminale S',
-    sub: 'Chapitre 3 : Ondes et lumière',
-    prof: 'Prof. Manikongo',
-    percent: 75,
-    accent: { badge: 'from-violet-500/90 to-fuchsia-600/80', bar: 'from-violet-500 to-fuchsia-500', pct: 'text-violet-400' },
-    symbol: 'atom',
-  },
-  {
-    id: 'd2',
-    to: ELEVE_MOBILE.bibliotheque,
-    title: 'Mathématiques – Terminale S',
-    sub: 'Chapitre 5 : Suites numériques',
-    prof: 'Prof. Kabasele',
-    percent: 42,
-    accent: { badge: 'from-emerald-500/90 to-teal-600/80', bar: 'from-emerald-400 to-teal-500', pct: 'text-emerald-400' },
-    symbol: 'math',
-  },
-  {
-    id: 'd3',
-    to: ELEVE_MOBILE.bibliotheque,
-    title: 'Chimie – Terminale S',
-    sub: 'Chapitre 2 : Réactions chimiques',
-    prof: 'Prof. Nguema',
-    percent: 58,
-    accent: { badge: 'from-violet-500/90 to-indigo-600/80', bar: 'from-violet-500 to-indigo-500', pct: 'text-violet-300' },
-    symbol: 'flask',
-  },
-];
-
-const DEMO_DONE = [
-  {
-    id: 'x1',
-    to: ELEVE_MOBILE.bibliotheque,
-    title: 'SVT – Terminale S',
-    sub: "Chap. 1 : Génétique — Terminé",
-    prof: 'Prof. A.',
-    imageTone: 'from-emerald-900/50 to-cyan-900/40',
-  },
-];
 
 function subjectIcon(key) {
   if (key === 'math') return Calculator;
@@ -213,6 +170,23 @@ function buildDoneRowsFromEnrollments(enrollments) {
         imageTone: formationCoverStyle(f?.title),
       };
     });
+}
+
+/** Map de vrais cours publiés (catalogue) vers les cartes « Tous les cours ». */
+function buildCatalogRows(courses) {
+  return (Array.isArray(courses) ? courses : []).map((c) => {
+    const t = c?.title || 'Formation';
+    return {
+      id: c.id,
+      to: c?.id ? ELEVE_MOBILE.course(c.id) : '/formations/catalogue',
+      title: t,
+      sub: c?.description ? String(c.description).trim().slice(0, 80) : 'Cours disponible',
+      prof: 'Formateur LIRI',
+      imageUrl: c?.image_url || null,
+      imageTone: formationCoverStyle(t),
+      symbol: t.toLowerCase().includes('math') ? 'math' : t.toLowerCase().includes('chim') ? 'flask' : 'atom',
+    };
+  });
 }
 
 function CoursBibliothequeHeader() {
@@ -497,6 +471,39 @@ function CourseCardDone({ row, index }) {
   );
 }
 
+function CourseCatalogCard({ row, index }) {
+  const Icon = subjectIcon(row.symbol);
+  const to = row.to || '/formations/catalogue';
+  return (
+    <Link to={to} className="mb-3 block last:mb-0">
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.04 * index }}
+        className="relative flex gap-3 overflow-hidden rounded-2xl p-3"
+        style={{ borderRadius: EV_R.md, ...courseInProgressSurface(index) }}
+      >
+        <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-xl">
+          {row.imageUrl ? (
+            <img src={row.imageUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <div className={cn('h-full w-full bg-gradient-to-br', row.imageTone || 'from-slate-800 to-slate-900')} />
+          )}
+          <div className="absolute bottom-1.5 left-1.5 flex h-7 w-7 items-center justify-center rounded-full border border-white/20 bg-black/50 backdrop-blur-sm">
+            <Icon className="h-3.5 w-3.5 text-white" strokeWidth={2.1} />
+          </div>
+        </div>
+        <div className="min-w-0 flex-1 py-0.5 pr-1">
+          <p className="line-clamp-1 text-[14px] font-bold leading-tight text-white">{row.title}</p>
+          <p className="mt-0.5 line-clamp-2 text-[11.5px] text-white/55">{row.sub}</p>
+          <p className="mt-1.5 text-[10.5px] text-white/45">{row.prof}</p>
+        </div>
+        <ChevronRight className="h-4 w-4 shrink-0 self-center text-white/30" />
+      </motion.div>
+    </Link>
+  );
+}
+
 function LongiaHelpRow() {
   return (
     <Link
@@ -527,19 +534,36 @@ export default function EleveBibliothequeScreen() {
   const completedCount = useMemo(() => courseGroups.filter((g) => g.isDone).length, [courseGroups]);
   const total = courseGroups.length;
 
-  const inProgressRows = useMemo(() => {
-    const fromDb = buildCourseRowsFromEnrollments(enrollments);
-    if (fromDb.length) return fromDb;
-    if (total === 0) return DEMO_IN_PROGRESS;
-    return [];
-  }, [enrollments, total]);
+  // Catalogue réel (cours publiés) — alimente l'onglet « Tous les cours ».
+  const [catalog, setCatalog] = useState([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const rows = await fetchPublishedFormationsForModules();
+        if (alive) setCatalog(Array.isArray(rows) ? rows : []);
+      } catch {
+        if (alive) setCatalog([]);
+      } finally {
+        if (alive) setCatalogLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const catalogRows = useMemo(() => buildCatalogRows(catalog), [catalog]);
 
-  const doneRows = useMemo(() => {
-    const fromDb = buildDoneRowsFromEnrollments(enrollments);
-    if (fromDb.length) return fromDb;
-    if (total === 0) return DEMO_DONE;
-    return [];
-  }, [enrollments, total]);
+  // Plus de données démo : on n'affiche que les VRAIS cours de l'élève.
+  const inProgressRows = useMemo(
+    () => buildCourseRowsFromEnrollments(enrollments),
+    [enrollments],
+  );
+  const doneRows = useMemo(
+    () => buildDoneRowsFromEnrollments(enrollments),
+    [enrollments],
+  );
 
   return (
     <EleveMobileShell
@@ -584,18 +608,37 @@ export default function EleveBibliothequeScreen() {
               <EleveSectionTitle action="Voir tout" actionTo="/formations/mes-formations" className="mb-3" actionClassName="!text-violet-400">
                 En cours
               </EleveSectionTitle>
-              {inProgressRows.map((row, i) => (
-                <CourseCardInProgress key={row.id} row={row} index={i} />
-              ))}
+              {inProgressRows.length > 0 ? (
+                inProgressRows.map((row, i) => (
+                  <CourseCardInProgress key={row.id} row={row} index={i} />
+                ))
+              ) : !loading ? (
+                <Link
+                  to="/formations/catalogue"
+                  className="mb-2 flex items-center gap-3 rounded-2xl px-3.5 py-4 transition-transform active:scale-[0.99]"
+                  style={{ borderRadius: EV_R.lg, ...courseInProgressSurface(0) }}
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-violet-500/25 bg-violet-500/12 text-violet-200">
+                    <BookOpen className="h-5 w-5" strokeWidth={2} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[14px] font-bold text-white">Aucun cours en cours</p>
+                    <p className="mt-0.5 text-[12px] text-white/55">Choisis un cours pour commencer</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-white/30" />
+                </Link>
+              ) : null}
 
-              <div className="mt-1">
-                <EleveSectionTitle action="Voir tout" actionTo="/formations/mes-formations" className="mb-3" actionClassName="!text-violet-400">
-                  Terminés récemment
-                </EleveSectionTitle>
-                {doneRows.map((row, i) => (
-                  <CourseCardDone key={row.id} row={row} index={i} />
-                ))}
-              </div>
+              {doneRows.length > 0 ? (
+                <div className="mt-1">
+                  <EleveSectionTitle action="Voir tout" actionTo="/formations/mes-formations" className="mb-3" actionClassName="!text-violet-400">
+                    Terminés récemment
+                  </EleveSectionTitle>
+                  {doneRows.map((row, i) => (
+                    <CourseCardDone key={row.id} row={row} index={i} />
+                  ))}
+                </div>
+              ) : null}
 
               <div className="mt-2">
                 <LongiaHelpRow />
@@ -614,6 +657,24 @@ export default function EleveBibliothequeScreen() {
               <p className="text-[14px] leading-relaxed" style={{ color: EV_MUTED }}>
                 Parcours toutes les formations disponibles et inscris-toi en quelques clics.
               </p>
+
+              <div className="mt-4">
+                {catalogLoading ? (
+                  <div className="space-y-3" aria-busy="true">
+                    <div className="h-[96px] animate-pulse rounded-2xl bg-white/[0.05]" />
+                    <div className="h-[96px] animate-pulse rounded-2xl bg-white/[0.05]" />
+                  </div>
+                ) : catalogRows.length > 0 ? (
+                  catalogRows.map((row, i) => (
+                    <CourseCatalogCard key={row.id} row={row} index={i} />
+                  ))
+                ) : (
+                  <p className="py-6 text-center text-[12.5px] text-white/40">
+                    Aucun cours publié pour l&apos;instant.
+                  </p>
+                )}
+              </div>
+
               <Link
                 to="/formations/catalogue"
                 className="mt-4 flex h-12 items-center justify-center gap-1 rounded-2xl text-[15px] font-bold text-white transition-transform active:scale-[0.99]"
