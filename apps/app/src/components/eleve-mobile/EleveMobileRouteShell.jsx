@@ -2,6 +2,26 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
+import { isCapacitorNative } from '@/lib/studentWebPlatform';
+
+// La coque LIRI /m/eleve est l'UI de l'app NATIVE Capacitor. Dans un navigateur
+// (prod), on ne l'affiche JAMAIS → on renvoie vers l'équivalent web responsive.
+function webEquivalentForCoque(pathname, search) {
+  const q = search || '';
+  if (
+    pathname === ELEVE_MOBILE.login ||
+    pathname === ELEVE_MOBILE.signup ||
+    pathname === ELEVE_MOBILE.connexion ||
+    pathname.startsWith(`${ELEVE_MOBILE.connexion}/`)
+  ) {
+    return `/login${q}`;
+  }
+  const cours = pathname.match(/^\/m\/eleve\/cours\/([^/?#]+)/);
+  if (cours) return `/student-school-life/cours/${cours[1]}`;
+  if (pathname.startsWith('/m/eleve/agenda')) return '/student-school-life/agenda';
+  if (pathname.startsWith('/m/eleve/profil')) return '/student-school-life/profile';
+  return '/student-school-life/dashboard';
+}
 
 function isPublicEleveMobilePath(pathname) {
   return (
@@ -19,6 +39,15 @@ function isPublicEleveMobilePath(pathname) {
 function EleveAuthGate() {
   const location = useLocation();
   const { user, loading } = useAuth();
+
+  // Verrou « coque = app native Capacitor uniquement » : en PROD, hors WebView
+  // native, AUCUNE route /m/eleve ne s'affiche dans un navigateur (= plus jamais
+  // le « menu capacitore »). On redirige vers le web responsive. (En dev, la coque
+  // reste accessible pour le preview.)
+  if (import.meta.env.PROD && !isCapacitorNative()) {
+    return <Navigate to={webEquivalentForCoque(location.pathname, location.search)} replace />;
+  }
+
   const publicPath = isPublicEleveMobilePath(location.pathname);
 
   if (publicPath) return <Outlet />;
