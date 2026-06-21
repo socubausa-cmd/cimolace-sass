@@ -347,10 +347,61 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  // ── 8. Flashcards : un deck de révision par PARTICIPANT (à partir des Q&R) ─
+  // Modèle recall_decks/recall_cards = per-user (chaque élève révise SON deck avec
+  // son propre état de répétition espacée). On crée donc, une seule fois (à la
+  // génération), un deck par participant effectif du live, garni des cartes Q→R.
+  // Idempotent : on saute un participant qui a déjà un deck pour ce live.
+  let decksCreated = 0;
+  const cards = (qa || [])
+    .filter((x) => x && String(x.question || '').trim() && String(x.answer || '').trim())
+    .slice(0, 30)
+    .map((x) => ({
+      question: String(x.question).trim().slice(0, 1000),
+      answer: String(x.answer).trim().slice(0, 2000),
+    }));
+  if (summarizedNow && cards.length) {
+    const { data: parts } = await admin
+      .from('live_session_participants')
+      .select('user_id')
+      .eq('live_session_id', sessionId)
+      .limit(300);
+    const deckTitle = `Révision — ${title}`;
+    const userIds = [
+      ...new Set(
+        (parts || [])
+          .map((p: any) => p.user_id as string)
+          .filter((uid) => uid && uid !== hostId),
+      ),
+    ];
+    for (const uid of userIds) {
+      const { data: existingDeck } = await admin
+        .from('recall_decks')
+        .select('id')
+        .eq('tenant_id', tenantId)
+        .eq('user_id', uid)
+        .eq('title', deckTitle)
+        .maybeSingle();
+      if (existingDeck) continue;
+      const { data: deck } = await admin
+        .from('recall_decks')
+        .insert({ tenant_id: tenantId, user_id: uid, title: deckTitle })
+        .select('id')
+        .maybeSingle();
+      if (!deck?.id) continue;
+      const { error: cardsErr } = await admin
+        .from('recall_cards')
+        .insert(cards.map((c) => ({ tenant_id: tenantId, deck_id: deck.id, ...c })));
+      if (!cardsErr) decksCreated++;
+    }
+  }
+
   return json(200, {
     ok: true,
     summarized: summarizedNow,
     posted,
+    decksCreated,
+    cardsPerDeck: cards.length,
     topicId,
     questionsTotal,
     questionsAnswered,
