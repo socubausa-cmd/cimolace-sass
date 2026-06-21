@@ -7,6 +7,7 @@ import {
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
+import { useStudentProfile, validateProfileName, validateProfilePhone } from '@/hooks/useStudentProfile';
 // Thème host-aware : `T` = tokens vivants (clair sous l'espace élève, sombre sous le portail prof).
 import { themeProxy as T, useSslThemeMode } from '@/pages/school/student-school-life/sslTheme';
 
@@ -158,8 +159,11 @@ const StudentProfilePage = () => {
   useSslThemeMode(); // publie le mode (clair/sombre) pour `T` AVANT le rendu des sous-composants
   const { user, updatePassword } = useAuth();
   const { isDemoMode, demoData, restrictedAction } = useDemoMode();
+  // Profil via le service PARTAGÉ (même source que le mobile) : lecture + écritures
+  // name / phone / notify_sms. Le 2FA, l'avatar (Storage) et le mot de passe
+  // restent gérés localement (auth/storage, hors « ligne profiles »).
+  const { profile, updateProfile, updateNotifyPrefs, applyAvatarUrl } = useStudentProfile(user?.id);
 
-  const [profile, setProfile] = useState(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [notifySms, setNotifySms] = useState(false);
@@ -183,35 +187,16 @@ const StudentProfilePage = () => {
   const [mfaCode, setMfaCode] = useState('');
   const [mfaMsg, setMfaMsg] = useState(null);
 
+  // Synchronise les champs éditables depuis le profil chargé par le service
+  // partagé (fallback `user` si la ligne profiles n'existe pas encore).
   useEffect(() => {
-    if (isDemoMode || !user?.id) return;
-    let alive = true;
-    const load = async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id,name,email,role,phone,avatar_url,notify_sms')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (!alive) return;
-      const row = data || {
-        id: user.id,
-        name: user.name || '',
-        email: user.email || '',
-        role: user.role || 'student',
-        phone: user.phone || '',
-        avatar_url: user.avatar_url || null,
-        notify_sms: false,
-      };
-      setProfile(row);
-      setName(String(row.name || ''));
-      setPhone(String(row.phone || ''));
-      setNotifySms(row.notify_sms === true);
-    };
-    void load();
-    return () => {
-      alive = false;
-    };
-  }, [isDemoMode, user?.avatar_url, user?.email, user?.id, user?.name, user?.phone, user?.role]);
+    if (isDemoMode) return;
+    const row = profile || user;
+    if (!row) return;
+    setName(String(row.name || ''));
+    setPhone(String(row.phone || ''));
+    setNotifySms(row.notify_sms === true);
+  }, [isDemoMode, profile, user]);
 
   /* Charger les facteurs MFA existants (hors démo) */
   const refreshMfaFactors = async () => {
@@ -270,16 +255,15 @@ const StudentProfilePage = () => {
       return;
     }
     if (!user?.id) return;
+    const nameErr = validateProfileName(name || displayName);
+    const phoneErr = validateProfilePhone(phone);
+    if (nameErr || phoneErr) {
+      setInfoMsg({ type: 'error', text: nameErr || phoneErr });
+      return;
+    }
     setSaving(true);
     setInfoMsg(null);
-    const mergedName = String(name || '').trim();
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        name: mergedName || displayName,
-        phone: String(phone || '').trim() || null,
-      })
-      .eq('id', user.id);
+    const { error } = await updateProfile({ name: String(name || '').trim() || displayName, phone });
     setSaving(false);
     setInfoMsg(
       error
@@ -296,12 +280,7 @@ const StudentProfilePage = () => {
     if (!user?.id) return;
     setSavingPrefs(true);
     setPrefMsg(null);
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        notify_sms: notifySms === true,
-      })
-      .eq('id', user.id);
+    const { error } = await updateNotifyPrefs(notifySms);
     setSavingPrefs(false);
     setPrefMsg(
       error
@@ -379,7 +358,7 @@ const StudentProfilePage = () => {
       if (dbErr) throw dbErr;
 
       setAvatarUrl(publicUrl);
-      setProfile((p) => (p ? { ...p, avatar_url: publicUrl } : p));
+      applyAvatarUrl(publicUrl);
       setAvatarMsg({ type: 'success', text: 'Photo mise à jour.' });
     } catch (err) {
       setAvatarMsg({ type: 'error', text: `Erreur : ${err.message || err}` });

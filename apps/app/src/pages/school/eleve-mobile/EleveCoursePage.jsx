@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useDataSync } from '@/contexts/DataSyncContext';
 import { useBilling } from '@/contexts/BillingContext';
 import { supabase } from '@/lib/customSupabaseClient';
+import { useFormationStructure } from '@/hooks/useFormationStructure';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { getLoginEntryPath } from '@/lib/loginEntryPath';
 import { getBillingCheckoutPath } from '@/lib/eleveBillingPath';
@@ -39,6 +40,7 @@ export default function EleveCoursePage() {
   const { user, session } = useAuth();
   const { status: billingStatus, inGrace } = useBilling();
   const { notifications: sync } = useDataSync();
+  const { fetchStructure } = useFormationStructure();
   const inboxUnread = (Array.isArray(sync) ? sync : []).filter((n) => !n.isRead).length;
 
   const [formation, setFormation] = useState(null);
@@ -68,9 +70,10 @@ export default function EleveCoursePage() {
         // Source réelle : table `courses` (la table `formations` n'existe pas).
         // On lit les VRAIES colonnes d'accès/prix (price_cents/currency/is_free :
         // 20260521000031_courses_learning.sql) au lieu d'inventer access_mode='free'.
+        // tenant_id sert à créer la ligne student_progress (colonne NOT NULL).
         const { data: formData, error: formErr } = await supabase
           .from('courses')
-          .select('id, title, description, category, created_at, price_cents, currency, is_free, status, metadata')
+          .select('id, title, description, category, created_at, price_cents, currency, is_free, status, metadata, tenant_id')
           .eq('id', id)
           .maybeSingle();
 
@@ -132,31 +135,14 @@ export default function EleveCoursePage() {
           setEnrolled(false);
         }
 
-        // Structure du cours depuis course_modules + course_lessons
-        const { data: modulesData } = await supabase
-          .from('course_modules')
-          .select('id, title, description, course_lessons(id, title, description, content_type, duration_minutes, sort_order)')
-          .eq('course_id', id)
-          .order('sort_order', { ascending: true });
-
-        if (!cancelled) {
-          const structData = (modulesData || []).map((m) => ({
-            id: m.id,
-            title: m.title,
-            weeks: [{
-              id: m.id + '-w',
-              title: m.title,
-              days: (m.course_lessons || []).map((l) => ({
-                id: l.id,
-                title: l.title,
-                videos: [],
-                powerpoint: null,
-                quiz: null,
-              })),
-            }],
-          }));
-          setModules(structData);
-        }
+        // Structure RÉELLE du cours via le hook PARTAGÉ useFormationStructure
+        // (modules → formation_weeks → formation_days → formation_day_contents,
+        // `modules.formation_id` = courses.id) : MÊME source et MÊME normalisation
+        // que le player web et la fiche cours web → une seule logique, plus de
+        // requête dupliquée ici. Le sommaire mobile ne lit que weeks[].title +
+        // days.length, que `fetchStructure` fournit déjà (forme identique).
+        const { data: structData } = await fetchStructure(id);
+        if (!cancelled) setModules(structData || []);
       } catch (e) {
         if (!cancelled) {
           setLoadError(e?.message || 'Erreur de chargement');
@@ -169,7 +155,7 @@ export default function EleveCoursePage() {
     return () => {
       cancelled = true;
     };
-  }, [id, user?.id]);
+  }, [id, user?.id, fetchStructure]);
 
   const meta = formation?.meta && typeof formation.meta === 'object' ? formation.meta : {};
   const year = useMemo(() => {
@@ -205,23 +191,26 @@ export default function EleveCoursePage() {
 
   const ensureEnrollment = useCallback(async () => {
     if (!user?.id || !id) return;
-    // Récupère la première leçon du cours pour créer une ligne student_progress
-    const { data: firstLesson } = await supabase
-      .from('course_lessons')
-      .select('id, module_id, course_modules!inner(course_id)')
-      .eq('course_modules.course_id', id)
-      .order('sort_order', { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (!firstLesson) return; // pas de leçon → pas d'inscription possible
-    const { error: spErr } = await supabase.from('student_progress').upsert({
-      user_id: user.id,
-      course_id: id,
-      lesson_id: firstLesson.id,
-      status: 'in_progress',
-    }, { onConflict: 'user_id,course_id,lesson_id', ignoreDuplicates: true });
+    // Inscription au NIVEAU COURS : le vrai contenu vit dans le modèle studio
+    // (modules/formation_days/...), pas dans course_lessons — il n'existe donc
+    // pas de lesson_id à attacher. On crée une ligne student_progress course-level
+    // (lesson_id NULL, contrainte UNIQUE(user_id,course_id) :
+    // 20260621_student_progress_unique.sql). tenant_id est requis (NOT NULL).
+    const tenantId = formation?.tenant_id || null;
+    if (!tenantId) return; // sans tenant on ne peut pas écrire la ligne
+    const { error: spErr } = await supabase.from('student_progress').upsert(
+      {
+        user_id: user.id,
+        course_id: id,
+        tenant_id: tenantId,
+        lesson_id: null,
+        status: 'in_progress',
+      },
+      { onConflict: 'user_id,course_id', ignoreDuplicates: true },
+    );
     if (spErr && spErr.code !== '23505') throw spErr;
-  }, [user?.id, id]);
+    setEnrolled(true);
+  }, [user?.id, id, formation?.tenant_id]);
 
   const createOneTimePayment = useCallback(
     async (paymentMethod = 'mobile_money') => {

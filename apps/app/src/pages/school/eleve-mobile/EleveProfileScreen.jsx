@@ -24,6 +24,7 @@ import {
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useDataSync } from '@/contexts/DataSyncContext';
+import { useStudentProfile } from '@/hooks/useStudentProfile';
 import { useLiriMobileEnrollmentPreview } from '@/hooks/useLiriMobileEnrollmentPreview';
 import { useLiriStudentProgress } from '@/hooks/useLiriStudentProgress';
 import { cn } from '@/lib/utils';
@@ -358,14 +359,11 @@ export default function EleveProfileScreen() {
   const { notifications: syncNotifications } = useDataSync();
   const { enrollments, loading: enrollLoading } = useLiriMobileEnrollmentPreview(user?.id);
   const progress = useLiriStudentProgress(user?.id);
+  // Identité via le service profil PARTAGÉ (même source que la page web) : merge
+  // `profiles` + `user_metadata` → nom / avatar cohérents entre mobile et web.
+  const { displayName, avatarUrl, school: schoolName, classLabel, initials } = useStudentProfile(user?.id);
 
   const unread = (Array.isArray(syncNotifications) ? syncNotifications : []).filter((n) => !n.isRead).length;
-
-  const fullName = user?.user_metadata?.full_name || user?.email?.split?.('@')?.[0] || 'Élève';
-  const displayName = fullName;
-  const avatarUrl = user?.user_metadata?.avatar_url;
-  const schoolName = user?.user_metadata?.school || 'ISNA / PRORASCIENCE';
-  const classLabel = user?.user_metadata?.class || 'Élève LIRI';
 
   const total = enrollments.length;
   const completedN = useMemo(
@@ -396,16 +394,6 @@ export default function EleveProfileScreen() {
     if (!hasReal || chTotal <= 0) return 0;
     return Math.min(100, Math.round((chDone / chTotal) * 100));
   }, [hasReal, chDone, chTotal]);
-
-  const initials = useMemo(() => {
-    return String(fullName)
-      .split(/\s+/)
-      .map((p) => p[0])
-      .filter(Boolean)
-      .join('')
-      .slice(0, 2)
-      .toUpperCase();
-  }, [fullName]);
 
   const handleSignOut = async () => {
     try {

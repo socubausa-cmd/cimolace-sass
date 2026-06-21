@@ -1,7 +1,7 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useStudentAppointments } from '@/hooks/useStudentAppointments';
+import { useLiriMobileAgendaMerged } from '@/hooks/useLiriMobileAgendaMerged';
 import {
   Calendar as CalendarIcon, Clock, MapPin, Search, Video,
   ChevronLeft, ChevronRight, X, Plus, RefreshCw,
@@ -9,7 +9,6 @@ import {
 import { format, startOfWeek, addDays, isSameDay, isValid } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useDemoMode } from '@/contexts/DemoModeContext';
-import { schoolEventsForStudentWindow } from '@/lib/studentSchoolDataQueries';
 // Thème host-aware : `T` = tokens vivants (clair sous l'espace élève, sombre sous le portail prof).
 import { themeProxy as T, useSslThemeMode } from '@/pages/school/student-school-life/sslTheme';
 
@@ -24,6 +23,13 @@ const FILTERS = [
   { key: 'exam',  label: 'Examens' },
   { key: 'event', label: 'Événements' },
 ];
+// Mappe les types riches de l'agenda mergé (useLiriMobileAgendaMerged) vers les
+// 3 buckets visuels de la page (live / exam / event).
+const MERGED_TYPE_TO_PAGE = {
+  live: 'live', formation_live: 'live', course_video: 'live',
+  exam: 'exam',
+  school: 'event', calendar: 'event', appointment: 'event',
+};
 
 const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 const detectType = (text) => {
@@ -223,53 +229,42 @@ const StudentAgendaPage = () => {
   useSslThemeMode(); // publie le mode (clair/sombre) pour `T` AVANT le rendu des sous-composants
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { upcomingEvents, appointmentRequests, studentReports, loading, refresh } = useStudentAppointments(user?.id);
+  // Agenda UNIFIÉ (même hook que l'app mobile) : lives élève + RDV + événements
+  // école + calendrier annuel + lives formation + vidéos post-prod publiées au
+  // calendrier (feature « Publier au calendrier »). Source unique web + mobile.
+  const {
+    events: mergedEvents,
+    loading,
+    refresh,
+    pendingRequests: appointmentRequests,
+    studentReports,
+  } = useLiriMobileAgendaMerged(user?.id);
   const { isDemoMode, demoData, restrictedAction } = useDemoMode();
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [filterType, setFilterType] = useState('all');
   const [search, setSearch] = useState('');
   const [focused, setFocused] = useState(false);
-  const [schoolEvents, setSchoolEvents] = useState([]);
-
-  useEffect(() => {
-    if (isDemoMode) return;
-    let alive = true;
-    (async () => {
-      const { data, error } = await schoolEventsForStudentWindow({ limit: 100, openEnd: true });
-      if (!alive) return;
-      setSchoolEvents(error ? [] : (data || []));
-    })();
-    return () => { alive = false; };
-  }, [isDemoMode]);
 
   const events = useMemo(() => {
     const raw = isDemoMode
       ? (demoData.agenda || []).map((e) => ({ ...e, type: e.type || detectType(e.title) }))
-      : [
-          ...upcomingEvents.map((e) => ({
-            id: e.id,
-            title: e.title,
-            type: e.type === 'live' ? 'live' : 'event',
-            date: e.scheduled_at,
-            location: e.video_url || e.type === 'live' ? 'Visioconférence' : 'Sur rendez-vous',
-            instructor: e.instructor || null,
-            video_url: e.video_url || null,
-            liveSessionId: e.type === 'live' ? e.id : null,
-            description: '',
-          })),
-          ...schoolEvents.map((e) => ({
-            id: `school-${e.id}`,
-            title: e.title || 'Événement',
-            type: detectType(`${e.title || ''} ${e.description || ''}`),
-            date: e.start_at,
-            location: e.location || 'Campus ISNA',
-            instructor: null,
-            video_url: null,
-            liveSessionId: null,
-            description: e.description || '',
-          })),
-        ];
+      : (mergedEvents || []).map((e) => ({
+          id: e.id,
+          title: e.title,
+          type: MERGED_TYPE_TO_PAGE[e.type] || 'event',
+          date: e.startAt,
+          location: e.location || 'École',
+          instructor: null,
+          video_url: e.videoUrl || null,
+          liveSessionId:
+            (e.type === 'live' || e.type === 'formation_live') &&
+            typeof e.href === 'string' && e.href.startsWith('/live/')
+              ? e.href.slice('/live/'.length)
+              : null,
+          href: e.href || null,
+          description: e.description || '',
+        }));
     return raw
       .map((e) => {
         const d = new Date(e.date);
@@ -284,7 +279,7 @@ const StudentAgendaPage = () => {
         };
       })
       .sort((a, b) => (a._dateObj?.getTime() || 0) - (b._dateObj?.getTime() || 0));
-  }, [isDemoMode, demoData.agenda, upcomingEvents, schoolEvents]);
+  }, [isDemoMode, demoData.agenda, mergedEvents]);
 
   const counts = useMemo(() => {
     const m = { all: events.length, live: 0, exam: 0, event: 0 };
@@ -303,10 +298,16 @@ const StudentAgendaPage = () => {
 
   const handleJoin = (ev) => {
     if (isDemoMode) return restrictedAction('Rejoindre la session');
-    if (ev.liveSessionId) navigate(`/live/${ev.liveSessionId}`);
-    else if (ev.video_url) window.open(ev.video_url, '_blank', 'noopener');
+    if (ev.liveSessionId) { navigate(`/live/${ev.liveSessionId}`); return; }
+    if (ev.video_url) { window.open(ev.video_url, '_blank', 'noopener'); return; }
+    if (ev.href) navigate(ev.href);
   };
-  const handleDetails = (ev) => restrictedAction(`Détails : ${ev.title}`);
+  // Sans live/visio : si l'événement a un lien (ex. vidéo de cours publiée au
+  // calendrier → /formation/:id/learn), on y navigue ; sinon détail (no-op hors démo).
+  const handleDetails = (ev) => {
+    if (ev.href) { navigate(ev.href); return; }
+    return restrictedAction(`Détails : ${ev.title}`);
+  };
 
   return (
     <div style={{ paddingBottom: 8 }}>

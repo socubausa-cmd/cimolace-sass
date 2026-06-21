@@ -56,6 +56,46 @@ const toUiStructure = (modulesRows) => {
   }));
 };
 
+// Vue « plan de cours » à PLAT : modules → leçons (chaque content block = 1 leçon).
+// Consommée par les pages de détail cours (TenantCourseDetailPage, route élève
+// /student-school-life/cours/:id) qui affichent un cours comme une liste de
+// modules + leçons, sans exposer la hiérarchie semaines/jours du studio.
+const outlineNum = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+const toOutline = (modulesRows) => {
+  return (modulesRows || [])
+    .slice()
+    .sort((a, b) => outlineNum(a.sort_order) - outlineNum(b.sort_order))
+    .map((m) => {
+      const lessons = [];
+      (m.formation_weeks || [])
+        .slice()
+        .sort((a, b) => outlineNum(a.sort_order) - outlineNum(b.sort_order))
+        .forEach((w) => {
+          (w.formation_days || [])
+            .slice()
+            .sort((a, b) => outlineNum(a.sort_order) - outlineNum(b.sort_order))
+            .forEach((d) => {
+              (d.formation_day_contents || [])
+                .slice()
+                .sort((a, b) => outlineNum(a.sort_order) - outlineNum(b.sort_order))
+                .forEach((c) => {
+                  const data = c.data || {};
+                  lessons.push({
+                    id: c.id,
+                    title: String(
+                      data.title || data.name || (c.type === 'video' ? 'Vidéo' : c.type || 'Contenu')
+                    ).trim(),
+                    type: c.type,
+                    // sentinelle truthy : la vraie URL signée est résolue par le player.
+                    video_url: c.type === 'video' ? '1' : null,
+                  });
+                });
+            });
+        });
+      return { id: m.id, title: m.title, sort_order: m.sort_order, lessons };
+    });
+};
+
 const buildDbInserts = ({ formationId, modules }) => {
   const modulesInsert = [];
   const weeksInsert = [];
@@ -237,6 +277,38 @@ export const useFormationStructure = () => {
     return { data: ui, error: null };
   }, []);
 
+  // Plan à plat (modules → leçons) pour les vues détail/lecture d'un cours.
+  // Même source studio que fetchStructure, mais aplatie pour l'affichage liste.
+  const fetchOutline = useCallback(async (formationId) => {
+    if (!formationId) return { data: [], error: null };
+
+    setLoading(true);
+    setError(null);
+
+    const { data, error: err } = await supabase
+      .from('modules')
+      .select(
+        `id, title, sort_order,
+         formation_weeks (
+           id, sort_order,
+           formation_days (
+             id, sort_order,
+             formation_day_contents (id, type, sort_order, data)
+           )
+         )`
+      )
+      .eq('formation_id', formationId);
+
+    if (err) {
+      setError(err);
+      setLoading(false);
+      return { data: null, error: err };
+    }
+
+    setLoading(false);
+    return { data: toOutline(data || []), error: null };
+  }, []);
+
   const saveStructure = useCallback(async (formationId, modules) => {
     if (!formationId) return { error: new Error('formationId is required') };
 
@@ -326,6 +398,7 @@ export const useFormationStructure = () => {
     loading,
     error,
     fetchStructure,
+    fetchOutline,
     saveStructure,
   };
 };

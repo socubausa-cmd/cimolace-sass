@@ -8,6 +8,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Play, CheckCircle, Lock, Loader2, BookOpen, ChevronDown, ChevronRight } from 'lucide-react';
 import { coursesApi } from '@/lib/api-v2';
+import supabase from '@/lib/customSupabaseClient';
+import { useFormationStructure } from '@/hooks/useFormationStructure';
 import TenantAdminShell from '@/components/admin/TenantAdminShell';
 import { SafeHtml } from '@/components/common/SafeHtml';
 
@@ -107,6 +109,7 @@ function LessonPlayer({ lesson, onComplete, onClose }) {
 export default function TenantCourseDetailPage() {
   const { tenantSlug, courseId } = useParams();
   const navigate = useNavigate();
+  const { fetchOutline } = useFormationStructure();
 
   const [course, setCourse] = useState(null);
   const [modules, setModules] = useState([]);
@@ -119,24 +122,27 @@ export default function TenantCourseDetailPage() {
 
   useEffect(() => { load(); }, [courseId]);
 
+  // P1 + P3 — modèle de cours UNIFIÉ via le hook partagé useFormationStructure :
+  // fetchOutline() lit le VRAI contenu studio (modules → formation_weeks →
+  // formation_days → formation_day_contents, la même source que le player
+  // /formation/:id/learn) et l'aplatit en modules → leçons. Plus de requête
+  // dupliquée ici → une seule source de vérité pour le plan d'un cours.
   async function load() {
     setLoading(true); setError(null);
     try {
-      const [c, mods, prog] = await Promise.all([
-        coursesApi.get(courseId),
-        coursesApi.listModules(courseId),
-        coursesApi.getProgress(courseId).catch(() => []),
+      const [{ data: c }, outline, { data: prog }] = await Promise.all([
+        supabase.from('courses').select('id, title, description, category, status').eq('id', courseId).maybeSingle(),
+        fetchOutline(courseId),
+        supabase.from('student_progress').select('lesson_id, status, course_id').eq('course_id', courseId),
       ]);
-      setCourse(c);
-      const sortedMods = (mods ?? []).sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
-      setModules(sortedMods);
+      setCourse(c || null);
+      const mods = outline?.data ?? [];
+      setModules(mods.map((m) => ({ id: m.id, title: m.title })));
+      const lessonsMap = {};
+      for (const m of mods) lessonsMap[m.id] = m.lessons ?? [];
+      setLessons(lessonsMap);
+      if (mods.length > 0) setExpandedModules(new Set([mods[0].id]));
       setProgress(Array.isArray(prog) ? prog : []);
-      // Expand first module by default
-      if (sortedMods.length > 0) {
-        setExpandedModules(new Set([sortedMods[0].id]));
-        const firstLessons = await coursesApi.listLessons(sortedMods[0].id).catch(() => []);
-        setLessons({ [sortedMods[0].id]: (firstLessons ?? []).sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0)) });
-      }
     } catch (err) {
       setError(err?.message ?? 'Impossible de charger le cours');
     } finally {
@@ -144,20 +150,13 @@ export default function TenantCourseDetailPage() {
     }
   }
 
-  async function toggleModule(moduleId) {
-    const next = new Set(expandedModules);
-    if (next.has(moduleId)) {
-      next.delete(moduleId);
-    } else {
-      next.add(moduleId);
-      if (!lessons[moduleId]) {
-        try {
-          const data = await coursesApi.listLessons(moduleId);
-          setLessons(l => ({ ...l, [moduleId]: (data ?? []).sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0)) }));
-        } catch { setLessons(l => ({ ...l, [moduleId]: [] })); }
-      }
-    }
-    setExpandedModules(next);
+  // Tout est chargé en une requête imbriquée → le toggle ne fait que plier/déplier.
+  function toggleModule(moduleId) {
+    setExpandedModules((prev) => {
+      const next = new Set(prev);
+      if (next.has(moduleId)) next.delete(moduleId); else next.add(moduleId);
+      return next;
+    });
   }
 
   function isCompleted(lessonId) {
@@ -221,6 +220,14 @@ export default function TenantCourseDetailPage() {
             <div>
               <h1 className="text-xl font-bold" style={{ color: T.t1 }}>{course?.title}</h1>
               {course?.description && <p className="mt-1 text-sm" style={{ color: T.t2 }}>{course.description}</p>}
+              <button
+                type="button"
+                onClick={() => navigate(`/formation/${courseId}/learn`)}
+                className="mt-3 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-transform active:scale-[0.99]"
+                style={{ background: T.gold, color: '#0b0b0f' }}
+              >
+                <Play className="h-4 w-4" /> Accéder au cours
+              </button>
             </div>
             {totalLessons > 0 && (
               <div className="flex items-center gap-3">
@@ -298,7 +305,7 @@ export default function TenantCourseDetailPage() {
                         key={lesson.id}
                         className="flex cursor-pointer items-center gap-3 px-5 py-3 transition-colors"
                         style={{ borderTop: j === 0 ? 'none' : `1px solid ${T.border}` }}
-                        onClick={() => setActiveLesson(lesson)}
+                        onClick={() => navigate(`/formation/${courseId}/learn`)}
                         onMouseEnter={(e) => { e.currentTarget.style.background = T.goldDim; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                       >

@@ -1,8 +1,50 @@
 import { useMemo, useEffect, useState, useCallback } from 'react';
+import { supabase } from '@/lib/customSupabaseClient';
 import { useDataSync } from '@/contexts/DataSyncContext';
 import { useStudentAppointments } from '@/hooks/useStudentAppointments';
 import { schoolCalendarRowsOverlappingFrom, schoolEventsForStudentWindow } from '@/lib/studentSchoolDataQueries';
 import { addDays, startOfWeek, isValid } from 'date-fns';
+
+/**
+ * Contenus de jour (vidéos post-prod) publiés au calendrier : `publication_date IS NOT NULL`.
+ * Le `course_id` (pour le lien /formation/:id/learn) est résolu via la chaîne
+ * formation_day_contents → formation_days → formation_weeks → modules.formation_id.
+ * RLS SELECT de ces tables = `USING (TRUE)` pour authenticated (lecture élève OK).
+ */
+async function publishedDayContentsFromIso(fromIso) {
+  const { data, error } = await supabase
+    .from('formation_day_contents')
+    .select(
+      `id, type, data, publication_date,
+       formation_days ( id, formation_weeks ( id, modules ( id, formation_id ) ) )`,
+    )
+    .not('publication_date', 'is', null)
+    .gte('publication_date', fromIso)
+    .order('publication_date', { ascending: true })
+    .limit(200);
+  if (error) return [];
+  return Array.isArray(data) ? data : [];
+}
+
+function dayContentsToEvents(rows) {
+  return (Array.isArray(rows) ? rows : [])
+    .filter((r) => String(r?.type || '').toLowerCase() === 'video' && r?.publication_date)
+    .map((r) => {
+      const courseId = r?.formation_days?.formation_weeks?.modules?.formation_id || null;
+      const d = r?.data && typeof r.data === 'object' ? r.data : {};
+      const title = String(d.title || d.name || '').trim() || 'Vidéo du cours disponible';
+      return {
+        id: `daycontent-${r.id}`,
+        title,
+        type: 'course_video',
+        startAt: r.publication_date,
+        endAt: null,
+        location: 'Cours',
+        href: courseId ? `/formation/${encodeURIComponent(courseId)}/learn` : null,
+        videoUrl: null,
+      };
+    });
+}
 
 function formationLivesFromYears(years) {
   const out = [];
@@ -33,13 +75,17 @@ function formationLivesFromYears(years) {
 }
 
 /**
- * Agenda LIRI mobile : événements école, entrées calendrier, RDV / lives élève, lives catalogue formation.
+ * Agenda élève MERGÉ (partagé web + mobile) : événements école, entrées calendrier,
+ * RDV / lives élève, lives catalogue formation, vidéos post-prod publiées au calendrier.
+ * Consommé par l'app mobile (EleveAgendaScreen / EleveHomeScreen) ET la page web
+ * StudentAgendaPage → source unique de l'agenda élève.
  */
 export function useLiriMobileAgendaMerged(userId) {
   const { years } = useDataSync();
-  const { upcomingEvents, appointmentRequests, loading: apptLoading, refresh: refreshAppt } = useStudentAppointments(userId || undefined);
+  const { upcomingEvents, appointmentRequests, studentReports, loading: apptLoading, refresh: refreshAppt } = useStudentAppointments(userId || undefined);
   const [schoolEvents, setSchoolEvents] = useState([]);
   const [calendarRows, setCalendarRows] = useState([]);
+  const [dayContents, setDayContents] = useState([]);
   const [extraLoading, setExtraLoading] = useState(true);
 
   const loadExtra = useCallback(async () => {
@@ -55,8 +101,11 @@ export function useLiriMobileAgendaMerged(userId) {
     const scRes = await schoolCalendarRowsOverlappingFrom({ fromIso: past, limit: 200 });
     const scData = scRes.error ? [] : scRes.data || [];
 
+    const dcData = await publishedDayContentsFromIso(past);
+
     setSchoolEvents(seRes.error ? [] : seRes.data || []);
     setCalendarRows(scData);
+    setDayContents(dcData);
     setExtraLoading(false);
   }, []);
 
@@ -101,7 +150,9 @@ export function useLiriMobileAgendaMerged(userId) {
       videoUrl: e.video_url || null,
     }));
 
-    const all = [...formation, ...school, ...cal, ...student];
+    const courseVideos = dayContentsToEvents(dayContents);
+
+    const all = [...formation, ...school, ...cal, ...student, ...courseVideos];
     const seen = new Set();
     return all
       .filter((ev) => {
@@ -110,7 +161,7 @@ export function useLiriMobileAgendaMerged(userId) {
         return true;
       })
       .sort((a, b) => new Date(a.startAt) - new Date(b.startAt));
-  }, [years, schoolEvents, calendarRows, upcomingEvents]);
+  }, [years, schoolEvents, calendarRows, upcomingEvents, dayContents]);
 
   const loading = (userId ? apptLoading : false) || extraLoading;
 
@@ -130,5 +181,5 @@ export function useLiriMobileAgendaMerged(userId) {
 
   // Demandes de RDV en attente (status='requested', sans date) — affichées
   // hors grille semaine (cf. EleveAgendaScreen), car elles n'ont pas de créneau.
-  return { events, loading, refresh, thisWeekCount, pendingRequests: appointmentRequests };
+  return { events, loading, refresh, thisWeekCount, pendingRequests: appointmentRequests, studentReports };
 }
