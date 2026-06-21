@@ -129,7 +129,9 @@ const WeekStrip = ({ weekStart, events, onPrev, onNext, onToday, onPick }) => {
           <IconBtn onClick={onNext} title="Semaine suivante"><ChevronRight size={16} /></IconBtn>
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
+      {/* Mobile : la bande 7 jours scrolle horizontalement (cellules ≥62px lisibles).
+          Desktop : minmax(…,1fr) = 1fr quand large → rendu identique à avant, pas de scroll. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(62px, 1fr))', gap: 8, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {days.map((day, i) => {
           const today = isSameDay(day, new Date());
           const dayEvents = events.filter((ev) => ev._dateObj && isSameDay(ev._dateObj, day));
