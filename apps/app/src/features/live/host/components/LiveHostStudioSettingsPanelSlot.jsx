@@ -98,7 +98,7 @@ export const LiveHostStudioSettingsPanelSlot = ({
         width: '100%',
         height: '100%',
         minHeight: 200,
-        background: 'linear-gradient(135deg,#1e1830,#2a2218)',
+        background: 'linear-gradient(135deg,#221c16,#2a2218)',
         borderRadius: 8,
         overflow: 'hidden',
       }}

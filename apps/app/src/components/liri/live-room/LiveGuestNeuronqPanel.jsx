@@ -141,7 +141,7 @@ export default function LiveGuestNeuronqPanel({
                           <button
                             type="button"
                             onClick={() => removeVolet(index)}
-                            className="rounded-lg border border-white/10 px-2 py-0.5 text-[9px] text-white/45 transition-colors hover:border-rose-500/35 hover:bg-rose-500/10 hover:text-rose-200"
+                            className="rounded-lg border border-white/10 px-2 py-0.5 text-[9px] text-white/45 transition-colors hover:border-amber-500/35 hover:bg-amber-500/10 hover:text-amber-200"
                           >
                             Retirer
                           </button>

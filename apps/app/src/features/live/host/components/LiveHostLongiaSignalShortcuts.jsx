@@ -164,7 +164,7 @@ export const LiveHostLongiaSignalShortcuts = ({
                 width: 6,
                 height: 6,
                 borderRadius: '50%',
-                background: '#c084fc',
+                background: '#d4a36a',
                 flexShrink: 0,
                 marginTop: 4,
                 boxShadow: '0 0 6px rgba(192,132,252,.5)',
@@ -179,7 +179,7 @@ export const LiveHostLongiaSignalShortcuts = ({
                   style={{
                     fontSize: 9,
                     fontWeight: 800,
-                    color: '#d8b4fe',
+                    color: '#e3c79a',
                     minWidth: 20,
                     textAlign: 'center',
                     padding: '1px 6px',

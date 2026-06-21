@@ -80,8 +80,8 @@ export default function LiveGuestMobileAuthorityShell({
         </button>
         <div className="flex min-w-0 flex-1 items-center justify-center gap-2 px-1">
           <span className="relative flex h-2 w-2 shrink-0">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-500/70 opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500/70 opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
           </span>
           <p className="truncate text-center text-[13px] font-semibold leading-tight text-white/95">
             {sessionTitle || 'Session LIRI'}

@@ -12,7 +12,7 @@ export function MobileSmartboardSlide({ slide }) {
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-2">
             {slide.header.live && (
-              <span className="rounded-lg bg-rose-500 px-2 py-1 text-[11px] font-bold text-white">LIVE</span>
+              <span className="rounded-lg bg-amber-500 px-2 py-1 text-[11px] font-bold text-white">LIVE</span>
             )}
 
             <div>

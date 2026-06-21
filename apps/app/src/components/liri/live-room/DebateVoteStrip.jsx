@@ -59,7 +59,7 @@ export default function DebateVoteStrip({
             type="button"
             disabled={voteBusy}
             onClick={() => void submit('A')}
-            className="h-10 px-5 rounded-xl bg-rose-600/75 hover:bg-rose-600 text-sm font-medium disabled:opacity-40"
+            className="h-10 px-5 rounded-xl bg-amber-600/75 hover:bg-amber-600 text-sm font-medium disabled:opacity-40"
           >
             Camp A
           </button>

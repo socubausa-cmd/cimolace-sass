@@ -666,7 +666,7 @@ export default function LiveStudioSettingsPanel({
                     <div className="mt-3 rounded-lg border border-white/10 p-3">
                       <p className="mb-2 text-[10px] text-white/40">Aperçu filtre</p>
                       <div
-                        className="h-20 rounded-lg bg-gradient-to-br from-amber-400 via-rose-400 to-amber-500"
+                        className="h-20 rounded-lg bg-gradient-to-br from-amber-400 via-amber-400 to-amber-500"
                         style={{
                           filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) hue-rotate(${hue}deg)`,
                         }}
@@ -1014,7 +1014,7 @@ export default function LiveStudioSettingsPanel({
                                   Accusé appareil : appliqué (vu par l'élève)
                                 </p>
                               ) : ev.guest_ack_success === false ? (
-                                <p className="mt-1 text-[9px] text-rose-300/90">
+                                <p className="mt-1 text-[9px] text-amber-300/90">
                                   Accusé appareil : échec
                                   {ev.guest_ack_error ? ` — ${String(ev.guest_ack_error).slice(0, 120)}` : ''}
                                 </p>

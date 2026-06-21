@@ -265,7 +265,7 @@ export default function LiveWhiteboardToolsSidebar({
                 disabled={whiteboardPaging.pageCount <= 1}
                 className={cn(
                   designerShellChipGhost,
-                  'flex-1 border-rose-500/20 py-1.5 text-[9px] text-rose-200/85',
+                  'flex-1 border-amber-500/20 py-1.5 text-[9px] text-amber-200/85',
                   whiteboardPaging.pageCount <= 1 && 'pointer-events-none opacity-35',
                 )}
               >
@@ -929,7 +929,7 @@ export default function LiveWhiteboardToolsSidebar({
         <button
           type="button"
           onClick={() => clearBoard()}
-          className={cn(designerShellChipGhost, 'h-8 w-8 shrink-0 border-rose-500/25 p-0 text-rose-300/80 hover:bg-rose-500/10')}
+          className={cn(designerShellChipGhost, 'h-8 w-8 shrink-0 border-amber-500/25 p-0 text-amber-300/80 hover:bg-amber-500/10')}
           title="Effacer tout"
         >
           <Trash2 className="mx-auto h-3.5 w-3.5" />

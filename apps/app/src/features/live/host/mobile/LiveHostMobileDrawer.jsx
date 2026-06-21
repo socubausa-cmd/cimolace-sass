@@ -28,7 +28,7 @@ function buildTabs({ chatUnread, qaCount, whisperUnread, onlineMemberCount, isGu
     { id: 'chat',     label: 'Chat',      Icon: MessageCircle,    badge: chatUnread,      color: '#d4a36a', show: true },
     { id: 'qa',       label: 'Q&R',       Icon: HelpCircle,       badge: qaCount,         color: '#4ade80', show: true },
     { id: 'script',   label: 'Script',    Icon: FileText,         badge: 0,               color: '#fb923c', show: !isGuestUi },
-    { id: 'whisper',  label: 'Aparté',    Icon: MessageSquareDot, badge: whisperUnread,   color: '#f472b6', show: !isGuestUi },
+    { id: 'whisper',  label: 'Aparté',    Icon: MessageSquareDot, badge: whisperUnread,   color: '#d98a5a', show: !isGuestUi },
     { id: 'ia',       label: 'IA',        Icon: Sparkles,         badge: 0,               color: '#d4a36a', show: !isGuestUi },
     { id: 'membres',  label: 'Membres',   Icon: Users,            badge: onlineMemberCount > 0 ? onlineMemberCount : 0, color: '#38bdf8', show: true },
     // NB: Scènes → tiroir GAUCHE (☰). Contrôle, Signaux, Paramètres → tiroir GAUCHE.
@@ -543,15 +543,15 @@ export function LiveHostMobileDrawer({
                       <button key={peerId} onClick={() => setWhisperPeerId(peerId)} style={{
                         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
                         padding: '6px 2px', borderRadius: 9,
-                        background: isActive ? 'rgba(244,114,182,0.16)' : 'transparent',
-                        border: isActive ? '1px solid rgba(244,114,182,0.3)' : '1px solid transparent',
+                        background: isActive ? 'rgba(217,138,90,0.16)' : 'transparent',
+                        border: isActive ? '1px solid rgba(217,138,90,0.3)' : '1px solid transparent',
                         cursor: 'pointer', position: 'relative',
                       }}>
                         <div style={{
                           width: 34, height: 34, borderRadius: '50%',
-                          background: 'rgba(244,114,182,0.2)',
+                          background: 'rgba(217,138,90,0.2)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 11, fontWeight: 700, color: '#f9a8d4',
+                          fontSize: 11, fontWeight: 700, color: '#e8cba0',
                         }}>{initials}</div>
                         <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', maxWidth: 60, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                           {name}
@@ -583,7 +583,7 @@ export function LiveHostMobileDrawer({
                       <button key={pid} onClick={() => setWhisperPeerId(pid)} style={{
                         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
                         padding: '6px 2px', borderRadius: 9,
-                        background: isActive ? 'rgba(244,114,182,0.12)' : 'transparent',
+                        background: isActive ? 'rgba(217,138,90,0.12)' : 'transparent',
                         border: '1px solid transparent',
                         cursor: 'pointer', opacity: 0.6,
                       }}>
@@ -643,7 +643,7 @@ export function LiveHostMobileDrawer({
                         />
                         <button onClick={handleSendWhisper} style={{
                           width: 32, height: 32, borderRadius: '50%',
-                          background: whisperInput.trim() ? '#f472b6' : 'rgba(255,255,255,0.07)',
+                          background: whisperInput.trim() ? '#d98a5a' : 'rgba(255,255,255,0.07)',
                           border: 'none', cursor: 'pointer', color: '#fff', fontSize: 14, flexShrink: 0,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           transition: 'background 0.15s',

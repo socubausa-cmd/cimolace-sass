@@ -61,7 +61,7 @@ export function LiveHostMobileFabStack({
       emoji: '🎭',
       label: 'Scènes',
       badge: null,
-      color: '#c084fc',
+      color: '#d4a36a',
       onPress: () => setScenesOpen((v) => !v),
       show: !isGuestUi,
     },

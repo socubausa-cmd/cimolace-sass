@@ -38,7 +38,7 @@ export default function LiveHostLayoutPreviewPanel({
       ? 'text-amber-200/90'
       : mobileRead.status === 'tight'
         ? 'text-amber-200/85'
-        : 'text-rose-200/90';
+        : 'text-amber-200/90';
 
   return (
     <div className={cn('space-y-4 pt-1', embedded && 'pt-0', className)}>

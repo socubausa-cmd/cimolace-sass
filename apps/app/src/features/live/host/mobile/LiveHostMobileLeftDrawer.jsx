@@ -12,12 +12,12 @@ const SCENE_META = {
   screen:           { emoji: '🖥️', color: '#d4a36a' },
   browser:          { emoji: '🌐', color: '#38bdf8' },
   embed:            { emoji: '🔗', color: '#fb923c' },
-  quiz:             { emoji: '❓', color: '#f472b6' },
+  quiz:             { emoji: '❓', color: '#d98a5a' },
   secure_app_share: { emoji: '🔒', color: '#fbbf24' },
-  board:            { emoji: '✏️', color: '#c084fc' },
+  board:            { emoji: '✏️', color: '#d4a36a' },
   image:            { emoji: '🖼️', color: '#4ade80' },
   camera2:          { emoji: '📷', color: '#f87171' },
-  shop:             { emoji: '🛍️', color: '#fb7185' },
+  shop:             { emoji: '🛍️', color: '#cf7a52' },
 };
 
 /**

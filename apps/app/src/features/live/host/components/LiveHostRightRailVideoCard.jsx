@@ -128,7 +128,7 @@ export const LiveHostRightRailVideoCard = ({
         </div>
       </div>
       {showHostRightRailVideoFrame ? (
-      <div style={{height:`${hostVidHeight}px`,borderRadius:'4px',border:'1px solid rgba(255,255,255,.07)',overflow:'hidden',position:'relative',isolation:'isolate',background:'linear-gradient(135deg,#1e1830,#2a2218)',transition:'height .3s ease',filter: videoFxActive && !lhHostShowsRemoteMain ? videoFilterCSS : undefined}}>
+      <div style={{height:`${hostVidHeight}px`,borderRadius:'4px',border:'1px solid rgba(255,255,255,.07)',overflow:'hidden',position:'relative',isolation:'isolate',background:'linear-gradient(135deg,#221c16,#2a2218)',transition:'height .3s ease',filter: videoFxActive && !lhHostShowsRemoteMain ? videoFilterCSS : undefined}}>
         {lhHostShowsRemoteMain ? (
           <>
             <button
