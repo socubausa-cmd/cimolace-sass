@@ -278,6 +278,7 @@ export const LiveHostLiveCenterColumn = forwardRef(function LiveHostLiveCenterCo
             onHostWhiteboardToolsRailSync={onHostWhiteboardToolsRailSync}
             floatingReactions={floatingReactions}
             openLongiaHubCoachPanel={openLongiaHubCoachPanel}
+            setMemberVideoPreview={setMemberVideoPreview}
             guestFooterBarBg={guestFooterBarBg}
             hostArenaLiveBarProps={hostArenaLiveBarProps}
           />

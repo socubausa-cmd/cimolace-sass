@@ -34,6 +34,8 @@ export const LiveArenaLayoutOverlays = ({
   arenaMembersWallCenter,
   arenaLayoutMode,
   hostId,
+  openLongiaHubCoachPanel,
+  setMemberVideoPreview,
   isGuestUi,
   hostLiveKitParticipant,
   livekitParticipantsMap,
@@ -265,6 +267,8 @@ export const LiveArenaLayoutOverlays = ({
           livekitParticipantsMap={livekitParticipantsMap}
           liveKitMediaEpoch={liveKitMediaEpoch}
           hostId={hostId}
+          onOpenLongia={openLongiaHubCoachPanel}
+          onMemberPreview={setMemberVideoPreview}
         />
       );
     }

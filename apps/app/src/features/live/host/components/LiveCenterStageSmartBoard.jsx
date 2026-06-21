@@ -77,6 +77,7 @@ export const LiveCenterStageSmartBoard = ({
   onHostWhiteboardToolsRailSync,
   floatingReactions,
   openLongiaHubCoachPanel,
+  setMemberVideoPreview,
   guestFooterBarBg,
   hostArenaLiveBarProps,
 }) => {
@@ -165,6 +166,8 @@ export const LiveCenterStageSmartBoard = ({
                 arenaMembersWallCenter={arenaMembersWallCenter}
                 arenaLayoutMode={arenaLayoutMode}
                 hostId={hostId}
+                openLongiaHubCoachPanel={openLongiaHubCoachPanel}
+                setMemberVideoPreview={setMemberVideoPreview}
                 isGuestUi={isGuestUi}
                 hostLiveKitParticipant={hostLiveKitParticipant}
                 livekitParticipantsMap={livekitParticipantsMap}
