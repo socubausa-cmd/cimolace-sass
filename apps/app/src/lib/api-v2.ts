@@ -360,6 +360,18 @@ export const messagingApi = {
     apiV2.get<ApiEnvelope<any[]>>(`/messaging/topics/${id}/messages`).then(unwrap),
   createTopic: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/messaging/topics', body).then(unwrap),
+  // Phase C — get-or-create idempotent du Sujet d'un contexte (vidéo de cours).
+  // body = { contextType:'video', contextId:<video_id>, courseId:<course_id>, subject?:'…' }
+  // Réservé aux inscrits au cours (ou encadrants) : 403 sinon. Renvoie LE Sujet
+  // (existant ou créé) que le panneau Questions normalise puis ouvre.
+  getOrCreateTopicForContext: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/messaging/topics/for-context', body).then(unwrap),
+  // Phase D — consolidation post-live : copie le chat éphémère (live_session_chat)
+  // dans le Sujet durable ('live', liveSessionId). body = { liveSessionId, subject? }.
+  // RÉSERVÉ aux encadrants (403 sinon). Idempotent. Renvoie { topic, consolidated,
+  // alreadyConsolidated }. À déclencher à la fin du live depuis le studio hôte.
+  publishLiveTopic: (body: { liveSessionId: string; subject?: string }) =>
+    apiV2.post<ApiEnvelope<any>>('/messaging/topics/publish-live', body).then(unwrap),
   sendTopicMessage: (id: string, content: string) =>
     apiV2.post<ApiEnvelope<any>>(`/messaging/topics/${id}/messages`, { content }).then(unwrap),
   closeTopic: (id: string) =>

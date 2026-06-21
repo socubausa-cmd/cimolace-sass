@@ -15,7 +15,9 @@ import { TenantGuard } from '../tenant/tenant.guard';
 import type { TenantContext } from '../tenant/tenant.types';
 import {
   CreateTopicDto,
+  GetOrCreateContextTopicDto,
   ListTopicsQueryDto,
+  PublishLiveTopicDto,
   SendTopicMessageDto,
 } from './dto/topics.dto';
 import { TopicsService } from './topics.service';
@@ -47,6 +49,41 @@ export class TopicsController {
     @Req() req: Request,
   ) {
     return this.svc.createTopic(t, (req as any).user.id, dto);
+  }
+
+  /**
+   * Phase C — get-or-create idempotent du Sujet d'un contexte (vidéo de cours).
+   * Appelé par le panneau Questions du lecteur à sa 1re ouverture. Le contrôle
+   * d'accès « inscrit au cours OU encadrant » est fait côté service AVANT toute
+   * écriture (403 si refus, aucune création).
+   */
+  @Post('for-context')
+  forContext(
+    @Body() dto: GetOrCreateContextTopicDto,
+    @CurrentTenant() t: TenantContext,
+    @Req() req: Request,
+  ) {
+    return this.svc.getOrCreateContextTopic(t, (req as any).user.id, dto);
+  }
+
+  /**
+   * Phase D — consolidation POST-LIVE : copie le chat éphémère de la session live
+   * dans son Sujet durable. Réservé aux encadrants (403 sinon). Idempotent (la
+   * sentinelle de subject empêche toute duplication sur double appel).
+   * Déclenché à la fin du live (status='ended') depuis le studio hôte.
+   */
+  @Post('publish-live')
+  publishLive(
+    @Body() dto: PublishLiveTopicDto,
+    @CurrentTenant() t: TenantContext,
+    @Req() req: Request,
+  ) {
+    return this.svc.publishLiveTopic(
+      t,
+      (req as any).user.id,
+      dto.liveSessionId,
+      dto.subject,
+    );
   }
 
   @Get(':id')
