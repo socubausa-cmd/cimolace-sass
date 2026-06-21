@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import {
   MessageSquare,
@@ -3039,6 +3039,27 @@ const MessagingPage = () => {
     // Fetch ciblé suffisant (le realtime + polling complètent).
     fetchAndMergeConversation(user.id);
   }, [fetchAndMergeConversation]);
+
+  // Deep-link « Discuter avec l'auteur » depuis le forum : /messages?to=<userId>&name=<nom>
+  // → ouvre/crée la conversation 1-à-1 avec cette personne (find_or_create côté API).
+  // C'est le pont forum → conversation face-à-face (chat/audio/vidéo).
+  const [deepLinkParams] = useSearchParams();
+  const deepLinkedPeerRef = useRef(false);
+  useEffect(() => {
+    if (deepLinkedPeerRef.current) return;
+    const to = deepLinkParams.get('to');
+    if (!to) return;
+    deepLinkedPeerRef.current = true;
+    const known = profiles[to] || {};
+    handleSelectUser({
+      id: to,
+      name: deepLinkParams.get('name') || known.name || 'Membre',
+      avatar_url: known.avatar_url || null,
+      role: known.role || 'student',
+      status: known.status || 'offline',
+      ...known,
+    });
+  }, [deepLinkParams, profiles, handleSelectUser]);
 
   const handleSelectConversation = useCallback(
     (conv) => {

@@ -480,6 +480,16 @@ export default function ForumThreadPage() {
         >
           <span style={{ fontSize: 16, lineHeight: 1 }}>←</span> Forum
         </button>
+        {/* Pont forum → conversation face-à-face : discuter en privé avec l'auteur (chat/audio/vidéo). */}
+        {!isAuthor && thread.student_id && (
+          <button
+            onClick={() => navigate(`/messages?to=${encodeURIComponent(thread.student_id)}&name=${encodeURIComponent(thread.author_name || 'Membre')}`)}
+            title={`Discuter en privé avec ${thread.author_name || "l'auteur"}`}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 11, background: 'rgba(212,175,55,0.16)', border: '1px solid rgba(212,175,55,0.4)', color: '#D4AF37', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
+          >
+            <MessageSquare size={14} /> Discuter
+          </button>
+        )}
         <div style={{ minWidth: 0, flex: 1 }}>
           {formation && (
             <div style={{ fontFamily: "'JetBrains Mono','Fira Code',monospace", fontSize: 9.5, fontWeight: 600, color: '#D4AF37', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 3 }}>
