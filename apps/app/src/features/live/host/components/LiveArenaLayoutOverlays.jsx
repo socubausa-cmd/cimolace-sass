@@ -34,6 +34,7 @@ export const LiveArenaLayoutOverlays = ({
   arenaMembersWallCenter,
   arenaLayoutMode,
   hostId,
+  sharingScreen,
   openLongiaHubCoachPanel,
   setMemberVideoPreview,
   isGuestUi,
@@ -267,6 +268,7 @@ export const LiveArenaLayoutOverlays = ({
           livekitParticipantsMap={livekitParticipantsMap}
           liveKitMediaEpoch={liveKitMediaEpoch}
           hostId={hostId}
+          sharingScreen={sharingScreen}
           onOpenLongia={openLongiaHubCoachPanel}
           onMemberPreview={setMemberVideoPreview}
         />

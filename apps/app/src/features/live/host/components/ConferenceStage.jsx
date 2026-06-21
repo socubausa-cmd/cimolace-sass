@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Track } from 'livekit-client';
-import { Search, SlidersHorizontal, MoreHorizontal, Mic, MicOff, Pin, Maximize2, UserPlus } from 'lucide-react';
+import { Search, SlidersHorizontal, MoreHorizontal, Mic, MicOff, Pin, Maximize2, UserPlus, MonitorUp, Users } from 'lucide-react';
 import LiveHostVideoCell from '@/components/liri/live-room/LiveHostVideoCell';
 import { ARENA_MEMBERS_WALL_MAX_VISIBLE } from '@/lib/liriArenaLayout';
 
@@ -20,6 +20,26 @@ const hasCamera = (lk) =>
   && Array.from(lk.videoTrackPublications?.values?.() || []).some(
     (p) => p.source === Track.Source.Camera && !p.isMuted && p.track,
   );
+
+const pickScreenSharePub = (lk) =>
+  (lk
+    && (Array.from(lk.videoTrackPublications?.values?.() || lk.trackPublications?.values?.() || []).find(
+      (p) => p.source === Track.Source.ScreenShare && p.track && !p.isMuted,
+    ) || null))
+  || null;
+
+/** Attache la piste « partage d'écran » LiveKit à un <video> (objectFit contain = écran entier). */
+function ScreenShareCell({ lk, mediaEpoch, style }) {
+  const vRef = useRef(null);
+  useEffect(() => {
+    if (!lk || !vRef.current) return undefined;
+    const pub = pickScreenSharePub(lk);
+    if (!pub?.track) return undefined;
+    pub.track.attach(vRef.current);
+    return () => { try { pub.track?.detach(vRef.current); } catch { /* ignore */ } };
+  }, [lk, mediaEpoch]);
+  return <video ref={vRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', ...style }} />;
+}
 
 const ToolbarBtn = ({ active, onClick, title, children }) => (
   <button
@@ -131,7 +151,7 @@ const Tile = ({ m, lk, mediaEpoch, speaking, big = false, onClick, pinned = fals
   );
 };
 
-export default function ConferenceStage({ liveParticipants, livekitParticipantsMap, liveKitMediaEpoch, hostId = null, onOpenLongia = null, onMemberPreview = null }) {
+export default function ConferenceStage({ liveParticipants, livekitParticipantsMap, liveKitMediaEpoch, hostId = null, sharingScreen = false, onOpenLongia = null, onMemberPreview = null }) {
   const [view, setView] = useState('grid'); // 'grid' | 'speaker'
   const [autoFollow, setAutoFollow] = useState(true);
   const [pinnedId, setPinnedId] = useState(null);
@@ -178,12 +198,34 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
   const focusLk = focus ? lkOf(focus) : null;
   const focusShowVid = hasCamera(focusLk);
 
+  // Partage d'écran (data-driven : la piste écran est dans la map LiveKit ; hôte local = clé 'local').
+  const shareFsRef = useRef(null);
+  let screenShareLk = null;
+  let screenSharerName = '';
+  for (const [key, lk] of Object.entries(livekitParticipantsMap || {})) {
+    if (pickScreenSharePub(lk)) {
+      screenShareLk = lk;
+      if (key === 'local') screenSharerName = host?.name || 'Vous';
+      else screenSharerName = visible.find((m) => String(m.id) === String(key))?.name || lk?.name || 'Un participant';
+      break;
+    }
+  }
+  const isSharing = Boolean(screenShareLk) || Boolean(sharingScreen);
+  if (!screenSharerName && isSharing) screenSharerName = host?.name || "L'animateur";
+
   // Densité : S = tuiles plus petites (1 colonne de plus), L = plus grandes (1 de moins).
   const baseCols = n <= 1 ? 1 : n <= 2 ? 2 : n <= 6 ? 3 : n <= 12 ? 4 : 5;
   const cols = Math.max(1, Math.min(6, baseCols + (density === 's' ? 1 : density === 'l' ? -1 : 0)));
 
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 15, background: '#0a0b0f', display: 'flex', flexDirection: 'column' }}>
+      {isSharing ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', flexShrink: 0 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, color: '#fff' }}><MonitorUp size={16} color={ACCENT} />{`${screenSharerName} partage son écran`}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,.5)' }}><Users size={13} /> {visible.length}</span>
+          <div style={{ marginLeft: 'auto' }}><ToolbarBtn onClick={() => { try { shareFsRef.current?.requestFullscreen?.(); } catch { /* ignore */ } }} title="Plein écran">{<Maximize2 size={14} />}</ToolbarBtn></div>
+        </div>
+      ) : (
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', flexShrink: 0 }}>
         <ToolbarBtn active={view === 'grid'} onClick={() => setView('grid')} title="Tous les participants en grille">Grille</ToolbarBtn>
         <ToolbarBtn active={view === 'speaker'} onClick={() => setView('speaker')} title="Un grand cadre + vignettes">Orateur</ToolbarBtn>
@@ -219,8 +261,9 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
           </div>
         ) : null}
       </div>
+      )}
 
-      {view === 'grid' ? (
+      {!isSharing && view === 'grid' ? (
         <div
           style={{
             flex: 1,
@@ -249,7 +292,7 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
             ))
           )}
         </div>
-      ) : panelPos === 'side' ? (
+      ) : (isSharing || panelPos === 'side') ? (
         <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 12, padding: '0 14px 14px' }}>
           <div style={{ width: 296, flexShrink: 0, minHeight: 0, display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 16, overflow: 'hidden' }}>
             <div style={{ padding: '14px 14px 10px', flexShrink: 0 }}>
@@ -301,8 +344,22 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
               </button>
             </div>
           </div>
-          <div style={{ flex: 1, minHeight: 0, position: 'relative', borderRadius: 18, overflow: 'hidden', border: `1px solid ${focusSpeaking ? ACCENT : 'rgba(255,255,255,.1)'}`, background: 'rgba(0,0,0,.45)', boxShadow: focusSpeaking ? '0 0 0 3px rgba(52,211,153,.22)' : 'none' }}>
-            {focus ? (
+          <div ref={shareFsRef} style={{ flex: 1, minHeight: 0, position: 'relative', borderRadius: 18, overflow: 'hidden', border: `1px solid ${isSharing ? 'rgba(52,211,153,.4)' : focusSpeaking ? ACCENT : 'rgba(255,255,255,.1)'}`, background: isSharing ? '#000' : 'rgba(0,0,0,.45)', boxShadow: focusSpeaking && !isSharing ? '0 0 0 3px rgba(52,211,153,.22)' : 'none' }}>
+            {isSharing ? (
+              <>
+                {screenShareLk ? (
+                  <ScreenShareCell lk={screenShareLk} mediaEpoch={liveKitMediaEpoch} style={{ position: 'absolute', inset: 0 }} />
+                ) : (
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, color: 'rgba(255,255,255,.55)' }}>
+                    <MonitorUp size={42} color={ACCENT} />
+                    <span style={{ fontSize: 13, fontWeight: 700 }}>{"Partage d'écran en cours…"}</span>
+                  </div>
+                )}
+                <div style={{ position: 'absolute', top: 14, left: 14, display: 'flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 700, color: '#fff', background: 'rgba(0,0,0,.5)', borderRadius: 9, padding: '6px 10px' }}>
+                  <MonitorUp size={14} color={ACCENT} /> {`${screenSharerName} partage son écran`}
+                </div>
+              </>
+            ) : focus ? (
               <>
                 {focusShowVid && focusLk ? (
                   <LiveHostVideoCell participant={focusLk} mediaEpoch={liveKitMediaEpoch} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />

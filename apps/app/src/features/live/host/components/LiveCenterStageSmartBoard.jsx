@@ -166,6 +166,7 @@ export const LiveCenterStageSmartBoard = ({
                 arenaMembersWallCenter={arenaMembersWallCenter}
                 arenaLayoutMode={arenaLayoutMode}
                 hostId={hostId}
+                sharingScreen={sharingScreen}
                 openLongiaHubCoachPanel={openLongiaHubCoachPanel}
                 setMemberVideoPreview={setMemberVideoPreview}
                 isGuestUi={isGuestUi}
