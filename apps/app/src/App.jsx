@@ -1050,14 +1050,16 @@ isLiriHostDevPreviewRoute;
     '/ecole', '/temple', '/programme', '/mission', '/fondateur', '/doctrine',
   ].includes((location.pathname || '/').replace(/\/+$/, '') || '/');
 
-  // Forum admin (liste ?tab=forum + sous-pages /owner-dashboard/forum/*) = MÊME expérience
-  // immersive que le forum élève → aucun en-tête global (comme /student-school-life).
-  const isAdminForum =
+  // Forum back-office (admin : ?tab=forum + /owner-dashboard/forum/* ; secrétariat :
+  // /secretariat-space/forum*) = MÊME expérience immersive que le forum élève → aucun
+  // en-tête global (comme /student-school-life).
+  const isDashForumImmersive =
     location.pathname.startsWith('/owner-dashboard/forum') ||
-    (location.pathname === '/owner-dashboard' && searchParams.get('tab') === 'forum');
+    (location.pathname === '/owner-dashboard' && searchParams.get('tab') === 'forum') ||
+    location.pathname.startsWith('/secretariat-space/forum');
 
   const shouldShowHeader =
-    !isAdminForum &&
+    !isDashForumImmersive &&
     !isAdminRoute &&
     !isMarketingShellRoute &&
     !isLiveArenaRoute &&
@@ -2002,6 +2004,18 @@ isLiriHostDevPreviewRoute;
             <ProtectedOwnerRoute>
               <ForumThreadPage />
             </ProtectedOwnerRoute>
+          } />
+
+          {/* Forum secrétariat — mêmes sous-pages immersives (fil / nouvelle question). */}
+          <Route path="/secretariat-space/forum/new" element={
+            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']}>
+              <ForumNewQuestionPage />
+            </ProtectedRoleRoute>
+          } />
+          <Route path="/secretariat-space/forum/thread/:threadId" element={
+            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']}>
+              <ForumThreadPage />
+            </ProtectedRoleRoute>
           } />
 
           {/* ── Routes publiques tenant ─────────────────────────────────── */}

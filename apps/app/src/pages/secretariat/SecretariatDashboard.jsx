@@ -28,9 +28,29 @@ import NgowazuluMentoratManagerTab from '@/components/ngowazulu/owner/NgowazuluM
 import NgowazuluOperationsPanel from '@/components/ngowazulu/admin/NgowazuluOperationsPanel';
 import SiteReviewsModerationPanel from '@/components/marketing/SiteReviewsModerationPanel';
 import AdministrativeDocumentStudio from '@/components/secretariat/AdministrativeDocumentStudio';
-import StudentForumCommunityPage from '@/pages/school/student-school-life/StudentForumCommunityPage';
+import StudentForumRedesign from '@/pages/school/student-school-life/StudentForumRedesign';
+import { SslThemeProvider, SSL_LIGHT_CLASS, ensureSslLightStyles } from '@/pages/school/student-school-life/sslTheme';
+import { useShellTint } from '@/lib/useShellTint';
 import { FormationForumContent } from '@/pages/school/FormationForumPage';
 import { FORUM_COMMUNITY_PATH } from '@/lib/forumDashboardPaths';
+
+/**
+ * Forum communauté du secrétariat = MÊME forum riche immersif que l'élève et l'admin
+ * (StudentForumRedesign), suivant la teinte partagée (sombre par défaut). Les sous-pages
+ * (fil / nouvelle question) sont routées dans App.jsx sous /secretariat-space/forum/*.
+ */
+const SecretariatForumPanel = () => {
+  useEffect(() => { ensureSslLightStyles(); }, []);
+  const [tint] = useShellTint();
+  const isLight = tint !== 'dark';
+  return (
+    <SslThemeProvider mode={isLight ? 'light' : 'dark'}>
+      <div className={isLight ? SSL_LIGHT_CLASS : ''}>
+        <StudentForumRedesign forumBasePath="/secretariat-space/forum" />
+      </div>
+    </SslThemeProvider>
+  );
+};
 
 const VALID_TABS = ['dashboard', 'apercu', 'paiements', 'notifications', 'reports', 'formations', 'coaching-mentoring', 'workshops', 'ngowazulu-mentorat', 'ngowazulu-operations', 'reviews', 'certificates', 'support', 'school-life', 'forum', 'rendez-vous', 'calendrier', 'marketing', 'messagerie', 'teachers', 'how-it-works', 'courses', 'document-admin', 'cycles-disciple', 'cycles-initie', 'cycles-maitre'];
 
@@ -104,7 +124,7 @@ const SecretariatDashboard = () => {
             />
           );
         }
-        return <StudentForumCommunityPage forumBasePath={FORUM_COMMUNITY_PATH.secretariat} />;
+        return <SecretariatForumPanel />;
       }
       case 'rendez-vous':
         return <SecretariatAppointmentsPage />;
