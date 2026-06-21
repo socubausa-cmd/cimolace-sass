@@ -607,7 +607,7 @@ const PlaceholderPage = ({ title }) => (
 );
 
 const PageLoader = () => (
-  <div className="flex min-h-[50dvh] w-full items-center justify-center bg-[#0F1419]">
+  <div className="flex flex-1 min-h-[100dvh] w-full items-center justify-center bg-[#0F1419]">
     <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#D4AF37] border-t-transparent" />
   </div>
 );
@@ -1050,7 +1050,14 @@ isLiriHostDevPreviewRoute;
     '/ecole', '/temple', '/programme', '/mission', '/fondateur', '/doctrine',
   ].includes((location.pathname || '/').replace(/\/+$/, '') || '/');
 
+  // Forum admin (liste ?tab=forum + sous-pages /owner-dashboard/forum/*) = MÊME expérience
+  // immersive que le forum élève → aucun en-tête global (comme /student-school-life).
+  const isAdminForum =
+    location.pathname.startsWith('/owner-dashboard/forum') ||
+    (location.pathname === '/owner-dashboard' && searchParams.get('tab') === 'forum');
+
   const shouldShowHeader =
+    !isAdminForum &&
     !isAdminRoute &&
     !isMarketingShellRoute &&
     !isLiveArenaRoute &&

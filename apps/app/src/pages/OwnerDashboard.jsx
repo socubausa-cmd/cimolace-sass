@@ -36,6 +36,7 @@ import NgowazuluOperationsPanel from '@/components/ngowazulu/admin/NgowazuluOper
 import SiteReviewsModerationPanel from '@/components/marketing/SiteReviewsModerationPanel';
 import StudentForumRedesign from '@/pages/school/student-school-life/StudentForumRedesign';
 import { SslThemeProvider, SSL_LIGHT_CLASS, ensureSslLightStyles } from '@/pages/school/student-school-life/sslTheme';
+import { useShellTint } from '@/lib/useShellTint';
 import { FormationForumContent } from '@/pages/school/FormationForumPage';
 
 /**
@@ -48,9 +49,13 @@ import { FormationForumContent } from '@/pages/school/FormationForumPage';
  */
 const OwnerForumPanel = () => {
   useEffect(() => { ensureSslLightStyles(); }, []);
+  // Le forum suit la MÊME teinte partagée que l'espace élève (clé localStorage commune
+  // `liri-shell-tint`, sombre par défaut) → rendu identique partout, plus de « deux couleurs ».
+  const [tint] = useShellTint();
+  const isLight = tint !== 'dark';
   return (
-    <SslThemeProvider mode="light">
-      <div className={SSL_LIGHT_CLASS}>
+    <SslThemeProvider mode={isLight ? 'light' : 'dark'}>
+      <div className={isLight ? SSL_LIGHT_CLASS : ''}>
         <StudentForumRedesign forumBasePath="/owner-dashboard/forum" />
       </div>
     </SslThemeProvider>
