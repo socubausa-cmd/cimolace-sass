@@ -128,22 +128,30 @@ const ensureStudentMembership = async (authUser) => {
   }
 };
 
-/** Vrai uniquement dans la coque élève /m/eleve (où le self-join student a un sens). */
-const isEleveShellPath = () => {
+/**
+ * Vrai dans un ESPACE ÉLÈVE où le self-join student a un sens :
+ *  - coque mobile `/m/eleve`
+ *  - hub élève web `/student-school-life` (parité web — un élève qui arrive là
+ *    sans membership tenant ne verrait aucun cours autrement).
+ * Le self-join reste SÛR partout : la RPC ne crée qu'un role='student' (jamais
+ * d'escalade) et est idempotente (un owner/teacher garde son rôle). On NE touche
+ * PAS les flux génériques (visiteur `/signup`, école `/t/:slug/signup`).
+ */
+const isStudentSpacePath = () => {
   try {
-    return String(window.location.pathname || '').startsWith('/m/eleve');
+    const p = String(window.location.pathname || '');
+    return p.startsWith('/m/eleve') || p.startsWith('/student-school-life');
   } catch {
     return false;
   }
 };
 
 /**
- * Self-heal rattachement élève, GATÉ sur la coque /m/eleve : ne touche pas les
- * autres flux d'inscription (visiteur générique /signup, école /t/:slug/signup).
+ * Self-heal rattachement élève, GATÉ sur les espaces élève (mobile + web).
  * Fire-and-forget.
  */
 const maybeEnsureStudentMembership = (authUser) => {
-  if (!isEleveShellPath()) return;
+  if (!isStudentSpacePath()) return;
   void ensureStudentMembership(authUser);
 };
 
