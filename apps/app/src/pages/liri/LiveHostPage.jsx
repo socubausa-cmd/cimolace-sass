@@ -489,7 +489,9 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
       formationFocusAppliedRef.current = false;
       return;
     }
-    if (isGuestUi || lhLayoutCompact) return; // desktop hôte d'abord
+    // Hôte web/desktop. On exclut seulement le VRAI mobile (lhCompactViewport),
+    // pas le web étroit (<3 colonnes) : un laptop ~1440 doit bénéficier du focus.
+    if (isGuestUi || lhCompactViewport) return;
     if (sessionType !== 'classe') return; // cours/formation uniquement
     if (formationFocusAppliedRef.current) return; // une seule fois
     formationFocusAppliedRef.current = true;
@@ -497,7 +499,7 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     setLongiaHubOpen(false);
     setLiveLeftRailOpen(false);
     setLiveRightRailOpen(false);
-  }, [phase, isGuestUi, lhLayoutCompact, sessionType]);
+  }, [phase, isGuestUi, lhCompactViewport, sessionType]);
   const guestInvitePreviewUrl = useMemo(() => {
     if (!sessionId || typeof window === 'undefined') return '';
     return `${window.location.origin}/live/${sessionId}`;
