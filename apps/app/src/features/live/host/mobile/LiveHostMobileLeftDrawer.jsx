@@ -371,7 +371,7 @@ export function LiveHostMobileLeftDrawer({
                       onClick={() => waitingEntries.forEach((e) => approveWaiting?.(e))}
                       style={{
                         flex: 1, padding: '8px', borderRadius: 9,
-                        background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.3)',
+                        background: 'rgba(128,101,74,0.15)', border: '1px solid rgba(128,101,74,0.3)',
                         color: '#86efac', fontSize: 11, fontWeight: 700, cursor: 'pointer',
                       }}
                     >✓ Tous accepter</button>
@@ -573,7 +573,7 @@ function SignalRow({ name, emoji, color, onAccept, onReject }) {
       </span>
       <button onClick={onAccept} style={{
         width: 28, height: 28, borderRadius: 8,
-        background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.3)',
+        background: 'rgba(128,101,74,0.15)', border: '1px solid rgba(128,101,74,0.3)',
         color: '#86efac', fontSize: 14, cursor: 'pointer',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>✓</button>

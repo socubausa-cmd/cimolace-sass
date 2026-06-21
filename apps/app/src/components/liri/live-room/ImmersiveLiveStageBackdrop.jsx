@@ -21,10 +21,10 @@ export default function ImmersiveLiveStageBackdrop({ parallax = { x: 0, y: 0 }, 
       <div
         className={
           isLiriHost
-            ? 'absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_100%,rgba(120,40,180,0.12),transparent_60%),radial-gradient(circle_at_50%_35%,rgba(212,163,106,0.08),transparent_45%),radial-gradient(circle_at_12%_20%,rgba(251,191,36,0.06),transparent_30%)]'
+            ? 'absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_100%,rgba(180,150,120,0.12),transparent_60%),radial-gradient(circle_at_50%_35%,rgba(212,163,106,0.08),transparent_45%),radial-gradient(circle_at_12%_20%,rgba(251,191,36,0.06),transparent_30%)]'
             : isArena
               ? 'absolute inset-0 bg-[radial-gradient(circle_at_14%_11%,rgba(212,175,55,0.16),transparent_32%),radial-gradient(circle_at_50%_42%,rgba(212,163,106,0.11),transparent_42%),radial-gradient(circle_at_88%_22%,rgba(212,163,106,0.12),transparent_28%),radial-gradient(circle_at_50%_92%,rgba(212,175,55,0.12),transparent_36%)]'
-              : 'absolute inset-0 bg-[radial-gradient(circle_at_14%_11%,rgba(212,175,55,0.12),transparent_32%),radial-gradient(circle_at_86%_20%,rgba(200,148,62,0.1),transparent_30%),radial-gradient(circle_at_50%_88%,rgba(56,189,248,0.07),transparent_34%)]'
+              : 'absolute inset-0 bg-[radial-gradient(circle_at_14%_11%,rgba(212,175,55,0.12),transparent_32%),radial-gradient(circle_at_86%_20%,rgba(200,148,62,0.1),transparent_30%),radial-gradient(circle_at_50%_88%,rgba(248,152,56,0.07),transparent_34%)]'
         }
       />
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -33,7 +33,7 @@ export default function ImmersiveLiveStageBackdrop({ parallax = { x: 0, y: 0 }, 
         {isLiriHost ? (
           <>
             <div className="absolute bottom-[-6%] left-1/2 h-[5.5rem] w-[min(24rem,55vw)] -translate-x-1/2 rounded-full bg-orange-500/[0.08] blur-[40px]" />
-            <div className="absolute left-[48%] top-[32%] h-[min(32rem,65vh)] w-[min(38rem,72vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(212,163,106,0.12)_0%,rgba(88,28,135,0.06)_40%,transparent_65%)] blur-[80px]" />
+            <div className="absolute left-[48%] top-[32%] h-[min(32rem,65vh)] w-[min(38rem,72vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(212,163,106,0.12)_0%,rgba(135,111,88,0.06)_40%,transparent_65%)] blur-[80px]" />
           </>
         ) : null}
         {isArena && !isLiriHost ? (
@@ -56,7 +56,7 @@ export default function ImmersiveLiveStageBackdrop({ parallax = { x: 0, y: 0 }, 
         <div
           className={
             isLiriHost
-              ? 'absolute inset-0 bg-[radial-gradient(circle_at_22%_14%,rgba(255,255,255,0.05),transparent_38%),radial-gradient(circle_at_78%_20%,rgba(212,163,106,0.12),transparent_28%),radial-gradient(circle_at_50%_90%,rgba(120,40,180,0.08),transparent_36%)] transition-transform duration-500'
+              ? 'absolute inset-0 bg-[radial-gradient(circle_at_22%_14%,rgba(255,255,255,0.05),transparent_38%),radial-gradient(circle_at_78%_20%,rgba(212,163,106,0.12),transparent_28%),radial-gradient(circle_at_50%_90%,rgba(180,150,120,0.08),transparent_36%)] transition-transform duration-500'
               : isArena
                 ? 'absolute inset-0 bg-[radial-gradient(circle_at_20%_12%,rgba(255,255,255,0.07),transparent_36%),radial-gradient(circle_at_82%_18%,rgba(212,175,55,0.14),transparent_28%),radial-gradient(circle_at_50%_48%,rgba(212,163,106,0.06),transparent_38%),radial-gradient(circle_at_50%_88%,rgba(212,175,55,0.1),transparent_32%)] transition-transform duration-500'
                 : 'absolute inset-0 bg-[radial-gradient(circle_at_20%_12%,rgba(255,255,255,0.09),transparent_36%),radial-gradient(circle_at_82%_18%,rgba(212,175,55,0.11),transparent_30%),radial-gradient(circle_at_50%_85%,rgba(200,148,62,0.1),transparent_34%)] transition-transform duration-500'

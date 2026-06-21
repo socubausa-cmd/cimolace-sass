@@ -400,8 +400,8 @@ export default function GuestNotesPanel({
               ...TOOLBAR_BTN,
               flex: 1.4,
               color: isShared ? proColors.ok : proColors.accent,
-              borderColor: isShared ? 'rgba(34,197,94,0.35)' : proColors.borderAccent,
-              background: isShared ? 'rgba(34,197,94,0.12)' : proColors.accentSoft,
+              borderColor: isShared ? 'rgba(94,64,34,0.35)' : proColors.borderAccent,
+              background: isShared ? 'rgba(94,64,34,0.12)' : proColors.accentSoft,
             }}
             title={isShared ? 'Notes déjà partagées avec le prof' : 'Envoyer mes notes au prof en fin de cours'}
             onClick={handleShareWithTeacher}

@@ -24,9 +24,9 @@ export function LiveGuestLeftRail({
       className="lh-sy lh-sp-dim"
       style={{
         order: hostCompactColOrder.left,
-        background: liveShell.panelBg,
-        borderRadius: liveShell.panelRadius,
-        border: liveShell.panelBorder,
+        background: liveLeftGuestCollapsedStrip ? liveShell.panelBg : 'transparent',
+        borderRadius: liveLeftGuestCollapsedStrip ? liveShell.panelRadius : 0,
+        border: liveLeftGuestCollapsedStrip ? liveShell.panelBorder : 'none',
         padding: liveLeftGuestCollapsedStrip ? '10px 6px' : '14px',
         display: lhLayoutCompact && !liveLeftRailOpen ? 'none' : 'flex',
         flexDirection: 'column',
@@ -100,7 +100,7 @@ export function LiveGuestLeftRail({
 
           {curEtape?.title ? (
             <div style={{padding:'8px',borderRadius:'6px',border:'1px solid rgba(255,255,255,.07)',background:'rgba(255,255,255,.03)'}}>
-              <div style={{fontSize:'8px',fontWeight:700,letterSpacing:'.1em',color:'rgba(167,243,208,.65)',marginBottom:'4px'}}>ÉTAPE EN COURS</div>
+              <div style={{fontSize:'8px',fontWeight:700,letterSpacing:'.1em',color:'rgba(208,187,167,.65)',marginBottom:'4px'}}>ÉTAPE EN COURS</div>
               <p style={{margin:0,fontSize:'11px',color:'rgba(255,255,255,.75)',lineHeight:1.45,overflow:'hidden',display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical'}}>{curEtape.title}</p>
             </div>
           ) : null}
@@ -112,7 +112,7 @@ export function LiveGuestLeftRail({
           {sessionFormationId ? (
             <div style={{display:'flex',flexDirection:'column',gap:'5px',marginTop:'auto'}}>
               <Link to={`/formation/${sessionFormationId}`} target="_blank" rel="noopener noreferrer"
-                style={{display:'flex',alignItems:'center',gap:'6px',padding:'7px 8px',borderRadius:'6px',border:'1px solid rgba(255,255,255,.07)',background:'rgba(255,255,255,.03)',fontSize:'10px',color:'rgba(147,197,253,.85)',fontWeight:600,textDecoration:'none'}}>
+                style={{display:'flex',alignItems:'center',gap:'6px',padding:'7px 8px',borderRadius:'6px',border:'1px solid rgba(255,255,255,.07)',background:'rgba(255,255,255,.03)',fontSize:'10px',color:'rgba(253,200,147,.85)',fontWeight:600,textDecoration:'none'}}>
                 Cours de la formation
               </Link>
               <Link to={`/formation/${sessionFormationId}/forum`} target="_blank" rel="noopener noreferrer"

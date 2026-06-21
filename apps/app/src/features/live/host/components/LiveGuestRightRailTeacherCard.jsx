@@ -124,7 +124,7 @@ export const LiveGuestRightRailTeacherCard = ({
             flexDirection: 'column',
             borderRadius: 12,
             overflow: 'hidden',
-            border: '1px solid rgba(148,163,184,.2)',
+            border: '1px solid rgba(184,166,148,.2)',
           }}
         >
           <GuestNotesPanel

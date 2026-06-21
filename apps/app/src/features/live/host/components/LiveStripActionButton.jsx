@@ -21,7 +21,7 @@ const VARIANTS = {
   leave: {
     testId: 'live-guest-leave-strip',
     bgIdle: 'linear-gradient(135deg,#a8763a,#7a5526)',
-    bgBusy: 'rgba(88,28,135,.35)',
+    bgBusy: 'rgba(135,111,88,.35)',
     color: '#f7f0e4',
     border: '1px solid rgba(212,163,106,.35)',
     boxShadow: '0 0 14px rgba(168,118,58,.35)',

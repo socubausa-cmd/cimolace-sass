@@ -43,7 +43,7 @@ export const LiveGuestProctorHistoryFloating = ({
             return !o;
           });
         }}
-        className="rounded-full border border-amber-400/35 bg-[rgba(46,16,101,.45)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-amber-100/95 shadow-lg backdrop-blur-sm transition-colors hover:bg-[rgba(46,16,101,.65)]"
+        className="rounded-full border border-amber-400/35 bg-[rgba(101,73,46,.45)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-amber-100/95 shadow-lg backdrop-blur-sm transition-colors hover:bg-[rgba(101,73,46,.65)]"
         title="Commandes caméra enregistrées pour votre compte dans cette session"
       >
         {open ? 'Fermer' : 'Mes commandes caméra'}

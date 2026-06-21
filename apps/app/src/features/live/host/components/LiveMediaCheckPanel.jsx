@@ -34,11 +34,11 @@ export const LiveMediaCheckPanel = ({
       className="lh-premium-card"
       style={{
         borderRadius: '12px',
-        border: '1px solid rgba(56,189,248,.35)',
-        background: 'radial-gradient(120% 90% at 8% -8%, rgba(56,189,248,.14), transparent 56%), rgba(8,47,73,.35)',
+        border: '1px solid rgba(248,152,56,.35)',
+        background: 'radial-gradient(120% 90% at 8% -8%, rgba(248,152,56,.14), transparent 56%), rgba(73,40,8,.35)',
         padding: '12px',
         fontSize: '10px',
-        color: 'rgba(224,242,254,.92)',
+        color: 'rgba(254,239,224,.92)',
         lineHeight: 1.5,
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,.08)',
       }}
@@ -57,8 +57,8 @@ export const LiveMediaCheckPanel = ({
         style={{
           marginTop: '8px',
           borderRadius: '8px',
-          border: '1px solid rgba(125,211,252,.4)',
-          background: 'rgba(14,116,144,.25)',
+          border: '1px solid rgba(252,188,125,.4)',
+          background: 'rgba(144,79,14,.25)',
           padding: '6px 10px',
           fontSize: '9px',
           fontWeight: 700,

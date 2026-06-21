@@ -19,8 +19,8 @@ export default function ParticipantJoyKitBar({
       onClick={onClick}
       style={{
         borderRadius: '4px',
-        border: '1px solid rgba(56,189,248,.28)',
-        background: 'rgba(56,189,248,.08)',
+        border: '1px solid rgba(248,152,56,.28)',
+        background: 'rgba(248,152,56,.08)',
         padding: '6px 8px',
         fontSize: '9px',
         fontWeight: 600,

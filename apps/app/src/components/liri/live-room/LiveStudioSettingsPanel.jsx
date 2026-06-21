@@ -107,7 +107,7 @@ const VBG_PRESETS = [
     id: 'immersive',
     label: 'Verre IA',
     thumb: null,
-    color: 'linear-gradient(135deg,rgba(212,175,55,0.14),rgba(9,13,20,0.5))',
+    color: 'linear-gradient(135deg,rgba(212,175,55,0.14),rgba(20,14,9,0.5))',
   },
   { id: 'blur',    label: 'Flou',      thumb: null, isBlur: true },
   { id: 'space',   label: 'Cosmos',    thumb: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=200&q=60' },

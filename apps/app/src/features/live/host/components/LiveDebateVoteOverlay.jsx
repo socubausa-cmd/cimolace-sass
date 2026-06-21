@@ -25,7 +25,7 @@ export const LiveDebateVoteOverlay = ({ phase, debateArena, debateLiveVoteCounts
         style={{
           borderRadius: '16px',
           border: '1px solid rgba(212,163,106,.35)',
-          background: 'rgba(20,16,28,.95)',
+          background: 'rgba(28,24,20,.95)',
           backdropFilter: 'blur(20px)',
           padding: '12px 16px',
           boxShadow: '0 8px 32px rgba(0,0,0,.55)',

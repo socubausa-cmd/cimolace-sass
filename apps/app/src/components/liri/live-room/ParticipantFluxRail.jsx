@@ -39,7 +39,7 @@ export default function ParticipantFluxRail({
       <div
         ref={railRef}
         onWheel={handleWheel}
-        className="flex items-center gap-2 overflow-x-auto rounded-2xl bg-white/[0.06] backdrop-blur-xl px-2 py-2 [scrollbar-width:none] shadow-[0_14px_46px_-28px_rgba(110,140,255,0.95)]"
+        className="flex items-center gap-2 overflow-x-auto rounded-2xl bg-white/[0.06] backdrop-blur-xl px-2 py-2 [scrollbar-width:none] shadow-[0_14px_46px_-28px_rgba(255,182,110,0.95)]"
       >
         <button
           type="button"

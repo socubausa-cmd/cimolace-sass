@@ -7,7 +7,7 @@ export const GLOBAL_CSS = `
 .lh-sy{overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent}
 .lh-sy::-webkit-scrollbar{width:3px}.lh-sy::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12)}
 .lh-sx{overflow-x:auto;scrollbar-width:none}.lh-sx::-webkit-scrollbar{display:none}
-.lh-ov{position:fixed;inset:0;background:rgba(8,9,14,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:500;display:flex;align-items:center;justify-content:center;animation:lhFadeUp .18s ease;padding:16px}
+.lh-ov{position:fixed;inset:0;background:rgba(16,14,11,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:500;display:flex;align-items:center;justify-content:center;animation:lhFadeUp .18s ease;padding:16px}
 .lh-mbox{background:linear-gradient(165deg,rgba(26,24,21,.97) 0%,rgba(24,22,19,.99) 100%);border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.04) inset;animation:lhMIn .2s ease;max-height:min(90vh,920px);overflow:hidden;display:flex;flex-direction:column}
 .lh-tbtn{padding:6px 12px;font-size:11px;font-weight:600;letter-spacing:.04em;border:none;background:transparent;color:rgba(255,255,255,.38);border-bottom:2px solid transparent;cursor:pointer;transition:all .12s}
 .lh-tbtn.on{color:rgba(var(--lh-accent-rgb,233,205,150),.95);border-bottom-color:rgba(var(--lh-accent-rgb,212,163,106),.55)}

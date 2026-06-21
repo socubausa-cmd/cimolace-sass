@@ -23,4 +23,4 @@ export const LIRI_HOST_STAGE_FRAME =
 
 /** Zone de rendu SmartBoard (dégradés type maquette) */
 export const LIRI_HOST_STAGE_CANVAS_GRADIENT =
-  'pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_90%_70%_at_50%_115%,rgba(160,50,20,0.45),rgba(100,20,70,0.22)_25%,rgba(50,10,70,0.1)_50%,transparent_70%),radial-gradient(ellipse_60%_50%_at_25%_90%,rgba(80,15,100,0.28),transparent_45%),linear-gradient(180deg,#0e0e24_0%,#130d20_40%,#1c0e1e_70%,#180c1a_100%)]';
+  'pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_90%_70%_at_50%_115%,rgba(160,50,20,0.45),rgba(100,20,70,0.22)_25%,rgba(70,60,50,0.1)_50%,transparent_70%),radial-gradient(ellipse_60%_50%_at_25%_90%,rgba(100,90,80,0.28),transparent_45%),linear-gradient(180deg,#0e0e24_0%,#130d20_40%,#1c0e1e_70%,#180c1a_100%)]';

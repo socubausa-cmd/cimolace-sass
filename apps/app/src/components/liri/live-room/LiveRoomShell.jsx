@@ -997,7 +997,7 @@ export default function LiveRoomShell({
     ? 'rounded-2xl border border-red-500/25 bg-black/[0.07] shadow-[inset_0_1px_0_0_rgba(248,113,113,0.14)]'
     : glassPanel;
   const zone2Shell = liriGuestLayout
-    ? 'rounded-2xl border border-amber-400/22 bg-black/[0.05] shadow-[inset_0_1px_0_0_rgba(56,189,248,0.12)]'
+    ? 'rounded-2xl border border-amber-400/22 bg-black/[0.05] shadow-[inset_0_1px_0_0_rgba(248,152,56,0.12)]'
     : glassPanel;
   const zone3Shell = liriGuestLayout
     ? 'rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-black/[0.06] shadow-[inset_0_1px_0_0_rgba(212,175,55,0.12)]'

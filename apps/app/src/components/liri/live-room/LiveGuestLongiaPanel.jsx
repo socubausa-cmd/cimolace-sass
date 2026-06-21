@@ -46,7 +46,7 @@ function LiriAudioMethodSelector({ multilangAudio }) {
       style={{
         marginTop: '8px',
         paddingTop: '8px',
-        borderTop: '1px solid rgba(167, 139, 250, 0.12)',
+        borderTop: '1px solid rgba(250,208,167, 0.12)',
         display: 'flex',
         flexDirection: 'column',
         gap: '6px',
@@ -70,8 +70,8 @@ function LiriAudioMethodSelector({ multilangAudio }) {
                 fontSize: '9px',
                 padding: '3px 8px',
                 borderRadius: '999px',
-                border: `1px solid ${checked ? 'rgba(167, 139, 250, 0.55)' : 'rgba(255,255,255,0.12)'}`,
-                background: checked ? 'rgba(124, 58, 237, 0.2)' : 'rgba(0,0,0,0.2)',
+                border: `1px solid ${checked ? 'rgba(250,208,167, 0.55)' : 'rgba(255,255,255,0.12)'}`,
+                background: checked ? 'rgba(237,180,124, 0.2)' : 'rgba(0,0,0,0.2)',
                 color: checked ? '#f3e8d2' : 'rgba(255,255,255,0.55)',
                 cursor: 'pointer',
                 transition: 'border-color 0.15s, background 0.15s',
@@ -91,7 +91,7 @@ function LiriAudioMethodSelector({ multilangAudio }) {
         })}
       </div>
       {livekitOffered && activeMethod === 'none' ? (
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '9px', color: 'rgba(147, 197, 253, 0.7)' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '9px', color: 'rgba(253,200,147, 0.7)' }}>
           <span style={{ flexShrink: 0 }}>Volume</span>
           <input
             type="range"
@@ -434,8 +434,8 @@ export default function LiveGuestLongiaPanel({
     <div
       style={{
         borderRadius: '6px',
-        border: '1px solid rgba(167, 139, 250, 0.28)',
-        background: 'linear-gradient(155deg, rgba(30, 22, 48, 0.92), rgba(12, 10, 22, 0.96))',
+        border: '1px solid rgba(250,208,167, 0.28)',
+        background: 'linear-gradient(155deg, rgba(48,39,30, 0.92), rgba(22,17,12, 0.96))',
         overflow: 'hidden',
       }}
     >
@@ -449,7 +449,7 @@ export default function LiveGuestLongiaPanel({
           justifyContent: 'space-between',
           padding: '8px 10px',
           border: 'none',
-          background: expanded ? 'rgba(124, 58, 237, 0.12)' : 'transparent',
+          background: expanded ? 'rgba(237,180,124, 0.12)' : 'transparent',
           cursor: 'pointer',
         }}
       >
@@ -465,8 +465,8 @@ export default function LiveGuestLongiaPanel({
           aria-live="polite"
           style={{
             padding: '8px 10px',
-            borderTop: '1px solid rgba(167, 139, 250, 0.15)',
-            borderBottom: '1px solid rgba(167, 139, 250, 0.08)',
+            borderTop: '1px solid rgba(250,208,167, 0.15)',
+            borderBottom: '1px solid rgba(250,208,167, 0.08)',
           }}
         >
           <div
@@ -474,7 +474,7 @@ export default function LiveGuestLongiaPanel({
               fontSize: '8px',
               fontWeight: 700,
               letterSpacing: '0.08em',
-              color: 'rgba(167, 243, 208, 0.75)',
+              color: 'rgba(208,187,167, 0.75)',
               marginBottom: '6px',
               display: 'flex',
               alignItems: 'center',
@@ -543,7 +543,7 @@ export default function LiveGuestLongiaPanel({
           aria-live="polite"
           style={{
             padding: '6px 10px 8px',
-            borderTop: '1px solid rgba(167, 139, 250, 0.15)',
+            borderTop: '1px solid rgba(250,208,167, 0.15)',
             maxHeight: expanded ? 160 : 72,
             overflowY: 'auto',
           }}
@@ -553,7 +553,7 @@ export default function LiveGuestLongiaPanel({
               fontSize: '8px',
               fontWeight: 700,
               letterSpacing: '0.08em',
-              color: 'rgba(253, 230, 138, 0.75)',
+              color: 'rgba(253,230,138, 0.75)',
               marginBottom: '6px',
             }}
           >
@@ -572,8 +572,8 @@ export default function LiveGuestLongiaPanel({
                     color: 'rgba(255,255,255,0.82)',
                     padding: '6px 8px',
                     borderRadius: '4px',
-                    border: `1px solid ${d.urgent ? 'rgba(248, 113, 113, 0.35)' : 'rgba(255,255,255,0.1)'}`,
-                    background: d.urgent ? 'rgba(248, 113, 113, 0.08)' : 'rgba(0,0,0,0.25)',
+                    border: `1px solid ${d.urgent ? 'rgba(248,113,113, 0.35)' : 'rgba(255,255,255,0.1)'}`,
+                    background: d.urgent ? 'rgba(248,113,113, 0.08)' : 'rgba(0,0,0,0.25)',
                   }}
                 >
                   <span style={{ fontWeight: 700, color: d.urgent ? '#fecaca' : '#f3e8d2' }}>{d.headline}</span>
@@ -645,8 +645,8 @@ export default function LiveGuestLongiaPanel({
                 color: 'rgba(255,255,255,0.88)',
                 padding: '8px',
                 borderRadius: '4px',
-                border: '1px solid rgba(251, 191, 36, 0.22)',
-                background: 'rgba(251, 191, 36, 0.06)',
+                border: '1px solid rgba(251,191,36, 0.22)',
+                background: 'rgba(251,191,36, 0.06)',
               }}
             >
               <span style={{ fontWeight: 700, color: '#fde68a' }}>Ce qu'il faut comprendre</span>
@@ -662,8 +662,8 @@ export default function LiveGuestLongiaPanel({
                 color: 'rgba(255,255,255,0.85)',
                 padding: '8px',
                 borderRadius: '4px',
-                border: '1px solid rgba(52, 211, 153, 0.2)',
-                background: 'rgba(16, 185, 129, 0.06)',
+                border: '1px solid rgba(153,102,52, 0.2)',
+                background: 'rgba(129,72,16, 0.06)',
               }}
             >
               <span style={{ fontWeight: 700, color: '#6ee7b7' }}>Version simple</span>
@@ -679,8 +679,8 @@ export default function LiveGuestLongiaPanel({
                 color: 'rgba(255,255,255,0.85)',
                 padding: '8px',
                 borderRadius: '4px',
-                border: '1px solid rgba(129, 140, 248, 0.25)',
-                background: 'rgba(99, 102, 241, 0.08)',
+                border: '1px solid rgba(248,188,129, 0.25)',
+                background: 'rgba(241,170,99, 0.08)',
               }}
             >
               <span style={{ fontWeight: 700, color: '#e3c79a' }}>Exemple / analogie</span>
@@ -713,8 +713,8 @@ export default function LiveGuestLongiaPanel({
                   fontWeight: 600,
                   padding: '4px 8px',
                   borderRadius: '999px',
-                  border: '1px solid rgba(167, 139, 250, 0.35)',
-                  background: 'rgba(124, 58, 237, 0.15)',
+                  border: '1px solid rgba(250,208,167, 0.35)',
+                  background: 'rgba(237,180,124, 0.15)',
                   color: '#f3e8d2',
                   cursor: loading ? 'default' : 'pointer',
                   opacity: loading ? 0.5 : 1,
@@ -732,8 +732,8 @@ export default function LiveGuestLongiaPanel({
                 fontWeight: 600,
                 padding: '4px 8px',
                 borderRadius: '999px',
-                border: '1px solid rgba(248, 113, 113, 0.35)',
-                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(248,113,113, 0.35)',
+                background: 'rgba(239,68,68, 0.1)',
                 color: '#fecaca',
                 cursor: loading ? 'default' : 'pointer',
                 opacity: loading ? 0.5 : 1,
@@ -768,8 +768,8 @@ export default function LiveGuestLongiaPanel({
                 fontWeight: 700,
                 padding: '6px 10px',
                 borderRadius: '4px',
-                border: '1px solid rgba(167, 139, 250, 0.4)',
-                background: 'rgba(124, 58, 237, 0.25)',
+                border: '1px solid rgba(250,208,167, 0.4)',
+                background: 'rgba(237,180,124, 0.25)',
                 color: '#fff',
                 cursor: loading || !draft.trim() ? 'default' : 'pointer',
                 opacity: loading || !draft.trim() ? 0.45 : 1,
@@ -803,8 +803,8 @@ export default function LiveGuestLongiaPanel({
                 alignSelf: 'flex-start',
                 padding: '4px 8px',
                 borderRadius: '4px',
-                border: '1px solid rgba(56, 189, 248, 0.35)',
-                background: 'rgba(14, 165, 233, 0.12)',
+                border: '1px solid rgba(248,152,56, 0.35)',
+                background: 'rgba(233,123,14, 0.12)',
                 color: '#7dd3fc',
                 cursor: 'pointer',
               }}

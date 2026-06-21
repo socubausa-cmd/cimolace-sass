@@ -304,7 +304,7 @@ export default function LiveHostInviteManagementPanel({
           <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-liri-violet text-[14px] font-bold text-white shadow-inner">
             {avatarLetter}
             <span
-              className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#16161c] bg-amber-500 shadow-[0_0_6px_rgba(34,197,94,0.75)]"
+              className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#16161c] bg-amber-500 shadow-[0_0_6px_rgba(94,64,34,0.75)]"
               aria-hidden
             />
           </span>

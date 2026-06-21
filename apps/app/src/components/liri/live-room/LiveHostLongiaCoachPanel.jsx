@@ -477,7 +477,7 @@ export default function LiveHostLongiaCoachPanel({
           ref={scrollRef}
           className={cn(
             'lh-sy relative flex min-h-[72px] min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain rounded-xl border border-[#2D3139] bg-black/25 px-2 py-2 text-[11px] leading-snug text-white/88',
-            '[scrollbar-width:thin] [scrollbar-color:rgba(123,97,255,0.22)_transparent]',
+            '[scrollbar-width:thin] [scrollbar-color:rgba(255,189,123,0.22)_transparent]',
           )}
         >
         {!threadHydrated ? (
@@ -605,7 +605,7 @@ export default function LiveHostLongiaCoachPanel({
         <div
           className={cn(
             'flex min-h-[44px] min-w-0 items-end gap-1 rounded-xl border bg-[#0a0c10] px-2 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-[border-color,box-shadow]',
-            'border-[#2D3139] focus-within:border-[#7B61FF]/45 focus-within:shadow-[0_0_0_1px_rgba(123,97,255,0.2),inset_0_1px_0_rgba(255,255,255,0.04)]',
+            'border-[#2D3139] focus-within:border-[#7B61FF]/45 focus-within:shadow-[0_0_0_1px_rgba(255,189,123,0.2),inset_0_1px_0_rgba(255,255,255,0.04)]',
           )}
         >
           <textarea

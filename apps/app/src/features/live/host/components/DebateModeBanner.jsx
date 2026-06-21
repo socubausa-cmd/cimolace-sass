@@ -106,12 +106,12 @@ export function DebateModeBanner({ debate, liveVoteCounts }) {
           </span>
         ) : null}
         {blended ? (
-          <span style={{ fontSize: '11px', color: 'rgba(167,243,208,.85)', fontVariantNumeric: 'tabular-nums', width: '100%' }}>
+          <span style={{ fontSize: '11px', color: 'rgba(208,187,167,.85)', fontVariantNumeric: 'tabular-nums', width: '100%' }}>
             Composite ({Math.round(blended.w * 100)}% IA, rounds terminés {blended.count}) · A {blended.sumA.toFixed(1)} · B {blended.sumB.toFixed(1)}
           </span>
         ) : null}
         {votingOpen && liveVoteCounts ? (
-          <span style={{ fontSize: '11px', color: 'rgba(196,181,253,.9)', fontVariantNumeric: 'tabular-nums' }}>
+          <span style={{ fontSize: '11px', color: 'rgba(253,224,196,.9)', fontVariantNumeric: 'tabular-nums' }}>
             Votes · A {liveVoteCounts.a} · = {liveVoteCounts.tie} · B {liveVoteCounts.b}
             {liveVoteCounts.total > 0 ? ` (${liveVoteCounts.total})` : ''}
           </span>
@@ -126,7 +126,7 @@ export function DebateModeBanner({ debate, liveVoteCounts }) {
           <p style={{ width: '100%', margin: 0, fontSize: '10px', color: 'rgba(255,255,255,.5)', lineHeight: 1.45, padding: '0 4px' }}>{roundBrief}</p>
         ) : null}
         {phaseHint ? (
-          <p style={{ width: '100%', margin: 0, marginTop: '4px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,.1)', fontSize: '10px', color: 'rgba(125,211,252,.75)', lineHeight: 1.45 }}>
+          <p style={{ width: '100%', margin: 0, marginTop: '4px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,.1)', fontSize: '10px', color: 'rgba(252,188,125,.75)', lineHeight: 1.45 }}>
             {phaseHint}
           </p>
         ) : null}

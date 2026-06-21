@@ -124,11 +124,11 @@ export function LiveHostMobileFabStack({
                   padding: '7px 12px',
                   borderRadius: 20,
                   background: active
-                    ? 'rgba(192,132,252,0.35)'
+                    ? 'rgba(252,222,192,0.35)'
                     : 'rgba(0,0,0,0.6)',
                   backdropFilter: 'blur(8px)',
                   WebkitBackdropFilter: 'blur(8px)',
-                  border: `1px solid ${active ? 'rgba(192,132,252,0.6)' : 'rgba(255,255,255,0.12)'}`,
+                  border: `1px solid ${active ? 'rgba(252,222,192,0.6)' : 'rgba(255,255,255,0.12)'}`,
                   color: '#fff',
                   fontSize: 12,
                   fontWeight: active ? 700 : 400,

@@ -12,7 +12,7 @@ const VARIANTS = {
   guest: {
     testId: 'live-guest-self-strip-preview',
     label: 'MOI',
-    labelBg: 'rgba(56,189,248,.9)',
+    labelBg: 'rgba(248,152,56,.9)',
     labelColor: '#0c1624',
     nameFallback: 'Moi',
   },

@@ -665,7 +665,7 @@ function paintBoardBackground(bgCanvas) {
     ctx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
     /* grille pointée style géoplan français */
     const STEP = 24;
-    ctx.fillStyle = 'rgba(100,100,220,0.28)';
+    ctx.fillStyle = 'rgba(220,160,100,0.28)';
     for (let gx = STEP; gx < bgCanvas.width; gx += STEP) {
       for (let gy = STEP; gy < bgCanvas.height; gy += STEP) {
         ctx.beginPath(); ctx.arc(gx, gy, 1.4, 0, Math.PI * 2); ctx.fill();
@@ -699,7 +699,7 @@ function redrawBoard(fgCanvas, bgCanvas, allStrokes, draft = null, curveDraft = 
   const { boardSelection } = useLiveWhiteboardStore.getState();
   if (boardSelection?.length) {
     ctx.save();
-    ctx.strokeStyle = 'rgba(212, 175, 55, 0.92)';
+    ctx.strokeStyle = 'rgba(212,175,55, 0.92)';
     ctx.setLineDash([5, 4]);
     ctx.lineWidth = 1.5;
     boardSelection.forEach((idx) => {
@@ -715,7 +715,7 @@ function redrawBoard(fgCanvas, bgCanvas, allStrokes, draft = null, curveDraft = 
     const box = normalizedMarquee(marqueeDraft);
     if (box && (box.w > 0.5 || box.h > 0.5)) {
       ctx.save();
-      ctx.strokeStyle = 'rgba(212, 175, 55, 0.88)';
+      ctx.strokeStyle = 'rgba(212,175,55, 0.88)';
       ctx.setLineDash([4, 3]);
       ctx.lineWidth = 1.25;
       ctx.strokeRect(box.x, box.y, box.w, box.h);

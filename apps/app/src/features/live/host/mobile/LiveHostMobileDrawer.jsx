@@ -320,7 +320,7 @@ export function LiveHostMobileDrawer({
                       alignItems: 'center',
                       justifyContent: 'center',
                       padding: '0 3px',
-                      border: '1.5px solid rgba(14,16,27,0.9)',
+                      border: '1.5px solid rgba(27,20,14,0.9)',
                     }}>
                       {tab.badge > 99 ? '99+' : tab.badge}
                     </div>
@@ -446,15 +446,15 @@ export function LiveHostMobileDrawer({
                       return (
                         <div key={q.id || i} style={{
                           padding: '11px 13px', borderRadius: 12,
-                          background: pending ? 'rgba(212,163,106,0.07)' : answered ? 'rgba(74,222,128,0.05)' : 'rgba(255,255,255,0.04)',
-                          border: `1px solid ${pending ? 'rgba(212,163,106,0.2)' : answered ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.06)'}`,
+                          background: pending ? 'rgba(212,163,106,0.07)' : answered ? 'rgba(128,101,74,0.05)' : 'rgba(255,255,255,0.04)',
+                          border: `1px solid ${pending ? 'rgba(212,163,106,0.2)' : answered ? 'rgba(128,101,74,0.15)' : 'rgba(255,255,255,0.06)'}`,
                         }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                             <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>{authorName}</span>
                             <span style={{
                               fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
                               padding: '2px 7px', borderRadius: 6,
-                              background: pending ? 'rgba(212,163,106,0.2)' : answered ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.08)',
+                              background: pending ? 'rgba(212,163,106,0.2)' : answered ? 'rgba(128,101,74,0.2)' : 'rgba(255,255,255,0.08)',
                               color: pending ? '#e3c79a' : answered ? '#86efac' : 'rgba(255,255,255,0.4)',
                             }}>
                               {pending ? 'En attente' : answered ? 'Répondu' : 'Passé'}
@@ -465,7 +465,7 @@ export function LiveHostMobileDrawer({
                             <div style={{ display: 'flex', gap: 6, marginTop: 9 }}>
                               <button onClick={() => markNeuronqAnswered?.(q.id)} style={{
                                 flex: 1, padding: '6px 10px', borderRadius: 8,
-                                background: 'rgba(74,222,128,0.13)', border: '1px solid rgba(74,222,128,0.28)',
+                                background: 'rgba(128,101,74,0.13)', border: '1px solid rgba(128,101,74,0.28)',
                                 color: '#86efac', fontSize: 11, fontWeight: 600, cursor: 'pointer',
                               }}>✓ Répondu</button>
                               <button onClick={() => markNeuronqSkipped?.(q.id)} style={{
@@ -700,7 +700,7 @@ export function LiveHostMobileDrawer({
                           {isHost && <span style={{ fontSize: 9, color: '#fbbf24', marginLeft: 6, fontWeight: 700, letterSpacing: '0.06em' }}>HÔTE</span>}
                         </p>
                         <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>
-                          {hasMic && <span style={{ fontSize: 9, color: 'rgba(74,222,128,0.8)' }}>🎤</span>}
+                          {hasMic && <span style={{ fontSize: 9, color: 'rgba(128,101,74,0.8)' }}>🎤</span>}
                           {hasCamera && <span style={{ fontSize: 9, color: 'rgba(212,163,106,0.8)' }}>📷</span>}
                         </div>
                       </div>

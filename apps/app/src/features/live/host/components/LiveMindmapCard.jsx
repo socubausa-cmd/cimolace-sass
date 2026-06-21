@@ -26,7 +26,7 @@ export const LiveMindmapCard = ({
             background: 'linear-gradient(160deg, rgba(168,118,58,.12), rgba(168,118,58,.04))',
             padding: '8px 12px',
             fontSize: '10px',
-            color: 'rgba(196,181,253,.9)',
+            color: 'rgba(253,224,196,.9)',
             cursor: 'pointer',
             textAlign: 'left',
             fontWeight: 700,

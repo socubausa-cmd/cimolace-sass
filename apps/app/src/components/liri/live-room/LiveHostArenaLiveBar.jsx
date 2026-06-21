@@ -167,9 +167,9 @@ export default function LiveHostArenaLiveBar({
             style={{
               borderRadius: '8px',
               border: `1px solid ${
-                arenaLayoutMode === ARENA_LAYOUT.SMARTBOARD ? 'rgba(56,189,248,.5)' : 'rgba(255,255,255,.12)'
+                arenaLayoutMode === ARENA_LAYOUT.SMARTBOARD ? 'rgba(248,152,56,.5)' : 'rgba(255,255,255,.12)'
               }`,
-              background: arenaLayoutMode === ARENA_LAYOUT.SMARTBOARD ? 'rgba(56,189,248,.18)' : 'rgba(0,0,0,.45)',
+              background: arenaLayoutMode === ARENA_LAYOUT.SMARTBOARD ? 'rgba(248,152,56,.18)' : 'rgba(0,0,0,.45)',
               padding: hub ? '4px 7px' : '6px 10px',
               fontSize: '10px',
               fontWeight: 700,
@@ -189,9 +189,9 @@ export default function LiveHostArenaLiveBar({
             style={{
               borderRadius: '8px',
               border: `1px solid ${
-                arenaLayoutMode === ARENA_LAYOUT.PANEL ? 'rgba(45,212,191,.55)' : 'rgba(255,255,255,.12)'
+                arenaLayoutMode === ARENA_LAYOUT.PANEL ? 'rgba(191,118,45,.55)' : 'rgba(255,255,255,.12)'
               }`,
-              background: arenaLayoutMode === ARENA_LAYOUT.PANEL ? 'rgba(13,148,136,.22)' : 'rgba(0,0,0,.45)',
+              background: arenaLayoutMode === ARENA_LAYOUT.PANEL ? 'rgba(136,74,13,.22)' : 'rgba(0,0,0,.45)',
               padding: hub ? '4px 7px' : '6px 10px',
               fontSize: '10px',
               fontWeight: 700,
@@ -211,9 +211,9 @@ export default function LiveHostArenaLiveBar({
             style={{
               borderRadius: '8px',
               border: `1px solid ${
-                arenaLayoutMode === ARENA_LAYOUT.MEMBERS_WALL ? 'rgba(148,163,184,.5)' : 'rgba(255,255,255,.12)'
+                arenaLayoutMode === ARENA_LAYOUT.MEMBERS_WALL ? 'rgba(184,166,148,.5)' : 'rgba(255,255,255,.12)'
               }`,
-              background: arenaLayoutMode === ARENA_LAYOUT.MEMBERS_WALL ? 'rgba(51,65,85,.35)' : 'rgba(0,0,0,.45)',
+              background: arenaLayoutMode === ARENA_LAYOUT.MEMBERS_WALL ? 'rgba(85,68,51,.35)' : 'rgba(0,0,0,.45)',
               padding: hub ? '4px 7px' : '6px 10px',
               fontSize: '10px',
               fontWeight: 700,
@@ -364,7 +364,7 @@ export default function LiveHostArenaLiveBar({
           border: `1px solid ${videoFxActive ? 'rgba(251,191,36,.5)' : 'rgba(255,255,255,.12)'}`,
           background: videoFxActive
             ? 'rgba(251,191,36,.16)'
-            : 'linear-gradient(165deg,rgba(22,15,32,.55),rgba(10,10,25,.75))',
+            : 'linear-gradient(165deg,rgba(32,27,22,.55),rgba(25,17,10,.75))',
           padding: '9px 12px',
           minWidth: '40px',
           color: videoFxActive ? '#fbbf24' : 'rgba(255,255,255,.82)',
@@ -658,8 +658,8 @@ export default function LiveHostArenaLiveBar({
             title={focusMode ? 'Quitter le focus formation' : 'Focus formation (tableau plein écran)'}
             style={{
               borderRadius: '4px',
-              border: `1px solid ${focusMode ? 'rgba(56,189,248,.5)' : 'rgba(255,255,255,.1)'}`,
-              background: focusMode ? 'rgba(56,189,248,.15)' : 'rgba(255,255,255,.04)',
+              border: `1px solid ${focusMode ? 'rgba(248,152,56,.5)' : 'rgba(255,255,255,.1)'}`,
+              background: focusMode ? 'rgba(248,152,56,.15)' : 'rgba(255,255,255,.04)',
               padding: '6px 8px',
               color: focusMode ? '#38bdf8' : 'rgba(255,255,255,.5)',
               fontSize: '11px',

@@ -250,7 +250,7 @@ export default function LiveControlsBar({
         </AnimatePresence>
 
         {premiumHostDock && isHost ? (
-          <div className="relative flex w-full max-w-[min(98vw,1180px)] flex-col items-stretch gap-2 rounded-[14px] border border-white/[0.08] bg-[rgba(6,7,18,0.88)] px-2 py-2 shadow-[0_8px_40px_-20px_rgba(212,163,106,0.25),0_4px_28px_-16px_rgba(251,191,36,0.12)] backdrop-blur-xl">
+          <div className="relative flex w-full max-w-[min(98vw,1180px)] flex-col items-stretch gap-2 rounded-[14px] border border-white/[0.08] bg-[rgba(18,12,6,0.88)] px-2 py-2 shadow-[0_8px_40px_-20px_rgba(212,163,106,0.25),0_4px_28px_-16px_rgba(251,191,36,0.12)] backdrop-blur-xl">
             <div className="flex min-h-[52px] w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3 sm:py-0 sm:pl-1 sm:pr-0.5">
             <div className="flex shrink-0 flex-wrap items-center gap-0.5 sm:flex-nowrap">
               <button
@@ -446,7 +446,7 @@ export default function LiveControlsBar({
           </div>
         ) : (
         <div className="flex w-full max-w-[min(98vw,1180px)] flex-col items-stretch gap-1">
-        <div className="mx-auto h-12 max-w-[96vw] overflow-x-auto px-2.5 rounded-full border border-white/20 bg-[#11183a]/72 backdrop-blur-xl inline-flex items-center gap-1.5 shadow-[0_15px_46px_-30px_rgba(88,118,255,0.95)]">
+        <div className="mx-auto h-12 max-w-[96vw] overflow-x-auto px-2.5 rounded-full border border-white/20 bg-[#11183a]/72 backdrop-blur-xl inline-flex items-center gap-1.5 shadow-[0_15px_46px_-30px_rgba(255,171,88,0.95)]">
 
           {/* ── Commun : Micro + Caméra + Settings ── */}
           <button

@@ -96,7 +96,7 @@ export default function LivePrimaryVideoStage({
         'border border-white/22 bg-white/[0.04] shadow-[0_24px_80px_-40px_rgba(212,175,55,0.35)]',
         'backdrop-blur-md supports-[backdrop-filter]:bg-white/[0.03]',
       )
-    : 'relative w-full aspect-[3/4] rounded-[28px] overflow-hidden bg-black/45 shadow-[0_26px_80px_-45px_rgba(96,116,255,0.68)]';
+    : 'relative w-full aspect-[3/4] rounded-[28px] overflow-hidden bg-black/45 shadow-[0_26px_80px_-45px_rgba(255,175,96,0.68)]';
 
   return (
     <motion.div
@@ -107,7 +107,7 @@ export default function LivePrimaryVideoStage({
       onClick={onClick}
     >
       {!segActive && !immersiveGlass && !chromaKey && (
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_20%,rgba(140,133,255,0.38),transparent_40%),radial-gradient(circle_at_82%_20%,rgba(70,142,255,0.24),transparent_36%),radial-gradient(circle_at_54%_84%,rgba(118,82,255,0.16),transparent_40%),linear-gradient(180deg,rgba(9,16,34,0.88),rgba(8,13,28,0.94))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_20%,rgba(255,197,140,0.38),transparent_40%),radial-gradient(circle_at_82%_20%,rgba(255,162,70,0.24),transparent_36%),radial-gradient(circle_at_54%_84%,rgba(255,186,118,0.16),transparent_40%),linear-gradient(180deg,rgba(34,21,9,0.88),rgba(28,18,8,0.94))]" />
       )}
 
       <video
@@ -147,7 +147,7 @@ export default function LivePrimaryVideoStage({
 
       {!immersiveGlass && (
         <>
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_46%_43%,rgba(157,190,255,0.24),transparent_42%)]" style={{ zIndex: 3 }} />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_46%_43%,rgba(255,206,157,0.24),transparent_42%)]" style={{ zIndex: 3 }} />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_90%,rgba(0,0,0,0.34),transparent_42%)]" style={{ zIndex: 3 }} />
           <div className="absolute inset-0 bg-gradient-to-t from-black/38 via-transparent to-black/8" style={{ zIndex: 4 }} />
         </>
@@ -169,7 +169,7 @@ export default function LivePrimaryVideoStage({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
             className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-5"
-            style={{ background: 'radial-gradient(circle at 50% 45%, rgba(212,175,55,0.07), transparent 65%), linear-gradient(180deg, rgba(9,16,34,0.9), rgba(8,13,28,0.97))' }}
+            style={{ background: 'radial-gradient(circle at 50% 45%, rgba(212,175,55,0.07), transparent 65%), linear-gradient(180deg, rgba(34,21,9,0.9), rgba(28,18,8,0.97))' }}
           >
             <div className="relative flex items-center justify-center">
               <motion.div

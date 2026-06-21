@@ -167,15 +167,15 @@ export function LiveHostMobileSignalBadges({
                 gap: 10,
                 padding: '10px 12px',
                 borderRadius: 12,
-                background: 'rgba(72,187,120,0.08)',
-                border: '1px solid rgba(72,187,120,0.2)',
+                background: 'rgba(120,96,72,0.08)',
+                border: '1px solid rgba(120,96,72,0.2)',
               }}>
                 <div style={{
                   width: 36,
                   height: 36,
                   borderRadius: '50%',
-                  background: 'rgba(72,187,120,0.15)',
-                  border: '1px solid rgba(72,187,120,0.3)',
+                  background: 'rgba(120,96,72,0.15)',
+                  border: '1px solid rgba(120,96,72,0.3)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -211,8 +211,8 @@ export function LiveHostMobileSignalBadges({
                   flex: 1,
                   padding: '10px',
                   borderRadius: 24,
-                  background: 'rgba(72,187,120,0.15)',
-                  border: '1px solid rgba(72,187,120,0.4)',
+                  background: 'rgba(120,96,72,0.15)',
+                  border: '1px solid rgba(120,96,72,0.4)',
                   color: '#cca34a',
                   fontWeight: 700,
                   fontSize: 13,
@@ -274,8 +274,8 @@ export function LiveHostMobileSignalBadges({
                 gap: 10,
                 padding: '10px 12px',
                 borderRadius: 12,
-                background: 'rgba(159,122,234,0.08)',
-                border: '1px solid rgba(159,122,234,0.2)',
+                background: 'rgba(234,196,159,0.08)',
+                border: '1px solid rgba(234,196,159,0.2)',
               }}>
                 <ShieldCheck size={16} color="#d4a36a" style={{ flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>

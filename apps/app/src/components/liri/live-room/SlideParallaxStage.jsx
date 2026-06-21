@@ -763,8 +763,8 @@ function ProgressiveBuildSlide({
     : !!(data.illustration?.insight || data.illustration?.scene || data.illustration?.formula || illUrl);
 
   const bgClass = isCosmic
-    ? 'bg-[radial-gradient(ellipse_at_15%_0%,rgba(200,148,62,0.22),transparent_45%),radial-gradient(ellipse_at_85%_90%,rgba(212,175,55,0.14),transparent_42%),radial-gradient(ellipse_at_50%_50%,rgba(15,23,42,0.9),#050814_75%)]'
-    : 'bg-[radial-gradient(ellipse_at_20%_10%,rgba(151,127,255,0.18),transparent_50%),radial-gradient(ellipse_at_80%_85%,rgba(212,175,55,0.12),transparent_50%)]';
+    ? 'bg-[radial-gradient(ellipse_at_15%_0%,rgba(200,148,62,0.22),transparent_45%),radial-gradient(ellipse_at_85%_90%,rgba(212,175,55,0.14),transparent_42%),radial-gradient(ellipse_at_50%_50%,rgba(42,28,15,0.9),#050814_75%)]'
+    : 'bg-[radial-gradient(ellipse_at_20%_10%,rgba(255,203,151,0.18),transparent_50%),radial-gradient(ellipse_at_80%_85%,rgba(212,175,55,0.12),transparent_50%)]';
 
   const accentBorder = isCosmic ? 'border-[#C9D3F2]/25' : 'border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]';
   const accentBg = isCosmic ? 'bg-[#C9D3F2]/08' : 'bg-[color-mix(in_srgb,var(--school-accent)_08%,transparent)]';
@@ -1590,7 +1590,7 @@ export default function SlideParallaxStage({
           onClick={legacyProgressive ? advanceLegacy : undefined}
         >
           {!fullBleedDocumentOnly && !studioPaper && (
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_16%,rgba(151,127,255,0.22),transparent_34%),radial-gradient(circle_at_78%_20%,rgba(69,153,255,0.14),transparent_36%),radial-gradient(circle_at_50%_82%,rgba(255,255,255,0.04),transparent_44%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_16%,rgba(255,203,151,0.22),transparent_34%),radial-gradient(circle_at_78%_20%,rgba(255,162,69,0.14),transparent_36%),radial-gradient(circle_at_50%_82%,rgba(255,255,255,0.04),transparent_44%)]" />
           )}
           {legacyVisible.map((el, idx) => {
             const isDoc = el.type === 'document' && (el.src || el.url || el.href);

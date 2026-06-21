@@ -115,8 +115,8 @@ function JoyKitRequestCard({ row, onReject, onApprove5min, onApproveSession }) {
           onClick={() => onApproveSession?.(row, level)}
           style={{
             borderRadius: 6,
-            border: '1px solid rgba(56,189,248,.4)',
-            background: 'rgba(56,189,248,.12)',
+            border: '1px solid rgba(248,152,56,.4)',
+            background: 'rgba(248,152,56,.12)',
             padding: '6px 10px',
             color: '#7dd3fc',
             fontSize: 9,
@@ -176,7 +176,7 @@ export default function HostPermissionRequestsPanel({
       {rows.length > 0 ? (
         <div>
           {joyKitRows.length > 0 ? (
-            <p style={{ fontSize: 9, fontWeight: 800, color: 'rgba(196,181,253,.85)', margin: '4px 0 8px', letterSpacing: '.06em' }}>
+            <p style={{ fontSize: 9, fontWeight: 800, color: 'rgba(253,224,196,.85)', margin: '4px 0 8px', letterSpacing: '.06em' }}>
               ACCÈS GÉNÉRAUX
             </p>
           ) : null}
@@ -220,7 +220,7 @@ export default function HostPermissionRequestsPanel({
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: 11, fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.3 }}>{row.name || 'Participant'}</p>
-                      <p style={{ fontSize: 10, color: 'rgba(196,181,253,.85)', margin: '4px 0 0', lineHeight: 1.35 }}>
+                      <p style={{ fontSize: 10, color: 'rgba(253,224,196,.85)', margin: '4px 0 0', lineHeight: 1.35 }}>
                         Demande : <strong style={{ color: '#f3e8d2' }}>{actionLabel}</strong>
                         {t ? <span style={{ color: 'rgba(255,255,255,.35)' }}> · {t}</span> : null}
                       </p>
@@ -267,8 +267,8 @@ export default function HostPermissionRequestsPanel({
                       onClick={() => onApproveSession?.(row)}
                       style={{
                         borderRadius: 6,
-                        border: '1px solid rgba(56,189,248,.4)',
-                        background: 'rgba(56,189,248,.12)',
+                        border: '1px solid rgba(248,152,56,.4)',
+                        background: 'rgba(248,152,56,.12)',
                         padding: '6px 10px',
                         color: '#7dd3fc',
                         fontSize: 9,

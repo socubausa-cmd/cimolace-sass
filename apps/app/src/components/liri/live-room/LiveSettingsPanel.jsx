@@ -27,7 +27,7 @@ const AUDIO_PRESETS = [
 // ── Virtual backgrounds ──────────────────────────────────────────────────────
 const VBG_PRESETS = [
   { id: 'none',   label: 'Aucun',   color: 'transparent', thumb: null },
-  { id: 'immersive', label: 'Verre IA', color: 'linear-gradient(135deg,rgba(212,175,55,0.12),rgba(9,13,20,0.5))', thumb: null },
+  { id: 'immersive', label: 'Verre IA', color: 'linear-gradient(135deg,rgba(212,175,55,0.12),rgba(20,14,9,0.5))', thumb: null },
   { id: 'blur',   label: 'Flou',    color: '#1a2a3a', thumb: null, isBlur: true },
   { id: 'studio', label: 'Studio',  color: 'linear-gradient(135deg,#0f1419,#1a2d4a)', thumb: null },
   { id: 'office', label: 'Bureau',  color: 'linear-gradient(135deg,#1a1f28,#2d3a4a)', thumb: null },

@@ -52,7 +52,7 @@ export default function LiveHostMemberPanelCard({
   const showLiveThumb = hasCam && (!isPromoted || preferLiveVideo);
   const goldBorder = isPromoted || isSelected;
   const accent = member?.color || '#d4a36a';
-  const borderColor = goldBorder ? 'rgba(251, 191, 72, 0.72)' : `${accent}55`;
+  const borderColor = goldBorder ? 'rgba(251,191,72, 0.72)' : `${accent}55`;
   const avatarUrl = member?.avatar_url || member?.avatarUrl;
 
   const body = (
@@ -71,7 +71,7 @@ export default function LiveHostMemberPanelCard({
               alt=""
               className="h-[38px] w-[38px] rounded-full object-cover shadow-md"
               style={{
-                border: `2px solid ${goldBorder ? 'rgba(251, 191, 72, 0.65)' : accent}`,
+                border: `2px solid ${goldBorder ? 'rgba(251,191,72, 0.65)' : accent}`,
               }}
               loading="lazy"
             />
@@ -80,7 +80,7 @@ export default function LiveHostMemberPanelCard({
               className="flex h-[34px] w-[34px] items-center justify-center rounded-full text-[11px] font-bold"
               style={{
                 background: `${accent}33`,
-                border: `2px solid ${goldBorder ? 'rgba(251, 191, 72, 0.65)' : accent}`,
+                border: `2px solid ${goldBorder ? 'rgba(251,191,72, 0.65)' : accent}`,
                 color: accent,
               }}
             >
@@ -116,7 +116,7 @@ export default function LiveHostMemberPanelCard({
   const style = {
     border: `1px solid ${borderColor}`,
     background: 'rgba(0,0,0,0.4)',
-    boxShadow: goldBorder ? '0 0 12px rgba(251, 191, 72, 0.22)' : undefined,
+    boxShadow: goldBorder ? '0 0 12px rgba(251,191,72, 0.22)' : undefined,
   };
 
   const buttonInnerClass = cn(

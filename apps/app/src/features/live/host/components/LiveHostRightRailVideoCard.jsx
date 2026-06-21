@@ -57,7 +57,7 @@ export const LiveHostRightRailVideoCard = ({
         ...LH_SIDEBAR_CARD_GLOW,
         border: '1px solid rgba(251,191,36,.26)',
         background:
-          'radial-gradient(120% 90% at 10% -8%, rgba(251,191,36,.12), transparent 54%), linear-gradient(160deg, rgba(29,19,43,.9), rgba(11,12,24,.96))',
+          'radial-gradient(120% 90% at 10% -8%, rgba(251,191,36,.12), transparent 54%), linear-gradient(160deg, rgba(43,36,29,.9), rgba(24,17,11,.96))',
       }}
     >
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'6px',gap:'6px',flexWrap:'wrap'}}>

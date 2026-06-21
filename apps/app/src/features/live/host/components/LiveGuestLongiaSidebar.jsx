@@ -50,14 +50,14 @@ export const LiveGuestLongiaSidebar = ({
         <div
           className="lh-sp-keep lh-sp-glow"
           style={{
-            border: '1px solid rgba(148,163,184,.2)',
-            background: 'rgba(15,23,42,.45)',
+            border: '1px solid rgba(184,166,148,.2)',
+            background: 'rgba(42,28,15,.45)',
             padding: '10px',
             borderRadius: '4px',
             flexShrink: 0,
           }}
         >
-          <p style={{ fontSize: '10px', color: 'rgba(226,232,240,.85)', lineHeight: 1.5, margin: 0 }}>
+          <p style={{ fontSize: '10px', color: 'rgba(240,233,226,.85)', lineHeight: 1.5, margin: 0 }}>
             Le <strong style={{ color: '#94a3b8' }}>chat de session</strong> est désactivé par le formateur.
           </p>
         </div>
@@ -80,7 +80,7 @@ export const LiveGuestLongiaSidebar = ({
             flexShrink: 0,
             borderRadius: '10px',
             border: '1px solid rgba(212,163,106,.25)',
-            background: 'linear-gradient(135deg,rgba(168,118,58,.12) 0%,rgba(16,12,26,.85) 100%)',
+            background: 'linear-gradient(135deg,rgba(168,118,58,.12) 0%,rgba(26,21,16,.85) 100%)',
             padding: '10px 12px',
             display: 'flex',
             flexDirection: 'column',

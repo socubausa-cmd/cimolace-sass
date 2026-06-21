@@ -157,7 +157,7 @@ export const LiveHostLongiaSignalShortcuts = ({
             onClick={() =>
               setLongiaSignalSubDrawer((p) => (p === 'permission_requests' ? null : 'permission_requests'))
             }
-            style={hubSigRow(longiaSignalSubDrawer === 'permission_requests', 'rgba(192,132,252,.45)')}
+            style={hubSigRow(longiaSignalSubDrawer === 'permission_requests', 'rgba(252,222,192,.45)')}
           >
             <span
               style={{
@@ -167,7 +167,7 @@ export const LiveHostLongiaSignalShortcuts = ({
                 background: '#d4a36a',
                 flexShrink: 0,
                 marginTop: 4,
-                boxShadow: '0 0 6px rgba(192,132,252,.5)',
+                boxShadow: '0 0 6px rgba(252,222,192,.5)',
               }}
             />
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -212,7 +212,7 @@ export const LiveHostLongiaSignalShortcuts = ({
           <button
             type="button"
             onClick={() => setLongiaSignalSubDrawer((p) => (p === 'waiting' ? null : 'waiting'))}
-            style={hubSigRow(longiaSignalSubDrawer === 'waiting', 'rgba(56,189,248,.4)')}
+            style={hubSigRow(longiaSignalSubDrawer === 'waiting', 'rgba(248,152,56,.4)')}
           >
             <span
               style={{
@@ -222,7 +222,7 @@ export const LiveHostLongiaSignalShortcuts = ({
                 background: '#38bdf8',
                 flexShrink: 0,
                 marginTop: 4,
-                boxShadow: '0 0 6px rgba(56,189,248,.55)',
+                boxShadow: '0 0 6px rgba(248,152,56,.55)',
               }}
             />
             <div style={{ flex: 1, minWidth: 0 }}>

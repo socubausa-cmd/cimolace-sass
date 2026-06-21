@@ -151,9 +151,9 @@ export const LiveHostRightColumn = React.forwardRef(function LiveHostRightColumn
       className="lh-sy"
       style={{
         order: isGuestUi && lhLayoutCompact ? 2 : hostCompactColOrder.right,
-        background: liveShell.panelBg,
-        borderRadius: liveShell.panelRadius,
-        border: liveShell.panelBorder,
+        background: collapsed ? liveShell.panelBg : 'transparent',
+        borderRadius: collapsed ? liveShell.panelRadius : 0,
+        border: collapsed ? liveShell.panelBorder : 'none',
         padding: collapsed ? '10px 6px' : '14px',
         display: hidden ? 'none' : 'flex',
         flexDirection: 'column',

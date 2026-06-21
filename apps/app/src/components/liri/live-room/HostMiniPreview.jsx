@@ -108,7 +108,7 @@ export default function HostMiniPreview({
           'relative z-20 mx-auto aspect-[3/4] w-full max-h-[min(48vh,560px)] overflow-hidden rounded-[28px]',
           'border border-white/22 bg-white/[0.04] shadow-[0_24px_80px_-40px_rgba(212,175,55,0.3)] backdrop-blur-md',
         )
-      : 'relative z-20 mx-auto aspect-[3/4] w-full max-h-[min(48vh,560px)] overflow-hidden rounded-[28px] border border-white/[0.18] shadow-[0_26px_80px_-45px_rgba(96,116,255,0.68)]'
+      : 'relative z-20 mx-auto aspect-[3/4] w-full max-h-[min(48vh,560px)] overflow-hidden rounded-[28px] border border-white/[0.18] shadow-[0_26px_80px_-45px_rgba(255,175,96,0.68)]'
     : embedded
       ? immersiveGlass
         ? cn(
@@ -140,7 +140,7 @@ export default function HostMiniPreview({
       onClick={embedded || symmetricStage ? undefined : onClick}
     >
       {!segActive && !immersiveGlass && !chromaKey && (
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_26%,rgba(120,115,240,0.26),transparent_44%),radial-gradient(circle_at_72%_24%,rgba(60,128,255,0.16),transparent_40%),linear-gradient(180deg,rgba(11,17,30,0.90),rgba(9,14,25,0.95))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_26%,rgba(240,180,120,0.26),transparent_44%),radial-gradient(circle_at_72%_24%,rgba(255,157,60,0.16),transparent_40%),linear-gradient(180deg,rgba(30,20,11,0.90),rgba(25,17,9,0.95))]" />
       )}
 
       <video
@@ -180,7 +180,7 @@ export default function HostMiniPreview({
 
       {!immersiveGlass && (
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(140,170,255,0.14),transparent_44%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(255,197,140,0.14),transparent_44%)]"
           style={{ zIndex: 3 }}
         />
       )}

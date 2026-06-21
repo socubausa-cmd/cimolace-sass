@@ -99,9 +99,9 @@ export default function HostSharedGuestNotesInbox({ sessionId, maxHeight = 340 }
     <div
       className="lh-premium-card lh-sp-keep"
       style={{
-        border: '1px solid rgba(45,212,191,.28)',
+        border: '1px solid rgba(191,118,45,.28)',
         background:
-          'radial-gradient(120% 90% at 8% -8%, rgba(45,212,191,.1), transparent 52%), linear-gradient(160deg, rgba(15,30,28,.85), rgba(11,12,24,.96))',
+          'radial-gradient(120% 90% at 8% -8%, rgba(191,118,45,.1), transparent 52%), linear-gradient(160deg, rgba(28,21,15,.85), rgba(24,17,11,.96))',
         padding: '11px',
       }}
     >
@@ -137,7 +137,7 @@ export default function HostSharedGuestNotesInbox({ sessionId, maxHeight = 340 }
               fontSize: 9,
               fontWeight: 700,
               color: '#0f172a',
-              background: count ? '#5eead4' : 'rgba(148,163,184,.35)',
+              background: count ? '#5eead4' : 'rgba(184,166,148,.35)',
               padding: '1px 7px',
               borderRadius: 999,
             }}
@@ -145,7 +145,7 @@ export default function HostSharedGuestNotesInbox({ sessionId, maxHeight = 340 }
             {count}
           </span>
         </span>
-        <span style={{ color: 'rgba(226,232,240,.5)' }}>
+        <span style={{ color: 'rgba(240,233,226,.5)' }}>
           {panelOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </span>
       </button>
@@ -162,9 +162,9 @@ export default function HostSharedGuestNotesInbox({ sessionId, maxHeight = 340 }
           }}
         >
           {loading ? (
-            <p style={{ margin: 0, fontSize: 10, color: 'rgba(226,232,240,.45)' }}>Chargement…</p>
+            <p style={{ margin: 0, fontSize: 10, color: 'rgba(240,233,226,.45)' }}>Chargement…</p>
           ) : count === 0 ? (
-            <p style={{ margin: 0, fontSize: 10, color: 'rgba(226,232,240,.45)', lineHeight: 1.5 }}>
+            <p style={{ margin: 0, fontSize: 10, color: 'rgba(240,233,226,.45)', lineHeight: 1.5 }}>
               Aucun élève n'a encore envoyé son cahier. Les notes apparaissent ici après « Envoyer au prof ».
             </p>
           ) : (
@@ -180,7 +180,7 @@ export default function HostSharedGuestNotesInbox({ sessionId, maxHeight = 340 }
                   key={row.id}
                   style={{
                     borderRadius: 8,
-                    border: '1px solid rgba(45,212,191,.15)',
+                    border: '1px solid rgba(191,118,45,.15)',
                     background: 'rgba(0,0,0,.22)',
                     padding: '8px 9px',
                   }}
@@ -201,7 +201,7 @@ export default function HostSharedGuestNotesInbox({ sessionId, maxHeight = 340 }
                       }}
                     >
                       <div style={{ fontSize: 10, fontWeight: 700, color: '#5eead4' }}>{label}</div>
-                      <div style={{ fontSize: 9, color: 'rgba(226,232,240,.4)', marginTop: 2 }}>
+                      <div style={{ fontSize: 9, color: 'rgba(240,233,226,.4)', marginTop: 2 }}>
                         {sharedAt} · {entries.length} entrée{entries.length > 1 ? 's' : ''}
                       </div>
                     </button>
@@ -212,7 +212,7 @@ export default function HostSharedGuestNotesInbox({ sessionId, maxHeight = 340 }
                       style={{
                         flexShrink: 0,
                         borderRadius: 6,
-                        border: '1px solid rgba(148,163,184,.25)',
+                        border: '1px solid rgba(184,166,148,.25)',
                         background: 'rgba(255,255,255,.04)',
                         padding: '5px 7px',
                         cursor: 'pointer',
@@ -225,7 +225,7 @@ export default function HostSharedGuestNotesInbox({ sessionId, maxHeight = 340 }
                     </button>
                   </div>
                   {isOpen ? (
-                    <ul style={{ margin: '8px 0 0', paddingLeft: 16, fontSize: 9, color: 'rgba(226,232,240,.75)', lineHeight: 1.45 }}>
+                    <ul style={{ margin: '8px 0 0', paddingLeft: 16, fontSize: 9, color: 'rgba(240,233,226,.75)', lineHeight: 1.45 }}>
                       {entries.slice().reverse().map((e, ei) => (
                         <li key={e.id || `e-${ei}-${e.created_at || ''}`} style={{ marginBottom: 6 }}>
                           {entryPreviewText(e)}
