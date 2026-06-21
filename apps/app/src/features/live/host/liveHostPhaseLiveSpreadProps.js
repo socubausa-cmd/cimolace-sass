@@ -306,6 +306,7 @@ const LIVE_HOST_LIVE_CENTER_COLUMN_SPREAD_KEYS = [
   'arenaPanelCenter',
   'arenaMembersWallCenter',
   'arenaLayoutMode',
+  'hostId',
   'arenaGuestFocusUserId',
   'arenaPanelUserIds',
   'liveParticipants',

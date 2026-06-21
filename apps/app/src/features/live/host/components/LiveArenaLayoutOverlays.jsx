@@ -33,6 +33,7 @@ export const LiveArenaLayoutOverlays = ({
   arenaPanelCenter,
   arenaMembersWallCenter,
   arenaLayoutMode,
+  hostId,
   isGuestUi,
   hostLiveKitParticipant,
   livekitParticipantsMap,
@@ -263,6 +264,7 @@ export const LiveArenaLayoutOverlays = ({
           liveParticipants={liveParticipants}
           livekitParticipantsMap={livekitParticipantsMap}
           liveKitMediaEpoch={liveKitMediaEpoch}
+          hostId={hostId}
         />
       );
     }

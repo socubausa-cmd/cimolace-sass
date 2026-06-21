@@ -1317,7 +1317,7 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     acceptGuestProctorConsent, acceptMeshRequest, activeAudioId, activeEtapes, activeMembers,
     activeVideoId, addMeshRequest, ambientMasterVolume, ambientTracks, antennaSoloMode,
     applyHostArenaLayoutMode, applyMeshProfile, approveWaiting, arenaGuestFocusCenter, arenaGuestFocusUserId,
-    arenaHostAlertSoundOn, arenaHostCameraCenter, arenaLayoutMode, arenaMembersWallCenter, arenaPanelCenter,
+    arenaHostAlertSoundOn, arenaHostCameraCenter, arenaLayoutMode, hostId: teacherId, arenaMembersWallCenter, arenaPanelCenter,
     arenaPanelUserIds, asideMedia, assertGuestLongiaSignal, audioDevices, broadcastHostCameraCommand,
     camera2FluxParticipants, cameraOn, chatMessages, coachScopeSessionId, curEtape,
     debateAiJudgeBusy, debateAiReportPreview, debateAiWeightPctDisplay, debateArena, debateCloseVoting,

@@ -41,6 +41,7 @@ export const LiveCenterStageSmartBoard = ({
   arenaPanelCenter,
   arenaMembersWallCenter,
   arenaLayoutMode,
+  hostId,
   arenaGuestFocusUserId,
   arenaPanelUserIds,
   promotedId,
@@ -163,6 +164,7 @@ export const LiveCenterStageSmartBoard = ({
                 arenaPanelCenter={arenaPanelCenter}
                 arenaMembersWallCenter={arenaMembersWallCenter}
                 arenaLayoutMode={arenaLayoutMode}
+                hostId={hostId}
                 isGuestUi={isGuestUi}
                 hostLiveKitParticipant={hostLiveKitParticipant}
                 livekitParticipantsMap={livekitParticipantsMap}

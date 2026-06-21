@@ -131,7 +131,7 @@ const Tile = ({ m, lk, mediaEpoch, speaking, big = false, onClick, pinned = fals
   );
 };
 
-export default function ConferenceStage({ liveParticipants, livekitParticipantsMap, liveKitMediaEpoch }) {
+export default function ConferenceStage({ liveParticipants, livekitParticipantsMap, liveKitMediaEpoch, hostId = null }) {
   const [view, setView] = useState('grid'); // 'grid' | 'speaker'
   const [autoFollow, setAutoFollow] = useState(true);
   const [pinnedId, setPinnedId] = useState(null);
@@ -166,7 +166,14 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
   const focus = visible.find((m) => String(m.id) === String(focusId)) || visible[0] || null;
   const others = visible.filter((m) => m !== focus);
   const q = search.trim().toLowerCase();
-  const filteredOthers = q ? others.filter((m) => String(m.name || '').toLowerCase().includes(q)) : others;
+  // Panneau membres : si l'hôte (Animateur) est connu, il coiffe la liste ; sinon = la personne à l'écran.
+  const host = hostId ? visible.find((m) => String(m.id) === String(hostId)) : null;
+  const panelTop = host || focus;
+  const panelTopLabel = host ? 'Animateur (1)' : "À l'écran";
+  const panelRest = panelTop ? visible.filter((m) => m !== panelTop) : visible;
+  const filteredPanelRest = q ? panelRest.filter((m) => String(m.name || '').toLowerCase().includes(q)) : panelRest;
+  const panelTopSpeaking = panelTop ? String(activeSpeakerId) === String(panelTop.id) : false;
+  const panelTopLk = panelTop ? lkOf(panelTop) : null;
   const focusSpeaking = focus ? String(activeSpeakerId) === String(focus.id) : false;
   const focusLk = focus ? lkOf(focus) : null;
   const focusShowVid = hasCamera(focusLk);
@@ -259,19 +266,19 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
               </div>
             </div>
             <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 12px 12px' }}>
-              {focus ? (
+              {panelTop ? (
                 <>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,.4)', margin: '4px 2px 8px' }}>{"À l'écran"}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,.4)', margin: '4px 2px 8px' }}>{panelTopLabel}</div>
                   <div style={{ aspectRatio: '16 / 9', marginBottom: 14 }}>
-                    <Tile m={focus} lk={focusLk} mediaEpoch={liveKitMediaEpoch} speaking={focusSpeaking} mic pinned={Boolean(pinnedId)} />
+                    <Tile m={panelTop} lk={panelTopLk} mediaEpoch={liveKitMediaEpoch} speaking={panelTopSpeaking} mic pinned={Boolean(pinnedId && String(pinnedId) === String(panelTop.id))} />
                   </div>
                 </>
               ) : null}
-              {filteredOthers.length > 0 ? (
+              {filteredPanelRest.length > 0 ? (
                 <>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,.4)', margin: '4px 2px 8px' }}>{`Participants (${filteredOthers.length})`}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,.4)', margin: '4px 2px 8px' }}>{`Participants (${filteredPanelRest.length})`}</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                    {filteredOthers.map((m) => (
+                    {filteredPanelRest.map((m) => (
                       <div key={m.id} style={{ aspectRatio: '16 / 9' }}>
                         <Tile m={m} lk={lkOf(m)} mediaEpoch={liveKitMediaEpoch} speaking={String(activeSpeakerId) === String(m.id)} mic onClick={() => { setPinnedId(m.id); setAutoFollow(false); }} />
                       </div>
