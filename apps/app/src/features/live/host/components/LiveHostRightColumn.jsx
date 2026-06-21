@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ChevronLeft, NotebookPen } from 'lucide-react';
 import HostSharedGuestNotesInbox from '@/components/liri/live-room/HostSharedGuestNotesInbox';
 import { AudioScenePanel } from '@/lib/liriAudioScene';
 import { LiveRightRailCollapsedStrip } from '@/features/live/host/components/LiveRightRailCollapsedStrip';
@@ -139,8 +139,11 @@ export const LiveHostRightColumn = React.forwardRef(function LiveHostRightColumn
   },
   ref,
 ) {
-  const collapsed = liveRightRailCollapsedStrip || liveRightGuestCollapsedStrip;
-  const hidden = lhStageFocusLayout || (lhLayoutCompact && !liveRightRailOpen);
+  // Mode formation (focus) hôte : panneau RÉTRACTABLE en languette d'extension
+  // (chevron sur le bord droit) plutôt que masqué. Fermé = languette, ouvert = panneau.
+  const focusHost = lhStageFocusLayout && !isGuestUi && phase === PHASE.LIVE;
+  const collapsed = liveRightRailCollapsedStrip || liveRightGuestCollapsedStrip || (focusHost && !liveRightRailOpen);
+  const hidden = focusHost ? false : (lhStageFocusLayout || (lhLayoutCompact && !liveRightRailOpen));
 
   return (
     <div
@@ -167,9 +170,33 @@ export const LiveHostRightColumn = React.forwardRef(function LiveHostRightColumn
         alignSelf: 'stretch',
         boxShadow:
           'inset 0 1px 0 rgba(255,255,255,.04), 0 18px 42px rgba(0,0,0,.34), 0 0 0 1px rgba(255,255,255,.02) inset',
+        // Mode formation : épinglé au bord DROIT (hors flux) — languette/panneau rétractable.
+        ...(focusHost
+          ? {
+              position: 'fixed',
+              right: 10,
+              zIndex: 45,
+              ...(collapsed
+                ? { top: '50%', transform: 'translateY(-50%)', width: 'auto', maxHeight: '72vh', background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }
+                : { top: 72, bottom: 96, width: 340 }),
+            }
+          : {}),
       }}
     >
       {collapsed ? (
+        focusHost ? (
+          <button
+            type="button"
+            onClick={() => setLiveRightRailOpen(true)}
+            title="Notes — agrandir le panneau"
+            aria-label="Notes — agrandir le panneau"
+            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/12 bg-[#15131f]/95 px-3 py-4 text-white/85 shadow-[0_12px_30px_rgba(0,0,0,.4)] transition hover:border-violet-400/45 hover:bg-[#1a1726]/95 hover:text-white"
+          >
+            <ChevronLeft className="h-4 w-4 text-white/45" strokeWidth={2} aria-hidden />
+            <NotebookPen className="h-5 w-5" strokeWidth={1.8} aria-hidden />
+            <span className="text-[10px] font-semibold tracking-wide">Notes</span>
+          </button>
+        ) : (
         <LiveRightRailCollapsedStrip
           liveRightRailCollapsedStrip={liveRightRailCollapsedStrip}
           liveRightGuestCollapsedStrip={liveRightGuestCollapsedStrip}
@@ -177,9 +204,10 @@ export const LiveHostRightColumn = React.forwardRef(function LiveHostRightColumn
           phase={phase}
           canUsePersonalNotes={guestCapabilityCaps.canUsePersonalNotes}
         />
+        )
       ) : (
         <>
-          {isGuestUi && phase === PHASE.LIVE && !lhStageFocusLayout ? (
+          {((isGuestUi && !lhStageFocusLayout) || focusHost) && phase === PHASE.LIVE ? (
             <button
               type="button"
               onClick={() => setLiveRightRailOpen(false)}

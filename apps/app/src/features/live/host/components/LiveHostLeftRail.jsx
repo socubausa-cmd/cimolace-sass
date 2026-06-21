@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Boxes, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Boxes, Sparkles, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
 import { designerShellCloseBtn } from '@/lib/liriDesignerShellClasses';
@@ -38,37 +38,65 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
   },
   ref,
 ) {
+  // Mode formation (focus) hôte : languette d'extension (chevron, bord gauche) si
+  // fermé, panneau si ouvert — jamais masqué. (Ce rail n'est rendu que pour l'hôte.)
+  const focusHost = lhStageFocusLayout && phase === PHASE.LIVE;
+  const asStrip = liveLeftRailCollapsedStrip || (focusHost && !liveLeftRailOpen);
+  const railHidden = focusHost ? false : (longiaHubPushesLayout || (lhLayoutCompact && !liveLeftRailOpen));
+  const showFullContent = phase === PHASE.LIVE && (!lhStageFocusLayout || (focusHost && liveLeftRailOpen));
   return (
     <div
       ref={ref}
       className="lh-sy lh-sp-dim"
       style={{
         order: hostCompactColOrder.left,
-        background: liveLeftRailCollapsedStrip
+        background: asStrip
           ? 'linear-gradient(180deg, rgba(14,11,24,.99) 0%, rgba(8,7,14,.995) 100%)'
           : liveShell.panelBg,
         borderRadius: liveShell.panelRadius,
         border: liveShell.panelBorder,
-        padding: liveLeftRailCollapsedStrip ? '10px 6px' : '16px',
-        display:
-          longiaHubPushesLayout || (lhLayoutCompact && !liveLeftRailOpen) ? 'none' : 'flex',
+        padding: asStrip ? '10px 6px' : '16px',
+        display: railHidden ? 'none' : 'flex',
         flexDirection: 'column',
-        gap: liveLeftRailCollapsedStrip ? '8px' : '11px',
-        alignItems: liveLeftRailCollapsedStrip ? 'center' : undefined,
+        gap: asStrip ? '8px' : '11px',
+        alignItems: asStrip ? 'center' : undefined,
         overflow: 'hidden',
         transition: 'opacity .2s, padding .2s ease, background .2s ease',
-        opacity: longiaHubPushesLayout || (lhLayoutCompact && !liveLeftRailOpen) ? 0 : 1,
-        pointerEvents:
-          longiaHubPushesLayout || (lhLayoutCompact && !liveLeftRailOpen) ? 'none' : 'auto',
+        opacity: railHidden ? 0 : 1,
+        pointerEvents: railHidden ? 'none' : 'auto',
         minHeight: 0,
         minWidth: 0,
         alignSelf: 'stretch',
-        boxShadow: liveLeftRailCollapsedStrip
+        boxShadow: asStrip
           ? 'inset 0 0 0 1px rgba(255,255,255,.1), inset 0 1px 0 rgba(255,255,255,.06)'
           : 'inset 0 1px 0 rgba(255,255,255,0.04), 0 0 0 1px rgba(255,255,255,0.02) inset',
+        // Mode formation : épinglé au bord GAUCHE (hors flux) — languette/panneau rétractable.
+        ...(focusHost
+          ? {
+              position: 'fixed',
+              left: 10,
+              zIndex: 45,
+              ...(asStrip
+                ? { top: '50%', transform: 'translateY(-50%)', width: 'auto', maxHeight: '72vh', background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }
+                : { top: 72, bottom: 96, width: 320 }),
+            }
+          : {}),
       }}
     >
-      {liveLeftRailCollapsedStrip ? (
+      {asStrip ? (
+        focusHost ? (
+          <button
+            type="button"
+            onClick={() => setLiveLeftRailOpen(true)}
+            title="Membres — agrandir le panneau"
+            aria-label="Membres — agrandir le panneau"
+            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/12 bg-[#15131f]/95 px-3 py-4 text-white/85 shadow-[0_12px_30px_rgba(0,0,0,.4)] transition hover:border-violet-400/45 hover:bg-[#1a1726]/95 hover:text-white"
+          >
+            <Users className="h-5 w-5" strokeWidth={1.8} aria-hidden />
+            <span className="text-[10px] font-semibold tracking-wide">Membres</span>
+            <ChevronRight className="h-4 w-4 text-white/45" strokeWidth={2} aria-hidden />
+          </button>
+        ) : (
         <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-3 py-1">
           <button
             type="button"
@@ -125,6 +153,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
             </>
           ) : null}
         </div>
+        )
       ) : (
         <>
           <div
@@ -153,7 +182,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
                 className="text-white drop-shadow-[0_2px_10px_rgba(124,58,237,0.35)]"
               />
             </div>
-            {phase === PHASE.LIVE && !lhStageFocusLayout ? (
+            {phase === PHASE.LIVE && (!lhStageFocusLayout || focusHost) ? (
               <button
                 type="button"
                 onClick={() => setLiveLeftRailOpen(false)}
@@ -176,7 +205,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
               scrollbarWidth: 'thin',
             }}
           >
-            {phase === PHASE.LIVE && !lhStageFocusLayout ? (
+            {showFullContent ? (
               <>
                 <LiveHostInviteManagementPanel
                   inviteUrl={(() => {
