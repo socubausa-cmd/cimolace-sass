@@ -41,6 +41,18 @@ function json(status: number, body: Record<string, unknown>) {
   });
 }
 
+/** Décode le payload d'un JWT déjà validé par la passerelle (verify_jwt) : { sub, role, … }. */
+function jwtClaims(token: string | null): { sub?: string; role?: string } | null {
+  if (!token) return null;
+  try {
+    const part = token.split('.')[1];
+    if (!part) return null;
+    return JSON.parse(atob(part.replace(/-/g, '+').replace(/_/g, '/')));
+  } catch {
+    return null;
+  }
+}
+
 /** Parse JSON tolérant : retire d'éventuelles barrières ```json … ``` puis JSON.parse. */
 function safeParseJson(raw: string | null | undefined): any | null {
   if (!raw) return null;
@@ -91,6 +103,8 @@ Deno.serve(async (req: Request) => {
   // @ts-ignore Deno
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
   const admin = createClient(supabaseUrl, serviceKey);
+  const authHeader = req.headers.get('Authorization') || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
   let body: { sessionId?: string };
   try {
@@ -104,13 +118,39 @@ Deno.serve(async (req: Request) => {
   // ── 1. Session live (autorité tenant + métadonnées) ──────────────────────
   const { data: session } = await admin
     .from('live_sessions')
-    .select('id, tenant_id, host_user_id, title')
+    .select('id, tenant_id, host_user_id, teacher_id, title')
     .eq('id', sessionId)
     .maybeSingle();
   if (!session) return json(404, { error: 'Session live introuvable' });
   const tenantId = session.tenant_id as string;
   const hostId = session.host_user_id as string;
   const title = (session.title as string) || 'Live';
+
+  // ── 1bis. Autorisation : hôte / encadrant de la session, ou appel SYSTÈME ─
+  // (service_role). Le neurone est déclenché par l'hôte à la fin du live (JWT
+  // user du front). On refuse qu'un simple authentifié déclenche le récap d'une
+  // session qui n'est pas la sienne (le récap consomme du LLM + poste au forum).
+  const claims = jwtClaims(token);
+  const isServiceRole = claims?.role === 'service_role';
+  if (!isServiceRole) {
+    if (!token) return json(401, { error: 'Authentification requise' });
+    const callerId = typeof claims?.sub === 'string' ? claims.sub : null;
+    if (!callerId) return json(401, { error: 'Token invalide' });
+    let allowed =
+      session.host_user_id === callerId || (session as any).teacher_id === callerId;
+    if (!allowed) {
+      const { data: mem } = await admin
+        .from('tenant_memberships')
+        .select('role')
+        .eq('tenant_id', tenantId)
+        .eq('user_id', callerId)
+        .maybeSingle();
+      allowed = ['owner', 'admin', 'teacher'].includes(String(mem?.role || ''));
+    }
+    if (!allowed) {
+      return json(403, { error: "Réservé à l'hôte ou à un encadrant de la session" });
+    }
+  }
 
   // ── 2. Récap déjà produit ? (idempotence de génération) ──────────────────
   const { data: existing } = await admin
