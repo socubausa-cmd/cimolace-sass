@@ -26,7 +26,7 @@ import {
 } from '@/features/smartboard-konva-editor/store/usePostProdNleStore';
 import MindMapNavigation from '@/components/lesson-player/MindMapNavigation';
 import NodeExplanationPanel from '@/components/lesson-player/NodeExplanationPanel';
-import { ArrowLeft, Check, Clapperboard, GraduationCap, LayoutGrid, Loader2, Plus, Sparkles, Trash } from 'lucide-react';
+import { ArrowLeft, CalendarClock, Check, Clapperboard, GraduationCap, Image as ImageIcon, LayoutGrid, Loader2, Plus, Sparkles, Trash } from 'lucide-react';
 import SplitScreenCoursePreview from '@/components/school/course-builder/SplitScreenCoursePreview';
 import SegmentAIEditorPanel from '@/components/school/course-builder/SegmentAIEditorPanel';
 import CoursePipelineView from '@/components/school/course-builder/CoursePipelineView';
@@ -73,6 +73,24 @@ const formatSecondsToTimeText = (seconds) => {
 };
 
 const round05 = (v) => Math.round(Number(v) * 2) / 2;
+
+/** ISO (timestamptz) → valeur d'un input `datetime-local` (heure locale, sans secondes). */
+const isoToDatetimeLocalInput = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+/** Valeur d'un input `datetime-local` → ISO (timestamptz) ; '' → null. */
+const datetimeLocalInputToIso = (value) => {
+  const v = String(value || '').trim();
+  if (!v) return null;
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString();
+};
 
 const makeSafeId = (s) =>
   String(s || '')
@@ -138,6 +156,11 @@ const VideoPostProductionPage = ({
   /** false si la ligne vient seulement de videoDataProp (non persistée) — l'IA serveur exige une ligne en base */
   const [contentPersistedInDb, setContentPersistedInDb] = useState(true);
 
+  /** Date de publication au calendrier élève (input `datetime-local`, '' = non publié). */
+  const [publicationDateInput, setPublicationDateInput] = useState('');
+  const [publishSaving, setPublishSaving] = useState(false);
+  const [publishMessage, setPublishMessage] = useState('');
+
   const [chapters, setChapters] = useState([]); // [{startText,endText,label}]
   /** URLs additionnelles pour `nleProject` clips `sourceRef` → fichier (export FFmpeg multi-entrées). */
   const [sourceVideoUrlsByRef, setSourceVideoUrlsByRef] = useState(/** @type {Record<string, string>} */ ({}));
@@ -150,6 +173,8 @@ const VideoPostProductionPage = ({
   const [transcriptEditorOpen, setTranscriptEditorOpen] = useState(false);
   const [mindmapPreviewOpen, setMindmapPreviewOpen] = useState(false);
   const [selectedMindmapNode, setSelectedMindmapNode] = useState(null);
+  const [cardImageLoading, setCardImageLoading] = useState(null); // null | 'all' | <cardId>
+  const [cardImageProgress, setCardImageProgress] = useState({ done: 0, total: 0 });
 
 
   const transcriptRowRefs = useRef([]);
@@ -385,7 +410,7 @@ const VideoPostProductionPage = ({
         let data = null;
         const { data: dbData, error: err } = await supabase
           .from('formation_day_contents')
-          .select('id,day_id,type,data')
+          .select('id,day_id,type,data,publication_date')
           .eq('id', contentId)
           .maybeSingle();
 
@@ -409,6 +434,8 @@ const VideoPostProductionPage = ({
         if (String(data.type || '').toLowerCase() !== 'video') throw new Error("Ce contenu n'est pas une vidéo");
 
         setRow(data);
+        setPublicationDateInput(isoToDatetimeLocalInput(data.publication_date));
+        setPublishMessage('');
 
         const d = data.data || {};
         const initialChapters = Array.isArray(d.chapters)
@@ -1245,6 +1272,157 @@ const VideoPostProductionPage = ({
     }
   }, [mindmapPreviewOpen]);
 
+  // ── Génération d'IMAGE par carte (overlay SmartBoard) — Mistral par défaut ──
+  const callGenerateVisualImage = async (prompt) => {
+    const { data: sessionSnap } = await supabase.auth.getSession();
+    const bearerToken = sessionSnap?.session?.access_token || '';
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const res = await fetch(`${supabaseUrl}/functions/v1/generate-visual-image`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: supabaseAnonKey,
+        ...(bearerToken ? { Authorization: `Bearer ${bearerToken}` } : {}),
+      },
+      body: JSON.stringify({ prompt, provider: 'auto' }),
+    });
+    if (!res.ok) throw new Error(`Image edge ${res.status}`);
+    const data = await res.json().catch(() => null);
+    const url = data?.imageUrl || null;
+    if (!url) throw new Error(data?.error || "Pas d'image renvoyée");
+    return url;
+  };
+
+  const setNodeIllustrationInTree = (node, cardId, url) => {
+    if (!node || typeof node !== 'object') return node;
+    const next = { ...node };
+    if (String(next.id || '') === String(cardId)) next.illustrationUrl = url;
+    if (Array.isArray(next.children)) next.children = next.children.map((c) => setNodeIllustrationInTree(c, cardId, url));
+    return next;
+  };
+
+  const collectMindmapCards = (node, acc = []) => {
+    if (!node || typeof node !== 'object') return acc;
+    (node.children || []).forEach((c) => {
+      if (c && c.id && (c.label || c.summary)) acc.push(c);
+      collectMindmapCards(c, acc);
+    });
+    return acc;
+  };
+
+  const cardImagePrompt = (card) => {
+    const label = String(card?.label || '').trim();
+    const summary = String(card?.summary || '').trim();
+    return `Illustration pédagogique claire et explicite pour le concept « ${label} ». ${summary}`.trim();
+  };
+
+  const handleGenerateCardImage = async (card) => {
+    if (!card?.id || cardImageLoading) return;
+    setCardImageLoading(card.id);
+    setError('');
+    try {
+      const url = await callGenerateVisualImage(cardImagePrompt(card));
+      const mm = mindmapPreview;
+      if (mm) setMindmapJsonText(JSON.stringify(setNodeIllustrationInTree(mm, card.id, url), null, 2));
+    } catch (e) {
+      setError(`Image carte : ${e.message}`);
+    } finally {
+      setCardImageLoading(null);
+    }
+  };
+
+  const handleGenerateAllCardImages = async () => {
+    const mm = mindmapPreview;
+    if (!mm || cardImageLoading) return;
+    const cards = collectMindmapCards(mm).filter((c) => !c.illustrationUrl);
+    if (!cards.length) {
+      setError('Toutes les cartes ont déjà une image.');
+      return;
+    }
+    setCardImageLoading('all');
+    setCardImageProgress({ done: 0, total: cards.length });
+    setError('');
+    let tree = mm;
+    for (let i = 0; i < cards.length; i += 1) {
+      try {
+        const url = await callGenerateVisualImage(cardImagePrompt(cards[i]));
+        tree = setNodeIllustrationInTree(tree, cards[i].id, url);
+        setMindmapJsonText(JSON.stringify(tree, null, 2));
+      } catch (e) {
+        console.warn('[card-image] échec carte', cards[i]?.id, e?.message);
+      }
+      setCardImageProgress({ done: i + 1, total: cards.length });
+    }
+    setCardImageLoading(null);
+  };
+
+  // ── Génération du CONTENU de slide riche (prompt agent) + image au nouveau style ──
+  const callGenerateSlideContent = async (card) => {
+    const { data: sessionSnap } = await supabase.auth.getSession();
+    const bearerToken = sessionSnap?.session?.access_token || '';
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const childLabels = (card.children || []).map((c) => String(c?.label || c?.title || '').trim()).filter(Boolean).slice(0, 4);
+    const res = await fetch(`${supabaseUrl}/functions/v1/generate-slide-content`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: supabaseAnonKey,
+        ...(bearerToken ? { Authorization: `Bearer ${bearerToken}` } : {}),
+      },
+      body: JSON.stringify({
+        card: { label: card.label, summary: card.summary, childLabels, time: card.time },
+        courseTitle: String(row?.data?.title || row?.data?.name || '').trim(),
+      }),
+    });
+    if (!res.ok) throw new Error(`Slide edge ${res.status}`);
+    const data = await res.json().catch(() => null);
+    if (!data?.slide) throw new Error(data?.error || 'pas de slide');
+    return data.slide;
+  };
+
+  const setNodeFieldsInTree = (node, cardId, patch) => {
+    if (!node || typeof node !== 'object') return node;
+    const next = { ...node };
+    if (String(next.id || '') === String(cardId)) Object.assign(next, patch);
+    if (Array.isArray(next.children)) next.children = next.children.map((c) => setNodeFieldsInTree(c, cardId, patch));
+    return next;
+  };
+
+  const handleGenerateRichSlides = async () => {
+    const mm = mindmapPreview;
+    if (!mm || cardImageLoading) return;
+    const cards = collectMindmapCards(mm);
+    if (!cards.length) {
+      setError('Aucune carte à enrichir.');
+      return;
+    }
+    setCardImageLoading('slides');
+    setCardImageProgress({ done: 0, total: cards.length });
+    setError('');
+    let tree = mm;
+    for (let i = 0; i < cards.length; i += 1) {
+      try {
+        const slide = await callGenerateSlideContent(cards[i]);
+        const patch = { slideContent: slide };
+        try {
+          const prompt = slide.imagePrompt || cardImagePrompt(cards[i]);
+          const url = await callGenerateVisualImage(prompt);
+          if (url) patch.illustrationUrl = url;
+        } catch (e) {
+          console.warn('[rich-slide] image échec', cards[i]?.id, e?.message);
+        }
+        tree = setNodeFieldsInTree(tree, cards[i].id, patch);
+        setMindmapJsonText(JSON.stringify(tree, null, 2));
+      } catch (e) {
+        console.warn('[rich-slide] échec', cards[i]?.id, e?.message);
+      }
+      setCardImageProgress({ done: i + 1, total: cards.length });
+    }
+    setCardImageLoading(null);
+  };
+
 
   const getMindmapNodeTimeSeconds = (node) => {
     if (!node) return null;
@@ -1272,6 +1450,36 @@ const VideoPostProductionPage = ({
     // If the user opened post-production directly (or refreshed), we still want
     // to bring them back to the formation builder instead of relying on history.
     return '/owner-dashboard?tab=formations';
+  };
+
+  /**
+   * Persiste uniquement la date de publication au calendrier (colonne `publication_date`).
+   * Indépendant du « Valider » global pour ne pas exiger des chapitres valides juste
+   * pour programmer la mise en ligne d'une vidéo. Vider le champ dépublie (NULL).
+   */
+  const handlePublishToCalendar = async () => {
+    if (!row?.id) return;
+    if (!contentPersistedInDb) {
+      setPublishMessage("Enregistre d'abord la vidéo (mode brouillon non persisté).");
+      return;
+    }
+    setPublishSaving(true);
+    setPublishMessage('');
+    setError('');
+    try {
+      const iso = datetimeLocalInputToIso(publicationDateInput);
+      const { error: err } = await supabase
+        .from('formation_day_contents')
+        .update({ publication_date: iso })
+        .eq('id', row.id);
+      if (err) throw err;
+      setRow((prev) => (prev ? { ...prev, publication_date: iso } : prev));
+      setPublishMessage(iso ? 'Vidéo programmée dans le calendrier élève.' : 'Vidéo retirée du calendrier.');
+    } catch (e) {
+      setError(String(e?.message || e));
+    } finally {
+      setPublishSaving(false);
+    }
   };
 
   const save = async () => {
@@ -1557,6 +1765,42 @@ const VideoPostProductionPage = ({
 
         {error ? (
           <div className="border border-red-500/30 bg-red-500/10 rounded p-3 text-sm text-red-200">{error}</div>
+        ) : null}
+
+        {!dockEmbed && postProdView === 'classic' ? (
+          <div className="rounded-lg border border-violet-500/25 bg-violet-500/10 p-4">
+            <div className="flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 shrink-0 text-violet-200" />
+              <div className="text-sm font-bold text-violet-100">Publier au calendrier</div>
+            </div>
+            <p className="mt-1 text-xs text-violet-200/70">
+              Programme la mise en ligne de cette vidéo dans l'agenda des élèves (« Vidéo du cours disponible »).
+              Laisse vide pour la retirer du calendrier.
+            </p>
+            <div className="mt-3 flex flex-wrap items-end gap-3">
+              <div className="min-w-[220px]">
+                <Label className="text-[11px] text-violet-200/80">Publier au calendrier le…</Label>
+                <Input
+                  type="datetime-local"
+                  value={publicationDateInput}
+                  onChange={(e) => { setPublicationDateInput(e.target.value); setPublishMessage(''); }}
+                  className="mt-1 bg-[#0F1419] border-white/10 text-white [color-scheme:dark]"
+                />
+              </div>
+              <Button
+                type="button"
+                onClick={() => void handlePublishToCalendar()}
+                disabled={publishSaving || !contentPersistedInDb}
+                className="bg-violet-600 text-white hover:bg-violet-500 font-bold"
+              >
+                {publishSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CalendarClock className="w-4 h-4 mr-2" />}
+                {publicationDateInput ? 'Programmer' : 'Retirer du calendrier'}
+              </Button>
+              {publishMessage ? (
+                <span className="text-xs text-violet-200/80">{publishMessage}</span>
+              ) : null}
+            </div>
+          </div>
         ) : null}
 
         {dockEmbed && (chapters || []).length > 0 ? (
@@ -2061,24 +2305,64 @@ const VideoPostProductionPage = ({
         </div>
 
         {postProdView !== 'classic' && postProdView !== 'pipeline' ? (
-          <SplitScreenCoursePreview
-            videoUrl={videoUrl}
-            videoRef={videoRef}
-            videoStyle={nleFilterStyle}
-            currentTime={previewCurrentTime}
-            duration={previewDuration}
-            onSeek={seekTo}
-            segments={chaptersForPreview}
-            aiMap={segmentAiMap}
-            mode={smartboardMode}
-            aiStatusText={segmentAiSyncLoading ? 'Synchronisation...' : ''}
-            activeChapterIdx={activeChapterIdx}
-            onSelectChapter={(idx) => {
-              const secs = parseTimestampToSeconds(chaptersForPreview?.[idx]?.startText);
-              setActiveChapterIdx(idx);
-              if (secs != null) seekTo(secs);
-            }}
-          />
+          <div className="space-y-3">
+            {mindmapPreview ? (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#111a2a]/60 px-4 py-3">
+                <div className="text-xs text-gray-400">
+                  <span className="text-white font-semibold">Slides riches</span> — contenu pédagogique premium (titre-idée, idée centrale, objectif, à retenir) + image au bon style, par carte.
+                </div>
+                <div className="flex items-center gap-3">
+                  {cardImageLoading ? (
+                    <span className="text-xs text-[var(--school-accent)] font-mono">
+                      {cardImageLoading === 'slides' ? 'Slides…' : 'Images…'} {cardImageProgress.done}/{cardImageProgress.total}
+                    </span>
+                  ) : null}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!!cardImageLoading}
+                    onClick={handleGenerateRichSlides}
+                    title="Génère, pour chaque carte, le contenu pédagogique riche (titre-idée, idée centrale, objectif, à retenir) + une image au bon style"
+                    className="border-[var(--school-accent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] font-bold gap-2 h-9"
+                  >
+                    {cardImageLoading === 'slides' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    Générer les slides riches
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!!cardImageLoading}
+                    onClick={handleGenerateAllCardImages}
+                    className="border-white/10 text-white hover:bg-white/5 font-medium gap-2 h-9"
+                  >
+                    {cardImageLoading === 'all' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
+                    Images seules
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+            <SplitScreenCoursePreview
+              videoUrl={videoUrl}
+              videoRef={videoRef}
+              videoStyle={nleFilterStyle}
+              currentTime={previewCurrentTime}
+              duration={previewDuration}
+              onSeek={seekTo}
+              segments={chaptersForPreview}
+              aiMap={segmentAiMap}
+              mindmap={mindmapPreview}
+              onGenerateCardImage={handleGenerateCardImage}
+              cardImageLoadingId={cardImageLoading}
+              mode={smartboardMode}
+              aiStatusText={segmentAiSyncLoading ? 'Synchronisation...' : ''}
+              activeChapterIdx={activeChapterIdx}
+              onSelectChapter={(idx) => {
+                const secs = parseTimestampToSeconds(chaptersForPreview?.[idx]?.startText);
+                setActiveChapterIdx(idx);
+                if (secs != null) seekTo(secs);
+              }}
+            />
+          </div>
         ) : null}
 
         {postProdView === 'nle' ? (
