@@ -141,7 +141,7 @@ export const LiveHostRightColumn = React.forwardRef(function LiveHostRightColumn
 ) {
   // Mode formation (focus) hôte : panneau RÉTRACTABLE en languette d'extension
   // (chevron sur le bord droit) plutôt que masqué. Fermé = languette, ouvert = panneau.
-  const focusHost = lhStageFocusLayout && !isGuestUi && phase === PHASE.LIVE;
+  const focusHost = !isGuestUi && phase === PHASE.LIVE; // poignée rétractable par défaut (hôte live — maquette)
   const collapsed = liveRightRailCollapsedStrip || liveRightGuestCollapsedStrip || (focusHost && !liveRightRailOpen);
   const hidden = focusHost ? false : (lhStageFocusLayout || (lhLayoutCompact && !liveRightRailOpen));
 
@@ -174,7 +174,7 @@ export const LiveHostRightColumn = React.forwardRef(function LiveHostRightColumn
         ...(focusHost
           ? {
               position: 'fixed',
-              right: 10,
+              right: 0,
               zIndex: 45,
               ...(collapsed
                 ? { top: '50%', transform: 'translateY(-50%)', width: 'auto', maxHeight: '72vh', background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }
@@ -188,13 +188,11 @@ export const LiveHostRightColumn = React.forwardRef(function LiveHostRightColumn
           <button
             type="button"
             onClick={() => setLiveRightRailOpen(true)}
-            title="Notes — agrandir le panneau"
-            aria-label="Notes — agrandir le panneau"
-            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/12 bg-[#15131f]/95 px-3 py-4 text-white/85 shadow-[0_12px_30px_rgba(0,0,0,.4)] transition hover:border-violet-400/45 hover:bg-[#1a1726]/95 hover:text-white"
+            title="Ouvrir le panneau droit"
+            aria-label="Ouvrir le panneau droit"
+            className="flex items-center justify-center rounded-l-xl border border-r-0 border-white/12 bg-[#15131f]/95 px-1.5 py-6 text-white/70 shadow-[0_12px_30px_rgba(0,0,0,.4)] transition hover:border-violet-400/45 hover:text-white"
           >
-            <ChevronLeft className="h-4 w-4 text-white/45" strokeWidth={2} aria-hidden />
-            <NotebookPen className="h-5 w-5" strokeWidth={1.8} aria-hidden />
-            <span className="text-[10px] font-semibold tracking-wide">Notes</span>
+            <ChevronLeft className="h-5 w-5" strokeWidth={2} aria-hidden />
           </button>
         ) : (
         <LiveRightRailCollapsedStrip

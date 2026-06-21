@@ -40,7 +40,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
 ) {
   // Mode formation (focus) hôte : languette d'extension (chevron, bord gauche) si
   // fermé, panneau si ouvert — jamais masqué. (Ce rail n'est rendu que pour l'hôte.)
-  const focusHost = lhStageFocusLayout && phase === PHASE.LIVE;
+  const focusHost = phase === PHASE.LIVE; // poignée rétractable par défaut (hôte live — maquette)
   const asStrip = liveLeftRailCollapsedStrip || (focusHost && !liveLeftRailOpen);
   const railHidden = focusHost ? false : (longiaHubPushesLayout || (lhLayoutCompact && !liveLeftRailOpen));
   const showFullContent = phase === PHASE.LIVE && (!lhStageFocusLayout || (focusHost && liveLeftRailOpen));
@@ -74,7 +74,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
         ...(focusHost
           ? {
               position: 'fixed',
-              left: 10,
+              left: 0,
               zIndex: 45,
               ...(asStrip
                 ? { top: '50%', transform: 'translateY(-50%)', width: 'auto', maxHeight: '72vh', background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }
@@ -88,13 +88,11 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
           <button
             type="button"
             onClick={() => setLiveLeftRailOpen(true)}
-            title="Membres — agrandir le panneau"
-            aria-label="Membres — agrandir le panneau"
-            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/12 bg-[#15131f]/95 px-3 py-4 text-white/85 shadow-[0_12px_30px_rgba(0,0,0,.4)] transition hover:border-violet-400/45 hover:bg-[#1a1726]/95 hover:text-white"
+            title="Ouvrir le panneau gauche"
+            aria-label="Ouvrir le panneau gauche"
+            className="flex items-center justify-center rounded-r-xl border border-l-0 border-white/12 bg-[#15131f]/95 px-1.5 py-6 text-white/70 shadow-[0_12px_30px_rgba(0,0,0,.4)] transition hover:border-violet-400/45 hover:text-white"
           >
-            <Users className="h-5 w-5" strokeWidth={1.8} aria-hidden />
-            <span className="text-[10px] font-semibold tracking-wide">Membres</span>
-            <ChevronRight className="h-4 w-4 text-white/45" strokeWidth={2} aria-hidden />
+            <ChevronRight className="h-5 w-5" strokeWidth={2} aria-hidden />
           </button>
         ) : (
         <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-3 py-1">

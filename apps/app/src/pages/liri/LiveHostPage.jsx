@@ -491,15 +491,16 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     }
     // Hôte web/desktop. On exclut seulement le VRAI mobile (lhCompactViewport),
     // pas le web étroit (<3 colonnes) : un laptop ~1440 doit bénéficier du focus.
-    if (isGuestUi || lhCompactViewport) return;
-    if (sessionType !== 'classe') return; // cours/formation uniquement
+    if (isGuestUi || lhCompactViewport) return; // hôte web/desktop ; pas le vrai mobile
     if (formationFocusAppliedRef.current) return; // une seule fois
     formationFocusAppliedRef.current = true;
-    setFocusMode(true);
+    // Arrivée par défaut (maquette) : smartboard dominant + panneaux repliés en
+    // poignées sur les bords + hub fermé, MAIS on garde la barre du haut et la
+    // bande membres (pas de focusMode, qui lui masque tout).
     setLongiaHubOpen(false);
     setLiveLeftRailOpen(false);
     setLiveRightRailOpen(false);
-  }, [phase, isGuestUi, lhCompactViewport, sessionType]);
+  }, [phase, isGuestUi, lhCompactViewport]);
   const guestInvitePreviewUrl = useMemo(() => {
     if (!sessionId || typeof window === 'undefined') return '';
     return `${window.location.origin}/live/${sessionId}`;
