@@ -213,6 +213,7 @@ export const LiveHostLiveCenterColumn = forwardRef(function LiveHostLiveCenterCo
             setModal={setModal}
             arenaHostCameraCenter={arenaHostCameraCenter}
             guestMobileAuthorityUi={guestMobileAuthorityUi}
+            sessionTitle={sessionTitle}
           />
           )}
 

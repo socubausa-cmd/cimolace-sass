@@ -1,10 +1,57 @@
 import React from 'react';
 import { Track } from 'livekit-client';
+import { Settings, ChevronDown } from 'lucide-react';
+import { LiriWordmark } from '@/components/brand/LiriWordmark';
 import { LiveLocalUserVignette } from '@/features/live/host/components/LiveLocalUserVignette';
 import { LiveMemberDockScroll } from '@/features/live/host/components/LiveMemberDockScroll';
 import { LiveStripActionButton } from '@/features/live/host/components/LiveStripActionButton';
 import { LiveStripOnlineCounter } from '@/features/live/host/components/LiveStripOnlineCounter';
 import { PHASE } from '@/features/live/host/liveHostConstants';
+
+/** Bloc chrome gauche de la barre du haut : logo + titre de la session. */
+function LiveTopBarBrand({ sessionTitle }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, paddingRight: 4, height: '100%' }}>
+      <LiriWordmark variant="mark" size="rail" letterClassName="text-white" className="text-white drop-shadow-[0_2px_10px_rgba(124,58,237,.35)]" />
+      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}>
+        <span style={{ fontSize: 12.5, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 150 }}>
+          {sessionTitle || 'Salle live'}
+        </span>
+        <span style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', display: 'flex', alignItems: 'center', gap: 3 }}>
+          LIRI <ChevronDown size={10} aria-hidden />
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** Bloc chrome droit : réglages + identité hôte. */
+function LiveTopBarHostMenu({ user }) {
+  const name = user?.full_name || (user?.email ? String(user.email).split('@')[0] : 'Hôte');
+  const initials = name.slice(0, 2).toUpperCase();
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, paddingLeft: 4, height: '100%' }}>
+      <button
+        type="button"
+        title="Paramètres de la salle"
+        aria-label="Paramètres"
+        className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/12 bg-white/[0.05] text-white/70 transition hover:border-white/25 hover:text-white"
+      >
+        <Settings size={17} aria-hidden />
+      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#7c3aed,#db2777)' }}>
+          {initials}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap' }}>{name}</span>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,.45)' }}>Hôte</span>
+        </div>
+        <ChevronDown size={13} className="text-white/45" aria-hidden />
+      </div>
+    </div>
+  );
+}
 
 /**
  * Bandeau membres en haut de la zone centrale : vignette locale + bouton STOP/QUITTER
@@ -36,6 +83,7 @@ export const LiveStripBandeau = React.forwardRef(function LiveStripBandeau(
     setModal,
     arenaHostCameraCenter,
     guestMobileAuthorityUi,
+    sessionTitle,
   },
   ref,
 ) {
@@ -72,6 +120,7 @@ export const LiveStripBandeau = React.forwardRef(function LiveStripBandeau(
     return (
       <div className="lh-sp-dim" style={wrapperStyle}>
         <div style={innerStyle}>
+          <LiveTopBarBrand sessionTitle={sessionTitle} />
           {showStripLocalHost ? (
             <LiveLocalUserVignette
               variant="host"
@@ -100,6 +149,7 @@ export const LiveStripBandeau = React.forwardRef(function LiveStripBandeau(
             emptySlotKeyPrefix="strip-empty"
             trailingSpacerKey="strip-dock-trail-spacer"
           />
+          <LiveTopBarHostMenu user={user} />
         </div>
       </div>
     );
