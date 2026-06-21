@@ -111,6 +111,9 @@ export default function LiveHostArenaLiveBar({
         />
       ) : isLive ? (
         <>
+          {/* Sélecteur de layout (caméra/panel/mur/conférence) masqué en focus formation : smartboard plein écran. */}
+          {!focusMode && (
+          <>
           <button
             type="button"
             onClick={() => applyHostArenaLayoutMode(ARENA_LAYOUT.HOST_CAMERA)}
@@ -243,6 +246,8 @@ export default function LiveHostArenaLiveBar({
           >
             Conférence
           </button>
+          </>
+          )}
           <button
             type="button"
             onClick={onOpenMobileCameraQr}
@@ -649,7 +654,7 @@ export default function LiveHostArenaLiveBar({
           <button
             type="button"
             onClick={() => setFocusMode((v) => !v)}
-            title={focusMode ? 'Quitter mode focus' : 'Mode focus'}
+            title={focusMode ? 'Quitter le focus formation' : 'Focus formation (tableau plein écran)'}
             style={{
               borderRadius: '4px',
               border: `1px solid ${focusMode ? 'rgba(56,189,248,.5)' : 'rgba(255,255,255,.1)'}`,

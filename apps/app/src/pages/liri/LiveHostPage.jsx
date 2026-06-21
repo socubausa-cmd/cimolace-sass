@@ -211,6 +211,8 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
   useLiveHostDocumentTitle(liriLiveUiLabel, sessionTitle);
   /** Lien « forum formation » quand la session `live_sessions` est rattachée à une formation. */
   const [sessionFormationId, setSessionFormationId] = useState(null);
+  /** Type de session live ('classe' | 'conference' | 'entretien'). 'classe' = cours/formation → mode épuré auto (smartboard dominant). */
+  const [sessionType, setSessionType] = useState(null);
   const [liveEtapes, setLiveEtapes] = useState([]);
   const [liveScenes, setLiveScenes] = useState([]); // scènes SmartBoard normalisées
   const [smartboardSceneFlags, setSmartboardSceneFlags] = useState(() => mergeSmartboardSceneFlags());
@@ -475,6 +477,27 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
       setLiveRightRailOpen(true);
     }
   }, [phase]);
+  /**
+   * Mode formation auto-épuré (desktop hôte) : un cours (session_type === 'classe')
+   * qui passe en LIVE met le SmartBoard au centre et replie le secondaire UNE SEULE
+   * FOIS — focus ⊞ + hub LONGIA fermé + rails repliés. L'hôte reprend ensuite la main
+   * (bouton ⊞ / strips) sans qu'on re-force (garde formationFocusAppliedRef).
+   */
+  const formationFocusAppliedRef = useRef(false);
+  useEffect(() => {
+    if (phase !== PHASE.LIVE) {
+      formationFocusAppliedRef.current = false;
+      return;
+    }
+    if (isGuestUi || lhLayoutCompact) return; // desktop hôte d'abord
+    if (sessionType !== 'classe') return; // cours/formation uniquement
+    if (formationFocusAppliedRef.current) return; // une seule fois
+    formationFocusAppliedRef.current = true;
+    setFocusMode(true);
+    setLongiaHubOpen(false);
+    setLiveLeftRailOpen(false);
+    setLiveRightRailOpen(false);
+  }, [phase, isGuestUi, lhLayoutCompact, sessionType]);
   const guestInvitePreviewUrl = useMemo(() => {
     if (!sessionId || typeof window === 'undefined') return '';
     return `${window.location.origin}/live/${sessionId}`;
@@ -819,7 +842,7 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
       roomRef, liveDisconnectTimerRef, pendingMeshRestoreRef, sharingScreenRef, isGuestUiRef,
       guestJoyKitDriveRef, guestResyncSmartboardFromDbRef, resyncSmartboardRef, arenaHostAlertSoundRef, hostSfxCtxRef,
       setPhase, setPhaseError, setLiveKitMediaAvailable, setLiriLiveKitDomFlag, setLiriLiveKitDomError, setSessionTitle,
-      setStartedAt, setTeacherId, setSessionFormationId, setLiveEtapes, setStep,
+      setStartedAt, setTeacherId, setSessionFormationId, setSessionType, setLiveEtapes, setStep,
       setSmartboardSceneFlags, setSessionQuickIaFlags, setSessionCommFlags, setSessionGuestPermissions, setHostMultilang,
       setGuestMultilangConfig, setSharedImageGallery, setSharedImageLoop, setShopProducts, setProgressivePlayback,
       setAmbientTracks, applyLiriAudioFromConfig, setMeshGrantsByUserId, setLiveScenes, setPanels,

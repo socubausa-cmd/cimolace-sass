@@ -79,6 +79,7 @@ export async function runLiveHostSessionAndLiveKitInit(ctx) {
     setStartedAt,
     setTeacherId,
     setSessionFormationId,
+    setSessionType,
     setLiveEtapes,
     setStep,
     setSmartboardSceneFlags,
@@ -143,6 +144,7 @@ export async function runLiveHostSessionAndLiveKitInit(ctx) {
         if (sess.started_at) setStartedAt(sess.started_at);
         setTeacherId(sess.teacher_id ?? null);
         setSessionFormationId(sess.formation_id ?? null);
+        setSessionType?.(sess.session_type ?? null);
 
         // Normaliser le config
         let cfg = {};
