@@ -1977,7 +1977,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                       {activePanel === 'notes' ? (
                         <div className="max-w-3xl mx-auto">
                           <div className="border border-white/10 rounded-xl bg-white/5 p-5 space-y-3">
-                            <div className="font-bold">Cahier de notes</div>
+                            <div className="font-bold">Cahier de synthèse</div>
                             <div className="text-sm text-gray-300">Qu'est-ce que tu as retenu ? Écris avec tes mots.</div>
                             <div className="text-xs text-gray-400">
                               {notesStatus === 'loading'

@@ -88,8 +88,8 @@ const NotesPanel: React.FC<Props> = ({ lessonId, currentTimeSeconds, onSeek, onN
     <div className="border border-white/10 rounded-xl bg-white/5 p-4">
       <div className="flex items-center justify-between gap-3 mb-3">
         <div>
-          <div className="font-bold">Notes de l'élève</div>
-          <div className="text-xs text-gray-400">Ajoute une note au temps courant ({formatTime(currentTimeSeconds)})</div>
+          <div className="font-bold">Mes repères vidéo</div>
+          <div className="text-xs text-gray-400">Place un repère au temps courant ({formatTime(currentTimeSeconds)})</div>
         </div>
         <Button
           onClick={addNote}
@@ -111,7 +111,7 @@ const NotesPanel: React.FC<Props> = ({ lessonId, currentTimeSeconds, onSeek, onN
         {loading ? (
           <div className="text-sm text-gray-400">Chargement…</div>
         ) : rows.length === 0 ? (
-          <div className="text-sm text-gray-400">Aucune note.</div>
+          <div className="text-sm text-gray-400">Aucun repère pour l'instant.</div>
         ) : (
           <div className="space-y-2">
             {rows.map((r) => (
