@@ -13,7 +13,7 @@ import { ARENA_MEMBERS_WALL_MAX_VISIBLE } from '@/lib/liriArenaLayout';
  * Réutilise `LiveHostVideoCell` (flux LiveKit) ; fallback avatar si caméra coupée.
  */
 
-const ACCENT = '#34d399';
+const ACCENT = 'var(--lh-accent, #34d399)';
 
 const hasCamera = (lk) =>
   lk
@@ -48,8 +48,8 @@ const ToolbarBtn = ({ active, onClick, title, children }) => (
     title={title}
     style={{
       borderRadius: 8,
-      border: `1px solid ${active ? 'rgba(52,211,153,.55)' : 'rgba(255,255,255,.12)'}`,
-      background: active ? 'rgba(16,185,129,.22)' : 'rgba(0,0,0,.45)',
+      border: `1px solid ${active ? 'rgba(var(--lh-accent-rgb,52,211,153),.55)' : 'rgba(255,255,255,.12)'}`,
+      background: active ? 'rgba(var(--lh-accent-rgb,16,185,129),.22)' : 'rgba(0,0,0,.45)',
       color: active ? ACCENT : 'rgba(255,255,255,.78)',
       fontSize: 10,
       fontWeight: 700,
@@ -83,7 +83,7 @@ const Tile = ({ m, lk, mediaEpoch, speaking, big = false, onClick, pinned = fals
         overflow: 'hidden',
         border: speaking ? `2px solid ${ACCENT}` : '1px solid rgba(255,255,255,.1)',
         background: 'rgba(0,0,0,.45)',
-        boxShadow: speaking ? `0 0 0 3px rgba(52,211,153,.28)` : 'none',
+        boxShadow: speaking ? `0 0 0 3px rgba(var(--lh-accent-rgb,52,211,153),.28)` : 'none',
         transition: 'box-shadow .18s ease, border-color .18s ease',
         cursor: onClick ? 'pointer' : 'default',
       }}
@@ -116,7 +116,7 @@ const Tile = ({ m, lk, mediaEpoch, speaking, big = false, onClick, pinned = fals
         </div>
       )}
       {pinned ? (
-        <div style={{ position: 'absolute', top: 6, right: 6, fontSize: 9, fontWeight: 700, color: ACCENT, background: 'rgba(6,78,59,.65)', borderRadius: 6, padding: '2px 6px' }}>
+        <div style={{ position: 'absolute', top: 6, right: 6, fontSize: 9, fontWeight: 700, color: ACCENT, background: 'rgba(var(--lh-accent-rgb,52,211,153),.16)', borderRadius: 6, padding: '2px 6px' }}>
           épinglé
         </div>
       ) : null}
@@ -344,7 +344,7 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
               </button>
             </div>
           </div>
-          <div ref={shareFsRef} style={{ flex: 1, minHeight: 0, position: 'relative', borderRadius: 18, overflow: 'hidden', border: `1px solid ${isSharing ? 'rgba(52,211,153,.4)' : focusSpeaking ? ACCENT : 'rgba(255,255,255,.1)'}`, background: isSharing ? '#000' : 'rgba(0,0,0,.45)', boxShadow: focusSpeaking && !isSharing ? '0 0 0 3px rgba(52,211,153,.22)' : 'none' }}>
+          <div ref={shareFsRef} style={{ flex: 1, minHeight: 0, position: 'relative', borderRadius: 18, overflow: 'hidden', border: `1px solid ${isSharing ? 'rgba(var(--lh-accent-rgb,52,211,153),.4)' : focusSpeaking ? ACCENT : 'rgba(255,255,255,.1)'}`, background: isSharing ? '#000' : 'rgba(0,0,0,.45)', boxShadow: focusSpeaking && !isSharing ? '0 0 0 3px rgba(var(--lh-accent-rgb,52,211,153),.22)' : 'none' }}>
             {isSharing ? (
               <>
                 {screenShareLk ? (
@@ -370,7 +370,7 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
                 )}
                 <div style={{ position: 'absolute', top: 14, left: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', textShadow: '0 1px 6px rgba(0,0,0,.9)' }}>{focus.name}</span>
-                  <span style={{ fontSize: 10.5, fontWeight: 700, color: ACCENT, background: 'rgba(6,78,59,.65)', borderRadius: 7, padding: '2px 8px' }}>{"À l'écran"}</span>
+                  <span style={{ fontSize: 10.5, fontWeight: 700, color: ACCENT, background: 'rgba(var(--lh-accent-rgb,52,211,153),.16)', borderRadius: 7, padding: '2px 8px' }}>{"À l'écran"}</span>
                 </div>
                 <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,.85)', background: 'rgba(0,0,0,.5)', borderRadius: 9, padding: '6px 10px' }}><Pin size={13} /> Épingler</span>
