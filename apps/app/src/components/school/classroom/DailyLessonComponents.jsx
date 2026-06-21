@@ -126,7 +126,7 @@ export const StudentNotebookBlock = ({ initialContent, question, minLength = 50,
             <div className="p-2 bg-blue-500/20 rounded-lg">
                <FileText className="w-6 h-6 text-blue-400" />
             </div>
-            <h3 className="text-xl font-bold text-white">Cahier de l'élève</h3>
+            <h3 className="text-xl font-bold text-white">Cahier de synthèse</h3>
          </div>
 
          <div className="mb-4">

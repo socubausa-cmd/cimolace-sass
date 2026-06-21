@@ -112,7 +112,7 @@ function markdownToPdf(markdown, title) {
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
-  doc.text(title || 'Cahier de notes LIRI', margin, y);
+  doc.text(title || 'Cahier de séance LIRI', margin, y);
   y += 28;
 
   markdown.split('\n').forEach((line) => {
@@ -191,7 +191,7 @@ export default function GuestNotesPanel({
 
   const handleExportPdf = useCallback(() => {
     const md = exportMarkdown();
-    const doc = markdownToPdf(md, `Cahier de notes — ${sessionTitle || 'Cours LIRI'}`);
+    const doc = markdownToPdf(md, `Cahier de séance — ${sessionTitle || 'Cours LIRI'}`);
     const name = `notes-${(sessionTitle || 'cours').replace(/\s+/g, '_')}-${new Date().toISOString().slice(0, 10)}.pdf`;
     doc.save(name);
   }, [exportMarkdown, sessionTitle]);
@@ -242,7 +242,7 @@ export default function GuestNotesPanel({
       >
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <FileText size={13} style={{ opacity: 0.85 }} />
-          Cahier de notes
+          Cahier de séance
         </span>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textTransform: 'none', letterSpacing: 0, fontWeight: 500 }}>
           {saving && <Loader2 size={11} className="animate-spin" />}

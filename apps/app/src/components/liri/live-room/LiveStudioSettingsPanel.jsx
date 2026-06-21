@@ -168,11 +168,11 @@ const GUEST_PERMISSIONS_SECTIONS = [
   },
   {
     id: 'notes',
-    title: 'Cahier de notes & sécurité',
+    title: 'Cahier de séance & sécurité',
     subtitle: 'Notes personnelles de l\u2019élève, export et surveillance.',
     icon: ShieldCheck,
     rows: [
-      { key: 'can_use_personal_notes', label: 'Cahier de notes personnel', desc: 'Affiche le panneau cahier (saisie, capture tableau, export si autorisé)' },
+      { key: 'can_use_personal_notes', label: 'Cahier de séance personnel', desc: 'Affiche le panneau cahier (saisie, capture tableau, export si autorisé)' },
       { key: 'can_export_notes', label: 'Exporter son cahier (PDF / Markdown)', desc: 'L\u2019élève télécharge ses notes en fin de cours' },
       { key: 'can_send_notes_to_teacher', label: 'Envoyer son cahier au prof', desc: 'L\u2019élève partage explicitement ses notes (vous les retrouvez en fin de session)' },
       { key: 'require_proctor_consent', label: 'Exiger le consentement proctoring caméra', desc: 'Type examen surveillé — consentement obligatoire avant vidéo' },

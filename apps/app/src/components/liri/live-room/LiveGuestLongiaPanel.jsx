@@ -818,7 +818,7 @@ export default function LiveGuestLongiaPanel({
               Brouillon LONGIA (ce navigateur)
             </span>
             <p style={{ fontSize: '8px', color: 'rgba(255,255,255,0.32)', margin: '4px 0 0', lineHeight: 1.4 }}>
-              Pour le cahier de cours sauvegardé (export, envoi au prof, captures tableau), utilisez le panneau de droite « Cahier de notes ».
+              Pour le cahier de cours sauvegardé (export, envoi au prof, captures tableau), utilisez le panneau de droite « Cahier de séance ».
             </p>
             <textarea
               value={notes}

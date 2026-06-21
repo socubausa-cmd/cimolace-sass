@@ -67,7 +67,7 @@ function sanitizeEntry(entry) {
 }
 
 function entriesToMarkdown(entries, sessionTitle) {
-  const header = `# Cahier de notes — ${sessionTitle || 'Cours LIRI'}\n\n`;
+  const header = `# Cahier de séance — ${sessionTitle || 'Cours LIRI'}\n\n`;
   const body = (entries || []).map((e) => {
     const t = new Date(e.created_at);
     const stamp = Number.isFinite(t.getTime())
