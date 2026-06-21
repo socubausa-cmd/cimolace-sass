@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { MessageCircle, MessagesSquare } from 'lucide-react';
 import StudentForumRedesign from '@/pages/school/student-school-life/StudentForumRedesign';
 import MessagingPage from '@/pages/MessagingPage';
@@ -16,7 +17,10 @@ import MessagingPage from '@/pages/MessagingPage';
  * forum scrolle dans la zone. Onglet inactif démonté (évite le polling messagerie en fond).
  */
 export default function CommunicationShell({ forumBasePath = '/student-school-life/forum' }) {
-  const [tab, setTab] = useState('forum');
+  // Onglet initial pilotable par l'URL (?ctab=messagerie) — utilisé par le bouton « Discuter »
+  // du forum pour ouvrir directement la conversation (la messagerie lit ?to= au montage).
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState(searchParams.get('ctab') === 'messagerie' ? 'messagerie' : 'forum');
 
   const TabButton = ({ value, label, Icon }) => {
     const active = tab === value;

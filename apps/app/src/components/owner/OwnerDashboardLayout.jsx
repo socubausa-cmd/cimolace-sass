@@ -46,7 +46,7 @@ const OwnerDashboardLayout = ({ children, activeTab, onTabChange }) => {
         section: 'Contenu & communauté',
         items: [
           { id: 'resources', icon: Library, label: 'Ressources' },
-          { id: 'forum', icon: MessageCircle, label: 'Forum communauté' },
+          { id: 'forum', icon: MessageCircle, label: 'Communication' },
           { id: 'reviews', icon: Star, label: 'Avis & Témoignages' },
           { id: 'support', icon: HelpCircle, label: 'Support' },
         ],

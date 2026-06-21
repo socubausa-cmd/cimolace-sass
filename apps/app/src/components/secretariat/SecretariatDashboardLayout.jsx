@@ -60,7 +60,7 @@ const SecretariatDashboardLayout = ({ children, activeTab, onTabChange }) => {
       {
         section: 'Communauté & croissance',
         items: [
-          { id: 'forum', icon: MessageCircle, label: 'Forum communauté' },
+          { id: 'forum', icon: MessageCircle, label: 'Communication' },
           { id: 'reviews', icon: Star, label: 'Avis & Témoignages' },
           { id: 'marketing', icon: Megaphone, label: 'Marketing' },
           { id: 'ngowazulu-mentorat', icon: Flame, label: 'Ngowazulu Ateliers' },

@@ -408,6 +408,13 @@ const OwnerDashboard = lazy(() => import('@/pages/OwnerDashboard'));
 // Sous-pages du forum riche (mêmes composants que l'espace élève) pour l'admin.
 const ForumThreadPage = lazy(() => import('@/pages/school/student-school-life/ForumThreadPage'));
 const ForumNewQuestionPage = lazy(() => import('@/pages/school/student-school-life/ForumNewQuestionPage'));
+// Redirige /owner-dashboard/forum → onglet forum EN PRÉSERVANT la query (?ctab, ?to) :
+// le bouton « Discuter » d'un fil peut ainsi ouvrir l'onglet Messagerie du shell avec le destinataire.
+function OwnerForumIndexRedirect() {
+  const [sp] = useSearchParams();
+  const q = sp.toString();
+  return <Navigate to={`/owner-dashboard?tab=forum${q ? `&${q}` : ''}`} replace />;
+}
 const TenantAdminPayoutSettingsPage = lazy(() => import('@/pages/tenant/TenantAdminPayoutSettingsPage'));
 const TenantMembersPage = lazy(() => import('@/pages/tenant/TenantMembersPage'));
 const ClientProfilePage = lazy(() => import('@/components/accompaniment/ClientProfilePage'));
@@ -1992,9 +1999,7 @@ isLiriHostDevPreviewRoute;
           {/* Forum admin = forum riche élève (StudentForumRedesign monté dans l'onglet ?tab=forum).
               Ses sous-pages sont des chemins (forumBase dérivé de l'URL) → on les route ici sous
               /owner-dashboard/forum/* pour que « Retour au forum » revienne sur l'onglet. */}
-          <Route path="/owner-dashboard/forum" element={
-            <Navigate to="/owner-dashboard?tab=forum" replace />
-          } />
+          <Route path="/owner-dashboard/forum" element={<OwnerForumIndexRedirect />} />
           <Route path="/owner-dashboard/forum/new" element={
             <ProtectedOwnerRoute>
               <ForumNewQuestionPage />
