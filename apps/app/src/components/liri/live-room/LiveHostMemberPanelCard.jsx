@@ -51,7 +51,7 @@ export default function LiveHostMemberPanelCard({
   const hasCam = liveHostMemberHasCamera(liveKitParticipant);
   const showLiveThumb = hasCam && (!isPromoted || preferLiveVideo);
   const goldBorder = isPromoted || isSelected;
-  const accent = member?.color || '#a78bfa';
+  const accent = member?.color || '#d4a36a';
   const borderColor = goldBorder ? 'rgba(251, 191, 72, 0.72)' : `${accent}55`;
   const avatarUrl = member?.avatar_url || member?.avatarUrl;
 
@@ -103,10 +103,10 @@ export default function LiveHostMemberPanelCard({
       <div
         className="pointer-events-none absolute right-1 top-1 z-[2] h-1.5 w-1.5 rounded-full"
         style={{
-          background: member?.status === 'online' ? '#10b981' : '#f59e0b',
+          background: member?.status === 'online' ? '#c8943e' : '#f59e0b',
           boxShadow:
             member?.status === 'online'
-              ? '0 0 5px rgba(16,185,129,0.8)'
+              ? '0 0 5px rgba(200,148,62,0.8)'
               : '0 0 5px rgba(245,158,11,0.8)',
         }}
       />

@@ -12,7 +12,7 @@ import { PHASE } from '@/features/live/host/liveHostConstants';
 function LiveTopBarBrand({ sessionTitle }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, paddingRight: 4, height: '100%' }}>
-      <LiriWordmark variant="mark" size="rail" letterClassName="text-white" className="text-white drop-shadow-[0_2px_10px_rgba(124,58,237,.35)]" />
+      <LiriWordmark variant="mark" size="rail" bulbColor="#d4a36a" bulbGlow="drop-shadow(0 0 12px rgba(212,163,106,.55))" letterClassName="text-white" className="text-white drop-shadow-[0_2px_10px_rgba(212,163,106,.35)]" />
       <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}>
         <span style={{ fontSize: 12.5, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 150 }}>
           {sessionTitle || 'Salle live'}
@@ -40,7 +40,7 @@ function LiveTopBarHostMenu({ user }) {
         <Settings size={17} aria-hidden />
       </button>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div className="flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#7c3aed,#db2777)' }}>
+        <div className="flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#c8943e,#c8843e)' }}>
           {initials}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>

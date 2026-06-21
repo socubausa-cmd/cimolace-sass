@@ -297,14 +297,14 @@ export default function LiveHostMessagingPanel({
             </div>
 
             {isGuestUi && eleveAppChatUrl ? (
-              <div className="shrink-0 border-b border-violet-500/20 bg-violet-950/35 px-3 py-2.5">
-                <p className="mb-1.5 flex items-center gap-1.5 text-[8px] font-semibold uppercase tracking-[0.12em] text-violet-200/80">
+              <div className="shrink-0 border-b border-amber-500/20 bg-amber-950/35 px-3 py-2.5">
+                <p className="mb-1.5 flex items-center gap-1.5 text-[8px] font-semibold uppercase tracking-[0.12em] text-amber-200/80">
                   <MessageCircle className="h-3 w-3 shrink-0 opacity-90" aria-hidden />
                   App LIRI — chat plein écran
                 </p>
                 <a
                   href={eleveAppChatUrl}
-                  className="block truncate rounded-lg border border-violet-500/30 bg-black/30 px-2.5 py-1.5 text-center text-[11px] font-semibold text-violet-100/95 underline-offset-2 hover:underline"
+                  className="block truncate rounded-lg border border-amber-500/30 bg-black/30 px-2.5 py-1.5 text-center text-[11px] font-semibold text-amber-100/95 underline-offset-2 hover:underline"
                   title="Ouvrir le chat de session (maquette app élève)"
                 >
                   Ouvrir le chat de session
@@ -313,7 +313,7 @@ export default function LiveHostMessagingPanel({
             ) : null}
 
             {!isGuestUi && inviteUrl ? (
-              <div className="shrink-0 border-b border-white/[0.08] bg-[#12111a]/90 px-3 py-2.5">
+              <div className="shrink-0 border-b border-white/[0.08] bg-[#1a1815]/90 px-3 py-2.5">
                 <p className="mb-1.5 flex items-center gap-1.5 text-[8px] font-semibold uppercase tracking-[0.12em] text-white/40">
                   <Link2 className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
                   Lien d&apos;invitation — rejoindre la session
@@ -355,7 +355,7 @@ export default function LiveHostMessagingPanel({
             ) : null}
 
             {liveTopic && !forumTarget ? (
-              <div className="shrink-0 border-b border-cyan-500/15 bg-[#0a0e12]/95">
+              <div className="shrink-0 border-b border-amber-500/15 bg-[#0a0e12]/95">
                 <button
                   type="button"
                   onClick={() => setLiveTopicOpen((v) => !v)}
@@ -363,8 +363,8 @@ export default function LiveHostMessagingPanel({
                   aria-expanded={liveTopicOpen}
                 >
                   <span className="flex min-w-0 flex-1 items-center gap-2">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-950/40">
-                      <MessagesSquare className="h-4 w-4 text-cyan-200/90" aria-hidden />
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-amber-500/30 bg-amber-950/40">
+                      <MessagesSquare className="h-4 w-4 text-amber-200/90" aria-hidden />
                     </span>
                     <span className="min-w-0">
                       <span className="flex items-center gap-1.5 text-[8px] font-semibold uppercase tracking-[0.12em] text-white/55">
@@ -399,7 +399,7 @@ export default function LiveHostMessagingPanel({
                       <>
                         <div
                           ref={liveTopicScrollRef}
-                          className="max-h-[240px] space-y-2.5 overflow-y-auto rounded-lg border border-white/[0.08] bg-black/25 p-2.5 [scrollbar-width:thin] [scrollbar-color:rgba(34,211,238,0.2)_transparent]"
+                          className="max-h-[240px] space-y-2.5 overflow-y-auto rounded-lg border border-white/[0.08] bg-black/25 p-2.5 [scrollbar-width:thin] [scrollbar-color:rgba(212,163,106,0.2)_transparent]"
                         >
                           {liveTopic.loading && !liveTopic.messages?.length ? (
                             <p className="py-6 text-center text-[10px] text-white/35">Chargement du fil…</p>
@@ -415,7 +415,7 @@ export default function LiveHostMessagingPanel({
                                   <div
                                     className={cn(
                                       'max-w-[88%] whitespace-pre-wrap break-words rounded-2xl px-3 py-1.5 text-[12px] leading-relaxed',
-                                      mine ? 'bg-cyan-500/85 text-black' : 'bg-white/10 text-white/90',
+                                      mine ? 'bg-amber-500/85 text-black' : 'bg-white/10 text-white/90',
                                     )}
                                   >
                                     {m.content}
@@ -464,7 +464,7 @@ export default function LiveHostMessagingPanel({
                               !String(liveTopic.input || '').trim() ||
                               liveTopic.topic?.status === 'closed'
                             }
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-500/15 text-cyan-200 transition-colors hover:bg-cyan-500/25 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/15 text-amber-200 transition-colors hover:bg-amber-500/25 disabled:cursor-not-allowed disabled:opacity-40"
                             title="Envoyer dans le Sujet du live"
                             aria-label="Envoyer dans le Sujet du live"
                           >
@@ -515,7 +515,7 @@ export default function LiveHostMessagingPanel({
                           <span
                             className={cn(
                               'shrink-0 text-[9px] font-semibold',
-                              m.status === 'online' ? 'text-emerald-400' : 'text-amber-500/90',
+                              m.status === 'online' ? 'text-amber-400' : 'text-amber-500/90',
                             )}
                           >
                             {m.status === 'online' ? 'En ligne' : 'Absent'}
@@ -529,20 +529,20 @@ export default function LiveHostMessagingPanel({
             ) : null}
 
             {hostMediaRoutingAllowed && forumTarget ? (
-              <div className="shrink-0 border-b border-violet-500/15 bg-[#0a0810]/95 px-3 py-2">
+              <div className="shrink-0 border-b border-amber-500/15 bg-[#0a0810]/95 px-3 py-2">
                 <button
                   type="button"
                   onClick={() => setSecretRoutingOpen((v) => !v)}
-                  className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-2 text-left transition-colors hover:border-violet-500/25 hover:bg-violet-950/20"
+                  className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-2 text-left transition-colors hover:border-amber-500/25 hover:bg-amber-950/20"
                   aria-expanded={secretRoutingOpen}
                 >
                   <span className="flex min-w-0 flex-1 items-center gap-2">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-violet-500/30 bg-violet-950/40">
-                      <Shield className="h-4 w-4 text-violet-200/90" aria-hidden />
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-amber-500/30 bg-amber-950/40">
+                      <Shield className="h-4 w-4 text-amber-200/90" aria-hidden />
                     </span>
                     <span className="min-w-0">
                       <span className="flex items-center gap-1.5 text-[8px] font-semibold uppercase tracking-[0.12em] text-white/55">
-                        <Headphones className="h-3 w-3 shrink-0 text-emerald-300/80" aria-hidden />
+                        <Headphones className="h-3 w-3 shrink-0 text-amber-300/80" aria-hidden />
                         Routage média — conversation secrète
                       </span>
                       <span className="mt-0.5 block text-[10px] leading-snug text-white/40">
@@ -576,7 +576,7 @@ export default function LiveHostMessagingPanel({
             <div className="flex min-h-0 flex-1 flex-row overflow-hidden">
               <div
                 className={cn(
-                  'flex w-[132px] shrink-0 flex-col gap-2.5 overflow-y-auto overflow-x-hidden border-r border-white/[0.08] bg-[#12111a]/95 px-2.5 py-2',
+                  'flex w-[132px] shrink-0 flex-col gap-2.5 overflow-y-auto overflow-x-hidden border-r border-white/[0.08] bg-[#1a1815]/95 px-2.5 py-2',
                   '[scrollbar-width:thin] [scrollbar-color:rgba(245,158,11,0.2)_transparent]',
                   '[perspective:1100px] [transform-style:preserve-3d]',
                 )}
@@ -609,8 +609,8 @@ export default function LiveHostMessagingPanel({
                       collectiveLocked && 'cursor-not-allowed opacity-40',
                     )}
                   >
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-500/25 bg-cyan-500/10" aria-hidden>
-                      <Globe className="h-4 w-4 text-cyan-200/90" strokeWidth={1.75} />
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full border border-amber-500/25 bg-amber-500/10" aria-hidden>
+                      <Globe className="h-4 w-4 text-amber-200/90" strokeWidth={1.75} />
                     </span>
                     <span className="text-[8px] font-bold uppercase tracking-wide">Tous</span>
                   </button>
@@ -715,7 +715,7 @@ export default function LiveHostMessagingPanel({
                   <div
                     className={cn(
                       designerShellComposerUnified,
-                      'focus-within:border-cyan-500/30 focus-within:shadow-[0_0_0_1px_rgba(34,211,238,0.1)]',
+                      'focus-within:border-amber-500/30 focus-within:shadow-[0_0_0_1px_rgba(212,163,106,0.1)]',
                     )}
                   >
                     <input

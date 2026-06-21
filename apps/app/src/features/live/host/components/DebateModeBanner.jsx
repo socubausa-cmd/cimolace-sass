@@ -88,7 +88,7 @@ export function DebateModeBanner({ debate, liveVoteCounts }) {
         <span style={{ fontSize: '10px', letterSpacing: '.2em', color: '#fda4af', fontWeight: 700 }}>⚔ DEBATECORE</span>
         <span style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,.9)' }}>{debate.title}</span>
         {debate.status && debate.status !== 'live' && (
-          <span style={{ fontSize: '9px', color: '#67e8f9', border: '1px solid rgba(6,182,212,.3)', borderRadius: '12px', padding: '1px 8px' }}>{DEBATE_STATUS_LABELS[debate.status] || debate.status}</span>
+          <span style={{ fontSize: '9px', color: '#e3c79a', border: '1px solid rgba(200,148,62,.3)', borderRadius: '12px', padding: '1px 8px' }}>{DEBATE_STATUS_LABELS[debate.status] || debate.status}</span>
         )}
         <span style={{ fontSize: '11px', color: '#bae6fd', fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>
           Round {roundIdx}/{debate.roundCount}

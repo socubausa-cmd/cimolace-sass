@@ -34,7 +34,7 @@ export function LiveHostMobileFabRail({
       label: 'Chat',
       badge: chatUnread > 0 ? chatUnread : null,
       onClick: onOpenChat,
-      color: '#4299e1',
+      color: '#d49a5a',
       show: true,
     },
     {
@@ -42,7 +42,7 @@ export function LiveHostMobileFabRail({
       label: 'Q&R',
       badge: qaCount > 0 ? qaCount : null,
       onClick: onOpenQA,
-      color: '#48bb78',
+      color: '#cca34a',
       show: true,
     },
     {
@@ -56,7 +56,7 @@ export function LiveHostMobileFabRail({
       icon: <Sparkles size={22} />,
       label: 'IA',
       onClick: onOpenIA,
-      color: '#9f7aea',
+      color: '#d4a36a',
       show: !isGuestUi,
     },
     {
@@ -78,7 +78,7 @@ export function LiveHostMobileFabRail({
       icon: <UserPlus size={22} />,
       label: 'Inviter',
       onClick: onInvite,
-      color: '#38b2ac',
+      color: '#c8943e',
       show: !isGuestUi,
     },
   ].filter((f) => f.show);

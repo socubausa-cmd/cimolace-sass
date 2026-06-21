@@ -55,10 +55,10 @@ export function LiveHostInvalidSessionScreen({ phaseError, liveShell, liriLiveUi
           onClick={onOpenStudio}
           style={{
             borderRadius: '14px',
-            background: 'rgba(124,58,237,.2)',
-            border: '1px solid rgba(167,139,250,.4)',
+            background: 'rgba(212,163,106,.2)',
+            border: '1px solid rgba(212,163,106,.4)',
             padding: '12px 22px',
-            color: '#e9d5ff',
+            color: '#f3e8d2',
             fontSize: '13px',
             fontWeight: 700,
             cursor: 'pointer',

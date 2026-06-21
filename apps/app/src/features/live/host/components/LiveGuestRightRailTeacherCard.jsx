@@ -51,7 +51,7 @@ export const LiveGuestRightRailTeacherCard = ({
           borderRadius: 10,
           overflow: 'hidden',
           border: '2px solid rgba(251,191,36,.42)',
-          background: 'linear-gradient(135deg,#1e1830,#2a1f40)',
+          background: 'linear-gradient(135deg,#1e1830,#2a2218)',
         }}
       >
         {hasHostCamera ? (

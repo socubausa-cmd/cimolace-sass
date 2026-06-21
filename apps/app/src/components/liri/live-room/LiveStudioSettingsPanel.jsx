@@ -594,7 +594,7 @@ export default function LiveStudioSettingsPanel({
                               <img src={preset.thumb} alt={preset.label} className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
                             ) : null}
                             {preset.isBlur ? (
-                              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-blue-900/60 to-purple-900/60 backdrop-blur-sm">
+                              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-amber-900/60 to-amber-900/60 backdrop-blur-sm">
                                 <Droplets className="h-5 w-5 text-white/70" />
                               </div>
                             ) : null}
@@ -659,14 +659,14 @@ export default function LiveStudioSettingsPanel({
                     </div>
                     <div className="space-y-4">
                       <SliderRow label="Luminosité" value={brightness} min={50} max={150} onChange={onBrightnessChange} unit="%" color="#facc15" />
-                      <SliderRow label="Contraste" value={contrast} min={50} max={150} onChange={onContrastChange} unit="%" color="#60a5fa" />
-                      <SliderRow label="Saturation" value={saturation} min={0} max={200} onChange={onSaturationChange} unit="%" color="#a78bfa" />
-                      <SliderRow label="Teinte" value={hue} min={-180} max={180} onChange={onHueChange} unit="°" color="#34d399" />
+                      <SliderRow label="Contraste" value={contrast} min={50} max={150} onChange={onContrastChange} unit="%" color="#d4a36a" />
+                      <SliderRow label="Saturation" value={saturation} min={0} max={200} onChange={onSaturationChange} unit="%" color="#d4a36a" />
+                      <SliderRow label="Teinte" value={hue} min={-180} max={180} onChange={onHueChange} unit="°" color="#d4a36a" />
                     </div>
                     <div className="mt-3 rounded-lg border border-white/10 p-3">
                       <p className="mb-2 text-[10px] text-white/40">Aperçu filtre</p>
                       <div
-                        className="h-20 rounded-lg bg-gradient-to-br from-amber-400 via-rose-400 to-violet-500"
+                        className="h-20 rounded-lg bg-gradient-to-br from-amber-400 via-rose-400 to-amber-500"
                         style={{
                           filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) hue-rotate(${hue}deg)`,
                         }}
@@ -705,11 +705,11 @@ export default function LiveStudioSettingsPanel({
                       step={5}
                       onChange={onMicGainChange}
                       unit="%"
-                      color="#34d399"
+                      color="#d4a36a"
                     />
                     <div className="my-3 h-px bg-white/8" />
                     <div className="mb-2 flex items-center gap-2">
-                      <Waves className="h-3.5 w-3.5 text-sky-400/85" />
+                      <Waves className="h-3.5 w-3.5 text-amber-400/85" />
                       <span className="text-[10px] font-semibold uppercase tracking-wide text-white/45">Réduction du bruit</span>
                     </div>
                     <Toggle
@@ -746,7 +746,7 @@ export default function LiveStudioSettingsPanel({
                             step={1}
                             onChange={(v) => onAmbientMasterVolumeChange(v / 100)}
                             unit="%"
-                            color="#a78bfa"
+                            color="#d4a36a"
                           />
                           <ul className="mt-2 space-y-1 border-t border-white/8 pt-2">
                             {ambientTracks
@@ -782,7 +782,7 @@ export default function LiveStudioSettingsPanel({
                             className={cn(
                               'rounded-lg border px-2 py-2 text-left transition-all',
                               liriAudioMode === m.id
-                                ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-100'
+                                ? 'border-amber-500/40 bg-amber-500/10 text-amber-100'
                                 : 'border-white/10 bg-white/[0.03] text-white/55 hover:border-white/20',
                             )}
                           >
@@ -800,7 +800,7 @@ export default function LiveStudioSettingsPanel({
                               <span className="text-[9px] text-white/35">Entrée</span>
                               <div className="h-10 rounded bg-white/5 overflow-hidden flex items-end">
                                 <div
-                                  className="w-full bg-sky-500/80 transition-[height] duration-75"
+                                  className="w-full bg-amber-500/80 transition-[height] duration-75"
                                   style={{ height: `${Math.min(100, (liriAudioLevels.in || 0) * 100)}%` }}
                                 />
                               </div>
@@ -811,7 +811,7 @@ export default function LiveStudioSettingsPanel({
                                 <div
                                   className={cn(
                                     'w-full transition-[height] duration-75',
-                                    liriAudioLevels.clip ? 'bg-red-500/85' : 'bg-emerald-500/75',
+                                    liriAudioLevels.clip ? 'bg-red-500/85' : 'bg-amber-500/75',
                                   )}
                                   style={{ height: `${Math.min(100, (liriAudioLevels.out || 0) * 100)}%` }}
                                 />
@@ -832,7 +832,7 @@ export default function LiveStudioSettingsPanel({
                           max={100}
                           onChange={onLiriClarityChange}
                           unit="%"
-                          color="#34d399"
+                          color="#d4a36a"
                         />
                       ) : null}
                       {liriAudioMode === 'sing' ? (
@@ -843,7 +843,7 @@ export default function LiveStudioSettingsPanel({
                           max={100}
                           onChange={onLiriReverbChange}
                           unit="%"
-                          color="#a78bfa"
+                          color="#d4a36a"
                         />
                       ) : null}
                       {liriAudioMode && liriAudioMode !== 'off' && liriAudioMode !== 'music' ? (
@@ -1010,7 +1010,7 @@ export default function LiveStudioSettingsPanel({
                                 Élève : <span className="text-white/80">{who}</span>
                               </p>
                               {ev.guest_ack_success === true ? (
-                                <p className="mt-1 text-[9px] text-emerald-400/90">
+                                <p className="mt-1 text-[9px] text-amber-400/90">
                                   Accusé appareil : appliqué (vu par l'élève)
                                 </p>
                               ) : ev.guest_ack_success === false ? (
@@ -1167,7 +1167,7 @@ export default function LiveStudioSettingsPanel({
             </Tabs>
 
             {/* Footer */}
-            <div className="border-t border-white/[0.08] bg-[#12111a]/95 px-5 py-3">
+            <div className="border-t border-white/[0.08] bg-[#1a1815]/95 px-5 py-3">
               <p className="text-center text-[10px] text-white/25">
                 Effets vidéo et traitement audio appliqués en temps réel sur votre flux — décor aligné sur le plateau LIRI.
               </p>

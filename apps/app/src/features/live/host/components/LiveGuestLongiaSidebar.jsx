@@ -62,7 +62,7 @@ export const LiveGuestLongiaSidebar = ({
           </p>
         </div>
       ) : null}
-      <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.1em', color: '#a78bfa', flexShrink: 0 }}>
+      <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.1em', color: '#d4a36a', flexShrink: 0 }}>
         PROF. VIRTUEL · LONGIA
       </div>
       {guestMultilangConfig.livekit_interpreter_enabled && phase === PHASE.LIVE ? (
@@ -79,8 +79,8 @@ export const LiveGuestLongiaSidebar = ({
           style={{
             flexShrink: 0,
             borderRadius: '10px',
-            border: '1px solid rgba(167,139,250,.25)',
-            background: 'linear-gradient(135deg,rgba(109,40,217,.12) 0%,rgba(16,12,26,.85) 100%)',
+            border: '1px solid rgba(212,163,106,.25)',
+            background: 'linear-gradient(135deg,rgba(168,118,58,.12) 0%,rgba(16,12,26,.85) 100%)',
             padding: '10px 12px',
             display: 'flex',
             flexDirection: 'column',
@@ -95,7 +95,7 @@ export const LiveGuestLongiaSidebar = ({
               subtleGlow
               className="opacity-95"
             />
-            <span style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em', color: '#a78bfa' }}>
+            <span style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em', color: '#d4a36a' }}>
               · TRADUCTION
             </span>
             {guestMultilangConfig.sourceLang ? (
@@ -116,9 +116,9 @@ export const LiveGuestLongiaSidebar = ({
                     padding: '2px 7px',
                     borderRadius: '20px',
                     border:
-                      guestMultilangViewLang === lang ? '1px solid #a78bfa' : '1px solid rgba(255,255,255,.15)',
-                    background: guestMultilangViewLang === lang ? 'rgba(139,92,246,.25)' : 'rgba(255,255,255,.04)',
-                    color: guestMultilangViewLang === lang ? '#c4b5fd' : 'rgba(255,255,255,.5)',
+                      guestMultilangViewLang === lang ? '1px solid #d4a36a' : '1px solid rgba(255,255,255,.15)',
+                    background: guestMultilangViewLang === lang ? 'rgba(212,163,106,.25)' : 'rgba(255,255,255,.04)',
+                    color: guestMultilangViewLang === lang ? '#e3c79a' : 'rgba(255,255,255,.5)',
                     cursor: 'pointer',
                     transition: 'all .15s',
                     textTransform: 'uppercase',
@@ -135,7 +135,7 @@ export const LiveGuestLongiaSidebar = ({
               fontSize: '12px',
               fontWeight: 500,
               lineHeight: 1.55,
-              color: guestMultilangRolling[guestMultilangViewLang] ? '#e9d5ff' : 'rgba(255,255,255,.3)',
+              color: guestMultilangRolling[guestMultilangViewLang] ? '#f3e8d2' : 'rgba(255,255,255,.3)',
               fontStyle: guestMultilangRolling[guestMultilangViewLang] ? 'normal' : 'italic',
               minHeight: '18px',
             }}
@@ -214,15 +214,15 @@ export const LiveGuestLongiaSidebar = ({
           style={{
             flexShrink: 0,
             borderRadius: '6px',
-            border: guestMediaDrive ? '1px solid rgba(52,211,153,.35)' : '1px solid rgba(200,150,12,.35)',
-            background: guestMediaDrive ? 'rgba(16,185,129,.08)' : 'rgba(200,150,12,.1)',
+            border: guestMediaDrive ? '1px solid rgba(212,163,106,.35)' : '1px solid rgba(200,150,12,.35)',
+            background: guestMediaDrive ? 'rgba(200,148,62,.08)' : 'rgba(200,150,12,.1)',
             padding: '8px',
             fontSize: '10px',
             color: guestMediaDrive ? '#a7f3d0' : '#fde68a',
             lineHeight: 1.45,
           }}
         >
-          <strong style={{ color: guestMediaDrive ? '#34d399' : '#C8960C' }}>
+          <strong style={{ color: guestMediaDrive ? '#d4a36a' : '#C8960C' }}>
             {guestMediaDrive ? 'Piste média' : 'JoyKit actif'}
           </strong>
           {guestMeshRemainSec != null ? (
@@ -237,7 +237,7 @@ export const LiveGuestLongiaSidebar = ({
           to={`/formation/${sessionFormationId}/forum`}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ fontSize: '9px', color: '#c4b5fd', fontWeight: 600, flexShrink: 0 }}
+          style={{ fontSize: '9px', color: '#e3c79a', fontWeight: 600, flexShrink: 0 }}
         >
           Forum formation
         </Link>

@@ -52,8 +52,8 @@ export const LiveHostMobileCameraQrModal = ({
               Caméra mobile (QR)
             </h2>
             <p style={{ margin: '6px 0 0', fontSize: 10, color: 'rgba(255,255,255,.45)', lineHeight: 1.45 }}>
-              Scannez avec le téléphone. Sur ce PC : scène <strong style={{ color: '#67e8f9' }}>Cam 2</strong> → flux{' '}
-              <strong style={{ color: '#67e8f9' }}>Caméra mobile LIRI</strong>.
+              Scannez avec le téléphone. Sur ce PC : scène <strong style={{ color: '#e3c79a' }}>Cam 2</strong> → flux{' '}
+              <strong style={{ color: '#e3c79a' }}>Caméra mobile LIRI</strong>.
             </p>
           </div>
           <button
@@ -97,12 +97,12 @@ export const LiveHostMobileCameraQrModal = ({
               onClick={onCopy}
               style={{
                 borderRadius: 8,
-                border: '1px solid rgba(34,211,238,.35)',
-                background: 'rgba(6,182,212,.12)',
+                border: '1px solid rgba(212,163,106,.35)',
+                background: 'rgba(200,148,62,.12)',
                 padding: '8px 14px',
                 fontSize: 11,
                 fontWeight: 700,
-                color: '#67e8f9',
+                color: '#e3c79a',
                 cursor: 'pointer',
               }}
             >

@@ -201,7 +201,7 @@ export default function WaitingRoomLivePreview({
           Aperçu du direct
         </div>
         {secondsLeft != null ? (
-          <span className="rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-mono text-emerald-200/95">
+          <span className="rounded-full border border-amber-500/35 bg-amber-500/10 px-2 py-0.5 text-[10px] font-mono text-amber-200/95">
             {secondsLeft}s · sans son
           </span>
         ) : phase === 'ended' ? (

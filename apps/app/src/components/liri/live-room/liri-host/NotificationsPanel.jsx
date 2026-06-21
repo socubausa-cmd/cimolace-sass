@@ -58,7 +58,7 @@ export function NotificationsPanel({
           className="flex min-w-0 flex-1 items-center justify-between gap-2 px-2.5 py-2 text-left transition-colors hover:bg-white/[0.04]"
         >
           <div className="flex min-w-0 items-center gap-2">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-500/15 text-violet-200 ring-1 ring-violet-300/40">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-200 ring-1 ring-amber-300/40">
               <Bell className="h-3.5 w-3.5" />
             </span>
             <div className="min-w-0">

@@ -22,8 +22,8 @@ export const LiveMindmapCard = ({
           onClick={() => setMmCardVisible(true)}
           style={{
             borderRadius: '10px',
-            border: '1px solid rgba(167,139,250,.28)',
-            background: 'linear-gradient(160deg, rgba(109,40,217,.12), rgba(109,40,217,.04))',
+            border: '1px solid rgba(212,163,106,.28)',
+            background: 'linear-gradient(160deg, rgba(168,118,58,.12), rgba(168,118,58,.04))',
             padding: '8px 12px',
             fontSize: '10px',
             color: 'rgba(196,181,253,.9)',
@@ -43,7 +43,7 @@ export const LiveMindmapCard = ({
           style={{
             ...LH_SIDEBAR_CARD,
             border: '1px solid rgba(255,255,255,.08)',
-            background: '#12111a',
+            background: '#1a1815',
             overflow: 'hidden',
             flexShrink: 0,
             display: 'flex',
@@ -52,8 +52,8 @@ export const LiveMindmapCard = ({
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(109,40,217,.14)', border: '1px solid rgba(167,139,250,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="2">
+              <span style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(168,118,58,.14)', border: '1px solid rgba(212,163,106,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#e3c79a" strokeWidth="2">
                   <circle cx="12" cy="12" r="3" />
                   <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
                 </svg>

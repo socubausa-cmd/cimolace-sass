@@ -625,14 +625,14 @@ export default function SlideAnnotationOverlay({
               </p>
             </div>
             {isBrowserSpeechRecognitionSupported() ? (
-              <div className="flex flex-col gap-1 rounded-lg border border-violet-500/20 bg-violet-950/20 px-2 py-1.5">
+              <div className="flex flex-col gap-1 rounded-lg border border-amber-500/20 bg-amber-950/20 px-2 py-1.5">
                 <button
                   type="button"
                   onClick={() => setSpeechAssistOn((v) => !v)}
                   className={cn(
                     'flex w-full items-center justify-center gap-1.5 rounded-lg border px-2 py-1 text-[9px] font-medium transition-colors',
                     speechAssistOn
-                      ? 'border-violet-400/40 bg-violet-500/20 text-violet-100'
+                      ? 'border-amber-400/40 bg-amber-500/20 text-amber-100'
                       : 'border-white/10 bg-white/[0.04] text-white/60 hover:text-white/85',
                   )}
                 >
@@ -647,10 +647,10 @@ export default function SlideAnnotationOverlay({
                   <p className="text-[8px] text-white/30">Reconnaissance vocale navigateur — branchement titres/listes à venir.</p>
                 )}
                 {pedagogyHints.length > 0 ? (
-                  <ul className="flex flex-col gap-0.5 border-t border-violet-500/15 pt-1.5">
+                  <ul className="flex flex-col gap-0.5 border-t border-amber-500/15 pt-1.5">
                     {pedagogyHints.map((h) => (
-                      <li key={h.id} className="text-[8px] leading-snug text-violet-200/85">
-                        <span className="font-semibold text-violet-100/90">{h.label}</span>
+                      <li key={h.id} className="text-[8px] leading-snug text-amber-200/85">
+                        <span className="font-semibold text-amber-100/90">{h.label}</span>
                         {h.detail ? <span className="text-white/40"> — {h.detail}</span> : null}
                       </li>
                     ))}

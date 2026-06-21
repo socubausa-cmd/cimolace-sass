@@ -172,7 +172,7 @@ function CompassTab() {
           className={cn(
             designerShellChipGhost,
             'flex flex-col items-center gap-1 py-2.5 text-[9px] font-semibold',
-            tool === 'compass' && cfg.arcMode && 'border-violet-500/55 bg-violet-500/16 text-violet-100',
+            tool === 'compass' && cfg.arcMode && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
           )}
           title="1er clic = centre, glisser = rayon, 2e clic = début arc, glisser = fin arc"
         >
@@ -193,7 +193,7 @@ function CompassTab() {
             </>
           ) : (
             <>
-              <p className="text-violet-300/80 font-semibold">Mode arc (pour constructions)</p>
+              <p className="text-amber-300/80 font-semibold">Mode arc (pour constructions)</p>
               <p>① <strong className="text-white/80">Cliquez</strong> pour le pivot. Glissez = rayon. Relâchez.</p>
               <p>② <strong className="text-white/80">2e clic</strong> = point de départ de l'arc.</p>
               <p>③ <strong className="text-white/80">Glissez</strong> autour du centre → arc tracé.</p>
@@ -267,7 +267,7 @@ function CompassTab() {
           className={cn(
             designerShellChipGhost,
             'flex flex-col items-center gap-1 py-2 text-[9px] font-semibold',
-            tool === 'right-angle' && 'border-emerald-500/55 bg-emerald-500/16 text-emerald-100',
+            tool === 'right-angle' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
           )}
           title="2 clics : sommet → direction du 1er côté (90° automatique)"
         >
@@ -286,7 +286,7 @@ function CompassTab() {
             </>
           ) : (
             <>
-              <p className="text-emerald-300/80 font-semibold">Angle droit (90°)</p>
+              <p className="text-amber-300/80 font-semibold">Angle droit (90°)</p>
               <p>① <strong className="text-white/80">Clic 1</strong> — sommet de l'angle droit.</p>
               <p>② <strong className="text-white/80">Clic 2</strong> — direction du 1er côté (l'autre côté est automatiquement perpendiculaire).</p>
               <p className="text-white/38 text-[8px]">Le petit carré ⊾ est dessiné au sommet.</p>
@@ -381,7 +381,7 @@ function GeoTab() {
         className={cn(
           designerShellChipGhost,
           'w-full flex items-center gap-2 py-2 text-[9px] font-semibold',
-          tool === 'symmetry' && 'border-violet-500/55 bg-violet-500/16 text-violet-100',
+          tool === 'symmetry' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
         )}
         title="Sélectionnez d'abord des objets, puis glissez pour définir l'axe"
       >
@@ -390,7 +390,7 @@ function GeoTab() {
       </button>
       {tool === 'symmetry' && (
         <div className={cn(designerShellCardInset, 'space-y-1 text-[9px] text-white/65 leading-relaxed')}>
-          <p className="text-violet-300/80 font-semibold">Réflexion axiale</p>
+          <p className="text-amber-300/80 font-semibold">Réflexion axiale</p>
           <p>① <strong className="text-white/80">Sélectionnez</strong> les objets à réfléchir (outil Sélection).</p>
           <p>② Activez <strong className="text-white/80">Symétrie</strong>, puis <strong className="text-white/80">glissez</strong> pour tracer l'axe.</p>
           <p>③ En relâchant, les copies symétriques apparaissent + axe en tirets.</p>
@@ -478,7 +478,7 @@ function GeoTab() {
           type="button"
           onClick={() => setTool('right-angle')}
           title="Angle droit 90° — 2 clics"
-          className={cn(designerShellChipGhost, 'flex flex-col items-center gap-0.5 py-1.5 text-[9px] font-semibold', tool === 'right-angle' && 'border-emerald-500/50 bg-emerald-500/14 text-emerald-100')}
+          className={cn(designerShellChipGhost, 'flex flex-col items-center gap-0.5 py-1.5 text-[9px] font-semibold', tool === 'right-angle' && 'border-amber-500/50 bg-amber-500/14 text-amber-100')}
         >
           <span className="text-[14px] leading-none">⊾</span>Angle droit
         </button>
@@ -495,7 +495,7 @@ function GeoTab() {
           className={cn(
             designerShellChipGhost,
             'flex flex-col items-center gap-1 py-2 text-[9px] font-semibold',
-            tool === 'rotation' && 'border-violet-500/55 bg-violet-500/16 text-violet-100',
+            tool === 'rotation' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
           )}
           title="Rotation autour d'un point — sélectionnez des objets, cliquez le centre, glissez l'angle"
         >
@@ -508,7 +508,7 @@ function GeoTab() {
           className={cn(
             designerShellChipGhost,
             'flex flex-col items-center gap-1 py-2 text-[9px] font-semibold',
-            tool === 'translation' && 'border-emerald-500/55 bg-emerald-500/16 text-emerald-100',
+            tool === 'translation' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
           )}
           title="Translation selon un vecteur — sélectionnez des objets, glissez le vecteur"
         >
@@ -554,7 +554,7 @@ function GeoTab() {
       )}
       {(tool === 'rotation') && (
         <div className={cn(designerShellCardInset, 'space-y-1 text-[9px] text-white/65 leading-relaxed')}>
-          <p className="text-violet-300/80 font-semibold">Rotation</p>
+          <p className="text-amber-300/80 font-semibold">Rotation</p>
           <p>① <strong className="text-white/80">Sélectionnez</strong> les objets (outil Sélection).</p>
           <p>② Activez Rotation, <strong className="text-white/80">cliquez</strong> le centre.</p>
           <p>③ <strong className="text-white/80">Glissez</strong> pour définir l'angle → les copies pivotent.</p>
@@ -563,7 +563,7 @@ function GeoTab() {
       )}
       {(tool === 'translation') && (
         <div className={cn(designerShellCardInset, 'space-y-1 text-[9px] text-white/65 leading-relaxed')}>
-          <p className="text-emerald-300/80 font-semibold">Translation de vecteur ⃗u</p>
+          <p className="text-amber-300/80 font-semibold">Translation de vecteur ⃗u</p>
           <p>① <strong className="text-white/80">Sélectionnez</strong> les objets.</p>
           <p>② Glissez de A vers B → le vecteur (dx ; dy) est affiché.</p>
           <p>③ En relâchant, les objets se déplacent selon ⃗u.</p>
@@ -611,7 +611,7 @@ function GeoTab() {
         className={cn(
           designerShellChipGhost,
           'w-full py-1.5 text-[9px]',
-          shapeFill && 'border-violet-500/40 bg-violet-500/14 text-violet-100',
+          shapeFill && 'border-amber-500/40 bg-amber-500/14 text-amber-100',
         )}
       >
         {shapeFill ? '⬛ Remplissage activé' : '⬜ Remplissage désactivé'}

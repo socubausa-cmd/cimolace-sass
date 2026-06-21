@@ -92,12 +92,12 @@ export function LiveHostMobileBottomBar({
       }}
     >
       {/* Mic */}
-      <button onClick={toggleMic} style={btnStyle(micOn, '#48bb78', '#fc8181')}>
+      <button onClick={toggleMic} style={btnStyle(micOn, '#cca34a', '#fc8181')}>
         {micOn ? <Mic size={22} /> : <MicOff size={22} />}
       </button>
 
       {/* Camera */}
-      <button onClick={toggleCamera} style={btnStyle(cameraOn, '#4299e1', 'rgba(255,255,255,0.45)')}>
+      <button onClick={toggleCamera} style={btnStyle(cameraOn, '#d49a5a', 'rgba(255,255,255,0.45)')}>
         {cameraOn ? <Video size={22} /> : <VideoOff size={22} />}
       </button>
 

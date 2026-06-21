@@ -25,11 +25,11 @@ const BOTTOM_BAR  = 80;      // px — hauteur de la BottomBar
 // ─── Tab definitions ──────────────────────────────────────────────────────────
 function buildTabs({ chatUnread, qaCount, whisperUnread, onlineMemberCount, isGuestUi }) {
   return [
-    { id: 'chat',     label: 'Chat',      Icon: MessageCircle,    badge: chatUnread,      color: '#60a5fa', show: true },
+    { id: 'chat',     label: 'Chat',      Icon: MessageCircle,    badge: chatUnread,      color: '#d4a36a', show: true },
     { id: 'qa',       label: 'Q&R',       Icon: HelpCircle,       badge: qaCount,         color: '#4ade80', show: true },
     { id: 'script',   label: 'Script',    Icon: FileText,         badge: 0,               color: '#fb923c', show: !isGuestUi },
     { id: 'whisper',  label: 'Aparté',    Icon: MessageSquareDot, badge: whisperUnread,   color: '#f472b6', show: !isGuestUi },
-    { id: 'ia',       label: 'IA',        Icon: Sparkles,         badge: 0,               color: '#a78bfa', show: !isGuestUi },
+    { id: 'ia',       label: 'IA',        Icon: Sparkles,         badge: 0,               color: '#d4a36a', show: !isGuestUi },
     { id: 'membres',  label: 'Membres',   Icon: Users,            badge: onlineMemberCount > 0 ? onlineMemberCount : 0, color: '#38bdf8', show: true },
     // NB: Scènes → tiroir GAUCHE (☰). Contrôle, Signaux, Paramètres → tiroir GAUCHE.
   ].filter((t) => t.show);
@@ -366,8 +366,8 @@ export function LiveHostMobileDrawer({
                           </span>
                         )}
                         <div style={{
-                          background: isMe ? 'rgba(96,165,250,0.22)' : 'rgba(255,255,255,0.07)',
-                          border: `1px solid ${isMe ? 'rgba(96,165,250,0.3)' : 'rgba(255,255,255,0.09)'}`,
+                          background: isMe ? 'rgba(212,163,106,0.22)' : 'rgba(255,255,255,0.07)',
+                          border: `1px solid ${isMe ? 'rgba(212,163,106,0.3)' : 'rgba(255,255,255,0.09)'}`,
                           borderRadius: isMe ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
                           padding: '8px 12px',
                           color: '#fff',
@@ -402,7 +402,7 @@ export function LiveHostMobileDrawer({
                     onClick={handleSendChat}
                     style={{
                       width: 36, height: 36, borderRadius: '50%',
-                      background: chatInput.trim() ? '#60a5fa' : 'rgba(255,255,255,0.07)',
+                      background: chatInput.trim() ? '#d4a36a' : 'rgba(255,255,255,0.07)',
                       border: 'none', cursor: 'pointer',
                       color: '#fff', fontSize: 16, flexShrink: 0,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -446,16 +446,16 @@ export function LiveHostMobileDrawer({
                       return (
                         <div key={q.id || i} style={{
                           padding: '11px 13px', borderRadius: 12,
-                          background: pending ? 'rgba(167,139,250,0.07)' : answered ? 'rgba(74,222,128,0.05)' : 'rgba(255,255,255,0.04)',
-                          border: `1px solid ${pending ? 'rgba(167,139,250,0.2)' : answered ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.06)'}`,
+                          background: pending ? 'rgba(212,163,106,0.07)' : answered ? 'rgba(74,222,128,0.05)' : 'rgba(255,255,255,0.04)',
+                          border: `1px solid ${pending ? 'rgba(212,163,106,0.2)' : answered ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.06)'}`,
                         }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                             <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>{authorName}</span>
                             <span style={{
                               fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
                               padding: '2px 7px', borderRadius: 6,
-                              background: pending ? 'rgba(167,139,250,0.2)' : answered ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.08)',
-                              color: pending ? '#c4b5fd' : answered ? '#86efac' : 'rgba(255,255,255,0.4)',
+                              background: pending ? 'rgba(212,163,106,0.2)' : answered ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.08)',
+                              color: pending ? '#e3c79a' : answered ? '#86efac' : 'rgba(255,255,255,0.4)',
                             }}>
                               {pending ? 'En attente' : answered ? 'Répondu' : 'Passé'}
                             </span>
@@ -616,8 +616,8 @@ export function LiveHostMobileDrawer({
                           return (
                             <div key={msg.id || i} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
                               <div style={{
-                                background: isMe ? 'rgba(96,165,250,0.2)' : 'rgba(255,255,255,0.07)',
-                                border: `1px solid ${isMe ? 'rgba(96,165,250,0.28)' : 'rgba(255,255,255,0.08)'}`,
+                                background: isMe ? 'rgba(212,163,106,0.2)' : 'rgba(255,255,255,0.07)',
+                                border: `1px solid ${isMe ? 'rgba(212,163,106,0.28)' : 'rgba(255,255,255,0.08)'}`,
                                 borderRadius: isMe ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
                                 padding: '7px 11px', color: '#fff', fontSize: 12, lineHeight: 1.4,
                               }}>{msg.text}</div>
@@ -701,7 +701,7 @@ export function LiveHostMobileDrawer({
                         </p>
                         <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>
                           {hasMic && <span style={{ fontSize: 9, color: 'rgba(74,222,128,0.8)' }}>🎤</span>}
-                          {hasCamera && <span style={{ fontSize: 9, color: 'rgba(96,165,250,0.8)' }}>📷</span>}
+                          {hasCamera && <span style={{ fontSize: 9, color: 'rgba(212,163,106,0.8)' }}>📷</span>}
                         </div>
                       </div>
                       {!isGuestUi && !isHost && (

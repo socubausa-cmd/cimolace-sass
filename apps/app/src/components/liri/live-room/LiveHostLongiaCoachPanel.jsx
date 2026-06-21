@@ -47,7 +47,7 @@ function CoachQuickActionIcon({ action }) {
           : key === 'add_to_notes' || key === 'notes' || key === 'append_notes'
             ? FileText
             : Sparkles;
-  return <Icon className="h-4 w-4 shrink-0 text-violet-400/85" strokeWidth={2} aria-hidden />;
+  return <Icon className="h-4 w-4 shrink-0 text-amber-400/85" strokeWidth={2} aria-hidden />;
 }
 
 /**
@@ -538,7 +538,7 @@ export default function LiveHostLongiaCoachPanel({
                     : 'Activez la pastille « Architecte » dans le journal LONGIA pour le flux conseillé'
                 }
                 onClick={() => onPushRendersToBoard(lastCard)}
-                className="rounded-full border border-cyan-400/30 bg-cyan-500/[0.1] px-2.5 py-1 text-[9px] font-semibold leading-tight text-cyan-100/95 transition hover:border-cyan-300/45 hover:bg-cyan-500/[0.16] disabled:opacity-40"
+                className="rounded-full border border-amber-400/30 bg-amber-500/[0.1] px-2.5 py-1 text-[9px] font-semibold leading-tight text-amber-100/95 transition hover:border-amber-300/45 hover:bg-amber-500/[0.16] disabled:opacity-40"
               >
                 Architecte · vers le tableau
               </button>
@@ -551,14 +551,14 @@ export default function LiveHostLongiaCoachPanel({
             </div>
           ) : null}
           {lastCard.explanation ? (
-            <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/[0.08] px-2.5 py-2 text-[10px] text-white/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-[4px]">
-              <span className="font-semibold text-emerald-100/90">Rendu — reformulation</span>
+            <div className="rounded-xl border border-amber-400/20 bg-amber-500/[0.08] px-2.5 py-2 text-[10px] text-white/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-[4px]">
+              <span className="font-semibold text-amber-100/90">Rendu — reformulation</span>
               <p className="mt-0.5 mb-0 whitespace-pre-wrap leading-snug">{lastCard.explanation}</p>
             </div>
           ) : null}
           {lastCard.example ? (
-            <div className="rounded-xl border border-violet-400/22 bg-violet-500/[0.09] px-2.5 py-2 text-[10px] text-white/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-[4px]">
-              <span className="font-semibold text-violet-100/90">Rendu — exemple</span>
+            <div className="rounded-xl border border-amber-400/22 bg-amber-500/[0.09] px-2.5 py-2 text-[10px] text-white/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-[4px]">
+              <span className="font-semibold text-amber-100/90">Rendu — exemple</span>
               <p className="mt-0.5 mb-0 whitespace-pre-wrap leading-snug">{lastCard.example}</p>
             </div>
           ) : null}
@@ -593,7 +593,7 @@ export default function LiveHostLongiaCoachPanel({
             onClick={() => void runTurn('', '[Actualiser] Reprends le fil du chat salle et la séance.')}
             className="inline-flex w-full min-w-0 items-center justify-start gap-2 rounded-2xl border border-white/12 px-3 py-2.5 text-left text-[11px] font-medium leading-snug text-white/60 hover:bg-white/[0.07] hover:text-white/78 disabled:opacity-40 [overflow-wrap:anywhere]"
           >
-            <Plus className="h-4 w-4 shrink-0 text-violet-400/85" strokeWidth={2} aria-hidden />
+            <Plus className="h-4 w-4 shrink-0 text-amber-400/85" strokeWidth={2} aria-hidden />
             <span>Contexte chat</span>
           </button>
         </div>
@@ -681,10 +681,10 @@ export default function LiveHostLongiaCoachPanel({
                       onClick={() => setMemberSectionExpanded((e) => !e)}
                       className={cn(
                         'flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-[10px] transition hover:bg-white/[0.07] disabled:opacity-40',
-                        memberSectionExpanded ? 'bg-violet-500/12 text-violet-100' : 'text-white/88',
+                        memberSectionExpanded ? 'bg-amber-500/12 text-amber-100' : 'text-white/88',
                       )}
                     >
-                      <Users className="h-3.5 w-3.5 shrink-0 text-violet-200/80" strokeWidth={2} aria-hidden />
+                      <Users className="h-3.5 w-3.5 shrink-0 text-amber-200/80" strokeWidth={2} aria-hidden />
                       <span>
                         <span className="font-semibold">Membre connecté</span>
                         <span className="mt-0.5 block text-[9px] font-normal text-white/45">Choisir dans la liste ci-dessous</span>
@@ -732,7 +732,7 @@ export default function LiveHostLongiaCoachPanel({
                       onClick={insertChatExcerpt}
                       className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-[10px] text-white/88 transition hover:bg-white/[0.07] disabled:opacity-40"
                     >
-                      <MessagesSquare className="h-3.5 w-3.5 shrink-0 text-sky-200/80" strokeWidth={2} aria-hidden />
+                      <MessagesSquare className="h-3.5 w-3.5 shrink-0 text-amber-200/80" strokeWidth={2} aria-hidden />
                       <span>
                         <span className="font-semibold">Extrait chat salle</span>
                         <span className="mt-0.5 block text-[9px] font-normal text-white/45">Derniers messages de la séance</span>

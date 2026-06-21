@@ -50,7 +50,7 @@ export default function LiveMemberVideoPreviewModal({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.98, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-            className="relative flex max-h-[min(92vh,900px)] w-full max-w-[min(96vw,1080px)] flex-col overflow-hidden rounded-2xl border border-white/[0.12] bg-[#06070f] shadow-[0_24px_80px_-20px_rgba(0,0,0,0.85)] ring-1 ring-inset ring-white/[0.04] sm:max-h-[min(88vh,860px)] sm:flex-row sm:flex-nowrap"
+            className="relative flex max-h-[min(92vh,900px)] w-full max-w-[min(96vw,1080px)] flex-col overflow-hidden rounded-2xl border border-white/[0.12] bg-[#0e0d0b] shadow-[0_24px_80px_-20px_rgba(0,0,0,0.85)] ring-1 ring-inset ring-white/[0.04] sm:max-h-[min(88vh,860px)] sm:flex-row sm:flex-nowrap"
             onClick={(e) => e.stopPropagation()}
           >
             <button

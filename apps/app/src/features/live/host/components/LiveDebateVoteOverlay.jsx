@@ -24,7 +24,7 @@ export const LiveDebateVoteOverlay = ({ phase, debateArena, debateLiveVoteCounts
       <div
         style={{
           borderRadius: '16px',
-          border: '1px solid rgba(139,92,246,.35)',
+          border: '1px solid rgba(212,163,106,.35)',
           background: 'rgba(20,16,28,.95)',
           backdropFilter: 'blur(20px)',
           padding: '12px 16px',
@@ -46,7 +46,7 @@ export const LiveDebateVoteOverlay = ({ phase, debateArena, debateLiveVoteCounts
         >
           A&nbsp;<span style={{ color: '#f87171' }}>{debateLiveVoteCounts.a}</span>
           &nbsp;·&nbsp;=&nbsp;<span style={{ color: 'rgba(255,255,255,.5)' }}>{debateLiveVoteCounts.tie}</span>
-          &nbsp;·&nbsp;B&nbsp;<span style={{ color: '#60a5fa' }}>{debateLiveVoteCounts.b}</span>
+          &nbsp;·&nbsp;B&nbsp;<span style={{ color: '#d4a36a' }}>{debateLiveVoteCounts.b}</span>
           {debateLiveVoteCounts.total > 0 && (
             <span style={{ fontSize: '10px', color: 'rgba(255,255,255,.3)', marginLeft: '6px' }}>
               {debateLiveVoteCounts.total} voix

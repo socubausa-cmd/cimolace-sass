@@ -11,8 +11,8 @@ const PHASES = [
 ];
 
 const SIDES = [
-  ['A', '#34d399', 'rgba(16,185,129,.5)', 'rgba(16,185,129,.15)'],
-  ['B', '#60a5fa', 'rgba(59,130,246,.5)', 'rgba(59,130,246,.15)'],
+  ['A', '#d4a36a', 'rgba(200,148,62,.5)', 'rgba(200,148,62,.15)'],
+  ['B', '#d4a36a', 'rgba(200,148,62,.5)', 'rgba(200,148,62,.15)'],
   [null, 'rgba(255,255,255,.5)', 'rgba(255,255,255,.2)', 'rgba(255,255,255,.06)'],
 ];
 
@@ -95,12 +95,12 @@ export const LiveHostDebateModeratorPanel = ({
           onClick={() => debatePatch({ neuronq_enabled: true })}
           style={{
             borderRadius: '3px',
-            border: `1px solid ${debateArena.neuronqEnabled !== false ? 'rgba(6,182,212,.45)' : 'rgba(255,255,255,.1)'}`,
-            background: debateArena.neuronqEnabled !== false ? 'rgba(6,182,212,.18)' : 'rgba(255,255,255,.04)',
+            border: `1px solid ${debateArena.neuronqEnabled !== false ? 'rgba(200,148,62,.45)' : 'rgba(255,255,255,.1)'}`,
+            background: debateArena.neuronqEnabled !== false ? 'rgba(200,148,62,.18)' : 'rgba(255,255,255,.04)',
             padding: '3px 8px',
             fontSize: '9px',
             fontWeight: debateArena.neuronqEnabled !== false ? 700 : 400,
-            color: debateArena.neuronqEnabled !== false ? '#22d3ee' : 'rgba(255,255,255,.45)',
+            color: debateArena.neuronqEnabled !== false ? '#d4a36a' : 'rgba(255,255,255,.45)',
             cursor: debateModBusy || debateArena.neuronqEnabled !== false ? 'default' : 'pointer',
             opacity: debateModBusy ? 0.55 : 1,
           }}
@@ -297,12 +297,12 @@ export const LiveHostDebateModeratorPanel = ({
           style={{
             width: '100%',
             borderRadius: '3px',
-            border: '1px solid rgba(167,139,250,.3)',
-            background: 'rgba(109,40,217,.1)',
+            border: '1px solid rgba(212,163,106,.3)',
+            background: 'rgba(168,118,58,.1)',
             padding: '5px 0',
             fontSize: '10px',
             fontWeight: 700,
-            color: '#c4b5fd',
+            color: '#e3c79a',
             cursor: 'pointer',
           }}
         >
@@ -315,12 +315,12 @@ export const LiveHostDebateModeratorPanel = ({
           style={{
             width: '100%',
             borderRadius: '3px',
-            border: '1px solid rgba(16,185,129,.3)',
-            background: 'rgba(16,185,129,.1)',
+            border: '1px solid rgba(200,148,62,.3)',
+            background: 'rgba(200,148,62,.1)',
             padding: '5px 0',
             fontSize: '10px',
             fontWeight: 700,
-            color: '#34d399',
+            color: '#d4a36a',
             cursor: 'pointer',
           }}
         >

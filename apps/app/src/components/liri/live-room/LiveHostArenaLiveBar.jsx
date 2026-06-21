@@ -145,13 +145,13 @@ export default function LiveHostArenaLiveBar({
             style={{
               borderRadius: '8px',
               border: `1px solid ${
-                arenaLayoutMode === ARENA_LAYOUT.GUEST_FOCUS ? 'rgba(167,139,250,.55)' : 'rgba(255,255,255,.12)'
+                arenaLayoutMode === ARENA_LAYOUT.GUEST_FOCUS ? 'rgba(212,163,106,.55)' : 'rgba(255,255,255,.12)'
               }`,
-              background: arenaLayoutMode === ARENA_LAYOUT.GUEST_FOCUS ? 'rgba(109,40,217,.22)' : 'rgba(0,0,0,.45)',
+              background: arenaLayoutMode === ARENA_LAYOUT.GUEST_FOCUS ? 'rgba(168,118,58,.22)' : 'rgba(0,0,0,.45)',
               padding: hub ? '4px 7px' : '6px 10px',
               fontSize: '10px',
               fontWeight: 700,
-              color: arenaLayoutMode === ARENA_LAYOUT.GUEST_FOCUS ? '#c4b5fd' : 'rgba(255,255,255,.78)',
+              color: arenaLayoutMode === ARENA_LAYOUT.GUEST_FOCUS ? '#e3c79a' : 'rgba(255,255,255,.78)',
               cursor: 'pointer',
               letterSpacing: '.04em',
               flexShrink: 0,
@@ -233,13 +233,13 @@ export default function LiveHostArenaLiveBar({
             style={{
               borderRadius: '8px',
               border: `1px solid ${
-                arenaLayoutMode === ARENA_LAYOUT.CONFERENCE ? 'rgba(52,211,153,.55)' : 'rgba(255,255,255,.12)'
+                arenaLayoutMode === ARENA_LAYOUT.CONFERENCE ? 'rgba(212,163,106,.55)' : 'rgba(255,255,255,.12)'
               }`,
-              background: arenaLayoutMode === ARENA_LAYOUT.CONFERENCE ? 'rgba(16,185,129,.22)' : 'rgba(0,0,0,.45)',
+              background: arenaLayoutMode === ARENA_LAYOUT.CONFERENCE ? 'rgba(200,148,62,.22)' : 'rgba(0,0,0,.45)',
               padding: hub ? '4px 7px' : '6px 10px',
               fontSize: '10px',
               fontWeight: 700,
-              color: arenaLayoutMode === ARENA_LAYOUT.CONFERENCE ? '#34d399' : 'rgba(255,255,255,.78)',
+              color: arenaLayoutMode === ARENA_LAYOUT.CONFERENCE ? '#d4a36a' : 'rgba(255,255,255,.78)',
               cursor: 'pointer',
               letterSpacing: '.04em',
               flexShrink: 0,
@@ -256,12 +256,12 @@ export default function LiveHostArenaLiveBar({
             className="lh-premium-btn"
             style={{
               borderRadius: '8px',
-              border: '1px solid rgba(34,211,238,.4)',
-              background: 'rgba(6,182,212,.12)',
+              border: '1px solid rgba(212,163,106,.4)',
+              background: 'rgba(200,148,62,.12)',
               padding: hub ? '4px 7px' : '6px 10px',
               fontSize: '10px',
               fontWeight: 700,
-              color: '#67e8f9',
+              color: '#e3c79a',
               cursor: 'pointer',
               letterSpacing: '.04em',
               flexShrink: 0,
@@ -277,10 +277,10 @@ export default function LiveHostArenaLiveBar({
             title="Micro"
             style={{
               borderRadius: '4px',
-              border: `1px solid ${micOn ? 'rgba(16,185,129,.4)' : 'rgba(255,255,255,.1)'}`,
-              background: micOn ? 'rgba(16,185,129,.14)' : 'rgba(255,255,255,.04)',
+              border: `1px solid ${micOn ? 'rgba(200,148,62,.4)' : 'rgba(255,255,255,.1)'}`,
+              background: micOn ? 'rgba(200,148,62,.14)' : 'rgba(255,255,255,.04)',
               padding: '9px',
-              color: micOn ? '#10b981' : 'rgba(255,255,255,.8)',
+              color: micOn ? '#c8943e' : 'rgba(255,255,255,.8)',
               display: 'flex',
               alignItems: 'center',
               cursor: 'pointer',
@@ -298,10 +298,10 @@ export default function LiveHostArenaLiveBar({
             title={cameraOn ? 'Couper caméra' : 'Activer caméra'}
             style={{
               borderRadius: '4px',
-              border: `1px solid ${cameraOn ? 'rgba(16,185,129,.4)' : 'rgba(255,255,255,.1)'}`,
-              background: cameraOn ? 'rgba(16,185,129,.14)' : 'rgba(255,255,255,.04)',
+              border: `1px solid ${cameraOn ? 'rgba(200,148,62,.4)' : 'rgba(255,255,255,.1)'}`,
+              background: cameraOn ? 'rgba(200,148,62,.14)' : 'rgba(255,255,255,.04)',
               padding: '9px',
-              color: cameraOn ? '#10b981' : 'rgba(255,255,255,.8)',
+              color: cameraOn ? '#c8943e' : 'rgba(255,255,255,.8)',
               display: 'flex',
               alignItems: 'center',
               cursor: 'pointer',
@@ -318,10 +318,10 @@ export default function LiveHostArenaLiveBar({
             title={sharingScreen ? 'Arrêter partage' : 'Partager écran'}
             style={{
               borderRadius: '4px',
-              border: `1px solid ${sharingScreen ? 'rgba(109,40,217,.5)' : 'rgba(255,255,255,.1)'}`,
-              background: sharingScreen ? 'rgba(109,40,217,.18)' : 'rgba(255,255,255,.04)',
+              border: `1px solid ${sharingScreen ? 'rgba(168,118,58,.5)' : 'rgba(255,255,255,.1)'}`,
+              background: sharingScreen ? 'rgba(168,118,58,.18)' : 'rgba(255,255,255,.04)',
               padding: '9px',
-              color: sharingScreen ? '#c4b5fd' : 'rgba(255,255,255,.8)',
+              color: sharingScreen ? '#e3c79a' : 'rgba(255,255,255,.8)',
               display: 'flex',
               alignItems: 'center',
               cursor: 'pointer',
@@ -341,10 +341,10 @@ export default function LiveHostArenaLiveBar({
           title="Neuro Recall"
           style={{
             borderRadius: '4px',
-            border: '1px solid rgba(167,139,250,.35)',
-            background: 'rgba(109,40,217,.12)',
+            border: '1px solid rgba(212,163,106,.35)',
+            background: 'rgba(168,118,58,.12)',
             padding: hub ? '6px 8px' : '8px 10px',
-            color: '#c4b5fd',
+            color: '#e3c79a',
             fontSize: '11px',
             fontWeight: 700,
             cursor: 'pointer',
@@ -458,8 +458,8 @@ export default function LiveHostArenaLiveBar({
         alignItems: 'center',
         gap: '3px',
         flexShrink: 0,
-        background: 'rgba(109,40,217,.08)',
-        border: '1px solid rgba(139,92,246,.2)',
+        background: 'rgba(168,118,58,.08)',
+        border: '1px solid rgba(212,163,106,.2)',
         borderRadius: '12px',
         padding: hub ? '3px 4px' : '4px 6px',
         position: 'relative',
@@ -476,8 +476,8 @@ export default function LiveHostArenaLiveBar({
           fontSize: '8px',
           fontWeight: 700,
           letterSpacing: '.08em',
-          color: 'rgba(167,139,250,.7)',
-          background: '#0f1022',
+          color: 'rgba(212,163,106,.7)',
+          background: '#1a1816',
           padding: '0 5px',
           whiteSpace: 'nowrap',
           textTransform: 'uppercase',
@@ -518,8 +518,8 @@ export default function LiveHostArenaLiveBar({
                   width: '10px',
                   height: '2px',
                   borderRadius: '2px',
-                  background: 'rgba(167,139,250,.9)',
-                  boxShadow: '0 0 5px rgba(139,92,246,.7)',
+                  background: 'rgba(212,163,106,.9)',
+                  boxShadow: '0 0 5px rgba(212,163,106,.7)',
                 }}
               />
             )}
@@ -615,10 +615,10 @@ export default function LiveHostArenaLiveBar({
             title="Révélation progressive"
             style={{
               borderRadius: '4px',
-              border: `1px solid ${progressivePlayback ? 'rgba(59,130,246,.45)' : 'rgba(255,255,255,.1)'}`,
-              background: progressivePlayback ? 'rgba(59,130,246,.14)' : 'rgba(255,255,255,.04)',
+              border: `1px solid ${progressivePlayback ? 'rgba(200,148,62,.45)' : 'rgba(255,255,255,.1)'}`,
+              background: progressivePlayback ? 'rgba(200,148,62,.14)' : 'rgba(255,255,255,.04)',
               padding: '6px 7px',
-              color: progressivePlayback ? '#93c5fd' : 'rgba(255,255,255,.55)',
+              color: progressivePlayback ? '#e3c79a' : 'rgba(255,255,255,.55)',
               fontSize: '10px',
               fontWeight: 700,
               cursor: 'pointer',
@@ -679,10 +679,10 @@ export default function LiveHostArenaLiveBar({
                 title="Forum formation"
                 style={{
                   borderRadius: '4px',
-                  border: '1px solid rgba(167,139,250,.35)',
-                  background: 'rgba(109,40,217,.12)',
+                  border: '1px solid rgba(212,163,106,.35)',
+                  background: 'rgba(168,118,58,.12)',
                   padding: '6px 7px',
-                  color: '#c4b5fd',
+                  color: '#e3c79a',
                   fontSize: '10px',
                   fontWeight: 700,
                   textDecoration: 'none',
@@ -700,8 +700,8 @@ export default function LiveHostArenaLiveBar({
             title="Copier le lien d'invitation"
             style={{
               borderRadius: '999px',
-              border: `1px solid ${inviteCopied ? 'rgba(16,185,129,.55)' : 'rgba(255,255,255,.12)'}`,
-              background: inviteCopied ? 'rgba(16,185,129,.18)' : 'rgba(255,255,255,.04)',
+              border: `1px solid ${inviteCopied ? 'rgba(200,148,62,.55)' : 'rgba(255,255,255,.12)'}`,
+              background: inviteCopied ? 'rgba(200,148,62,.18)' : 'rgba(255,255,255,.04)',
               padding: '6px 10px',
               color: inviteCopied ? '#6ee7b7' : 'rgba(255,255,255,.8)',
               fontSize: '11px',
@@ -741,7 +741,7 @@ export default function LiveHostArenaLiveBar({
               to={`/formation/${sessionFormationId}/forum`}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ fontSize: '9px', fontWeight: 700, color: '#c4b5fd', textDecoration: 'underline', textUnderlineOffset: '2px' }}
+              style={{ fontSize: '9px', fontWeight: 700, color: '#e3c79a', textDecoration: 'underline', textUnderlineOffset: '2px' }}
             >
               Forum
             </Link>

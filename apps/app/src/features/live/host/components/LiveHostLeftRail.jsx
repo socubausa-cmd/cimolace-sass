@@ -81,7 +81,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
             onClick={() => setLiveLeftRailOpen(true)}
             title="Ouvrir le panneau gauche"
             aria-label="Ouvrir le panneau gauche"
-            className="flex items-center justify-center rounded-r-xl border border-l-0 border-white/12 bg-[#15131f]/95 px-1.5 py-6 text-white/70 shadow-[0_12px_30px_rgba(0,0,0,.4)] transition hover:border-violet-400/45 hover:text-white"
+            className="flex items-center justify-center rounded-r-xl border border-l-0 border-white/12 bg-[#15131f]/95 px-1.5 py-6 text-white/70 shadow-[0_12px_30px_rgba(0,0,0,.4)] transition hover:border-amber-400/45 hover:text-white"
           >
             <ChevronRight className="h-5 w-5" strokeWidth={2} aria-hidden />
           </button>
@@ -92,7 +92,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
             onClick={() => setLiveLeftRailOpen(true)}
             title="Agrandir le panneau gauche"
             aria-label="Agrandir le panneau gauche"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/22 bg-[#0a0814]/92 text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,.08)] transition hover:border-violet-400/45 hover:bg-[#100d1a]/95 hover:text-white"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/22 bg-[#0a0814]/92 text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,.08)] transition hover:border-amber-400/45 hover:bg-[#100d1a]/95 hover:text-white"
           >
             <ChevronRight className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
           </button>
@@ -133,8 +133,8 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
                 aria-label="IA — coach formateur"
                 className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_rgba(255,255,255,.06)] transition ${
                   longiaHubOpen && longiaSignalSubDrawer === 'host_coach'
-                    ? 'border-violet-400/55 bg-violet-500/18 text-violet-100'
-                    : 'border-white/22 bg-[#0a0814]/92 text-violet-200/95 hover:border-violet-400/45 hover:text-violet-100'
+                    ? 'border-amber-400/55 bg-amber-500/18 text-amber-100'
+                    : 'border-white/22 bg-[#0a0814]/92 text-amber-200/95 hover:border-amber-400/45 hover:text-amber-100'
                 }`}
               >
                 <Sparkles className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
@@ -167,8 +167,10 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
               <LiriWordmark
                 variant="mark"
                 size="rail"
+                bulbColor="#d4a36a"
+                bulbGlow="drop-shadow(0 0 12px rgba(212,163,106,.55))"
                 letterClassName="text-white"
-                className="text-white drop-shadow-[0_2px_10px_rgba(124,58,237,0.35)]"
+                className="text-white drop-shadow-[0_2px_10px_rgba(212,163,106,0.35)]"
               />
             </div>
             {phase === PHASE.LIVE && (!lhStageFocusLayout || focusHost) ? (

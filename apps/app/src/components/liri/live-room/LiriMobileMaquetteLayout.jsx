@@ -35,7 +35,7 @@ function ConnectionGlyph({ quality, reconnecting }) {
   if (q === 'good') {
     return <SignalMedium className="h-3.5 w-3.5 text-[#c9a962]/90" aria-hidden />;
   }
-  return <Signal className="h-3.5 w-3.5 text-emerald-400/90" aria-hidden />;
+  return <Signal className="h-3.5 w-3.5 text-amber-400/90" aria-hidden />;
 }
 
 function WaveformBars() {
@@ -44,7 +44,7 @@ function WaveformBars() {
       {[0.35, 0.65, 1, 0.55, 0.8].map((h, i) => (
         <span
           key={i}
-          className="w-0.5 rounded-full bg-emerald-400/80 origin-bottom animate-[liri-wave_0.9s_ease-in-out_infinite]"
+          className="w-0.5 rounded-full bg-amber-400/80 origin-bottom animate-[liri-wave_0.9s_ease-in-out_infinite]"
           style={{
             height: `${h * 100}%`,
             animationDelay: `${i * 0.08}s`,
@@ -311,7 +311,7 @@ export default function LiriMobileMaquetteLayout({
           </div>
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/80 via-black/35 to-transparent px-3 py-2">
             <div className="flex items-center gap-2 text-[10px] font-medium text-white/90">
-              <span className="text-emerald-400">●</span>
+              <span className="text-amber-400">●</span>
               <span>En direct</span>
               {!remoteWaiting ? <WaveformBars /> : null}
             </div>

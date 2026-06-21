@@ -35,7 +35,7 @@ export default function LiveHostLayoutPreviewPanel({
   const mobileRead = useMemo(() => getSmartboardMobileReadabilitySummary(), []);
   const readStyle =
     mobileRead.status === 'ok'
-      ? 'text-emerald-200/90'
+      ? 'text-amber-200/90'
       : mobileRead.status === 'tight'
         ? 'text-amber-200/85'
         : 'text-rose-200/90';
@@ -52,13 +52,13 @@ export default function LiveHostLayoutPreviewPanel({
         className={cn(
           'rounded-xl border p-3',
           mobilePreviewActive
-            ? 'border-violet-400/35 bg-violet-500/[0.06]'
+            ? 'border-amber-400/35 bg-amber-500/[0.06]'
             : 'border-white/[0.08] bg-black/25',
         )}
       >
         <div className="flex items-start gap-2.5">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/30">
-            <Smartphone className="h-4 w-4 text-violet-200/90" strokeWidth={1.75} />
+            <Smartphone className="h-4 w-4 text-amber-200/90" strokeWidth={1.75} />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-semibold text-white/90">Vue mobile</p>
@@ -78,7 +78,7 @@ export default function LiveHostLayoutPreviewPanel({
                   'rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-colors',
                   mobilePreviewActive
                     ? 'cursor-default bg-white/[0.06] text-white/35'
-                    : 'bg-violet-500/25 text-violet-100 hover:bg-violet-500/35',
+                    : 'bg-amber-500/25 text-amber-100 hover:bg-amber-500/35',
                 )}
               >
                 Activer l&apos;aperçu
@@ -184,7 +184,7 @@ export default function LiveHostLayoutPreviewPanel({
         <section className="rounded-xl border border-white/[0.08] bg-black/25 p-3">
           <div className="flex items-start gap-2.5">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/30">
-              <Users className="h-4 w-4 text-teal-200/90" strokeWidth={1.75} />
+              <Users className="h-4 w-4 text-amber-200/90" strokeWidth={1.75} />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[13px] font-semibold text-white/90">Vue invité</p>
@@ -202,7 +202,7 @@ export default function LiveHostLayoutPreviewPanel({
                       /* ignore */
                     }
                   }}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-teal-500/22 px-3 py-1.5 text-[11px] font-semibold text-teal-100 transition-colors hover:bg-teal-500/32"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500/22 px-3 py-1.5 text-[11px] font-semibold text-amber-100 transition-colors hover:bg-amber-500/32"
                 >
                   <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />
                   Ouvrir vue invité

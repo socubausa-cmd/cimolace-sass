@@ -1075,7 +1075,7 @@ function ProgressiveBuildSlide({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className={`rounded-2xl overflow-hidden border ${isHorizontal ? 'border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]' : 'border-purple-500/20'} ${isHorizontal ? 'bg-black/30 backdrop-blur-md' : 'bg-gradient-to-br from-purple-500/08 to-blue-500/06'}`}
+              className={`rounded-2xl overflow-hidden border ${isHorizontal ? 'border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]' : 'border-amber-500/20'} ${isHorizontal ? 'bg-black/30 backdrop-blur-md' : 'bg-gradient-to-br from-amber-500/08 to-amber-500/06'}`}
             >
               <IaTacticalPanel
                 panelId="ia-footer"
@@ -1091,7 +1091,7 @@ function ProgressiveBuildSlide({
                 className=""
               >
                 <div className="px-4 py-2 border-b border-white/06 flex items-center gap-2">
-                  <span className={`text-[10px] uppercase tracking-widest font-semibold ${isHorizontal ? 'text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]' : 'text-purple-300/60'}`}>
+                  <span className={`text-[10px] uppercase tracking-widest font-semibold ${isHorizontal ? 'text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]' : 'text-amber-300/60'}`}>
                     {isHorizontal ? 'Insight & formule' : 'Illustration'}
                   </span>
                 </div>
@@ -1122,7 +1122,7 @@ function ProgressiveBuildSlide({
                     </div>
                   )}
                   {data.illustration?.advice && (
-                    <p className="text-[11px] text-emerald-300/70 leading-relaxed">
+                    <p className="text-[11px] text-amber-300/70 leading-relaxed">
                       💡 {data.illustration.advice}
                     </p>
                   )}
@@ -1184,8 +1184,8 @@ function ProgressiveBuildSlide({
             <span className="opacity-60">→</span>
           </button>
         ) : (
-          <span className="h-7 px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-semibold flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <span className="h-7 px-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px] font-semibold flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
             Complet
           </span>
         )}

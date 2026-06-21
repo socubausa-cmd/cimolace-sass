@@ -735,7 +735,7 @@ function redrawBoardWithCompass(fgCanvas, bgCanvas, allStrokes, draft, curveDraf
   const ctx = fgCanvas.getContext('2d');
   const st = useLiveWhiteboardStore.getState();
   if (compassDraft) drawCompassDraft(ctx, compassDraft, st.color || '#d4af37');
-  if (angleDraftVal) drawAngleDraft(ctx, angleDraftVal, st.color || '#60a5fa', st.size || 2);
+  if (angleDraftVal) drawAngleDraft(ctx, angleDraftVal, st.color || '#d4a36a', st.size || 2);
   if (triFreeDraftVal) {
     const d = triFreeDraftVal;
     const col = st.color || '#fff';
@@ -2195,7 +2195,7 @@ function WhiteboardScene({
       return { kind: 'circle', cx, cy, r, color: c, lineWidth: lw, fill: shapeFill, ...(fillColorProp ? { fillColor: fillColorProp } : {}) };
     }
     if (kind === 'frame') {
-      return { kind: 'frame', x, y, w, h, label: 'Cadre', color: c || '#a78bfa', lineWidth: lw };
+      return { kind: 'frame', x, y, w, h, label: 'Cadre', color: c || '#d4a36a', lineWidth: lw };
     }
     if (kind === 'table') {
       const cfg = schoolConfig || {};
@@ -3695,7 +3695,7 @@ function WhiteboardScene({
                   onClick={() => void runOverlayTextAi(mode)}
                   className={cn(
                     designerShellChipGhost,
-                    'flex items-center gap-0.5 px-2 py-1 text-[9px] text-violet-200/95',
+                    'flex items-center gap-0.5 px-2 py-1 text-[9px] text-amber-200/95',
                     textOverlayAiBusy === mode && 'opacity-70',
                   )}
                 >
@@ -4309,7 +4309,7 @@ function Camera2SourcePickerBody({
                     onClick={() => onPickRemote(p.id)}
                     className={designerShellSegmentedSlot(false)}
                   >
-                    <UserSquare2 className="h-3.5 w-3.5 shrink-0 text-cyan-300/75" />
+                    <UserSquare2 className="h-3.5 w-3.5 shrink-0 text-amber-300/75" />
                     <span className="line-clamp-2 text-center text-[10px] font-semibold leading-tight text-white/80">
                       {fluxParticipantLabel(p)}
                     </span>
@@ -4328,7 +4328,7 @@ function Camera2SourcePickerBody({
                       'items-stretch py-2',
                     )}
                   >
-                    <UserSquare2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-300/75" />
+                    <UserSquare2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300/75" />
                     <span className="min-w-0 flex-1 text-left text-xs font-medium text-white/82">
                       {fluxParticipantLabel(p)}
                     </span>
@@ -4494,7 +4494,7 @@ function Camera2Scene({
         <>
           <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
           <div className="absolute top-3 left-3 z-[21] flex items-center gap-1.5 h-5 px-2 rounded-full bg-black/60 border border-white/15 pointer-events-none">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
             <span className="text-[9px] text-white/70">Caméra 2</span>
           </div>
           {!readOnlySceneNavigator && (
@@ -4684,14 +4684,14 @@ function SceneNavTooltip({ scene, premiumArenaHostTray, children }) {
         className={cn(
           'max-w-[min(92vw,268px)] border px-3 py-2.5 text-left shadow-[0_14px_44px_-14px_rgba(0,0,0,0.82)]',
           premiumArenaHostTray
-            ? 'border-violet-400/35 bg-[#0c0820]/97 text-violet-50'
+            ? 'border-amber-400/35 bg-[#0c0820]/97 text-amber-50'
             : 'border-amber-400/32 bg-[#0f0e0a]/97 text-amber-50',
         )}
       >
         <p
           className={cn(
             'text-[11px] font-bold uppercase tracking-[0.07em]',
-            premiumArenaHostTray ? 'text-violet-100' : 'text-amber-100',
+            premiumArenaHostTray ? 'text-amber-100' : 'text-amber-100',
           )}
         >
           {scene.label}
@@ -4729,7 +4729,7 @@ function dockChromeBtnClass(premiumArenaHostTray) {
     'border-white/[0.08] bg-[#14131c]/95 text-white/52',
     'shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]',
     premiumArenaHostTray
-      ? 'hover:border-violet-400/35 hover:bg-[#16122a] hover:text-violet-100 hover:shadow-[0_0_28px_-10px_rgba(139,92,246,0.28)]'
+      ? 'hover:border-amber-400/35 hover:bg-[#16122a] hover:text-amber-100 hover:shadow-[0_0_28px_-10px_rgba(212,163,106,0.28)]'
       : 'hover:border-amber-400/32 hover:bg-[#1a1814] hover:text-amber-100/95 hover:shadow-[0_0_28px_-10px_rgba(251,191,36,0.22)]',
     'active:scale-[0.96] disabled:pointer-events-none disabled:opacity-[0.22]',
   );
@@ -4744,14 +4744,14 @@ const SceneThumbnail = forwardRef(function SceneThumbnail(
     'relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border transition-all duration-200 ease-out',
     active
       ? premiumArenaHostTray
-        ? 'border-violet-400/45 bg-gradient-to-b from-violet-500/22 to-[#0c0a18] text-violet-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_0_20px_-12px_rgba(124,58,237,0.45)]'
+        ? 'border-amber-400/45 bg-gradient-to-b from-amber-500/22 to-[#0c0a18] text-amber-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_0_20px_-12px_rgba(212,163,106,0.45)]'
         : 'border-amber-400/42 bg-gradient-to-b from-amber-500/18 to-[#14100c] text-amber-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_20px_-12px_rgba(245,158,11,0.3)]'
       : cn(
           'border-white/[0.07] bg-[#14131c]/90 text-white/48',
           'shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
           !readOnly &&
             (premiumArenaHostTray
-              ? 'hover:border-violet-400/28 hover:bg-[#16122a] hover:text-violet-100/90'
+              ? 'hover:border-amber-400/28 hover:bg-[#16122a] hover:text-amber-100/90'
               : 'hover:border-amber-400/26 hover:bg-[#1c1a16] hover:text-amber-100/90'),
         ),
     readOnly ? 'cursor-default opacity-[0.96]' : 'cursor-pointer',
@@ -4760,7 +4760,7 @@ const SceneThumbnail = forwardRef(function SceneThumbnail(
     'pointer-events-none absolute bottom-[5px] left-1/2 h-[3px] w-[18px] -translate-x-1/2 rounded-full transition-all duration-200',
     active ? 'opacity-100' : 'opacity-0',
     premiumArenaHostTray
-      ? 'bg-violet-300/90 shadow-[0_0_8px_rgba(167,139,250,0.65)]'
+      ? 'bg-amber-300/90 shadow-[0_0_8px_rgba(212,163,106,0.65)]'
       : 'bg-amber-300/90 shadow-[0_0_8px_rgba(252,211,77,0.5)]',
   );
   const inner = (
@@ -5238,7 +5238,7 @@ export default function SmartBoardCompositor({
                     inset: 0,
                     zIndex: 50,
                     pointerEvents: 'none',
-                    background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(139,92,246,.28) 0%, rgba(109,40,217,.12) 40%, transparent 72%)',
+                    background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(212,163,106,.28) 0%, rgba(168,118,58,.12) 40%, transparent 72%)',
                     mixBlendMode: 'screen',
                   }}
                 />
@@ -5424,7 +5424,7 @@ export default function SmartBoardCompositor({
                 className={cn(
                   'pointer-events-auto absolute left-1.5 top-1/2 z-[51] w-[min(13.5rem,42vw)] max-h-[min(78vh,520px)] -translate-y-1/2 overflow-y-auto overflow-x-hidden rounded-2xl border border-white/[0.09] bg-[#14131c]/94 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03] sm:left-2',
                   premiumArenaHostTray &&
-                    'border-violet-500/20 bg-[#14131c]/96 shadow-[inset_0_1px_0_rgba(167,139,250,0.08),0_16px_44px_-14px_rgba(124,58,237,0.12)]',
+                    'border-amber-500/20 bg-[#14131c]/96 shadow-[inset_0_1px_0_rgba(212,163,106,0.08),0_16px_44px_-14px_rgba(212,163,106,0.12)]',
                 )}
               >
                 <LiveWhiteboardToolsSidebar
@@ -5594,7 +5594,7 @@ export default function SmartBoardCompositor({
                       dockChromeBtnClass(premiumArenaHostTray),
                       pipEnabled &&
                         (premiumArenaHostTray
-                          ? 'border-violet-400/40 bg-gradient-to-b from-violet-500/20 to-[#0c0a18] text-violet-50 shadow-[0_0_18px_-8px_rgba(139,92,246,0.35)]'
+                          ? 'border-amber-400/40 bg-gradient-to-b from-amber-500/20 to-[#0c0a18] text-amber-50 shadow-[0_0_18px_-8px_rgba(212,163,106,0.35)]'
                           : 'border-amber-400/40 bg-gradient-to-b from-amber-500/16 to-[#14100c] text-amber-50 shadow-[0_0_18px_-8px_rgba(251,191,36,0.28)]'),
                     )}
                   >
@@ -5613,7 +5613,7 @@ export default function SmartBoardCompositor({
                         dockChromeBtnClass(premiumArenaHostTray),
                         pipEditMode &&
                           (premiumArenaHostTray
-                            ? 'border-violet-400/48 bg-gradient-to-b from-violet-500/24 to-[#0c0a18] text-violet-50 shadow-[0_0_20px_-8px_rgba(139,92,246,0.4)]'
+                            ? 'border-amber-400/48 bg-gradient-to-b from-amber-500/24 to-[#0c0a18] text-amber-50 shadow-[0_0_20px_-8px_rgba(212,163,106,0.4)]'
                             : 'border-amber-400/45 bg-gradient-to-b from-amber-500/20 to-[#14100c] text-amber-50 shadow-[0_0_20px_-8px_rgba(251,191,36,0.32)]'),
                       )}
                     >
@@ -5650,7 +5650,7 @@ export default function SmartBoardCompositor({
                   dockChromeBtnClass(premiumArenaHostTray),
                   pipEnabled &&
                     (premiumArenaHostTray
-                      ? 'border-violet-400/40 bg-gradient-to-b from-violet-500/20 to-[#0c0a18] text-violet-50 shadow-[0_0_18px_-8px_rgba(139,92,246,0.35)]'
+                      ? 'border-amber-400/40 bg-gradient-to-b from-amber-500/20 to-[#0c0a18] text-amber-50 shadow-[0_0_18px_-8px_rgba(212,163,106,0.35)]'
                       : 'border-amber-400/40 bg-gradient-to-b from-amber-500/16 to-[#14100c] text-amber-50 shadow-[0_0_18px_-8px_rgba(251,191,36,0.28)]'),
                 )}
               >
@@ -5669,7 +5669,7 @@ export default function SmartBoardCompositor({
                     dockChromeBtnClass(premiumArenaHostTray),
                     pipEditMode &&
                       (premiumArenaHostTray
-                        ? 'border-violet-400/48 bg-gradient-to-b from-violet-500/24 to-[#0c0a18] text-violet-50 shadow-[0_0_20px_-8px_rgba(139,92,246,0.4)]'
+                        ? 'border-amber-400/48 bg-gradient-to-b from-amber-500/24 to-[#0c0a18] text-amber-50 shadow-[0_0_20px_-8px_rgba(212,163,106,0.4)]'
                         : 'border-amber-400/45 bg-gradient-to-b from-amber-500/20 to-[#14100c] text-amber-50 shadow-[0_0_20px_-8px_rgba(251,191,36,0.32)]'),
                   )}
                 >
@@ -5687,7 +5687,7 @@ export default function SmartBoardCompositor({
             'pointer-events-auto absolute top-1/2 z-[52] w-[min(13.5rem,38vw)] max-h-[min(78vh,520px)] -translate-y-1/2 overflow-y-auto overflow-x-hidden rounded-2xl border border-white/[0.09] bg-[#14131c]/94 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03]',
             footerNeuroInkRight,
             premiumArenaHostTray &&
-              'border-violet-500/20 bg-[#14131c]/96 shadow-[inset_0_1px_0_rgba(167,139,250,0.08),0_16px_44px_-14px_rgba(124,58,237,0.12)]',
+              'border-amber-500/20 bg-[#14131c]/96 shadow-[inset_0_1px_0_rgba(212,163,106,0.08),0_16px_44px_-14px_rgba(212,163,106,0.12)]',
           )}
         >
           <p className="mb-1.5 font-serif text-[11px] font-semibold uppercase tracking-wide text-white/55">

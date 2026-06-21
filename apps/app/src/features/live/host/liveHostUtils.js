@@ -51,8 +51,8 @@ export function formatMeshCountdown(totalSec) {
 }
 
 export function evc(t) {
-  if (typeof t === 'string' && t.startsWith('longia_')) return '#a78bfa';
-  return (['join', 'hand_up'].includes(t)) ? '#10b981' : (['leave', 'hand_down'].includes(t)) ? '#ef4444' : (t === 'message' ? '#7c3aed' : '#888');
+  if (typeof t === 'string' && t.startsWith('longia_')) return '#d4a36a';
+  return (['join', 'hand_up'].includes(t)) ? '#c8943e' : (['leave', 'hand_down'].includes(t)) ? '#ef4444' : (t === 'message' ? '#c8943e' : '#888');
 }
 
 export function evi(t) {

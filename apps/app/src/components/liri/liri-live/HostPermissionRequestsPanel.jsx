@@ -99,8 +99,8 @@ function JoyKitRequestCard({ row, onReject, onApprove5min, onApproveSession }) {
           onClick={() => onApprove5min?.(row, level)}
           style={{
             borderRadius: 6,
-            border: '1px solid rgba(52,211,153,.4)',
-            background: 'rgba(16,185,129,.12)',
+            border: '1px solid rgba(212,163,106,.4)',
+            background: 'rgba(200,148,62,.12)',
             padding: '6px 10px',
             color: '#6ee7b7',
             fontSize: 9,
@@ -194,8 +194,8 @@ export default function HostPermissionRequestsPanel({
                     flexDirection: 'column',
                     gap: 8,
                     padding: '10px 10px',
-                    background: 'rgba(139,92,246,.07)',
-                    border: '1px solid rgba(167,139,250,.22)',
+                    background: 'rgba(212,163,106,.07)',
+                    border: '1px solid rgba(212,163,106,.22)',
                     borderRadius: 8,
                   }}
                 >
@@ -205,14 +205,14 @@ export default function HostPermissionRequestsPanel({
                         width: 28,
                         height: 28,
                         borderRadius: '50%',
-                        background: 'rgba(167,139,250,.2)',
-                        border: '1px solid rgba(167,139,250,.45)',
+                        background: 'rgba(212,163,106,.2)',
+                        border: '1px solid rgba(212,163,106,.45)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontSize: 9,
                         fontWeight: 800,
-                        color: '#c4b5fd',
+                        color: '#e3c79a',
                         flexShrink: 0,
                       }}
                     >
@@ -221,7 +221,7 @@ export default function HostPermissionRequestsPanel({
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: 11, fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.3 }}>{row.name || 'Participant'}</p>
                       <p style={{ fontSize: 10, color: 'rgba(196,181,253,.85)', margin: '4px 0 0', lineHeight: 1.35 }}>
-                        Demande : <strong style={{ color: '#e9d5ff' }}>{actionLabel}</strong>
+                        Demande : <strong style={{ color: '#f3e8d2' }}>{actionLabel}</strong>
                         {t ? <span style={{ color: 'rgba(255,255,255,.35)' }}> · {t}</span> : null}
                       </p>
                       <p style={{ fontSize: 8, color: 'rgba(255,255,255,.32)', margin: '4px 0 0', fontFamily: 'monospace' }}>
@@ -251,8 +251,8 @@ export default function HostPermissionRequestsPanel({
                       onClick={() => onApprove5min?.(row)}
                       style={{
                         borderRadius: 6,
-                        border: '1px solid rgba(52,211,153,.4)',
-                        background: 'rgba(16,185,129,.12)',
+                        border: '1px solid rgba(212,163,106,.4)',
+                        background: 'rgba(200,148,62,.12)',
                         padding: '6px 10px',
                         color: '#6ee7b7',
                         fontSize: 9,

@@ -22,7 +22,7 @@ export function LiveHostMobileParticipantStrip({
   };
 
   const getColor = (id = '') => {
-    const colors = ['#4299e1', '#48bb78', '#ed8936', '#9f7aea', '#f6ad55', '#38b2ac', '#fc8181', '#76e4f7'];
+    const colors = ['#d49a5a', '#cca34a', '#ed8936', '#d4a36a', '#f6ad55', '#c8943e', '#fc8181', '#e3c79a'];
     let hash = 0;
     for (let i = 0; i < String(id).length; i++) hash += String(id).charCodeAt(i);
     return colors[hash % colors.length];

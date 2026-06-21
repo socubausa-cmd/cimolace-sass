@@ -60,7 +60,7 @@ function MembresTab({ members, privilegedSeats, onGrantSeat, isHost, currentUser
                   {initials}
                 </div>
               )}
-              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-[1.5px] border-[#0c1425]" />
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-400 border-[1.5px] border-[#0c1425]" />
             </div>
 
             {/* Name + role */}

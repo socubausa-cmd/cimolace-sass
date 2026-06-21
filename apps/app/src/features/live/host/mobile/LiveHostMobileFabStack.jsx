@@ -51,7 +51,7 @@ export function LiveHostMobileFabStack({
       emoji: '🎮',
       label: 'JoyKit',
       badge: joyKitPending > 0 ? joyKitPending : null,
-      color: '#a78bfa',
+      color: '#d4a36a',
       onPress: () => onOpenJoyKit?.(),
       show: !isGuestUi,
     },

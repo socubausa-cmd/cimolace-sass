@@ -67,7 +67,7 @@ export function LiveHostMobileViewerPipeline({
   const avatarUrl   = user?.avatar_url || user?.avatarUrl || user?.photoURL || null;
   const avatarLetter = displayName[0]?.toUpperCase() || '?';
   const schoolName  = liveShell?.school_name || liveShell?.schoolName || '';
-  const accentColor = liveShell?.primary_color || liveShell?.primaryColor || '#a78bfa';
+  const accentColor = liveShell?.primary_color || liveShell?.primaryColor || '#d4a36a';
   // Fond réel de l'école depuis liveShell (évite le bleu hardcodé)
   const pageBg      = liveShell?.pageBg  || 'var(--lh-page-bg, #262624)';
   const pageMesh    = liveShell?.pageMesh || '';

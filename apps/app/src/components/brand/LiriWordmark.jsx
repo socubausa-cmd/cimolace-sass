@@ -243,6 +243,9 @@ export function LiriWordmark({
   letterClassName,
   /** Moins de glow (ex. footer discret) — uniquement variant mark */
   subtleGlow = false,
+  /** Couleur + glow de l'ampoule (variant mark). Défaut = lavande de marque ; surchargé en chaud dans le live. */
+  bulbColor = LIRI_WORDMARK_BULB,
+  bulbGlow = BULB_GLOW,
 }) {
   const s = SIZES[size] || SIZES.header;
   const imgClass = OFFICIAL_IMG[size] || OFFICIAL_IMG.header;
@@ -278,8 +281,8 @@ export function LiriWordmark({
         <Lightbulb
           className={s.bulb}
           style={{
-            color: LIRI_WORDMARK_BULB,
-            filter: subtleGlow ? 'none' : BULB_GLOW,
+            color: bulbColor,
+            filter: subtleGlow ? 'none' : bulbGlow,
           }}
           strokeWidth={2}
         />

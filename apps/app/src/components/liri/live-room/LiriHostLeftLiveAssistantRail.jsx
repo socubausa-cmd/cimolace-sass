@@ -84,16 +84,16 @@ export default function LiriHostLeftLiveAssistantRail() {
           voiceEngaged
             ? 'border-amber-400/45 bg-gradient-to-b from-amber-950/40 to-[#0a0812]/95 shadow-[0_0_40px_rgba(251,191,36,0.22)]'
             : micListening
-              ? 'border-emerald-400/30 bg-[#0a0a10]/95 shadow-[0_0_32px_rgba(52,211,153,0.18)]'
-              : 'border-violet-500/25 bg-[#080712]/95 shadow-[0_0_28px_rgba(139,92,246,0.18)]',
+              ? 'border-amber-400/30 bg-[#0a0a10]/95 shadow-[0_0_32px_rgba(212,163,106,0.18)]'
+              : 'border-amber-500/25 bg-[#080712]/95 shadow-[0_0_28px_rgba(212,163,106,0.18)]',
         )}
       >
         <div
-          className="liri-vision-sweep pointer-events-none absolute -left-1/2 -top-1/2 h-[200%] w-[200%] bg-[conic-gradient(from_0deg,transparent_0deg,rgba(124,58,237,0.12)_60deg,transparent_120deg,rgba(6,182,212,0.1)_200deg,transparent_280deg)]"
+          className="liri-vision-sweep pointer-events-none absolute -left-1/2 -top-1/2 h-[200%] w-[200%] bg-[conic-gradient(from_0deg,transparent_0deg,rgba(212,163,106,0.12)_60deg,transparent_120deg,rgba(200,148,62,0.1)_200deg,transparent_280deg)]"
           aria-hidden
         />
         <div
-          className="liri-vision-aura pointer-events-none absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-500/20 blur-2xl"
+          className="liri-vision-aura pointer-events-none absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-500/20 blur-2xl"
           aria-hidden
         />
         <div className="relative z-[1] border-b border-white/[0.06] px-2.5 pb-2 pt-2">
@@ -110,7 +110,7 @@ export default function LiriHostLeftLiveAssistantRail() {
                   <span
                     className={cn(
                       'absolute inline-flex h-full w-full rounded-full',
-                      voiceEngaged ? 'bg-amber-400' : micListening ? 'bg-emerald-400' : 'bg-violet-400',
+                      voiceEngaged ? 'bg-amber-400' : micListening ? 'bg-amber-400' : 'bg-amber-400',
                     )}
                     style={{ animation: 'liriVisionHalo 1.2s ease-in-out infinite' }}
                   />
@@ -120,15 +120,15 @@ export default function LiriHostLeftLiveAssistantRail() {
                       voiceEngaged
                         ? 'bg-amber-300 shadow-[0_0_8px_2px_rgba(251,191,36,0.7)]'
                         : micListening
-                          ? 'bg-emerald-300 shadow-[0_0_8px_2px_rgba(52,211,153,0.5)]'
-                          : 'bg-violet-400 shadow-[0_0_6px_2px_rgba(167,139,250,0.5)]',
+                          ? 'bg-amber-300 shadow-[0_0_8px_2px_rgba(212,163,106,0.5)]'
+                          : 'bg-amber-400 shadow-[0_0_6px_2px_rgba(212,163,106,0.5)]',
                     )}
                   />
                 </span>
                 <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-amber-100/95">
                   LONGIA Realtime
                 </p>
-                <span className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-1.5 py-px text-[6px] font-bold uppercase tracking-widest text-cyan-200/90">
+                <span className="rounded-full border border-amber-400/25 bg-amber-500/10 px-1.5 py-px text-[6px] font-bold uppercase tracking-widest text-amber-200/90">
                   connecté
                 </span>
               </div>
@@ -144,8 +144,8 @@ export default function LiriHostLeftLiveAssistantRail() {
                 className={cn(
                   'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border text-white/90 transition',
                   micListening
-                    ? 'border-emerald-400/50 bg-emerald-500/20 shadow-[0_0_12px_rgba(16,185,129,0.35)]'
-                    : 'border-white/15 bg-white/[0.06] hover:border-violet-400/35',
+                    ? 'border-amber-400/50 bg-amber-500/20 shadow-[0_0_12px_rgba(200,148,62,0.35)]'
+                    : 'border-white/15 bg-white/[0.06] hover:border-amber-400/35',
                 )}
                 title={
                   micListening
@@ -183,7 +183,7 @@ export default function LiriHostLeftLiveAssistantRail() {
             Outil : {TOOL_FR[tool] || tool}
           </span>
           {boardTextDraftActive ? (
-            <span className="inline-flex items-center gap-0.5 rounded border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-emerald-200/80">
+            <span className="inline-flex items-center gap-0.5 rounded border border-amber-500/25 bg-amber-500/10 px-1.5 py-0.5 text-amber-200/80">
               {busy ? <Loader2 className="h-2.5 w-2.5 animate-spin" aria-hidden /> : null}
               Saisie · {previewLen} c.
             </span>
@@ -211,8 +211,8 @@ export default function LiriHostLeftLiveAssistantRail() {
             key={it.id}
             className={cn(
               'select-none rounded-lg border px-2 py-1.5',
-              it.kind === 'correction' && 'border-emerald-500/20 bg-emerald-950/35',
-              it.kind === 'enrichissement' && 'border-sky-500/20 bg-sky-950/30',
+              it.kind === 'correction' && 'border-amber-500/20 bg-amber-950/35',
+              it.kind === 'enrichissement' && 'border-amber-500/20 bg-amber-950/30',
               it.kind === 'forme' && 'border-amber-500/20 bg-amber-950/20',
               it.kind === 'erreur' && 'border-red-500/25 bg-red-950/20',
             )}

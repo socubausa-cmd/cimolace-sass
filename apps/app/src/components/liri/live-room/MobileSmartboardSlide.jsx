@@ -28,7 +28,7 @@ export function MobileSmartboardSlide({ slide }) {
 
         <div className="mt-4 h-[3px] w-full rounded-full bg-slate-100">
           <div
-            className="h-full rounded-full bg-blue-500"
+            className="h-full rounded-full bg-amber-500"
             style={{
               width: `${Math.min(100, Math.max(0, (slide.header.currentSlide / Math.max(1, slide.header.totalSlides)) * 100))}%`,
             }}
@@ -48,41 +48,41 @@ export function MobileSmartboardSlide({ slide }) {
       {/* CONTENU SMARTBOARD */}
       <div className="px-7 pt-14">
         <div className="pr-[145px]">
-          <div className="mb-3 inline-flex rounded-lg bg-blue-50 px-3 py-1 text-[12px] font-bold text-blue-600">
+          <div className="mb-3 inline-flex rounded-lg bg-amber-50 px-3 py-1 text-[12px] font-bold text-amber-600">
             {slide.title.badge}
           </div>
 
           <h1 className="max-w-[210px] text-[34px] font-black leading-[0.98] tracking-tight">{slide.title.text}</h1>
 
-          <div className="mt-4 h-1 w-16 rounded-full bg-blue-500" />
+          <div className="mt-4 h-1 w-16 rounded-full bg-amber-500" />
         </div>
 
-        <div className="mt-8 flex items-center gap-4 rounded-xl bg-blue-50 px-4 py-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-500 text-2xl">
+        <div className="mt-8 flex items-center gap-4 rounded-xl bg-amber-50 px-4 py-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-amber-500 text-2xl">
             {slide.keyIdea.icon}
           </div>
 
           <div>
-            <div className="text-[14px] font-black text-blue-600">{slide.keyIdea.title}</div>
+            <div className="text-[14px] font-black text-amber-600">{slide.keyIdea.title}</div>
             <div className="mt-1 text-[15px] leading-snug text-slate-800">{slide.keyIdea.text}</div>
           </div>
         </div>
 
         <div className="mt-6">
-          <div className="mb-3 text-[14px] font-black text-blue-600">{slide.valueBlock.title}</div>
+          <div className="mb-3 text-[14px] font-black text-amber-600">{slide.valueBlock.title}</div>
 
-          <div className="whitespace-pre-line rounded-xl border border-blue-100 px-4 py-5 text-center text-[25px] font-black leading-snug text-blue-600">
+          <div className="whitespace-pre-line rounded-xl border border-amber-100 px-4 py-5 text-center text-[25px] font-black leading-snug text-amber-600">
             {slide.valueBlock.value}
           </div>
         </div>
 
-        <div className="mt-6 rounded-xl bg-emerald-50 px-5 py-5">
-          <div className="mb-3 text-[14px] font-black text-emerald-700">{slide.rememberBlock.title}</div>
+        <div className="mt-6 rounded-xl bg-amber-50 px-5 py-5">
+          <div className="mb-3 text-[14px] font-black text-amber-700">{slide.rememberBlock.title}</div>
 
           <div className="space-y-3">
             {slide.rememberBlock.points.map((point, index) => (
               <div key={index} className="flex gap-3 text-[14px] leading-snug">
-                <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs text-white">
+                <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500 text-xs text-white">
                   ✓
                 </span>
                 <span>{point}</span>
@@ -93,7 +93,7 @@ export function MobileSmartboardSlide({ slide }) {
           <div className="mt-5 text-center">
             <div className="flex items-center justify-center gap-8 text-5xl">
               <span>{slide.rememberBlock.diagram.left}</span>
-              <span className="text-4xl text-blue-500">{slide.rememberBlock.diagram.arrow}</span>
+              <span className="text-4xl text-amber-500">{slide.rememberBlock.diagram.arrow}</span>
               <span>{slide.rememberBlock.diagram.right}</span>
             </div>
 
@@ -114,7 +114,7 @@ export function MobileSmartboardSlide({ slide }) {
               {Array.from({ length: slide.header.totalSlides }).map((_, i) => (
                 <span
                   key={i}
-                  className={`h-1.5 w-5 rounded-full ${i + 1 === slide.header.currentSlide ? 'bg-blue-500' : 'bg-slate-200'}`}
+                  className={`h-1.5 w-5 rounded-full ${i + 1 === slide.header.currentSlide ? 'bg-amber-500' : 'bg-slate-200'}`}
                 />
               ))}
             </div>

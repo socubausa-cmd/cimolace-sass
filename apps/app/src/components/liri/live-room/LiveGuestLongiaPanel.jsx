@@ -72,7 +72,7 @@ function LiriAudioMethodSelector({ multilangAudio }) {
                 borderRadius: '999px',
                 border: `1px solid ${checked ? 'rgba(167, 139, 250, 0.55)' : 'rgba(255,255,255,0.12)'}`,
                 background: checked ? 'rgba(124, 58, 237, 0.2)' : 'rgba(0,0,0,0.2)',
-                color: checked ? '#e9d5ff' : 'rgba(255,255,255,0.55)',
+                color: checked ? '#f3e8d2' : 'rgba(255,255,255,0.55)',
                 cursor: 'pointer',
                 transition: 'border-color 0.15s, background 0.15s',
               }}
@@ -83,7 +83,7 @@ function LiriAudioMethodSelector({ multilangAudio }) {
                 value={o.id}
                 checked={checked}
                 onChange={() => selectMethod(o.id)}
-                style={{ accentColor: '#a78bfa', width: 10, height: 10 }}
+                style={{ accentColor: '#d4a36a', width: 10, height: 10 }}
               />
               {o.label}
             </label>
@@ -98,7 +98,7 @@ function LiriAudioMethodSelector({ multilangAudio }) {
             min={0} max={1} step={0.05}
             value={interpreterVolume}
             onChange={(e) => onInterpreterVolumeChange?.(Number(e.target.value))}
-            style={{ flex: 1, accentColor: '#93c5fd' }}
+            style={{ flex: 1, accentColor: '#e3c79a' }}
           />
           <span style={{ flexShrink: 0, minWidth: 28, textAlign: 'right' }}>
             {Math.round(interpreterVolume * 100)}%
@@ -453,7 +453,7 @@ export default function LiveGuestLongiaPanel({
           cursor: 'pointer',
         }}
       >
-        <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', color: '#e9d5ff' }}>
+        <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', color: '#f3e8d2' }}>
           LONGIA — assistant perso
         </span>
         <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.45)' }}>{expanded ? '▼' : '▶'}</span>
@@ -576,7 +576,7 @@ export default function LiveGuestLongiaPanel({
                     background: d.urgent ? 'rgba(248, 113, 113, 0.08)' : 'rgba(0,0,0,0.25)',
                   }}
                 >
-                  <span style={{ fontWeight: 700, color: d.urgent ? '#fecaca' : '#e9d5ff' }}>{d.headline}</span>
+                  <span style={{ fontWeight: 700, color: d.urgent ? '#fecaca' : '#f3e8d2' }}>{d.headline}</span>
                   {d.detail ? (
                     <p style={{ margin: '4px 0 0', whiteSpace: 'pre-wrap', color: 'rgba(255,255,255,0.65)' }}>
                       {d.detail.length > 280 && !expanded ? `${d.detail.slice(0, 280)}…` : d.detail}
@@ -683,7 +683,7 @@ export default function LiveGuestLongiaPanel({
                 background: 'rgba(99, 102, 241, 0.08)',
               }}
             >
-              <span style={{ fontWeight: 700, color: '#c4b5fd' }}>Exemple / analogie</span>
+              <span style={{ fontWeight: 700, color: '#e3c79a' }}>Exemple / analogie</span>
               <p style={{ margin: '6px 0 0', whiteSpace: 'pre-wrap' }}>{lastCard.example}</p>
             </div>
           ) : null}
@@ -715,7 +715,7 @@ export default function LiveGuestLongiaPanel({
                   borderRadius: '999px',
                   border: '1px solid rgba(167, 139, 250, 0.35)',
                   background: 'rgba(124, 58, 237, 0.15)',
-                  color: '#e9d5ff',
+                  color: '#f3e8d2',
                   cursor: loading ? 'default' : 'pointer',
                   opacity: loading ? 0.5 : 1,
                 }}

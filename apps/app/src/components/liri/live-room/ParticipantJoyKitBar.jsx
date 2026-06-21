@@ -39,15 +39,15 @@ export default function ParticipantJoyKitBar({
     <div
       style={{
         borderRadius: '4px',
-        border: '1px solid rgba(167,139,250,.22)',
-        background: 'rgba(109,40,217,.06)',
+        border: '1px solid rgba(212,163,106,.22)',
+        background: 'rgba(168,118,58,.06)',
         padding: '8px',
         display: 'flex',
         flexDirection: 'column',
         gap: '6px',
       }}
     >
-      <div style={{ fontSize: '10px', fontWeight: 700, color: '#c4b5fd', letterSpacing: '0.06em' }}>
+      <div style={{ fontSize: '10px', fontWeight: 700, color: '#e3c79a', letterSpacing: '0.06em' }}>
         {PRODUCT_NAMES.joyKit} · {PRODUCT_NAMES.controlMesh}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px' }}>

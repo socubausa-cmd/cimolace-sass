@@ -40,7 +40,7 @@ function PurpleButton({ children, className, ...props }) {
     <button
       type="button"
       className={cn(
-        'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-2xl px-3 py-2.5 text-[11px] font-bold text-white shadow-[0_2px_14px_rgba(124,58,237,0.38)] transition-colors',
+        'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-2xl px-3 py-2.5 text-[11px] font-bold text-white shadow-[0_2px_14px_rgba(212,163,106,0.38)] transition-colors',
         'bg-liri-violet hover:bg-liri-violet/92 active:scale-[0.98]',
         'disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40 disabled:shadow-none',
         className,
@@ -162,16 +162,16 @@ export default function LiveHostInviteManagementPanel({
       {currentStepTitle ? (
         <div
           className={cn(
-            'flex w-full items-start gap-2.5 rounded-2xl border border-emerald-500/35 bg-emerald-950/20 px-3 py-2.5 text-left',
+            'flex w-full items-start gap-2.5 rounded-2xl border border-amber-500/35 bg-amber-950/20 px-3 py-2.5 text-left',
           )}
           role="status"
           aria-label={`Étape en cours : ${currentStepTitle}`}
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/15">
-            <BookOpen className="h-3.5 w-3.5 text-emerald-300/90" strokeWidth={1.75} aria-hidden />
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/15">
+            <BookOpen className="h-3.5 w-3.5 text-amber-300/90" strokeWidth={1.75} aria-hidden />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[8px] font-bold uppercase tracking-[0.14em] text-emerald-400/90">
+            <span className="block text-[8px] font-bold uppercase tracking-[0.14em] text-amber-400/90">
               Étape en cours
             </span>
             <span className="mt-1 block text-[12px] font-semibold leading-snug text-white/90">{currentStepTitle}</span>
@@ -217,11 +217,11 @@ export default function LiveHostInviteManagementPanel({
             className={cn(
               'flex flex-col items-center justify-center gap-0.5 rounded-2xl border px-2 py-2 text-center text-[9px] font-semibold transition-colors',
               canShare
-                ? 'border-emerald-500/35 bg-emerald-950/40 text-emerald-50 hover:bg-emerald-950/55'
+                ? 'border-amber-500/35 bg-amber-950/40 text-amber-50 hover:bg-amber-950/55'
                 : 'pointer-events-none border-white/10 text-white/35',
             )}
           >
-            <MessageCircle className="h-4 w-4 text-emerald-400/85" strokeWidth={1.75} aria-hidden />
+            <MessageCircle className="h-4 w-4 text-amber-400/85" strokeWidth={1.75} aria-hidden />
             WhatsApp
           </a>
           <button
@@ -231,7 +231,7 @@ export default function LiveHostInviteManagementPanel({
             className={cn(
               'flex flex-col items-center justify-center gap-0.5 rounded-2xl border px-2 py-2 text-center text-[9px] font-semibold transition-colors',
               canShare
-                ? 'border-liri-blue/40 bg-liri-blue/15 text-sky-50 hover:bg-liri-blue/22'
+                ? 'border-liri-blue/40 bg-liri-blue/15 text-amber-50 hover:bg-liri-blue/22'
                 : 'cursor-not-allowed border-white/10 text-white/35',
             )}
           >
@@ -246,7 +246,7 @@ export default function LiveHostInviteManagementPanel({
             className={cn(
               'flex flex-col items-center justify-center gap-0.5 rounded-2xl border px-2 py-2 text-center text-[9px] font-semibold transition-colors',
               canShare
-                ? 'border-liri-violet/45 bg-liri-violet/18 text-violet-50 hover:bg-liri-violet/28'
+                ? 'border-liri-violet/45 bg-liri-violet/18 text-amber-50 hover:bg-liri-violet/28'
                 : 'cursor-not-allowed border-white/10 text-white/35',
             )}
           >
@@ -304,7 +304,7 @@ export default function LiveHostInviteManagementPanel({
           <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-liri-violet text-[14px] font-bold text-white shadow-inner">
             {avatarLetter}
             <span
-              className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#16161c] bg-emerald-500 shadow-[0_0_6px_rgba(34,197,94,0.75)]"
+              className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#16161c] bg-amber-500 shadow-[0_0_6px_rgba(34,197,94,0.75)]"
               aria-hidden
             />
           </span>
@@ -329,15 +329,15 @@ export default function LiveHostInviteManagementPanel({
       </section>
 
       {/* File d'attente */}
-      <section className={cn(cardClass, 'border-sky-500/25 bg-sky-950/12 p-3')}>
+      <section className={cn(cardClass, 'border-amber-500/25 bg-amber-950/12 p-3')}>
         <div className="mb-2 flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
-            <Hourglass className="h-3.5 w-3.5 shrink-0 text-sky-400/85" strokeWidth={1.75} aria-hidden />
-            <span className="truncate text-[9px] font-bold uppercase tracking-[0.12em] text-sky-100/95">
+            <Hourglass className="h-3.5 w-3.5 shrink-0 text-amber-400/85" strokeWidth={1.75} aria-hidden />
+            <span className="truncate text-[9px] font-bold uppercase tracking-[0.12em] text-amber-100/95">
               En attente d&apos;approbation
             </span>
           </div>
-          <span className="shrink-0 rounded-full border border-white/10 bg-black/40 px-2 py-0.5 text-[11px] font-bold tabular-nums text-sky-300">
+          <span className="shrink-0 rounded-full border border-white/10 bg-black/40 px-2 py-0.5 text-[11px] font-bold tabular-nums text-amber-300">
             {waitingEntries.length}
           </span>
         </div>
@@ -353,7 +353,7 @@ export default function LiveHostInviteManagementPanel({
                   key={e.id}
                   className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-black/30 px-2 py-2"
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-500/25 text-[10px] font-bold text-sky-200">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-500/25 text-[10px] font-bold text-amber-200">
                     {name.substring(0, 2).toUpperCase()}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-white/90">{name}</span>
@@ -361,7 +361,7 @@ export default function LiveHostInviteManagementPanel({
                     type="button"
                     title="Accepter"
                     onClick={() => onApproveWaiting?.(e.id)}
-                    className="shrink-0 rounded-xl border border-emerald-500/45 bg-emerald-500/18 px-2 py-1 text-[10px] font-bold text-emerald-400"
+                    className="shrink-0 rounded-xl border border-amber-500/45 bg-amber-500/18 px-2 py-1 text-[10px] font-bold text-amber-400"
                   >
                     ✓
                   </button>

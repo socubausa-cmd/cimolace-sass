@@ -57,7 +57,7 @@ function SectionCard({
           </span>
         )}
         {isCurrent && (
-          <span className="flex items-center gap-0.5 h-4 px-1.5 rounded bg-emerald-500/12 border border-emerald-400/22 text-[8px] text-emerald-300 font-semibold">
+          <span className="flex items-center gap-0.5 h-4 px-1.5 rounded bg-amber-500/12 border border-amber-400/22 text-[8px] text-amber-300 font-semibold">
             ▶ En cours
           </span>
         )}
@@ -127,7 +127,7 @@ function SectionCard({
               <button
                 type="button"
                 onClick={() => onApplyAi(section.id)}
-                className="h-5 px-2 rounded bg-emerald-500/12 border border-emerald-400/22 text-[8px] text-emerald-300 hover:bg-emerald-500/20"
+                className="h-5 px-2 rounded bg-amber-500/12 border border-amber-400/22 text-[8px] text-amber-300 hover:bg-amber-500/20"
               >
                 Appliquer
               </button>

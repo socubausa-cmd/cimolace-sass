@@ -181,7 +181,7 @@ export const LiveHostRightColumn = React.forwardRef(function LiveHostRightColumn
             onClick={() => setLiveRightRailOpen(true)}
             title="Ouvrir le panneau droit"
             aria-label="Ouvrir le panneau droit"
-            className="flex items-center justify-center rounded-l-xl border border-r-0 border-white/12 bg-[#15131f]/95 px-1.5 py-6 text-white/70 shadow-[0_12px_30px_rgba(0,0,0,.4)] transition hover:border-violet-400/45 hover:text-white"
+            className="flex items-center justify-center rounded-l-xl border border-r-0 border-white/12 bg-[#15131f]/95 px-1.5 py-6 text-white/70 shadow-[0_12px_30px_rgba(0,0,0,.4)] transition hover:border-amber-400/45 hover:text-white"
           >
             <ChevronLeft className="h-5 w-5" strokeWidth={2} aria-hidden />
           </button>
@@ -298,9 +298,9 @@ export const LiveHostRightColumn = React.forwardRef(function LiveHostRightColumn
                 className="lh-premium-card"
                 style={{
                   ...LH_SIDEBAR_CARD,
-                  border: '1px solid rgba(167,139,250,.28)',
+                  border: '1px solid rgba(212,163,106,.28)',
                   background:
-                    'radial-gradient(120% 90% at 10% -10%, rgba(167,139,250,.1), transparent 52%), linear-gradient(160deg, rgba(109,40,217,.05), rgba(255,255,255,.012))',
+                    'radial-gradient(120% 90% at 10% -10%, rgba(212,163,106,.1), transparent 52%), linear-gradient(160deg, rgba(168,118,58,.05), rgba(255,255,255,.012))',
                   overflow: 'hidden',
                   padding: '10px',
                 }}

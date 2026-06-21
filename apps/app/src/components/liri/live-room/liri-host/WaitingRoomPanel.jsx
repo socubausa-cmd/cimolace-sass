@@ -87,7 +87,7 @@ export function WaitingRoomPanel({
                     <button
                       type="button"
                       onClick={() => onApprove(entry.id)}
-                      className="h-7 min-w-0 flex-1 rounded-lg border border-emerald-500/30 bg-emerald-500/15 text-[9px] font-semibold text-emerald-300 hover:bg-emerald-500/25"
+                      className="h-7 min-w-0 flex-1 rounded-lg border border-amber-500/30 bg-amber-500/15 text-[9px] font-semibold text-amber-300 hover:bg-amber-500/25"
                     >
                       Accepter
                     </button>

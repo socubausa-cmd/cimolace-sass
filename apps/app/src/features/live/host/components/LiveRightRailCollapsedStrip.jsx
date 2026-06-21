@@ -16,7 +16,7 @@ export const LiveRightRailCollapsedStrip = ({
         onClick={() => setLiveRightRailOpen(true)}
         title="Agrandir le panneau droit"
         aria-label="Agrandir le panneau droit"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/14 bg-white/[0.06] text-white/85 transition hover:border-violet-400/35 hover:bg-white/[0.1] hover:text-white"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/14 bg-white/[0.06] text-white/85 transition hover:border-amber-400/35 hover:bg-white/[0.1] hover:text-white"
       >
         <ChevronLeft className="h-4 w-4" strokeWidth={2} aria-hidden />
       </button>
@@ -38,7 +38,7 @@ export const LiveRightRailCollapsedStrip = ({
             onClick={() => setLiveRightRailOpen(true)}
             title="Participants et LONGIA — agrandir le panneau"
             aria-label="Agrandir le panneau (participants, LONGIA)"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/12 bg-white/[0.04] text-violet-200/90 transition hover:border-violet-400/35 hover:bg-violet-500/10"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/12 bg-white/[0.04] text-amber-200/90 transition hover:border-amber-400/35 hover:bg-amber-500/10"
           >
             <Users className="h-4 w-4" strokeWidth={2} aria-hidden />
           </button>
@@ -47,7 +47,7 @@ export const LiveRightRailCollapsedStrip = ({
             onClick={() => setLiveRightRailOpen(true)}
             title="LONGIA — agrandir le panneau"
             aria-label="Agrandir le panneau LONGIA"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/12 bg-white/[0.04] text-violet-300/90 transition hover:border-violet-400/35 hover:bg-violet-500/10"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/12 bg-white/[0.04] text-amber-300/90 transition hover:border-amber-400/35 hover:bg-amber-500/10"
           >
             <Sparkles className="h-4 w-4" strokeWidth={2} aria-hidden />
           </button>

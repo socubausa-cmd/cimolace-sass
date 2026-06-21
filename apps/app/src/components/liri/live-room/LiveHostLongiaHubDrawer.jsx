@@ -148,7 +148,7 @@ export default function LiveHostLongiaHubDrawer({
             <div className="min-w-0 flex-1 space-y-0.5 pt-0.5">
               <p className="live-studio-pane-head-title">Signaux & salle</p>
               <h2
-                className="truncate text-[13px] font-semibold leading-snug tracking-[0.04em] text-[#c4b5fd]"
+                className="truncate text-[13px] font-semibold leading-snug tracking-[0.04em] text-[#e3c79a]"
                 style={{ fontFamily: 'Georgia, "Times New Roman", ui-serif, serif' }}
               >
                 LONGIA · HUB
@@ -165,8 +165,8 @@ export default function LiveHostLongiaHubDrawer({
                     designerShellChipGhost,
                     'flex h-9 w-9 items-center justify-center rounded-xl border p-0 transition-colors',
                     layoutPreviewHubActive
-                      ? 'border-violet-400/45 bg-violet-500/15 text-violet-100'
-                      : 'border-white/12 text-white/70 hover:border-violet-400/35 hover:bg-violet-500/10 hover:text-violet-100',
+                      ? 'border-amber-400/45 bg-amber-500/15 text-amber-100'
+                      : 'border-white/12 text-white/70 hover:border-amber-400/35 hover:bg-amber-500/10 hover:text-amber-100',
                   )}
                 >
                   <Eye className="h-4 w-4" strokeWidth={2} aria-hidden />
@@ -217,7 +217,7 @@ export default function LiveHostLongiaHubDrawer({
             className="live-studio-premium flex max-w-[min(92vw,280px)] items-center gap-2 overflow-hidden rounded-full border border-[#2D3139] bg-[#12141a]/96 px-2.5 py-2 pr-3 text-white shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-md"
             title="Déplier LONGIA — signaux et journal"
           >
-            <div className="h-8 w-8 shrink-0 rounded-full bg-gradient-to-br from-amber-400/90 to-violet-700/80 ring-2 ring-white/10" />
+            <div className="h-8 w-8 shrink-0 rounded-full bg-gradient-to-br from-amber-400/90 to-amber-700/80 ring-2 ring-white/10" />
             <span className="shrink-0 text-[11px] font-semibold tracking-tight text-white/95">LONGIA</span>
             <ChevronUp className="h-4 w-4 shrink-0 text-white/70" strokeWidth={2} />
           </button>
@@ -231,7 +231,7 @@ export default function LiveHostLongiaHubDrawer({
       <div className="pointer-events-auto absolute left-3 top-3 flex max-w-[min(96vw,300px)] flex-col items-start gap-2">
         <div className="live-studio-premium premium-panel flex max-w-full flex-nowrap items-center gap-2 overflow-x-auto rounded-2xl border border-[#2D3139] bg-[#12141a]/98 px-3 py-2 text-white shadow-[0_12px_40px_rgba(0,0,0,0.5)] backdrop-blur-md [scrollbar-width:none]">
           <div className="flex shrink-0 items-center gap-2 border-r border-white/[0.08] pr-3">
-            <div className="h-8 w-8 shrink-0 rounded-full bg-gradient-to-br from-amber-400/90 to-violet-700/80 ring-2 ring-white/10" />
+            <div className="h-8 w-8 shrink-0 rounded-full bg-gradient-to-br from-amber-400/90 to-amber-700/80 ring-2 ring-white/10" />
             <span className="whitespace-nowrap text-[12px] font-semibold tracking-tight text-white/95">LONGIA</span>
           </div>
 
@@ -244,8 +244,8 @@ export default function LiveHostLongiaHubDrawer({
               className={cn(
                 'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-white/55 transition-colors',
                 layoutPreviewHubActive
-                  ? 'border-violet-400/45 bg-violet-500/15 text-violet-100'
-                  : 'border-white/[0.08] bg-white/[0.04] hover:border-violet-400/30 hover:bg-violet-500/10 hover:text-violet-100',
+                  ? 'border-amber-400/45 bg-amber-500/15 text-amber-100'
+                  : 'border-white/[0.08] bg-white/[0.04] hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-100',
               )}
             >
               <Eye className="h-4 w-4" strokeWidth={2} aria-hidden />

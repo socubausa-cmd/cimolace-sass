@@ -5,7 +5,7 @@ const VARIANTS = {
   host: {
     testId: 'live-host-local-preview',
     label: 'HOTE',
-    labelBg: 'rgba(109,40,217,.85)',
+    labelBg: 'rgba(168,118,58,.85)',
     labelColor: '#fff',
     nameFallback: 'Prof. LIRI',
   },
@@ -43,7 +43,7 @@ export const LiveLocalUserVignette = ({
         border: '2px solid rgba(251,191,36,.5)',
         overflow: 'hidden',
         flexShrink: 0,
-        background: 'linear-gradient(135deg,#2a1f40,#15102a)',
+        background: 'linear-gradient(135deg,#2a2218,#15102a)',
       }}
     >
       {cameraVisible && participant ? (

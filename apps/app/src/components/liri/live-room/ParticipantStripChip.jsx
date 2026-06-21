@@ -121,7 +121,7 @@ export default function ParticipantStripChip({
         fillSlot ? 'min-w-0 w-full' : 'w-[80px] shrink-0',
         isPromoted ? 'border-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] ring-1 ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]' : 'border-white/12',
         seatRole === 'host'
-          && 'rounded-[13px] border-2 border-amber-400/40 bg-gradient-to-br from-[#2a1f40]/90 to-[#15102a]/95 shadow-[inset_0_0_24px_-8px_rgba(0,0,0,0.45)]',
+          && 'rounded-[13px] border-2 border-amber-400/40 bg-gradient-to-br from-[#2a2218]/90 to-[#15102a]/95 shadow-[inset_0_0_24px_-8px_rgba(0,0,0,0.45)]',
         (onOpenPreview || (canPromote && onPromote)) ? 'cursor-pointer hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]' : '',
       )}
     >
@@ -148,7 +148,7 @@ export default function ParticipantStripChip({
       <div className="absolute bottom-0 left-0 right-0 z-[3] bg-gradient-to-t from-black/90 via-black/45 to-transparent px-1 pt-4 pb-0.5 pointer-events-none">
         {seatRole === 'host' ? (
           <span className="flex items-center justify-center gap-1">
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(212,163,106,0.8)]" />
             <span className="truncate text-[8px] font-medium text-white/95">{displayName || 'Hôte'}</span>
           </span>
         ) : (
@@ -158,7 +158,7 @@ export default function ParticipantStripChip({
         )}
       </div>
       {seatRole === 'host' && !isPromoted ? (
-        <span className="absolute top-1 left-1 z-[4] rounded bg-violet-600/92 px-1 py-0.5 text-[6px] font-bold uppercase tracking-wider text-white shadow-sm ring-1 ring-violet-300/40">
+        <span className="absolute top-1 left-1 z-[4] rounded bg-amber-600/92 px-1 py-0.5 text-[6px] font-bold uppercase tracking-wider text-white shadow-sm ring-1 ring-amber-300/40">
           HÔTE
         </span>
       ) : null}

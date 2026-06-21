@@ -117,7 +117,7 @@ export default function HostMiniPreview({
               : 'relative z-20 h-[156px] w-full max-h-[30vh] overflow-hidden rounded-2xl',
             'border border-white/20 bg-white/[0.04] shadow-[0_12px_36px_-20px_rgba(212,175,55,0.28)] backdrop-blur-md',
             embeddedSize === 'hero' &&
-              'shadow-[0_8px_40px_-12px_rgba(139,92,246,0.25),0_12px_48px_-18px_rgba(212,175,55,0.32)]',
+              'shadow-[0_8px_40px_-12px_rgba(212,163,106,0.25),0_12px_48px_-18px_rgba(212,175,55,0.32)]',
             arenaHostGoldFrame &&
               'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] shadow-[0_12px_40px_-18px_rgba(212,175,55,0.42),inset_0_0_0_1px_rgba(212,175,55,0.15)] ring-2 ring-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] ring-offset-2 ring-offset-[#070a10]',
           )

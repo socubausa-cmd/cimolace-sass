@@ -229,7 +229,7 @@ export function MemberSchoolLifeInlinePanel({ studentId, studentName, onBack, em
                     className={cn(
                       'font-medium',
                       r.status === 'present'
-                        ? 'text-emerald-400'
+                        ? 'text-amber-400'
                         : r.status === 'excused'
                           ? 'text-amber-400'
                           : r.status === 'late'

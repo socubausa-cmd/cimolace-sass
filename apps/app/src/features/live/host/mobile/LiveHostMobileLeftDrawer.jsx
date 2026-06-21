@@ -7,9 +7,9 @@ const HANDLE_W = 20;    // languette toujours visible
 
 // ─── Icônes scènes ────────────────────────────────────────────────────────────
 const SCENE_META = {
-  smartboard:       { emoji: '🧠', color: '#a78bfa' },
-  diapo:            { emoji: '📽️', color: '#60a5fa' },
-  screen:           { emoji: '🖥️', color: '#34d399' },
+  smartboard:       { emoji: '🧠', color: '#d4a36a' },
+  diapo:            { emoji: '📽️', color: '#d4a36a' },
+  screen:           { emoji: '🖥️', color: '#d4a36a' },
   browser:          { emoji: '🌐', color: '#38bdf8' },
   embed:            { emoji: '🔗', color: '#fb923c' },
   quiz:             { emoji: '❓', color: '#f472b6' },
@@ -214,14 +214,14 @@ export function LiveHostMobileLeftDrawer({
                   padding: '5px 11px',
                   borderRadius: 20,
                   background: activeSection === s.id
-                    ? 'rgba(167,139,250,0.2)'
+                    ? 'rgba(212,163,106,0.2)'
                     : 'rgba(255,255,255,0.05)',
                   border: `1px solid ${
                     activeSection === s.id
-                      ? 'rgba(167,139,250,0.4)'
+                      ? 'rgba(212,163,106,0.4)'
                       : 'rgba(255,255,255,0.07)'
                   }`,
-                  color: activeSection === s.id ? '#c4b5fd' : 'rgba(255,255,255,0.5)',
+                  color: activeSection === s.id ? '#e3c79a' : 'rgba(255,255,255,0.5)',
                   fontSize: 11,
                   fontWeight: activeSection === s.id ? 700 : 400,
                   cursor: 'pointer',
@@ -306,7 +306,7 @@ export function LiveHostMobileLeftDrawer({
                   emoji="❓" label="Q&R NeuronQ"
                   hint="Activer les questions des participants"
                   active={neuronQActive} onToggle={toggleNeuronQ}
-                  color="#a78bfa"
+                  color="#d4a36a"
                 />
                 {/* Volume ambiant */}
                 <div style={{
@@ -327,7 +327,7 @@ export function LiveHostMobileLeftDrawer({
                     type="range" min={0} max={1} step={0.01}
                     value={ambientMasterVolume ?? 0.22}
                     onChange={(e) => setAmbientMasterVolume?.(parseFloat(e.target.value))}
-                    style={{ width: '100%', accentColor: '#60a5fa' }}
+                    style={{ width: '100%', accentColor: '#d4a36a' }}
                   />
                 </div>
               </div>
@@ -401,7 +401,7 @@ export function LiveHostMobileLeftDrawer({
                   emoji="📷" label="Caméra"
                   hint={cameraOn ? 'Caméra active' : 'Caméra éteinte'}
                   active={cameraOn} onToggle={toggleCamera}
-                  color="#60a5fa"
+                  color="#d4a36a"
                 />
               </div>
             )}

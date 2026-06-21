@@ -7,7 +7,7 @@ export const LIRI_HOST_SHELL_PAD = 'p-2.5 gap-2 sm:gap-2';
 
 /** Colonnes latérales (événements gauche, guidance / membres droite) */
 export const LIRI_HOST_SIDE_COLUMN =
-  'flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-white/[0.07] bg-[linear-gradient(170deg,#0d0f22_0%,#080910_100%)] px-3 py-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]';
+  'flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-white/[0.07] bg-[linear-gradient(170deg,#181613_0%,#080910_100%)] px-3 py-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]';
 
 /** Cartes Mains levées / Salle d'attente / Notifications */
 export const LIRI_HOST_EVENT_CARD =
@@ -15,11 +15,11 @@ export const LIRI_HOST_EVENT_CARD =
 
 /** Bandeau sièges au-dessus du SmartBoard (members-dock) */
 export const LIRI_HOST_MEMBERS_DOCK =
-  'rounded-[18px] border border-amber-400/14 bg-[linear-gradient(170deg,#0f1022_0%,#090a18_100%)] p-2 shadow-[0_0_32px_-16px_rgba(251,191,36,0.12)]';
+  'rounded-[18px] border border-amber-400/14 bg-[linear-gradient(170deg,#1a1816_0%,#090a18_100%)] p-2 shadow-[0_0_32px_-16px_rgba(251,191,36,0.12)]';
 
 /** Conteneur colonne centrale (SmartBoard plein cadre, sans bandeau au-dessus) */
 export const LIRI_HOST_STAGE_FRAME =
-  'flex min-h-0 flex-1 flex-col overflow-hidden rounded-[20px] border border-amber-400/14 bg-[#06070f]/90 shadow-[0_0_40px_-18px_rgba(124,58,237,0.2)]';
+  'flex min-h-0 flex-1 flex-col overflow-hidden rounded-[20px] border border-amber-400/14 bg-[#0e0d0b]/90 shadow-[0_0_40px_-18px_rgba(212,163,106,0.2)]';
 
 /** Zone de rendu SmartBoard (dégradés type maquette) */
 export const LIRI_HOST_STAGE_CANVAS_GRADIENT =

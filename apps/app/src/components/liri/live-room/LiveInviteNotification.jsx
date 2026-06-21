@@ -95,7 +95,7 @@ export default function LiveInviteNotification({
                 <button
                   type="button"
                   onClick={onAccept}
-                  className="h-7 px-2.5 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-[11px] hover:bg-emerald-500/30 transition-colors inline-flex items-center gap-1"
+                  className="h-7 px-2.5 rounded-lg bg-amber-500/20 border border-amber-400/30 text-amber-200 text-[11px] hover:bg-amber-500/30 transition-colors inline-flex items-center gap-1"
                 >
                   <Check className="w-3 h-3" />
                   Accepter
@@ -167,8 +167,8 @@ export default function LiveInviteNotification({
             'w-full rounded-xl border px-3 py-2.5 shadow-lg backdrop-blur-xl',
             isAccepted
               ? isDarkTheme
-                ? 'border-emerald-400/30 bg-emerald-500/10'
-                : 'border-emerald-300 bg-emerald-50'
+                ? 'border-amber-400/30 bg-amber-500/10'
+                : 'border-amber-300 bg-amber-50'
               : isDarkTheme
                 ? 'border-white/10 bg-[#111827]/88'
                 : 'border-gray-300 bg-white',
@@ -178,14 +178,14 @@ export default function LiveInviteNotification({
           <div className="flex items-center gap-2.5">
             <div className={cn(
               'w-7 h-7 rounded-lg flex items-center justify-center shrink-0',
-              isAccepted ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/5 text-gray-400'
+              isAccepted ? 'bg-amber-500/20 text-amber-300' : 'bg-white/5 text-gray-400'
             )}>
               {isAccepted ? <Check className="w-3.5 h-3.5" /> : <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             </div>
             <div className="min-w-0 flex-1">
               <p className={cn('text-xs truncate', isDarkTheme ? 'text-white' : 'text-[#1f2937]')}>
                 {isAccepted ? (
-                  <><span className="text-emerald-300 font-medium">{receiverName}</span> a accepté. Connexion en cours…</>
+                  <><span className="text-amber-300 font-medium">{receiverName}</span> a accepté. Connexion en cours…</>
                 ) : (
                   <>Invitation envoyée à <span className="text-white/80 font-medium">{receiverName}</span>.</>
                 )}

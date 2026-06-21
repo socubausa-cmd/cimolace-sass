@@ -237,7 +237,7 @@ export default function HostSharedGuestNotesInbox({ sessionId, maxHeight = 340 }
                                   href={a.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  style={{ fontSize: 8, color: '#67e8f9' }}
+                                  style={{ fontSize: 8, color: '#e3c79a' }}
                                 >
                                   voir capture
                                 </a>

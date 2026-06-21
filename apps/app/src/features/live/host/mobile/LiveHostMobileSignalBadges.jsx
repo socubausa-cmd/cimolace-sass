@@ -93,8 +93,8 @@ export function LiveHostMobileSignalBadges({
         alignItems: 'flex-start',
       }}>
         {badge(<Hand size={16} />, handCount, '#f6ad55', () => setOpenSheet('hands'))}
-        {badge(<Clock size={16} />, waitingCount, '#48bb78', () => setOpenSheet('waiting'))}
-        {badge(<ShieldCheck size={16} />, permCount, '#9f7aea', () => setOpenSheet('perms'))}
+        {badge(<Clock size={16} />, waitingCount, '#cca34a', () => setOpenSheet('waiting'))}
+        {badge(<ShieldCheck size={16} />, permCount, '#d4a36a', () => setOpenSheet('perms'))}
       </div>
 
       {/* ── Sheet levées de main ───────────────────────────────────────── */}
@@ -127,7 +127,7 @@ export function LiveHostMobileSignalBadges({
                 <span style={{ color: '#fff', fontSize: 14, flex: 1 }}>{name}</span>
                 <button
                   onClick={() => resolveHandRaise?.(userId, 'grant')}
-                  style={actionBtn('#48bb78')}
+                  style={actionBtn('#cca34a')}
                 >
                   <Check size={14} />
                   <span>Micro</span>
@@ -179,7 +179,7 @@ export function LiveHostMobileSignalBadges({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#48bb78',
+                  color: '#cca34a',
                   fontWeight: 700,
                   fontSize: 14,
                   flexShrink: 0,
@@ -189,7 +189,7 @@ export function LiveHostMobileSignalBadges({
                 <span style={{ color: '#fff', fontSize: 14, flex: 1, fontWeight: 500 }}>{name}</span>
                 <button
                   onClick={() => { approveWaiting?.(userId || entry); setOpenSheet(null); }}
-                  style={actionBtn('#48bb78')}
+                  style={actionBtn('#cca34a')}
                 >
                   <Check size={14} />
                   <span>Accepter</span>
@@ -213,7 +213,7 @@ export function LiveHostMobileSignalBadges({
                   borderRadius: 24,
                   background: 'rgba(72,187,120,0.15)',
                   border: '1px solid rgba(72,187,120,0.4)',
-                  color: '#48bb78',
+                  color: '#cca34a',
                   fontWeight: 700,
                   fontSize: 13,
                   cursor: 'pointer',
@@ -277,14 +277,14 @@ export function LiveHostMobileSignalBadges({
                 background: 'rgba(159,122,234,0.08)',
                 border: '1px solid rgba(159,122,234,0.2)',
               }}>
-                <ShieldCheck size={16} color="#9f7aea" style={{ flexShrink: 0 }} />
+                <ShieldCheck size={16} color="#d4a36a" style={{ flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ color: '#fff', fontSize: 14, margin: 0, fontWeight: 500 }}>{name}</p>
                   <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, margin: 0 }}>{type}</p>
                 </div>
                 <button
                   onClick={() => resolveHostPermissionSignal?.(req.id || req, 'grant')}
-                  style={actionBtn('#9f7aea')}
+                  style={actionBtn('#d4a36a')}
                 >
                   <Check size={14} />
                   <span>OK</span>

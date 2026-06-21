@@ -85,7 +85,7 @@ export const LiveHostMemberVideoModalSlot = ({
               id: p.id,
               name: p.name || 'Membre',
               init: '?',
-              color: '#a78bfa',
+              color: '#d4a36a',
               status: 'online',
               grade: '',
               bio: '',

@@ -102,10 +102,10 @@ export default function GuestPermissionBar({
             title={guestCamLocked ? 'Caméra désactivée par le formateur' : (cameraOn ? 'Couper caméra' : 'Activer caméra')}
             style={{
               borderRadius: '4px',
-              border: `1px solid ${cameraOn ? 'rgba(167,139,250,.5)' : 'rgba(255,255,255,.1)'}`,
-              background: cameraOn ? 'rgba(109,40,217,.2)' : 'rgba(255,255,255,.04)',
+              border: `1px solid ${cameraOn ? 'rgba(212,163,106,.5)' : 'rgba(255,255,255,.1)'}`,
+              background: cameraOn ? 'rgba(168,118,58,.2)' : 'rgba(255,255,255,.04)',
               padding: '9px',
-              color: cameraOn ? '#ddd6fe' : 'rgba(255,255,255,.8)',
+              color: cameraOn ? '#efe0c4' : 'rgba(255,255,255,.8)',
               display: 'flex',
               alignItems: 'center',
               cursor: guestCamLocked ? 'not-allowed' : 'pointer',
@@ -147,10 +147,10 @@ export default function GuestPermissionBar({
           title={guestScreenShareLocked ? (debateViewerRole === 'viewer' ? 'Partage indisponible' : 'Partage désactivé') : (sharingScreen ? 'Arrêter partage' : 'Partager écran')}
           style={{
             borderRadius: '4px',
-            border: `1px solid ${sharingScreen ? 'rgba(109,40,217,.5)' : 'rgba(255,255,255,.1)'}`,
-            background: sharingScreen ? 'rgba(109,40,217,.18)' : 'rgba(255,255,255,.04)',
+            border: `1px solid ${sharingScreen ? 'rgba(168,118,58,.5)' : 'rgba(255,255,255,.1)'}`,
+            background: sharingScreen ? 'rgba(168,118,58,.18)' : 'rgba(255,255,255,.04)',
             padding: '9px',
-            color: sharingScreen ? '#c4b5fd' : 'rgba(255,255,255,.8)',
+            color: sharingScreen ? '#e3c79a' : 'rgba(255,255,255,.8)',
             display: 'flex',
             alignItems: 'center',
             cursor: guestScreenShareLocked ? 'not-allowed' : 'pointer',
@@ -182,12 +182,12 @@ export default function GuestPermissionBar({
       <>
         {joyKitGrant?.level ? <JoyKitActiveBadge grant={joyKitGrant} /> : null}
         <PermissionGate action="canUseJoyKit">
-          <button type="button" onClick={() => { void withGuestServerPermission('canUseJoyKit', () => addMeshRequest('control')); }} title="Demander contrôle (Mesh)" style={{ borderRadius: '6px', border: '1px solid rgba(167,139,250,.4)', background: 'rgba(109,40,217,.14)', padding: '7px 8px', fontSize: '9px', fontWeight: 700, color: '#ddd6fe', cursor: 'pointer', whiteSpace: 'nowrap' }}>Joy·Ctl</button>
+          <button type="button" onClick={() => { void withGuestServerPermission('canUseJoyKit', () => addMeshRequest('control')); }} title="Demander contrôle (Mesh)" style={{ borderRadius: '6px', border: '1px solid rgba(212,163,106,.4)', background: 'rgba(168,118,58,.14)', padding: '7px 8px', fontSize: '9px', fontWeight: 700, color: '#efe0c4', cursor: 'pointer', whiteSpace: 'nowrap' }}>Joy·Ctl</button>
         </PermissionGate>
         <PermissionGate action="canUseJoyKit">
-          <button type="button" onClick={() => { void withGuestServerPermission('canUseJoyKit', () => addMeshRequest('joykit')); }} title="Demander JoyKit" style={{ borderRadius: '6px', border: '1px solid rgba(167,139,250,.35)', background: 'rgba(109,40,217,.12)', padding: '7px 8px', fontSize: '9px', fontWeight: 700, color: '#c4b5fd', cursor: 'pointer', whiteSpace: 'nowrap' }}>JoyKit</button>
+          <button type="button" onClick={() => { void withGuestServerPermission('canUseJoyKit', () => addMeshRequest('joykit')); }} title="Demander JoyKit" style={{ borderRadius: '6px', border: '1px solid rgba(212,163,106,.35)', background: 'rgba(168,118,58,.12)', padding: '7px 8px', fontSize: '9px', fontWeight: 700, color: '#e3c79a', cursor: 'pointer', whiteSpace: 'nowrap' }}>JoyKit</button>
         </PermissionGate>
-        <RequestAccessButton action="canUseJoyKit" size="sm" variant="outline" className="h-8 px-2 text-[9px] font-semibold whitespace-nowrap border-violet-400/35 bg-violet-500/10 text-violet-200 hover:bg-violet-500/15">
+        <RequestAccessButton action="canUseJoyKit" size="sm" variant="outline" className="h-8 px-2 text-[9px] font-semibold whitespace-nowrap border-amber-400/35 bg-amber-500/10 text-amber-200 hover:bg-amber-500/15">
           Demander accès JoyKit
         </RequestAccessButton>
         {debateNeuronqEnabled && neuronqSessionOn ? (

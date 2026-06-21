@@ -29,7 +29,7 @@ export const LiveHostMasterScriptDock = ({
         flexDirection: 'column',
         overflow: 'hidden',
         border: '1px solid rgba(255,255,255,.08)',
-        background: '#12111a',
+        background: '#1a1815',
       }}
     >
       <div
@@ -47,14 +47,14 @@ export const LiveHostMasterScriptDock = ({
               width: '18px',
               height: '18px',
               borderRadius: '50%',
-              background: 'rgba(109,40,217,.14)',
-              border: '1px solid rgba(167,139,250,.2)',
+              background: 'rgba(168,118,58,.14)',
+              border: '1px solid rgba(212,163,106,.2)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="2">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#e3c79a" strokeWidth="2">
               <path d="M9 11l3 3L22 4" />
               <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
             </svg>
@@ -108,19 +108,19 @@ export const LiveHostMasterScriptDock = ({
           <div
             style={{
               fontSize: '10px',
-              color: 'rgba(167,139,250,.75)',
+              color: 'rgba(212,163,106,.75)',
               fontStyle: 'italic',
               marginBottom: '7px',
               padding: '6px 8px',
-              background: nqAnalysis ? 'rgba(6,182,212,.07)' : 'rgba(109,40,217,.07)',
-              borderLeft: `2px solid ${nqAnalysis ? '#06b6d4' : 'rgba(109,40,217,.4)'}`,
+              background: nqAnalysis ? 'rgba(200,148,62,.07)' : 'rgba(168,118,58,.07)',
+              borderLeft: `2px solid ${nqAnalysis ? '#c8943e' : 'rgba(168,118,58,.4)'}`,
               lineHeight: '1.6',
               flexShrink: 0,
             }}
           >
             {nqAnalysis ? (
               <>
-                <span style={{ color: '#06b6d4', fontWeight: 700 }}>NeuronQ: </span>
+                <span style={{ color: '#c8943e', fontWeight: 700 }}>NeuronQ: </span>
                 {nqAnalysis}
               </>
             ) : (

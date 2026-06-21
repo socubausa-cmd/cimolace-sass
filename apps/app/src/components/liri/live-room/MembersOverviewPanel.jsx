@@ -67,7 +67,7 @@ export function MembersOverviewPanel({
                           )}
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-white truncate">{m.name || 'Membre'}</p>
-                            <p className="text-[10px] text-emerald-400/85 truncate">{m.role || 'connecté'}</p>
+                            <p className="text-[10px] text-amber-400/85 truncate">{m.role || 'connecté'}</p>
                           </div>
                         </div>
                         <div className="px-3 py-1.5 border-t border-white/8 bg-white/[0.03] text-[9px] text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)] text-center">

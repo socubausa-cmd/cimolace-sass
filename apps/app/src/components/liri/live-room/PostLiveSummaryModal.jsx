@@ -201,22 +201,22 @@ export default function PostLiveSummaryModal({
                       icon={Layers}
                       label="Diapos"
                       value={summary.slidesCovered?.length || 0}
-                      color="text-blue-300"
-                      bg="bg-blue-500/5"
+                      color="text-amber-300"
+                      bg="bg-amber-500/5"
                     />
                     <StatCard
                       icon={HelpCircle}
                       label="Questions"
                       value={`${summary.questionsAnswered}/${summary.questionsTotal}`}
-                      color="text-emerald-300"
-                      bg="bg-emerald-500/5"
+                      color="text-amber-300"
+                      bg="bg-amber-500/5"
                     />
                     <StatCard
                       icon={BookOpen}
                       label="Script"
                       value={summary.scriptSectionsTotal || 0}
-                      color="text-violet-300"
-                      bg="bg-violet-500/5"
+                      color="text-amber-300"
+                      bg="bg-amber-500/5"
                     />
                   </div>
 
@@ -288,7 +288,7 @@ export default function PostLiveSummaryModal({
                       </p>
                       <div className="flex gap-3">
                         <div className="flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
                           <span className="text-xs text-white/70">{summary.questionsAnswered} répondues</span>
                         </div>
                         <div className="flex items-center gap-1.5">
@@ -316,7 +316,7 @@ export default function PostLiveSummaryModal({
                   disabled={!summary}
                   className="flex items-center gap-1.5 h-9 px-3 rounded-xl bg-white/[0.05] border border-white/10 text-xs text-gray-400 hover:text-white hover:bg-white/8 disabled:opacity-40 transition-all"
                 >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? <Check className="w-3.5 h-3.5 text-amber-400" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied ? 'Copié !' : 'Copier'}
                 </button>
 
@@ -335,9 +335,9 @@ export default function PostLiveSummaryModal({
                 )}
 
                 {reportSent && (
-                  <div className="flex-1 h-9 rounded-xl bg-emerald-500/12 border border-emerald-400/22 flex items-center justify-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-xs text-emerald-300">Rapport envoyé</span>
+                  <div className="flex-1 h-9 rounded-xl bg-amber-500/12 border border-amber-400/22 flex items-center justify-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="text-xs text-amber-300">Rapport envoyé</span>
                   </div>
                 )}
 

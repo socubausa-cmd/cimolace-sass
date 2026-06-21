@@ -41,8 +41,8 @@ export function CourseMindmapPanel({
         });
       });
       return { branches: [
-        { label: 'SmartBoard IA', color: 'from-violet-500/25 to-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]', children: out.filter((n) => n.id.startsWith('native-')) },
-        { label: 'Diapo importé', color: 'from-sky-500/20 to-white/5', children: out.filter((n) => n.id.startsWith('import-')) },
+        { label: 'SmartBoard IA', color: 'from-amber-500/25 to-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]', children: out.filter((n) => n.id.startsWith('native-')) },
+        { label: 'Diapo importé', color: 'from-amber-500/20 to-white/5', children: out.filter((n) => n.id.startsWith('import-')) },
       ] };
     }
     const arr = Array.isArray(slides) ? slides : [];
@@ -50,7 +50,7 @@ export function CourseMindmapPanel({
       branches: [
         {
           label: 'Déroulé',
-          color: 'from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-violet-500/10',
+          color: 'from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-amber-500/10',
           children: arr.map((s, idx) => ({
             id: `s-${idx}`,
             title: s?.title || s?.label || `Slide ${idx + 1}`,

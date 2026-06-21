@@ -278,10 +278,10 @@ export const LiveHostLongiaSignalHub = ({
                                 title="Résoudre"
                                 style={{
                                   borderRadius: 4,
-                                  border: '1px solid rgba(16,185,129,.4)',
-                                  background: 'rgba(16,185,129,.12)',
+                                  border: '1px solid rgba(200,148,62,.4)',
+                                  background: 'rgba(200,148,62,.12)',
                                   padding: '4px 8px',
-                                  color: '#10b981',
+                                  color: '#c8943e',
                                   fontSize: 9,
                                   fontWeight: 700,
                                   cursor: 'pointer',
@@ -355,10 +355,10 @@ export const LiveHostLongiaSignalHub = ({
                                 title="Accepter"
                                 style={{
                                   borderRadius: 3,
-                                  border: '1px solid rgba(16,185,129,.4)',
-                                  background: 'rgba(16,185,129,.12)',
+                                  border: '1px solid rgba(200,148,62,.4)',
+                                  background: 'rgba(200,148,62,.12)',
                                   padding: '3px 7px',
-                                  color: '#10b981',
+                                  color: '#c8943e',
                                   fontSize: 9,
                                   fontWeight: 700,
                                   cursor: 'pointer',
@@ -422,12 +422,12 @@ export const LiveHostLongiaSignalHub = ({
                               onClick={() => setHostNotifFilter(chip.id)}
                               style={{
                                 borderRadius: '999px',
-                                border: `1px solid ${hostNotifFilter === chip.id ? 'rgba(167,139,250,.55)' : 'rgba(255,255,255,.12)'}`,
-                                background: hostNotifFilter === chip.id ? 'rgba(167,139,250,.14)' : 'rgba(255,255,255,.04)',
+                                border: `1px solid ${hostNotifFilter === chip.id ? 'rgba(212,163,106,.55)' : 'rgba(255,255,255,.12)'}`,
+                                background: hostNotifFilter === chip.id ? 'rgba(212,163,106,.14)' : 'rgba(255,255,255,.04)',
                                 padding: '3px 8px',
                                 fontSize: '8px',
                                 fontWeight: 700,
-                                color: hostNotifFilter === chip.id ? '#e9d5ff' : 'rgba(255,255,255,.45)',
+                                color: hostNotifFilter === chip.id ? '#f3e8d2' : 'rgba(255,255,255,.45)',
                                 cursor: 'pointer',
                                 letterSpacing: '.04em',
                               }}
@@ -463,8 +463,8 @@ export const LiveHostLongiaSignalHub = ({
                                 onClick={() => toggleLongiaGovernorMode(mode)}
                                 style={{
                                   borderRadius: '4px',
-                                  border: `1px solid ${on ? 'rgba(16,185,129,.35)' : 'rgba(255,255,255,.1)'}`,
-                                  background: on ? 'rgba(16,185,129,.08)' : 'rgba(0,0,0,.2)',
+                                  border: `1px solid ${on ? 'rgba(200,148,62,.35)' : 'rgba(255,255,255,.1)'}`,
+                                  background: on ? 'rgba(200,148,62,.08)' : 'rgba(0,0,0,.2)',
                                   padding: '2px 6px',
                                   fontSize: '8px',
                                   fontWeight: 700,
@@ -558,10 +558,10 @@ export const LiveHostLongiaSignalHub = ({
                                             onClick={() => handleLongiaDecisionAction(ac.action, payload)}
                                             style={{
                                               borderRadius: '3px',
-                                              border: '1px solid rgba(167,139,250,.35)',
-                                              background: 'rgba(124,58,237,.12)',
+                                              border: '1px solid rgba(212,163,106,.35)',
+                                              background: 'rgba(212,163,106,.12)',
                                               padding: '2px 6px',
-                                              color: '#ddd6fe',
+                                              color: '#efe0c4',
                                               fontSize: '8px',
                                               fontWeight: 700,
                                               cursor: 'pointer',
@@ -635,8 +635,8 @@ export const LiveHostLongiaSignalHub = ({
                               alignItems: 'flex-start',
                               gap: 6,
                               padding: '7px 8px',
-                              background: q.status === 'answered' ? 'rgba(16,185,129,.04)' : 'rgba(255,255,255,.025)',
-                              border: `1px solid ${q.status === 'answered' ? 'rgba(16,185,129,.2)' : 'rgba(6,182,212,.15)'}`,
+                              background: q.status === 'answered' ? 'rgba(200,148,62,.04)' : 'rgba(255,255,255,.025)',
+                              border: `1px solid ${q.status === 'answered' ? 'rgba(200,148,62,.2)' : 'rgba(200,148,62,.15)'}`,
                               borderRadius: 4,
                               opacity: q.status === 'answered' ? 0.55 : 1,
                             }}
@@ -646,14 +646,14 @@ export const LiveHostLongiaSignalHub = ({
                                 width: 18,
                                 height: 18,
                                 borderRadius: '50%',
-                                background: 'rgba(6,182,212,.18)',
-                                border: '1px solid rgba(6,182,212,.4)',
+                                background: 'rgba(200,148,62,.18)',
+                                border: '1px solid rgba(200,148,62,.4)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 fontSize: 8,
                                 fontWeight: 700,
-                                color: '#06b6d4',
+                                color: '#c8943e',
                                 flexShrink: 0,
                               }}
                             >
@@ -674,7 +674,7 @@ export const LiveHostLongiaSignalHub = ({
                               >
                                 {q.reformulated_text || q.raw_text}
                               </p>
-                              <span style={{ fontSize: 8, color: q.status === 'answered' ? '#10b981' : 'rgba(6,182,212,.7)', fontWeight: 600 }}>
+                              <span style={{ fontSize: 8, color: q.status === 'answered' ? '#c8943e' : 'rgba(200,148,62,.7)', fontWeight: 600 }}>
                                 {q.status === 'answered' ? '✓ Répondue' : 'En attente'}
                               </span>
                             </div>
@@ -686,10 +686,10 @@ export const LiveHostLongiaSignalHub = ({
                                   title="Marquer répondue"
                                   style={{
                                     borderRadius: 3,
-                                    border: '1px solid rgba(16,185,129,.4)',
-                                    background: 'rgba(16,185,129,.12)',
+                                    border: '1px solid rgba(200,148,62,.4)',
+                                    background: 'rgba(200,148,62,.12)',
                                     padding: '3px 7px',
-                                    color: '#10b981',
+                                    color: '#c8943e',
                                     fontSize: 9,
                                     fontWeight: 700,
                                     cursor: 'pointer',

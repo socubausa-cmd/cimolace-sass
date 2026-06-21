@@ -96,7 +96,7 @@ export const LiveHostLongiaSignalShortcuts = ({
                 Discuter avec LONGIA · cartes de rendu (résumé, reformulation, exemple)
               </p>
             </div>
-            <span style={{ fontSize: 11, color: 'rgba(167,139,250,.5)', flexShrink: 0 }}>›</span>
+            <span style={{ fontSize: 11, color: 'rgba(212,163,106,.5)', flexShrink: 0 }}>›</span>
           </button>
 
           <button
@@ -149,7 +149,7 @@ export const LiveHostLongiaSignalShortcuts = ({
                 {lastHandEv ? String(lastHandEv.msg || '').slice(0, 64) : '0 main — rien à traiter'}
               </p>
             </div>
-            <span style={{ fontSize: 11, color: 'rgba(167,139,250,.5)', flexShrink: 0 }}>›</span>
+            <span style={{ fontSize: 11, color: 'rgba(212,163,106,.5)', flexShrink: 0 }}>›</span>
           </button>
 
           <button
@@ -206,7 +206,7 @@ export const LiveHostLongiaSignalShortcuts = ({
                 {permReqPreviewLine}
               </p>
             </div>
-            <span style={{ fontSize: 11, color: 'rgba(167,139,250,.5)', flexShrink: 0 }}>›</span>
+            <span style={{ fontSize: 11, color: 'rgba(212,163,106,.5)', flexShrink: 0 }}>›</span>
           </button>
 
           <button
@@ -263,7 +263,7 @@ export const LiveHostLongiaSignalShortcuts = ({
                   : '0 en file'}
               </p>
             </div>
-            <span style={{ fontSize: 11, color: 'rgba(167,139,250,.5)', flexShrink: 0 }}>›</span>
+            <span style={{ fontSize: 11, color: 'rgba(212,163,106,.5)', flexShrink: 0 }}>›</span>
           </button>
 
           <button
@@ -316,23 +316,23 @@ export const LiveHostLongiaSignalShortcuts = ({
                 {meshPreviewLine}
               </p>
             </div>
-            <span style={{ fontSize: 11, color: 'rgba(167,139,250,.5)', flexShrink: 0 }}>›</span>
+            <span style={{ fontSize: 11, color: 'rgba(212,163,106,.5)', flexShrink: 0 }}>›</span>
           </button>
 
           <button
             type="button"
             onClick={() => setLongiaSignalSubDrawer((p) => (p === 'zone3' ? null : 'zone3'))}
-            style={hubSigRow(longiaSignalSubDrawer === 'zone3', 'rgba(167,139,250,.45)')}
+            style={hubSigRow(longiaSignalSubDrawer === 'zone3', 'rgba(212,163,106,.45)')}
           >
             <span
               style={{
                 width: 6,
                 height: 6,
                 borderRadius: '50%',
-                background: '#a78bfa',
+                background: '#d4a36a',
                 flexShrink: 0,
                 marginTop: 4,
-                boxShadow: '0 0 6px rgba(167,139,250,.4)',
+                boxShadow: '0 0 6px rgba(212,163,106,.4)',
               }}
             />
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -363,24 +363,24 @@ export const LiveHostLongiaSignalShortcuts = ({
                 Salle privilégiée — ouvrir pour gérer
               </p>
             </div>
-            <span style={{ fontSize: 11, color: 'rgba(167,139,250,.5)', flexShrink: 0 }}>›</span>
+            <span style={{ fontSize: 11, color: 'rgba(212,163,106,.5)', flexShrink: 0 }}>›</span>
           </button>
 
           {debateNeuronqEnabled ? (
             <button
               type="button"
               onClick={() => setLongiaSignalSubDrawer((p) => (p === 'neuronq' ? null : 'neuronq'))}
-              style={hubSigRow(longiaSignalSubDrawer === 'neuronq', 'rgba(6,182,212,.45)')}
+              style={hubSigRow(longiaSignalSubDrawer === 'neuronq', 'rgba(200,148,62,.45)')}
             >
               <span
                 style={{
                   width: 6,
                   height: 6,
                   borderRadius: '50%',
-                  background: '#06b6d4',
+                  background: '#c8943e',
                   flexShrink: 0,
                   marginTop: 4,
-                  boxShadow: '0 0 6px rgba(6,182,212,.55)',
+                  boxShadow: '0 0 6px rgba(200,148,62,.55)',
                 }}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -390,7 +390,7 @@ export const LiveHostLongiaSignalShortcuts = ({
                     style={{
                       fontSize: 9,
                       fontWeight: 800,
-                      color: '#22d3ee',
+                      color: '#d4a36a',
                       minWidth: 20,
                       textAlign: 'center',
                       padding: '1px 6px',
@@ -419,7 +419,7 @@ export const LiveHostLongiaSignalShortcuts = ({
                     : '0 question en attente'}
                 </p>
               </div>
-              <span style={{ fontSize: 11, color: 'rgba(167,139,250,.5)', flexShrink: 0 }}>›</span>
+              <span style={{ fontSize: 11, color: 'rgba(212,163,106,.5)', flexShrink: 0 }}>›</span>
             </button>
           ) : null}
 
@@ -467,7 +467,7 @@ export const LiveHostLongiaSignalShortcuts = ({
                   : 'Historique, filtres et modes IA'}
               </p>
             </div>
-            <span style={{ fontSize: 11, color: 'rgba(167,139,250,.5)', flexShrink: 0 }}>›</span>
+            <span style={{ fontSize: 11, color: 'rgba(212,163,106,.5)', flexShrink: 0 }}>›</span>
           </button>
         </div>
       </div>

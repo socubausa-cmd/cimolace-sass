@@ -250,7 +250,7 @@ export default function LiveControlsBar({
         </AnimatePresence>
 
         {premiumHostDock && isHost ? (
-          <div className="relative flex w-full max-w-[min(98vw,1180px)] flex-col items-stretch gap-2 rounded-[14px] border border-white/[0.08] bg-[rgba(6,7,18,0.88)] px-2 py-2 shadow-[0_8px_40px_-20px_rgba(124,58,237,0.25),0_4px_28px_-16px_rgba(251,191,36,0.12)] backdrop-blur-xl">
+          <div className="relative flex w-full max-w-[min(98vw,1180px)] flex-col items-stretch gap-2 rounded-[14px] border border-white/[0.08] bg-[rgba(6,7,18,0.88)] px-2 py-2 shadow-[0_8px_40px_-20px_rgba(212,163,106,0.25),0_4px_28px_-16px_rgba(251,191,36,0.12)] backdrop-blur-xl">
             <div className="flex min-h-[52px] w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3 sm:py-0 sm:pl-1 sm:pr-0.5">
             <div className="flex shrink-0 flex-wrap items-center gap-0.5 sm:flex-nowrap">
               <button
@@ -284,7 +284,7 @@ export default function LiveControlsBar({
                 onClick={() => { onToggleParticipants?.(); setHostDockMoreOpen(false); }}
                 className={cn(
                   'h-9 w-9 rounded-full transition-colors',
-                  participantsOpen ? 'bg-violet-500/25 text-violet-100' : 'text-white/88 hover:bg-white/10',
+                  participantsOpen ? 'bg-amber-500/25 text-amber-100' : 'text-white/88 hover:bg-white/10',
                 )}
                 title={participantsOpen ? 'Revenir au pilotage cours' : 'Membres & sièges'}
                 aria-pressed={Boolean(participantsOpen)}
@@ -553,7 +553,7 @@ export default function LiveControlsBar({
                   className={cn(
                     'h-8 px-2.5 rounded-full text-xs inline-flex items-center gap-1.5 transition-colors',
                     copied
-                      ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/30'
+                      ? 'bg-amber-500/25 text-amber-300 border border-amber-500/30'
                       : 'text-white/85 hover:bg-white/10 border border-transparent'
                   )}
                   title="Copier le lien d'invitation"
@@ -589,7 +589,7 @@ export default function LiveControlsBar({
                   className={cn(
                     'h-8 px-2 rounded-full text-xs inline-flex items-center gap-1',
                     progressivePlayback
-                      ? 'bg-sky-500/20 text-sky-200 border border-sky-500/25'
+                      ? 'bg-amber-500/20 text-amber-200 border border-amber-500/25'
                       : 'text-white/85 hover:bg-white/10 border border-transparent',
                   )}
                   title={

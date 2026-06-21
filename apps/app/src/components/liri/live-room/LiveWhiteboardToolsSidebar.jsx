@@ -168,7 +168,7 @@ export default function LiveWhiteboardToolsSidebar({
           className={cn(
             'flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[9px] font-semibold border flex-1 justify-center transition-colors',
             sidebarTab === 'scolaire'
-              ? 'border-violet-500/55 bg-violet-500/16 text-violet-100'
+              ? 'border-amber-500/55 bg-amber-500/16 text-amber-100'
               : 'border-white/10 bg-white/4 text-white/50 hover:text-white/70',
           )}
         >
@@ -303,7 +303,7 @@ export default function LiveWhiteboardToolsSidebar({
             className={cn(
               designerShellChipGhost,
               'flex-1 py-1.5 text-[9px]',
-              boardSurface === 'chalkboard' && 'border-emerald-500/40 bg-emerald-500/12 text-emerald-100',
+              boardSurface === 'chalkboard' && 'border-amber-500/40 bg-amber-500/12 text-amber-100',
             )}
           >
             Tableau vert
@@ -315,7 +315,7 @@ export default function LiveWhiteboardToolsSidebar({
             className={cn(
               designerShellChipGhost,
               'flex-1 py-1.5 text-[9px]',
-              boardSurface === 'geoplan' && 'border-blue-500/40 bg-blue-500/12 text-blue-100',
+              boardSurface === 'geoplan' && 'border-amber-500/40 bg-amber-500/12 text-amber-100',
             )}
           >
             Géoplan
@@ -390,7 +390,7 @@ export default function LiveWhiteboardToolsSidebar({
           onClick={() => setSnapToGrid(!snapToGrid)}
           className={cn(
             designerShellChipGhost, 'w-full py-1.5 text-[9px] flex items-center justify-center gap-1.5',
-            snapToGrid && 'border-blue-500/45 bg-blue-500/12 text-blue-100',
+            snapToGrid && 'border-amber-500/45 bg-amber-500/12 text-amber-100',
           )}
           title="Aligner les tracés sur la grille (24px)"
         >

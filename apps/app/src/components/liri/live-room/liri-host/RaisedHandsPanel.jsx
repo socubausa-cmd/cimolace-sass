@@ -32,7 +32,7 @@ export function RaisedHandsPanel({
         className="flex w-full items-center justify-between gap-2 border-b border-white/[0.06] px-2.5 py-2 text-left transition-colors hover:bg-white/[0.04]"
       >
         <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-500/15 text-red-300 ring-1 ring-violet-400/35">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-500/15 text-red-300 ring-1 ring-amber-400/35">
             <Hand className="h-3.5 w-3.5" />
           </span>
           <div className="min-w-0">

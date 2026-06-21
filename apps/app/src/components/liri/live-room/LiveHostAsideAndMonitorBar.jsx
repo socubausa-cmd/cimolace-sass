@@ -48,7 +48,7 @@ export default function LiveHostAsideAndMonitorBar({
           type="button"
           disabled={!peerId || disabled || busy}
           onClick={() => peerId && startAside(peerId, 'audio')}
-          className="inline-flex items-center gap-1.5 rounded-md border border-violet-500/40 bg-violet-950/50 px-2.5 py-1.5 text-[11px] font-medium text-violet-100 transition-colors hover:bg-violet-900/60 disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center gap-1.5 rounded-md border border-amber-500/40 bg-amber-950/50 px-2.5 py-1.5 text-[11px] font-medium text-amber-100 transition-colors hover:bg-amber-900/60 disabled:cursor-not-allowed disabled:opacity-40"
           title={LIVE_COMM_COPY[LIVE_COMM_LAYER.ASIDE_AUDIO]}
         >
           <Mic className="h-3.5 w-3.5" />
@@ -91,7 +91,7 @@ export default function LiveHostAsideAndMonitorBar({
       ) : null}
 
       <div className="border-t border-white/[0.08] pt-2">
-        <div className="mb-1 flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-200/70">
+        <div className="mb-1 flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wide text-amber-200/70">
           <Headphones className="h-3 w-3" />
           Préécoute casque (hors salle)
         </div>
@@ -107,7 +107,7 @@ export default function LiveHostAsideAndMonitorBar({
             type="button"
             onClick={onPreview}
             disabled={!previewUrl.trim()}
-            className="rounded-md bg-emerald-800/50 px-2.5 py-1 text-[11px] text-emerald-50 hover:bg-emerald-700/55 disabled:opacity-40"
+            className="rounded-md bg-amber-800/50 px-2.5 py-1 text-[11px] text-amber-50 hover:bg-amber-700/55 disabled:opacity-40"
           >
             Écouter
           </button>
@@ -128,12 +128,12 @@ export default function LiveHostAsideAndMonitorBar({
               step={0.05}
               value={monitorBus.previewVolume}
               onChange={(e) => monitorBus.setPreviewVolume(Number(e.target.value))}
-              className="w-20 accent-emerald-500"
+              className="w-20 accent-amber-500"
             />
           </label>
         </div>
         {monitorBus.lastPreviewLabel && monitorBus.isPreviewPlaying ? (
-          <p className="mt-1 text-[10px] text-emerald-200/80">{monitorBus.lastPreviewLabel}</p>
+          <p className="mt-1 text-[10px] text-amber-200/80">{monitorBus.lastPreviewLabel}</p>
         ) : null}
       </div>
     </div>

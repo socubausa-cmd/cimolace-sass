@@ -96,7 +96,7 @@ export default function LiveGuestMobileAuthorityShell({
           style={{ maxWidth: MOBILE_LIVE_AUTHORITY_WIDTH }}
         >
           <div
-            className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-amber-300"
+            className="h-full rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-300"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -106,7 +106,7 @@ export default function LiveGuestMobileAuthorityShell({
         <div className="absolute inset-0 z-0 flex min-h-0 flex-col">{children}</div>
 
         <div
-          className="absolute z-20 overflow-hidden rounded-2xl border-2 border-white/25 bg-black/40 shadow-[0_12px_40px_rgba(0,0,0,.5)] ring-2 ring-cyan-400/15"
+          className="absolute z-20 overflow-hidden rounded-2xl border-2 border-white/25 bg-black/40 shadow-[0_12px_40px_rgba(0,0,0,.5)] ring-2 ring-amber-400/15"
           style={{
             right: 10,
             top: 8,
@@ -136,7 +136,7 @@ export default function LiveGuestMobileAuthorityShell({
             className="group flex h-12 w-12 flex-col items-center justify-center"
             aria-label="Control Mesh"
           >
-            <span className="flex h-12 w-12 items-center justify-center rounded-full border border-cyan-400/35 bg-[#0c1018]/90 text-cyan-200 shadow-lg backdrop-blur-md transition group-active:scale-95 group-hover:border-cyan-300/50">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full border border-amber-400/35 bg-[#0c1018]/90 text-amber-200 shadow-lg backdrop-blur-md transition group-active:scale-95 group-hover:border-amber-300/50">
               <Network className="h-5 w-5" strokeWidth={2.2} />
             </span>
           </button>
@@ -147,7 +147,7 @@ export default function LiveGuestMobileAuthorityShell({
             className="group flex h-12 w-12 flex-col items-center justify-center"
             aria-label="LONGIA"
           >
-            <span className="flex h-12 w-12 items-center justify-center rounded-full border border-fuchsia-500/35 bg-[#120818]/90 text-fuchsia-200 shadow-lg backdrop-blur-md transition group-active:scale-95 group-hover:border-fuchsia-300/50">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full border border-amber-500/35 bg-[#120818]/90 text-amber-200 shadow-lg backdrop-blur-md transition group-active:scale-95 group-hover:border-amber-300/50">
               <Sparkles className="h-5 w-5" strokeWidth={2.2} />
             </span>
           </button>

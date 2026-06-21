@@ -380,7 +380,7 @@ export function NeuronQHostTab({ questions, onMarkAnswered, onMarkSkipped, qaMod
                 'flex items-start gap-2 border-white/[0.06] bg-[#1f1e1c]/60 py-2',
               )}
             >
-              <Check className="mt-0.5 h-3 w-3 shrink-0 text-emerald-400/90" />
+              <Check className="mt-0.5 h-3 w-3 shrink-0 text-amber-400/90" />
               <p className="line-clamp-2 text-[10px] leading-relaxed text-white/48">
                 {q.reformulated_text || q.raw_text}
               </p>
@@ -495,7 +495,7 @@ export function QAModeOverlay({ questions, onMarkAnswered, onMarkSkipped, onClos
         </div>
       ) : (
         <div className="space-y-2 text-center">
-          <Check className="mx-auto h-10 w-10 text-emerald-400/90" />
+          <Check className="mx-auto h-10 w-10 text-amber-400/90" />
           <p className="text-lg font-semibold text-white/82">Toutes les questions ont été traitées</p>
           <button
             type="button"

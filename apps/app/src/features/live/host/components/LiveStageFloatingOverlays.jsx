@@ -40,7 +40,7 @@ export function LiveStageFloatingOverlays({
               width: 28,
               height: 28,
               borderRadius: '50%',
-              background: 'linear-gradient(145deg, rgba(251,191,36,.95), rgba(109,40,217,.88))',
+              background: 'linear-gradient(145deg, rgba(251,191,36,.95), rgba(168,118,58,.88))',
               border: '1px solid rgba(255,255,255,.2)',
               flexShrink: 0,
             }}

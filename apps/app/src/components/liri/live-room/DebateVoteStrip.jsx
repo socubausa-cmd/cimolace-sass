@@ -50,7 +50,7 @@ export default function DebateVoteStrip({
         compact ? 'bottom-[max(5.25rem,env(safe-area-inset-bottom,0px))]' : 'bottom-32'
       }`}
     >
-      <div className="rounded-2xl border border-violet-500/35 bg-[#14101c]/95 backdrop-blur-xl px-4 py-3 shadow-xl">
+      <div className="rounded-2xl border border-amber-500/35 bg-[#14101c]/95 backdrop-blur-xl px-4 py-3 shadow-xl">
         <p className="text-center text-[11px] text-white/55 mb-2">
           Vote round {r} — qui a été le plus convaincant ?
         </p>
@@ -75,7 +75,7 @@ export default function DebateVoteStrip({
             type="button"
             disabled={voteBusy}
             onClick={() => void submit('B')}
-            className="h-10 px-5 rounded-xl bg-sky-600/75 hover:bg-sky-600 text-sm font-medium disabled:opacity-40"
+            className="h-10 px-5 rounded-xl bg-amber-600/75 hover:bg-amber-600 text-sm font-medium disabled:opacity-40"
           >
             Camp B
           </button>

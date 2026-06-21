@@ -36,7 +36,7 @@ export const LiveHostMindmapOrWhiteboardSlot = ({
           style={{
             ...LH_SIDEBAR_CARD,
             border: '1px solid rgba(255,255,255,.08)',
-            background: '#12111a',
+            background: '#1a1815',
             overflow: 'hidden',
             flex: !isGuestUi ? 1 : undefined,
             minHeight: 0,

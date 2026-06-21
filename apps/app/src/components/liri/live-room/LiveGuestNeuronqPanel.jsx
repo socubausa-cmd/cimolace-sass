@@ -108,13 +108,13 @@ export default function LiveGuestNeuronqPanel({
             <div className={designerShellHeader}>
               <div className="flex min-w-0 flex-1 items-start gap-3">
                 <div className={designerShellIconBadge}>
-                  <HelpCircle className="h-5 w-5 text-cyan-200/95" strokeWidth={2} />
+                  <HelpCircle className="h-5 w-5 text-amber-200/95" strokeWidth={2} />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[12px] font-semibold tracking-wide text-white/95">NeuronQ — question au formateur</p>
                   <p className="mt-1 max-w-[360px] text-[10px] leading-relaxed text-white/38">
                     Chaque bloc est un « volet » de votre question.{' '}
-                    <span className="text-cyan-200/80">Ctrl+Entrée</span> (ou <span className="text-cyan-200/80">⌘+Entrée</span>) ajoute un
+                    <span className="text-amber-200/80">Ctrl+Entrée</span> (ou <span className="text-amber-200/80">⌘+Entrée</span>) ajoute un
                     volet suivant. Envoyez quand tout est prêt.
                   </p>
                 </div>
@@ -133,7 +133,7 @@ export default function LiveGuestNeuronqPanel({
                       className="rounded-xl border border-white/[0.08] bg-[#14131c]/90 p-3 ring-1 ring-inset ring-white/[0.02]"
                     >
                       <div className="mb-2 flex items-center justify-between gap-2">
-                        <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-cyan-200/75">
+                        <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-amber-200/75">
                           Volet {index + 1}
                           {volets.length > 1 ? ` / ${volets.length}` : ''}
                         </span>
@@ -166,13 +166,13 @@ export default function LiveGuestNeuronqPanel({
                 <button
                   type="button"
                   onClick={addVolet}
-                  className="mt-3 w-full rounded-xl border border-dashed border-cyan-500/25 bg-cyan-500/[0.04] py-2.5 text-[11px] font-semibold text-cyan-200/80 transition-colors hover:border-cyan-400/40 hover:bg-cyan-500/[0.08]"
+                  className="mt-3 w-full rounded-xl border border-dashed border-amber-500/25 bg-amber-500/[0.04] py-2.5 text-[11px] font-semibold text-amber-200/80 transition-colors hover:border-amber-400/40 hover:bg-amber-500/[0.08]"
                 >
                   + Ajouter un volet (ou Ctrl+Entrée dans un champ)
                 </button>
 
                 {guestNeuronqReformulated ? (
-                  <div className="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-500/[0.06] p-3">
+                  <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/[0.06] p-3">
                     <span className="text-[9px] font-semibold uppercase tracking-wide text-white/45">Version reformulée (modifiable)</span>
                     <textarea
                       value={guestNeuronqReformulated}
@@ -190,7 +190,7 @@ export default function LiveGuestNeuronqPanel({
                     type="button"
                     disabled={!canAct || neuronqReformulating}
                     onClick={() => onReformulate()}
-                    className="rounded-xl border border-cyan-500/35 bg-cyan-500/10 px-4 py-2.5 text-[12px] font-semibold text-cyan-100/95 transition-colors hover:bg-cyan-500/16 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-2.5 text-[12px] font-semibold text-amber-100/95 transition-colors hover:bg-amber-500/16 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     {neuronqReformulating ? '…' : 'Reformuler (IA)'}
                   </button>

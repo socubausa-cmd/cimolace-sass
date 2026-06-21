@@ -43,14 +43,14 @@ export const LiveGuestProctorHistoryFloating = ({
             return !o;
           });
         }}
-        className="rounded-full border border-violet-400/35 bg-[rgba(46,16,101,.45)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-violet-100/95 shadow-lg backdrop-blur-sm transition-colors hover:bg-[rgba(46,16,101,.65)]"
+        className="rounded-full border border-amber-400/35 bg-[rgba(46,16,101,.45)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-amber-100/95 shadow-lg backdrop-blur-sm transition-colors hover:bg-[rgba(46,16,101,.65)]"
         title="Commandes caméra enregistrées pour votre compte dans cette session"
       >
         {open ? 'Fermer' : 'Mes commandes caméra'}
       </button>
       {open ? (
         <div
-          className="mt-2 max-h-[min(38vh,240px)] overflow-y-auto rounded-xl border border-white/12 bg-[rgba(20,19,28,.92)] p-2.5 shadow-xl backdrop-blur-md"
+          className="mt-2 max-h-[min(38vh,240px)] overflow-y-auto rounded-xl border border-white/12 bg-[rgba(26,24,21,.92)] p-2.5 shadow-xl backdrop-blur-md"
           style={{ boxShadow: '0 12px 40px rgba(0,0,0,.45)' }}
         >
           <p className="mb-2 text-[9px] font-semibold uppercase tracking-wider text-white/45">
@@ -84,7 +84,7 @@ export const LiveGuestProctorHistoryFloating = ({
                   key={ev.id}
                   className="rounded-lg border border-white/[0.07] bg-black/30 px-2 py-1.5 text-[10px] leading-snug text-white/80"
                 >
-                  <span className="font-semibold text-violet-200/95">{label}</span>
+                  <span className="font-semibold text-amber-200/95">{label}</span>
                   <span className="text-white/40"> · {rel}</span>
                   <div className="mt-0.5 text-[9px] text-white/45">{ack}</div>
                 </li>

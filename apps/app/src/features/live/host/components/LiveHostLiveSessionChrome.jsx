@@ -13,19 +13,22 @@ export function LiveHostLiveSessionChrome({
   lhLayoutCompact,
   children,
 }) {
-  const { branding, cssVars, shellTheme } = useTenantBranding();
+  const { branding, cssVars } = useTenantBranding();
   const liveShellVars = useMemo(() => buildLiveShellCssVars(liveShell, branding), [liveShell, branding]);
   const rootStyle = useMemo(
     () => ({
       ...getLiveHostSessionRootStyle({ liveShell, lhLayoutCompact }),
       ...cssVars,
       ...liveShellVars,
+      // Neutralise l'accent tenant (--school-*) sur l'ambre LIRI → plus de grille/accent violet froid.
+      '--school-accent': 'var(--lh-accent, #d4a36a)',
+      '--school-accent-rgb': '212, 163, 106',
+      '--school-primary': 'var(--lh-accent, #d4a36a)',
       backgroundColor: 'var(--lh-page-bg, #262624)',
-      backgroundImage: shellTheme.gridBackground?.backgroundImage,
-      backgroundSize: shellTheme.gridBackground?.backgroundSize,
+      backgroundImage: liveShell.pageMesh,
       fontFamily: 'var(--school-font-family, system-ui, -apple-system, sans-serif)',
     }),
-    [liveShell, lhLayoutCompact, cssVars, shellTheme, liveShellVars],
+    [liveShell, lhLayoutCompact, cssVars, liveShellVars],
   );
 
   return (

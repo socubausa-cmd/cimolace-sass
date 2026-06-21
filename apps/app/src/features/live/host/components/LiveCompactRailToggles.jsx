@@ -21,7 +21,7 @@ export const LiveCompactRailToggles = ({
       {!liveLeftRailOpen ? (
         <button
           type="button"
-          className="pointer-events-auto fixed z-[52] top-1/2 -translate-y-1/2 flex h-10 w-8 items-center justify-center rounded-r-lg border border-white/15 bg-[#14131c]/95 text-white/80 shadow-lg backdrop-blur-md transition hover:border-violet-400/35 hover:text-white"
+          className="pointer-events-auto fixed z-[52] top-1/2 -translate-y-1/2 flex h-10 w-8 items-center justify-center rounded-r-lg border border-white/15 bg-[#14131c]/95 text-white/80 shadow-lg backdrop-blur-md transition hover:border-amber-400/35 hover:text-white"
           style={{ left: 'max(8px, env(safe-area-inset-left, 0px))' }}
           onClick={onOpenLeft}
           title="Afficher le panneau gauche"
@@ -33,7 +33,7 @@ export const LiveCompactRailToggles = ({
       {!liveRightRailOpen ? (
         <button
           type="button"
-          className="pointer-events-auto fixed z-[52] top-1/2 -translate-y-1/2 flex h-10 w-8 items-center justify-center rounded-l-lg border border-white/15 bg-[#14131c]/95 text-white/80 shadow-lg backdrop-blur-md transition hover:border-violet-400/35 hover:text-white"
+          className="pointer-events-auto fixed z-[52] top-1/2 -translate-y-1/2 flex h-10 w-8 items-center justify-center rounded-l-lg border border-white/15 bg-[#14131c]/95 text-white/80 shadow-lg backdrop-blur-md transition hover:border-amber-400/35 hover:text-white"
           style={{ right: 'max(8px, env(safe-area-inset-right, 0px))' }}
           onClick={onOpenRight}
           title="Afficher le panneau droit"

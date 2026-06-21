@@ -147,7 +147,7 @@ export function LiriHostMembersColumn({
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[11px] font-medium leading-tight">{m.name}</p>
-                      <p className="truncate text-[9px] text-emerald-400/80">{m.role || 'connecté'}</p>
+                      <p className="truncate text-[9px] text-amber-400/80">{m.role || 'connecté'}</p>
                     </div>
                   </button>
                   {onPromoteParticipant && uid && !activeP ? (

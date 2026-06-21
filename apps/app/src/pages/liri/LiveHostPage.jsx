@@ -838,11 +838,11 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
         // la bande de membres peuplée (aucun participant réel sur cette route mock).
         setLiveParticipants([
           { id: 'demo-1', name: 'Aicha Karim', status: 'online', color: '#f472b6' },
-          { id: 'demo-2', name: 'Sara Benali', status: 'online', color: '#60a5fa' },
-          { id: 'demo-3', name: 'Karim Touré', status: 'online', color: '#34d399' },
+          { id: 'demo-2', name: 'Sara Benali', status: 'online', color: '#d4a36a' },
+          { id: 'demo-3', name: 'Karim Touré', status: 'online', color: '#c98a4e' },
           { id: 'demo-4', name: 'Lina Cissé', status: 'online', color: '#fbbf24' },
-          { id: 'demo-5', name: 'Yacine Mansouri', status: 'online', color: '#a78bfa' },
-          { id: 'demo-6', name: 'Nabil Bensalem', status: 'online', color: '#22d3ee' },
+          { id: 'demo-5', name: 'Yacine Mansouri', status: 'online', color: '#e0b878' },
+          { id: 'demo-6', name: 'Nabil Bensalem', status: 'online', color: '#b8794a' },
           { id: 'demo-7', name: 'Fatoumata Sow', status: 'online', color: '#fb7185' },
         ]);
         setPhase(PHASE.LIVE);
@@ -1271,7 +1271,7 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     return () => cancelAnimationFrame(id);
   }, [hostLiriMobileHostBranch, promotedId, liveKitMediaEpoch, syncLhMaquetteVideo]);
 
-  const guestFooterBarBg = 'linear-gradient(170deg,#0f1022,#090a18)';
+  const guestFooterBarBg = 'linear-gradient(170deg,#1a1816,#090a18)';
 
   const {
     footerWhisperTargets, guestFooterMessagingAllowed, memberModalWhisperPickable, memberModalAllowSchoolLife, guestMicLocked,

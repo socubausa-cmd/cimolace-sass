@@ -378,7 +378,7 @@ export function MemberVideoModal({
                   <Button
                     type="button"
                     variant="outline"
-                    className="border-cyan-400/35 text-cyan-100/95 hover:bg-cyan-500/12"
+                    className="border-amber-400/35 text-amber-100/95 hover:bg-amber-500/12"
                     onClick={() => onHostRemoteCamera(true)}
                   >
                     Allumer la caméra (élève)

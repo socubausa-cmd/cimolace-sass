@@ -102,14 +102,14 @@ export const LiveArenaLayoutOverlays = ({
                 width: '72px',
                 height: '72px',
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg,#6d28d9,#4c1d95)',
+                background: 'linear-gradient(135deg,#a8763a,#7a5526)',
                 border: '2px solid rgba(255,255,255,.12)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: '20px',
                 fontWeight: 800,
-                color: '#e9d5ff',
+                color: '#f3e8d2',
               }}
             >
               {(focusName || '?').substring(0, 2).toUpperCase()}
@@ -209,14 +209,14 @@ export const LiveArenaLayoutOverlays = ({
                       width: '40px',
                       height: '40px',
                       borderRadius: '50%',
-                      background: 'linear-gradient(135deg,#4c1d95,#312e81)',
+                      background: 'linear-gradient(135deg,#7a5526,#5c4a28)',
                       border: '1px solid rgba(255,255,255,.12)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: '12px',
                       fontWeight: 800,
-                      color: '#c4b5fd',
+                      color: '#e3c79a',
                     }}
                   >
                     {(cellName || '?').substring(0, 2).toUpperCase()}

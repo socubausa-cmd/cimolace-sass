@@ -76,7 +76,7 @@ export function LiveGuestLeftRail({
                 variant="mark"
                 size="rail"
                 letterClassName="text-white"
-                className="text-white drop-shadow-[0_2px_10px_rgba(124,58,237,0.35)]"
+                className="text-white drop-shadow-[0_2px_10px_rgba(212,163,106,0.35)]"
               />
             </div>
             {phase === PHASE.LIVE && !lhStageFocusLayout ? (
@@ -116,7 +116,7 @@ export function LiveGuestLeftRail({
                 Cours de la formation
               </Link>
               <Link to={`/formation/${sessionFormationId}/forum`} target="_blank" rel="noopener noreferrer"
-                style={{display:'flex',alignItems:'center',gap:'6px',padding:'7px 8px',borderRadius:'6px',border:'1px solid rgba(255,255,255,.07)',background:'rgba(255,255,255,.03)',fontSize:'10px',color:'#c4b5fd',fontWeight:600,textDecoration:'none'}}>
+                style={{display:'flex',alignItems:'center',gap:'6px',padding:'7px 8px',borderRadius:'6px',border:'1px solid rgba(255,255,255,.07)',background:'rgba(255,255,255,.03)',fontSize:'10px',color:'#e3c79a',fontWeight:600,textDecoration:'none'}}>
                 Forum de la formation
               </Link>
             </div>

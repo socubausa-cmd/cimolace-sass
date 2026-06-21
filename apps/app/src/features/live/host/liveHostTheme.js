@@ -8,9 +8,9 @@ export const GLOBAL_CSS = `
 .lh-sy::-webkit-scrollbar{width:3px}.lh-sy::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12)}
 .lh-sx{overflow-x:auto;scrollbar-width:none}.lh-sx::-webkit-scrollbar{display:none}
 .lh-ov{position:fixed;inset:0;background:rgba(8,9,14,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:500;display:flex;align-items:center;justify-content:center;animation:lhFadeUp .18s ease;padding:16px}
-.lh-mbox{background:linear-gradient(165deg,rgba(20,19,28,.97) 0%,rgba(15,17,23,.99) 100%);border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.04) inset;animation:lhMIn .2s ease;max-height:min(90vh,920px);overflow:hidden;display:flex;flex-direction:column}
+.lh-mbox{background:linear-gradient(165deg,rgba(26,24,21,.97) 0%,rgba(24,22,19,.99) 100%);border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.04) inset;animation:lhMIn .2s ease;max-height:min(90vh,920px);overflow:hidden;display:flex;flex-direction:column}
 .lh-tbtn{padding:6px 12px;font-size:11px;font-weight:600;letter-spacing:.04em;border:none;background:transparent;color:rgba(255,255,255,.38);border-bottom:2px solid transparent;cursor:pointer;transition:all .12s}
-.lh-tbtn.on{color:rgba(var(--lh-accent-rgb,253,230,138),.95);border-bottom-color:rgba(var(--lh-accent-rgb,245,158,11),.55)}
+.lh-tbtn.on{color:rgba(var(--lh-accent-rgb,233,205,150),.95);border-bottom-color:rgba(var(--lh-accent-rgb,212,163,106),.55)}
 .liri-live-shell--host,.liri-live-shell--guest{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
 .lh-right-rail-scroll{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.12) transparent}
 .lh-right-rail-scroll::-webkit-scrollbar{width:3px}
@@ -36,34 +36,34 @@ body.lh-sp-on .lh-sp-glow{box-shadow:0 0 0 1px rgba(200,150,12,.22),0 0 28px rgb
   -webkit-font-smoothing:antialiased;
   border:1px solid transparent;
   background:transparent;
-  color:rgba(var(--lh-accent-rgb,167,139,250),.45);
+  color:rgba(var(--lh-accent-rgb,212,163,106),.45);
 }
 .lh-scene-btn[data-active="true"]{
-  border-color:rgba(var(--lh-accent-rgb,139,92,246),.55);
-  background:rgba(var(--lh-accent-rgb,109,40,217),.28);
-  color:var(--lh-accent,#c4b5fd);
+  border-color:rgba(var(--lh-accent-rgb,212,163,106),.55);
+  background:rgba(var(--lh-accent-rgb,168,118,58),.28);
+  color:var(--lh-accent,#e3c79a);
 }
 .lh-scene-btn:hover{
   transform:translateY(-3px) scale(1.14);
   box-shadow:
     0 2px 6px rgba(0,0,0,.22),
-    0 8px 24px rgba(var(--lh-accent-rgb,109,40,217),.32),
-    0 18px 40px rgba(var(--lh-accent-rgb,109,40,217),.14),
-    0 0 0 1.5px rgba(var(--lh-accent-rgb,139,92,246),.48),
+    0 8px 24px rgba(var(--lh-accent-rgb,168,118,58),.32),
+    0 18px 40px rgba(var(--lh-accent-rgb,168,118,58),.14),
+    0 0 0 1.5px rgba(var(--lh-accent-rgb,212,163,106),.48),
     inset 0 1px 0 rgba(255,255,255,.14);
-  border-color:rgba(var(--lh-accent-rgb,139,92,246),.65);
-  background:linear-gradient(160deg,rgba(var(--lh-accent-rgb,139,92,246),.22),rgba(var(--lh-accent-rgb,109,40,217),.34));
-  color:var(--lh-accent,#ddd6fe);
+  border-color:rgba(var(--lh-accent-rgb,212,163,106),.65);
+  background:linear-gradient(160deg,rgba(var(--lh-accent-rgb,212,163,106),.22),rgba(var(--lh-accent-rgb,168,118,58),.34));
+  color:var(--lh-accent,#efe0c4);
 }
 .lh-scene-btn:active{
   transform:scale(.92);
   transition:transform 90ms cubic-bezier(.25,.46,.45,.94),box-shadow 90ms ease;
   box-shadow:0 1px 4px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.07);
 }
-.lh-side-head{position:sticky;top:0;z-index:18;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:#12111a;padding:10px 12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);backdrop-filter:blur(8px)}
+.lh-side-head{position:sticky;top:0;z-index:18;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:#1a1815;padding:10px 12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);backdrop-filter:blur(8px)}
 .lh-side-head-kicker{font-size:8px;font-weight:600;letter-spacing:.12em;color:rgba(255,255,255,.38);text-transform:uppercase;line-height:1.3}
-.liri-live-shell--guest .lh-side-head-kicker{color:rgba(var(--lh-accent-rgb,253,230,138),.42)}
-.liri-live-shell--host .lh-side-head-title,.liri-live-shell--guest .lh-side-head-title{margin-top:2px;font-size:13px;font-weight:600;letter-spacing:.06em;color:rgba(var(--lh-accent-rgb,253,230,138),.95);line-height:1.35;font-family:Georgia,'Times New Roman',ui-serif,serif}
+.liri-live-shell--guest .lh-side-head-kicker{color:rgba(var(--lh-accent-rgb,233,205,150),.42)}
+.liri-live-shell--host .lh-side-head-title,.liri-live-shell--guest .lh-side-head-title{margin-top:2px;font-size:13px;font-weight:600;letter-spacing:.06em;color:rgba(var(--lh-accent-rgb,233,205,150),.95);line-height:1.35;font-family:Georgia,'Times New Roman',ui-serif,serif}
 .lh-side-head-sub{margin-top:4px;font-size:9px;line-height:1.45;color:rgba(255,255,255,.38)}
 `;
 
@@ -99,14 +99,16 @@ function hexToRgbTriplet(hex) {
   const h = String(hex || '').trim().replace('#', '');
   const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
   const n = parseInt(full, 16);
-  if (full.length !== 6 || Number.isNaN(n)) return '124, 58, 237';
+  if (full.length !== 6 || Number.isNaN(n)) return '212, 163, 106';
   return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
 }
 
 export function buildLiveShellCssVars(liveShell, branding) {
   const live = (branding && branding.live) || {};
-  // Accent = surcharge live tenant > accent branding tenant > violet charte LIRI (#7c3aed).
-  const accent = live.accent || (branding && branding.accentColor) || '#7c3aed';
+  // Accent = ambre chaud LIRI par défaut (#d4a36a). Ne suit PLUS accentColor tenant (ça injectait
+  // du violet/froid = 2e temps de couleur) ; surchargeable uniquement via branding.live.accent
+  // pour rester dans une famille chaude cohérente avec le fond.
+  const accent = live.accent || '#d4a36a';
   return {
     '--lh-page-bg': live.pageBg || liveShell.pageBg,
     '--lh-stage-bg': live.stageBg || liveShell.stageBg,

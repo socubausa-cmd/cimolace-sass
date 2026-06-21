@@ -997,7 +997,7 @@ export default function LiveRoomShell({
     ? 'rounded-2xl border border-red-500/25 bg-black/[0.07] shadow-[inset_0_1px_0_0_rgba(248,113,113,0.14)]'
     : glassPanel;
   const zone2Shell = liriGuestLayout
-    ? 'rounded-2xl border border-sky-400/22 bg-black/[0.05] shadow-[inset_0_1px_0_0_rgba(56,189,248,0.12)]'
+    ? 'rounded-2xl border border-amber-400/22 bg-black/[0.05] shadow-[inset_0_1px_0_0_rgba(56,189,248,0.12)]'
     : glassPanel;
   const zone3Shell = liriGuestLayout
     ? 'rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-black/[0.06] shadow-[inset_0_1px_0_0_rgba(212,175,55,0.12)]'
@@ -1118,7 +1118,7 @@ export default function LiveRoomShell({
           'p-1.5',
           glassSub,
           arenaNotifScrollHighlight &&
-            'ring-2 ring-violet-400/50 ring-offset-2 ring-offset-[#070a10] transition-shadow duration-300',
+            'ring-2 ring-amber-400/50 ring-offset-2 ring-offset-[#070a10] transition-shadow duration-300',
         )}
       >
         <div className="mb-1 flex items-start justify-between gap-2">
@@ -1524,7 +1524,7 @@ export default function LiveRoomShell({
                         <button
                           type="button"
                           onClick={() => onArenaApproveWaiting(entry.id)}
-                          className="h-7 min-w-0 flex-1 rounded-lg border border-emerald-500/30 bg-emerald-500/15 text-[9px] font-semibold text-emerald-300 hover:bg-emerald-500/25"
+                          className="h-7 min-w-0 flex-1 rounded-lg border border-amber-500/30 bg-amber-500/15 text-[9px] font-semibold text-amber-300 hover:bg-amber-500/25"
                         >
                           Accepter
                         </button>
@@ -1836,7 +1836,7 @@ export default function LiveRoomShell({
                     'flex items-center justify-between gap-2 border-b px-3 pb-0 pt-2',
                     liriArenaDesktopChrome
                       ? 'border-amber-400/15 bg-black/15'
-                      : 'border-sky-400/10',
+                      : 'border-amber-400/10',
                   )}
                 >
                   <p
@@ -1850,7 +1850,7 @@ export default function LiveRoomShell({
                   <span
                     className={cn(
                       'tabular-nums text-[9px]',
-                      liriArenaDesktopChrome ? 'text-amber-200/60' : 'text-sky-300/70',
+                      liriArenaDesktopChrome ? 'text-amber-200/60' : 'text-amber-300/70',
                     )}
                   >
                     {participants.length}
@@ -1969,13 +1969,13 @@ export default function LiveRoomShell({
               'flex-shrink-0 border-b px-3 py-1.5',
               liriArenaDesktopChrome
                 ? 'border-amber-400/12 bg-[#0a0612]/40'
-                : 'border-sky-400/10 bg-sky-500/[0.04]',
+                : 'border-amber-400/10 bg-amber-500/[0.04]',
             )}
           >
             <p
               className={cn(
                 'text-[10px] font-semibold uppercase tracking-[0.14em]',
-                liriArenaDesktopChrome ? 'text-amber-200/80' : 'text-sky-300/80',
+                liriArenaDesktopChrome ? 'text-amber-200/80' : 'text-amber-300/80',
               )}
             >
               Zone 2 — Écran intelligent
@@ -2302,7 +2302,7 @@ export default function LiveRoomShell({
                       </span>
                     ) : null}
                     {canNav ? (
-                      <span className="text-[8px] font-normal text-sky-300/80">· ouvrir sur l&apos;écran</span>
+                      <span className="text-[8px] font-normal text-amber-300/80">· ouvrir sur l&apos;écran</span>
                     ) : null}
                   </p>
                   <p className="font-serif text-sm leading-relaxed text-white/88 whitespace-pre-wrap line-clamp-[10]">
@@ -2320,7 +2320,7 @@ export default function LiveRoomShell({
                       'w-full rounded-lg border p-2.5 transition-colors text-left',
                       scriptCurrentSection?.id === sec.id
                         ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]'
-                        : 'border-white/10 bg-white/[0.03] hover:border-sky-500/30 hover:bg-sky-500/08',
+                        : 'border-white/10 bg-white/[0.03] hover:border-amber-500/30 hover:bg-amber-500/08',
                     )}
                   >
                     {inner}
@@ -2401,7 +2401,7 @@ export default function LiveRoomShell({
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-medium text-white/90 truncate leading-tight">{m.name}</p>
-                  <p className="text-[9px] text-emerald-400/80 truncate">{m.role || 'connecté'}</p>
+                  <p className="text-[9px] text-amber-400/80 truncate">{m.role || 'connecté'}</p>
                 </div>
               </button>
             );
@@ -2470,7 +2470,7 @@ export default function LiveRoomShell({
                 ? 'bg-amber-500/30 border-amber-400/45 text-amber-200'
                 : 'bg-black/60 border-white/12 text-white/70'
             )}>
-              <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', isReconnecting ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400 animate-pulse')} />
+              <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', isReconnecting ? 'bg-amber-400 animate-pulse' : 'bg-amber-400 animate-pulse')} />
               {isReconnecting ? 'Reconnexion…' : 'LIRI Live'}
             </div>
 
@@ -2635,7 +2635,7 @@ export default function LiveRoomShell({
                 width: `calc(${colSizes.center + colSizes.right}% - 8px)`,
               }}
             >
-              <div className="shadow-[0_0_40px_-14px_rgba(124,58,237,0.35),0_0_28px_-12px_rgba(251,191,36,0.15)]">
+              <div className="shadow-[0_0_40px_-14px_rgba(212,163,106,0.35),0_0_28px_-12px_rgba(251,191,36,0.15)]">
                 <div className={cn(LIRI_HOST_MEMBERS_DOCK, 'backdrop-blur-xl')}>
                   <LiriHostCenterSeatStrip
                     embedded
@@ -2891,7 +2891,7 @@ export default function LiveRoomShell({
           className="pointer-events-none absolute inset-x-0 bottom-0 z-[4] h-[min(38vh,320px)]"
           aria-hidden
         >
-          <div className="absolute inset-0 bg-gradient-to-t from-[var(--school-accent)]/[0.14] via-indigo-500/[0.06] to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--school-accent)]/[0.14] via-amber-500/[0.06] to-transparent" />
           <div className="absolute left-1/2 bottom-0 h-[min(28vh,240px)] w-[min(120%,720px)] -translate-x-1/2 translate-y-1/3 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.14)_0%,rgba(212,175,55,0.12)_40%,transparent_68%)] blur-[1px]" />
         </div>
         ) : null}

@@ -59,7 +59,7 @@ export default function ControlMeshPanel({
   const [acceptDurationMs, setAcceptDurationMs] = useState(DEFAULT_MESH_GRANT_MS);
 
   const selectClass =
-    'min-w-[6.25rem] rounded-lg border border-white/12 bg-[var(--lh-stage-bg)] px-2 py-1.5 text-[10px] leading-tight text-amber-100/95 outline-none focus:border-cyan-500/35 focus:ring-1 focus:ring-cyan-500/15';
+    'min-w-[6.25rem] rounded-lg border border-white/12 bg-[var(--lh-stage-bg)] px-2 py-1.5 text-[10px] leading-tight text-amber-100/95 outline-none focus:border-amber-500/35 focus:ring-1 focus:ring-amber-500/15';
 
   const bodyGap = compact ? 'gap-3' : 'gap-3.5';
   const bodyPad = compact ? 'px-3 pb-3 pt-2' : 'px-4 pb-4 pt-2';

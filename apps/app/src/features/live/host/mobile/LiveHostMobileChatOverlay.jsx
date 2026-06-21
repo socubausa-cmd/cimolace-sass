@@ -72,7 +72,7 @@ export function LiveHostMobileChatOverlay({ chatMessages, user, bottomOffset = 8
               width: 22,
               height: 22,
               borderRadius: '50%',
-              background: isMe ? 'rgba(96,165,250,0.7)' : 'rgba(255,255,255,0.25)',
+              background: isMe ? 'rgba(212,163,106,0.7)' : 'rgba(255,255,255,0.25)',
               flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
@@ -95,7 +95,7 @@ export function LiveHostMobileChatOverlay({ chatMessages, user, bottomOffset = 8
               maxWidth: '100%',
             }}>
               <span style={{
-                color: isMe ? '#93c5fd' : 'rgba(253,230,138,0.95)',
+                color: isMe ? '#e3c79a' : 'rgba(253,230,138,0.95)',
                 fontSize: 10,
                 fontWeight: 700,
                 marginRight: 5,
