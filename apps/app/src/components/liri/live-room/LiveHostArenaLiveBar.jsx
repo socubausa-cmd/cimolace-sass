@@ -223,6 +223,28 @@ export default function LiveHostArenaLiveBar({
           </button>
           <button
             type="button"
+            onClick={() => applyHostArenaLayoutMode(ARENA_LAYOUT.CONFERENCE)}
+            title="Mode conférence : grille type Meet (se voir), smartboard rétracté"
+            className="lh-premium-btn"
+            style={{
+              borderRadius: '8px',
+              border: `1px solid ${
+                arenaLayoutMode === ARENA_LAYOUT.CONFERENCE ? 'rgba(52,211,153,.55)' : 'rgba(255,255,255,.12)'
+              }`,
+              background: arenaLayoutMode === ARENA_LAYOUT.CONFERENCE ? 'rgba(16,185,129,.22)' : 'rgba(0,0,0,.45)',
+              padding: hub ? '4px 7px' : '6px 10px',
+              fontSize: '10px',
+              fontWeight: 700,
+              color: arenaLayoutMode === ARENA_LAYOUT.CONFERENCE ? '#34d399' : 'rgba(255,255,255,.78)',
+              cursor: 'pointer',
+              letterSpacing: '.04em',
+              flexShrink: 0,
+            }}
+          >
+            Conférence
+          </button>
+          <button
+            type="button"
             onClick={onOpenMobileCameraQr}
             title="QR : caméra secondaire sur téléphone (scène Cam 2)"
             className="lh-premium-btn"

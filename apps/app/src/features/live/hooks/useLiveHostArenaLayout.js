@@ -186,7 +186,7 @@ export function useLiveHostArenaLayout({
         arenaGuestFocusUserIdRef.current = null;
         arenaPanelUserIdsRef.current = [];
         setArenaPanelUserIds([]);
-        if (mode === ARENA_LAYOUT.HOST_CAMERA || mode === ARENA_LAYOUT.MEMBERS_WALL) {
+        if (mode === ARENA_LAYOUT.HOST_CAMERA || mode === ARENA_LAYOUT.MEMBERS_WALL || mode === ARENA_LAYOUT.CONFERENCE) {
           setNeuronQActive(false);
         }
       }

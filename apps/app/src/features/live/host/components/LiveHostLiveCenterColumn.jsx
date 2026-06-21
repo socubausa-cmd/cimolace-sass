@@ -97,6 +97,7 @@ export const LiveHostLiveCenterColumn = forwardRef(function LiveHostLiveCenterCo
     arenaGuestFocusCenter,
     arenaPanelCenter,
     arenaMembersWallCenter,
+    arenaLayoutMode,
     arenaGuestFocusUserId,
     arenaPanelUserIds,
     liveParticipants,
@@ -236,6 +237,7 @@ export const LiveHostLiveCenterColumn = forwardRef(function LiveHostLiveCenterCo
             arenaGuestFocusCenter={arenaGuestFocusCenter}
             arenaPanelCenter={arenaPanelCenter}
             arenaMembersWallCenter={arenaMembersWallCenter}
+            arenaLayoutMode={arenaLayoutMode}
             arenaGuestFocusUserId={arenaGuestFocusUserId}
             arenaPanelUserIds={arenaPanelUserIds}
             promotedId={promotedId}

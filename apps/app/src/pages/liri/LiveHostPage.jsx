@@ -449,7 +449,8 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     && Boolean(isGuestUi ? arenaGuestFocusUserId : promotedId);
   const arenaPanelCenter =
     phase === PHASE.LIVE && arenaLayoutMode === ARENA_LAYOUT.PANEL && arenaPanelUserIds.length > 0;
-  const arenaMembersWallCenter = phase === PHASE.LIVE && arenaLayoutMode === ARENA_LAYOUT.MEMBERS_WALL;
+  const arenaMembersWallCenter = phase === PHASE.LIVE
+    && (arenaLayoutMode === ARENA_LAYOUT.MEMBERS_WALL || arenaLayoutMode === ARENA_LAYOUT.CONFERENCE);
   const lhLayoutCompact = useMemo(
     () =>
       lhCompactViewport

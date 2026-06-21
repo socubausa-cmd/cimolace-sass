@@ -9,6 +9,7 @@ export const ARENA_LAYOUT = {
   GUEST_FOCUS: 'guest_focus',
   PANEL: 'panel',
   MEMBERS_WALL: 'members_wall',
+  CONFERENCE: 'conference',
 };
 
 /** Nombre de cases vidéo en mode Panel (grille 2×2). */
@@ -28,6 +29,7 @@ export function normalizeArenaLayoutMode(raw) {
   if (raw === ARENA_LAYOUT.GUEST_FOCUS) return ARENA_LAYOUT.GUEST_FOCUS;
   if (raw === ARENA_LAYOUT.PANEL) return ARENA_LAYOUT.PANEL;
   if (raw === ARENA_LAYOUT.MEMBERS_WALL) return ARENA_LAYOUT.MEMBERS_WALL;
+  if (raw === ARENA_LAYOUT.CONFERENCE) return ARENA_LAYOUT.CONFERENCE;
   return ARENA_LAYOUT.SMARTBOARD;
 }
 

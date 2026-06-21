@@ -2,6 +2,7 @@ import React from 'react';
 import { Track } from 'livekit-client';
 import LiveHostVideoCell from '@/components/liri/live-room/LiveHostVideoCell';
 import {
+  ARENA_LAYOUT,
   ARENA_MEMBERS_WALL_MAX_VISIBLE,
   ARENA_PANEL_MAX_SLOTS,
 } from '@/lib/liriArenaLayout';
@@ -30,6 +31,7 @@ export const LiveArenaLayoutOverlays = ({
   arenaGuestFocusCenter,
   arenaPanelCenter,
   arenaMembersWallCenter,
+  arenaLayoutMode,
   isGuestUi,
   hostLiveKitParticipant,
   livekitParticipantsMap,
@@ -252,6 +254,109 @@ export const LiveArenaLayoutOverlays = ({
   }
 
   if (arenaMembersWallCenter) {
+    // Mode CONFÉRENCE : grille adaptative type Meet (colonnes selon le nombre,
+    // tuiles 16:9, orateur actif surligné en émeraude). Le « Mur » dense reste en dessous.
+    if (arenaLayoutMode === ARENA_LAYOUT.CONFERENCE) {
+      const confVisible = liveParticipants.slice(0, ARENA_MEMBERS_WALL_MAX_VISIBLE);
+      const confCount = confVisible.length;
+      const confCols = confCount <= 1 ? 1 : confCount <= 2 ? 2 : confCount <= 6 ? 3 : confCount <= 12 ? 4 : 5;
+      return (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 15,
+            background: '#0a0b0f',
+            padding: '16px',
+            boxSizing: 'border-box',
+            display: 'grid',
+            gridTemplateColumns: `repeat(${confCols}, minmax(0, 1fr))`,
+            gridAutoRows: '1fr',
+            gap: '10px',
+            alignContent: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {confCount === 0 ? (
+            <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', color: 'rgba(255,255,255,.4)' }}>
+              En attente de participants…
+            </div>
+          ) : (
+            confVisible.map((m) => {
+              const lk = livekitParticipantsMap[m.id] || livekitParticipantsMap[String(m.id)] || null;
+              const showVid =
+                lk
+                && Array.from(lk.videoTrackPublications?.values?.() || []).some(
+                  (p) => p.source === Track.Source.Camera && !p.isMuted && p.track,
+                );
+              const speaking = Boolean(lk?.isSpeaking);
+              return (
+                <div
+                  key={m.id}
+                  style={{
+                    position: 'relative',
+                    aspectRatio: '16 / 9',
+                    minHeight: 0,
+                    borderRadius: '14px',
+                    overflow: 'hidden',
+                    border: speaking ? '2px solid #34d399' : '1px solid rgba(255,255,255,.1)',
+                    background: 'rgba(0,0,0,.45)',
+                    boxShadow: speaking ? '0 0 0 3px rgba(52,211,153,.28)' : 'none',
+                    transition: 'box-shadow .18s ease, border-color .18s ease',
+                  }}
+                >
+                  {showVid && lk ? (
+                    <LiveHostVideoCell
+                      participant={lk}
+                      mediaEpoch={liveKitMediaEpoch}
+                      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${m.color}22` }}>
+                      <div
+                        style={{
+                          width: '64px',
+                          height: '64px',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '22px',
+                          fontWeight: 800,
+                          color: m.color,
+                          background: `${m.color}1f`,
+                          border: `1px solid ${m.color}55`,
+                        }}
+                      >
+                        {m.init}
+                      </div>
+                    </div>
+                  )}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      padding: '6px 10px',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      color: '#fff',
+                      background: 'linear-gradient(transparent, rgba(0,0,0,.78))',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {m.name}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      );
+    }
     return (
       <div
         style={{
