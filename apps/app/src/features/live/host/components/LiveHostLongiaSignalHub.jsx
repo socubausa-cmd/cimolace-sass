@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import HostPermissionRequestsPanel from '@/components/liri/liri-live/HostPermissionRequestsPanel';
 import ControlMeshPanel from '@/components/liri/live-room/ControlMeshPanel';
@@ -91,6 +91,31 @@ export const LiveHostLongiaSignalHub = ({
   focusMode,
   guestInvitePreviewUrl,
 }) => {
+  // Phase 2 — « Longia suggère » : on remonte les notifs du mode COACH (pédagogie/audience) du
+  // journal (panels[2]) dans l'overlay Coach en cartes Appliquer/Ignorer. Le journal reste le log complet.
+  const [dismissedCoachSuggestions, setDismissedCoachSuggestions] = useState(() => new Set());
+  const coachSuggestions = useMemo(() => {
+    if (longiaGovernorModes?.[LONGIA_GOVERNOR_MODE.COACH] === false) return [];
+    const evs = panels?.[2]?.events || [];
+    return evs
+      .filter((ev) => ev?.longiaSourceMode === LONGIA_GOVERNOR_MODE.COACH)
+      .map((ev) => ({
+        key: ev.longiaRealtimeId || `${ev.msg || ''}|${ev.time || ''}`,
+        text: String(ev.msg || '').replace(/^[^:]+ : /, '').trim(),
+        urgent: Boolean(ev.longiaUrgent),
+      }))
+      .filter((s) => s.text && !dismissedCoachSuggestions.has(s.key))
+      .slice(-3)
+      .reverse();
+  }, [panels, longiaGovernorModes, dismissedCoachSuggestions]);
+  const dismissCoachSuggestion = useCallback((key) => {
+    setDismissedCoachSuggestions((prev) => {
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+  }, []);
+
   if (phase !== PHASE.LIVE || isGuestUi) return null;
 
   return (
@@ -225,6 +250,8 @@ export const LiveHostLongiaSignalHub = ({
                         toast={toast}
                         onPushRendersToBoard={pushCoachRendersToSmartboard}
                         architectModeOn={longiaGovernorModes[LONGIA_GOVERNOR_MODE.SMARTBOARD_ASSISTANT] !== false}
+                        coachSuggestions={coachSuggestions}
+                        onDismissSuggestion={dismissCoachSuggestion}
                       />
                     </div>
                   ) : null}

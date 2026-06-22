@@ -69,6 +69,9 @@ export default function LiveHostLongiaCoachPanel({
   architectModeOn = true,
   /** Participants LiveKit (hôte) — insertion « membre connecté ». */
   liveParticipants = [],
+  /** Phase 2 — suggestions proactives de Longia (notifs mode COACH du journal) : [{ key, text, urgent }]. */
+  coachSuggestions = [],
+  onDismissSuggestion,
 }) {
   const { user: ctxUser, loading: authLoading } = useAuth();
   /** Profil page hôte ou contexte auth (évite écran vide si la prop arrive en retard). */
@@ -345,6 +348,15 @@ export default function LiveHostLongiaCoachPanel({
     void runTurn('ask_question', userLine);
   }, [draft, runTurn, consumeAttachments]);
 
+  /** « Appliquer » une suggestion Longia : lance un tour coach sur cette piste, puis la retire. */
+  const onApplySuggestion = useCallback(
+    (s) => {
+      onDismissSuggestion?.(s.key);
+      void runTurn('apply_suggestion', s.text);
+    },
+    [onDismissSuggestion, runTurn],
+  );
+
   const onImageFileChange = useCallback(
     (e) => {
       const f = e.target.files?.[0];
@@ -478,9 +490,45 @@ export default function LiveHostLongiaCoachPanel({
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-hidden px-3 pb-2 pt-2">
       <p className="m-0 text-[10px] font-medium leading-snug tracking-normal text-white/50 [overflow-wrap:anywhere]">
-        Discussion privée — invisible côté salle. Cartes ambre / vert / violet : pistes à vous approprier à
-        l'oral.
+        Discussion privée — invisible côté salle. Les cartes ambre sont des pistes à vous approprier à l'oral.
       </p>
+
+      {coachSuggestions.length > 0 ? (
+        <div className="flex shrink-0 flex-col gap-1.5">
+          <div className={cn(designerShellMicroLabel, 'flex items-center gap-1.5')}>
+            <Sparkles className="h-3 w-3 text-amber-300/80" strokeWidth={2} aria-hidden />
+            Longia suggère
+          </div>
+          {coachSuggestions.map((s) => (
+            <div
+              key={s.key}
+              className={cn(
+                'rounded-xl border px-2.5 py-2',
+                s.urgent ? 'border-amber-400/35 bg-amber-500/[0.1]' : 'border-amber-400/20 bg-amber-500/[0.06]',
+              )}
+            >
+              <p className="m-0 text-[11px] leading-snug text-white/88">{s.text}</p>
+              <div className="mt-2 flex gap-1.5">
+                <button
+                  type="button"
+                  disabled={loading || !threadHydrated}
+                  onClick={() => onApplySuggestion(s)}
+                  className="flex-1 rounded-lg border border-amber-400/40 bg-amber-500/[0.16] px-2 py-1 text-[10px] font-semibold text-amber-100 transition hover:bg-amber-500/[0.24] disabled:opacity-40"
+                >
+                  Appliquer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDismissSuggestion?.(s.key)}
+                  className="rounded-lg border border-white/12 px-2.5 py-1 text-[10px] font-medium text-white/55 transition hover:bg-white/[0.06]"
+                >
+                  Ignorer
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1.5">
         <div className={designerShellMicroLabel}>Flux de conversation</div>
