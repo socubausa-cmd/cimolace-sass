@@ -140,6 +140,113 @@ export class LiveService {
   }
 
   /**
+   * Mode de publication des replays du tenant (tenants.metadata.replay.publish_mode) :
+   *   'auto'   → replay visible des élèves dès la fin de l'enregistrement ('published') ;
+   *   'review' (défaut) → 'pending_review' tant que l'hôte n'a pas approuvé.
+   */
+  private async replayPublishStatus(
+    tenantId: string,
+  ): Promise<"published" | "pending_review"> {
+    const { data } = await this.supabase
+      .from("tenants")
+      .select("metadata")
+      .eq("id", tenantId)
+      .maybeSingle();
+    const mode = (data as any)?.metadata?.replay?.publish_mode;
+    return mode === "auto" ? "published" : "pending_review";
+  }
+
+  /** Vrai si l'acteur est l'hôte/formateur de la session OU un encadrant du tenant. */
+  private async isSessionEditor(
+    tenantId: string,
+    sessionId: string,
+    actorId: string,
+  ): Promise<boolean> {
+    const { data: s } = await this.supabase
+      .from("live_sessions")
+      .select("host_user_id, teacher_id")
+      .eq("id", sessionId)
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
+    if (s && (s.host_user_id === actorId || (s as any).teacher_id === actorId)) {
+      return true;
+    }
+    const { data: m } = await this.supabase
+      .from("tenant_memberships")
+      .select("role")
+      .eq("tenant_id", tenantId)
+      .eq("user_id", actorId)
+      .maybeSingle();
+    return ["owner", "admin", "teacher"].includes(String((m as any)?.role || ""));
+  }
+
+  /**
+   * PONT replay : relie l'enregistrement (live_recordings.output_url) à l'état lu par
+   * l'élève (live_neuro_recall_state). Prend le dernier enregistrement complété de la
+   * session et upsert l'état avec le bon workflow_status :
+   *   - opts.force            → statut imposé (ex. 'published' quand l'hôte approuve) ;
+   *   - sinon réglage tenant  → 'published' (auto) ou 'pending_review' (revue).
+   * Appelé (1) par le webhook egress_ended (SANS actorId = système, fiable) ;
+   *        (2) par l'hôte via POST /lives/:id/replay/publish (AVEC actorId → garde).
+   * Idempotent (live_session_id UNIQUE).
+   */
+  async publishReplay(
+    tenantId: string,
+    sessionId: string,
+    opts?: { force?: "published" | "pending_review"; actorId?: string },
+  ) {
+    if (
+      opts?.actorId &&
+      !(await this.isSessionEditor(tenantId, sessionId, opts.actorId))
+    ) {
+      throw new ForbiddenException("Réservé à l'hôte ou à un encadrant");
+    }
+    const { data: rec } = await this.supabase
+      .from("live_recordings")
+      .select("output_url")
+      .eq("live_session_id", sessionId)
+      .not("output_url", "is", null)
+      .order("completed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!rec?.output_url) {
+      return { published: false, reason: "no_recording" as const };
+    }
+    const status = opts?.force ?? (await this.replayPublishStatus(tenantId));
+    const { data } = await this.supabase
+      .from("live_neuro_recall_state")
+      .upsert(
+        {
+          live_session_id: sessionId,
+          replay_public_url: rec.output_url,
+          workflow_status: status,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "live_session_id" },
+      )
+      .select("*")
+      .single();
+    return { published: status === "published", workflow_status: status, state: data };
+  }
+
+  /** Dépublie le replay (revue hôte) : repasse en 'pending_review' (invisible élève). */
+  async unpublishReplay(tenantId: string, sessionId: string, actorId?: string) {
+    if (actorId && !(await this.isSessionEditor(tenantId, sessionId, actorId))) {
+      throw new ForbiddenException("Réservé à l'hôte ou à un encadrant");
+    }
+    const { data } = await this.supabase
+      .from("live_neuro_recall_state")
+      .update({
+        workflow_status: "pending_review",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("live_session_id", sessionId)
+      .select("*")
+      .maybeSingle();
+    return { unpublished: Boolean(data), state: data };
+  }
+
+  /**
    * Génère un vrai token LiveKit JWT pour rejoindre une room.
    * - role "host"    → canPublish + canSubscribe + roomAdmin, TTL 4h
    * - role "student" → canSubscribe only, TTL 1h

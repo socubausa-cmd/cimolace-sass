@@ -18,4 +18,7 @@ export class LiveController {
   @Post(":id/end") async end(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.endSession(req.tenant.id, id) }; }
   @Post(":id/recording/start") async recStart(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.startRecording(req.tenant.id, id) }; }
   @Post(":id/recording/stop") async recStop(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.stopRecording(req.tenant.id, id) }; }
+  // Revue hôte : approuver le brouillon de replay (→ 'published', visible élève) / le retirer.
+  @Post(":id/replay/publish") async replayPublish(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.publishReplay(req.tenant.id, id, { force: "published", actorId: req.user.id }) }; }
+  @Post(":id/replay/unpublish") async replayUnpublish(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.unpublishReplay(req.tenant.id, id, req.user.id) }; }
 }

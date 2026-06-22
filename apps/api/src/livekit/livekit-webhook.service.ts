@@ -201,15 +201,27 @@ export class LiveKitWebhookService {
       })
       .eq('egress_id', egressId);
 
+    // Pont replay : l'enregistrement est complet → on écrit l'état lu par l'élève
+    // (live_neuro_recall_state) via LiveService.publishReplay, selon le réglage de
+    // publication du tenant (auto/revue). Appel SYSTÈME (pas d'actorId) → fiable, non
+    // bloquant. Remplace l'ancien UPDATE live_sessions (colonnes recording_url/
+    // replay_available/recording_status INEXISTANTES → échouait silencieusement).
     if (outputUrl && liveSessionId) {
-      await this.supabase.client
+      const { data: sess } = await this.supabase.client
         .from('live_sessions')
-        .update({
-          recording_url: outputUrl,
-          replay_available: true,
-          recording_status: 'completed',
-        })
-        .eq('id', liveSessionId);
+        .select('tenant_id')
+        .eq('id', liveSessionId)
+        .maybeSingle();
+      const tenantId = (sess as { tenant_id?: string } | null)?.tenant_id;
+      if (tenantId) {
+        try {
+          await this.liri.publishReplay(tenantId, liveSessionId);
+        } catch (err) {
+          this.logger.warn(
+            'publishReplay (pont webhook) échec: ' + (err as Error).message,
+          );
+        }
+      }
     }
   }
 
