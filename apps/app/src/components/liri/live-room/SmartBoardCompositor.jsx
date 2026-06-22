@@ -1109,7 +1109,7 @@ function WhiteboardScene({
   const pendingTextAnchorRef = useRef(null);
   const [textDraft, setTextDraft] = useState(null);
   /** Position écran de la pop-up texte (portail — au-dessus du rail outils z-51). */
-  const [textOverlayScreen, setTextOverlayScreen] = useState({ left: 0, top: 0 });
+  const [textOverlayScreen, setTextOverlayScreen] = useState({ left: 0, top: 0, scaleX: 1, scaleY: 1, maxWidth: 480 });
   /** Glisser-déposer en mode sélection : { pointerId, x0, y0, snapshot, indices } */
   const boardDragRef = useRef(null);
   const boardDragDidMoveRef = useRef(false);
@@ -1138,6 +1138,35 @@ function WhiteboardScene({
   const textAlign = useLiveWhiteboardStore((s) => s.textAlign);
   const setTextAlign = useLiveWhiteboardStore((s) => s.setTextAlign);
   const setTextFontSize = useLiveWhiteboardStore((s) => s.setTextFontSize);
+  const textFontSize = useLiveWhiteboardStore((s) => s.textFontSize);
+
+  // Éditeur de texte « in-place » façon Word : on calque EXACTEMENT le rendu canvas
+  // (police, taille mise à l'échelle écran, couleur, interligne 1.25) pour écrire directement
+  // sur le tableau — sans cadre. Le fond reprend la couleur de la surface du tableau, ce qui le
+  // rend invisible ET masque le bloc en cours d'édition (fini le double affichage en mode edit).
+  const textInPlace = useMemo(() => {
+    const scaleY = textOverlayScreen.scaleY || 1;
+    const fontPx = Math.max(11, (textFontSize || 20) * scaleY);
+    const presetBase = WHITEBOARD_TEXT_PRESET_BASE[textPreset] || WHITEBOARD_TEXT_PRESET_BASE.body;
+    let weight = presetBase.fontWeight || 400;
+    if (textBold) weight = Math.max(weight, 700);
+    const surfaceBg =
+      boardSurface === 'chalkboard'
+        ? BOARD_BG_CHALK
+        : boardSurface === 'geoplan'
+          ? BOARD_BG_GEOPLAN
+          : BOARD_BG_DARK;
+    return {
+      fontPx,
+      lineHeightPx: fontPx * 1.25,
+      weight,
+      fontStyle: textItalic ? 'italic' : 'normal',
+      textAlign: textAlign === 'center' || textAlign === 'right' ? textAlign : 'left',
+      color: color || '#F7F2E8',
+      surfaceBg,
+      topPx: (textOverlayScreen.top || 0) - fontPx * 0.125,
+    };
+  }, [textFontSize, textPreset, textBold, textItalic, textAlign, color, boardSurface, textOverlayScreen]);
 
   const polyDraftRef = useRef(null);
   const compassDraftRef = useRef(null);
@@ -1368,8 +1397,18 @@ function WhiteboardScene({
   }, [redrawSheet]);
 
   useEffect(() => {
-    if (textDraft && textAreaRef.current) {
-      textAreaRef.current.focus();
+    const el = textAreaRef.current;
+    if (textDraft && el) {
+      el.focus();
+      // Caret en fin de texte (édition) + hauteur calée sur le contenu (multi-lignes).
+      try {
+        const end = el.value.length;
+        el.setSelectionRange(end, end);
+      } catch {
+        /* setSelectionRange indisponible */
+      }
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight}px`;
     }
   }, [textDraft]);
 
@@ -1425,9 +1464,13 @@ function WhiteboardScene({
     const ch = Math.max(1, c.height);
     const sx = r.width / cw;
     const sy = r.height / ch;
+    const left = r.left + td.x * sx;
     setTextOverlayScreen({
-      left: r.left + td.x * sx,
+      left,
       top: r.top + td.y * sy,
+      scaleX: sx,
+      scaleY: sy,
+      maxWidth: Math.max(120, r.right - left - 8),
     });
   }, [textDraft]);
 
@@ -3603,20 +3646,76 @@ function WhiteboardScene({
             role="dialog"
             aria-modal="true"
             aria-label={textDraft.mode === 'edit' ? 'Modifier le texte sur le tableau' : 'Saisie de texte sur le tableau'}
-            className="flex w-[min(300px,calc(100vw-1.5rem))] flex-col gap-1.5 rounded-xl border border-white/12 bg-[#1a1815]/98 p-2 shadow-2xl shadow-black/50 ring-1 ring-white/10 backdrop-blur-md"
             style={{
               position: 'fixed',
-              left: Math.max(
-                8,
-                Math.min(
-                  textOverlayScreen.left,
-                  typeof window !== 'undefined' ? window.innerWidth - 296 : textOverlayScreen.left,
-                ),
-              ),
-              top: Math.max(8, textOverlayScreen.top - 4),
+              left: Math.max(4, textOverlayScreen.left || 0),
+              top: Math.max(4, textInPlace.topPx),
               zIndex: 6000,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              gap: 8,
+              // Conteneur de POSITIONNEMENT seulement — transparent, aucun cadre autour du texte.
+              background: 'transparent',
+              border: 'none',
+              padding: 0,
+              maxWidth: 'calc(100vw - 16px)',
             }}
           >
+            {/* Saisie DIRECTE sur le tableau (façon Word) : calque exact du rendu canvas. */}
+            <textarea
+              ref={textAreaRef}
+              key={`${textDraft.mode}-${textDraft.x}-${textDraft.y}-${textDraft.mode === 'edit' ? textDraft.index : ''}`}
+              rows={1}
+              wrap="off"
+              spellCheck={false}
+              placeholder="Texte…"
+              defaultValue={textDraft.mode === 'edit' ? String(textDraft.initialText ?? '') : ''}
+              onInput={(ev) => {
+                const el = ev.currentTarget;
+                el.style.height = 'auto';
+                el.style.height = `${el.scrollHeight}px`;
+                const v = String(el.value || '').slice(0, 2000);
+                useLiveWhiteboardStore.getState().emitBoardIaTelemetry({
+                  textDraftActive: true,
+                  textDraftPreview: v,
+                });
+              }}
+              onKeyDown={(ev) => {
+                if (ev.key === 'Escape') {
+                  ev.preventDefault();
+                  setTextDraft(null);
+                }
+                if (ev.key === 'Enter' && !ev.shiftKey) {
+                  ev.preventDefault();
+                  commitTextDraft();
+                }
+              }}
+              style={{
+                margin: 0,
+                padding: 0,
+                border: 'none',
+                outline: 'none',
+                boxShadow: 'none',
+                resize: 'none',
+                overflow: 'hidden',
+                whiteSpace: 'pre',
+                width: Math.max(120, textOverlayScreen.maxWidth || 480),
+                minHeight: textInPlace.lineHeightPx,
+                background: textDraft.mode === 'edit' ? textInPlace.surfaceBg : 'transparent',
+                fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                fontSize: `${textInPlace.fontPx}px`,
+                fontWeight: textInPlace.weight,
+                fontStyle: textInPlace.fontStyle,
+                lineHeight: `${textInPlace.lineHeightPx}px`,
+                textAlign: textInPlace.textAlign,
+                color: textInPlace.color,
+                caretColor: textInPlace.color,
+              }}
+            />
+
+            {/* Contrôles DÉTACHÉS sous le texte (jamais autour) — barre flottante minimale. */}
+            <div className="flex flex-col gap-1.5 rounded-lg border border-white/10 bg-[#15131a]/90 p-1.5 shadow-lg backdrop-blur-sm">
             {composerToolsOpen ? (
             <>
             <p className={cn(designerShellMicroLabel, 'text-white/55')}>Compositeur Architect · presets et IA</p>
@@ -3715,38 +3814,6 @@ function WhiteboardScene({
             </div>
             </>
             ) : null}
-            <textarea
-              ref={textAreaRef}
-              key={`${textDraft.mode}-${textDraft.x}-${textDraft.y}-${textDraft.mode === 'edit' ? textDraft.index : ''}`}
-              rows={4}
-              placeholder={
-                textDraft.mode === 'edit'
-                  ? 'Modifier… Entrée = valider, texte vide = supprimer le bloc'
-                  : 'Saisie… Entrée = valider, Maj+Entrée = ligne, Échap = annuler'
-              }
-              className={cn(
-                designerShellInput,
-                'min-h-[5rem] w-full resize-y py-2 text-[13px] leading-snug text-white placeholder:text-white/40',
-              )}
-              defaultValue={textDraft.mode === 'edit' ? String(textDraft.initialText ?? '') : ''}
-              onInput={(ev) => {
-                const v = String(ev.currentTarget?.value || '').slice(0, 2000);
-                useLiveWhiteboardStore.getState().emitBoardIaTelemetry({
-                  textDraftActive: true,
-                  textDraftPreview: v,
-                });
-              }}
-              onKeyDown={(ev) => {
-                if (ev.key === 'Escape') {
-                  ev.preventDefault();
-                  setTextDraft(null);
-                }
-                if (ev.key === 'Enter' && !ev.shiftKey) {
-                  ev.preventDefault();
-                  commitTextDraft();
-                }
-              }}
-            />
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
@@ -3778,6 +3845,7 @@ function WhiteboardScene({
               >
                 {textDraft.mode === 'edit' ? 'Enregistrer' : 'Placer'}
               </button>
+            </div>
             </div>
           </div>,
           document.body,
