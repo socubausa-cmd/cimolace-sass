@@ -2,14 +2,15 @@ import React from 'react';
 import {
   ChevronLeft,
   ChevronRight,
-  Boxes,
-  Sparkles,
   Users,
   Copy,
   Check,
   Link2,
   Share2,
-  Pin,
+  Hand,
+  Lightbulb,
+  Brain,
+  Eye,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
@@ -60,7 +61,9 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
   // s'ouvre AU SURVOL et flotte par-dessus la scène — la colonne reste à 52px, donc la
   // grille ne bouge pas (plus de réorganisation ni de superposition).
   const hostHoverMode = focusHost && asStrip && !lhLayoutCompact;
-  const [pinned, setPinned] = React.useState(false);
+  // Activity bar : icône cliquable → overlay focalisé, un seul à la fois. `activePanel` pilote
+  // l'overlay « Salle » ancré au rail ; Modération/Coach/Interactions ouvrent le Hub ; Aperçu = onglet.
+  const [activePanel, setActivePanel] = React.useState(null);
   const [copied, setCopied] = React.useState(false);
 
   // Ref fusionnée : on conserve la ref transmise par le parent ET une ref locale pour
@@ -171,7 +174,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
       <div
         ref={setRefs}
         className="lh-sp-dim lh-hoverrail"
-        data-pinned={pinned ? 'true' : 'false'}
+        data-pinned={activePanel === 'salle' ? 'true' : 'false'}
         onMouseLeave={() => {
           /* le survol gère l'ouverture ; rien à faire ici (l'épingle persiste) */
         }}
@@ -200,56 +203,61 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
             'inset 0 0 0 1px rgba(255,255,255,.1), inset 0 1px 0 rgba(255,255,255,.06)',
         }}
       >
-        {/* Languette fine (toujours visible) — survolez pour ouvrir */}
+        {/* Activity bar — icônes cliquables, un overlay focalisé à la fois.
+            Salle = overlay ancré au rail ; Modération/Coach/Interactions = Hub ; Aperçu = onglet. */}
         <div
           className="lh-hoverrail-strip"
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', paddingTop: '2px' }}
+          style={{ display: 'flex', flex: 1, width: '100%', minHeight: 0, flexDirection: 'column', alignItems: 'center', gap: '10px', paddingTop: '2px' }}
         >
           <span
             className="h-2 w-2 shrink-0 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,.85)]"
-            style={{ animation: 'lhPulse 2s infinite' }}
+            style={{ animation: 'lhPulse 2s infinite', marginBottom: '2px' }}
             title="En direct"
             aria-hidden
           />
+          {[
+            { id: 'salle', label: 'Salle — participants, file, inviter', Icon: Users, badge: waitingCount > 0 ? waitingCount : 0, active: activePanel === 'salle', onClick: () => setActivePanel((p) => (p === 'salle' ? null : 'salle')) },
+            { id: 'mod', label: 'Modération — mains levées, demandes', Icon: Hand, badge: 0, active: longiaHubOpen && longiaSignalSubDrawer === 'hands', onClick: () => { setActivePanel(null); openLongiaHubControlMesh(); setLongiaSignalSubDrawer('hands'); } },
+            { id: 'coach', label: 'Coach IA — Longia', Icon: Lightbulb, badge: 0, active: longiaHubOpen && longiaSignalSubDrawer === 'host_coach', onClick: () => { setActivePanel(null); openLongiaHubCoachPanel(); } },
+            { id: 'inter', label: 'Interactions — Zone 3, NeuronQ', Icon: Brain, badge: 0, active: longiaHubOpen && longiaSignalSubDrawer === 'zone3', onClick: () => { setActivePanel(null); openLongiaHubControlMesh(); setLongiaSignalSubDrawer('zone3'); } },
+          ].map((it) => {
+            const ItIcon = it.Icon;
+            return (
+              <button
+                key={it.id}
+                type="button"
+                onClick={it.onClick}
+                title={it.label}
+                aria-label={it.label}
+                className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_rgba(255,255,255,.06)] transition ${
+                  it.active
+                    ? 'border-amber-400/55 bg-amber-500/18 text-amber-100'
+                    : 'border-white/22 bg-white/[0.02] text-amber-200/90 hover:border-amber-400/40 hover:text-amber-100'
+                }`}
+              >
+                <ItIcon className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
+                {it.badge ? (
+                  <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#d4a36a] px-1 text-[10px] font-semibold text-[#2a2118]">
+                    {it.badge}
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
+          <div style={{ flex: 1 }} />
           <button
             type="button"
-            onClick={() => setPinned((p) => !p)}
-            title={pinned ? 'Détacher le panneau' : 'Ouvrir / épingler le panneau'}
-            aria-label={pinned ? 'Détacher le panneau gauche' : 'Ouvrir le panneau gauche'}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/22 bg-white/[0.02] text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,.08)] transition hover:border-amber-400/45 hover:text-white"
+            onClick={() => { if (inviteUrl && typeof window !== 'undefined') window.open(inviteUrl, '_blank', 'noopener,noreferrer'); }}
+            title="Aperçu — vue participant (nouvel onglet)"
+            aria-label="Aperçu — vue participant (nouvel onglet)"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/22 bg-white/[0.02] text-white/70 transition hover:border-amber-400/40 hover:text-amber-100"
           >
-            <ChevronRight className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
-          </button>
-          <button
-            type="button"
-            onClick={() => openLongiaHubControlMesh()}
-            title="Signaux LONGIA — salle d'attente, Zone 3, NeuronQ, journal"
-            aria-label="Signaux LONGIA"
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_rgba(255,255,255,.06)] transition ${
-              longiaHubOpen && longiaSignalSubDrawer !== 'host_coach' && longiaSignalSubDrawer !== 'layout_preview'
-                ? 'border-amber-400/55 bg-amber-500/18 text-amber-100'
-                : 'border-white/22 bg-white/[0.02] text-[#d4a012] hover:border-amber-400/35 hover:text-amber-200'
-            }`}
-          >
-            <Boxes className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
-          </button>
-          <button
-            type="button"
-            onClick={() => openLongiaHubCoachPanel()}
-            title="IA — coach formateur (chat et rendus)"
-            aria-label="IA — coach formateur"
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_rgba(255,255,255,.06)] transition ${
-              longiaHubOpen && longiaSignalSubDrawer === 'host_coach'
-                ? 'border-amber-400/55 bg-amber-500/18 text-amber-100'
-                : 'border-white/22 bg-white/[0.02] text-amber-200/95 hover:border-amber-400/45 hover:text-amber-100'
-            }`}
-          >
-            <Sparkles className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
+            <Eye className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
           </button>
         </div>
 
-        {/* Fenêtre flottante (révélée au survol / épinglée) */}
-        <div className="lh-hoverrail-panel" aria-hidden={!pinned ? undefined : false}>
+        {/* Overlay « Salle » ancré au rail — ouvert au clic sur l'icône Salle (data-pinned). */}
+        <div className="lh-hoverrail-panel" aria-hidden={activePanel === 'salle' ? false : true}>
           <div className="lh-hoverrail-panel-inner lh-sy">
             {/* En direct + épingle */}
             <div
@@ -283,9 +291,9 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
               ) : null}
               <button
                 type="button"
-                onClick={() => setPinned((p) => !p)}
-                title={pinned ? 'Détacher' : 'Épingler'}
-                aria-label={pinned ? 'Détacher le panneau' : 'Épingler le panneau'}
+                onClick={() => setActivePanel(null)}
+                title="Fermer"
+                aria-label="Fermer le panneau Salle"
                 style={{
                   marginLeft: 'auto',
                   display: 'flex',
@@ -295,12 +303,12 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
                   justifyContent: 'center',
                   borderRadius: 8,
                   border: '1px solid rgba(255,255,255,.1)',
-                  background: pinned ? 'rgba(212,163,106,.16)' : 'rgba(255,255,255,.03)',
-                  color: pinned ? '#e3c79a' : 'rgba(255,255,255,.55)',
+                  background: 'rgba(255,255,255,.03)',
+                  color: 'rgba(255,255,255,.55)',
                   cursor: 'pointer',
                 }}
               >
-                {pinned ? <ChevronLeft size={14} aria-hidden /> : <Pin size={13} aria-hidden />}
+                <ChevronLeft size={14} aria-hidden />
               </button>
             </div>
 
@@ -623,51 +631,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
               ) : null}
             </div>
 
-            {/* Longia — accès rapide */}
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button
-                type="button"
-                onClick={openLongiaHubControlMesh}
-                style={{
-                  flex: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  borderRadius: 10,
-                  border: '1px solid rgba(255,255,255,.1)',
-                  background: 'rgba(255,255,255,.03)',
-                  color: 'rgba(255,255,255,.82)',
-                  padding: '8px',
-                  fontSize: 10,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                <Boxes size={13} style={{ color: 'var(--lh-accent,#d4a36a)' }} aria-hidden /> Signaux
-              </button>
-              <button
-                type="button"
-                onClick={openLongiaHubCoachPanel}
-                style={{
-                  flex: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  borderRadius: 10,
-                  border: '1px solid rgba(255,255,255,.1)',
-                  background: 'rgba(255,255,255,.03)',
-                  color: 'rgba(255,255,255,.82)',
-                  padding: '8px',
-                  fontSize: 10,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                <Sparkles size={13} style={{ color: 'var(--lh-accent,#d4a36a)' }} aria-hidden /> Coach IA
-              </button>
-            </div>
+            {/* Signaux / Coach retirés d'ici : ce sont désormais des icônes de l'activity bar. */}
           </div>
         </div>
       </div>
