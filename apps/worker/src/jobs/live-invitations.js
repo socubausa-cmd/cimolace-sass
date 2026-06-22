@@ -9,16 +9,19 @@
  *   - WhatsApp élève : si notify_whatsapp → Twilio (opt-in profiles.notify_sms + téléphone).
  *   - Chaîne école   : si whatsapp_channel_enabled → 1 WhatsApp vers whatsapp_school_number.
  * Idempotent via live_sessions.invitations_sent_at.
+ *
+ * MULTI-TENANT : expéditeur email (from + nom) et liens résolus PAR TENANT via
+ * getTenantNotif(s.tenant_id) ; tenant_id posé sur l'email pour la résolution de
+ * clé Resend (centrale/BYO) à l'envoi.
  */
 import { createClient } from '@supabase/supabase-js';
 import { sendWhatsApp, whatsappConfigured } from '../lib/whatsapp.js';
+import { getTenantNotif } from '../lib/tenantNotif.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_ROLE_KEY || '',
 );
-
-const APP_URL = (process.env.APP_PUBLIC_URL || process.env.PUBLIC_SITE_URL || 'https://app.cimolace.space').replace(/\/$/, '');
 
 function esc(s) {
   return String(s || '')
@@ -53,14 +56,14 @@ export async function pollLiveInvitations() {
 
   let sent = 0;
   for (const s of sessions) {
+    const notif = await getTenantNotif(s.tenant_id);
     const titleHtml = esc(s.title || 'Séance live');
     const titleText = s.title || 'Séance live';
     const when = (() => {
       try { return new Date(s.scheduled_at).toLocaleString('fr-FR'); } catch { return ''; }
     })();
-    // Lien vers la salle d'attente (compte à rebours) : un live programmé n'est pas
-    // encore démarré, l'élève y patiente jusqu'à l'admission le jour J.
-    const link = `${APP_URL}/live/waiting/${s.id}`;
+    // Lien vers la salle d'attente (compte à rebours) sur le portail DU TENANT.
+    const link = `${notif.baseUrl}/live/waiting/${s.id}`;
 
     // Moyens de diffusion CHOISIS PAR LE CRÉATEUR (live_visibility_rules, posés par
     // le studio). Sans règle (lives legacy) : défaut email ON (ne pas régresser), WhatsApp OFF.
@@ -122,6 +125,9 @@ export async function pollLiveInvitations() {
           try {
             await supabase.from('email_queue').insert({
               to: p.email,
+              from: notif.from,
+              from_name: notif.fromName,
+              tenant_id: s.tenant_id || null,
               subject: `Invitation — ${titleText}`,
               html_body: html,
               status: 'pending',

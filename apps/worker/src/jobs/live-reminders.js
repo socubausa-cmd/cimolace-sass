@@ -5,16 +5,19 @@
  * enfile un rappel dans email_queue (envoyé par jobs/email.js → Resend).
  * Idempotent via live_sessions.reminder_sent_at.
  *
+ * MULTI-TENANT : expéditeur (from + nom) et liens résolus PAR TENANT via
+ * getTenantNotif(s.tenant_id) ; le tenant_id est posé sur l'email pour que
+ * jobs/email.js choisisse la bonne clé Resend (centrale ou BYO) à l'envoi.
  * Porté d'ISNA v1 (live-start-emails-scheduled), version multi-tenant v2.
  */
 import { createClient } from '@supabase/supabase-js';
+import { getTenantNotif } from '../lib/tenantNotif.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_ROLE_KEY || '',
 );
 
-const APP_URL = (process.env.APP_PUBLIC_URL || process.env.PUBLIC_SITE_URL || 'https://app.cimolace.space').replace(/\/$/, '');
 const WINDOW_MIN = Number(process.env.LIVE_REMINDER_WINDOW_MIN || 15);
 
 function esc(s) {
@@ -37,7 +40,7 @@ export async function pollLiveReminders() {
 
   const { data: sessions } = await supabase
     .from('live_sessions')
-    .select('id, title, scheduled_at, teacher_id, appointment_id')
+    .select('id, title, scheduled_at, teacher_id, appointment_id, tenant_id')
     .eq('status', 'scheduled')
     .is('reminder_sent_at', null)
     .gte('scheduled_at', now.toISOString())
@@ -48,10 +51,11 @@ export async function pollLiveReminders() {
 
   let enqueued = 0;
   for (const s of sessions) {
+    const notif = await getTenantNotif(s.tenant_id);
     const recipients = [];
 
     const host = await emailFor(s.teacher_id);
-    if (host) recipients.push({ ...host, link: `${APP_URL}/live/host/${s.id}`, cta: 'Démarrer la séance' });
+    if (host) recipients.push({ ...host, link: `${notif.baseUrl}/live/host/${s.id}`, cta: 'Démarrer la séance' });
 
     if (s.appointment_id) {
       const { data: appt } = await supabase
@@ -60,7 +64,7 @@ export async function pollLiveReminders() {
         .eq('id', s.appointment_id)
         .maybeSingle();
       const guest = await emailFor(appt?.student_id);
-      if (guest) recipients.push({ ...guest, link: `${APP_URL}/live/${s.id}`, cta: 'Rejoindre la séance' });
+      if (guest) recipients.push({ ...guest, link: `${notif.baseUrl}/live/${s.id}`, cta: 'Rejoindre la séance' });
     }
 
     // Élèves INVITÉS du live (live de classe) — pas seulement le guest d'un rendez-vous.
@@ -72,7 +76,7 @@ export async function pollLiveReminders() {
     for (const p of parts || []) {
       if ((p.role || 'student') !== 'student') continue;
       const stu = await emailFor(p.user_id);
-      if (stu) recipients.push({ ...stu, link: `${APP_URL}/live/${s.id}`, cta: 'Rejoindre la séance' });
+      if (stu) recipients.push({ ...stu, link: `${notif.baseUrl}/live/${s.id}`, cta: 'Rejoindre la séance' });
     }
 
     const title = esc(s.title || 'Votre séance live');
@@ -91,6 +95,9 @@ export async function pollLiveReminders() {
       try {
         await supabase.from('email_queue').insert({
           to: r.email,
+          from: notif.from,
+          from_name: notif.fromName,
+          tenant_id: s.tenant_id || null,
           subject: `Rappel — ${title} commence bientôt`,
           html_body: html,
           status: 'pending',
