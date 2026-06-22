@@ -226,7 +226,19 @@ export class LiveService {
       )
       .select("*")
       .single();
-    return { published: status === "published", workflow_status: status, state: data };
+    // Forum connecté : un replay PUBLIÉ converge dans le Sujet du live (même surface
+    // que le chat consolidé + le récap du neurone, même accès fail-closed). En
+    // 'pending_review', on ne poste PAS (l'élève ne doit pas le voir avant approbation).
+    let forumPosted = false;
+    if (status === "published") {
+      forumPosted = await this.postReplayToForum(tenantId, sessionId, rec.output_url);
+    }
+    return {
+      published: status === "published",
+      workflow_status: status,
+      forumPosted,
+      state: data,
+    };
   }
 
   /** Dépublie le replay (revue hôte) : repasse en 'pending_review' (invisible élève). */
@@ -243,7 +255,124 @@ export class LiveService {
       .eq("live_session_id", sessionId)
       .select("*")
       .maybeSingle();
+    // Forum connecté : on retire aussi le message de replay du Sujet (invisible élève
+    // tant que non republié).
+    await this.removeReplayFromForum(tenantId, sessionId);
     return { unpublished: Boolean(data), state: data };
+  }
+
+  private static REPLAY_MARK = "📹 Replay du live";
+
+  /**
+   * Forum connecté : poste le replay dans le Sujet du live (kind='topic',
+   * context_type='live'). Résout (ou crée) le Sujet puis insère UN message
+   * « 📹 Replay du live » porteur de l'URL (anti-doublon). service_role — le contrôle
+   * d'accès est porté par le Sujet lui-même (fail-closed à la lecture côté messaging).
+   */
+  private async postReplayToForum(
+    tenantId: string,
+    sessionId: string,
+    replayUrl: string,
+  ): Promise<boolean> {
+    const { data: s } = await this.supabase
+      .from("live_sessions")
+      .select("host_user_id, title")
+      .eq("id", sessionId)
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
+    if (!s) return false;
+    const hostId = (s as any).host_user_id as string;
+    const title = ((s as any).title as string) || "Live";
+
+    const topicId = await this.resolveLiveTopicId(tenantId, sessionId, hostId, title);
+    if (!topicId) return false;
+
+    const { data: dup } = await this.supabase
+      .from("messages")
+      .select("id")
+      .eq("conversation_id", topicId)
+      .ilike("content", `${LiveService.REPLAY_MARK}%`)
+      .limit(1)
+      .maybeSingle();
+    if (dup) return true; // déjà présent
+
+    const content = `${LiveService.REPLAY_MARK} — ${title}\n${replayUrl}`;
+    const { error } = await this.supabase.from("messages").insert({
+      tenant_id: tenantId,
+      conversation_id: topicId,
+      sender_id: hostId,
+      recipient_id: null,
+      content,
+    });
+    if (error) return false;
+    await this.supabase
+      .from("conversations")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", topicId);
+    return true;
+  }
+
+  /** Retire le message de replay du Sujet du live (sur dépublication). */
+  private async removeReplayFromForum(
+    tenantId: string,
+    sessionId: string,
+  ): Promise<void> {
+    const topicId = await this.resolveLiveTopicId(tenantId, sessionId);
+    if (!topicId) return;
+    await this.supabase
+      .from("messages")
+      .delete()
+      .eq("conversation_id", topicId)
+      .ilike("content", `${LiveService.REPLAY_MARK}%`);
+  }
+
+  /**
+   * Résout l'id du Sujet de forum du live. Si absent ET hostId fourni, le crée
+   * (idempotent : index unique → 23505 → on relit). null si introuvable.
+   */
+  private async resolveLiveTopicId(
+    tenantId: string,
+    sessionId: string,
+    hostId?: string,
+    title?: string,
+  ): Promise<string | null> {
+    const found = await this.supabase
+      .from("conversations")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .eq("kind", "topic")
+      .eq("context_type", "live")
+      .eq("context_id", sessionId)
+      .maybeSingle();
+    if (found.data?.id) return found.data.id as string;
+    if (!hostId) return null;
+    const subject = `Sujet du live — ${title || "Live"}`;
+    const ins = await this.supabase
+      .from("conversations")
+      .insert({
+        tenant_id: tenantId,
+        kind: "topic",
+        type: "group",
+        name: subject,
+        subject,
+        status: "open",
+        visibility: "context",
+        context_type: "live",
+        context_id: sessionId,
+        created_by: hostId,
+      })
+      .select("id")
+      .maybeSingle();
+    if (ins.data?.id) return ins.data.id as string;
+    const re = await this.supabase
+      .from("conversations")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .eq("kind", "topic")
+      .eq("context_type", "live")
+      .eq("context_id", sessionId)
+      .maybeSingle();
+    return re.data?.id ?? null;
   }
 
   /**
