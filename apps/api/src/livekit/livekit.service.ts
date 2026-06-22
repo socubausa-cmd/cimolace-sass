@@ -4,7 +4,14 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AccessToken, RoomServiceClient, EgressClient, EncodedFileType } from 'livekit-server-sdk';
+import {
+  AccessToken,
+  RoomServiceClient,
+  EgressClient,
+  EncodedFileType,
+  EncodedFileOutput,
+  S3Upload,
+} from 'livekit-server-sdk';
 
 @Injectable()
 export class LiveKitService {
@@ -193,25 +200,34 @@ export class LiveKitService {
     const r2Bucket = process.env.CF_R2_BUCKET;
     const r2Configured = Boolean(r2AccountId && r2Key && r2Secret && r2Bucket);
 
-    const fileOutput = r2Configured
-      ? {
-          fileType: EncodedFileType.MP4,
-          filepath,
-          s3: {
-            accessKey: r2Key!,
-            secret: r2Secret!,
-            region: 'auto',
-            bucket: r2Bucket!,
-            endpoint: `https://${r2AccountId}.r2.cloudflarestorage.com`,
-            forcePathStyle: true,
-          },
-        }
-      : { fileType: EncodedFileType.MP4, filepath };
+    // SDK v2 : l'output doit être une instance EncodedFileOutput, avec la
+    // destination S3/R2 dans le oneof `output` (case 's3'), et être passée
+    // DIRECTEMENT à startRoomCompositeEgress — pas via `{ file: {...} }` (objet
+    // simple), que le SDK ne mappe pas → 400 « missing or invalid field: output ».
+    const fileOutput = new EncodedFileOutput({
+      fileType: EncodedFileType.MP4,
+      filepath,
+      output: r2Configured
+        ? {
+            case: 's3',
+            value: new S3Upload({
+              accessKey: r2Key!,
+              secret: r2Secret!,
+              region: 'auto',
+              bucket: r2Bucket!,
+              endpoint: `https://${r2AccountId}.r2.cloudflarestorage.com`,
+              forcePathStyle: true,
+            }),
+          }
+        : { case: undefined },
+    });
 
     try {
-      const egressInfo = await egressClient.startRoomCompositeEgress(roomName, {
-        file: fileOutput as any,
-      });
+      const egressInfo = await egressClient.startRoomCompositeEgress(
+        roomName,
+        fileOutput,
+        { layout: 'grid' },
+      );
       const egressId =
         (egressInfo as any).egressId ??
         (egressInfo as any).egress_id ??

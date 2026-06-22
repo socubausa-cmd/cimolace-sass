@@ -12,8 +12,13 @@ export class LiveKitWebhookController {
     @Req() req: RawBodyRequest<Request>,
     @Headers('authorization') authorization?: string,
   ): Promise<{ ok: boolean }> {
-    const rawBody =
-      typeof req.rawBody === 'string'
+    // `req.body` est le Buffer brut posé par le parser `raw()` dédié (main.ts).
+    // Fallbacks : req.rawBody (NestFactory rawBody:true) puis re-sérialisation.
+    // `req.body` est le Buffer brut posé par le parser `raw()` dédié (main.ts).
+    // Fallbacks : req.rawBody (NestFactory rawBody:true) puis re-sérialisation.
+    const rawBody = Buffer.isBuffer(req.body)
+      ? (req.body as Buffer).toString('utf-8')
+      : typeof req.rawBody === 'string'
         ? req.rawBody
         : req.rawBody
           ? Buffer.from(req.rawBody).toString('utf-8')

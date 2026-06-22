@@ -40,8 +40,10 @@ export class LiveKitWebhookService {
         rawBody,
         authorization,
       )) as unknown as WebhookEvent;
-    } catch {
-      this.logger.warn('Webhook verification failed');
+    } catch (e) {
+      this.logger.warn(
+        `Webhook verification failed: ${(e as Error)?.message ?? 'unknown'}`,
+      );
       return;
     }
 

@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
+import { raw } from 'express';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
@@ -71,6 +72,14 @@ function extractHost(origin: string): string {
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
+
+  // ── Corps BRUT pour le webhook LiveKit ─────────────────────────────────────
+  // LiveKit envoie ses webhooks en `application/webhook+json`, que le parser JSON
+  // par défaut de Nest n'intercepte pas → `req.rawBody` reste vide et la
+  // vérification de signature (qui hashe le body brut) échoue systématiquement.
+  // On capture donc le corps brut (n'importe quel content-type) pour cette seule
+  // route, avant les parsers globaux. Le contrôleur lit alors `req.body` (Buffer).
+  app.use('/webhooks/livekit', raw({ type: () => true, limit: '10mb' }));
 
   // ── Sécurité HTTP headers ──────────────────────────────────────────────────
   app.use(
