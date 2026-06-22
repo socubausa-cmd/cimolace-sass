@@ -90,7 +90,15 @@ export class LiveService {
    */
   async startRecording(tenantId: string, sessionId: string) {
     const session: any = await this.findOne(tenantId, sessionId);
-    const slug = session.tenant_slug ?? "";
+    // Le slug DOIT être identique à celui de generateToken/ensureRoom — sinon l'egress
+    // vise une room inexistante (`_<id>` au lieu de `isna_<id>`) → échec. Or
+    // live_sessions.tenant_slug est souvent NULL → on lit le slug du TENANT.
+    const { data: tnt } = await this.supabase
+      .from("tenants")
+      .select("slug")
+      .eq("id", tenantId)
+      .maybeSingle();
+    const slug = (tnt as any)?.slug ?? session.tenant_slug ?? sessionId;
     const roomName = LiveKitService.scopedRoomName(slug, sessionId);
     const { egressId, filepath } = await this.liveKit.startRecording(roomName, sessionId, slug);
     const { data } = await this.supabase
