@@ -122,6 +122,19 @@ export async function aiChatClaudeDeepSeekGrok(opts: {
   grokModel?: string;
   /** Coach live : ordre DeepSeek → Claude → Grok (réponses courtes, latence souvent meilleure). */
   preferDeepseekFirst?: boolean;
+  /**
+   * Palier de coût (défaut global : `economy`).
+   * - `economy`  : DeepSeek → Mistral → Grok, **jamais Claude/OpenAI** (économie).
+   * - `premium`  : Claude d'abord (qualité max), à la demande.
+   */
+  tier?: 'economy' | 'premium';
+  /**
+   * Rôle DeepSeek → choisit le modèle via env :
+   * - `heavy` (travail de fond) → `DEEPSEEK_HEAVY_MODEL`
+   * - `fast`  (réponse instantanée) → `DEEPSEEK_FAST_MODEL`
+   * Défaut : `SMARTBOARD_DEEPSEEK_MODEL` ou `deepseek-chat`.
+   */
+  deepseekRole?: 'heavy' | 'fast';
 }): Promise<AiChainResult> {
   const max_tokens = opts.max_tokens ?? 800;
   const temperature = opts.temperature ?? 0.5;
@@ -131,8 +144,15 @@ export async function aiChatClaudeDeepSeekGrok(opts: {
     (opts.claudeModel != null && String(opts.claudeModel).trim()) ||
     env('SMARTBOARD_CLAUDE_MODEL') ||
     'claude-haiku-4-5';
+  const deepseekRoleModel =
+    opts.deepseekRole === 'fast'
+      ? env('DEEPSEEK_FAST_MODEL')
+      : opts.deepseekRole === 'heavy'
+        ? env('DEEPSEEK_HEAVY_MODEL')
+        : '';
   const deepseekModel =
     (opts.deepseekModel != null && String(opts.deepseekModel).trim()) ||
+    deepseekRoleModel ||
     env('SMARTBOARD_DEEPSEEK_MODEL') ||
     'deepseek-chat';
   const grokModel =
@@ -251,11 +271,16 @@ export async function aiChatClaudeDeepSeekGrok(opts: {
   // autres providers ne gèrent pas le format de blocs Anthropic. Sans image (string), routage
   // habituel inchangé → les 8 consommateurs existants ne sont pas affectés.
   const hasMultimodalContent = opts.messages.some((m) => Array.isArray(m.content));
+  // Palier de coût. ÉCO (défaut global) = DeepSeek → Mistral → Grok, jamais Claude.
+  // PREMIUM (à la demande) = Claude d'abord (qualité max).
+  const premium = opts.tier === 'premium';
   const order = hasMultimodalContent
-    ? [tryClaude]
-    : opts.preferDeepseekFirst
-      ? [tryDeepseek, tryClaude, tryMistral, tryGrok]
-      : [tryClaude, tryMistral, tryDeepseek, tryGrok];
+    ? [tryClaude] // seul Claude gère les blocs image ici ; la vision éco passe par vision-describe (Mistral/Pixtral)
+    : premium
+      ? opts.preferDeepseekFirst
+        ? [tryDeepseek, tryClaude, tryMistral, tryGrok]
+        : [tryClaude, tryMistral, tryDeepseek, tryGrok]
+      : [tryDeepseek, tryMistral, tryGrok];
 
   for (const fn of order) {
     const r = await fn();

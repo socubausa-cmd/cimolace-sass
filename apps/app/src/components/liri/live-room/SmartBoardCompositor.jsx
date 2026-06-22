@@ -40,6 +40,7 @@ import {
 import SlideParallaxStage from './SlideParallaxStage';
 import SlideAnnotationOverlay from './SlideAnnotationOverlay';
 import NeuroInkPanel from './NeuroInkPanel';
+import { useNeuroInkAi } from './useNeuroInkAi';
 import LiveWhiteboardToolsSidebar from './LiveWhiteboardToolsSidebar';
 import WhiteboardContextMenu from './WhiteboardContextMenu';
 import { useLiveWhiteboardStore } from './useLiveWhiteboardStore';
@@ -1752,6 +1753,47 @@ function WhiteboardScene({
       link.click();
     };
 
+    /** NeuroInk IA — image PNG (base64) du tableau, downscalée pour l'analyse vision. */
+    const aiRasterize = () => {
+      const fg = canvasRef.current;
+      const bg = bgCanvasRef.current;
+      if (!fg || !fg.width) return null;
+      const srcW = fg.width;
+      const srcH = fg.height;
+      const maxW = 1280;
+      const scale = srcW > maxW ? maxW / srcW : 1;
+      const outW = Math.max(1, Math.round(srcW * scale));
+      const outH = Math.max(1, Math.round(srcH * scale));
+      const merged = document.createElement('canvas');
+      merged.width = outW;
+      merged.height = outH;
+      const mx = merged.getContext('2d');
+      if (!mx) return null;
+      /* Fond sombre du tableau (l'encre claire reste lisible même sans bg). */
+      mx.fillStyle = '#17150f';
+      mx.fillRect(0, 0, outW, outH);
+      if (bg) mx.drawImage(bg, 0, 0, outW, outH);
+      mx.drawImage(fg, 0, 0, outW, outH);
+      try {
+        return merged.toDataURL('image/png');
+      } catch {
+        return null;
+      }
+    };
+
+    /** NeuroInk IA — texte concaténé des blocs `text` du tableau (pour reformulation/architecte). */
+    const aiReadBoardText = () => {
+      try {
+        return (strokesRef.current || [])
+          .filter((s) => s && s.kind === 'text' && s.text)
+          .map((s) => String(s.text).trim())
+          .filter(Boolean)
+          .join('\n');
+      } catch {
+        return '';
+      }
+    };
+
     const noop = () => {};
     if (readOnly || !onStrokesChange) {
       useLiveWhiteboardStore.getState().bindBoardActions({
@@ -1968,6 +2010,8 @@ function WhiteboardScene({
         useLiveWhiteboardStore.getState().resetBoardView();
       },
       download,
+      aiRasterize,
+      aiReadBoardText,
       groupBoardSelection,
       ungroupBoardSelection,
       copyBoardSelection,
@@ -2077,6 +2121,7 @@ function WhiteboardScene({
         duplicateBoardSelection: noop, deleteBoardSelection: noop,
         bringToFront: noop, sendToBack: noop, bringForward: noop, sendBackward: noop,
         updateStrokeProperties: noop,
+        aiRasterize: noop, aiReadBoardText: noop,
         alignLeft: noop, alignRight: noop, alignCenterH: noop,
         alignTop: noop, alignBottom: noop, alignCenterV: noop,
         distributeH: noop, distributeV: noop,
@@ -5305,6 +5350,7 @@ export default function SmartBoardCompositor({
   const setNeuroInkOpen = useLiveWhiteboardStore((s) => s.setNeuroInkOpen);
   const neuroInk = useLiveWhiteboardStore((s) => s.neuroInk);
   const setNeuroInk = useLiveWhiteboardStore((s) => s.setNeuroInk);
+  const neuroInkAi = useNeuroInkAi();
 
   // ── PiP state ──────────────────────────────────────────────────────────────
   const [pipEnabled, setPipEnabled] = useState(false);
@@ -5960,6 +6006,7 @@ export default function SmartBoardCompositor({
             onOpenChange={setNeuroInkOpen}
             neuroInk={neuroInk}
             setNeuroInk={setNeuroInk}
+            ai={neuroInkAi}
             footerHint="S'applique au crayon libre au relâchement du trait."
           />
         </div>

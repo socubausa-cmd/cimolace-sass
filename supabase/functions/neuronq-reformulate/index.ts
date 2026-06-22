@@ -36,12 +36,13 @@ Deno.serve(async (req: Request) => {
   const authHeader = req.headers.get('Authorization') || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
-  let body: { rawText?: string; userName?: string; sessionId?: string };
+  let body: { rawText?: string; userName?: string; sessionId?: string; tier?: 'economy' | 'premium' };
   try {
     body = (await req.json()) as typeof body;
   } catch {
     return json(400, { error: 'Invalid JSON' });
   }
+  const tier = body?.tier === 'premium' ? 'premium' : 'economy';
 
   // ─── LIRI Credits — Tenant + preflight ────────────────────────────────
   const ctx = await resolveTenant(req, body);
@@ -124,6 +125,9 @@ Règles :
     messages: [{ role: 'user', content: userContent }],
     max_tokens,
     temperature: 0.3,
+    // Reformulation = réponse instantanée → DeepSeek « flash ».
+    tier,
+    deepseekRole: 'fast',
   });
 
   if (!text) {

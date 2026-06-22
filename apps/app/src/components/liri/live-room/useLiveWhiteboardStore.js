@@ -23,6 +23,8 @@ const initialBoard = {
   bringForward: noop,
   sendBackward: noop,
   updateStrokeProperties: noop,
+  aiRasterize: () => null,
+  aiReadBoardText: () => '',
 };
 
 /**
@@ -101,6 +103,24 @@ export const useLiveWhiteboardStore = create((set, get) => ({
       neuroInkRevision: state.neuroInkRevision + 1,
     })),
 
+  /** NeuroInk IA — copilote pédagogique (activé par l'hôte). État partagé panneau ↔ orchestrateur. */
+  neuroInkAi: {
+    enabled: false,
+    premium: false,
+    busy: false,
+    activeKind: null,
+    comprehension: null,
+    suggestions: [],
+    error: null,
+  },
+  setNeuroInkAi: (patch) =>
+    set((state) => ({
+      neuroInkAi: {
+        ...state.neuroInkAi,
+        ...(typeof patch === 'function' ? patch(state.neuroInkAi) : patch),
+      },
+    })),
+
   /** Pour le panneau Architect (live) : traits, brouillon texte, révision globale. */
   boardStrokeCount: 0,
   boardTextDraftActive: false,
@@ -156,6 +176,9 @@ export const useLiveWhiteboardStore = create((set, get) => ({
   bringForward: () => get()._board.bringForward(),
   sendBackward: () => get()._board.sendBackward(),
   updateStrokeProperties: (patch) => get()._board.updateStrokeProperties(patch),
+  /** NeuroInk IA — primitives tableau exposées par le compositor. */
+  aiRasterizeBoard: () => get()._board.aiRasterize?.(),
+  aiReadBoardText: () => get()._board.aiReadBoardText?.(),
   alignLeft: () => get()._board.alignLeft(),
   alignRight: () => get()._board.alignRight(),
   alignCenterH: () => get()._board.alignCenterH(),

@@ -35,12 +35,13 @@ Deno.serve(async (req: Request) => {
   const { data: { user }, error: authErr } = await admin.auth.getUser(token);
   if (authErr || !user) return json(401, { error: 'Invalid token' });
 
-  let body: { assistantText?: string; centralIdea?: string; lang?: string };
+  let body: { assistantText?: string; centralIdea?: string; lang?: string; tier?: 'economy' | 'premium' };
   try {
     body = (await req.json()) as typeof body;
   } catch {
     return json(400, { error: 'Invalid JSON' });
   }
+  const tier = body?.tier === 'premium' ? 'premium' : 'economy';
 
   const assistantText = String(body?.assistantText || '').trim();
   if (assistantText.length < 20) {
@@ -76,8 +77,10 @@ Deno.serve(async (req: Request) => {
     messages: [{ role: 'user', content: userContent }],
     max_tokens: 2500,
     temperature: 0.25,
-    // Architecture de cours = raisonnement structuré → modèle Mistral capable.
+    // Architecture de cours = raisonnement structuré → modèle Mistral capable + DeepSeek « fond ».
     mistralModel: 'mistral-large-latest',
+    tier,
+    deepseekRole: 'heavy',
   });
 
   const rawText = result?.text ?? undefined;

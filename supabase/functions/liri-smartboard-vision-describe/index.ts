@@ -112,6 +112,49 @@ async function describeWithOpenAI(opts: {
   return text.trim();
 }
 
+/** Vision économique (EU) : Mistral Pixtral, API compatible OpenAI. */
+async function describeWithMistral(opts: {
+  apiKey: string;
+  model: string;
+  b64: string;
+  mime: string;
+  userPrompt: string;
+}): Promise<string> {
+  const url = `data:${opts.mime};base64,${opts.b64}`;
+  const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${opts.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: opts.model,
+      max_tokens: 1200,
+      temperature: 0.4,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: opts.userPrompt },
+            { type: 'image_url', image_url: url },
+          ],
+        },
+      ],
+    }),
+  });
+  const data = (await res.json().catch(() => ({}))) as {
+    choices?: Array<{ message?: { content?: string } }>;
+    error?: { message?: string } | string;
+  };
+  if (!res.ok) {
+    const msg = typeof data?.error === 'string' ? data.error : data?.error?.message;
+    throw new Error(msg || `Mistral HTTP ${res.status}`);
+  }
+  const text = data?.choices?.[0]?.message?.content;
+  if (typeof text !== 'string' || !text.trim()) throw new Error('Mistral vision: réponse vide');
+  return text.trim();
+}
+
 // @ts-ignore Deno
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -131,12 +174,14 @@ Deno.serve(async (req: Request) => {
     mimeType?: string;
     lang?: string;
     centralIdea?: string;
+    tier?: 'economy' | 'premium';
   };
   try {
     body = (await req.json()) as typeof body;
   } catch {
     return json(400, { error: 'Invalid JSON' });
   }
+  const tier = body?.tier === 'premium' ? 'premium' : 'economy';
 
   const rawInput = String(body?.imageBase64 || '').trim();
   if (!rawInput) return json(400, { error: 'imageBase64 requis' });
@@ -163,6 +208,8 @@ Deno.serve(async (req: Request) => {
   /** Ne pas réutiliser le modèle texte seul : la vision exige un modèle multimodal Anthropic. */
   const claudeModel = env('SMARTBOARD_VISION_CLAUDE_MODEL') || 'claude-3-5-haiku-20241022';
   const openaiModel = env('OPENAI_VISION_MODEL') || env('OPENAI_MODEL') || 'gpt-4o-mini';
+  /** Vision économique (défaut) : Mistral Pixtral. */
+  const mistralVisionModel = env('MISTRAL_VISION_MODEL') || 'pixtral-12b-2409';
 
   // ─── LIRI Credits — Résolution tenant ─────────────────────────────────
   const { resolveTenant, debitUsage } = await import('../_shared/aiBilling.ts');
@@ -176,46 +223,69 @@ Deno.serve(async (req: Request) => {
   };
 
   const anthropicKey = env('ANTHROPIC_API_KEY');
-  if (anthropicKey) {
+  const openaiKey = env('OPENAI_API_KEY');
+  const mistralKey = env('MISTRAL_API_KEY');
+  // Estimation tokens (image ~ 1500 tokens vision, output ~ texte / 4)
+  const estTokens = (description: string) => ({
+    estIn: 1500 + Math.ceil(userPrompt.length / 4),
+    estOut: Math.ceil(description.length / 4),
+  });
+
+  const tryMistral = async () => {
+    if (!mistralKey) return null;
     try {
-      const description = await describeWithClaude({
-        apiKey: anthropicKey,
-        model: claudeModel,
-        b64,
-        mediaType: mime,
-        userPrompt,
-      });
-      // Estimation tokens (image ~ 1500 tokens vision, output ~ texte / 4)
-      const estInTokens = 1500 + Math.ceil(userPrompt.length / 4);
-      const estOutTokens = Math.ceil(description.length / 4);
-      const _billing = await debitVision('anthropic', claudeModel, estInTokens, estOutTokens);
+      const description = await describeWithMistral({ apiKey: mistralKey, model: mistralVisionModel, b64, mime, userPrompt });
+      const { estIn, estOut } = estTokens(description);
+      const _billing = await debitVision('mistral', mistralVisionModel, estIn, estOut);
+      return json(200, { description, provider: 'mistral', _billing });
+    } catch (e) {
+      console.warn('[liri-smartboard-vision-describe] Mistral:', (e as Error)?.message);
+      return null;
+    }
+  };
+  const tryClaude = async () => {
+    if (!anthropicKey) return null;
+    try {
+      const description = await describeWithClaude({ apiKey: anthropicKey, model: claudeModel, b64, mediaType: mime, userPrompt });
+      const { estIn, estOut } = estTokens(description);
+      const _billing = await debitVision('anthropic', claudeModel, estIn, estOut);
       return json(200, { description, provider: 'claude', _billing });
     } catch (e) {
       console.warn('[liri-smartboard-vision-describe] Claude:', (e as Error)?.message);
+      return null;
     }
-  }
-
-  const openaiKey = env('OPENAI_API_KEY');
-  if (openaiKey) {
+  };
+  const tryOpenAI = async () => {
+    if (!openaiKey) return null;
     try {
-      const description = await describeWithOpenAI({
-        apiKey: openaiKey,
-        model: openaiModel,
-        b64,
-        mime,
-        userPrompt,
-      });
-      const estInTokens = 1500 + Math.ceil(userPrompt.length / 4);
-      const estOutTokens = Math.ceil(description.length / 4);
-      const _billing = await debitVision('openai', openaiModel, estInTokens, estOutTokens);
+      const description = await describeWithOpenAI({ apiKey: openaiKey, model: openaiModel, b64, mime, userPrompt });
+      const { estIn, estOut } = estTokens(description);
+      const _billing = await debitVision('openai', openaiModel, estIn, estOut);
       return json(200, { description, provider: 'openai', _billing });
     } catch (e) {
       console.warn('[liri-smartboard-vision-describe] OpenAI:', (e as Error)?.message);
+      return null;
     }
+  };
+
+  // ÉCO (défaut) = Mistral Pixtral seul, jamais Claude/OpenAI. Si Mistral pas
+  // configuré → repli Claude/OpenAI pour ne pas casser. PREMIUM = Claude → OpenAI → Mistral.
+  const chain =
+    tier === 'premium'
+      ? [tryClaude, tryOpenAI, tryMistral]
+      : mistralKey
+        ? [tryMistral]
+        : [tryClaude, tryOpenAI];
+
+  for (const fn of chain) {
+    const r = await fn();
+    if (r) return r;
   }
 
   return json(503, {
     error:
-      'Aucun fournisseur vision disponible (ANTHROPIC_API_KEY ou OPENAI_API_KEY requis).',
+      tier === 'premium'
+        ? 'Aucun fournisseur vision premium disponible (ANTHROPIC_API_KEY / OPENAI_API_KEY).'
+        : 'Vision économique indisponible (MISTRAL_API_KEY + MISTRAL_VISION_MODEL requis).',
   });
 });
