@@ -207,7 +207,9 @@ Deno.serve(async (req: Request) => {
       `Titre du live : ${title}\n\n--- CHAT DU LIVE ---\n${chatBlock || '(aucun message)'}\n\n--- QUESTIONS ---\n${qBlock || '(aucune question)'}\n\nProduis le récap JSON.`;
     const max_tokens = 1200;
 
-    // Billing best-effort (comme neuronq-reformulate) : ne bloque pas si pas de tenant.
+    // Billing best-effort. Revue #11 : on FORCE le tenant de la SESSION pour ne pas
+    // débiter un autre tenant via body.tenant_id/JWT (resolveTenant lit body.tenant_id).
+    (body as Record<string, unknown>).tenant_id = tenantId;
     const ctx = await resolveTenant(req, body);
     if (ctx) {
       const estimate = await estimateLlmCost(ctx, 'deepseek', 'deepseek-chat', system + userContent, max_tokens);
@@ -229,13 +231,17 @@ Deno.serve(async (req: Request) => {
     });
     provider = result.provider;
     const parsed = safeParseJson(result.text);
-    aiSummary = String(parsed?.summary || result.text || '').trim().slice(0, 4000);
+    const parsedSummary = String(parsed?.summary || '').trim();
+    // Revue #5 : si le LLM n'a pas renvoyé de JSON exploitable, on NE retombe PAS sur
+    // le texte brut (préambule/refus du modèle) qu'on publierait dans le forum élève.
+    if (!parsedSummary) return json(200, { ok: true, skipped: 'unparseable' });
+    aiSummary = parsedSummary.slice(0, 4000);
     keyPoints = Array.isArray(parsed?.keyPoints) ? parsed.keyPoints.slice(0, 8).map((p: unknown) => String(p)) : [];
     qa = Array.isArray(parsed?.qa) ? parsed.qa : [];
     summarizedNow = true;
 
-    // 5. Upsert du résumé (réveille la page post-live).
-    await admin
+    // 5. Upsert du résumé (réveille la page post-live). Revue #12 : on inspecte l'erreur.
+    const { error: sumErr } = await admin
       .from('live_session_summaries')
       .upsert(
         {
@@ -248,6 +254,7 @@ Deno.serve(async (req: Request) => {
         },
         { onConflict: 'session_id' },
       );
+    if (sumErr) console.error('[neurone] échec upsert live_session_summaries:', sumErr.message);
 
     // Débit crédits LIRI (best-effort).
     if (ctx && result.usage) {
@@ -347,48 +354,55 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  // ── 8. Flashcards : un deck de révision par PARTICIPANT (à partir des Q&R) ─
+  // ── 8. Flashcards : un deck de révision par ÉLÈVE participant ─────────────
   // Modèle recall_decks/recall_cards = per-user (chaque élève révise SON deck avec
-  // son propre état de répétition espacée). On crée donc, une seule fois (à la
-  // génération), un deck par participant effectif du live, garni des cartes Q→R.
-  // Idempotent : on saute un participant qui a déjà un deck pour ce live.
+  // son propre état de répétition espacée). Revue #7 : les cartes viennent des
+  // questions RÉELLEMENT répondues (live_questions = source DURABLE), donc
+  // reconstructibles à CHAQUE appel → réparables même après un échec partiel du
+  // 1er appel (≠ qa LLM qui n'existe qu'à la génération). Gardé par cards.length
+  // (plus par summarizedNow).
   let decksCreated = 0;
-  const cards = (qa || [])
-    .filter((x) => x && String(x.question || '').trim() && String(x.answer || '').trim())
+  const cards = qList
+    .filter((x) => String(x.content || '').trim() && String(x.answer || '').trim())
     .slice(0, 30)
     .map((x) => ({
-      question: String(x.question).trim().slice(0, 1000),
+      question: String(x.content).trim().slice(0, 1000),
       answer: String(x.answer).trim().slice(0, 2000),
     }));
-  if (summarizedNow && cards.length) {
+  if (cards.length) {
+    const teacherId = (session as any).teacher_id ?? null;
+    // Revue #8 : pas de deck pour le host/teacher/co-host/modérateur ni les partis.
+    const STAFF_PART_ROLES = ['host', 'co_host', 'cohost', 'moderator', 'moderateur', 'teacher'];
     const { data: parts } = await admin
       .from('live_session_participants')
-      .select('user_id')
+      .select('user_id, role, left_at')
       .eq('live_session_id', sessionId)
       .limit(300);
     const deckTitle = `Révision — ${title}`;
     const userIds = [
       ...new Set(
         (parts || [])
-          .map((p: any) => p.user_id as string)
-          .filter((uid) => uid && uid !== hostId),
+          .filter(
+            (p: any) =>
+              p.user_id &&
+              p.user_id !== hostId &&
+              p.user_id !== teacherId &&
+              !p.left_at &&
+              !STAFF_PART_ROLES.includes(String(p.role || '').toLowerCase()),
+          )
+          .map((p: any) => p.user_id as string),
       ),
     ];
     for (const uid of userIds) {
-      const { data: existingDeck } = await admin
+      // Revue #1 : idempotence ATOMIQUE via l'index UNIQUE partiel
+      // uniq_recall_decks_source (tenant_id, user_id, source_session_id) → un 2e
+      // INSERT (course ou re-run) échoue en 23505 et on saute, pas de doublon.
+      const { data: deck, error: deckErr } = await admin
         .from('recall_decks')
-        .select('id')
-        .eq('tenant_id', tenantId)
-        .eq('user_id', uid)
-        .eq('title', deckTitle)
-        .maybeSingle();
-      if (existingDeck) continue;
-      const { data: deck } = await admin
-        .from('recall_decks')
-        .insert({ tenant_id: tenantId, user_id: uid, title: deckTitle })
+        .insert({ tenant_id: tenantId, user_id: uid, title: deckTitle, source_session_id: sessionId })
         .select('id')
         .maybeSingle();
-      if (!deck?.id) continue;
+      if (deckErr || !deck?.id) continue; // 23505 = deck déjà créé pour ce live
       const { error: cardsErr } = await admin
         .from('recall_cards')
         .insert(cards.map((c) => ({ tenant_id: tenantId, deck_id: deck.id, ...c })));
