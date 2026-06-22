@@ -2,25 +2,23 @@
  * TenantEmailSettings
  *
  * Configuration NO-CODE de l'expéditeur email de l'école (multi-tenant).
- * L'owner/admin renseigne le nom d'expéditeur, le domaine d'envoi et l'URL du
- * portail ; il peut ajouter son domaine dans Resend, copier les DNS, puis
- * vérifier — sans coder ni redéployer.
+ * TOUTES les opérations passent par l'edge function `resend-domain`, qui résout
+ * le tenant par SLUG (signal fiable, public) + vérifie owner/admin côté serveur.
+ * Le composant n'a donc PAS besoin du tenant_id (la résolution d'id côté front
+ * est peu fiable) ni d'accès direct à Supabase. La clé Resend n'est jamais lue.
  *
- * Compte d'envoi : « central Cimolace » par défaut, ou « son propre compte
- * Resend » (BYO / domaine custom) en collant une clé (jamais réaffichée).
- * Les opérations Resend passent par l'edge function `resend-domain` (la clé
- * n'est jamais exposée au front).
- *
- * Usage: <TenantEmailSettings tenantId={tenant.id} />
+ * Usage: <TenantEmailSettings /> (le slug est résolu via useResolvedTenantSlug).
  */
 import { useState, useEffect, useCallback } from 'react';
 import { Loader2, Save, Check, AlertCircle, Mail, ShieldCheck, RefreshCw, Globe } from 'lucide-react';
 import supabase from '@/lib/customSupabaseClient';
+import { useResolvedTenantSlug } from '@/hooks/useResolvedTenantSlug';
 
 const INPUT =
   'w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none disabled:bg-gray-50 disabled:text-gray-400';
 
-export default function TenantEmailSettings({ tenantId }) {
+export default function TenantEmailSettings() {
+  const { slug, loading: slugLoading } = useResolvedTenantSlug();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState(''); // '' | 'configure' | 'verify'
@@ -28,60 +26,50 @@ export default function TenantEmailSettings({ tenantId }) {
   const [notice, setNotice] = useState('');
   const [verified, setVerified] = useState(false);
   const [records, setRecords] = useState([]);
-  const [form, setForm] = useState({
-    email_from_name: '',
-    email_domain: '',
-    app_base_url: '',
-    resendApiKey: '',
-  });
+  const [form, setForm] = useState({ email_from_name: '', email_domain: '', app_base_url: '', resendApiKey: '' });
+
+  const call = useCallback(
+    async (payload) => {
+      const { data, error: err } = await supabase.functions.invoke('resend-domain', {
+        body: { ...payload, slug },
+      });
+      if (err) throw err;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    [slug],
+  );
 
   const load = useCallback(async () => {
-    if (!tenantId) return;
+    if (slugLoading) return;
+    if (!slug) { setLoading(false); return; }
     setLoading(true);
     try {
-      const { data } = await supabase
-        .from('tenant_notification_settings')
-        .select('email_from_name, email_domain, app_base_url, email_verified')
-        .eq('tenant_id', tenantId)
-        .maybeSingle();
-      if (data) {
-        setForm((f) => ({
-          ...f,
-          email_from_name: data.email_from_name || '',
-          email_domain: data.email_domain || '',
-          app_base_url: data.app_base_url || '',
-        }));
-        setVerified(data.email_verified === true);
-      }
+      const data = await call({ action: 'get' });
+      setForm((f) => ({
+        ...f,
+        email_from_name: data.emailFromName || '',
+        email_domain: data.emailDomain || '',
+        app_base_url: data.appBaseUrl || '',
+      }));
+      setVerified(data.emailVerified === true);
+      setError('');
     } catch (err) {
-      console.error('[TenantEmailSettings] load', err);
+      // Non bloquant : on laisse le formulaire éditable même si la lecture échoue.
+      setError(err?.message || '');
     } finally {
       setLoading(false);
     }
-  }, [tenantId]);
+  }, [slug, slugLoading, call]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const upsertBasics = () =>
-    supabase.from('tenant_notification_settings').upsert(
-      {
-        tenant_id: tenantId,
-        email_from_name: form.email_from_name.trim() || null,
-        app_base_url: form.app_base_url.trim() || null,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'tenant_id' },
-    );
-
   const saveBasics = async () => {
-    setError('');
-    setNotice('');
-    setSaving(true);
+    setError(''); setNotice(''); setSaving(true);
     try {
-      const { error: err } = await upsertBasics();
-      if (err) throw err;
+      await call({ action: 'save', emailFromName: form.email_from_name, appBaseUrl: form.app_base_url });
       setNotice('Réglages enregistrés.');
       setTimeout(() => setNotice(''), 2500);
     } catch (err) {
@@ -92,33 +80,16 @@ export default function TenantEmailSettings({ tenantId }) {
   };
 
   const configureDomain = async () => {
-    setError('');
-    setNotice('');
-    setRecords([]);
+    setError(''); setNotice(''); setRecords([]);
     const dom = form.email_domain.trim();
-    if (!dom) {
-      setError("Renseigne le domaine d'envoi (ex : prorascience.org).");
-      return;
-    }
+    if (!dom) { setError("Renseigne le domaine d'envoi (ex : prorascience.org)."); return; }
     setBusy('configure');
     try {
-      await upsertBasics();
-      const { data, error: err } = await supabase.functions.invoke('resend-domain', {
-        body: {
-          action: 'add',
-          tenantId,
-          domain: dom,
-          resendApiKey: form.resendApiKey.trim() || undefined,
-        },
-      });
-      if (err) throw err;
-      if (data?.error) {
-        setError(data.error);
-        return;
-      }
+      await call({ action: 'save', emailFromName: form.email_from_name, appBaseUrl: form.app_base_url });
+      const data = await call({ action: 'add', domain: dom, resendApiKey: form.resendApiKey.trim() || undefined });
       setRecords(data.records || []);
       setVerified(data.status === 'verified');
-      setForm((f) => ({ ...f, resendApiKey: '' })); // ne pas conserver la clé en mémoire
+      setForm((f) => ({ ...f, resendApiKey: '' }));
       setNotice('Domaine ajouté. Ajoute les DNS ci-dessous chez ton registrar, puis clique « Vérifier ».');
     } catch (err) {
       setError(err?.message || 'Échec de la configuration du domaine.');
@@ -128,18 +99,9 @@ export default function TenantEmailSettings({ tenantId }) {
   };
 
   const verifyDomain = async () => {
-    setError('');
-    setNotice('');
-    setBusy('verify');
+    setError(''); setNotice(''); setBusy('verify');
     try {
-      const { data, error: err } = await supabase.functions.invoke('resend-domain', {
-        body: { action: 'verify', tenantId },
-      });
-      if (err) throw err;
-      if (data?.error) {
-        setError(data.error);
-        return;
-      }
+      const data = await call({ action: 'verify' });
       setRecords(data.records || []);
       setVerified(data.verified === true);
       setNotice(
@@ -157,6 +119,7 @@ export default function TenantEmailSettings({ tenantId }) {
   const fromPreview = form.email_domain.trim()
     ? `${form.email_from_name.trim() ? `${form.email_from_name.trim()} ` : ''}<noreply@${form.email_domain.trim()}>`
     : '—';
+  const blocked = saving || !!busy || loading;
 
   return (
     <div className="bg-white rounded-lg shadow">
@@ -194,7 +157,7 @@ export default function TenantEmailSettings({ tenantId }) {
                   onChange={(e) => setForm((f) => ({ ...f, email_from_name: e.target.value }))}
                   placeholder="ISNA Prorascience"
                   className={INPUT}
-                  disabled={saving || !!busy}
+                  disabled={blocked}
                 />
               </div>
               <div>
@@ -205,7 +168,7 @@ export default function TenantEmailSettings({ tenantId }) {
                   onChange={(e) => setForm((f) => ({ ...f, email_domain: e.target.value }))}
                   placeholder="prorascience.org"
                   className={INPUT}
-                  disabled={saving || !!busy}
+                  disabled={blocked}
                 />
               </div>
             </div>
@@ -222,7 +185,7 @@ export default function TenantEmailSettings({ tenantId }) {
                   onChange={(e) => setForm((f) => ({ ...f, app_base_url: e.target.value }))}
                   placeholder="https://prorascience.org"
                   className={`${INPUT} pl-9`}
-                  disabled={saving || !!busy}
+                  disabled={blocked}
                 />
               </div>
             </div>
@@ -238,7 +201,7 @@ export default function TenantEmailSettings({ tenantId }) {
                 placeholder="re_…  (laisser vide = compte Cimolace central)"
                 className={INPUT}
                 autoComplete="off"
-                disabled={saving || !!busy}
+                disabled={blocked}
               />
               <p className="mt-1 text-xs text-gray-400">
                 Pour utiliser le propre compte Resend de l'école (domaine custom), colle sa clé API.
@@ -265,7 +228,7 @@ export default function TenantEmailSettings({ tenantId }) {
               <button
                 type="button"
                 onClick={saveBasics}
-                disabled={saving || !!busy}
+                disabled={blocked}
                 className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
               >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
@@ -274,7 +237,7 @@ export default function TenantEmailSettings({ tenantId }) {
               <button
                 type="button"
                 onClick={configureDomain}
-                disabled={saving || !!busy}
+                disabled={blocked}
                 className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
               >
                 {busy === 'configure' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
@@ -283,7 +246,7 @@ export default function TenantEmailSettings({ tenantId }) {
               <button
                 type="button"
                 onClick={verifyDomain}
-                disabled={saving || !!busy}
+                disabled={blocked}
                 className="inline-flex items-center gap-2 rounded-lg border border-indigo-200 px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50 disabled:opacity-60"
               >
                 {busy === 'verify' ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}

@@ -4,23 +4,16 @@ import { Input } from '@/components/ui/input';
 import { Save, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useSystemSettings } from '@/hooks/useAdmin';
 import { useToast } from '@/components/ui/use-toast';
-import { tenantsApi } from '@/lib/api-v2';
 import TenantEmailSettings from '@/components/admin/TenantEmailSettings';
 
 const SettingsPage = () => {
   const { toast } = useToast();
   const { settings, loading, error, refresh, save } = useSystemSettings();
   const [form, setForm] = useState(settings);
-  const [tenant, setTenant] = useState(null);
 
   useEffect(() => {
     setForm(settings);
   }, [settings]);
-
-  // Tenant courant (sur prorascience.org → ISNA) pour la config email de l'école.
-  useEffect(() => {
-    tenantsApi.current().then(setTenant).catch(() => {});
-  }, []);
 
   const handleSave = async () => {
     const payload = {
@@ -109,8 +102,8 @@ const SettingsPage = () => {
             </div>
           </div>
 
-          {/* Expéditeur email — configuration no-code Resend de l'école (tenant courant) */}
-          {tenant?.id ? <TenantEmailSettings tenantId={tenant.id} /> : null}
+          {/* Expéditeur email — configuration no-code Resend (slug résolu côté edge) */}
+          <TenantEmailSettings />
         </div>
       </div>
     </div>

@@ -265,7 +265,7 @@ export default function TenantAdminSettingsPage() {
           {/* Expéditeur email — domaine d'envoi de l'école (no-code, multi-tenant) */}
           {tenant && (
             <Section title="Expéditeur email" icon={Mail}>
-              <TenantEmailSettings tenantId={tenant.id} />
+              <TenantEmailSettings />
             </Section>
           )}
 
