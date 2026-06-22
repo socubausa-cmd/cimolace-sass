@@ -138,6 +138,26 @@ export class LiveKitWebhookService {
         { live_session_id: liveSessionId, user_id: userId, joined_at: now },
         { onConflict: 'live_session_id,user_id' },
       );
+
+    // Démarrer l'egress d'enregistrement quand l'HÔTE rejoint la room : la room est
+    // alors ACTIVE (l'hôte va publier sa caméra/écran) → l'egress composite peut
+    // démarrer. C'est le BON timing (≠ à l'émission du token, où la room est encore
+    // vide → LiveKit refuse l'egress → 'failed'). Non bloquant.
+    try {
+      const { data: sess } = await this.supabase.client
+        .from('live_sessions')
+        .select('host_user_id, tenant_id')
+        .eq('id', liveSessionId)
+        .maybeSingle();
+      const s = sess as { host_user_id?: string; tenant_id?: string } | null;
+      if (s?.host_user_id === userId && s?.tenant_id) {
+        await this.liri.maybeStartRecording(s.tenant_id, liveSessionId);
+      }
+    } catch (err) {
+      this.logger.warn(
+        'egress auto-start (participant_joined hôte) échec: ' + (err as Error).message,
+      );
+    }
   }
 
   private async handleParticipantLeft(

@@ -448,22 +448,17 @@ export class LiveService {
         ? await this.liveKit.generateHostToken(roomName, userId)
         : await this.liveKit.generateParticipantToken(roomName, userId);
 
-    // Phase 1.5 — l'HÔTE rejoint → démarre l'egress R2 (enregistrement) UNE fois.
-    // Fire-and-forget : ne retarde ni ne casse l'entrée en live ; no-op si R2 non
-    // configuré (évite des lignes 'failed') ; idempotent (un enregistrement / live).
-    if (role === "host") {
-      void this.maybeStartRecording((session as any).tenant_id, sessionId);
-    }
-
     return { token, room: roomName, role, userId, requestedRole: requestedRole ?? null };
   }
 
   /**
-   * Démarre l'egress UNE fois pour la session si pertinent. Best-effort (avale les
-   * erreurs), NO-OP si R2 non configuré (CF_R2_BUCKET absent) ou si un enregistrement
-   * a déjà été lancé (status recording/completed/stopped). Appelé à l'arrivée de l'hôte.
+   * Démarre l'egress UNE fois pour la session. Best-effort (avale les erreurs), NO-OP si
+   * R2 non configuré (CF_R2_BUCKET absent) ou si un enregistrement a déjà été lancé.
+   * Appelé par le WEBHOOK quand l'HÔTE rejoint la room (room ACTIVE → l'egress démarre).
+   * ⚠️ NE PAS appeler à l'émission du token : la room est alors VIDE (le client de l'hôte
+   * n'a pas encore publié) → LiveKit refuse l'egress composite → 'failed' (bug vécu).
    */
-  private async maybeStartRecording(tenantId: string, sessionId: string): Promise<void> {
+  async maybeStartRecording(tenantId: string, sessionId: string): Promise<void> {
     if (!process.env.CF_R2_BUCKET) return;
     try {
       const { data: existing } = await this.supabase
