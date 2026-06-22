@@ -204,7 +204,7 @@ export default function CimolaceAdminAiKeys() {
               <b>⚠️ Bootstrap requis.</b> Le token Management Supabase n'est pas configuré, donc poser/supprimer une clé est désactivé
               (le bouton « Tester » fonctionne quand même). Pose-le une seule fois :<br />
               <code style={{ display: 'block', marginTop: 6, color: '#fff' }}>
-                supabase secrets set SUPABASE_MGMT_TOKEN=&lt;ton_PAT&gt; --project-ref fwfupxvmwtxbtbjdeqvu
+                supabase secrets set LIRI_MGMT_TOKEN=&lt;ton_PAT&gt; --project-ref fwfupxvmwtxbtbjdeqvu
               </code>
             </div>
           ) : null}

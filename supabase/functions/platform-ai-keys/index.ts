@@ -139,7 +139,7 @@ Deno.serve(async (req: Request) => {
 
   const action = String(body?.action || '');
   const ref = env('SUPABASE_PROJECT_REF') || (supabaseUrl.match(/https:\/\/([a-z0-9]+)\.supabase\./)?.[1] ?? '');
-  const mgmt = env('SUPABASE_MGMT_TOKEN');
+  const mgmt = env('LIRI_MGMT_TOKEN');
 
   const mgmtFetch = (method: string, payload?: unknown) =>
     fetch(`${MGMT}/v1/projects/${ref}/secrets`, {
@@ -181,7 +181,7 @@ Deno.serve(async (req: Request) => {
 
   // ─── SET ────────────────────────────────────────────────────────────────
   if (action === 'set') {
-    if (!mgmt) return json(400, { error: 'SUPABASE_MGMT_TOKEN non configuré (bootstrap requis).' });
+    if (!mgmt) return json(400, { error: 'LIRI_MGMT_TOKEN non configuré (bootstrap requis).' });
     const name = String(body.name || '');
     const value = String(body.value || '');
     if (!ALLOWED_SECRETS.has(name)) return json(400, { error: 'Secret non autorisé' });
@@ -196,7 +196,7 @@ Deno.serve(async (req: Request) => {
 
   // ─── DELETE ──────────────────────────────────────────────────────────────
   if (action === 'delete') {
-    if (!mgmt) return json(400, { error: 'SUPABASE_MGMT_TOKEN non configuré (bootstrap requis).' });
+    if (!mgmt) return json(400, { error: 'LIRI_MGMT_TOKEN non configuré (bootstrap requis).' });
     const name = String(body.name || '');
     if (!ALLOWED_SECRETS.has(name)) return json(400, { error: 'Secret non autorisé' });
     const r = await mgmtFetch('DELETE', [name]);
