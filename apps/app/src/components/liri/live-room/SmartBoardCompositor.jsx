@@ -1353,6 +1353,59 @@ function WhiteboardScene({
     [onSaveStroke, onStrokesChange, redrawSheet, saveUndoSnapshot],
   );
 
+  // « Tout saisir » : insère une image (File) sur le tableau — collage presse-papiers ou
+  // glisser-déposer (façon Photoshop). Dimensionne proportionnellement (plafonné), centre sur
+  // le point fourni (drop) ou le centre du tableau (collage), puis sélectionne l'image posée.
+  const insertImageFromFile = useCallback((file, atCanvasPos) => {
+    if (readOnly || !file || !String(file.type || '').startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = String(reader.result || '');
+      if (!url) return;
+      const img = new Image();
+      img.onload = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const maxW = Math.min(canvas.width * 0.6, 700);
+        const maxH = Math.min(canvas.height * 0.6, 520);
+        let w = img.naturalWidth || 240;
+        let h = img.naturalHeight || 180;
+        const scale = Math.min(1, maxW / w, maxH / h);
+        w = Math.max(24, Math.round(w * scale));
+        h = Math.max(24, Math.round(h * scale));
+        const cx = atCanvasPos ? atCanvasPos.x : canvas.width / 2;
+        const cy = atCanvasPos ? atCanvasPos.y : canvas.height / 2;
+        pushStroke({ kind: 'image', url, x: cx - w / 2, y: cy - h / 2, width: w, height: h });
+        const st = useLiveWhiteboardStore.getState();
+        st.setTool('select');
+        st.setBoardSelection([strokesRef.current.length - 1]);
+      };
+      img.src = url;
+    };
+    reader.readAsDataURL(file);
+  }, [readOnly, pushStroke]);
+
+  // Collage d'image système (Ctrl+V) façon Photoshop. Écouteur 'paste' global, ignoré quand on
+  // saisit dans un champ texte (laisse le collage texte normal). Le keydown Ctrl+V n'intercepte
+  // que si le presse-papiers INTERNE du tableau contient des objets (cf. handler clavier).
+  useEffect(() => {
+    if (readOnly || typeof window === 'undefined') return undefined;
+    const onPaste = (ev) => {
+      const ae = document.activeElement;
+      if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT' || ae.isContentEditable)) return;
+      const items = ev.clipboardData?.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i += 1) {
+        if (items[i].type && items[i].type.startsWith('image/')) {
+          const file = items[i].getAsFile();
+          if (file) { ev.preventDefault(); insertImageFromFile(file, null); return; }
+        }
+      }
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  }, [readOnly, insertImageFromFile]);
+
   useEffect(() => {
     if (readOnly || typeof window === 'undefined') return undefined;
     const onArchitectApply = (ev) => {
@@ -1573,8 +1626,13 @@ function WhiteboardScene({
           return;
         }
         if (k === 'v' && !ev.shiftKey) {
-          ev.preventDefault();
-          st.pasteBoardClipboard();
+          // Ne capter Ctrl+V que si le presse-papiers INTERNE a des objets ; sinon laisser passer
+          // le collage natif → l'écouteur 'paste' insère une image système (façon Photoshop).
+          const clip = useLiveWhiteboardStore.getState().boardClipboard;
+          if (Array.isArray(clip) && clip.length > 0) {
+            ev.preventDefault();
+            st.pasteBoardClipboard();
+          }
           return;
         }
         if (k === 'd' && !ev.shiftKey) {
@@ -3492,6 +3550,16 @@ function WhiteboardScene({
               onPointerCancel={handlePointerUp}
               onDoubleClick={handleCanvasDoubleClick}
               onContextMenu={handleBoardContextMenu}
+              onDragOver={(e) => { if (!readOnly && e.dataTransfer?.types?.includes('Files')) e.preventDefault(); }}
+              onDrop={(e) => {
+                if (readOnly) return;
+                const f = e.dataTransfer?.files?.[0];
+                if (f && String(f.type || '').startsWith('image/')) {
+                  e.preventDefault();
+                  const canvas = canvasRef.current;
+                  insertImageFromFile(f, canvas ? getPos(e, canvas) : null);
+                }
+              }}
               onWheel={(e) => {
                 if (readOnly) return;
                 if (!pointerOverBoardRef.current) return;
