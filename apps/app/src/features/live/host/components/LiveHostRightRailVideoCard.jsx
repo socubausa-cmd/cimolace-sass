@@ -55,9 +55,10 @@ export const LiveHostRightRailVideoCard = ({
       className="lh-sp-dim lh-premium-card"
       style={{
         ...LH_SIDEBAR_CARD_GLOW,
-        border: '1px solid rgba(251,191,36,.26)',
-        background:
-          'radial-gradient(120% 90% at 10% -8%, rgba(251,191,36,.12), transparent 54%), linear-gradient(160deg, rgba(43,36,29,.9), rgba(24,17,11,.96))',
+        // Fond neutre/immersif : on retire le glow doré (l'or reste un accent — libellé, état actif —
+        // pas un remplissage de carte). Base chaude sombre seulement.
+        border: '1px solid rgba(245,244,238,.08)',
+        background: 'linear-gradient(160deg, rgba(38,34,29,.92), rgba(22,18,14,.96))',
       }}
     >
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'6px',gap:'6px',flexWrap:'wrap'}}>

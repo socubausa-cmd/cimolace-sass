@@ -93,9 +93,9 @@ export const LiveHostMasterScriptDock = ({
           <span
             style={{
               fontSize: '9px',
-              background: 'rgba(200,150,12,.15)',
-              color: '#C8960C',
-              border: '1px solid rgba(200,150,12,.3)',
+              background: 'rgba(255,255,255,.04)',
+              color: 'rgba(200,150,12,.9)',
+              border: '1px solid rgba(255,255,255,.08)',
               padding: '1px 7px',
               borderRadius: '3px',
               display: 'inline-block',
@@ -108,12 +108,13 @@ export const LiveHostMasterScriptDock = ({
           <div
             style={{
               fontSize: '10px',
-              color: 'rgba(212,163,106,.75)',
+              color: 'rgba(255,255,255,.6)',
               fontStyle: 'italic',
               marginBottom: '7px',
               padding: '6px 8px',
-              background: nqAnalysis ? 'rgba(200,148,62,.07)' : 'rgba(168,118,58,.07)',
-              borderLeft: `2px solid ${nqAnalysis ? '#c8943e' : 'rgba(168,118,58,.4)'}`,
+              background: 'rgba(255,255,255,.02)',
+              border: '1px solid rgba(255,255,255,.06)',
+              borderRadius: '6px',
               lineHeight: '1.6',
               flexShrink: 0,
             }}
