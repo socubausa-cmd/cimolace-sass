@@ -56,6 +56,7 @@ import CimolaceAdminSites from '@/pages/cimolace/admin/sites/index';
 import CimolaceAdminBilling from '@/pages/cimolace/admin/billing/index';
 import CimolaceAdminSupport from '@/pages/cimolace/admin/support/index';
 import CimolaceAdminMonitoring from '@/pages/cimolace/admin/monitoring/index';
+import CimolaceAdminAiKeys from '@/pages/cimolace/admin/ai-keys/index';
 import CimolaceClientDashboard from '@/pages/cimolace/client/[clientSlug]/index';
 const CimolaceBillingDashboardPage = React.lazy(() => import('@/pages/cimolace/CimolaceBillingDashboardPage'));
 const CimolaceLaunchPage = React.lazy(() => import('@/pages/cimolace/CimolaceLaunchPage'));
@@ -132,6 +133,7 @@ export default function CimolaceRouter() {
           <Route path="admin/billing" element={<CimolaceProtectedOwnerRoute><CimolaceAdminBilling /></CimolaceProtectedOwnerRoute>} />
           <Route path="admin/support" element={<CimolaceProtectedOwnerRoute><CimolaceAdminSupport /></CimolaceProtectedOwnerRoute>} />
           <Route path="admin/monitoring" element={<CimolaceProtectedOwnerRoute><CimolaceAdminMonitoring /></CimolaceProtectedOwnerRoute>} />
+          <Route path="admin/ai-keys" element={<CimolaceProtectedOwnerRoute><CimolaceAdminAiKeys /></CimolaceProtectedOwnerRoute>} />
 
           {/* Self-service school creation */}
           <Route path="create-school" element={<CimolaceProtectedRoute><CreateSchoolPage /></CimolaceProtectedRoute>} />

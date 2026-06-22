@@ -15,6 +15,7 @@ const navItems = [
   { name: 'Créer une école', path: '/cimolace/create-school', icon: '➕' },
   { name: 'Sites', path: '/cimolace/admin/sites', icon: '🌐' },
   { name: 'Billing', path: '/cimolace/admin/billing', icon: '💳' },
+  { name: 'Clés IA', path: '/cimolace/admin/ai-keys', icon: '🔑' },
   { name: 'Support', path: '/cimolace/admin/support', icon: '🎫' },
 ];
 
