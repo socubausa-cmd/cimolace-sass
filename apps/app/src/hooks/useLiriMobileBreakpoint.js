@@ -13,9 +13,11 @@ export const LIRI_LIVE_ARENA_COMPACT_MAX_CSS_PX = 1023;
 /**
  * Navigateur web live : au-delà de cette largeur la grille 3 colonnes (rails + plateau) est prévue ;
  * en dessous ou égal → layout compact empilé pour éviter le débordement horizontal.
- * Aligné ~ breakpoint `2xl` (1536px).
+ * Abaissé à 1024 (lg) : les rails repliés sont désormais de fines poignées 52px (façon maquette),
+ * donc la grille 3 colonnes tient dès les laptops (~1024-1536) → l'arène desktop + le chrome
+ * (barre du haut membres) s'affichent au lieu de la maquette mobile.
  */
-export const LIRI_LIVE_WEB_THREE_COL_MAX_CSS_PX = 1536;
+export const LIRI_LIVE_WEB_THREE_COL_MAX_CSS_PX = 1024;
 
 export function layoutWidthPx() {
   if (typeof window === 'undefined') return LIRI_MOBILE_MAX_CSS_PX + 1;
