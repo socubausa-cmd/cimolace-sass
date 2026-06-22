@@ -1032,13 +1032,25 @@ function hitResizeHandle(handles, px, py, tol = 9) {
   for (const h of handles) { if (Math.hypot(px - h.x, py - h.y) <= tol) return h.id; }
   return null;
 }
-function computeNewBoundsFromHandle(handle, origBounds, dx, dy) {
+function computeNewBoundsFromHandle(handle, origBounds, dx, dy, proportional = false) {
   let { x, y, w, h } = origBounds;
   if (handle === 'tl' || handle === 'ml' || handle === 'bl') { x += dx; w -= dx; }
   if (handle === 'tr' || handle === 'mr' || handle === 'br') { w += dx; }
   if (handle === 'tl' || handle === 'tc' || handle === 'tr') { y += dy; h -= dy; }
   if (handle === 'bl' || handle === 'bc' || handle === 'br') { h += dy; }
-  return { x, y, w: Math.max(4, w), h: Math.max(4, h) };
+  w = Math.max(4, w); h = Math.max(4, h);
+  // Resize PROPORTIONNEL (Shift) sur les poignées de COIN : conserve le ratio d'origine,
+  // ancré sur le coin opposé (réflexe Photoshop). Les poignées de bord restent libres.
+  const isCorner = handle === 'tl' || handle === 'tr' || handle === 'bl' || handle === 'br';
+  if (proportional && isCorner && origBounds.w > 0 && origBounds.h > 0) {
+    const ar = origBounds.w / origBounds.h;
+    if (w / origBounds.w >= h / origBounds.h) { h = Math.max(4, w / ar); } else { w = Math.max(4, h * ar); }
+    const left = handle === 'tl' || handle === 'bl';
+    const top = handle === 'tl' || handle === 'tr';
+    x = left ? origBounds.x + origBounds.w - w : origBounds.x;
+    y = top ? origBounds.y + origBounds.h - h : origBounds.y;
+  }
+  return { x, y, w, h };
 }
 const RESIZABLE_KINDS = new Set(['rect', 'circle', 'image', 'polygon', 'star', 'arc', 'axes', 'numberline', 'ruler', 'frame', 'table', 'function-plot', 'histogram', 'value-table', 'pie-chart', 'scatter-plot', 'curtain']);
 function applyResizeToStroke(stroke, nb) {
@@ -1107,6 +1119,9 @@ function WhiteboardScene({
   const textPointerIdRef = useRef(null);
   const textClickTimerRef = useRef(null);
   const pendingTextAnchorRef = useRef(null);
+  // Garde anti double-commit : passe à true quand la saisie est finalisée (Entrée/Placer/Échap/Annuler)
+  // pour que le blur d'unmount qui suit ne re-déclenche PAS commitTextDraft. Reset à l'ouverture d'un draft.
+  const textFinalizedRef = useRef(false);
   const [textDraft, setTextDraft] = useState(null);
   /** Position écran de la pop-up texte (portail — au-dessus du rail outils z-51). */
   const [textOverlayScreen, setTextOverlayScreen] = useState({ left: 0, top: 0, scaleX: 1, scaleY: 1, maxWidth: 480 });
@@ -1182,14 +1197,34 @@ function WhiteboardScene({
   const resizeDraftRef = useRef(null);
   const [resizeRevision, setResizeRevision] = useState(0);
 
+  // Redraw coalescé en 1 frame (requestAnimationFrame). Pendant un geste continu (déplacement,
+  // redimensionnement, lasso, tracé de forme), des dizaines de pointermove/s ne déclenchent
+  // qu'UN seul redraw complet par frame au lieu d'un redraw O(n traits) à chaque mouvement → fluide.
+  // (Le crayon libre dessine de façon incrémentale et ne passe pas par ici.)
+  const redrawRafRef = useRef(0);
+  const redrawArgsRef = useRef(null);
+  const flushRedraw = useCallback(() => {
+    redrawRafRef.current = 0;
+    const a = redrawArgsRef.current;
+    redrawArgsRef.current = null;
+    if (!a) return;
+    redrawBoardWithCompass(
+      canvasRef.current, bgCanvasRef.current, a.strokes, a.draft, a.curve, a.marquee,
+      polyDraftRef.current, compassDraftRef.current, angleDraftRef.current, measureDraftRef.current, triFreeDraftRef.current,
+    );
+  }, []);
   const redrawSheet = useCallback((
     strokes,
     draft = shapeDraft.current,
     curve = curveDraftRef.current,
     marquee = marqueeDraftRef.current,
   ) => {
-    redrawBoardWithCompass(canvasRef.current, bgCanvasRef.current, strokes, draft, curve, marquee, polyDraftRef.current, compassDraftRef.current, angleDraftRef.current, measureDraftRef.current, triFreeDraftRef.current);
-  }, []);
+    redrawArgsRef.current = { strokes, draft, curve, marquee };
+    if (redrawRafRef.current) return;
+    redrawRafRef.current = typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame(flushRedraw)
+      : (flushRedraw(), 0);
+  }, [flushRedraw]);
 
   const paintCanvas = useCallback(() => {
     redrawSheet(strokesRef.current, shapeDraft.current, curveDraftRef.current);
@@ -1198,6 +1233,9 @@ function WhiteboardScene({
   useEffect(
     () => () => {
       if (textClickTimerRef.current) window.clearTimeout(textClickTimerRef.current);
+      if (redrawRafRef.current && typeof cancelAnimationFrame === 'function') {
+        cancelAnimationFrame(redrawRafRef.current);
+      }
     },
     [],
   );
@@ -1399,6 +1437,7 @@ function WhiteboardScene({
   useEffect(() => {
     const el = textAreaRef.current;
     if (textDraft && el) {
+      textFinalizedRef.current = false; // nouveau draft : réarmer le commit-on-blur
       el.focus();
       // Caret en fin de texte (édition) + hauteur calée sur le contenu (multi-lignes).
       try {
@@ -1545,7 +1584,7 @@ function WhiteboardScene({
         }
         if (k === 'x' && !ev.shiftKey) {
           ev.preventDefault();
-          st.deleteBoardSelection();
+          st.cutBoardSelection(); // couper = copier + supprimer (réflexe standard), pas juste supprimer
           return;
         }
       }
@@ -1613,10 +1652,30 @@ function WhiteboardScene({
         paintCanvas();
         return;
       }
+      // Flèches = nudge de la sélection (réflexe Photoshop/Figma). Shift = grand pas (10 px).
+      if (k === 'ArrowUp' || k === 'ArrowDown' || k === 'ArrowLeft' || k === 'ArrowRight') {
+        const sel = useLiveWhiteboardStore.getState().boardSelection;
+        if (Array.isArray(sel) && sel.length > 0) {
+          ev.preventDefault();
+          const step = ev.shiftKey ? 10 : 1;
+          const dx = k === 'ArrowLeft' ? -step : k === 'ArrowRight' ? step : 0;
+          const dy = k === 'ArrowUp' ? -step : k === 'ArrowDown' ? step : 0;
+          const indices = sortedUniqueBoardIndices(strokesRef.current, sel);
+          if (indices.length) {
+            saveUndoSnapshot();
+            const idxSet = new Set(indices);
+            const next = strokesRef.current.map((s, i) => (idxSet.has(i) ? offsetWhiteboardStroke(s, dx, dy) : s));
+            strokesRef.current = next;
+            paintCanvas();
+            onStrokesChange?.(() => cloneStrokesDeep(strokesRef.current));
+          }
+          return;
+        }
+      }
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
-  }, [readOnly, paintCanvas, zoomToBoardSelection]);
+  }, [readOnly, paintCanvas, zoomToBoardSelection, saveUndoSnapshot, onStrokesChange]);
 
   useEffect(() => {
     const download = () => {
@@ -2290,6 +2349,7 @@ function WhiteboardScene({
 
   const commitTextDraft = useCallback(() => {
     if (!textDraft || readOnly) return;
+    textFinalizedRef.current = true; // empêche le blur d'unmount de re-committer
     const el = textAreaRef.current;
     const raw = el?.value ?? '';
     const t = String(raw).trim();
@@ -2516,6 +2576,17 @@ function WhiteboardScene({
           snapshot: cloneStrokesDeep(strokesRef.current),
           indices: sortedUniqueBoardIndices(strokesRef.current, next),
         };
+        try {
+          canvas.setPointerCapture(e.pointerId);
+        } catch {
+          /* ignore */
+        }
+      } else if (hit < 0 && !additive) {
+        // Réflexe Figma/Photoshop : glisser sur le vide en mode Sélection = lasso (marquee),
+        // sans changer d'outil. Un simple clic (sans glisser) reste une désélection (cf. pointerUp).
+        setBoardContextMenu(null);
+        marqueeDraggingRef.current = true;
+        marqueeDraftRef.current = { x0: pos.x, y0: pos.y, x1: pos.x, y1: pos.y };
         try {
           canvas.setPointerCapture(e.pointerId);
         } catch {
@@ -2946,7 +3017,7 @@ function WhiteboardScene({
       const pos = getPos(e, canvas);
       const rd = resizeDraftRef.current;
       const dx = pos.x - rd.x0; const dy = pos.y - rd.y0;
-      const nb = computeNewBoundsFromHandle(rd.handle, rd.origBounds, dx, dy);
+      const nb = computeNewBoundsFromHandle(rd.handle, rd.origBounds, dx, dy, e.shiftKey);
       const newStroke = applyResizeToStroke(rd.origStroke, nb);
       const next = [...strokesRef.current];
       next[rd.strokeIdx] = newStroke;
@@ -3277,13 +3348,27 @@ function WhiteboardScene({
         textPointerIdRef.current = null;
         const pos = canvas ? getPos(e, canvas) : start;
         if (canvas && Math.hypot(pos.x - start.x, pos.y - start.y) < 12) {
-          if (textClickTimerRef.current) window.clearTimeout(textClickTimerRef.current);
-          pendingTextAnchorRef.current = { x: start.x, y: start.y };
-          textClickTimerRef.current = window.setTimeout(() => {
-            textClickTimerRef.current = null;
-            pendingTextAnchorRef.current = null;
+          // Saisie IMMÉDIATE, sans délai (fini les 220 ms). Si le tap touche un bloc texte
+          // existant → édition directe au clic simple (façon Word) ; sinon → nouveau bloc tout de suite.
+          const ctx = canvas.getContext('2d');
+          const list = strokesRef.current;
+          let editIdx = -1;
+          for (let i = list.length - 1; i >= 0; i -= 1) {
+            if (hitTestWhiteboardTextStroke(ctx, list[i], pos.x, pos.y)) { editIdx = i; break; }
+          }
+          if (editIdx >= 0) {
+            const s = list[editIdx];
+            const wb = useLiveWhiteboardStore.getState();
+            wb.setTextPreset(s.textPreset || 'body');
+            wb.setTextBold(s.textBold === true);
+            wb.setTextItalic(s.fontStyle === 'italic');
+            wb.setTextAlign(s.textAlign === 'center' || s.textAlign === 'right' ? s.textAlign : 'left');
+            if (typeof s.fontSize === 'number') wb.setTextFontSize(s.fontSize);
+            wb.setColor(s.color || wb.color);
+            setTextDraft({ mode: 'edit', index: editIdx, x: s.x, y: s.y, initialText: s.text || '' });
+          } else {
             setTextDraft({ mode: 'create', x: start.x, y: start.y });
-          }, 220);
+          }
         }
         return;
       }
@@ -3684,12 +3769,20 @@ function WhiteboardScene({
               onKeyDown={(ev) => {
                 if (ev.key === 'Escape') {
                   ev.preventDefault();
+                  textFinalizedRef.current = true; // Échap = annuler, pas committer au blur
                   setTextDraft(null);
                 }
                 if (ev.key === 'Enter' && !ev.shiftKey) {
                   ev.preventDefault();
                   commitTextDraft();
                 }
+              }}
+              onBlur={() => {
+                // Commit-on-blur façon Word : cliquer ailleurs (le tableau) valide la saisie.
+                // Les contrôles (Aa/Annuler/Placer) ont onMouseDown preventDefault → pas de blur,
+                // et le blur d'unmount après finalisation est ignoré via textFinalizedRef.
+                if (textFinalizedRef.current) return;
+                commitTextDraft();
               }}
               style={{
                 margin: 0,
@@ -3714,8 +3807,13 @@ function WhiteboardScene({
               }}
             />
 
-            {/* Contrôles DÉTACHÉS sous le texte (jamais autour) — barre flottante minimale. */}
-            <div className="flex flex-col gap-1.5 rounded-lg border border-white/10 bg-[#15131a]/90 p-1.5 shadow-lg backdrop-blur-sm">
+            {/* Contrôles DÉTACHÉS sous le texte (jamais autour) — barre flottante minimale.
+                onMouseDown preventDefault : cliquer un contrôle ne retire PAS le focus du champ
+                (pas de blur → la saisie continue, et Annuler reste « annuler »). */}
+            <div
+              className="flex flex-col gap-1.5 rounded-lg border border-white/10 bg-[#15131a]/90 p-1.5 shadow-lg backdrop-blur-sm"
+              onMouseDown={(e) => e.preventDefault()}
+            >
             {composerToolsOpen ? (
             <>
             <p className={cn(designerShellMicroLabel, 'text-white/55')}>Compositeur Architect · presets et IA</p>
@@ -3833,7 +3931,7 @@ function WhiteboardScene({
               </button>
               <button
                 type="button"
-                onClick={() => setTextDraft(null)}
+                onClick={() => { textFinalizedRef.current = true; setTextDraft(null); }}
                 className={cn(designerShellChipGhost, 'ml-auto px-2.5 py-1 text-[10px]')}
               >
                 Annuler
