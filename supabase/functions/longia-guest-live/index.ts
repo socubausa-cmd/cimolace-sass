@@ -10,7 +10,7 @@
  * }
  */
 import { corsHeaders } from '../_shared/cors.ts';
-import { aiChatClaudeDeepSeekGrok } from '../_shared/aiClaudeDeepSeekGrok.ts';
+import { aiChatClaudeDeepSeekGrok, type AiContentBlock, type ChatMessage } from '../_shared/aiClaudeDeepSeekGrok.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 function json(status: number, body: Record<string, unknown>) {
@@ -76,6 +76,8 @@ Deno.serve(async (req: Request) => {
     studentState?: Record<string, unknown>;
     sessionContext?: Record<string, unknown>;
     uiAction?: string;
+    /** Vision (Phase 3) : data URLs d'images jointes (réduites côté client). */
+    images?: unknown;
   };
   try {
     body = (await req.json()) as typeof body;
@@ -87,15 +89,21 @@ Deno.serve(async (req: Request) => {
   const studentState = body.studentState && typeof body.studentState === 'object' ? body.studentState : {};
   const sessionContextRaw = body.sessionContext && typeof body.sessionContext === 'object' ? body.sessionContext : {};
   const hubMeta = sessionContextRaw.longia_hub;
-  const isLiveHostCoach =
+  const isLiveHostCoach = Boolean(
     hubMeta &&
     typeof hubMeta === 'object' &&
     !Array.isArray(hubMeta) &&
-    String((hubMeta as Record<string, unknown>).surface || '') === 'live_host';
+    String((hubMeta as Record<string, unknown>).surface || '') === 'live_host',
+  );
   /** Métadonnée client — ne pas répéter dans le JSON injecté au prompt. */
   const sessionContext = { ...sessionContextRaw };
   delete sessionContext.longia_hub;
   const uiAction = String(body.uiAction || '').trim();
+  // Vision (Phase 3) : on garde les data URLs base64 (max 4) pour les attacher au dernier
+  // message user en blocs Anthropic plus bas → contenu multimodal → routé vers Claude (vision).
+  const imageDataUrls: string[] = Array.isArray(body.images)
+    ? (body.images as unknown[]).filter((x): x is string => typeof x === 'string').slice(0, 4)
+    : [];
 
   const jsonShape = `
 Tu réponds UNIQUEMENT par un objet JSON valide (pas de markdown hors JSON), avec cette forme exacte :
@@ -160,7 +168,7 @@ Dernière action UI (si vide, conversation libre) : ${uiAction || '(aucune)'}`;
 
   const system = isLiveHostCoach ? systemHost : systemStudent;
 
-  const conv = messages
+  const conv: ChatMessage[] = messages
     .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
     .map((m) => ({
       role: m.role === 'user' ? 'user' as const : 'assistant' as const,
@@ -174,6 +182,22 @@ Dernière action UI (si vide, conversation libre) : ${uiAction || '(aucune)'}`;
         ? '[Ouverture coach formateur] Accueil très court (2 phrases max), JSON conforme. teacher_signal.send = false.'
         : '[Ouverture panneau] L’élève vient d’ouvrir LONGIA. Donne un accueil bref + un résumé placeholder si tu n’as pas encore de transcript, et 3 actions utiles.',
     });
+  }
+
+  // Vision (Phase 3) : si des images sont jointes, on bascule le DERNIER message user en contenu
+  // multimodal (texte + blocs image base64). Le helper route alors vers Claude (gère la vision).
+  if (imageDataUrls.length) {
+    for (let i = conv.length - 1; i >= 0; i -= 1) {
+      if (conv[i].role !== 'user') continue;
+      const txt = typeof conv[i].content === 'string' ? (conv[i].content as string) : '';
+      const blocks: AiContentBlock[] = txt ? [{ type: 'text', text: txt }] : [];
+      for (const dataUrl of imageDataUrls) {
+        const m = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/.exec(dataUrl);
+        if (m) blocks.push({ type: 'image', source: { type: 'base64', media_type: m[1], data: m[2] } });
+      }
+      if (blocks.length) conv[i].content = blocks;
+      break;
+    }
   }
 
   // @ts-ignore Deno

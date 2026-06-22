@@ -3,7 +3,11 @@
  * (aiChatClaudeDeepSeekGrok).
  */
 
-export type ChatMessage = { role: 'user' | 'assistant'; content: string };
+/** Bloc de contenu multimodal (vision) — format Anthropic. Seul Claude le gère (cf. routage ci-dessous). */
+export type AiContentBlock =
+  | { type: 'text'; text: string }
+  | { type: 'image'; source: { type: 'base64'; media_type: string; data: string } };
+export type ChatMessage = { role: 'user' | 'assistant'; content: string | AiContentBlock[] };
 
 export type AiUsageInfo = {
   provider: string;
@@ -243,9 +247,15 @@ export async function aiChatClaudeDeepSeekGrok(opts: {
 
   // Mistral (EU) placé juste après le primaire : si Claude (ou DeepSeek en mode
   // coach) échoue, on bascule sur Mistral avant Grok.
-  const order = opts.preferDeepseekFirst
-    ? [tryDeepseek, tryClaude, tryMistral, tryGrok]
-    : [tryClaude, tryMistral, tryDeepseek, tryGrok];
+  // Vision : un message à contenu multimodal (blocs image) ne passe QUE par Claude — les
+  // autres providers ne gèrent pas le format de blocs Anthropic. Sans image (string), routage
+  // habituel inchangé → les 8 consommateurs existants ne sont pas affectés.
+  const hasMultimodalContent = opts.messages.some((m) => Array.isArray(m.content));
+  const order = hasMultimodalContent
+    ? [tryClaude]
+    : opts.preferDeepseekFirst
+      ? [tryDeepseek, tryClaude, tryMistral, tryGrok]
+      : [tryClaude, tryMistral, tryDeepseek, tryGrok];
 
   for (const fn of order) {
     const r = await fn();

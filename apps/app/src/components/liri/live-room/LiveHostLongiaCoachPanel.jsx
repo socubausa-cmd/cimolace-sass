@@ -51,6 +51,29 @@ function CoachQuickActionIcon({ action }) {
   return <Icon className="h-4 w-4 shrink-0 text-amber-400/85" strokeWidth={2} aria-hidden />;
 }
 
+/** Réduit une image à ≤ maxDim px (JPEG) → data URL : vignette + prêt pour l'envoi vision (Phase 3). */
+async function fileToDownscaledDataUrl(file, maxDim = 1024) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = reject;
+      im.src = url;
+    });
+    const scale = Math.min(1, maxDim / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
+    const w = Math.max(1, Math.round((img.naturalWidth || 1) * scale));
+    const h = Math.max(1, Math.round((img.naturalHeight || 1) * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext('2d')?.drawImage(img, 0, 0, w, h);
+    return canvas.toDataURL('image/jpeg', 0.82);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 /**
  * Coach LONGIA côté **formateur** — chat privé + cartes de rendu (résumé, reformulation, exemple).
  * Appelle **LIRI Brain** (`VITE_USE_LIRI_BRAIN` / `VITE_LIRI_BRAIN_URL`) si configuré, sinon l'Edge `longia-guest-live` avec `longia_hub.surface === live_host`.
@@ -208,7 +231,7 @@ export default function LiveHostLongiaCoachPanel({
   }, [sessionId, sessionTitle, stepTitle, chatMessages]);
 
   const runTurn = useCallback(
-    async (uiAction, extraUserLine) => {
+    async (uiAction, extraUserLine, images = []) => {
       if (!sessionId || !userId) return;
       const userLine = String(extraUserLine || '').trim();
       const nextMessages =
@@ -271,6 +294,7 @@ export default function LiveHostLongiaCoachPanel({
               studentState: { role: 'host', coach_panel: true },
               sessionContext: { ...sessionContext(), longia_hub: hub },
               uiAction: uiAction || '',
+              images: Array.isArray(images) ? images : [],
             });
           }
         } else {
@@ -279,6 +303,7 @@ export default function LiveHostLongiaCoachPanel({
             studentState: { role: 'host', coach_panel: true },
             sessionContext: { ...sessionContext(), longia_hub: hub },
             uiAction: uiAction || '',
+            images: Array.isArray(images) ? images : [],
           });
         }
 
@@ -325,27 +350,28 @@ export default function LiveHostLongiaCoachPanel({
 
   /** Compile les chips joints en lignes de contexte et vide le bac. */
   const consumeAttachments = useCallback(() => {
-    if (!attachments.length) return '';
+    if (!attachments.length) return { ctx: '', images: [] };
     const ctx = attachments.map((a) => a.compile).filter(Boolean).join('\n');
+    const images = attachments.filter((a) => a.kind === 'image' && a.dataUrl).map((a) => a.dataUrl);
     setAttachments([]);
-    return ctx;
+    return { ctx, images };
   }, [attachments]);
 
   const onChip = useCallback(
     (action) => {
-      const ctx = consumeAttachments();
-      void runTurn(action, ctx);
+      const { ctx, images } = consumeAttachments();
+      void runTurn(action, ctx, images);
     },
     [runTurn, consumeAttachments],
   );
 
   const onSend = useCallback(() => {
-    const ctx = consumeAttachments();
+    const { ctx, images } = consumeAttachments();
     const t = draft.trim();
     const userLine = [ctx, t].filter(Boolean).join('\n\n');
     if (!userLine) return;
     setDraft('');
-    void runTurn('ask_question', userLine);
+    void runTurn('ask_question', userLine, images);
   }, [draft, runTurn, consumeAttachments]);
 
   /** « Appliquer » une suggestion Longia : lance un tour coach sur cette piste, puis la retire. */
@@ -362,14 +388,19 @@ export default function LiveHostLongiaCoachPanel({
       const f = e.target.files?.[0];
       e.target.value = '';
       if (!f) return;
-      addAttachment({
-        kind: 'image',
-        label: f.name,
-        compile: `[Image jointe : ${f.name} — le formateur en décrit le contenu utile dans le message]`,
-      });
+      void (async () => {
+        let dataUrl;
+        try { dataUrl = await fileToDownscaledDataUrl(f); } catch { dataUrl = undefined; }
+        addAttachment({
+          kind: 'image',
+          label: f.name,
+          dataUrl,
+          compile: `[Image jointe : ${f.name} — décrivez le contenu utile dans le message]`,
+        });
+      })();
       toast?.({
         title: 'Image jointe',
-        description: 'Décrivez le visuel dans le message : LONGIA n\'a pas encore la vision directe.',
+        description: 'Vignette ajoutée. Décrivez le visuel — la vision directe s\'active une fois le backend câblé.',
       });
     },
     [addAttachment, toast],
@@ -385,11 +416,16 @@ export default function LiveHostLongiaCoachPanel({
           e.preventDefault();
           const file = it.getAsFile();
           const name = file?.name || 'capture';
-          addAttachment({
-            kind: 'image',
-            label: name,
-            compile: `[Image collée : ${name} — décrite dans le message]`,
-          });
+          void (async () => {
+            let dataUrl;
+            try { dataUrl = file ? await fileToDownscaledDataUrl(file) : undefined; } catch { dataUrl = undefined; }
+            addAttachment({
+              kind: 'image',
+              label: name,
+              dataUrl,
+              compile: `[Image collée : ${name} — décrite dans le message]`,
+            });
+          })();
           toast?.({
             title: 'Image collée',
             description: 'Ajoutez une courte description du visuel dans le message.',
@@ -668,7 +704,13 @@ export default function LiveHostLongiaCoachPanel({
                 key={a.id}
                 className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-white/12 bg-white/[0.05] py-1 pl-1.5 pr-1 text-[10px] text-white/85"
               >
-                {a.kind === 'member' ? (
+                {a.kind === 'image' && a.dataUrl ? (
+                  <img
+                    src={a.dataUrl}
+                    alt=""
+                    className="h-[18px] w-[18px] shrink-0 rounded-md object-cover"
+                  />
+                ) : a.kind === 'member' ? (
                   <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-amber-500/25 text-[9px] font-semibold text-amber-100">
                     {(a.label || '?').charAt(0).toUpperCase()}
                   </span>
