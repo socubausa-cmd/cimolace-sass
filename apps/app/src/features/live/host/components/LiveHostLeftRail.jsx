@@ -44,6 +44,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
     liveDuration,
     curEtape,
     waitingEntries,
+    activityBadges,
     onApproveWaiting,
     onRejectWaiting,
     onOpenLongiaWaiting,
@@ -168,6 +169,10 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
   const waitingList = Array.isArray(waitingEntries) ? waitingEntries : [];
   const waitingCount = waitingList.length;
   const memberCount = Math.max(1, onlineMemberCount || 1);
+  // Badges de la barre d'activité — compteurs réels remontés depuis LiveHostPage (signaux Longia).
+  const modBadge = Math.max(0, activityBadges?.moderation || 0);
+  const coachBadge = Math.max(0, activityBadges?.coach || 0);
+  const interBadge = Math.max(0, activityBadges?.interactions || 0);
 
   if (hostHoverMode) {
     return (
@@ -217,9 +222,9 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
           />
           {[
             { id: 'salle', label: 'Salle — participants, file, inviter', Icon: Users, badge: waitingCount > 0 ? waitingCount : 0, active: activePanel === 'salle', onClick: () => setActivePanel((p) => (p === 'salle' ? null : 'salle')) },
-            { id: 'mod', label: 'Modération — mains levées, demandes', Icon: Hand, badge: 0, active: longiaHubOpen && longiaSignalSubDrawer === 'hands', onClick: () => { setActivePanel(null); openLongiaHubControlMesh(); setLongiaSignalSubDrawer('hands'); } },
-            { id: 'coach', label: 'Coach IA — Longia', Icon: Lightbulb, badge: 0, active: longiaHubOpen && longiaSignalSubDrawer === 'host_coach', onClick: () => { setActivePanel(null); openLongiaHubCoachPanel(); } },
-            { id: 'inter', label: 'Interactions — Zone 3, NeuronQ', Icon: Brain, badge: 0, active: longiaHubOpen && longiaSignalSubDrawer === 'zone3', onClick: () => { setActivePanel(null); openLongiaHubControlMesh(); setLongiaSignalSubDrawer('zone3'); } },
+            { id: 'mod', label: 'Modération — mains levées, demandes', Icon: Hand, badge: modBadge, active: longiaHubOpen && longiaSignalSubDrawer === 'hands', onClick: () => { setActivePanel(null); openLongiaHubControlMesh(); setLongiaSignalSubDrawer('hands'); } },
+            { id: 'coach', label: 'Coach IA — Longia', Icon: Lightbulb, badge: coachBadge, active: longiaHubOpen && longiaSignalSubDrawer === 'host_coach', onClick: () => { setActivePanel(null); openLongiaHubCoachPanel(); } },
+            { id: 'inter', label: 'Interactions — Zone 3, NeuronQ', Icon: Brain, badge: interBadge, active: longiaHubOpen && longiaSignalSubDrawer === 'zone3', onClick: () => { setActivePanel(null); openLongiaHubControlMesh(); setLongiaSignalSubDrawer('zone3'); } },
           ].map((it) => {
             const ItIcon = it.Icon;
             return (
@@ -238,7 +243,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
                 <ItIcon className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
                 {it.badge ? (
                   <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#d4a36a] px-1 text-[10px] font-semibold text-[#2a2118]">
-                    {it.badge}
+                    {it.badge > 9 ? '9+' : it.badge}
                   </span>
                 ) : null}
               </button>

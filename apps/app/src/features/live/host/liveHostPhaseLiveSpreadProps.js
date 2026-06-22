@@ -109,6 +109,7 @@ const LIVE_HOST_GRID_SHELL_SPREAD_KEYS = [
   'approveWaiting',
   'rejectWaiting',
   'openLongiaHubWaitingRoom',
+  'liveHostActivityBadges',
   'liveLeftGuestCollapsedStrip',
   'liveParticipants',
   'sessionFormationId',

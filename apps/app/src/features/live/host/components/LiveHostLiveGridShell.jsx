@@ -39,6 +39,7 @@ export const LiveHostLiveGridShell = forwardRef(function LiveHostLiveGridShell(p
     approveWaiting,
     rejectWaiting,
     openLongiaHubWaitingRoom,
+    liveHostActivityBadges,
     liveLeftGuestCollapsedStrip,
     liveParticipants,
     sessionFormationId,
@@ -179,6 +180,7 @@ export const LiveHostLiveGridShell = forwardRef(function LiveHostLiveGridShell(p
           liveDuration={liveDuration}
           curEtape={curEtape}
           waitingEntries={waitingEntries}
+          activityBadges={liveHostActivityBadges}
           onApproveWaiting={(entryId) => {
             void approveWaiting(entryId);
           }}

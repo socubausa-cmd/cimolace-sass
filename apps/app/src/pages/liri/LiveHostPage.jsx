@@ -122,6 +122,7 @@ import { loadLiriAudioSettings, saveLiriAudioSettings } from '@/lib/liriAudioEng
 import { normalizeLiriAudioScenes } from '@/lib/liriAudioScene';
 import {
   DEFAULT_LONGIA_GOVERNOR_MODES,
+  LONGIA_GOVERNOR_MODE,
   LONGIA_PANEL_FILTER,
 } from '@/lib/longiaLiveCopilot';
 import { useLongiaLiveRealtime } from '@/hooks/useLongiaLiveRealtime';
@@ -1327,6 +1328,25 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     toggleMic, toggleCamera,
   });
 
+  // Compteurs des badges de la barre d'activité (rail gauche hôte) — signaux ambiants à
+  // traiter : Modération = mains/permissions (panels[0]), Coach = suggestions Longia fraîches
+  // (panels[2] filtré COACH, respecte le gouverneur), Interactions = mains levées Zone 3.
+  const liveHostActivityBadges = useMemo(() => {
+    const moderation = panels?.[0]?.events?.length || 0;
+    const interactions = Array.isArray(zone3RaisedHands) ? zone3RaisedHands.length : 0;
+    const coach =
+      longiaGovernorModes?.[LONGIA_GOVERNOR_MODE.COACH] === false
+        ? 0
+        : (panels?.[2]?.events || []).filter(
+            (ev) =>
+              ev?.longiaSourceMode === LONGIA_GOVERNOR_MODE.COACH &&
+              String(ev?.msg || '')
+                .replace(/^[^:]+ : /, '')
+                .trim(),
+          ).length;
+    return { moderation, coach, interactions };
+  }, [panels, zone3RaisedHands, longiaGovernorModes]);
+
   const phaseLiveSpreadInput = {
     acceptGuestProctorConsent, acceptMeshRequest, activeAudioId, activeEtapes, activeMembers,
     activeVideoId, addMeshRequest, ambientMasterVolume, ambientTracks, antennaSoloMode,
@@ -1399,6 +1419,7 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     videoContrast, videoCustomBgUrl, videoDevices, videoFilterCSS, videoFxActive,
     videoHue, videoSaturation, videoVbg, waitingEntries, whisperThreads,
     zone3GrantSeat, zone3LowerHand, zone3PrivilegedSeats, zone3RaisedHands, zone3RevokeSeat,
+    liveHostActivityBadges,
   };
 
   const liveHostLongiaSignalHubSpreadProps = buildLiveHostLongiaSignalHubSpreadProps(phaseLiveSpreadInput);
