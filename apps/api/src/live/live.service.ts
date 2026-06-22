@@ -211,13 +211,21 @@ export class LiveService {
     }
     const { data: rec } = await this.supabase
       .from("live_recordings")
-      .select("output_url")
+      .select("output_url, storage_filepath")
       .eq("live_session_id", sessionId)
-      .not("output_url", "is", null)
+      .eq("status", "completed")
+      .not("storage_filepath", "is", null)
       .order("completed_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (!rec?.output_url) {
+    // L'egress S3 de LiveKit ne renvoie PAS de downloadUrl → `output_url` reste
+    // souvent vide. On construit l'URL de lecture en PRÉSIGNANT la clé R2 réelle
+    // (`storage_filepath`, que l'API contrôle). output_url s'il existe = priorité.
+    const filepath = (rec as any)?.storage_filepath as string | undefined;
+    const playbackUrl =
+      ((rec as any)?.output_url as string | undefined) ||
+      (filepath ? await this.liveKit.presignReplayGet(filepath) : null);
+    if (!playbackUrl) {
       return { published: false, reason: "no_recording" as const };
     }
     const status = opts?.force ?? (await this.replayPublishStatus(tenantId));
@@ -226,7 +234,7 @@ export class LiveService {
       .upsert(
         {
           live_session_id: sessionId,
-          replay_public_url: rec.output_url,
+          replay_public_url: playbackUrl,
           workflow_status: status,
           updated_at: new Date().toISOString(),
         },
@@ -239,7 +247,7 @@ export class LiveService {
     // 'pending_review', on ne poste PAS (l'élève ne doit pas le voir avant approbation).
     let forumPosted = false;
     if (status === "published") {
-      forumPosted = await this.postReplayToForum(tenantId, sessionId, rec.output_url);
+      forumPosted = await this.postReplayToForum(tenantId, sessionId, playbackUrl);
     }
     return {
       published: status === "published",

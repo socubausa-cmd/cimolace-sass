@@ -12,6 +12,8 @@ import {
   EncodedFileOutput,
   S3Upload,
 } from 'livekit-server-sdk';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 @Injectable()
 export class LiveKitService {
@@ -250,6 +252,39 @@ export class LiveKitService {
       await egressClient.stopEgress(egressId);
     } catch (err) {
       this.logger.error('stopRecording failed', (err as Error).message);
+    }
+  }
+
+  /**
+   * Présigne une URL GET (lecture) d'un objet R2 — pour le REPLAY. Le bucket est
+   * PRIVÉ ; l'egress LiveKit S3 ne renvoie pas de downloadUrl, donc on construit
+   * l'URL de lecture nous-mêmes à partir de la clé (`storage_filepath`). L'URL
+   * présignée n'est postée que dans le Sujet du live (fail-closed). TTL max R2 = 7 j.
+   */
+  async presignReplayGet(
+    filepath: string,
+    ttlSeconds = 604800,
+  ): Promise<string | null> {
+    const accountId = process.env.CF_R2_ACCOUNT_ID;
+    const accessKeyId = process.env.CF_R2_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.CF_R2_SECRET_ACCESS_KEY;
+    const bucket = process.env.CF_R2_BUCKET;
+    if (!accountId || !accessKeyId || !secretAccessKey || !bucket) return null;
+    try {
+      const client = new S3Client({
+        region: 'auto',
+        endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+        credentials: { accessKeyId, secretAccessKey },
+        forcePathStyle: true,
+      });
+      return await getSignedUrl(
+        client,
+        new GetObjectCommand({ Bucket: bucket, Key: filepath }),
+        { expiresIn: ttlSeconds },
+      );
+    } catch (err) {
+      this.logger.error('presignReplayGet failed', (err as Error).message);
+      return null;
     }
   }
 
