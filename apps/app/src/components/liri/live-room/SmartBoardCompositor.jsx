@@ -1121,6 +1121,13 @@ function WhiteboardScene({
   const [spaceHeld, setSpaceHeld] = useState(false);
   const [viewPanPointerDown, setViewPanPointerDown] = useState(false);
   const [textOverlayAiBusy, setTextOverlayAiBusy] = useState(null);
+  /** Compositeur texte MINIMAL par défaut (saisie inline façon Zoom, à l'endroit du clic) ;
+   *  mise en forme + presets + IA repliés, révélés À LA DEMANDE via le bouton « Aa ». */
+  const [composerToolsOpen, setComposerToolsOpen] = useState(false);
+  useEffect(() => {
+    // Chaque nouvelle saisie repart en mode minimal (on ne garde pas les outils ouverts).
+    if (textDraft) setComposerToolsOpen(false);
+  }, [textDraft]);
 
   const textPreset = useLiveWhiteboardStore((s) => s.textPreset);
   const setTextPreset = useLiveWhiteboardStore((s) => s.setTextPreset);
@@ -3596,7 +3603,7 @@ function WhiteboardScene({
             role="dialog"
             aria-modal="true"
             aria-label={textDraft.mode === 'edit' ? 'Modifier le texte sur le tableau' : 'Saisie de texte sur le tableau'}
-            className="flex max-w-[min(420px,calc(100vw-1.5rem))] flex-col gap-1.5 rounded-xl border border-amber-500/45 bg-[#0c1018]/98 p-2.5 shadow-2xl shadow-black/50 ring-1 ring-white/10 backdrop-blur-md"
+            className="flex w-[min(300px,calc(100vw-1.5rem))] flex-col gap-1.5 rounded-xl border border-white/12 bg-[#1a1815]/98 p-2 shadow-2xl shadow-black/50 ring-1 ring-white/10 backdrop-blur-md"
             style={{
               position: 'fixed',
               left: Math.max(
@@ -3610,6 +3617,8 @@ function WhiteboardScene({
               zIndex: 6000,
             }}
           >
+            {composerToolsOpen ? (
+            <>
             <p className={cn(designerShellMicroLabel, 'text-white/55')}>Compositeur Architect · presets et IA</p>
             <div className="flex flex-wrap gap-1">
               {[
@@ -3704,6 +3713,8 @@ function WhiteboardScene({
                 </button>
               ))}
             </div>
+            </>
+            ) : null}
             <textarea
               ref={textAreaRef}
               key={`${textDraft.mode}-${textDraft.x}-${textDraft.y}-${textDraft.mode === 'edit' ? textDraft.index : ''}`}
@@ -3736,11 +3747,27 @@ function WhiteboardScene({
                 }
               }}
             />
-            <div className="flex justify-end gap-1.5">
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setComposerToolsOpen((o) => !o)}
+                title="Mise en forme & IA — titre, gras, alignement, Corriger, Reformuler…"
+                aria-pressed={composerToolsOpen}
+                aria-label="Afficher la mise en forme et l'IA"
+                className={cn(
+                  designerShellChipGhost,
+                  'flex items-center px-2.5 py-1 text-[11px] font-semibold leading-none',
+                  composerToolsOpen
+                    ? 'border-amber-500/40 bg-amber-500/12 text-amber-100'
+                    : 'text-white/70',
+                )}
+              >
+                Aa
+              </button>
               <button
                 type="button"
                 onClick={() => setTextDraft(null)}
-                className={cn(designerShellChipGhost, 'px-2.5 py-1 text-[10px]')}
+                className={cn(designerShellChipGhost, 'ml-auto px-2.5 py-1 text-[10px]')}
               >
                 Annuler
               </button>
