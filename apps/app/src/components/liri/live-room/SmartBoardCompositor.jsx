@@ -1354,6 +1354,23 @@ function WhiteboardScene({
     [onSaveStroke, onStrokesChange, redrawSheet, saveUndoSnapshot],
   );
 
+  // Zoom du tableau vers un point écran (curseur ou centre) en gardant ce point fixe — réflexe
+  // Figma/Photoshop. boardLayerRef porte le pan ; un enfant porte scale(zoom) origine 0,0.
+  const zoomBoardAtPoint = useCallback((targetZoom, clientX, clientY) => {
+    const st = useLiveWhiteboardStore.getState();
+    const zoom = st.boardZoom || 1;
+    const z = Math.min(4, Math.max(0.25, targetZoom));
+    if (z === zoom) return;
+    const host = boardLayerRef.current;
+    const rect = host?.getBoundingClientRect();
+    if (rect) {
+      const lx = (clientX - rect.left) / zoom;
+      const ly = (clientY - rect.top) / zoom;
+      st.setBoardPan({ x: st.boardPan.x + lx * (zoom - z), y: st.boardPan.y + ly * (zoom - z) });
+    }
+    st.setBoardZoom(z);
+  }, []);
+
   // « Tout saisir » : insère une image (File) sur le tableau — collage presse-papiers ou
   // glisser-déposer (façon Photoshop). Dimensionne proportionnellement (plafonné), centre sur
   // le point fourni (drop) ou le centre du tableau (collage), puis sélectionne l'image posée.
@@ -1602,6 +1619,19 @@ function WhiteboardScene({
           zoomToBoardSelection();
           return;
         }
+        if (k === '0') {
+          ev.preventDefault();
+          st.resetBoardView(); // Ctrl+0 = vue 100 % recentrée
+          return;
+        }
+        if (k === '=' || k === '+' || k === '-') {
+          ev.preventDefault();
+          const r = boardLayerRef.current?.parentElement?.getBoundingClientRect();
+          const cx = r ? r.left + r.width / 2 : 0;
+          const cy = r ? r.top + r.height / 2 : 0;
+          zoomBoardAtPoint((st.boardZoom || 1) * (k === '-' ? 0.9 : 1.1), cx, cy);
+          return;
+        }
         if (k === 'g') {
           ev.preventDefault();
           if (ev.shiftKey) {
@@ -1734,7 +1764,7 @@ function WhiteboardScene({
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
-  }, [readOnly, paintCanvas, zoomToBoardSelection, saveUndoSnapshot, onStrokesChange]);
+  }, [readOnly, paintCanvas, zoomToBoardSelection, saveUndoSnapshot, onStrokesChange, zoomBoardAtPoint]);
 
   useEffect(() => {
     const download = () => {
@@ -3609,6 +3639,13 @@ function WhiteboardScene({
                 if (readOnly) return;
                 if (!pointerOverBoardRef.current) return;
                 const st = useLiveWhiteboardStore.getState();
+                // Ctrl/Cmd + molette = zoom du tableau vers le curseur (réflexe Figma/Photoshop).
+                if (e.ctrlKey || e.metaKey) {
+                  e.preventDefault();
+                  const zoom = st.boardZoom || 1;
+                  zoomBoardAtPoint(zoom * (e.deltaY > 0 ? 0.9 : 1.1), e.clientX, e.clientY);
+                  return;
+                }
                 const t = st.tool;
                 if (t !== 'pencil' && t !== 'eraser') return;
                 e.preventDefault();
