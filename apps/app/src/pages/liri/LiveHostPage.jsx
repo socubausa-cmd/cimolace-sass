@@ -546,22 +546,22 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     guestJoyKitDriveRef,
   });
 
-  /** Hub fermé → pas de sous-vue. Hub ouvert en live hôte → par défaut le tiroir « Coach formateur » (même effet que le bouton IA). */
+  /**
+   * Hub fermé → pas de sous-vue. Hub ouvert → on conserve la sous-vue courante ; par défaut
+   * l'ACCUEIL Signaux (vue d'ensemble : Coach, Mains, Demandes, Salle d'attente, Zone 3, NeuronQ,
+   * Journal). Le Coach formateur reste accessible explicitement (bouton IA + 1ʳᵉ carte de la liste).
+   * (Avant : le hub se forçait sur « Coach » à l'ouverture, ce qui détournait le bouton « Signaux ».)
+   */
   useEffect(() => {
-    if (!longiaHubOpen) {
-      setLongiaSignalSubDrawer(null);
-      return;
-    }
-    if (phase !== PHASE.LIVE || isGuestUi) return;
-    setLongiaSignalSubDrawer((p) => (p == null ? 'host_coach' : p));
-  }, [longiaHubOpen, phase, isGuestUi]);
+    if (!longiaHubOpen) setLongiaSignalSubDrawer(null);
+  }, [longiaHubOpen]);
 
   const {
     expandLongiaHubUi, openLongiaHubSignauxHome, openLongiaHubControlMesh, openLongiaHubCoachPanel, openLayoutPreviewInHub,
     toggleLayoutPreviewHubPanel, openLongiaHubWaitingRoom,
   } = useLiveHostLongiaHubNav({
     phase, isGuestUi, lhLayoutCompact, setLongiaHubOpen, setLongiaSignalSubDrawer,
-    setMeshPanelOpen, setLiveLeftRailOpen,
+    setMeshPanelOpen, setLiveLeftRailOpen, guestPreviewUrl: guestInvitePreviewUrl,
   });
 
 

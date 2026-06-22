@@ -1,22 +1,14 @@
 import { PHASE } from '@/features/live/host/liveHostConstants';
 
 /**
- * Tiroir LONGIA ouvert : réserver la bande à gauche pour que le centre (SmartBoard) ne soit pas recouvert.
+ * Le Hub LONGIA s'ouvre désormais en FENÊTRE FLOTTANTE par-dessus la scène
+ * (cf. LiveHostLongiaHubDrawer) — il ne réserve plus de bande dans la grille.
+ * Conséquence : la grille ne se réorganise JAMAIS à l'ouverture du hub → fini la
+ * superposition / le « SmartBoard poussé » au clic sur IA. On renvoie donc toujours
+ * `false` (l'argument est conservé pour ne pas casser les appelants).
  */
-export function computeLongiaHubPushesLayout({
-  phase,
-  isGuestUi,
-  longiaHubOpen,
-  lhStageFocusLayout,
-  lhLayoutCompact,
-}) {
-  return (
-    phase === PHASE.LIVE
-    && !isGuestUi
-    && longiaHubOpen
-    && !lhStageFocusLayout
-    && !lhLayoutCompact
-  );
+export function computeLongiaHubPushesLayout() {
+  return false;
 }
 
 /**

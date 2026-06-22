@@ -219,7 +219,7 @@ export const LiveHostLongiaSignalShortcuts = ({
                 width: 6,
                 height: 6,
                 borderRadius: '50%',
-                background: '#38bdf8',
+                background: '#fbbf24',
                 flexShrink: 0,
                 marginTop: 4,
                 boxShadow: '0 0 6px rgba(248,152,56,.55)',
@@ -234,7 +234,7 @@ export const LiveHostLongiaSignalShortcuts = ({
                   style={{
                     fontSize: 9,
                     fontWeight: 800,
-                    color: '#38bdf8',
+                    color: '#fbbf24',
                     minWidth: 20,
                     textAlign: 'center',
                     padding: '1px 6px',
@@ -266,58 +266,8 @@ export const LiveHostLongiaSignalShortcuts = ({
             <span style={{ fontSize: 11, color: 'rgba(212,163,106,.5)', flexShrink: 0 }}>›</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setLongiaSignalSubDrawer((p) => (p === 'mesh' ? null : 'mesh'))}
-            style={hubSigRow(longiaSignalSubDrawer === 'mesh', 'rgba(200,150,12,.45)')}
-          >
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                background: '#C8960C',
-                flexShrink: 0,
-                marginTop: 4,
-                boxShadow: '0 0 6px rgba(200,150,12,.45)',
-              }}
-            />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', letterSpacing: '.03em' }}>Control Mesh</span>
-                <span
-                  style={{
-                    fontSize: 9,
-                    fontWeight: 800,
-                    color: '#C8960C',
-                    minWidth: 20,
-                    textAlign: 'center',
-                    padding: '1px 6px',
-                    borderRadius: 4,
-                    border: '1px solid rgba(255,255,255,.12)',
-                    background: 'rgba(0,0,0,.25)',
-                    fontVariantNumeric: 'tabular-nums',
-                  }}
-                >
-                  {meshRequestsCount}
-                </span>
-              </div>
-              <p
-                style={{
-                  fontSize: 9,
-                  color: 'rgba(255,255,255,.4)',
-                  margin: '4px 0 0',
-                  lineHeight: 1.45,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {meshPreviewLine}
-              </p>
-            </div>
-            <span style={{ fontSize: 11, color: 'rgba(212,163,106,.5)', flexShrink: 0 }}>›</span>
-          </button>
+          {/* Control Mesh masqué : aperçu produit non branché + roster « Sur scène » redondant
+              (déjà dans la barre membres et « Salle »). Réactiver ici quand il sera câblé. */}
 
           <button
             type="button"

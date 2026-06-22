@@ -87,13 +87,13 @@ export const designerShellMemberRowIdle =
 export const designerShellIconBadge =
   'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cyan-500/20 bg-cyan-500/[0.08] text-cyan-300 shadow-[0_0_20px_-8px_rgba(34,211,238,0.35)]';
 
-/** Panneau incrusté (colonne live — Control Mesh, etc.) */
+/** Panneau incrusté (colonne live — Control Mesh, etc.) — fond chaud (était #14131c bleu). */
 export const designerShellEmbedPanel =
-  'flex flex-col overflow-hidden rounded-2xl border border-white/[0.09] bg-[#14131c]/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ring-1 ring-inset ring-white/[0.02]';
+  'flex flex-col overflow-hidden rounded-2xl border border-white/[0.09] bg-[#211f1c]/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ring-1 ring-inset ring-white/[0.02]';
 
-/** Bloc interne type « carte » sur fond canvas */
+/** Bloc interne type « carte » sur fond canvas — chaud (était #0a0b0f bleu-noir). */
 export const designerShellCardInset =
-  'rounded-xl border border-white/[0.08] bg-[#0a0b0f]/95 p-2.5 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.1)_transparent]';
+  'rounded-xl border border-white/[0.08] bg-[#13110e]/95 p-2.5 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.1)_transparent]';
 
 export const designerShellMicroLabel =
   'text-[9px] font-semibold uppercase tracking-[0.08em] text-white/42';
@@ -101,8 +101,10 @@ export const designerShellMicroLabel =
 export const designerShellChipAmber =
   'rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[8px] font-semibold text-amber-100/90 transition-colors hover:bg-amber-500/16';
 
+// Nom hérité « Violet » — teinte désormais CHAUDE (or doux contour) : plus de violet ISNA.
+// Contour gold discret pour rester distinct des puces ambre pleines (JoyKit).
 export const designerShellChipViolet =
-  'rounded-lg border border-violet-400/25 bg-violet-500/10 px-2 py-1 text-[8px] font-semibold text-violet-200/90 transition-colors hover:bg-violet-500/16';
+  'rounded-lg border border-amber-400/25 bg-white/[0.03] px-2 py-1 text-[8px] font-semibold text-amber-100/85 transition-colors hover:border-amber-400/40 hover:bg-amber-500/[0.08]';
 
 export const designerShellChipGhost =
   'rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1 text-[8px] font-medium text-white/50 transition-colors hover:border-white/14 hover:bg-white/[0.07]';

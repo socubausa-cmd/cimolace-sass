@@ -65,6 +65,15 @@ body.lh-sp-on .lh-sp-glow{box-shadow:0 0 0 1px rgba(200,150,12,.22),0 0 28px rgb
 .liri-live-shell--guest .lh-side-head-kicker{color:rgba(var(--lh-accent-rgb,233,205,150),.42)}
 .liri-live-shell--host .lh-side-head-title,.liri-live-shell--guest .lh-side-head-title{margin-top:2px;font-size:13px;font-weight:600;letter-spacing:.06em;color:rgba(var(--lh-accent-rgb,233,205,150),.95);line-height:1.35;font-family:Georgia,'Times New Roman',ui-serif,serif}
 .lh-side-head-sub{margin-top:4px;font-size:9px;line-height:1.45;color:rgba(255,255,255,.38)}
+/* Rail gauche live — fenêtre flottante façon Claude : languette fine 52px, le panneau
+   se révèle AU SURVOL (ou épinglé) en flottant PAR-DESSUS la scène — la grille ne se
+   réorganise jamais (fini la superposition / le « poussé » du SmartBoard). */
+.lh-hoverrail{position:relative}
+.lh-hoverrail-strip{transition:opacity .2s ease}
+.lh-hoverrail-panel{position:absolute;left:0;top:var(--lh-panel-top,10px);bottom:var(--lh-panel-bottom,10px);width:0;opacity:0;pointer-events:none;overflow:hidden;z-index:60;border-radius:16px;border:1px solid rgba(245,244,238,.1);background:var(--lh-panel-bg,rgba(48,48,46,.97));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.07);transition:width .28s cubic-bezier(.22,1,.36,1),opacity .18s ease}
+.lh-hoverrail:hover>.lh-hoverrail-panel,.lh-hoverrail[data-pinned="true"]>.lh-hoverrail-panel{width:300px;opacity:1;pointer-events:auto}
+.lh-hoverrail-panel-inner{width:300px;height:100%;overflow-y:auto;padding:14px;box-sizing:border-box}
+@media (prefers-reduced-motion:reduce){.lh-hoverrail-panel{transition:opacity .14s ease}}
 `;
 
 /** Shell visuel aligné sur le **portail LIRI** (Zoom × Claude) : base chaude #262624,

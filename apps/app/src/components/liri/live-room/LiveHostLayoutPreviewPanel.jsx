@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { Smartphone, Projector, Users, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getSmartboardMobileReadabilitySummary } from '@/lib/smartboardDesignCanvas';
-import LiveHostDomMirror from '@/components/liri/live-room/LiveHostDomMirror';
 
 /**
  * Contrôles aperçu mobile / projecteur / lien invité — partagé entre le modal Arena et le sous-tiroir LONGIA.
@@ -23,10 +22,6 @@ export default function LiveHostLayoutPreviewPanel({
   embedded = false,
   className,
 }) {
-  const setMobile = (v) => {
-    if (v) onProjectorPreviewChange(false);
-    onMobilePreviewChange(v);
-  };
   const setProjector = (v) => {
     if (v) onMobilePreviewChange(false);
     onProjectorPreviewChange(v);
@@ -48,14 +43,7 @@ export default function LiveHostLayoutPreviewPanel({
         </p>
       ) : null}
 
-      <section
-        className={cn(
-          'rounded-xl border p-3',
-          mobilePreviewActive
-            ? 'border-amber-400/35 bg-amber-500/[0.06]'
-            : 'border-white/[0.08] bg-black/25',
-        )}
-      >
+      <section className="rounded-xl border border-white/[0.08] bg-black/25 p-3">
         <div className="flex items-start gap-2.5">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/30">
             <Smartphone className="h-4 w-4 text-amber-200/90" strokeWidth={1.75} />
@@ -63,64 +51,71 @@ export default function LiveHostLayoutPreviewPanel({
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-semibold text-white/90">Vue mobile</p>
             <p className="mt-1 text-[11px] leading-snug text-white/42">
-              Activez l&apos;aperçu : le pilotage passe en mode compact, le plateau se cale sur le{' '}
-              <span className="text-white/55">SmartBoard</span> (modes Arène plein écran / NeuronQ sont
-              relâchés), puis le cadre reprend la <span className="text-white/55">colonne centrale</span> (miroir
-              DOM) comme sur un téléphone.
+              Idée de ce que voient les participants sur téléphone — <span className="text-white/55">sans recharger
+              ni modifier votre pilotage</span>.
             </p>
-            <div className="mt-2.5 flex flex-wrap gap-2">
-              <button
-                type="button"
-                disabled={mobilePreviewActive}
-                onClick={() => setMobile(true)}
-                data-testid="live-host-activate-mobile-preview"
-                className={cn(
-                  'rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-colors',
-                  mobilePreviewActive
-                    ? 'cursor-default bg-white/[0.06] text-white/35'
-                    : 'bg-amber-500/25 text-amber-100 hover:bg-amber-500/35',
-                )}
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-start gap-3">
+          {/* Maquette téléphone statique (indicative) — aucun miroir DOM, aucun basculement de layout. */}
+          <div
+            aria-hidden
+            style={{
+              width: 100,
+              flexShrink: 0,
+              borderRadius: 16,
+              border: '1px solid rgba(255,255,255,.12)',
+              background: 'var(--lh-stage-bg, #1f1e1c)',
+              padding: 6,
+              boxShadow: '0 12px 30px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05)',
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div
+                style={{
+                  height: 100,
+                  borderRadius: 9,
+                  border: '1px solid rgba(212,163,106,.3)',
+                  background: 'rgba(212,163,106,.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
-                Activer l&apos;aperçu
-              </button>
-              <button
-                type="button"
-                disabled={!mobilePreviewActive}
-                onClick={() => setMobile(false)}
-                data-testid="live-host-deactivate-mobile-preview"
-                className={cn(
-                  'rounded-lg border border-white/12 px-3 py-1.5 text-[11px] font-medium transition-colors',
-                  !mobilePreviewActive
-                    ? 'cursor-default text-white/25'
-                    : 'text-white/70 hover:bg-white/[0.06]',
-                )}
-              >
-                Désactiver
-              </button>
-            </div>
-            {emulatorSourceRef ? (
-              <div className="mt-3">
-                <p className="mb-1.5 text-[8px] font-bold uppercase tracking-wider text-white/30">Simulateur (rendu hôte)</p>
-                <LiveHostDomMirror
-                  sourceRef={emulatorSourceRef}
-                  active={mobilePreviewActive}
-                  embedded={embedded}
-                />
+                <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: '.08em', color: 'rgba(227,199,154,.9)' }}>
+                  SMARTBOARD
+                </span>
               </div>
-            ) : (
-              <p className="mt-3 text-[9.5px] leading-snug text-white/32">
-                Emulateur visuel hôte : disponible sur la page Live hôte (/live/host/…). En Arène, utilisez le lien
-                invité pour comparer la vue spectateur.
-              </p>
-            )}
-            <div className="mt-2.5 space-y-1 text-[9.5px] leading-snug text-white/40">
-              <p className="text-[8px] font-bold uppercase tracking-wider text-white/28">Densité SmartBoard (repère invité)</p>
-              <p className={cn('font-medium', readStyle)}>{mobileRead.hint}</p>
-              <p className="text-white/32">
-                Zone scène type téléphone ≈ {mobileRead.availableStage.width}×{mobileRead.availableStage.height} px, échelle
-                ≈ {mobileRead.scaleContainPercent} %.
-              </p>
+              <div style={{ display: 'flex', gap: 3 }}>
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} style={{ flex: 1, height: 14, borderRadius: 5, background: 'rgba(255,255,255,.06)' }} />
+                ))}
+              </div>
+              <div
+                style={{
+                  height: 16,
+                  borderRadius: 7,
+                  background: 'rgba(255,255,255,.05)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <span style={{ fontSize: 6, fontWeight: 600, letterSpacing: '.1em', color: 'rgba(255,255,255,.42)' }}>
+                  CONTRÔLES
+                </span>
+              </div>
             </div>
+          </div>
+
+          <div className="min-w-0 flex-1 space-y-1 text-[9.5px] leading-snug text-white/40">
+            <p className="text-[8px] font-bold uppercase tracking-wider text-white/28">Densité SmartBoard (repère invité)</p>
+            <p className={cn('font-medium', readStyle)}>{mobileRead.hint}</p>
+            <p className="text-white/32">
+              Zone scène ≈ {mobileRead.availableStage.width}×{mobileRead.availableStage.height} px, échelle ≈{' '}
+              {mobileRead.scaleContainPercent} %.
+            </p>
           </div>
         </div>
       </section>

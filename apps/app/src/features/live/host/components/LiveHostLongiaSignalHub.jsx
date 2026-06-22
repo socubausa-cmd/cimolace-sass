@@ -4,7 +4,6 @@ import HostPermissionRequestsPanel from '@/components/liri/liri-live/HostPermiss
 import ControlMeshPanel from '@/components/liri/live-room/ControlMeshPanel';
 import Zone3Panel from '@/components/liri/live-room/Zone3Panel';
 import LiveHostLongiaCoachPanel from '@/components/liri/live-room/LiveHostLongiaCoachPanel';
-import LiveHostLayoutPreviewPanel from '@/components/liri/live-room/LiveHostLayoutPreviewPanel';
 import { LIVE_DRAWER_SPRING_ELASTIC } from '@/lib/liveDrawerMotion';
 import {
   LIVE_HOST_HUB_GOVERNOR_LABELS,
@@ -144,7 +143,7 @@ export const LiveHostLongiaSignalHub = ({
               display: 'flex',
               flexDirection: 'row',
               alignItems: 'stretch',
-              background: '#14131c',
+              background: 'var(--lh-page-bg, #211f1c)',
               boxSizing: 'border-box',
               boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 0 0 1px rgba(255,255,255,0.02)',
             }}
@@ -165,7 +164,7 @@ export const LiveHostLongiaSignalHub = ({
                 display: 'flex',
                 flexDirection: 'column',
                 boxSizing: 'border-box',
-                background: '#14131c',
+                background: 'var(--lh-page-bg, #211f1c)',
                 boxShadow: '10px 0 32px rgba(0,0,0,.4)',
               }}
             >
@@ -342,7 +341,7 @@ export const LiveHostLongiaSignalHub = ({
                                   justifyContent: 'center',
                                   fontSize: 9,
                                   fontWeight: 700,
-                                  color: '#38bdf8',
+                                  color: '#f3e8d2',
                                   flexShrink: 0,
                                 }}
                               >
@@ -468,7 +467,7 @@ export const LiveHostLongiaSignalHub = ({
                                   padding: '2px 6px',
                                   fontSize: '8px',
                                   fontWeight: 700,
-                                  color: on ? '#6ee7b7' : 'rgba(255,255,255,.35)',
+                                  color: on ? '#e0b878' : 'rgba(255,255,255,.35)',
                                   cursor: 'pointer',
                                   maxWidth: '88px',
                                   overflow: 'hidden',
@@ -721,18 +720,8 @@ export const LiveHostLongiaSignalHub = ({
                       </div>
                     )
                   ) : null}
-                  {longiaSignalSubDrawer === 'layout_preview' ? (
-                    <LiveHostLayoutPreviewPanel
-                      embedded
-                      emulatorSourceRef={hostCenterStageMirrorRef}
-                      mobilePreviewActive={previewMobileMaquette}
-                      onMobilePreviewChange={handleMobileLayoutPreviewChange}
-                      projectorPreviewActive={previewProjectorLayout}
-                      onProjectorPreviewChange={setPreviewProjectorLayout}
-                      cinemaModeReal={focusMode}
-                      guestInviteUrl={guestInvitePreviewUrl}
-                    />
-                  ) : null}
+                  {/* Aperçu des vues retiré du hub (saturait) : l'œil ouvre désormais la vue
+                      participant dans un nouvel onglet (cf. useLiveHostLongiaHubNav). */}
                 </div>
               </div>
             </motion.div>

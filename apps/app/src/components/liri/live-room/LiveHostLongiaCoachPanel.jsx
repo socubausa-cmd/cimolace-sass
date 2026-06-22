@@ -12,6 +12,7 @@ import {
   Send,
   Sparkles,
   Users,
+  X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { invokeLongiaGuestLive } from '@/lib/longiaGuestClient';
@@ -88,6 +89,9 @@ export default function LiveHostLongiaCoachPanel({
   const [insertHubOpen, setInsertHubOpen] = useState(false);
   /** Sous-section « membres » dans le hub. */
   const [memberSectionExpanded, setMemberSectionExpanded] = useState(false);
+  /** Références jointes (image, membre, étape, chat, horodatage) — affichées en chips, compilées dans le message à l'envoi. */
+  const [attachments, setAttachments] = useState([]);
+  const attCounterRef = useRef(0);
 
   useEffect(() => {
     if (!insertHubOpen) return undefined;
@@ -111,24 +115,16 @@ export default function LiveHostLongiaCoachPanel({
     };
   }, [insertHubOpen]);
 
-  const insertAtCaret = useCallback((snippet) => {
-    const s = String(snippet || '');
-    if (!s) return;
-    const el = draftRef.current;
-    if (!el) {
-      setDraft((d) => `${d}${s}`);
-      return;
-    }
-    const start = el.selectionStart ?? el.value.length;
-    const end = el.selectionEnd ?? el.value.length;
-    const v = el.value;
-    const next = v.slice(0, start) + s + v.slice(end);
-    setDraft(next);
-    queueMicrotask(() => {
-      el.focus();
-      const pos = start + s.length;
-      el.setSelectionRange(pos, pos);
-    });
+  const addAttachment = useCallback((att) => {
+    const id = `att-${attCounterRef.current}`;
+    attCounterRef.current += 1;
+    setAttachments((list) => [...list, { id, ...att }]);
+    setInsertHubOpen(false);
+    setMemberSectionExpanded(false);
+    queueMicrotask(() => draftRef.current?.focus());
+  }, []);
+  const removeAttachment = useCallback((id) => {
+    setAttachments((list) => list.filter((a) => a.id !== id));
   }, []);
 
   useEffect(() => {
@@ -324,36 +320,47 @@ export default function LiveHostLongiaCoachPanel({
     [sessionId, userId, supabase, sessionContext, messages, toast, sessionTitle, stepTitle],
   );
 
+  /** Compile les chips joints en lignes de contexte et vide le bac. */
+  const consumeAttachments = useCallback(() => {
+    if (!attachments.length) return '';
+    const ctx = attachments.map((a) => a.compile).filter(Boolean).join('\n');
+    setAttachments([]);
+    return ctx;
+  }, [attachments]);
+
   const onChip = useCallback(
     (action) => {
-      void runTurn(action, '');
+      const ctx = consumeAttachments();
+      void runTurn(action, ctx);
     },
-    [runTurn],
+    [runTurn, consumeAttachments],
   );
 
   const onSend = useCallback(() => {
+    const ctx = consumeAttachments();
     const t = draft.trim();
-    if (!t) return;
+    const userLine = [ctx, t].filter(Boolean).join('\n\n');
+    if (!userLine) return;
     setDraft('');
-    void runTurn('ask_question', t);
-  }, [draft, runTurn]);
+    void runTurn('ask_question', userLine);
+  }, [draft, runTurn, consumeAttachments]);
 
   const onImageFileChange = useCallback(
     (e) => {
       const f = e.target.files?.[0];
       e.target.value = '';
       if (!f) return;
-      setInsertHubOpen(false);
-      setMemberSectionExpanded(false);
-      insertAtCaret(
-        `[Image : ${f.name} — décrivez ce que le coach doit en retenir (contenu visible, objectif pédagogique).]\n`,
-      );
+      addAttachment({
+        kind: 'image',
+        label: f.name,
+        compile: `[Image jointe : ${f.name} — le formateur en décrit le contenu utile dans le message]`,
+      });
       toast?.({
-        title: 'Image',
-        description: 'Complétez la description après le bloc inséré pour que LONGIA comprenne sans vision directe.',
+        title: 'Image jointe',
+        description: 'Décrivez le visuel dans le message : LONGIA n\'a pas encore la vision directe.',
       });
     },
-    [insertAtCaret, toast],
+    [addAttachment, toast],
   );
 
   const onPasteDraft = useCallback(
@@ -365,10 +372,12 @@ export default function LiveHostLongiaCoachPanel({
         if (it.kind === 'file' && String(it.type || '').startsWith('image/')) {
           e.preventDefault();
           const file = it.getAsFile();
-          const name = file?.name || 'collage';
-          insertAtCaret(
-            `[Capture / image collée : ${name} — décrivez le contenu utile pour le coach.]\n`,
-          );
+          const name = file?.name || 'capture';
+          addAttachment({
+            kind: 'image',
+            label: name,
+            compile: `[Image collée : ${name} — décrite dans le message]`,
+          });
           toast?.({
             title: 'Image collée',
             description: 'Ajoutez une courte description du visuel dans le message.',
@@ -377,7 +386,7 @@ export default function LiveHostLongiaCoachPanel({
         }
       }
     },
-    [insertAtCaret, toast],
+    [addAttachment, toast],
   );
 
   const insertMemberLine = useCallback(
@@ -386,11 +395,14 @@ export default function LiveHostLongiaCoachPanel({
       const id = p?.id != null ? String(p.id) : '';
       const host = p?.isHost ? ' (hôte)' : '';
       const local = p?.isLocal ? ' (vous)' : '';
-      insertAtCaret(`[Membre connecté : ${name}${host}${local}${id ? ` — id ${id}` : ''}]\n`);
-      setInsertHubOpen(false);
-      setMemberSectionExpanded(false);
+      addAttachment({
+        kind: 'member',
+        label: name,
+        sub: p?.isHost ? 'hôte' : p?.isLocal ? 'vous' : 'membre',
+        compile: `[Membre connecté : ${name}${host}${local}${id ? ` — id ${id}` : ''}]`,
+      });
     },
-    [insertAtCaret],
+    [addAttachment],
   );
 
   const insertStepContext = useCallback(() => {
@@ -399,16 +411,13 @@ export default function LiveHostLongiaCoachPanel({
       toast?.({ title: 'Étape', description: 'Aucun titre d\'étape disponible pour l\'instant.', variant: 'destructive' });
       return;
     }
-    insertAtCaret(`[Contexte étape en cours : ${t}]\n`);
-    setInsertHubOpen(false);
-    setMemberSectionExpanded(false);
-  }, [insertAtCaret, stepTitle, toast]);
+    addAttachment({ kind: 'step', label: 'Étape en cours', sub: t, compile: `[Contexte étape en cours : ${t}]` });
+  }, [addAttachment, stepTitle, toast]);
 
   const insertTimestamp = useCallback(() => {
-    insertAtCaret(`[Horodatage : ${new Date().toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' })}]\n`);
-    setInsertHubOpen(false);
-    setMemberSectionExpanded(false);
-  }, [insertAtCaret]);
+    const ts = new Date().toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
+    addAttachment({ kind: 'timestamp', label: ts, compile: `[Horodatage : ${ts}]` });
+  }, [addAttachment]);
 
   const insertChatExcerpt = useCallback(() => {
     const lines = (chatMessages || [])
@@ -427,10 +436,12 @@ export default function LiveHostLongiaCoachPanel({
       });
       return;
     }
-    insertAtCaret(`[Extrait chat de séance — derniers messages]\n${lines.join('\n')}\n\n`);
-    setInsertHubOpen(false);
-    setMemberSectionExpanded(false);
-  }, [chatMessages, insertAtCaret, toast]);
+    addAttachment({
+      kind: 'chat',
+      label: `Extrait chat · ${lines.length} msg`,
+      compile: `[Extrait chat de séance — derniers messages]\n${lines.join('\n')}`,
+    });
+  }, [chatMessages, addAttachment, toast]);
 
   if (!sessionId) {
     return (
@@ -462,7 +473,7 @@ export default function LiveHostLongiaCoachPanel({
     <div
       className={cn(
         'live-studio-premium flex min-h-0 min-w-0 h-full w-full max-w-full flex-1 flex-col overflow-hidden',
-        'rounded-2xl border border-[#2D3139] bg-[#0F1419]/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+        'rounded-2xl border border-[#3a342d] bg-[#262624]/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
       )}
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-hidden px-3 pb-2 pt-2">
@@ -476,13 +487,13 @@ export default function LiveHostLongiaCoachPanel({
         <div
           ref={scrollRef}
           className={cn(
-            'lh-sy relative flex min-h-[72px] min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain rounded-xl border border-[#2D3139] bg-black/25 px-2 py-2 text-[11px] leading-snug text-white/88',
+            'lh-sy relative flex min-h-[72px] min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain rounded-xl border border-[#3a342d] bg-black/25 px-2 py-2 text-[11px] leading-snug text-white/88',
             '[scrollbar-width:thin] [scrollbar-color:rgba(255,189,123,0.22)_transparent]',
           )}
         >
         {!threadHydrated ? (
           <div className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center rounded-[inherit] bg-[#1f1e1c]/45 backdrop-blur-[2px]">
-            <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#14131c]/95 px-3 py-2 text-[10px] text-white/55">
+            <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#1f1d1a]/95 px-3 py-2 text-[10px] text-white/55">
               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
               Restauration du fil…
             </div>
@@ -509,7 +520,7 @@ export default function LiveHostLongiaCoachPanel({
         {loading ? (
           <div
             className={cn(
-              'mb-1.5 mr-auto flex max-w-[min(100%,28rem)] items-center gap-1.5 rounded-xl border border-white/[0.08] bg-[#14131c]/80 px-2.5 py-2',
+              'mb-1.5 mr-auto flex max-w-[min(100%,28rem)] items-center gap-1.5 rounded-xl border border-white/[0.08] bg-[#1f1d1a]/80 px-2.5 py-2',
               'text-[10px] text-white/48 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]',
             )}
           >
@@ -602,10 +613,50 @@ export default function LiveHostLongiaCoachPanel({
       <input ref={imageFileRef} type="file" accept="image/*" className="hidden" onChange={onImageFileChange} />
 
       <div className="flex min-w-0 shrink-0 flex-col gap-1">
+        {attachments.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5 px-0.5 pb-0.5">
+            {attachments.map((a) => (
+              <span
+                key={a.id}
+                className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-white/12 bg-white/[0.05] py-1 pl-1.5 pr-1 text-[10px] text-white/85"
+              >
+                {a.kind === 'member' ? (
+                  <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-amber-500/25 text-[9px] font-semibold text-amber-100">
+                    {(a.label || '?').charAt(0).toUpperCase()}
+                  </span>
+                ) : (
+                  <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-md bg-amber-500/20 text-amber-200/90">
+                    {a.kind === 'image' ? (
+                      <ImagePlus className="h-3 w-3" strokeWidth={2} aria-hidden />
+                    ) : a.kind === 'step' ? (
+                      <Bookmark className="h-3 w-3" strokeWidth={2} aria-hidden />
+                    ) : a.kind === 'chat' ? (
+                      <MessagesSquare className="h-3 w-3" strokeWidth={2} aria-hidden />
+                    ) : (
+                      <Clock className="h-3 w-3" strokeWidth={2} aria-hidden />
+                    )}
+                  </span>
+                )}
+                <span className="min-w-0 truncate">
+                  {a.label}
+                  {a.sub ? <span className="text-white/40"> · {a.sub}</span> : null}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removeAttachment(a.id)}
+                  aria-label={`Retirer ${a.label}`}
+                  className="flex shrink-0 items-center rounded text-white/40 transition hover:text-rose-300"
+                >
+                  <X className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : null}
         <div
           className={cn(
-            'flex min-h-[44px] min-w-0 items-end gap-1 rounded-xl border bg-[#0a0c10] px-2 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-[border-color,box-shadow]',
-            'border-[#2D3139] focus-within:border-[#7B61FF]/45 focus-within:shadow-[0_0_0_1px_rgba(255,189,123,0.2),inset_0_1px_0_rgba(255,255,255,0.04)]',
+            'flex min-h-[44px] min-w-0 items-end gap-1 rounded-xl border bg-[#171410] px-2 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-[border-color,box-shadow]',
+            'border-[#3a342d] focus-within:border-amber-400/45 focus-within:shadow-[0_0_0_1px_rgba(255,189,123,0.2),inset_0_1px_0_rgba(255,255,255,0.04)]',
           )}
         >
           <textarea
@@ -655,7 +706,7 @@ export default function LiveHostLongiaCoachPanel({
                   id="coach-insert-hub"
                   role="dialog"
                   aria-label="Insérer dans le message coach"
-                  className="absolute right-0 bottom-full z-[120] mb-1.5 w-[min(94vw,280px)] overflow-hidden rounded-xl border border-white/12 bg-[#0d0f14] shadow-[0_12px_40px_rgba(0,0,0,.55)]"
+                  className="absolute right-0 bottom-full z-[120] mb-1.5 w-[min(94vw,280px)] overflow-hidden rounded-xl border border-white/12 bg-[#221f1a] shadow-[0_12px_40px_rgba(0,0,0,.55)]"
                 >
                   <div className="border-b border-white/[0.06] px-2.5 py-1.5">
                     <p className={cn(designerShellMicroLabel, 'm-0 text-[9px] font-semibold tracking-wide text-white/55')}>
@@ -759,11 +810,11 @@ export default function LiveHostLongiaCoachPanel({
             </div>
             <button
               type="button"
-              disabled={loading || !draft.trim() || !threadHydrated}
+              disabled={loading || (!draft.trim() && attachments.length === 0) || !threadHydrated}
               onClick={onSend}
               className={cn(
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition disabled:opacity-30',
-                draft.trim() && threadHydrated && !loading
+                (draft.trim() || attachments.length > 0) && threadHydrated && !loading
                   ? 'bg-amber-500/22 text-amber-50 hover:bg-amber-500/30'
                   : 'text-white/35 hover:bg-white/[0.06] hover:text-white/55',
               )}

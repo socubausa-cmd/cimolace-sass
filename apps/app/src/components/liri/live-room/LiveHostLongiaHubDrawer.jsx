@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronDown, ChevronUp, Eye, Minimize2, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, Minimize2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { designerShellChipGhost } from '@/lib/liriDesignerShellClasses';
 import {
   LIVE_DRAWER_BACKDROP_TRANSITION,
   LIVE_TAB_SPRING,
-  liveDrawerAsideLeft,
   liveDrawerFloatPanel,
 } from '@/lib/liveDrawerMotion';
 
@@ -27,12 +25,20 @@ const focusPlaceholderRows = [
   { k: 'Mesh', v: '0' },
 ];
 
+/** Couleurs chaudes du shell live (alignées --lh-*), pour ne plus injecter le bleu Studio. */
+const HUB_PANEL_BG = 'var(--lh-panel-bg, rgba(48,48,46,.97))';
+const HUB_BORDER = '1px solid rgba(245,244,238,.1)';
+const HUB_ACCENT = 'var(--lh-accent, #d4a36a)';
+const HUB_PILL_BG = 'var(--lh-page-bg, #262624)';
+const HUB_SHADOW =
+  '0 30px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.07)';
+
 /**
  * Hub LONGIA pendant le live hôte — vue Signaux (journal, mains levées, Mesh, Zone 3…).
  *
  * @param {boolean} [centralFocusMode=false] — Mode « écran central élargi » : barre et panneau flottants.
  * @param {import('react').ReactNode} [signalHubSlot] — Contenu embarqué (signaux temps réel).
- * @param {() => void} [onOpenLayoutPreview] — Ouvre le sous-panneau « Aperçu des vues » (mobile / projecteur).
+ * @param {() => void} [onOpenLayoutPreview] — Ouvre la vue participant dans un nouvel onglet (aperçu).
  * @param {boolean} [layoutPreviewHubActive] — Surligne le bouton œil quand ce sous-panneau est ouvert.
  */
 export default function LiveHostLongiaHubDrawer({
@@ -42,8 +48,8 @@ export default function LiveHostLongiaHubDrawer({
   signalHubSlot = null,
   onOpenLayoutPreview,
   layoutPreviewHubActive = false,
-  /** Largeur du tiroir bureau (px). Peut augmenter quand un sous-panneau détaillé est ouvert (ex. Zone 3). */
-  drawerWidthPx = 320,
+  /** Largeur de la fenêtre flottante (px). Peut augmenter quand un sous-panneau détaillé est ouvert (ex. Zone 3). */
+  drawerWidthPx = 340,
 }) {
   const [hubPanelOpen, setHubPanelOpen] = useState(true);
   /** En mode écran central : barre complète vs pastille compacte (reste visible). */
@@ -108,99 +114,90 @@ export default function LiveHostLongiaHubDrawer({
       </div>
     );
 
-  const signalsPanelDesktop = (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent px-3 py-3 [scrollbar-width:thin]">
-      {signalsBody}
-    </div>
-  );
-
   const signalsPanelFocus = (
     <div className="flex max-h-[min(70vh,520px)] min-h-[min(40vh,280px)] flex-col overflow-hidden px-2 py-2 [scrollbar-width:thin]">
       {signalsBody}
     </div>
   );
 
-  /** Tiroir latéral classique — ancré à gauche. */
+  /**
+   * Mode standard (desktop hôte) — FENÊTRE FLOTTANTE chaude par-dessus la scène.
+   * Calée sur la scène via les vars partagées posées par le rail gauche
+   * (--lh-stage-top-vw / --lh-stage-bottom-vw / --lh-rail-edge), avec repli sûr.
+   * Plus de tiroir plein écran ni de réorganisation de la grille.
+   */
   if (!centralFocusMode) {
     return (
-      <>
-        {/* Voile visuel seulement : sans pointer-events, sinon il capte tous les clics
-            au-dessus du plateau (bouton LONGIA, Mesh, etc.) qui sont en z-index plus bas. */}
-        <div
-          role="presentation"
-          aria-hidden
-          className="pointer-events-none fixed top-0 right-0 bottom-0 z-[85] bg-black/50 lg:bg-black/40"
-          style={{ left: `min(100vw, ${drawerWidthPx}px)` }}
-        />
-        <motion.aside
-          {...liveDrawerAsideLeft}
-          className={cn(
-            'live-studio-premium live-studio-pane-left fixed left-0 top-0 z-[90] flex h-[100dvh] shrink-0 flex-col text-white',
-            'shadow-[16px_0_48px_rgba(0,0,0,.55)] ring-1 ring-inset ring-white/[0.02]',
-          )}
-          style={{
-            width: `min(100vw, ${drawerWidthPx}px)`,
-            maxWidth: `min(100vw, ${drawerWidthPx}px)`,
-          }}
+      <motion.aside
+        role="dialog"
+        aria-label="Hub LONGIA — signaux et salle"
+        initial={{ opacity: 0, x: -14, scale: 0.985 }}
+        animate={{ opacity: 1, x: 0, scale: 1 }}
+        transition={LIVE_TAB_SPRING}
+        className="fixed z-[70] flex flex-col overflow-hidden text-white"
+        style={{
+          left: 'var(--lh-rail-edge, 78px)',
+          top: 'var(--lh-stage-top-vw, 150px)',
+          bottom: 'var(--lh-stage-bottom-vw, 84px)',
+          width: `min(92vw, ${Math.max(320, drawerWidthPx)}px)`,
+          maxWidth: '92vw',
+          borderRadius: 18,
+          border: HUB_BORDER,
+          background: HUB_PANEL_BG,
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          boxShadow: HUB_SHADOW,
+        }}
+      >
+        <header
+          className="flex shrink-0 items-start justify-between gap-3 px-3.5 py-3"
+          style={{ borderBottom: '1px solid rgba(255,255,255,.07)' }}
         >
-          {/* En-tête aligné shell Studio Live Creator (live-studio-pane-head) */}
-          <header className="live-studio-pane-head flex shrink-0 items-start justify-between gap-3 px-3 py-2.5">
-            <div className="min-w-0 flex-1 space-y-0.5 pt-0.5">
-              <p className="live-studio-pane-head-title">Signaux & salle</p>
-              <h2
-                className="truncate text-[13px] font-semibold leading-snug tracking-[0.04em] text-[#e3c79a]"
-                style={{ fontFamily: 'Georgia, "Times New Roman", ui-serif, serif' }}
-              >
-                LONGIA · HUB
-              </h2>
-            </div>
-            <div className="flex shrink-0 items-center gap-1.5">
-              {typeof onOpenLayoutPreview === 'function' ? (
-                <button
-                  type="button"
-                  onClick={onOpenLayoutPreview}
-                  title="Aperçu des vues — mobile et projecteur"
-                  aria-label="Aperçu des vues mobile et projecteur"
-                  className={cn(
-                    designerShellChipGhost,
-                    'flex h-9 w-9 items-center justify-center rounded-xl border p-0 transition-colors',
-                    layoutPreviewHubActive
-                      ? 'border-amber-400/45 bg-amber-500/15 text-amber-100'
-                      : 'border-white/12 text-white/70 hover:border-amber-400/35 hover:bg-amber-500/10 hover:text-amber-100',
-                  )}
-                >
-                  <Eye className="h-4 w-4" strokeWidth={2} aria-hidden />
-                </button>
-              ) : null}
+          <div className="min-w-0 flex-1 space-y-0.5 pt-0.5">
+            <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/45">Signaux &amp; salle</p>
+            <h2
+              className="truncate text-[14px] font-semibold leading-snug tracking-[0.08em]"
+              style={{ color: HUB_ACCENT, fontFamily: 'Georgia, "Times New Roman", ui-serif, serif' }}
+            >
+              LONGIA
+            </h2>
+          </div>
+          <div className="flex shrink-0 items-center gap-1.5">
+            {typeof onOpenLayoutPreview === 'function' ? (
               <button
                 type="button"
-                onClick={onClose}
+                onClick={onOpenLayoutPreview}
+                title="Aperçu — ouvrir la vue participant (nouvel onglet)"
+                aria-label="Ouvrir la vue participant dans un nouvel onglet"
                 className={cn(
-                  designerShellChipGhost,
-                  'shrink-0 rounded-xl border border-white/12 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-white/80 hover:border-white/18 hover:bg-white/[0.07] hover:text-white/95',
+                  'flex h-9 w-9 items-center justify-center rounded-xl border p-0 transition-colors',
+                  layoutPreviewHubActive
+                    ? 'border-amber-400/45 bg-amber-500/15 text-amber-100'
+                    : 'border-white/12 text-white/65 hover:border-amber-400/35 hover:bg-amber-500/10 hover:text-amber-100',
                 )}
               >
-                Fermer
+                <ExternalLink className="h-4 w-4" strokeWidth={2} aria-hidden />
               </button>
-            </div>
-          </header>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key="signals"
-              role="region"
-              aria-label="Signaux LONGIA"
-              className="flex min-h-0 flex-1 flex-col overflow-hidden"
-              initial={{ opacity: 0, y: 12, scaleY: 0.982 }}
-              animate={{ opacity: 1, y: 0, scaleY: 1 }}
-              exit={{ opacity: 0, y: -10, scaleY: 0.99 }}
-              transition={LIVE_TAB_SPRING}
-              style={{ transformOrigin: '50% 0%' }}
+            ) : null}
+            <button
+              type="button"
+              onClick={onClose}
+              title="Fermer le hub LONGIA"
+              aria-label="Fermer le hub LONGIA"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/12 text-white/55 transition-colors hover:border-red-500/30 hover:bg-red-950/30 hover:text-red-200"
             >
-              {signalsPanelDesktop}
-            </motion.div>
-          </AnimatePresence>
-        </motion.aside>
-      </>
+              <X className="h-4 w-4" strokeWidth={2} aria-hidden />
+            </button>
+          </div>
+        </header>
+        <div
+          role="region"
+          aria-label="Signaux LONGIA"
+          className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-3 [scrollbar-width:thin]"
+        >
+          {signalsBody}
+        </div>
+      </motion.aside>
     );
   }
 
@@ -214,7 +211,8 @@ export default function LiveHostLongiaHubDrawer({
               setHubBarCollapsed(false);
               setHubPanelOpen(true);
             }}
-            className="live-studio-premium flex max-w-[min(92vw,280px)] items-center gap-2 overflow-hidden rounded-full border border-[#2D3139] bg-[#12141a]/96 px-2.5 py-2 pr-3 text-white shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-md"
+            className="flex max-w-[min(92vw,280px)] items-center gap-2 overflow-hidden rounded-full px-2.5 py-2 pr-3 text-white backdrop-blur-md"
+            style={{ background: HUB_PILL_BG, border: HUB_BORDER, boxShadow: HUB_SHADOW }}
             title="Déplier LONGIA — signaux et journal"
           >
             <div className="h-8 w-8 shrink-0 rounded-full bg-gradient-to-br from-amber-400/90 to-amber-700/80 ring-2 ring-white/10" />
@@ -229,7 +227,10 @@ export default function LiveHostLongiaHubDrawer({
   return (
     <div className="pointer-events-none fixed inset-0 z-[230]">
       <div className="pointer-events-auto absolute left-3 top-3 flex max-w-[min(96vw,300px)] flex-col items-start gap-2">
-        <div className="live-studio-premium premium-panel flex max-w-full flex-nowrap items-center gap-2 overflow-x-auto rounded-2xl border border-[#2D3139] bg-[#12141a]/98 px-3 py-2 text-white shadow-[0_12px_40px_rgba(0,0,0,0.5)] backdrop-blur-md [scrollbar-width:none]">
+        <div
+          className="flex max-w-full flex-nowrap items-center gap-2 overflow-x-auto rounded-2xl px-3 py-2 text-white backdrop-blur-md [scrollbar-width:none]"
+          style={{ background: HUB_PILL_BG, border: HUB_BORDER, boxShadow: HUB_SHADOW }}
+        >
           <div className="flex shrink-0 items-center gap-2 border-r border-white/[0.08] pr-3">
             <div className="h-8 w-8 shrink-0 rounded-full bg-gradient-to-br from-amber-400/90 to-amber-700/80 ring-2 ring-white/10" />
             <span className="whitespace-nowrap text-[12px] font-semibold tracking-tight text-white/95">LONGIA</span>
@@ -239,8 +240,8 @@ export default function LiveHostLongiaHubDrawer({
             <button
               type="button"
               onClick={onOpenLayoutPreview}
-              title="Aperçu des vues — mobile et projecteur"
-              aria-label="Aperçu des vues mobile et projecteur"
+              title="Aperçu — ouvrir la vue participant (nouvel onglet)"
+              aria-label="Ouvrir la vue participant dans un nouvel onglet"
               className={cn(
                 'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-white/55 transition-colors',
                 layoutPreviewHubActive
@@ -248,7 +249,7 @@ export default function LiveHostLongiaHubDrawer({
                   : 'border-white/[0.08] bg-white/[0.04] hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-100',
               )}
             >
-              <Eye className="h-4 w-4" strokeWidth={2} aria-hidden />
+              <ExternalLink className="h-4 w-4" strokeWidth={2} aria-hidden />
             </button>
           ) : null}
           <button
@@ -290,13 +291,14 @@ export default function LiveHostLongiaHubDrawer({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={LIVE_DRAWER_BACKDROP_TRANSITION}
-                className="fixed inset-0 z-[228] bg-black/35"
+                className="fixed inset-0 z-[228] bg-black/30"
                 onClick={() => setHubPanelOpen(false)}
               />
               <motion.div
                 key="longia-focus-panel"
                 {...liveDrawerFloatPanel}
-                className="live-studio-premium premium-panel relative z-[229] flex max-h-[min(78vh,560px)] w-[min(280px,92vw)] max-w-full flex-col overflow-hidden rounded-2xl border border-[#2D3139] bg-[#12141a] shadow-[0_20px_64px_rgba(0,0,0,0.7)] ring-1 ring-inset ring-white/[0.03]"
+                className="relative z-[229] flex max-h-[min(78vh,560px)] w-[min(300px,92vw)] max-w-full flex-col overflow-hidden rounded-2xl"
+                style={{ background: HUB_PANEL_BG, border: HUB_BORDER, boxShadow: HUB_SHADOW }}
               >
                 {signalsPanelFocus}
               </motion.div>

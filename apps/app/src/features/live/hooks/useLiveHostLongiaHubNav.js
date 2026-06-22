@@ -15,6 +15,8 @@ export function useLiveHostLongiaHubNav({
   setLongiaSignalSubDrawer,
   setMeshPanelOpen,
   setLiveLeftRailOpen,
+  /** URL vue participant — l'aperçu s'ouvre dans un nouvel onglet (plus de panneau embarqué). */
+  guestPreviewUrl,
 }) {
   useEffect(() => {
     if (phase !== PHASE.LIVE || isGuestUi) return undefined;
@@ -46,10 +48,14 @@ export function useLiveHostLongiaHubNav({
     expandLongiaHubUi();
   }, [expandLongiaHubUi, lhLayoutCompact, setLongiaHubOpen, setLongiaSignalSubDrawer, setMeshPanelOpen, setLiveLeftRailOpen]);
 
+  // Control Mesh MASQUÉ (aperçu produit non branché + roster « Sur scène » redondant avec la
+  // barre membres et « Salle »). Ce lanceur ouvre désormais l'ACCUEIL Signaux du hub (salle
+  // d'attente, Zone 3, NeuronQ, journal…) au lieu du sous-tiroir mesh. Le sous-tiroir reste
+  // dormant dans le code (réactivable quand le Transfer Engine sera branché).
   const openLongiaHubControlMesh = useCallback(() => {
     setLongiaHubOpen(true);
-    setLongiaSignalSubDrawer('mesh');
-    setMeshPanelOpen(true);
+    setLongiaSignalSubDrawer(null);
+    setMeshPanelOpen(false);
     if (lhLayoutCompact) setLiveLeftRailOpen(true);
     expandLongiaHubUi();
   }, [expandLongiaHubUi, lhLayoutCompact, setLongiaHubOpen, setLongiaSignalSubDrawer, setMeshPanelOpen, setLiveLeftRailOpen]);
@@ -62,19 +68,16 @@ export function useLiveHostLongiaHubNav({
     expandLongiaHubUi();
   }, [expandLongiaHubUi, lhLayoutCompact, setLongiaHubOpen, setLongiaSignalSubDrawer, setMeshPanelOpen, setLiveLeftRailOpen]);
 
-  const openLayoutPreviewInHub = useCallback(() => {
-    setLongiaHubOpen(true);
-    setLongiaSignalSubDrawer('layout_preview');
-    if (lhLayoutCompact) setLiveLeftRailOpen(true);
-    expandLongiaHubUi();
-  }, [expandLongiaHubUi, lhLayoutCompact, setLongiaHubOpen, setLongiaSignalSubDrawer, setLiveLeftRailOpen]);
-
-  const toggleLayoutPreviewHubPanel = useCallback(() => {
-    setLongiaHubOpen(true);
-    setLongiaSignalSubDrawer((p) => (p === 'layout_preview' ? null : 'layout_preview'));
-    if (lhLayoutCompact) setLiveLeftRailOpen(true);
-    expandLongiaHubUi();
-  }, [expandLongiaHubUi, lhLayoutCompact, setLongiaHubOpen, setLongiaSignalSubDrawer, setLiveLeftRailOpen]);
+  // Aperçu des vues = ouvrir la VUE PARTICIPANT dans un NOUVEL ONGLET — ça ne sature plus le hub
+  // avec un panneau embarqué. Les deux entrées (œil du hub + raccourci scène) déclenchent ceci.
+  const openGuestPreviewTab = useCallback(() => {
+    if (!guestPreviewUrl || typeof window === 'undefined') return;
+    try {
+      window.open(guestPreviewUrl, '_blank', 'noopener,noreferrer');
+    } catch {
+      /* popup bloquée — ignore */
+    }
+  }, [guestPreviewUrl]);
 
   const openLongiaHubWaitingRoom = useCallback(() => {
     setLongiaHubOpen(true);
@@ -89,8 +92,8 @@ export function useLiveHostLongiaHubNav({
     openLongiaHubSignauxHome,
     openLongiaHubControlMesh,
     openLongiaHubCoachPanel,
-    openLayoutPreviewInHub,
-    toggleLayoutPreviewHubPanel,
+    openLayoutPreviewInHub: openGuestPreviewTab,
+    toggleLayoutPreviewHubPanel: openGuestPreviewTab,
     openLongiaHubWaitingRoom,
   };
 }

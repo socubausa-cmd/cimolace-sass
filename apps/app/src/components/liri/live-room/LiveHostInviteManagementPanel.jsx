@@ -34,14 +34,14 @@ function shareBody(sessionTitle, inviteUrl) {
   return `Rejoignez la session sur LIRI :\n${inviteUrl}`;
 }
 
-/** Boutons principaux violet plein (maquette ~ #6332C1) */
+/** Bouton principal — pastille pleine or chaud (#d4a36a, texte sombre) alignée sur le shell live. */
 function PurpleButton({ children, className, ...props }) {
   return (
     <button
       type="button"
       className={cn(
-        'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-2xl px-3 py-2.5 text-[11px] font-bold text-white shadow-[0_2px_14px_rgba(212,163,106,0.38)] transition-colors',
-        'bg-liri-violet hover:bg-liri-violet/92 active:scale-[0.98]',
+        'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-2xl px-3 py-2.5 text-[11px] font-bold text-[#2a2118] shadow-[0_2px_14px_rgba(212,163,106,0.38)] transition-colors',
+        'bg-[#d4a36a] hover:bg-[#e0b27a] active:scale-[0.98]',
         'disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40 disabled:shadow-none',
         className,
       )}
@@ -193,7 +193,7 @@ export default function LiveHostInviteManagementPanel({
       {/* Inviter par lien */}
       <section className={cn(cardClass, 'p-3')}>
         <p className="mb-2 flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.16em] text-white/55">
-          <Link2 className="h-3 w-3 shrink-0 text-liri-violet/85" strokeWidth={1.75} aria-hidden />
+          <Link2 className="h-3 w-3 shrink-0 text-amber-300/85" strokeWidth={1.75} aria-hidden />
           Inviter par lien
         </p>
         <div className="flex gap-2">
@@ -231,11 +231,11 @@ export default function LiveHostInviteManagementPanel({
             className={cn(
               'flex flex-col items-center justify-center gap-0.5 rounded-2xl border px-2 py-2 text-center text-[9px] font-semibold transition-colors',
               canShare
-                ? 'border-liri-blue/40 bg-liri-blue/15 text-amber-50 hover:bg-liri-blue/22'
+                ? 'border-amber-400/30 bg-amber-500/12 text-amber-50 hover:bg-amber-500/20'
                 : 'cursor-not-allowed border-white/10 text-white/35',
             )}
           >
-            <Mail className="h-4 w-4 text-liri-blue/90" strokeWidth={1.75} aria-hidden />
+            <Mail className="h-4 w-4 text-amber-300/90" strokeWidth={1.75} aria-hidden />
             Email
           </button>
           <button
@@ -246,11 +246,11 @@ export default function LiveHostInviteManagementPanel({
             className={cn(
               'flex flex-col items-center justify-center gap-0.5 rounded-2xl border px-2 py-2 text-center text-[9px] font-semibold transition-colors',
               canShare
-                ? 'border-liri-violet/45 bg-liri-violet/18 text-amber-50 hover:bg-liri-violet/28'
+                ? 'border-amber-400/40 bg-amber-500/15 text-amber-50 hover:bg-amber-500/25'
                 : 'cursor-not-allowed border-white/10 text-white/35',
             )}
           >
-            <Link2 className="h-4 w-4 text-liri-violet/90" strokeWidth={1.75} aria-hidden />
+            <Link2 className="h-4 w-4 text-amber-300/90" strokeWidth={1.75} aria-hidden />
             Lien court
           </button>
           <button
@@ -300,17 +300,17 @@ export default function LiveHostInviteManagementPanel({
         <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">
           Participants ({participantOnlineCount})
         </p>
-        <div className="flex items-center gap-3 rounded-2xl border border-liri-violet/28 bg-liri-violet/[0.12] px-2.5 py-2">
-          <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-liri-violet text-[14px] font-bold text-white shadow-inner">
+        <div className="flex items-center gap-3 rounded-2xl border border-amber-400/25 bg-amber-500/[0.1] px-2.5 py-2">
+          <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#d4a36a] text-[14px] font-bold text-[#2a2118] shadow-inner">
             {avatarLetter}
             <span
-              className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#16161c] bg-amber-500 shadow-[0_0_6px_rgba(94,64,34,0.75)]"
+              className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#211f1c] bg-amber-500 shadow-[0_0_6px_rgba(94,64,34,0.75)]"
               aria-hidden
             />
           </span>
           <div className="min-w-0 flex-1">
             <div className="truncate text-[13px] font-semibold text-white/95">{hostCardLabel}</div>
-            <div className="mt-1 inline-flex rounded-lg bg-liri-violet/45 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white">
+            <div className="mt-1 inline-flex rounded-lg bg-amber-500/40 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide text-[#2a2118]">
               Vous (formateur)
             </div>
           </div>
@@ -392,16 +392,16 @@ export default function LiveHostInviteManagementPanel({
       </section>
 
       {/* Aide */}
-      <section className={cn(cardClass, 'border-liri-gold/22 bg-gradient-to-br from-[#1a1510]/90 to-[#121218]/95 p-3')}>
+      <section className={cn(cardClass, 'border-amber-400/20 bg-gradient-to-br from-[#1a1510]/90 to-[#161310]/95 p-3')}>
         <div className="flex items-start gap-2">
-          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-liri-gold/90" strokeWidth={1.75} aria-hidden />
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-300/90" strokeWidth={1.75} aria-hidden />
           <div className="min-w-0 flex-1 pr-1">
             <div className="flex items-start justify-between gap-2">
               <p className="text-[12px] font-semibold text-white/95">Besoin d&apos;aide ?</p>
               <button
                 type="button"
                 onClick={handleGuide}
-                className="group inline-flex shrink-0 items-center gap-0.5 text-[10px] font-bold text-liri-gold/95 hover:text-liri-gold"
+                className="group inline-flex shrink-0 items-center gap-0.5 text-[10px] font-bold text-amber-300/95 hover:text-amber-200"
               >
                 Voir guide
                 <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
