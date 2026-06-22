@@ -5,7 +5,7 @@
  */
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Settings, Save, Loader2, Check, AlertCircle, Globe, Palette, School, KeyRound, CreditCard, MessageCircle } from 'lucide-react';
+import { Settings, Save, Loader2, Check, AlertCircle, Globe, Palette, School, KeyRound, CreditCard, MessageCircle, Mail } from 'lucide-react';
 import { tenantsApi } from '@/lib/api-v2';
 import TenantAdminShell from '@/components/admin/TenantAdminShell';
 import { ADMIN_T as T } from '@/lib/tenantAdminTheme';
@@ -13,6 +13,7 @@ import TenantOAuthSettings from '@/components/admin/TenantOAuthSettings';
 import TenantStripeSettings from '@/components/admin/TenantStripeSettings';
 import TenantPayPalSettings from '@/components/admin/TenantPayPalSettings';
 import TenantWhatsAppSettings from '@/components/admin/TenantWhatsAppSettings';
+import TenantEmailSettings from '@/components/admin/TenantEmailSettings';
 
 const inputStyle = {
   width: '100%', borderRadius: 8, border: `1px solid ${T.border}`,
@@ -258,6 +259,13 @@ export default function TenantAdminSettingsPage() {
           {tenant && (
             <Section title="Chaîne WhatsApp" icon={MessageCircle}>
               <TenantWhatsAppSettings tenantId={tenant.id} />
+            </Section>
+          )}
+
+          {/* Expéditeur email — domaine d'envoi de l'école (no-code, multi-tenant) */}
+          {tenant && (
+            <Section title="Expéditeur email" icon={Mail}>
+              <TenantEmailSettings tenantId={tenant.id} />
             </Section>
           )}
 
