@@ -4,14 +4,12 @@
  *
  * Résout le tenant par SLUG (signal fiable côté front : fetchTenantContext,
  * public, sans RLS) puis vérifie owner/admin côté serveur (service_role).
- * Le front n'a PAS besoin de connaître le tenant_id (dette de résolution
- * d'id contournée). La clé Resend n'est jamais renvoyée au front.
+ * Le front n'a PAS besoin du tenant_id. La clé Resend n'est jamais renvoyée.
  *
- * Actions (body.action) :
- *   - get    : réglages actuels (sans la clé).
- *   - save   : enregistre nom d'expéditeur + URL portail.
- *   - add    : ajoute le domaine dans Resend → renvoie les DNS.
- *   - verify : déclenche la vérification Resend + relit le statut.
+ * Les erreurs MÉTIER renvoient HTTP 200 + { error } (sinon supabase-js masque
+ * le message derrière « non-2xx status code »). Seules les exceptions → 500.
+ *
+ * Actions : get | save | add | verify
  */
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -28,6 +26,8 @@ function json(body: unknown, status = 200) {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }
+/** Erreur MÉTIER (affichable) → 200 pour ne pas être masquée par supabase-js. */
+const fail = (error: string) => json({ error });
 
 // @ts-ignore - Deno runtime
 Deno.serve(async (req: Request) => {
@@ -36,39 +36,39 @@ Deno.serve(async (req: Request) => {
     const body = await req.json().catch(() => ({}));
     const { action, slug, domain, resendApiKey, emailFromName, appBaseUrl } = body;
     const cleanSlug = String(slug || '').trim().toLowerCase();
-    if (!cleanSlug) return json({ error: "École (slug) non résolue." }, 400);
+    if (!cleanSlug) return fail("École (slug) non résolue.");
 
-    // ── Auth utilisateur ─────────────────────────────────────────────────────
+    // Auth utilisateur
     const authClient = createClient(SUPABASE_URL, ANON_KEY, {
       global: { headers: { Authorization: req.headers.get('Authorization') || '' } },
     });
     const { data: userData } = await authClient.auth.getUser();
     const user = userData?.user;
-    if (!user) return json({ error: 'Non authentifié' }, 401);
+    if (!user) return fail('Non authentifié.');
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    // ── Résolution tenant par slug (service_role → pas de RLS) ────────────────
+    // Résolution tenant par slug (service_role → pas de RLS)
     const { data: tenantRow } = await admin
       .from('tenants').select('id').eq('slug', cleanSlug).maybeSingle();
-    if (!tenantRow?.id) return json({ error: `École « ${cleanSlug} » introuvable.` }, 404);
+    if (!tenantRow?.id) return fail(`École « ${cleanSlug} » introuvable.`);
     const tenantId = tenantRow.id as string;
 
-    // ── Garde owner/admin actif ──────────────────────────────────────────────
+    // Garde owner/admin actif
     const { data: membership } = await admin
       .from('tenant_memberships').select('role')
       .eq('tenant_id', tenantId).eq('user_id', user.id).eq('status', 'active').maybeSingle();
     if (!membership || !['owner', 'admin'].includes(membership.role)) {
-      return json({ error: "Réservé à l'administrateur de l'école." }, 403);
+      return fail("Réservé à l'administrateur de l'école.");
     }
 
-    // ── Réglages actuels ─────────────────────────────────────────────────────
+    // Réglages actuels
     const { data: settings } = await admin
       .from('tenant_notification_settings')
       .select('email_from, email_from_name, email_domain, email_domain_id, app_base_url, resend_api_key, email_verified')
       .eq('tenant_id', tenantId).maybeSingle();
 
-    // ── ACTION get ───────────────────────────────────────────────────────────
+    // ── get ──
     if (action === 'get') {
       return json({
         ok: true,
@@ -80,7 +80,7 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // ── ACTION save (nom d'expéditeur + URL portail) ─────────────────────────
+    // ── save ──
     if (action === 'save') {
       await admin.from('tenant_notification_settings').upsert(
         {
@@ -94,7 +94,7 @@ Deno.serve(async (req: Request) => {
       return json({ ok: true });
     }
 
-    // Clé Resend à utiliser (BYO du tenant si fournie/enregistrée, sinon centrale).
+    // Clé Resend (BYO du tenant si fournie/enregistrée, sinon centrale)
     const newKey = (resendApiKey || '').trim();
     if (newKey) {
       await admin.from('tenant_notification_settings').upsert(
@@ -103,42 +103,54 @@ Deno.serve(async (req: Request) => {
       );
     }
     const key = newKey || settings?.resend_api_key || CENTRAL_RESEND_KEY;
-    if (!key) return json({ error: 'Aucune clé Resend (ni tenant ni centrale).' }, 400);
+    if (!key) return fail('Aucune clé Resend (ni école ni centrale).');
     const rHeaders = { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' };
 
-    // ── ACTION add ───────────────────────────────────────────────────────────
+    // ── add ──
     if (action === 'add') {
       const dom = String(domain || '').trim().toLowerCase()
         .replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-      if (!dom) return json({ error: "Domaine d'envoi requis." }, 400);
+      if (!dom) return fail("Domaine d'envoi requis.");
       const resp = await fetch('https://api.resend.com/domains', {
         method: 'POST', headers: rHeaders,
         body: JSON.stringify({ name: dom, region: RESEND_REGION }),
       });
       const data = await resp.json().catch(() => ({}));
-      if (!resp.ok) return json({ error: data?.message || `Resend HTTP ${resp.status}`, code: resp.status });
+      if (!resp.ok) return fail(data?.message || `Resend HTTP ${resp.status}`);
       await admin.from('tenant_notification_settings').upsert(
         {
-          tenant_id: tenantId,
-          email_domain: dom,
-          email_domain_id: data.id,
+          tenant_id: tenantId, email_domain: dom, email_domain_id: data.id,
           email_from: settings?.email_from || `noreply@${dom}`,
-          email_verified: false,
-          updated_at: new Date().toISOString(),
+          email_verified: false, updated_at: new Date().toISOString(),
         },
         { onConflict: 'tenant_id' },
       );
       return json({ ok: true, domain: dom, status: data.status, records: data.records || [] });
     }
 
-    // ── ACTION verify ────────────────────────────────────────────────────────
+    // ── verify ──
     if (action === 'verify') {
-      const domainId = settings?.email_domain_id;
-      if (!domainId) return json({ error: "Aucun domaine configuré — ajoutez-le d'abord." }, 400);
+      let domainId = settings?.email_domain_id as string | null;
+      // Domaine connu mais sans id (ex. configuré hors de cet écran) → on le
+      // retrouve dans la liste Resend par son nom.
+      if (!domainId && settings?.email_domain) {
+        const listResp = await fetch('https://api.resend.com/domains', { headers: rHeaders });
+        const list = await listResp.json().catch(() => ({}));
+        const rows = Array.isArray(list?.data) ? list.data : (Array.isArray(list) ? list : []);
+        const match = rows.find((d: any) => String(d?.name).toLowerCase() === String(settings.email_domain).toLowerCase());
+        if (match?.id) {
+          domainId = match.id;
+          await admin.from('tenant_notification_settings')
+            .update({ email_domain_id: domainId, updated_at: new Date().toISOString() })
+            .eq('tenant_id', tenantId);
+        }
+      }
+      if (!domainId) return fail("Aucun domaine configuré — clique d'abord « Configurer le domaine ».");
+
       await fetch(`https://api.resend.com/domains/${domainId}/verify`, { method: 'POST', headers: rHeaders });
       const resp = await fetch(`https://api.resend.com/domains/${domainId}`, { headers: rHeaders });
       const data = await resp.json().catch(() => ({}));
-      if (!resp.ok) return json({ error: data?.message || `Resend HTTP ${resp.status}`, code: resp.status });
+      if (!resp.ok) return fail(data?.message || `Resend HTTP ${resp.status}`);
       const verified = data.status === 'verified';
       await admin.from('tenant_notification_settings')
         .update({ email_verified: verified, updated_at: new Date().toISOString() })
@@ -146,7 +158,7 @@ Deno.serve(async (req: Request) => {
       return json({ ok: true, status: data.status, verified, records: data.records || [] });
     }
 
-    return json({ error: 'Action inconnue' }, 400);
+    return fail('Action inconnue.');
   } catch (e) {
     return json({ error: String(e) }, 500);
   }
