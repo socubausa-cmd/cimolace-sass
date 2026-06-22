@@ -155,6 +155,29 @@ function renderMessageContent(content) {
       </audio>
     );
   }
+  // Forum connecté : le replay du live (posté par publishReplay dans le Sujet) se rend
+  // comme un lecteur vidéo intégré, au fil du Sujet (à côté du chat + récap du neurone).
+  if (trimmed.startsWith('📹 Replay du live')) {
+    const url = (trimmed.match(/(https?:\/\/[^\s]+)/) || [])[1] || '';
+    const label = trimmed.split('\n')[0];
+    return (
+      <div className="space-y-2">
+        <p className="text-sm font-semibold text-[var(--school-accent)]">{label}</p>
+        {url ? (
+          <video
+            controls
+            preload="metadata"
+            className="w-full max-w-2xl mx-auto rounded-2xl border border-white/10 shadow-xl bg-black"
+          >
+            <source src={url} />
+            Votre navigateur ne supporte pas la lecture vidéo.
+          </video>
+        ) : (
+          <p className="text-xs text-gray-400">Replay en cours de préparation…</p>
+        )}
+      </div>
+    );
+  }
 
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const parts = value.split(urlRegex);
