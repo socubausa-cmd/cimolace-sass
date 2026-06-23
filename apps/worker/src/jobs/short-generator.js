@@ -139,12 +139,15 @@ async function extractAudio(inputPath, outputPath) {
 async function transcribeAudio(audioPath) {
   const fileBuffer = await readFile(audioPath);
   const providers = [];
+  // `form` = champs spécifiques pour obtenir les SEGMENTS timés (moments forts +
+  // sous-titres) : OpenAI/Groq via response_format=verbose_json ; Voxtral via
+  // timestamp_granularities=segment (vérifié : renvoie alors text + segments).
   if (process.env.OPENAI_API_KEY)
-    providers.push({ name: 'OpenAI', url: 'https://api.openai.com/v1/audio/transcriptions', key: process.env.OPENAI_API_KEY, model: 'whisper-1' });
+    providers.push({ name: 'OpenAI', url: 'https://api.openai.com/v1/audio/transcriptions', key: process.env.OPENAI_API_KEY, model: 'whisper-1', form: { response_format: 'verbose_json' } });
   if (process.env.GROQ_API_KEY)
-    providers.push({ name: 'Groq', url: 'https://api.groq.com/openai/v1/audio/transcriptions', key: process.env.GROQ_API_KEY, model: 'whisper-large-v3' });
+    providers.push({ name: 'Groq', url: 'https://api.groq.com/openai/v1/audio/transcriptions', key: process.env.GROQ_API_KEY, model: 'whisper-large-v3', form: { response_format: 'verbose_json' } });
   if (process.env.MISTRAL_API_KEY)
-    providers.push({ name: 'Mistral', url: 'https://api.mistral.ai/v1/audio/transcriptions', key: process.env.MISTRAL_API_KEY, model: 'voxtral-mini-latest' });
+    providers.push({ name: 'Mistral', url: 'https://api.mistral.ai/v1/audio/transcriptions', key: process.env.MISTRAL_API_KEY, model: 'voxtral-mini-latest', form: { timestamp_granularities: 'segment' } });
 
   let lastErr = 'aucun fournisseur de transcription configuré';
   for (const p of providers) {
@@ -152,8 +155,8 @@ async function transcribeAudio(audioPath) {
       const formData = new FormData();
       formData.append('file', new Blob([fileBuffer], { type: 'audio/wav' }), 'audio.wav');
       formData.append('model', p.model);
-      formData.append('response_format', 'verbose_json');
       formData.append('language', 'fr');
+      for (const [fk, fv] of Object.entries(p.form || {})) formData.append(fk, fv);
       const res = await fetch(p.url, {
         method: 'POST',
         headers: { Authorization: `Bearer ${p.key}` },
