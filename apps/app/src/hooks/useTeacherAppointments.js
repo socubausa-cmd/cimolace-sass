@@ -249,6 +249,50 @@ export function useTeacherAppointments(teacherId) {
         (typeof data.cimolaceTenantId === 'string' && data.cimolaceTenantId) ||
         null;
       const resolvedTenantId = explicitTenant || (await resolveCimolaceTenantIdForInsert());
+
+      // ── Type « Débat » : créer le débat (debates + rounds + participant modérateur) ──────
+      // et l'attacher au live via debate_id. Le runtime (bandeau/panel) le charge ensuite.
+      let debateId = (typeof data.debate_id === 'string' && data.debate_id) ? data.debate_id : null;
+      if (!debateId && data.session_type === 'debate') {
+        const roundCount = Math.min(50, Math.max(1, parseInt(data.debate_round_count, 10) || 3));
+        const secondsPerTurn = Math.min(7200, Math.max(30, parseInt(data.debate_seconds_per_turn, 10) || 300));
+        const { data: deb, error: debErr } = await supabase
+          .from('debates')
+          .insert({
+            title: data.title,
+            topic: data.title,
+            description: data.description || null,
+            scheduled_at: scheduledAt,
+            round_count: roundCount,
+            seconds_per_turn: secondsPerTurn,
+            access_mode: 'private',
+            vote_type: 'per_round_ab',
+            neuronq_enabled: true,
+            ai_judge_enabled: false,
+            ai_weight: 0.3,
+            moderator_id: effectiveTeacherId,
+            created_by: effectiveTeacherId,
+            status: 'draft',
+            ...(resolvedTenantId ? { tenant_id: resolvedTenantId } : {}),
+          })
+          .select('id')
+          .single();
+        if (debErr || !deb?.id) {
+          return { error: new Error(`Création du débat impossible : ${debErr?.message || 'erreur inconnue'}`) };
+        }
+        debateId = deb.id;
+        const roundsRows = Array.from({ length: roundCount }, (_, i) => ({
+          debate_id: debateId, round_number: i + 1, status: 'pending',
+        }));
+        await supabase.from('debate_rounds').insert(roundsRows);
+        // Participant modérateur (best-effort : RLS peut bloquer si staff ≠ enseignant).
+        try {
+          await supabase.from('debate_participants').insert({
+            debate_id: debateId, user_id: effectiveTeacherId, role: 'moderator', side: null, ready_status: 'ready',
+          });
+        } catch { /* non bloquant */ }
+      }
+
       /* Toujours créer en « scheduled » d'abord : le trigger « live démarré » doit voir les invitations
          déjà en base (livekit-send-invitations) avant le passage en status live. */
       const baseInsert = {
@@ -274,6 +318,7 @@ export function useTeacherAppointments(teacherId) {
         // `tenant_id` — `cimolace_tenant_id` N'EXISTE PAS dans le schéma (l'ancien code la posait
         // → insert en échec « column not found » → wizard ne créait jamais le live).
         ...(resolvedTenantId ? { tenant_id: resolvedTenantId } : {}),
+        ...(debateId ? { debate_id: debateId } : {}),
       };
 
       let insertResult = await supabase
@@ -318,6 +363,10 @@ export function useTeacherAppointments(teacherId) {
       const inserted = insertResult.data;
       const sessionId = inserted?.id;
       const join_code = inserted?.join_code ?? null;
+      // Lien retour débat → live (best-effort, comme « Lancer l'arène »).
+      if (debateId && sessionId) {
+        try { await supabase.from('debates').update({ live_session_id: sessionId }).eq('id', debateId); } catch { /* non bloquant */ }
+      }
       const invitedIds = data.invited_user_ids || [];
       const allowMembersInvite = data.allow_members_invite === true;
       if (sessionId && invitedIds.length > 0) {

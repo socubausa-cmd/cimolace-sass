@@ -10,6 +10,9 @@ export const DEFAULT_DRAFT = {
   description: '',
   session_type: 'classe',
   category: 'formation',
+  // Type Débat (créé à la volée à la sauvegarde du live)
+  debate_round_count: 3,
+  debate_minutes_per_turn: 5,
   // Étape 2
   cover_image_url: '',
   thumbnail_url: '',

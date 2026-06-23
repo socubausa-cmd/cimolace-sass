@@ -15,9 +15,9 @@ import {
 // Type de live → pilote l'affichage par défaut en salle (cf. arenaLayoutForSessionType) :
 // Formation → SmartBoard · Conférence → grille membres · Débat → panel débatteurs.
 const SESSION_TYPES = [
-  { value: 'classe', label: 'Formation', icon: GraduationCap },
+  { value: 'classe', label: 'Formation', icon: GraduationCap }, // → mappé 'class' à la création
   { value: 'conference', label: 'Conférence', icon: Sparkles },
-  { value: 'debat', label: 'Débat', icon: Swords },
+  { value: 'debate', label: 'Débat', icon: Swords },
 ];
 
 const CATEGORIES = [
@@ -155,6 +155,36 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
           </Select>
         </div>
       </div>
+
+      {draft.session_type === 'debate' ? (
+        <div className="grid grid-cols-1 gap-4 rounded-lg border border-[#7B61FF]/30 bg-[#7B61FF]/[0.06] p-4 md:grid-cols-2">
+          <div className="md:col-span-2 -mb-1 flex items-center gap-2 text-[13px] font-medium text-[#B8A3FF]">
+            <Swords className="h-4 w-4" /> Paramètres du débat
+          </div>
+          <div className="space-y-2">
+            <Label className="text-white/90">Nombre de manches</Label>
+            <Input
+              type="number"
+              min={1}
+              max={50}
+              value={draft.debate_round_count}
+              onChange={(e) => updateDraft({ debate_round_count: e.target.value })}
+              className="h-12 rounded-lg border-[#2D3139] bg-[#0a0c10] text-white"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-white/90">Durée par tour (min)</Label>
+            <Input
+              type="number"
+              min={1}
+              max={60}
+              value={draft.debate_minutes_per_turn}
+              onChange={(e) => updateDraft({ debate_minutes_per_turn: e.target.value })}
+              className="h-12 rounded-lg border-[#2D3139] bg-[#0a0c10] text-white"
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
