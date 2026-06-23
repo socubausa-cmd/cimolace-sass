@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import TenantFavicon from '@/components/TenantFavicon';
 import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { getCachedHostTenant } from '@/lib/tenantResolver';
 
@@ -2406,6 +2407,7 @@ const App = () => {
                     <Router>
                       <VitrineContactEmailProvider>
                         <CimolaceDomainHandler />
+                        <TenantFavicon />
                         <AppContent />
                       </VitrineContactEmailProvider>
                     </Router>
