@@ -6,9 +6,9 @@ import {
   ArrowRight, GraduationCap, FileText, Tag,
   BookMarked, Library, ScrollText,
 } from 'lucide-react';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
-const LIBRARY_PAGE_TITLE = `Bibliothèque ${isnaTenantConfig.branding.name}`;
+const libraryPageTitle = () => `Bibliothèque ${getActiveTenantBranding().name}`;
 
 /**
  * Catalogue de la bibliothèque ISNA — ouvrages du programme fondamental.
@@ -264,13 +264,13 @@ const BibliothequePage = ({ embedded = false }) => {
   if (embedded) {
     return (
       <div className="space-y-6 pb-8">
-        <SEO title={LIBRARY_PAGE_TITLE} />
+        <SEO title={libraryPageTitle()} />
         <div className="flex items-center gap-3">
           <div className="p-2 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
             <Library className="w-6 h-6 text-[var(--school-accent)]" />
           </div>
           <div>
-            <h1 className="text-2xl font-serif font-bold text-white">{LIBRARY_PAGE_TITLE}</h1>
+            <h1 className="text-2xl font-serif font-bold text-white">{libraryPageTitle()}</h1>
             <p className="text-gray-400 text-sm">{books.length} ouvrages — {books.reduce((s, b) => s + b.chapters, 0)} chapitres · programme fondamental</p>
           </div>
         </div>
@@ -283,21 +283,21 @@ const BibliothequePage = ({ embedded = false }) => {
   return (
     <div className="min-h-screen bg-[#0F1419] text-white">
       <SEO
-        title={LIBRARY_PAGE_TITLE}
-        description={`Bibliothèque ${isnaTenantConfig.branding.name} : ouvrages du programme fondamental — Tajwîd, Sciences du Coran, Fiqh et Langue arabe.`}
+        title={libraryPageTitle()}
+        description={`Bibliothèque ${getActiveTenantBranding().name} : ouvrages du programme fondamental — Tajwîd, Sciences du Coran, Fiqh et Langue arabe.`}
       />
       <section className="relative py-24 md:py-32 px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0F1419] via-[#192734]/40 to-[#0F1419]" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[250px]" />
         <div className="relative max-w-4xl mx-auto text-center space-y-5">
           <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] text-xs font-bold uppercase tracking-widest border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
-            <Library className="w-4 h-4" /> {LIBRARY_PAGE_TITLE}
+            <Library className="w-4 h-4" /> {libraryPageTitle()}
           </span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-white leading-tight">
             Les ouvrages du<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] via-yellow-400 to-[var(--school-accent)]">programme</span>
           </h1>
           <p className="text-gray-400 text-lg max-w-xl mx-auto">
-            {`Tajwîd, Sciences du Coran, Fiqh et Langue arabe — la bibliothèque ${isnaTenantConfig.branding.name}.`}
+            {`Tajwîd, Sciences du Coran, Fiqh et Langue arabe — la bibliothèque ${getActiveTenantBranding().name}.`}
           </p>
           <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
             <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4 text-[var(--school-accent)]" /> <strong className="text-white">{books.length}</strong> ouvrages</span>
@@ -309,7 +309,7 @@ const BibliothequePage = ({ embedded = false }) => {
       <div className="max-w-5xl mx-auto px-4 md:px-6 pb-20">
         <Results />
         <div className="text-center py-8 mt-8 border-t border-white/5">
-          <p className="text-sm text-gray-600">{`© ${isnaTenantConfig.branding.name} — Tous droits réservés`}</p>
+          <p className="text-sm text-gray-600">{`© ${getActiveTenantBranding().name} — Tous droits réservés`}</p>
         </div>
       </div>
     </div>

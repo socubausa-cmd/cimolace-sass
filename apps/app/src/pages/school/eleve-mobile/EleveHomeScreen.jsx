@@ -42,7 +42,7 @@ import { useLiriMobileAgendaMerged } from '@/hooks/useLiriMobileAgendaMerged';
 import { useLiriMobileEnrollmentPreview } from '@/hooks/useLiriMobileEnrollmentPreview';
 import { formatDistanceToNow } from 'date-fns';
 import { fr as frDateFns } from 'date-fns/locale';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 import {
   hasQuickAccessLiveSoonSignal,
   pickQuickAccessLiveSession,
@@ -616,7 +616,7 @@ function liriAccessInfoBannerModel({ role, formationTitle, enrollCount, profileL
   if (formationTitle) {
     const many = typeof enrollCount === 'number' && enrollCount > 1 ? ` — ${enrollCount} inscriptions liées à ton compte.` : '';
     return {
-      title: `Tes inscriptions (${isnaTenantConfig.branding.name})`,
+      title: `Tes inscriptions (${getActiveTenantBranding().name})`,
       description: `L'agenda, les annonces de lives et la bibliothèque s'appuient sur le parcours « ${formationTitle} »${many}`,
       accent: 'green',
       to: ELEVE_MOBILE.bibliotheque,

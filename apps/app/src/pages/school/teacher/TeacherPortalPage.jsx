@@ -18,7 +18,7 @@ import TeacherClassroomPage from '@/pages/school/TeacherClassroomPage';
 import TeacherCorrectionPanel from '@/components/school/teacher/TeacherCorrectionPanel';
 import LiveSessionManager from '@/components/liri/lives/LiveSessionManager';
 import LiveStudioPage from '@/pages/studio-creator/LiveStudioPage';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 import StudentForumRedesign from '@/pages/school/student-school-life/StudentForumRedesign';
 import ForumNewQuestionPage from '@/pages/school/student-school-life/ForumNewQuestionPage';
 import ForumThreadPage from '@/pages/school/student-school-life/ForumThreadPage';
@@ -53,7 +53,7 @@ function TeacherFormationForumRoute() {
 }
 
 const TeacherPortalPage = () => {
-  const schoolBrand = isnaTenantConfig?.branding?.name || 'LIRI';
+  const schoolBrand = getActiveTenantBranding().name || 'LIRI';
   useEffect(() => { ensureSslLightStyles(); }, []);
   // Bascule de teinte partagée (clé localStorage commune au back-office + élève). Défaut crème.
   const [tint, toggleTint] = useShellTint();

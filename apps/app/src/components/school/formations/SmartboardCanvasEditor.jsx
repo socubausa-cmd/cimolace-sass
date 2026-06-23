@@ -18,7 +18,7 @@ import {
   genCanvasObjectId,
 } from '@/lib/smartboardCanvasModel';
 import CanvasTextFormatToolbar from '@/components/school/formations/CanvasTextFormatToolbar';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
 const GOLD = SB_CANVAS_GOLD;
 const GOLD_DIM = SB_CANVAS_GOLD_DIM;
@@ -584,7 +584,7 @@ export default function SmartboardCanvasEditor({
                   { label: 'Sous-titre', props: { fontSize: 22, fontWeight: '600', color: '#555', text: 'Sous-titre' } },
                   { label: 'Corps', props: { fontSize: 16, fontWeight: '400', color: '#333', text: 'Paragraphe…', width: 480, height: 100 } },
                   { label: 'Citation', props: { fontSize: 18, italic: true, fontFamily: 'Georgia, serif', text: '« Citation »' } },
-                  { label: 'Badge', props: { fontSize: 12, fontWeight: '700', color: '#fff', text: String(isnaTenantConfig.branding.name || 'École').toUpperCase(), width: 200, height: 36, textAlign: 'center' } },
+                  { label: 'Badge', props: { fontSize: 12, fontWeight: '700', color: '#fff', text: String(getActiveTenantBranding().name || 'École').toUpperCase(), width: 200, height: 36, textAlign: 'center' } },
                 ].map((row) => (
                   <button
                     key={row.label}

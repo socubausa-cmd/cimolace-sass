@@ -24,7 +24,7 @@ import {
   Bold, Italic, AlignLeft, AlignCenter, AlignRight, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 import {
   designerShellMicroLabel,
   designerShellCardInset,
@@ -4306,7 +4306,7 @@ function IntegratedUrlFrame({
 
   const goHome = useCallback(() => {
     if (readOnly || variant !== 'secure_app') return;
-    const home = String(syncState?.homeUrl || `${isnaTenantConfig.branding.publicSiteOrigin}/`);
+    const home = String(syncState?.homeUrl || `${getActiveTenantBranding().publicSiteOrigin}/`);
     navigate(home);
     emitState({ homeUrl: home });
   }, [emitState, navigate, readOnly, syncState?.homeUrl, variant]);
