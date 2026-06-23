@@ -21,7 +21,7 @@ interface ActivityItem { id: string; icon: LucideIcon; tint?: 'coral' | 'green' 
    Affiché uniquement quand l'API ne renvoie pas encore de données réelles,
    afin que le portail ne paraisse jamais vide. */
 const DEMO_RESUME: ResumeItem[] = [
-  { id: 'r1', icon: Clock, title: 'Masterclass React — dans 1 h 53', sub: "Salle d'attente ouverte · 48 inscrits", to: '/dashboard/lives' },
+  { id: 'r1', icon: Clock, title: 'Masterclass React — dans 1 h 53', sub: "Salle d'attente ouverte · 48 inscrits", to: '/lives' },
   { id: 'r2', icon: FilePenLine, title: 'Brouillon — « Les portes du monde »', sub: 'Formation Builder · 35 %', to: '/studio/liri/formation' },
 ];
 const DEMO_ACTIVITY: ActivityItem[] = [
@@ -118,7 +118,7 @@ export function LiriPortalPage() {
       icon: Clock,
       title: l.title || 'Session live',
       sub: `${fmtWhen(l.scheduled_at)}${l.price_cents ? ` · ${euros(l.price_cents)} €` : ' · gratuit'}`,
-      to: '/dashboard/lives',
+      to: '/lives',
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [upcoming]);
@@ -134,7 +134,7 @@ export function LiriPortalPage() {
       sub: l.ended_at ? 'replay disponible' : l.started_at ? 'en cours' : 'programmé',
       when: fmtAgo(l.scheduled_at),
       action: l.ended_at ? 'Ouvrir' : undefined,
-      to: '/dashboard/lives',
+      to: '/lives',
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recent]);
@@ -150,7 +150,7 @@ export function LiriPortalPage() {
 
   const RAIL: { key: string; label: string; icon: LucideIcon; to: string; active?: boolean; live?: boolean; badge?: number }[] = [
     { key: 'accueil', label: 'Accueil', icon: House, to: '/liri', active: true },
-    { key: 'lives', label: 'Lives', icon: Video, to: '/dashboard/lives', live: liveNow.length > 0 },
+    { key: 'lives', label: 'Lives', icon: Video, to: '/lives', live: liveNow.length > 0 },
     { key: 'forum', label: 'Forum', icon: MessagesSquare, to: '/liri/forum', badge: 5 },
     { key: 'messages', label: 'Messages', icon: MessageCircle, to: '/liri/messages' },
     { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri' },
@@ -159,8 +159,8 @@ export function LiriPortalPage() {
     { key: 'brain', label: 'Brain', icon: Sparkles, to: '/dashboard/liri' },
   ];
   const QUICK = [
-    { label: 'Démarrer', icon: Video, hero: true, to: '/dashboard/lives/new' },
-    { label: 'Rejoindre', icon: LogIn, to: '/dashboard/lives' },
+    { label: 'Démarrer', icon: Video, hero: true, to: '/lives' },
+    { label: 'Rejoindre', icon: LogIn, to: '/lives' },
     { label: 'Converser', icon: MessageCircle, to: '/liri/messages' },
     { label: 'Programmer', icon: CalendarPlus, to: '/studio/live' },
     { label: 'SmartBoard', icon: PenTool, to: '/studio/smartboard' },
@@ -303,7 +303,7 @@ export function LiriPortalPage() {
 
           {/* en direct */}
           {liveNow.length > 0 && (
-            <button onClick={() => nav('/dashboard/lives')} className="lp-tr lp-soft mt-3 flex w-full items-center gap-2.5 rounded-2xl border px-3 py-3 text-left" style={{ background: 'rgba(226,85,63,.10)', borderColor: 'rgba(226,85,63,.28)' }}>
+            <button onClick={() => nav('/lives')} className="lp-tr lp-soft mt-3 flex w-full items-center gap-2.5 rounded-2xl border px-3 py-3 text-left" style={{ background: 'rgba(226,85,63,.10)', borderColor: 'rgba(226,85,63,.28)' }}>
               <span className="relative flex h-2.5 w-2.5 shrink-0"><span className="lp-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: 'var(--live)' }} /><span className="relative inline-flex h-2.5 w-2.5 rounded-full" style={{ background: 'var(--live)' }} /></span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
@@ -322,7 +322,7 @@ export function LiriPortalPage() {
             <span className="rounded-md px-1.5 py-0.5 text-[10px] font-medium lp-faint" style={{ background: 'rgba(255,255,255,.05)' }}>Cycle académique</span>
           </div>
           {upcoming.length > 0 ? (
-            <button onClick={() => nav('/dashboard/lives')} className="lp-tr lp-soft w-full rounded-2xl lp-line border lp-panel70 p-3.5 text-left lp-panelhov">
+            <button onClick={() => nav('/lives')} className="lp-tr lp-soft w-full rounded-2xl lp-line border lp-panel70 p-3.5 text-left lp-panelhov">
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-[13px] font-semibold"><span className="h-2 w-2 rounded-full" style={{ background: 'var(--coral)' }} />{new Date(upcoming[0].scheduled_at!).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
                 <span className="rounded-md px-1.5 py-0.5 text-[10px] font-bold lp-muted" style={{ background: 'rgba(255,255,255,.05)' }}>{fmtWhen(upcoming[0].scheduled_at).split(' · ')[0]}</span>
