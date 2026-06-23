@@ -6,6 +6,7 @@ import { LiveKitModule } from "../livekit/livekit.module";
 import { SupabaseModule } from "../supabase/supabase.module";
 import { LiveService } from "./live.service";
 import { LiveController } from "./live.controller";
+import { LiveReplayFileController } from "./live-replay-file.controller";
 import { LiriAdminController } from "./liri-admin.controller";
 import { LiveEmbedService } from "./embed/live-embed.service";
 import { LiveEmbedController } from "./embed/live-embed.controller";
@@ -29,6 +30,7 @@ import { LiveKitWebhookService } from "../livekit/livekit-webhook.service";
     // IMPORTANT : LiveEmbedController AVANT LiveController
     // sinon @Post(':id/token') dans LiveController capture /lives/embed/token
     LiveEmbedController,
+    LiveReplayFileController,
     LiveController,
     LiriAdminController,
     LiveKitWebhookController,

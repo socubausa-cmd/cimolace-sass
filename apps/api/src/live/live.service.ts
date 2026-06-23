@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import { AuthService } from "../auth/auth.service";
 import { LiveKitService } from "../livekit/livekit.service";
 
@@ -211,23 +211,21 @@ export class LiveService {
     }
     const { data: rec } = await this.supabase
       .from("live_recordings")
-      .select("output_url, storage_filepath")
+      .select("storage_filepath")
       .eq("live_session_id", sessionId)
       .eq("status", "completed")
       .not("storage_filepath", "is", null)
       .order("completed_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    // L'egress S3 de LiveKit ne renvoie PAS de downloadUrl → `output_url` reste
-    // souvent vide. On construit l'URL de lecture en PRÉSIGNANT la clé R2 réelle
-    // (`storage_filepath`, que l'API contrôle). output_url s'il existe = priorité.
-    const filepath = (rec as any)?.storage_filepath as string | undefined;
-    const playbackUrl =
-      ((rec as any)?.output_url as string | undefined) ||
-      (filepath ? await this.liveKit.presignReplayGet(filepath) : null);
-    if (!playbackUrl) {
+    if (!(rec as any)?.storage_filepath) {
       return { published: false, reason: "no_recording" as const };
     }
+    // URL STABLE de lecture : l'endpoint GET /lives/:id/replay/file présigne R2 À
+    // LA LECTURE (TTL court → PERMANENT, pas d'expiration figée dans le message) et
+    // vérifie l'accès fail-closed. Le front fetche cette URL (Bearer) puis joue
+    // <video> avec l'URL présignée fraîche renvoyée.
+    const playbackUrl = `${process.env.PUBLIC_API_URL ?? "https://api.cimolace.space"}/lives/${sessionId}/replay/file`;
     const status = opts?.force ?? (await this.replayPublishStatus(tenantId));
     const { data } = await this.supabase
       .from("live_neuro_recall_state")
@@ -255,6 +253,84 @@ export class LiveService {
       forumPosted,
       state: data,
     };
+  }
+
+  /**
+   * Accès LECTURE replay — réplique focalisée de hasLiveTopicAccess (module
+   * messaging), gardée self-contained pour éviter un cycle de modules : encadrant
+   * /hôte (isSessionEditor) OU participant effectif au live
+   * (live_session_participants) OU inscrit au cours lié (student_progress).
+   * Garde fail-closed de l'endpoint /replay/file.
+   */
+  private async canViewReplay(
+    tenantId: string,
+    sessionId: string,
+    userId: string,
+  ): Promise<boolean> {
+    if (await this.isSessionEditor(tenantId, sessionId, userId)) return true;
+    const { data: p } = await this.supabase
+      .from("live_session_participants")
+      .select("user_id")
+      .eq("live_session_id", sessionId)
+      .eq("user_id", userId)
+      .limit(1)
+      .maybeSingle();
+    if (p) return true;
+    const { data: sess } = await this.supabase
+      .from("live_sessions")
+      .select("formation_id")
+      .eq("id", sessionId)
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
+    const formationId = (sess as any)?.formation_id as string | undefined;
+    if (formationId) {
+      const { data: e } = await this.supabase
+        .from("student_progress")
+        .select("id")
+        .eq("tenant_id", tenantId)
+        .eq("user_id", userId)
+        .eq("course_id", formationId)
+        .limit(1)
+        .maybeSingle();
+      if (e) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Résout l'URL de LECTURE du replay (endpoint GET /lives/:id/replay/file) :
+   * dérive le tenant de la session, vérifie l'accès fail-closed (canViewReplay),
+   * prend le dernier enregistrement complété et PRÉSIGNE sa clé R2 à la lecture
+   * (TTL court). Permanent : une URL fraîche est émise à chaque visionnage.
+   */
+  async resolveReplayPlaybackUrl(
+    sessionId: string,
+    userId: string,
+  ): Promise<string> {
+    const { data: sess } = await this.supabase
+      .from("live_sessions")
+      .select("tenant_id")
+      .eq("id", sessionId)
+      .maybeSingle();
+    const tenantId = (sess as any)?.tenant_id as string | undefined;
+    if (!tenantId) throw new NotFoundException("Session introuvable");
+    if (!(await this.canViewReplay(tenantId, sessionId, userId))) {
+      throw new ForbiddenException("Accès au replay refusé");
+    }
+    const { data: rec } = await this.supabase
+      .from("live_recordings")
+      .select("storage_filepath")
+      .eq("live_session_id", sessionId)
+      .eq("status", "completed")
+      .not("storage_filepath", "is", null)
+      .order("completed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const filepath = (rec as any)?.storage_filepath as string | undefined;
+    if (!filepath) throw new NotFoundException("Aucun enregistrement disponible");
+    const url = await this.liveKit.presignReplayGet(filepath, 3600);
+    if (!url) throw new ServiceUnavailableException("Stockage replay indisponible");
+    return url;
   }
 
   /** Dépublie le replay (revue hôte) : repasse en 'pending_review' (invisible élève). */
