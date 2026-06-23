@@ -142,4 +142,56 @@ export class LongiaService {
     );
     return { suggestions: response };
   }
+
+  /**
+   * Cerveau social : à partir d'un extrait de live (transcript d'un short),
+   * rédige une légende + des hashtags adaptés à la plateforme. Sortie JSON
+   * robuste (DeepSeek peut entourer de ```json). Utilisé par le front (suggestion
+   * manuelle) et, à terme, par le pipeline auto shorts→réseaux.
+   */
+  async shortCaption(
+    transcriptSnippet: string,
+    platform = 'tiktok',
+    tone = 'dynamique',
+    title?: string,
+  ): Promise<{ caption: string; hashtags: string[] }> {
+    const hints: Record<string, string> = {
+      tiktok:
+        'TikTok : accroche très courte et percutante, ton direct, 3-5 hashtags tendance.',
+      instagram:
+        'Instagram Reels : légende engageante, emojis bienvenus, 5-8 hashtags.',
+      facebook:
+        'Facebook Reels : phrase claire et chaleureuse, 2-4 hashtags.',
+      linkedin:
+        'LinkedIn : ton professionnel, 1-2 phrases de valeur, 3-5 hashtags pros.',
+      youtube_shorts:
+        'YouTube Shorts : titre accrocheur orienté curiosité, 3-5 hashtags.',
+    };
+    const sys =
+      `Tu es Longia, l'assistant social media de l'école. À partir d'un extrait de live, rédige UNE légende courte et accrocheuse en FRANÇAIS pour promouvoir ce clip, ton "${tone}". ${hints[platform] || ''} ` +
+      `Réponds UNIQUEMENT en JSON valide, sans texte autour ni backticks : {"caption":"...","hashtags":["#...","#..."]}.`;
+    const user =
+      (title ? `Titre du live : ${title}\n` : '') +
+      `Extrait (transcript) : ${String(transcriptSnippet || '').slice(0, 1200)}`;
+    const raw = await this.chatCompletion([{ role: 'user', content: user }], sys);
+    const cleaned = String(raw || '').replace(/```json|```/g, '').trim();
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    try {
+      const parsed = JSON.parse(match ? match[0] : cleaned);
+      const caption = String(parsed.caption || '').trim();
+      const hashtags = (Array.isArray(parsed.hashtags) ? parsed.hashtags : [])
+        .map((h: any) => String(h).trim())
+        .filter(Boolean)
+        .map((h: string) => (h.startsWith('#') ? h : '#' + h.replace(/^#+/, '')));
+      if (caption) return { caption, hashtags };
+    } catch {
+      /* JSON non exploitable → fallback */
+    }
+    return {
+      caption:
+        (title ? `${title} — ` : '') +
+        String(transcriptSnippet || '').slice(0, 120).trim(),
+      hashtags: ['#live', '#replay', '#école'],
+    };
+  }
 }

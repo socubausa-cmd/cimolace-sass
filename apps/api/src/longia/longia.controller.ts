@@ -93,4 +93,16 @@ export class LongiaController {
   async coverPrompt(@Body() d: any) {
     return this.svc.coverPromptAssistant(d.brief, d.style);
   }
+
+  // Cerveau social : légende + hashtags pour un short de live (suggestion manuelle
+  // côté front ; réutilisable par le pipeline auto shorts→réseaux).
+  @Post('short-caption')
+  async shortCaption(@Body() d: any) {
+    return this.svc.shortCaption(
+      d.transcript || d.transcriptSnippet || '',
+      d.platform || 'tiktok',
+      d.tone || 'dynamique',
+      d.title,
+    );
+  }
 }
