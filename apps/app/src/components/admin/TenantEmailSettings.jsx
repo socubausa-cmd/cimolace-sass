@@ -11,12 +11,43 @@
  * Usage: <TenantEmailSettings /> (le slug est résolu via useResolvedTenantSlug).
  */
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2, Save, Check, AlertCircle, Mail, ShieldCheck, RefreshCw, Globe } from 'lucide-react';
+import { Loader2, Save, Check, AlertCircle, Mail, ShieldCheck, RefreshCw, Globe, Copy } from 'lucide-react';
 import supabase from '@/lib/customSupabaseClient';
 import { useResolvedTenantSlug } from '@/hooks/useResolvedTenantSlug';
 
 const INPUT =
   'w-full rounded-lg border border-white/10 bg-[#0F1419] px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-[var(--school-accent,#D4AF37)] focus:outline-none disabled:opacity-50';
+
+/**
+ * Champ DNS en lecture seule + bouton « Copier » dédié (chaque valeur se copie
+ * proprement, sans sélection manuelle d'un pavé de texte).
+ */
+function CopyField({ label, value, fieldKey, copiedKey, onCopy }) {
+  const copied = copiedKey === fieldKey;
+  return (
+    <div>
+      <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">{label}</div>
+      <div className="flex items-stretch gap-2">
+        <code className="min-w-0 flex-1 select-all break-all rounded-md border border-white/10 bg-[#0F1419] px-2.5 py-2 font-mono text-xs leading-relaxed text-gray-200">
+          {value}
+        </code>
+        <button
+          type="button"
+          onClick={() => onCopy(value, fieldKey)}
+          title="Copier dans le presse-papier"
+          className={`inline-flex shrink-0 items-center gap-1 self-start rounded-md border px-2.5 py-2 text-xs font-semibold transition-colors ${
+            copied
+              ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+              : 'border-white/15 text-gray-300 hover:bg-white/5'
+          }`}
+        >
+          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+          {copied ? 'Copié' : 'Copier'}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function TenantEmailSettings() {
   const { slug, loading: slugLoading } = useResolvedTenantSlug();
@@ -27,7 +58,27 @@ export default function TenantEmailSettings() {
   const [notice, setNotice] = useState('');
   const [verified, setVerified] = useState(false);
   const [records, setRecords] = useState([]);
+  const [copiedKey, setCopiedKey] = useState('');
   const [form, setForm] = useState({ email_from_name: '', email_domain: '', app_base_url: '', resendApiKey: '' });
+
+  const copyValue = useCallback(async (text, key) => {
+    const str = String(text ?? '');
+    try {
+      await navigator.clipboard.writeText(str);
+    } catch {
+      // Fallback navigateurs sans Clipboard API (contexte non sécurisé).
+      const ta = document.createElement('textarea');
+      ta.value = str;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch { /* ignore */ }
+      document.body.removeChild(ta);
+    }
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey((k) => (k === key ? '' : k)), 1500);
+  }, []);
 
   const call = useCallback(
     async (payload) => {
@@ -255,43 +306,66 @@ export default function TenantEmailSettings() {
           </div>
 
           {records.length > 0 ? (
-            <div className="mt-2 overflow-hidden rounded-lg border border-white/10">
-              <div className="border-b border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white">
-                Enregistrements DNS à ajouter chez ton registrar
+            <div className="mt-2 space-y-3 rounded-xl border border-white/10 bg-black/20 p-4">
+              <div>
+                <h3 className="text-sm font-semibold text-white">
+                  Enregistrements DNS à ajouter chez ton registrar
+                </h3>
+                <ol className="ml-4 mt-2 list-decimal space-y-1 text-xs leading-relaxed text-gray-400">
+                  <li>
+                    Ouvre la zone DNS de{' '}
+                    <span className="font-mono text-gray-200">{form.email_domain.trim() || 'ton domaine'}</span>{' '}
+                    chez ton fournisseur (Cloudflare, OVH, Gandi, Vercel…).
+                  </li>
+                  <li>
+                    Pour <strong className="text-gray-200">chaque carte ci-dessous</strong>, crée un
+                    enregistrement : choisis le <strong className="text-gray-200">Type</strong>, puis copie le{' '}
+                    <strong className="text-gray-200">Nom/Host</strong> et la{' '}
+                    <strong className="text-gray-200">Valeur</strong> (et la Priorité pour le MX).
+                  </li>
+                  <li>
+                    Reviens ici et clique <strong className="text-gray-200">« Vérifier »</strong> — la
+                    propagation peut prendre quelques minutes.
+                  </li>
+                </ol>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="bg-white/5 text-left text-gray-400">
-                    <tr>
-                      <th className="px-3 py-2 font-medium">Type</th>
-                      <th className="px-3 py-2 font-medium">Nom / Host</th>
-                      <th className="px-3 py-2 font-medium">Valeur</th>
-                      <th className="px-3 py-2 font-medium">Priorité</th>
-                      <th className="px-3 py-2 font-medium">Statut</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5 text-gray-300">
-                    {records.map((r, i) => (
-                      <tr key={i} className="align-top">
-                        <td className="px-3 py-2 font-mono">{r.type}</td>
-                        <td className="px-3 py-2 font-mono break-all">{r.name}</td>
-                        <td className="px-3 py-2 font-mono break-all text-gray-400">{r.value}</td>
-                        <td className="px-3 py-2 font-mono">{r.priority ?? '—'}</td>
-                        <td className="px-3 py-2">
-                          {r.status === 'verified' ? (
-                            <span className="text-emerald-400">✓ vérifié</span>
-                          ) : (
-                            <span className="text-amber-400">en attente</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <p className="px-4 py-2 text-xs text-gray-500">
-                Copie ces enregistrements chez ton fournisseur de domaine (Vercel, Cloudflare…), puis
-                clique « Vérifier ». La propagation DNS peut prendre quelques minutes.
+
+              {records.map((r, i) => {
+                const hasPriority = r.priority != null && r.priority !== '';
+                return (
+                  <div key={i} className="rounded-lg border border-white/10 bg-[#0F1419]/60 p-3">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="rounded bg-[var(--school-accent,#D4AF37)]/15 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-[var(--school-accent,#D4AF37)]">
+                          {r.type}
+                        </span>
+                        <span className="text-xs text-gray-500">Enregistrement {i + 1}/{records.length}</span>
+                      </span>
+                      {r.status === 'verified' ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-400">
+                          <Check className="h-3.5 w-3.5" /> vérifié
+                        </span>
+                      ) : (
+                        <span className="text-xs font-medium text-amber-400">● en attente</span>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <CopyField label="Nom / Host" value={r.name} fieldKey={`${i}-name`} copiedKey={copiedKey} onCopy={copyValue} />
+                      <CopyField label="Valeur" value={r.value} fieldKey={`${i}-value`} copiedKey={copiedKey} onCopy={copyValue} />
+                      {hasPriority ? (
+                        <CopyField label="Priorité" value={String(r.priority)} fieldKey={`${i}-prio`} copiedKey={copiedKey} onCopy={copyValue} />
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+
+              <p className="text-xs leading-relaxed text-gray-500">
+                Astuce : si ton hébergeur réclame un nom <em>complet</em>, ajoute{' '}
+                <span className="font-mono text-gray-400">.{form.email_domain.trim() || 'tondomaine.com'}</span>{' '}
+                après le Nom/Host (ex :{' '}
+                <span className="font-mono text-gray-400">resend._domainkey.{form.email_domain.trim() || 'tondomaine.com'}</span>).
               </p>
             </div>
           ) : null}
