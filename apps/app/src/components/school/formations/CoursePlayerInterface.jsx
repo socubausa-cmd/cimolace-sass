@@ -1567,7 +1567,9 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                         const countNodes = (n) => n ? 1 + (n.children || []).reduce((s, c) => s + countNodes(c), 0) : 0;
                                         const totalNodes = countNodes(mindmapData);
                                         const quizThreshold = totalNodes > 0 ? Math.max(1, Math.ceil(totalNodes * 0.5)) : 0;
-                                        const allNodesClicked = quizThreshold > 0 && clickedMindmapNodeIds.size >= quizThreshold;
+                                        // Verrou Quiz désactivé en mode test (GATING_ENABLED=false) : le Quiz
+                                        // s'ouvre sans avoir à cliquer tous les nœuds de la mindmap.
+                                        const allNodesClicked = !GATING_ENABLED || (quizThreshold > 0 && clickedMindmapNodeIds.size >= quizThreshold);
                                         return (
                                           <>
                                             <div className="h-12 px-3 flex items-center justify-between border-b border-white/10 bg-black/30">
