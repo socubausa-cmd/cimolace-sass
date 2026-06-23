@@ -244,14 +244,14 @@ export default function TenantAdminSettingsPage() {
           {/* Stripe — paiements par tenant */}
           {tenant && (
             <Section title="Stripe — paiements personnalisés" icon={CreditCard}>
-              <TenantStripeSettings tenantId={tenant.id} />
+              <TenantStripeSettings />
             </Section>
           )}
 
           {/* PayPal — paiements par tenant */}
           {tenant && (
             <Section title="PayPal — paiements personnalisés" icon={CreditCard}>
-              <TenantPayPalSettings tenantId={tenant.id} />
+              <TenantPayPalSettings />
             </Section>
           )}
 
