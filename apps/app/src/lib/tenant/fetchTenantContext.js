@@ -9,6 +9,8 @@
  *   3. null               → pas de branding tenant
  */
 
+import { isPlatformOrDevHost } from '@/lib/tenantResolver';
+
 const CACHE_MS = 5 * 60 * 1000;
 
 function currentHostKey() {
@@ -72,12 +74,23 @@ export async function fetchTenantContext(options = {}) {
   }
 
   const fetchApiTenant = async () => {
-    if (!pathSlug) return null;
     // base peut être vide → URL relative (ex: via proxy local)
     const base = apiBaseUrl();
-    // /tenants/by-slug/:slug/branding est public (no auth required) et retourne
-    // { data: { slug, name, logo_url, brand_colors } } — wrapped by NestJS interceptor
-    const res = await fetch(`${base}/tenants/by-slug/${encodeURIComponent(pathSlug)}/branding`);
+    // 1. /t/:slug ou ?tenant= explicite → résolution par SLUG.
+    //    /tenants/by-slug/:slug/branding est public (no auth) et retourne
+    //    { data: { slug, name, logo_url, brand_colors } } — wrapped by NestJS interceptor.
+    if (pathSlug) {
+      const res = await fetch(`${base}/tenants/by-slug/${encodeURIComponent(pathSlug)}/branding`);
+      const body = await res.json().catch(() => ({}));
+      const tenant = body?.data ?? body;
+      return res.ok && tenant?.slug ? tenant : null;
+    }
+    // 2. Aucun slug d'URL : résoudre par DOMAINE (tenant à domaine custom, ex.
+    //    prorascience.org → isna). L'hôte PLATEFORME (app.cimolace.space, *.cimolace.space,
+    //    localhost) = le PRODUIT LIRI = aucun tenant → null → branding neutre LIRI.
+    const hostname = currentHostKey();
+    if (!hostname || isPlatformOrDevHost(hostname)) return null;
+    const res = await fetch(`${base}/tenants/by-host/${encodeURIComponent(hostname)}/branding`);
     const body = await res.json().catch(() => ({}));
     const tenant = body?.data ?? body;
     return res.ok && tenant?.slug ? tenant : null;
