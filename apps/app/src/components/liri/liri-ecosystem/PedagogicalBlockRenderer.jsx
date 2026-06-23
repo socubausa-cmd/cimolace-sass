@@ -20,6 +20,7 @@ import {
   ChevronDown,
   ChevronRight,
   PlayCircle,
+  Sparkles,
   Radio,
   BookOpen,
 } from 'lucide-react';
@@ -224,7 +225,7 @@ if (typeof document !== 'undefined' && !document.getElementById('pbr-styles')) {
 ══════════════════════════════════════════════════════════════════════ */
 
 /* ── VideoBlock (previsualisation_video / doctrinal_video) ──────────── */
-function VideoBlock({ block, isActive, isCompleted, onComplete }) {
+function VideoBlock({ block, isActive, isCompleted, onComplete, onOpenClassroom }) {
   const [playing, setPlaying] = useState(false);
   const videoRef = useRef(null);
   const { video_url = '' } = block.data || {};
@@ -309,6 +310,27 @@ function VideoBlock({ block, isActive, isCompleted, onComplete }) {
           />
         )}
       </div>
+
+      {/* Pont « Salle de classe » immersive — si ce bloc vidéo est relié à un cours
+          généré (data.content_id), on propose le plein écran narré (le tableau qui
+          enseigne). Sinon, ce bouton n'apparaît pas (lecture vidéo classique). */}
+      {block?.data?.content_id && onOpenClassroom ? (
+        <div style={{ marginTop: 12 }}>
+          <button
+            type="button"
+            onClick={() => onOpenClassroom(block)}
+            title="Voir ce cours en plein écran — le tableau qui enseigne (narré)"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: 'rgba(212,163,106,0.14)', border: '1px solid rgba(212,163,106,0.45)',
+              borderRadius: 999, padding: '7px 14px', cursor: 'pointer',
+              color: '#b07f3c', fontSize: 12.5, fontWeight: 700,
+            }}
+          >
+            <Sparkles size={14} /> Salle de classe
+          </button>
+        </div>
+      ) : null}
 
       {!isCompleted && (
         <div style={{ marginTop: 14 }}>
@@ -1080,10 +1102,11 @@ export default function PedagogicalBlockRenderer({
   isCompleted = false,
   onComplete,
   onNavigate,
+  onOpenClassroom,
 }) {
   if (!block) return null;
 
-  const props = { block, isActive, isCompleted, onComplete, onNavigate };
+  const props = { block, isActive, isCompleted, onComplete, onNavigate, onOpenClassroom };
 
   switch (block.type) {
     case 'previsualisation_video':

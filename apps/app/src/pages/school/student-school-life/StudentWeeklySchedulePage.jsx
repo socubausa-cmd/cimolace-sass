@@ -705,7 +705,7 @@ function BlockCard({ block, onNavigate, onOpenVideo, onOpenQuiz }) {
 
 // ── Day column ────────────────────────────────────────────────────────────────
 
-function DayColumn({ dayLabel, dayDate, dayData, isMobile, onNavigate, onOpenVideo, onOpenQuiz, completedBlocks, onBlockComplete }) {
+function DayColumn({ dayLabel, dayDate, dayData, isMobile, onNavigate, onOpenVideo, onOpenQuiz, completedBlocks, onBlockComplete, onOpenClassroom }) {
   const today    = isToday(dayDate);
   const dayTitle = dayData?.title || null;
   const pedagogy = dayData?.pedagogy_type || 'generic';
@@ -779,6 +779,7 @@ function DayColumn({ dayLabel, dayDate, dayData, isMobile, onNavigate, onOpenVid
             isCompleted={completedBlocks ? completedBlocks.has(block.id) : false}
             onComplete={(score) => onBlockComplete && onBlockComplete(block.id, score)}
             onNavigate={(path) => onNavigate(path)}
+            onOpenClassroom={onOpenClassroom}
           />
         ))}
       </div>
@@ -834,30 +835,25 @@ export default function StudentWeeklySchedulePage() {
 
   // UI state
   const [videoModal, setVideoModal] = useState(null); // { block }
-  // Pont « Salle de classe » immersive : si le bloc vidéo du calendrier référence un
-  // contenu généré (data.content_id → formation_day_contents avec mindmap post-prod),
-  // on propose le plein écran narré. Sinon, modale vidéo classique (repli).
+  // Pont « Salle de classe » immersive : un bloc vidéo du calendrier relié à un
+  // contenu généré (data.content_id → formation_day_contents avec mindmap post-prod)
+  // ouvre le plein écran narré. Résolution À LA DEMANDE (au clic du bouton).
   const [classroomChapters, setClassroomChapters] = useState([]);
   const [showImmersive, setShowImmersive] = useState(false);
 
-  useEffect(() => {
-    const contentId = videoModal?.block?.data?.content_id;
-    if (!contentId) { setClassroomChapters([]); return undefined; }
-    let alive = true;
-    (async () => {
-      try {
-        const { data } = await supabase
-          .from('formation_day_contents')
-          .select('data')
-          .eq('id', contentId)
-          .maybeSingle();
-        if (alive) setClassroomChapters(buildClassroomChapters(data?.data || null));
-      } catch {
-        if (alive) setClassroomChapters([]);
-      }
-    })();
-    return () => { alive = false; };
-  }, [videoModal?.block?.data?.content_id]);
+  const onOpenClassroom = useCallback(async (block) => {
+    const contentId = block?.data?.content_id;
+    if (!contentId) return;
+    try {
+      const { data } = await supabase
+        .from('formation_day_contents')
+        .select('data')
+        .eq('id', contentId)
+        .maybeSingle();
+      const chapters = buildClassroomChapters(data?.data || null);
+      if (chapters.length) { setClassroomChapters(chapters); setShowImmersive(true); }
+    } catch { /* repli silencieux : lecture vidéo classique */ }
+  }, []);
   const [quizModal,  setQuizModal]  = useState(null); // { block }
 
   // Completed blocks tracking
@@ -1265,6 +1261,7 @@ export default function StudentWeeklySchedulePage() {
                   onOpenQuiz={(block) => setQuizModal({ block })}
                   completedBlocks={completedBlocks}
                   onBlockComplete={markBlockCompleted}
+                  onOpenClassroom={onOpenClassroom}
                 />
               );
             })}
@@ -1278,7 +1275,7 @@ export default function StudentWeeklySchedulePage() {
           videoUrl={videoModal.block.data?.video_url}
           title={videoModal.block.title}
           onClose={() => setVideoModal(null)}
-          onOpenClassroom={classroomChapters.length > 0 ? () => setShowImmersive(true) : undefined}
+          onOpenClassroom={videoModal?.block?.data?.content_id ? () => onOpenClassroom(videoModal.block) : undefined}
         />
       )}
 
@@ -1287,7 +1284,7 @@ export default function StudentWeeklySchedulePage() {
       <ImmersiveClassroom
         open={showImmersive}
         chapters={classroomChapters}
-        title={videoModal?.block?.title || 'Cours'}
+        title={classroomChapters[0]?.title || 'Cours'}
         supabase={supabase}
         onClose={() => setShowImmersive(false)}
       />
