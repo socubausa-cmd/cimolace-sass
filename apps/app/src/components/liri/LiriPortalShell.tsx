@@ -1,19 +1,20 @@
 import { useNavigate } from 'react-router-dom';
 import {
   Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare,
-  WandSparkles, Library, Blocks, Settings2,
+  WandSparkles, Library, Blocks, Settings2, GraduationCap,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { authStore } from '@/lib/auth-store';
 import '../../pages/LiriPortal.css';
 
-type RailKey = 'accueil' | 'lives' | 'forum' | 'studio' | 'biblio' | 'brain' | 'integrations' | 'reglages';
+type RailKey = 'accueil' | 'lives' | 'forum' | 'studio' | 'ecole' | 'biblio' | 'brain' | 'integrations' | 'reglages';
 
 const RAIL: { key: RailKey; label: string; icon: typeof House; to: string }[] = [
   { key: 'accueil', label: 'Accueil', icon: House, to: '/liri' },
   { key: 'lives', label: 'Lives', icon: Video, to: '/dashboard/lives' },
   { key: 'forum', label: 'Forum', icon: MessagesSquare, to: '/dashboard' },
   { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri' },
+  { key: 'ecole', label: 'École', icon: GraduationCap, to: '/liri/ecole' },
   { key: 'biblio', label: 'Biblio.', icon: Library, to: '/studio/liri/bibliotheque' },
   { key: 'brain', label: 'Brain', icon: Sparkles, to: '/dashboard/liri' },
 ];

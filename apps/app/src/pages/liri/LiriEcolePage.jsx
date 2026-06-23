@@ -2,62 +2,37 @@
  * LiriEcolePage — Module ÉCOLE HORIZONTAL dans le portail LIRI (`/liri/ecole`).
  *
  * « École façon Zoom-app » : un tenant LIRI (créateur / coach SANS site vertical
- * comme ISNA) active l'école DANS le portail LIRI pour vendre ses lives et gérer
- * formations / calendrier / élèves — sans vitrine `/t/:slug`.
+ * comme ISNA) gère formations / calendrier / élèves DANS le portail LIRI — sans
+ * vitrine `/t/:slug`. HORIZONTAL ≠ VERTICAL (le site ISNA `/t/:slug` reste à part).
  *
- * HORIZONTAL ≠ VERTICAL : le vertical (ISNA) reste un site complet sous `/t/:slug`
- * (infrastructure_type=school). Ici on réutilise le MÊME back-office école, mais
- * monté DANS le portail LIRI, pour un tenant sans site.
- *
- * RÉUTILISE le back-office école existant (tenant-agnostique : scope via JWT/RLS) :
- *   - Aperçu     → SecretariatOverview          (secrétariat-lite : synthèse)
- *   - Formations → OwnerFormationsTab           (création + liste de formations)
- *   - Calendrier → CalendarSection              (calendrier de formation)
- *   - Élèves     → SecretariatStudentDashboard  (gestion élèves)
- *
- * Activation fine par tenant (tenant_services `service_key='school_module'`) =
- * à brancher ensuite ; en attendant la route est gardée par ProtectedLiriRoute.
+ * DESIGN : on s'aligne sur le SHELL DU PORTAIL LIRI (`LiriPortalShell` : chrome
+ * chaud terracotta, top-bar « ✦ LIRI », rail Accueil/Lives/.../École) et NON sur
+ * le shell admin (LiriDashboardShell / PRORASCIENCE) → pas d'écart visuel.
+ * Le contenu réutilise les surfaces back-office existantes (tenant-agnostiques) :
+ *   - Formations → OwnerFormationsTab
+ *   - Calendrier → CalendarSection
+ *   - Élèves     → SecretariatStudentDashboard
  */
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { BookOpen, Calendar, Users } from 'lucide-react';
-import LiriDashboardShell from '@/components/shell/LiriDashboardShell';
+import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import OwnerFormationsTab from '@/components/owner/OwnerFormationsTab';
 import { CalendarSection } from '@/components/school/school-life/CalendarComponents';
 import SecretariatStudentDashboard from '@/components/secretariat/SecretariatStudentDashboard';
-// NB: l'onglet « Aperçu » (SecretariatOverview) plante au rendu (recharts conteneur
-// 0-size) → retiré pour l'instant ; à rebrancher après fix du sizing du graphique.
-import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { SslThemeProvider } from '@/pages/school/student-school-life/sslTheme';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
-const SCHOOL_ACCENT = {
-  color: 'var(--school-accent, #D4AF37)',
-  dim: 'rgba(212,175,55,0.12)',
-  mid: 'rgba(212,175,55,0.28)',
-};
-
-const NAV_GROUPS = [
-  {
-    section: 'École',
-    items: [
-      { id: 'formations', label: 'Formations', icon: BookOpen },
-      { id: 'calendrier', label: 'Calendrier', icon: Calendar },
-      { id: 'eleves', label: 'Élèves', icon: Users },
-    ],
-  },
+const TABS = [
+  { id: 'formations', label: 'Formations', icon: BookOpen },
+  { id: 'calendrier', label: 'Calendrier', icon: Calendar },
+  { id: 'eleves', label: 'Élèves', icon: Users },
 ];
-const ALL_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
+
+// Accent terracotta du portail (LiriPortal.css : ~#d97757 / --coral).
+const EMBER = '#d97757';
 
 export default function LiriEcolePage() {
-  const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  // Défaut = Formations (le cœur : « créer/vendre des formations », composant éprouvé).
   const [activeTab, setActiveTab] = useState('formations');
-
-  const handleLogout = async () => {
-    try { await logout?.(); } finally { navigate('/login'); }
-  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -69,28 +44,44 @@ export default function LiriEcolePage() {
   };
 
   return (
-    <LiriDashboardShell
-      navGroups={NAV_GROUPS}
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
-      onNavigate={navigate}
-      accent={SCHOOL_ACCENT}
-      brandTitle="LIRI"
-      brandSubtitle="ÉCOLE"
-      user={user}
-      onLogout={handleLogout}
-      title={ALL_ITEMS.find((i) => i.id === activeTab)?.label || 'École'}
-      lightContent
-    >
-      {/* Un onglet qui plante (composant réutilisé) ne doit PAS blanchir tout le
-          module : ErrorBoundary PAR onglet → le shell + la nav restent visibles,
-          seul l'onglet fautif montre un repli. Les surfaces réutilisées lisent les
-          tokens sslTheme → thème clair (comme SecretariatDashboard). */}
-      <ErrorBoundary key={activeTab} logTag={`LIRI École · ${activeTab}`}>
-        <SslThemeProvider mode="light">
-          {renderContent()}
-        </SslThemeProvider>
-      </ErrorBoundary>
-    </LiriDashboardShell>
+    <LiriPortalShell active="ecole">
+      <div className="flex h-full min-h-0 flex-col">
+        {/* Sous-nav École — dans le langage chaud du portail (lp-line, accent ember) */}
+        <div className="flex items-center gap-3 border-b lp-line px-4 py-2.5">
+          <span className="text-[14px] font-semibold lp-ink">École</span>
+          <div className="flex flex-wrap gap-1.5">
+            {TABS.map((t) => {
+              const Icon = t.icon;
+              const on = activeTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setActiveTab(t.id)}
+                  className="lp-tr flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12.5px] font-medium"
+                  style={
+                    on
+                      ? { background: 'rgba(217,119,87,0.15)', border: `1px solid rgba(217,119,87,0.34)`, color: EMBER }
+                      : { background: 'transparent', border: '1px solid transparent', color: 'rgba(245,244,238,0.55)' }
+                  }
+                >
+                  <Icon size={15} /> {t.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Contenu (réutilisé) — ErrorBoundary par onglet pour qu'un composant qui
+            plante ne blanchisse pas tout le module. */}
+        <div className="min-h-0 flex-1 overflow-auto">
+          <ErrorBoundary key={activeTab} logTag={`LIRI École · ${activeTab}`}>
+            <SslThemeProvider mode="dark">
+              <div className="p-4">{renderContent()}</div>
+            </SslThemeProvider>
+          </ErrorBoundary>
+        </div>
+      </div>
+    </LiriPortalShell>
   );
 }
