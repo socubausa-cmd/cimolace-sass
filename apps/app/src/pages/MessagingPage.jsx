@@ -3377,17 +3377,23 @@ const MessagingPage = () => {
   );
 
   // ── SUJETS : handlers additifs ────────────────────────────────────────────────
+  // ⚠️ stopLiveRoom est défini BIEN plus bas (ses deps stopLocalRecording/resetMiniOffset
+  // sont déclarées après ce point → impossible de le remonter). On l'appelle via un ref
+  // pour NE PAS le citer dans les deps de handleOpenTopic : sinon l'évaluation immédiate du
+  // tableau de deps accède à un `const` pas encore initialisé → TDZ « Cannot access
+  // 'stopLiveRoom' before initialization » qui plantait TOUTE la messagerie au chargement.
+  const stopLiveRoomRef = useRef(null);
   const handleOpenTopic = useCallback(
     (topic) => {
       // Un Sujet est un fil de groupe (chat seul) : on stoppe tout live 1:1 en cours et
       // on libère le destinataire DM pour basculer le centre sur le sujet.
-      if (liveActive) void stopLiveRoom();
+      if (liveActive) void stopLiveRoomRef.current?.();
       setSelectedRecipient(null);
       setActiveMessageIndex(-1);
       setShowConversationList(false);
       void openTopic(topic);
     },
-    [liveActive, stopLiveRoom, openTopic]
+    [liveActive, openTopic]
   );
 
   const handleCreateTopic = useCallback(
@@ -4145,6 +4151,9 @@ const MessagingPage = () => {
       });
     }
   }, [stopLocalRecording, resetMiniOffset, generateLiveSummary]);
+  // Tient stopLiveRoomRef à jour pour handleOpenTopic (défini plus haut, voir la note là-bas).
+  // Assignation pendant le render : sûre, le ref est prêt avant toute interaction utilisateur.
+  stopLiveRoomRef.current = stopLiveRoom;
 
   const handleClearRecipient = () => {
     if (liveActive) {
