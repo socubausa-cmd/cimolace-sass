@@ -269,6 +269,7 @@ export default function LiveHostArenaLiveBar({
               {[
                 { mode: ARENA_LAYOUT.SMARTBOARD, label: 'Formation', title: 'Affichage Formation (SmartBoard / cours)' },
                 { mode: ARENA_LAYOUT.CONFERENCE, label: 'Conférence', title: 'Affichage Conférence (grille type Meet + panneau membres)' },
+                { mode: ARENA_LAYOUT.PANEL, label: 'Débat', title: 'Affichage Débat (panel des débatteurs + bandeau débat si un débat est lié)' },
               ].map((seg) => {
                 const active = arenaLayoutMode === seg.mode;
                 return (
