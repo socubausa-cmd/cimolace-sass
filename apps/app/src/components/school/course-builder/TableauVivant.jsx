@@ -188,8 +188,12 @@ function HandDrawnDiagram({ play, rm }) {
   );
 }
 
-export default function TableauVivant({ title, subtitle, blocks = [], autoplay = true, onEnded, speak = false }) {
+export default function TableauVivant({ title, subtitle, blocks = [], autoplay = true, onEnded, speak = false, externalAudio = false }) {
   const rm = useReducedMotion();
+  // `externalAudio` : la voix (premium liri-tts) est jouée PAR LE PARENT (ex. la
+  // salle de classe). On cadence alors le texte au débit voix SANS déclencher le
+  // TTS navigateur — la main écrit au même rythme que la voix premium.
+  const voiceRate = speak || externalAudio;
   const steps = blocks.length;
   const [step, setStep] = useState(0);
   const [playing, setPlaying] = useState(autoplay);
@@ -210,8 +214,8 @@ export default function TableauVivant({ title, subtitle, blocks = [], autoplay =
     // CADENCE = durée AUDIO estimée (pas onend, peu fiable => sinon cascade "tout
     // d'un coup" + son coupé). La voix lit pendant que la main écrit ; on passe à la
     // ligne suivante quand la voix a fini de la lire. Schéma = pas de voix, temps fixe.
-    const useVoice = speak && canSpeak() && !isDiagram && cur.trim().length > 0;
-    if (useVoice) speakText(cur);
+    const useVoice = ((speak && canSpeak()) || externalAudio) && !isDiagram && cur.trim().length > 0;
+    if (useVoice && !externalAudio) speakText(cur);
     let ms;
     if (isDiagram) ms = 4200;
     else if (useVoice) ms = estSpeechMs(cur);
@@ -242,7 +246,7 @@ export default function TableauVivant({ title, subtitle, blocks = [], autoplay =
         className="relative overflow-hidden rounded-[28px] bg-white p-7 shadow-2xl ring-1 ring-black/5 md:p-10"
       >
         <h1 className="break-words text-2xl font-extrabold leading-tight text-slate-900 md:text-[34px]">
-          <Handwriting text={title} perCharMs={speak ? 78 : 22} writing={step === 0} rm={rm} />
+          <Handwriting text={title} perCharMs={voiceRate ? 78 : 22} writing={step === 0} rm={rm} />
         </h1>
         <HandUnderline play={step >= 1} rm={rm} />
         {subtitle ? (
@@ -312,11 +316,11 @@ export default function TableauVivant({ title, subtitle, blocks = [], autoplay =
                     </ul>
                   ) : b.type === 'retain' ? (
                     <div className="text-xl font-extrabold leading-snug text-slate-900 md:text-2xl">
-                      <Handwriting text={b.text} perCharMs={speak ? 82 : 26} writing={isActive} rm={rm} />
+                      <Handwriting text={b.text} perCharMs={voiceRate ? 82 : 26} writing={isActive} rm={rm} />
                     </div>
                   ) : (
                     <div className="text-[15px] leading-relaxed text-slate-700 md:text-base">
-                      {isActive ? <Handwriting text={b.text} perCharMs={speak ? 78 : 16} writing rm={rm} /> : b.text}
+                      {isActive ? <Handwriting text={b.text} perCharMs={voiceRate ? 78 : 16} writing rm={rm} /> : b.text}
                     </div>
                   )}
                 </div>

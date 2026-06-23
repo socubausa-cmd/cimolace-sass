@@ -1653,6 +1653,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               open={showClassroom}
                               chapters={classroomChapters}
                               title={currentVideoMemo?.title || 'Cours'}
+                              supabase={supabase}
                               onClose={() => setShowClassroom(false)}
                             />
 

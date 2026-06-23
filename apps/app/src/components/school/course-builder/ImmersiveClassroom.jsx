@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GraduationCap, RotateCcw, ChevronRight, ChevronLeft, Check, Volume2, Play, X } from 'lucide-react';
 import TableauVivant, { primeSpeech } from '@/components/school/course-builder/TableauVivant';
+import { enqueueMultilangEdgeTts, stopMultilangEdgeTts } from '@/lib/liriMultilangTtsEdge';
 
 const EXPO = [0.16, 1, 0.3, 1];
 
@@ -20,10 +21,16 @@ const EXPO = [0.16, 1, 0.3, 1];
  *   <ImmersiveClassroom open={show} chapters={chapters} onClose={...} />
  *   chapters = [{ title, subtitle?, chapterLabel?, blocks:[…], narration? }]
  */
-export default function ImmersiveClassroom({ open, chapters = [], title = 'Cours', onClose }) {
+export default function ImmersiveClassroom({ open, chapters = [], title = 'Cours', onClose, supabase = null }) {
   const [idx, setIdx] = useState(0);
   const [done, setDone] = useState(false);
   const [started, setStarted] = useState(false);
+
+  // Voix PREMIUM (liri-tts / ElevenLabs) si un client Supabase est fourni : on lit
+  // la narration du chapitre courant ET on cadence le texte au débit voix sans le
+  // TTS navigateur (externalAudio). Sinon, repli sur la voix du navigateur (speak).
+  const usePremium = Boolean(supabase);
+  const cur = chapters[idx] || null;
 
   const advanceFrom = useCallback(
     (from) => { if (from >= chapters.length - 1) setDone(true); else setIdx(from + 1); },
@@ -33,8 +40,23 @@ export default function ImmersiveClassroom({ open, chapters = [], title = 'Cours
   const goPrev = useCallback(() => setIdx((i) => Math.max(0, i - 1)), []);
   const replay = useCallback(() => { setDone(false); setStarted(true); setIdx(0); }, []);
 
+  // Lit le chapitre courant à voix premium (une narration par chapitre).
+  useEffect(() => {
+    if (!open || !started || done || !usePremium) return undefined;
+    const text = cur?.narration;
+    if (!text) return undefined;
+    stopMultilangEdgeTts();
+    enqueueMultilangEdgeTts(supabase, { text, languageCode: 'fr', tier: 'live' });
+    return () => { stopMultilangEdgeTts(); };
+  }, [open, started, done, idx, usePremium, cur?.narration, supabase]);
+
+  // Coupe la voix quand on ferme / démonte.
+  useEffect(() => {
+    if (!open) stopMultilangEdgeTts();
+    return () => { stopMultilangEdgeTts(); };
+  }, [open]);
+
   if (!open) return null;
-  const cur = chapters[idx] || null;
 
   return (
     <AnimatePresence>
@@ -147,7 +169,8 @@ export default function ImmersiveClassroom({ open, chapters = [], title = 'Cours
                 subtitle={cur?.subtitle}
                 blocks={cur?.blocks || []}
                 autoplay
-                speak
+                speak={!usePremium}
+                externalAudio={usePremium}
                 onEnded={() => { window.setTimeout(() => advanceFrom(idx), 1600); }}
               />
 
