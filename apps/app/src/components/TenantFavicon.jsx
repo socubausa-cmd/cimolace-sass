@@ -2,18 +2,19 @@ import { useEffect } from 'react';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
 
 /**
- * TenantFavicon — favicon RÉSOLU PAR TENANT.
+ * TenantFavicon — marque du <head> RÉSOLUE PAR TENANT : **favicon + titre d'onglet**.
  *
  * Modèle : **Cimolace** = la société SaaS ; **LIRI** = son produit (le portail) ;
  * un **tenant** (Prorascience/ISNA, zahirwellness…) ne fait qu'*utiliser* LIRI.
  * Donc sur le domaine d'un TENANT, c'est SA marque qui doit apparaître dans l'onglet
- * (le produit reste invisible, façon Stripe/Zoom) — pas le logo LIRI.
+ * (favicon + titre) — le produit reste invisible, façon Stripe/Zoom.
  *
- * Défaut (index.html) = `/lirilogo.png` = LIRI/Cimolace, le PRODUIT (et les domaines
- * Cimolace sans tenant). Dès qu'un vrai tenant est résolu (`slug` présent), on bascule
- * le favicon sur le sien (`branding.favicon`). Aucun hardcode : tout vient du branding.
+ * Défaut (index.html / pas de tenant / domaines Cimolace) = LIRI/Cimolace, le PRODUIT.
+ * Dès qu'un vrai tenant est résolu (`slug` présent), on bascule favicon → `branding.favicon`
+ * et titre → nom du tenant. Aucun hardcode : tout vient de `useTenantBranding`.
  */
 const LIRI_DEFAULT_FAVICON = '/lirilogo.png';
+const LIRI_DEFAULT_TITLE = 'LIRI';
 
 function applyFavicon(href) {
   if (typeof document === 'undefined' || !href) return;
@@ -33,8 +34,10 @@ function applyFavicon(href) {
 export default function TenantFavicon() {
   const { slug, branding } = useTenantBranding();
   useEffect(() => {
-    // Tenant résolu → son favicon ; sinon → défaut LIRI/Cimolace (le produit).
+    // Tenant résolu → sa marque ; sinon → défaut LIRI/Cimolace (le produit).
     applyFavicon(slug ? (branding?.favicon || LIRI_DEFAULT_FAVICON) : LIRI_DEFAULT_FAVICON);
-  }, [slug, branding?.favicon]);
+    const tenantTitle = slug ? (branding?.fullName || branding?.name) : null;
+    document.title = tenantTitle || LIRI_DEFAULT_TITLE;
+  }, [slug, branding?.favicon, branding?.fullName, branding?.name]);
   return null;
 }
