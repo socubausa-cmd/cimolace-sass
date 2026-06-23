@@ -5454,7 +5454,7 @@ const MessagingPage = ({ embedded = false }) => {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)]" />
+              <img src="/lirilogo.png" alt="LIRI" className="h-5 w-5 rounded-md object-cover" />
               <h1 className="text-sm font-semibold text-white">{liveActive ? 'Live-Room Immersif' : 'Messagerie'}</h1>
               {totalUnread > 0 && (
                 <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--school-accent)] text-[10px] font-bold text-black px-1">
