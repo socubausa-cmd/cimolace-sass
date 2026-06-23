@@ -223,7 +223,7 @@ export async function fetchLives(): Promise<Live[]> {
  * LiveKit pour tous les tenants — les rooms sont scopées par nom côté serveur.
  */
 export const LIVEKIT_URL =
-  process.env.EXPO_PUBLIC_LIVEKIT_URL ?? 'wss://prorascience-pswodwud.livekit.cloud';
+  process.env.EXPO_PUBLIC_LIVEKIT_URL ?? 'wss://cimolace-yis8vna7.livekit.cloud';
 
 export interface LiveToken {
   token: string;

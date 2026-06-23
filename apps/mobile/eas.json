@@ -16,7 +16,7 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.cimolace.space",
         "EXPO_PUBLIC_TENANT_SLUG": "isna",
-        "EXPO_PUBLIC_LIVEKIT_URL": "wss://prorascience-pswodwud.livekit.cloud"
+        "EXPO_PUBLIC_LIVEKIT_URL": "wss://cimolace-yis8vna7.livekit.cloud"
       }
     },
     "production": {
@@ -24,7 +24,7 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.cimolace.space",
         "EXPO_PUBLIC_TENANT_SLUG": "isna",
-        "EXPO_PUBLIC_LIVEKIT_URL": "wss://prorascience-pswodwud.livekit.cloud"
+        "EXPO_PUBLIC_LIVEKIT_URL": "wss://cimolace-yis8vna7.livekit.cloud"
       }
     }
   },
