@@ -105,6 +105,7 @@ const OwnerDashboardLayout = ({ children, activeTab, onTabChange }) => {
       onTabChange={onTabChange}
       onNavigate={navigate}
       accent={OWNER_ACCENT}
+      autoCollapse={false}
       brandTitle="PRORASCIENCE"
       brandSubtitle="ADMIN"
       user={user}

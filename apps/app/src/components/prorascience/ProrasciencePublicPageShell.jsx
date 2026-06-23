@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -11,10 +11,21 @@ import { cn } from '@/lib/utils';
 export function ProrasciencePublicPageShell({
   children,
   className = '',
-  /** Barre minimale : marque + retour accueil (comme le header commercial) */
+  /** Barre minimale : marque + bouton retour (façon header commercial) */
   simpleNav = false,
   navTitle = 'LIRI',
+  /** Libellé du bouton retour (ex. « Retour » dans la salle d'attente). */
+  backLabel = 'Accueil',
+  /** Route de repli si l'historique du navigateur est vide (jamais bloqué). */
+  backTo = '/',
 }) {
+  const navigate = useNavigate();
+  // Retour INTUITIF : on revient à l'écran précédent si possible, sinon on
+  // se replie sur `backTo` — on n'est jamais figé/bloqué sur cette étape.
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) navigate(-1);
+    else navigate(backTo);
+  };
   return (
     <div
       className={`prs-live-site relative min-h-screen overflow-x-hidden bg-[#070b12] text-white ${className}`}
@@ -108,11 +119,9 @@ export function ProrasciencePublicPageShell({
         <header className="prs-waiting-nav sticky top-0 z-[60] border-b border-white/10">
           <div className="mx-auto flex h-14 max-w-6xl items-center px-4 sm:px-6">
             <div className="flex flex-1 justify-start">
-              <Button variant="ghost" size="sm" className="gap-2 text-white/80 hover:bg-white/10 hover:text-white" asChild>
-                <Link to="/">
-                  <ArrowLeft className="h-4 w-4" />
-                  Accueil
-                </Link>
+              <Button variant="ghost" size="sm" onClick={handleBack} className="gap-2 text-white/80 hover:bg-white/10 hover:text-white">
+                <ArrowLeft className="h-4 w-4" />
+                {backLabel}
               </Button>
             </div>
             <span className="shrink-0 text-[11px] font-bold uppercase tracking-[0.22em] text-[#ebca5e]">

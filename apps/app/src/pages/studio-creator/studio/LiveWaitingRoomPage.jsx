@@ -844,7 +844,7 @@ export default function LiveWaitingRoomPage() {
   // ─────────────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <ProrasciencePublicPageShell simpleNav navTitle="Salle d&apos;attente">
+      <ProrasciencePublicPageShell simpleNav navTitle="Salle d&apos;attente" backLabel="Retour">
         <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4">
           <Loader2 className="h-8 w-8 animate-spin text-[var(--school-accent)]" />
         </div>
@@ -854,7 +854,7 @@ export default function LiveWaitingRoomPage() {
 
   if (error) {
     return (
-      <ProrasciencePublicPageShell simpleNav navTitle="Salle d&apos;attente">
+      <ProrasciencePublicPageShell simpleNav navTitle="Salle d&apos;attente" backLabel="Retour">
         <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center gap-4 px-4">
           <AlertTriangle className="h-10 w-10 text-red-400" />
           <p className="max-w-md text-center text-sm text-white/65">{error}</p>
@@ -864,7 +864,7 @@ export default function LiveWaitingRoomPage() {
   }
 
   return (
-    <ProrasciencePublicPageShell simpleNav navTitle="Salle d&apos;attente">
+    <ProrasciencePublicPageShell simpleNav navTitle="Salle d&apos;attente" backLabel="Retour">
       <div className="relative flex min-h-[calc(100vh-3.5rem)] flex-col text-white">
 
       {/* ── Fond ambiant (au-dessus du shell) ── */}

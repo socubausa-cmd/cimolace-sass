@@ -1,5 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
+import { useNavigate } from 'react-router-dom';
+import { ChevronLeft } from 'lucide-react';
 import BillingCheckoutView from '@/components/billing/BillingCheckoutView';
 
 /**
@@ -7,6 +9,12 @@ import BillingCheckoutView from '@/components/billing/BillingCheckoutView';
  * Parcours mobile shell : `/m/eleve/billing/checkout/:id` → `EleveBillingCheckoutScreen`.
  */
 export default function BillingCheckoutPage() {
+  const navigate = useNavigate();
+  // Retour intuitif : écran précédent si possible, sinon repli sur les forfaits.
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) navigate(-1);
+    else navigate('/forfaits');
+  };
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0F1419] px-4 pb-16 pt-24 text-white">
       <div className="pointer-events-none absolute inset-0">
@@ -17,6 +25,13 @@ export default function BillingCheckoutPage() {
         <title>Paiement | Abonnement</title>
       </Helmet>
       <div className="relative z-10 mx-auto max-w-3xl space-y-6">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-medium text-gray-200 transition-colors hover:border-white/20 hover:bg-white/10"
+        >
+          <ChevronLeft className="h-4 w-4" /> Retour
+        </button>
         <BillingCheckoutView variant="web" />
       </div>
     </div>

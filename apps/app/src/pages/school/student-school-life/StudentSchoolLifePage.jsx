@@ -104,11 +104,10 @@ function StudentBookReaderRoute() {
 // Main Wrapper Layout for Student School Life Area
 const StudentSchoolLifePage = () => {
   const location = useLocation();
-  // Le forum réduit la sidebar en mode icônes pour centrer la conversation.
   const isForum = location.pathname.includes('/forum');
-  const [collapsed, setCollapsed] = useState(isForum);
-  // Auto : réduit en entrant sur le forum, étend en sortant (l'utilisateur peut surcharger via le bouton tiroir).
-  useEffect(() => { setCollapsed(isForum); }, [isForum]);
+  // Nav TOUJOURS dépliée par défaut (cohérent sur les 4 rôles) — l'utilisateur peut
+  // la réduire manuellement via le bouton tiroir, mais on ne la replie plus de force.
+  const [collapsed, setCollapsed] = useState(false);
   // Injecte le remap CSS clair (pages en utilitaires Tailwind/shadcn). Idempotent.
   useEffect(() => { ensureSslLightStyles(); }, []);
   // Bascule de teinte partagée avec le back-office (clé localStorage commune). Défaut = crème clair.

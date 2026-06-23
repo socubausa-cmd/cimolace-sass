@@ -103,6 +103,7 @@ const SecretariatDashboardLayout = ({ children, activeTab, onTabChange }) => {
       onTabChange={onTabChange}
       onNavigate={navigate}
       accent={SECRETARIAT_ACCENT}
+      autoCollapse={false}
       lightContent
       brandTitle="PRORASCIENCE"
       brandSubtitle="SECRÉTARIAT"
