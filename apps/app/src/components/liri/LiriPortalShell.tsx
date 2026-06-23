@@ -12,7 +12,7 @@ type RailKey = 'accueil' | 'lives' | 'forum' | 'studio' | 'ecole' | 'biblio' | '
 const RAIL: { key: RailKey; label: string; icon: typeof House; to: string }[] = [
   { key: 'accueil', label: 'Accueil', icon: House, to: '/liri' },
   { key: 'lives', label: 'Lives', icon: Video, to: '/dashboard/lives' },
-  { key: 'forum', label: 'Forum', icon: MessagesSquare, to: '/dashboard' },
+  { key: 'forum', label: 'Forum', icon: MessagesSquare, to: '/liri/forum' },
   { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri' },
   { key: 'ecole', label: 'École', icon: GraduationCap, to: '/liri/ecole' },
   { key: 'biblio', label: 'Biblio.', icon: Library, to: '/studio/liri/bibliotheque' },

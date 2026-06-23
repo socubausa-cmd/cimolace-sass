@@ -530,6 +530,8 @@ const DashboardLiri = lazy(() => import('@/pages/liri/DashboardLiri').then((m) =
 const LiriPortalPage = lazy(() => import('@/pages/liri/LiriPortalPage').then((m) => ({ default: m.LiriPortalPage })));
 // Module ÉCOLE HORIZONTAL dans le portail LIRI (vertical = /t/:slug ; ici = app activable dans /liri)
 const LiriEcolePage = lazy(() => import('@/pages/liri/LiriEcolePage'));
+// Forum CONNECTÉ + messagerie immersive comme app du portail LIRI
+const LiriForumPage = lazy(() => import('@/pages/liri/LiriForumPage'));
 const LiriStudioHub = lazy(() => import('@/pages/dev/LiriStudioHub'));
 const LiriAdminShellDemo = lazy(() => import('@/pages/dev/LiriAdminShellDemo'));
 const MasterclassFactoryV2 = lazy(() => import('@/pages/dev/MasterclassFactoryV2'));
@@ -1501,6 +1503,13 @@ isLiriHostDevPreviewRoute;
           <Route path="/liri/ecole" element={
             <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat']} allowTenantRole>
               <LiriEcolePage />
+            </ProtectedLiriRoute>
+          } />
+          {/* Forum CONNECTÉ + messagerie immersive comme app du portail (au lieu de /dashboard).
+              Splat /* pour garder les sous-pages (new / thread) dans le portail. */}
+          <Route path="/liri/forum/*" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole>
+              <LiriForumPage />
             </ProtectedLiriRoute>
           } />
           <Route path="/choose-account-type" element={

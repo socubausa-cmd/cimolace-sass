@@ -151,7 +151,7 @@ export function LiriPortalPage() {
   const RAIL: { key: string; label: string; icon: LucideIcon; to: string; active?: boolean; live?: boolean; badge?: number }[] = [
     { key: 'accueil', label: 'Accueil', icon: House, to: '/liri', active: true },
     { key: 'lives', label: 'Lives', icon: Video, to: '/dashboard/lives', live: liveNow.length > 0 },
-    { key: 'forum', label: 'Forum', icon: MessagesSquare, to: '/dashboard', badge: 5 },
+    { key: 'forum', label: 'Forum', icon: MessagesSquare, to: '/liri/forum', badge: 5 },
     { key: 'messages', label: 'Messages', icon: MessageCircle, to: '/messages' },
     { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri' },
     { key: 'ecole', label: 'École', icon: GraduationCap, to: '/liri/ecole' },
