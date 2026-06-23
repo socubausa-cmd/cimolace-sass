@@ -84,17 +84,22 @@ export const LiveStripBandeau = React.forwardRef(function LiveStripBandeau(
     arenaHostCameraCenter,
     guestMobileAuthorityUi,
     sessionTitle,
+    arenaLayoutMode,
   },
   ref,
 ) {
+  // Mode conférence : le panneau membres vit dans la colonne de gauche → on retire
+  // le dock membres (+ vignette locale + compteur) de la bande du haut, qui devient
+  // une simple barre de contrôle (marque + STOP + menu hôte).
+  const stripConference = arenaLayoutMode === 'conference';
   const wrapperStyle = {
     position: 'relative',
     zIndex: 95,
     background: liveShell.stripBg,
     borderRadius: liveShell.panelRadius,
     border: liveShell.stripBorder,
-    padding: '10px',
-    height: '132px',
+    padding: stripConference ? '8px 10px' : '10px',
+    height: stripConference ? 'auto' : '132px',
     flexShrink: 0,
     boxShadow: '0 12px 40px rgba(0,0,0,.2)',
   };
@@ -121,7 +126,7 @@ export const LiveStripBandeau = React.forwardRef(function LiveStripBandeau(
       <div className="lh-sp-dim" style={wrapperStyle}>
         <div style={innerStyle}>
           <LiveTopBarBrand sessionTitle={sessionTitle} />
-          {showStripLocalHost ? (
+          {!stripConference && showStripLocalHost ? (
             <LiveLocalUserVignette
               variant="host"
               participant={livekitParticipantsMap['local']}
@@ -136,19 +141,25 @@ export const LiveStripBandeau = React.forwardRef(function LiveStripBandeau(
             onClick={() => void handleStop()}
             title={phase === PHASE.LIVE ? 'Arrêter la session live' : 'Quitter'}
           />
-          <LiveStripOnlineCounter count={onlineMemberCount} variant="host" />
-          <LiveMemberDockScroll
-            ref={ref}
-            liveStripDockMembers={liveStripDockMembers}
-            livekitParticipantsMap={livekitParticipantsMap}
-            liveKitMediaEpoch={liveKitMediaEpoch}
-            promotedId={promotedId}
-            isGuestUi={isGuestUi}
-            onMemberClick={memberClickHandler}
-            onPlusClick={plusClickHandler}
-            emptySlotKeyPrefix="strip-empty"
-            trailingSpacerKey="strip-dock-trail-spacer"
-          />
+          {!stripConference ? (
+            <LiveStripOnlineCounter count={onlineMemberCount} variant="host" />
+          ) : null}
+          {!stripConference ? (
+            <LiveMemberDockScroll
+              ref={ref}
+              liveStripDockMembers={liveStripDockMembers}
+              livekitParticipantsMap={livekitParticipantsMap}
+              liveKitMediaEpoch={liveKitMediaEpoch}
+              promotedId={promotedId}
+              isGuestUi={isGuestUi}
+              onMemberClick={memberClickHandler}
+              onPlusClick={plusClickHandler}
+              emptySlotKeyPrefix="strip-empty"
+              trailingSpacerKey="strip-dock-trail-spacer"
+            />
+          ) : (
+            <div style={{ flex: 1 }} />
+          )}
           <LiveTopBarHostMenu user={user} />
         </div>
       </div>
