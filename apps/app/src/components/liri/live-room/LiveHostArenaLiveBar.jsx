@@ -249,6 +249,55 @@ export default function LiveHostArenaLiveBar({
           </button>
           </>
           )}
+          {/* Bascule d'affichage Formation ⇄ Conférence (raccourci toujours visible dans la barre).
+              Le sélecteur complet (Invité / Panel / Mur…) reste dans le hub. */}
+          {!hub && (
+            <div
+              role="group"
+              aria-label="Affichage de la salle"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                padding: 2,
+                borderRadius: 10,
+                border: '1px solid rgba(255,255,255,.12)',
+                background: 'rgba(0,0,0,.3)',
+                flexShrink: 0,
+              }}
+            >
+              {[
+                { mode: ARENA_LAYOUT.SMARTBOARD, label: 'Formation', title: 'Affichage Formation (SmartBoard / cours)' },
+                { mode: ARENA_LAYOUT.CONFERENCE, label: 'Conférence', title: 'Affichage Conférence (grille type Meet + panneau membres)' },
+              ].map((seg) => {
+                const active = arenaLayoutMode === seg.mode;
+                return (
+                  <button
+                    key={seg.mode}
+                    type="button"
+                    onClick={() => applyHostArenaLayoutMode(seg.mode)}
+                    title={seg.title}
+                    aria-pressed={active}
+                    className="lh-premium-btn"
+                    style={{
+                      borderRadius: 8,
+                      border: '1px solid transparent',
+                      background: active ? 'rgba(200,148,62,.22)' : 'transparent',
+                      padding: '5px 11px',
+                      fontSize: 10,
+                      fontWeight: 700,
+                      color: active ? '#d4a36a' : 'rgba(255,255,255,.6)',
+                      cursor: 'pointer',
+                      letterSpacing: '.04em',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {seg.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <button
             type="button"
             onClick={onOpenMobileCameraQr}

@@ -34,6 +34,19 @@ export function normalizeArenaLayoutMode(raw) {
 }
 
 /**
+ * Affichage par défaut dérivé du type de live (session_type) choisi à la création.
+ * Formation/classe → SmartBoard ; Conférence → Conférence ; Débat → Panel.
+ * @param {unknown} sessionType
+ * @returns {ArenaLayoutMode}
+ */
+export function arenaLayoutForSessionType(sessionType) {
+  const t = String(sessionType || '').toLowerCase();
+  if (t === 'conference' || t === 'conference_live') return ARENA_LAYOUT.CONFERENCE;
+  if (t === 'debat' || t === 'debate') return ARENA_LAYOUT.PANEL;
+  return ARENA_LAYOUT.SMARTBOARD;
+}
+
+/**
  * @param {unknown} raw
  * @returns {string[]}
  */

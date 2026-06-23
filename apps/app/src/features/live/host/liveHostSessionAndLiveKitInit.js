@@ -18,6 +18,7 @@ import { devLogLiveHostEnded, nt } from '@/features/live/host/liveHostUtils';
 import { normalizeScriptSections } from '@/features/live/host/liveSmartboardLegacySlides';
 import { LIRI_MOCK_SCRIPT_SECTIONS } from '@/lib/liriHostUiMocks';
 import { normalizeLiveSceneToSlide, buildLiveScenesFromUploadedSlides } from '@/lib/liveSceneNormalize';
+import { arenaLayoutForSessionType, normalizeArenaLayoutMode } from '@/lib/liriArenaLayout';
 import { mergeSmartboardSceneFlags } from '@/lib/smartboardNavigatorScenes';
 import { serializeGuestPermissions, GUEST_CAPABILITIES_DEFAULTS } from '@/hooks/useGuestCapabilities';
 import { parseLangList } from '@/lib/liriMultilangApi';
@@ -104,6 +105,8 @@ export async function runLiveHostSessionAndLiveKitInit(ctx) {
     setSharingScreen,
     setMicOn,
     setCameraOn,
+    setArenaLayoutMode,
+    arenaLayoutModeRef,
     toast,
     buildParticipantList,
   } = ctx;
@@ -149,6 +152,17 @@ export async function runLiveHostSessionAndLiveKitInit(ctx) {
         // Normaliser le config
         let cfg = {};
         try { cfg = typeof sess.config === 'string' ? JSON.parse(sess.config) : (sess.config || {}); } catch { /* ignore */ }
+
+        // Affichage initial : config arène persistée sinon dérivé du type de live (Formation/Conférence/Débat).
+        try {
+          const initialArenaLayout = (typeof cfg.arena_layout_mode === 'string' && cfg.arena_layout_mode)
+            ? normalizeArenaLayoutMode(cfg.arena_layout_mode)
+            : arenaLayoutForSessionType(sess.session_type);
+          if (initialArenaLayout && arenaLayoutModeRef) {
+            arenaLayoutModeRef.current = initialArenaLayout;
+            setArenaLayoutMode?.(initialArenaLayout);
+          }
+        } catch { /* ignore */ }
 
         // Script sections (MasterScript)
         const sections = cfg.smartboard_master_script_sections;

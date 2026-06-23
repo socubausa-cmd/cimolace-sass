@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Sparkles, GraduationCap, Video, Presentation, Info } from 'lucide-react';
+import { Sparkles, GraduationCap, Video, Presentation, Info, Swords } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -12,10 +12,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+// Type de live → pilote l'affichage par défaut en salle (cf. arenaLayoutForSessionType) :
+// Formation → SmartBoard · Conférence → grille membres · Débat → panel débatteurs.
 const SESSION_TYPES = [
-  { value: 'classe', label: 'Classe virtuelle', icon: Video },
-  { value: 'entretien', label: 'Entretien privé', icon: Presentation },
+  { value: 'classe', label: 'Formation', icon: GraduationCap },
   { value: 'conference', label: 'Conférence', icon: Sparkles },
+  { value: 'debat', label: 'Débat', icon: Swords },
 ];
 
 const CATEGORIES = [

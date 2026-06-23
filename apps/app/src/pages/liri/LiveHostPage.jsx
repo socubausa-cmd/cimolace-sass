@@ -862,7 +862,7 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
       setGuestMultilangConfig, setSharedImageGallery, setSharedImageLoop, setShopProducts, setProgressivePlayback,
       setAmbientTracks, applyLiriAudioFromConfig, setMeshGrantsByUserId, setLiveScenes, setPanels,
       setDebateArena, setGuestProctorModalOpen, setLiveKitMediaEpoch, setLiveKitScreenEpoch, setSharingScreen,
-      setMicOn, setCameraOn, toast, buildParticipantList,
+      setMicOn, setCameraOn, setArenaLayoutMode, arenaLayoutModeRef, toast, buildParticipantList,
     });
     return () => {
       cancelled = true;

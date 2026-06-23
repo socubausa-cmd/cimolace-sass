@@ -152,11 +152,13 @@ const Tile = ({ m, lk, mediaEpoch, speaking, big = false, onClick, pinned = fals
 };
 
 export default function ConferenceStage({ liveParticipants, livekitParticipantsMap, liveKitMediaEpoch, hostId = null, sharingScreen = false, onOpenLongia = null, onMemberPreview = null }) {
-  const [view, setView] = useState('grid'); // 'grid' | 'speaker'
+  // Défaut = vue Orateur + panneau latéral (flux vidéo membres) : l'« interface conférence »
+  // attendue (grand cadre à l'écran + colonne Membres). Togglable vers Grille / Vignettes bas.
+  const [view, setView] = useState('speaker'); // 'grid' | 'speaker'
   const [autoFollow, setAutoFollow] = useState(true);
   const [pinnedId, setPinnedId] = useState(null);
   const [density, setDensity] = useState('m'); // 's' | 'm' | 'l'
-  const [panelPos, setPanelPos] = useState('bottom'); // 'bottom' (bande) | 'side' (panneau latéral 2 colonnes)
+  const [panelPos, setPanelPos] = useState('side'); // 'bottom' (bande) | 'side' (panneau latéral 2 colonnes)
   const [search, setSearch] = useState('');
   const [activeSpeakerId, setActiveSpeakerId] = useState(null);
 
