@@ -258,7 +258,7 @@ export default function TenantAdminSettingsPage() {
           {/* Chaîne WhatsApp — notifications de l'école (no-code) */}
           {tenant && (
             <Section title="Chaîne WhatsApp" icon={MessageCircle}>
-              <TenantWhatsAppSettings tenantId={tenant.id} />
+              <TenantWhatsAppSettings />
             </Section>
           )}
 
