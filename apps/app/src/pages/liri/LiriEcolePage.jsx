@@ -51,6 +51,20 @@ const TAB_OPTIONS = [
   { value: 'calendrier', label: 'Calendrier', badge: 'Planning', icon: Calendar },
   { value: 'eleves', label: 'Élèves', badge: 'Gestion', icon: Users },
 ];
+
+// Le Calendrier (CalendarSection) hardcode des bleus navy (#0F1419/#192734/#16202A)
+// → froid vs le shell. On remappe CES fonds vers du sombre CHAUD, scopé au calendrier
+// (ses accents sont déjà terracotta via --school-accent). Scope = .ecole-cal-warm.
+const CAL_WARM_CSS = `
+.ecole-cal-warm .bg-\\[\\#0F1419\\],
+.ecole-cal-warm .bg-\\[\\#0F1419\\]\\/50,
+.ecole-cal-warm .bg-\\[\\#0F1419\\]\\/30,
+.ecole-cal-warm .bg-\\[\\#0F1419\\]\\/20 { background-color: #191512 !important; }
+.ecole-cal-warm .bg-\\[\\#192734\\] { background-color: #221f1b !important; }
+.ecole-cal-warm .bg-\\[\\#16202A\\] { background-color: #1d1916 !important; }
+.ecole-cal-warm .from-\\[\\#192734\\] { --tw-gradient-from: #221f1b var(--tw-gradient-from-position) !important; }
+.ecole-cal-warm .to-\\[\\#0F1419\\] { --tw-gradient-to: #191512 var(--tw-gradient-to-position) !important; }
+`;
 // Clés tenant_services qui « allument » le moteur école (course_builder = formations).
 const ECOLE_SERVICE_KEYS = ['course_builder', 'school', 'school_module', 'formations'];
 
@@ -74,7 +88,12 @@ export default function LiriEcolePage() {
   const renderContent = () => {
     switch (activeTab) {
       case 'formations': return <OwnerFormationsTab />;
-      case 'calendrier': return <CalendarSection />;
+      case 'calendrier': return (
+        <div className="ecole-cal-warm">
+          <style>{CAL_WARM_CSS}</style>
+          <CalendarSection />
+        </div>
+      );
       case 'eleves': return <SecretariatStudentDashboard />;
       case 'apercu':
       default: return <SecretariatOverview />;
