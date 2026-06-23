@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { useTenantBranding } from '@/hooks/useTenantBranding';
 
 const PricingDocumentation = () => {
+  const { branding } = useTenantBranding();
   return (
     <div className="max-w-5xl mx-auto space-y-12 py-12 px-4 sm:px-6">
       
@@ -17,7 +18,7 @@ const PricingDocumentation = () => {
         <Card className="bg-[#192734] border-white/10 text-gray-300">
           <CardContent className="pt-6 leading-relaxed">
             <p>
-              {`Bienvenue dans la documentation officielle des tarifs de `}<strong>{`${isnaTenantConfig.branding.name} Academy`}</strong>. 
+              {`Bienvenue dans la documentation officielle des tarifs de `}<strong>{`${branding.name} Academy`}</strong>. 
               Notre structure de prix est conçue pour refléter la valeur de l'enseignement dispensé, la qualité des infrastructures numériques 
               et l'accompagnement personnalisé offert à chaque étudiant. Cette transparence vise à vous permettre de choisir le parcours 
               le plus adapté à vos ambitions intellectuelles et spirituelles.

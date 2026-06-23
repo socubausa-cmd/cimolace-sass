@@ -13,6 +13,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fetchTenantContext } from '@/lib/tenant/fetchTenantContext';
 import { normalizeTenantBranding } from '@/lib/tenant/tenantBranding';
+import { setActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
 function normalizeModules(active) {
   const src = active && typeof active === 'object' ? active : {};
@@ -36,6 +37,7 @@ export function useTenantContext({ forceRefresh = false } = {}) {
       .then((t) => {
         if (cancelled) return;
         setTenant(t);
+        setActiveTenantBranding(t); // sync l'accesseur synchrone (code hors-React)
         setError(t ? null : new Error('tenant_not_resolved'));
       })
       .catch((e) => {

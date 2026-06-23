@@ -8,9 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { Save, Upload } from 'lucide-react';
 import { useVitrineContactEmail } from '@/contexts/VitrineContactEmailContext';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
-
-const SITE_NAME = `${isnaTenantConfig.branding.name} · LIRI`;
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
 const SettingsForm = ({ children, onSave }) => (
   <Card className="bg-[#192734] border-white/10">
@@ -35,7 +33,7 @@ export const StoreSettingsTab = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label className="text-white">Store Name</Label>
-            <Input defaultValue={SITE_NAME} className="bg-[#0F1419] border-white/10 text-white" />
+            <Input defaultValue={`${getActiveTenantBranding().name} · LIRI`} className="bg-[#0F1419] border-white/10 text-white" />
           </div>
           <div className="space-y-2">
             <Label className="text-white">Support Email</Label>

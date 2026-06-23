@@ -1,7 +1,8 @@
 import { SMARTBOARD_DESIGN_HEIGHT, SMARTBOARD_DESIGN_WIDTH } from '@/lib/smartboardDesignCanvas';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { useTenantBranding } from '@/hooks/useTenantBranding';
 
 export function LiveSceneSlide({ slide }) {
+  const { branding } = useTenantBranding();
   if (!slide) return null;
 
   // Scène IA (ia_data sans éléments) → layout texte simplifié
@@ -11,7 +12,7 @@ export function LiveSceneSlide({ slide }) {
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 60% at 50% 110%,rgba(160,50,20,.5),rgba(100,20,70,.25) 30%,transparent 65%),linear-gradient(180deg,#0e0e24,#130d20 40%,#1c0e1e)' }}/>
         <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column', padding: '28px 36px', gap: '12px' }}>
-          <span style={{ fontSize: '10px', letterSpacing: '.22em', fontWeight: 700, padding: '3px 10px', borderRadius: '3px', border: '1px solid rgba(200,150,12,.4)', background: 'rgba(200,150,12,.12)', color: '#C8960C', alignSelf: 'flex-start' }}>{`${isnaTenantConfig.branding.name} · LIRI`}</span>
+          <span style={{ fontSize: '10px', letterSpacing: '.22em', fontWeight: 700, padding: '3px 10px', borderRadius: '3px', border: '1px solid rgba(200,150,12,.4)', background: 'rgba(200,150,12,.12)', color: '#C8960C', alignSelf: 'flex-start' }}>{`${branding.name} · LIRI`}</span>
           {ia.title && <div style={{ fontSize: '28px', fontWeight: 700, color: '#fff', lineHeight: 1.25 }}>{ia.title}</div>}
           {ia.subtitle && <div style={{ fontSize: '14px', color: 'rgba(255,255,255,.55)', fontStyle: 'italic' }}>{ia.subtitle}</div>}
           {ia.core_idea && <div style={{ fontSize: '13px', color: 'rgba(255,255,255,.8)', lineHeight: 1.7, padding: '10px 14px', background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.1)', borderRadius: '4px', flex: 1 }}>{ia.core_idea}</div>}
