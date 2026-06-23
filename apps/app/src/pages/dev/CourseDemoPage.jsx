@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { GraduationCap, RotateCcw, ChevronRight, ChevronLeft, Check } from 'lucide-react';
+import { GraduationCap, RotateCcw, ChevronRight, ChevronLeft, Check, Volume2, Play } from 'lucide-react';
 import TableauVivant from '@/components/school/course-builder/TableauVivant';
 
 const EXPO = [0.16, 1, 0.3, 1];
@@ -19,8 +19,8 @@ const CHAPTERS = [
     title: 'La prorascience est la science qui combine la spiritualité et la morale',
     subtitle: 'Relier l’esprit et l’éthique dans une seule discipline',
     blocks: [
-      { type: 'idea', label: 'Idée centrale', text: 'La prorascience est la science qui combine la spiritualité et la morale.' },
-      { type: 'objective', label: 'Objectif', text: 'Comprendre comment une seule discipline relie la vie intérieure et la conduite juste.' },
+      { type: 'idea', label: 'Idée centrale', text: 'Elle relie deux dimensions souvent opposées : la vie intérieure, la spiritualité, et la conduite juste, la morale.' },
+      { type: 'objective', label: 'Objectif', text: 'Comprendre comment une seule discipline relie l’esprit et l’éthique.' },
       { type: 'diagram', label: 'Schéma — au tableau' },
       { type: 'retain', label: 'À retenir', text: 'Spiritualité + morale = prorascience.' },
     ],
@@ -56,6 +56,7 @@ const CHAPTERS = [
 export default function CourseDemoPage() {
   const [idx, setIdx] = useState(0);
   const [done, setDone] = useState(false);
+  const [started, setStarted] = useState(false);
 
   const advanceFrom = useCallback((from) => {
     if (from >= CHAPTERS.length - 1) setDone(true);
@@ -64,7 +65,7 @@ export default function CourseDemoPage() {
 
   const goNext = useCallback(() => advanceFrom(idx), [advanceFrom, idx]);
   const goPrev = useCallback(() => setIdx((i) => Math.max(0, i - 1)), []);
-  const replay = useCallback(() => { setDone(false); setIdx(0); }, []);
+  const replay = useCallback(() => { setDone(false); setStarted(true); setIdx(0); }, []);
 
   const cur = CHAPTERS[idx];
 
@@ -90,7 +91,31 @@ export default function CourseDemoPage() {
           ))}
         </div>
 
-        {done ? (
+        {!started && !done ? (
+          <motion.div
+            key="cover"
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, ease: EXPO }}
+            className="rounded-[28px] border border-white/10 bg-gradient-to-b from-[#11161f] to-[#0c1119] p-10 text-center shadow-2xl md:p-14"
+          >
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--school-accent)]/15 text-[var(--school-accent)]">
+              <Volume2 className="h-8 w-8" />
+            </div>
+            <h2 className="text-2xl font-extrabold text-white md:text-3xl">{CHAPTERS[0].title}</h2>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/55">
+              Cours <strong className="text-white/80">narré</strong> : le prof écrit chaque ligne à la main
+              <strong className="text-white/80"> et la lit à voix haute</strong>. Monte le son 🔊, puis clique pour commencer.
+            </p>
+            <button
+              type="button"
+              onClick={() => setStarted(true)}
+              className="mt-7 inline-flex items-center gap-2 rounded-full bg-[var(--school-accent)] px-7 py-3 text-base font-bold text-black hover:opacity-90"
+            >
+              <Play className="h-5 w-5" /> Commencer le cours
+            </button>
+          </motion.div>
+        ) : done ? (
           <motion.div
             key="done"
             initial={{ opacity: 0, scale: 0.96 }}
@@ -129,6 +154,7 @@ export default function CourseDemoPage() {
               subtitle={cur.subtitle}
               blocks={cur.blocks}
               autoplay
+              speak
               onEnded={() => { window.setTimeout(() => advanceFrom(idx), 1600); }}
             />
 

@@ -17,6 +17,31 @@ const speakMs = (text) => Math.max(1100, Math.min(8000, String(text || '').lengt
 const EXPO = [0.16, 1, 0.3, 1]; // ease-out-expo
 const QUINT = [0.22, 1, 0.36, 1]; // ease-out-quint
 
+// VOIX OFF NAVIGATEUR (Web Speech API) — pour la démo PUBLIQUE sans backend/auth.
+// (Le vrai lecteur élève connecté utilise liri-tts/ElevenLabs, pas ceci.)
+const canSpeak = () => typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+const cancelSpeech = () => { try { if (canSpeak()) window.speechSynthesis.cancel(); } catch { /* */ } };
+const pickFrVoice = () => {
+  try {
+    const vs = window.speechSynthesis.getVoices() || [];
+    return vs.find((v) => /fr[-_]?FR/i.test(v.lang)) || vs.find((v) => /^fr/i.test(v.lang)) || null;
+  } catch { return null; }
+};
+const speakText = (text, onEnd) => {
+  if (!canSpeak() || !text) { onEnd?.(); return; }
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'fr-FR';
+    const v = pickFrVoice();
+    if (v) u.voice = v;
+    u.rate = 0.96;
+    u.onend = () => onEnd?.();
+    u.onerror = () => onEnd?.();
+    window.speechSynthesis.speak(u);
+  } catch { onEnd?.(); }
+};
+
 // LA MAIN QUI ECRIT — comme un prof a l'ecole : une main (teinte brune) qui tient
 // un stylo, calee sur la POINTE d'ecriture (fin du texte revele) avec un leger
 // tremblement de poignet. Echelle en `em` => suit la taille du texte (titre/corps).
@@ -139,7 +164,7 @@ function HandDrawnDiagram({ play, rm }) {
   );
 }
 
-export default function TableauVivant({ title, subtitle, blocks = [], autoplay = true, onEnded }) {
+export default function TableauVivant({ title, subtitle, blocks = [], autoplay = true, onEnded, speak = false }) {
   const rm = useReducedMotion();
   const steps = blocks.length;
   const [step, setStep] = useState(0);
@@ -150,18 +175,27 @@ export default function TableauVivant({ title, subtitle, blocks = [], autoplay =
 
   useEffect(() => {
     clear();
+    cancelSpeech();
     if (!playing) return undefined;
     if (step >= steps) { onEnded?.(); return undefined; }
+    let done = false;
+    const advance = () => { if (done) return; done = true; setStep((s) => s + 1); };
     const cur = step === 0
-      ? `${title || ''} ${subtitle || ''}`
-      : (blocks[step - 1]?.text || (blocks[step - 1]?.items || []).join(' '));
-    timer.current = setTimeout(() => setStep((s) => s + 1), speakMs(cur));
-    return clear;
-  }, [step, playing, steps, blocks, title, subtitle, onEnded]);
+      ? `${title || ''}. ${subtitle || ''}`
+      : (blocks[step - 1]?.text || (blocks[step - 1]?.items || []).join('. '));
+    if (speak && canSpeak()) {
+      // La voix lit la ligne ; quand elle a fini, on passe à la suivante (+ filet de sécurité).
+      speakText(cur, advance);
+      timer.current = setTimeout(advance, Math.max(4500, speakMs(cur) * 2.4));
+    } else {
+      timer.current = setTimeout(advance, speakMs(cur));
+    }
+    return () => { done = true; clear(); cancelSpeech(); };
+  }, [step, playing, steps, blocks, title, subtitle, onEnded, speak]);
 
-  useEffect(() => () => clear(), []);
+  useEffect(() => () => { clear(); cancelSpeech(); }, []);
 
-  const replay = useCallback(() => { clear(); setStep(0); setPlaying(true); }, []);
+  const replay = useCallback(() => { clear(); cancelSpeech(); setStep(0); setPlaying(true); }, []);
   const activeBlock = step - 1;
 
   const REVEAL = rm
