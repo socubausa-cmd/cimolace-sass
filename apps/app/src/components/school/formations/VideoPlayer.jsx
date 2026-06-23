@@ -34,6 +34,8 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
         onTimeUpdate?.(t);
       },
       getCurrentTime: () => (videoRef.current ? Number(videoRef.current.currentTime || 0) : 0),
+      pause: () => { try { videoRef.current?.pause(); } catch { /* */ } },
+      play: () => { try { void videoRef.current?.play?.()?.catch?.(() => {}); } catch { /* */ } },
     }),
     [onTimeUpdate]
   );

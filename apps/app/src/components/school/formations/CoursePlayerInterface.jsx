@@ -26,6 +26,8 @@ import MindMapNavigation from '@/components/lesson-player/MindMapNavigation';
 import NodeExplanationPanel from '@/components/lesson-player/NodeExplanationPanel';
 import QuizPanel from '@/components/lesson-player/QuizPanel';
 import StudentSmartboardDeck from '@/components/school/course-builder/StudentSmartboardDeck';
+import ChapterInterlude from '@/components/school/course-builder/ChapterInterlude';
+import { buildDeckFromMindmap } from '@/lib/smartboard/buildDeckFromMindmap';
 import QuestionPanel from '@/components/lesson-player/QuestionPanel';
 import { tsToSeconds } from '@/components/lesson-player/types';
 import NotesPanel from '@/components/lesson-player/NotesPanel';
@@ -38,6 +40,32 @@ import { useMessagingTopics } from '@/hooks/useMessagingTopics';
 // (formation_day_contents.id). En fallback legacy (storagePath/url), on n'ouvre pas.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const isUuid = (v) => typeof v === 'string' && UUID_RE.test(v);
+
+// Lot 1 (CDC Tableau Vivant) — construit le contenu de l'interlude de reformulation
+// d'un chapitre (titre + blocs Tableau Vivant + texte voix off) à partir du mindmap/deck.
+function buildInterludeForChapter(videoMemo, chapterIndex) {
+  try {
+    const deck = buildDeckFromMindmap(videoMemo?.mindmap || null, Array.isArray(videoMemo?.chapters) ? videoMemo.chapters : []);
+    const sections = deck?.sections || [];
+    const section = sections.find((s) => s.chapterIndex === chapterIndex) || sections[chapterIndex];
+    const slides = section?.slides || [];
+    if (!slides.length) return null;
+    const sc = (s) => s?.slideContent || {};
+    const title = section.label || sc(slides[0]).title || slides[0].label || 'Reformulation';
+    const idea = slides.map((s) => sc(s).ideeCentrale || s.summary).filter(Boolean)[0];
+    const points = slides.map((s) => sc(s).aRetenir || s.label).filter(Boolean).slice(0, 4);
+    const retain = slides.map((s) => sc(s).aRetenir).filter(Boolean)[0];
+    const blocks = [];
+    if (idea) blocks.push({ type: 'idea', label: 'Idée centrale', text: idea });
+    if (points.length) blocks.push({ type: 'list', label: 'À revoir', items: points });
+    if (retain) blocks.push({ type: 'retain', label: 'À retenir', text: retain });
+    if (!blocks.length) return null;
+    const narration = [title, idea, ...points, retain].filter(Boolean).join('. ');
+    return { chapterLabel: section.label, title, blocks, narration };
+  } catch {
+    return null;
+  }
+}
 
 const withTimeout = async (promise, ms, label) => {
   let t;
@@ -262,6 +290,9 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
 
   const [videoDone, setVideoDone] = useState(false);
   const [presentationDone, setPresentationDone] = useState(false);
+  // Lot 1 — interlude de reformulation à la fin d'un chapitre (cf. CDC Tableau Vivant).
+  const [chapterInterlude, setChapterInterlude] = useState(null);
+  const playedInterludesRef = useRef(new Set());
   const [quizDone, setQuizDone] = useState(false);
 
   const [mindmapOpen, setMindmapOpen] = useState(false);
@@ -708,6 +739,8 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
     setVideoDone(false);
     setPresentationDone(false);
     setQuizDone(false);
+    setChapterInterlude(null);
+    playedInterludesRef.current = new Set();
     setClickedMindmapNodeIds(new Set());
     setMindmapTab('mindmap');
   }, [activeItem?.payload?.id]);
@@ -1393,7 +1426,24 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                             ref={videoPlayerRef}
                             video={currentVideoMemo}
                             onEnded={handleVideoEnded}
-                            onTimeUpdate={setVideoCurrentTime}
+                            onTimeUpdate={(t) => {
+                              setVideoCurrentTime(t);
+                              // Lot 1 — fin de chapitre atteinte → pause + interlude de reformulation.
+                              if (chapterInterlude) return;
+                              const chs = currentVideoMemo?.chapters || [];
+                              for (let i = 0; i < chs.length; i += 1) {
+                                const end = Number(chs[i]?.endSeconds);
+                                if (Number.isFinite(end) && t >= end - 0.25 && t < end + 2 && !playedInterludesRef.current.has(i)) {
+                                  const data = buildInterludeForChapter(currentVideoMemo, i);
+                                  if (data) {
+                                    playedInterludesRef.current.add(i);
+                                    videoPlayerRef.current?.pause?.();
+                                    setChapterInterlude(data);
+                                  }
+                                  break;
+                                }
+                              }
+                            }}
                             overlay={(() => {
                               const mm = currentVideoMemo?.mindmap || null;
                               const chs = Array.isArray(currentVideoMemo?.chapters) ? currentVideoMemo.chapters : [];
@@ -1524,6 +1574,18 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                 );
                               })()
                             }
+
+                            {/* Lot 1 — interlude de reformulation plein écran (pause fin de chapitre + voix off). */}
+                            <ChapterInterlude
+                              open={!!chapterInterlude}
+                              chapterLabel={chapterInterlude?.chapterLabel}
+                              title={chapterInterlude?.title}
+                              subtitle={chapterInterlude?.subtitle}
+                              blocks={chapterInterlude?.blocks || []}
+                              narration={chapterInterlude?.narration}
+                              supabase={supabase}
+                              onContinue={() => { setChapterInterlude(null); videoPlayerRef.current?.play?.(); }}
+                            />
 
                             {mindmapOpen ? (
                               <div className="fixed inset-0 z-[80]">
