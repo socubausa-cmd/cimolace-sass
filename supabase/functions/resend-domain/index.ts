@@ -70,6 +70,27 @@ Deno.serve(async (req: Request) => {
 
     // ── get ──
     if (action === 'get') {
+      // Best-effort : si le domaine est déjà connu chez Resend, on renvoie ses
+      // enregistrements DNS pour qu'ils s'affichent dès le chargement (sans avoir
+      // à re-cliquer « Configurer le domaine »).
+      let records: unknown[] = [];
+      let status = settings?.email_verified ? 'verified' : 'pending';
+      const getKey = settings?.resend_api_key || CENTRAL_RESEND_KEY;
+      const domainId = settings?.email_domain_id as string | null;
+      if (getKey && domainId) {
+        try {
+          const r = await fetch(`https://api.resend.com/domains/${domainId}`, {
+            headers: { Authorization: `Bearer ${getKey}` },
+          });
+          const d = await r.json().catch(() => ({}));
+          if (r.ok) {
+            records = d.records || [];
+            status = d.status || status;
+          }
+        } catch {
+          /* best-effort : ne bloque jamais le chargement de l'écran */
+        }
+      }
       return json({
         ok: true,
         emailFromName: settings?.email_from_name || '',
@@ -77,6 +98,8 @@ Deno.serve(async (req: Request) => {
         appBaseUrl: settings?.app_base_url || '',
         emailVerified: settings?.email_verified === true,
         hasKey: Boolean(settings?.resend_api_key),
+        records,
+        status,
       });
     }
 
@@ -116,7 +139,39 @@ Deno.serve(async (req: Request) => {
         body: JSON.stringify({ name: dom, region: RESEND_REGION }),
       });
       const data = await resp.json().catch(() => ({}));
-      if (!resp.ok) return fail(data?.message || `Resend HTTP ${resp.status}`);
+
+      // Domaine DÉJÀ enregistré chez Resend → on ne renvoie pas une erreur (qui
+      // bloque l'utilisateur et masque les DNS) : on récupère le domaine existant
+      // + ses enregistrements. « Configurer le domaine » devient idempotent.
+      if (!resp.ok) {
+        const already = resp.status === 422 || /already|exist/i.test(String(data?.message || ''));
+        if (already) {
+          const listResp = await fetch('https://api.resend.com/domains', { headers: rHeaders });
+          const list = await listResp.json().catch(() => ({}));
+          const rows = Array.isArray(list?.data) ? list.data : (Array.isArray(list) ? list : []);
+          const match = rows.find((d: any) => String(d?.name).toLowerCase() === dom);
+          if (match?.id) {
+            const detResp = await fetch(`https://api.resend.com/domains/${match.id}`, { headers: rHeaders });
+            const det = await detResp.json().catch(() => ({}));
+            const verified = det?.status === 'verified';
+            await admin.from('tenant_notification_settings').upsert(
+              {
+                tenant_id: tenantId, email_domain: dom, email_domain_id: match.id,
+                email_from: settings?.email_from || `noreply@${dom}`,
+                email_verified: verified, updated_at: new Date().toISOString(),
+              },
+              { onConflict: 'tenant_id' },
+            );
+            return json({
+              ok: true, domain: dom, alreadyExists: true,
+              status: det?.status || match?.status || 'pending',
+              records: det?.records || match?.records || [],
+            });
+          }
+        }
+        return fail(data?.message || `Resend HTTP ${resp.status}`);
+      }
+
       await admin.from('tenant_notification_settings').upsert(
         {
           tenant_id: tenantId, email_domain: dom, email_domain_id: data.id,

@@ -105,6 +105,7 @@ export default function TenantEmailSettings() {
         app_base_url: data.appBaseUrl || '',
       }));
       setVerified(data.emailVerified === true);
+      setRecords(Array.isArray(data.records) ? data.records : []);
       setError('');
     } catch (err) {
       setError(err?.message || '');
@@ -141,7 +142,11 @@ export default function TenantEmailSettings() {
       setRecords(data.records || []);
       setVerified(data.status === 'verified');
       setForm((f) => ({ ...f, resendApiKey: '' }));
-      setNotice('Domaine ajouté. Ajoute les DNS ci-dessous chez ton registrar, puis clique « Vérifier ».');
+      setNotice(
+        data.alreadyExists
+          ? 'Domaine déjà enregistré — copie les DNS ci-dessous, puis clique « Vérifier ».'
+          : 'Domaine ajouté. Copie les DNS ci-dessous chez ton registrar, puis clique « Vérifier ».',
+      );
     } catch (err) {
       setError(err?.message || 'Échec de la configuration du domaine.');
     } finally {
