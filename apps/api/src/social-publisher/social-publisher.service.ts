@@ -13,6 +13,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 @Injectable()
 export class SocialPublisherService {
@@ -22,6 +24,30 @@ export class SocialPublisherService {
     private readonly supabase: SupabaseService,
     private readonly config: ConfigService,
   ) {}
+
+  /**
+   * Présigne l'URL R2 (GET) du clip. Le bucket est PRIVÉ : une URL directe
+   * renvoie 403 → TikTok/Meta ne peuvent pas tirer la vidéo. TTL large (7 j max
+   * R2) car la plateforme télécharge la vidéo de façon asynchrone après l'appel.
+   */
+  private async presignClipUrl(storageKey: string): Promise<string | null> {
+    const accountId = this.config.get<string>('CF_R2_ACCOUNT_ID');
+    const accessKeyId = this.config.get<string>('CF_R2_ACCESS_KEY_ID');
+    const secretAccessKey = this.config.get<string>('CF_R2_SECRET_ACCESS_KEY');
+    const bucket = this.config.get<string>('CF_R2_BUCKET');
+    if (!accountId || !accessKeyId || !secretAccessKey || !bucket) return null;
+    const client = new S3Client({
+      region: 'auto',
+      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+      credentials: { accessKeyId, secretAccessKey },
+      forcePathStyle: true,
+    });
+    return getSignedUrl(
+      client,
+      new GetObjectCommand({ Bucket: bucket, Key: storageKey }),
+      { expiresIn: 604800 },
+    );
+  }
 
   // ─── Gestion des tokens sociaux ──────────────────────────────────────────
 
@@ -128,8 +154,9 @@ export class SocialPublisherService {
     const clip = await this.getShortClip(post.short_clip_id);
     if (!clip) throw new Error('Clip introuvable');
 
+    // Bucket R2 privé → on PRÉSIGNE pour que la plateforme puisse tirer la vidéo.
     const videoUrl = clip.storage_key
-      ? `https://${this.config.get('CF_R2_BUCKET') || 'cimolace-media'}.${this.config.get('CF_R2_ACCOUNT_ID')}.r2.cloudflarestorage.com/${clip.storage_key}`
+      ? await this.presignClipUrl(clip.storage_key)
       : null;
 
     if (!videoUrl) throw new Error('URL vidéo introuvable');
@@ -198,8 +225,9 @@ export class SocialPublisherService {
     const clip = await this.getShortClip(post.short_clip_id);
     if (!clip) throw new Error('Clip introuvable');
 
+    // Bucket R2 privé → on PRÉSIGNE pour que la plateforme puisse tirer la vidéo.
     const videoUrl = clip.storage_key
-      ? `https://${this.config.get('CF_R2_BUCKET') || 'cimolace-media'}.${this.config.get('CF_R2_ACCOUNT_ID')}.r2.cloudflarestorage.com/${clip.storage_key}`
+      ? await this.presignClipUrl(clip.storage_key)
       : null;
 
     if (!videoUrl) throw new Error('URL vidéo introuvable');
