@@ -234,10 +234,7 @@ export default function TenantAdminSettingsPage() {
           {/* Connexion Google — branding custom */}
           {tenant && (
             <Section title="Connexion Google personnalisée" icon={KeyRound}>
-              <TenantOAuthSettings
-                tenantId={tenant.id}
-                tenantSlug={tenantSlug}
-              />
+              <TenantOAuthSettings />
             </Section>
           )}
 
