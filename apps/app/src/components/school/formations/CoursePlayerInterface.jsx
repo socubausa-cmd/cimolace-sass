@@ -1428,15 +1428,22 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                             onEnded={handleVideoEnded}
                             onTimeUpdate={(t) => {
                               setVideoCurrentTime(t);
-                              // Lot 1 — fin de chapitre atteinte → pause + interlude de reformulation.
+                              // Lot 1 — les chapitres sont des marqueurs de DÉBUT (timeSeconds) : la fin du
+                              // chapitre i = le début du chapitre i+1. Quand on franchit cette frontière,
+                              // on met la vidéo en pause et on joue l'interlude du chapitre qui se termine.
                               if (chapterInterlude) return;
-                              const chs = currentVideoMemo?.chapters || [];
-                              for (let i = 0; i < chs.length; i += 1) {
-                                const end = Number(chs[i]?.endSeconds);
-                                if (Number.isFinite(end) && t >= end - 0.25 && t < end + 2 && !playedInterludesRef.current.has(i)) {
-                                  const data = buildInterludeForChapter(currentVideoMemo, i);
+                              const raw = currentVideoMemo?.chapters || currentVideoMemo?.timestamps || [];
+                              const marks = (Array.isArray(raw) ? raw : [])
+                                .map((c) => Number(c?.timeSeconds ?? c?.time ?? c?.seconds))
+                                .filter((n) => Number.isFinite(n))
+                                .sort((a, b) => a - b);
+                              for (let i = 1; i < marks.length; i += 1) {
+                                const boundary = marks[i];
+                                const ended = i - 1;
+                                if (t >= boundary - 0.25 && t < boundary + 2 && !playedInterludesRef.current.has(ended)) {
+                                  const data = buildInterludeForChapter(currentVideoMemo, ended);
                                   if (data) {
-                                    playedInterludesRef.current.add(i);
+                                    playedInterludesRef.current.add(ended);
                                     videoPlayerRef.current?.pause?.();
                                     setChapterInterlude(data);
                                   }
