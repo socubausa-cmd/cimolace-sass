@@ -546,6 +546,7 @@ const LiveHostPageRoute = lazy(() => import('@/pages/liri/LiveHostPage'));
 const LiveGuestPage = lazy(() => import('@/pages/liri/LiveGuestPage'));
 const DevLiriHostEntry = lazy(() => import('@/pages/dev/DevLiriHostEntry'));
 const TableauVivantDemoPage = lazy(() => import('@/pages/dev/TableauVivantDemoPage'));
+const CourseDemoPage = lazy(() => import('@/pages/dev/CourseDemoPage'));
 const LiveWaitingRoomPage = lazy(() => import('@/pages/studio-creator/studio/LiveWaitingRoomPage'));
 const LiveWaitingRoomMaquettePage = lazy(() => import('@/pages/dev/LiveWaitingRoomMaquettePage'));
 const SecretariatPortalPage = lazy(() => import('@/pages/secretariat/SecretariatPortalPage'));
@@ -1256,6 +1257,12 @@ isLiriHostDevPreviewRoute;
               </React.Suspense>
             } />
           )}
+          {/* Cours-démo PUBLIC (watchable, sans auth) — le « prof virtuel » qui se joue seul */}
+          <Route path="/cours-demo" element={
+            <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0b0f17] text-white/60">Chargement du cours…</div>}>
+              <CourseDemoPage />
+            </React.Suspense>
+          } />
           {import.meta.env.DEV && (
             <Route path="/dev/liri/*" element={
               <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0F1117] text-white/50 text-sm">Chargement LIRI…</div>}>

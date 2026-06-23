@@ -10,7 +10,7 @@ const SAMPLE = {
   title: "Tout dans l'univers pourrait s'expliquer par une seule loi",
   subtitle: 'La quête d’une théorie unifiée en prorascience',
   blocks: [
-    { type: 'idea', label: 'Idée centrale', text: 'La prorascience postule qu’une loi fondamentale régit tous les phénomènes observables.' },
+    { type: 'idea', label: 'Idée centrale', text: 'La prorascience est la science qui combine la spiritualité et la morale.' },
     { type: 'objective', label: 'Objectif', text: 'Comprendre l’ambition unificatrice de la prorascience et ses implications pour la science moderne.' },
     { type: 'diagram', label: 'Schéma — au tableau' },
     { type: 'list', label: 'Carte mentale', items: [

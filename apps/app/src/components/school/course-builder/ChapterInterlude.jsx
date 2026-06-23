@@ -23,6 +23,7 @@ export default function ChapterInterlude({
   narration,
   supabase,
   onContinue,
+  autoContinue = false,
 }) {
   const startedRef = useRef(false);
   const rm = useReducedMotion();
@@ -72,7 +73,14 @@ export default function ChapterInterlude({
             </div>
 
             <div className="max-h-[78vh] overflow-y-auto">
-              <TableauVivant key={title} title={title} subtitle={subtitle} blocks={blocks} autoplay />
+              <TableauVivant
+                key={title}
+                title={title}
+                subtitle={subtitle}
+                blocks={blocks}
+                autoplay
+                onEnded={autoContinue ? () => { window.setTimeout(finish, 1400); } : undefined}
+              />
             </div>
           </motion.div>
         </motion.div>

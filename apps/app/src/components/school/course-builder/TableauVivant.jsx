@@ -17,8 +17,55 @@ const speakMs = (text) => Math.max(1100, Math.min(8000, String(text || '').lengt
 const EXPO = [0.16, 1, 0.3, 1]; // ease-out-expo
 const QUINT = [0.22, 1, 0.36, 1]; // ease-out-quint
 
+// LA MAIN QUI ECRIT — comme un prof a l'ecole : une main (teinte brune) qui tient
+// un stylo, calee sur la POINTE d'ecriture (fin du texte revele) avec un leger
+// tremblement de poignet. Echelle en `em` => suit la taille du texte (titre/corps).
+function WritingHand({ rm }) {
+  return (
+    <span
+      aria-hidden
+      style={{ position: 'relative', display: 'inline-block', width: 0, height: 0, verticalAlign: 'baseline' }}
+    >
+      <motion.svg
+        viewBox="0 0 110 116"
+        style={{
+          position: 'absolute',
+          left: '-0.32em',
+          bottom: '-0.62em',
+          width: '2.15em',
+          height: '2.26em',
+          overflow: 'visible',
+          zIndex: 6,
+          filter: 'drop-shadow(0 4px 5px rgba(0,0,0,0.22))',
+        }}
+        animate={rm ? undefined : { x: [0, 0.9, -0.6, 0.7, 0], y: [0, -0.7, 0.5, -0.4, 0], rotate: [0, 0.5, -0.4, 0.3, 0] }}
+        transition={rm ? undefined : { duration: 0.42, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <g transform="rotate(29 18 90)">
+          {/* le stylo (bic) — pointe nib en bas a (18,90) */}
+          <rect x="10" y="2" width="16" height="88" rx="8" fill="#2f6df6" />
+          <rect x="13.5" y="6" width="4" height="80" rx="2" fill="#ffffff" opacity="0.3" />
+          <rect x="10" y="60" width="16" height="9" fill="#1e2e74" />
+          <polygon points="10,90 26,90 18,104" fill="#15224a" />
+          <circle cx="18" cy="101" r="2.3" fill="#0b1130" />
+          {/* la paume */}
+          <ellipse cx="54" cy="56" rx="26" ry="23" fill="#bd8150" />
+          {/* les doigts qui enroulent le stylo (pointes a gauche du stylo) */}
+          <rect x="2" y="37" width="44" height="12.5" rx="6.25" fill="#c4894f" />
+          <rect x="0" y="50" width="46" height="12.5" rx="6.25" fill="#c0844c" />
+          <rect x="2" y="63" width="43" height="12.5" rx="6.25" fill="#b87a48" />
+          {/* le pouce */}
+          <ellipse cx="37" cy="76" rx="9.5" ry="15.5" fill="#b2774a" transform="rotate(17 37 76)" />
+          {/* dos de la main / debut du poignet (vers le haut-droite) */}
+          <path d="M62 40 q22 -2 30 16 q7 16 -4 30 q-9 11 -24 8 q12 -6 14 -22 q2 -18 -16 -28 Z" fill="#b27746" />
+        </g>
+      </motion.svg>
+    </span>
+  );
+}
+
 // Texte qui « s'ecrit » a l'encre : cascade caractere par caractere (glisse depuis
-// la gauche), groupee par MOTS (inline-block) pour un retour a la ligne propre, + plume.
+// la gauche), groupee par MOTS (inline-block) pour un retour a la ligne propre, + main.
 function Handwriting({ text, perCharMs = 24, writing, rm }) {
   const words = String(text || '').split(' ');
   let gi = 0;
@@ -54,14 +101,7 @@ function Handwriting({ text, perCharMs = 24, writing, rm }) {
           </React.Fragment>
         );
       })}
-      {writing && !rm ? (
-        <motion.span
-          aria-hidden
-          className="ml-[2px] inline-block h-[1em] w-[3px] -rotate-12 rounded-full bg-blue-600/80 align-text-bottom"
-          animate={{ opacity: [1, 0.25, 1] }}
-          transition={{ duration: 0.5, repeat: Infinity }}
-        />
-      ) : null}
+      {writing ? <WritingHand rm={rm} /> : null}
     </span>
   );
 }
@@ -135,9 +175,9 @@ export default function TableauVivant({ title, subtitle, blocks = [], autoplay =
     <div className="flex flex-col gap-3">
       {/* Le tableau se POSE (entree orchestree : scale + flou) */}
       <motion.div
-        initial={rm ? { opacity: 0 } : { opacity: 0, scale: 0.97, filter: 'blur(8px)', y: 10 }}
+        initial={rm ? { opacity: 0 } : { opacity: 0, scale: 0.985, filter: 'blur(3px)', y: 8 }}
         animate={rm ? { opacity: 1 } : { opacity: 1, scale: 1, filter: 'blur(0px)', y: 0 }}
-        transition={{ duration: rm ? 0.2 : 0.6, ease: EXPO }}
+        transition={{ duration: rm ? 0.2 : 0.5, ease: EXPO }}
         className="relative overflow-hidden rounded-[28px] bg-white p-7 shadow-2xl ring-1 ring-black/5 md:p-10"
       >
         <h1 className="break-words text-2xl font-extrabold leading-tight text-slate-900 md:text-[34px]">
