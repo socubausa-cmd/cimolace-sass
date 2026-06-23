@@ -180,7 +180,7 @@ export function LiriPortalPage() {
         <div className="flex items-center gap-2.5">
           <button className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Menu"><Menu size={17} /></button>
           <span className="flex items-center gap-2">
-            <span className="grid h-7 w-7 place-items-center rounded-[10px] text-white lp-ember"><Sparkles size={15} /></span>
+            <img src="/lirilogo.png" alt="LIRI" className="h-8 w-8 rounded-[10px] object-cover" />
             <span className="text-[17px] font-semibold tracking-tight">LIRI</span>
           </span>
         </div>
