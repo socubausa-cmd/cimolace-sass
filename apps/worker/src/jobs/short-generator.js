@@ -19,6 +19,7 @@ import { existsSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { tmpdir } from 'os';
 import { join, dirname } from 'path';
+import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
@@ -35,32 +36,40 @@ function r2Configured() {
   return Boolean(R2_ACCOUNT && R2_KEY && R2_SECRET && R2_BUCKET);
 }
 
-async function uploadToR2(filePath, key, contentType) {
-  if (!r2Configured()) return null;
-  const fileBuffer = await readFile(filePath);
-  const endpoint = `https://${R2_ACCOUNT}.r2.cloudflarestorage.com`;
-  const url = `${endpoint}/${R2_BUCKET}/${key}`;
-  const res = await fetch(url, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Basic ${Buffer.from(R2_KEY + ':' + R2_SECRET).toString('base64')}`,
-      'Content-Type': contentType || 'video/mp4',
-    },
-    body: fileBuffer,
+// R2 = S3-compatible → SigV4 obligatoire (l'ancien `Authorization: Basic` était
+// rejeté par R2). On passe par @aws-sdk/client-s3 (même approche que le presign
+// du replay côté API).
+function r2Client() {
+  return new S3Client({
+    region: 'auto',
+    endpoint: `https://${R2_ACCOUNT}.r2.cloudflarestorage.com`,
+    credentials: { accessKeyId: R2_KEY, secretAccessKey: R2_SECRET },
+    forcePathStyle: true,
   });
-  if (!res.ok) throw new Error(`R2 upload failed: ${res.status}`);
-  return `https://${R2_BUCKET}.${R2_ACCOUNT}.r2.cloudflarestorage.com/${key}`;
 }
 
-// ── Téléchargement depuis R2 ──────────────────────────────────────────────
+async function uploadToR2(filePath, key, contentType) {
+  if (!r2Configured()) return null;
+  const body = await readFile(filePath);
+  await r2Client().send(
+    new PutObjectCommand({
+      Bucket: R2_BUCKET,
+      Key: key,
+      Body: body,
+      ContentType: contentType || 'video/mp4',
+    }),
+  );
+  return key; // la clé R2 suffit ; la lecture se fait via URL présignée (API/front)
+}
+
+// ── Téléchargement depuis R2 (SigV4) ──────────────────────────────────────
 async function downloadFromR2(storageKey, destPath) {
   if (!r2Configured()) throw new Error('R2 not configured');
-  const endpoint = `https://${R2_ACCOUNT}.r2.cloudflarestorage.com`;
-  const url = `${endpoint}/${R2_BUCKET}/${storageKey}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`R2 download failed: ${res.status}`);
-  const buffer = Buffer.from(await res.arrayBuffer());
-  await writeFile(destPath, buffer);
+  const res = await r2Client().send(
+    new GetObjectCommand({ Bucket: R2_BUCKET, Key: storageKey }),
+  );
+  const bytes = await res.Body.transformToByteArray();
+  await writeFile(destPath, Buffer.from(bytes));
 }
 
 // ─── FFmpeg helpers ────────────────────────────────────────────────────────
@@ -125,35 +134,48 @@ async function extractAudio(inputPath, outputPath) {
 }
 
 // ─── Transcription via Whisper (OpenAI API) ────────────────────────────
-async function transcribeAudio(audioPath, apiKey, model = 'whisper-1') {
-  if (!apiKey) throw new Error('OPENAI_API_KEY requise pour la transcription');
-
+// Transcription Whisper — essaie OpenAI puis Groq (API compatible). Jette si
+// AUCUN fournisseur ne répond (l'appelant rend l'échec non-bloquant).
+async function transcribeAudio(audioPath) {
   const fileBuffer = await readFile(audioPath);
-  const formData = new FormData();
-  const blob = new Blob([fileBuffer], { type: 'audio/wav' });
-  formData.append('file', blob, 'audio.wav');
-  formData.append('model', model);
-  formData.append('response_format', 'verbose_json');
-  formData.append('language', 'fr');
+  const providers = [];
+  if (process.env.OPENAI_API_KEY)
+    providers.push({ name: 'OpenAI', url: 'https://api.openai.com/v1/audio/transcriptions', key: process.env.OPENAI_API_KEY, model: 'whisper-1' });
+  if (process.env.GROQ_API_KEY)
+    providers.push({ name: 'Groq', url: 'https://api.groq.com/openai/v1/audio/transcriptions', key: process.env.GROQ_API_KEY, model: 'whisper-large-v3' });
 
-  const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}` },
-    body: formData,
-  });
-
-  if (!res.ok) throw new Error(`Whisper failed: ${res.status} ${await res.text()}`);
-  const data = await res.json();
-
-  return {
-    text: data.text,
-    segments: (data.segments || []).map((seg) => ({
-      start: seg.start,
-      end: seg.end,
-      text: seg.text.trim(),
-      confidence: seg.confidence || 0,
-    })),
-  };
+  let lastErr = 'aucun fournisseur de transcription configuré';
+  for (const p of providers) {
+    try {
+      const formData = new FormData();
+      formData.append('file', new Blob([fileBuffer], { type: 'audio/wav' }), 'audio.wav');
+      formData.append('model', p.model);
+      formData.append('response_format', 'verbose_json');
+      formData.append('language', 'fr');
+      const res = await fetch(p.url, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${p.key}` },
+        body: formData,
+      });
+      if (!res.ok) {
+        lastErr = `${p.name} ${res.status}`;
+        continue; // ex: OpenAI 429 quota → on tente Groq
+      }
+      const data = await res.json();
+      return {
+        text: data.text || '',
+        segments: (data.segments || []).map((seg) => ({
+          start: seg.start,
+          end: seg.end,
+          text: (seg.text || '').trim(),
+          confidence: seg.confidence || 0,
+        })),
+      };
+    } catch (e) {
+      lastErr = `${p.name}: ${e.message}`;
+    }
+  }
+  throw new Error(`Transcription: ${lastErr}`);
 }
 
 // ─── Détection des moments forts ──────────────────────────────────────────
@@ -234,7 +256,9 @@ function generateSrt(segments, startOffset, endOffset) {
 }
 
 // ─── Traiter une vidéo pour en extraire des shorts ────────────────────────
-async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrlFallback) {
+async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrlFallback, opts = {}) {
+  const source = opts.source || 'zoom';        // 'zoom' (legacy) | 'live' (replay LiveKit)
+  const liveSessionId = opts.liveSessionId || null;
   const jobId = randomUUID();
   const tmpDir = tmpdir();
   const videoFile = join(tmpDir, `short_source_${jobId}.mp4`);
@@ -262,26 +286,18 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
     console.log(`[short-gen] Extraction audio...`);
     await extractAudio(videoFile, audioFile);
 
-    // 3. Transcrire
-    const openaiKey = process.env.OPENAI_API_KEY;
-    if (!openaiKey) {
-      console.warn(`[short-gen] Pas de OPENAI_API_KEY — utilisation transcription simulée`);
-    }
-
+    // 3. Transcrire — NON BLOQUANT : si Whisper échoue (quota OpenAI, etc.), on
+    // garde un clip "fallback" (1re minute, sans sous-titres) plutôt que rien.
     let transcript;
-    if (openaiKey) {
-      transcript = await transcribeAudio(audioFile, openaiKey);
-    } else {
-      // Transcription simulée (fallback développement)
-      transcript = {
-        text: "Transcription non disponible — configurer OPENAI_API_KEY",
-        segments: [
-          { start: 0, end: 5, text: "Segment de test pour le développement.", confidence: 1 },
-          { start: 5, end: 15, text: "Configurez OPENAI_API_KEY pour la transcription automatique.", confidence: 1 },
-        ],
-      };
+    try {
+      transcript = await transcribeAudio(audioFile);
+    } catch (e) {
+      console.warn(
+        `[short-gen] Transcription indisponible (${String(e.message).slice(0, 80)}) → clip sans transcript`,
+      );
+      transcript = { text: '', segments: [] };
     }
-    console.log(`[short-gen] Transcription: ${transcript.text.slice(0, 100)}...`);
+    console.log(`[short-gen] Transcription: ${(transcript.text || '').slice(0, 100)}...`);
 
     // 4. Détecter les moments forts
     const highlights = detectHighlightMoments(transcript.segments);
@@ -323,7 +339,9 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
       // Sauvegarder en DB
       const { error: dbErr } = await supabase.from('short_clips').insert({
         id: clipId,
-        recording_id: recordingId,
+        recording_id: source === 'zoom' ? recordingId : null,
+        live_session_id: liveSessionId,
+        source,
         tenant_id: tenantId,
         title: `Extrait ${i + 1}`,
         description: hl.text.slice(0, 200),
@@ -342,29 +360,43 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
       console.log(`[short-gen] ✅ Short ${i + 1}: ${duration}s — ${hl.text.slice(0, 60)}`);
     }
 
-    // Mettre à jour le statut du recording
-    await supabase
-      .from('zoom_recordings')
-      .update({
-        transcript_text: transcript.text,
-        status: 'analyzed',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', recordingId);
+    // Mettre à jour le statut du recording (selon la source)
+    if (source === 'live') {
+      await supabase
+        .from('live_recordings')
+        .update({ shorts_status: 'done' })
+        .eq('id', recordingId);
+    } else {
+      await supabase
+        .from('zoom_recordings')
+        .update({
+          transcript_text: transcript.text,
+          status: 'analyzed',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', recordingId);
+    }
 
     console.log(`[short-gen] ✅ ${clips.length} short(s) généré(s) pour ${recordingId}`);
     return clips;
   } catch (err) {
     console.error(`[short-gen] ❌ Erreur: ${err.message}`);
 
-    await supabase
-      .from('zoom_recordings')
-      .update({
-        status: 'error',
-        error_message: `Short gen: ${err.message}`,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', recordingId);
+    if (source === 'live') {
+      await supabase
+        .from('live_recordings')
+        .update({ shorts_status: 'error' })
+        .eq('id', recordingId);
+    } else {
+      await supabase
+        .from('zoom_recordings')
+        .update({
+          status: 'error',
+          error_message: `Short gen: ${err.message}`,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', recordingId);
+    }
 
     return [];
   } finally {
@@ -400,6 +432,53 @@ export async function pollShortGeneration() {
     return count;
   } catch (err) {
     console.error(`[short-gen] Poll error: ${err.message}`);
+    return 0;
+  }
+}
+
+// ─── Poller les REPLAYS LiveKit (live_recordings) pour générer des shorts ──
+// Branche le pipeline shorts sur le replay qu'on a livré (egress LiveKit → R2),
+// pas seulement Zoom. Idempotent via live_recordings.shorts_status.
+export async function pollLiveReplayShorts() {
+  try {
+    const { data: recs, error } = await supabase
+      .from('live_recordings')
+      .select('id, storage_filepath, live_session_id')
+      .eq('status', 'completed')
+      .not('storage_filepath', 'is', null)
+      .is('shorts_status', null)
+      .limit(2);
+    if (error) throw error;
+    if (!recs || recs.length === 0) return 0;
+
+    console.log(`[short-gen:live] ${recs.length} replay(s) à traiter`);
+    let count = 0;
+    for (const r of recs) {
+      // live_recordings n'a PAS tenant_id → on le résout via la session.
+      const { data: sess } = await supabase
+        .from('live_sessions')
+        .select('tenant_id')
+        .eq('id', r.live_session_id)
+        .maybeSingle();
+      const tenantId = sess?.tenant_id;
+      if (!tenantId) continue;
+      // Marque 'processing' AVANT le traitement (évite la reprise en boucle).
+      await supabase
+        .from('live_recordings')
+        .update({ shorts_status: 'processing' })
+        .eq('id', r.id);
+      const clips = await processVideoForShorts(
+        r.id,
+        tenantId,
+        r.storage_filepath,
+        null,
+        { source: 'live', liveSessionId: r.live_session_id },
+      );
+      count += clips.length;
+    }
+    return count;
+  } catch (err) {
+    console.error(`[short-gen:live] Poll error: ${err.message}`);
     return 0;
   }
 }

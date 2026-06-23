@@ -4,6 +4,10 @@
 FROM node:22-alpine
 WORKDIR /app
 
+# ffmpeg : requis par le générateur de shorts (découpage + recadrage 9:16 +
+# extraction audio pour Whisper + incrustation des sous-titres SRT).
+RUN apk add --no-cache ffmpeg
+
 COPY package.json ./
 # --include=dev pour garder tsx (devDependency) requis au runtime.
 RUN npm install --include=dev --legacy-peer-deps --ignore-scripts

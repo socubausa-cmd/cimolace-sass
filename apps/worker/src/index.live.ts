@@ -18,6 +18,8 @@ import { startPingJob }        from './jobs/ping.js';
 import { pollEmailQueue }      from './jobs/email.js';
 import { pollLiveReminders }   from './jobs/live-reminders.js';
 import { pollLiveInvitations } from './jobs/live-invitations.js';
+import { pollLiveReplayShorts } from './jobs/short-generator.js';
+import { pollDraftSocialPosts } from './jobs/social-poster.js';
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -57,4 +59,26 @@ startPingJob();
   }
 })();
 
-console.log('[worker:live] Pollers actifs ✅ (email 15s · rappels 60s · invitations 120s)');
+// ── Shorts depuis les replays LiveKit (5 min) ───────────────────────────────
+(async () => {
+  while (true) {
+    try {
+      const n = await (pollLiveReplayShorts as () => Promise<number>)();
+      if (n > 0) console.log(`[worker:live] Shorts: ${n} clip(s) généré(s)`);
+    } catch (e: unknown) { console.error('[worker:live] Shorts error:', (e as Error)?.message || e); }
+    await sleep(300_000);
+  }
+})();
+
+// ── Brouillons réseaux sociaux depuis les shorts prêts (90s) ────────────────
+(async () => {
+  while (true) {
+    try {
+      const n = await (pollDraftSocialPosts as () => Promise<number>)();
+      if (n > 0) console.log(`[worker:live] Posts brouillons: ${n} créé(s)`);
+    } catch (e: unknown) { console.error('[worker:live] Social drafts error:', (e as Error)?.message || e); }
+    await sleep(90_000);
+  }
+})();
+
+console.log('[worker:live] Pollers actifs ✅ (email 15s · rappels 60s · invitations 120s · shorts 5min · posts 90s)');
