@@ -785,6 +785,9 @@ function ImmersiveComposer({
   const [recordingSec, setRecordingSec] = useState(0);
   const [pendingAudioSrc, setPendingAudioSrc] = useState('');
   const [pendingImageSrc, setPendingImageSrc] = useState('');
+  // Rangée « Partager un lien » repliée par défaut (déclutter) : une seule pastille, on
+  // déploie les 5 liens à la demande au lieu de les afficher en permanence.
+  const [shareOpen, setShareOpen] = useState(false);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -947,25 +950,45 @@ function ImmersiveComposer({
       </AnimatePresence>
 
       {showQuickShareLinks ? (
-        <div className="mb-1.5 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
-          {quickLinks.map((item) => (
-            <motion.button
-              key={item.id}
+        <div className="mb-1.5">
+          {shareOpen ? (
+            <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
+              <button
+                type="button"
+                onClick={() => setShareOpen(false)}
+                aria-label="Replier le partage"
+                className="flex-shrink-0 grid h-7 w-7 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-gray-400 hover:text-[var(--school-accent)] hover:bg-white/5 transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+              {quickLinks.map((item) => (
+                <motion.button
+                  key={item.id}
+                  type="button"
+                  onClick={() => { insertText(item.value); setShareOpen(false); }}
+                  whileHover={{ y: -2, scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={cn(
+                    'flex-shrink-0 h-7 px-3 rounded-full text-[11px] border backdrop-blur-md transition-all whitespace-nowrap',
+                    item.id === 'payment'
+                      ? 'text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] shadow-[0_8px_20px_-14px_rgba(212,175,55,0.8)]'
+                      : 'text-gray-400 border-white/10 bg-white/[0.03] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:text-[var(--school-accent)] hover:bg-white/5'
+                  )}
+                >
+                  <Link2 className="w-3 h-3 inline mr-1 opacity-60" />
+                  {item.label}
+                </motion.button>
+              ))}
+            </div>
+          ) : (
+            <button
               type="button"
-              onClick={() => insertText(item.value)}
-              whileHover={{ y: -2, scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className={cn(
-                'flex-shrink-0 h-7 px-3 rounded-full text-[11px] border backdrop-blur-md transition-all whitespace-nowrap',
-                item.id === 'payment'
-                  ? 'text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] shadow-[0_8px_20px_-14px_rgba(212,175,55,0.8)]'
-                  : 'text-gray-400 border-white/10 bg-white/[0.03] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:text-[var(--school-accent)] hover:bg-white/5'
-              )}
+              onClick={() => setShareOpen(true)}
+              className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-[11px] text-gray-400 border border-white/10 bg-white/[0.03] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:text-[var(--school-accent)] hover:bg-white/5 transition-all"
             >
-              <Link2 className="w-3 h-3 inline mr-1 opacity-60" />
-              {item.label}
-            </motion.button>
-          ))}
+              <Link2 className="w-3 h-3 opacity-60" /> Partager un lien
+            </button>
+          )}
         </div>
       ) : null}
 
@@ -2117,7 +2140,7 @@ function CreateTopicModal({ open, onClose, onCreate }) {
   );
 }
 
-const MessagingPage = () => {
+const MessagingPage = ({ embedded = false }) => {
   const { users, currentUser, conversations, sendMessage, markAsRead, deleteMessage, editMessage, getConversationMessages, fetchAndMergeConversation, profiles, loading, reloadProfiles } =
     useMessaging();
   const { toast } = useToast();
@@ -5358,11 +5381,18 @@ const MessagingPage = () => {
   const remoteVideoWaiting = liveActive && !!recipientId && !remoteCameraStream;
 
   return (
-    <div className="relative flex flex-col h-[calc(100dvh-5rem)] overflow-hidden bg-[#090D14] text-white">
+    <div
+      className={cn(
+        'relative flex flex-col overflow-hidden text-white',
+        // EMBEDDED (dans le shell du portail LIRI) : remplit le <main>, fond transparent
+        // (le portail fournit l'ambiance chaude). STANDALONE : possède le viewport.
+        embedded ? 'h-full' : 'h-[calc(100dvh-5rem)] bg-[#090D14]',
+      )}
+    >
       <div className="absolute inset-0 z-0 pointer-events-none">
         {liveActive ? (
           <ImmersiveLiveStageBackdrop parallax={messagingLiveParallax} />
-        ) : (
+        ) : embedded ? null : (
           <>
             <div className="absolute -top-32 -left-32 w-96 h-96 bg-[var(--school-accent)]/[0.08] rounded-full blur-[150px]" />
             <div className="absolute top-1/3 -right-24 w-80 h-80 bg-cyan-500/[0.06] rounded-full blur-[150px]" />
@@ -5374,10 +5404,14 @@ const MessagingPage = () => {
 
       <div
         className={cn(
-          'relative z-10 mx-3 md:mx-6 mt-3 rounded-2xl border flex items-center justify-between px-4 md:px-6 h-14 flex-shrink-0 transition-colors duration-300',
+          'relative z-10 flex items-center justify-between px-4 md:px-6 h-14 flex-shrink-0 transition-colors duration-300',
           liveActive
-            ? 'border-white/[0.1] bg-[#090D14]/35 backdrop-blur-2xl shadow-[0_12px_40px_-24px_rgba(0,0,0,0.65)]'
-            : 'border-white/[0.08] bg-[#0d1420]/65 backdrop-blur-xl',
+            ? 'mx-3 md:mx-6 mt-3 rounded-2xl border border-white/[0.1] bg-[#090D14]/35 backdrop-blur-2xl shadow-[0_12px_40px_-24px_rgba(0,0,0,0.65)]'
+            : embedded
+              // Dans le shell du portail : barre PLATE (le <main> est déjà une carte arrondie
+              // → éviter la carte-dans-carte, surcharge visuelle pointée à l'audit).
+              ? 'border-b border-white/[0.06]'
+              : 'mx-3 md:mx-6 mt-3 rounded-2xl border border-white/[0.08] bg-[#0d1420]/65 backdrop-blur-xl',
           liriMobileLive && 'mx-1.5 mt-1.5 h-11 px-2 md:mx-3 md:px-4',
         )}
       >

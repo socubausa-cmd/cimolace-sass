@@ -532,6 +532,7 @@ const LiriPortalPage = lazy(() => import('@/pages/liri/LiriPortalPage').then((m)
 const LiriEcolePage = lazy(() => import('@/pages/liri/LiriEcolePage'));
 // Forum CONNECTÉ + messagerie immersive comme app du portail LIRI
 const LiriForumPage = lazy(() => import('@/pages/liri/LiriForumPage'));
+const LiriMessagesPage = lazy(() => import('@/pages/liri/LiriMessagesPage'));
 const LiriStudioHub = lazy(() => import('@/pages/dev/LiriStudioHub'));
 const LiriAdminShellDemo = lazy(() => import('@/pages/dev/LiriAdminShellDemo'));
 const MasterclassFactoryV2 = lazy(() => import('@/pages/dev/MasterclassFactoryV2'));
@@ -1519,6 +1520,13 @@ isLiriHostDevPreviewRoute;
             <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole>
               <LiriForumPage />
             </ProtectedLiriRoute>
+          } />
+          {/* Messagerie immersive comme app du portail LIRI (shell du portail au lieu de la
+              coque plein écran). Même garde d'accès que /messages (ProtectedImmersiveMessagingRoute). */}
+          <Route path="/liri/messages" element={
+            <ProtectedImmersiveMessagingRoute>
+              <LiriMessagesPage />
+            </ProtectedImmersiveMessagingRoute>
           } />
           <Route path="/choose-account-type" element={
             <ProtectedRoute>
