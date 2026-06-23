@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { GraduationCap, RotateCcw, ChevronRight, ChevronLeft, Check, Volume2, Play } from 'lucide-react';
-import TableauVivant from '@/components/school/course-builder/TableauVivant';
+import TableauVivant, { primeSpeech } from '@/components/school/course-builder/TableauVivant';
 
 const EXPO = [0.16, 1, 0.3, 1];
 
@@ -109,7 +109,7 @@ export default function CourseDemoPage() {
             </p>
             <button
               type="button"
-              onClick={() => setStarted(true)}
+              onClick={() => { primeSpeech(); setStarted(true); }}
               className="mt-7 inline-flex items-center gap-2 rounded-full bg-[var(--school-accent)] px-7 py-3 text-base font-bold text-black hover:opacity-90"
             >
               <Play className="h-5 w-5" /> Commencer le cours

@@ -19,6 +19,7 @@ const QUINT = [0.22, 1, 0.36, 1]; // ease-out-quint
 
 // VOIX OFF NAVIGATEUR (Web Speech API) — pour la démo PUBLIQUE sans backend/auth.
 // (Le vrai lecteur élève connecté utilise liri-tts/ElevenLabs, pas ceci.)
+const SPEAK_RATE = 0.95;
 const canSpeak = () => typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 const cancelSpeech = () => { try { if (canSpeak()) window.speechSynthesis.cancel(); } catch { /* */ } };
 const pickFrVoice = () => {
@@ -27,18 +28,41 @@ const pickFrVoice = () => {
     return vs.find((v) => /fr[-_]?FR/i.test(v.lang)) || vs.find((v) => /^fr/i.test(v.lang)) || null;
   } catch { return null; }
 };
-const speakText = (text, onEnd) => {
+// Durée parlée estimée (FR ~13 caractères/seconde au débit 0.95) + petite pause.
+const estSpeechMs = (text) => {
+  const n = String(text || '').length;
+  return Math.max(1800, Math.min(13000, Math.round((n / 13) * 1000) + 400));
+};
+// Débloque l'audio DANS le geste utilisateur (sinon les navigateurs muettent la voix).
+export const primeSpeech = () => {
+  if (!canSpeak()) return;
+  try {
+    const s = window.speechSynthesis;
+    s.getVoices();
+    s.cancel();
+    const u = new SpeechSynthesisUtterance('');
+    u.volume = 0;
+    s.speak(u);
+    s.resume();
+  } catch { /* */ }
+};
+// Parle un texte. onBoundary(charIndex) permet de révéler le texte AU FUR ET À MESURE
+// (karaoké) quand le navigateur émet l'événement boundary (Chrome/Edge/Safari récent).
+const speakText = (text, { onBoundary, onEnd } = {}) => {
   if (!canSpeak() || !text) { onEnd?.(); return; }
   try {
-    window.speechSynthesis.cancel();
+    const s = window.speechSynthesis;
+    s.cancel();
     const u = new SpeechSynthesisUtterance(String(text));
     u.lang = 'fr-FR';
     const v = pickFrVoice();
     if (v) u.voice = v;
-    u.rate = 0.96;
+    u.rate = SPEAK_RATE;
+    if (onBoundary) u.onboundary = (e) => { try { onBoundary(e.charIndex ?? 0); } catch { /* */ } };
     u.onend = () => onEnd?.();
     u.onerror = () => onEnd?.();
-    window.speechSynthesis.speak(u);
+    s.resume();
+    s.speak(u);
   } catch { onEnd?.(); }
 };
 
@@ -175,22 +199,25 @@ export default function TableauVivant({ title, subtitle, blocks = [], autoplay =
 
   useEffect(() => {
     clear();
-    cancelSpeech();
-    if (!playing) return undefined;
+    if (!playing) { cancelSpeech(); return undefined; }
     if (step >= steps) { onEnded?.(); return undefined; }
-    let done = false;
-    const advance = () => { if (done) return; done = true; setStep((s) => s + 1); };
+    const block = step >= 1 ? blocks[step - 1] : null;
+    const isDiagram = block?.type === 'diagram';
+    // step 0 = on lit le TITRE seul (la sous-ligne s'affiche, inutile de tout relire).
     const cur = step === 0
-      ? `${title || ''}. ${subtitle || ''}`
-      : (blocks[step - 1]?.text || (blocks[step - 1]?.items || []).join('. '));
-    if (speak && canSpeak()) {
-      // La voix lit la ligne ; quand elle a fini, on passe à la suivante (+ filet de sécurité).
-      speakText(cur, advance);
-      timer.current = setTimeout(advance, Math.max(4500, speakMs(cur) * 2.4));
-    } else {
-      timer.current = setTimeout(advance, speakMs(cur));
-    }
-    return () => { done = true; clear(); cancelSpeech(); };
+      ? `${title || ''}`
+      : (block?.text || (block?.items || []).join('. '));
+    // CADENCE = durée AUDIO estimée (pas onend, peu fiable => sinon cascade "tout
+    // d'un coup" + son coupé). La voix lit pendant que la main écrit ; on passe à la
+    // ligne suivante quand la voix a fini de la lire. Schéma = pas de voix, temps fixe.
+    const useVoice = speak && canSpeak() && !isDiagram && cur.trim().length > 0;
+    if (useVoice) speakText(cur);
+    let ms;
+    if (isDiagram) ms = 4200;
+    else if (useVoice) ms = estSpeechMs(cur);
+    else ms = speakMs(cur);
+    timer.current = setTimeout(() => setStep((s) => s + 1), ms);
+    return () => { clear(); }; // on ne coupe PAS la voix ici : elle finit sa ligne
   }, [step, playing, steps, blocks, title, subtitle, onEnded, speak]);
 
   useEffect(() => () => { clear(); cancelSpeech(); }, []);
@@ -215,7 +242,7 @@ export default function TableauVivant({ title, subtitle, blocks = [], autoplay =
         className="relative overflow-hidden rounded-[28px] bg-white p-7 shadow-2xl ring-1 ring-black/5 md:p-10"
       >
         <h1 className="break-words text-2xl font-extrabold leading-tight text-slate-900 md:text-[34px]">
-          <Handwriting text={title} perCharMs={22} writing={step === 0} rm={rm} />
+          <Handwriting text={title} perCharMs={speak ? 78 : 22} writing={step === 0} rm={rm} />
         </h1>
         <HandUnderline play={step >= 1} rm={rm} />
         {subtitle ? (
@@ -275,7 +302,7 @@ export default function TableauVivant({ title, subtitle, blocks = [], autoplay =
                           key={j}
                           initial={rm ? { opacity: 0 } : { opacity: 0, x: -10, filter: 'blur(3px)' }}
                           animate={rm ? { opacity: 1 } : { opacity: 1, x: 0, filter: 'blur(0px)' }}
-                          transition={{ delay: rm ? 0 : 0.15 + j * 0.16, duration: 0.4, ease: EXPO }}
+                          transition={{ delay: rm ? 0 : (speak ? 0.3 + j * 0.7 : 0.15 + j * 0.16), duration: 0.4, ease: EXPO }}
                           className="flex items-start gap-2 rounded-lg bg-white/80 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-200"
                         >
                           <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
@@ -285,11 +312,11 @@ export default function TableauVivant({ title, subtitle, blocks = [], autoplay =
                     </ul>
                   ) : b.type === 'retain' ? (
                     <div className="text-xl font-extrabold leading-snug text-slate-900 md:text-2xl">
-                      <Handwriting text={b.text} perCharMs={26} writing={isActive} rm={rm} />
+                      <Handwriting text={b.text} perCharMs={speak ? 82 : 26} writing={isActive} rm={rm} />
                     </div>
                   ) : (
                     <div className="text-[15px] leading-relaxed text-slate-700 md:text-base">
-                      {isActive ? <Handwriting text={b.text} perCharMs={16} writing rm={rm} /> : b.text}
+                      {isActive ? <Handwriting text={b.text} perCharMs={speak ? 44 : 16} writing rm={rm} /> : b.text}
                     </div>
                   )}
                 </div>
