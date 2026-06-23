@@ -316,7 +316,7 @@ export default function TableauVivant({ title, subtitle, blocks = [], autoplay =
                     </div>
                   ) : (
                     <div className="text-[15px] leading-relaxed text-slate-700 md:text-base">
-                      {isActive ? <Handwriting text={b.text} perCharMs={speak ? 44 : 16} writing rm={rm} /> : b.text}
+                      {isActive ? <Handwriting text={b.text} perCharMs={speak ? 78 : 16} writing rm={rm} /> : b.text}
                     </div>
                   )}
                 </div>
