@@ -143,6 +143,8 @@ async function transcribeAudio(audioPath) {
     providers.push({ name: 'OpenAI', url: 'https://api.openai.com/v1/audio/transcriptions', key: process.env.OPENAI_API_KEY, model: 'whisper-1' });
   if (process.env.GROQ_API_KEY)
     providers.push({ name: 'Groq', url: 'https://api.groq.com/openai/v1/audio/transcriptions', key: process.env.GROQ_API_KEY, model: 'whisper-large-v3' });
+  if (process.env.MISTRAL_API_KEY)
+    providers.push({ name: 'Mistral', url: 'https://api.mistral.ai/v1/audio/transcriptions', key: process.env.MISTRAL_API_KEY, model: 'voxtral-mini-latest' });
 
   let lastErr = 'aucun fournisseur de transcription configuré';
   for (const p of providers) {
@@ -305,8 +307,13 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
 
     // 5. Générer les clips
     if (highlights.length === 0) {
-      // Fallback : prendre la première minute
-      highlights.push({ start: 0, end: Math.min(60, 60), text: "Extrait vidéo" });
+      // Fallback : 1re minute. Si on a au moins le TEXTE (transcription sans
+      // segments timés, ex. Voxtral), on le garde pour nourrir la légende.
+      highlights.push({
+        start: 0,
+        end: 60,
+        text: (transcript.text || '').trim().slice(0, 500) || 'Extrait vidéo',
+      });
     }
 
     await mkdir(shortsDir, { recursive: true });
