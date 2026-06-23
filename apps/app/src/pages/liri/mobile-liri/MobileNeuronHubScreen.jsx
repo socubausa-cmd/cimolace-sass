@@ -8,7 +8,7 @@ import {
   LiriSectionLabel,
 } from '@/components/liri/mobile-liri/LiriMobileScreenShell';
 import { LIRI_MOBILE } from '@/lib/liriMobileRoutes';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
 export default function MobileNeuronHubScreen() {
   return (
@@ -67,7 +67,7 @@ export default function MobileNeuronHubScreen() {
         </LiriGoldCard>
       </Link>
 
-      <p className="text-center text-[10px] text-white/25 mt-6">{`NeuronQ · NeuroRecall · ${isnaTenantConfig.branding.name}`}</p>
+      <p className="text-center text-[10px] text-white/25 mt-6">{`NeuronQ · NeuroRecall · ${getActiveTenantBranding().name}`}</p>
     </LiriMobileScreenShell>
   );
 }

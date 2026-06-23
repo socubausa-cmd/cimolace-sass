@@ -8,7 +8,7 @@ import {
   LiriSectionLabel,
 } from '@/components/liri/mobile-liri/LiriMobileScreenShell';
 import { LIRI_MOBILE } from '@/lib/liriMobileRoutes';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
 /** Extrait l'UUID d'une session depuis un collage d'URL ou d'ID brut. */
 export function parseLiveSessionIdFromInput(raw) {
@@ -76,7 +76,7 @@ export default function MobileArenaScreen() {
         <textarea
           value={joinPaste}
           onChange={(e) => setJoinPaste(e.target.value)}
-          placeholder={`${isnaTenantConfig.branding.publicSiteOrigin}/live/…`}
+          placeholder={`${getActiveTenantBranding().publicSiteOrigin}/live/…`}
           rows={2}
           className="mt-3 w-full resize-none rounded-xl border border-white/12 bg-black/50 px-3 py-2 text-sm text-white/90 placeholder:text-white/25 focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] focus:outline-none focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]"
         />

@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import { PlayCircle, Award, Clock } from 'lucide-react';
 import StatCard from '@/components/ui/StatCard';
 import PremiumSegmentedSelector from '@/components/ui/premium-segmented-selector';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
 const StudentModulesDashboard = () => {
   const { user } = useAuth();
@@ -45,7 +45,7 @@ const StudentModulesDashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#0F1419] text-white pt-24 pb-20">
-      <Helmet><title>{`Mes Modules | ${isnaTenantConfig.branding.name}`}</title></Helmet>
+      <Helmet><title>{`Mes Modules | ${getActiveTenantBranding().name}`}</title></Helmet>
 
       <div className="max-w-7xl mx-auto px-6">
         <h1 className="text-3xl font-serif font-bold mb-8">Tableau de Bord Modules</h1>

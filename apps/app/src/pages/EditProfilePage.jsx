@@ -6,7 +6,7 @@ import { useMessaging } from '@/contexts/MessagingContext';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
 const EditProfilePage = () => {
   const { user, refreshProfile, supabase } = useAuth();
@@ -91,7 +91,7 @@ const EditProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-[#0F1419] text-white pt-24 pb-16 px-4">
-      <Helmet><title>{`Modifier le profil | ${isnaTenantConfig.branding.name}`}</title></Helmet>
+      <Helmet><title>{`Modifier le profil | ${getActiveTenantBranding().name}`}</title></Helmet>
 
       <div className="max-w-xl mx-auto">
         <Link

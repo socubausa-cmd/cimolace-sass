@@ -6,7 +6,7 @@ import PricingDocumentation from '@/components/pricing/PricingDocumentation';
 import { useToast } from '@/components/ui/use-toast';
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
 const PricingPage = () => {
   const { toast } = useToast();
@@ -36,7 +36,7 @@ const PricingPage = () => {
     <div className="min-h-screen bg-[#0F1419] text-white pt-24 pb-20">
       <SEO
         title="Tarifs & Forfaits"
-        description={`Tarifs et forfaits ${isnaTenantConfig.branding.name} : cycle académique, privé, privilégié et autonome. Formations initiatiques en Sciences Nocturnes Africaines avec tarification transparente.`}
+        description={`Tarifs et forfaits ${getActiveTenantBranding().name} : cycle académique, privé, privilégié et autonome. Formations initiatiques en Sciences Nocturnes Africaines avec tarification transparente.`}
       />
 
       {/* Header with Breadcrumb */}

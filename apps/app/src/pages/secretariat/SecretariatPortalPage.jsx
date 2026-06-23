@@ -1,13 +1,13 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
 import SecretariatDashboard from './SecretariatDashboard';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
 const SecretariatPortalPage = () => {
   return (
     <>
       <Helmet>
-        <title>{`Espace Secrétariat | ${isnaTenantConfig.branding.name}`}</title>
+        <title>{`Espace Secrétariat | ${getActiveTenantBranding().name}`}</title>
       </Helmet>
       <SecretariatDashboard />
     </>

@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { Button } from '@/components/ui/button';
 import { User, Mail, MapPin, Shield, Edit2, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
 const MyProfilePage = () => {
   const { user, logout } = useAuth();
@@ -19,7 +19,7 @@ const MyProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-[#0F1419] text-white pt-24 pb-20">
-      <Helmet><title>{`Mon Profil | ${isnaTenantConfig.branding.name}`}</title></Helmet>
+      <Helmet><title>{`Mon Profil | ${getActiveTenantBranding().name}`}</title></Helmet>
 
       <div className="max-w-4xl mx-auto px-6">
         <div className="bg-[#192734] border border-white/10 rounded-2xl overflow-hidden">

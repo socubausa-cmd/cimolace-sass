@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { getLiriMemberLoginPath } from '@/lib/liriVitrineModel';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
 export default function AppMemberAccessPage() {
   return (
@@ -13,7 +13,7 @@ export default function AppMemberAccessPage() {
           Accédez à l'app uniquement en vous connectant
         </h1>
         <p className="mt-5 text-gray-300 max-w-2xl mx-auto">
-          <span className="text-white/90">{isnaTenantConfig.branding.name}</span> sur le web, c'est le <strong>portail public</strong> (vitrine, offre, contact).{' '}
+          <span className="text-white/90">{getActiveTenantBranding().name}</span> sur le web, c'est le <strong>portail public</strong> (vitrine, offre, contact).{' '}
           <span className="text-white/90">LIRI</span> est l'<strong>application</strong> qui héberge l\'école : cours, lives, messagerie, outils.{' '}
           Votre connexion membre s'y fait ici.
         </p>

@@ -5,7 +5,7 @@ import { Helmet } from 'react-helmet';
 import { Button } from '@/components/ui/button';
 import { Save, User, Camera, Bell } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
 const ProfilePage = () => {
   const { user, profile } = useAuth();
@@ -40,7 +40,7 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-[#0F1419] py-12 px-4">
-      <Helmet><title>{`Mon Profil — ${isnaTenantConfig.branding.name}`}</title></Helmet>
+      <Helmet><title>{`Mon Profil — ${getActiveTenantBranding().name}`}</title></Helmet>
       
       <div className="max-w-3xl mx-auto bg-white/5 border border-white/10 rounded-2xl p-8">
         <h1 className="text-3xl font-bold text-white mb-8">Mon Profil</h1>

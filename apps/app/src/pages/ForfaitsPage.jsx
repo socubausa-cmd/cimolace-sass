@@ -52,7 +52,7 @@ import {
   cycleContent,
   marketingForCycleKey,
 } from '@/data/cycleInitiationProduct';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
 const CYCLE_SELECTOR_ICONS = {
   autonome: BookOpen,
@@ -343,7 +343,7 @@ const ForfaitsPage = () => {
     <div className="prs-forfaits-site relative min-h-screen overflow-x-hidden bg-[#070b12] text-white pb-16">
       <style>{PRORASCIENCE_MARKETING_HERO_CSS}</style>
       <Helmet>
-        <title>{`${INITIATION_PRODUCT_NAME} | ${isnaTenantConfig.branding.name}`}</title>
+        <title>{`${INITIATION_PRODUCT_NAME} | ${getActiveTenantBranding().name}`}</title>
       </Helmet>
       <MarketingAmbientLayers />
 
@@ -545,7 +545,7 @@ const ForfaitsPage = () => {
                   className="mt-8 flex flex-wrap items-center gap-2 text-xs text-white/55"
                 >
                   <ShieldCheck className="h-4 w-4 text-[var(--school-accent)]" />
-                  {`Système MK5 / Ngowazulu / ${isnaTenantConfig.branding.name}`}
+                  {`Système MK5 / Ngowazulu / ${getActiveTenantBranding().name}`}
                   <span className="mx-1 text-white/30">•</span>
                   Contrats flexibles
                   <span className="mx-1 text-white/30">•</span>
