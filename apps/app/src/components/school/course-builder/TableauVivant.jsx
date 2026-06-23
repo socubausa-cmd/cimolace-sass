@@ -1,30 +1,27 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { RotateCcw, Pause, Play } from 'lucide-react';
 
 /**
  * LE TABLEAU VIVANT — cf. docs/CAHIER_DE_CHARGE_TABLEAU_VIVANT.md
  *
- * Reproduit le geste d'un PROF qui enseigne au tableau : affichage SEQUENTIEL
- * (un bloc a la fois), le texte S'ECRIT (cascade facon main), le passage actif
- * est SURLIGNE, les accents sont DESSINES A LA MAIN (trace SVG), et les
- * « a retenir » s'affichent en GROS PLAN.
- *
- * Cette version cadence les blocs sur une estimation de debit de parole. La
- * synchro fine avec la VRAIE voix off (TTS) est le Lot 1/3 du CDC : il suffira
- * de remplacer speakMs() par les reperes temporels de l'audio.
+ * Reproduit le geste d'un PROF qui enseigne au tableau : affichage SEQUENTIEL,
+ * le texte S'ECRIT (encre, caractere par caractere), le bloc lu est SURLIGNE
+ * (surligneur anime), les accents sont DESSINES A LA MAIN (trace SVG), et les
+ * « a retenir » s'affichent en GROS PLAN. Passe motion design : entree
+ * orchestree (scale + flou), courbes ease-out-expo, respect de prefers-reduced-motion.
  */
 
-// Duree de « narration » estimee d'un texte (~ debit d'un prof).
 const speakMs = (text) => Math.max(1100, Math.min(8000, String(text || '').length * 52));
 
-const EASE = [0.22, 1, 0.36, 1];
+const EXPO = [0.16, 1, 0.3, 1]; // ease-out-expo
+const QUINT = [0.22, 1, 0.36, 1]; // ease-out-quint
 
-// Texte qui « s'ecrit » : cascade caractere par caractere, groupee par MOTS
-// (inline-block) pour garder un retour a la ligne propre, + plume au bout.
-function Handwriting({ text, perCharMs = 24, writing }) {
+// Texte qui « s'ecrit » a l'encre : cascade caractere par caractere (glisse depuis
+// la gauche), groupee par MOTS (inline-block) pour un retour a la ligne propre, + plume.
+function Handwriting({ text, perCharMs = 24, writing, rm }) {
   const words = String(text || '').split(' ');
-  let gi = 0; // index global pour cadencer la cascade a travers les mots
+  let gi = 0;
   return (
     <span aria-label={text} className="relative">
       {words.map((w, wi) => {
@@ -33,13 +30,15 @@ function Handwriting({ text, perCharMs = 24, writing }) {
             {[...w].map((c, ci) => {
               const delay = gi * (perCharMs / 1000);
               gi += 1;
-              return (
+              return rm ? (
+                <span key={ci} aria-hidden>{c}</span>
+              ) : (
                 <motion.span
                   key={ci}
                   aria-hidden
-                  initial={{ opacity: 0, y: 2 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.08, delay }}
+                  initial={{ opacity: 0, x: -4 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.12, ease: 'easeOut', delay }}
                 >
                   {c}
                 </motion.span>
@@ -55,11 +54,11 @@ function Handwriting({ text, perCharMs = 24, writing }) {
           </React.Fragment>
         );
       })}
-      {writing ? (
+      {writing && !rm ? (
         <motion.span
           aria-hidden
-          className="ml-[1px] inline-block h-[1em] w-[2px] rounded-full bg-blue-600/80 align-text-bottom"
-          animate={{ opacity: [1, 0.2, 1] }}
+          className="ml-[2px] inline-block h-[1em] w-[3px] -rotate-12 rounded-full bg-blue-600/80 align-text-bottom"
+          animate={{ opacity: [1, 0.25, 1] }}
           transition={{ duration: 0.5, repeat: Infinity }}
         />
       ) : null}
@@ -67,8 +66,7 @@ function Handwriting({ text, perCharMs = 24, writing }) {
   );
 }
 
-// Soulignage « trace a la main » qui se dessine sous un titre.
-function HandUnderline({ play }) {
+function HandUnderline({ play, rm }) {
   return (
     <svg viewBox="0 0 320 12" className="mt-1 h-3 w-[min(320px,80%)]" fill="none" aria-hidden>
       <motion.path
@@ -76,20 +74,19 @@ function HandUnderline({ play }) {
         stroke="var(--school-accent, #d4a36a)"
         strokeWidth="3"
         strokeLinecap="round"
-        initial={{ pathLength: 0, opacity: 0.9 }}
-        animate={play ? { pathLength: 1 } : { pathLength: 0 }}
-        transition={{ duration: 0.7, ease: EASE }}
+        initial={{ pathLength: rm ? 1 : 0, opacity: 0.9 }}
+        animate={play ? { pathLength: 1 } : { pathLength: rm ? 1 : 0 }}
+        transition={{ duration: rm ? 0 : 0.7, ease: EXPO }}
       />
     </svg>
   );
 }
 
-// Ideogramme dessine a la main (cercle + fleche + noeud) — trace progressif.
-function HandDrawnDiagram({ play }) {
+function HandDrawnDiagram({ play, rm }) {
   const draw = (delay) => ({
-    initial: { pathLength: 0, opacity: 0.95 },
-    animate: play ? { pathLength: 1 } : { pathLength: 0 },
-    transition: { duration: 0.8, ease: EASE, delay },
+    initial: { pathLength: rm ? 1 : 0, opacity: 0.95 },
+    animate: play ? { pathLength: 1 } : { pathLength: rm ? 1 : 0 },
+    transition: { duration: rm ? 0 : 0.8, ease: EXPO, delay: rm ? 0 : delay },
   });
   return (
     <svg viewBox="0 0 200 120" className="h-28 w-full" fill="none" aria-hidden>
@@ -102,14 +99,10 @@ function HandDrawnDiagram({ play }) {
   );
 }
 
-const REVEAL = {
-  hidden: { opacity: 0, y: 14, filter: 'blur(2px)' },
-  shown: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.45, ease: EASE } },
-};
-
 export default function TableauVivant({ title, subtitle, blocks = [], autoplay = true, onEnded }) {
+  const rm = useReducedMotion();
   const steps = blocks.length;
-  const [step, setStep] = useState(0); // nombre d'elements reveles (0 = titre seul en cours d'ecriture)
+  const [step, setStep] = useState(0);
   const [playing, setPlaying] = useState(autoplay);
   const timer = useRef(null);
 
@@ -131,17 +124,35 @@ export default function TableauVivant({ title, subtitle, blocks = [], autoplay =
   const replay = useCallback(() => { clear(); setStep(0); setPlaying(true); }, []);
   const activeBlock = step - 1;
 
+  const REVEAL = rm
+    ? { hidden: { opacity: 0 }, shown: { opacity: 1, transition: { duration: 0.2 } } }
+    : {
+        hidden: { opacity: 0, y: 18, scale: 0.98, filter: 'blur(6px)' },
+        shown: { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', transition: { duration: 0.55, ease: EXPO } },
+      };
+
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative overflow-hidden rounded-[28px] bg-white p-7 shadow-2xl ring-1 ring-black/5 md:p-10">
+      {/* Le tableau se POSE (entree orchestree : scale + flou) */}
+      <motion.div
+        initial={rm ? { opacity: 0 } : { opacity: 0, scale: 0.97, filter: 'blur(8px)', y: 10 }}
+        animate={rm ? { opacity: 1 } : { opacity: 1, scale: 1, filter: 'blur(0px)', y: 0 }}
+        transition={{ duration: rm ? 0.2 : 0.6, ease: EXPO }}
+        className="relative overflow-hidden rounded-[28px] bg-white p-7 shadow-2xl ring-1 ring-black/5 md:p-10"
+      >
         <h1 className="break-words text-2xl font-extrabold leading-tight text-slate-900 md:text-[34px]">
-          <Handwriting text={title} perCharMs={22} writing={step === 0} />
+          <Handwriting text={title} perCharMs={22} writing={step === 0} rm={rm} />
         </h1>
-        <HandUnderline play={step >= 1} />
+        <HandUnderline play={step >= 1} rm={rm} />
         {subtitle ? (
-          <p className="mt-2 text-base font-medium text-blue-700 md:text-lg">
-            {step >= 1 ? subtitle : <span className="opacity-0">{subtitle}</span>}
-          </p>
+          <motion.p
+            className="mt-2 text-base font-medium text-blue-700 md:text-lg"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: step >= 1 ? 1 : 0 }}
+            transition={{ duration: 0.4, ease: QUINT, delay: 0.1 }}
+          >
+            {subtitle}
+          </motion.p>
         ) : null}
 
         <div className="mt-6 flex flex-col gap-4">
@@ -155,46 +166,59 @@ export default function TableauVivant({ title, subtitle, blocks = [], autoplay =
                 initial="hidden"
                 animate="shown"
                 variants={REVEAL}
-                className={`rounded-2xl border p-4 transition-colors ${
+                className={`relative overflow-hidden rounded-2xl border p-4 ${
                   b.type === 'retain'
                     ? 'border-amber-400 bg-amber-50'
                     : isActive
-                      ? 'border-amber-300 bg-amber-50/70'
+                      ? 'border-amber-300'
                       : 'border-slate-200 bg-slate-50/60'
                 }`}
               >
-                {b.label ? (
-                  <div className={`mb-1.5 text-[11px] font-bold uppercase tracking-wider ${b.type === 'retain' ? 'text-amber-700' : 'text-blue-700'}`}>
-                    {b.label}
-                  </div>
+                {/* Surligneur anime : balaie le bloc en cours de lecture */}
+                {isActive && b.type !== 'retain' && !rm ? (
+                  <motion.div
+                    aria-hidden
+                    className="absolute inset-0 origin-left bg-amber-100/70"
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 1.1, ease: QUINT }}
+                  />
                 ) : null}
 
-                {b.type === 'diagram' ? (
-                  <HandDrawnDiagram play={revealed} />
-                ) : b.type === 'list' ? (
-                  <ul className="grid gap-2 md:grid-cols-2">
-                    {(b.items || []).map((it, j) => (
-                      <motion.li
-                        key={j}
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.15 + j * 0.18, duration: 0.35, ease: EASE }}
-                        className="flex items-start gap-2 rounded-lg bg-white/70 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-200"
-                      >
-                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
-                        <span>{it}</span>
-                      </motion.li>
-                    ))}
-                  </ul>
-                ) : b.type === 'retain' ? (
-                  <div className="text-xl font-extrabold leading-snug text-slate-900 md:text-2xl">
-                    <Handwriting text={b.text} perCharMs={26} writing={isActive} />
-                  </div>
-                ) : (
-                  <div className="text-[15px] leading-relaxed text-slate-700 md:text-base">
-                    {isActive ? <Handwriting text={b.text} perCharMs={16} writing /> : b.text}
-                  </div>
-                )}
+                <div className="relative">
+                  {b.label ? (
+                    <div className={`mb-1.5 text-[11px] font-bold uppercase tracking-wider ${b.type === 'retain' ? 'text-amber-700' : 'text-blue-700'}`}>
+                      {b.label}
+                    </div>
+                  ) : null}
+
+                  {b.type === 'diagram' ? (
+                    <HandDrawnDiagram play={revealed} rm={rm} />
+                  ) : b.type === 'list' ? (
+                    <ul className="grid gap-2 md:grid-cols-2">
+                      {(b.items || []).map((it, j) => (
+                        <motion.li
+                          key={j}
+                          initial={rm ? { opacity: 0 } : { opacity: 0, x: -10, filter: 'blur(3px)' }}
+                          animate={rm ? { opacity: 1 } : { opacity: 1, x: 0, filter: 'blur(0px)' }}
+                          transition={{ delay: rm ? 0 : 0.15 + j * 0.16, duration: 0.4, ease: EXPO }}
+                          className="flex items-start gap-2 rounded-lg bg-white/80 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-200"
+                        >
+                          <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+                          <span>{it}</span>
+                        </motion.li>
+                      ))}
+                    </ul>
+                  ) : b.type === 'retain' ? (
+                    <div className="text-xl font-extrabold leading-snug text-slate-900 md:text-2xl">
+                      <Handwriting text={b.text} perCharMs={26} writing={isActive} rm={rm} />
+                    </div>
+                  ) : (
+                    <div className="text-[15px] leading-relaxed text-slate-700 md:text-base">
+                      {isActive ? <Handwriting text={b.text} perCharMs={16} writing rm={rm} /> : b.text}
+                    </div>
+                  )}
+                </div>
               </motion.div>
             );
           })}
@@ -202,18 +226,18 @@ export default function TableauVivant({ title, subtitle, blocks = [], autoplay =
 
         <div className="pointer-events-none absolute right-5 top-5 flex items-center gap-2 rounded-full bg-slate-900/5 px-3 py-1.5">
           <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500/60" />
+            {!rm ? <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500/60" /> : null}
             <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-600" />
           </span>
           <span className="text-[11px] font-semibold text-slate-500">Narration</span>
         </div>
-      </div>
+      </motion.div>
 
       <div className="flex items-center justify-center gap-3">
         <button
           type="button"
           onClick={() => setPlaying((p) => !p)}
-          className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
+          className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10"
         >
           {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           {playing ? 'Pause' : 'Lire'}
@@ -221,7 +245,7 @@ export default function TableauVivant({ title, subtitle, blocks = [], autoplay =
         <button
           type="button"
           onClick={replay}
-          className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
+          className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10"
         >
           <RotateCcw className="h-4 w-4" /> Rejouer
         </button>

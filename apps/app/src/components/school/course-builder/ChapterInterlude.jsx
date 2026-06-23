@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { ArrowRight, Volume2 } from 'lucide-react';
 import TableauVivant from './TableauVivant';
 import { enqueueMultilangEdgeTts, stopMultilangEdgeTts } from '@/lib/liriMultilangTtsEdge';
@@ -25,6 +25,7 @@ export default function ChapterInterlude({
   onContinue,
 }) {
   const startedRef = useRef(false);
+  const rm = useReducedMotion();
 
   useEffect(() => {
     if (!open) { startedRef.current = false; return undefined; }
@@ -48,7 +49,12 @@ export default function ChapterInterlude({
           exit={{ opacity: 0 }}
           style={{ '--school-accent': 'var(--school-accent, #d4a36a)' }}
         >
-          <div className="flex w-full max-w-3xl flex-col gap-4">
+          <motion.div
+            className="flex w-full max-w-3xl flex-col gap-4"
+            initial={rm ? { opacity: 0 } : { opacity: 0, scale: 0.95, filter: 'blur(10px)', y: 14 }}
+            animate={rm ? { opacity: 1 } : { opacity: 1, scale: 1, filter: 'blur(0px)', y: 0 }}
+            transition={{ duration: rm ? 0.2 : 0.55, ease: [0.16, 1, 0.3, 1] }}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-amber-300">
                 <Volume2 className="h-4 w-4 animate-pulse" />
@@ -68,7 +74,7 @@ export default function ChapterInterlude({
             <div className="max-h-[78vh] overflow-y-auto">
               <TableauVivant key={title} title={title} subtitle={subtitle} blocks={blocks} autoplay />
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       ) : null}
     </AnimatePresence>
