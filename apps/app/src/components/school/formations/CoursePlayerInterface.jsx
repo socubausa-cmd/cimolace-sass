@@ -271,12 +271,15 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
   const [clickedMindmapNodeIds, setClickedMindmapNodeIds] = useState(new Set());
   const [liked, setLiked] = useState(false);
 
+  // Minimum de mots du Cahier pour débloquer Questions/Discussion (abaissé de 100 → 20 :
+  // 100 mots bloquait quasi tout le monde avant de pouvoir poser une question).
+  const MIN_NOTES_WORDS = 20;
   const notesWordCount = useMemo(() => {
     const txt = String(notesText || '').trim();
     if (!txt) return 0;
     return txt.split(/\s+/).filter(Boolean).length;
   }, [notesText]);
-  const notesFilled = useMemo(() => notesWordCount >= 100, [notesWordCount]);
+  const notesFilled = useMemo(() => notesWordCount >= MIN_NOTES_WORDS, [notesWordCount, MIN_NOTES_WORDS]);
 
   const [questionText, setQuestionText] = useState('');
   const [questionIsPublic, setQuestionIsPublic] = useState(true);
@@ -1271,8 +1274,8 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
               if (canShowPresentation && !presentationDone) return "Va jusqu'au dernier slide de la présentation.";
               if (canShowQuiz && !quizDone) return 'Termine le quiz pour continuer.';
               if (!notesFilled) {
-                const missing = Math.max(0, 100 - notesWordCount);
-                return `Remplis ton cahier (minimum 100 mots). Il manque ${missing} mot${missing > 1 ? 's' : ''}.`;
+                const missing = Math.max(0, MIN_NOTES_WORDS - notesWordCount);
+                return `Remplis ton cahier (minimum ${MIN_NOTES_WORDS} mots). Il manque ${missing} mot${missing > 1 ? 's' : ''}.`;
               }
               return '';
             };
@@ -1402,7 +1405,21 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               );
                             })()}
                           />
-                          <div className="flex items-center justify-end">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              disabled={videoDone}
+                              onClick={() => setVideoDone(true)}
+                              title="Valider que tu as regardé la vidéo (débloque la suite même si la lecture ne s'est pas terminée d'elle-même)"
+                              className={
+                                videoDone
+                                  ? 'border-green-500/40 text-green-300 hover:bg-white/5 font-bold'
+                                  : 'border-white/10 text-white hover:bg-white/5 font-bold'
+                              }
+                            >
+                              {videoDone ? '✓ Vidéo vue' : "J'ai vu la vidéo"}
+                            </Button>
                             <Button
                               type="button"
                               variant="outline"
@@ -1990,8 +2007,8 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                       : 'Enregistré'
                                     : ''}
                             </div>
-                            <div className={notesWordCount >= 100 ? 'text-xs text-green-400' : 'text-xs text-gray-400'}>
-                              {notesWordCount}/100 mots
+                            <div className={notesWordCount >= MIN_NOTES_WORDS ? 'text-xs text-green-400' : 'text-xs text-gray-400'}>
+                              {notesWordCount}/{MIN_NOTES_WORDS} mots
                             </div>
                             <Textarea
                               value={notesText}
