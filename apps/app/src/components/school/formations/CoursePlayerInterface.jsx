@@ -27,6 +27,7 @@ import NodeExplanationPanel from '@/components/lesson-player/NodeExplanationPane
 import QuizPanel from '@/components/lesson-player/QuizPanel';
 import StudentSmartboardDeck from '@/components/school/course-builder/StudentSmartboardDeck';
 import ChapterInterlude from '@/components/school/course-builder/ChapterInterlude';
+import ImmersiveClassroom from '@/components/school/course-builder/ImmersiveClassroom';
 import { buildDeckFromMindmap } from '@/lib/smartboard/buildDeckFromMindmap';
 import QuestionPanel from '@/components/lesson-player/QuestionPanel';
 import { tsToSeconds } from '@/components/lesson-player/types';
@@ -64,6 +65,42 @@ function buildInterludeForChapter(videoMemo, chapterIndex) {
     return { chapterLabel: section.label, title, blocks, narration };
   } catch {
     return null;
+  }
+}
+
+// « Salle de classe » immersive — construit TOUS les chapitres d'un cours en blocs
+// Tableau Vivant (idée centrale / objectif / points clés / à retenir) depuis le
+// mindmap + slideContent générés en post-production. Renvoie [] si rien à jouer
+// (→ le bouton « Salle de classe » n'apparaît pas, on garde le player normal).
+function buildClassroomChapters(videoMemo) {
+  try {
+    const deck = buildDeckFromMindmap(videoMemo?.mindmap || null, Array.isArray(videoMemo?.chapters) ? videoMemo.chapters : []);
+    const sections = deck?.sections || [];
+    const sc = (s) => s?.slideContent || {};
+    const out = [];
+    for (const section of sections) {
+      const slides = section?.slides || [];
+      if (!slides.length) continue;
+      const first = sc(slides[0]);
+      const title = section.label || first.title || slides[0]?.label || 'Chapitre';
+      const idea = slides.map((s) => sc(s).ideeCentrale || s.summary).filter(Boolean)[0];
+      const objectif = slides.map((s) => sc(s).objectif).filter(Boolean)[0];
+      const branches = (first.branches || []).map((b) => b?.label).filter(Boolean);
+      const keyPoints = slides.map((s) => sc(s).aRetenir || s.label).filter(Boolean);
+      const retain = slides.map((s) => sc(s).aRetenir).filter(Boolean)[0];
+      const list = (branches.length ? branches : keyPoints).slice(0, 4);
+      const blocks = [];
+      if (idea) blocks.push({ type: 'idea', label: 'Idée centrale', text: idea });
+      if (objectif) blocks.push({ type: 'objective', label: 'Objectif', text: objectif });
+      if (list.length) blocks.push({ type: 'list', label: 'Les points clés', items: list });
+      if (retain) blocks.push({ type: 'retain', label: 'À retenir', text: retain });
+      if (!blocks.length) continue;
+      const narration = [title, idea, objectif, ...list, retain].filter(Boolean).join('. ');
+      out.push({ chapterLabel: section.label, title, subtitle: '', blocks, narration });
+    }
+    return out;
+  } catch {
+    return [];
   }
 }
 
@@ -463,6 +500,11 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
     if (keyed?.url === normalizedUrl) return keyed;
     return { ...keyed, url: normalizedUrl };
   }, [activeItem?.kind, activeItem?.payload]);
+
+  // « Salle de classe » immersive (plein écran, non destructif) — disponible
+  // uniquement si le cours a déjà son contenu généré (mindmap post-prod).
+  const [showClassroom, setShowClassroom] = useState(false);
+  const classroomChapters = useMemo(() => buildClassroomChapters(currentVideoMemo), [currentVideoMemo]);
 
   // Phase C — video_id du Sujet de discussion = formation_day_contents.id (UUID réel).
   const discussionVideoId = useMemo(() => {
@@ -1592,6 +1634,26 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               narration={chapterInterlude?.narration}
                               supabase={supabase}
                               onContinue={() => { setChapterInterlude(null); videoPlayerRef.current?.play?.(); }}
+                            />
+
+                            {/* Salle de classe immersive — petit bouton au coin + overlay plein écran.
+                                NON destructif : la vidéo scrubbable, le forum et les notes restent dessous.
+                                Visible seulement si le cours a déjà son contenu généré (post-prod). */}
+                            {classroomChapters.length > 0 && !showClassroom ? (
+                              <button
+                                type="button"
+                                onClick={() => { videoPlayerRef.current?.pause?.(); setShowClassroom(true); }}
+                                title="Voir le cours en plein écran — le tableau qui enseigne (narré)"
+                                className="fixed right-5 top-24 z-[120] inline-flex items-center gap-2 rounded-full border border-[var(--school-accent,#D4AF37)]/40 bg-[#12111a]/90 px-4 py-2.5 text-sm font-semibold text-[var(--school-accent,#D4AF37)] shadow-xl backdrop-blur transition-colors hover:bg-[#12111a]"
+                              >
+                                <Sparkles className="h-4 w-4" /> Salle de classe
+                              </button>
+                            ) : null}
+                            <ImmersiveClassroom
+                              open={showClassroom}
+                              chapters={classroomChapters}
+                              title={currentVideoMemo?.title || 'Cours'}
+                              onClose={() => setShowClassroom(false)}
                             />
 
                             {mindmapOpen ? (
