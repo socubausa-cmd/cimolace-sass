@@ -2,9 +2,10 @@
  * Normalise une ligne live_scenes (ou brouillon wizard) vers le format SlideParallaxStage.
  */
 
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
-const LIVE_SCENE_BADGE_LABEL = `${isnaTenantConfig.branding.name} · LIRI`;
+/** Badge « <tenant> · LIRI » résolu au runtime (tenant courant ; neutre LIRI hors tenant). */
+const liveSceneBadgeLabel = () => `${getActiveTenantBranding().name} · LIRI`;
 
 /** Visionneuse plein cadre SmartBoard : PDF natif, PowerPoint via Office Online (URL publique HTTPS requise). */
 export function getDocumentEmbedSrc(url, documentKind) {
@@ -72,7 +73,7 @@ export function buildLiveScenesFromUploadedSlides(uploaded) {
       order_index: 10_000 + i,
       content_payload_json: {
         elements: [
-          { id: `u-${i}-badge`, type: 'badge', content: LIVE_SCENE_BADGE_LABEL, x: 44, y: 32, width: 360, height: 26, zIndex: 2 },
+          { id: `u-${i}-badge`, type: 'badge', content: liveSceneBadgeLabel(), x: 44, y: 32, width: 360, height: 26, zIndex: 2 },
           { id: `u-${i}-title`, type: 'title', content: label, x: 44, y: 72, width: 772, height: 72, zIndex: 3 },
           { id: `u-${i}-img`, type: 'image', src: s.url, content: s.label || '', x: 44, y: 150, width: 772, height: 520, zIndex: 2 },
         ],
@@ -171,7 +172,7 @@ export function normalizeLiveSceneToSlide(scene) {
       id,
       title,
       elements: normalizeElements([
-        { id: `${id}-badge`, type: 'badge', content: LIVE_SCENE_BADGE_LABEL, x: 44, y: 32, width: 360, height: 26, zIndex: 2 },
+        { id: `${id}-badge`, type: 'badge', content: liveSceneBadgeLabel(), x: 44, y: 32, width: 360, height: 26, zIndex: 2 },
         { id: `${id}-title`, type: 'title', content: title, x: 44, y: 72, width: 772, height: 72, zIndex: 3 },
         { id: `${id}-img`, type: 'image', src: imgUrl, content: payload.caption || '', x: 44, y: 150, width: 772, height: 520, zIndex: 2 },
       ]),
@@ -187,7 +188,7 @@ export function normalizeLiveSceneToSlide(scene) {
     id,
     title,
     elements: [
-      { id: `${id}-badge`, type: 'badge',     content: LIVE_SCENE_BADGE_LABEL,                                            x: 44, y: 32,  width: 360, height: 26,  zIndex: 2, animation: 'fade' },
+      { id: `${id}-badge`, type: 'badge',     content: liveSceneBadgeLabel(),                                            x: 44, y: 32,  width: 360, height: 26,  zIndex: 2, animation: 'fade' },
       { id: `${id}-title`, type: 'title',     content: title,                                                            x: 44, y: 80,  width: 772, height: 100, zIndex: 3, animation: 'fade-up' },
       { id: `${id}-p`,     type: 'paragraph', content: body,                                                             x: 44, y: 220, width: 772, height: 360, zIndex: 2, animation: 'fade' },
       { id: `${id}-q`,     type: 'quote',     content: payload.retention_text || 'A retenir : structurez, illustrez, engagez.', x: 44, y: 620, width: 772, height: 76,  zIndex: 2, animation: 'spotlight' },

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
 export const DEFAULT_MAILBOX_ID = 'a0000000-0000-4000-8000-000000000001';
 
@@ -32,7 +32,7 @@ export function getSuggestedOffer(label) {
     urgence: 'Consultation prioritaire',
     appointment_request: 'Proposer un créneau (booking)',
     consultation: 'Consultation spirituelle',
-    commercial_education: `Cursus / modules ${isnaTenantConfig.branding.name}`,
+    commercial_education: `Cursus / modules ${getActiveTenantBranding().name}`,
     support: 'Ticket support',
     information: 'Réponse info ou orientation cursus',
   };

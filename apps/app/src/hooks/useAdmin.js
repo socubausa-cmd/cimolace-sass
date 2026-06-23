@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { resolveVitrineContactEmailSync } from '@/lib/vitrineContactEmail';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
 let auditLogsTableAvailable = true;
 
@@ -440,7 +440,7 @@ export const useSystemSettings = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [settings, setSettings] = useState({
-    site_name: `${isnaTenantConfig.branding.name} Academy`,
+    site_name: `${getActiveTenantBranding().name} Academy`,
     contact_email: resolveVitrineContactEmailSync(),
     session_expiration_minutes: 60,
     force_2fa_admin: false,
