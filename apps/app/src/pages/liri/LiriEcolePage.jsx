@@ -19,9 +19,26 @@ import OwnerFormationsTab from '@/components/owner/OwnerFormationsTab';
 import { CalendarSection } from '@/components/school/school-life/CalendarComponents';
 import SecretariatOverview from '@/components/secretariat/SecretariatOverview';
 import SecretariatStudentDashboard from '@/components/secretariat/SecretariatStudentDashboard';
-import { SslThemeProvider, SSL_LIGHT_CLASS, ensureSslLightStyles } from '@/pages/school/student-school-life/sslTheme';
+import { SslThemeProvider } from '@/pages/school/student-school-life/sslTheme';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { catalogApi } from '@/lib/api-v2';
+
+// Les surfaces réutilisées lisent les tokens `--lt-*` (définis ailleurs sous le shell
+// ADMIN `.premium-app-shell` → indéfinis ici). On les REMAPPE en SOMBRE CHAUD, à la
+// palette du portail LIRI (cartes sombres chaudes + accent terracotta) → le contenu
+// épouse le shell au lieu d'un fond blanc.
+const ECOLE_THEME_VARS = {
+  '--lt-text': '#f5f1e9',
+  '--lt-sub': 'rgba(245,241,233,0.60)',
+  '--lt-muted': 'rgba(245,241,233,0.42)',
+  '--lt-border': 'rgba(245,241,233,0.10)',
+  '--lt-card-bg': '#211e1a',
+  '--lt-card-border': 'rgba(245,241,233,0.08)',
+  '--lt-card-shadow': '0 10px 30px -16px rgba(0,0,0,0.6)',
+  '--lt-inner-bg': '#191512',
+  '--lt-gold': '#d97757',
+  '--lt-gold-ink': '#e58a5f',
+};
 
 const TABS = [
   { id: 'apercu', label: 'Aperçu', icon: LayoutDashboard },
@@ -37,8 +54,6 @@ const ECOLE_SERVICE_KEYS = ['course_builder', 'school', 'school_module', 'format
 export default function LiriEcolePage() {
   const [activeTab, setActiveTab] = useState('apercu');
   const [ecoleActive, setEcoleActive] = useState(null); // null=inconnu (affiché), false=non activé
-
-  useEffect(() => { ensureSslLightStyles(); }, []);
 
   // GATE #3 : l'École s'affiche si un moteur école est actif (tenant_services).
   // Fail-open : si l'appel échoue, on n'enferme pas l'utilisateur (on affiche).
@@ -108,16 +123,15 @@ export default function LiriEcolePage() {
           </div>
         </div>
 
-        {/* Contenu école dans son thème SSL CLAIR (cream → harmonise avec le shell
-            terracotta + fournit les tokens --lt-*). ErrorBoundary par onglet. */}
-        <div className="min-h-0 flex-1 overflow-auto">
-          <div className={SSL_LIGHT_CLASS}>
-            <ErrorBoundary key={activeTab} logTag={`LIRI École · ${activeTab}`}>
-              <SslThemeProvider mode="light">
-                <div className="p-4">{renderContent()}</div>
-              </SslThemeProvider>
-            </ErrorBoundary>
-          </div>
+        {/* Contenu en SOMBRE CHAUD (tokens --lt-* remappés → palette portail) → épouse
+            le shell terracotta, fini le fond blanc. SslThemeProvider mode=dark pour les
+            surfaces qui lisent le mode via contexte. ErrorBoundary par onglet. */}
+        <div className="min-h-0 flex-1 overflow-auto" style={ECOLE_THEME_VARS}>
+          <ErrorBoundary key={activeTab} logTag={`LIRI École · ${activeTab}`}>
+            <SslThemeProvider mode="dark">
+              <div className="p-4">{renderContent()}</div>
+            </SslThemeProvider>
+          </ErrorBoundary>
         </div>
       </div>
     </LiriPortalShell>
