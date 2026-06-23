@@ -209,10 +209,22 @@ export function useLiveAlertsForUser(userId) {
     return () => clearInterval(interval);
   }, [uid, load, loadPublicLives]);
 
+  // Nom de canal UNIQUE par instance du hook : sans ça, deux composants qui montent
+  // ce hook avec le même uid réutilisent le canal DÉJÀ souscrit, et le 2e `.on()`
+  // lève « cannot add postgres_changes callbacks ... after subscribe() » (bug realtime
+  // app-wide ; vu p.ex. DashboardLiveSessionsPanel monté à côté d'une bannière live).
+  const chanIdRef = useRef(null);
+  if (!chanIdRef.current) {
+    chanIdRef.current =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID().slice(0, 8)
+        : Math.random().toString(36).slice(2, 10);
+  }
+
   useEffect(() => {
     if (!uid) return undefined;
     const ch = supabase
-      .channel(`live_alerts_${uid}`)
+      .channel(`live_alerts_${uid}_${chanIdRef.current}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'live_invitations', filter: `user_id=eq.${uid}` }, scheduleLoad)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'live_waiting_room_entries', filter: `user_id=eq.${uid}` }, scheduleLoad)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'live_visibility_rules' }, scheduleLoad)
@@ -230,7 +242,7 @@ export function useLiveAlertsForUser(userId) {
   useEffect(() => {
     if (uid) return undefined;
     const ch = supabase
-      .channel('live_alerts_public_anon')
+      .channel(`live_alerts_public_anon_${chanIdRef.current}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'live_visibility_rules' }, schedulePublicLoad)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'live_sessions' }, schedulePublicLoad)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'live_neuro_recall_state' }, schedulePublicLoad)
