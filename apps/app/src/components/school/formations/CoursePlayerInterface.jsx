@@ -1264,10 +1264,16 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
             const canShowPresentation = !!currentDayPowerpoint;
             const canShowQuiz = !!currentDayQuiz;
 
-            const questionsUnlocked = videoDone
+            // ⚠️ GATING DÉSACTIVÉ (mode test) : Question / Discussion / Forum accessibles
+            // directement, sans condition. Pour RÉACTIVER la pédagogie (vidéo + présentation +
+            // quiz + 20 mots de cahier), remettre simplement GATING_ENABLED = true.
+            const GATING_ENABLED = false;
+            const questionsUnlocked = !GATING_ENABLED || (
+              videoDone
               && (!canShowPresentation || presentationDone)
               && (!canShowQuiz || quizDone)
-              && notesFilled;
+              && notesFilled
+            );
 
             const getQuestionsLockedReason = () => {
               if (!videoDone) return 'Termine la vidéo pour débloquer les questions.';
