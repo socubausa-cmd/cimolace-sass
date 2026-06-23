@@ -29,6 +29,7 @@ import StudentSmartboardDeck from '@/components/school/course-builder/StudentSma
 import ChapterInterlude from '@/components/school/course-builder/ChapterInterlude';
 import ImmersiveClassroom from '@/components/school/course-builder/ImmersiveClassroom';
 import { buildDeckFromMindmap } from '@/lib/smartboard/buildDeckFromMindmap';
+import { buildClassroomChapters } from '@/lib/smartboard/buildClassroomChapters';
 import QuestionPanel from '@/components/lesson-player/QuestionPanel';
 import { tsToSeconds } from '@/components/lesson-player/types';
 import NotesPanel from '@/components/lesson-player/NotesPanel';
@@ -65,42 +66,6 @@ function buildInterludeForChapter(videoMemo, chapterIndex) {
     return { chapterLabel: section.label, title, blocks, narration };
   } catch {
     return null;
-  }
-}
-
-// « Salle de classe » immersive — construit TOUS les chapitres d'un cours en blocs
-// Tableau Vivant (idée centrale / objectif / points clés / à retenir) depuis le
-// mindmap + slideContent générés en post-production. Renvoie [] si rien à jouer
-// (→ le bouton « Salle de classe » n'apparaît pas, on garde le player normal).
-function buildClassroomChapters(videoMemo) {
-  try {
-    const deck = buildDeckFromMindmap(videoMemo?.mindmap || null, Array.isArray(videoMemo?.chapters) ? videoMemo.chapters : []);
-    const sections = deck?.sections || [];
-    const sc = (s) => s?.slideContent || {};
-    const out = [];
-    for (const section of sections) {
-      const slides = section?.slides || [];
-      if (!slides.length) continue;
-      const first = sc(slides[0]);
-      const title = section.label || first.title || slides[0]?.label || 'Chapitre';
-      const idea = slides.map((s) => sc(s).ideeCentrale || s.summary).filter(Boolean)[0];
-      const objectif = slides.map((s) => sc(s).objectif).filter(Boolean)[0];
-      const branches = (first.branches || []).map((b) => b?.label).filter(Boolean);
-      const keyPoints = slides.map((s) => sc(s).aRetenir || s.label).filter(Boolean);
-      const retain = slides.map((s) => sc(s).aRetenir).filter(Boolean)[0];
-      const list = (branches.length ? branches : keyPoints).slice(0, 4);
-      const blocks = [];
-      if (idea) blocks.push({ type: 'idea', label: 'Idée centrale', text: idea });
-      if (objectif) blocks.push({ type: 'objective', label: 'Objectif', text: objectif });
-      if (list.length) blocks.push({ type: 'list', label: 'Les points clés', items: list });
-      if (retain) blocks.push({ type: 'retain', label: 'À retenir', text: retain });
-      if (!blocks.length) continue;
-      const narration = [title, idea, objectif, ...list, retain].filter(Boolean).join('. ');
-      out.push({ chapterLabel: section.label, title, subtitle: '', blocks, narration });
-    }
-    return out;
-  } catch {
-    return [];
   }
 }
 

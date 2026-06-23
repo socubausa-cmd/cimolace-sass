@@ -22,10 +22,13 @@ import {
   Map,
   Award,
   AlertCircle,
+  Sparkles,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
+import ImmersiveClassroom from '@/components/school/course-builder/ImmersiveClassroom';
+import { buildClassroomChapters } from '@/lib/smartboard/buildClassroomChapters';
 
 // ── Design tokens — thème CLAIR (Wix Studio) ──────────────────────────────────
 // Cette page « Ma semaine » est routée séparément dans App.jsx et n'est atteinte
@@ -281,7 +284,7 @@ function DurationChip({ minutes }) {
 }
 
 /** Inline video modal */
-function VideoModal({ videoUrl, title, onClose }) {
+function VideoModal({ videoUrl, title, onClose, onOpenClassroom }) {
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape') onClose(); }
     window.addEventListener('keydown', onKey);
@@ -331,16 +334,32 @@ function VideoModal({ videoUrl, title, onClose }) {
           borderBottom: `1px solid ${T.border}`,
         }}>
           <span style={{ color: T.t1, fontSize: 14, fontWeight: 600 }}>{title || 'Vidéo'}</span>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'rgba(0,0,0,0.05)', border: 'none',
-              borderRadius: 8, width: 30, height: 30, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.t2,
-            }}
-          >
-            <X size={16} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {onOpenClassroom ? (
+              <button
+                onClick={onOpenClassroom}
+                title="Voir ce cours en plein écran — le tableau qui enseigne (narré)"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  background: 'rgba(212,163,106,0.14)', border: '1px solid rgba(212,163,106,0.45)',
+                  borderRadius: 999, padding: '6px 12px', cursor: 'pointer',
+                  color: '#b07f3c', fontSize: 12.5, fontWeight: 700,
+                }}
+              >
+                <Sparkles size={14} /> Salle de classe
+              </button>
+            ) : null}
+            <button
+              onClick={onClose}
+              style={{
+                background: 'rgba(0,0,0,0.05)', border: 'none',
+                borderRadius: 8, width: 30, height: 30, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.t2,
+              }}
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
         {/* Video */}
         <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
@@ -815,6 +834,30 @@ export default function StudentWeeklySchedulePage() {
 
   // UI state
   const [videoModal, setVideoModal] = useState(null); // { block }
+  // Pont « Salle de classe » immersive : si le bloc vidéo du calendrier référence un
+  // contenu généré (data.content_id → formation_day_contents avec mindmap post-prod),
+  // on propose le plein écran narré. Sinon, modale vidéo classique (repli).
+  const [classroomChapters, setClassroomChapters] = useState([]);
+  const [showImmersive, setShowImmersive] = useState(false);
+
+  useEffect(() => {
+    const contentId = videoModal?.block?.data?.content_id;
+    if (!contentId) { setClassroomChapters([]); return undefined; }
+    let alive = true;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('formation_day_contents')
+          .select('data')
+          .eq('id', contentId)
+          .maybeSingle();
+        if (alive) setClassroomChapters(buildClassroomChapters(data?.data || null));
+      } catch {
+        if (alive) setClassroomChapters([]);
+      }
+    })();
+    return () => { alive = false; };
+  }, [videoModal?.block?.data?.content_id]);
   const [quizModal,  setQuizModal]  = useState(null); // { block }
 
   // Completed blocks tracking
@@ -1235,8 +1278,19 @@ export default function StudentWeeklySchedulePage() {
           videoUrl={videoModal.block.data?.video_url}
           title={videoModal.block.title}
           onClose={() => setVideoModal(null)}
+          onOpenClassroom={classroomChapters.length > 0 ? () => setShowImmersive(true) : undefined}
         />
       )}
+
+      {/* Salle de classe immersive plein écran — pour les cours du calendrier reliés
+          à un contenu généré (data.content_id). Non destructif : superposé. */}
+      <ImmersiveClassroom
+        open={showImmersive}
+        chapters={classroomChapters}
+        title={videoModal?.block?.title || 'Cours'}
+        supabase={supabase}
+        onClose={() => setShowImmersive(false)}
+      />
 
       {/* ── Quiz modal ── */}
       {quizModal && (
