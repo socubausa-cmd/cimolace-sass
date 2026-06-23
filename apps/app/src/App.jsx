@@ -528,6 +528,8 @@ const SmartboardStreamingPage = lazy(() => import('@/app/dashboard/liri/smartboa
 const DashboardLiri = lazy(() => import('@/pages/liri/DashboardLiri').then((m) => ({ default: m.DashboardLiri })));
 // Portail LIRI — accueil/hub (rail Accueil/Lives/Forum/Studio/Biblio/Brain + stats live)
 const LiriPortalPage = lazy(() => import('@/pages/liri/LiriPortalPage').then((m) => ({ default: m.LiriPortalPage })));
+// Module ÉCOLE HORIZONTAL dans le portail LIRI (vertical = /t/:slug ; ici = app activable dans /liri)
+const LiriEcolePage = lazy(() => import('@/pages/liri/LiriEcolePage'));
 const LiriStudioHub = lazy(() => import('@/pages/dev/LiriStudioHub'));
 const LiriAdminShellDemo = lazy(() => import('@/pages/dev/LiriAdminShellDemo'));
 const MasterclassFactoryV2 = lazy(() => import('@/pages/dev/MasterclassFactoryV2'));
@@ -1492,6 +1494,13 @@ isLiriHostDevPreviewRoute;
           <Route path="/liri" element={
             <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole>
               <LiriPortalPage />
+            </ProtectedLiriRoute>
+          } />
+          {/* Module ÉCOLE HORIZONTAL : le back-office école monté DANS le portail LIRI
+              (pour un tenant LIRI sans site vertical /t/:slug). */}
+          <Route path="/liri/ecole" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat']} allowTenantRole>
+              <LiriEcolePage />
             </ProtectedLiriRoute>
           } />
           <Route path="/choose-account-type" element={

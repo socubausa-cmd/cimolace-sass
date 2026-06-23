@@ -4,7 +4,7 @@ import {
   Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare, MessageCircle, WandSparkles,
   Library, Blocks, Settings2, Mic, ArrowUp, LogIn, CalendarPlus, PenTool,
   ShoppingBag, Clock, ChevronRight, Film, ChevronLeft, UserRound, Plus,
-  Clapperboard, Radio, FilePenLine, BadgeDollarSign, Webhook,
+  Clapperboard, Radio, FilePenLine, BadgeDollarSign, Webhook, GraduationCap,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { authStore } from '@/lib/auth-store';
@@ -154,6 +154,7 @@ export function LiriPortalPage() {
     { key: 'forum', label: 'Forum', icon: MessagesSquare, to: '/dashboard', badge: 5 },
     { key: 'messages', label: 'Messages', icon: MessageCircle, to: '/messages' },
     { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri' },
+    { key: 'ecole', label: 'École', icon: GraduationCap, to: '/liri/ecole' },
     { key: 'biblio', label: 'Biblio.', icon: Library, to: '/studio/liri/bibliotheque' },
     { key: 'brain', label: 'Brain', icon: Sparkles, to: '/dashboard/liri' },
   ];
