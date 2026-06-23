@@ -130,6 +130,58 @@ function applyAutoCorrection(input) {
   return out.replace(/\s{2,}/g, ' ').trim();
 }
 
+// Lecteur du replay : le message du Sujet porte l'URL STABLE de l'endpoint
+// (/lives/:id/replay/file). On la fetche avec le Bearer de l'élève → l'API vérifie
+// l'accès (fail-closed) et renvoie une URL R2 présignée FRAÎCHE (TTL court) qu'on
+// joue. Le JWT n'est JAMAIS mis dans la balise <video>. Rétro-compat : si l'URL
+// n'est pas l'endpoint (ancienne URL R2 présignée directe), on la joue telle quelle.
+function ReplayPlayer({ apiUrl, label }) {
+  const isEndpoint = /\/lives\/[^/]+\/replay\/file/.test(apiUrl);
+  const [src, setSrc] = useState(isEndpoint ? null : apiUrl);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (!isEndpoint) return undefined;
+    let alive = true;
+    (async () => {
+      try {
+        const token = (await supabase.auth.getSession())?.data?.session
+          ?.access_token;
+        const res = await fetch(apiUrl, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        const body = await res.json();
+        const url = body?.data?.url || body?.url || '';
+        if (alive) url ? setSrc(url) : setFailed(true);
+      } catch {
+        if (alive) setFailed(true);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [apiUrl, isEndpoint]);
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-semibold text-[var(--school-accent)]">{label}</p>
+      {src ? (
+        <video
+          controls
+          preload="metadata"
+          className="w-full max-w-2xl mx-auto rounded-2xl border border-white/10 shadow-xl bg-black"
+        >
+          <source src={src} />
+          Votre navigateur ne supporte pas la lecture vidéo.
+        </video>
+      ) : failed ? (
+        <p className="text-xs text-gray-400">Replay indisponible.</p>
+      ) : (
+        <p className="text-xs text-gray-400">Chargement du replay…</p>
+      )}
+    </div>
+  );
+}
+
 function renderMessageContent(content) {
   const value = String(content || '');
   const trimmed = value.trim();
@@ -160,23 +212,15 @@ function renderMessageContent(content) {
   if (trimmed.startsWith('📹 Replay du live')) {
     const url = (trimmed.match(/(https?:\/\/[^\s]+)/) || [])[1] || '';
     const label = trimmed.split('\n')[0];
-    return (
-      <div className="space-y-2">
-        <p className="text-sm font-semibold text-[var(--school-accent)]">{label}</p>
-        {url ? (
-          <video
-            controls
-            preload="metadata"
-            className="w-full max-w-2xl mx-auto rounded-2xl border border-white/10 shadow-xl bg-black"
-          >
-            <source src={url} />
-            Votre navigateur ne supporte pas la lecture vidéo.
-          </video>
-        ) : (
+    if (!url) {
+      return (
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-[var(--school-accent)]">{label}</p>
           <p className="text-xs text-gray-400">Replay en cours de préparation…</p>
-        )}
-      </div>
-    );
+        </div>
+      );
+    }
+    return <ReplayPlayer apiUrl={url} label={label} />;
   }
 
   const urlRegex = /(https?:\/\/[^\s]+)/g;
