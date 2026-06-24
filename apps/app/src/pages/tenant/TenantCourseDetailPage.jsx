@@ -336,15 +336,16 @@ export default function TenantCourseDetailPage() {
 
       {modules.length === 0 ? (
         <div
-          className="flex flex-col items-center justify-center rounded-2xl py-16 text-center"
-          style={{ border: `1px dashed ${T.borderMid}`, background: 'rgba(18,17,26,0.5)' }}
+          className="flex flex-col items-center justify-center py-16 text-center"
+          style={{ borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}
         >
           <BookOpen className="mb-3 h-9 w-9" style={{ color: T.t4 }} />
           <p className="text-sm" style={{ color: T.t2 }}>Ce cours n'a pas encore de modules.</p>
           <p className="mt-1 text-xs" style={{ color: T.t3 }}>Ajoute du contenu depuis le Studio pour construire le programme.</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl" style={{ border: `1px solid ${T.border}`, background: 'rgba(18,17,26,0.55)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', boxShadow: '0 24px 70px rgba(0,0,0,0.34)' }}>
+        /* Liste à plat — pas de carte : fond la liste dans la scène (juste des filets) */
+        <div style={{ borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
           {modules.map((mod, i) => {
             const modLessons = lessons[mod.id] ?? [];
             const expanded = expandedModules.has(mod.id);
