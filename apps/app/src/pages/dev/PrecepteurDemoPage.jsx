@@ -20,17 +20,21 @@ function b64ToAudioUrl(b64, mime) {
   return URL.createObjectURL(new Blob([bytes], { type: mime || 'audio/mpeg' }));
 }
 
-// liri-tts (ElevenLabs) — EXIGE le token de session (supabaseCompat ne l'ajoute pas tout seul).
+// liri-tts (ElevenLabs Multilingual v2 = le plus réaliste) — EXIGE le token de session.
+// Renvoie { b64, mime } en cas de succès, sinon { error } (pour diagnostiquer).
 async function ttsFetch(text) {
   try {
     const { data: sess } = await supabase.auth.getSession();
     const token = sess?.session?.access_token;
-    const opts = { body: { text: String(text || '').slice(0, 4500), languageCode: 'fr', tier: 'live' } };
-    if (token) opts.headers = { Authorization: `Bearer ${token}` };
-    const { data, error } = await supabase.functions.invoke('liri-tts', opts);
-    if (error || data?.error || !data?.audioBase64) return null;
-    return { b64: data.audioBase64, mime: data.mimeType };
-  } catch { return null; }
+    if (!token) return { error: 'non connecté (pas de session)' };
+    const { data, error } = await supabase.functions.invoke('liri-tts', {
+      body: { text: String(text || '').slice(0, 4500), languageCode: 'fr', tier: 'export' },
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (data?.audioBase64) return { b64: data.audioBase64, mime: data.mimeType };
+    const detail = (typeof data?.error === 'string' && data.error) || error?.message || 'échec liri-tts';
+    return { error: detail };
+  } catch (e) { return { error: String(e?.message || e) }; }
 }
 
 const imgCacheKey = (prompt) => {
@@ -80,6 +84,7 @@ export default function PrecepteurDemoPage() {
   const [done, setDone] = useState(false);
   const [analogyImages, setAnalogyImages] = useState({}); // sceneIndex -> { url?, loading?, error? }
   const [narrAudio, setNarrAudio] = useState({}); // sceneIndex -> blob URL (voix ElevenLabs)
+  const [ttsStatus, setTtsStatus] = useState('pending'); // 'pending' | 'ok' | { error }
   const speak = canSpeak();
   const audioRef = useRef(null); // élément <audio> courant
 
@@ -102,9 +107,14 @@ export default function PrecepteurDemoPage() {
       if (!text) return;
       ttsFetch(text).then((r) => {
         if (cancelled || !r) return;
-        const url = b64ToAudioUrl(r.b64, r.mime);
-        urls.push(url);
-        setNarrAudio((m) => ({ ...m, [i]: url }));
+        if (r.b64) {
+          const url = b64ToAudioUrl(r.b64, r.mime);
+          urls.push(url);
+          setNarrAudio((m) => ({ ...m, [i]: url }));
+          setTtsStatus('ok');
+        } else if (r.error) {
+          setTtsStatus((prev) => (prev === 'ok' ? prev : { error: r.error }));
+        }
       });
     });
     return () => { cancelled = true; urls.forEach((u) => { try { URL.revokeObjectURL(u); } catch { /* */ } }); };
@@ -187,7 +197,8 @@ export default function PrecepteurDemoPage() {
     if (!text) return;
     cancelSpeech(); stopAudio();
     const r = await ttsFetch(text);
-    if (r) { playAudioUrl(b64ToAudioUrl(r.b64, r.mime)); return; }
+    if (r?.b64) { playAudioUrl(b64ToAudioUrl(r.b64, r.mime)); setTtsStatus('ok'); return; }
+    if (r?.error) setTtsStatus((prev) => (prev === 'ok' ? prev : { error: r.error }));
     if (speak) speakText(text);
   }, [speak, stopAudio, playAudioUrl]);
 
@@ -295,10 +306,23 @@ export default function PrecepteurDemoPage() {
     <div className="flex min-h-screen flex-col bg-[#0b0f17] px-4 py-6 md:py-8" style={{ '--school-accent': '#d4a36a' }}>
       <div className={`mx-auto flex w-full flex-1 flex-col transition-[max-width] duration-500 ${wide ? 'max-w-6xl' : 'max-w-4xl'}`}>
         {/* En-tête */}
-        <div className="mb-4 flex items-center justify-center gap-2 text-amber-400/90">
+        <div className="mb-2 flex items-center justify-center gap-2 text-amber-400/90">
           <GraduationCap className="h-5 w-5" />
           <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Le Précepteur · cours enseigné</span>
         </div>
+
+        {/* Indicateur de voix (diagnostic) */}
+        {started ? (
+          <div className="mb-3 text-center text-[10px] font-semibold uppercase tracking-wider">
+            {ttsStatus === 'ok' ? (
+              <span className="text-emerald-400/80">🔊 Voix ElevenLabs · réaliste</span>
+            ) : ttsStatus === 'pending' ? (
+              <span className="text-white/30">🔊 préparation de la voix…</span>
+            ) : (
+              <span className="text-amber-400/70">🔊 voix navigateur (repli) — ElevenLabs indispo : {ttsStatus.error}</span>
+            )}
+          </div>
+        ) : null}
 
         {/* Progression */}
         {started && !done ? (
@@ -367,7 +391,7 @@ export default function PrecepteurDemoPage() {
 
         <p className="mt-5 text-center text-xs leading-relaxed text-white/35">
           Démo « Le Précepteur » — leçon → amorce → croquis dessiné (balayage) → atelier nominatif → analogie animée.
-          Voix off : synthèse du navigateur (en production : ElevenLabs).
+          Voix off : ElevenLabs (réaliste) si connecté, sinon synthèse du navigateur.
         </p>
       </div>
     </div>
