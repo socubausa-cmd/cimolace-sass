@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { LiriBrandIcon } from '@/components/brand/LiriWordmark';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { authStore } from '@/lib/auth-store';
@@ -55,7 +54,8 @@ export default function OnboardingOrgPage() {
         body: JSON.stringify({ slug: s }),
       });
       const body = await res.json().catch(() => ({}));
-      setSlugState({ checking: false, available: Boolean(body?.available), slug: s });
+      const payload = body?.data ?? body; // l'API NestJS enveloppe la réponse dans { data: ... }
+      setSlugState({ checking: false, available: Boolean(payload?.available), slug: s });
     } catch {
       setSlugState({ checking: false, available: null, slug: s });
     }
@@ -91,10 +91,12 @@ export default function OnboardingOrgPage() {
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(body?.message || 'Création impossible. Réessayez.');
+        // L'API enveloppe les erreurs dans { error: { code, message } } ; fallback message direct.
+        throw new Error(body?.error?.message || body?.message || 'Création impossible. Réessayez.');
       }
-      const createdSlug = body?.tenant?.slug || slug;
-      const nextUrl = body?.next_url || `/t/${createdSlug}/admin`;
+      const payload = body?.data ?? body; // { data: { tenant, user, next_url } }
+      const createdSlug = payload?.tenant?.slug || slug;
+      const nextUrl = payload?.next_url || `/t/${createdSlug}/admin`;
       // Connecte le nouvel owner (user créé avec email_confirm:true → connexion directe).
       const { error: loginErr } = await login(email.trim(), password);
       if (loginErr) {
@@ -118,11 +120,12 @@ export default function OnboardingOrgPage() {
     : (slugState.checking ? <span className="inline-flex items-center gap-1 text-xs text-white/40"><Loader2 size={13} className="animate-spin" /> vérification…</span> : null);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#070b14] px-4 py-10" style={{ '--school-accent': ACCENT }}>
+    <div className="liri-onboarding flex min-h-screen items-center justify-center bg-[#262624] px-4 py-10" style={{ '--school-accent': ACCENT }}>
+      <style>{`.liri-onboarding{--school-accent:${ACCENT} !important}`}</style>
       <Helmet><title>Créer mon organisation | LIRI</title></Helmet>
       <div className="w-full max-w-md">
         <div className="mb-7 flex flex-col items-center text-center">
-          <LiriBrandIcon className="h-14 w-14" style={{ filter: 'drop-shadow(0 0 22px rgba(217,119,87,0.45))' }} />
+          <img src="/lirilogo.png" alt="LIRI" className="h-16 w-16 object-contain" style={{ filter: 'drop-shadow(0 0 22px rgba(217,119,87,0.45))' }} />
           <h1 className="mt-4 text-2xl font-bold text-white">Créez votre organisation LIRI</h1>
           <p className="mt-1.5 text-sm text-gray-400">
             Votre espace live, smartboard IA, forum et agenda — prêt en une minute. Comme Zoom, mais à vous.
@@ -145,7 +148,7 @@ export default function OnboardingOrgPage() {
                 id="org" value={orgName}
                 onChange={(e) => { setOrgName(e.target.value); if (!slugEdited) checkSlug(e.target.value); }}
                 placeholder="Mon Académie, Ma Clinique, Mon Studio…"
-                className="h-11 border-white/10 bg-[#111a26] pl-10 text-white focus:border-[var(--school-accent)]"
+                className="h-11 border-white/10 bg-[#211e1a] pl-10 text-white focus:border-[var(--school-accent)]"
               />
             </div>
             <div className="flex items-center justify-between pl-1">
@@ -162,7 +165,7 @@ export default function OnboardingOrgPage() {
               id="slug" value={slugEdited || slug}
               onChange={(e) => { setSlugEdited(e.target.value); checkSlug(e.target.value); }}
               placeholder="mon-organisation"
-              className="h-11 border-white/10 bg-[#111a26] font-mono text-white focus:border-[var(--school-accent)]"
+              className="h-11 border-white/10 bg-[#211e1a] font-mono text-white focus:border-[var(--school-accent)]"
             />
           </div>
 
@@ -173,7 +176,7 @@ export default function OnboardingOrgPage() {
               <Input
                 id="email" type="email" autoComplete="email" value={email}
                 onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.com"
-                className="h-11 border-white/10 bg-[#111a26] pl-10 text-white focus:border-[var(--school-accent)]"
+                className="h-11 border-white/10 bg-[#211e1a] pl-10 text-white focus:border-[var(--school-accent)]"
               />
             </div>
           </div>
@@ -185,7 +188,7 @@ export default function OnboardingOrgPage() {
               <Input
                 id="password" type="password" autoComplete="new-password" value={password}
                 onChange={(e) => setPassword(e.target.value)} placeholder="••••••••"
-                className="h-11 border-white/10 bg-[#111a26] pl-10 text-white focus:border-[var(--school-accent)]"
+                className="h-11 border-white/10 bg-[#211e1a] pl-10 text-white focus:border-[var(--school-accent)]"
               />
             </div>
           </div>
