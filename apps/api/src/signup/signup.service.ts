@@ -212,6 +212,25 @@ export class SignupService {
       }
     }
 
+    // 5b) (Best-effort) Activer les moteurs LIRI dans tenant_services pour les tenants
+    //     qui utilisent LIRI. SANS ça, ProtectedLiriRoute bloque l'accès au portail /liri
+    //     (gate « ce tenant a-t-il LIRI ? ») et le nouvel owner reste hors du produit.
+    if (kind === 'liri' || kind === 'school' || kind === 'medos') {
+      try {
+        const LIRI_ENGINES = [
+          'liri_live', 'liri_replay', 'studio_creator', 'liri_brain',
+          'liri_masterclass', 'liri_smartboard', 'liri_neuro_recall', 'course_builder',
+        ];
+        await (this.sb.client as unknown as {
+          from: (t: string) => { insert: (rows: unknown) => Promise<{ error: unknown }> };
+        })
+          .from('tenant_services')
+          .insert(LIRI_ENGINES.map((service_key) => ({ tenant_id: tenant.id, service_key, active: true })));
+      } catch (e) {
+        this.logger.warn(`Activation moteurs LIRI échouée (non bloquant): ${(e as Error).message}`);
+      }
+    }
+
     // 6) (Best-effort) Provisionner l'espace patient brandé instantané sur Vercel :
     //    {slug}.patient.cimolace.space. Pour les tenants santé qui utilisent le
     //    portail patient. Non bloquant — un échec n'annule jamais le signup.
@@ -242,8 +261,11 @@ export class SignupService {
       `✅ Tenant ${tenant.slug} (${kind}) créé pour ${email} (user ${userId})`,
     );
 
-    // Frontend va rediriger ici
-    const next_url = `/t/${tenant.slug}/admin/${this.firstAdminTabFor(kind as Kind)}`;
+    // Frontend va rediriger ici. LIRI = produit horizontal (façon Zoom) → portail LIRI
+    // unifié (/liri) ; les autres kinds → back-office tenant /t/{slug}/admin.
+    const next_url = kind === 'liri'
+      ? '/liri'
+      : `/t/${tenant.slug}/admin/${this.firstAdminTabFor(kind as Kind)}`;
 
     return {
       tenant: {
