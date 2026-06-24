@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/customSupabaseClient';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantSlug } from '@/lib/tenant/activeBranding';
 import { Copy } from 'lucide-react';
 
 const FN_ACCOUNTS = '/.netlify/functions/billing-save-tenant-payment-accounts';
@@ -50,7 +50,7 @@ async function postProvider({ tenantSlug, provider, credentials, publicConfig })
 export default function TenantPayoutProvidersForm({ initialTenantSlug, lockTenantSlug = false } = {}) {
   const { toast } = useToast();
   const resolvedInitial =
-    (typeof initialTenantSlug === 'string' && initialTenantSlug.trim()) || isnaTenantConfig.slug || 'isna';
+    (typeof initialTenantSlug === 'string' && initialTenantSlug.trim()) || getActiveTenantSlug() || '';
   const [tenantSlug, setTenantSlug] = useState(resolvedInitial);
   const [busy, setBusy] = useState(null);
   const [busyPrefs, setBusyPrefs] = useState(false);

@@ -1,9 +1,9 @@
 import { Capacitor } from '@capacitor/core';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { shouldUseLiriMobileLogin } from '@/lib/loginEntryPath';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
-const DEFAULT_PUBLIC_WEB = isnaTenantConfig.branding.publicSiteOrigin;
+const defaultPublicWeb = () => getActiveTenantBranding().publicSiteOrigin || (typeof window !== 'undefined' ? window.location.origin : '');
 
 const LS_STUDENT_WEB_LIMITED = 'liri_student_web_limited_opt_in';
 
@@ -93,10 +93,10 @@ export function shouldShowStudentInstallGate() {
 export function getEleveStoreInstallUrl() {
   const a = import.meta.env.VITE_ELEVE_PLAY_STORE_URL;
   const i = import.meta.env.VITE_ELEVE_APP_STORE_URL;
-  if (typeof navigator === 'undefined') return a || i || DEFAULT_PUBLIC_WEB;
+  if (typeof navigator === 'undefined') return a || i || defaultPublicWeb();
   const ua = navigator.userAgent || '';
-  if (/iPad|iPhone|iPod/i.test(ua)) return i || a || DEFAULT_PUBLIC_WEB;
-  return a || i || DEFAULT_PUBLIC_WEB;
+  if (/iPad|iPhone|iPod/i.test(ua)) return i || a || defaultPublicWeb();
+  return a || i || defaultPublicWeb();
 }
 
 /**
@@ -133,7 +133,7 @@ function buildLiriAppOpenUrlHttps() {
   if (typeof window !== 'undefined' && window.location?.origin) {
     return `${window.location.origin}${ELEVE_MOBILE.login}?${q}`;
   }
-  return `${DEFAULT_PUBLIC_WEB}${ELEVE_MOBILE.login}?${q}`;
+  return `${defaultPublicWeb()}${ELEVE_MOBILE.login}?${q}`;
 }
 
 function normalizeEleveAppOpenUrl(raw) {
