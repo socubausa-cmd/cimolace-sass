@@ -221,13 +221,23 @@ export class SignupService {
           'liri_live', 'liri_replay', 'studio_creator', 'liri_brain',
           'liri_masterclass', 'liri_smartboard', 'liri_neuro_recall', 'course_builder',
         ];
-        await (this.sb.client as unknown as {
-          from: (t: string) => { insert: (rows: unknown) => Promise<{ error: unknown }> };
+        const { error: svcErr } = await (this.sb.client as unknown as {
+          from: (t: string) => { insert: (rows: unknown) => Promise<{ error: { message?: string } | null }> };
         })
           .from('tenant_services')
           .insert(LIRI_ENGINES.map((service_key) => ({ tenant_id: tenant.id, service_key, active: true })));
+        if (svcErr) {
+          // VISIBLE (jamais silencieux) : sans services, ProtectedLiriRoute piégerait le
+          // nouvel owner sur /cimolace/billing. On ne throw PAS (le tenant/user existent
+          // déjà → éviter un orphelin), mais on log en ERROR pour intervention.
+          this.logger.error(
+            `CRITIQUE: activation moteurs LIRI échouée pour ${tenant.slug}: ${svcErr.message ?? 'inconnue'}`,
+          );
+        }
       } catch (e) {
-        this.logger.warn(`Activation moteurs LIRI échouée (non bloquant): ${(e as Error).message}`);
+        this.logger.error(
+          `CRITIQUE: activation moteurs LIRI (exception) pour ${tenant.slug}: ${(e as Error).message}`,
+        );
       }
     }
 

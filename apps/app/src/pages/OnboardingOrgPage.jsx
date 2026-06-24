@@ -98,6 +98,9 @@ export default function OnboardingOrgPage() {
       const payload = body?.data ?? body; // { data: { tenant, user, next_url } }
       const createdSlug = payload?.tenant?.slug || slug;
       const nextUrl = payload?.next_url || `/t/${createdSlug}/admin`;
+      // Pose le slug du tenant créé AVANT le login : si la connexion échoue, l'utilisateur
+      // garde la référence à SON org (évite de la perdre / re-tenter avec un slug en conflit).
+      authStore.setTenantSlug(createdSlug);
       // Connecte le nouvel owner (user créé avec email_confirm:true → connexion directe).
       const { error: loginErr } = await login(email.trim(), password);
       if (loginErr) {
@@ -105,7 +108,6 @@ export default function OnboardingOrgPage() {
         navigate('/login', { replace: true });
         return;
       }
-      authStore.setTenantSlug(createdSlug);
       navigate(nextUrl, { replace: true });
     } catch (err) {
       setError(err?.message || 'Une erreur est survenue.');
@@ -152,7 +154,7 @@ export default function OnboardingOrgPage() {
         <div className="absolute -right-16 bottom-0 h-80 w-80 rounded-full blur-[130px]" style={{ background: 'rgba(226,85,63,0.10)' }} />
 
         <motion.div {...fade()} className="relative z-10">
-          <img src="/liri-logo-official.png" alt="LIRI" className="h-24 w-auto object-contain" style={{ filter: 'drop-shadow(0 0 26px rgba(217,119,87,0.45))' }} />
+          <img src="/liri-logo-official.png" alt="LIRI" className="h-80 w-auto object-contain" style={{ filter: 'drop-shadow(0 0 40px rgba(217,119,87,0.4))' }} />
         </motion.div>
 
         <motion.div {...fade(0.08)} className="relative z-10 max-w-md">
@@ -181,7 +183,7 @@ export default function OnboardingOrgPage() {
         <motion.div {...fade()} className="relative z-10 w-full max-w-[420px]">
           {/* logo + nom (mobile) */}
           <div className="mb-8 flex justify-center lg:hidden">
-            <img src="/liri-logo-official.png" alt="LIRI" className="h-20 w-auto object-contain" />
+            <img src="/liri-logo-official.png" alt="LIRI" className="h-44 w-auto object-contain" />
           </div>
 
           <h1 className="text-[1.7rem] font-bold leading-tight tracking-tight text-white">Créez votre organisation</h1>
