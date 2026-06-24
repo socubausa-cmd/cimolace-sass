@@ -548,6 +548,7 @@ const LiveGuestPage = lazy(() => import('@/pages/liri/LiveGuestPage'));
 const DevLiriHostEntry = lazy(() => import('@/pages/dev/DevLiriHostEntry'));
 const TableauVivantDemoPage = lazy(() => import('@/pages/dev/TableauVivantDemoPage'));
 const CourseDemoPage = lazy(() => import('@/pages/dev/CourseDemoPage'));
+const PrecepteurDemoPage = lazy(() => import('@/pages/dev/PrecepteurDemoPage'));
 const LiveWaitingRoomPage = lazy(() => import('@/pages/studio-creator/studio/LiveWaitingRoomPage'));
 const LiveWaitingRoomMaquettePage = lazy(() => import('@/pages/dev/LiveWaitingRoomMaquettePage'));
 const SecretariatPortalPage = lazy(() => import('@/pages/secretariat/SecretariatPortalPage'));
@@ -1262,6 +1263,12 @@ isLiriHostDevPreviewRoute;
           <Route path="/cours-demo" element={
             <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0b0f17] text-white/60">Chargement du cours…</div>}>
               <CourseDemoPage />
+            </React.Suspense>
+          } />
+          {/* LE PRÉCEPTEUR — preuve immersive (leçon → croquis → atelier → analogie) */}
+          <Route path="/precepteur" element={
+            <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0b0f17] text-white/60">Chargement du Précepteur…</div>}>
+              <PrecepteurDemoPage />
             </React.Suspense>
           } />
           {import.meta.env.DEV && (

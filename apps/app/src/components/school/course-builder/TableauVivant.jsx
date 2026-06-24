@@ -20,8 +20,8 @@ const QUINT = [0.22, 1, 0.36, 1]; // ease-out-quint
 // VOIX OFF NAVIGATEUR (Web Speech API) — pour la démo PUBLIQUE sans backend/auth.
 // (Le vrai lecteur élève connecté utilise liri-tts/ElevenLabs, pas ceci.)
 const SPEAK_RATE = 0.95;
-const canSpeak = () => typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
-const cancelSpeech = () => { try { if (canSpeak()) window.speechSynthesis.cancel(); } catch { /* */ } };
+export const canSpeak = () => typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+export const cancelSpeech = () => { try { if (canSpeak()) window.speechSynthesis.cancel(); } catch { /* */ } };
 const pickFrVoice = () => {
   try {
     const vs = window.speechSynthesis.getVoices() || [];
@@ -29,7 +29,7 @@ const pickFrVoice = () => {
   } catch { return null; }
 };
 // Durée parlée estimée (FR ~13 caractères/seconde au débit 0.95) + petite pause.
-const estSpeechMs = (text) => {
+export const estSpeechMs = (text) => {
   const n = String(text || '').length;
   return Math.max(1800, Math.min(13000, Math.round((n / 13) * 1000) + 400));
 };
@@ -48,7 +48,7 @@ export const primeSpeech = () => {
 };
 // Parle un texte. onBoundary(charIndex) permet de révéler le texte AU FUR ET À MESURE
 // (karaoké) quand le navigateur émet l'événement boundary (Chrome/Edge/Safari récent).
-const speakText = (text, { onBoundary, onEnd } = {}) => {
+export const speakText = (text, { onBoundary, onEnd } = {}) => {
   if (!canSpeak() || !text) { onEnd?.(); return; }
   try {
     const s = window.speechSynthesis;
@@ -115,7 +115,7 @@ function WritingHand({ rm }) {
 
 // Texte qui « s'ecrit » a l'encre : cascade caractere par caractere (glisse depuis
 // la gauche), groupee par MOTS (inline-block) pour un retour a la ligne propre, + main.
-function Handwriting({ text, perCharMs = 24, writing, rm }) {
+export function Handwriting({ text, perCharMs = 24, writing, rm }) {
   const words = String(text || '').split(' ');
   let gi = 0;
   return (
