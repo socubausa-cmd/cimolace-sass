@@ -403,6 +403,7 @@ const IsnaProPage = lazy(() => import('@/pages/IsnaProPage'));
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const HandoffPage = lazy(() => import('@/pages/HandoffPage'));
 const SignupPage = lazy(() => import('@/pages/SignupPage'));
+const OnboardingOrgPage = lazy(() => import('@/pages/OnboardingOrgPage'));
 const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
 const UpdatePasswordPage = lazy(() => import('@/pages/UpdatePasswordPage'));
 const OwnerDashboard = lazy(() => import('@/pages/OwnerDashboard'));
@@ -1001,8 +1002,9 @@ const AppContent = () => {
   const isImmersiveHomeRoute = location.pathname === '/';
 
   const hideHeaderRoutes = [
-    '/login', 
-    '/signup', 
+    '/login',
+    '/signup',
+    '/creer-organisation',
     '/auth/callback',
     '/creator-dashboard',
     '/teacher-dashboard',
@@ -1577,6 +1579,8 @@ isLiriHostDevPreviewRoute;
               <SignupPage />
             </RedirectIfAuthenticated>
           } />
+          {/* Onboarding self-service LIRI — créer son organisation (POST /signup/tenant) */}
+          <Route path="/creer-organisation" element={<OnboardingOrgPage />} />
           {/* Alias publics — le lien "Rejoindre" du menu vitrine ne doit pas faire 404 */}
           <Route path="/rejoindre" element={<Navigate to="/signup" replace />} />
           <Route path="/inscription" element={<Navigate to="/signup" replace />} />

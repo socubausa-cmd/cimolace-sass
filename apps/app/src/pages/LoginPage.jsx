@@ -572,7 +572,7 @@ const LoginPage = () => {
             onGoogle={handleGoogleLogin}
             forgotLabel="Oublié ?"
             onForgot={() => navigate('/forgot-password')}
-            footer={<>Pas encore inscrit ?{' '}<Link to="/signup" className="font-medium text-[var(--school-accent)] hover:underline">Créer un compte</Link></>}
+            footer={<>Pas encore inscrit ?{' '}<Link to={isPlatformLiri ? '/creer-organisation' : '/signup'} className="font-medium text-[var(--school-accent)] hover:underline">{isPlatformLiri ? 'Créer mon organisation' : 'Créer un compte'}</Link></>}
           />
         </motion.div>
       </div>
