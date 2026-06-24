@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { GraduationCap, Volume2, Play, RotateCcw, Check, PenLine } from 'lucide-react';
 import {
@@ -11,6 +11,27 @@ import AtelierPrompt from '@/components/school/course-builder/AtelierPrompt';
 import { supabase } from '@/lib/supabaseCompat';
 import { invokeGenerateVisualImage } from '@/features/smartboard-konva-editor/lib/designerIaImageHistory';
 import { CANONICAL_COURSE } from './precepteurCanonicalCourse';
+
+// décode base64 MP3 -> URL blob jouable
+function b64ToAudioUrl(b64, mime) {
+  const bin = atob(String(b64));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i += 1) bytes[i] = bin.charCodeAt(i);
+  return URL.createObjectURL(new Blob([bytes], { type: mime || 'audio/mpeg' }));
+}
+
+// liri-tts (ElevenLabs) — EXIGE le token de session (supabaseCompat ne l'ajoute pas tout seul).
+async function ttsFetch(text) {
+  try {
+    const { data: sess } = await supabase.auth.getSession();
+    const token = sess?.session?.access_token;
+    const opts = { body: { text: String(text || '').slice(0, 4500), languageCode: 'fr', tier: 'live' } };
+    if (token) opts.headers = { Authorization: `Bearer ${token}` };
+    const { data, error } = await supabase.functions.invoke('liri-tts', opts);
+    if (error || data?.error || !data?.audioBase64) return null;
+    return { b64: data.audioBase64, mime: data.mimeType };
+  } catch { return null; }
+}
 
 const imgCacheKey = (prompt) => {
   try { return 'precepteur_img_' + btoa(unescape(encodeURIComponent(prompt))).slice(0, 48); } catch { return null; }
@@ -58,7 +79,37 @@ export default function PrecepteurDemoPage() {
   const [idx, setIdx] = useState(0);
   const [done, setDone] = useState(false);
   const [analogyImages, setAnalogyImages] = useState({}); // sceneIndex -> { url?, loading?, error? }
+  const [narrAudio, setNarrAudio] = useState({}); // sceneIndex -> blob URL (voix ElevenLabs)
   const speak = canSpeak();
+  const audioRef = useRef(null); // élément <audio> courant
+
+  const stopAudio = useCallback(() => {
+    try { if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; audioRef.current = null; } } catch { /* */ }
+  }, []);
+  const playAudioUrl = useCallback((url) => {
+    stopAudio();
+    try { const a = new Audio(url); audioRef.current = a; void a.play().catch(() => {}); } catch { /* */ }
+  }, [stopAudio]);
+
+  // VOIX RÉELLE (ElevenLabs via liri-tts) : pré-génère l'audio de chaque scène au
+  // démarrage (élève CONNECTÉ). Indépendant des voix du navigateur => fiable.
+  useEffect(() => {
+    if (!started) return undefined;
+    let cancelled = false;
+    const urls = [];
+    scenes.forEach((s, i) => {
+      const text = s.narration || s.board_text;
+      if (!text) return;
+      ttsFetch(text).then((r) => {
+        if (cancelled || !r) return;
+        const url = b64ToAudioUrl(r.b64, r.mime);
+        urls.push(url);
+        setNarrAudio((m) => ({ ...m, [i]: url }));
+      });
+    });
+    return () => { cancelled = true; urls.forEach((u) => { try { URL.revokeObjectURL(u); } catch { /* */ } }); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [started]);
 
   // PRÉFETCH des images d'analogie dès le départ : Le Précepteur « dessine » l'image
   // (generate-visual-image / Imagen) — pour un élève CONNECTÉ. Sinon repli sur le SVG.
@@ -95,25 +146,50 @@ export default function PrecepteurDemoPage() {
     });
   }, [scenes.length]);
 
+  // VOIX de la scène courante : audio ElevenLabs si prêt, sinon synthèse navigateur (repli).
+  // Se relance quand l'audio de la scène arrive (narrAudio[idx]) => bascule sur la vraie voix.
+  useEffect(() => {
+    if (!started || done || !sc || sc.type === 'atelier') return undefined;
+    cancelSpeech(); stopAudio();
+    const url = narrAudio[idx];
+    if (url) playAudioUrl(url);
+    else if (speak) { const t = sc.narration || sc.board_text; if (t) speakText(t); }
+    return () => { stopAudio(); cancelSpeech(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idx, started, done, narrAudio[idx]]);
+
   // Cadence auto pour les scènes NON interactives (l'atelier s'avance lui-même).
   useEffect(() => {
     if (!started || done || !sc) return undefined;
     if (sc.type === 'atelier') return undefined;
     const narration = sc.narration || sc.board_text || '';
-    if (speak && narration) speakText(narration);
     const speechMs = narration ? estSpeechMs(narration) : 1600;
-    let ms = speechMs + 800;
-    if (sc.type === 'croquis') ms = Math.max((sc.sketch?.elements?.length || 1) * 1400 + 1000, speechMs) + 900;
-    else if (sc.type === 'image_analogie') ms = speechMs + 2400;
+    let ms = speechMs + 900;
+    if (sc.type === 'croquis') ms = Math.max((sc.sketch?.elements?.length || 1) * 1400 + 1000, speechMs) + 1100;
+    else if (sc.type === 'image_analogie') ms = speechMs + 2600;
     else if (sc.type === 'amorce_croquis') ms = speechMs + 400;
     else if (sc.type === 'transition') ms = speechMs + 500;
     const id = window.setTimeout(advance, ms);
-    return () => { window.clearTimeout(id); if (speak) cancelSpeech(); };
+    return () => { window.clearTimeout(id); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx, started, done]);
 
-  const begin = () => { primeSpeech(); setStarted(true); };
+  // débloque l'audio DANS le geste (sinon les navigateurs muettent <audio> et la synthèse)
+  const begin = () => {
+    primeSpeech();
+    try { const a = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQxAADB8AhSmxhIIEVCSiJrDCQBTcu3UrAIwUdkRgQbFAZC1CQEwTJ9mjRvBA4UOLD8nKVOWfh+UlK3z/177OXrfOdKl7pyn3Xf//WreyTEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV'); a.volume = 0; void a.play().catch(() => {}); } catch { /* */ }
+    setStarted(true);
+  };
   const replay = () => { setDone(false); setStarted(true); setIdx(0); };
+
+  // voix À LA DEMANDE (atelier) : ElevenLabs si possible, sinon synthèse navigateur.
+  const narrateNow = useCallback(async (text) => {
+    if (!text) return;
+    cancelSpeech(); stopAudio();
+    const r = await ttsFetch(text);
+    if (r) { playAudioUrl(b64ToAudioUrl(r.b64, r.mime)); return; }
+    if (speak) speakText(text);
+  }, [speak, stopAudio, playAudioUrl]);
 
   // --- rendu d'une scène ---
   const renderScene = (s) => {
@@ -200,7 +276,7 @@ export default function PrecepteurDemoPage() {
     if (s.type === 'atelier') {
       return (
         <div className="w-full max-w-4xl">
-          <AtelierPrompt scene={s} studentName={name} speak={speak} onContinue={advance} />
+          <AtelierPrompt scene={s} studentName={name} speak={speak} onNarrate={narrateNow} onContinue={advance} />
         </div>
       );
     }

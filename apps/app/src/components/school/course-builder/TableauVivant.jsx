@@ -50,20 +50,33 @@ export const primeSpeech = () => {
 // (karaoké) quand le navigateur émet l'événement boundary (Chrome/Edge/Safari récent).
 export const speakText = (text, { onBoundary, onEnd } = {}) => {
   if (!canSpeak() || !text) { onEnd?.(); return; }
+  const s = window.speechSynthesis;
+  let spoken = false;
+  const doSpeak = () => {
+    if (spoken) return;
+    spoken = true;
+    try {
+      s.cancel();
+      const u = new SpeechSynthesisUtterance(String(text));
+      u.lang = 'fr-FR';
+      const v = pickFrVoice();
+      if (v) u.voice = v;
+      u.rate = SPEAK_RATE;
+      if (onBoundary) u.onboundary = (e) => { try { onBoundary(e.charIndex ?? 0); } catch { /* */ } };
+      u.onend = () => onEnd?.();
+      u.onerror = () => onEnd?.();
+      s.resume();
+      s.speak(u);
+    } catch { onEnd?.(); }
+  };
   try {
-    const s = window.speechSynthesis;
-    s.cancel();
-    const u = new SpeechSynthesisUtterance(String(text));
-    u.lang = 'fr-FR';
-    const v = pickFrVoice();
-    if (v) u.voice = v;
-    u.rate = SPEAK_RATE;
-    if (onBoundary) u.onboundary = (e) => { try { onBoundary(e.charIndex ?? 0); } catch { /* */ } };
-    u.onend = () => onEnd?.();
-    u.onerror = () => onEnd?.();
-    s.resume();
-    s.speak(u);
-  } catch { onEnd?.(); }
+    const vs = s.getVoices();
+    if (vs && vs.length > 0) { doSpeak(); return; }
+    // Voix pas encore chargées (fréquent sur Chrome/macOS) : attendre l'event + filet.
+    const handler = () => { try { s.removeEventListener('voiceschanged', handler); } catch { /* */ } doSpeak(); };
+    try { s.addEventListener('voiceschanged', handler); } catch { /* */ }
+    window.setTimeout(doSpeak, 320);
+  } catch { doSpeak(); }
 };
 
 // LA MAIN QUI ECRIT — comme un prof a l'ecole : une main (teinte brune) qui tient

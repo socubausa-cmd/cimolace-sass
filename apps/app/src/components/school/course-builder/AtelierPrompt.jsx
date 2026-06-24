@@ -35,7 +35,7 @@ const ACK_TONE = {
   skip: 'text-slate-500',
 };
 
-export default function AtelierPrompt({ scene, studentName = '', speak = false, onContinue }) {
+export default function AtelierPrompt({ scene, studentName = '', speak = false, onNarrate, onContinue }) {
   const name = (studentName || '').trim() || 'l’élève';
   const question = String(scene?.question || '').replace('{{student_name}}', name);
   const [phase, setPhase] = useState('asking'); // asking | revealed
@@ -43,8 +43,11 @@ export default function AtelierPrompt({ scene, studentName = '', speak = false, 
   const [ack, setAck] = useState(null);
   const inputRef = useRef(null);
 
+  // voix : ElevenLabs (onNarrate) si fourni, sinon synthèse navigateur
+  const say = useCallback((t) => { if (onNarrate) onNarrate(t); else if (speak) speakText(t); }, [onNarrate, speak]);
+
   useEffect(() => {
-    if (speak) speakText(`${name}. ${question}`);
+    say(`${name}. ${question}`);
     const id = window.setTimeout(() => inputRef.current?.focus?.(), 300);
     return () => { window.clearTimeout(id); if (speak) cancelSpeech(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -54,12 +57,12 @@ export default function AtelierPrompt({ scene, studentName = '', speak = false, 
     const msg = cat === 'skip' ? '' : pick((scene.ack_variants || {})[cat], 'Voyons ensemble.');
     setAck({ cat, msg });
     const delay = msg ? 1500 : 200;
-    if (speak && msg) speakText(msg);
+    if (msg) say(msg);
     window.setTimeout(() => {
       setPhase('revealed');
-      if (speak) speakText(scene.reveal_narration || '');
+      say(scene.reveal_narration || '');
     }, delay);
-  }, [scene, speak]);
+  }, [scene, say]);
 
   const submit = () => { if (phase !== 'asking') return; goReveal(classifyLocal(answer, scene.expected_answers, scene.expected_errors)); };
 
