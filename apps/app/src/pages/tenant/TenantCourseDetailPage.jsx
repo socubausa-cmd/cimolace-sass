@@ -210,9 +210,50 @@ export default function TenantCourseDetailPage() {
 
   return (
     <TenantAdminShell>
-    <div className="mx-auto w-full max-w-4xl">
+      <style>{`
+        @keyframes tcdFloat { 0%,100%{transform:translate3d(0,0,0) scale(1)} 50%{transform:translate3d(0,-22px,0) scale(1.07)} }
+        .tcd-orb{ filter: blur(74px); opacity:.22; animation: tcdFloat 15s ease-in-out infinite; will-change: transform; }
+        .tcd-orb.alt{ animation-duration:19s; animation-delay:-4s; opacity:.18; }
+        @media (prefers-reduced-motion: reduce){ .tcd-orb{ animation:none } }
+      `}</style>
+
+    {/* ── Scène immersive (le fond N'est PLUS plat) ─────────────────── */}
+    <div
+      className="relative overflow-hidden rounded-[28px]"
+      style={{ minHeight: '82vh', background: '#0d0c14', border: `1px solid ${T.border}` }}
+    >
+      {/* halos + orbes flottants + rayons de lumière */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(95% 55% at 50% -8%, rgba(212,175,55,0.14), transparent 55%),' +
+              'radial-gradient(72% 60% at 90% 108%, rgba(111,76,255,0.12), transparent 60%),' +
+              'radial-gradient(60% 55% at 5% 96%, rgba(15,179,255,0.09), transparent 60%)',
+          }}
+        />
+        <div
+          className="absolute left-1/2 top-0 h-[130vh] w-[130vh] -translate-x-1/2"
+          style={{
+            background:
+              'conic-gradient(from 198deg at 50% 34%, transparent 0deg, rgba(212,175,55,0.10) 38deg, transparent 80deg, transparent 188deg, rgba(15,179,255,0.07) 224deg, transparent 300deg)',
+            opacity: 0.55,
+            filter: 'blur(3px)',
+            WebkitMaskImage: 'radial-gradient(ellipse 52% 42% at 50% 30%, #000 0%, transparent 72%)',
+            maskImage: 'radial-gradient(ellipse 52% 42% at 50% 30%, #000 0%, transparent 72%)',
+          }}
+        />
+        <span className="tcd-orb absolute -left-16 top-10 h-72 w-72 rounded-full" style={{ background: '#D4AF37' }} />
+        <span className="tcd-orb alt absolute -right-16 top-1/4 h-80 w-80 rounded-full" style={{ background: '#6f4cff' }} />
+        <span className="tcd-orb absolute bottom-8 left-1/3 h-64 w-64 rounded-full" style={{ background: '#0fb3ff' }} />
+        {/* vignette pour la profondeur */}
+        <div className="absolute inset-0" style={{ boxShadow: 'inset 0 0 200px 40px rgba(0,0,0,0.55)' }} />
+      </div>
+
+      {/* Retour (haut-gauche) */}
       <button
-        className="mb-4 inline-flex items-center gap-1.5 text-sm transition-colors"
+        className="absolute left-5 top-5 z-20 inline-flex items-center gap-1.5 text-sm transition-colors md:left-7 md:top-6"
         style={{ color: T.t3 }}
         onMouseEnter={(e) => { e.currentTarget.style.color = T.gold; }}
         onMouseLeave={(e) => { e.currentTarget.style.color = T.t3; }}
@@ -221,76 +262,45 @@ export default function TenantCourseDetailPage() {
         <ArrowLeft className="h-4 w-4" /> Retour aux cours
       </button>
 
-      {/* ── Hero immersif ───────────────────────────────────────────── */}
-      <section
-        className="relative overflow-hidden rounded-3xl px-7 py-9 md:px-10 md:py-11"
-        style={{
-          background: `radial-gradient(130% 95% at 90% -25%, ${T.goldDim}, transparent 58%), ${T.surface}`,
-          border: `1px solid ${T.border}`,
-        }}
-      >
-        <div className="flex flex-col gap-7 md:flex-row md:items-start md:justify-between">
-          <div className="min-w-0 md:max-w-2xl">
-            <div className="flex items-center gap-3">
-              <span
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
-                style={{ background: T.goldDim, border: `1px solid ${T.goldMid}`, color: T.gold }}
-              >
-                <GraduationCap className="h-6 w-6" />
-              </span>
-              <span
-                className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                style={{ background: statusMeta.bg, color: statusMeta.color }}
-              >
-                {statusMeta.label}
-              </span>
-            </div>
+      {/* Contenu CENTRÉ */}
+      <div className="relative z-10 mx-auto w-full max-w-3xl px-6 pb-16 pt-24 md:pt-28">
+        {/* ── Hero centré ───────────────────────────────────────────── */}
+        <div className="flex flex-col items-center text-center">
+          <span
+            className="flex h-16 w-16 items-center justify-center rounded-2xl"
+            style={{ background: T.goldDim, border: `1px solid ${T.goldMid}`, color: T.gold, boxShadow: '0 0 46px rgba(212,175,55,0.30)' }}
+          >
+            <GraduationCap className="h-7 w-7" />
+          </span>
+          <span
+            className="mt-4 rounded-full px-3 py-1 text-[11px] font-semibold"
+            style={{ background: statusMeta.bg, color: statusMeta.color }}
+          >
+            {statusMeta.label}
+          </span>
+          <h1
+            className="mt-5 text-3xl font-bold leading-[1.08] md:text-[40px]"
+            style={{ color: T.t1, textWrap: 'balance', letterSpacing: '-0.02em' }}
+          >
+            {course?.title}
+          </h1>
+          {course?.description && (
+            <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed" style={{ color: T.t2, textWrap: 'pretty' }}>
+              {course.description}
+            </p>
+          )}
 
-            <h1
-              className="mt-5 text-2xl font-bold leading-tight md:text-[32px]"
-              style={{ color: T.t1, textWrap: 'balance' }}
-            >
-              {course?.title}
-            </h1>
-            {course?.description && (
-              <p className="mt-2.5 text-[15px] leading-relaxed" style={{ color: T.t2 }}>
-                {course.description}
-              </p>
-            )}
-
-            {/* Méta : compteurs sobres (pas de big-number template) */}
-            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm" style={{ color: T.t2 }}>
-              <span className="inline-flex items-center gap-1.5">
-                <Layers className="h-4 w-4" style={{ color: T.t3 }} />
-                {modules.length} module{C(modules.length)}
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Play className="h-4 w-4" style={{ color: T.t3 }} />
-                {totalLessons} leçon{C(totalLessons)}
-              </span>
-              {course?.category && (
-                <span className="inline-flex items-center gap-1.5" style={{ color: T.t3 }}>
-                  {course.category}
-                </span>
-              )}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => navigate(`/formation/${courseId}/learn`)}
-              className="mt-7 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-transform active:scale-[0.99]"
-              style={{ background: T.gold, color: '#0b0b0f' }}
-              onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.06)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; }}
-            >
-              <Play className="h-4 w-4" /> {started ? 'Reprendre le cours' : 'Accéder au cours'}
-            </button>
+          {/* Méta : compteurs sobres, centrés */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm" style={{ color: T.t2 }}>
+            <span className="inline-flex items-center gap-1.5"><Layers className="h-4 w-4" style={{ color: T.t3 }} />{modules.length} module{C(modules.length)}</span>
+            <span className="inline-flex items-center gap-1.5"><Play className="h-4 w-4" style={{ color: T.t3 }} />{totalLessons} leçon{C(totalLessons)}</span>
+            {course?.category && <span style={{ color: T.t3 }}>{course.category}</span>}
           </div>
 
-          {/* Anneau de progression — seulement si l'élève a commencé (inutile pour l'admin / cours neuf) */}
+          {/* Anneau de progression — seulement si l'élève a commencé */}
           {started && totalLessons > 0 && (
-            <div className="flex shrink-0 flex-col items-center gap-1.5">
-              <div className="relative h-[88px] w-[88px]">
+            <div className="mt-7 inline-flex items-center gap-2.5">
+              <div className="relative h-14 w-14">
                 <svg viewBox="0 0 36 36" className="h-full w-full -rotate-90">
                   <circle cx="18" cy="18" r="15.5" fill="none" stroke={T.borderMid} strokeWidth="3" />
                   <circle
@@ -299,38 +309,43 @@ export default function TenantCourseDetailPage() {
                     style={{ transition: 'stroke-dasharray 0.5s ease' }}
                   />
                 </svg>
-                <span
-                  className="absolute inset-0 flex items-center justify-center text-lg font-bold"
-                  style={{ color: T.gold }}
-                >
-                  {progressPct}%
-                </span>
+                <span className="absolute inset-0 flex items-center justify-center text-[13px] font-bold" style={{ color: T.gold }}>{progressPct}%</span>
               </div>
-              <span className="text-[11px]" style={{ color: T.t3 }}>{completedCount}/{totalLessons} terminé{C(completedCount)}</span>
+              <span className="text-left text-xs leading-tight" style={{ color: T.t3 }}>{completedCount}/{totalLessons}<br />terminé{C(completedCount)}</span>
             </div>
           )}
-        </div>
-      </section>
 
-      {/* ── Programme ───────────────────────────────────────────────── */}
-      <div className="mb-3 mt-9 flex items-baseline justify-between">
-        <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em]" style={{ color: T.t2 }}>Programme</h2>
-        {totalLessons > 0 && (
-          <span className="text-xs" style={{ color: T.t3 }}>{modules.length} module{C(modules.length)} · {totalLessons} leçon{C(totalLessons)}</span>
-        )}
-      </div>
+          <button
+            type="button"
+            onClick={() => navigate(`/formation/${courseId}/learn`)}
+            className="mt-8 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition-transform active:scale-[0.99]"
+            style={{ background: T.gold, color: '#0b0b0f', boxShadow: '0 12px 36px rgba(212,175,55,0.32)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.06)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; }}
+          >
+            <Play className="h-4 w-4" /> {started ? 'Reprendre le cours' : 'Accéder au cours'}
+          </button>
+        </div>
+
+        {/* ── Programme ─────────────────────────────────────────────── */}
+        <div className="mt-14 mb-4 text-center">
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.14em]" style={{ color: T.t2 }}>Programme</h2>
+          {totalLessons > 0 && (
+            <p className="mt-1 text-xs" style={{ color: T.t3 }}>{modules.length} module{C(modules.length)} · {totalLessons} leçon{C(totalLessons)}</p>
+          )}
+        </div>
 
       {modules.length === 0 ? (
         <div
           className="flex flex-col items-center justify-center rounded-2xl py-16 text-center"
-          style={{ border: `1px dashed ${T.borderMid}`, background: T.surface }}
+          style={{ border: `1px dashed ${T.borderMid}`, background: 'rgba(18,17,26,0.5)' }}
         >
           <BookOpen className="mb-3 h-9 w-9" style={{ color: T.t4 }} />
           <p className="text-sm" style={{ color: T.t2 }}>Ce cours n'a pas encore de modules.</p>
           <p className="mt-1 text-xs" style={{ color: T.t3 }}>Ajoute du contenu depuis le Studio pour construire le programme.</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl" style={{ border: `1px solid ${T.border}`, background: T.surface }}>
+        <div className="overflow-hidden rounded-2xl" style={{ border: `1px solid ${T.border}`, background: 'rgba(18,17,26,0.55)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', boxShadow: '0 24px 70px rgba(0,0,0,0.34)' }}>
           {modules.map((mod, i) => {
             const modLessons = lessons[mod.id] ?? [];
             const expanded = expandedModules.has(mod.id);
@@ -424,6 +439,7 @@ export default function TenantCourseDetailPage() {
           })}
         </div>
       )}
+      </div>
 
       {/* Lecteur leçon (overlay) */}
       {activeLesson && (
