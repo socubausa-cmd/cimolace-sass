@@ -241,6 +241,38 @@ export class SignupService {
       }
     }
 
+    // 5c) (Best-effort) ESSAI 7 JOURS pour LIRI : crée une souscription "active" de 7j
+    //     (plan_id libre, pas de FK). BillingContext la voit active → resolveLiriTier='paid'
+    //     → accès complet pendant l'essai, puis bascule "free" (limites 3min/5pers) à
+    //     l'expiration de current_period_end. Modèle : essai 7j tout débloqué → gratuit limité.
+    if (kind === 'liri') {
+      try {
+        const startIso = new Date().toISOString();
+        const endIso = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        const { error: trialErr } = await (this.sb.client as unknown as {
+          from: (t: string) => { insert: (rows: unknown) => Promise<{ error: { message?: string } | null }> };
+        })
+          .from('billing_subscriptions')
+          .insert({
+            tenant_id: tenant.id,
+            user_id: userId,
+            plan_id: 'liri-trial',
+            provider: 'manual',
+            status: 'active',
+            amount_cents: 0,
+            currency: 'EUR',
+            current_period_start: startIso,
+            current_period_end: endIso,
+            metadata: { trial: true, source: 'signup', days: 7 },
+          });
+        if (trialErr) {
+          this.logger.warn(`Essai 7j LIRI non créé pour ${tenant.slug}: ${trialErr.message ?? 'inconnue'}`);
+        }
+      } catch (e) {
+        this.logger.warn(`Essai 7j LIRI (exception) pour ${tenant.slug}: ${(e as Error).message}`);
+      }
+    }
+
     // 6) (Best-effort) Provisionner l'espace patient brandé instantané sur Vercel :
     //    {slug}.patient.cimolace.space. Pour les tenants santé qui utilisent le
     //    portail patient. Non bloquant — un échec n'annule jamais le signup.
