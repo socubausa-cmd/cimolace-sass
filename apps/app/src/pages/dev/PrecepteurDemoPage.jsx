@@ -156,33 +156,39 @@ export default function PrecepteurDemoPage() {
     });
   }, [scenes.length]);
 
-  // VOIX de la scène courante : audio ElevenLabs si prêt, sinon synthèse navigateur (repli).
-  // Se relance quand l'audio de la scène arrive (narrAudio[idx]) => bascule sur la vraie voix.
+  // VOIX + CADENCE fusionnées : joue la voix de la scène, et AVANCE QUAND LA VOIX A
+  // FINI (le rythme naturel d'un prof, plus de coupure). Filet : durée MIN (le croquis
+  // doit finir de se dessiner) + cap MAX de sécurité. Se relance quand l'audio arrive.
   useEffect(() => {
     if (!started || done || !sc || sc.type === 'atelier') return undefined;
+    let advanced = false;
+    const go = () => { if (advanced) return; advanced = true; advance(); };
     cancelSpeech(); stopAudio();
+    const text = sc.narration || sc.board_text || '';
+    const speechMs = estSpeechMs(text);
+    const minMs = sc.type === 'croquis'
+      ? ((sc.sketch?.elements?.length || 1) * 1700 + 1800)
+      : sc.type === 'image_analogie' ? 3500 : 700;
+    let t0 = 0; try { t0 = performance.now(); } catch { t0 = 0; }
+    const goAfterMin = () => {
+      let el = minMs; try { el = performance.now() - t0; } catch { /* */ }
+      if (el < minMs) window.setTimeout(go, minMs - el); else go();
+    };
     const url = narrAudio[idx];
-    if (url) playAudioUrl(url);
-    else if (speak) { const t = sc.narration || sc.board_text; if (t) speakText(t); }
-    return () => { stopAudio(); cancelSpeech(); };
+    if (url) {
+      const a = new Audio(url); audioRef.current = a;
+      a.onended = goAfterMin; // ← on avance quand la voix se termine
+      a.onerror = () => { if (speak) speakText(text, { onEnd: goAfterMin }); else goAfterMin(); };
+      void a.play().catch(() => { if (speak) speakText(text, { onEnd: goAfterMin }); });
+    } else if (speak) {
+      speakText(text, { onEnd: goAfterMin });
+    } else {
+      window.setTimeout(goAfterMin, Math.max(minMs, speechMs + 800));
+    }
+    const cap = window.setTimeout(go, Math.max(minMs, speechMs * 2.8) + 3500); // filet
+    return () => { advanced = true; window.clearTimeout(cap); stopAudio(); cancelSpeech(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx, started, done, narrAudio[idx]]);
-
-  // Cadence auto pour les scènes NON interactives (l'atelier s'avance lui-même).
-  useEffect(() => {
-    if (!started || done || !sc) return undefined;
-    if (sc.type === 'atelier') return undefined;
-    const narration = sc.narration || sc.board_text || '';
-    const speechMs = narration ? estSpeechMs(narration) : 1600;
-    let ms = speechMs + 900;
-    if (sc.type === 'croquis') ms = Math.max((sc.sketch?.elements?.length || 1) * 1400 + 1000, speechMs) + 1100;
-    else if (sc.type === 'image_analogie') ms = speechMs + 2600;
-    else if (sc.type === 'amorce_croquis') ms = speechMs + 400;
-    else if (sc.type === 'transition') ms = speechMs + 500;
-    const id = window.setTimeout(advance, ms);
-    return () => { window.clearTimeout(id); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idx, started, done]);
 
   // débloque l'audio DANS le geste (sinon les navigateurs muettent <audio> et la synthèse)
   const begin = () => {
