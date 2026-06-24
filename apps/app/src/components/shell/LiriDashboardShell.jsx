@@ -205,7 +205,7 @@ const SidebarBody = ({ navGroups, activeTab, accent, collapsed, onItem, user, on
 
 export default function LiriDashboardShell({
   navGroups = [], activeTab, onTabChange, onNavigate,
-  accent = DEFAULT_ACCENT, brandTitle = 'PRORASCIENCE', brandSubtitle = 'ADMIN',
+  accent = DEFAULT_ACCENT, brandTitle = 'LIRI', brandSubtitle = 'ADMIN',
   user, onLogout, title, topbarRight = null, autoCollapse = true, lightContent = false, children,
 }) {
   const [collapsed, setCollapsed] = useState(autoCollapse);

@@ -52,7 +52,7 @@ import {
   cycleContent,
   marketingForCycleKey,
 } from '@/data/cycleInitiationProduct';
-import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
+import { getActiveTenantBranding, getActiveTenantSlug } from '@/lib/tenant/activeBranding';
 
 const CYCLE_SELECTOR_ICONS = {
   autonome: BookOpen,
@@ -320,7 +320,7 @@ const ForfaitsPage = () => {
     const planKey = plan?.key || plan?.slug || planId;
     const cycleLabel = CYCLE_SELECTOR_LABELS[paymentCycleKey] || toCycleLabel(plan, paymentCycleKey);
     const priceLabel = plan?.price_amount ? `${formatPrice(plan.price_amount, plan.price_currency)} / mois` : '';
-    const paymentPath = `/t/isna/paiement?plan=${encodeURIComponent(planKey)}&type=subscription`
+    const paymentPath = `/t/${getActiveTenantSlug() || 'isna'}/paiement?plan=${encodeURIComponent(planKey)}&type=subscription`
       + `${cycleLabel ? `&label=${encodeURIComponent(cycleLabel)}` : ''}`
       + `${priceLabel ? `&priceLabel=${encodeURIComponent(priceLabel)}` : ''}`;
     if (!authUser) {

@@ -1,4 +1,5 @@
 import React, { lazy, Suspense, useEffect, useState } from 'react';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 import { Routes, Route, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom';
 const TenantCourseDetailPage = lazy(() => import('@/pages/tenant/TenantCourseDetailPage'));
 import { Helmet } from 'react-helmet';
@@ -119,7 +120,7 @@ const StudentSchoolLifePage = () => {
     // propre fond et n'est PAS affectée — seul le contenu central passe au clair.
     <SslThemeProvider mode={isLight ? 'light' : 'dark'}>
       <div className={isLight ? SSL_LIGHT_CLASS : ''} style={{ minHeight: '100dvh', background: isLight ? '#F4EFE3' : '#0b0b0f', display: 'flex' }}>
-        <Helmet><title>Espace Étudiant | PRORASCIENCE</title></Helmet>
+        <Helmet><title>{`Espace Étudiant | ${getActiveTenantBranding().name}`}</title></Helmet>
 
         {/* Bouton de bascule de teinte (crème ⇄ sombre) — flottant, clé partagée avec le back-office */}
         <button

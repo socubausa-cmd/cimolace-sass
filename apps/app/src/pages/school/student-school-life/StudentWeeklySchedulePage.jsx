@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { getActiveTenantSlug } from '@/lib/tenant/activeBranding';
 import PedagogicalBlockRenderer from "@/components/liri/liri-ecosystem/PedagogicalBlockRenderer";
 import {
   Calendar,
@@ -610,7 +611,7 @@ function BlockCard({ block, onNavigate, onOpenVideo, onOpenQuiz }) {
     switch (type) {
       case 'opening_live':
       case 'closure_live':
-        onNavigate('/t/isna/live');
+        onNavigate(`/t/${getActiveTenantSlug() || 'isna'}/live`);
         break;
       case 'previsualisation_video':
       case 'doctrinal_video':
@@ -1102,7 +1103,7 @@ export default function StudentWeeklySchedulePage() {
           Vous n'avez pas encore de parcours scolaire. Consultez le catalogue pour rejoindre un programme.
         </p>
         <button
-          onClick={() => navigate('/t/isna')}
+          onClick={() => navigate(`/t/${getActiveTenantSlug() || 'isna'}`)}
           style={{
             background: T.goldDim, color: T.gold,
             border: `1px solid ${T.goldMid}`,

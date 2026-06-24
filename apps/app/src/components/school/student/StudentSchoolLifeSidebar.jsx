@@ -4,6 +4,7 @@
  * Width: 220px · Gold active state · Violet/Cyan gradient avatar
  */
 import React, { useState } from 'react';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -336,7 +337,7 @@ const StudentSchoolLifeSidebar = ({ collapsed = false, onToggle }) => {
               </div>
               <div style={{ width: 1, height: 16, background: T.border }}/>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 12, color: T.t1, letterSpacing: '0.01em' }}>PRORASCIENCE</div>
+                <div style={{ fontWeight: 700, fontSize: 12, color: T.t1, letterSpacing: '0.01em' }}>{getActiveTenantBranding().name.toUpperCase()}</div>
                 <div style={{ fontFamily: T.mono, fontSize: 7, color: T.t3, letterSpacing: '0.12em' }}>ACADEMY</div>
               </div>
             </div>
@@ -403,7 +404,7 @@ const StudentSchoolLifeSidebar = ({ collapsed = false, onToggle }) => {
                 <span style={{ color: T.t1 }}>L</span>
                 <div style={{ width: 12, height: 12, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#00E5FF)', flexShrink: 0 }}/>
                 <span style={{ color: T.t1 }}>RI</span>
-                <span style={{ fontFamily: T.mono, fontSize: 9, color: T.t3, marginLeft: 4 }}>PRORASCIENCE</span>
+                <span style={{ fontFamily: T.mono, fontSize: 9, color: T.t3, marginLeft: 4 }}>{getActiveTenantBranding().name.toUpperCase()}</span>
               </div>
               <button onClick={() => setMobileOpen(false)}
                 style={{ background: 'none', border: 'none', color: T.t3, cursor: 'pointer', padding: 4 }}>
