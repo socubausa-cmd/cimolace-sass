@@ -217,43 +217,43 @@ export default function TenantCourseDetailPage() {
         @media (prefers-reduced-motion: reduce){ .tcd-orb{ animation:none } }
       `}</style>
 
-    {/* ── Scène immersive (le fond N'est PLUS plat) ─────────────────── */}
+    {/* ── Fond immersif PLEIN-CADRE : calque FIXE derrière tout, SANS bordure ni coins ── */}
     <div
-      className="relative overflow-hidden rounded-[28px]"
-      style={{ minHeight: '82vh', background: '#0d0c14', border: `1px solid ${T.border}` }}
+      aria-hidden
+      className="pointer-events-none fixed top-0 bottom-0 right-0 left-0 z-0 overflow-hidden lg:left-[234px]"
+      style={{ background: '#0b0b0f' }}
     >
-      {/* halos + orbes flottants + rayons de lumière */}
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(95% 55% at 50% -8%, rgba(212,175,55,0.14), transparent 55%),' +
-              'radial-gradient(72% 60% at 90% 108%, rgba(111,76,255,0.12), transparent 60%),' +
-              'radial-gradient(60% 55% at 5% 96%, rgba(15,179,255,0.09), transparent 60%)',
-          }}
-        />
-        <div
-          className="absolute left-1/2 top-0 h-[130vh] w-[130vh] -translate-x-1/2"
-          style={{
-            background:
-              'conic-gradient(from 198deg at 50% 34%, transparent 0deg, rgba(212,175,55,0.10) 38deg, transparent 80deg, transparent 188deg, rgba(15,179,255,0.07) 224deg, transparent 300deg)',
-            opacity: 0.55,
-            filter: 'blur(3px)',
-            WebkitMaskImage: 'radial-gradient(ellipse 52% 42% at 50% 30%, #000 0%, transparent 72%)',
-            maskImage: 'radial-gradient(ellipse 52% 42% at 50% 30%, #000 0%, transparent 72%)',
-          }}
-        />
-        <span className="tcd-orb absolute -left-16 top-10 h-72 w-72 rounded-full" style={{ background: '#D4AF37' }} />
-        <span className="tcd-orb alt absolute -right-16 top-1/4 h-80 w-80 rounded-full" style={{ background: '#6f4cff' }} />
-        <span className="tcd-orb absolute bottom-8 left-1/3 h-64 w-64 rounded-full" style={{ background: '#0fb3ff' }} />
-        {/* vignette pour la profondeur */}
-        <div className="absolute inset-0" style={{ boxShadow: 'inset 0 0 200px 40px rgba(0,0,0,0.55)' }} />
-      </div>
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(80% 50% at 50% -5%, rgba(212,175,55,0.13), transparent 55%),' +
+            'radial-gradient(65% 55% at 92% 104%, rgba(111,76,255,0.12), transparent 60%),' +
+            'radial-gradient(55% 50% at 4% 98%, rgba(15,179,255,0.09), transparent 60%)',
+        }}
+      />
+      <div
+        className="absolute left-1/2 top-0 h-[140vh] w-[140vh] -translate-x-1/2"
+        style={{
+          background:
+            'conic-gradient(from 198deg at 50% 32%, transparent 0deg, rgba(212,175,55,0.10) 38deg, transparent 80deg, transparent 188deg, rgba(15,179,255,0.07) 224deg, transparent 300deg)',
+          opacity: 0.5,
+          filter: 'blur(3px)',
+          WebkitMaskImage: 'radial-gradient(ellipse 50% 40% at 50% 28%, #000 0%, transparent 72%)',
+          maskImage: 'radial-gradient(ellipse 50% 40% at 50% 28%, #000 0%, transparent 72%)',
+        }}
+      />
+      <span className="tcd-orb absolute -left-10 top-16 h-72 w-72 rounded-full" style={{ background: '#D4AF37' }} />
+      <span className="tcd-orb alt absolute -right-10 top-1/4 h-80 w-80 rounded-full" style={{ background: '#6f4cff' }} />
+      <span className="tcd-orb absolute bottom-10 left-1/3 h-64 w-64 rounded-full" style={{ background: '#0fb3ff' }} />
+      <div className="absolute inset-0" style={{ boxShadow: 'inset 0 0 220px 50px rgba(0,0,0,0.5)' }} />
+    </div>
 
-      {/* Retour (haut-gauche) */}
+    {/* ── Contenu CENTRÉ, au-dessus, SANS aucun cadre ────────────────── */}
+    <div className="relative z-10 mx-auto w-full max-w-3xl px-2 pb-24 pt-1">
+      {/* Retour (en haut, aligné à gauche) */}
       <button
-        className="absolute left-5 top-5 z-20 inline-flex items-center gap-1.5 text-sm transition-colors md:left-7 md:top-6"
+        className="mb-10 inline-flex items-center gap-1.5 text-sm transition-colors"
         style={{ color: T.t3 }}
         onMouseEnter={(e) => { e.currentTarget.style.color = T.gold; }}
         onMouseLeave={(e) => { e.currentTarget.style.color = T.t3; }}
@@ -262,8 +262,7 @@ export default function TenantCourseDetailPage() {
         <ArrowLeft className="h-4 w-4" /> Retour aux cours
       </button>
 
-      {/* Contenu CENTRÉ */}
-      <div className="relative z-10 mx-auto w-full max-w-3xl px-6 pb-16 pt-24 md:pt-28">
+      <div className="pt-4 md:pt-8">
         {/* ── Hero centré ───────────────────────────────────────────── */}
         <div className="flex flex-col items-center text-center">
           <span
