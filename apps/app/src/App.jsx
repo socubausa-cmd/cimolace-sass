@@ -1076,7 +1076,12 @@ isLiriHostDevPreviewRoute;
     (location.pathname === '/owner-dashboard' && searchParams.get('tab') === 'forum') ||
     location.pathname.startsWith('/secretariat-space/forum');
 
+  // Lecteur de cours plein écran (/formation/:id/learn) — expérience immersive focalisée :
+  // pas de header marketing global (il a son propre header minimal Retour / titre / Forum).
+  const isCoursePlayerRoute = /^\/formation\/[^/]+\/learn\/?$/.test(location.pathname || '/');
+
   const shouldShowHeader =
+    !isCoursePlayerRoute &&
     !isDashForumImmersive &&
     !isAdminRoute &&
     !isMarketingShellRoute &&

@@ -1084,185 +1084,102 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
         </Button>
       </motion.header>
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 p-6 max-w-7xl mx-auto w-full">
-        {/* Sidebar - Programme */}
-        <motion.aside
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="lg:col-span-4"
-        >
-          <div className="rounded-2xl border border-white/10 bg-[#151a21]/80 backdrop-blur-xl overflow-hidden">
-            <div className="p-4 border-b border-white/10 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-[var(--school-accent)]" />
+      <div className="flex-1 w-full max-w-3xl mx-auto px-4 pb-20">
+        {/* Hero du jour courant — centré, comme l'écran détail */}
+        {!d ? (
+          <div className="flex flex-col items-center text-center pt-12 pb-4">
+            <BookOpen className="w-12 h-12 text-gray-600 mb-3" />
+            <p className="text-gray-300 font-medium">Sélectionne un jour dans le programme</p>
+            <p className="text-sm text-gray-500 mt-1">pour afficher le contenu</p>
+          </div>
+        ) : (
+          <motion.div
+            key={`hero-${path.mIdx}-${path.wIdx}-${path.dIdx}`}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="flex flex-col items-center text-center pt-6"
+          >
+            <span className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.28)', color: 'var(--school-accent)' }}>
+              <Play className="w-6 h-6" />
+            </span>
+            {[m?.title, w?.title].filter(Boolean).length > 0 && (
+              <div className="mt-3 text-[11px] tracking-[0.14em] uppercase" style={{ color: 'rgba(245,245,247,0.5)' }}>
+                {[m?.title, w?.title].filter(Boolean).join(' · ')}
               </div>
-              <span className="font-bold text-[var(--school-accent)] uppercase tracking-wider text-sm">Programme</span>
-            </div>
-            <div className="p-3 max-h-[60vh] overflow-y-auto space-y-2">
-              {modules.length === 0 ? (
-                <div className="text-sm text-gray-500 py-8 text-center">Aucun contenu.</div>
-              ) : null}
-              {modules.map((mod, mIdx) => (
-                <motion.div
-                  key={mod.id || mIdx}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: mIdx * 0.03 }}
-                  className="space-y-1"
-                >
-                  <button
-                    type="button"
-                    onClick={() => selectSafe({ mIdx })}
-                    className={cn(
-                      'w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3',
-                      mIdx === path.mIdx
-                        ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]'
-                        : 'border border-transparent hover:bg-white/5 hover:border-white/10 text-gray-300'
-                    )}
-                  >
-                    <span className={cn(
-                      'w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0',
-                      mIdx === path.mIdx ? 'bg-[var(--school-accent)] text-black' : 'bg-white/10 text-gray-400'
-                    )}>
-                      {mIdx + 1}
-                    </span>
-                    <span className="font-semibold truncate">{mod.title || `Module ${mIdx + 1}`}</span>
-                  </button>
+            )}
+            <h2 className="mt-1.5 text-2xl md:text-3xl font-bold text-white" style={{ letterSpacing: '-0.02em' }}>{d.title}</h2>
+            {contentCards.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => setActiveItem(contentCards[0])}
+                className="mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition-transform active:scale-[0.99]"
+                style={{ background: 'var(--school-accent)', color: '#0b0b0f', boxShadow: '0 12px 36px rgba(212,175,55,0.3)' }}
+              >
+                <Play className="w-4 h-4" /> Commencer la leçon
+              </button>
+            ) : (
+              <p className="mt-4 text-sm text-gray-500">Aucun contenu pour ce jour.</p>
+            )}
+          </motion.div>
+        )}
 
-                  <AnimatePresence>
-                    {mIdx === path.mIdx && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="overflow-hidden pl-4 ml-3 border-l border-white/10"
-                      >
-                        {(mod.weeks || []).map((week, wIdx) => (
-                          <div key={week.id || wIdx} className="py-2">
-                            <button
-                              type="button"
-                              onClick={() => selectSafe({ mIdx, wIdx })}
-                              className={cn(
-                                'w-full text-left px-3 py-2 rounded-lg transition-all flex items-center gap-2 text-sm',
-                                wIdx === path.wIdx ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'
-                              )}
-                            >
-                              <ChevronRight className={cn('w-4 h-4 transition-transform', wIdx === path.wIdx && 'rotate-90')} />
-                              {week.title || `Semaine ${wIdx + 1}`}
-                            </button>
-                            {wIdx === path.wIdx && (
-                              <div className="pl-4 mt-1 space-y-0.5">
-                                {(week.days || []).map((day, dIdx) => (
-                                  <button
-                                    key={day.id || dIdx}
-                                    type="button"
-                                    onClick={() => selectSafe({ mIdx, wIdx, dIdx })}
-                                    className={cn(
-                                      'w-full text-left px-3 py-2 rounded-lg transition-all text-sm flex items-center gap-2',
-                                      dIdx === path.dIdx
-                                        ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border-l-2 border-[var(--school-accent)] -ml-[2px] pl-[14px]'
-                                        : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
-                                    )}
-                                  >
-                                    <Play className="w-3.5 h-3.5 opacity-70" />
-                                    {day.title || `Jour ${dIdx + 1}`}
-                                  </button>
-                                ))}
+        {/* Programme — filets fins (fondu), comme l'écran détail */}
+        {modules.length > 0 && (
+          <div className="mt-12">
+            <h3 className="text-center text-[13px] font-semibold uppercase tracking-[0.14em] mb-4" style={{ color: 'rgba(245,245,247,0.6)' }}>Programme</h3>
+            <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.09)', borderBottom: '0.5px solid rgba(255,255,255,0.09)' }}>
+              {modules.map((mod, mIdx) => {
+                const mOpen = mIdx === path.mIdx;
+                return (
+                  <div key={mod.id || mIdx} style={{ borderTop: mIdx === 0 ? 'none' : '0.5px solid rgba(255,255,255,0.06)' }}>
+                    <button
+                      type="button"
+                      onClick={() => selectSafe({ mIdx })}
+                      className="w-full flex items-center gap-3 px-2 py-3 text-left transition-colors hover:bg-white/[0.025]"
+                    >
+                      <span className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style={mOpen ? { background: 'rgba(212,175,55,0.18)', color: 'var(--school-accent)' } : { background: 'rgba(255,255,255,0.08)', color: 'rgba(245,245,247,0.5)' }}>{mIdx + 1}</span>
+                      <span className="flex-1 text-sm font-medium truncate" style={{ color: mOpen ? '#fff' : 'rgba(245,245,247,0.8)' }}>{mod.title || `Module ${mIdx + 1}`}</span>
+                      <ChevronRight className="w-4 h-4 shrink-0 transition-transform" style={{ color: 'rgba(245,245,247,0.4)', transform: mOpen ? 'rotate(90deg)' : 'none' }} />
+                    </button>
+                    {mOpen && (mod.weeks || []).map((week, wIdx) => {
+                      const wOpen = wIdx === path.wIdx;
+                      return (
+                        <div key={week.id || wIdx}>
+                          <button type="button" onClick={() => selectSafe({ mIdx, wIdx })} className="w-full flex items-center gap-2 pl-10 pr-3 py-2 text-left text-sm transition-colors hover:bg-white/[0.025]" style={{ color: wOpen ? '#fff' : 'rgba(245,245,247,0.55)' }}>
+                            <ChevronRight className="w-3.5 h-3.5 transition-transform" style={{ transform: wOpen ? 'rotate(90deg)' : 'none' }} />
+                            <span className="truncate">{week.title || `Semaine ${wIdx + 1}`}</span>
+                          </button>
+                          {wOpen && (week.days || []).map((day, dIdx) => {
+                            const dOpen = dIdx === path.dIdx;
+                            return (
+                              <div key={day.id || dIdx}>
+                                <button type="button" onClick={() => selectSafe({ mIdx, wIdx, dIdx })} className="w-full flex items-center gap-2 pl-16 pr-3 py-2 text-left text-sm transition-colors" style={{ color: dOpen ? 'var(--school-accent)' : 'rgba(245,245,247,0.5)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(212,175,55,0.06)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>
+                                  <Play className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                                  <span className="flex-1 truncate">{day.title || `Jour ${dIdx + 1}`}</span>
+                                </button>
+                                {dOpen && contentCards.map((c) => {
+                                  const Icon = c.kind === 'video' ? Video : c.kind === 'support' ? Presentation : FileText;
+                                  return (
+                                    <button key={c.key} type="button" onClick={() => setActiveItem(c)} className="w-full flex items-center gap-2.5 pr-3 py-2 text-left transition-colors" style={{ paddingLeft: '5.5rem' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(212,175,55,0.06)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>
+                                      <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--school-accent)' }} />
+                                      <span className="flex-1 truncate text-[13px] text-white">{c.title}</span>
+                                      <span className="text-[10px] uppercase tracking-wide shrink-0" style={{ color: 'var(--school-accent)' }}>{c.kind === 'video' ? 'Vidéo' : c.kind === 'support' ? 'Support' : 'Texte'}</span>
+                                    </button>
+                                  );
+                                })}
                               </div>
-                            )}
-                          </div>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              ))}
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </motion.aside>
-
-        {/* Content area */}
-        <motion.main
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.15 }}
-          className="lg:col-span-8"
-        >
-          {!d ? (
-            <div className="rounded-2xl border border-dashed border-white/20 bg-[#151a21]/40 backdrop-blur p-12 text-center">
-              <BookOpen className="w-16 h-16 mx-auto text-gray-600 mb-4" />
-              <p className="text-gray-400 font-medium">Sélectionne un jour dans le programme</p>
-              <p className="text-sm text-gray-500 mt-1">pour afficher le contenu</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <motion.div
-                key={`${path.mIdx}-${path.wIdx}-${path.dIdx}`}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3 }}
-                className="rounded-2xl border border-white/10 bg-[#151a21]/80 backdrop-blur-xl overflow-hidden"
-              >
-                <div className="p-6 border-b border-white/10 bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] to-transparent">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center">
-                      <Layers className="w-5 h-5 text-[var(--school-accent)]" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-white">{d.title}</h2>
-                      <p className="text-sm text-gray-400">{m?.title} · {w?.title}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Video className="w-4 h-4 text-[var(--school-accent)]" />
-                    <span className="text-sm font-semibold text-[var(--school-accent)] uppercase tracking-wider">Contenu du jour</span>
-                  </div>
-                  {contentCards.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500 rounded-xl border border-dashed border-white/10">
-                      Aucun contenu pour ce jour.
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {contentCards.map((c, idx) => {
-                        const Icon = c.kind === 'video' ? Video : c.kind === 'support' ? Presentation : FileText;
-                        return (
-                          <motion.button
-                            key={c.key}
-                            type="button"
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.05 }}
-                            whileHover={{ scale: 1.02, y: -2 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setActiveItem(c)}
-                            className="group text-left rounded-xl border border-white/10 bg-white/[0.02] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] p-5 transition-all duration-300 flex items-start gap-4"
-                          >
-                            <div className="w-12 h-12 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center shrink-0 group-hover:bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-colors">
-                              <Icon className="w-6 h-6 text-[var(--school-accent)]" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-white truncate group-hover:text-[var(--school-accent)] transition-colors">{c.title}</div>
-                              <div className="text-xs text-gray-500 mt-0.5">{c.meta}</div>
-                            </div>
-                            <div className="shrink-0 flex items-center gap-1 text-xs text-gray-500 group-hover:text-[var(--school-accent)] transition-colors">
-                              <span>Ouvrir</span>
-                              <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                            </div>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </motion.main>
+        )}
       </div>
 
       <Dialog open={!!activeItem} onOpenChange={(open) => { if (!open) setActiveItem(null); }}>
