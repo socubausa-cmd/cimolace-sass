@@ -139,7 +139,7 @@ const DemoCoursePlayerContent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F1419] text-white flex flex-col">
+    <div className="min-h-screen bg-[#0b0b0f] text-white flex flex-col">
       {/* Header Progress */}
       <div className="h-16 border-b border-white/10 flex items-center px-8 bg-[#15202B]">
          <div className="flex-1">
@@ -201,7 +201,7 @@ const DemoCoursePlayerContent = () => {
                     value={writingText}
                     onChange={(e) => setWritingText(e.target.value)}
                     placeholder="Écris ta réponse ici (min. 50 caractères)..."
-                    className="h-64 bg-[#0F1419] border-white/10 text-white"
+                    className="h-64 bg-[#0b0b0f] border-white/10 text-white"
                   />
                   <div className="text-right text-sm text-gray-500 mt-2">
                     {writingText.length} caractères
@@ -1006,10 +1006,10 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
     setPath({ mIdx: safeMIdx, wIdx: safeWIdx, dIdx: safeDIdx });
   };
 
-  if (loading) return <div className="min-h-screen bg-[#0F1419] text-white p-10">Chargement…</div>;
+  if (loading) return <div className="min-h-screen bg-[#0b0b0f] text-white p-10">Chargement…</div>;
   if (error) {
     return (
-      <div className="min-h-screen bg-[#0F1419] text-white p-10">
+      <div className="min-h-screen bg-[#0b0b0f] text-white p-10">
         <div className="max-w-xl space-y-4">
           <div className="text-lg font-semibold">Accès indisponible</div>
           <div className="text-sm text-gray-300">{error}</div>
@@ -1183,7 +1183,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
       </div>
 
       <Dialog open={!!activeItem} onOpenChange={(open) => { if (!open) setActiveItem(null); }}>
-        <DialogContent className="max-w-[98vw] w-full h-[92vh] bg-[#0F1419] border border-white/10 p-0 overflow-hidden text-white [&>button]:hidden">
+        <DialogContent className="max-w-[98vw] w-full h-[92vh] bg-[#0b0b0f] border border-white/10 p-0 overflow-hidden text-white [&>button]:hidden">
           <DialogHeader className="sr-only">
             <DialogTitle>Lecteur de cours</DialogTitle>
           </DialogHeader>
@@ -1267,8 +1267,8 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
             };
 
             return (
-              <div className="h-full bg-[#0F1419] text-white flex flex-col overflow-hidden">
-                <header className="h-16 bg-[#151a21]/95 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-4 md:px-6 shrink-0 z-20">
+              <div className="relative h-full text-white flex flex-col overflow-hidden" style={{ background: 'radial-gradient(72% 40% at 50% -2%, rgba(212,175,55,0.10), transparent 58%), radial-gradient(48% 44% at 97% 103%, rgba(111,76,255,0.05), transparent 62%), #0b0b0f' }}>
+                <header className="h-16 bg-[#151a21]/70 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-4 md:px-6 shrink-0 z-20">
                   <div className="flex items-center gap-4 min-w-0">
                     <Sheet>
                       <SheetTrigger asChild>
@@ -1358,7 +1358,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                 </header>
 
                 <div className="flex-1 flex overflow-hidden relative">
-                  <div className="flex-1 flex flex-col overflow-y-auto bg-[#0F1419]">
+                  <div className="flex-1 flex flex-col overflow-y-auto bg-[#0b0b0f]">
                     <div className="p-4 md:p-8 max-w-6xl mx-auto w-full">
                       {activePanel === 'video' ? (
                         <div className="space-y-6">
@@ -1566,7 +1566,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
 
                                 {mindmapMinimized ? (
                                   <div className="absolute bottom-4 right-4">
-                                    <div className="bg-[#0F1419]/95 border border-white/10 rounded-xl shadow-2xl backdrop-blur px-3 py-2 flex items-center gap-2">
+                                    <div className="bg-[#0b0b0f]/95 border border-white/10 rounded-xl shadow-2xl backdrop-blur px-3 py-2 flex items-center gap-2">
                                       <div className="text-xs text-gray-200 font-semibold">Mindmap</div>
                                       <Button
                                         type="button"
@@ -1591,7 +1591,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                   </div>
                                 ) : (
                                   <div className="absolute inset-0 flex items-end md:items-center justify-center p-3 md:p-6">
-                                    <div className="w-[98vw] md:w-[1100px] h-[82vh] bg-[#0F1419]/95 border border-white/10 rounded-2xl overflow-hidden shadow-2xl backdrop-blur">
+                                    <div className="w-[98vw] md:w-[1100px] h-[82vh] bg-[#0b0b0f]/95 border border-white/10 rounded-2xl overflow-hidden shadow-2xl backdrop-blur">
                                       {(() => {
                                         const mindmapData = currentVideoMemo?.mindmap || null;
                                         const countNodes = (n) => n ? 1 + (n.children || []).reduce((s, c) => s + countNodes(c), 0) : 0;
@@ -1880,12 +1880,12 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                           <div className="space-y-1">
                                                             <div className="text-xs text-gray-400">Début (s)</div>
                                                             <input type="number" min="0" step="0.5" value={questionClipStart} onChange={(e) => setClipStartSafe(e.target.value)}
-                                                              className="w-full px-3 py-2 rounded bg-[#0F1419] border border-white/10 text-white" placeholder="ex: 12" />
+                                                              className="w-full px-3 py-2 rounded bg-[#0b0b0f] border border-white/10 text-white" placeholder="ex: 12" />
                                                           </div>
                                                           <div className="space-y-1">
                                                             <div className="text-xs text-gray-400">Fin (s)</div>
                                                             <input type="number" min="0" step="0.5" value={questionClipEnd} onChange={(e) => setClipEndSafe(e.target.value)}
-                                                              className="w-full px-3 py-2 rounded bg-[#0F1419] border border-white/10 text-white" placeholder="ex: 32" />
+                                                              className="w-full px-3 py-2 rounded bg-[#0b0b0f] border border-white/10 text-white" placeholder="ex: 32" />
                                                           </div>
                                                         </div>
                                                       </div>
@@ -1899,7 +1899,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                           if (m) { setMentionQuery(m[2] || ''); }
                                                           else { setMentionQuery(''); setMentionCandidates([]); }
                                                         }}
-                                                        className="bg-[#0F1419] border-white/10 min-h-[180px] text-white"
+                                                        className="bg-[#0b0b0f] border-white/10 min-h-[180px] text-white"
                                                         placeholder="Écris ta question ici..."
                                                       />
 
@@ -1917,7 +1917,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                       ) : null}
 
                                                       {mentionQuery !== '' ? (
-                                                        <div className="border border-white/10 rounded-lg bg-[#0F1419] overflow-hidden">
+                                                        <div className="border border-white/10 rounded-lg bg-[#0b0b0f] overflow-hidden">
                                                           <div className="px-3 py-2 text-xs text-gray-400 border-b border-white/10">Mentionner un prof / admin</div>
                                                           {mentionLoading ? (
                                                             <div className="px-3 py-2 text-sm text-gray-400">Recherche…</div>
@@ -1954,7 +1954,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                               const editable = canEditQuestion(q.created_at);
                                                               const shareUrl = formationForumBase ? `${window.location.origin}${formationForumBase}?questionId=${q.id}` : '';
                                                               return (
-                                                                <div key={q.id} className="border border-white/10 rounded-lg p-3 bg-[#0F1419]">
+                                                                <div key={q.id} className="border border-white/10 rounded-lg p-3 bg-[#0b0b0f]">
                                                                   <div className="text-xs text-gray-500">{new Date(q.created_at).toLocaleString()}</div>
                                                                   <div className="text-sm text-gray-200 whitespace-pre-wrap mt-1">{q.question}</div>
                                                                   <div className="text-xs text-gray-400 mt-1">Séquence: {q.clip_start_seconds ?? '—'}s → {q.clip_end_seconds ?? '—'}s</div>
@@ -2051,7 +2051,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                             <Textarea
                               value={notesText}
                               onChange={(e) => setNotesText(e.target.value)}
-                              className="bg-[#0F1419] border-white/10 min-h-[220px] text-white"
+                              className="bg-[#0b0b0f] border-white/10 min-h-[220px] text-white"
                               placeholder="Écris ici..."
                             />
                             <div className="flex items-center justify-end gap-2">
@@ -2253,7 +2253,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                     step="0.5"
                                     value={questionClipStart}
                                     onChange={(e) => setClipStartSafe(e.target.value)}
-                                    className="w-full px-3 py-2 rounded bg-[#0F1419] border border-white/10 text-white"
+                                    className="w-full px-3 py-2 rounded bg-[#0b0b0f] border border-white/10 text-white"
                                     placeholder="ex: 12"
                                   />
                                 </div>
@@ -2265,7 +2265,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                     step="0.5"
                                     value={questionClipEnd}
                                     onChange={(e) => setClipEndSafe(e.target.value)}
-                                    className="w-full px-3 py-2 rounded bg-[#0F1419] border border-white/10 text-white"
+                                    className="w-full px-3 py-2 rounded bg-[#0b0b0f] border border-white/10 text-white"
                                     placeholder="ex: 32"
                                   />
                                 </div>
@@ -2284,7 +2284,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                   setMentionCandidates([]);
                                 }
                               }}
-                              className="bg-[#0F1419] border-white/10 min-h-[180px] text-white"
+                              className="bg-[#0b0b0f] border-white/10 min-h-[180px] text-white"
                               placeholder="Écris ta question ici..."
                             />
 
@@ -2305,7 +2305,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                             ) : null}
 
                             {mentionQuery !== '' ? (
-                              <div className="border border-white/10 rounded-lg bg-[#0F1419] overflow-hidden">
+                              <div className="border border-white/10 rounded-lg bg-[#0b0b0f] overflow-hidden">
                                 <div className="px-3 py-2 text-xs text-gray-400 border-b border-white/10">
                                   Mentionner un prof / admin
                                 </div>
@@ -2351,7 +2351,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                     const editable = canEditQuestion(q.created_at);
                                     const shareUrl = formationForumBase ? `${window.location.origin}${formationForumBase}?questionId=${q.id}` : '';
                                     return (
-                                      <div key={q.id} className="border border-white/10 rounded-lg p-3 bg-[#0F1419]">
+                                      <div key={q.id} className="border border-white/10 rounded-lg p-3 bg-[#0b0b0f]">
                                         <div className="text-xs text-gray-500">{new Date(q.created_at).toLocaleString()}</div>
                                         <div className="text-sm text-gray-200 whitespace-pre-wrap mt-1">{q.question}</div>
                                         <div className="text-xs text-gray-400 mt-1">
@@ -2497,7 +2497,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                   <Textarea
                                     value={discussionText}
                                     onChange={(e) => setDiscussionText(e.target.value)}
-                                    className="bg-[#0F1419] border-white/10 min-h-[90px] text-white"
+                                    className="bg-[#0b0b0f] border-white/10 min-h-[90px] text-white"
                                     placeholder={discussionTopic?.id ? 'Écris ton message…' : 'Ouverture de la discussion…'}
                                     disabled={!discussionTopic?.id || discussionTopic?.status === 'closed'}
                                     onKeyDown={(e) => {
