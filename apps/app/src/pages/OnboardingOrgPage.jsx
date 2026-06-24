@@ -151,9 +151,8 @@ export default function OnboardingOrgPage() {
         <div className="absolute -left-24 top-16 h-[440px] w-[440px] rounded-full blur-[150px]" style={{ background: 'rgba(217,119,87,0.16)' }} />
         <div className="absolute -right-16 bottom-0 h-80 w-80 rounded-full blur-[130px]" style={{ background: 'rgba(226,85,63,0.10)' }} />
 
-        <motion.div {...fade()} className="relative z-10 flex items-center gap-3.5">
-          <img src="/lirilogo.png" alt="" className="h-14 w-14 object-contain" style={{ filter: 'drop-shadow(0 0 26px rgba(217,119,87,0.5))' }} />
-          <span className="text-[2rem] font-bold leading-none tracking-[0.22em] text-[#e8b483]">LIRI</span>
+        <motion.div {...fade()} className="relative z-10">
+          <img src="/liri-logo-official.png" alt="LIRI" className="h-24 w-auto object-contain" style={{ filter: 'drop-shadow(0 0 26px rgba(217,119,87,0.45))' }} />
         </motion.div>
 
         <motion.div {...fade(0.08)} className="relative z-10 max-w-md">
@@ -181,9 +180,8 @@ export default function OnboardingOrgPage() {
         <div className="pointer-events-none absolute right-8 top-10 hidden h-72 w-72 rounded-full blur-[140px] lg:block" style={{ background: 'rgba(217,119,87,0.07)' }} />
         <motion.div {...fade()} className="relative z-10 w-full max-w-[420px]">
           {/* logo + nom (mobile) */}
-          <div className="mb-8 flex items-center justify-center gap-2.5 lg:hidden">
-            <img src="/lirilogo.png" alt="" className="h-11 w-11 object-contain" />
-            <span className="text-2xl font-bold tracking-[0.2em] text-[#e8b483]">LIRI</span>
+          <div className="mb-8 flex justify-center lg:hidden">
+            <img src="/liri-logo-official.png" alt="LIRI" className="h-20 w-auto object-contain" />
           </div>
 
           <h1 className="text-[1.7rem] font-bold leading-tight tracking-tight text-white">Créez votre organisation</h1>
