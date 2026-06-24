@@ -6,9 +6,9 @@ import {
   BookOpen, GraduationCap, Library, School,
   ArrowRight, CheckCircle2, Sparkles, X
 } from 'lucide-react';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
-const SITE_NAME = `${isnaTenantConfig.branding.name} · LIRI`;
+const siteName = () => `${getActiveTenantBranding().name} · LIRI`;
 
 const STEPS = [
   {
@@ -16,7 +16,7 @@ const STEPS = [
     icon: Sparkles,
     color: '#D4AF37',
     title: (name) => `Bienvenue, ${name} !`,
-    subtitle: `Vous faites maintenant partie de ${SITE_NAME}.`,
+    subtitle: () => `Vous faites maintenant partie de ${siteName()}.`,
     description: 'Votre espace élève personnel est prêt. Découvrez en quelques secondes tout ce qui vous attend.',
     visual: (
       <div className="relative flex items-center justify-center w-32 h-32 mx-auto mb-6">
@@ -131,7 +131,7 @@ const OnboardingModal = ({ userName, onClose }) => {
                 <h2 className="text-2xl font-serif font-bold text-white mb-2">
                   {current.title(firstName)}
                 </h2>
-                <p className="text-[var(--school-accent)] font-medium text-sm mb-3">{current.subtitle}</p>
+                <p className="text-[var(--school-accent)] font-medium text-sm mb-3">{typeof current.subtitle === 'function' ? current.subtitle() : current.subtitle}</p>
                 <p className="text-gray-400 text-sm leading-relaxed">{current.description}</p>
               </div>
             )}
@@ -141,7 +141,7 @@ const OnboardingModal = ({ userName, onClose }) => {
               <div>
                 <div className="text-center mb-6">
                   <h2 className="text-2xl font-serif font-bold text-white mb-1">{current.title()}</h2>
-                  <p className="text-gray-400 text-sm">{current.subtitle}</p>
+                  <p className="text-gray-400 text-sm">{typeof current.subtitle === 'function' ? current.subtitle() : current.subtitle}</p>
                 </div>
                 <div className="grid grid-cols-1 gap-3">
                   {current.features.map(({ icon: Icon, label, desc, color, bg }) => (
@@ -166,7 +166,7 @@ const OnboardingModal = ({ userName, onClose }) => {
                   <CheckCircle2 className="w-10 h-10 text-green-400" />
                 </div>
                 <h2 className="text-2xl font-serif font-bold text-white mb-2">{current.title()}</h2>
-                <p className="text-gray-400 text-sm mb-8">{current.subtitle}</p>
+                <p className="text-gray-400 text-sm mb-8">{typeof current.subtitle === 'function' ? current.subtitle() : current.subtitle}</p>
                 <div className="space-y-3">
                   {current.ctas.map(({ label, path, primary }) => (
                     <Button

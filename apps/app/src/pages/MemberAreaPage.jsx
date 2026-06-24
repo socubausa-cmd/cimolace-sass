@@ -7,16 +7,16 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import PremiumSegmentedSelector from '@/components/ui/premium-segmented-selector';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
-const SITE_NAME = `${isnaTenantConfig.branding.name} · LIRI`;
-const PUBLIC_HOST = (() => {
+const siteName = () => `${getActiveTenantBranding().name} · LIRI`;
+const publicHost = () => {
   try {
-    return new URL(isnaTenantConfig.branding.publicSiteOrigin).host;
+    return new URL(getActiveTenantBranding().publicSiteOrigin).host;
   } catch {
-    return 'prorascience.org';
+    return '';
   }
-})();
+};
 
 const MemberAreaPage = () => {
   const { user, profile, signOut, loading } = useAuth();
@@ -58,8 +58,8 @@ const MemberAreaPage = () => {
   return (
     <div className="min-h-screen py-20 px-4">
       <Helmet>
-        <title>{`Espace membre — ${SITE_NAME}`}</title>
-        <meta name="description" content={`Gérez vos formations, vidéos, consultations et profil sur ${PUBLIC_HOST}.`} />
+        <title>{`Espace membre — ${siteName()}`}</title>
+        <meta name="description" content={`Gérez vos formations, vidéos, consultations et profil sur ${publicHost()}.`} />
       </Helmet>
 
       <div className="max-w-7xl mx-auto">
@@ -112,7 +112,7 @@ const MemberAreaPage = () => {
               {activeTab === 'dashboard' && (
                 <div className="space-y-6">
                   <h2 className="text-2xl font-bold text-white">Tableau de bord</h2>
-                  <p className="text-gray-300">{`Bienvenue dans votre espace personnel. Ici, vous pouvez gérer toutes vos activités sur ${PUBLIC_HOST}.`}</p>
+                  <p className="text-gray-300">{`Bienvenue dans votre espace personnel. Ici, vous pouvez gérer toutes vos activités sur ${publicHost()}.`}</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-white/10 p-4 rounded-lg border border-white/20">
                       <h3 className="text-xl font-semibold text-white mb-2">Prochaine Consultation</h3>
