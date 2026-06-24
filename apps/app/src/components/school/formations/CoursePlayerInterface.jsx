@@ -1032,12 +1032,28 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F1419] text-white flex flex-col relative overflow-hidden">
-      {/* Ambient background */}
-      <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[color-mix(in_srgb,var(--school-accent)_6%,transparent)] rounded-full blur-[140px]" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-indigo-500/5 rounded-full blur-[100px]" />
-        <div className="absolute top-1/2 left-0 w-[300px] h-[300px] bg-cyan-500/4 rounded-full blur-[80px]" />
+    <div className="min-h-screen bg-[#0b0b0f] text-white flex flex-col relative overflow-hidden">
+      <style>{`
+        @keyframes cpiFloat { 0%,100%{transform:translate3d(0,0,0) scale(1)} 50%{transform:translate3d(0,-22px,0) scale(1.07)} }
+        .cpi-orb{ filter: blur(86px); opacity:.2; animation: cpiFloat 16s ease-in-out infinite; will-change: transform; }
+        .cpi-orb.alt{ animation-duration:20s; animation-delay:-4s; }
+        @media (prefers-reduced-motion: reduce){ .cpi-orb{ animation:none } }
+      `}</style>
+      {/* Ambient background — MÊME scène immersive que le détail du cours (TenantCourseDetailPage) */}
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+        <div className="absolute inset-0" style={{ background:
+          'radial-gradient(80% 50% at 50% -5%, rgba(212,175,55,0.12), transparent 55%),' +
+          'radial-gradient(65% 55% at 92% 104%, rgba(111,76,255,0.06), transparent 62%),' +
+          'radial-gradient(55% 50% at 4% 98%, rgba(15,179,255,0.045), transparent 62%)' }} />
+        <div className="absolute left-1/2 top-0 h-[140vh] w-[140vh] -translate-x-1/2" style={{
+          background: 'conic-gradient(from 198deg at 50% 32%, transparent 0deg, rgba(212,175,55,0.09) 38deg, transparent 80deg, transparent 188deg, rgba(15,179,255,0.04) 224deg, transparent 300deg)',
+          opacity: 0.42, filter: 'blur(3px)',
+          WebkitMaskImage: 'radial-gradient(ellipse 50% 40% at 50% 28%, #000 0%, transparent 72%)',
+          maskImage: 'radial-gradient(ellipse 50% 40% at 50% 28%, #000 0%, transparent 72%)' }} />
+        <span className="cpi-orb absolute -left-10 top-16 h-72 w-72 rounded-full" style={{ background: '#D4AF37' }} />
+        <span className="cpi-orb alt absolute -right-10 top-1/4 h-80 w-80 rounded-full" style={{ background: '#6f4cff', opacity: 0.1 }} />
+        <span className="cpi-orb absolute bottom-10 left-1/3 h-64 w-64 rounded-full" style={{ background: '#0fb3ff', opacity: 0.09 }} />
+        <div className="absolute inset-0" style={{ boxShadow: 'inset 0 0 220px 50px rgba(0,0,0,0.5)' }} />
       </div>
 
       {/* Header */}
@@ -1051,7 +1067,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
           <ChevronRight className="w-4 h-4 rotate-180 mr-1" /> Retour
         </Button>
         <div className="flex-1 px-6 min-w-0">
-          <h1 className="text-lg font-bold truncate bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
+          <h1 className="text-lg font-bold truncate text-white">
             {formation?.title || 'Formation'}
           </h1>
           <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
