@@ -121,21 +121,23 @@ export default function OnboardingOrgPage() {
     : (slugState.checking ? <span className="inline-flex items-center gap-1 text-xs text-white/40"><Loader2 size={13} className="animate-spin" /> vérification…</span> : null);
 
   const features = [
-    { icon: Wand2, title: 'Création par IA', sub: 'École, culte, débat — générés pour vous' },
-    { icon: Video, title: 'Lives & visioconférence', sub: 'En direct, multi-participants' },
-    { icon: GraduationCap, title: 'Cours vidéo & classe numérique', sub: 'Apprentissage structuré' },
-    { icon: Sparkles, title: 'Smartboard IA', sub: 'Tableau blanc augmenté' },
-    { icon: MessagesSquare, title: 'Forum & messagerie', sub: 'Votre communauté connectée' },
-    { icon: CalendarDays, title: 'Agenda & rappels', sub: 'Planifiez vos sessions' },
+    { icon: Wand2, title: 'Création par IA' },
+    { icon: Video, title: 'Lives & visio' },
+    { icon: GraduationCap, title: 'Cours & classe' },
+    { icon: Sparkles, title: 'Smartboard IA' },
+    { icon: MessagesSquare, title: 'Forum & chat' },
+    { icon: CalendarDays, title: 'Agenda' },
   ];
 
   const inputCls =
     'h-12 rounded-xl border-white/10 bg-white/[0.035] text-white transition-colors placeholder:text-white/30 focus:border-[var(--school-accent)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--school-accent)_22%,transparent)]';
   const labelCls = 'text-[13px] font-medium text-white/70';
+  // Entrée = glissement subtil SANS gater la visibilité (pas d'opacity:0 → le contenu
+  // reste visible même si rAF est throttlé en arrière-plan / reduced-motion / headless).
   const fade = (delay = 0) => ({
-    initial: { opacity: 0, y: 14 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] },
+    initial: { y: 16 },
+    animate: { y: 0 },
+    transition: { duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] },
   });
 
   return (
@@ -155,25 +157,15 @@ export default function OnboardingOrgPage() {
         </motion.div>
 
         <motion.div {...fade(0.08)} className="relative z-10 max-w-md">
-          <h2 className="font-serif text-[2.35rem] font-semibold leading-[1.1] tracking-tight text-white" style={{ textWrap: 'balance' }}>
-            Votre école, votre culte, vos débats. <span className="text-[var(--school-accent)]">En live, augmentés par l’IA.</span>
+          <h2 className="font-serif text-[2.6rem] font-semibold leading-[1.1] tracking-tight text-white" style={{ textWrap: 'balance' }}>
+            Votre école, votre culte, vos débats. <span className="text-[var(--school-accent)]">En live.</span>
           </h2>
-          <p className="mt-3.5 max-w-sm text-[14.5px] leading-relaxed text-white/60">
-            LIRI embarque l’IA pour générer votre espace — cours vidéo, classe numérique, lives &amp; visioconférence, smartboard — sous votre propre marque.
-          </p>
-          <ul className="mt-7 space-y-3">
-            {features.map(({ icon: Icon, title, sub }) => (
-              <li key={title} className="flex items-center gap-3.5">
-                <span
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)]"
-                  style={{ background: 'color-mix(in srgb, var(--school-accent) 13%, transparent)' }}
-                >
-                  <Icon className="h-4 w-4 text-[var(--school-accent)]" strokeWidth={2} />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-white/90">{title}</span>
-                  <span className="block text-[12.5px] text-white/50">{sub}</span>
-                </span>
+          <p className="mt-4 text-[15px] text-white/55">Comme Zoom — mais à vous. Augmenté par l’IA.</p>
+          <ul className="mt-9 grid max-w-sm grid-cols-2 gap-x-5 gap-y-4">
+            {features.map(({ icon: Icon, title }) => (
+              <li key={title} className="flex items-center gap-2.5">
+                <Icon className="h-[18px] w-[18px] shrink-0 text-[var(--school-accent)]" strokeWidth={2} />
+                <span className="text-sm font-medium text-white/80">{title}</span>
               </li>
             ))}
           </ul>
