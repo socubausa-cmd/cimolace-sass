@@ -34,10 +34,16 @@ function currentPathTenantSlug() {
   } catch {
     /* ignore */
   }
-  // 3. Env var (LIRI mobile sur /m/eleve/* ou build dédié)
+  // 3. Env var VITE_TENANT_SLUG (build dédié tenant, ex. LIRI mobile /m/eleve/*) — MAIS
+  //    IGNORÉE sur les domaines PLATEFORME `*.cimolace.space` (= le PRODUIT LIRI neutre :
+  //    app/liri.cimolace.space). Sinon un build baké `VITE_TENANT_SLUG=isna` forcerait le
+  //    tenant ISNA même sur le domaine produit (favicon/titre/branding). Sur un domaine de
+  //    tenant (prorascience.org) ou en local, l'env s'applique normalement.
   const envSlug =
     (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TENANT_SLUG) || '';
-  return envSlug.trim() || null;
+  const host = currentHostKey();
+  const isCimolacePlatformHost = host === 'cimolace.space' || host.endsWith('.cimolace.space');
+  return (envSlug.trim() && !isCimolacePlatformHost) ? envSlug.trim() : null;
 }
 
 function apiBaseUrl() {
