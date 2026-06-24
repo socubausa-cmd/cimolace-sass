@@ -3,10 +3,9 @@
  * (TikTok, Facebook/Instagram via Meta, LinkedIn) et stocker les tokens dans
  * social_tokens. Générique + configuré par plateforme.
  *
- * Identifiants d'app (gestes fondateur) attendus en env :
- *   SOCIAL_TIKTOK_CLIENT_ID / SOCIAL_TIKTOK_CLIENT_SECRET
- *   SOCIAL_FACEBOOK_CLIENT_ID / SOCIAL_FACEBOOK_CLIENT_SECRET
- *   SOCIAL_LINKEDIN_CLIENT_ID / SOCIAL_LINKEDIN_CLIENT_SECRET
+ * Identifiants d'app saisis PAR TENANT depuis le back-office (owner/admin),
+ * stockés dans tenants.metadata.social_apps[platform].{client_id,client_secret}.
+ * Aucune clé en env : chaque école apporte sa propre app (isolation par tenant).
  * Redirect URI à enregistrer côté plateforme :
  *   {PUBLIC_API_URL}/social-publisher/oauth/{platform}/callback
  */
@@ -54,8 +53,9 @@ export class SocialOAuthService {
     return p === 'tiktok' || p === 'facebook' || p === 'linkedin';
   }
 
-  // Identifiants d'app : priorité au config PAR TENANT (back-office, stocké dans
-  // tenants.metadata.social_apps), sinon l'app Cimolace partagée (env).
+  // Identifiants d'app STRICTEMENT par tenant : chaque école saisit ses propres
+  // clés depuis son back-office (tenants.metadata.social_apps). Pas de repli sur
+  // l'env — l'isolation par tenant est le modèle voulu (comme Stripe/PayPal).
   private async creds(platform: PlatformKey, tenantId: string) {
     const { data } = await (this.supabase.client as any)
       .from('tenants')
@@ -63,11 +63,9 @@ export class SocialOAuthService {
       .eq('id', tenantId)
       .maybeSingle();
     const app = (data?.metadata?.social_apps?.[platform] as any) || {};
-    const P = platform.toUpperCase();
     return {
-      clientId: app.client_id || this.config.get<string>(`SOCIAL_${P}_CLIENT_ID`),
-      clientSecret:
-        app.client_secret || this.config.get<string>(`SOCIAL_${P}_CLIENT_SECRET`),
+      clientId: app.client_id || null,
+      clientSecret: app.client_secret || null,
     };
   }
 
@@ -91,7 +89,7 @@ export class SocialOAuthService {
     const { clientId } = await this.creds(platform, tenantId);
     if (!clientId) {
       throw new BadRequestException(
-        `App ${platform} non configurée (env SOCIAL_${platform.toUpperCase()}_CLIENT_ID manquant)`,
+        `App ${platform} non configurée : renseignez le Client ID/Secret dans le back-office de l'école`,
       );
     }
     // state signé = anti-CSRF + porte le tenant/user (le callback est public).
@@ -226,10 +224,7 @@ export class SocialOAuthService {
     const connected = new Set((tokens || []).map((x: any) => x.platform));
     return (Object.keys(PLATFORMS) as PlatformKey[]).map((p) => ({
       platform: p,
-      configured: Boolean(
-        apps[p]?.client_id ||
-          this.config.get<string>(`SOCIAL_${p.toUpperCase()}_CLIENT_ID`),
-      ),
+      configured: Boolean(apps[p]?.client_id),
       connected: connected.has(p),
     }));
   }
