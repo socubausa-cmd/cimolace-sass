@@ -66,6 +66,22 @@ export class SocialPublisherController {
     return { success, message: success ? 'Publié sur Facebook ✅' : 'Échec publication Facebook ❌' };
   }
 
+  @Post('publish/:postId/instagram')
+  @ApiOperation({ summary: 'Publier un post sur Instagram (via Meta)' })
+  async publishInstagram(@Req() req: any, @Param('postId') postId: string) {
+    const tenantId = req.tenantId || req.user?.tenantId;
+    const success = await this.service.publishToInstagram(tenantId, postId);
+    return { success, message: success ? 'Publié sur Instagram ✅' : 'Échec publication Instagram ❌' };
+  }
+
+  @Post('publish/:postId/linkedin')
+  @ApiOperation({ summary: 'Publier un post sur LinkedIn' })
+  async publishLinkedIn(@Req() req: any, @Param('postId') postId: string) {
+    const tenantId = req.tenantId || req.user?.tenantId;
+    const success = await this.service.publishToLinkedIn(tenantId, postId);
+    return { success, message: success ? 'Publié sur LinkedIn ✅' : 'Échec publication LinkedIn ❌' };
+  }
+
   @Post('publish/:postId/all')
   @ApiOperation({ summary: 'Publier sur toutes les plateformes configurées' })
   async publishAll(@Req() req: any, @Param('postId') postId: string) {

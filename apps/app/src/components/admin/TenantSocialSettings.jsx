@@ -21,9 +21,9 @@ const INPUT =
   'w-full rounded-lg border border-white/10 bg-[#0F1419] px-3 py-2 text-sm font-mono text-white placeholder-gray-500 focus:border-[var(--school-accent,#D4AF37)] focus:outline-none disabled:opacity-50';
 
 const PLATFORMS = [
-  { key: 'tiktok', label: 'TikTok', dev: 'developers.tiktok.com', devUrl: 'https://developers.tiktok.com', idLabel: 'Client Key', secretLabel: 'Client Secret', color: '#69C9D0' },
-  { key: 'facebook', label: 'Facebook / Instagram', dev: 'developers.facebook.com', devUrl: 'https://developers.facebook.com', idLabel: 'App ID', secretLabel: 'App Secret', color: '#1877F2' },
-  { key: 'linkedin', label: 'LinkedIn', dev: 'linkedin.com/developers', devUrl: 'https://www.linkedin.com/developers', idLabel: 'Client ID', secretLabel: 'Client Secret', color: '#0A66C2' },
+  { key: 'tiktok', label: 'TikTok', dev: 'developers.tiktok.com', devUrl: 'https://developers.tiktok.com', idLabel: 'Client Key', secretLabel: 'Client Secret', color: '#69C9D0', note: 'Active « Login Kit » + « Content Posting API » dans ton app.' },
+  { key: 'facebook', label: 'Facebook / Instagram', dev: 'developers.facebook.com', devUrl: 'https://developers.facebook.com', idLabel: 'App ID', secretLabel: 'App Secret', color: '#1877F2', note: 'Connecter Facebook publie aussi sur Instagram — ton compte IG doit être un compte Business lié à ta Page Facebook.' },
+  { key: 'linkedin', label: 'LinkedIn', dev: 'linkedin.com/developers', devUrl: 'https://www.linkedin.com/developers', idLabel: 'Client ID', secretLabel: 'Client Secret', color: '#0A66C2', note: 'Active les produits « Sign In with LinkedIn using OpenID Connect » et « Share on LinkedIn ».' },
 ];
 
 function PlatformCard({ def, status, onSaved }) {
@@ -129,6 +129,11 @@ function PlatformCard({ def, status, onSaved }) {
             </a>{' '}
             puis collez ce <strong className="text-gray-200">Redirect URI</strong> dans sa configuration :
           </p>
+          {def.note && (
+            <p className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-2.5 py-1.5 text-[11px] leading-relaxed text-amber-200/80">
+              {def.note}
+            </p>
+          )}
           <div className="rounded-lg border border-white/10 bg-[#0F1419] px-2 py-1.5">
             <p className="text-[10px] uppercase tracking-wide text-gray-500">Redirect URI</p>
             <p className="select-all break-all font-mono text-xs text-gray-200">{redirectUri}</p>

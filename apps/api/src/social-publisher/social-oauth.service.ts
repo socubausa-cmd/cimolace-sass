@@ -34,9 +34,12 @@ const PLATFORMS: Record<
     clientIdParam: 'client_id',
   },
   linkedin: {
+    // openid+profile = lire l'URN du membre (auteur) ; w_member_social = publier.
+    // Produits LinkedIn requis : « Sign In with LinkedIn using OpenID Connect »
+    // + « Share on LinkedIn ».
     authUrl: 'https://www.linkedin.com/oauth/v2/authorization',
     tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
-    scope: 'w_member_social',
+    scope: 'openid profile w_member_social',
     clientIdParam: 'client_id',
   },
 };
@@ -160,17 +163,24 @@ export class SocialOAuthService {
       ? new Date(Date.now() + Number(expiresIn) * 1000).toISOString()
       : null;
 
+    // Résout les identifiants exploitables (token de Page Meta + ig_user_id,
+    // URN du membre LinkedIn). Sans ça, on ne peut PAS publier.
+    const acc = await this.resolveAccount(platform, accessToken);
+
     await (this.supabase.client as any).from('social_tokens').upsert(
       {
         tenant_id: payload.tenantId,
         platform,
-        access_token: accessToken,
+        access_token: acc.accessToken,
         refresh_token: refreshToken,
         token_type: data.token_type || 'bearer',
         expires_at: expiresAt,
+        page_id: acc.pageId,
+        page_name: acc.pageName,
         metadata: {
           open_id: data.open_id || data.data?.open_id || null,
           scope: data.scope || cfg.scope,
+          ...acc.extra,
         },
         updated_at: new Date().toISOString(),
       },
@@ -179,6 +189,58 @@ export class SocialOAuthService {
 
     this.logger.log(`✅ OAuth ${platform} connecté (tenant ${payload.tenantId})`);
     return { tenantId: payload.tenantId };
+  }
+
+  /**
+   * Après l'échange OAuth, résout les identifiants nécessaires à la publication :
+   * - Facebook/Meta : 1re Page + son access_token (publier exige un token de
+   *   PAGE, pas le token user) + compte Instagram Business lié (ig_user_id).
+   * - LinkedIn : URN du membre (auteur des posts) via /userinfo (OpenID).
+   * Tolérant : en cas d'échec on garde le token brut (la connexion réussit, la
+   * résolution pourra être refaite plus tard).
+   */
+  private async resolveAccount(
+    platform: PlatformKey,
+    accessToken: string,
+  ): Promise<{
+    accessToken: string;
+    pageId: string | null;
+    pageName: string | null;
+    extra: Record<string, any>;
+  }> {
+    try {
+      if (platform === 'facebook') {
+        const res = await fetch(
+          `https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${encodeURIComponent(accessToken)}`,
+        );
+        const json: any = await res.json();
+        const page = json?.data?.[0];
+        if (page?.access_token) {
+          return {
+            accessToken: page.access_token, // token de PAGE pour publier
+            pageId: page.id || null,
+            pageName: page.name || null,
+            extra: { ig_user_id: page.instagram_business_account?.id || null },
+          };
+        }
+      } else if (platform === 'linkedin') {
+        const res = await fetch('https://api.linkedin.com/v2/userinfo', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const ui: any = await res.json();
+        if (ui?.sub) {
+          return {
+            accessToken,
+            pageId: `urn:li:person:${ui.sub}`,
+            pageName: ui.name || null,
+            extra: { sub: ui.sub },
+          };
+        }
+      }
+    } catch (e) {
+      this.logger.warn(`resolveAccount ${platform}: ${(e as Error).message}`);
+    }
+    return { accessToken, pageId: null, pageName: null, extra: {} };
   }
 
   /** Back-office : enregistre les identifiants d'app d'un tenant pour une plateforme. */

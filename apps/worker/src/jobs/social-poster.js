@@ -17,7 +17,7 @@ const supabase = createClient(
 );
 
 // Plateformes pour lesquelles on prépare un brouillon par clip.
-const TARGET_PLATFORMS = ['tiktok', 'facebook', 'instagram'];
+const TARGET_PLATFORMS = ['tiktok', 'facebook', 'instagram', 'linkedin'];
 
 const PLATFORM_HINTS = {
   tiktok: 'TikTok : accroche très courte et percutante, ton direct, 3-5 hashtags tendance.',

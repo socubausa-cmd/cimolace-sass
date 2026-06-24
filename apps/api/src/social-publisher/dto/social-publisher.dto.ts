@@ -6,8 +6,8 @@ export class PublishShortDto {
   @IsUUID()
   short_clip_id: string;
 
-  @ApiProperty({ enum: ['tiktok', 'facebook', 'instagram', 'youtube_shorts'] })
-  @IsIn(['tiktok', 'facebook', 'instagram', 'youtube_shorts'])
+  @ApiProperty({ enum: ['tiktok', 'facebook', 'instagram', 'linkedin', 'youtube_shorts'] })
+  @IsIn(['tiktok', 'facebook', 'instagram', 'linkedin', 'youtube_shorts'])
   platform: string;
 
   @ApiPropertyOptional()
@@ -27,8 +27,8 @@ export class PublishShortDto {
 }
 
 export class SaveSocialTokenDto {
-  @ApiProperty({ enum: ['tiktok', 'facebook', 'instagram'] })
-  @IsIn(['tiktok', 'facebook', 'instagram'])
+  @ApiProperty({ enum: ['tiktok', 'facebook', 'instagram', 'linkedin'] })
+  @IsIn(['tiktok', 'facebook', 'instagram', 'linkedin'])
   platform: string;
 
   @ApiProperty()
