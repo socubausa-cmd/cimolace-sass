@@ -6,8 +6,15 @@ import {
 } from '@/components/school/course-builder/TableauVivant';
 import SketchRenderer from '@/components/school/course-builder/SketchRenderer';
 import AnimatedExample from '@/components/school/course-builder/AnimatedExample';
+import AnimatedImage from '@/components/school/course-builder/AnimatedImage';
 import AtelierPrompt from '@/components/school/course-builder/AtelierPrompt';
+import { supabase } from '@/lib/supabaseCompat';
+import { invokeGenerateVisualImage } from '@/features/smartboard-konva-editor/lib/designerIaImageHistory';
 import { CANONICAL_COURSE } from './precepteurCanonicalCourse';
+
+const imgCacheKey = (prompt) => {
+  try { return 'precepteur_img_' + btoa(unescape(encodeURIComponent(prompt))).slice(0, 48); } catch { return null; }
+};
 
 /**
  * LE PRÉCEPTEUR — lecteur immersif (preuve « temps → spirale »).
@@ -50,7 +57,35 @@ export default function PrecepteurDemoPage() {
   const [name, setName] = useState('');
   const [idx, setIdx] = useState(0);
   const [done, setDone] = useState(false);
+  const [analogyImages, setAnalogyImages] = useState({}); // sceneIndex -> { url?, loading?, error? }
   const speak = canSpeak();
+
+  // PRÉFETCH des images d'analogie dès le départ : Le Précepteur « dessine » l'image
+  // (generate-visual-image / Imagen) — pour un élève CONNECTÉ. Sinon repli sur le SVG.
+  // En production, ces images sont générées à la création du cours et mises en cache.
+  useEffect(() => {
+    if (!started) return;
+    scenes.forEach((s, i) => {
+      if (s.type !== 'image_analogie' || !s.image_prompt) return;
+      const ck = imgCacheKey(s.image_prompt);
+      let cached = null;
+      try { cached = ck ? window.localStorage.getItem(ck) : null; } catch { /* */ }
+      if (cached) { setAnalogyImages((m) => ({ ...m, [i]: { url: cached } })); return; }
+      setAnalogyImages((m) => ({ ...m, [i]: { loading: true } }));
+      invokeGenerateVisualImage(supabase, { prompt: s.image_prompt, size: '1792x1024' })
+        .then(({ data, error }) => {
+          const url = data?.imageUrl || data?.url;
+          if (url) {
+            try { if (ck) window.localStorage.setItem(ck, url); } catch { /* */ }
+            setAnalogyImages((m) => ({ ...m, [i]: { url } }));
+          } else {
+            setAnalogyImages((m) => ({ ...m, [i]: { error: error?.message || data?.error || 'indisponible' } }));
+          }
+        })
+        .catch((e) => setAnalogyImages((m) => ({ ...m, [i]: { error: String(e?.message || e) } })));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [started]);
 
   const sc = scenes[idx];
   const advance = useCallback(() => {
@@ -118,14 +153,26 @@ export default function PrecepteurDemoPage() {
       );
     }
     if (s.type === 'image_analogie') {
+      const img = analogyImages[idx] || {};
+      const showImg = !!(img.url || img.loading);
       return (
         <Board>
-          <div className="grid items-center gap-6 md:grid-cols-2">
-            <div>
-              <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-700">Pour faire asseoir l’idée</div>
-              <p className="text-[17px] leading-relaxed text-slate-700 md:text-lg">{s.analogie}</p>
+          <div className="grid items-stretch gap-6 md:grid-cols-2">
+            {/* L'ANALOGIE : texte + image GÉNÉRÉE puis ANIMÉE (Ken Burns) */}
+            <div className="flex flex-col">
+              <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-700">L’analogie</div>
+              <p className="text-[16px] leading-relaxed text-slate-700 md:text-[17px]">{s.analogie}</p>
+              {showImg ? (
+                <AnimatedImage src={img.url} loading={img.loading && !img.url} alt={s.analogie} className="mt-4 aspect-[4/3] w-full" />
+              ) : null}
             </div>
-            <AnimatedExample subject={s.animated_example?.subject} caption={s.animated_example?.caption} />
+            {/* DANS LA NATURE : l'exemple animé (mouvement réel, SVG) */}
+            {s.animated_example ? (
+              <div className="flex flex-col items-center justify-center">
+                <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-700">Dans la nature</div>
+                <AnimatedExample subject={s.animated_example.subject} caption={s.animated_example.caption} />
+              </div>
+            ) : null}
           </div>
         </Board>
       );

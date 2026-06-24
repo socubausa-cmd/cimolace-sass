@@ -74,7 +74,9 @@ Pour chaque **concept**, Le Précepteur émet une suite ordonnée de **scènes t
 | `amorce_croquis` | phrase de transition « faisons un croquis » | si croquis |
 | `croquis` | idéogramme à tracer (spec de dessin) + narration | si concept abstrait |
 | `atelier` | interpellation nominative + question + réponses attendues/erreurs + **banque de formulations variées** + révélation (souvent + croquis) | si concept abstrait |
-| `image_analogie` | analogie concrète (texte) + image réelle + **exemple animé** | oui pour un concept abstrait |
+| `image_analogie` | analogie concrète (texte) + **image GÉNÉRÉE puis ANIMÉE** + **exemple animé** | oui pour un concept abstrait |
+
+> **Règle (fondateur, 2026-06-24) : à CHAQUE analogie, le système GÉNÈRE une image (depuis `image_prompt`, via `generate-visual-image`/Imagen) et l'ANIME** pour mieux faire voir. Génération à la **création du cours** (mise en cache de l'URL) ; à la lecture, l'image est **animée** par effet **Ken Burns** (zoom + travelling + voile de lumière) — composant `AnimatedImage`. (Évolution : image→vidéo réelle via Runway/Kling.) Pour un exemple à **mouvement réel** (orbite, spirale), on garde un schéma animé SVG (`animated_example.subject`).
 | `transition` | amorce vers le concept suivant | oui |
 
 Règle de dosage : un concept **simple** peut se limiter à `lecon` + `image_analogie`. Un concept **abstrait** DOIT avoir `croquis` + `atelier` + `image_analogie`. Jamais deux idées dans un même croquis (**1 idée = 1 croquis**).
