@@ -16,7 +16,7 @@ import { EleveConnectionLayout } from '@/pages/school/eleve-mobile/connection/El
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { shouldUseLiriMobileLogin, FORCE_DESKTOP_LOGIN_PARAM } from '@/lib/loginEntryPath';
 import { shouldShowStudentInstallGate } from '@/lib/studentWebPlatform';
-import { LiriPageFooterLine, LiriBrandIcon } from '@/components/brand/LiriWordmark';
+import { LiriPageFooterLine } from '@/components/brand/LiriWordmark';
 import { isPlatformOrDevHost } from '@/lib/tenantResolver';
 import { InstallAppGate } from '@/components/eleve-mobile/InstallAppGate';
 import { EV_ACCENT, EV_MUTED, EV_LINE, EV_CARD, EV_CARD_INNER, EV_R, EV_SH } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
@@ -45,7 +45,9 @@ const LoginPage = () => {
     typeof window !== 'undefined' && isPlatformOrDevHost(window.location.hostname) && !tenantCtx.slug;
   const schoolBrand = isPlatformLiri ? 'LIRI' : (branding.name || 'École');
   const schoolAcademyTitle = isPlatformLiri ? 'LIRI — Intelligence Live Augmentée' : `${schoolBrand} Academy`;
-  const accentColor = isPlatformLiri ? '#7C3AED' : '#D4AF37';
+  // LIRI = terracotta du PORTAIL (--coral #d97757), pas un violet inventé. Cohérent avec
+  // LiriPortalShell / le logo lirilogo.png. ISNA (tenant) = or #D4AF37.
+  const accentColor = isPlatformLiri ? '#d97757' : '#D4AF37';
   const brandTagline = isPlatformLiri ? 'Intelligence Live Augmentée' : 'Institut Nocturne';
   const footerOrg = isPlatformLiri ? 'Cimolace' : 'NGOWAZULU';
   // Logo ISNA (Œil d'Horus) — utilisé hors plateforme ; sur LIRI on rend <LiriBrandIcon/>.
@@ -454,18 +456,22 @@ const LoginPage = () => {
 
   return (
     <div
-      className="flex min-h-screen bg-[#070b14]"
+      className={isPlatformLiri ? 'liri-neutral-login flex min-h-screen bg-[#262624]' : 'flex min-h-screen bg-[#070b14]'}
       style={isPlatformLiri ? { '--school-accent': accentColor } : undefined}
     >
+      {isPlatformLiri && <style>{`.liri-neutral-login{--school-accent:#d97757 !important}`}</style>}
       <Helmet>
         <title>{`Connexion | ${schoolAcademyTitle}`}</title>
       </Helmet>
 
       {/* ── PANNEAU GAUCHE – branding ── */}
       <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden p-12 lg:flex">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#070b14] via-[#192734] to-[#070b14]" />
+        <div
+          className={isPlatformLiri ? 'absolute inset-0' : 'absolute inset-0 bg-gradient-to-br from-[#070b14] via-[#192734] to-[#070b14]'}
+          style={isPlatformLiri ? { background: 'linear-gradient(to bottom right, #2b2926, #262624 45%, #1f1e1c)' } : undefined}
+        />
         <div className="absolute left-1/4 top-1/4 h-[500px] w-[500px] rounded-full blur-[150px]" style={{ backgroundColor: `${accentColor}0d` }} />
-        <div className="absolute bottom-1/4 right-1/4 h-[300px] w-[300px] rounded-full blur-[120px]" style={{ backgroundColor: 'rgba(212,175,55,0.07)' }} />
+        <div className="absolute bottom-1/4 right-1/4 h-[300px] w-[300px] rounded-full blur-[120px]" style={{ backgroundColor: isPlatformLiri ? 'rgba(226,85,63,0.08)' : 'rgba(212,175,55,0.07)' }} />
         <div
           className="absolute inset-0 opacity-40"
           style={{
@@ -488,7 +494,7 @@ const LoginPage = () => {
             <Ripple mainCircleSize={118} numCircles={7} />
             <div className="absolute h-40 w-40 scale-110 rounded-full blur-2xl" style={{ backgroundColor: `${accentColor}33` }} />
             {isPlatformLiri ? (
-              <LiriBrandIcon className="relative z-10 h-40 w-40" style={{ filter: 'drop-shadow(0 0 42px rgba(124,58,237,0.55))' }} />
+              <img src="/lirilogo.png" alt="LIRI" className="relative z-10 h-44 w-44 rounded-[32px] object-cover shadow-2xl" style={{ filter: 'drop-shadow(0 0 42px rgba(217,119,87,0.5))' }} />
             ) : (
               <img
                 src={logo}
@@ -542,7 +548,7 @@ const LoginPage = () => {
           <div className="mb-8 flex flex-col items-center text-center lg:hidden">
             <Link to="/" className="inline-flex flex-col items-center gap-2">
               {isPlatformLiri ? (
-                <LiriBrandIcon className="h-20 w-20" style={{ filter: 'drop-shadow(0 0 24px rgba(124,58,237,0.5))' }} />
+                <img src="/lirilogo.png" alt="LIRI" className="h-20 w-20 rounded-2xl object-cover" style={{ filter: 'drop-shadow(0 0 24px rgba(217,119,87,0.5))' }} />
               ) : (
                 <img src={logo} alt={schoolBrand} className="h-20 w-20 rounded-full border-2 bg-black object-contain" style={{ borderColor: `${accentColor}80` }} />
               )}
