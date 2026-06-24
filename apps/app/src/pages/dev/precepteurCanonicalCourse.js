@@ -73,7 +73,9 @@ export const CANONICAL_COURSE = {
         {
           type: 'image_analogie',
           analogie: 'Imagine un oiseau qui s’envole, mais un animal lui tient la patte : il ne peut pas filer droit. C’est la course du temps, ralentie par l’espace.',
-          image_prompt: 'a bird taking flight at dusk while a small animal holds its leg with a rope, cinematic real scene, warm directional light, sense of tension and pull',
+          // Image RÉELLE générée par Le Précepteur (Imagen) — doit montrer EXPLICITEMENT l'analogie.
+          image_prompt: 'Photo cinématographique : un oiseau aux ailes grandes ouvertes essaie de s’envoler vers le ciel, mais une CORDE attachée à sa patte le RETIENT vers le bas — la corde est tenue au sol par un petit animal (renard) assis. Tension visible, l’oiseau tire vers le haut, la corde est tendue. Lumière chaude de fin de journée, ciel ouvert. Sujet clair et lisible, pas de texte.',
+          analogy_anim: 'bird_tethered',
           animated_example: {
             subject: 'earth_orbit',
             caption: 'La Terre tourne autour du Soleil et sur elle-même — comme tout ce qui est en action. C’est la même spirale qui explique les galaxies.',

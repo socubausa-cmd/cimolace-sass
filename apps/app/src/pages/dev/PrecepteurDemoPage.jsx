@@ -164,6 +164,9 @@ export default function PrecepteurDemoPage() {
               <p className="text-[16px] leading-relaxed text-slate-700 md:text-[17px]">{s.analogie}</p>
               {showImg ? (
                 <AnimatedImage src={img.url} loading={img.loading && !img.url} alt={s.analogie} className="mt-4 aspect-[4/3] w-full" />
+              ) : s.analogy_anim ? (
+                // pas de photo générée (non connecté) → illustration ANIMÉE pertinente de l'analogie
+                <div className="mt-3 h-44 w-full md:h-48"><AnimatedExample subject={s.analogy_anim} /></div>
               ) : null}
             </div>
             {/* DANS LA NATURE : l'exemple animé (mouvement réel, SVG) */}

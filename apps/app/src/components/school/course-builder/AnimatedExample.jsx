@@ -75,7 +75,59 @@ function GalaxySpin({ rm }) {
   );
 }
 
-const SUBJECTS = { earth_orbit: EarthOrbit, galaxy_spin: GalaxySpin, orbit_generic: EarthOrbit };
+// L'ANALOGIE de l'oiseau : il s'envole mais un animal lui tient la patte (corde tendue)
+// => il ne peut pas filer droit. Illustration ANIMÉE explicite (ailes qui battent, oiseau
+// qui force vers le haut, corde tendue retenue par l'animal au sol).
+function BirdTethered({ rm }) {
+  return (
+    <svg viewBox="0 0 220 200" className="h-full w-full" style={{ overflow: 'visible' }}>
+      <defs>
+        <linearGradient id="btSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#dbeafe" />
+          <stop offset="100%" stopColor="#fef3c7" />
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="220" height="200" rx="14" fill="url(#btSky)" opacity="0.55" />
+      {/* sol */}
+      <path d="M0 182 Q 110 174 220 182 L 220 200 L 0 200 Z" fill="#9ca38a" opacity="0.6" />
+      {/* l'animal qui tient (silhouette assise, patte levée) */}
+      <g fill="#475569">
+        <ellipse cx="58" cy="170" rx="22" ry="15" />
+        <circle cx="42" cy="153" r="12" />
+        <path d="M34 145 l-3 -11 l8 6 Z" />
+        <path d="M46 143 l2 -11 l7 7 Z" />
+        <path d="M60 158 q11 -9 18 -3" stroke="#475569" strokeWidth="6" strokeLinecap="round" fill="none" />
+      </g>
+      {/* corde tendue (frémit) */}
+      <motion.path
+        fill="none" stroke="#92400e" strokeWidth="2.4" strokeLinecap="round"
+        initial={{ d: 'M78 153 Q 112 130 142 104' }}
+        animate={rm ? {} : { d: ['M78 153 Q 112 130 142 104', 'M78 153 Q 114 126 144 98', 'M78 153 Q 112 130 142 104'] }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      {/* l'oiseau qui force vers le haut, retenu */}
+      <motion.g
+        animate={rm ? {} : { y: [0, -7, 0], rotate: [0, -3, 0] }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+        style={{ transformOrigin: '148px 90px' }}
+      >
+        <ellipse cx="150" cy="92" rx="14" ry="8.5" fill="#2563eb" />
+        <circle cx="164" cy="86" r="7" fill="#1d4ed8" />
+        <path d="M170 86 l10 -2 l-10 5 Z" fill="#f59e0b" />
+        <path d="M136 94 l-15 4 l11 -9 Z" fill="#1d4ed8" />
+        <line x1="144" y1="100" x2="142" y2="105" stroke="#1e3a8a" strokeWidth="2" strokeLinecap="round" />
+        <motion.path d="M148 86 q-18 -22 -36 -13 q15 3 19 18 Z" fill="#3b82f6"
+          animate={rm ? {} : { rotate: [0, -28, 0] }} transition={{ duration: 0.5, repeat: Infinity, ease: 'easeInOut' }}
+          style={{ transformOrigin: '148px 88px' }} />
+        <motion.path d="M152 86 q-1 -27 17 -28 q-7 12 1 25 Z" fill="#60a5fa"
+          animate={rm ? {} : { rotate: [0, 28, 0] }} transition={{ duration: 0.5, repeat: Infinity, ease: 'easeInOut' }}
+          style={{ transformOrigin: '152px 88px' }} />
+      </motion.g>
+    </svg>
+  );
+}
+
+const SUBJECTS = { earth_orbit: EarthOrbit, galaxy_spin: GalaxySpin, orbit_generic: EarthOrbit, bird_tethered: BirdTethered };
 
 export default function AnimatedExample({ subject = 'earth_orbit', caption, className = '' }) {
   const rm = useReducedMotion();
