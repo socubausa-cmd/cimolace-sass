@@ -5,10 +5,6 @@ import { cn } from '@/lib/utils';
 /** Ampoule — lavande (#c4b5fd), alignée maquette logo LIRI définitif */
 export const LIRI_WORDMARK_BULB = '#c4b5fd';
 
-/** Compat héritage : anciennes sources PNG (désormais non utilisées par défaut). */
-export const LIRI_WORDMARK_OFFICIAL_SRC = '/liri-wordmark-official.png';
-export const LIRI_WORDMARK_WORD_ONLY_SRC = '/liri-wordmark-word-only.png';
-
 /** Couleurs du dégradé officiel (violet → bleu → cyan), partagées avec `LiriBrandIcon`. */
 export const LIRI_GRADIENT_STOPS = ['#7C3AED', '#3B82F6', '#00E5FF'];
 
