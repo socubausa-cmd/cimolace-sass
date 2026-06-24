@@ -4,7 +4,7 @@
  * Utilisé aussi depuis /student-school-life/cours/:courseId (route élève).
  * PARTAGÉE admin + élève → reskin du CONTENU uniquement (pas de shell).
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Play, CheckCircle, Lock, Loader2, BookOpen, ChevronDown, ChevronRight, Layers, GraduationCap } from 'lucide-react';
 import { coursesApi } from '@/lib/api-v2';
@@ -177,15 +177,22 @@ export default function TenantCourseDetailPage() {
 
   const backPath = tenantSlug ? `/t/${tenantSlug}/admin/courses` : '/student-school-life/cours';
 
+  // Shell conditionnel : la route élève (/student-school-life/cours/:id) est DÉJÀ rendue
+  // dans le shell de StudentSchoolLifePage (sidebar + main lg:pl-[250px] + conteneur). Re-wrapper
+  // dans TenantAdminShell créait un DOUBLE shell → 2 sidebars empilées + double décalage du
+  // contenu vers la droite. La route admin (/t/:slug/admin/courses/:id) n'a aucun shell parent
+  // → on fournit TenantAdminShell. slug présent = admin ; absent = élève.
+  const Shell = tenantSlug ? TenantAdminShell : Fragment;
+
   if (loading) return (
-    <TenantAdminShell>
+    <Shell>
       <div className="flex min-h-[60vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" style={{ color: T.gold }} />
       </div>
-    </TenantAdminShell>
+    </Shell>
   );
   if (error) return (
-    <TenantAdminShell>
+    <Shell>
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
         <p style={{ color: T.danger }}>{error}</p>
         <button
@@ -198,7 +205,7 @@ export default function TenantCourseDetailPage() {
           <ArrowLeft className="h-4 w-4" /> Retour
         </button>
       </div>
-    </TenantAdminShell>
+    </Shell>
   );
 
   const statusMeta = {
@@ -209,7 +216,7 @@ export default function TenantCourseDetailPage() {
   const C = (n) => (n > 1 ? 's' : '');
 
   return (
-    <TenantAdminShell>
+    <Shell>
       <style>{`
         @keyframes tcdFloat { 0%,100%{transform:translate3d(0,0,0) scale(1)} 50%{transform:translate3d(0,-22px,0) scale(1.07)} }
         .tcd-orb{ filter: blur(74px); opacity:.22; animation: tcdFloat 15s ease-in-out infinite; will-change: transform; }
@@ -450,6 +457,6 @@ export default function TenantCourseDetailPage() {
         />
       )}
     </div>
-    </TenantAdminShell>
+    </Shell>
   );
 }
