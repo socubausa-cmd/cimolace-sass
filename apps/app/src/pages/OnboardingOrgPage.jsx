@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { Loader2, Building2, Mail, Lock, Check, X, AlertCircle, ArrowRight, Video, Sparkles, MessagesSquare, CalendarDays } from 'lucide-react';
+import { Loader2, Building2, Mail, Lock, Check, X, AlertCircle, ArrowRight, Video, Sparkles, MessagesSquare, CalendarDays, Wand2, GraduationCap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -121,7 +121,9 @@ export default function OnboardingOrgPage() {
     : (slugState.checking ? <span className="inline-flex items-center gap-1 text-xs text-white/40"><Loader2 size={13} className="animate-spin" /> vérification…</span> : null);
 
   const features = [
-    { icon: Video, title: 'Lives & webinaires', sub: 'Diffusez en direct, en HD' },
+    { icon: Wand2, title: 'Création par IA', sub: 'École, culte, débat — générés pour vous' },
+    { icon: Video, title: 'Lives & visioconférence', sub: 'En direct, multi-participants' },
+    { icon: GraduationCap, title: 'Cours vidéo & classe numérique', sub: 'Apprentissage structuré' },
     { icon: Sparkles, title: 'Smartboard IA', sub: 'Tableau blanc augmenté' },
     { icon: MessagesSquare, title: 'Forum & messagerie', sub: 'Votre communauté connectée' },
     { icon: CalendarDays, title: 'Agenda & rappels', sub: 'Planifiez vos sessions' },
@@ -153,20 +155,20 @@ export default function OnboardingOrgPage() {
         </motion.div>
 
         <motion.div {...fade(0.08)} className="relative z-10 max-w-md">
-          <h2 className="font-serif text-[2.55rem] font-semibold leading-[1.08] tracking-tight text-white" style={{ textWrap: 'balance' }}>
-            Votre plateforme live, <span className="text-[var(--school-accent)]">prête en une minute.</span>
+          <h2 className="font-serif text-[2.35rem] font-semibold leading-[1.1] tracking-tight text-white" style={{ textWrap: 'balance' }}>
+            Votre école, votre culte, vos débats. <span className="text-[var(--school-accent)]">En live, augmentés par l’IA.</span>
           </h2>
-          <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-white/60">
-            Comme Zoom — mais à vous. Lives, tableau IA, communauté et agenda, sous votre propre marque.
+          <p className="mt-3.5 max-w-sm text-[14.5px] leading-relaxed text-white/60">
+            LIRI embarque l’IA pour générer votre espace — cours vidéo, classe numérique, lives &amp; visioconférence, smartboard — sous votre propre marque.
           </p>
-          <ul className="mt-9 space-y-4">
+          <ul className="mt-7 space-y-3">
             {features.map(({ icon: Icon, title, sub }) => (
               <li key={title} className="flex items-center gap-3.5">
                 <span
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)]"
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)]"
                   style={{ background: 'color-mix(in srgb, var(--school-accent) 13%, transparent)' }}
                 >
-                  <Icon className="h-[18px] w-[18px] text-[var(--school-accent)]" strokeWidth={2} />
+                  <Icon className="h-4 w-4 text-[var(--school-accent)]" strokeWidth={2} />
                 </span>
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold text-white/90">{title}</span>
