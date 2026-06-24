@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { Loader2, Building2, Mail, Lock, Check, X, AlertCircle, ArrowRight } from 'lucide-react';
+import { Loader2, Building2, Mail, Lock, Check, X, AlertCircle, ArrowRight, Video, Sparkles, MessagesSquare, CalendarDays } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -119,95 +120,156 @@ export default function OnboardingOrgPage() {
         : <span className="inline-flex items-center gap-1 text-xs text-red-400"><X size={13} /> déjà pris</span>)
     : (slugState.checking ? <span className="inline-flex items-center gap-1 text-xs text-white/40"><Loader2 size={13} className="animate-spin" /> vérification…</span> : null);
 
+  const features = [
+    { icon: Video, title: 'Lives & webinaires', sub: 'Diffusez en direct, en HD' },
+    { icon: Sparkles, title: 'Smartboard IA', sub: 'Tableau blanc augmenté' },
+    { icon: MessagesSquare, title: 'Forum & messagerie', sub: 'Votre communauté connectée' },
+    { icon: CalendarDays, title: 'Agenda & rappels', sub: 'Planifiez vos sessions' },
+  ];
+
+  const inputCls =
+    'h-12 rounded-xl border-white/10 bg-white/[0.035] text-white transition-colors placeholder:text-white/30 focus:border-[var(--school-accent)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--school-accent)_22%,transparent)]';
+  const labelCls = 'text-[13px] font-medium text-white/70';
+  const fade = (delay = 0) => ({
+    initial: { opacity: 0, y: 14 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] },
+  });
+
   return (
-    <div className="liri-onboarding flex min-h-screen items-center justify-center bg-[#262624] px-4 py-10" style={{ '--school-accent': ACCENT }}>
+    <div className="liri-onboarding relative flex min-h-screen bg-[#1f1d1b] text-white" style={{ '--school-accent': ACCENT }}>
       <style>{`.liri-onboarding{--school-accent:${ACCENT} !important}`}</style>
       <Helmet><title>Créer mon organisation | LIRI</title></Helmet>
-      <div className="w-full max-w-md">
-        <div className="mb-7 flex flex-col items-center text-center">
-          <img src="/lirilogo.png" alt="LIRI" className="h-16 w-16 object-contain" style={{ filter: 'drop-shadow(0 0 22px rgba(217,119,87,0.45))' }} />
-          <h1 className="mt-4 text-2xl font-bold text-white">Créez votre organisation LIRI</h1>
-          <p className="mt-1.5 text-sm text-gray-400">
-            Votre espace live, smartboard IA, forum et agenda — prêt en une minute. Comme Zoom, mais à vous.
+
+      {/* ── GAUCHE : marque LIRI + valeur (desktop) ── */}
+      <aside className="relative hidden w-[44%] flex-col justify-between overflow-hidden p-12 xl:p-16 lg:flex">
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(150deg,#2c2926 0%,#221f1d 55%,#1a1816 100%)' }} />
+        <div className="absolute -left-24 top-16 h-[440px] w-[440px] rounded-full blur-[150px]" style={{ background: 'rgba(217,119,87,0.16)' }} />
+        <div className="absolute -right-16 bottom-0 h-80 w-80 rounded-full blur-[130px]" style={{ background: 'rgba(226,85,63,0.10)' }} />
+
+        <motion.div {...fade()} className="relative z-10 flex items-center gap-3.5">
+          <img src="/lirilogo.png" alt="" className="h-14 w-14 object-contain" style={{ filter: 'drop-shadow(0 0 26px rgba(217,119,87,0.5))' }} />
+          <span className="text-[2rem] font-bold leading-none tracking-[0.22em] text-[#e8b483]">LIRI</span>
+        </motion.div>
+
+        <motion.div {...fade(0.08)} className="relative z-10 max-w-md">
+          <h2 className="font-serif text-[2.55rem] font-semibold leading-[1.08] tracking-tight text-white" style={{ textWrap: 'balance' }}>
+            Votre plateforme live, <span className="text-[var(--school-accent)]">prête en une minute.</span>
+          </h2>
+          <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-white/60">
+            Comme Zoom — mais à vous. Lives, tableau IA, communauté et agenda, sous votre propre marque.
           </p>
-        </div>
+          <ul className="mt-9 space-y-4">
+            {features.map(({ icon: Icon, title, sub }) => (
+              <li key={title} className="flex items-center gap-3.5">
+                <span
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)]"
+                  style={{ background: 'color-mix(in srgb, var(--school-accent) 13%, transparent)' }}
+                >
+                  <Icon className="h-[18px] w-[18px] text-[var(--school-accent)]" strokeWidth={2} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-white/90">{title}</span>
+                  <span className="block text-[12.5px] text-white/50">{sub}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </motion.div>
 
-        {error && (
-          <Alert variant="destructive" className="mb-5 border-red-900/50 bg-red-900/20 text-red-200">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+        <div className="relative z-10 text-[12px] text-white/35">© {new Date().getFullYear()} LIRI · une plateforme Cimolace</div>
+      </aside>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="org" className="text-sm text-gray-300">Nom de l’organisation</Label>
-            <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+      {/* ── DROITE : formulaire ── */}
+      <main className="relative flex flex-1 items-center justify-center px-5 py-10 sm:px-8">
+        <div className="pointer-events-none absolute right-8 top-10 hidden h-72 w-72 rounded-full blur-[140px] lg:block" style={{ background: 'rgba(217,119,87,0.07)' }} />
+        <motion.div {...fade()} className="relative z-10 w-full max-w-[420px]">
+          {/* logo + nom (mobile) */}
+          <div className="mb-8 flex items-center justify-center gap-2.5 lg:hidden">
+            <img src="/lirilogo.png" alt="" className="h-11 w-11 object-contain" />
+            <span className="text-2xl font-bold tracking-[0.2em] text-[#e8b483]">LIRI</span>
+          </div>
+
+          <h1 className="text-[1.7rem] font-bold leading-tight tracking-tight text-white">Créez votre organisation</h1>
+          <p className="mt-1.5 text-sm text-white/55">Quelques secondes, et votre espace LIRI est à vous.</p>
+
+          {error && (
+            <Alert variant="destructive" className="mt-6 border-red-900/50 bg-red-900/20 text-red-200">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <form onSubmit={handleSubmit} className="mt-7 space-y-5">
+            <div className="space-y-1.5">
+              <Label htmlFor="org" className={labelCls}>Nom de l’organisation</Label>
+              <div className="relative">
+                <Building2 className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-white/35" />
+                <Input
+                  id="org" value={orgName}
+                  onChange={(e) => { setOrgName(e.target.value); if (!slugEdited) checkSlug(e.target.value); }}
+                  placeholder="Mon Académie, Ma Clinique, Mon Studio…"
+                  className={`${inputCls} pl-11`}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-2 pl-1 pt-0.5">
+                <span className="truncate text-xs text-white/40">
+                  liri.cimolace.space/t/<span className="font-mono text-white/65">{slug || '…'}</span>
+                </span>
+                {slugBadge}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="slug" className={labelCls}>Identifiant <span className="text-white/35">(modifiable)</span></Label>
               <Input
-                id="org" value={orgName}
-                onChange={(e) => { setOrgName(e.target.value); if (!slugEdited) checkSlug(e.target.value); }}
-                placeholder="Mon Académie, Ma Clinique, Mon Studio…"
-                className="h-11 border-white/10 bg-[#211e1a] pl-10 text-white focus:border-[var(--school-accent)]"
+                id="slug" value={slugEdited || slug}
+                onChange={(e) => { setSlugEdited(e.target.value); checkSlug(e.target.value); }}
+                placeholder="mon-organisation"
+                className={`${inputCls} font-mono`}
               />
             </div>
-            <div className="flex items-center justify-between pl-1">
-              <span className="text-xs text-white/40">
-                URL : <span className="font-mono text-white/70">liri.cimolace.space/t/{slug || '…'}</span>
-              </span>
-              {slugBadge}
+
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className={labelCls}>Votre e-mail <span className="text-white/35">(compte propriétaire)</span></Label>
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-white/35" />
+                <Input
+                  id="email" type="email" autoComplete="email" value={email}
+                  onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.com"
+                  className={`${inputCls} pl-11`}
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="slug" className="text-sm text-gray-300">Identifiant (modifiable)</Label>
-            <Input
-              id="slug" value={slugEdited || slug}
-              onChange={(e) => { setSlugEdited(e.target.value); checkSlug(e.target.value); }}
-              placeholder="mon-organisation"
-              className="h-11 border-white/10 bg-[#211e1a] font-mono text-white focus:border-[var(--school-accent)]"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm text-gray-300">Votre e-mail (compte propriétaire)</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-              <Input
-                id="email" type="email" autoComplete="email" value={email}
-                onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.com"
-                className="h-11 border-white/10 bg-[#211e1a] pl-10 text-white focus:border-[var(--school-accent)]"
-              />
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className={labelCls}>Mot de passe <span className="text-white/35">(8 car. min.)</span></Label>
+              <div className="relative">
+                <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-white/35" />
+                <Input
+                  id="password" type="password" autoComplete="new-password" value={password}
+                  onChange={(e) => setPassword(e.target.value)} placeholder="••••••••"
+                  className={`${inputCls} pl-11`}
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-sm text-gray-300">Mot de passe (8 caractères min.)</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-              <Input
-                id="password" type="password" autoComplete="new-password" value={password}
-                onChange={(e) => setPassword(e.target.value)} placeholder="••••••••"
-                className="h-11 border-white/10 bg-[#211e1a] pl-10 text-white focus:border-[var(--school-accent)]"
-              />
-            </div>
-          </div>
+            <Button
+              type="submit" disabled={submitting || slugState.available === false}
+              className="group mt-1 h-12 w-full rounded-xl font-semibold text-white shadow-[0_12px_32px_-12px_rgba(217,119,87,0.6)] transition-transform duration-200 hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
+              style={{ background: 'linear-gradient(90deg,#e2855f 0%,#d97757 50%,#c2683f 100%)' }}
+            >
+              {submitting ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Création de votre espace…</>)
+                : (<>Créer mon organisation <ArrowRight className="ml-1.5 h-4 w-4 transition-transform group-hover:translate-x-0.5" /></>)}
+            </Button>
+          </form>
 
-          <Button
-            type="submit" disabled={submitting || slugState.available === false}
-            className="mt-2 h-12 w-full font-bold text-white"
-            style={{ background: `linear-gradient(90deg, ${ACCENT} 0%, #b85c3e 100%)` }}
-          >
-            {submitting ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Création de votre espace…</>)
-              : (<>Créer mon organisation <ArrowRight className="ml-1 h-4 w-4" /></>)}
-          </Button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-gray-400">
-          Déjà une organisation ?{' '}
-          <Link to="/login" className="font-medium hover:underline" style={{ color: ACCENT }}>Se connecter</Link>
-        </p>
-      </div>
+          <p className="mt-6 text-center text-sm text-white/45">
+            Déjà une organisation ?{' '}
+            <Link to="/login" className="font-semibold text-[var(--school-accent)] hover:underline">Se connecter</Link>
+          </p>
+        </motion.div>
+      </main>
     </div>
   );
 }
