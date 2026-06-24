@@ -1,12 +1,15 @@
 import {
   Controller,
   Get,
+  Post,
   Param,
   Query,
+  Body,
   Req,
   Res,
   UseGuards,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -23,13 +26,48 @@ export class SocialOAuthController {
    */
   @Get(':platform/start')
   @UseGuards(JwtAuthGuard, TenantGuard)
-  start(@Param('platform') platform: string, @Req() req: any) {
+  async start(@Param('platform') platform: string, @Req() req: any) {
     if (!this.oauth.isPlatform(platform)) {
       throw new BadRequestException('Plateforme inconnue');
     }
     return {
-      url: this.oauth.getAuthorizeUrl(platform, req.tenant.id, req.user.id),
+      url: await this.oauth.getAuthorizeUrl(
+        platform,
+        req.tenant.id,
+        req.user.id,
+      ),
     };
+  }
+
+  /** Back-office : statut des plateformes (configurée ? connectée ?). */
+  @Get('status')
+  @UseGuards(JwtAuthGuard, TenantGuard)
+  status(@Req() req: any) {
+    return this.oauth.getStatus(req.tenant.id);
+  }
+
+  /** Back-office : enregistrer les identifiants d'app (owner/admin uniquement). */
+  @Post(':platform/config')
+  @UseGuards(JwtAuthGuard, TenantGuard)
+  async saveConfig(
+    @Param('platform') platform: string,
+    @Req() req: any,
+    @Body() body: { clientId?: string; clientSecret?: string },
+  ) {
+    if (!this.oauth.isPlatform(platform)) {
+      throw new BadRequestException('Plateforme inconnue');
+    }
+    const role = String(req.tenant?.userRole || '').toLowerCase();
+    if (!['owner', 'admin'].includes(role)) {
+      throw new ForbiddenException('Réservé aux administrateurs');
+    }
+    await this.oauth.saveConfig(
+      req.tenant.id,
+      platform,
+      body.clientId || '',
+      body.clientSecret || '',
+    );
+    return { ok: true };
   }
 
   /**

@@ -54,11 +54,20 @@ export class SocialOAuthService {
     return p === 'tiktok' || p === 'facebook' || p === 'linkedin';
   }
 
-  private creds(platform: PlatformKey) {
+  // Identifiants d'app : priorité au config PAR TENANT (back-office, stocké dans
+  // tenants.metadata.social_apps), sinon l'app Cimolace partagée (env).
+  private async creds(platform: PlatformKey, tenantId: string) {
+    const { data } = await (this.supabase.client as any)
+      .from('tenants')
+      .select('metadata')
+      .eq('id', tenantId)
+      .maybeSingle();
+    const app = (data?.metadata?.social_apps?.[platform] as any) || {};
     const P = platform.toUpperCase();
     return {
-      clientId: this.config.get<string>(`SOCIAL_${P}_CLIENT_ID`),
-      clientSecret: this.config.get<string>(`SOCIAL_${P}_CLIENT_SECRET`),
+      clientId: app.client_id || this.config.get<string>(`SOCIAL_${P}_CLIENT_ID`),
+      clientSecret:
+        app.client_secret || this.config.get<string>(`SOCIAL_${P}_CLIENT_SECRET`),
     };
   }
 
@@ -73,9 +82,13 @@ export class SocialOAuthService {
   }
 
   /** URL vers laquelle envoyer l'utilisateur pour autoriser l'app. */
-  getAuthorizeUrl(platform: PlatformKey, tenantId: string, userId: string): string {
+  async getAuthorizeUrl(
+    platform: PlatformKey,
+    tenantId: string,
+    userId: string,
+  ): Promise<string> {
     const cfg = PLATFORMS[platform];
-    const { clientId } = this.creds(platform);
+    const { clientId } = await this.creds(platform, tenantId);
     if (!clientId) {
       throw new BadRequestException(
         `App ${platform} non configurée (env SOCIAL_${platform.toUpperCase()}_CLIENT_ID manquant)`,
@@ -112,7 +125,10 @@ export class SocialOAuthService {
     if (payload.platform !== platform) {
       throw new BadRequestException('state incohérent');
     }
-    const { clientId, clientSecret } = this.creds(platform);
+    const { clientId, clientSecret } = await this.creds(
+      platform,
+      payload.tenantId,
+    );
     if (!clientId || !clientSecret) {
       throw new BadRequestException(`App ${platform} non configurée`);
     }
@@ -165,5 +181,56 @@ export class SocialOAuthService {
 
     this.logger.log(`✅ OAuth ${platform} connecté (tenant ${payload.tenantId})`);
     return { tenantId: payload.tenantId };
+  }
+
+  /** Back-office : enregistre les identifiants d'app d'un tenant pour une plateforme. */
+  async saveConfig(
+    tenantId: string,
+    platform: PlatformKey,
+    clientId: string,
+    clientSecret: string,
+  ): Promise<void> {
+    const { data } = await (this.supabase.client as any)
+      .from('tenants')
+      .select('metadata')
+      .eq('id', tenantId)
+      .maybeSingle();
+    const metadata = data?.metadata || {};
+    metadata.social_apps = metadata.social_apps || {};
+    metadata.social_apps[platform] = {
+      ...(metadata.social_apps[platform] || {}),
+      ...(clientId ? { client_id: clientId } : {}),
+      ...(clientSecret ? { client_secret: clientSecret } : {}),
+    };
+    await (this.supabase.client as any)
+      .from('tenants')
+      .update({ metadata })
+      .eq('id', tenantId);
+    this.logger.log(`Config app ${platform} enregistrée (tenant ${tenantId})`);
+  }
+
+  /** Back-office : statut par plateforme (configurée ? connectée ?). Sans secret. */
+  async getStatus(tenantId: string): Promise<
+    Array<{ platform: PlatformKey; configured: boolean; connected: boolean }>
+  > {
+    const { data: t } = await (this.supabase.client as any)
+      .from('tenants')
+      .select('metadata')
+      .eq('id', tenantId)
+      .maybeSingle();
+    const apps = (t?.metadata?.social_apps as any) || {};
+    const { data: tokens } = await (this.supabase.client as any)
+      .from('social_tokens')
+      .select('platform')
+      .eq('tenant_id', tenantId);
+    const connected = new Set((tokens || []).map((x: any) => x.platform));
+    return (Object.keys(PLATFORMS) as PlatformKey[]).map((p) => ({
+      platform: p,
+      configured: Boolean(
+        apps[p]?.client_id ||
+          this.config.get<string>(`SOCIAL_${p.toUpperCase()}_CLIENT_ID`),
+      ),
+      connected: connected.has(p),
+    }));
   }
 }

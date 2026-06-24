@@ -68,6 +68,28 @@ export const tenantsApi = {
     apiV2.delete<ApiEnvelope<any>>(`/tenants/current/members/${userId}`).then(unwrap),
 };
 
+// ── Réseaux sociaux (OAuth + config back-office) ─────────────────────────────
+// Endpoints NestJS social-publisher/oauth/*. Le secret n'est jamais renvoyé
+// (status = booléens configured/connected). `loose` = tolère l'enveloppe { data }.
+const loose = (r: any) => r?.data?.data ?? r?.data;
+
+export interface SocialPlatformStatus {
+  platform: 'tiktok' | 'facebook' | 'linkedin';
+  configured: boolean;
+  connected: boolean;
+}
+
+export const socialApi = {
+  status: (): Promise<SocialPlatformStatus[]> =>
+    apiV2.get('/social-publisher/oauth/status').then(loose),
+  saveConfig: (platform: string, clientId: string, clientSecret: string) =>
+    apiV2
+      .post(`/social-publisher/oauth/${platform}/config`, { clientId, clientSecret })
+      .then(loose),
+  authorizeUrl: (platform: string): Promise<{ url: string }> =>
+    apiV2.get(`/social-publisher/oauth/${platform}/start`).then(loose),
+};
+
 // ── Lives ───────────────────────────────────────────────────────────────────
 
 export const livesApi = {
