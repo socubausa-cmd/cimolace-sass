@@ -87,6 +87,7 @@ export default function PrecepteurDemoPage() {
   const [ttsStatus, setTtsStatus] = useState('pending'); // 'pending' | 'ok' | { error }
   const speak = canSpeak();
   const audioRef = useRef(null); // élément <audio> courant
+  const narrateTokenRef = useRef(0); // jeton anti-doublon pour les narrations à la demande
 
   const stopAudio = useCallback(() => {
     try { if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; audioRef.current = null; } } catch { /* */ }
@@ -156,9 +157,13 @@ export default function PrecepteurDemoPage() {
     });
   }, [scenes.length]);
 
-  // VOIX + CADENCE fusionnées : joue la voix de la scène, et AVANCE QUAND LA VOIX A
-  // FINI (le rythme naturel d'un prof, plus de coupure). Filet : durée MIN (le croquis
-  // doit finir de se dessiner) + cap MAX de sécurité. Se relance quand l'audio arrive.
+  // ElevenLabs a-t-il CONFIRMÉ son échec ? (sinon on attend la vraie voix, jamais de doublon)
+  const ttsFailed = (ttsStatus && typeof ttsStatus === 'object' && ttsStatus.error) ? ttsStatus.error : null;
+
+  // VOIX + CADENCE fusionnées : UNE SEULE voix joue. On avance QUAND LA VOIX A FINI
+  // (rythme naturel d'un prof). Filet : durée MIN (le croquis finit de se dessiner) + cap MAX.
+  // Tant qu'ElevenLabs n'a pas échoué, on ATTEND son audio (re-run quand il arrive) — pas de
+  // synthèse navigateur EN PARALLÈLE (sinon deux voix se croisent).
   useEffect(() => {
     if (!started || done || !sc || sc.type === 'atelier') return undefined;
     let advanced = false;
@@ -176,19 +181,21 @@ export default function PrecepteurDemoPage() {
     };
     const url = narrAudio[idx];
     if (url) {
+      // ── VRAIE voix ElevenLabs : la SEULE qui joue ──
       const a = new Audio(url); audioRef.current = a;
-      a.onended = goAfterMin; // ← on avance quand la voix se termine
-      a.onerror = () => { if (speak) speakText(text, { onEnd: goAfterMin }); else goAfterMin(); };
-      void a.play().catch(() => { if (speak) speakText(text, { onEnd: goAfterMin }); });
-    } else if (speak) {
+      a.onended = goAfterMin;
+      a.onerror = goAfterMin;
+      void a.play().catch(() => {});
+    } else if (ttsFailed && speak) {
+      // ── ElevenLabs CONFIRMÉ indispo → repli synthèse (jamais en même temps qu'ElevenLabs) ──
       speakText(text, { onEnd: goAfterMin });
-    } else {
-      window.setTimeout(goAfterMin, Math.max(minMs, speechMs + 800));
     }
-    const cap = window.setTimeout(go, Math.max(minMs, speechMs * 2.8) + 3500); // filet
+    // sinon (audio pas encore prêt, ElevenLabs ok/pending) : on attend — l'effet se relance
+    // quand narrAudio[idx] arrive. Cap de sécurité au cas où.
+    const cap = window.setTimeout(go, Math.max(minMs, speechMs * 2.8) + 4500);
     return () => { advanced = true; window.clearTimeout(cap); stopAudio(); cancelSpeech(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idx, started, done, narrAudio[idx]]);
+  }, [idx, started, done, narrAudio[idx], ttsFailed]);
 
   // débloque l'audio DANS le geste (sinon les navigateurs muettent <audio> et la synthèse)
   const begin = () => {
@@ -199,10 +206,13 @@ export default function PrecepteurDemoPage() {
   const replay = () => { setDone(false); setStarted(true); setIdx(0); };
 
   // voix À LA DEMANDE (atelier) : ElevenLabs si possible, sinon synthèse navigateur.
+  // Jeton : si une narration plus récente démarre, l'ancienne ne joue pas (pas de doublon).
   const narrateNow = useCallback(async (text) => {
     if (!text) return;
+    const my = (narrateTokenRef.current += 1);
     cancelSpeech(); stopAudio();
     const r = await ttsFetch(text);
+    if (narrateTokenRef.current !== my) return; // dépassée par une narration plus récente
     if (r?.b64) { playAudioUrl(b64ToAudioUrl(r.b64, r.mime)); setTtsStatus('ok'); return; }
     if (r?.error) setTtsStatus((prev) => (prev === 'ok' ? prev : { error: r.error }));
     if (speak) speakText(text);
