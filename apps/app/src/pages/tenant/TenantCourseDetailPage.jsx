@@ -219,8 +219,8 @@ export default function TenantCourseDetailPage() {
     <Shell>
       <style>{`
         @keyframes tcdFloat { 0%,100%{transform:translate3d(0,0,0) scale(1)} 50%{transform:translate3d(0,-22px,0) scale(1.07)} }
-        .tcd-orb{ filter: blur(74px); opacity:.22; animation: tcdFloat 15s ease-in-out infinite; will-change: transform; }
-        .tcd-orb.alt{ animation-duration:19s; animation-delay:-4s; opacity:.18; }
+        .tcd-orb{ filter: blur(86px); opacity:.2; animation: tcdFloat 16s ease-in-out infinite; will-change: transform; }
+        .tcd-orb.alt{ animation-duration:20s; animation-delay:-4s; }
         @media (prefers-reduced-motion: reduce){ .tcd-orb{ animation:none } }
       `}</style>
 
@@ -234,25 +234,25 @@ export default function TenantCourseDetailPage() {
         className="absolute inset-0"
         style={{
           background:
-            'radial-gradient(80% 50% at 50% -5%, rgba(212,175,55,0.13), transparent 55%),' +
-            'radial-gradient(65% 55% at 92% 104%, rgba(111,76,255,0.12), transparent 60%),' +
-            'radial-gradient(55% 50% at 4% 98%, rgba(15,179,255,0.09), transparent 60%)',
+            'radial-gradient(80% 50% at 50% -5%, rgba(212,175,55,0.12), transparent 55%),' +
+            'radial-gradient(65% 55% at 92% 104%, rgba(111,76,255,0.06), transparent 62%),' +
+            'radial-gradient(55% 50% at 4% 98%, rgba(15,179,255,0.045), transparent 62%)',
         }}
       />
       <div
         className="absolute left-1/2 top-0 h-[140vh] w-[140vh] -translate-x-1/2"
         style={{
           background:
-            'conic-gradient(from 198deg at 50% 32%, transparent 0deg, rgba(212,175,55,0.10) 38deg, transparent 80deg, transparent 188deg, rgba(15,179,255,0.07) 224deg, transparent 300deg)',
-          opacity: 0.5,
+            'conic-gradient(from 198deg at 50% 32%, transparent 0deg, rgba(212,175,55,0.09) 38deg, transparent 80deg, transparent 188deg, rgba(15,179,255,0.04) 224deg, transparent 300deg)',
+          opacity: 0.42,
           filter: 'blur(3px)',
           WebkitMaskImage: 'radial-gradient(ellipse 50% 40% at 50% 28%, #000 0%, transparent 72%)',
           maskImage: 'radial-gradient(ellipse 50% 40% at 50% 28%, #000 0%, transparent 72%)',
         }}
       />
       <span className="tcd-orb absolute -left-10 top-16 h-72 w-72 rounded-full" style={{ background: '#D4AF37' }} />
-      <span className="tcd-orb alt absolute -right-10 top-1/4 h-80 w-80 rounded-full" style={{ background: '#6f4cff' }} />
-      <span className="tcd-orb absolute bottom-10 left-1/3 h-64 w-64 rounded-full" style={{ background: '#0fb3ff' }} />
+      <span className="tcd-orb alt absolute -right-10 top-1/4 h-80 w-80 rounded-full" style={{ background: '#6f4cff', opacity: 0.1 }} />
+      <span className="tcd-orb absolute bottom-10 left-1/3 h-64 w-64 rounded-full" style={{ background: '#0fb3ff', opacity: 0.09 }} />
       <div className="absolute inset-0" style={{ boxShadow: 'inset 0 0 220px 50px rgba(0,0,0,0.5)' }} />
     </div>
 
