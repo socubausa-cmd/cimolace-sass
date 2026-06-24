@@ -56,7 +56,7 @@ export function LiriPortalShell({
         <div className="flex items-center gap-2.5">
           <button onClick={() => nav('/liri')} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Retour au portail"><Menu size={17} /></button>
           <button onClick={() => nav('/liri')} className="flex items-center gap-2 lp-tr" aria-label="Portail LIRI">
-            <img src="/lirilogo.png" alt="LIRI" className="h-8 w-8 rounded-[10px] object-cover" />
+            <img src="/lirilogo.png" alt="LIRI" className="h-9 w-9 object-contain" />
             <span className="text-[17px] font-semibold tracking-tight lp-ink">LIRI</span>
           </button>
         </div>

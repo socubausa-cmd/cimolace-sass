@@ -5454,7 +5454,7 @@ const MessagingPage = ({ embedded = false }) => {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <img src="/lirilogo.png" alt="LIRI" className="h-5 w-5 rounded-md object-cover" />
+              <img src="/lirilogo.png" alt="LIRI" className="h-6 w-6 object-contain" />
               <h1 className="text-sm font-semibold text-white">{liveActive ? 'Live-Room Immersif' : 'Messagerie'}</h1>
               {totalUnread > 0 && (
                 <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--school-accent)] text-[10px] font-bold text-black px-1">

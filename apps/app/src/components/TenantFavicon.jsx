@@ -13,7 +13,7 @@ import { useTenantBranding } from '@/hooks/useTenantBranding';
  * Dès qu'un vrai tenant est résolu (`slug` présent), on bascule favicon → `branding.favicon`
  * et titre → nom du tenant. Aucun hardcode : tout vient de `useTenantBranding`.
  */
-const LIRI_DEFAULT_FAVICON = '/lirilogo.png';
+const LIRI_DEFAULT_FAVICON = '/liri-mark.png';
 const LIRI_DEFAULT_TITLE = 'LIRI';
 
 function applyFavicon(href) {

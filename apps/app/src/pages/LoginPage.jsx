@@ -494,7 +494,7 @@ const LoginPage = () => {
             <Ripple mainCircleSize={118} numCircles={7} />
             <div className="absolute h-40 w-40 scale-110 rounded-full blur-2xl" style={{ backgroundColor: `${accentColor}33` }} />
             {isPlatformLiri ? (
-              <img src="/lirilogo.png" alt="LIRI" className="relative z-10 h-44 w-44 rounded-[32px] object-cover shadow-2xl" style={{ filter: 'drop-shadow(0 0 42px rgba(217,119,87,0.5))' }} />
+              <img src="/lirilogo.png" alt="LIRI" className="relative z-10 h-48 w-48 object-contain" style={{ filter: 'drop-shadow(0 0 42px rgba(217,119,87,0.5))' }} />
             ) : (
               <img
                 src={logo}
@@ -548,7 +548,7 @@ const LoginPage = () => {
           <div className="mb-8 flex flex-col items-center text-center lg:hidden">
             <Link to="/" className="inline-flex flex-col items-center gap-2">
               {isPlatformLiri ? (
-                <img src="/lirilogo.png" alt="LIRI" className="h-20 w-20 rounded-2xl object-cover" style={{ filter: 'drop-shadow(0 0 24px rgba(217,119,87,0.5))' }} />
+                <img src="/lirilogo.png" alt="LIRI" className="h-24 w-24 object-contain" style={{ filter: 'drop-shadow(0 0 24px rgba(217,119,87,0.5))' }} />
               ) : (
                 <img src={logo} alt={schoolBrand} className="h-20 w-20 rounded-full border-2 bg-black object-contain" style={{ borderColor: `${accentColor}80` }} />
               )}
