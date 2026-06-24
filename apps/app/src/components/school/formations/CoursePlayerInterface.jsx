@@ -282,6 +282,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
   const [path, setPath] = useState({ mIdx: 0, wIdx: 0, dIdx: 0 });
   const [activeItem, setActiveItem] = useState(null);
   const [activePanel, setActivePanel] = useState('video');
+  const [panelOpen, setPanelOpen] = useState(false); // tiroir latéral programme — fermé par défaut (vue leçon immersive : on ne voit que la vidéo)
   const [notesText, setNotesText] = useState('');
   const [notesSaving, setNotesSaving] = useState(false);
   const [notesStatus, setNotesStatus] = useState('idle');
@@ -1358,10 +1359,14 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                 </header>
 
                 <div className="flex-1 flex overflow-hidden relative">
-                  <div className="flex-1 flex flex-col overflow-y-auto bg-[#0b0b0f]">
+                  <div className="flex-1 flex flex-col overflow-y-auto">
                     <div className="p-4 md:p-8 max-w-6xl mx-auto w-full">
                       {activePanel === 'video' ? (
                         <div className="space-y-6">
+                          {/* Vidéo FONDUE dans le fond immersif : halo or autour + vignette (inset) qui dissout les bords dans le noir — pas de cadre */}
+                          <div className="relative mx-auto w-full pt-2 md:pt-6" style={{ maxWidth: '1040px' }}>
+                            <div className="pointer-events-none absolute -inset-12 -z-10 rounded-full" style={{ background: 'radial-gradient(ellipse at 50% 46%, rgba(212,175,55,0.17), rgba(8,8,11,0) 62%)', filter: 'blur(34px)' }} />
+                            <div className="relative overflow-hidden rounded-3xl" style={{ boxShadow: '0 50px 120px rgba(0,0,0,0.5), inset 0 0 120px 48px #08080b' }}>
                           <VideoPlayer
                             ref={videoPlayerRef}
                             video={currentVideoMemo}
@@ -1408,6 +1413,8 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               );
                             })()}
                           />
+                            </div>
+                          </div>
                           <div className="flex items-center justify-end gap-2">
                             <Button
                               type="button"
@@ -2540,7 +2547,19 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                     <div className="h-20" />
                   </div>
 
-                  <div className="hidden md:flex w-[350px] lg:w-[400px] bg-[#192734] border-l border-white/10 flex-col z-10 shadow-xl">
+                  {!panelOpen && (
+                    <button type="button" onClick={() => setPanelOpen(true)} className="hidden md:flex absolute top-1/2 right-0 -translate-y-1/2 z-30 items-center gap-1.5 pl-3 pr-2 py-5 rounded-l-2xl bg-[#141318]/70 backdrop-blur-md border border-r-0 border-white/10 text-[var(--school-accent)] hover:bg-[#141318]/90 transition-colors" aria-label="Ouvrir le programme">
+                      <ChevronRight className="w-4 h-4 rotate-180" />
+                      <span className="text-[10px] tracking-[0.16em]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>PROGRAMME</span>
+                    </button>
+                  )}
+                  <div className={cn(
+                    "hidden md:flex flex-col absolute top-0 right-0 h-full w-[380px] lg:w-[420px] bg-[#141318]/95 backdrop-blur-2xl border-l border-white/10 z-40 shadow-2xl transition-transform duration-300 ease-out",
+                    panelOpen ? "translate-x-0" : "translate-x-full"
+                  )}>
+                    <button type="button" onClick={() => setPanelOpen(false)} className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition-colors" aria-label="Fermer le panneau">
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
                     <ProgressivePlaylist
                       playlistData={playlistData}
                       currentFormationId={formationId}
