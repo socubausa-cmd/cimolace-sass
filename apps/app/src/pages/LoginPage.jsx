@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Mail, Lock, AlertCircle, BookOpen, Users, GraduationCap, Sparkles, ChevronLeft } from 'lucide-react';
+import { Loader2, Mail, Lock, AlertCircle, BookOpen, Users, GraduationCap, Sparkles, ChevronLeft, Radio, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
 import { clearSelectedAccountRole } from '@/lib/accountRoleMode';
@@ -16,21 +16,12 @@ import { EleveConnectionLayout } from '@/pages/school/eleve-mobile/connection/El
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { shouldUseLiriMobileLogin, FORCE_DESKTOP_LOGIN_PARAM } from '@/lib/loginEntryPath';
 import { shouldShowStudentInstallGate } from '@/lib/studentWebPlatform';
-import { LiriPageFooterLine } from '@/components/brand/LiriWordmark';
+import { LiriPageFooterLine, LiriBrandIcon } from '@/components/brand/LiriWordmark';
+import { isPlatformOrDevHost } from '@/lib/tenantResolver';
 import { InstallAppGate } from '@/components/eleve-mobile/InstallAppGate';
 import { EV_ACCENT, EV_MUTED, EV_LINE, EV_CARD, EV_CARD_INNER, EV_R, EV_SH } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
 import { Ripple, AnimatedForm } from '@/components/ui/animated-sign-in';
-
-const STATS = [
-  { icon: GraduationCap, value: '21', label: 'Modules' },
-  { icon: BookOpen, value: '∞', label: 'Ressources' },
-  { icon: Users, value: '5ᵉ', label: 'Manikongo' },
-];
-
-const QUOTES = [
-  { text: "La connaissance n'est pas un privilège, c'est une responsabilité.", author: '5ᵉ Manikongo' },
-];
 
 const LIRI_CTA = {
   background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #5B21B6 100%)`,
@@ -44,14 +35,38 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   /** Re-render après opt-in « web limité » (localStorage mis à jour dans InstallAppGate). */
   const [, bumpInstallGate] = useState(0);
-  const { branding } = useTenantBranding();
-  const schoolBrand = branding.name || 'École';
-  const schoolAcademyTitle = `${schoolBrand} Academy`;
-  // ISNA = pôle école de PRORASCIENCE → thème de la landing officielle : navy + OR.
-  // (on n'utilise pas le violet du branding tenant ici : la vitrine ISNA est or #D4AF37.)
-  const accentColor = '#D4AF37';
-  // Logo ISNA / Prorascience : Œil d'Horus + Oreille (voir & entendre) — blanc sur fond noir.
+  const tenantCtx = useTenantBranding();
+  const branding = tenantCtx.branding;
+  // Hôte PLATEFORME (liri.cimolace.space, app.cimolace.space, localhost) = le PRODUIT LIRI
+  // neutre (aucun tenant) → identité LIRI : violet→cyan, logo R+i, slogan « Intelligence Live
+  // Augmentée », features live/IA. Domaine de TENANT (prorascience.org) → identité du tenant
+  // (ISNA = or #D4AF37 + Œil d'Horus + Manikongo). LIRI = le produit (comme Zoom), pas une école.
+  const isPlatformLiri =
+    typeof window !== 'undefined' && isPlatformOrDevHost(window.location.hostname) && !tenantCtx.slug;
+  const schoolBrand = isPlatformLiri ? 'LIRI' : (branding.name || 'École');
+  const schoolAcademyTitle = isPlatformLiri ? 'LIRI — Intelligence Live Augmentée' : `${schoolBrand} Academy`;
+  const accentColor = isPlatformLiri ? '#7C3AED' : '#D4AF37';
+  const brandTagline = isPlatformLiri ? 'Intelligence Live Augmentée' : 'Institut Nocturne';
+  const footerOrg = isPlatformLiri ? 'Cimolace' : 'NGOWAZULU';
+  // Logo ISNA (Œil d'Horus) — utilisé hors plateforme ; sur LIRI on rend <LiriBrandIcon/>.
   const logo = '/prorascience-logo-2.jpeg';
+  const STATS = isPlatformLiri
+    ? [
+        { icon: Radio, value: 'HD', label: 'Live' },
+        { icon: Sparkles, value: 'IA', label: 'Tableau' },
+        { icon: Globe, value: '∞', label: 'Écoles' },
+      ]
+    : [
+        { icon: GraduationCap, value: '21', label: 'Modules' },
+        { icon: BookOpen, value: '∞', label: 'Ressources' },
+        { icon: Users, value: '5ᵉ', label: 'Manikongo' },
+      ];
+  const quote = isPlatformLiri
+    ? { text: 'Enseignez, animez et diffusez en direct — augmenté par l’IA.', author: 'LIRI · par Cimolace' }
+    : { text: 'La connaissance n’est pas un privilège, c’est une responsabilité.', author: '5ᵉ Manikongo' };
+  const subCopy = isPlatformLiri
+    ? (<>Connectez-vous à votre espace <strong className="font-semibold text-white/90">LIRI</strong>.</>)
+    : (<><strong className="font-semibold text-white/90">LIRI</strong> héberge l&apos;espace membre de votre école. Le site public ({schoolBrand}), c&apos;est la vitrine — pas l&apos;application.</>);
 
   const { login, loginWithOAuth } = useAuth();
   const navigate = useNavigate();
@@ -165,10 +180,7 @@ const LoginPage = () => {
           {isLiriMobileAuth ? (
             <>Accédez à votre espace d&apos;apprentissage.</>
           ) : (
-            <>
-              <strong className="font-semibold text-white/90">LIRI</strong> héberge l&apos;espace membre de votre école. Le
-              site public ({schoolBrand}), c&apos;est la vitrine — pas l&apos;application.
-            </>
+            subCopy
           )}
         </p>
       </div>
@@ -441,7 +453,10 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#070b14]">
+    <div
+      className="flex min-h-screen bg-[#070b14]"
+      style={isPlatformLiri ? { '--school-accent': accentColor } : undefined}
+    >
       <Helmet>
         <title>{`Connexion | ${schoolAcademyTitle}`}</title>
       </Helmet>
@@ -463,7 +478,7 @@ const LoginPage = () => {
         <div className="relative z-10">
           <Link to="/">
             <span className="font-serif text-2xl font-bold tracking-wider text-white">{schoolBrand}</span>
-            <span className="mt-0.5 block text-[0.65rem] uppercase tracking-[0.4em]" style={{ color: accentColor }}>Institut Nocturne</span>
+            <span className="mt-0.5 block text-[0.65rem] uppercase tracking-[0.4em]" style={{ color: accentColor }}>{brandTagline}</span>
           </Link>
         </div>
 
@@ -472,12 +487,16 @@ const LoginPage = () => {
           <div className="relative grid h-72 w-72 place-items-center">
             <Ripple mainCircleSize={118} numCircles={7} />
             <div className="absolute h-40 w-40 scale-110 rounded-full blur-2xl" style={{ backgroundColor: `${accentColor}33` }} />
-            <img
-              src={logo}
-              alt={schoolBrand}
-              className="relative z-10 h-44 w-44 rounded-full border-2 bg-black object-contain shadow-2xl"
-              style={{ borderColor: `${accentColor}80` }}
-            />
+            {isPlatformLiri ? (
+              <LiriBrandIcon className="relative z-10 h-40 w-40" style={{ filter: 'drop-shadow(0 0 42px rgba(124,58,237,0.55))' }} />
+            ) : (
+              <img
+                src={logo}
+                alt={schoolBrand}
+                className="relative z-10 h-44 w-44 rounded-full border-2 bg-black object-contain shadow-2xl"
+                style={{ borderColor: `${accentColor}80` }}
+              />
+            )}
           </div>
         </div>
 
@@ -489,9 +508,9 @@ const LoginPage = () => {
               <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: accentColor }}>Citation du jour</span>
             </div>
             <blockquote className="font-serif text-2xl leading-relaxed text-white">
-              &ldquo;{QUOTES[0].text}&rdquo;
+              &ldquo;{quote.text}&rdquo;
             </blockquote>
-            <p className="mt-3 text-sm text-gray-400">— {QUOTES[0].author}</p>
+            <p className="mt-3 text-sm text-gray-400">— {quote.author}</p>
           </div>
 
           <div className="flex gap-8 border-t border-white/5 pt-4">
@@ -507,7 +526,7 @@ const LoginPage = () => {
 
         {/* Pied de page */}
         <div className="relative z-10">
-          <p className="text-xs text-gray-600">© {new Date().getFullYear()} {schoolBrand} · NGOWAZULU</p>
+          <p className="text-xs text-gray-600">© {new Date().getFullYear()} {schoolBrand} · {footerOrg}</p>
         </div>
       </div>
 
@@ -522,15 +541,19 @@ const LoginPage = () => {
           {/* Logo mobile uniquement */}
           <div className="mb-8 flex flex-col items-center text-center lg:hidden">
             <Link to="/" className="inline-flex flex-col items-center gap-2">
-              <img src={logo} alt={schoolBrand} className="h-20 w-20 rounded-full border-2 bg-black object-contain" style={{ borderColor: `${accentColor}80` }} />
+              {isPlatformLiri ? (
+                <LiriBrandIcon className="h-20 w-20" style={{ filter: 'drop-shadow(0 0 24px rgba(124,58,237,0.5))' }} />
+              ) : (
+                <img src={logo} alt={schoolBrand} className="h-20 w-20 rounded-full border-2 bg-black object-contain" style={{ borderColor: `${accentColor}80` }} />
+              )}
               <span className="font-serif text-2xl font-bold tracking-wider text-white">{schoolBrand}</span>
-              <span className="text-[0.6rem] uppercase tracking-[0.3em]" style={{ color: accentColor }}>Institut Nocturne</span>
+              <span className="text-[0.6rem] uppercase tracking-[0.3em]" style={{ color: accentColor }}>{brandTagline}</span>
             </Link>
           </div>
 
           <AnimatedForm
             header="Bon retour"
-            subHeader={<><strong className="font-semibold text-white/90">LIRI</strong> héberge l&apos;espace membre de votre école. Le site public ({schoolBrand}), c&apos;est la vitrine — pas l&apos;application.</>}
+            subHeader={subCopy}
             fields={[
               { label: 'Email', name: 'email', type: 'email', placeholder: 'exemple@email.com', value: formData.email, onChange: handleChange },
               { label: 'Mot de passe', name: 'password', type: 'password', placeholder: '••••••••', value: formData.password, onChange: handleChange },
