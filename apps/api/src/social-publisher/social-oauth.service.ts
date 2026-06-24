@@ -106,7 +106,9 @@ export class SocialOAuthService {
       response_type: 'code',
       state,
     });
-    return `${cfg.authUrl}?${params.toString()}`;
+    // LinkedIn exige les scopes séparés par des espaces encodés %20 (URLSearchParams
+    // encode l'espace en '+', refusé par LinkedIn → « invalid scope »).
+    return `${cfg.authUrl}?${params.toString().replace(/\+/g, '%20')}`;
   }
 
   /** Callback : échange le code contre un token et le stocke dans social_tokens. */

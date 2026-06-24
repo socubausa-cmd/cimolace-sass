@@ -25,7 +25,10 @@ export const cancelSpeech = () => { try { if (canSpeak()) window.speechSynthesis
 const pickFrVoice = () => {
   try {
     const vs = window.speechSynthesis.getVoices() || [];
-    return vs.find((v) => /fr[-_]?FR/i.test(v.lang)) || vs.find((v) => /^fr/i.test(v.lang)) || null;
+    const fr = vs.filter((v) => /fr/i.test(v.lang));
+    // préférer les voix de QUALITÉ (Google network / Siri / Enhanced / Premium / Neural)
+    const quality = fr.find((v) => /(google|siri|enhanc|premium|neural|natural)/i.test(v.name || ''));
+    return quality || fr.find((v) => /fr[-_]?FR/i.test(v.lang)) || fr[0] || null;
   } catch { return null; }
 };
 // Durée parlée estimée (FR ~13 caractères/seconde au débit 0.95) + petite pause.
