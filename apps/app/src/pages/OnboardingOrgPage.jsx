@@ -157,8 +157,10 @@ export default function OnboardingOrgPage() {
         </motion.div>
 
         <motion.div {...fade(0.08)} className="relative z-10 max-w-md">
-          <h2 className="font-serif text-[2.6rem] font-semibold leading-[1.1] tracking-tight text-white" style={{ textWrap: 'balance' }}>
-            Votre école, votre culte, vos débats. <span className="text-[var(--school-accent)]">En live.</span>
+          <h2 className="font-serif text-[2.05rem] font-semibold leading-[1.16] tracking-tight text-white">
+            Votre école,<br />
+            votre culte,<br />
+            vos débats. <span className="text-[var(--school-accent)]">En live.</span>
           </h2>
           <p className="mt-4 text-[15px] text-white/55">Comme Zoom — mais à vous. Augmenté par l’IA.</p>
           <ul className="mt-9 grid max-w-sm grid-cols-2 gap-x-5 gap-y-4">
