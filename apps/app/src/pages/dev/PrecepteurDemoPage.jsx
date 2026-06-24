@@ -143,13 +143,30 @@ export default function PrecepteurDemoPage() {
       );
     }
     if (s.type === 'croquis') {
+      // ÉCRAN DIVISÉ : le texte est poussé à gauche, l'espace de DESSIN s'ouvre à droite.
       return (
-        <Board>
-          <div className="h-[58vh] max-h-[460px] w-full">
-            <SketchRenderer sketch={s.sketch} play />
-          </div>
-          {s.narration ? <p className="mt-3 text-center text-sm leading-relaxed text-slate-500">{s.narration}</p> : null}
-        </Board>
+        <div className="flex w-full items-stretch gap-3 md:gap-5">
+          <motion.div
+            initial={{ x: -38, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.5, ease: EXPO }}
+            className="hidden w-[32%] flex-col justify-center md:flex"
+          >
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+              <div className="mb-2 flex items-center gap-2 text-amber-300/90">
+                <PenLine className="h-4 w-4" />
+                <span className="text-[11px] font-bold uppercase tracking-[0.18em]">Au tableau</span>
+              </div>
+              <p className="text-[15px] leading-relaxed text-white/75">{s.narration}</p>
+            </div>
+          </motion.div>
+          <motion.div
+            initial={{ x: 42, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.55, ease: EXPO }}
+            className="min-w-0 flex-1"
+          >
+            <Board className="!max-w-none">
+              <div className="h-[62vh] max-h-[540px] w-full"><SketchRenderer sketch={s.sketch} play /></div>
+            </Board>
+          </motion.div>
+        </div>
       );
     }
     if (s.type === 'image_analogie') {
@@ -195,11 +212,12 @@ export default function PrecepteurDemoPage() {
     );
   };
 
-  const strong = sc && (sc.type === 'croquis' || sc.type === 'image_analogie');
+  const strong = sc && sc.type === 'image_analogie';
+  const wide = sc && (sc.type === 'croquis' || sc.type === 'image_analogie');
 
   return (
     <div className="flex min-h-screen flex-col bg-[#0b0f17] px-4 py-6 md:py-8" style={{ '--school-accent': '#d4a36a' }}>
-      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col">
+      <div className={`mx-auto flex w-full flex-1 flex-col transition-[max-width] duration-500 ${wide ? 'max-w-6xl' : 'max-w-4xl'}`}>
         {/* En-tête */}
         <div className="mb-4 flex items-center justify-center gap-2 text-amber-400/90">
           <GraduationCap className="h-5 w-5" />

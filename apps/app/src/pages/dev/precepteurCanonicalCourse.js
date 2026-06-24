@@ -42,8 +42,8 @@ export const CANONICAL_COURSE = {
           sketch: {
             caption: 'La flèche du temps et la contrainte de l’espace',
             elements: [
-              { kind: 'vector', from: [30, 60], to: [78, 34], color: 'blue', label: 'flèche du temps', order: 1 },
-              { kind: 'arrow', from: [74, 70], to: [40, 54], color: 'amber', label: 'contrainte — l’espace', order: 2 },
+              { kind: 'vector', from: [26, 64], to: [80, 30], color: 'blue', label: 'flèche du temps', labelSide: 'above', order: 1 },
+              { kind: 'arrow', from: [80, 72], to: [40, 52], color: 'amber', label: 'contrainte — l’espace', labelSide: 'below', order: 2 },
             ],
           },
         },
@@ -64,8 +64,8 @@ export const CANONICAL_COURSE = {
           reveal_sketch: {
             caption: 'Le temps spirale autour du point de gravité',
             elements: [
-              { kind: 'spiral', center: [50, 48], turns: 2.6, radius: 32, color: 'blue', label: 'mouvement du temps', order: 1 },
-              { kind: 'point', center: [50, 48], color: 'amber', label: 'point de gravité (espace)', order: 2 },
+              { kind: 'spiral', center: [50, 50], turns: 2.8, radius: 40, color: 'blue', label: 'mouvement du temps', order: 1 },
+              { kind: 'point', center: [50, 50], color: 'amber', label: 'point de gravité (espace)', order: 2 },
             ],
           },
         },
@@ -74,7 +74,7 @@ export const CANONICAL_COURSE = {
           type: 'image_analogie',
           analogie: 'Imagine un oiseau qui s’envole, mais un animal lui tient la patte : il ne peut pas filer droit. C’est la course du temps, ralentie par l’espace.',
           // Image RÉELLE générée par Le Précepteur (Imagen) — doit montrer EXPLICITEMENT l'analogie.
-          image_prompt: 'Photo cinématographique : un oiseau aux ailes grandes ouvertes essaie de s’envoler vers le ciel, mais une CORDE attachée à sa patte le RETIENT vers le bas — la corde est tenue au sol par un petit animal (renard) assis. Tension visible, l’oiseau tire vers le haut, la corde est tendue. Lumière chaude de fin de journée, ciel ouvert. Sujet clair et lisible, pas de texte.',
+          image_prompt: 'Photo cinématographique dramatique : un grand oiseau bat puissamment des ailes et TIRE DE TOUTES SES FORCES vers le ciel, le corps tendu par l’EFFORT, les plumes ébouriffées par la lutte. Mais une CORDE nouée à sa patte le RETIENT violemment vers le bas — la corde, tendue à se rompre, est tirée AGRESSIVEMENT par un animal au sol (renard) crocs serrés, pattes arc-boutées, qui résiste de tout son poids. Tension extrême, sensation de force bloquée, mouvement empêché. Lumière chaude rasante de fin de journée, poussière soulevée. Sujet clair et lisible, pas de texte.',
           analogy_anim: 'bird_tethered',
           animated_example: {
             subject: 'earth_orbit',
