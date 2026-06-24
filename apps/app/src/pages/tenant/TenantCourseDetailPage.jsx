@@ -6,7 +6,7 @@
  */
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Play, CheckCircle, Lock, Loader2, BookOpen, ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Play, CheckCircle, Lock, Loader2, BookOpen, ChevronDown, ChevronRight, Layers, GraduationCap } from 'lucide-react';
 import { coursesApi } from '@/lib/api-v2';
 import supabase from '@/lib/customSupabaseClient';
 import { useFormationStructure } from '@/hooks/useFormationStructure';
@@ -201,141 +201,231 @@ export default function TenantCourseDetailPage() {
     </TenantAdminShell>
   );
 
+  const statusMeta = {
+    published: { label: 'Publié', color: T.success, bg: 'rgba(34,197,94,0.14)' },
+    draft: { label: 'Brouillon', color: T.warning, bg: 'rgba(245,158,11,0.14)' },
+  }[course?.status] || { label: course?.status || 'Cours', color: T.t2, bg: 'rgba(255,255,255,0.06)' };
+  const started = completedCount > 0;
+  const C = (n) => (n > 1 ? 's' : '');
+
   return (
     <TenantAdminShell>
-    <div className="rounded-2xl overflow-hidden" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
-      {/* Header */}
-      <div className="px-6 py-5" style={{ borderBottom: `1px solid ${T.border}`, background: T.surface2 }}>
-        <div className="mx-auto max-w-4xl">
-          <button
-            className="mb-3 flex items-center gap-1.5 text-sm transition-colors"
-            style={{ color: T.t3 }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = T.gold; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = T.t3; }}
-            onClick={() => navigate(backPath)}
-          >
-            <ArrowLeft className="h-4 w-4" /> Retour aux cours
-          </button>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-xl font-bold" style={{ color: T.t1 }}>{course?.title}</h1>
-              {course?.description && <p className="mt-1 text-sm" style={{ color: T.t2 }}>{course.description}</p>}
-              <button
-                type="button"
-                onClick={() => navigate(`/formation/${courseId}/learn`)}
-                className="mt-3 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-transform active:scale-[0.99]"
-                style={{ background: T.gold, color: '#0b0b0f' }}
+    <div className="mx-auto w-full max-w-4xl">
+      <button
+        className="mb-4 inline-flex items-center gap-1.5 text-sm transition-colors"
+        style={{ color: T.t3 }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = T.gold; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = T.t3; }}
+        onClick={() => navigate(backPath)}
+      >
+        <ArrowLeft className="h-4 w-4" /> Retour aux cours
+      </button>
+
+      {/* ── Hero immersif ───────────────────────────────────────────── */}
+      <section
+        className="relative overflow-hidden rounded-3xl px-7 py-9 md:px-10 md:py-11"
+        style={{
+          background: `radial-gradient(130% 95% at 90% -25%, ${T.goldDim}, transparent 58%), ${T.surface}`,
+          border: `1px solid ${T.border}`,
+        }}
+      >
+        <div className="flex flex-col gap-7 md:flex-row md:items-start md:justify-between">
+          <div className="min-w-0 md:max-w-2xl">
+            <div className="flex items-center gap-3">
+              <span
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
+                style={{ background: T.goldDim, border: `1px solid ${T.goldMid}`, color: T.gold }}
               >
-                <Play className="h-4 w-4" /> Accéder au cours
-              </button>
+                <GraduationCap className="h-6 w-6" />
+              </span>
+              <span
+                className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                style={{ background: statusMeta.bg, color: statusMeta.color }}
+              >
+                {statusMeta.label}
+              </span>
             </div>
-            {totalLessons > 0 && (
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <p className="text-xs" style={{ color: T.t3 }}>{completedCount}/{totalLessons} leçons</p>
-                  <div className="mt-1 h-2 w-32 overflow-hidden rounded-full" style={{ background: T.borderMid }}>
-                    <div className="h-full rounded-full transition-all" style={{ width: `${progressPct}%`, background: T.gold }} />
-                  </div>
-                </div>
-                <span className="text-sm font-semibold" style={{ color: T.gold }}>{progressPct}%</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
 
-      {/* Modules list */}
-      <div className="mx-auto max-w-4xl px-6 py-6 space-y-3">
-        {modules.length === 0 && (
-          <div
-            className="flex flex-col items-center justify-center rounded-2xl py-16 text-center"
-            style={{ border: `2px dashed ${T.borderMid}`, background: T.surface2 }}
-          >
-            <BookOpen className="mb-3 h-10 w-10" style={{ color: T.t4 }} />
-            <p className="text-sm" style={{ color: T.t3 }}>Ce cours n'a pas encore de modules.</p>
-          </div>
-        )}
-
-        {modules.map((mod, i) => {
-          const modLessons = lessons[mod.id] ?? [];
-          const expanded = expandedModules.has(mod.id);
-          const modCompleted = modLessons.length > 0 && modLessons.every(l => isCompleted(l.id));
-
-          return (
-            <div
-              key={mod.id}
-              className="overflow-hidden rounded-xl"
-              style={{ border: `1px solid ${T.border}`, background: T.surface2 }}
+            <h1
+              className="mt-5 text-2xl font-bold leading-tight md:text-[32px]"
+              style={{ color: T.t1, textWrap: 'balance' }}
             >
-              {/* Module header */}
-              <button
-                className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors"
-                onClick={() => toggleModule(mod.id)}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-              >
-                <span
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold"
-                  style={modCompleted
-                    ? { background: 'rgba(34,197,94,0.15)', color: T.success }
-                    : { background: T.goldDim, color: T.gold }}
-                >
-                  {modCompleted ? <CheckCircle className="h-4 w-4" /> : i + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold" style={{ color: T.t1 }}>{mod.title}</p>
-                  {mod.description && <p className="text-xs truncate" style={{ color: T.t3 }}>{mod.description}</p>}
-                </div>
-                <span className="shrink-0 text-xs" style={{ color: T.t3 }}>{modLessons.length} leçon(s)</span>
-                {expanded
-                  ? <ChevronDown className="h-4 w-4 shrink-0" style={{ color: T.t3 }} />
-                  : <ChevronRight className="h-4 w-4 shrink-0" style={{ color: T.t3 }} />}
-              </button>
+              {course?.title}
+            </h1>
+            {course?.description && (
+              <p className="mt-2.5 text-[15px] leading-relaxed" style={{ color: T.t2 }}>
+                {course.description}
+              </p>
+            )}
 
-              {/* Lessons */}
-              {expanded && (
-                <div style={{ borderTop: `1px solid ${T.border}` }}>
-                  {modLessons.length === 0 && (
-                    <p className="px-5 py-4 text-sm" style={{ color: T.t3 }}>Aucune leçon dans ce module.</p>
-                  )}
-                  {modLessons.map((lesson, j) => {
-                    const done = isCompleted(lesson.id);
-                    return (
-                      <div
-                        key={lesson.id}
-                        className="flex cursor-pointer items-center gap-3 px-5 py-3 transition-colors"
-                        style={{ borderTop: j === 0 ? 'none' : `1px solid ${T.border}` }}
-                        onClick={() => navigate(`/formation/${courseId}/learn`)}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = T.goldDim; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                      >
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center">
-                          {done
-                            ? <CheckCircle className="h-5 w-5" style={{ color: T.success }} />
-                            : <Play className="h-4 w-4" style={{ color: T.gold }} />}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <p
-                            className={`text-sm font-medium ${done ? 'line-through' : ''}`}
-                            style={{ color: done ? T.t3 : T.t1 }}
-                          >
-                            {j + 1}. {lesson.title}
-                          </p>
-                          {lesson.video_url && <p className="text-[10px]" style={{ color: T.gold }}>Vidéo</p>}
-                          {lesson.content && !lesson.video_url && <p className="text-[10px]" style={{ color: T.t3 }}>Texte</p>}
-                        </div>
-                        <ChevronRight className="h-4 w-4 shrink-0" style={{ color: T.t4 }} />
-                      </div>
-                    );
-                  })}
-                </div>
+            {/* Méta : compteurs sobres (pas de big-number template) */}
+            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm" style={{ color: T.t2 }}>
+              <span className="inline-flex items-center gap-1.5">
+                <Layers className="h-4 w-4" style={{ color: T.t3 }} />
+                {modules.length} module{C(modules.length)}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Play className="h-4 w-4" style={{ color: T.t3 }} />
+                {totalLessons} leçon{C(totalLessons)}
+              </span>
+              {course?.category && (
+                <span className="inline-flex items-center gap-1.5" style={{ color: T.t3 }}>
+                  {course.category}
+                </span>
               )}
             </div>
-          );
-        })}
+
+            <button
+              type="button"
+              onClick={() => navigate(`/formation/${courseId}/learn`)}
+              className="mt-7 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-transform active:scale-[0.99]"
+              style={{ background: T.gold, color: '#0b0b0f' }}
+              onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.06)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; }}
+            >
+              <Play className="h-4 w-4" /> {started ? 'Reprendre le cours' : 'Accéder au cours'}
+            </button>
+          </div>
+
+          {/* Anneau de progression — seulement si l'élève a commencé (inutile pour l'admin / cours neuf) */}
+          {started && totalLessons > 0 && (
+            <div className="flex shrink-0 flex-col items-center gap-1.5">
+              <div className="relative h-[88px] w-[88px]">
+                <svg viewBox="0 0 36 36" className="h-full w-full -rotate-90">
+                  <circle cx="18" cy="18" r="15.5" fill="none" stroke={T.borderMid} strokeWidth="3" />
+                  <circle
+                    cx="18" cy="18" r="15.5" fill="none" stroke={T.gold} strokeWidth="3" strokeLinecap="round"
+                    strokeDasharray={`${(progressPct / 100) * 97.4} 97.4`}
+                    style={{ transition: 'stroke-dasharray 0.5s ease' }}
+                  />
+                </svg>
+                <span
+                  className="absolute inset-0 flex items-center justify-center text-lg font-bold"
+                  style={{ color: T.gold }}
+                >
+                  {progressPct}%
+                </span>
+              </div>
+              <span className="text-[11px]" style={{ color: T.t3 }}>{completedCount}/{totalLessons} terminé{C(completedCount)}</span>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── Programme ───────────────────────────────────────────────── */}
+      <div className="mb-3 mt-9 flex items-baseline justify-between">
+        <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em]" style={{ color: T.t2 }}>Programme</h2>
+        {totalLessons > 0 && (
+          <span className="text-xs" style={{ color: T.t3 }}>{modules.length} module{C(modules.length)} · {totalLessons} leçon{C(totalLessons)}</span>
+        )}
       </div>
 
-      {/* Lesson player overlay */}
+      {modules.length === 0 ? (
+        <div
+          className="flex flex-col items-center justify-center rounded-2xl py-16 text-center"
+          style={{ border: `1px dashed ${T.borderMid}`, background: T.surface }}
+        >
+          <BookOpen className="mb-3 h-9 w-9" style={{ color: T.t4 }} />
+          <p className="text-sm" style={{ color: T.t2 }}>Ce cours n'a pas encore de modules.</p>
+          <p className="mt-1 text-xs" style={{ color: T.t3 }}>Ajoute du contenu depuis le Studio pour construire le programme.</p>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-2xl" style={{ border: `1px solid ${T.border}`, background: T.surface }}>
+          {modules.map((mod, i) => {
+            const modLessons = lessons[mod.id] ?? [];
+            const expanded = expandedModules.has(mod.id);
+            const modCompleted = modLessons.length > 0 && modLessons.every((l) => isCompleted(l.id));
+
+            return (
+              <div key={mod.id} style={{ borderTop: i === 0 ? 'none' : `1px solid ${T.border}` }}>
+                {/* En-tête de module */}
+                <button
+                  className="flex w-full items-center gap-3.5 px-5 py-4 text-left transition-colors"
+                  onClick={() => toggleModule(mod.id)}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.025)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <span
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                    style={modCompleted
+                      ? { background: 'rgba(34,197,94,0.15)', color: T.success }
+                      : { background: T.goldDim, color: T.gold }}
+                  >
+                    {modCompleted ? <CheckCircle className="h-4 w-4" /> : i + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold leading-snug" style={{ color: T.t1 }}>{mod.title}</p>
+                    {mod.description && <p className="truncate text-xs" style={{ color: T.t3 }}>{mod.description}</p>}
+                  </div>
+                  <span className="shrink-0 text-xs" style={{ color: T.t3 }}>{modLessons.length} leçon{C(modLessons.length)}</span>
+                  <ChevronDown
+                    className="h-4 w-4 shrink-0 transition-transform duration-200"
+                    style={{ color: T.t3, transform: expanded ? 'none' : 'rotate(-90deg)' }}
+                  />
+                </button>
+
+                {/* Leçons — rail vertical (timeline), pas de carte imbriquée */}
+                {expanded && (
+                  <div className="pb-2 pl-[34px] pr-3" style={{ borderTop: `1px solid ${T.border}` }}>
+                    {modLessons.length === 0 && (
+                      <p className="py-3 pl-5 text-sm" style={{ color: T.t3 }}>Aucune leçon dans ce module.</p>
+                    )}
+                    {modLessons.map((lesson, j) => {
+                      const done = isCompleted(lesson.id);
+                      return (
+                        <button
+                          key={lesson.id}
+                          type="button"
+                          onClick={() => navigate(`/formation/${courseId}/learn`)}
+                          className="group relative flex w-full items-center gap-3 rounded-xl py-3 pl-5 pr-3 text-left transition-colors"
+                          onMouseEnter={(e) => { e.currentTarget.style.background = T.goldDim; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          {/* rail */}
+                          <span
+                            aria-hidden
+                            className="absolute left-0 top-0 w-px"
+                            style={{ background: T.border, height: j === modLessons.length - 1 ? '50%' : '100%' }}
+                          />
+                          <span
+                            aria-hidden
+                            className="absolute left-0 top-1/2 h-px w-3.5"
+                            style={{ background: T.border }}
+                          />
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center">
+                            {done
+                              ? <CheckCircle className="h-[18px] w-[18px]" style={{ color: T.success }} />
+                              : <Play className="h-3.5 w-3.5" style={{ color: T.gold }} />}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span
+                              className={`block truncate text-sm font-medium ${done ? 'line-through' : ''}`}
+                              style={{ color: done ? T.t3 : T.t1 }}
+                            >
+                              {lesson.title}
+                            </span>
+                          </span>
+                          {lesson.video_url
+                            ? <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide" style={{ color: T.gold }}>Vidéo</span>
+                            : lesson.content
+                              ? <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide" style={{ color: T.t3 }}>Texte</span>
+                              : null}
+                          <ChevronRight
+                            className="h-4 w-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                            style={{ color: T.gold }}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Lecteur leçon (overlay) */}
       {activeLesson && (
         <LessonPlayer
           lesson={activeLesson}
