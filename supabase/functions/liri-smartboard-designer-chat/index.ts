@@ -126,6 +126,10 @@ Deno.serve(async (req: Request) => {
   // ─── LIRI Credits — Tenant + preflight ────────────────────────────────
   const billingCtx = await resolveTenant(req, body);
   if (billingCtx) {
+    // Gating palier : Smartboard IA réservé aux forfaits LIRI (refus 403 en gratuit).
+    const { checkSmartboardAiAccess } = await import('../_shared/checkSmartboardAiAccess.ts');
+    const deny = await checkSmartboardAiAccess(billingCtx);
+    if (deny) return deny;
     const lastUser = messages[messages.length - 1]?.content || '';
     const estimate = await estimateLlmCost(billingCtx, 'anthropic', 'claude-haiku-4-5', system + lastUser, 4000);
     const reject = await preflightCheck(billingCtx, estimate);

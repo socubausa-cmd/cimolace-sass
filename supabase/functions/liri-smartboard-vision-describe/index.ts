@@ -214,6 +214,12 @@ Deno.serve(async (req: Request) => {
   // ─── LIRI Credits — Résolution tenant ─────────────────────────────────
   const { resolveTenant, debitUsage } = await import('../_shared/aiBilling.ts');
   const billingCtx = await resolveTenant(req, body);
+  if (billingCtx) {
+    // Gating palier : Smartboard IA réservé aux forfaits LIRI (refus 403 en gratuit).
+    const { checkSmartboardAiAccess } = await import('../_shared/checkSmartboardAiAccess.ts');
+    const deny = await checkSmartboardAiAccess(billingCtx);
+    if (deny) return deny;
+  }
 
   const debitVision = async (provider: string, model: string, inputTokens: number, outputTokens: number) => {
     if (!billingCtx) return null;

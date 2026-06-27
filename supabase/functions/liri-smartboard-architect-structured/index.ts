@@ -61,6 +61,10 @@ Deno.serve(async (req: Request) => {
   // ─── LIRI Credits — Tenant + preflight ────────────────────────────────
   const ctx = await resolveTenant(req, body);
   if (ctx) {
+    // Gating palier : Smartboard IA réservé aux forfaits LIRI (refus 403 en gratuit).
+    const { checkSmartboardAiAccess } = await import('../_shared/checkSmartboardAiAccess.ts');
+    const deny = await checkSmartboardAiAccess(ctx);
+    if (deny) return deny;
     const estimate = await estimateLlmCost(ctx, 'deepseek', 'deepseek-chat', system + userContent, 2500);
     const reject = await preflightCheck(ctx, estimate);
     if (reject) {

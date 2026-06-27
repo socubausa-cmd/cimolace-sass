@@ -136,6 +136,12 @@ Deno.serve(async (req: Request) => {
   // ─── LIRI Credits — Débit Gemini Vision ────────────────────────────────
   const { resolveTenant, debitUsage } = await import('../_shared/aiBilling.ts');
   const billingCtx = await resolveTenant(req, body);
+  if (billingCtx) {
+    // Gating palier : Smartboard IA réservé aux forfaits LIRI (refus 403 en gratuit).
+    const { checkSmartboardAiAccess } = await import('../_shared/checkSmartboardAiAccess.ts');
+    const deny = await checkSmartboardAiAccess(billingCtx);
+    if (deny) return deny;
+  }
   let _billing: Record<string, unknown> | null = null;
   if (billingCtx) {
     // Estimation : image ~ 1500 tokens, prompt + output
