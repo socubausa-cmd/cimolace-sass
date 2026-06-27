@@ -257,7 +257,7 @@ export class SignupService {
             tenant_id: tenant.id,
             user_id: userId,
             plan_id: 'liri-trial',
-            provider: 'manual',
+            provider: 'free', // CHECK provider_check exclut 'manual' → 'free' pour l'essai
             status: 'active',
             amount_cents: 0,
             currency: 'EUR',
