@@ -136,6 +136,16 @@ export default function PrecepteurDemoPage() {
   // 'openai' | 'elevenlabs' | 'mistral' = voix SERVEUR (TTS réaliste) ; sinon = voix navigateur.
   const serverTts = ['openai', 'elevenlabs', 'mistral'].includes(voiceChoice) ? voiceChoice : null;
   const useServerVoice = !!serverTts;
+  const [connected, setConnected] = useState(false); // session présente ? (pour les voix premium)
+
+  // Détecte la session (les voix premium OpenAI/ElevenLabs/Mistral l'exigent).
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => { if (active) setConnected(!!data?.session?.access_token); }).catch(() => {});
+    let sub = null;
+    try { sub = supabase.auth.onAuthStateChange?.((_e, s) => setConnected(!!s?.access_token))?.data || null; } catch { /* */ }
+    return () => { active = false; try { sub?.subscription?.unsubscribe?.(); } catch { /* */ } };
+  }, []);
 
   // Liste des voix FR du navigateur (peut se charger en async → on écoute voiceschanged).
   useEffect(() => {
@@ -432,6 +442,17 @@ export default function PrecepteurDemoPage() {
               <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/55">
                 Cours <strong className="text-white/80">narré et dessiné à la main</strong>. Le professeur t’appellera par ton prénom. Monte le son 🔊.
               </p>
+
+              {/* Bandeau CONNEXION : les voix premium (OpenAI/ElevenLabs/Mistral) exigent une session */}
+              {!connected && useServerVoice ? (
+                <a
+                  href={`/login?redirect=${encodeURIComponent('/precepteur')}`}
+                  className="mx-auto mt-4 flex max-w-md items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-amber-200 hover:bg-amber-400/20"
+                >
+                  🔊 Connecte-toi pour la <strong>voix premium</strong> (OpenAI) — sinon voix navigateur →
+                </a>
+              ) : null}
+
               <input
                 type="text"
                 value={name}
