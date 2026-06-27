@@ -14,6 +14,19 @@ export class LiveService {
   private get supabase() { return this.auth.getClient(); }
 
   async createSession(tenantId: string, data: any) {
+    // ── Enforcement palier : lives PROGRAMMÉS à l'avance = feature payante ──
+    // Un live planifié loin dans le futur (>2 h) suppose un palier payant ; les lives
+    // INSTANTANÉS (scheduled_at ~ maintenant, ou absent) restent ouverts au gratuit.
+    // Le seuil 2 h évite tout faux positif sur un live lancé dans la foulée.
+    const scheduledAt = data?.scheduled_at ? new Date(data.scheduled_at).getTime() : null;
+    if (scheduledAt && Number.isFinite(scheduledAt) && scheduledAt > Date.now() + 2 * 60 * 60 * 1000) {
+      const { limits } = await this.entitlements.resolveLimits(tenantId);
+      if (!limits.canSchedule) {
+        throw new ForbiddenException(
+          "Forfait gratuit : la programmation de lives à l'avance n'est pas incluse. Lancez un live immédiat, ou passez à un forfait LIRI pour planifier vos lives.",
+        );
+      }
+    }
     const { data: session } = await this.supabase
       .from("live_sessions")
       .insert({ tenant_id: tenantId, ...data, status: "scheduled" })
