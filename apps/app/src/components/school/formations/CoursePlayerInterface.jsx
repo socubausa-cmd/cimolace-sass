@@ -1273,20 +1273,19 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
             return (
               <div className="relative h-full text-white flex flex-col overflow-hidden" style={{ background: '#0b0b0f' }}>
                 {/* Ambiance immersive identique aux autres écrans : orbes flottants + halos + rayon conique */}
+                {/* Halos de fond : restent à z-0 pour la couche basse (profondeur derrière tout) */}
                 <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
                   <div className="absolute inset-0" style={{ background:
                     'radial-gradient(80% 50% at 50% -5%, rgba(212,175,55,0.12), transparent 55%),' +
                     'radial-gradient(65% 55% at 92% 104%, rgba(111,76,255,0.06), transparent 62%),' +
                     'radial-gradient(55% 50% at 4% 98%, rgba(15,179,255,0.045), transparent 62%)' }} />
-                  <div className="absolute left-1/2 top-0 h-[140vh] w-[140vh] -translate-x-1/2" style={{
-                    background: 'conic-gradient(from 198deg at 50% 32%, transparent 0deg, rgba(212,175,55,0.09) 38deg, transparent 80deg, transparent 188deg, rgba(15,179,255,0.04) 224deg, transparent 300deg)',
-                    opacity: 0.42, filter: 'blur(3px)',
-                    WebkitMaskImage: 'radial-gradient(ellipse 50% 40% at 50% 28%, #000 0%, transparent 72%)',
-                    maskImage: 'radial-gradient(ellipse 50% 40% at 50% 28%, #000 0%, transparent 72%)' }} />
-                  <span className="cpi-orb absolute -left-10 top-16 h-72 w-72 rounded-full" style={{ background: '#D4AF37' }} />
-                  <span className="cpi-orb alt absolute -right-10 top-1/4 h-80 w-80 rounded-full" style={{ background: '#6f4cff', opacity: 0.1 }} />
-                  <span className="cpi-orb absolute bottom-10 left-1/3 h-64 w-64 rounded-full" style={{ background: '#0fb3ff', opacity: 0.09 }} />
                   <div className="absolute inset-0" style={{ boxShadow: 'inset 0 0 220px 50px rgba(0,0,0,0.5)' }} />
+                </div>
+                {/* Orbes flottants : z-4 — flottent SUR la vidéo (pointer-events-none, contrôles natifs toujours accessibles) */}
+                <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 4 }}>
+                  <span className="cpi-orb absolute -left-10 top-16 h-72 w-72 rounded-full" style={{ background: '#D4AF37', opacity: 0.13 }} />
+                  <span className="cpi-orb alt absolute -right-10 top-1/4 h-80 w-80 rounded-full" style={{ background: '#6f4cff', opacity: 0.07 }} />
+                  <span className="cpi-orb absolute bottom-10 left-1/3 h-64 w-64 rounded-full" style={{ background: '#0fb3ff', opacity: 0.06 }} />
                 </div>
                 {/* CSS leçon — fond noir sur la vidéo (état de chargement gris → noir) */}
                 <style>{`video{background:#0b0b0f!important}`}</style>
@@ -1421,7 +1420,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               SmartBoard
                             </button>
                             <div className="pointer-events-none absolute -inset-12 -z-10 rounded-full" style={{ background: 'radial-gradient(ellipse at 50% 46%, rgba(212,175,55,0.17), rgba(8,8,11,0) 62%)', filter: 'blur(34px)' }} />
-                            <div className="relative overflow-hidden rounded-3xl" style={{ background: '#0b0b0f', boxShadow: '0 50px 120px rgba(0,0,0,0.5), inset 0 0 120px 48px #08080b' }}>
+                            <div className="relative overflow-hidden rounded-3xl" style={{ background: '#0b0b0f', boxShadow: '0 0 160px 60px rgba(212,175,55,0.10), 0 0 100px 30px rgba(111,76,255,0.07), 0 50px 120px rgba(0,0,0,0.5), inset 0 0 120px 48px #08080b' }}>
                           <VideoPlayer
                             ref={videoPlayerRef}
                             video={currentVideoMemo}

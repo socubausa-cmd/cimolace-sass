@@ -166,6 +166,7 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
           <video
             ref={videoRef}
             src={playableUrl}
+            poster="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII="
             className="w-full aspect-video block"
             style={{ background: '#0b0b0f' }}
             controls
