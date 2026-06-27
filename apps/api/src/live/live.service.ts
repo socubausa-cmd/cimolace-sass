@@ -1,12 +1,14 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import { AuthService } from "../auth/auth.service";
 import { LiveKitService } from "../livekit/livekit.service";
+import { LiriEntitlementsService } from "../billing/liri-entitlements.service";
 
 @Injectable()
 export class LiveService {
   constructor(
     private auth: AuthService,
     private liveKit: LiveKitService,
+    private entitlements: LiriEntitlementsService,
   ) {}
 
   private get supabase() { return this.auth.getClient(); }
@@ -51,6 +53,23 @@ export class LiveService {
     if ((session as any).status === "live") return session;
     if ((session as any).status === "ended") {
       throw new BadRequestException("La session est déjà terminée");
+    }
+    // ── Enforcement palier (Couche A) : 1 seul live SIMULTANÉ en gratuit ──
+    // Barrière non contournable : on refuse de passer un 2e live "en direct" tant
+    // qu'un autre tourne. Le payant/essai n'est jamais limité (maxConcurrentLives=null).
+    const { limits } = await this.entitlements.resolveLimits(tenantId);
+    if (limits.maxConcurrentLives !== null) {
+      const { count } = await this.supabase
+        .from("live_sessions")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", tenantId)
+        .eq("status", "live")
+        .neq("id", sessionId);
+      if ((count ?? 0) >= limits.maxConcurrentLives) {
+        throw new ForbiddenException(
+          `Forfait gratuit : ${limits.maxConcurrentLives} live à la fois. Terminez votre live en cours, ou passez à un forfait LIRI pour des lives simultanés.`,
+        );
+      }
     }
     const { data } = await this.supabase
       .from("live_sessions")
@@ -489,10 +508,11 @@ export class LiveService {
     requestedRole?: "host" | "student",
     tenant?: { id?: string; slug?: string; userRole?: string | null },
   ) {
-    // Charger la session : hôte légitime + slug pour le nom de room (1 requête).
+    // Charger la session : hôte légitime + slug pour le nom de room + état/started_at
+    // pour l'enforcement de la durée (palier gratuit). 1 requête.
     const { data: session } = await this.supabase
       .from("live_sessions")
-      .select("host_user_id, tenant_id, tenants(slug)")
+      .select("host_user_id, tenant_id, status, started_at, tenants(slug)")
       .eq("id", sessionId)
       .single();
     if (!session) throw new NotFoundException("Session introuvable");
@@ -523,14 +543,56 @@ export class LiveService {
     const slug = tenant?.slug ?? (session as any)?.tenants?.slug ?? sessionId;
     const roomName = LiveKitService.scopedRoomName(slug, sessionId);
 
+    // ── Enforcement palier gratuit (Couche A) — barrière réelle, non contournable ──
+    // Le front affiche les limites ; ICI on les APPLIQUE au mint du token LiveKit.
+    // Payant/essai → limits.* = null → aucun bridage.
+    const { limits } = await this.entitlements.resolveLimits(
+      (session as any).tenant_id,
+    );
+    let cappedTtlSeconds: number | undefined;
+    if (limits.maxLiveMinutes !== null) {
+      const startedAt = (session as any).started_at
+        ? new Date((session as any).started_at).getTime()
+        : null;
+      const isLive = (session as any).status === "live" && startedAt !== null;
+      if (isLive) {
+        const deadline = startedAt! + limits.maxLiveMinutes * 60_000;
+        const remainingMs = deadline - Date.now();
+        // (a) Durée écoulée → on n'émet plus AUCUN token (host inclus) : le live gratuit est clos.
+        if (remainingMs <= 0) {
+          throw new ForbiddenException(
+            `Forfait gratuit : ce live a atteint sa limite de ${limits.maxLiveMinutes} minutes. Passez à un forfait LIRI pour des lives illimités.`,
+          );
+        }
+        // Token capé au temps restant → tous les participants (host compris) sont
+        // déconnectés à l'échéance des 3 min, même sans re-mint.
+        cappedTtlSeconds = Math.max(30, Math.floor(remainingMs / 1000));
+      } else {
+        // Pas encore en direct : on plafonne quand même le token à la durée max
+        // (la room gratuite ne vivra pas plus longtemps une fois lancée).
+        cappedTtlSeconds = limits.maxLiveMinutes * 60;
+      }
+    }
+    // (b) Participants : N max. L'hôte entre TOUJOURS (il anime sa room) ; on refuse
+    //     le (N+1)e invité. listParticipantIdentities = [] si la room n'existe pas encore.
+    if (limits.maxParticipants !== null && role !== "host") {
+      const present = await this.liveKit.listParticipantIdentities(roomName);
+      const alreadyIn = present.includes(userId);
+      if (!alreadyIn && present.length >= limits.maxParticipants) {
+        throw new ForbiddenException(
+          `Forfait gratuit : ${limits.maxParticipants} participants maximum dans un live. Passez à un forfait LIRI pour accueillir plus de monde.`,
+        );
+      }
+    }
+
     // Créer la room LiveKit si elle n'existe pas encore (idempotent)
     await this.liveKit.ensureRoom(roomName, sessionId, userId);
 
-    // Émettre le token selon le rôle EFFECTIF (pas celui demandé)
+    // Émettre le token selon le rôle EFFECTIF (pas celui demandé), TTL capé en gratuit.
     const token =
       role === "host"
-        ? await this.liveKit.generateHostToken(roomName, userId)
-        : await this.liveKit.generateParticipantToken(roomName, userId);
+        ? await this.liveKit.generateHostToken(roomName, userId, undefined, cappedTtlSeconds ?? "4h")
+        : await this.liveKit.generateParticipantToken(roomName, userId, undefined, cappedTtlSeconds ?? "1h");
 
     return { token, room: roomName, role, userId, requestedRole: requestedRole ?? null };
   }

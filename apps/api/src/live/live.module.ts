@@ -3,6 +3,7 @@ import { JwtModule } from "@nestjs/jwt";
 import { AuthModule } from "../auth/auth.module";
 import { TenantModule } from "../tenant/tenant.module";
 import { LiveKitModule } from "../livekit/livekit.module";
+import { LiriEntitlementsModule } from "../billing/liri-entitlements.module";
 import { SupabaseModule } from "../supabase/supabase.module";
 import { LiveService } from "./live.service";
 import { LiveController } from "./live.controller";
@@ -20,6 +21,7 @@ import { LiveKitWebhookService } from "../livekit/livekit-webhook.service";
     AuthModule,
     TenantModule,
     LiveKitModule,
+    LiriEntitlementsModule,
     SupabaseModule,
     // JwtModule pour signer/vérifier les embed tokens LIRI (30 min lifetime).
     // Le secret est résolu à la demande via ConfigService dans les services

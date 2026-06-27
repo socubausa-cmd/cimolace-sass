@@ -49,12 +49,15 @@ export class LiveKitService {
     roomName: string,
     userId: string,
     displayName?: string,
+    /** TTL custom (sec ou '1h'…). Défaut '1h'. Utilisé par l'enforcement du palier
+     *  gratuit pour caper la connexion à la durée restante du live (3 min). */
+    ttl: string | number = '1h',
   ): Promise<string> {
     this.assertConfigured();
     const at = new AccessToken(this.apiKey, this.apiSecret, {
       identity: userId,
       name: displayName,
-      ttl: '1h',
+      ttl,
     });
     at.addGrant({
       roomJoin: true,
@@ -69,12 +72,14 @@ export class LiveKitService {
     roomName: string,
     userId: string,
     displayName?: string,
+    /** TTL custom (sec ou '4h'…). Défaut '4h'. Capé à la durée restante en gratuit. */
+    ttl: string | number = '4h',
   ): Promise<string> {
     this.assertConfigured();
     const at = new AccessToken(this.apiKey, this.apiSecret, {
       identity: userId,
       name: displayName,
-      ttl: '4h',
+      ttl,
     });
     at.addGrant({
       roomJoin: true,
@@ -174,6 +179,26 @@ export class LiveKitService {
           'Impossible de créer la room LiveKit',
         );
       }
+    }
+  }
+
+  /**
+   * Identités actuellement connectées à la room (live). Sert à l'enforcement du
+   * palier gratuit (refuser le 6e participant). Fail-soft : room inexistante (live
+   * pas encore actif) ou LiveKit non configuré → [] (0 présent), on ne bloque rien.
+   */
+  async listParticipantIdentities(roomName: string): Promise<string[]> {
+    if (!this.configured) return [];
+    const roomService = new RoomServiceClient(
+      this.livekitUrl,
+      this.apiKey,
+      this.apiSecret,
+    );
+    try {
+      const list = await roomService.listParticipants(roomName);
+      return (list ?? []).map((p) => String((p as { identity?: string }).identity ?? ""));
+    } catch {
+      return [];
     }
   }
 
