@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { GraduationCap, Volume2, Play, RotateCcw, Check, PenLine } from 'lucide-react';
 import {
   Handwriting, speakText, cancelSpeech, canSpeak, estSpeechMs, primeSpeech,
+  setPreferredVoiceURI, listFrVoices, setSpeakRate,
 } from '@/components/school/course-builder/TableauVivant';
 import SketchRenderer from '@/components/school/course-builder/SketchRenderer';
 import AnimatedExample from '@/components/school/course-builder/AnimatedExample';
@@ -36,6 +37,48 @@ async function ttsFetch(text) {
     return { error: detail };
   } catch (e) { return { error: String(e?.message || e) }; }
 }
+
+// Mistral Voxtral TTS (voix française) — edge `mistral-tts`. Renvoie { b64, mime } ou { error }.
+async function mistralTtsFetch(text) {
+  try {
+    const { data: sess } = await supabase.auth.getSession();
+    const token = sess?.session?.access_token;
+    if (!token) return { error: 'non connecté (pas de session)' };
+    const { data, error } = await supabase.functions.invoke('mistral-tts', {
+      body: { text: String(text || '').slice(0, 4000) },
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (data?.audioBase64) return { b64: data.audioBase64, mime: data.mimeType };
+    const base = (typeof data?.error === 'string' && data.error) || error?.message || 'échec mistral-tts';
+    const detail = data?.detail ? ` — ${String(data.detail).slice(0, 120)}` : '';
+    const v = data?.voice ? ` [voix:${data.voice}]` : '';
+    return { error: base + detail + v };
+  } catch (e) { return { error: String(e?.message || e) }; }
+}
+
+// OpenAI TTS (gpt-4o-mini-tts) — voix NATURELLE type NotebookLM/ChatGPT — edge `openai-tts`.
+async function openaiTtsFetch(text, voice, speed) {
+  try {
+    const { data: sess } = await supabase.auth.getSession();
+    const token = sess?.session?.access_token;
+    if (!token) return { error: 'non connecté (pas de session)' };
+    const { data, error } = await supabase.functions.invoke('openai-tts', {
+      body: { text: String(text || '').slice(0, 4000), voice: voice || 'coral', speed: speed || 1.0 },
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (data?.audioBase64) return { b64: data.audioBase64, mime: data.mimeType };
+    const base = (typeof data?.error === 'string' && data.error) || error?.message || 'échec openai-tts';
+    const detail = data?.detail ? ` — ${String(data.detail).slice(0, 120)}` : '';
+    return { error: base + detail };
+  } catch (e) { return { error: String(e?.message || e) }; }
+}
+
+// Aiguillage : OpenAI (naturelle) · ElevenLabs · Mistral selon le choix.
+const serverTtsFetch = (text, provider, opts) => {
+  if (provider === 'mistral') return mistralTtsFetch(text);
+  if (provider === 'elevenlabs') return ttsFetch(text);
+  return openaiTtsFetch(text, opts?.voice, opts?.speed); // 'openai' (défaut)
+};
 
 const imgCacheKey = (prompt) => {
   try { return 'precepteur_img_' + btoa(unescape(encodeURIComponent(prompt))).slice(0, 48); } catch { return null; }
@@ -85,7 +128,28 @@ export default function PrecepteurDemoPage() {
   const [analogyImages, setAnalogyImages] = useState({}); // sceneIndex -> { url?, loading?, error? }
   const [narrAudio, setNarrAudio] = useState({}); // sceneIndex -> blob URL (voix ElevenLabs)
   const [ttsStatus, setTtsStatus] = useState('pending'); // 'pending' | 'ok' | { error }
+  const [voiceChoice, setVoiceChoice] = useState('openai'); // 'openai' | 'elevenlabs' | 'mistral' | voiceURI navigateur
+  const [openaiVoice, setOpenaiVoice] = useState('coral'); // timbre OpenAI
+  const [frVoices, setFrVoices] = useState([]); // voix françaises du navigateur
+  const [voiceSpeed, setVoiceSpeed] = useState(1.0); // débit (Studio Voix)
   const speak = canSpeak();
+  // 'openai' | 'elevenlabs' | 'mistral' = voix SERVEUR (TTS réaliste) ; sinon = voix navigateur.
+  const serverTts = ['openai', 'elevenlabs', 'mistral'].includes(voiceChoice) ? voiceChoice : null;
+  const useServerVoice = !!serverTts;
+
+  // Liste des voix FR du navigateur (peut se charger en async → on écoute voiceschanged).
+  useEffect(() => {
+    if (!speak) return undefined;
+    const load = () => setFrVoices(listFrVoices());
+    load();
+    try { window.speechSynthesis.addEventListener('voiceschanged', load); } catch { /* */ }
+    return () => { try { window.speechSynthesis.removeEventListener('voiceschanged', load); } catch { /* */ } };
+  }, [speak]);
+
+  // applique le choix de voix navigateur (sinon voix serveur)
+  useEffect(() => { setPreferredVoiceURI(useServerVoice ? null : voiceChoice); }, [voiceChoice, useServerVoice]);
+  // applique le débit (Studio Voix) à la voix navigateur
+  useEffect(() => { setSpeakRate(voiceSpeed); }, [voiceSpeed]);
   const audioRef = useRef(null); // élément <audio> courant
   const narrateTokenRef = useRef(0); // jeton anti-doublon pour les narrations à la demande
 
@@ -100,13 +164,13 @@ export default function PrecepteurDemoPage() {
   // VOIX RÉELLE (ElevenLabs via liri-tts) : pré-génère l'audio de chaque scène au
   // démarrage (élève CONNECTÉ). Indépendant des voix du navigateur => fiable.
   useEffect(() => {
-    if (!started) return undefined;
+    if (!started || !useServerVoice) return undefined;
     let cancelled = false;
     const urls = [];
     scenes.forEach((s, i) => {
       const text = s.narration || s.board_text;
       if (!text) return;
-      ttsFetch(text).then((r) => {
+      serverTtsFetch(text, serverTts, { voice: openaiVoice, speed: voiceSpeed }).then((r) => {
         if (cancelled || !r) return;
         if (r.b64) {
           const url = b64ToAudioUrl(r.b64, r.mime);
@@ -120,7 +184,7 @@ export default function PrecepteurDemoPage() {
     });
     return () => { cancelled = true; urls.forEach((u) => { try { URL.revokeObjectURL(u); } catch { /* */ } }); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [started]);
+  }, [started, useServerVoice, serverTts, openaiVoice, voiceSpeed]);
 
   // PRÉFETCH des images d'analogie dès le départ : Le Précepteur « dessine » l'image
   // (generate-visual-image / Imagen) — pour un élève CONNECTÉ. Sinon repli sur le SVG.
@@ -180,22 +244,25 @@ export default function PrecepteurDemoPage() {
       if (el < minMs) window.setTimeout(go, minMs - el); else go();
     };
     const url = narrAudio[idx];
-    if (url) {
-      // ── VRAIE voix ElevenLabs : la SEULE qui joue ──
+    if (useServerVoice && url) {
+      // ── VRAIE voix serveur (ElevenLabs / Mistral) : la SEULE qui joue ──
       const a = new Audio(url); audioRef.current = a;
       a.onended = goAfterMin;
       a.onerror = goAfterMin;
       void a.play().catch(() => {});
-    } else if (ttsFailed && speak) {
-      // ── ElevenLabs CONFIRMÉ indispo → repli synthèse (jamais en même temps qu'ElevenLabs) ──
+    } else if (!useServerVoice && speak) {
+      // ── voix NAVIGATEUR choisie (française) ──
+      speakText(text, { onEnd: goAfterMin });
+    } else if (useServerVoice && ttsFailed && speak) {
+      // ── voix serveur CONFIRMÉE indispo → repli synthèse (jamais en parallèle) ──
       speakText(text, { onEnd: goAfterMin });
     }
-    // sinon (audio pas encore prêt, ElevenLabs ok/pending) : on attend — l'effet se relance
-    // quand narrAudio[idx] arrive. Cap de sécurité au cas où.
+    // sinon (voix serveur choisie, audio pas encore prêt, pas d'échec) : on attend — l'effet
+    // se relance quand narrAudio[idx] arrive. Cap de sécurité au cas où.
     const cap = window.setTimeout(go, Math.max(minMs, speechMs * 2.8) + 4500);
     return () => { advanced = true; window.clearTimeout(cap); stopAudio(); cancelSpeech(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idx, started, done, narrAudio[idx], ttsFailed]);
+  }, [idx, started, done, narrAudio[idx], ttsFailed, useServerVoice]);
 
   // débloque l'audio DANS le geste (sinon les navigateurs muettent <audio> et la synthèse)
   const begin = () => {
@@ -211,12 +278,13 @@ export default function PrecepteurDemoPage() {
     if (!text) return;
     const my = (narrateTokenRef.current += 1);
     cancelSpeech(); stopAudio();
-    const r = await ttsFetch(text);
+    if (!useServerVoice) { if (speak) speakText(text); return; } // voix navigateur choisie
+    const r = await serverTtsFetch(text, serverTts, { voice: openaiVoice, speed: voiceSpeed });
     if (narrateTokenRef.current !== my) return; // dépassée par une narration plus récente
     if (r?.b64) { playAudioUrl(b64ToAudioUrl(r.b64, r.mime)); setTtsStatus('ok'); return; }
     if (r?.error) setTtsStatus((prev) => (prev === 'ok' ? prev : { error: r.error }));
     if (speak) speakText(text);
-  }, [speak, stopAudio, playAudioUrl]);
+  }, [speak, stopAudio, playAudioUrl, useServerVoice, serverTts, openaiVoice, voiceSpeed]);
 
   // --- rendu d'une scène ---
   const renderScene = (s) => {
@@ -330,12 +398,14 @@ export default function PrecepteurDemoPage() {
         {/* Indicateur de voix (diagnostic) */}
         {started ? (
           <div className="mb-3 text-center text-[10px] font-semibold uppercase tracking-wider">
-            {ttsStatus === 'ok' ? (
-              <span className="text-emerald-400/80">🔊 Voix ElevenLabs · réaliste</span>
+            {!useServerVoice ? (
+              <span className="text-sky-400/80">🔊 Voix navigateur : {(frVoices.find((v) => v.uri === voiceChoice) || {}).name || 'sélectionnée'}</span>
+            ) : ttsStatus === 'ok' ? (
+              <span className="text-emerald-400/80">🔊 Voix {serverTts === 'openai' ? 'OpenAI naturelle' : serverTts === 'mistral' ? 'Mistral Voxtral' : 'ElevenLabs'} · réaliste</span>
             ) : ttsStatus === 'pending' ? (
               <span className="text-white/30">🔊 préparation de la voix…</span>
             ) : (
-              <span className="text-amber-400/70">🔊 voix navigateur (repli) — ElevenLabs indispo : {ttsStatus.error}</span>
+              <span className="text-amber-400/70">🔊 voix navigateur (repli) — {serverTts === 'openai' ? 'OpenAI' : serverTts === 'mistral' ? 'Mistral' : 'ElevenLabs'} indispo : {ttsStatus.error}</span>
             )}
           </div>
         ) : null}
@@ -370,10 +440,74 @@ export default function PrecepteurDemoPage() {
                 placeholder="Ton prénom (ex. Badika)"
                 className="mt-6 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-base text-white outline-none placeholder:text-white/30 focus:border-[var(--school-accent)]"
               />
+
+              {/* SÉLECTEUR DE VOIX */}
+              <div className="mt-4 text-left">
+                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-white/45">Voix du professeur</label>
+                <select
+                  value={voiceChoice}
+                  onChange={(e) => setVoiceChoice(e.target.value)}
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-base text-white outline-none focus:border-[var(--school-accent)]"
+                >
+                  <option value="openai" className="bg-[#11161f]">✨ OpenAI — voix naturelle (NotebookLM/ChatGPT)</option>
+                  <option value="elevenlabs" className="bg-[#11161f]">⭐ ElevenLabs — réaliste</option>
+                  <option value="mistral" className="bg-[#11161f]">🇫🇷 Mistral Voxtral — voix française</option>
+                  {frVoices.length ? (
+                    <optgroup label="Voix françaises du navigateur" className="bg-[#11161f]">
+                      {frVoices.map((v) => (
+                        <option key={v.uri} value={v.uri} className="bg-[#11161f]">{v.name} ({v.lang})</option>
+                      ))}
+                    </optgroup>
+                  ) : null}
+                </select>
+                {voiceChoice !== 'openai' && !useServerVoice && !frVoices.length ? (
+                  <p className="mt-1 text-[11px] text-white/30">Aucune voix navigateur détectée — ElevenLabs/OpenAI restent dispo.</p>
+                ) : null}
+              </div>
+
+              {/* TIMBRE OpenAI (quand OpenAI choisi) */}
+              {voiceChoice === 'openai' ? (
+                <div className="mt-3 text-left">
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-white/45">Timbre</label>
+                  <select
+                    value={openaiVoice}
+                    onChange={(e) => setOpenaiVoice(e.target.value)}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-base text-white outline-none focus:border-[var(--school-accent)]"
+                  >
+                    <option value="coral" className="bg-[#11161f]">Coral — chaleureuse (femme)</option>
+                    <option value="nova" className="bg-[#11161f]">Nova — claire (femme)</option>
+                    <option value="shimmer" className="bg-[#11161f]">Shimmer — douce (femme)</option>
+                    <option value="sage" className="bg-[#11161f]">Sage — posée (femme)</option>
+                    <option value="onyx" className="bg-[#11161f]">Onyx — grave (homme)</option>
+                    <option value="ash" className="bg-[#11161f]">Ash — naturelle (homme)</option>
+                    <option value="ballad" className="bg-[#11161f]">Ballad — expressive (homme)</option>
+                  </select>
+                </div>
+              ) : null}
+
+              {/* CONTRÔLE DE VITESSE (Studio Voix) — voix navigateur + OpenAI */}
+              {(!useServerVoice || voiceChoice === 'openai') ? (
+                <div className="mt-3 text-left">
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-white/45">Débit</label>
+                  <div className="flex gap-2">
+                    {[{ v: 0.85, l: 'Posé' }, { v: 1.0, l: 'Normal' }, { v: 1.15, l: 'Vif' }].map((o) => (
+                      <button
+                        key={o.v}
+                        type="button"
+                        onClick={() => setVoiceSpeed(o.v)}
+                        className={`flex-1 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${voiceSpeed === o.v ? 'border-[var(--school-accent)] bg-[var(--school-accent)]/15 text-white' : 'border-white/15 bg-white/5 text-white/60 hover:bg-white/10'}`}
+                      >
+                        {o.l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
               <button
                 type="button"
                 onClick={begin}
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--school-accent)] px-7 py-3 text-base font-bold text-black hover:opacity-90"
+                className="mt-5 inline-flex items-center gap-2 rounded-full bg-[var(--school-accent)] px-7 py-3 text-base font-bold text-black hover:opacity-90"
               >
                 <Play className="h-5 w-5" /> Commencer le cours
               </button>

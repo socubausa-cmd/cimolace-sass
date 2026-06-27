@@ -19,12 +19,24 @@ const QUINT = [0.22, 1, 0.36, 1]; // ease-out-quint
 
 // VOIX OFF NAVIGATEUR (Web Speech API) — pour la démo PUBLIQUE sans backend/auth.
 // (Le vrai lecteur élève connecté utilise liri-tts/ElevenLabs, pas ceci.)
-const SPEAK_RATE = 0.95;
+let SPEAK_RATE = 0.95; // débit voix navigateur — réglable via le contrôle « Studio Voix »
+export const setSpeakRate = (r) => { const n = Number(r); if (Number.isFinite(n)) SPEAK_RATE = Math.max(0.5, Math.min(1.6, n)); };
 export const canSpeak = () => typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 export const cancelSpeech = () => { try { if (canSpeak()) window.speechSynthesis.cancel(); } catch { /* */ } };
+// voix navigateur choisie explicitement (sinon auto). Posée par le sélecteur de voix.
+let _preferredVoiceURI = null;
+export const setPreferredVoiceURI = (uri) => { _preferredVoiceURI = uri || null; };
+export const listFrVoices = () => {
+  try {
+    return (window.speechSynthesis.getVoices() || [])
+      .filter((v) => /fr/i.test(v.lang))
+      .map((v) => ({ name: v.name, uri: v.voiceURI, lang: v.lang }));
+  } catch { return []; }
+};
 const pickFrVoice = () => {
   try {
     const vs = window.speechSynthesis.getVoices() || [];
+    if (_preferredVoiceURI) { const p = vs.find((v) => v.voiceURI === _preferredVoiceURI); if (p) return p; }
     const fr = vs.filter((v) => /fr/i.test(v.lang));
     // préférer les voix de QUALITÉ (Google network / Siri / Enhanced / Premium / Neural)
     const quality = fr.find((v) => /(google|siri|enhanc|premium|neural|natural)/i.test(v.name || ''));
