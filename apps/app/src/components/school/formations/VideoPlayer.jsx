@@ -5,6 +5,7 @@ import supabase from '@/lib/customSupabaseClient';
 
 const signedUrlCache = new Map();
 
+
 const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }, ref) => {
   const inferredType = useMemo(() => {
     if (video?.type) return video.type;
@@ -21,6 +22,7 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [playableUrl, setPlayableUrl] = useState(video?.url || '');
+  const [videoCanPlay, setVideoCanPlay] = useState(false);
   const draggingRef = useRef(false);
 
   useImperativeHandle(
@@ -59,6 +61,8 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
     const ss = Math.floor(s % 60);
     return `${mm}:${String(ss).padStart(2, '0')}`;
   };
+
+  useEffect(() => { setVideoCanPlay(false); }, [playableUrl]);
 
   useEffect(() => {
     let alive = true;
@@ -155,11 +159,18 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
     return (
       <div className="relative group bg-[#0b0b0f] overflow-hidden">
         <div className="relative">
+          {/* Overlay noir retiré dès que la vidéo peut jouer — couvre le gris natif Chrome pendant le chargement */}
+          {!videoCanPlay && (
+            <div className="absolute inset-0 z-10 pointer-events-none" style={{ background: '#0b0b0f' }} />
+          )}
           <video
             ref={videoRef}
             src={playableUrl}
-            className="w-full aspect-video block bg-[#0b0b0f]"
+            className="w-full aspect-video block"
+            style={{ background: '#0b0b0f' }}
             controls
+            onCanPlay={() => setVideoCanPlay(true)}
+            onError={() => setVideoCanPlay(true)}
             onEnded={onEnded}
             onLoadedMetadata={(e) => {
               const d = Number(e?.currentTarget?.duration);
