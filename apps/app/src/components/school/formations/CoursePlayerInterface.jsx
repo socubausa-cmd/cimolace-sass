@@ -283,6 +283,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
   const [activeItem, setActiveItem] = useState(null);
   const [activePanel, setActivePanel] = useState('video');
   const [panelOpen, setPanelOpen] = useState(false); // tiroir latéral programme — fermé par défaut (vue leçon immersive : on ne voit que la vidéo)
+  const [smartboardOn, setSmartboardOn] = useState(false); // smartboard masqué par défaut — bascule depuis la vidéo
   const [notesText, setNotesText] = useState('');
   const [notesSaving, setNotesSaving] = useState(false);
   const [notesStatus, setNotesStatus] = useState('idle');
@@ -1367,6 +1368,39 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                           <div className="relative mx-auto w-full pt-2 md:pt-6" style={{ maxWidth: '1040px' }}>
                             <div className="pointer-events-none absolute -inset-12 -z-10 rounded-full" style={{ background: 'radial-gradient(ellipse at 50% 46%, rgba(212,175,55,0.17), rgba(8,8,11,0) 62%)', filter: 'blur(34px)' }} />
                             <div className="relative overflow-hidden rounded-3xl" style={{ boxShadow: '0 50px 120px rgba(0,0,0,0.5), inset 0 0 120px 48px #08080b' }}>
+                          {/* Bouton bascule SmartBoard — coin inférieur gauche de la vidéo */}
+                          <button
+                            type="button"
+                            onClick={() => setSmartboardOn(v => !v)}
+                            style={{
+                              position: 'absolute',
+                              bottom: '14px',
+                              left: '14px',
+                              zIndex: 20,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '5px 10px',
+                              borderRadius: '20px',
+                              background: smartboardOn
+                                ? 'rgba(212,175,55,0.22)'
+                                : 'rgba(15,15,18,0.72)',
+                              border: smartboardOn
+                                ? '1px solid rgba(212,175,55,0.55)'
+                                : '1px solid rgba(255,255,255,0.12)',
+                              color: smartboardOn ? '#D4AF37' : 'rgba(255,255,255,0.55)',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              letterSpacing: '0.04em',
+                              backdropFilter: 'blur(10px)',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                            }}
+                            title={smartboardOn ? 'Masquer le SmartBoard' : 'Afficher le SmartBoard'}
+                          >
+                            <Sparkles size={12} />
+                            SmartBoard
+                          </button>
                           <VideoPlayer
                             ref={videoPlayerRef}
                             video={currentVideoMemo}
@@ -1396,7 +1430,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                 }
                               }
                             }}
-                            overlay={(() => {
+                            overlay={smartboardOn ? (() => {
                               const mm = currentVideoMemo?.mindmap || null;
                               const chs = Array.isArray(currentVideoMemo?.chapters) ? currentVideoMemo.chapters : [];
                               if (!mm || !chs.length) return null;
@@ -1411,7 +1445,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                   className="h-full"
                                 />
                               );
-                            })()}
+                            })() : null}
                           />
                             </div>
                           </div>
