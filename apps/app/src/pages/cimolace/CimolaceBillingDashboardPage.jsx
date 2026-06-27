@@ -52,6 +52,10 @@ const PLAN_HINTS = {
   business: { tagline: 'Marque blanche & gros volumes' },
   medos_standard: { tagline: 'Cabinet médical clé en main' },
   'zahir-forfait': { badge: 'Tout-en-un', tagline: 'MEDOS + boutique Mbolo réunis' },
+  // Grille LIRI (forfaits Cimolace pour le produit live LIRI) — voir ?upgrade=liri.
+  liri_start: { tagline: 'Lancez vos lives sans limite' },
+  liri_business: { badge: 'Recommandé', highlight: true, tagline: 'Pour les organisations qui grandissent' },
+  liri_entreprise: { tagline: 'Puissance maximale, accompagnement dédié' },
 };
 
 const STATUS = {
@@ -129,6 +133,7 @@ export default function CimolaceBillingDashboardPage() {
   const [keys, setKeys] = useState([]);
   const [market, setMarket] = useState([]);
   const [mktCycle, setMktCycle] = useState('monthly'); // 'monthly' | 'yearly' (annuel = ancrage + demande, pas de prix annuel en DB)
+  const [showAllPlans, setShowAllPlans] = useState(false); // ?upgrade=liri → grille LIRI seule, ce flag révèle tous les forfaits
   const [tickets, setTickets] = useState([]);
   const [busy, setBusy] = useState(null);
   const [newKey, setNewKey] = useState(null);
@@ -414,6 +419,12 @@ export default function CimolaceBillingDashboardPage() {
 
   const planName = (s) => s?.metadata?.label || s?.plan_id || 'Abonnement';
   const activeName = tenants.find((t) => t.slug === activeSlug)?.name || activeSlug || '—';
+  // ?upgrade=liri → focaliser le marketplace sur la GRILLE LIRI (sinon 16 plans
+  // mélangés école/medos/mentorat). showAllPlans révèle le catalogue complet.
+  const isLiriUpgrade = params.get('upgrade') === 'liri';
+  const liriPlans = market.filter((p) => String(p.key || '').startsWith('liri_'));
+  const showLiriGrille = isLiriUpgrade && liriPlans.length > 0 && !showAllPlans;
+  const displayMarket = showLiriGrille ? liriPlans : market;
   const activeSubs = subs.filter((s) => s.status === 'active');
   const primarySub = activeSubs[0] || subs.find((s) => s.status === 'pending') || subs[0] || null;
   const activeServices = services.filter((sv) => sv.active === true || sv.status === 'active');
@@ -637,8 +648,15 @@ export default function CimolaceBillingDashboardPage() {
 
                 {/* MARKETPLACE */}
                 {tab === 'marketplace' && (
-                  market.length === 0 ? <Empty>Catalogue Cimolace indisponible pour le moment.</Empty> : (
+                  displayMarket.length === 0 ? <Empty>Catalogue Cimolace indisponible pour le moment.</Empty> : (
                     <div className="space-y-4">
+                      {showLiriGrille && (
+                        <div className="text-center pb-1">
+                          <div className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-violet-300/80 mb-1.5"><Sparkles className="w-3.5 h-3.5" /> Forfaits LIRI</div>
+                          <h2 className="text-xl font-black">Débloquez tout LIRI</h2>
+                          <p className="text-sm text-white/55 mt-1 max-w-lg mx-auto">Lives illimités, replay, smartboard IA et tous les moteurs LIRI. En gratuit : 3 min / 5 personnes. Choisissez votre forfait pour libérer la pleine puissance.</p>
+                        </div>
+                      )}
                       <div className="flex items-center justify-center">
                         <div className="inline-flex items-center gap-1 p-1 rounded-xl border border-white/[0.08] bg-white/[0.03]">
                           {['monthly', 'yearly'].map((c) => (
@@ -649,7 +667,7 @@ export default function CimolaceBillingDashboardPage() {
                         </div>
                       </div>
                       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {market.map((p) => {
+                        {displayMarket.map((p) => {
                           const hint = PLAN_HINTS[p.key] || {};
                           const feats = humanizeFeatures(p.features);
                           const oneTime = (p.billing_cycle || 'monthly') === 'one_time';
@@ -694,6 +712,13 @@ export default function CimolaceBillingDashboardPage() {
                         })}
                       </div>
                       <p className="text-xs text-white/40 flex items-center gap-1.5 flex-wrap"><ShieldCheck className="w-3.5 h-3.5 text-green-400 shrink-0" /> Paiement sécurisé Stripe · Conforme RGPD · Selon le service, des frais d'activation uniques peuvent s'appliquer (forfait boutique : 500 €), détaillés avant paiement.</p>
+                      {isLiriUpgrade && (
+                        <div className="text-center pt-1">
+                          <button onClick={() => setShowAllPlans((v) => !v)} className="text-xs text-white/45 hover:text-white/75 underline underline-offset-2">
+                            {showAllPlans ? '← Revenir aux forfaits LIRI' : 'Voir tous les forfaits Cimolace (école, MEDOS, boutique…)'}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )
                 )}
