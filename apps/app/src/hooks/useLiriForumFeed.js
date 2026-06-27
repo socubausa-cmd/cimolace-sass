@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
-const ISNA_TENANT_ID = isnaTenantConfig?.id ?? null;
+// NB : plus de tenant_id codé en dur ici. La RLS de `forum_topics`
+// (forum_topics_member_select) scope DÉJÀ la lecture au(x) tenant(s) du lecteur
+// via tenant_memberships → multi-tenant safe. L'ancien filtre ISNA_TENANT_ID
+// cassait le feed pour tout tenant ≠ isna.
 
 /**
  * Récupère les derniers sujets du forum depuis Supabase (`forum_topics`)
@@ -25,7 +27,6 @@ export function useLiriForumFeed({ limit = 5, userId } = {}) {
           .from('forum_topics')
           .select('id, title, category, created_at, replies_count, is_locked, is_pinned')
           .eq('is_locked', false);
-        if (ISNA_TENANT_ID) q = q.eq('tenant_id', ISNA_TENANT_ID);
         const { data, error: err } = await q
           .order('last_post_at', { ascending: false, nullsFirst: false })
           .order('created_at', { ascending: false })
