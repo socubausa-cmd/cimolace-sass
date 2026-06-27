@@ -16,9 +16,11 @@ const ALLOWED_VOICES = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'ony
 const DEFAULT_VOICE = 'coral';
 const DEFAULT_MODEL = 'gpt-4o-mini-tts';
 const FR_INSTRUCTIONS =
-  'Tu es un professeur chaleureux et bienveillant. Parle en FRANÇAIS, d’un ton naturel, posé et expressif, ' +
-  'comme une vraie conversation (pas une lecture). Respecte la ponctuation : marque de vraies pauses aux virgules ' +
-  'et aux points, monte le ton aux questions, varie l’intonation. Articule clairement, rythme humain, avec de la respiration.';
+  'Parle FRANÇAIS comme si tu EXPLIQUAIS à un ami assis en face de toi — décontracté, chaleureux, complice. ' +
+  'SURTOUT PAS un ton de lecture ni de livre audio, PAS monocorde. C’est une VRAIE conversation : ' +
+  'varie beaucoup l’intonation, insiste sur les mots importants, ralentis sur les idées-clés, accélère un peu sur le reste, ' +
+  'fais de VRAIES respirations et de vraies pauses (silences) aux virgules et entre les phrases, monte nettement le ton aux questions. ' +
+  'Ajoute le naturel d’un prof qui réfléchit à voix haute. Énergie vivante, jamais plat, jamais robotique.';
 
 function bytesToBase64(bytes: Uint8Array): string {
   let bin = '';

@@ -22,23 +22,23 @@ export const CANONICAL_COURSE = {
           type: 'lecon',
           title: 'Le temps est une information',
           board_text: 'Le temps est l’information potentielle qui tend vers la différenciation : sa tendance est de continuer. Une information quantique est un minimum d’état d’action — le temps ne porte donc qu’un seul bit : « continuer ».',
-          narration: 'Le temps est l’information potentielle qui tend vers la différenciation. Sa seule tendance, c’est de continuer. Or une information quantique est un minimum d’état d’action : le temps ne peut donc porter qu’un seul bit, « continuer ».',
+          narration: 'Bon… commençons par le temps. Le temps, en vrai, c’est quoi ? C’est de l’information. Une information qui veut avancer, qui tend vers la différence. Sa seule envie, au fond, c’est de continuer. Et là, écoute bien : une information quantique, c’est un minimum d’action. Donc le temps, il ne peut transporter qu’un seul bit. Un seul, tu vois ? Et ce bit, c’est : continuer.',
         },
         {
           type: 'lecon',
           title: 'Mais le temps n’est pas seul',
           board_text: 'Être, c’est le potentiel d’être différent de ce que l’on n’est pas. Le temps ne peut donc exister seul : il existe une information contraire — l’espace — dont la tendance unique est d’unifier, de revenir. Deux volontés opposées : il en naît une troisième, l’énergie, le différentiel accordé.',
-          narration: 'Mais le temps n’est pas seul. Être, c’est le potentiel d’être différent de ce que l’on n’est pas. Il existe donc une information contraire : l’espace, dont la tendance est d’unifier, de revenir. Deux volontés opposées — et il en naît une troisième : l’énergie, le différentiel accordé.',
+          narration: 'Mais attends… le temps n’est pas tout seul. Réfléchis avec moi : être, c’est pouvoir être différent de ce qu’on n’est pas. Donc forcément, il existe une information contraire. Et cette information-là, c’est l’espace. L’espace, lui, il veut l’inverse : unifier, revenir en arrière. Tu as donc deux volontés qui s’opposent, face à face. Et de ce choc… il naît une troisième chose : l’énergie. Ce qu’on appelle le différentiel accordé.',
         },
         // 2) AMORCE → CROQUIS
         {
           type: 'amorce_croquis',
-          narration: 'Pour bien voir ça, faisons un croquis.',
+          narration: 'Bon… pour bien voir ce qui se passe, on va faire un petit croquis ensemble.',
         },
         // 3) CROQUIS 1 — la flèche du temps et la contrainte
         {
           type: 'croquis',
-          narration: 'Voici la flèche du temps : ce vecteur bleu qui veut continuer, filer vers l’extérieur. Mais derrière, une force de contrainte lui impose le retour : c’est l’espace.',
+          narration: 'Regarde bien. Voilà la flèche du temps — ce vecteur bleu, là, qui veut continuer, filer tout droit vers l’extérieur. Mais juste derrière, il y a une force qui le retient… qui lui impose de revenir. Et ça, cette force, c’est l’espace.',
           sketch: {
             caption: 'La flèche du temps et la contrainte de l’espace',
             elements: [
@@ -60,7 +60,7 @@ export const CANONICAL_COURSE = {
             partial: ['Tu tiens un bout du fil…', 'Presque — pousse d’un cran.', 'Bonne direction.'],
             wrong: ['Pas tout à fait.', 'Regarde mieux le croquis.', 'Non — mais l’erreur est instructive.'],
           },
-          reveal_narration: 'En vérité, la flèche doit se courber. C’est de la physique de contrainte : au lieu d’une trajectoire rectiligne, elle suit une géodésique — elle spirale autour du point qui lui impose la contrainte. Ce point, on l’appelle le point de gravité : la gravité est l’action de l’espace qui exige le retour à l’unité. Le temps se transforme alors de flèche en spirale. Voilà pourquoi le mouvement rectiligne n’existe pas : tout ce qui est en action spirale autour d’un point.',
+          reveal_narration: 'Eh bien voilà : la flèche, elle est obligée de se courber. C’est de la physique de contrainte, tout simplement. Au lieu d’aller tout droit, elle se met à spiraler… à tourner autour du point qui la retient. Et ce point, écoute bien, on l’appelle le point de gravité. Parce que la gravité, en fait, c’est juste l’action de l’espace qui réclame le retour à l’unité. Du coup le temps, il se transforme : de flèche, il devient spirale. Et c’est pour ça — retiens bien ça — que le mouvement en ligne droite, ça n’existe pas. Tout ce qui bouge spirale autour d’un point.',
           reveal_sketch: {
             caption: 'Le temps spirale autour du point de gravité',
             elements: [
@@ -80,7 +80,7 @@ export const CANONICAL_COURSE = {
             subject: 'earth_orbit',
             caption: 'La Terre tourne autour du Soleil et sur elle-même — comme tout ce qui est en action. C’est la même spirale qui explique les galaxies.',
           },
-          narration: 'Pour faire asseoir l’idée : imagine un oiseau qui s’envole, mais un animal lui tient la patte. Il ne peut pas filer droit. C’est la course du temps, ralentie par l’espace. Et cette spirale explique même pourquoi tout tourne : la Terre autour du Soleil et sur elle-même, et c’est la même chose pour les galaxies. Le temps est courbé par l’espace, et la spirale en naît.',
+          narration: 'Et pour que ça rentre vraiment, imagine un truc tout simple. Un oiseau qui s’envole… mais un animal lui tient la patte. Il a beau battre des ailes, il ne peut pas filer droit, tu vois ? Eh bien c’est exactement ça : la course du temps, ralentie par l’espace. Et le plus fou, c’est que cette spirale, elle explique pourquoi tout tourne. La Terre autour du Soleil, et sur elle-même. Pareil pour les galaxies. Le temps est courbé par l’espace… et c’est de là que naît la spirale.',
         },
         // 6) TRANSITION
         {
