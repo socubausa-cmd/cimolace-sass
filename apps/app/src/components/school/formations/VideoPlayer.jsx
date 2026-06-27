@@ -153,12 +153,12 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
     // Basic HTML5 Video Player styling placeholder
     // In a real app, you would wire up the custom controls to the video ref
     return (
-      <div className="relative group bg-black rounded-lg overflow-hidden border border-white/10">
+      <div className="relative group bg-[#0b0b0f] overflow-hidden">
         <div className="relative">
           <video
             ref={videoRef}
             src={playableUrl}
-            className="w-full aspect-video block"
+            className="w-full aspect-video block bg-[#0b0b0f]"
             controls
             onEnded={onEnded}
             onLoadedMetadata={(e) => {
