@@ -18,6 +18,11 @@ export class BillingController {
   // Valeur brute renvoyée : le ResponseInterceptor global emballe en { data: ... }
   // (renvoyer { data } ici produirait un double-emballage).
   @Get("plan") async plan(@Req() req: any) { return this.svc.getTenantSubscription(req.tenant.id); }
+  // SELF-SERVE : choisir un forfait Cimolace (grille LIRI) → crée l'abo 'pending' à
+  // payer ensuite via card-checkout (Stripe) ou collect (PawaPay). Body { planKey, provider? }.
+  @Post("subscribe") async subscribe(@Req() req: any, @Body() b: { planKey?: string; provider?: string }) {
+    return this.svc.subscribeToPlan(req.tenant.id, b?.planKey ?? "", b?.provider);
+  }
   // Mobile money (PawaPay — Afrique)
   @Post("subscriptions/:id/collect") async collect(@Req() req: any, @Param("id") id: string, @Body() b: any) {
     return this.svc.collectSubscriptionViaPawaPay(req.tenant.id, id, b);

@@ -111,6 +111,118 @@ export class BillingService {
     return { subscription, gating_enabled: true, plan: (plan as any).key };
   }
 
+  /** Providers de paiement autorisés (= CHECK billing_subscriptions/invoices provider). */
+  private static readonly PAYMENT_PROVIDERS = new Set([
+    "stripe", "chariow", "cinetpay", "pawapay", "nowpayments", "paypal", "free",
+  ]);
+
+  /**
+   * SELF-SERVE upgrade : crée (ou réutilise) un abonnement EN ATTENTE pour le plan
+   * choisi (billing_plans) + une facture à régler, que le tenant paie ensuite via
+   * `createCardCheckout` (Stripe, prix INLINE depuis price_cents) ou
+   * `collectSubscriptionViaPawaPay` (mobile money). À la confirmation du paiement,
+   * la même plomberie existante flippe l'abo en 'active' + provisionne les moteurs
+   * (confirmCardPayment / applyPawaPayDeposit). C'est le maillon « je choisis un
+   * forfait » qui manquait entre la grille et le paiement.
+   *
+   * NB : le palier LIRI ([[liri-entitlements]]) lit `current_period_end` ; un abo
+   * 'pending' (period_end NULL) reste donc en GRATUIT tant que le paiement n'a pas
+   * abouti — l'upgrade ne débloque rien avant d'être payé.
+   */
+  async subscribeToPlan(
+    tenantId: string,
+    planKey: string,
+    provider = "stripe",
+  ) {
+    if (!planKey) throw new BadRequestException("planKey requis");
+    const prov = String(provider || "stripe").toLowerCase();
+    if (!BillingService.PAYMENT_PROVIDERS.has(prov)) {
+      throw new BadRequestException(`provider invalide (autorisés: ${[...BillingService.PAYMENT_PROVIDERS].join(", ")})`);
+    }
+    const sb = this.supabase;
+    const { data: plan } = await sb
+      .from("billing_plans")
+      .select("key, label, price_cents, currency, is_active")
+      .eq("key", planKey)
+      .maybeSingle();
+    if (!plan || (plan as any).is_active === false) {
+      throw new NotFoundException(`Plan "${planKey}" introuvable ou inactif`);
+    }
+    const amountCents = Number((plan as any).price_cents ?? 0);
+    const currency = String((plan as any).currency ?? "EUR");
+
+    // Réutilise un abo EN ATTENTE existant pour ce plan (évite d'empiler les pending).
+    const { data: existing } = await sb
+      .from("billing_subscriptions")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .eq("plan_id", planKey)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .maybeSingle();
+
+    let subscriptionId = (existing as any)?.id as string | undefined;
+    if (subscriptionId) {
+      await sb.from("billing_subscriptions")
+        .update({ provider: prov, amount_cents: amountCents, currency, updated_at: new Date().toISOString() })
+        .eq("id", subscriptionId);
+    } else {
+      const { data: created, error } = await sb
+        .from("billing_subscriptions")
+        .insert({
+          tenant_id: tenantId,
+          plan_id: planKey,
+          provider: prov,
+          status: "pending",
+          amount_cents: amountCents,
+          currency,
+          current_period_start: new Date().toISOString(),
+          current_period_end: null,
+          metadata: { source: "self-serve-upgrade", plan_label: (plan as any).label },
+        })
+        .select("id")
+        .single();
+      if (error || !created) {
+        throw new BadRequestException(`Création abonnement impossible: ${error?.message ?? "inconnue"}`);
+      }
+      subscriptionId = (created as any).id as string;
+    }
+
+    // Facture à régler (requise par le flux PawaPay ; inoffensive pour le flux carte).
+    const { data: openInv } = await sb
+      .from("billing_invoices")
+      .select("id")
+      .eq("subscription_id", subscriptionId)
+      .in("status", ["pending", "processing", "failed"])
+      .limit(1)
+      .maybeSingle();
+    let invoiceId = (openInv as any)?.id as string | undefined;
+    if (!invoiceId) {
+      const { data: inv } = await sb
+        .from("billing_invoices")
+        .insert({
+          tenant_id: tenantId,
+          subscription_id: subscriptionId,
+          provider: prov,
+          status: "pending",
+          amount_cents: amountCents,
+          currency,
+          invoice_number: `LIRI-${Date.now().toString(36).toUpperCase()}`,
+          description: `Abonnement ${(plan as any).label ?? planKey}`,
+        })
+        .select("id")
+        .maybeSingle();
+      invoiceId = (inv as any)?.id;
+    }
+
+    return {
+      subscription_id: subscriptionId,
+      invoice_id: invoiceId ?? null,
+      plan: { key: planKey, label: (plan as any).label, price_cents: amountCents, currency },
+      status: "pending",
+    };
+  }
+
   /**
    * Initie une collecte PawaPay (mobile money) pour régler la facture en cours
    * d'un abonnement. Le montant est lu en base (jamais fourni par le client).
