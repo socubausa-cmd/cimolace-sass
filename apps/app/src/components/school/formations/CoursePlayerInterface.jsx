@@ -1281,11 +1281,11 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                     'radial-gradient(55% 50% at 4% 98%, rgba(15,179,255,0.045), transparent 62%)' }} />
                   <div className="absolute inset-0" style={{ boxShadow: 'inset 0 0 220px 50px rgba(0,0,0,0.5)' }} />
                 </div>
-                {/* Orbes flottants : z-4 — flottent SUR la vidéo (pointer-events-none, contrôles natifs toujours accessibles) */}
+                {/* Orbes flottants larges z-4 — couvrent TOUTE la scène vidéo (pointer-events-none, contrôles natifs toujours accessibles) */}
                 <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 4 }}>
-                  <span className="cpi-orb absolute -left-10 top-16 h-72 w-72 rounded-full" style={{ background: '#D4AF37', opacity: 0.13 }} />
-                  <span className="cpi-orb alt absolute -right-10 top-1/4 h-80 w-80 rounded-full" style={{ background: '#6f4cff', opacity: 0.07 }} />
-                  <span className="cpi-orb absolute bottom-10 left-1/3 h-64 w-64 rounded-full" style={{ background: '#0fb3ff', opacity: 0.06 }} />
+                  <span className="cpi-orb absolute rounded-full" style={{ background: '#D4AF37', opacity: 0.09, left: '-5%', top: '-10%', width: '55vw', height: '55vh', filter: 'blur(140px)' }} />
+                  <span className="cpi-orb alt absolute rounded-full" style={{ background: '#6f4cff', opacity: 0.07, right: '-5%', bottom: '-10%', width: '50vw', height: '50vh', filter: 'blur(130px)' }} />
+                  <span className="cpi-orb absolute rounded-full" style={{ background: '#0fb3ff', opacity: 0.045, left: '20%', bottom: '5%', width: '40vw', height: '40vh', filter: 'blur(120px)' }} />
                 </div>
                 {/* CSS leçon — fond noir sur la vidéo (état de chargement gris → noir) */}
                 <style>{`video{background:#0b0b0f!important}`}</style>
