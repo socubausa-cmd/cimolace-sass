@@ -1288,6 +1288,8 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                   <span className="cpi-orb absolute bottom-10 left-1/3 h-64 w-64 rounded-full" style={{ background: '#0fb3ff', opacity: 0.09 }} />
                   <div className="absolute inset-0" style={{ boxShadow: 'inset 0 0 220px 50px rgba(0,0,0,0.5)' }} />
                 </div>
+                {/* CSS leçon — fond noir sur la vidéo (état de chargement gris → noir) */}
+                <style>{`video{background:#0b0b0f!important}`}</style>
                 {/* Header transparent — flottant sur la scène, sans fond opaque */}
                 <header className="h-14 flex items-center justify-between px-4 md:px-6 shrink-0 relative" style={{ zIndex: 20, background: 'linear-gradient(to bottom, rgba(11,11,15,0.85), transparent)' }}>
                   <div className="flex items-center gap-4 min-w-0">
@@ -1419,7 +1421,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               SmartBoard
                             </button>
                             <div className="pointer-events-none absolute -inset-12 -z-10 rounded-full" style={{ background: 'radial-gradient(ellipse at 50% 46%, rgba(212,175,55,0.17), rgba(8,8,11,0) 62%)', filter: 'blur(34px)' }} />
-                            <div className="relative overflow-hidden rounded-3xl" style={{ boxShadow: '0 50px 120px rgba(0,0,0,0.5), inset 0 0 120px 48px #08080b' }}>
+                            <div className="relative overflow-hidden rounded-3xl" style={{ background: '#0b0b0f', boxShadow: '0 50px 120px rgba(0,0,0,0.5), inset 0 0 120px 48px #08080b' }}>
                           <VideoPlayer
                             ref={videoPlayerRef}
                             video={currentVideoMemo}
