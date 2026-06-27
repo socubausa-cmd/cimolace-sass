@@ -109,6 +109,16 @@ export class LiveService {
    */
   async startRecording(tenantId: string, sessionId: string) {
     const session: any = await this.findOne(tenantId, sessionId);
+    // ── Enforcement palier : enregistrement/replay = feature PAYANTE ──
+    // Point d'étranglement unique : couvre l'appel explicite (POST /recording/start)
+    // ET l'auto-enregistrement (maybeStartRecording, best-effort → l'exception est
+    // avalée → pas de replay en gratuit, sans casser le live).
+    const { limits } = await this.entitlements.resolveLimits(tenantId);
+    if (!limits.canReplay) {
+      throw new ForbiddenException(
+        "Forfait gratuit : l'enregistrement et le replay ne sont pas inclus. Passez à un forfait LIRI pour enregistrer et rediffuser vos lives.",
+      );
+    }
     // Le slug DOIT être identique à celui de generateToken/ensureRoom — sinon l'egress
     // vise une room inexistante (`_<id>` au lieu de `isna_<id>`) → échec. Or
     // live_sessions.tenant_slug est souvent NULL → on lit le slug du TENANT.
