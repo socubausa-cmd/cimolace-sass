@@ -1,7 +1,9 @@
 import React from 'react';
-import { Sparkles, ChevronDown, ScanEye, WandSparkles, LayoutTemplate, ImagePlus, Loader2, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Sparkles, ChevronDown, ScanEye, WandSparkles, LayoutTemplate, ImagePlus, Loader2, X, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NEURO_INK_MODE } from '@/lib/neuroInk';
+import { useLiriEntitlements } from '@/hooks/useLiriEntitlements';
 import {
   designerShellMicroLabel,
   designerShellInput,
@@ -165,6 +167,9 @@ const NEURO_AI_ACTIONS = [
 
 /** Section copilote IA du panneau NeuroInk (hôte) : lecture + transformation du tableau. */
 function NeuroInkAiSection({ ai }) {
+  // Smartboard IA (copilote du tableau) = feature payante. canSmartboardAI=false en gratuit.
+  const { limits } = useLiriEntitlements();
+  const canAI = limits?.canSmartboardAI !== false;
   const state = ai?.state || {};
   const { enabled, premium, busy, activeKind, comprehension, error } = state;
   const suggestions = state.suggestions || [];
@@ -175,22 +180,39 @@ function NeuroInkAiSection({ ai }) {
         <span className="flex items-center gap-1.5 text-[10px] font-semibold text-amber-100/90">
           <Sparkles className="h-3 w-3" aria-hidden /> Copilote IA
         </span>
-        <button
-          type="button"
-          onClick={() => ai.setEnabled(!enabled)}
-          aria-pressed={Boolean(enabled)}
-          className={cn(
-            'rounded-full px-2 py-0.5 text-[9px] font-semibold transition',
-            enabled
-              ? 'bg-amber-500/25 text-amber-100 ring-1 ring-inset ring-amber-400/40'
-              : 'bg-white/[0.06] text-white/55 ring-1 ring-inset ring-white/10',
-          )}
-        >
-          {enabled ? 'Activé' : 'Activer'}
-        </button>
+        {canAI && (
+          <button
+            type="button"
+            onClick={() => ai.setEnabled(!enabled)}
+            aria-pressed={Boolean(enabled)}
+            className={cn(
+              'rounded-full px-2 py-0.5 text-[9px] font-semibold transition',
+              enabled
+                ? 'bg-amber-500/25 text-amber-100 ring-1 ring-inset ring-amber-400/40'
+                : 'bg-white/[0.06] text-white/55 ring-1 ring-inset ring-white/10',
+            )}
+          >
+            {enabled ? 'Activé' : 'Activer'}
+          </button>
+        )}
       </div>
 
-      {enabled ? (
+      {!canAI ? (
+        <div className="flex flex-col gap-1.5 rounded-lg border border-amber-400/25 bg-amber-500/[0.06] px-2 py-2">
+          <p className="m-0 flex items-center gap-1.5 text-[10px] font-semibold text-amber-100/90">
+            <Lock className="h-3 w-3 shrink-0" aria-hidden /> Réservé aux forfaits LIRI
+          </p>
+          <p className="m-0 text-[9px] leading-snug text-white/55">
+            Le copilote IA du tableau (Comprendre, Mettre au propre, Présentation, Illustration) est inclus dès le forfait LIRI.
+          </p>
+          <Link
+            to="/cimolace/billing?upgrade=liri"
+            className="mt-0.5 inline-flex w-fit items-center gap-1 rounded-md border border-amber-400/40 bg-amber-500/[0.16] px-2 py-0.5 text-[9px] font-semibold text-amber-100 transition hover:bg-amber-500/25"
+          >
+            Passer au complet
+          </Link>
+        </div>
+      ) : enabled ? (
         <>
           <div className="flex flex-col gap-0.5">
             <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-black/25 p-0.5 text-[9px] font-semibold">

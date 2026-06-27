@@ -8,7 +8,9 @@ import {
   ChevronRight,
   Circle,
   Square,
+  Lock,
 } from 'lucide-react';
+import { useLiriEntitlements } from '@/hooks/useLiriEntitlements';
 
 /**
  * Barre de contrôle inférieure — TikTok style.
@@ -67,7 +69,13 @@ export function LiveHostMobileBottomBar({
     outline: 'none',
   });
 
+  // Enregistrement/replay = feature payante. En gratuit, le bouton REC est verrouillé
+  // (le serveur refuse aussi recording/start — double barrière). canReplay=false en free.
+  const { limits } = useLiriEntitlements();
+  const canRec = limits?.canReplay !== false;
+
   const handleRec = () => {
+    if (!canRec) return;
     if (isRecording) stopRecording?.();
     else startRecording?.();
   };
@@ -132,17 +140,22 @@ export function LiveHostMobileBottomBar({
         </div>
       )}
 
-      {/* REC — hôte uniquement */}
+      {/* REC — hôte uniquement (verrouillé en palier gratuit) */}
       {!isGuestUi && (
         <button
           onClick={handleRec}
-          disabled={recStarting}
+          disabled={recStarting || !canRec}
+          title={!canRec ? 'Enregistrement & replay réservés aux forfaits LIRI' : undefined}
           style={{
             ...btnStyle(isRecording, '#e53e3e', 'rgba(255,255,255,0.55)'),
             position: 'relative',
+            opacity: !canRec ? 0.45 : 1,
+            cursor: !canRec ? 'not-allowed' : 'pointer',
           }}
         >
-          {isRecording ? (
+          {!canRec ? (
+            <Lock size={18} color="rgba(255,255,255,0.7)" />
+          ) : isRecording ? (
             <Square size={18} fill="#e53e3e" color="#e53e3e" />
           ) : (
             <Circle size={22} color={recStarting ? 'rgba(255,255,255,0.35)' : '#e53e3e'} />

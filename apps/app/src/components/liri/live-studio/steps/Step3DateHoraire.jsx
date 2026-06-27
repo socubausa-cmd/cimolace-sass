@@ -1,5 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { Sparkles } from 'lucide-react';
+import { useLiriEntitlements } from '@/hooks/useLiriEntitlements';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -19,6 +22,8 @@ const RECURRENCE = [
 ];
 
 export function Step3DateHoraire({ draft, updateDraft }) {
+  const { isFree, limits } = useLiriEntitlements();
+  const scheduleLocked = isFree && !limits.canSchedule;
   const dateStr = draft.scheduled_at ? (typeof draft.scheduled_at === 'string' && draft.scheduled_at.includes('T')
     ? draft.scheduled_at.slice(0, 10)
     : new Date(draft.scheduled_at).toISOString().slice(0, 10)) : '';
@@ -29,6 +34,16 @@ export function Step3DateHoraire({ draft, updateDraft }) {
         <h2 className="text-2xl font-semibold text-white mb-1">Date et horaire</h2>
         <p className="text-gray-400">Quand aura lieu votre session ?</p>
       </div>
+
+      {scheduleLocked && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-amber-400/25 bg-amber-500/[0.07] px-4 py-3 text-sm text-amber-100/90">
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+          <span>
+            <strong>Programmer un live à l'avance</strong> est réservé aux forfaits LIRI. En gratuit, lancez un live immédiat — ou{' '}
+            <Link to="/cimolace/billing?upgrade=liri" className="font-semibold underline underline-offset-2 hover:text-white">passez à un forfait</Link> pour planifier.
+          </span>
+        </div>
+      )}
 
       <motion.div
         initial={{ opacity: 0, y: 8 }}
