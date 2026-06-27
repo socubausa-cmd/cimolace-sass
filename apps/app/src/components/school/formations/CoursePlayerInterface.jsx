@@ -1040,6 +1040,8 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
         .cpi-orb{ filter: blur(86px); opacity:.2; animation: cpiFloat 16s ease-in-out infinite; will-change: transform; }
         .cpi-orb.alt{ animation-duration:20s; animation-delay:-4s; }
         @media (prefers-reduced-motion: reduce){ .cpi-orb{ animation:none } }
+        /* Fond noir sur le lecteur vidéo en attente de chargement — évite le rectangle gris */
+        video { background: #0b0b0f !important; }
       `}</style>
       {/* Ambient background — MÊME scène immersive que le détail du cours (TenantCourseDetailPage) */}
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
@@ -1269,8 +1271,25 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
             };
 
             return (
-              <div className="relative h-full text-white flex flex-col overflow-hidden" style={{ background: 'radial-gradient(72% 40% at 50% -2%, rgba(212,175,55,0.10), transparent 58%), radial-gradient(48% 44% at 97% 103%, rgba(111,76,255,0.05), transparent 62%), #0b0b0f' }}>
-                <header className="h-16 bg-[#151a21]/70 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-4 md:px-6 shrink-0 z-20">
+              <div className="relative h-full text-white flex flex-col overflow-hidden" style={{ background: '#0b0b0f' }}>
+                {/* Ambiance immersive identique aux autres écrans : orbes flottants + halos + rayon conique */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+                  <div className="absolute inset-0" style={{ background:
+                    'radial-gradient(80% 50% at 50% -5%, rgba(212,175,55,0.12), transparent 55%),' +
+                    'radial-gradient(65% 55% at 92% 104%, rgba(111,76,255,0.06), transparent 62%),' +
+                    'radial-gradient(55% 50% at 4% 98%, rgba(15,179,255,0.045), transparent 62%)' }} />
+                  <div className="absolute left-1/2 top-0 h-[140vh] w-[140vh] -translate-x-1/2" style={{
+                    background: 'conic-gradient(from 198deg at 50% 32%, transparent 0deg, rgba(212,175,55,0.09) 38deg, transparent 80deg, transparent 188deg, rgba(15,179,255,0.04) 224deg, transparent 300deg)',
+                    opacity: 0.42, filter: 'blur(3px)',
+                    WebkitMaskImage: 'radial-gradient(ellipse 50% 40% at 50% 28%, #000 0%, transparent 72%)',
+                    maskImage: 'radial-gradient(ellipse 50% 40% at 50% 28%, #000 0%, transparent 72%)' }} />
+                  <span className="cpi-orb absolute -left-10 top-16 h-72 w-72 rounded-full" style={{ background: '#D4AF37' }} />
+                  <span className="cpi-orb alt absolute -right-10 top-1/4 h-80 w-80 rounded-full" style={{ background: '#6f4cff', opacity: 0.1 }} />
+                  <span className="cpi-orb absolute bottom-10 left-1/3 h-64 w-64 rounded-full" style={{ background: '#0fb3ff', opacity: 0.09 }} />
+                  <div className="absolute inset-0" style={{ boxShadow: 'inset 0 0 220px 50px rgba(0,0,0,0.5)' }} />
+                </div>
+                {/* Header transparent — flottant sur la scène, sans fond opaque */}
+                <header className="h-14 flex items-center justify-between px-4 md:px-6 shrink-0 relative" style={{ zIndex: 20, background: 'linear-gradient(to bottom, rgba(11,11,15,0.85), transparent)' }}>
                   <div className="flex items-center gap-4 min-w-0">
                     <Sheet>
                       <SheetTrigger asChild>
@@ -1359,9 +1378,9 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                   </div>
                 </header>
 
-                <div className="flex-1 flex overflow-hidden relative">
+                <div className="flex-1 flex overflow-hidden relative" style={{ zIndex: 1 }}>
                   <div className="flex-1 flex flex-col overflow-y-auto">
-                    <div className="p-4 md:p-8 max-w-6xl mx-auto w-full">
+                    <div className="p-4 md:p-6 max-w-6xl mx-auto w-full">
                       {activePanel === 'video' ? (
                         <div className="space-y-6">
                           {/* Vidéo FONDUE dans le fond immersif : halo or autour + vignette (inset) qui dissout les bords dans le noir — pas de cadre */}
