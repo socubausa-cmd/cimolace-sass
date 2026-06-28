@@ -200,7 +200,7 @@ export default function LiriKonvaToolkitPanel({ addObjects, className, quickFilt
       <div className="space-y-2 rounded-xl border border-violet-500/25 bg-violet-950/20 p-2.5">
         <p className="flex items-center justify-center gap-1 text-center text-[9px] font-semibold uppercase tracking-wider text-violet-200/90">
           {library === 'science' ? <Atom className="h-3 w-3" /> : <LayoutGrid className="h-3 w-3" />}
-          Bibliothèque LIRI
+          Bibliothèque IA
         </p>
         <select
           value={library}

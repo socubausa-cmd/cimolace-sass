@@ -1926,7 +1926,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
               </svg>
               {!course && (
                 <p className="mt-8 text-center text-[13px] text-white/30">
-                  Importez un parcours depuis l'agent LIRI pour afficher la mindmap.
+                  Importez un parcours depuis l'Agent IA pour afficher la mindmap.
                 </p>
               )}
             </div>

@@ -52,7 +52,7 @@ export default function KonvaParityFeatureRoot({ className, editorRef }) {
     const copilot = useCourseCopilotStore.getState();
     const { course: c, slideTimingMinutes: st } = copilot;
     if (!c?.slides?.length) {
-      setHint('Importez un parcours LIRI (plan Copilot) avant export.');
+      setHint('Importez un parcours (plan Copilot) avant export.');
       window.setTimeout(() => setHint(''), 4000);
       return;
     }
@@ -204,11 +204,11 @@ export default function KonvaParityFeatureRoot({ className, editorRef }) {
       <details className="group border-t border-white/[0.06]">
         <summary
           className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-left text-[10px] font-medium text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)] transition-colors hover:bg-white/[0.03] [&::-webkit-details-marker]:hidden"
-          aria-label="Ouvrir exports LIRI, thème et blocs pédagogiques"
+          aria-label="Ouvrir exports, thème et blocs pédagogiques"
         >
           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] transition-transform group-open:rotate-180" />
           <span>
-            Exports &amp; parité LIRI <span className="font-normal text-white/45">— PDF, scripts, thème, blocs</span>
+            Exports &amp; parité <span className="font-normal text-white/45">— PDF, scripts, thème, blocs</span>
           </span>
         </summary>
       <div className="max-h-[min(42vh,380px)] overflow-y-auto overflow-x-hidden border-t border-white/[0.04] [scrollbar-width:thin]">

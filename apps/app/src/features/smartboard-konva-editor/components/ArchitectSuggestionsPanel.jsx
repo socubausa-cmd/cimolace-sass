@@ -39,7 +39,7 @@ export default function ArchitectSuggestionsPanel({
       <div className="shrink-0 border-b border-white/[0.07] bg-[#0a0c12]/90 p-2.5">
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color-mix(in_srgb,var(--school-accent)_75%,transparent)]">Architect</p>
         <p className="mt-1 text-[11px] leading-snug text-white/40">
-          Préconisations selon la sélection et la bibliothèque LIRI. Le moteur logique tourne sans jetons ; les variantes IA
+          Préconisations selon la sélection et la bibliothèque IA. Le moteur logique tourne sans jetons ; les variantes IA
           consomment des tokens.
         </p>
         <div className="mt-2 flex flex-wrap gap-1.5">

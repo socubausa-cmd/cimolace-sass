@@ -76,7 +76,7 @@ export default function CourseSlideCoachColumn({
 
       {!course ? (
         <p className="rounded-2xl border border-white/10 bg-black/30 p-4 text-center text-[10px] leading-relaxed text-white/45">
-          Ouvrez un parcours depuis l'agent LIRI (Designer + Coach) pour afficher le guide de la scène.
+          Ouvrez un parcours depuis l'Agent IA (Designer + Coach) pour afficher le guide de la scène.
         </p>
       ) : null}
 
