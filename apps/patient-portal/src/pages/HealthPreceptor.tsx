@@ -10,6 +10,7 @@ import {
   VolumeX,
   Lightbulb,
   Sparkles,
+  TrendingUp,
 } from 'lucide-react';
 import {
   patientApi,
@@ -67,6 +68,9 @@ type PreceptorChapter = {
   factors: string[];
   // 2-3 leviers d'hygiène de vie concrets.
   levers: string[];
+  // Vrai quand l'axe est alimenté par le suivi du patient (source='health_entry').
+  // Sert à afficher un repère bienveillant « d'après ton suivi », jamais anxiogène.
+  fromHealthEntry?: boolean;
 };
 
 // Bande de score → couleur (alignée sur la logique de HealthTwinPage :
@@ -242,6 +246,7 @@ function buildChapters(twin: MyTwinState, brandName: string): PreceptorChapter[]
       meaning: meaningFor(name, band),
       factors: FACTOR_HINTS,
       levers: leversFor(d.domain),
+      fromHealthEntry: d.source === 'health_entry',
     });
   }
 
@@ -354,19 +359,71 @@ export function HealthPreceptor() {
 
   if (loading) {
     return (
-      <div style={{ padding: 24, color: '#64748b' }}>
+      <div
+        role="status"
+        aria-live="polite"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: 24,
+          color: '#64748b',
+          fontSize: 14,
+        }}
+      >
+        <Sparkles size={18} color="var(--brand-primary)" aria-hidden="true" />
         Préparation de votre parcours guidé…
       </div>
     );
   }
   if (error) {
     return (
-      <div style={{ padding: 16, background: '#fef2f2', color: '#991b1b', borderRadius: 8 }}>
-        {error}
+      <div
+        role="alert"
+        style={{
+          display: 'flex',
+          gap: 10,
+          alignItems: 'flex-start',
+          padding: 16,
+          background: '#fef2f2',
+          border: '1px solid #fecaca',
+          color: '#991b1b',
+          borderRadius: 10,
+          fontSize: 14,
+          lineHeight: 1.5,
+        }}
+      >
+        <AlertTriangle size={18} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+        <span>{error}</span>
       </div>
     );
   }
-  if (!twin || !current) return null;
+  // Données chargées mais aucun contenu exploitable (sécurité — l'intro et
+  // l'outro existent toujours, mais on évite un écran blanc si jamais).
+  if (!twin || !current) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          gap: 10,
+          alignItems: 'flex-start',
+          padding: 16,
+          background: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          color: '#475569',
+          borderRadius: 10,
+          fontSize: 14,
+          lineHeight: 1.5,
+        }}
+      >
+        <Info size={18} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+        <span>
+          Votre parcours guidé sera disponible dès que votre suivi {branding.name}{' '}
+          contiendra quelques repères. Revenez après votre prochaine consultation.
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: 820, margin: '0 auto' }}>
@@ -595,22 +652,53 @@ function PreceptorSlide({ chapter }: { chapter: PreceptorChapter }) {
           <h3 style={{ fontSize: 22, fontWeight: 700, margin: '2px 0 0', color: '#0f172a' }}>
             {chapter.title}
           </h3>
-          {chapter.band !== 'unknown' && (
-            <span
+          {(chapter.band !== 'unknown' || chapter.fromHealthEntry) && (
+            <div
               style={{
-                display: 'inline-block',
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                gap: 6,
                 marginTop: 6,
-                padding: '2px 10px',
-                borderRadius: 999,
-                background: '#fff',
-                border: `1px solid ${meta.color}`,
-                color: meta.color,
-                fontSize: 11.5,
-                fontWeight: 600,
               }}
             >
-              {meta.label}
-            </span>
+              {chapter.band !== 'unknown' && (
+                <span
+                  style={{
+                    display: 'inline-block',
+                    padding: '2px 10px',
+                    borderRadius: 999,
+                    background: '#fff',
+                    border: `1px solid ${meta.color}`,
+                    color: meta.color,
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                  }}
+                >
+                  {meta.label}
+                </span>
+              )}
+              {/* Repère bienveillant : cet axe est nourri par TON suivi. */}
+              {chapter.fromHealthEntry && (
+                <span
+                  title="Cet axe reflète vos dernières entrées de suivi santé."
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    padding: '2px 10px',
+                    borderRadius: 999,
+                    background: 'var(--brand-primary-soft)',
+                    color: 'var(--brand-primary)',
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                  }}
+                >
+                  <TrendingUp size={12} aria-hidden="true" />
+                  d'après ton suivi
+                </span>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -851,6 +939,9 @@ function CoachBlock({
 
       <div
         ref={scrollRef}
+        role="log"
+        aria-live="polite"
+        aria-busy={thinking}
         style={{
           padding: 16,
           display: 'flex',
@@ -969,15 +1060,21 @@ function CoachBlock({
 
       {error && (
         <div
+          role="alert"
           style={{
+            display: 'flex',
+            gap: 8,
+            alignItems: 'flex-start',
             padding: '10px 16px',
             background: '#fef2f2',
             color: '#991b1b',
             fontSize: 13,
+            lineHeight: 1.45,
             borderTop: '1px solid #fecaca',
           }}
         >
-          {error}
+          <AlertTriangle size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+          <span>{error}</span>
         </div>
       )}
 

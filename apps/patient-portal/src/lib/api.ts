@@ -87,6 +87,10 @@ export type TwinOrganScore = {
 export type TwinWheelDomain = {
   domain: string;
   score: number | null;
+  // Provenance de l'axe — additif, peut être absent sur d'anciennes réponses.
+  // 'health_entry' = dérivé du suivi du patient ; 'questionnaire' = saisi par
+  // le praticien. Le front l'utilise pour un repère bienveillant, jamais requis.
+  source?: 'questionnaire' | 'health_entry' | null;
 };
 
 export type TwinEvent = {

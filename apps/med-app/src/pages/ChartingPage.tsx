@@ -573,6 +573,7 @@ export function ChartingPage() {
                       <button
                         onClick={requestSuggestion}
                         disabled={suggestLoading}
+                        aria-busy={suggestLoading}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 8,
                           padding: '9px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600,
@@ -588,8 +589,9 @@ export function ChartingPage() {
                   </div>
 
                   {suggestError && (
-                    <div style={{ marginTop: 14, padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, color: '#dc2626', fontSize: 13 }}>
-                      {suggestError}
+                    <div role="alert" style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 14, padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, color: '#dc2626', fontSize: 13, lineHeight: 1.5 }}>
+                      <AlertTriangle size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+                      <span>{suggestError}</span>
                     </div>
                   )}
 
@@ -683,8 +685,8 @@ export function ChartingPage() {
 
                       {/* Action : créer le brouillon */}
                       {rxCreated ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8 }}>
-                          <CheckCircle size={18} color="#16a34a" />
+                        <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8 }}>
+                          <CheckCircle size={18} color="#16a34a" aria-hidden="true" />
                           <span style={{ fontSize: 13.5, color: '#15803d', fontWeight: 600 }}>
                             Ordonnance créée en brouillon.
                           </span>
@@ -699,6 +701,7 @@ export function ChartingPage() {
                         <button
                           onClick={createDraftPrescription}
                           disabled={rxCreating}
+                          aria-busy={rxCreating}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 8,
                             padding: '12px 26px', borderRadius: 8, fontSize: 14, fontWeight: 600,
@@ -732,7 +735,7 @@ export function ChartingPage() {
 // ─── Styles helpers ───────────────────────────────────────────────────────────
 
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6,
+  display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--zw-text-soft)', marginBottom: 6,
 };
 
 const selectStyle: React.CSSProperties = {

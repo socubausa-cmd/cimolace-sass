@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Heart, Activity, Moon, Dumbbell, Droplets, Plus, X } from 'lucide-react';
+import { Heart, Activity, Moon, Dumbbell, Droplets, Plus, X, AlertTriangle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
@@ -24,6 +24,8 @@ const emptyForm: HealthForm = {
 
 export function MyHealth() {
   const [entries, setEntries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<HealthForm>(emptyForm);
   const [saving, setSaving] = useState(false);
@@ -31,16 +33,25 @@ export function MyHealth() {
 
   const fetchEntries = useCallback(() => {
     const t = localStorage.getItem('supabase_token');
-    if (!t) return;
+    if (!t) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setLoadError(null);
     fetch(API + '/med/me/health', {
       headers: {
         Authorization: 'Bearer ' + t,
         'X-Tenant-Slug': localStorage.getItem('tenant_slug') || '',
       },
     })
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error('Erreur ' + r.status);
+        return r.json();
+      })
       .then((d) => setEntries(d.data || d || []))
-      .catch(() => {});
+      .catch(() => setLoadError('Impossible de charger votre journal pour le moment.'))
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -105,15 +116,31 @@ export function MyHealth() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h2 style={{ fontSize: 24, fontWeight: 700 }}>Mon journal de sante</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+        <h2 style={{ fontSize: 24, fontWeight: 700 }}>Mon journal de santé</h2>
         <button
           onClick={openModal}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', background: '#0d9488', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
         >
           <Plus size={16} /> Enregistrer aujourd'hui
         </button>
       </div>
+
+      {loadError && (
+        <div
+          role="alert"
+          style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: 12, marginBottom: 16, background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', borderRadius: 10, fontSize: 13.5, lineHeight: 1.5 }}
+        >
+          <AlertTriangle size={16} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+          <span>{loadError}</span>
+        </div>
+      )}
+
+      {loading && entries.length === 0 && !loadError && (
+        <div role="status" aria-live="polite" style={{ padding: '8px 0 20px', color: '#64748b', fontSize: 14 }}>
+          Chargement de votre journal…
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
         {metrics.map((m) => (
@@ -193,6 +220,9 @@ export function MyHealth() {
           }}
         >
           <form
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="health-modal-title"
             onClick={(e) => e.stopPropagation()}
             onSubmit={handleSubmit}
             style={{
@@ -206,13 +236,14 @@ export function MyHealth() {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Comment vous sentez-vous ?</h3>
+              <h3 id="health-modal-title" style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Comment vous sentez-vous ?</h3>
               <button
                 type="button"
                 onClick={() => !saving && setModalOpen(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                aria-label="Fermer"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#475569' }}
               >
-                <X size={18} />
+                <X size={18} aria-hidden="true" />
               </button>
             </div>
 
@@ -276,8 +307,9 @@ export function MyHealth() {
             </label>
 
             {error && (
-              <div style={{ marginTop: 12, padding: 10, background: '#fef2f2', color: '#991b1b', borderRadius: 8, fontSize: 13 }}>
-                {error}
+              <div role="alert" style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 12, padding: 10, background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', borderRadius: 8, fontSize: 13, lineHeight: 1.45 }}>
+                <AlertTriangle size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+                <span>{error}</span>
               </div>
             )}
 
@@ -304,7 +336,7 @@ export function MyHealth() {
                 disabled={saving}
                 style={{
                   padding: '10px 16px',
-                  background: '#0d9488',
+                  background: 'var(--brand-primary)',
                   color: '#fff',
                   border: 'none',
                   borderRadius: 8,
@@ -348,7 +380,8 @@ function Slider({
         max={10}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        style={{ width: '100%', accentColor: '#0d9488' }}
+        aria-label={label}
+        style={{ width: '100%', accentColor: 'var(--brand-primary)' }}
       />
     </div>
   );

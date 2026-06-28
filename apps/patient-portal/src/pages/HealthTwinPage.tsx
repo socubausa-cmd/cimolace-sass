@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Activity, AlertTriangle, Info } from 'lucide-react';
+import { Activity, AlertTriangle, Info, TrendingUp } from 'lucide-react';
 import { patientApi, type MyTwinState } from '../lib/api';
 
 // Couleurs par sévérité (badges d'alerte).
@@ -175,6 +175,12 @@ function WheelSection({ wheel }: { wheel: MyTwinState['wheel'] }) {
       .join(' ');
   }, [wheel, cx, cy, r]);
 
+  // Au moins un axe nourri par le suivi du patient ? → on affiche une légende
+  // bienveillante sous la roue (et un petit repère sur les libellés concernés).
+  const hasHealthEntry = wheel.some(
+    (d) => d.source === 'health_entry' && d.score != null,
+  );
+
   return (
     <section style={sectionStyle}>
       <h3 style={sectionTitle}>Ma roue d'équilibre</h3>
@@ -183,7 +189,7 @@ function WheelSection({ wheel }: { wheel: MyTwinState['wheel'] }) {
           Aucune mesure enregistrée. Votre praticien pourra remplir votre roue lors d'une consultation.
         </p>
       ) : (
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
           <svg width={size} height={size} role="img" aria-label="Roue d'équilibre">
             {/* Cercles de référence */}
             {[0.25, 0.5, 0.75, 1].map((f) => (
@@ -214,33 +220,63 @@ function WheelSection({ wheel }: { wheel: MyTwinState['wheel'] }) {
                 />
               );
             })}
-            {/* Polygone des scores */}
+            {/* Polygone des scores — teinté de la couleur de marque du tenant. */}
             <polygon
               points={points}
-              fill="rgba(13, 148, 136, 0.25)"
-              stroke="#0d9488"
+              fill="var(--brand-primary-soft)"
+              stroke="var(--brand-primary)"
               strokeWidth={2}
             />
-            {/* Labels */}
+            {/* Labels — les axes nourris par le suivi du patient sont teintés
+                de la couleur de marque + portent un petit point repère. */}
             {wheel.map((d, i) => {
               const angle = (i / wheel.length) * Math.PI * 2 - Math.PI / 2;
               const lx = cx + Math.cos(angle) * (r + 16);
               const ly = cy + Math.sin(angle) * (r + 16);
+              const isHealth = d.source === 'health_entry' && d.score != null;
               return (
-                <text
-                  key={`l-${d.domain}`}
-                  x={lx}
-                  y={ly}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fontSize={10}
-                  fill="#475569"
-                >
-                  {WHEEL_LABELS[d.domain] || d.domain}
-                </text>
+                <g key={`l-${d.domain}`}>
+                  {isHealth && (
+                    <circle
+                      cx={cx + Math.cos(angle) * (r + 6)}
+                      cy={cy + Math.sin(angle) * (r + 6)}
+                      r={2.5}
+                      fill="var(--brand-primary)"
+                    />
+                  )}
+                  <text
+                    x={lx}
+                    y={ly}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fontSize={10}
+                    fontWeight={isHealth ? 600 : 400}
+                    fill={isHealth ? 'var(--brand-primary)' : '#475569'}
+                  >
+                    {WHEEL_LABELS[d.domain] || d.domain}
+                  </text>
+                </g>
               );
             })}
           </svg>
+          {hasHealthEntry && (
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '4px 12px',
+                borderRadius: 999,
+                background: 'var(--brand-primary-soft)',
+                color: 'var(--brand-primary)',
+                fontSize: 12,
+                fontWeight: 500,
+              }}
+            >
+              <TrendingUp size={13} aria-hidden="true" />
+              Les axes en couleur sont enrichis par votre suivi santé.
+            </div>
+          )}
         </div>
       )}
     </section>
@@ -267,7 +303,7 @@ function TimelineSection({ events }: { events: MyTwinState['events'] }) {
               }}
             >
               <div style={{ marginTop: 4 }}>
-                <Activity size={16} color="#0d9488" />
+                <Activity size={16} color="var(--brand-primary)" aria-hidden="true" />
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{e.title}</div>

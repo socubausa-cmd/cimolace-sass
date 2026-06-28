@@ -753,7 +753,7 @@ export class TwinService {
         .order('computed_at', { ascending: false }),
       this.db
         .from('med_transformation_wheel')
-        .select('domain,score,measured_at')
+        .select('domain,score,source,measured_at')
         .eq('patient_id', patientId)
         .order('measured_at', { ascending: false }),
       this.db
@@ -785,15 +785,23 @@ export class TwinService {
       };
     });
 
-    // Roue : dernière valeur par domaine.
+    // Roue : dernière valeur par domaine. On expose aussi `source`
+    // ('questionnaire' | 'health_entry') — PUREMENT ADDITIF — pour que le
+    // portail patient puisse signaler discrètement les axes alimentés par son
+    // propre suivi (cf. syncWheelFromHealthEntries). Null si l'axe n'a pas
+    // encore de mesure.
     const latestWheel = new Map<string, any>();
     for (const r of wheelRes.data ?? []) {
       if (!latestWheel.has(r.domain)) latestWheel.set(r.domain, r);
     }
-    const wheel = TwinService.WHEEL_DOMAINS.map((d) => ({
-      domain: d,
-      score: latestWheel.get(d)?.score ?? null,
-    }));
+    const wheel = TwinService.WHEEL_DOMAINS.map((d) => {
+      const row = latestWheel.get(d);
+      return {
+        domain: d,
+        score: row?.score ?? null,
+        source: (row?.source ?? null) as 'questionnaire' | 'health_entry' | null,
+      };
+    });
 
     // La colonne en DB est `message_fr` ; on l'expose sous `message` pour
     // respecter le contrat front (TwinAlert.message).
