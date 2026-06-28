@@ -89,9 +89,11 @@ async function findOrCreateThread(mailboxId, parsed) {
 async function syncMailbox(mb) {
   const pass = passwordFor(mb.address);
   if (!pass) {
+    // ⚠️ sync_status est borné par CHECK à ('idle','syncing','error','ok') → on
+    // utilise 'error' (pas 'no_credentials' qui serait rejeté en silence) + détail.
     await supabase
       .from('mailboxes')
-      .update({ sync_status: 'no_credentials', last_error: `Mot de passe IMAP absent (env MAIL_IMAP_PASSWORD pour ${mb.address})`, updated_at: new Date().toISOString() })
+      .update({ sync_status: 'error', last_error: `Mot de passe IMAP absent (env MAIL_IMAP_PASSWORD pour ${mb.address})`, updated_at: new Date().toISOString() })
       .eq('id', mb.id);
     return 0;
   }
