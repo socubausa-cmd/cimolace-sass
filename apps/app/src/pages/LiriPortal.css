@@ -316,3 +316,17 @@
    par erreur le style inline de la chrome (vars --school-*-rgb) et tintaient le fond. */
 .lp-root .lp-shell-main .liri-live-shell--host,
 .lp-root .lp-shell-main .liri-live-shell--guest { background-color:#262624 !important; }
+
+/* ── Forum + messagerie dans le portail : fond CHAUD du shell ──────────────────
+   Le forum (`.forum-bg`) peint un fond bleu-nuit (#0a0b12) + halos or/navy en
+   styles INLINE (insaisissables par les règles d'accent ci-dessus). Sous le
+   portail chaud, ils jurent et transparaissent en « halo marron » sous le
+   contenu. On réduit le fond à la base chaude (mesh coral très discret, comme la
+   console live) et on masque les halos décoratifs. Scope `.lp-shell-main` → le
+   forum de l'espace élève (hors portail) garde ses ambiances. */
+.lp-shell-main .forum-bg {
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -12%, rgba(217,119,87,.05), transparent 56%),
+    #262624 !important;
+}
+.lp-shell-main .forum-bg > * { display:none !important; }

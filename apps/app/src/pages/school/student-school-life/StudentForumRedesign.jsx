@@ -639,7 +639,7 @@ function ForumBg({ variant }) {
   const goldBlob2  = isLight ? 'rgba(212,175,55,0.07)' : 'rgba(212,175,55,0.09)';
   if (variant === 'aurore') {
     return (
-      <div aria-hidden style={{ position: 'absolute', inset: 0, background: base }}>
+      <div aria-hidden className="forum-bg" style={{ position: 'absolute', inset: 0, background: base }}>
         <div style={{ position:'absolute', width:'70vw', height:'70vw', top:'-24%', right:'-14%', borderRadius:'50%', background:`radial-gradient(circle, ${goldBlob}, transparent 60%)`, filter:'blur(34px)', animation:'forumAurora1 26s ease-in-out infinite' }}/>
         <div style={{ position:'absolute', width:'64vw', height:'64vw', bottom:'-28%', left:'-18%', borderRadius:'50%', background:`radial-gradient(circle, ${navyBlob}, transparent 60%)`, filter:'blur(34px)', animation:'forumAurora2 33s ease-in-out infinite' }}/>
         <div style={{ position:'absolute', width:'48vw', height:'48vw', top:'34%', left:'44%', borderRadius:'50%', background:`radial-gradient(circle, ${goldBlob2}, transparent 60%)`, filter:'blur(42px)', animation:'forumAurora3 23s ease-in-out infinite' }}/>
@@ -650,7 +650,7 @@ function ForumBg({ variant }) {
   if (variant === 'zellige') {
     const pattern = `url("data:image/svg+xml,${encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><g fill='none' stroke='#D4AF37' stroke-width='1'><path d='M30 2 L37 23 L58 30 L37 37 L30 58 L23 37 L2 30 L23 23 Z'/><circle cx='30' cy='30' r='8'/></g></svg>")}")`;
     return (
-      <div aria-hidden style={{ position: 'absolute', inset: 0, background: base }}>
+      <div aria-hidden className="forum-bg" style={{ position: 'absolute', inset: 0, background: base }}>
         <div style={{ position:'absolute', inset:0, opacity: isLight ? 0.05 : 0.07, backgroundImage: pattern, backgroundSize:'54px 54px' }}/>
         <div style={{ position:'absolute', inset:0, background:`radial-gradient(820px 620px at 50% 26%, ${goldBlob}, transparent 60%)` }}/>
         <div style={{ position:'absolute', inset:0, background: vignette }}/>
@@ -659,7 +659,7 @@ function ForumBg({ variant }) {
   }
   // halos (défaut)
   return (
-    <div aria-hidden style={{ position: 'absolute', inset: 0, background: `radial-gradient(1000px 720px at 88% -10%, ${goldBlob}, transparent 55%), radial-gradient(940px 820px at 4% 114%, ${navyBlob}, transparent 55%), ${base}` }}>
+    <div aria-hidden className="forum-bg" style={{ position: 'absolute', inset: 0, background: `radial-gradient(1000px 720px at 88% -10%, ${goldBlob}, transparent 55%), radial-gradient(940px 820px at 4% 114%, ${navyBlob}, transparent 55%), ${base}` }}>
       <div style={{ position:'absolute', inset:0, background: vignette }}/>
     </div>
   );

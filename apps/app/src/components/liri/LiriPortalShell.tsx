@@ -45,10 +45,11 @@ export function LiriPortalShell({
 
   return (
     <div className="lp-root relative grid h-[100dvh] w-full grid-rows-[56px_1fr_34px] overflow-hidden">
-      {/* glow chaleureux */}
+      {/* Glow chaleureux — discret, confiné à la topbar/aux marges (le <main> est opaque,
+          il ne transparaît donc plus dans le contenu : fini le « halo marron » envahissant). */}
       <div className="lp-glow">
-        <span style={{ width: 520, height: 420, left: '34%', top: -120, background: 'rgba(217,119,87,.10)' }} />
-        <span style={{ width: 360, height: 360, right: 40, bottom: -40, background: 'rgba(226,85,63,.07)' }} />
+        <span style={{ width: 460, height: 300, left: '36%', top: -160, background: 'rgba(217,119,87,.05)' }} />
+        <span style={{ width: 300, height: 260, right: 40, bottom: -60, background: 'rgba(226,85,63,.035)' }} />
       </div>
 
       {/* topbar */}
@@ -102,8 +103,9 @@ export function LiriPortalShell({
         </aside>
         )}
 
-        {/* main : la page enveloppée (host) remplit ce conteneur */}
-        <main className="lp-shell-main relative min-h-0 overflow-hidden rounded-3xl lp-line border lp-soft">
+        {/* main : la page enveloppée (host) remplit ce conteneur. Fond OPAQUE (base chaude
+            du shell) → les zones non couvertes ne laissent plus voir le glow coral. */}
+        <main className="lp-shell-main relative min-h-0 overflow-hidden rounded-3xl lp-line border lp-soft" style={{ background: 'var(--base)' }}>
           {children}
         </main>
       </div>
