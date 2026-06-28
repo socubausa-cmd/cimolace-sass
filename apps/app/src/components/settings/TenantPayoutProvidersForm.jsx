@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/customSupabaseClient';
 import { getActiveTenantSlug } from '@/lib/tenant/activeBranding';
+import { api } from '@/lib/api';
 import { Copy } from 'lucide-react';
 
 const FN_ACCOUNTS = '/.netlify/functions/billing-save-tenant-payment-accounts';
@@ -34,17 +35,16 @@ async function authFetch(url, options = {}) {
 }
 
 async function postProvider({ tenantSlug, provider, credentials, publicConfig }) {
-  return authFetch(FN_ACCOUNTS, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      tenantSlug,
-      provider,
-      status: 'active',
-      credentials,
-      publicConfig: publicConfig || undefined,
-    }),
+  // API NestJS réelle : POST /billing/payment-methods (TenantGuard via X-Tenant-Slug,
+  // ajouté par le client `api`). Remplace la fonction Netlify morte
+  // billing-save-tenant-payment-accounts. Le tenant courant vient du header, pas du body.
+  const res = await api.post('/billing/payment-methods', {
+    provider,
+    credentials,
+    ...(publicConfig?.mode ? { mode: publicConfig.mode } : {}),
+    ...(publicConfig?.productMap ? { productMap: publicConfig.productMap } : {}),
   });
+  return res.data?.data ?? res.data ?? {};
 }
 
 export default function TenantPayoutProvidersForm({ initialTenantSlug, lockTenantSlug = false } = {}) {
