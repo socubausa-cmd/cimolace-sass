@@ -28,6 +28,7 @@ import {
   BellRing,
   BellOff,
   Check,
+  CheckCheck,
   PanelRightOpen,
   PanelRightClose,
   Layers3,
@@ -609,8 +610,11 @@ function ImmersiveMessage({
           <span className={cn('text-[10px]', isDarkTheme ? 'text-gray-500' : 'text-gray-500')}>
             {formatMessageTime(message.created_at)}
           </span>
-          {isLatest && (
-            <span className="text-[10px] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">{isOwn ? 'Envoyé' : 'Lu'}</span>
+          {isOwn && (
+            <CheckCheck
+              className="h-3.5 w-3.5 text-[color-mix(in_srgb,var(--school-accent)_75%,transparent)]"
+              aria-label={isLatest ? 'Lu' : 'Envoyé'}
+            />
           )}
           {!editing && (
             <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
@@ -5384,10 +5388,14 @@ const MessagingPage = ({ embedded = false }) => {
     <div
       className={cn(
         'relative flex flex-col overflow-hidden text-white',
-        // EMBEDDED (dans le shell du portail LIRI) : remplit le <main>, fond transparent
-        // (le portail fournit l'ambiance chaude). STANDALONE : possède le viewport.
+        // EMBEDDED (dans le shell du portail LIRI) : remplit le <main>. STANDALONE : viewport.
         embedded ? 'h-full' : 'h-[calc(100dvh-5rem)] bg-[#090D14]',
       )}
+      // EMBEDDED : fond chaud OPAQUE (même base + mesh coral discret que le forum du portail)
+      // → aucun halo ne transparaît, cohérent avec le shell LIRI.
+      style={embedded ? {
+        background: 'radial-gradient(ellipse 90% 55% at 50% -12%, rgba(217,119,87,0.05), transparent 56%), #262624',
+      } : undefined}
     >
       <div className="absolute inset-0 z-0 pointer-events-none">
         {liveActive ? (
@@ -5867,6 +5875,12 @@ const MessagingPage = ({ embedded = false }) => {
             <div
               ref={messageScrollRef}
               className="absolute inset-0 overflow-y-auto py-4 space-y-0.5"
+              style={{
+                // Texture de fond discrète (esprit WhatsApp : un fil jamais « plat »),
+                // calée sur le ton ivoire du shell pour rester cohérente et très subtile.
+                backgroundImage: 'radial-gradient(rgba(245,244,238,0.022) 1px, transparent 1px)',
+                backgroundSize: '22px 22px',
+              }}
             >
               {convMessages.length === 0 ? (
                 !isRemoteTyping ? <NoMessagesState recipientName={recipientProfile?.name || 'ce membre'} /> : null
