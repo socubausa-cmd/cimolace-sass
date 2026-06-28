@@ -93,7 +93,10 @@ export default function PaiementPage() {
 
   // Chargé à la 1re bascule vers Mobile Money (la carte n'en a pas besoin).
   useEffect(() => {
-    if (method !== 'mobile_money' || mmConfig || mmLoading) return;
+    // ⚠️ NE PAS mettre mmLoading dans les deps : setMmLoading(true) ci-dessous
+    // relancerait l'effet, dont le cleanup annulerait (cancelled) la requête en
+    // cours → opérateurs jamais chargés + spinner bloqué → paiement MM impossible.
+    if (method !== 'mobile_money' || mmConfig) return;
     let cancelled = false;
     setMmLoading(true);
     Promise.race([
@@ -115,7 +118,7 @@ export default function PaiementPage() {
     return () => {
       cancelled = true;
     };
-  }, [method, mmConfig, mmLoading]);
+  }, [method, mmConfig]);
 
   const mmCountries = mmConfig?.countries ?? [];
   const mmOperators = mmCountries.find((c) => c.country === mmCountry)?.providers ?? [];
