@@ -53,7 +53,7 @@ export default function MobileAppointmentsScreen() {
             <Sparkles className="h-5 w-5 text-[var(--school-accent)]" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-white/95">Salon entretien Prorascience</p>
+            <p className="font-semibold text-white/95">Salon entretien</p>
             <p className="text-xs text-white/45">Compte à rebours, parcours et accès session</p>
           </div>
           <ChevronRight className="h-5 w-5 text-white/25 shrink-0" />

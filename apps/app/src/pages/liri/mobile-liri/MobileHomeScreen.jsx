@@ -228,7 +228,7 @@ export default function MobileHomeScreen() {
         <ChevronRight className="h-4 w-4 text-white/30" />
       </Link>
 
-      <LiriPageFooterLine marginClass="mt-6" suffix="Prorascience" />
+      <LiriPageFooterLine marginClass="mt-6" suffix="Accueil" />
     </LiriMobileScreenShell>
   );
 }

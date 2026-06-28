@@ -10,6 +10,7 @@
  *   onNavigate  (path: string) => void
  */
 import React, { useState, useRef } from 'react';
+import { getActiveTenantSlug } from '@/lib/tenant/activeBranding';
 import {
   CheckCircle2,
   Monitor,
@@ -396,7 +397,7 @@ function LiveBlock({ block, isActive, isCompleted, onNavigate }) {
         <div style={{ marginTop: 14 }}>
           <ActionButton
             color={T.gold}
-            onClick={() => onNavigate('/t/isna/live')}
+            onClick={() => onNavigate(`/t/${getActiveTenantSlug()}/live`)}
           >
             <Radio size={14} />
             Rejoindre le LIVE
