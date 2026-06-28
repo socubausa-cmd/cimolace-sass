@@ -20,6 +20,7 @@ export class TenantService {
         .select("role")
         .eq("tenant_id", tenant.id)
         .eq("user_id", userId)
+        .eq("status", "active")
         .single();
       const role = (membership?.role ?? null) as string | null;
       // Both `role` (legacy callers) and `userRole` (TenantContext required by
@@ -30,6 +31,7 @@ export class TenantService {
       .from("tenant_memberships")
       .select("tenant_id, role, tenants(*)")
       .eq("user_id", userId)
+      .eq("status", "active")
       .single();
     if (!membership) return null;
     const role = membership.role as string | null;
