@@ -16,11 +16,22 @@ import {
   Film, BookOpen, Target, Sparkles, Circle, Activity,
 } from 'lucide-react';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
+import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import {
   ProShell, ProTopBar, ProMenuButton, ProWorkspaceSwitcher, ProRecPill,
   ProSideRail, ProPanel, ProStatusBar, ProStatusItem,
   proColors, proRadii, proType, proSize, proShadow,
 } from '@/components/studio-creator/studio-pro';
+
+// Marque blanche par tenant : sur le domaine d'un tenant (ex. prorascience.org) le
+// Studio porte le nom du tenant et n'expose JAMAIS « LIRI » ; sur l'hôte produit
+// (liri.cimolace.space / app.cimolace.space) il reste « LIRI ». activeTenantConfig
+// est résolu par l'hôte (cf. isFounderHost / LIRI_NEUTRAL_CONFIG).
+const STUDIO_IS_TENANT = !!(activeTenantConfig && activeTenantConfig.slug);
+const STUDIO_BRAND =
+  (activeTenantConfig && activeTenantConfig.branding && activeTenantConfig.branding.name) || 'LIRI';
+const STUDIO_AGENT_LABEL = STUDIO_IS_TENANT ? 'Agent IA' : 'Agent LIRI';
+const STUDIO_PROJECT_TAG = STUDIO_IS_TENANT ? `studio.${activeTenantConfig.slug}` : 'studio.liri';
 
 const STUDIO_TYPES = [
   {
@@ -32,9 +43,9 @@ const STUDIO_TYPES = [
   },
   {
     id: 'liri-agent', path: '/studio/liri-agent', icon: Brain,
-    title: 'Agent LIRI', category: 'pedagogy',
+    title: STUDIO_AGENT_LABEL, category: 'pedagogy',
     shortDesc: 'Parcours complet en 10 étapes (SmartBoard + mindmap).',
-    description: "Générez un parcours pédagogique complet en 10 étapes : SmartBoard, MasterScript et mindmap automatiquement, depuis un simple sujet — méthode LIRI.",
+    description: `Générez un parcours pédagogique complet en 10 étapes : SmartBoard, MasterScript et mindmap automatiquement, depuis un simple sujet — méthode ${STUDIO_BRAND}.`,
     accent: '#F59E0B',
   },
   {
@@ -178,7 +189,20 @@ export default function StudioEntryPage() {
         <ProTopBar
           logo={
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <LiriWordmark size="compact" className="text-[#e8e0d8]" />
+              {STUDIO_IS_TENANT ? (
+                <span
+                  style={{
+                    fontSize: proType.sm,
+                    fontWeight: 700,
+                    letterSpacing: '0.01em',
+                    color: proColors.textPrimary,
+                  }}
+                >
+                  {STUDIO_BRAND}
+                </span>
+              ) : (
+                <LiriWordmark size="compact" className="text-[#e8e0d8]" />
+              )}
               <span
                 style={{
                   fontSize: proType.sm,
@@ -277,7 +301,7 @@ export default function StudioEntryPage() {
         <ProStatusBar
           left={
             <>
-              <ProStatusItem icon={Circle} label="Projet" value="studio.liri" tone="info" />
+              <ProStatusItem icon={Circle} label="Projet" value={STUDIO_PROJECT_TAG} tone="info" />
               <ProStatusItem label="Catégorie" value={CATEGORIES.find((c) => c.id === category)?.label || '—'} />
               <ProStatusItem label="Résultats" value={String(filtered.length)} />
             </>

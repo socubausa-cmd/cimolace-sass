@@ -3,7 +3,15 @@
  */
 import React from 'react';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
+import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import { proColors, proRadii, proSize, proShadow, proType } from './tokens';
+
+// Marque blanche : sur le domaine d'un tenant (ex. prorascience.org), la barre Studio
+// porte le nom du tenant et n'expose JAMAIS « LIRI » ; sur l'hôte produit LIRI
+// (liri.cimolace.space) elle garde le wordmark LIRI. activeTenantConfig = résolu par l'hôte.
+const PROBAR_IS_TENANT = !!(activeTenantConfig && activeTenantConfig.slug);
+const PROBAR_BRAND =
+  (activeTenantConfig && activeTenantConfig.branding && activeTenantConfig.branding.name) || 'LIRI';
 
 /** @param {object} props
  *  @param {React.ReactNode} [props.logo] — défaut : wordmark LIRI seul ; sinon ex. mot « Studio » à côté */
@@ -35,7 +43,15 @@ export function ProTopBar({ left, center, right, logo }) {
           height: '100%',
         }}
       >
-        {logo != null ? logo : <LiriWordmark size="compact" className="text-[#e8e0d8]" />}
+        {logo != null ? logo : (
+          PROBAR_IS_TENANT ? (
+            <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.01em', color: '#e8e0d8' }}>
+              {PROBAR_BRAND}
+            </span>
+          ) : (
+            <LiriWordmark size="compact" className="text-[#e8e0d8]" />
+          )
+        )}
       </div>
       {left && <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{left}</div>}
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>{center}</div>
