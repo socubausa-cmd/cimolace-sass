@@ -92,6 +92,10 @@ function CimolaceDomainHandler() {
   useEffect(() => {
     const host = (window.location.hostname || '').toLowerCase();
     const path = location.pathname || '/';
+    // La query (?plan=…) + le hash DOIVENT survivre au strip /t/isna, sinon les
+    // CTA de paiement /t/isna/paiement?plan=X perdent leurs params.
+    const search = location.search || '';
+    const hash = location.hash || '';
 
     // Dev local : ne pas imposer la prod
     if (
@@ -127,9 +131,9 @@ function CimolaceDomainHandler() {
       // On STRIPE le préfixe /t/isna de toute URL (anciens liens, bookmarks) → chemin propre.
       // La racine '/' rend la vitrine via RootRedirect ; /login,/signup,/forfaits,/admin… = routes propres existantes.
       if (path === '/t/isna' || path === '/t/isna/') {
-        navigate('/', { replace: true });
+        navigate('/' + search + hash, { replace: true });
       } else if (path.startsWith('/t/isna/')) {
-        navigate(path.slice('/t/isna'.length) || '/', { replace: true });
+        navigate((path.slice('/t/isna'.length) || '/') + search + hash, { replace: true });
       } else if (path === '/formations' || path === '/catalogue') {
         navigate('/forfaits', { replace: true });
       }
