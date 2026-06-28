@@ -67,9 +67,11 @@ const LoginPage = () => {
   const quote = isPlatformLiri
     ? { text: 'Enseignez, animez et diffusez en direct — augmenté par l’IA.', author: 'LIRI · par Cimolace' }
     : { text: 'La connaissance n’est pas un privilège, c’est une responsabilité.', author: '5ᵉ Manikongo' };
+  // Sur un domaine tenant (prorascience.org), on n'expose JAMAIS la marque « LIRI » à l'utilisateur
+  // final (LIRI = moteur invisible, façon Shopify) → copy 100% école.
   const subCopy = isPlatformLiri
     ? (<>Connectez-vous à votre espace <strong className="font-semibold text-white/90">LIRI</strong>.</>)
-    : (<><strong className="font-semibold text-white/90">LIRI</strong> héberge l&apos;espace membre de votre école. Le site public ({schoolBrand}), c&apos;est la vitrine — pas l&apos;application.</>);
+    : (<>Connectez-vous à votre espace membre <strong className="font-semibold text-white/90">{schoolBrand}</strong>.</>);
 
   const { login, loginWithOAuth } = useAuth();
   const navigate = useNavigate();

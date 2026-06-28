@@ -22,6 +22,7 @@
 import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useShellTint } from '../../lib/useShellTint';
+import { isPlatformOrDevHost } from '@/lib/tenantResolver';
 
 /**
  * Contexte « chrome » du shell : permet à un enfant profond (ex. le studio
@@ -99,17 +100,25 @@ const IconMoon = () => (
   </svg>
 );
 
-/* ─── LIRI logo ─── */
-const LiriBrand = ({ title, subtitle }) => (
+/* ─── Marque du shell ───
+ * `showMark` = afficher le logotype « L●RI » du PRODUIT. Sur un domaine de TENANT
+ * (prorascience.org), on ne l'affiche PAS : LIRI est le moteur invisible (façon Shopify),
+ * seul le branding du tenant (title) est visible. Sur l'hôte plateforme (liri.cimolace.space),
+ * le logotype LIRI s'affiche. */
+const LiriBrand = ({ title, subtitle, showMark = true }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 800, fontSize: 15, letterSpacing: '-0.02em' }}>
-      <span style={{ color: T.t1 }}>L</span>
-      <div style={{ width: 12, height: 12, borderRadius: '50%', background: `linear-gradient(135deg,${T.violet},${T.cyan})`, flexShrink: 0, position: 'relative', top: -1, boxShadow: '0 0 8px rgba(124,58,237,0.5)' }} />
-      <span style={{ color: T.t1 }}>RI</span>
-    </div>
-    <div style={{ width: 1, height: 16, background: T.border }} />
+    {showMark && (
+      <>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 800, fontSize: 15, letterSpacing: '-0.02em' }}>
+          <span style={{ color: T.t1 }}>L</span>
+          <div style={{ width: 12, height: 12, borderRadius: '50%', background: `linear-gradient(135deg,${T.violet},${T.cyan})`, flexShrink: 0, position: 'relative', top: -1, boxShadow: '0 0 8px rgba(124,58,237,0.5)' }} />
+          <span style={{ color: T.t1 }}>RI</span>
+        </div>
+        <div style={{ width: 1, height: 16, background: T.border }} />
+      </>
+    )}
     <div>
-      <div style={{ fontWeight: 700, fontSize: 12, color: T.t1, letterSpacing: '0.01em' }}>{title}</div>
+      <div style={{ fontWeight: 700, fontSize: showMark ? 12 : 14, color: T.t1, letterSpacing: '0.01em' }}>{title}</div>
       <div style={{ fontFamily: T.mono, fontSize: 7, color: T.t3, letterSpacing: '0.12em' }}>{subtitle}</div>
     </div>
   </div>
@@ -208,6 +217,9 @@ export default function LiriDashboardShell({
   accent = DEFAULT_ACCENT, brandTitle = 'LIRI', brandSubtitle = 'ADMIN',
   user, onLogout, title, topbarRight = null, autoCollapse = true, lightContent = false, children,
 }) {
+  // Logotype « L●RI » : visible uniquement sur l'hôte PRODUIT (liri.cimolace.space). Sur un
+  // domaine de TENANT (prorascience.org), LIRI est invisible → on n'affiche que le branding tenant.
+  const showLiriMark = typeof window !== 'undefined' && isPlatformOrDevHost(window.location.hostname);
   const [collapsed, setCollapsed] = useState(autoCollapse);
   const [mobileOpen, setMobileOpen] = useState(false);
   // Repli demandé par un enfant monté (ex. le studio « Créer une formation »).
@@ -269,7 +281,7 @@ export default function LiriDashboardShell({
         transition: 'width 220ms cubic-bezier(0.4,0,0.2,1), box-shadow 220ms ease',
       }}>
         <div style={{ padding: visualCollapsed ? '14px 0 12px' : '14px 14px 12px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: visualCollapsed ? 'center' : 'space-between', gap: 8, flexShrink: 0 }}>
-          {visualCollapsed ? ToggleBtn : (<><LiriBrand title={brandTitle} subtitle={brandSubtitle} />{ToggleBtn}</>)}
+          {visualCollapsed ? ToggleBtn : (<><LiriBrand title={brandTitle} subtitle={brandSubtitle} showMark={showLiriMark} />{ToggleBtn}</>)}
         </div>
         <SidebarBody navGroups={navGroups} activeTab={activeTab} accent={accent} collapsed={visualCollapsed} onItem={onItem} user={user} onLogout={onLogout} />
       </aside>
@@ -291,7 +303,7 @@ export default function LiriDashboardShell({
             <motion.aside className="lg:hidden" initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               style={{ position: 'fixed', top: 0, left: 0, bottom: 0, width: 264, zIndex: 160, display: 'flex', flexDirection: 'column', background: 'rgba(18,17,26,0.99)', borderRight: `1px solid ${T.border}` }}>
               <div style={{ padding: '16px 14px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-                <LiriBrand title={brandTitle} subtitle={brandSubtitle} />
+                <LiriBrand title={brandTitle} subtitle={brandSubtitle} showMark={showLiriMark} />
                 <button type="button" onClick={() => setMobileOpen(false)} aria-label="Fermer" style={{ background: 'none', border: 'none', color: T.t2, cursor: 'pointer' }}><IconClose /></button>
               </div>
               <SidebarBody navGroups={navGroups} activeTab={activeTab} accent={accent} collapsed={false} onItem={onItem} user={user} onLogout={onLogout} />
