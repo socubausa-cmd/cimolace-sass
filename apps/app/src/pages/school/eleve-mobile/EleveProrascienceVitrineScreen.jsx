@@ -120,7 +120,7 @@ const VISION_MISSION_FONDATEUR = [
     key: 'mission',
     title: 'Mission',
     text:
-      `Rigueur, initiation structurée et transmission vivante : ancrer le pôle école ${SCHOOL} et l'enseignement du 5e Manikongo, fil conducteur entre l'Ordre mystique des Manikongo et la communauté des élèves en ligne (LIRI).`,
+      `Rigueur, initiation structurée et transmission vivante : ancrer le pôle école ${SCHOOL} et l'enseignement du 5e Manikongo, fil conducteur entre l'Ordre mystique des Manikongo et la communauté des élèves en ligne.`,
     icon: Target,
   },
   {

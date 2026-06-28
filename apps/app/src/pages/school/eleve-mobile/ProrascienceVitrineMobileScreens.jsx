@@ -247,7 +247,7 @@ export function VitrineForfaitsMobileScreen() {
           className="mt-2.5 text-center text-[12.5px] font-medium leading-[1.6] text-slate-300/95 [text-rendering:optimizeLegibility] sm:text-[13px]"
           style={{ textWrap: 'balance' }}
         >
-          Même offre que le portail forfaits — présentation dans l'immersion LIRI.
+          Même offre que le portail forfaits — présentation immersive.
         </p>
       </div>
 
@@ -592,7 +592,7 @@ export function VitrineFormationsMobileScreen() {
 
 export function VitrineIsnaProMobileScreen() {
   return (
-    <ProrascienceMobileVitrineShell title="ISNA Pro" lead="Pédagogie, LIRI, immersion">
+    <ProrascienceMobileVitrineShell title="ISNA Pro" lead="Pédagogie, immersion">
       <div className="mb-3 flex justify-center">
         <div className="rounded-full border border-sky-500/30 bg-sky-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-sky-200/90">
           Expérience pro
@@ -992,7 +992,7 @@ export function VitrineContactMobileScreen() {
 
 export function VitrineCommunauteMobileScreen() {
   return (
-    <ProrascienceMobileVitrineShell title="Communauté" lead="LIRI & réseau">
+    <ProrascienceMobileVitrineShell title="Communauté" lead="En ligne & réseau">
       <ProrascienceVitrineImmersiveCard variant="violet" className="mb-4">
         <ProrascienceVitrineImmersiveProse>
           {WEB_COMMUNAUTE.note} L'espace vivant (échanges, annonces) se pratique dans l\'app{' '}
