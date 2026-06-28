@@ -42,6 +42,46 @@ export class TenantService {
     return this.resolveTenant(userId, slug);
   }
 
+  /**
+   * Self-join : rattache l'utilisateur AUTHENTIFIÉ au tenant `slug` en role
+   * 'student' (idempotent). Miroir serveur de la RPC ensure_student_membership :
+   * role figé 'student' (zéro escalade), ne rétrograde JAMAIS un owner/teacher
+   * existant (réactive seulement un statut non 'active'). Sert le flux public
+   * /t/:slug/signup (SchoolSignupPage.autoJoinTenant → POST /tenants/:slug/join).
+   * Renvoie null si le tenant n'existe pas ou n'est pas actif.
+   */
+  async joinAsStudent(userId: string, slug: string) {
+    const supabase = this.authService.getClient();
+    const { data: tenant } = await supabase
+      .from("tenants")
+      .select("id, status")
+      .eq("slug", slug)
+      .single();
+    if (!tenant || (tenant as any).status !== "active") return null;
+    const tenantId = (tenant as any).id as string;
+    const { data: existing } = await supabase
+      .from("tenant_memberships")
+      .select("id, role, status")
+      .eq("tenant_id", tenantId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if ((existing as any)?.id) {
+      if ((existing as any).status !== "active") {
+        await supabase
+          .from("tenant_memberships")
+          .update({ status: "active" })
+          .eq("id", (existing as any).id);
+      }
+      return { ok: true, joined: false, role: (existing as any).role };
+    }
+    const { error } = await supabase
+      .from("tenant_memberships")
+      .insert({ tenant_id: tenantId, user_id: userId, role: "student", status: "active" });
+    // Course condition (double POST simultané) → traiter comme idempotent.
+    if (error) return { ok: true, joined: false };
+    return { ok: true, joined: true, role: "student" };
+  }
+
   async getTenantBySlug(slug: string) {
     const supabase = this.authService.getClient();
     const { data } = await supabase

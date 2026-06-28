@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -39,6 +40,22 @@ export class TenantController {
   async mine(@Req() req: any) {
     const memberships = await this.tenantService.getMineForUser(req.user.id);
     return { data: memberships };
+  }
+
+  /**
+   * POST /tenants/:slug/join — l'utilisateur AUTHENTIFIÉ se rattache au tenant
+   * `slug` en role 'student' (self-join idempotent, zéro escalade ; ne rétrograde
+   * jamais un owner/teacher). Câble le flux public /t/:slug/signup
+   * (SchoolSignupPage.autoJoinTenant). Pas de TenantGuard : on rejoint JUSTEMENT
+   * un tenant dont on n'est pas encore membre ; le slug vient de l'URL publique,
+   * l'utilisateur de l'auth. Le front accepte 200 (ok) ou 409.
+   */
+  @Post(":slug/join")
+  @UseGuards(JwtAuthGuard)
+  async join(@Req() req: any, @Param("slug") slug: string) {
+    const result = await this.tenantService.joinAsStudent(req.user.id, slug);
+    if (!result) throw new NotFoundException("École introuvable ou inactive.");
+    return { data: result };
   }
 
   /**
