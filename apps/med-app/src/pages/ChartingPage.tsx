@@ -11,7 +11,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, Upload, FileText, RefreshCw, CheckCircle, XCircle, Loader2, Copy, ClipboardPlus } from 'lucide-react';
+import { Mic, Upload, FileText, RefreshCw, CheckCircle, XCircle, Loader2, Copy, ClipboardPlus, Pill, Sparkles, AlertTriangle, Plus, Trash2 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4002';
 const POLL_INTERVAL_MS = 2500;
@@ -24,6 +24,7 @@ type JobStatus = 'pending' | 'transcribing' | 'generating' | 'completed' | 'fail
 interface ChartingJob {
   jobId: string;
   status: JobStatus;
+  noteId?: string;
   transcript?: string;
   soapNote?: {
     subjective: string;
@@ -42,6 +43,32 @@ interface Patient {
   last_name: string;
 }
 
+// ─── Suggestion d'ordonnance (copilote IA) ──────────────────────────────────
+
+// Ligne éditable affichée au praticien. Les champs alignés sur l'API de
+// création (drug_name…is_substitutable) sont postés tels quels ; confidence /
+// reasoning servent UNIQUEMENT à la relecture et ne sont pas envoyés.
+interface SuggestedItem {
+  drug_name: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  quantity?: string | null;
+  route?: string | null;
+  notes?: string | null;
+  is_substitutable?: boolean;
+  confidence: number;
+  reasoning: string;
+}
+
+interface PrescriptionSuggestion {
+  items: SuggestedItem[];
+  patient_instructions?: string | null;
+  warnings?: string | null;
+  model_used?: string;
+  tokens_used?: number;
+}
+
 // Mappe la ligne brute du job backend (réponse wrappée { data: {...} }, champs
 // snake_case soap_*) vers le modèle UI ChartingJob (camelCase, soapNote agrégé).
 function mapJob(d: any): ChartingJob {
@@ -49,6 +76,7 @@ function mapJob(d: any): ChartingJob {
   return {
     jobId: d?.id,
     status: d?.status,
+    noteId: d?.note_id ?? undefined,
     transcript: d?.raw_transcript ?? undefined,
     soapNote: hasSoap
       ? {
@@ -82,6 +110,13 @@ export function ChartingPage() {
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState<string | null>(null);
   const [copied, setCopied]       = useState(false);
+
+  // Suggestion d'ordonnance (copilote IA)
+  const [suggestion, setSuggestion]       = useState<PrescriptionSuggestion | null>(null);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const [suggestError, setSuggestError]   = useState<string | null>(null);
+  const [rxCreated, setRxCreated]         = useState<{ id: string } | null>(null);
+  const [rxCreating, setRxCreating]       = useState(false);
 
   const pollRef  = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollCount = useRef(0);
@@ -204,6 +239,133 @@ export function ChartingPage() {
     navigate(`/patients/${patientId}/notes/new`, {
       state: { prefillSoap: job.soapNote },
     });
+  }
+
+  // ── Copilote ordonnance : demander une suggestion IA ──────────────────────
+  async function requestSuggestion() {
+    if (!jobId) return;
+    setSuggestError(null);
+    setSuggestLoading(true);
+    setRxCreated(null);
+    try {
+      const token = localStorage.getItem('supabase_token') ?? '';
+      const slug  = localStorage.getItem('tenant_slug') ?? '';
+      const res = await fetch(`${API_BASE}/med/charting/${jobId}/suggest-prescription`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'X-Tenant-Slug': slug,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message ?? err?.message ?? `Erreur ${res.status}`);
+      }
+      const raw = await res.json();
+      const data = (raw?.data ?? raw) as PrescriptionSuggestion;
+      setSuggestion({
+        items: Array.isArray(data?.items) ? data.items : [],
+        patient_instructions: data?.patient_instructions ?? '',
+        warnings: data?.warnings ?? null,
+        model_used: data?.model_used,
+        tokens_used: data?.tokens_used,
+      });
+    } catch (e: unknown) {
+      setSuggestError(e instanceof Error ? e.message : 'Erreur inattendue');
+    } finally {
+      setSuggestLoading(false);
+    }
+  }
+
+  // Édition en place d'un champ d'une ligne suggérée.
+  function updateItem(index: number, patch: Partial<SuggestedItem>) {
+    setSuggestion(prev => {
+      if (!prev) return prev;
+      const items = prev.items.map((it, i) => (i === index ? { ...it, ...patch } : it));
+      return { ...prev, items };
+    });
+  }
+
+  function removeItem(index: number) {
+    setSuggestion(prev => {
+      if (!prev) return prev;
+      return { ...prev, items: prev.items.filter((_, i) => i !== index) };
+    });
+  }
+
+  function addBlankItem() {
+    setSuggestion(prev => {
+      const blank: SuggestedItem = {
+        drug_name: '', dosage: '', frequency: '', duration: '',
+        quantity: '', route: '', notes: '', is_substitutable: true,
+        confidence: 0, reasoning: 'Ligne ajoutée manuellement par le praticien.',
+      };
+      if (!prev) {
+        return { items: [blank], patient_instructions: '', warnings: null };
+      }
+      return { ...prev, items: [...prev.items, blank] };
+    });
+  }
+
+  // ── Créer l'ordonnance en BROUILLON (jamais signée) ───────────────────────
+  async function createDraftPrescription() {
+    if (!patientId) { setSuggestError('Patient manquant.'); return; }
+    if (!suggestion || suggestion.items.length === 0) {
+      setSuggestError('Aucune ligne à enregistrer.');
+      return;
+    }
+    // Garde-fou : chaque ligne doit au moins porter un médicament et une posologie.
+    const incomplete = suggestion.items.find(it => !it.drug_name.trim() || !it.dosage.trim() || !it.frequency.trim() || !it.duration.trim());
+    if (incomplete) {
+      setSuggestError('Chaque ligne doit comporter au minimum : médicament, dosage, fréquence et durée.');
+      return;
+    }
+
+    setSuggestError(null);
+    setRxCreating(true);
+    try {
+      const token = localStorage.getItem('supabase_token') ?? '';
+      const slug  = localStorage.getItem('tenant_slug') ?? '';
+      // On n'envoie QUE les champs d'ordonnance (pas confidence / reasoning).
+      const items = suggestion.items.map(it => ({
+        drug_name: it.drug_name.trim(),
+        dosage: it.dosage.trim(),
+        frequency: it.frequency.trim(),
+        duration: it.duration.trim(),
+        quantity: it.quantity?.trim() || undefined,
+        route: it.route?.trim() || undefined,
+        notes: it.notes?.trim() || undefined,
+        is_substitutable: it.is_substitutable ?? true,
+      }));
+      const res = await fetch(`${API_BASE}/med/prescriptions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'X-Tenant-Slug': slug,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          patient_id: patientId,
+          consultation_note_id: job?.noteId ?? undefined,
+          patient_instructions: suggestion.patient_instructions?.trim() || undefined,
+          items,
+          // statut draft par défaut côté API — JAMAIS de signature ici.
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message ?? err?.message ?? `Erreur ${res.status}`);
+      }
+      const raw = await res.json();
+      const created = (raw?.data ?? raw) as { id: string };
+      setRxCreated({ id: created.id });
+    } catch (e: unknown) {
+      setSuggestError(e instanceof Error ? e.message : 'Erreur inattendue');
+    } finally {
+      setRxCreating(false);
+    }
   }
 
   // ─── Render ───────────────────────────────────────────────────────────────
@@ -399,6 +561,160 @@ export function ChartingPage() {
                   </p>
                 </div>
               ))}
+
+              {/* ── Copilote ordonnance (IA) ───────────────────────────── */}
+              {job.status === 'completed' && (
+                <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px dashed var(--zw-border-strong)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                    <h3 style={{ ...sectionTitle, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Pill size={16} color="var(--brand-primary)" /> Ordonnance suggérée
+                    </h3>
+                    {!suggestion && (
+                      <button
+                        onClick={requestSuggestion}
+                        disabled={suggestLoading}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          padding: '9px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                          border: 'none', cursor: suggestLoading ? 'not-allowed' : 'pointer',
+                          background: suggestLoading ? 'var(--zw-text-faint)' : 'var(--brand-primary)', color: '#fff',
+                        }}
+                      >
+                        {suggestLoading
+                          ? <><Loader2 size={15} className="spin" /> Analyse pharmacologique…</>
+                          : <><Sparkles size={15} /> Suggérer une ordonnance (IA)</>}
+                      </button>
+                    )}
+                  </div>
+
+                  {suggestError && (
+                    <div style={{ marginTop: 14, padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, color: '#dc2626', fontSize: 13 }}>
+                      {suggestError}
+                    </div>
+                  )}
+
+                  {suggestion && (
+                    <div style={{ marginTop: 16 }}>
+                      {/* DISCLAIMER — visible, non dismissable */}
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '12px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, marginBottom: 16 }}>
+                        <AlertTriangle size={18} color="#d97706" style={{ flexShrink: 0, marginTop: 1 }} />
+                        <p style={{ margin: 0, fontSize: 12.5, color: '#92400e', lineHeight: 1.6 }}>
+                          <strong>Suggestion générée par IA — à vérifier et valider par le praticien.</strong> Aucune
+                          ordonnance n'est créée ni signée automatiquement. Contrôlez chaque ligne (molécule,
+                          posologie, durée), les allergies, contre-indications et interactions avant de
+                          créer le brouillon. Vous restez seul responsable de la prescription.
+                        </p>
+                      </div>
+
+                      {/* Mise en garde IA globale */}
+                      {suggestion.warnings && (
+                        <p style={{ fontSize: 13, color: '#b45309', background: '#fffbeb', borderLeft: '3px solid #f59e0b', padding: '8px 12px', borderRadius: 6, margin: '0 0 16px', lineHeight: 1.6 }}>
+                          ⚠️ {suggestion.warnings}
+                        </p>
+                      )}
+
+                      {/* Lignes éditables */}
+                      {suggestion.items.length === 0 ? (
+                        <p style={{ fontSize: 13.5, color: 'var(--zw-text-muted)', fontStyle: 'italic', margin: '0 0 16px' }}>
+                          L'IA ne suggère aucun médicament pour ce tableau clinique (prise en charge non médicamenteuse possible). Vous pouvez ajouter une ligne manuellement.
+                        </p>
+                      ) : (
+                        suggestion.items.map((it, i) => (
+                          <div key={i} style={{ border: '1px solid var(--zw-border)', borderRadius: 10, padding: 16, marginBottom: 14, background: 'var(--zw-bg)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 10 }}>
+                              <span style={{ ...confidencePill(it.confidence) }}>
+                                Confiance {Math.round((it.confidence ?? 0) * 100)}%
+                              </span>
+                              <button
+                                onClick={() => removeItem(i)}
+                                title="Retirer cette ligne"
+                                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', background: '#fef2f2', color: '#dc2626', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                              >
+                                <Trash2 size={13} /> Retirer
+                              </button>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                              <Field label="Médicament" value={it.drug_name} onChange={v => updateItem(i, { drug_name: v })} span2 />
+                              <Field label="Dosage" value={it.dosage} onChange={v => updateItem(i, { dosage: v })} />
+                              <Field label="Fréquence" value={it.frequency} onChange={v => updateItem(i, { frequency: v })} />
+                              <Field label="Durée" value={it.duration} onChange={v => updateItem(i, { duration: v })} />
+                              <Field label="Voie" value={it.route ?? ''} onChange={v => updateItem(i, { route: v })} />
+                              <Field label="Quantité" value={it.quantity ?? ''} onChange={v => updateItem(i, { quantity: v })} />
+                              <Field label="Notes" value={it.notes ?? ''} onChange={v => updateItem(i, { notes: v })} span2 />
+                            </div>
+
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, fontSize: 12.5, color: 'var(--zw-text-soft)', cursor: 'pointer' }}>
+                              <input
+                                type="checkbox"
+                                checked={it.is_substitutable ?? true}
+                                onChange={e => updateItem(i, { is_substitutable: e.target.checked })}
+                              />
+                              Substitution générique autorisée
+                            </label>
+
+                            {it.reasoning && (
+                              <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--zw-text-muted)', lineHeight: 1.6, fontStyle: 'italic' }}>
+                                Rationnel IA : {it.reasoning}
+                              </p>
+                            )}
+                          </div>
+                        ))
+                      )}
+
+                      <button
+                        onClick={addBlankItem}
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--zw-bg-subtle)', color: 'var(--zw-text-soft)', border: '1px dashed var(--zw-border-strong)', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 16 }}
+                      >
+                        <Plus size={14} /> Ajouter une ligne
+                      </button>
+
+                      {/* Conseils patient (éditable) */}
+                      <div style={{ marginBottom: 18 }}>
+                        <label style={labelStyle}>Conseils au patient (optionnel)</label>
+                        <textarea
+                          value={suggestion.patient_instructions ?? ''}
+                          onChange={e => setSuggestion(prev => prev ? { ...prev, patient_instructions: e.target.value } : prev)}
+                          rows={2}
+                          placeholder="Hydratation, repos, quand reconsulter…"
+                          style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', fontSize: 13.5, border: '1px solid var(--zw-border)', borderRadius: 8, resize: 'vertical', fontFamily: 'inherit', color: 'var(--zw-text)' }}
+                        />
+                      </div>
+
+                      {/* Action : créer le brouillon */}
+                      {rxCreated ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8 }}>
+                          <CheckCircle size={18} color="#16a34a" />
+                          <span style={{ fontSize: 13.5, color: '#15803d', fontWeight: 600 }}>
+                            Ordonnance créée en brouillon.
+                          </span>
+                          <button
+                            onClick={() => navigate(`/prescriptions/${rxCreated.id}`)}
+                            style={{ marginLeft: 'auto', padding: '7px 14px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                          >
+                            Ouvrir l'ordonnance
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={createDraftPrescription}
+                          disabled={rxCreating}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            padding: '12px 26px', borderRadius: 8, fontSize: 14, fontWeight: 600,
+                            border: 'none', cursor: rxCreating ? 'not-allowed' : 'pointer',
+                            background: rxCreating ? 'var(--zw-text-faint)' : 'var(--brand-primary)', color: '#fff',
+                          }}
+                        >
+                          {rxCreating
+                            ? <><Loader2 size={16} className="spin" /> Création…</>
+                            : <><Pill size={16} /> Créer l'ordonnance (brouillon)</>}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -448,4 +764,46 @@ function actionBtn(bg: string, color: string): React.CSSProperties {
     padding: '7px 14px', background: bg, color, border: 'none',
     borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: 'pointer',
   };
+}
+
+// Pastille de confiance colorée (vert ≥0.75, ambre ≥0.6, rouge sinon).
+function confidencePill(confidence: number): React.CSSProperties {
+  const c = confidence ?? 0;
+  const palette = c >= 0.75
+    ? { bg: '#dcfce7', fg: '#15803d' }
+    : c >= 0.6
+    ? { bg: '#fef3c7', fg: '#b45309' }
+    : { bg: '#fee2e2', fg: '#b91c1c' };
+  return {
+    background: palette.bg, color: palette.fg,
+    borderRadius: 6, padding: '3px 10px', fontSize: 11.5, fontWeight: 700,
+  };
+}
+
+// Champ éditable d'une ligne d'ordonnance suggérée.
+function Field({
+  label, value, onChange, span2,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  span2?: boolean;
+}) {
+  return (
+    <div style={{ gridColumn: span2 ? '1 / -1' : 'auto' }}>
+      <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: 'var(--zw-text-soft)', marginBottom: 4 }}>
+        {label}
+      </label>
+      <input
+        type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        style={{
+          width: '100%', boxSizing: 'border-box', padding: '8px 11px', fontSize: 13.5,
+          border: '1px solid var(--zw-border)', borderRadius: 7, background: '#fff', color: 'var(--zw-text)',
+          fontFamily: 'inherit',
+        }}
+      />
+    </div>
+  );
 }

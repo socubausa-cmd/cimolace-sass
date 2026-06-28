@@ -16,9 +16,11 @@ import { CurrentTenant } from '../tenant/current-tenant.decorator';
 import { TenantGuard } from '../tenant/tenant.guard';
 import type { TenantContext } from '../tenant/tenant.types';
 import { StartChartingDto } from './dto/start-charting.dto';
+import { SuggestPrescriptionDto } from './dto/suggest-prescription.dto';
 import { AuditResource } from './decorators/audit-resource.decorator';
 import { MedosEnabledGuard } from './medos-enabled.guard';
 import { MedChartingService } from './med-charting.service';
+import { MedPrescriptionSuggestionService } from './prescription-suggestion/med-prescription-suggestion.service';
 
 interface AuthRequest extends Request {
   user: { id: string; email?: string };
@@ -38,7 +40,10 @@ interface AuthRequest extends Request {
 @UseGuards(JwtAuthGuard, TenantGuard, MedosEnabledGuard, RolesGuard)
 @Roles('owner', 'practitioner', 'clinic_admin')
 export class MedChartingController {
-  constructor(private readonly chartingService: MedChartingService) {}
+  constructor(
+    private readonly chartingService: MedChartingService,
+    private readonly suggestionService: MedPrescriptionSuggestionService,
+  ) {}
 
   /**
    * POST /med/charting/start
@@ -96,5 +101,39 @@ export class MedChartingController {
     @CurrentTenant() tenant: TenantContext,
   ) {
     return this.chartingService.listJobsForPatient(tenant, patientId);
+  }
+
+  /**
+   * POST /med/charting/:jobId/suggest-prescription
+   *
+   * Copilote agentique : à partir d'un job SOAP terminé (note + diagnostics
+   * ICD-10), suggère une ébauche d'ordonnance NON persistée. Le praticien
+   * relit, édite chaque ligne, puis crée le BROUILLON via POST /med/prescriptions.
+   *
+   * Réservé aux PRATICIENS et CLINIC_ADMIN (jamais owner-seul, jamais patient) :
+   * la décision pharmacologique relève d'un soignant. Le `@Roles` de méthode
+   * surcharge celui de la classe (getAllAndOverride).
+   *
+   * La réponse N'EST PAS une ordonnance : aucune signature, aucune persistance.
+   */
+  @Post(':jobId/suggest-prescription')
+  @Roles('practitioner', 'clinic_admin')
+  @AuditResource({
+    resource: 'prescription',
+    action: 'generate',
+    idParam: 'jobId',
+  })
+  suggestPrescription(
+    @Param('jobId') jobId: string,
+    @Body() dto: SuggestPrescriptionDto,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.suggestionService.suggestFromJob(
+      tenant,
+      req.user.id,
+      jobId,
+      dto.extra_context,
+    );
   }
 }

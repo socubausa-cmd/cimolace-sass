@@ -15,6 +15,7 @@ import { MedChartingController } from './med-charting.controller';
 import { MedosEnabledGuard } from './medos-enabled.guard';
 import { MedosService } from './medos.service';
 import { MedChartingService } from './med-charting.service';
+import { MedPrescriptionSuggestionService } from './prescription-suggestion/med-prescription-suggestion.service';
 import { MedAuditInterceptor } from './med-audit.interceptor';
 import { ApiKeysController } from './api-keys/api-keys.controller';
 import { ApiKeysService } from './api-keys/api-keys.service';
@@ -105,6 +106,7 @@ import { EmailEngineModule } from '../email-engine/email-engine.module';
     MedosService,
     MedosEnabledGuard,
     MedChartingService,
+    MedPrescriptionSuggestionService,
     MedAuditInterceptor,
     // Embedding
     ApiKeysService,
