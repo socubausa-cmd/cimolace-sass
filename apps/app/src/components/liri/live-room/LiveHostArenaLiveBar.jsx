@@ -71,6 +71,7 @@ export default function LiveHostArenaLiveBar({
   gotoStep,
   formatTimer,
   liveDuration,
+  freeTierRemainingSeconds,
   toggleProgressivePlayback,
   progressivePlayback,
   spotlightOn,
@@ -635,13 +636,22 @@ export default function LiveHostArenaLiveBar({
                 ? formatTimer()
                 : `${step + 1 < 10 ? '0' : ''}${step + 1}/${stepCount < 10 ? '0' : ''}${stepCount}`}
             </div>
-            {liveDuration
+            {typeof freeTierRemainingSeconds === 'number'
               ? (
-                <div style={{ fontSize: '8px', color: 'rgba(255,255,255,.35)', letterSpacing: '.06em' }}>
-                  {liveDuration}
+                <div
+                  title="Forfait gratuit : lives limités à 3 min. Passez à un forfait LIRI pour des lives illimités."
+                  style={{ fontSize: '8px', fontWeight: 700, letterSpacing: '.04em', color: freeTierRemainingSeconds <= 30 ? '#f87171' : '#fbbf24' }}
+                >
+                  Gratuit · {Math.floor(freeTierRemainingSeconds / 60)}:{String(freeTierRemainingSeconds % 60).padStart(2, '0')}
                 </div>
                 )
-              : null}
+              : liveDuration
+                ? (
+                  <div style={{ fontSize: '8px', color: 'rgba(255,255,255,.35)', letterSpacing: '.06em' }}>
+                    {liveDuration}
+                  </div>
+                  )
+                : null}
           </div>
           <button
             type="button"

@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useDock } from '@/features/live/hooks/useDock';
 import { useLiveDuration } from '@/features/live/hooks/useLiveDuration';
+import { useLiveRemainingSeconds } from '@/features/live/hooks/useLiveRemainingSeconds';
+import { useLiriEntitlements } from '@/hooks/useLiriEntitlements';
 import { useLiveHostSessionRoute } from '@/features/live/hooks/useLiveHostSessionRoute';
 import { useLiveHostViewportBreakpoints } from '@/features/live/hooks/useLiveHostViewportBreakpoints';
 import { useLiveHostLiveMediaCheck } from '@/features/live/hooks/useLiveHostLiveMediaCheck';
@@ -235,6 +237,11 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
   useEffect(() => { antennaSoloModeRef.current = antennaSoloMode; }, [antennaSoloMode]);
   const [startedAt, setStartedAt] = useState(null);
   const liveDuration = useLiveDuration(startedAt);
+  // Palier gratuit : compte à rebours 3 min (le serveur cape déjà le token LiveKit ;
+  // ceci le rend visible + termine proprement à 0). null si payant/essai (illimité).
+  const { isFree: isFreeTier, limits: liriLimits } = useLiriEntitlements();
+  const freeTierRemainingSeconds = useLiveRemainingSeconds(startedAt, isFreeTier ? liriLimits?.maxLiveMinutes : null);
+  const freeTierEndedRef = useRef(false);
   const roomRef = useRef(null);
   /** Invité : la caméra a été forcée par le formateur (contourne la coupure « vidéo participants » le temps du contrôle). */
   const guestHostCameraUnlockRef = useRef(false);
@@ -1282,8 +1289,21 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     guestCommAllowed, debateArena,
   });
 
+  // Palier gratuit : à 0 s, on termine le live proprement (anti-gel + bascule post-live).
+  // Garde ref → ne se déclenche qu'UNE fois. Jamais pour un invité ni en payant (remaining=null).
+  useEffect(() => {
+    if (phase === PHASE.LIVE && isFreeTier && !isGuestUi && freeTierRemainingSeconds === 0 && !freeTierEndedRef.current) {
+      freeTierEndedRef.current = true;
+      try {
+        toast?.({ title: 'Live gratuit terminé', description: 'Limite de 3 minutes atteinte — passez à un forfait LIRI pour des lives illimités.' });
+      } catch { /* noop */ }
+      handleStop?.();
+    }
+  }, [phase, isFreeTier, isGuestUi, freeTierRemainingSeconds, handleStop]);
+
   const hostArenaLiveBarProps = {
     isGuestUi, phase, guestMicLocked, toggleMic, micOn,
+    freeTierRemainingSeconds,
     guestCamLocked, toggleCamera, cameraOn, guestHandRaiseLocked, myHandRaised,
     lowerHand, raiseHand, guestScreenShareLocked, toggleScreenShare, sharingScreen,
     debateViewerRole: debateArena?.myRole,
