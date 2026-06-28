@@ -62,7 +62,7 @@ const ACTIONS = [
   {
     to: ELEVE_MOBILE.modules,
     label: '21 modules',
-    sub: 'Catalogue LIRI',
+    sub: 'Catalogue',
     icon: BookOpen,
     tone: 'blue',
   },

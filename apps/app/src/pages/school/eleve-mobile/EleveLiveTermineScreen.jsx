@@ -196,10 +196,10 @@ export default function EleveLiveTermineScreen() {
       ? `${ELEVE_MOBILE.liveTermine}?session=${encodeURIComponent(sessionHint)}`
       : ELEVE_MOBILE.liveTermine;
     const url = typeof window !== 'undefined' ? `${window.location.origin}${path}` : path;
-    const title = 'LIRI — Live terminé';
+    const title = 'Live terminé';
     try {
       if (typeof navigator !== 'undefined' && navigator.share) {
-        await navigator.share({ title, text: 'Cours suivi sur LIRI', url });
+        await navigator.share({ title, text: 'Cours suivi', url });
         return;
       }
       if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {

@@ -56,7 +56,7 @@ export default function Ecoles21SciencesMobileScreen() {
   return (
     <ProrascienceMobileVitrineShell
       title="Les 21 sciences"
-      lead="Curriculum — ISNA Prorascience, immersion LIRI"
+      lead="Curriculum — ISNA Prorascience, immersion en ligne"
     >
       <motion.div
         className="text-center"

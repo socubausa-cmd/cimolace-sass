@@ -597,7 +597,7 @@ function liriAccessInfoBannerModel({ role, formationTitle, enrollCount, profileL
   const dataPending = enrollLoading || !profileLoaded;
   if (dataPending) {
     return {
-      title: 'Espace LIRI',
+      title: `Espace ${getActiveTenantBranding().name}`,
       description: 'Chargement de ton profil et de tes inscriptions…',
       accent: 'blue',
       to: null,
@@ -624,7 +624,7 @@ function liriAccessInfoBannerModel({ role, formationTitle, enrollCount, profileL
   }
   if (r === 'student' || r === 'owner' || r === 'admin' || r === 'secretariat' || r === 'teacher' || r === 'coach' || r === 'mentor') {
     return {
-      title: r === 'student' ? 'Compte élève' : 'Compte LIRI',
+      title: r === 'student' ? 'Compte élève' : `Compte ${getActiveTenantBranding().name}`,
       description: 'Aucun parcours inscrit pour l\'instant. Ouvre le catalogue de modules et les forfaits pour activer l\'accès côté école (secrétariat, paiement, validation).',
       accent: 'blue',
       to: ELEVE_MOBILE.modules,
