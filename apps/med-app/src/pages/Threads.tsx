@@ -43,6 +43,7 @@ function patientName(p: Patient | undefined): string {
 
 export function Threads() {
   const [threads, setThreads] = useState<Thread[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [patients, setPatients] = useState<Record<string, Patient>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -74,17 +75,22 @@ export function Threads() {
   }, []);
 
   // -- Threads ----------------------------------------------------------
-  const fetchThreads = useCallback(async () => {
+  const fetchThreads = useCallback(async (retries = 8) => {
+    if (!localStorage.getItem('supabase_token')) {
+      if (retries > 0) setTimeout(() => fetchThreads(retries - 1), 350);
+      return;
+    }
     try {
       const res = await fetch(API + '/med/threads', { headers: authHeaders() });
-      if (!res.ok) return;
-      const d = await res.json();
-      const list: Thread[] = d.data || d || [];
-      setThreads(list);
-      if (list.length > 0 && !activeId) setActiveId(list[0].id);
-    } catch {
-      /* ignore */
-    }
+      if (res.status === 401 && retries > 0) { setTimeout(() => fetchThreads(retries - 1), 350); return; }
+      if (res.ok) {
+        const d = await res.json();
+        const list: Thread[] = Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
+        setThreads(list);
+        if (list.length > 0 && !activeId) setActiveId(list[0].id);
+      }
+    } catch { /* ignore */ }
+    setLoaded(true);
   }, [activeId]);
 
   useEffect(() => {
@@ -238,7 +244,7 @@ export function Threads() {
             overflowY: 'auto',
           }}
         >
-          {threads.length === 0 && (
+          {loaded && threads.length === 0 && (
             <p style={{ color: 'var(--zw-text-faint)', padding: 20, textAlign: 'center', fontSize: 13 }}>
               Aucune conversation.
               <br />

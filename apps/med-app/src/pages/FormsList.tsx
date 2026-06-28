@@ -31,17 +31,22 @@ export function FormsList() {
   const navigate = useNavigate();
   const location = useLocation() as { state?: { created?: boolean } };
   const [forms, setForms] = useState<Form[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [preview, setPreview] = useState<Form | null>(null);
   const [query, setQuery] = useState('');
   const [toast, setToast] = useState(false);
 
-  const fetchForms = useCallback(async () => {
+  const fetchForms = useCallback(async (retries = 8) => {
+    if (!localStorage.getItem('supabase_token')) {
+      if (retries > 0) setTimeout(() => fetchForms(retries - 1), 350);
+      return;
+    }
     try {
       const res = await fetch(API + '/med/forms', { headers: authHeaders() });
-      if (!res.ok) return;
-      const d = await res.json();
-      setForms(d.data || d || []);
+      if (res.status === 401 && retries > 0) { setTimeout(() => fetchForms(retries - 1), 350); return; }
+      if (res.ok) { const d = await res.json(); setForms(Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : []); }
     } catch { /* ignore */ }
+    setLoaded(true);
   }, []);
 
   useEffect(() => { fetchForms(); }, [fetchForms]);
@@ -104,7 +109,7 @@ export function FormsList() {
           </button>
         ))}
 
-        {forms.length === 0 && (
+        {loaded && forms.length === 0 && (
           <p style={{ color: 'var(--zw-text-faint)', gridColumn: '1/-1', fontSize: 13 }}>
             Aucun formulaire pour l’instant — créez le premier.
           </p>

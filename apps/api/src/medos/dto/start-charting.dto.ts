@@ -6,12 +6,22 @@ export class StartChartingDto {
   @IsUUID()
   patient_id: string;
 
-  @ApiProperty({
-    description: 'URL du fichier audio (Supabase Storage, R2...)',
+  @ApiPropertyOptional({
+    description:
+      'URL du fichier audio (Supabase Storage, R2...). Requis si raw_transcript est absent.',
     example: 'https://storage.supabase.co/audio/consult-001.mp3',
   })
+  @IsOptional()
   @IsUrl()
-  audio_url: string;
+  audio_url?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Transcription manuelle (texte). Si fournie, la transcription audio (Deepgram) est sautée.',
+  })
+  @IsOptional()
+  @IsString()
+  raw_transcript?: string;
 
   @ApiPropertyOptional({
     description:

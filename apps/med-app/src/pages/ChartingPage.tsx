@@ -42,6 +42,28 @@ interface Patient {
   last_name: string;
 }
 
+// Mappe la ligne brute du job backend (réponse wrappée { data: {...} }, champs
+// snake_case soap_*) vers le modèle UI ChartingJob (camelCase, soapNote agrégé).
+function mapJob(d: any): ChartingJob {
+  const hasSoap = !!(d?.soap_subjective || d?.soap_objective || d?.soap_assessment || d?.soap_plan);
+  return {
+    jobId: d?.id,
+    status: d?.status,
+    transcript: d?.raw_transcript ?? undefined,
+    soapNote: hasSoap
+      ? {
+          subjective: d?.soap_subjective ?? '',
+          objective: d?.soap_objective ?? '',
+          assessment: d?.soap_assessment ?? '',
+          plan: d?.soap_plan ?? '',
+          raw: d?.soap_free_text ?? undefined,
+        }
+      : undefined,
+    error: d?.error_message ?? undefined,
+    createdAt: d?.created_at,
+  };
+}
+
 // ─── Composant ────────────────────────────────────────────────────────────────
 
 export function ChartingPage() {
@@ -67,8 +89,8 @@ export function ChartingPage() {
 
   // Charger la liste des patients
   useEffect(() => {
-    const token = localStorage.getItem('med_token') ?? '';
-    const slug  = localStorage.getItem('med_tenant') ?? '';
+    const token = localStorage.getItem('supabase_token') ?? '';
+    const slug  = localStorage.getItem('tenant_slug') ?? '';
     fetch(`${API_BASE}/med/patients`, {
       headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug },
     })
@@ -89,17 +111,18 @@ export function ChartingPage() {
         return;
       }
       try {
-        const token = localStorage.getItem('med_token') ?? '';
-        const slug  = localStorage.getItem('med_tenant') ?? '';
+        const token = localStorage.getItem('supabase_token') ?? '';
+        const slug  = localStorage.getItem('tenant_slug') ?? '';
         const res = await fetch(`${API_BASE}/med/charting/jobs/${jobId}`, {
           headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug },
         });
-        const data: ChartingJob = await res.json();
-        setJob(data);
-        if (data.status === 'completed' || data.status === 'failed') {
+        const raw = await res.json();
+        const job = mapJob(raw?.data ?? raw);
+        setJob(job);
+        if (job.status === 'completed' || job.status === 'failed') {
           clearInterval(pollRef.current!);
           setLoading(false);
-          if (data.status === 'failed') setError(data.error ?? 'Erreur inconnue');
+          if (job.status === 'failed') setError(job.error ?? 'Erreur inconnue');
         }
       } catch (e) {
         // continue polling on transient errors
@@ -121,23 +144,25 @@ export function ChartingPage() {
     pollCount.current = 0;
 
     try {
-      const token = localStorage.getItem('med_token') ?? '';
-      const slug  = localStorage.getItem('med_tenant') ?? '';
+      const token = localStorage.getItem('supabase_token') ?? '';
+      const slug  = localStorage.getItem('tenant_slug') ?? '';
       let body: FormData | string;
       let headers: Record<string, string> = {
         Authorization: `Bearer ${token}`,
         'X-Tenant-Slug': slug,
       };
 
-      if (mode === 'audio' && audioFile) {
-        const fd = new FormData();
-        fd.append('patientId', patientId);
-        fd.append('audio', audioFile);
-        body = fd;
-      } else {
-        body = JSON.stringify({ patientId, transcript: manualText });
-        headers['Content-Type'] = 'application/json';
+      // Transcription audio (Deepgram) non activée pour l'instant : le backend
+      // génère la note SOAP à partir d'un TEXTE (Mistral/DeepSeek). On gate l'audio
+      // proprement au lieu d'échouer en 400.
+      if (mode === 'audio') {
+        setError("Transcription audio bientôt disponible — utilisez « Texte manuel » pour coller ou dicter la consultation.");
+        setLoading(false);
+        return;
       }
+
+      headers['Content-Type'] = 'application/json';
+      body = JSON.stringify({ patient_id: patientId, raw_transcript: manualText });
 
       const res = await fetch(`${API_BASE}/med/charting/start`, {
         method: 'POST',
@@ -147,10 +172,12 @@ export function ChartingPage() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err?.message ?? `Erreur ${res.status}`);
+        throw new Error(err?.error?.message ?? err?.message ?? `Erreur ${res.status}`);
       }
 
-      const { jobId: newJobId } = await res.json();
+      const raw = await res.json();
+      const newJobId = raw?.data?.id ?? raw?.jobId;
+      if (!newJobId) throw new Error('Réponse inattendue du serveur (jobId manquant).');
       setJobId(newJobId);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Erreur inattendue');
@@ -205,7 +232,7 @@ export function ChartingPage() {
           <Mic size={26} color="var(--brand-primary)" /> Consultation IA — Note SOAP
         </h1>
         <p style={{ color: 'var(--zw-text-muted)', marginTop: 6, fontSize: 14 }}>
-          Transcription audio + génération automatique de note SOAP via Deepgram &amp; Claude
+          Génération automatique de note SOAP par IA (Mistral / DeepSeek)
         </p>
       </div>
 

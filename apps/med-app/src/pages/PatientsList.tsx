@@ -49,14 +49,21 @@ export function PatientsList() {
   const navigate = useNavigate();
   const [patients, setPatients] = useState<any[]>([]);
   const [search, setSearch] = useState('');
+  const [loaded, setLoaded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<PatientForm>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchPatients = useCallback(() => {
+  const fetchPatients = useCallback((retries = 8) => {
     const token = localStorage.getItem('supabase_token');
-    if (!token) return;
+    if (!token) {
+      // Le token d'auth peut ne pas être encore posé au tout premier rendu
+      // (session async / nav SPA) : on réessaie plutôt que d'abandonner sur un
+      // état vide trompeur (« Aucun patient » alors qu'il y en a).
+      if (retries > 0) setTimeout(() => fetchPatients(retries - 1), 350);
+      return;
+    }
     fetch(API + '/med/patients', {
       headers: {
         Authorization: 'Bearer ' + token,
@@ -64,8 +71,9 @@ export function PatientsList() {
       },
     })
       .then((r) => r.json())
-      .then((d) => setPatients(d.data || d || []))
-      .catch(() => {});
+      .then((d) => setPatients(Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : []))
+      .catch(() => {})
+      .finally(() => setLoaded(true));
   }, []);
 
   useEffect(() => {
@@ -92,6 +100,10 @@ export function PatientsList() {
       setError('Prénom et nom requis');
       return;
     }
+    if (!form.email.trim()) {
+      setError("Email requis : le patient en a besoin pour accéder à son espace (création de son compte).");
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -115,7 +127,7 @@ export function PatientsList() {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body?.message || `Erreur ${res.status}`);
+        throw new Error(body?.error?.message || body?.message || `Erreur ${res.status}`);
       }
       setModalOpen(false);
       fetchPatients();
@@ -172,7 +184,7 @@ export function PatientsList() {
             {filtered.length === 0 && (
               <tr>
                 <td colSpan={4} style={{ padding: 24, textAlign: 'center', color: 'var(--zw-text-faint)', fontSize: 14 }}>
-                  Aucun patient. Cliquez sur "+ Nouveau patient" pour créer le premier dossier.
+                  {loaded ? 'Aucun patient. Cliquez sur "+ Nouveau patient" pour créer le premier dossier.' : 'Chargement…'}
                 </td>
               </tr>
             )}
@@ -313,9 +325,10 @@ export function PatientsList() {
                 />
               </Field>
               <div style={{ gridColumn: '1 / -1' }}>
-                <Field label="Email">
+                <Field label="Email *" required>
                   <input
                     type="email"
+                    required
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     style={inputStyle}

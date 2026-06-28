@@ -16,6 +16,7 @@ import { Threads } from './pages/Threads';
 import { Appointments } from './pages/Appointments';
 import { AuditPage } from './pages/AuditPage';
 import { HandoffPage } from './pages/HandoffPage';
+import { ResetPasswordPage } from './pages/ResetPassword';
 import { Layout } from './components/Layout';
 
 // Bio Digital Twin (v2) — lazy : isole three.js / 3D du bundle principal.
@@ -32,6 +33,10 @@ function AppRoutes() {
   // SSO handoff landing (embedded dashboard) — must run before the auth gate,
   // since it's what establishes the session.
   if (typeof window !== 'undefined' && window.location.pathname === '/handoff') return <HandoffPage />;
+  // Définition d'un nouveau mot de passe (lien « mot de passe oublié ») — doit
+  // s'afficher AVANT le gate d'auth : la session de récupération rendrait sinon
+  // isAuthenticated=true → redirection /dashboard avant le choix du mot de passe.
+  if (typeof window !== 'undefined' && window.location.pathname === '/reset-password') return <ResetPasswordPage />;
   if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--zw-text-faint)' }}>Chargement...</div>;
   if (!isAuthenticated) return <LoginPage />;
   return (

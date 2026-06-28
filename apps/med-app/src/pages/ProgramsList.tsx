@@ -69,6 +69,7 @@ function patientName(p: Patient | undefined): string {
 
 export function ProgramsList() {
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [steps, setSteps] = useState<Step[]>([]);
   const [patients, setPatients] = useState<Record<string, Patient>>({});
@@ -87,15 +88,17 @@ export function ProgramsList() {
   const [saving, setSaving] = useState(false);
 
   // -- Load data --------------------------------------------------------
-  const fetchPrograms = useCallback(async () => {
+  const fetchPrograms = useCallback(async (retries = 8) => {
+    if (!localStorage.getItem('supabase_token')) {
+      if (retries > 0) setTimeout(() => fetchPrograms(retries - 1), 350);
+      return;
+    }
     try {
       const res = await fetch(API + '/med/programs', { headers: authHeaders() });
-      if (!res.ok) return;
-      const d = await res.json();
-      setPrograms(d.data || d || []);
-    } catch {
-      /* ignore */
-    }
+      if (res.status === 401 && retries > 0) { setTimeout(() => fetchPrograms(retries - 1), 350); return; }
+      if (res.ok) { const d = await res.json(); setPrograms(Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : []); }
+    } catch { /* ignore */ }
+    setLoaded(true);
   }, []);
 
   const fetchPatients = useCallback(async () => {
@@ -275,7 +278,7 @@ export function ProgramsList() {
       <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 16 }}>
         {/* Programs list */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {programs.length === 0 && (
+          {loaded && programs.length === 0 && (
             <p style={{ color: 'var(--zw-text-faint)', padding: 20, background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', textAlign: 'center' }}>
               Aucun programme. Cliquez sur "+ Nouveau programme".
             </p>

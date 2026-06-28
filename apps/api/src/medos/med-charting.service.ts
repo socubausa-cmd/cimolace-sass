@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -152,85 +153,89 @@ export class MedChartingService {
   // ── Claude SOAP generation ────────────────────────────────────────────────
 
   /**
-   * Génère une note SOAP structurée à partir de la transcription,
-   * en appelant Claude claude-3-5-sonnet via l'API Anthropic.
+   * Génère une note SOAP structurée à partir de la transcription, via une
+   * chaîne de fournisseurs IA (OpenAI-compatibles) : Mistral (primaire) →
+   * DeepSeek (repli). On bascule sur le suivant si l'un échoue (crédit, 5xx…).
    */
   async generateSoapNote(
     transcript: string,
     contextHint?: string,
   ): Promise<SoapResult> {
-    const apiKey = this.config.get<string>('ANTHROPIC_API_KEY');
-
-    if (!apiKey) {
-      throw new InternalServerErrorException(
-        'ANTHROPIC_API_KEY non configuré — génération SOAP impossible.',
-      );
-    }
-
     const userMessage = contextHint
       ? `Contexte fourni par le praticien : ${contextHint}\n\nTranscription de la consultation :\n\n${transcript}`
       : `Transcription de la consultation :\n\n${transcript}`;
 
-    const model = 'claude-3-5-sonnet-20241022';
+    const providers: { name: string; url: string; key?: string; model: string }[] = [
+      { name: 'mistral', url: 'https://api.mistral.ai/v1/chat/completions', key: this.config.get<string>('MISTRAL_API_KEY'), model: 'mistral-large-latest' },
+      { name: 'deepseek', url: 'https://api.deepseek.com/v1/chat/completions', key: this.config.get<string>('DEEPSEEK_API_KEY'), model: 'deepseek-chat' },
+    ].filter((p) => !!p.key);
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 2048,
-        system: SOAP_SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userMessage }],
-      }),
-    });
-
-    if (!response.ok) {
-      const body = await response.text();
-      this.logger.error(`Claude API error ${response.status}: ${body}`);
+    if (providers.length === 0) {
       throw new InternalServerErrorException(
-        `Échec de la génération SOAP (${response.status})`,
+        'Aucun fournisseur IA configuré (MISTRAL_API_KEY / DEEPSEEK_API_KEY) — génération SOAP impossible.',
       );
     }
 
-    const result = await response.json();
-    const rawText: string = result?.content?.[0]?.text ?? '';
-    const tokensUsed: number = result?.usage?.output_tokens ?? 0;
+    let lastError = '';
+    for (const p of providers) {
+      try {
+        const response = await fetch(p.url, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${p.key}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: p.model,
+            max_tokens: 2048,
+            temperature: 0.2,
+            response_format: { type: 'json_object' },
+            messages: [
+              { role: 'system', content: SOAP_SYSTEM_PROMPT },
+              { role: 'user', content: userMessage },
+            ],
+          }),
+        });
 
-    // Parser le JSON retourné par Claude
-    let soap: any;
-    try {
-      // Claude peut entourer le JSON de backticks — on les retire
-      const cleaned = rawText
-        .replace(/```json\s*/gi, '')
-        .replace(/```\s*/g, '')
-        .trim();
-      soap = JSON.parse(cleaned);
-    } catch {
-      this.logger.error(
-        'Impossible de parser la réponse SOAP de Claude',
-        rawText,
-      );
-      throw new InternalServerErrorException(
-        'La génération SOAP a retourné une réponse non structurée.',
-      );
+        if (!response.ok) {
+          lastError = `${p.name} HTTP ${response.status}: ${(await response.text()).slice(0, 200)}`;
+          this.logger.warn(`SOAP ${lastError}`);
+          continue;
+        }
+
+        const result = await response.json();
+        const rawText: string = result?.choices?.[0]?.message?.content ?? '';
+        const tokensUsed: number =
+          result?.usage?.completion_tokens ?? result?.usage?.total_tokens ?? 0;
+
+        const cleaned = rawText
+          .replace(/```json\s*/gi, '')
+          .replace(/```\s*/g, '')
+          .trim();
+        const soap: any = JSON.parse(cleaned);
+
+        return {
+          subjective: soap.subjective ?? null,
+          objective: soap.objective ?? null,
+          assessment: soap.assessment ?? null,
+          plan: soap.plan ?? null,
+          free_text: soap.free_text ?? null,
+          icd10_suggestions: Array.isArray(soap.icd10_suggestions)
+            ? soap.icd10_suggestions
+            : [],
+          model_used: `${p.name}:${p.model}`,
+          tokens_used: tokensUsed,
+        };
+      } catch (err: any) {
+        lastError = `${p.name}: ${err?.message ?? 'erreur'}`;
+        this.logger.warn(`SOAP ${lastError}`);
+        // on tente le fournisseur suivant
+      }
     }
 
-    return {
-      subjective: soap.subjective ?? null,
-      objective: soap.objective ?? null,
-      assessment: soap.assessment ?? null,
-      plan: soap.plan ?? null,
-      free_text: soap.free_text ?? null,
-      icd10_suggestions: Array.isArray(soap.icd10_suggestions)
-        ? soap.icd10_suggestions
-        : [],
-      model_used: model,
-      tokens_used: tokensUsed,
-    };
+    throw new InternalServerErrorException(
+      `Échec de la génération SOAP (tous les fournisseurs IA ont échoué). Dernier : ${lastError}`,
+    );
   }
 
   // ── Pipeline principal ────────────────────────────────────────────────────
@@ -259,6 +264,13 @@ export class MedChartingService {
       throw new NotFoundException('Patient introuvable');
     }
 
+    // Source requise : audio (URL) OU transcription manuelle (texte).
+    if (!dto.audio_url && !dto.raw_transcript?.trim()) {
+      throw new BadRequestException(
+        'Fournir audio_url (audio) ou raw_transcript (texte) pour lancer l’analyse.',
+      );
+    }
+
     // Créer le job
     const { data: job, error: jobErr } = await this.supabase.client
       .from('med_charting_jobs')
@@ -267,7 +279,8 @@ export class MedChartingService {
         patient_id: dto.patient_id,
         note_id: dto.note_id ?? null,
         practitioner_id: practitionerId,
-        audio_url: dto.audio_url,
+        audio_url: dto.audio_url ?? null,
+        raw_transcript: dto.raw_transcript?.trim() || null,
         status: 'pending',
         started_at: new Date().toISOString(),
       } as any)
@@ -301,23 +314,27 @@ export class MedChartingService {
     job: ChartingJobRow,
     dto: StartChartingDto,
   ): Promise<void> {
-    // ── Étape 1 : Transcription ──────────────────────────────────────────
-    await this.updateJob(job.id, { status: 'transcribing' });
-
+    // ── Étape 1 : Transcription (sautée si transcription manuelle fournie) ─
     let transcript: string;
-    try {
-      transcript = await this.transcribeAudio(
-        dto.audio_url,
-        dto.language ?? 'fr',
-      );
-      await this.updateJob(job.id, { raw_transcript: transcript });
-    } catch (err: any) {
-      await this.updateJob(job.id, {
-        status: 'failed',
-        error_message: `Transcription : ${err?.message}`,
-        completed_at: new Date().toISOString(),
-      });
-      return;
+    const manualTranscript = dto.raw_transcript?.trim();
+    if (manualTranscript) {
+      transcript = manualTranscript;
+    } else {
+      await this.updateJob(job.id, { status: 'transcribing' });
+      try {
+        transcript = await this.transcribeAudio(
+          dto.audio_url!,
+          dto.language ?? 'fr',
+        );
+        await this.updateJob(job.id, { raw_transcript: transcript });
+      } catch (err: any) {
+        await this.updateJob(job.id, {
+          status: 'failed',
+          error_message: `Transcription : ${err?.message}`,
+          completed_at: new Date().toISOString(),
+        });
+        return;
+      }
     }
 
     // ── Étape 2 : Génération SOAP via Claude ────────────────────────────
@@ -401,7 +418,7 @@ export class MedChartingService {
       soap_plan: soap.plan,
       soap_free_text: soap.free_text,
       icd10_suggestions: soap.icd10_suggestions,
-      generation_provider: 'anthropic',
+      generation_provider: (soap.model_used || '').split(':')[0] || 'unknown',
       model_used: soap.model_used,
       tokens_used: soap.tokens_used,
       completed_at: new Date().toISOString(),

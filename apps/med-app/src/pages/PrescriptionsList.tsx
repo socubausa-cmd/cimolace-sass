@@ -57,6 +57,7 @@ function patientName(p: Patient | undefined): string {
 
 export function PrescriptionsList() {
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [patients, setPatients] = useState<Record<string, Patient>>({});
   const [selected, setSelected] = useState<Prescription | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -69,15 +70,17 @@ export function PrescriptionsList() {
   const [newItems, setNewItems] = useState<typeof emptyItem[]>([{ ...emptyItem }]);
   const [saving, setSaving] = useState(false);
 
-  const fetchPrescriptions = useCallback(async () => {
+  const fetchPrescriptions = useCallback(async (retries = 8) => {
+    if (!localStorage.getItem('supabase_token')) {
+      if (retries > 0) setTimeout(() => fetchPrescriptions(retries - 1), 350);
+      return;
+    }
     try {
       const res = await fetch(API + '/med/prescriptions', { headers: authHeaders() });
-      if (!res.ok) return;
-      const d = await res.json();
-      setPrescriptions(d.data || d || []);
-    } catch {
-      /* ignore */
-    }
+      if (res.status === 401 && retries > 0) { setTimeout(() => fetchPrescriptions(retries - 1), 350); return; }
+      if (res.ok) { const d = await res.json(); setPrescriptions(Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : []); }
+    } catch { /* ignore */ }
+    setLoaded(true);
   }, []);
 
   const fetchPatients = useCallback(async () => {
@@ -226,7 +229,7 @@ export function PrescriptionsList() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: 16 }}>
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', overflow: 'hidden' }}>
-          {prescriptions.length === 0 && (
+          {loaded && prescriptions.length === 0 && (
             <p style={{ padding: 24, color: 'var(--zw-text-faint)', textAlign: 'center' }}>Aucune ordonnance</p>
           )}
           {prescriptions.map((p) => {
