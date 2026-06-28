@@ -36,7 +36,7 @@ import { getFreshAccessToken } from '@/lib/authToken';
 import { canServeSecretariatHeartbeat } from '@/lib/staffRole';
 import { getLiriMemberLoginPath } from '@/lib/liriVitrineModel';
 import { useResolvedTenantSlug } from '@/hooks/useResolvedTenantSlug';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { FOUNDER_TENANT_CONFIG as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const ISNA_SLUG = String(isnaTenantConfig?.slug || 'isna').trim().toLowerCase();
 

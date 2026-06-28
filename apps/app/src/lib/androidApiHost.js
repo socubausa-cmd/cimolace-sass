@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { FOUNDER_TENANT_CONFIG as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const DEFAULT_EMULATOR_HOST = '10.0.2.2';
 

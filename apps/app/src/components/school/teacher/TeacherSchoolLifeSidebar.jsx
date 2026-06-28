@@ -29,7 +29,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
-import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { FOUNDER_TENANT_CONFIG as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 
 /* ─── Tokens (copiés depuis StudentSchoolLifeSidebar — ne pas importer) ─── */

@@ -1,5 +1,5 @@
 import { isPlatformOrDevHost, getCachedHostTenant } from '@/lib/tenantResolver';
-import { activeTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { FOUNDER_TENANT_CONFIG } from '@/lib/tenant/activeTenantConfig';
 import { LIRI_PLATFORM_BRANDING } from '@/lib/tenant/liriPlatformBranding';
 
 /**
@@ -42,9 +42,10 @@ const LIRI_FALLBACK = {
   zones: ZONES,
 };
 
-/** Identité du tenant FONDATEUR — repli SYNCHRONE uniquement sur SON propre domaine. */
-const FOUNDER = (activeTenantConfig && activeTenantConfig.branding) || {};
-const FOUNDER_SLUG = String(activeTenantConfig?.slug || '').trim().toLowerCase();
+/** Identité du tenant FONDATEUR — repli SYNCHRONE uniquement sur SON propre domaine.
+ *  TOUJOURS la config fondateur (ISNA), jamais le seam résolu par l'hôte. */
+const FOUNDER = (FOUNDER_TENANT_CONFIG && FOUNDER_TENANT_CONFIG.branding) || {};
+const FOUNDER_SLUG = String(FOUNDER_TENANT_CONFIG?.slug || '').trim().toLowerCase();
 const FOUNDER_FALLBACK = {
   name: FOUNDER.name || LIRI_FALLBACK.name,
   fullName: FOUNDER.fullName || FOUNDER.name || LIRI_FALLBACK.fullName,
