@@ -540,6 +540,10 @@ export const mboloApi = {
   createOrder: () => apiV2.post<ApiEnvelope<any>>('/mbolo/orders').then(unwrap),
   listOrders: () => apiV2.get<ApiEnvelope<any[]>>('/mbolo/orders').then(unwrap),
   getOrder: (id: string) => apiV2.get<ApiEnvelope<any>>(`/mbolo/orders/${id}`).then(unwrap),
+  checkoutSession: (orderId: string, body: Record<string, unknown> = {}) =>
+    apiV2.post<ApiEnvelope<any>>(`/mbolo/orders/${orderId}/checkout-session`, body).then(unwrap),
+  confirmOrder: (orderId: string) =>
+    apiV2.post<ApiEnvelope<any>>(`/mbolo/orders/${orderId}/confirm`).then(unwrap),
 };
 
 // ── Neuro Recall ────────────────────────────────────────────────────────────

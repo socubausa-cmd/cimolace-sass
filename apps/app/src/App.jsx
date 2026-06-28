@@ -486,6 +486,7 @@ const CompanionCapturePage = lazy(() => import('@/pages/CompanionCapturePage'));
 const ImmersivePhoneCompanionPage = lazy(() => import('@/pages/liri/live/ImmersivePhoneCompanionPage'));
 const LiveMobileCameraPage = lazy(() => import('@/pages/liri/live/LiveMobileCameraPage'));
 const BoutiquePage = lazy(() => import('@/pages/BoutiquePage'));
+const MboloStorefrontPage = lazy(() => import('@/pages/MboloStorefrontPage'));
 const ServicesSpirituelsPage = lazy(() => import('@/pages/ServicesSpirituelsPage'));
 const CoursesPage = lazy(() => import('@/pages/school/CoursesPage'));
 const TeachersPage = lazy(() => import('@/pages/school/TeachersPage'));
@@ -534,6 +535,7 @@ const SmartboardStreamingPage = lazy(() => import('@/app/dashboard/liri/smartboa
 const DashboardLiri = lazy(() => import('@/pages/liri/DashboardLiri').then((m) => ({ default: m.DashboardLiri })));
 // Portail LIRI — accueil/hub (rail Accueil/Lives/Forum/Studio/Biblio/Brain + stats live)
 const LiriPortalPage = lazy(() => import('@/pages/liri/LiriPortalPage').then((m) => ({ default: m.LiriPortalPage })));
+const LiriAccountPage = lazy(() => import('@/pages/liri/LiriAccountPage'));
 // Module ÉCOLE HORIZONTAL dans le portail LIRI (vertical = /t/:slug ; ici = app activable dans /liri)
 const LiriEcolePage = lazy(() => import('@/pages/liri/LiriEcolePage'));
 // Forum CONNECTÉ + messagerie immersive comme app du portail LIRI
@@ -1544,6 +1546,13 @@ isLiriHostDevPreviewRoute;
               <LiriPortalPage />
             </ProtectedLiriRoute>
           } />
+          {/* Gestion complète du compte tenant (profil, organisation, membres,
+              facturation, encaissements, suppression) — hub du portail LIRI. */}
+          <Route path="/liri/compte" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole>
+              <LiriAccountPage />
+            </ProtectedLiriRoute>
+          } />
           {/* Module ÉCOLE HORIZONTAL : le back-office école monté DANS le portail LIRI
               (pour un tenant LIRI sans site vertical /t/:slug). */}
           <Route path="/liri/ecole" element={
@@ -1609,7 +1618,8 @@ isLiriHostDevPreviewRoute;
           <Route path="/isna/produits" element={<Navigate to={TENANT_COURSES_PATH} replace />} /> {/* Legacy ISNA route - redirects to tenant system */}
           <Route path="/isna/produits/:slug" element={<Navigate to={TENANT_COURSES_PATH} replace />} /> {/* Legacy ISNA route - redirects to tenant system */}
           <Route path="/products" element={<ProductsPage />} />
-          <Route path="/boutique" element={<BoutiquePage />} />
+          <Route path="/boutique" element={<MboloStorefrontPage />} />
+          <Route path="/boutique-sacree" element={<BoutiquePage />} />
           <Route path="/services-spirituels" element={<ServicesSpirituelsPage />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/checkout-success" element={<CheckoutSuccessPage />} />

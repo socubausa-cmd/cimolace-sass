@@ -34,4 +34,7 @@ export class MboloController {
   @Post('orders') createOrder(@CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.createOrder(t.id, (r as any).user.id); }
   @Get('orders') listOrders(@CurrentTenant() t: TenantContext, @Req() r: Request) { const role = (r as any).tenant?.userRole; return this.svc.listOrders(t.id, role === 'student' ? (r as any).user.id : undefined); }
   @Get('orders/:id') getOrder(@Param('id') id: string, @CurrentTenant() t: TenantContext) { return this.svc.getOrder(t.id, id); }
+  // Paiement de la commande (membre connecté) : crée la session Stripe + confirme au retour.
+  @Post('orders/:id/checkout-session') checkoutSession(@Param('id') id: string, @Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.createOrderCheckoutSession(t.id, id, { successUrl: d?.successUrl, cancelUrl: d?.cancelUrl }); }
+  @Post('orders/:id/confirm') confirmOrder(@Param('id') id: string, @CurrentTenant() t: TenantContext) { return this.svc.confirmOrderPayment(t.id, id); }
 }
