@@ -169,11 +169,18 @@ async function syncMailbox(mb) {
 }
 
 export async function pollImapSync() {
-  // Centralisé : toutes les boîtes ayant un hôte IMAP configuré.
-  const { data: boxes } = await supabase.from('mailboxes').select('*').not('imap_host', 'is', null);
-  if (!boxes?.length) return 0;
+  // Centralisé : toutes les boîtes ayant un hôte IMAP configuré. On lit tout et on
+  // filtre en JS (robuste) + on logge l'erreur éventuelle (sinon diagnostic muet).
+  const { data: boxes, error } = await supabase.from('mailboxes').select('*');
+  if (error) {
+    console.error('[imap] lecture mailboxes échouée:', error.message || error);
+    return 0;
+  }
+  const active = (boxes || []).filter((b) => b.imap_host);
+  console.log(`[imap] poll: ${active.length} boîte(s) à synchroniser`);
+  if (!active.length) return 0;
   let total = 0;
-  for (const mb of boxes) total += await syncMailbox(mb);
+  for (const mb of active) total += await syncMailbox(mb);
   return total;
 }
 
