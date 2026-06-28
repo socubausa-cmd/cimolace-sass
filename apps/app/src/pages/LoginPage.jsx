@@ -20,6 +20,7 @@ import { LiriPageFooterLine } from '@/components/brand/LiriWordmark';
 import { InstallAppGate } from '@/components/eleve-mobile/InstallAppGate';
 import { EV_ACCENT, EV_MUTED, EV_LINE, EV_CARD, EV_CARD_INNER, EV_R, EV_SH } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
+import { isPlatformOrDevHost } from '@/lib/tenantResolver';
 import { Ripple, AnimatedForm } from '@/components/ui/animated-sign-in';
 
 const LIRI_CTA = {
@@ -36,9 +37,13 @@ const LoginPage = () => {
   const [, bumpInstallGate] = useState(0);
   const tenantCtx = useTenantBranding();
   const branding = tenantCtx.branding;
-  // /login EST TOUJOURS le login PRODUIT LIRI — indépendamment du domaine (prorascience.org ou
-  // liri.cimolace.space). Le login tenant-spécifique avec branding école est sur /t/:slug/login.
-  const isPlatformLiri = true;
+  // Le DOMAINE décide de l'identité (doc CIMOLACE_ARCHITECTURE_SOURCE_OF_TRUTH) :
+  // - Hôte PLATEFORME (liri.cimolace.space, app.cimolace.space, localhost) sans tenant résolu
+  //   = le PRODUIT LIRI neutre → identité LIRI (terracotta, logo LIRI, « Intelligence Live Augmentée »).
+  // - Domaine de TENANT (prorascience.org) → identité du tenant (ISNA = or + Œil d'Horus + Manikongo).
+  // prorascience.org ne doit JAMAIS afficher « LIRI » : LIRI est le moteur invisible (façon Shopify).
+  const isPlatformLiri =
+    typeof window !== 'undefined' && isPlatformOrDevHost(window.location.hostname) && !tenantCtx.slug;
   const schoolBrand = isPlatformLiri ? 'LIRI' : (branding.name || 'École');
   const schoolAcademyTitle = isPlatformLiri ? 'LIRI — Intelligence Live Augmentée' : `${schoolBrand} Academy`;
   // LIRI = terracotta du PORTAIL (--coral #d97757), pas un violet inventé. Cohérent avec

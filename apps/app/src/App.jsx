@@ -2,7 +2,7 @@ import React, { Suspense, lazy, useEffect, useState } from 'react';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import TenantFavicon from '@/components/TenantFavicon';
 import { DEFAULT_TENANT_SLUG } from '@/config/platform';
-import { getCachedHostTenant } from '@/lib/tenantResolver';
+import { getCachedHostTenant, isPlatformOrDevHost } from '@/lib/tenantResolver';
 
 /** Redirige "/" vers la bonne destination selon le contexte :
  *  1. access_token dans le hash (magic link / recovery) → /auth/callback
@@ -692,7 +692,14 @@ const DashboardRedirect = () => {
     return <Navigate to="/liri" replace />;
   }
 
-  if (role === 'owner' || role === 'admin') return <Navigate to="/liri" replace />;
+  // Le DOMAINE décide de l'atterrissage (doc CIMOLACE_ARCHITECTURE_SOURCE_OF_TRUTH + choix user) :
+  // - Domaine PRODUIT LIRI (liri.cimolace.space / app.cimolace.space) → portail produit /liri.
+  // - Domaine d'un TENANT (prorascience.org) → back-office École du tenant, brandé tenant.
+  //   prorascience.org ne doit JAMAIS afficher le portail /liri (marque « LIRI »).
+  const isPlatformHost = typeof window !== 'undefined' && isPlatformOrDevHost(window.location.hostname);
+  if (role === 'owner' || role === 'admin') {
+    return <Navigate to={isPlatformHost ? '/liri' : '/owner-dashboard'} replace />;
+  }
   if (role === 'secretariat') return <Navigate to="/secretariat-space/dashboard" replace />;
   if (role === 'teacher') return <Navigate to="/teacher-space/dashboard" replace />;
   if (role === 'creator') return <Navigate to="/creator-dashboard" replace />;
@@ -1025,6 +1032,9 @@ const AppContent = () => {
     '/handoff',      // handoff cross-domain (« Connexion à la salle ») — coque neutre, pas de shell école
     '/liri',         // accueil LIRI standalone (LiriPortalShell a son propre topbar) — pas de header école
     '/messages',     // messagerie immersive (page plein écran, embarquée dans LIRI) — pas de header école
+    '/owner-dashboard', // back-office École : LiriDashboardShell est auto-suffisant (sidebar+topbar+user)
+                        // et déjà brandé tenant (Prorascience). Le Header global = bandeau VITRINE du
+                        // domaine tenant → « impression d'être ramené à la vitrine ». On le retire.
   ];
 
   // Routes live immersif — aucun shell app autour (plein écran total)
@@ -1049,9 +1059,10 @@ isLiriHostDevPreviewRoute;
   
   const isCimolaceRoute = location.pathname.startsWith('/cimolace');
 
-  // Espace propriétaire (/owner-dashboard) : on AFFICHE désormais l'entête globale, comme le
-  // secrétariat (parité demandée par l'utilisateur). La sidebar repliée en icônes par défaut
-  // évite le doublon de marque LIRI / PRORASCIENCE.
+  // Espace propriétaire (/owner-dashboard) : PAS d'entête globale (cf. hideHeaderRoutes). Sur un
+  // domaine tenant (prorascience.org), le Header global = bandeau VITRINE → confusion « ramené à la
+  // vitrine ». Le back-office a son propre shell (LiriDashboardShell : sidebar + topbar + user/logout),
+  // déjà brandé tenant (Prorascience). prorascience.org ne doit jamais afficher la marque « LIRI ».
 
   /**
    * Espace élève (sidebar LIRI plein écran) — aucune barre globale au-dessus (sinon double header
