@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, UserRound, Building2, Users, CreditCard, Wallet, LogOut, Trash2,
   X, Loader2, Sparkles, Check, ArrowUpRight, SlidersHorizontal, Settings2,
+  Eye, EyeOff, Copy, ShieldCheck,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { authStore } from '@/lib/auth-store';
@@ -34,6 +35,24 @@ export default function LiriAccountPage() {
   const [delReason, setDelReason] = useState('');
   const [delLoading, setDelLoading] = useState(false);
   const [delDone, setDelDone] = useState(false);
+
+  // Encaissements — config Stripe INLINE (on ne quitte JAMAIS le portail LIRI
+  // pour le vieux shell « Academy »). POST/GET /billing/payment-methods, scopé
+  // au tenant via X-Tenant-Slug (le SAVE va sur l'org courante, pas isna).
+  const [payLoaded, setPayLoaded] = useState(false);
+  const [stripeSet, setStripeSet] = useState(false);
+  const [stripeLast4, setStripeLast4] = useState('');
+  const [stripeEnabled, setStripeEnabled] = useState(false);
+  const [reconfig, setReconfig] = useState(false);
+  const [sk, setSk] = useState('');
+  const [wh, setWh] = useState('');
+  const [showSk, setShowSk] = useState(false);
+  const [showWh, setShowWh] = useState(false);
+  const [paySaving, setPaySaving] = useState(false);
+  const [payTesting, setPayTesting] = useState(false);
+  const [payMsg, setPayMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [copied, setCopied] = useState(false);
+  const webhookUrl = `${base}/checkout/webhook/stripe`;
 
   const orgName = org?.name || slugLabel;
   const orgSlug = org?.slug || slug;
@@ -88,6 +107,45 @@ export default function LiriAccountPage() {
     } finally { setDelLoading(false); }
   };
 
+  // Enregistre la clé Stripe DU TENANT (chiffrée en base par le service). Clés
+  // NON préfixées (secret_key/webhook_secret) = forme attendue par SECRET_FIELDS.
+  const saveStripe = async () => {
+    if (paySaving || !sk.trim()) return;
+    setPaySaving(true); setPayMsg(null);
+    try {
+      const h = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
+      const credentials: Record<string, string> = { secret_key: sk.trim() };
+      if (wh.trim()) credentials.webhook_secret = wh.trim();
+      const mode = sk.trim().startsWith('sk_live') ? 'live' : 'test';
+      const res = await fetch(`${base}/billing/payment-methods`, { method: 'POST', headers: h, body: JSON.stringify({ provider: 'stripe', mode, credentials }) });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || e?.message || 'Échec de l’enregistrement.'); }
+      setStripeSet(true); setStripeEnabled(true); setStripeLast4(sk.trim().slice(-4));
+      setSk(''); setWh(''); setReconfig(false);
+      setPayMsg({ ok: true, text: 'Stripe connecté. Vos clés sont chiffrées en base — vous encaissez directement.' });
+    } catch (err: any) {
+      setPayMsg({ ok: false, text: err?.message || 'Échec de l’enregistrement.' });
+    } finally { setPaySaving(false); }
+  };
+
+  // Test de connexion RÉEL côté serveur (valide que la clé fonctionne vraiment).
+  const testStripe = async () => {
+    if (payTesting) return;
+    setPayTesting(true); setPayMsg(null);
+    try {
+      const h = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
+      const res = await fetch(`${base}/billing/payment-methods/stripe/test`, { method: 'POST', headers: h });
+      const d = await res.json().catch(() => ({}));
+      const r = d?.data ?? d;
+      setPayMsg({ ok: !!r?.ok, text: r?.message || (r?.ok ? 'Connexion Stripe vérifiée.' : 'Test échoué.') });
+    } catch (err: any) {
+      setPayMsg({ ok: false, text: err?.message || 'Test impossible.' });
+    } finally { setPayTesting(false); }
+  };
+
+  const copyWebhook = async () => {
+    try { await navigator.clipboard.writeText(webhookUrl); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* clipboard indispo */ }
+  };
+
   type NavItem = { key: string; label: string; icon: LucideIcon; group: 'compte' | 'org' };
   const NAV: NavItem[] = [
     { key: 'profil', label: 'Profil', icon: UserRound, group: 'compte' },
@@ -99,6 +157,25 @@ export default function LiriAccountPage() {
   ];
   const visibleNav = NAV.filter((n) => n.group === 'compte' || canManageOrg);
   const active = visibleNav.some((n) => n.key === section) ? section : (visibleNav[0]?.key || 'profil');
+
+  // Charge (lazy) l'état des moyens de paiement quand la section Encaissements s'ouvre.
+  // Placé APRÈS `active` (sinon TDZ dans le tableau de deps).
+  useEffect(() => {
+    if (active !== 'encaissements' || !token || payLoaded) return;
+    const h = { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
+    fetch(`${base}/billing/payment-methods`, { headers: h }).then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const arr = (d?.data ?? d) as any[];
+        const stripe = Array.isArray(arr) ? arr.find((p) => p?.provider === 'stripe') : null;
+        if (stripe) {
+          setStripeSet(!!stripe.credentials?.secret_key?.set);
+          setStripeLast4(stripe.credentials?.secret_key?.last4 || '');
+          setStripeEnabled(!!stripe.enabled);
+        }
+        setPayLoaded(true);
+      })
+      .catch(() => setPayLoaded(true));
+  }, [active, base, token, slug, payLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const initials = orgName.slice(0, 2).toUpperCase();
 
@@ -193,8 +270,64 @@ export default function LiriAccountPage() {
       case 'encaissements':
         return (
           <div>
-            <Header title="Encaissements" subtitle="Vendez vos lives et vos cours" />
-            <div className="mt-5"><Linkish label="Vos comptes de paiement" sub="Connectez vos propres Stripe / PawaPay pour encaisser vos clients directement sur votre compte." btn="Configurer les paiements" onClick={() => nav('/dashboard/payouts')} /></div>
+            <Header title="Encaissements" subtitle="Encaissez vos lives et vos cours — l’argent arrive directement sur VOTRE compte Stripe." />
+
+            {!payLoaded ? (
+              <div className="mt-6 flex items-center gap-2 text-[13px] lp-faint"><Loader2 size={15} className="animate-spin" /> Chargement…</div>
+            ) : stripeSet && !reconfig ? (
+              <div className="mt-5 rounded-2xl border lp-line lp-panel70 p-5">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ background: 'rgba(91,122,82,.16)' }}><Check size={18} style={{ color: '#7bbf6a' }} /></span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[14px] font-medium lp-ink">Stripe connecté</p>
+                    <p className="mt-0.5 text-[12.5px] lp-faint">Clé secrète •••• {stripeLast4 || '••••'} · chiffrée en base{stripeEnabled ? '' : ' · désactivé'}</p>
+                  </div>
+                </div>
+                {payMsg && <p className="mt-3 text-[12.5px]" style={{ color: payMsg.ok ? '#7bbf6a' : '#ef6a52' }}>{payMsg.text}</p>}
+                <div className="mt-4 flex flex-wrap gap-2.5">
+                  <button onClick={testStripe} disabled={payTesting} className="flex items-center gap-2 rounded-lg border px-3.5 py-2 text-[12.5px] font-medium lp-tr disabled:opacity-60" style={{ color: '#cfcac4', borderColor: 'rgba(245,244,238,.14)' }}>{payTesting ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />} Tester la connexion</button>
+                  <GhostBtn onClick={() => { setReconfig(true); setPayMsg(null); }}>Reconfigurer</GhostBtn>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-5 space-y-4">
+                <div className="rounded-2xl border lp-line lp-panel70 p-5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white" style={{ background: 'linear-gradient(135deg,#635bff,#4b45d6)' }}><CreditCard size={17} /></span>
+                    <div><p className="text-[14px] font-medium lp-ink">Stripe — carte bancaire</p><p className="text-[12px] lp-faint">Visa, Mastercard, CB. Idéal à l’international.</p></div>
+                  </div>
+
+                  <label className="mt-5 block text-[12px] font-medium lp-faint">Clé secrète <span style={{ color: '#ef6a52' }}>*</span></label>
+                  <div className="relative mt-1.5">
+                    <input type={showSk ? 'text' : 'password'} value={sk} onChange={(e) => setSk(e.target.value)} placeholder="sk_live_…  ou  sk_test_…" autoComplete="off" spellCheck={false} className="w-full rounded-xl border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2.5 pr-10 font-mono text-[13px] text-white placeholder:text-white/25 focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                    <button type="button" onClick={() => setShowSk((v) => !v)} className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-lg lp-faint lp-tr hover:bg-[rgba(255,255,255,.06)]" aria-label="Afficher / masquer">{showSk ? <EyeOff size={15} /> : <Eye size={15} />}</button>
+                  </div>
+
+                  <label className="mt-4 block text-[12px] font-medium lp-faint">Secret du webhook <span className="lp-faint">(signing secret)</span></label>
+                  <div className="relative mt-1.5">
+                    <input type={showWh ? 'text' : 'password'} value={wh} onChange={(e) => setWh(e.target.value)} placeholder="whsec_…" autoComplete="off" spellCheck={false} className="w-full rounded-xl border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2.5 pr-10 font-mono text-[13px] text-white placeholder:text-white/25 focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                    <button type="button" onClick={() => setShowWh((v) => !v)} className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-lg lp-faint lp-tr hover:bg-[rgba(255,255,255,.06)]" aria-label="Afficher / masquer">{showWh ? <EyeOff size={15} /> : <Eye size={15} />}</button>
+                  </div>
+
+                  {payMsg && <p className="mt-3 text-[12.5px]" style={{ color: payMsg.ok ? '#7bbf6a' : '#ef6a52' }}>{payMsg.text}</p>}
+
+                  <div className="mt-5 flex flex-wrap gap-2.5">
+                    <button onClick={saveStripe} disabled={paySaving || !sk.trim()} className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white lp-tr disabled:opacity-50" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}>{paySaving ? <><Loader2 size={15} className="animate-spin" /> Enregistrement…</> : 'Enregistrer Stripe'}</button>
+                    {stripeSet && <button onClick={() => { setReconfig(false); setSk(''); setWh(''); setPayMsg(null); }} className="rounded-xl border px-4 py-2.5 text-[13px] font-medium lp-muted lp-tr" style={{ borderColor: 'rgba(245,244,238,.14)' }}>Annuler</button>}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border lp-line p-4" style={{ background: 'rgba(217,119,87,.05)' }}>
+                  <p className="text-[12.5px] font-medium lp-ink">Pour obtenir le secret du webhook</p>
+                  <p className="mt-1 text-[12px] lp-faint">Dans Stripe → Développeurs → Webhooks → « Ajouter un endpoint », collez cette URL et choisissez l’événement <span className="font-mono lp-muted">checkout.session.completed</span> :</p>
+                  <div className="mt-2.5 flex items-center gap-2 rounded-lg border lp-line bg-[rgba(0,0,0,.25)] px-3 py-2">
+                    <code className="min-w-0 flex-1 truncate font-mono text-[12px] lp-ink">{webhookUrl}</code>
+                    <button onClick={copyWebhook} className="flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-[11.5px] font-medium lp-muted lp-tr hover:bg-[rgba(255,255,255,.06)]">{copied ? <><Check size={13} /> Copié</> : <><Copy size={13} /> Copier</>}</button>
+                  </div>
+                  <p className="mt-2 text-[11.5px] lp-faint">Stripe vous donnera alors un <span className="font-mono">whsec_…</span> à coller ci-dessus. Optionnel pour démarrer, requis pour créditer l’accès automatiquement après paiement.</p>
+                </div>
+              </div>
+            )}
           </div>
         );
       case 'general':
