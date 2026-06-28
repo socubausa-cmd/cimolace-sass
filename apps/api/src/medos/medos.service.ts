@@ -11,6 +11,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { TwinService } from './twin/twin.service';
 import type { TenantContext } from '../tenant/tenant.types';
 import type { CreatePatientDto } from './dto/create-patient.dto';
 import type { UpdatePatientDto } from './dto/update-patient.dto';
@@ -84,6 +85,7 @@ export class MedosService {
     private readonly supabase: SupabaseService,
     private readonly config: ConfigService,
     private readonly notifications: NotificationsService,
+    private readonly twin: TwinService,
   ) {}
 
   /**
@@ -914,7 +916,69 @@ export class MedosService {
     }
 
     await this.writeAudit(tenant.id, actorId, 'med_health_entry', (data as any).id, 'create');
+
+    // Fermeture de boucle suivi → jumeau (best-effort, ne bloque JAMAIS la
+    // saisie patient) : on projette l'entrée sur la roue de transformation
+    // (source='health_entry', idempotent) puis on recalcule les scores +
+    // alertes du jumeau pour rafraîchir le tableau de bord. Une panne ici
+    // (table twin absente, recompute en erreur) ne doit pas faire échouer
+    // l'enregistrement du suivi — d'où le try/catch silencieux.
+    try {
+      await this.twin.syncWheelFromHealthEntries(tenant, patientId);
+      await this.twin.computeScores(tenant, patientId);
+    } catch (e: any) {
+      this.logger.warn(
+        `health→twin sync skipped for patient ${patientId}: ${e?.message ?? e}`,
+      );
+    }
+
     return data as unknown as Record<string, unknown>;
+  }
+
+  /**
+   * Vue staff « Suivi santé » (roll-up tenant) — dernières entrées de suivi
+   * tous patients confondus, enrichies du nom du patient. Lecture seule,
+   * réservée au staff (garde rôle côté contrôleur). Sert l'écran HealthTracker
+   * qui n'a pas de patient sélectionné : sans cet endpoint, le bare
+   * GET /med/health renvoyait 404 → liste toujours vide.
+   */
+  async listRecentHealthEntries(tenant: TenantContext, limit = 100) {
+    const { data, error } = await this.supabase.client
+      .from('med_health_entries')
+      .select(
+        'id, patient_id, entry_date, entry_type, mood_score, energy_level, sleep_hours, exercise_minutes, water_liters, symptoms, notes, created_at',
+      )
+      .eq('tenant_id', tenant.id)
+      .order('entry_date', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      this.logger.error('listRecentHealthEntries', error.message);
+      throw new InternalServerErrorException('Erreur interne');
+    }
+
+    const entries = (data ?? []) as any[];
+    if (entries.length === 0) return [] as Record<string, unknown>[];
+
+    // Enrichissement nom patient (une seule requête, dédupliquée).
+    const ids = [...new Set(entries.map((e) => e.patient_id))];
+    const { data: patients } = await this.supabase.client
+      .from('med_patients')
+      .select('id, first_name, last_name')
+      .eq('tenant_id', tenant.id)
+      .in('id', ids);
+    const nameById = new Map(
+      (patients ?? []).map((p: any) => [
+        p.id,
+        [p.first_name, p.last_name].filter(Boolean).join(' ') || null,
+      ]),
+    );
+
+    return entries.map((e) => ({
+      ...e,
+      patient_name: nameById.get(e.patient_id) ?? null,
+    })) as unknown as Record<string, unknown>[];
   }
 
   async getHealthEntries(tenant: TenantContext, patientId: string) {

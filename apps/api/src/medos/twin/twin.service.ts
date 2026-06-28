@@ -13,6 +13,7 @@ import {
   TwinScoringService,
   type BiomarkerRef,
   type BiomarkerValue,
+  type LifestyleSignals,
 } from './twin-scoring.service';
 import { TwinAiService, type PatientAiContext } from './twin-ai.service';
 import { TwinSimulationService, INTERVENTIONS } from './twin-simulation.service';
@@ -462,7 +463,11 @@ export class TwinService {
     const organCodes = organs.map((o) => o.code);
 
     const organScores = this.scoring.computeAllOrganScores(organCodes, biomarkers, values);
-    const alerts = this.scoring.detectAlerts(biomarkers, values);
+    // Alertes biomarqueurs + alertes hygiène de vie (suivi patient). Les
+    // signaux lifestyle sont best-effort : s'ils sont indisponibles, on passe
+    // undefined → detectAlerts conserve son comportement biomarqueurs-only.
+    const lifestyle = await this.deriveLifestyleSignals(tenant, patientId);
+    const alerts = this.scoring.detectAlerts(biomarkers, values, lifestyle);
 
     // Snapshot des scores (historisé : on insère, on n'écrase pas).
     if (organScores.length > 0) {
@@ -504,6 +509,156 @@ export class TwinService {
     }
 
     return { organ_scores: organScores, alerts };
+  }
+
+  // ── Suivi patient → Jumeau (fermeture de boucle) ──────────────────────
+  /**
+   * Domaines de la roue alimentés par le suivi patient (sous-ensemble des 12
+   * axes lifestyle). Exposé pour le nettoyage idempotent ciblé : on ne touche
+   * QUE ces domaines pour la source 'health_entry', jamais les axes
+   * 'questionnaire' du praticien ni les domaines non dérivés du suivi.
+   */
+  private static WHEEL_DOMAINS_FROM_HEALTH = [
+    'sleep',
+    'energy',
+    'physical_activity',
+    'environment',
+    'emotions',
+    'inflammation',
+  ];
+
+  /**
+   * Projette la DERNIÈRE entrée de suivi (med_health_entries) sur la roue de
+   * transformation avec source='health_entry'. IDEMPOTENT sans contrainte
+   * d'unicité DB : on supprime d'abord les lignes 'health_entry' des domaines
+   * concernés pour ce patient, puis on insère les nouvelles (même pattern que
+   * le remplacement des alertes ouvertes dans computeScores). Best-effort —
+   * ne jette jamais (le suivi ne doit pas échouer si la roue ne se met pas à
+   * jour). Renvoie le nombre de domaines écrits.
+   */
+  async syncWheelFromHealthEntries(
+    tenant: TenantContext,
+    patientId: string,
+  ): Promise<{ updated: number }> {
+    try {
+      const { data: latest } = await this.db
+        .from('med_health_entries')
+        .select(
+          'sleep_hours, energy_level, exercise_minutes, water_liters, mood_score, symptoms, entry_date, created_at',
+        )
+        .eq('tenant_id', tenant.id)
+        .eq('patient_id', patientId)
+        .order('entry_date', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!latest) return { updated: 0 };
+
+      const metrics = this.scoring.mapHealthEntryToWheel(latest);
+      if (metrics.length === 0) return { updated: 0 };
+
+      const domains = metrics.map((m) => m.domain);
+      // Remplacement idempotent : on retire les anciennes lignes 'health_entry'
+      // des domaines qu'on s'apprête à réécrire (les axes 'questionnaire' du
+      // praticien sont préservés — filtre source).
+      await this.db
+        .from('med_transformation_wheel')
+        .delete()
+        .eq('tenant_id', tenant.id)
+        .eq('patient_id', patientId)
+        .eq('source', 'health_entry')
+        .in('domain', domains);
+
+      const rows = metrics.map((m) => ({
+        tenant_id: tenant.id,
+        patient_id: patientId,
+        domain: m.domain,
+        score: m.score,
+        source: 'health_entry',
+      }));
+      const { error } = await this.db.from('med_transformation_wheel').insert(rows);
+      if (error) {
+        this.logger.error(`sync wheel from health: ${error.message}`);
+        return { updated: 0 };
+      }
+      return { updated: rows.length };
+    } catch (e: any) {
+      this.logger.warn(`syncWheelFromHealthEntries: ${e?.message ?? e}`);
+      return { updated: 0 };
+    }
+  }
+
+  /**
+   * Construit les signaux d'hygiène de vie passés à detectAlerts à partir des
+   * entrées de suivi récentes + de l'axe stress de la roue. Best-effort :
+   * renvoie undefined si aucune donnée (→ detectAlerts reste biomarqueurs-only).
+   *
+   * - latest_*        : dernière entrée saisie.
+   * - low_mood_streak : nb de jours consécutifs (entrées les plus récentes)
+   *                     avec mood_score <= 4, en partant de la plus récente.
+   * - latest_stress_score : dernier score de l'axe 'stress' de la roue
+   *                     (saisi au questionnaire ; le suivi ne le produit pas).
+   */
+  private async deriveLifestyleSignals(
+    tenant: TenantContext,
+    patientId: string,
+  ): Promise<LifestyleSignals | undefined> {
+    try {
+      const RECENT = 7;
+      const [entriesRes, wheelRes] = await Promise.all([
+        this.db
+          .from('med_health_entries')
+          .select(
+            'sleep_hours, energy_level, mood_score, exercise_minutes, water_liters, entry_date, created_at',
+          )
+          .eq('tenant_id', tenant.id)
+          .eq('patient_id', patientId)
+          .order('entry_date', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(RECENT),
+        this.db
+          .from('med_transformation_wheel')
+          .select('domain, score, measured_at')
+          .eq('tenant_id', tenant.id)
+          .eq('patient_id', patientId)
+          .eq('domain', 'stress')
+          .order('measured_at', { ascending: false })
+          .limit(1),
+      ]);
+
+      const entries: any[] = entriesRes.data ?? [];
+      if (entries.length === 0) return undefined;
+
+      const num = (v: unknown): number | null =>
+        v == null || v === '' || !Number.isFinite(Number(v)) ? null : Number(v);
+
+      const latest = entries[0];
+
+      // Série d'humeur consécutive basse (<=4/10) en partant de la plus récente.
+      let lowMoodStreak = 0;
+      for (const e of entries) {
+        const m = num(e.mood_score);
+        if (m != null && m <= 4) lowMoodStreak += 1;
+        else break;
+      }
+
+      const latestStress = num((wheelRes.data ?? [])[0]?.score);
+
+      return {
+        latest_sleep_hours: num(latest.sleep_hours),
+        latest_energy_level: num(latest.energy_level),
+        latest_mood_score: num(latest.mood_score),
+        latest_exercise_minutes: num(latest.exercise_minutes),
+        latest_water_liters: num(latest.water_liters),
+        latest_stress_score: latestStress,
+        low_mood_streak: lowMoodStreak,
+        sample_size: entries.length,
+      };
+    } catch (e: any) {
+      this.logger.warn(`deriveLifestyleSignals: ${e?.message ?? e}`);
+      return undefined;
+    }
   }
 
   // ── État complet du jumeau (Module 35 : centre de commande) ───────────

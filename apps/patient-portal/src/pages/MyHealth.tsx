@@ -69,7 +69,10 @@ export function MyHealth() {
     try {
       const t = localStorage.getItem('supabase_token');
       const payload: Record<string, unknown> = {
-        entry_type: 'daily',
+        // 'custom' = seule valeur générique acceptée par la contrainte CHECK
+        // de med_health_entries (mood|sleep|vitals|food|activity|symptom|custom).
+        // 'daily' violait la contrainte → l'enregistrement échouait côté serveur.
+        entry_type: 'custom',
         mood_score: form.mood_score,
         energy_level: form.energy_level,
       };

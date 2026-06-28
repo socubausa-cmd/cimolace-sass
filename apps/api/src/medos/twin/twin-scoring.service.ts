@@ -63,8 +63,46 @@ export interface ClinicalAlert {
   evidence: Array<{ code: string; value: number; flag: Flag }>;
 }
 
+/**
+ * Métriques de suivi (lifestyle) issues de med_health_entries, AGRÉGÉES côté
+ * service avant d'être passées au moteur. Toutes optionnelles : une règle
+ * d'alerte lifestyle ne se déclenche que si les champs qu'elle exige sont
+ * présents (sinon elle est silencieuse — additif, jamais de faux positif).
+ *
+ * - latest_*   : dernière valeur saisie par le patient.
+ * - avg_mood_recent / low_mood_streak : agrégats sur les N dernières entrées
+ *   (pour détecter une tendance, pas un point isolé).
+ */
+export interface LifestyleSignals {
+  latest_sleep_hours?: number | null;
+  latest_energy_level?: number | null; // 1-10
+  latest_mood_score?: number | null; // 1-10
+  latest_exercise_minutes?: number | null;
+  latest_water_liters?: number | null;
+  latest_stress_score?: number | null; // 0-100 (axe roue) si disponible
+  /** Nb de jours consécutifs (entrées récentes) avec humeur basse (<=4/10). */
+  low_mood_streak?: number;
+  /** Nb d'entrées prises en compte pour les agrégats (confiance). */
+  sample_size?: number;
+}
+
+/**
+ * Métrique unique de la roue de transformation (Module 2), bornée 0-100.
+ * `source='health_entry'` distingue les axes dérivés du suivi patient des
+ * axes saisis au questionnaire ('questionnaire').
+ */
+export interface WheelMetric {
+  domain: string;
+  score: number;
+}
+
 const PENALTY_MILD = 12; // hors plage optimale mais dans la plage labo
 const PENALTY_CRITICAL = 30; // hors plage labo (large)
+
+/** Borne un nombre dans [0,100] et l'arrondit (helper pur, hors classe). */
+function clamp100(n: number): number {
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
 
 @Injectable()
 export class TwinScoringService {
@@ -165,6 +203,72 @@ export class TwinScoringService {
       .filter((s): s is OrganScore => s !== null);
   }
 
+  // ── Suivi patient → Roue de transformation (fermeture de boucle) ────────
+  /**
+   * Mappe UNE entrée de suivi (med_health_entries) vers des axes lifestyle de
+   * la roue de transformation, bornés 0-100. DÉTERMINISTE et PUR (aucun I/O).
+   *
+   * Mapping (volontairement simple, défendable cliniquement comme INDICATEUR,
+   * pas comme diagnostic) :
+   *   - sleep_hours        → sleep              (optimum ~8 h ; pénalité linéaire
+   *                                              de part et d'autre, plancher 0)
+   *   - energy_level 1-10  → energy             (×10)
+   *   - exercise_minutes   → physical_activity  (30 min/j ≈ 100, plafonné)
+   *   - water_liters       → environment        (1.5 L/j ≈ 100, plafonné)
+   *   - mood_score 1-10    → emotions           (×10)
+   *   - symptoms (non vide) → inflammation       (présence de symptômes = signal
+   *                                              d'inflammation/inconfort abaissé)
+   *
+   * Seuls les axes dont la métrique source est renseignée sont produits — une
+   * entrée « humeur seule » ne fabrique pas un score de sommeil arbitraire.
+   */
+  mapHealthEntryToWheel(entry: {
+    sleep_hours?: number | null;
+    energy_level?: number | null;
+    exercise_minutes?: number | null;
+    water_liters?: number | null;
+    mood_score?: number | null;
+    symptoms?: unknown;
+  }): WheelMetric[] {
+    const out: WheelMetric[] = [];
+    const num = (v: unknown): number | null =>
+      v == null || v === '' || !Number.isFinite(Number(v)) ? null : Number(v);
+
+    const sleep = num(entry.sleep_hours);
+    if (sleep != null) {
+      // Optimum 8 h. On retire ~12.5 pts par heure d'écart (4 h d'écart → 50).
+      const deviation = Math.abs(sleep - 8);
+      out.push({ domain: 'sleep', score: clamp100(100 - deviation * 12.5) });
+    }
+
+    const energy = num(entry.energy_level);
+    if (energy != null) out.push({ domain: 'energy', score: clamp100(energy * 10) });
+
+    const exercise = num(entry.exercise_minutes);
+    if (exercise != null) {
+      // 30 min/j = 100. Au-delà, plafonné (pas de bonus). 0 min → 0.
+      out.push({ domain: 'physical_activity', score: clamp100((exercise / 30) * 100) });
+    }
+
+    const water = num(entry.water_liters);
+    if (water != null) {
+      // 1.5 L/j = 100 (hydratation correcte), plafonné.
+      out.push({ domain: 'environment', score: clamp100((water / 1.5) * 100) });
+    }
+
+    const mood = num(entry.mood_score);
+    if (mood != null) out.push({ domain: 'emotions', score: clamp100(mood * 10) });
+
+    // Symptômes déclarés → inflammation abaissée (signal d'inconfort).
+    // 0 symptôme = 100 ; chaque symptôme retire 20 pts (plancher 0).
+    const symptomCount = Array.isArray(entry.symptoms) ? entry.symptoms.length : 0;
+    if (symptomCount > 0) {
+      out.push({ domain: 'inflammation', score: clamp100(100 - symptomCount * 20) });
+    }
+
+    return out;
+  }
+
   /** Carte code → flag pour l'ensemble des valeurs (utilitaire alertes/UI). */
   flagMap(refs: BiomarkerRef[], values: BiomarkerValue[]): Record<string, Flag> {
     const refByCode = new Map(refs.map((r) => [r.code, r]));
@@ -180,8 +284,17 @@ export class TwinScoringService {
    * Détection d'alertes cliniques RULE-BASED (Module 14).
    * Patterns reconnus : syndrome métabolique, inflammation chronique,
    * carences, risque métabolique. Présentés comme signaux, jamais diagnostics.
+   *
+   * `lifestyle` (optionnel) : quand des métriques de suivi patient sont
+   * fournies, des règles d'hygiène de vie DÉTERMINISTES s'AJOUTENT aux règles
+   * biomarqueurs. Sans `lifestyle`, le comportement est strictement inchangé
+   * (rétro-compatibilité — aucun faux positif quand le suivi est vide).
    */
-  detectAlerts(refs: BiomarkerRef[], values: BiomarkerValue[]): ClinicalAlert[] {
+  detectAlerts(
+    refs: BiomarkerRef[],
+    values: BiomarkerValue[],
+    lifestyle?: LifestyleSignals,
+  ): ClinicalAlert[] {
     const flags = this.flagMap(refs, values);
     const valByCode = new Map(values.map((v) => [v.biomarker_code, v.value]));
     const alerts: ClinicalAlert[] = [];
@@ -383,6 +496,71 @@ export class TwinScoringService {
         message_fr: `Atteinte hépatique multiple (${liverHigh.join(', ')} ↑). Évoquer NAFLD, hépatite ou surcharge toxique selon contexte.`,
         evidence: liverHigh.map(ev),
       });
+    }
+
+    // ─── Règles HYGIÈNE DE VIE (suivi patient → jumeau) ─────────────────────
+    // Déterministes, additives, sans biomarqueur requis. `evidence` reste []
+    // (le contrat ClinicalAlert vise des codes biomarqueurs ; le suivi n'en a
+    // pas). Ne se déclenchent que si les métriques nécessaires sont présentes.
+    if (lifestyle) {
+      const ls = lifestyle;
+      const sleep = ls.latest_sleep_hours;
+      const stress = ls.latest_stress_score; // 0-100, plus BAS = plus stressé
+      const water = ls.latest_water_liters;
+      const exercise = ls.latest_exercise_minutes;
+      const energy = ls.latest_energy_level;
+
+      // 1) Fatigue chronique probable : sommeil court ET stress élevé.
+      //    (stress_score bas = stress élevé sur l'axe roue ; seuil < 40)
+      if (sleep != null && sleep < 6 && stress != null && stress < 40) {
+        alerts.push({
+          kind: 'lifestyle_chronic_fatigue',
+          severity: 'warning',
+          message_fr:
+            'Sommeil insuffisant (< 6 h) associé à un niveau de stress élevé. ' +
+            'Ce cumul favorise la fatigue chronique. Prioriser le repos et la ' +
+            'gestion du stress ; en parler à votre praticien si cela persiste.',
+          evidence: [],
+        });
+      }
+
+      // 2) Fatigue/sous-récupération : sommeil court ET énergie basse
+      //    (filet quand le stress n'est pas renseigné — n'entre pas en conflit).
+      else if (sleep != null && sleep < 6 && energy != null && energy <= 4) {
+        alerts.push({
+          kind: 'lifestyle_low_recovery',
+          severity: 'info',
+          message_fr:
+            'Sommeil court (< 6 h) et énergie ressentie basse. Votre récupération ' +
+            'semble insuffisante : visez des nuits plus longues et régulières.',
+          evidence: [],
+        });
+      }
+
+      // 3) Risque de déshydratation : hydratation faible ET activité soutenue.
+      if (water != null && water < 1 && exercise != null && exercise >= 45) {
+        alerts.push({
+          kind: 'lifestyle_dehydration_risk',
+          severity: 'info',
+          message_fr:
+            'Hydratation faible (< 1 L) avec une activité physique soutenue ' +
+            '(≥ 45 min). Pensez à boire davantage, surtout autour de l\'effort.',
+          evidence: [],
+        });
+      }
+
+      // 4) Mal-être persistant : humeur basse sur plusieurs jours consécutifs.
+      if ((ls.low_mood_streak ?? 0) >= 3) {
+        alerts.push({
+          kind: 'lifestyle_persistent_low_mood',
+          severity: 'warning',
+          message_fr:
+            `Humeur basse rapportée plusieurs jours de suite ` +
+            `(${ls.low_mood_streak} jours). Si ce ressenti dure, n'attendez pas ` +
+            'pour en parler à votre praticien ; un soutien est possible.',
+          evidence: [],
+        });
+      }
     }
 
     return alerts;

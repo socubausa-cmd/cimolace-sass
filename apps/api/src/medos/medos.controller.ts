@@ -405,6 +405,19 @@ export class MedosHealthController {
     return this.medosService.createHealthEntry(tenant, req.user.id, dto);
   }
 
+  /**
+   * Vue staff « Suivi santé » (roll-up tenant) — dernières entrées tous
+   * patients confondus. Staff uniquement (le patient passe par /med/me/health).
+   * Comble le 404 de l'ancien bare GET /med/health côté HealthTracker.
+   */
+  @Get()
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'practitioner', 'clinic_admin', 'receptionist')
+  @AuditResource({ resource: 'health_entry', action: 'list' })
+  listRecent(@CurrentTenant() tenant: TenantContext) {
+    return this.medosService.listRecentHealthEntries(tenant);
+  }
+
   @Get('patient/:patientId')
   @UseGuards(RolesGuard)
   @Roles('owner', 'practitioner', 'clinic_admin', 'patient')

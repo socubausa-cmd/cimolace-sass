@@ -34,17 +34,22 @@ export function HealthTracker() {
           <div key={m.key} style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
             <m.icon size={20} color={m.color} />
             <div><div style={{ fontSize: 12, color: 'var(--zw-text-muted)' }}>{m.label}</div>
-              <div style={{ fontSize: 18, fontWeight: 700 }}>{entries[entries.length - 1]?.[m.key] || '-'} <span style={{ fontSize: 12, color: 'var(--zw-text-faint)' }}>{m.unit}</span></div>
+              {/* Le roll-up est trié du plus récent au plus ancien → entries[0]. */}
+              <div style={{ fontSize: 18, fontWeight: 700 }}>{entries[0]?.[m.key] || '-'} <span style={{ fontSize: 12, color: 'var(--zw-text-faint)' }}>{m.unit}</span></div>
             </div>
           </div>
         ))}
       </div>
       <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', padding: 20 }}>
-        <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Historique</h3>
+        <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Dernieres entrees patients</h3>
         {entries.length === 0 && <p style={{ color: 'var(--zw-text-faint)' }}>Aucune entree de suivi</p>}
-        {entries.slice(0, 10).map((e: any) => (
+        {entries.slice(0, 20).map((e: any) => (
           <div key={e.id} style={{ padding: '8px 0', borderTop: '1px solid var(--zw-bg-subtle)', fontSize: 13, color: 'var(--zw-text-muted)' }}>
+            {e.patient_name ? <strong style={{ color: 'var(--zw-text)' }}>{e.patient_name}</strong> : 'Patient'}
+            {' — '}
             {new Date(e.entry_date || e.created_at).toLocaleDateString('fr')} — Humeur: {e.mood_score || '-'}/10, Sommeil: {e.sleep_hours || '-'}h
+            {e.exercise_minutes ? `, Exercice: ${e.exercise_minutes}min` : ''}
+            {e.water_liters ? `, Eau: ${e.water_liters}L` : ''}
           </div>
         ))}
       </div>
