@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, UserRound, Building2, Users, CreditCard, Wallet, LogOut, Trash2,
   X, Loader2, Sparkles, Check, ArrowUpRight, SlidersHorizontal, Settings2,
-  Eye, EyeOff, Copy, ShieldCheck,
+  Eye, EyeOff, Copy, ShieldCheck, UserPlus,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { authStore } from '@/lib/auth-store';
@@ -14,6 +14,7 @@ import '../LiriPortal.css';
 interface Org { name: string; slug: string; role?: string | null; plan?: string | null; }
 interface OrgRef { name: string; slug: string; role?: string | null }
 interface Stats { totalMembers: number; totalLives: number; totalCourses: number; totalRevenueCents: number; }
+interface Member { user_id: string; role: string; status: string; email: string | null; full_name: string | null; }
 interface Sub { status?: string; plan_id?: string; provider?: string; current_period_end?: string | null; }
 
 const DAY = 86_400_000;
@@ -54,6 +55,18 @@ export default function LiriAccountPage() {
   const [copied, setCopied] = useState(false);
   const webhookUrl = `${base}/checkout/webhook/stripe`;
 
+  // Membres (tenant-scopé) + invitation, et renommage de l'org — INLINE (jamais
+  // le vieux shell admin « Academy »).
+  const [members, setMembers] = useState<Member[]>([]);
+  const [memLoaded, setMemLoaded] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('student');
+  const [inviteSending, setInviteSending] = useState(false);
+  const [inviteMsg, setInviteMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [nameEditing, setNameEditing] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
+  const [nameSaving, setNameSaving] = useState(false);
+
   const orgName = org?.name || slugLabel;
   const orgSlug = org?.slug || slug;
   const role = (org?.role ?? '') as string;
@@ -91,6 +104,7 @@ export default function LiriAccountPage() {
   }, [subs]);
 
   const euros = (cents?: number) => ((cents ?? 0) / 100).toLocaleString('fr-FR');
+  const roleLabel = (r?: string) => (({ owner: 'Propriétaire', admin: 'Admin', teacher: 'Enseignant', secretariat: 'Secrétariat', student: 'Élève', practitioner: 'Praticien', clinic_admin: 'Admin clinique' } as Record<string, string>)[String(r || '').toLowerCase()] || r || '—');
 
   const switchOrg = (s: string) => { if (!s || s === orgSlug) return; authStore.setTenantSlug(s); if (typeof window !== 'undefined') window.location.assign('/liri'); };
 
@@ -146,6 +160,37 @@ export default function LiriAccountPage() {
     try { await navigator.clipboard.writeText(webhookUrl); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* clipboard indispo */ }
   };
 
+  // Invite un membre/élève par email (VRAI magic-link via /team-invites/send).
+  const sendInvite = async () => {
+    const em = inviteEmail.trim().toLowerCase();
+    if (inviteSending || !em) return;
+    setInviteSending(true); setInviteMsg(null);
+    try {
+      const h = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
+      const res = await fetch(`${base}/team-invites/send`, { method: 'POST', headers: h, body: JSON.stringify({ email: em, role: inviteRole }) });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || e?.message || 'Invitation impossible.'); }
+      setInviteMsg({ ok: true, text: `Invitation envoyée à ${em}.` });
+      setInviteEmail('');
+    } catch (err: any) {
+      setInviteMsg({ ok: false, text: err?.message || 'Invitation impossible.' });
+    } finally { setInviteSending(false); }
+  };
+
+  // Renomme l'org (PATCH /tenants/current/branding, scopé au tenant courant).
+  const saveName = async () => {
+    const nm = nameDraft.trim();
+    if (nameSaving || !nm || nm === orgName) { setNameEditing(false); return; }
+    setNameSaving(true);
+    try {
+      const h = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
+      const res = await fetch(`${base}/tenants/current/branding`, { method: 'PATCH', headers: h, body: JSON.stringify({ name: nm }) });
+      if (!res.ok) throw new Error('Échec');
+      setOrg((o) => (o ? { ...o, name: nm } : o));
+      setNameEditing(false);
+    } catch { if (typeof window !== 'undefined') window.alert('Le renommage a échoué.'); }
+    finally { setNameSaving(false); }
+  };
+
   type NavItem = { key: string; label: string; icon: LucideIcon; group: 'compte' | 'org' };
   const NAV: NavItem[] = [
     { key: 'profil', label: 'Profil', icon: UserRound, group: 'compte' },
@@ -165,8 +210,10 @@ export default function LiriAccountPage() {
     const h = { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
     fetch(`${base}/billing/payment-methods`, { headers: h }).then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        const arr = (d?.data ?? d) as any[];
-        const stripe = Array.isArray(arr) ? arr.find((p) => p?.provider === 'stripe') : null;
+        // La réponse est { data: { providers: [...] } } (pas un tableau direct).
+        const body = d?.data ?? d;
+        const arr = (Array.isArray(body) ? body : body?.providers ?? []) as any[];
+        const stripe = arr.find((p) => p?.provider === 'stripe');
         if (stripe) {
           setStripeSet(!!stripe.credentials?.secret_key?.set);
           setStripeLast4(stripe.credentials?.secret_key?.last4 || '');
@@ -176,6 +223,15 @@ export default function LiriAccountPage() {
       })
       .catch(() => setPayLoaded(true));
   }, [active, base, token, slug, payLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Charge (lazy) les membres TENANT-SCOPÉS quand la section Membres s'ouvre.
+  useEffect(() => {
+    if (active !== 'membres' || !token || memLoaded) return;
+    const h = { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
+    fetch(`${base}/tenant-portal/members`, { headers: h }).then((r) => (r.ok ? r.json() : null))
+      .then((d) => { const a = d?.data ?? d; if (Array.isArray(a)) setMembers(a as Member[]); setMemLoaded(true); })
+      .catch(() => setMemLoaded(true));
+  }, [active, base, token, slug, memLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const initials = orgName.slice(0, 2).toUpperCase();
 
@@ -251,9 +307,42 @@ export default function LiriAccountPage() {
       case 'membres':
         return (
           <div>
-            <Header title="Membres & équipe" subtitle="Qui a accès à votre organisation" />
-            <div className="mt-5 flex items-baseline gap-2"><span className="lp-serif text-[28px] font-medium lp-ink">{stats?.totalMembers ?? 0}</span><span className="text-[13px] lp-faint">membre{(stats?.totalMembers ?? 0) > 1 ? 's' : ''}</span></div>
-            <div className="mt-5"><GhostBtn onClick={() => nav(`/t/${orgSlug}/admin/members`)}>Gérer les membres</GhostBtn></div>
+            <Header title="Membres & équipe" subtitle="Invitez votre équipe et vos élèves — tout reste dans votre organisation." />
+
+            <div className="mt-5 rounded-2xl border lp-line lp-panel70 p-4">
+              <p className="text-[13px] font-medium lp-ink">Inviter quelqu’un</p>
+              <p className="mt-0.5 text-[12px] lp-faint">Un email avec un lien d’accès lui est envoyé.</p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') sendInvite(); }} placeholder="email@exemple.com" autoComplete="off" className="min-w-0 flex-1 rounded-xl border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2.5 text-[13px] text-white placeholder:text-white/25 focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} className="rounded-xl border lp-line bg-[rgba(34,31,27,.95)] px-3 py-2.5 text-[13px] text-white focus:border-[rgba(217,119,87,.5)] focus:outline-none">
+                  <option value="student">Élève</option>
+                  <option value="teacher">Enseignant</option>
+                  <option value="secretariat">Secrétariat</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <button onClick={sendInvite} disabled={inviteSending || !inviteEmail.trim()} className="flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white lp-tr disabled:opacity-50" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}>{inviteSending ? <Loader2 size={15} className="animate-spin" /> : <UserPlus size={15} />} Inviter</button>
+              </div>
+              {inviteMsg && <p className="mt-2.5 text-[12.5px]" style={{ color: inviteMsg.ok ? '#7bbf6a' : '#ef6a52' }}>{inviteMsg.text}</p>}
+            </div>
+
+            <div className="mt-6">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] lp-faint">{memLoaded ? `${members.length} membre${members.length > 1 ? 's' : ''}` : 'Membres'}</p>
+              {!memLoaded ? (
+                <div className="mt-3 flex items-center gap-2 text-[13px] lp-faint"><Loader2 size={15} className="animate-spin" /> Chargement…</div>
+              ) : members.length === 0 ? (
+                <p className="mt-3 text-[13px] lp-faint">Personne pour l’instant — invitez votre première recrue ci-dessus.</p>
+              ) : (
+                <div className="mt-2.5 space-y-1.5">
+                  {members.map((m) => (
+                    <div key={m.user_id} className="flex items-center gap-3 rounded-xl border px-3 py-2.5" style={{ borderColor: 'rgba(245,244,238,.08)' }}>
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[11px] font-semibold text-white" style={{ background: 'linear-gradient(135deg,#5b7a52,#6d8f60)' }}>{(m.full_name || m.email || '?').slice(0, 2).toUpperCase()}</span>
+                      <span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-medium lp-ink">{m.full_name || m.email || '—'}</span>{m.full_name && m.email && <span className="block truncate text-[11.5px] lp-faint">{m.email}</span>}</span>
+                      <span className="shrink-0 rounded-md px-2 py-0.5 text-[11px] font-medium" style={{ background: 'rgba(217,119,87,.13)', color: '#e2a07f' }}>{roleLabel(m.role)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         );
       case 'facturation':
@@ -336,7 +425,15 @@ export default function LiriAccountPage() {
           <div>
             <Header title="Général" subtitle="Informations de votre organisation" />
             <div className="mt-5 border-t lp-line">
-              <Row label="Nom de l’organisation" value={<span className="capitalize">{orgName}</span>} action={<GhostBtn onClick={() => nav(`/t/${orgSlug}/admin/settings`)}>Modifier</GhostBtn>} />
+              {nameEditing ? (
+                <div className="flex items-center gap-2 border-b lp-line py-3.5">
+                  <input autoFocus value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setNameEditing(false); }} className="min-w-0 flex-1 rounded-lg border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2 text-[14px] text-white focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                  <button onClick={saveName} disabled={nameSaving} className="flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12.5px] font-semibold text-white lp-tr disabled:opacity-50" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}>{nameSaving ? <Loader2 size={14} className="animate-spin" /> : 'Enregistrer'}</button>
+                  <button onClick={() => setNameEditing(false)} className="shrink-0 rounded-lg border px-3 py-2 text-[12.5px] font-medium lp-muted lp-tr" style={{ borderColor: 'rgba(245,244,238,.14)' }}>Annuler</button>
+                </div>
+              ) : (
+                <Row label="Nom de l’organisation" value={<span className="capitalize">{orgName}</span>} action={<GhostBtn onClick={() => { setNameDraft(orgName); setNameEditing(true); }}>Modifier</GhostBtn>} />
+              )}
               <Row label="Identifiant" value={<span className="font-mono text-[13px]">/t/{orgSlug}</span>} />
               <Row label="Plan" value={billing.label} action={!billing.isPaid ? (
                 <button onClick={() => nav('/cimolace/billing?upgrade=liri')} className="flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12.5px] font-medium text-white lp-tr" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}><Sparkles size={14} /> Passer à un forfait</button>
