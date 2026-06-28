@@ -24,18 +24,6 @@ const ROLE_OPTIONS = [
   { value: 'communaute_temple', label: 'Communauté Temple',      emoji: '🏛️' },
 ];
 
-// ─── Tags pour modules ─────────────────────────────────────────────────────
-const MODULE_PRESETS = [
-  { id: 'cosmologie',  name: 'Cosmologie' },
-  { id: 'ontologie',   name: 'Ontologie' },
-  { id: 'karma',       name: 'Karma' },
-  { id: 'libation',    name: 'Libation' },
-  { id: 'kmt',         name: 'Kemit (KMT)' },
-  { id: 'spiritualite',name: 'Spiritualité africaine' },
-  { id: 'manikongo',   name: 'Manikongo' },
-  { id: 'nganga',      name: 'Nganga' },
-];
-
 function InviteSection({ icon: Icon, title, desc, defaultOpen = false, children }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
@@ -170,24 +158,30 @@ function ClassesPicker({ selected, onChange }) {
 }
 
 // ─── Modules picker ─────────────────────────────────────────────────────────
+// Les modules = les VRAIES formations du tenant courant (table `courses`, filtrée par
+// RLS au tenant de l'utilisateur). Aucun preset en dur : le portail LIRI est multi-tenant.
 function ModulesPicker({ selected, onChange }) {
   const [dbModules, setDbModules] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
     supabase
       .from('courses')
       .select('id, title')
-      .limit(30)
+      .limit(50)
       .then(({ data, error }) => {
         if (error) console.warn('[ModulesPicker] courses', error.message);
-        setDbModules((data || []).map((d) => ({ id: d.id, name: d.title })));
+        if (!cancelled) setDbModules((data || []).map((d) => ({ id: d.id, name: d.title })));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
+    return () => {
+      cancelled = true;
+    };
   }, []);
-
-  const allModules = [
-    ...MODULE_PRESETS,
-    ...dbModules.filter((m) => !MODULE_PRESETS.find((p) => p.name.toLowerCase() === m.name.toLowerCase())),
-  ];
 
   const toggle = (mod) => {
     const already = selected.find((m) => m.id === mod.id);
@@ -204,26 +198,34 @@ function ModulesPicker({ selected, onChange }) {
           ))}
         </div>
       )}
-      <div className="flex flex-wrap gap-2">
-        {allModules.map((mod) => {
-          const active = selected.some((m) => m.id === mod.id);
-          return (
-            <button
-              key={mod.id}
-              type="button"
-              onClick={() => toggle(mod)}
-              className={cn(
-                'h-7 px-3 rounded-full border text-xs font-medium transition-all',
-                active
-                  ? 'bg-[#7B61FF]/20 border-[#7B61FF]/40 text-[#7B61FF]'
-                  : 'bg-black/20 border-white/10 text-white/50 hover:border-white/25 hover:text-white'
-              )}
-            >
-              {mod.name}
-            </button>
-          );
-        })}
-      </div>
+      {loading ? (
+        <Loader2 className="w-4 h-4 animate-spin text-white/30 mx-auto" />
+      ) : dbModules.length === 0 ? (
+        <p className="text-xs text-white/30 py-2 text-center">
+          Aucune formation — créez des modules pour cibler leurs inscrits.
+        </p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {dbModules.map((mod) => {
+            const active = selected.some((m) => m.id === mod.id);
+            return (
+              <button
+                key={mod.id}
+                type="button"
+                onClick={() => toggle(mod)}
+                className={cn(
+                  'h-7 px-3 rounded-full border text-xs font-medium transition-all',
+                  active
+                    ? 'bg-[#7B61FF]/20 border-[#7B61FF]/40 text-[#7B61FF]'
+                    : 'bg-black/20 border-white/10 text-white/50 hover:border-white/25 hover:text-white'
+                )}
+              >
+                {mod.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
