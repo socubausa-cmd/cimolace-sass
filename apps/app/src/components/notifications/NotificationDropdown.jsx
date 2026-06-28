@@ -38,7 +38,7 @@ const NotificationDropdown = ({ externalUnreadCount = 0, externalItems = [] }) =
     if (!user?.id) { setNotifications([]); return; }
     const { data } = await supabase
       .from('notifications')
-      .select('id,user_id,title,message,type,is_read,created_at,action_url')
+      .select('id,user_id,title,body,type,is_read,created_at,action_url')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(20);
@@ -139,7 +139,7 @@ const NotificationDropdown = ({ externalUnreadCount = 0, externalItems = [] }) =
 
   const merged = useMemo(() => {
     const internalItems = notifications.slice(0, 5).map((n) => ({
-      id: n.id, title: n.title, body: n.message, isRead: Boolean(n.is_read),
+      id: n.id, title: n.title, body: n.body, isRead: Boolean(n.is_read),
       created_at: n.created_at, action_url: n.action_url, isLive: false, isExternal: false,
     }));
     const liveItems = liveNotifications.slice(0, 5).map((n) => ({
