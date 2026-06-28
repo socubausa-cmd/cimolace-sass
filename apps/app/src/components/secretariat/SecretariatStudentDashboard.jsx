@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSecretariatWorkflow } from '@/hooks/useSecretariatWorkflow';
 import { useAuth } from '@/hooks/useAuth';
+import { api } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -232,7 +233,9 @@ const SecretariatStudentDashboard = () => {
     }
     setCreateLoading(true);
     try {
-      await callSecretariatAction('secretariat-invite-student', { email: createForm.email.trim(), name: createForm.name.trim() });
+      // API NestJS réelle : envoie un vrai email d'invitation élève (magic link).
+      // role='student' est autorisé par sendInvite ; `api` ajoute auth + X-Tenant-Slug.
+      await api.post('/team-invites/send', { email: createForm.email.trim(), role: 'student', firstName: createForm.name.trim() });
       toast({ title: 'Invitation envoyée', description: `${createForm.email} recevra un email d'invitation` });
       setCreateForm({ email: '', name: '' });
       setCreateModalOpen(false);

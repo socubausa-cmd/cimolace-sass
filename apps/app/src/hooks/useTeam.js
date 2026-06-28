@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { api } from '@/lib/api';
 
 export function useTeam() {
   const { supabase, session, user } = useAuth();
@@ -47,27 +48,20 @@ export function useTeam() {
   }, [refresh]);
 
   const inviteMember = async (payload) => {
-    const token = session?.access_token;
-    if (!token) return { error: new Error('Non authentifié') };
-
-    const res = await fetch('/.netlify/functions/team-invite', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
+    try {
+      // API NestJS réelle : envoie un VRAI email d'invitation (magic link Supabase).
+      // Le client `api` ajoute Authorization + X-Tenant-Slug (requis par TenantGuard) —
+      // les anciens appels Netlify n'envoyaient pas le tenant et la fonction n'existait pas.
+      const res = await api.post('/team-invites/send', {
         email: payload.email,
         role: payload.role,
         firstName: payload.firstName,
         lastName: payload.lastName,
         validityDays: payload.validityDays ?? 7,
-      }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) return { error: new Error(data?.error || 'Erreur') };
-    // Mise à jour optimiste : ajouter la nouvelle invitation immédiatement
-    if (data?.invitation) {
+      });
+      const data = res.data?.data ?? res.data ?? {};
+      // Mise à jour optimiste : ajouter la nouvelle invitation immédiatement
+      if (data?.invitation) {
       setInvitations((prev) => [
         {
           id: data.invitation.id,
@@ -82,9 +76,12 @@ export function useTeam() {
         },
         ...prev,
       ]);
+      }
+      await refresh();
+      return { data, error: null };
+    } catch (err) {
+      return { error: new Error(err?.message || 'Erreur') };
     }
-    await refresh();
-    return { data, error: null };
   };
 
   const createPrivilegedLink = async (payload) => {
@@ -117,19 +114,14 @@ export function useTeam() {
   };
 
   const getInvitationLink = async (id) => {
-    const token = session?.access_token;
-    if (!token) return { error: new Error('Non authentifié') };
-    const res = await fetch('/.netlify/functions/team-invite-resend-link', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ invitationId: id }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) return { error: new Error(data?.error || 'Erreur') };
-    return { data: data?.link, email: data?.email, error: null };
+    try {
+      // Régénère le magic link de l'invitation via l'API réelle (POST /team-invites/:id/resend).
+      const res = await api.post(`/team-invites/${id}/resend`);
+      const data = res.data?.data ?? res.data ?? {};
+      return { data: data?.link, email: data?.email, error: null };
+    } catch (err) {
+      return { error: new Error(err?.message || 'Erreur') };
+    }
   };
 
   const resendInvitation = async (id, extraDays = 7) => {
