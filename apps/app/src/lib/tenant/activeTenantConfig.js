@@ -60,7 +60,10 @@ export const LIRI_NEUTRAL_CONFIG = {
     favicon: LIRI_PLATFORM_BRANDING.favicon,
     primaryColor: LIRI_PLATFORM_BRANDING.primaryColor,
     secondaryColor: LIRI_PLATFORM_BRANDING.secondaryColor,
-    accentColor: LIRI_PLATFORM_BRANDING.accentColor,
+    // Accent canonique du PORTAIL LIRI = terracotta #d97757 (cf. LiriPortalShell /
+    // LoginPage), pas le violet historique. C'est lui qui pilote --school-accent
+    // par défaut sur la plateforme (l'or #D4AF37 reste celui d'ISNA, sur son domaine).
+    accentColor: '#d97757',
     backgroundColor: LIRI_PLATFORM_BRANDING.backgroundColor,
     // Non vides : canonicals/OG + repli API natif ne doivent jamais être vides.
     domain: 'app.cimolace.space',
