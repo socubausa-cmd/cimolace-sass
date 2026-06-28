@@ -13,6 +13,7 @@ import {
   Shield,
   Activity,
   Sparkles,
+  GraduationCap,
 } from 'lucide-react';
 import { useBranding } from '../lib/branding';
 import { NotificationBell } from './NotificationBell';
@@ -27,6 +28,7 @@ const nav = [
   { to: '/forms',         icon: ClipboardList,   label: 'Formulaires' },
   { to: '/health',        icon: Heart,           label: 'Suivi santé' },
   { to: '/sante/mon-corps', icon: Activity,      label: 'Mon corps' },
+  { to: '/sante/precepteur', icon: GraduationCap, label: 'Précepteur santé' },
   { to: '/sante/assistant', icon: Sparkles,      label: 'Assistant santé' },
   { to: '/programs',      icon: BookOpen,        label: 'Programmes' },
   { to: '/messages',      icon: MessageCircle,   label: 'Messages' },
