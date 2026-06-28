@@ -9,6 +9,7 @@ import {
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
 import { useResolvedTenantSlug } from '@/hooks/useResolvedTenantSlug';
 import LiriDashboardShell from '@/components/shell/LiriDashboardShell';
+import { useTenantBranding } from '@/hooks/useTenantBranding';
 
 // Accent owner = violet LIRI (le secrétariat garde l'or).
 const OWNER_ACCENT = { color: '#7C3AED', dim: 'rgba(124,58,237,0.12)', mid: 'rgba(124,58,237,0.28)' };
@@ -17,6 +18,7 @@ const OwnerDashboardLayout = ({ children, activeTab, onTabChange }) => {
   const { user, logout, loading: isLoading } = useAuth();
   const navigate = useNavigate();
   const { slug: payoutTenantSlug } = useResolvedTenantSlug();
+  const { branding } = useTenantBranding();
 
   // 24 entrées regroupées en 6 familles (chunking) — chaque id/href est inchangé.
   const menuGroups = useMemo(
@@ -106,7 +108,7 @@ const OwnerDashboardLayout = ({ children, activeTab, onTabChange }) => {
       onNavigate={navigate}
       accent={OWNER_ACCENT}
       autoCollapse={false}
-      brandTitle="PRORASCIENCE"
+      brandTitle={branding?.name || 'LIRI'}
       brandSubtitle="ADMIN"
       user={user}
       onLogout={handleLogout}

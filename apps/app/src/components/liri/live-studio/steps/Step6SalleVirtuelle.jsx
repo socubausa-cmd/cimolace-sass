@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useRef, useEffect, useCallback, startTransition } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
@@ -963,7 +964,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
     const { data: sessionData } = await supabase.auth.getSession();
     if (!sessionData?.session?.access_token) {
       throw new Error(
-        'Connexion requise — connectez-vous à PRORASCIENCE puis relancez SmartBoard Architect.',
+        `Connexion requise — connectez-vous à ${getActiveTenantBranding()?.name || 'LIRI'} puis relancez SmartBoard Architect.`,
       );
     }
     const designCanvas = resolveArchitectDesignCanvasForApiRequest({

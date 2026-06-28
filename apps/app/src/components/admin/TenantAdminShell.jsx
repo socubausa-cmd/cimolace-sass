@@ -8,6 +8,7 @@
 import React, { useState } from 'react';
 import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useTenantBranding } from '@/hooks/useTenantBranding';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   LayoutDashboard, GraduationCap, Users, UserCog, Video, MonitorPlay,
@@ -149,7 +150,10 @@ const SidebarContent = ({ slug, onNavClick }) => {
   );
 };
 
-const LogoStrip = () => (
+const LogoStrip = () => {
+  // Nom de marque = tenant actif (multi-tenant) ; « LIRI » par défaut (plateforme).
+  const { branding } = useTenantBranding();
+  return (
   <div style={{ padding: '14px 14px 12px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 800, fontSize: 15, letterSpacing: '-0.02em' }}>
       <span style={{ color: T.t1 }}>L</span>
@@ -157,12 +161,13 @@ const LogoStrip = () => (
       <span style={{ color: T.t1 }}>RI</span>
     </div>
     <div style={{ width: 1, height: 16, background: T.border }}/>
-    <div>
-      <div style={{ fontWeight: 700, fontSize: 12, color: T.t1, letterSpacing: '0.01em' }}>PRORASCIENCE</div>
+    <div style={{ minWidth: 0 }}>
+      <div style={{ fontWeight: 700, fontSize: 12, color: T.t1, letterSpacing: '0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>{(branding?.name || 'LIRI').toUpperCase()}</div>
       <div style={{ fontFamily: T.mono, fontSize: 7, color: T.t3, letterSpacing: '0.12em' }}>ACADEMY</div>
     </div>
   </div>
-);
+  );
+};
 
 const TenantAdminShell = ({ children }) => {
   const { tenantSlug } = useParams();
