@@ -29,8 +29,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
-import { FOUNDER_TENANT_CONFIG as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
-import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
+import { getActiveTenantBranding, getActiveTenantSlug } from '@/lib/tenant/activeBranding';
 
 /* ─── Tokens (copiés depuis StudentSchoolLifeSidebar — ne pas importer) ─── */
 const T = {
@@ -52,8 +51,6 @@ const T = {
   t3: 'rgba(245,245,247,0.38)',
   mono: "'JetBrains Mono','Fira Code',monospace",
 };
-
-const slug = isnaTenantConfig.slug;
 
 /* ─── Nav items formateur (préfixe /teacher-space, icônes lucide conservées) ─── */
 const NAV = [
@@ -77,12 +74,18 @@ const NAV = [
   { key: 'profile',                 label: 'Mon Profil',         icon: User,            path: '/teacher-space/profile' },
 ];
 
-/* ─── Section Administration école (accents recolorés OR) ─── */
-const ADMIN_NAV = [
-  { key: 'admin-courses',  label: 'Gérer les Cours',     icon: GraduationCap, path: `/t/${slug}/admin/courses` },
-  { key: 'admin-students', label: 'Gérer les Étudiants', icon: Users,         path: `/t/${slug}/admin/students` },
-  { key: 'admin-settings', label: 'Paramètres École',    icon: Settings,      path: `/t/${slug}/admin/settings` },
-];
+/* ─── Section Administration école (accents recolorés OR) ─────────────────────
+   Construite au RENDER avec le slug du tenant COURANT (multi-tenant). Sans slug
+   résolu (hôte plateforme non hydraté), on n'affiche aucun lien admin plutôt que
+   de pointer vers un tenant en dur. */
+const buildAdminNav = (slug) =>
+  slug
+    ? [
+        { key: 'admin-courses',  label: 'Gérer les Cours',     icon: GraduationCap, path: `/t/${slug}/admin/courses` },
+        { key: 'admin-students', label: 'Gérer les Étudiants', icon: Users,         path: `/t/${slug}/admin/students` },
+        { key: 'admin-settings', label: 'Paramètres École',    icon: Settings,      path: `/t/${slug}/admin/settings` },
+      ]
+    : [];
 
 /* ─── SVG Logout / Menu / Close icons ─── */
 const IconLogout = () => (
@@ -213,24 +216,32 @@ const SidebarContent = ({ onNavClick }) => {
           />
         ))}
 
-        {/* ── Administration école (accents OR) ── */}
-        <div style={{ height: 1, background: T.border, margin: '10px 4px 8px' }}/>
-        <div style={{
-          padding: '0 10px 6px', fontFamily: T.mono, fontSize: 9,
-          fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
-          color: T.t3,
-        }}>
-          Administration école
-        </div>
-        {ADMIN_NAV.map((item, i) => (
-          <NavItem
-            key={item.key}
-            item={item}
-            isActive={isItemActive(item)}
-            onClick={() => handleNav(item)}
-            index={NAV.length + i}
-          />
-        ))}
+        {/* ── Administration école (accents OR) — liens scopés au tenant courant ── */}
+        {(() => {
+          const adminNav = buildAdminNav(getActiveTenantSlug());
+          if (!adminNav.length) return null;
+          return (
+            <>
+              <div style={{ height: 1, background: T.border, margin: '10px 4px 8px' }}/>
+              <div style={{
+                padding: '0 10px 6px', fontFamily: T.mono, fontSize: 9,
+                fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+                color: T.t3,
+              }}>
+                Administration école
+              </div>
+              {adminNav.map((item, i) => (
+                <NavItem
+                  key={item.key}
+                  item={item}
+                  isActive={isItemActive(item)}
+                  onClick={() => handleNav(item)}
+                  index={NAV.length + i}
+                />
+              ))}
+            </>
+          );
+        })()}
 
         <div style={{ height: 1, background: T.border, margin: '8px 4px' }}/>
 
