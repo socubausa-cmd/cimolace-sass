@@ -128,15 +128,41 @@ export class CheckoutService {
    * POST /checkout/webhook/stripe (event checkout.session.completed).
    */
   async handleStripeWebhook(rawBody: Buffer, signature?: string) {
-    const secret =
-      process.env.STRIPE_LIVE_WEBHOOK_SECRET ||
-      process.env.STRIPE_WEBHOOK_SECRET ||
-      process.env.STRIPE_BILLING_WEBHOOK_SECRET;
-    if (!secret) {
-      this.logger.warn("Webhook Stripe live : aucun secret configuré — ignoré.");
+    // Secret de vérif PAR TENANT (multi-tenant : chaque tenant peut avoir son propre
+    // compte Stripe + son propre webhook secret). On « peek » le tenant_id du payload
+    // NON vérifié UNIQUEMENT pour choisir le bon secret ; la confiance vient ENSUITE de
+    // la signature (un tenant_id forgé → aucun secret candidat ne valide → 400). Repli
+    // sur les secrets d'env (compte Stripe plateforme).
+    let peekTenantId: string | null = null;
+    try {
+      const peek = JSON.parse((rawBody ?? Buffer.alloc(0)).toString("utf8"));
+      peekTenantId = peek?.data?.object?.metadata?.tenant_id ?? null;
+    } catch {
+      /* payload illisible → on tentera les secrets d'env */
+    }
+
+    const candidates: string[] = [];
+    if (peekTenantId) {
+      const tp = await this.tenantPayments.resolveTenantProviderCreds(peekTenantId, "stripe");
+      if (tp?.creds?.webhook_secret) candidates.push(tp.creds.webhook_secret);
+    }
+    for (const s of [
+      process.env.STRIPE_LIVE_WEBHOOK_SECRET,
+      process.env.STRIPE_WEBHOOK_SECRET,
+      process.env.STRIPE_BILLING_WEBHOOK_SECRET,
+    ]) {
+      if (s) candidates.push(s);
+    }
+    if (candidates.length === 0) {
+      this.logger.warn("Webhook Stripe live : aucun secret (tenant ni env) — ignoré.");
       return { received: true };
     }
-    const event = verifyStripeSignature(rawBody ?? Buffer.alloc(0), signature, secret);
+
+    let event: any = null;
+    for (const secret of candidates) {
+      event = verifyStripeSignature(rawBody ?? Buffer.alloc(0), signature, secret);
+      if (event) break;
+    }
     if (!event) throw new BadRequestException("Signature Stripe invalide.");
 
     const paidTypes = new Set([

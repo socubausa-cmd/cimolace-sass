@@ -286,7 +286,21 @@ export class TenantPaymentConfigService {
       const creds = this.safeDecrypt(row.credentials ?? null);
       if (!creds || Object.keys(creds).length === 0) return null;
 
-      return { creds, mode: row.mode ?? null };
+      // Le form de réglages stocke des clés PRÉFIXÉES (ex. `stripe_secret_key`,
+      // `stripe_webhook_secret`, `pawapay_api_token`, `chariow_webhook_secret`) alors
+      // que les moteurs lisent SANS préfixe (`secret_key`, `webhook_secret`, `api_token`…).
+      // On expose des ALIAS sans préfixe (ADDITIF : aucune clé supprimée) pour réconcilier
+      // les deux conventions — sinon les credentials tenant ne résolvaient jamais (repli env).
+      const normalized: Record<string, string> = { ...creds };
+      const prefix = `${provider}_`;
+      for (const [k, v] of Object.entries(creds)) {
+        if (k.startsWith(prefix)) {
+          const bare = k.slice(prefix.length);
+          if (bare && !(bare in normalized)) normalized[bare] = v;
+        }
+      }
+
+      return { creds: normalized, mode: row.mode ?? null };
     } catch (e) {
       // Filet de sécurité ultime : jamais d'exception ne remonte au checkout.
       this.logger.warn(
