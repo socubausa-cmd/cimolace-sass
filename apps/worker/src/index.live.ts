@@ -20,6 +20,7 @@ import { pollLiveReminders }   from './jobs/live-reminders.js';
 import { pollLiveInvitations } from './jobs/live-invitations.js';
 import { pollLiveReplayShorts } from './jobs/short-generator.js';
 import { pollDraftSocialPosts } from './jobs/social-poster.js';
+import { pollImapSync }         from './jobs/imap-sync.js';
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -56,6 +57,17 @@ startPingJob();
       if (n > 0) console.log(`[worker:live] Invitations: ${n} enfilée(s)`);
     } catch (e: unknown) { console.error('[worker:live] Invitations error:', (e as Error)?.message || e); }
     await sleep(120_000);
+  }
+})();
+
+// ── RÉCEPTION inbound : sync IMAP des boîtes → boîte CRM back-office (90s) ─────
+(async () => {
+  while (true) {
+    try {
+      const n = await (pollImapSync as () => Promise<number>)();
+      if (n > 0) console.log(`[worker:live] IMAP: ${n} email(s) reçu(s)`);
+    } catch (e: unknown) { console.error('[worker:live] IMAP error:', (e as Error)?.message || e); }
+    await sleep(90_000);
   }
 })();
 

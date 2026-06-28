@@ -12,7 +12,9 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.600.0",
     "@supabase/supabase-js": "^2.30.0",
-    "inngest": "^3.0.0"
+    "imapflow": "^1.0.171",
+    "inngest": "^3.0.0",
+    "mailparser": "^3.7.1"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
