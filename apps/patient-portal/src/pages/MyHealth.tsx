@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Heart, Activity, Moon, Dumbbell, Droplets, Plus, X, AlertTriangle } from 'lucide-react';
+import { Heart, Activity, Moon, Dumbbell, Droplets, Plus, X, AlertTriangle, Gauge, Thermometer, HeartPulse, Scale, Stethoscope } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
@@ -22,6 +22,26 @@ const emptyForm: HealthForm = {
   notes: '',
 };
 
+// « Mes constantes » — saisie des relevés d'appareils maison (RPM). Tous les
+// champs sont optionnels : on n'envoie que ce qui est renseigné.
+type VitalsForm = {
+  blood_pressure_systolic: string;
+  blood_pressure_diastolic: string;
+  blood_glucose: string;
+  heart_rate: string;
+  weight_kg: string;
+  temperature: string;
+};
+
+const emptyVitals: VitalsForm = {
+  blood_pressure_systolic: '',
+  blood_pressure_diastolic: '',
+  blood_glucose: '',
+  heart_rate: '',
+  weight_kg: '',
+  temperature: '',
+};
+
 export function MyHealth() {
   const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +50,12 @@ export function MyHealth() {
   const [form, setForm] = useState<HealthForm>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // « Mes constantes » (RPM) — modal + état dédiés.
+  const [vitalsOpen, setVitalsOpen] = useState(false);
+  const [vitals, setVitals] = useState<VitalsForm>(emptyVitals);
+  const [vitalsSaving, setVitalsSaving] = useState(false);
+  const [vitalsError, setVitalsError] = useState<string | null>(null);
 
   const fetchEntries = useCallback(() => {
     const t = localStorage.getItem('supabase_token');
@@ -66,6 +92,33 @@ export function MyHealth() {
     { icon: Dumbbell, label: 'Exercice', value: latest.exercise_minutes, unit: 'min', color: '#10b981' },
     { icon: Droplets, label: 'Eau', value: latest.water_liters, unit: 'L', color: '#3b82f6' },
   ];
+
+  // Dernière valeur connue par constante (chaque vital peut venir d'une entrée
+  // différente : on parcourt du plus récent au plus ancien et on garde la 1re
+  // valeur non nulle de chaque champ).
+  const lastVital = (field: string): number | string | null => {
+    for (const e of entries) {
+      const v = (e as any)?.[field];
+      if (v != null && v !== '') return v;
+    }
+    return null;
+  };
+  const sysV = lastVital('blood_pressure_systolic');
+  const diaV = lastVital('blood_pressure_diastolic');
+  const vitalCards = [
+    {
+      icon: Gauge,
+      label: 'Tension',
+      value: sysV != null || diaV != null ? `${sysV ?? '-'}/${diaV ?? '-'}` : null,
+      unit: 'mmHg',
+      color: '#ef4444',
+    },
+    { icon: Droplets, label: 'Glycémie', value: lastVital('blood_glucose'), unit: 'mg/dL', color: '#0ea5e9' },
+    { icon: HeartPulse, label: 'Fréq. card.', value: lastVital('heart_rate'), unit: 'bpm', color: '#ec4899' },
+    { icon: Scale, label: 'Poids', value: lastVital('weight_kg'), unit: 'kg', color: '#10b981' },
+    { icon: Thermometer, label: 'Température', value: lastVital('temperature'), unit: '°C', color: '#f59e0b' },
+  ];
+  const hasAnyVital = vitalCards.some((c) => c.value != null);
 
   function openModal() {
     setForm(emptyForm);
@@ -114,16 +167,83 @@ export function MyHealth() {
     }
   }
 
+  function openVitals() {
+    setVitals(emptyVitals);
+    setVitalsError(null);
+    setVitalsOpen(true);
+  }
+
+  // Saisie « Mes constantes » → POST /med/me/health avec source='home_device'.
+  // Réutilise le pipeline existant : l'API projette ces vitals en biomarqueurs
+  // cliniques (glycémie/tension/FC/poids/température) et le jumeau recalcule
+  // ses scores d'organes + alertes. On n'envoie que les champs renseignés.
+  async function handleVitalsSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setVitalsSaving(true);
+    setVitalsError(null);
+    try {
+      const t = localStorage.getItem('supabase_token');
+      const payload: Record<string, unknown> = {
+        entry_type: 'vitals',
+        source: 'home_device',
+      };
+      const sys = Number(vitals.blood_pressure_systolic);
+      const dia = Number(vitals.blood_pressure_diastolic);
+      if (vitals.blood_pressure_systolic && sys > 0) payload.blood_pressure_systolic = sys;
+      if (vitals.blood_pressure_diastolic && dia > 0) payload.blood_pressure_diastolic = dia;
+      if (vitals.blood_glucose) payload.blood_glucose = Number(vitals.blood_glucose);
+      if (vitals.heart_rate) payload.heart_rate = Number(vitals.heart_rate);
+      if (vitals.weight_kg) payload.weight_kg = Number(vitals.weight_kg);
+      if (vitals.temperature) payload.temperature = Number(vitals.temperature);
+
+      // Garde-fou bienveillant : au moins une constante doit être renseignée.
+      const hasAny = Object.keys(payload).some(
+        (k) => k !== 'entry_type' && k !== 'source',
+      );
+      if (!hasAny) {
+        throw new Error('Renseignez au moins une constante avant d\'enregistrer.');
+      }
+
+      const res = await fetch(API + '/med/me/health', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + t,
+          'X-Tenant-Slug': localStorage.getItem('tenant_slug') || '',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.message || `Erreur ${res.status}`);
+      }
+      setVitalsOpen(false);
+      fetchEntries();
+    } catch (err: any) {
+      setVitalsError(err?.message || 'Echec de l\'enregistrement');
+    } finally {
+      setVitalsSaving(false);
+    }
+  }
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
         <h2 style={{ fontSize: 24, fontWeight: 700 }}>Mon journal de santé</h2>
-        <button
-          onClick={openModal}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
-        >
-          <Plus size={16} /> Enregistrer aujourd'hui
-        </button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            onClick={openVitals}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', background: '#fff', color: 'var(--brand-primary)', border: '1px solid var(--brand-primary)', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+          >
+            <Stethoscope size={16} aria-hidden="true" /> Mes constantes
+          </button>
+          <button
+            onClick={openModal}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+          >
+            <Plus size={16} /> Enregistrer aujourd'hui
+          </button>
+        </div>
       </div>
 
       {loadError && (
@@ -158,6 +278,45 @@ export function MyHealth() {
           </div>
         ))}
       </div>
+
+      {/* ── Mes constantes (RPM) ─────────────────────────────────────── */}
+      <section style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, marginBottom: 24 }} aria-labelledby="vitals-title">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+          <Stethoscope size={18} color="var(--brand-primary)" aria-hidden="true" />
+          <h3 id="vitals-title" style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Mes constantes</h3>
+          <button
+            onClick={openVitals}
+            style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+          >
+            <Plus size={15} aria-hidden="true" /> Ajouter un relevé
+          </button>
+        </div>
+        <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 14px', lineHeight: 1.5 }}>
+          Relevez vos mesures d'appareils maison (tensiomètre, glucomètre, balance, oxymètre…). Elles enrichissent votre suivi et celui de votre praticien.
+        </p>
+        {!hasAnyVital ? (
+          <p style={{ color: '#94a3b8', fontSize: 14, margin: 0 }}>
+            Aucune constante enregistrée pour l'instant. Cliquez sur « Ajouter un relevé » pour commencer.
+          </p>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 }}>
+            {vitalCards.map((c) => (
+              <div
+                key={c.label}
+                style={{ background: '#f8fafc', borderRadius: 12, border: '1px solid #eef2f7', padding: 14, display: 'flex', alignItems: 'center', gap: 10 }}
+              >
+                <c.icon size={20} color={c.color} aria-hidden="true" />
+                <div>
+                  <div style={{ fontSize: 12, color: '#64748b' }}>{c.label}</div>
+                  <div style={{ fontSize: 19, fontWeight: 700 }}>
+                    {c.value != null && c.value !== '' ? c.value : '-'} <span style={{ fontSize: 12, color: '#94a3b8' }}>{c.unit}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       {entries.length >= 2 && (
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, marginBottom: 16 }}>
@@ -347,6 +506,120 @@ export function MyHealth() {
                 }}
               >
                 {saving ? 'Enregistrement…' : 'Enregistrer'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* ── Modal « Mes constantes » (RPM) ───────────────────────────── */}
+      {vitalsOpen && (
+        <div
+          onClick={() => !vitalsSaving && setVitalsOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}
+        >
+          <form
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="vitals-modal-title"
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={handleVitalsSubmit}
+            style={{ background: '#fff', borderRadius: 12, padding: 24, width: 'min(520px, 96vw)', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <h3 id="vitals-modal-title" style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Mes constantes du jour</h3>
+              <button
+                type="button"
+                onClick={() => !vitalsSaving && setVitalsOpen(false)}
+                aria-label="Fermer"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#475569' }}
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+            </div>
+            <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 16px', lineHeight: 1.5 }}>
+              Saisissez les valeurs lues sur vos appareils. Laissez vide ce que vous n'avez pas mesuré.
+            </p>
+
+            <fieldset style={{ border: 'none', padding: 0, margin: '0 0 4px' }}>
+              <legend style={{ fontSize: 12, color: '#475569', fontWeight: 600, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Gauge size={15} color="#ef4444" aria-hidden="true" /> Tension artérielle
+              </legend>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <NumField
+                  label="Systolique (haut)"
+                  step="1"
+                  placeholder="120"
+                  value={vitals.blood_pressure_systolic}
+                  onChange={(v) => setVitals({ ...vitals, blood_pressure_systolic: v })}
+                />
+                <NumField
+                  label="Diastolique (bas)"
+                  step="1"
+                  placeholder="80"
+                  value={vitals.blood_pressure_diastolic}
+                  onChange={(v) => setVitals({ ...vitals, blood_pressure_diastolic: v })}
+                />
+              </div>
+            </fieldset>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginTop: 14 }}>
+              <NumField
+                label="Glycémie (mg/dL)"
+                step="1"
+                placeholder="90"
+                value={vitals.blood_glucose}
+                onChange={(v) => setVitals({ ...vitals, blood_glucose: v })}
+              />
+              <NumField
+                label="Fréq. cardiaque (bpm)"
+                step="1"
+                placeholder="65"
+                value={vitals.heart_rate}
+                onChange={(v) => setVitals({ ...vitals, heart_rate: v })}
+              />
+              <NumField
+                label="Poids (kg)"
+                step="0.1"
+                placeholder="70"
+                value={vitals.weight_kg}
+                onChange={(v) => setVitals({ ...vitals, weight_kg: v })}
+              />
+              <NumField
+                label="Température (°C)"
+                step="0.1"
+                placeholder="36.8"
+                value={vitals.temperature}
+                onChange={(v) => setVitals({ ...vitals, temperature: v })}
+              />
+            </div>
+
+            <p style={{ fontSize: 12, color: '#94a3b8', margin: '14px 0 0', lineHeight: 1.5 }}>
+              Ces relevés sont indicatifs et ne remplacent pas un avis médical. En cas de malaise ou de valeur très inhabituelle, contactez votre praticien ou les urgences.
+            </p>
+
+            {vitalsError && (
+              <div role="alert" style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 12, padding: 10, background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', borderRadius: 8, fontSize: 13, lineHeight: 1.45 }}>
+                <AlertTriangle size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+                <span>{vitalsError}</span>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 20 }}>
+              <button
+                type="button"
+                onClick={() => !vitalsSaving && setVitalsOpen(false)}
+                disabled={vitalsSaving}
+                style={{ padding: '10px 16px', background: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: vitalsSaving ? 'not-allowed' : 'pointer' }}
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                disabled={vitalsSaving}
+                style={{ padding: '10px 16px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: vitalsSaving ? 'not-allowed' : 'pointer', opacity: vitalsSaving ? 0.7 : 1 }}
+              >
+                {vitalsSaving ? 'Enregistrement…' : 'Enregistrer mes constantes'}
               </button>
             </div>
           </form>

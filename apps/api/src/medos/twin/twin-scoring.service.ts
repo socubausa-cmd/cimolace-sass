@@ -96,6 +96,18 @@ export interface WheelMetric {
   score: number;
 }
 
+/**
+ * Valeur de biomarqueur projetée depuis les CONSTANTES (vitals) d'une entrée
+ * de suivi patient (RPM — Remote Patient Monitoring). `biomarker_code` doit
+ * correspondre à un code de med_biomarker_refs (cf. mapVitalsToBiomarkers).
+ * `measured_at` est l'entry_date de la saisie (date du relevé maison).
+ */
+export interface VitalBiomarker {
+  biomarker_code: string;
+  value: number;
+  measured_at?: string;
+}
+
 const PENALTY_MILD = 12; // hors plage optimale mais dans la plage labo
 const PENALTY_CRITICAL = 30; // hors plage labo (large)
 
@@ -265,6 +277,65 @@ export class TwinScoringService {
     if (symptomCount > 0) {
       out.push({ domain: 'inflammation', score: clamp100(100 - symptomCount * 20) });
     }
+
+    return out;
+  }
+
+  // ── Constantes maison (RPM) → Biomarqueurs cliniques ────────────────────
+  /**
+   * Projette les CONSTANTES (vitals) d'une entrée de suivi vers des codes de
+   * biomarqueurs cliniques (RPM — Remote Patient Monitoring). DÉTERMINISTE et
+   * PUR (aucun I/O). À la différence de mapHealthEntryToWheel (lifestyle → roue),
+   * ce mapping alimente le niveau CLINIQUE : les valeurs renvoyées sont
+   * insérées dans med_patient_biomarkers puis scorées/alertées par le moteur.
+   *
+   * Mapping (codes de med_biomarker_refs — le poids/temp/SpO2 supposent la
+   * migration 20260628150000_medos_twin_rpm_vitals ; GLUCOSE préexiste) :
+   *   - blood_glucose            → GLUCOSE       (mg/dL, glycémie)
+   *   - blood_pressure_systolic  → BP_SYSTOLIC   (mmHg)
+   *   - blood_pressure_diastolic → BP_DIASTOLIC  (mmHg)
+   *   - heart_rate               → HEART_RATE    (bpm)
+   *   - spo2                      → SPO2          (%) — si fourni (futur oxymètre)
+   *   - temperature              → BODY_TEMP     (°C)
+   *   - weight_kg                → WEIGHT        (kg)
+   *
+   * Seules les constantes RENSEIGNÉES (numériques finies, > 0 pour écarter les
+   * 0 sentinelles d'appareils) produisent un biomarqueur. Un code dont la ref
+   * n'existe pas en base sera filtré en aval par addBiomarkers (refByCode) —
+   * donc additif et sûr même avant l'application de la migration.
+   */
+  mapVitalsToBiomarkers(
+    entry: {
+      blood_glucose?: number | null;
+      blood_pressure_systolic?: number | null;
+      blood_pressure_diastolic?: number | null;
+      heart_rate?: number | null;
+      spo2?: number | null;
+      temperature?: number | null;
+      weight_kg?: number | null;
+    },
+    measuredAt?: string,
+  ): VitalBiomarker[] {
+    const out: VitalBiomarker[] = [];
+    // Valeur strictement positive et finie : écarte null/''/0 (0 = pas de
+    // mesure pour une constante humaine ; aucune des constantes ici ne vaut 0).
+    const pos = (v: unknown): number | null => {
+      if (v == null || v === '') return null;
+      const n = Number(v);
+      return Number.isFinite(n) && n > 0 ? n : null;
+    };
+    const push = (code: string, v: unknown) => {
+      const n = pos(v);
+      if (n != null) out.push({ biomarker_code: code, value: n, measured_at: measuredAt });
+    };
+
+    push('GLUCOSE', entry.blood_glucose);
+    push('BP_SYSTOLIC', entry.blood_pressure_systolic);
+    push('BP_DIASTOLIC', entry.blood_pressure_diastolic);
+    push('HEART_RATE', entry.heart_rate);
+    push('SPO2', entry.spo2);
+    push('BODY_TEMP', entry.temperature);
+    push('WEIGHT', entry.weight_kg);
 
     return out;
   }
@@ -495,6 +566,81 @@ export class TwinScoringService {
         severity: liverHigh.length >= 3 ? 'warning' : 'info',
         message_fr: `Atteinte hépatique multiple (${liverHigh.join(', ')} ↑). Évoquer NAFLD, hépatite ou surcharge toxique selon contexte.`,
         evidence: liverHigh.map(ev),
+      });
+    }
+
+    // ─── Constantes maison (RPM — tensiomètre/oxymètre/glucomètre) ──────────
+    // Alertes CLINIQUES déterministes sur les vitals saisis par le patient.
+    // Ne se déclenchent que si le code correspondant est présent (additif,
+    // jamais de faux positif). Sévérité 'critical' quand la valeur sort de la
+    // plage labo (flag 'critical'), 'warning' sinon.
+    // L'hypertension lit la VALEUR (pas seulement le flag) : un seuil de crise
+    // (≥180/≥110) reste critique même si la borne labo est plus permissive.
+    const sys = valByCode.get('BP_SYSTOLIC');
+    const dia = valByCode.get('BP_DIASTOLIC');
+    if ((sys != null && high('BP_SYSTOLIC')) || (dia != null && high('BP_DIASTOLIC'))) {
+      const crisis = (sys ?? 0) >= 180 || (dia ?? 0) >= 110;
+      const labCritical =
+        flags['BP_SYSTOLIC'] === 'critical' || flags['BP_DIASTOLIC'] === 'critical';
+      alerts.push({
+        kind: 'hypertension',
+        severity: crisis || labCritical ? 'critical' : 'warning',
+        message_fr: crisis
+          ? `Tension artérielle très élevée (${sys ?? '?'}/${dia ?? '?'} mmHg). Seuil de crise hypertensive — contactez sans tarder votre praticien ou les urgences.`
+          : `Tension artérielle au-dessus de la cible (${sys ?? '?'}/${dia ?? '?'} mmHg). À recontrôler au calme et à signaler à votre praticien.`,
+        evidence: ['BP_SYSTOLIC', 'BP_DIASTOLIC'].filter((c) => valByCode.has(c)).map(ev),
+      });
+    }
+
+    // Hypotension marquée (systolique très basse) — sortie de plage labo basse.
+    if (sys != null && low('BP_SYSTOLIC')) {
+      alerts.push({
+        kind: 'hypotension',
+        severity: flags['BP_SYSTOLIC'] === 'critical' ? 'warning' : 'info',
+        message_fr: `Tension artérielle basse (${sys} mmHg de systolique). Si vertiges ou malaises, asseyez-vous, hydratez-vous et parlez-en à votre praticien.`,
+        evidence: ['BP_SYSTOLIC', 'BP_DIASTOLIC'].filter((c) => valByCode.has(c)).map(ev),
+      });
+    }
+
+    // Fréquence cardiaque au repos anormale (tachycardie / bradycardie).
+    const hr = valByCode.get('HEART_RATE');
+    if (hr != null && (high('HEART_RATE') || low('HEART_RATE'))) {
+      const tachy = high('HEART_RATE');
+      alerts.push({
+        kind: tachy ? 'tachycardia' : 'bradycardia',
+        severity: flags['HEART_RATE'] === 'critical' ? 'warning' : 'info',
+        message_fr: tachy
+          ? `Fréquence cardiaque au repos élevée (${hr} bpm). Au repos et hors effort/stress, à surveiller ; consultez si palpitations ou malaise.`
+          : `Fréquence cardiaque au repos basse (${hr} bpm). Souvent bénin chez les sportifs ; consultez en cas de fatigue, vertiges ou malaise.`,
+        evidence: [ev('HEART_RATE')],
+      });
+    }
+
+    // Hypoxémie (SpO2 basse à l'oxymètre) — signal respiratoire potentiellement grave.
+    const spo2 = valByCode.get('SPO2');
+    if (spo2 != null && low('SPO2')) {
+      const severe = spo2 < 92 || flags['SPO2'] === 'critical';
+      alerts.push({
+        kind: 'hypoxemia',
+        severity: severe ? 'critical' : 'warning',
+        message_fr: severe
+          ? `Saturation en oxygène basse (SpO2 ${spo2} %). En cas d'essoufflement, appelez le 15/112 ; sinon recontrôlez et contactez votre praticien.`
+          : `Saturation en oxygène un peu basse (SpO2 ${spo2} %). Recontrôlez au repos, doigt réchauffé, et signalez-le à votre praticien.`,
+        evidence: [ev('SPO2')],
+      });
+    }
+
+    // Fièvre (température corporelle élevée) — signal inflammatoire/infectieux aigu.
+    const temp = valByCode.get('BODY_TEMP');
+    if (temp != null && high('BODY_TEMP')) {
+      const highFever = temp >= 39 || flags['BODY_TEMP'] === 'critical';
+      alerts.push({
+        kind: 'fever',
+        severity: highFever ? 'warning' : 'info',
+        message_fr: highFever
+          ? `Fièvre élevée (${temp} °C). Hydratez-vous et surveillez ; consultez si elle persiste ou s'accompagne de signes de gravité.`
+          : `Température au-dessus de la normale (${temp} °C). Reposez-vous, hydratez-vous et recontrôlez ; consultez si cela dure.`,
+        evidence: [ev('BODY_TEMP')],
       });
     }
 

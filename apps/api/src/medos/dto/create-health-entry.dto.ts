@@ -33,4 +33,12 @@ export class CreateHealthEntryDto {
   @IsInt() @IsOptional() exercise_minutes?: number;
   @IsObject() @IsOptional() symptoms?: Record<string, unknown>[];
   @IsString() @IsOptional() notes?: string;
+
+  // Provenance de la saisie (RPM). 'home_device' = constante relevée sur un
+  // appareil maison (tensiomètre/glucomètre/balance/oxymètre/FC). Défaut côté
+  // service = 'manual'. Whitelist appliquée dans createHealthEntry.
+  @IsString()
+  @IsIn(['manual', 'home_device', 'questionnaire', 'import'])
+  @IsOptional()
+  source?: string;
 }

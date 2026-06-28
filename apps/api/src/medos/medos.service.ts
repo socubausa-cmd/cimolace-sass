@@ -882,49 +882,56 @@ export class MedosService {
       throw new ForbiddenException('Accès refusé');
     }
 
-    const { data, error } = await this.supabase.client
-      .from('med_health_entries')
-      .insert({
-        tenant_id: tenant.id,
-        patient_id: patientId,
-        entry_date: dto.entry_date ?? new Date().toISOString().split('T')[0],
-        entry_type: dto.entry_type ?? 'custom',
-        mood_score: dto.mood_score ?? null,
-        energy_level: dto.energy_level ?? null,
-        sleep_hours: dto.sleep_hours ?? null,
-        sleep_quality: dto.sleep_quality ?? null,
-        weight_kg: dto.weight_kg ?? null,
-        blood_pressure_systolic: dto.blood_pressure_systolic ?? null,
-        blood_pressure_diastolic: dto.blood_pressure_diastolic ?? null,
-        heart_rate: dto.heart_rate ?? null,
-        blood_glucose: dto.blood_glucose ?? null,
-        temperature: dto.temperature ?? null,
-        meal_photos: (dto.meal_photos ?? []) as any,
-        food_notes: dto.food_notes ?? null,
-        water_liters: dto.water_liters ?? null,
-        steps: dto.steps ?? null,
-        exercise_minutes: dto.exercise_minutes ?? null,
-        symptoms: (dto.symptoms ?? []) as any,
-        notes: dto.notes ?? null,
-      } as any)
-      .select('*')
-      .single();
+    // Base de l'entrée (sans provenance). `source` est ajouté ensuite et
+    // retiré en repli si la colonne n'existe pas encore (migration RPM non
+    // appliquée) — voir insertHealthEntry.
+    const baseRow: Record<string, unknown> = {
+      tenant_id: tenant.id,
+      patient_id: patientId,
+      entry_date: dto.entry_date ?? new Date().toISOString().split('T')[0],
+      entry_type: dto.entry_type ?? 'custom',
+      mood_score: dto.mood_score ?? null,
+      energy_level: dto.energy_level ?? null,
+      sleep_hours: dto.sleep_hours ?? null,
+      sleep_quality: dto.sleep_quality ?? null,
+      weight_kg: dto.weight_kg ?? null,
+      blood_pressure_systolic: dto.blood_pressure_systolic ?? null,
+      blood_pressure_diastolic: dto.blood_pressure_diastolic ?? null,
+      heart_rate: dto.heart_rate ?? null,
+      blood_glucose: dto.blood_glucose ?? null,
+      temperature: dto.temperature ?? null,
+      meal_photos: (dto.meal_photos ?? []) as any,
+      food_notes: dto.food_notes ?? null,
+      water_liters: dto.water_liters ?? null,
+      steps: dto.steps ?? null,
+      exercise_minutes: dto.exercise_minutes ?? null,
+      symptoms: (dto.symptoms ?? []) as any,
+      notes: dto.notes ?? null,
+    };
 
-    if (error) {
-      this.logger.error('createHealthEntry', error.message);
-      throw new InternalServerErrorException('Erreur interne');
-    }
+    // Provenance (RPM) : on tague l'origine de la saisie. Whitelist de valeurs
+    // pour éviter qu'un client injecte un libellé arbitraire ; défaut 'manual'.
+    const PROVENANCE = ['manual', 'home_device', 'questionnaire', 'import'];
+    const rawSource = typeof dto.source === 'string' ? dto.source : undefined;
+    const source = rawSource && PROVENANCE.includes(rawSource) ? rawSource : 'manual';
+
+    const data = await this.insertHealthEntry({ ...baseRow, source });
 
     await this.writeAudit(tenant.id, actorId, 'med_health_entry', (data as any).id, 'create');
 
     // Fermeture de boucle suivi → jumeau (best-effort, ne bloque JAMAIS la
-    // saisie patient) : on projette l'entrée sur la roue de transformation
-    // (source='health_entry', idempotent) puis on recalcule les scores +
-    // alertes du jumeau pour rafraîchir le tableau de bord. Une panne ici
-    // (table twin absente, recompute en erreur) ne doit pas faire échouer
-    // l'enregistrement du suivi — d'où le try/catch silencieux.
+    // saisie patient). Deux projections complémentaires :
+    //   1. roue de transformation (lifestyle : sommeil/énergie/exercice…),
+    //   2. biomarqueurs CLINIQUES depuis les CONSTANTES maison (RPM : glycémie,
+    //      tension, FC, poids, température) — c'est ce qui alimente les scores
+    //      d'organes + alertes cliniques (ex. glycémie/tension élevée).
+    // computeScores est appelé EN DERNIER pour qu'il voie les biomarqueurs
+    // fraîchement insérés et régénère scores d'organes + alertes en un passage.
+    // Une panne ici (table twin absente, recompute en erreur) ne doit pas faire
+    // échouer l'enregistrement du suivi — d'où le try/catch silencieux.
     try {
       await this.twin.syncWheelFromHealthEntries(tenant, patientId);
+      await this.twin.syncBiomarkersFromHealthEntry(tenant, patientId);
       await this.twin.computeScores(tenant, patientId);
     } catch (e: any) {
       this.logger.warn(
@@ -933,6 +940,50 @@ export class MedosService {
     }
 
     return data as unknown as Record<string, unknown>;
+  }
+
+  /**
+   * Insère une entrée de suivi. Tente d'écrire la colonne `source`
+   * (provenance RPM) ; si elle n'existe pas encore en base (migration
+   * 20260628150000_medos_twin_rpm_vitals non appliquée → Postgres 42703 /
+   * « column ... does not exist »), repli automatique en réinsérant SANS
+   * `source`. Garantit que la saisie n'échoue jamais à cause de la provenance,
+   * tout en l'enregistrant dès que la migration est appliquée.
+   */
+  private async insertHealthEntry(
+    row: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> {
+    const { data, error } = await this.supabase.client
+      .from('med_health_entries')
+      .insert(row as any)
+      .select('*')
+      .single();
+
+    if (!error) return data as unknown as Record<string, unknown>;
+
+    const code = (error as { code?: string }).code;
+    const msg = (error.message ?? '').toLowerCase();
+    const missingSource =
+      'source' in row &&
+      (code === '42703' ||
+        (msg.includes('source') && msg.includes('does not exist') &&
+          msg.includes('column')));
+    if (missingSource) {
+      const { source: _omit, ...withoutSource } = row;
+      const retry = await this.supabase.client
+        .from('med_health_entries')
+        .insert(withoutSource as any)
+        .select('*')
+        .single();
+      if (!retry.error) {
+        return retry.data as unknown as Record<string, unknown>;
+      }
+      this.logger.error('createHealthEntry (retry)', retry.error.message);
+      throw new InternalServerErrorException('Erreur interne');
+    }
+
+    this.logger.error('createHealthEntry', error.message);
+    throw new InternalServerErrorException('Erreur interne');
   }
 
   /**

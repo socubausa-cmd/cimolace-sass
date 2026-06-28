@@ -260,3 +260,114 @@ test('detectAlerts — liver_strain (3 enzymes hépatiques ↑)', () => {
   assert.ok(a);
   assert.equal(a.severity, 'warning');
 });
+
+// ─── RPM : constantes maison → biomarqueurs (mapVitalsToBiomarkers) ─────────
+
+test('mapVitalsToBiomarkers — projette les constantes renseignées', () => {
+  const out = svc.mapVitalsToBiomarkers(
+    {
+      blood_glucose: 95,
+      blood_pressure_systolic: 128,
+      blood_pressure_diastolic: 82,
+      heart_rate: 72,
+      temperature: 36.8,
+      weight_kg: 70.5,
+    },
+    '2026-06-28',
+  );
+  const byCode = Object.fromEntries(out.map((v) => [v.biomarker_code, v.value]));
+  assert.equal(byCode.GLUCOSE, 95);
+  assert.equal(byCode.BP_SYSTOLIC, 128);
+  assert.equal(byCode.BP_DIASTOLIC, 82);
+  assert.equal(byCode.HEART_RATE, 72);
+  assert.equal(byCode.BODY_TEMP, 36.8);
+  assert.equal(byCode.WEIGHT, 70.5);
+  // measured_at propagé sur chaque valeur.
+  assert.ok(out.every((v) => v.measured_at === '2026-06-28'));
+});
+
+test('mapVitalsToBiomarkers — ignore null / vide / 0 sentinelle', () => {
+  const out = svc.mapVitalsToBiomarkers({
+    blood_glucose: null,
+    blood_pressure_systolic: 0, // 0 = pas de mesure → ignoré
+    heart_rate: undefined,
+    temperature: '',
+    weight_kg: 68,
+  });
+  assert.equal(out.length, 1);
+  assert.equal(out[0].biomarker_code, 'WEIGHT');
+  assert.equal(out[0].value, 68);
+});
+
+test('mapVitalsToBiomarkers — entrée lifestyle pure → aucun vital', () => {
+  const out = svc.mapVitalsToBiomarkers({ /* mood/sleep only, no vitals */ });
+  assert.equal(out.length, 0);
+});
+
+// ─── RPM : alertes CLINIQUES sur constantes maison ──────────────────────────
+
+const VITAL_REFS = [
+  ref({ code: 'GLUCOSE', organs: ['pancreas', 'liver'], optimal_low: 75, optimal_high: 86, lab_low: 70, lab_high: 100 }),
+  ref({ code: 'HBA1C', organs: ['pancreas'], optimal_low: 4.8, optimal_high: 5.3, lab_low: 4, lab_high: 5.7, unit: '%' }),
+  ref({ code: 'BP_SYSTOLIC', organs: ['heart', 'kidneys'], optimal_low: 90, optimal_high: 120, lab_low: 90, lab_high: 140, unit: 'mmHg' }),
+  ref({ code: 'BP_DIASTOLIC', organs: ['heart', 'kidneys'], optimal_low: 60, optimal_high: 80, lab_low: 60, lab_high: 90, unit: 'mmHg' }),
+  ref({ code: 'HEART_RATE', organs: ['heart'], optimal_low: 55, optimal_high: 75, lab_low: 50, lab_high: 100, unit: 'bpm' }),
+  ref({ code: 'SPO2', organs: ['lungs', 'heart'], optimal_low: 96, optimal_high: 100, lab_low: 94, lab_high: 100, higher_is_worse: false, unit: '%' }),
+  ref({ code: 'BODY_TEMP', organs: ['immune'], optimal_low: 36.3, optimal_high: 37.2, lab_low: 35.5, lab_high: 37.5, unit: '°C' }),
+];
+
+test('detectAlerts — hypertension warning (au-dessus cible, < crise)', () => {
+  const alerts = svc.detectAlerts(VITAL_REFS, [
+    { biomarker_code: 'BP_SYSTOLIC', value: 135 },
+    { biomarker_code: 'BP_DIASTOLIC', value: 85 },
+  ]);
+  const a = alerts.find((x) => x.kind === 'hypertension');
+  assert.ok(a, 'hypertension alert missing');
+  assert.equal(a.severity, 'warning');
+});
+
+test('detectAlerts — hypertension critique (seuil de crise 180/110)', () => {
+  const alerts = svc.detectAlerts(VITAL_REFS, [
+    { biomarker_code: 'BP_SYSTOLIC', value: 185 },
+    { biomarker_code: 'BP_DIASTOLIC', value: 112 },
+  ]);
+  const a = alerts.find((x) => x.kind === 'hypertension');
+  assert.ok(a);
+  assert.equal(a.severity, 'critical');
+});
+
+test('detectAlerts — glycémie élevée (metabolic_risk, RPM glucomètre)', () => {
+  // GLUCOSE haut (hors optimal, dans labo) sans HBA1C → metabolic_risk préexistant.
+  const alerts = svc.detectAlerts(VITAL_REFS, [{ biomarker_code: 'GLUCOSE', value: 96 }]);
+  assert.ok(alerts.some((a) => a.kind === 'metabolic_risk'));
+});
+
+test('detectAlerts — tachycardie au repos', () => {
+  const alerts = svc.detectAlerts(VITAL_REFS, [{ biomarker_code: 'HEART_RATE', value: 110 }]);
+  const a = alerts.find((x) => x.kind === 'tachycardia');
+  assert.ok(a, 'tachycardia alert missing');
+});
+
+test('detectAlerts — hypoxémie critique (SpO2 basse)', () => {
+  const alerts = svc.detectAlerts(VITAL_REFS, [{ biomarker_code: 'SPO2', value: 90 }]);
+  const a = alerts.find((x) => x.kind === 'hypoxemia');
+  assert.ok(a, 'hypoxemia alert missing');
+  assert.equal(a.severity, 'critical');
+});
+
+test('detectAlerts — fièvre (température élevée)', () => {
+  const alerts = svc.detectAlerts(VITAL_REFS, [{ biomarker_code: 'BODY_TEMP', value: 38.4 }]);
+  assert.ok(alerts.some((a) => a.kind === 'fever'));
+});
+
+test('detectAlerts — constantes normales → aucune alerte vitale', () => {
+  const alerts = svc.detectAlerts(VITAL_REFS, [
+    { biomarker_code: 'BP_SYSTOLIC', value: 115 },
+    { biomarker_code: 'BP_DIASTOLIC', value: 75 },
+    { biomarker_code: 'HEART_RATE', value: 65 },
+    { biomarker_code: 'SPO2', value: 98 },
+    { biomarker_code: 'BODY_TEMP', value: 36.8 },
+  ]);
+  const vitalKinds = ['hypertension', 'hypotension', 'tachycardia', 'bradycardia', 'hypoxemia', 'fever'];
+  assert.ok(!alerts.some((a) => vitalKinds.includes(a.kind)));
+});

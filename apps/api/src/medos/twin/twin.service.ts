@@ -351,6 +351,87 @@ export class TwinService {
     return { inserted: rows.length, scores };
   }
 
+  // ── Constantes maison (RPM) → Biomarqueurs cliniques ──────────────────
+  /**
+   * Projette les CONSTANTES (vitals) de la DERNIÈRE entrée de suivi
+   * (med_health_entries) vers med_patient_biomarkers, tag source='home_device'.
+   * C'est le trou RPM comblé : le suivi maison (tensiomètre/glucomètre/balance/
+   * oxymètre/FC) alimente le jumeau au niveau CLINIQUE, pas seulement le
+   * lifestyle (cf. syncWheelFromHealthEntries qui ne mappe que la roue).
+   *
+   * - DÉTERMINISTE : le mapping vital→code est pur (scoring.mapVitalsToBiomarkers)
+   *   et chaque valeur est filtrée contre le référentiel (refByCode) + flaggée
+   *   par le même moteur que les biomarqueurs labo.
+   * - ADDITIF : n'insère QUE les codes connus en base. Avant l'application de la
+   *   migration RPM (BP_SYSTOLIC, BP_DIASTOLIC, HEART_RATE, SPO2, BODY_TEMP,
+   *   WEIGHT), seul GLUCOSE passe ; les autres sont ignorés sans erreur.
+   * - measured_at = entry_date de la saisie (date du relevé maison).
+   * - NE recalcule PAS les scores ici : l'appelant (createHealthEntry) appelle
+   *   computeScores juste après → un seul recompute, alertes cliniques incluses.
+   * - Best-effort : ne jette jamais (le suivi ne doit pas échouer si la
+   *   projection clinique échoue). Renvoie le nombre de biomarqueurs insérés.
+   */
+  async syncBiomarkersFromHealthEntry(
+    tenant: TenantContext,
+    patientId: string,
+  ): Promise<{ inserted: number }> {
+    try {
+      const { data: latest } = await this.db
+        .from('med_health_entries')
+        .select(
+          'blood_glucose, blood_pressure_systolic, blood_pressure_diastolic, heart_rate, temperature, weight_kg, entry_date, created_at',
+        )
+        .eq('tenant_id', tenant.id)
+        .eq('patient_id', patientId)
+        .order('entry_date', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!latest) return { inserted: 0 };
+
+      const measuredAt =
+        (latest.entry_date as string | null) ??
+        new Date().toISOString().slice(0, 10);
+      const vitals = this.scoring.mapVitalsToBiomarkers(latest, measuredAt);
+      if (vitals.length === 0) return { inserted: 0 };
+
+      const { biomarkers: refs } = await this.getReferential();
+      const refByCode = new Map(refs.map((r) => [r.code, r]));
+
+      const rows = vitals
+        .filter((v) => refByCode.has(v.biomarker_code))
+        .map((v) => {
+          const ref = refByCode.get(v.biomarker_code)!;
+          const flag = this.scoring.computeFlag(ref, v.value);
+          return {
+            tenant_id: tenant.id,
+            patient_id: patientId,
+            lab_document_id: null,
+            biomarker_code: v.biomarker_code,
+            value: v.value,
+            unit_raw: ref.unit,
+            value_canonical: v.value,
+            flag,
+            measured_at: v.measured_at ?? measuredAt,
+            confidence: 1.0,
+            source: 'home_device',
+          };
+        });
+
+      if (rows.length === 0) return { inserted: 0 };
+      const { error } = await this.db.from('med_patient_biomarkers').insert(rows);
+      if (error) {
+        this.logger.error(`sync biomarkers from health: ${error.message}`);
+        return { inserted: 0 };
+      }
+      return { inserted: rows.length };
+    } catch (e: any) {
+      this.logger.warn(`syncBiomarkersFromHealthEntry: ${e?.message ?? e}`);
+      return { inserted: 0 };
+    }
+  }
+
   /**
    * Import structuré (CSV/JSON) — zéro IA pour le mapping.
    *
