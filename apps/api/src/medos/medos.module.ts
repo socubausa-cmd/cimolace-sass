@@ -79,6 +79,9 @@ import { TwinGenomicsService } from './twin/twin-genomics.service';
 import { TwinMicrobiomeService } from './twin/twin-microbiome.service';
 import { TwinMetabolomicsService } from './twin/twin-metabolomics.service';
 import { TwinEnabledGuard } from './twin/twin-enabled.guard';
+// MEDOS — Façade FHIR R4 (interopérabilité hôpital/DMP, lecture seule)
+import { FhirController } from './fhir/fhir.controller';
+import { FhirService } from './fhir/fhir.service';
 // MEDOS routes all video through Liri (LiveModule). We don't import
 // LiveKitModule directly anymore — that would re-introduce the bypass
 // the P5 refactor specifically eliminated.
@@ -138,6 +141,8 @@ import { EmailEngineModule } from '../email-engine/email-engine.module';
     TwinMicrobiomeService,
     TwinMetabolomicsService,
     TwinEnabledGuard,
+    // FHIR R4 facade (read-only interoperability)
+    FhirService,
     // Global audit interceptor (court-circuite hors MEDOS)
     {
       provide: APP_INTERCEPTOR,
@@ -192,6 +197,9 @@ import { EmailEngineModule } from '../email-engine/email-engine.module';
     TwinController,
     TwinMeController,
     TwinUsageController,
+    // FHIR R4 facade (read-only) — registered last; '/med/fhir/*' is
+    // a distinct, unambiguous prefix so route ordering doesn't matter.
+    FhirController,
   ],
   exports: [
     ApiKeyGuard,
