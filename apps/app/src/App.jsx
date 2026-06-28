@@ -834,10 +834,13 @@ const ProtectedImmersiveMessagingRoute = ({ children }) => {
   const role = String(getEffectiveRole(user) || '').toLowerCase();
   const isStaffRole = ['owner', 'admin', 'secretariat', 'teacher', 'creator', 'commercial', 'support'].includes(role);
   const isPremiumActive = status === 'active' || (status === 'past_due' && inGrace);
-  // Membre actif d'un tenant LIRI/MedOS : son vrai rôle est dans le JWT (tenant_role), pas le
+  // Membre actif d'un tenant LIRI/École : son vrai rôle est dans le JWT (tenant_role), pas le
   // rôle global (souvent 'visitor'). La messagerie inter-membres est tenant-scoped (isolation
-  // garantie côté API), donc tout membre d'un tenant y a accès. Additif → l'accès école inchangé.
-  const isLiriMember = ['owner', 'admin', 'practitioner', 'clinic_admin', 'teacher', 'secretariat'].includes(tenantRole);
+  // garantie côté API), donc tout membre d'un tenant école y a accès — y compris les ÉLÈVES
+  // ('student'), qui peuvent ainsi écrire à leurs profs / au secrétariat. Additif → accès école inchangé.
+  // NB : 'patient' (MEDOS) volontairement EXCLU de ce canal — la relation patient↔praticien a son
+  // propre flux et on évite tout DM patient↔patient (confidentialité médicale).
+  const isLiriMember = ['owner', 'admin', 'practitioner', 'clinic_admin', 'teacher', 'secretariat', 'student'].includes(tenantRole);
   if (isStaffRole || isPremiumActive || isLiriMember || (role === 'visitor' && visitorCanChat)) return children;
 
   return <Navigate to="/appointment/request?source=immersive-chat" replace />;
