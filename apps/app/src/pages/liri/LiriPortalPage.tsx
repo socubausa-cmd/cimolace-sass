@@ -1,47 +1,68 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare, MessageCircle, WandSparkles,
   Library, Blocks, Settings2, Mic, ArrowUp, LogIn, CalendarPlus, PenTool,
   ShoppingBag, Clock, ChevronRight, Film, ChevronLeft, UserRound, Plus,
-  Clapperboard, Radio, FilePenLine, BadgeDollarSign, Webhook, GraduationCap,
+  Radio, GraduationCap, LogOut, ArrowUpRight,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { authStore } from '@/lib/auth-store';
 import { getApiBaseUrl } from '@/lib/apiBase';
+import { useAuth } from '@/hooks/useAuth';
+import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import '../LiriPortal.css';
+
+// Marque blanche par tenant : sur le domaine d'un tenant (ex. prorascience.org), le
+// portail porte le nom du tenant et n'expose JAMAIS « LIRI » ; sur l'hôte produit LIRI
+// (liri.cimolace.space) il reste « LIRI ». activeTenantConfig = résolu par l'hôte.
+const PORTAL_IS_TENANT = !!(activeTenantConfig && activeTenantConfig.slug);
+const PORTAL_BRAND =
+  (activeTenantConfig && activeTenantConfig.branding && activeTenantConfig.branding.name) || 'LIRI';
 
 interface Live { id: string; title?: string; status?: string; scheduled_at?: string; started_at?: string | null; ended_at?: string | null; price_cents?: number; }
 interface Stats { totalMembers: number; totalLives: number; totalCourses: number; totalRevenueCents: number; }
+interface Org { name: string; slug: string; role?: string | null; plan?: string | null; billingStatus?: string | null; }
+interface Sub { status?: string; plan_id?: string; provider?: string; current_period_end?: string | null; }
 
 interface ResumeItem { id: string; icon: LucideIcon; title: string; sub: string; to: string; }
 interface ActivityItem { id: string; icon: LucideIcon; tint?: 'coral' | 'green' | 'muted'; title: string; sub: string; when: string; action?: string; to?: string; }
 
-/* Repli « démo » aligné sur la maquette docs/liri-portal-accueil.mockup.html.
-   Affiché uniquement quand l'API ne renvoie pas encore de données réelles,
-   afin que le portail ne paraisse jamais vide. */
-const DEMO_RESUME: ResumeItem[] = [
-  { id: 'r1', icon: Clock, title: 'Masterclass React — dans 1 h 53', sub: "Salle d'attente ouverte · 48 inscrits", to: '/lives' },
-  { id: 'r2', icon: FilePenLine, title: 'Brouillon — « Les portes du monde »', sub: 'Formation Builder · 35 %', to: '/studio/liri/formation' },
-];
-const DEMO_ACTIVITY: ActivityItem[] = [
-  { id: 'a1', icon: Film, tint: 'coral', title: 'Replay « Chapitre 3 — Katiokeni » prêt', sub: 'Post-production disponible', when: '12 min', action: 'Ouvrir', to: '/studio/liri/bibliotheque' },
-  { id: 'a2', icon: WandSparkles, tint: 'coral', title: 'Masterclass #4 générée — 19 slides', sub: 'via Orchestrateur Live', when: '1 h' },
-  { id: 'a3', icon: BadgeDollarSign, tint: 'green', title: 'Nouvelle inscription payante — 25 €', sub: 'Masterclass React', when: '2 h' },
-  { id: 'a4', icon: Webhook, tint: 'muted', title: '2 webhooks livrés à isna.app', sub: 'événement session:ended', when: '3 h' },
-];
-
 export function LiriPortalPage() {
   const nav = useNavigate();
+  const { logout, user } = useAuth();
   const base = getApiBaseUrl();
   const token = authStore.getToken();
   const slug = authStore.getTenantSlug();
-  const tenant = (slug || 'École').replace(/-/g, ' ');
+  const slugLabel = (slug || 'École').replace(/-/g, ' ');
 
   const [now, setNow] = useState(() => new Date());
   const [stats, setStats] = useState<Stats | null>(null);
   const [lives, setLives] = useState<Live[]>([]);
+  const [org, setOrg] = useState<Org | null>(null);
+  const [subs, setSubs] = useState<Sub[]>([]);
   const [starting, setStarting] = useState(false);
+
+  // Menu compte / organisation (avatar).
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  // Identité affichée : vrai nom d'org (API) sinon slug humanisé ; email du compte.
+  const orgName = org?.name || slugLabel;
+  const orgSlug = org?.slug || slug;
+  const email = user?.email || '';
+
+  // État d'abonnement (essai / payant / gratuit) pour le badge + le CTA upgrade.
+  const billing = useMemo(() => {
+    const active = subs.find((s) => s.status === 'active') ?? subs[0];
+    const end = active?.current_period_end ? new Date(active.current_period_end) : null;
+    const future = end ? end.getTime() - Date.now() : 0;
+    const daysLeft = end ? Math.max(0, Math.ceil(future / 86_400_000)) : null;
+    const isPaid = !!active && !!active.provider && active.provider !== 'free' && active.status === 'active' && (!end || future > 0);
+    const isTrial = !!active && !isPaid && (String(active.plan_id || '').includes('trial') || active.provider === 'free');
+    const label = isPaid ? (active?.plan_id || 'Forfait') : isTrial ? `Essai${daysLeft != null ? ` · ${daysLeft} j` : ''}` : 'Gratuit';
+    return { isPaid, label };
+  }, [subs]);
 
   // « Démarrer » = réunion instantanée façon Zoom : crée une session live à la volée,
   // la démarre, et ouvre directement le LiveHostPage (coque LIRI neutre). Repli = wizard.
@@ -80,12 +101,37 @@ export function LiriPortalPage() {
 
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 30_000); return () => clearInterval(t); }, []);
 
+  // Ferme le menu compte au clic extérieur / Échap.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => { if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
+  }, [menuOpen]);
+
   useEffect(() => {
     if (!token) return;
     const h = { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
-    fetch(`${base}/growth/stats`, { headers: h }).then((r) => r.json()).then((d) => setStats(d?.data ?? d)).catch(() => {});
+    // Stats : on ne garde la réponse QUE si la forme est valide (sinon une réponse
+    // d'erreur — guard tenant, 401… — polluerait l'affichage avec des NaN / mocks).
+    fetch(`${base}/growth/stats`, { headers: h })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { const s = d?.data ?? d; if (s && typeof s.totalLives === 'number' && typeof s.totalMembers === 'number') setStats(s as Stats); })
+      .catch(() => {});
+    // Organisation réelle (nom, rôle, plan) pour l'en-tête + le menu compte.
+    fetch(`${base}/tenants/current`, { headers: h })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { let t: any = d; while (t && typeof t === 'object' && 'data' in t) t = t.data; if (t?.name || t?.slug) setOrg({ name: t.name ?? slugLabel, slug: t.slug ?? slug, role: t.userRole ?? t.role ?? null, plan: t.plan ?? null, billingStatus: t.billing_status ?? null }); })
+      .catch(() => {});
+    // Abonnement plateforme (essai / forfait) pour le badge + le CTA upgrade.
+    fetch(`${base}/billing/plan`, { headers: h })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { let t: any = d; while (t && typeof t === 'object' && 'data' in t && !('subscriptions' in t)) t = t.data; const arr = t?.subscriptions ?? []; setSubs(Array.isArray(arr) ? arr : []); })
+      .catch(() => {});
     fetch(`${base}/lives`, { headers: h }).then((r) => r.json()).then((d) => { const a = d?.data ?? d; setLives(Array.isArray(a) ? a : []); }).catch(() => {});
-  }, [base, token, slug]);
+  }, [base, token, slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const greet = useMemo(() => { const h = now.getHours(); return h < 6 ? 'Bonne nuit' : h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir'; }, [now]);
   const dateLong = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -99,6 +145,8 @@ export function LiriPortalPage() {
   );
   const recent = useMemo(() => [...lives].sort((a, b) => +new Date(b.scheduled_at ?? 0) - +new Date(a.scheduled_at ?? 0)).slice(0, 4), [lives]);
 
+  const liveMinutes = (stats?.totalLives ?? 0) * 70;
+
   const fmtAgo = (iso?: string) => {
     if (!iso) return '';
     const diff = now.getTime() - new Date(iso).getTime();
@@ -110,23 +158,21 @@ export function LiriPortalPage() {
     return `${Math.round(h / 24)} j`;
   };
 
-  // « Reprendre » : prochains lives → repli démo si rien de programmé.
-  const resumeItems = useMemo<ResumeItem[]>(() => {
-    if (upcoming.length === 0) return DEMO_RESUME;
-    return upcoming.slice(0, 2).map((l) => ({
+  // « Reprendre » : prochains lives réels (plus de repli démo : un tenant neuf est vide).
+  const resumeItems = useMemo<ResumeItem[]>(() => (
+    upcoming.slice(0, 2).map((l) => ({
       id: l.id,
       icon: Clock,
       title: l.title || 'Session live',
       sub: `${fmtWhen(l.scheduled_at)}${l.price_cents ? ` · ${euros(l.price_cents)} €` : ' · gratuit'}`,
       to: '/lives',
-    }));
+    }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [upcoming]);
+  ), [upcoming]);
 
-  // « Activité récente » : lives récents → repli démo si rien.
-  const activityItems = useMemo<ActivityItem[]>(() => {
-    if (recent.length === 0) return DEMO_ACTIVITY;
-    return recent.map((l) => ({
+  // « Activité récente » : lives récents réels (plus de repli démo).
+  const activityItems = useMemo<ActivityItem[]>(() => (
+    recent.map((l) => ({
       id: l.id,
       icon: l.ended_at ? Film : WandSparkles,
       tint: 'coral' as const,
@@ -135,9 +181,9 @@ export function LiriPortalPage() {
       when: fmtAgo(l.scheduled_at),
       action: l.ended_at ? 'Ouvrir' : undefined,
       to: '/lives',
-    }));
+    }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recent]);
+  ), [recent]);
 
   function fmtWhen(iso?: string) {
     if (!iso) return '';
@@ -167,6 +213,9 @@ export function LiriPortalPage() {
     { label: 'Acheter', icon: ShoppingBag, to: '/dashboard' },
   ];
 
+  const openMenu = () => setMenuOpen((v) => !v);
+  const runMenu = (fn: () => void) => { setMenuOpen(false); fn(); };
+
   return (
     <div className="lp-root relative h-[100dvh] w-full overflow-hidden grid grid-rows-[56px_1fr_34px]">
       {/* glow chaleureux */}
@@ -180,14 +229,59 @@ export function LiriPortalPage() {
         <div className="flex items-center gap-2.5">
           <button className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Menu"><Menu size={17} /></button>
           <span className="flex items-center gap-2">
-            <img src="/lirilogo.png" alt="LIRI" className="h-9 w-9 object-contain" />
-            <span className="text-[17px] font-semibold tracking-tight">LIRI</span>
+            {PORTAL_IS_TENANT ? null : <img src="/lirilogo.png" alt="LIRI" className="h-9 w-9 object-contain" />}
+            <span className="text-[17px] font-semibold tracking-tight">{PORTAL_BRAND}</span>
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <button className="relative grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Notifications"><Bell size={17} /><span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full" style={{ background: 'var(--coral)' }} /></button>
-          <button onClick={() => nav('/dashboard')} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Paramètres"><Settings size={17} /></button>
-          <span className="ml-1 grid h-8 w-8 place-items-center rounded-full text-[12px] font-semibold text-white lp-ember">{tenant.slice(0, 2).toUpperCase()}</span>
+          <button onClick={() => nav(`/t/${orgSlug}/admin/settings`)} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Réglages de l’organisation"><Settings size={17} /></button>
+
+          {/* ── Avatar → menu compte / organisation ── */}
+          <div className="relative" ref={menuRef}>
+            <button onClick={openMenu} aria-label="Compte et organisation" aria-haspopup="menu" aria-expanded={menuOpen}
+              className="ml-1 grid h-8 w-8 place-items-center rounded-full text-[12px] font-semibold text-white lp-ember lp-tr lp-railbtn">
+              {orgName.slice(0, 2).toUpperCase()}
+            </button>
+
+            {menuOpen && (
+              <div role="menu" className="absolute right-0 top-[calc(100%+8px)] z-50 w-[280px] overflow-hidden rounded-2xl border lp-line lp-soft"
+                style={{ background: '#221f1b', boxShadow: '0 24px 60px -16px rgba(0,0,0,.7)' }}>
+                {/* En-tête : nom réel + email + badge essai/plan */}
+                <div className="flex items-center gap-3 border-b lp-line px-4 py-3.5">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[13px] font-semibold text-white lp-ember">{orgName.slice(0, 2).toUpperCase()}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[14px] font-semibold capitalize lp-ink">{orgName}</p>
+                    <p className="truncate text-[11.5px] lp-faint">{email || `/t/${orgSlug}`}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ background: billing.isPaid ? 'rgba(91,122,82,.20)' : 'rgba(217,119,87,.16)', color: billing.isPaid ? '#9ec08f' : '#e7a07f' }}>{billing.label}</span>
+                </div>
+
+                {/* CTA upgrade — visible tant que non payant */}
+                {!billing.isPaid && (
+                  <button role="menuitem" onClick={() => runMenu(() => nav('/cimolace/billing?upgrade=liri'))}
+                    className="flex w-full items-center justify-between px-4 py-3 text-left lp-tr hover:bg-[rgba(217,119,87,.08)]">
+                    <span className="flex items-center gap-2.5 text-[13.5px] font-medium lp-ink"><Sparkles size={16} className="lp-coral" /> Passer à un forfait</span>
+                    <ArrowUpRight size={16} className="lp-coral" />
+                  </button>
+                )}
+
+                <div className="border-t lp-line py-1.5">
+                  <button role="menuitem" onClick={() => runMenu(() => nav('/liri/compte'))}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[13.5px] lp-muted lp-tr hover:bg-[rgba(255,255,255,.05)]">
+                    <UserRound size={16} className="lp-faint" />
+                    <span className="flex-1">Mon compte &amp; organisation</span>
+                    <ChevronRight size={15} className="lp-faint" />
+                  </button>
+                  <button role="menuitem" onClick={() => runMenu(() => logout())}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[13.5px] lp-muted lp-tr hover:bg-[rgba(255,255,255,.05)]">
+                    <LogOut size={16} className="lp-faint" />
+                    <span className="flex-1">Déconnexion</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -211,21 +305,21 @@ export function LiriPortalPage() {
           })}
           <div className="my-1.5 h-px w-9" style={{ background: 'rgba(245,244,238,.08)' }} />
           <button onClick={() => nav('/dashboard')} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Blocks size={20} /></span><span className="lp-nl text-[10px] font-medium">Intégr.</span></button>
-          <button onClick={() => nav('/dashboard')} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Settings2 size={20} /></span><span className="lp-nl text-[10px] font-medium">Réglages</span></button>
-          <button className="mt-auto grid h-9 w-9 place-items-center rounded-full text-[11px] font-bold text-white lp-tr lp-railbtn" style={{ background: 'linear-gradient(135deg,#5b7a52,#6d8f60)' }} title={tenant}>{tenant.slice(0, 2).toUpperCase()}</button>
+          <button onClick={() => nav(`/t/${orgSlug}/admin/settings`)} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Settings2 size={20} /></span><span className="lp-nl text-[10px] font-medium">Réglages</span></button>
+          <button onClick={openMenu} title={orgName} aria-label="Compte et organisation" className="mt-auto grid h-9 w-9 place-items-center rounded-full text-[11px] font-bold text-white lp-tr lp-railbtn" style={{ background: 'linear-gradient(135deg,#5b7a52,#6d8f60)' }}>{orgName.slice(0, 2).toUpperCase()}</button>
         </aside>
 
         {/* MAIN — Accueil */}
         <main className="lp-scroll relative min-h-0 overflow-y-auto">
           <div className="mx-auto flex min-h-full max-w-4xl flex-col items-center px-6 pt-12 pb-10">
             <p className="text-[13px] font-medium uppercase tracking-[0.18em] lp-faint lp-rise">{dateLong} · {timeStr}</p>
-            <h1 className="mt-3 text-center lp-serif text-[34px] font-medium leading-tight tracking-tight lp-rise">{greet}<span className="lp-coral"> sur LIRI</span></h1>
+            <h1 className="mt-3 text-center lp-serif text-[34px] font-medium leading-tight tracking-tight lp-rise">{greet}<span className="lp-coral"> sur {PORTAL_BRAND}</span></h1>
             <p className="mt-2 text-center text-[14px] lp-muted lp-rise">Que voulez-vous lancer aujourd'hui&nbsp;?</p>
 
             {/* command bar → Brain */}
             <button onClick={() => nav('/dashboard/liri')} className="lp-tr lp-soft group mt-7 flex h-14 w-full max-w-xl items-center gap-3 rounded-2xl lp-line border lp-panel px-4 text-left hover:border-[rgba(217,119,87,.4)]">
               <span className="grid h-8 w-8 place-items-center rounded-xl lp-coral lp-coral-tint"><Sparkles size={18} /></span>
-              <span className="flex-1 text-[15px] lp-muted">Demandez à LIRI ou lancez une action…</span>
+              <span className="flex-1 text-[15px] lp-muted">Demandez à {PORTAL_BRAND} ou lancez une action…</span>
               <span className="grid h-7 w-7 place-items-center rounded-lg lp-faint lp-railbtn lp-tr"><Mic size={16} /></span>
               <span className="grid h-9 w-9 place-items-center rounded-xl text-white lp-ember"><ArrowUp size={18} /></span>
             </button>
@@ -236,7 +330,6 @@ export function LiriPortalPage() {
                 const Icon = q.icon;
                 return (
                   <button key={q.label} onClick={() => (q.hero ? startInstantMeeting() : nav(q.to))} disabled={q.hero && starting} className="group relative flex w-24 flex-col items-center gap-2.5 disabled:cursor-wait disabled:opacity-70">
-                    {q.badge && <span className="absolute -top-2 right-2 z-10 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[9px] font-bold text-white" style={{ background: 'var(--coral)' }}>{q.badge}</span>}
                     <span className={`lp-tr grid h-24 w-24 place-items-center rounded-[26px] lp-soft lp-lift ${q.hero ? 'text-white lp-ember' : 'lp-line border lp-panel lp-coral lp-hovbtn'}`}><Icon size={q.hero ? 32 : 30} /></span>
                     <span className={`text-[13px] font-medium ${q.hero ? 'lp-ink' : 'lp-muted'}`}>{q.hero && starting ? 'Création…' : q.label}</span>
                   </button>
@@ -244,10 +337,10 @@ export function LiriPortalPage() {
               })}
             </div>
 
-            {/* reprendre — prochains lives + travaux en cours (repli démo) */}
-            {resumeItems.length > 0 && (
-              <div className="mt-12 w-full max-w-xl">
-                <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] lp-faint">Reprendre</p>
+            {/* reprendre — prochains lives réels ; état vide honnête sinon */}
+            <div className="mt-12 w-full max-w-xl">
+              <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] lp-faint">Reprendre</p>
+              {resumeItems.length > 0 ? (
                 <div className="space-y-2">
                   {resumeItems.map((it) => {
                     const Icon = it.icon;
@@ -260,13 +353,19 @@ export function LiriPortalPage() {
                     );
                   })}
                 </div>
-              </div>
-            )}
+              ) : (
+                <button onClick={() => nav('/studio/live')} className="lp-tr lp-soft flex w-full items-center gap-3 rounded-2xl lp-line border lp-panel70 px-4 py-3.5 text-left lp-panelhov">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg lp-coral lp-coral-tint"><CalendarPlus size={17} /></span>
+                  <span className="flex-1 min-w-0"><span className="block text-[13.5px] font-medium">Rien à reprendre pour l’instant</span><span className="block text-[12px] lp-faint">Programmez votre premier live ou créez un cours</span></span>
+                  <ChevronRight size={18} className="lp-faint" />
+                </button>
+              )}
+            </div>
 
-            {/* activité récente — lives récents + événements (repli démo) */}
-            {activityItems.length > 0 && (
-              <div className="mt-8 w-full max-w-3xl">
-                <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] lp-faint">Activité récente</p>
+            {/* activité récente — lives récents réels ; état vide honnête sinon */}
+            <div className="mt-8 w-full max-w-3xl">
+              <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] lp-faint">Activité récente</p>
+              {activityItems.length > 0 ? (
                 <div className="lp-soft overflow-hidden rounded-2xl lp-line border lp-panel70">
                   {activityItems.map((it, idx) => {
                     const Icon = it.icon;
@@ -281,8 +380,12 @@ export function LiriPortalPage() {
                     );
                   })}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="lp-soft rounded-2xl lp-line border lp-panel70 px-4 py-5 text-center">
+                  <p className="text-[13px] lp-faint">Aucune activité pour l’instant — vos lives, replays et inscriptions apparaîtront ici.</p>
+                </div>
+              )}
+            </div>
           </div>
         </main>
 
@@ -319,7 +422,6 @@ export function LiriPortalPage() {
           {/* à venir */}
           <div className="mb-2 mt-6 flex items-center justify-between">
             <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] lp-faint">À venir</h3>
-            <span className="rounded-md px-1.5 py-0.5 text-[10px] font-medium lp-faint" style={{ background: 'rgba(255,255,255,.05)' }}>Cycle académique</span>
           </div>
           {upcoming.length > 0 ? (
             <button onClick={() => nav('/lives')} className="lp-tr lp-soft w-full rounded-2xl lp-line border lp-panel70 p-3.5 text-left lp-panelhov">
@@ -328,27 +430,23 @@ export function LiriPortalPage() {
                 <span className="rounded-md px-1.5 py-0.5 text-[10px] font-bold lp-muted" style={{ background: 'rgba(255,255,255,.05)' }}>{fmtWhen(upcoming[0].scheduled_at).split(' · ')[0]}</span>
               </div>
               <p className="mt-2 text-[13.5px] font-medium">{upcoming[0].title || 'Session live'}</p>
-              <p className="mt-1 flex items-center gap-1.5 text-[11px] lp-faint capitalize"><UserRound size={12} /> {tenant}</p>
+              <p className="mt-1 flex items-center gap-1.5 text-[11px] lp-faint capitalize"><UserRound size={12} /> {orgName}</p>
             </button>
           ) : (
-            <div className="lp-soft w-full rounded-2xl lp-line border lp-panel70 p-3.5">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-[13px] font-semibold"><span className="h-2 w-2 rounded-full" style={{ background: 'var(--coral)' }} />20:00 – 22:00</span>
-                <span className="rounded-md px-1.5 py-0.5 text-[10px] font-bold lp-muted" style={{ background: 'rgba(255,255,255,.05)' }}>demain</span>
-              </div>
-              <p className="mt-2 text-[13.5px] font-medium">ISNA — Classe Académique (a)</p>
-              <p className="mt-1 flex items-center gap-1.5 text-[11px] lp-faint capitalize"><UserRound size={12} /> {tenant} · récurrent</p>
-            </div>
+            <button onClick={() => nav('/studio/live')} className="lp-tr lp-soft w-full rounded-2xl lp-line border lp-panel70 p-3.5 text-left lp-panelhov">
+              <p className="text-[13px] font-medium">Aucun live programmé</p>
+              <p className="mt-1 flex items-center gap-1.5 text-[11px] lp-faint"><CalendarPlus size={12} /> Programmer une session</p>
+            </button>
           )}
 
-          {/* ce mois */}
+          {/* ce mois — chiffres réels du tenant (0 pour une organisation neuve) */}
           <h3 className="mb-2 mt-6 text-[11px] font-semibold uppercase tracking-[0.16em] lp-faint">Ce mois</h3>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { v: stats?.totalLives ?? 12, l: 'sessions' },
-              { v: stats?.totalMembers ?? '1.2k', l: 'participants' },
-              { v: stats ? `${stats.totalLives * 70}` : '847', l: 'min en live' },
-              { v: `${stats ? euros(stats.totalRevenueCents) : '3 420'} €`, l: 'revenus', coral: true },
+              { v: stats?.totalLives ?? 0, l: 'sessions' },
+              { v: stats?.totalMembers ?? 0, l: 'membres' },
+              { v: liveMinutes, l: 'min en live' },
+              { v: `${euros(stats?.totalRevenueCents)} €`, l: 'revenus', coral: true },
             ].map((s, i) => (
               <div key={i} className="lp-soft rounded-2xl lp-line border lp-panel70 p-3">
                 <p className={`lp-serif text-[20px] font-medium ${s.coral ? 'lp-coral' : ''}`}>{s.v}</p>
@@ -356,24 +454,17 @@ export function LiriPortalPage() {
               </div>
             ))}
           </div>
-
-          {/* à traiter — replays en attente de post-production */}
-          <button onClick={() => nav('/studio/liri/bibliotheque')} className="lp-tr lp-soft mt-4 flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left lp-panelhov" style={{ borderColor: 'rgba(217,119,87,.25)', background: 'rgba(217,119,87,.08)' }}>
-            <span className="grid h-8 w-8 place-items-center rounded-lg lp-coral" style={{ background: 'rgba(217,119,87,.16)' }}><Clapperboard size={17} /></span>
-            <span className="flex-1"><span className="block text-[13px] font-medium">3 replays à traiter</span><span className="block text-[11px] lp-faint">post-production en attente</span></span>
-            <ChevronRight size={17} className="lp-faint" />
-          </button>
         </aside>
       </div>
 
       {/* ───── FOOTER ───── */}
       <footer className="z-30 flex items-center justify-between border-t lp-line lp-rail-bg px-5 text-[11px] lp-muted">
-        <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Connecté · <span className="capitalize">{tenant}</span></span>
+        <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Connecté · <span className="capitalize">{orgName}</span></span>
         <span className="hidden items-center gap-4 sm:flex">
-          <span className="lp-faint">{stats ? stats.totalLives * 70 : 847} / 2 000 min ce mois</span>
+          <span className="lp-faint">{liveMinutes} / 2 000 min ce mois</span>
           <span className="h-3 w-px" style={{ background: 'rgba(255,255,255,.10)' }} />
           <button onClick={() => nav('/dashboard')} className="lp-railbtn lp-tr rounded px-1">Aide</button>
-          <span className="lp-faint flex items-center gap-1.5"><Radio size={12} /> LIRI v2.0</span>
+          <span className="lp-faint flex items-center gap-1.5"><Radio size={12} /> {PORTAL_BRAND} v2.0</span>
         </span>
       </footer>
     </div>
