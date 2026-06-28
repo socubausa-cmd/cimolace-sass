@@ -1488,59 +1488,59 @@ isLiriHostDevPreviewRoute;
           <Route path="/dashboard/medos/me/prescriptions" element={<MedosPatientPortal />} />
           <Route path="/dashboard/medos/me/messages" element={<MedosPatientPortal />} />
           <Route path="/dashboard/mbolo" element={
-            <ProtectedRoleRoute allowedRoles={['owner', 'admin']}>
+            <ProtectedRoleRoute allowedRoles={['owner', 'admin']} allowTenantRole>
               <MboloCatalog />
             </ProtectedRoleRoute>
           } />
           <Route path="/dashboard/mbolo/orders" element={
-            <ProtectedRoleRoute allowedRoles={['owner', 'admin']}>
+            <ProtectedRoleRoute allowedRoles={['owner', 'admin']} allowTenantRole>
               <MboloOrders />
             </ProtectedRoleRoute>
           } />
           <Route path="/dashboard/billing" element={
-            <ProtectedRoleRoute allowedRoles={['owner', 'admin']}>
+            <ProtectedRoleRoute allowedRoles={['owner', 'admin']} allowTenantRole>
               <TenantBillingPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/dashboard/payouts" element={
-            <ProtectedRoleRoute allowedRoles={['owner', 'admin']}>
+            <ProtectedRoleRoute allowedRoles={['owner', 'admin']} allowTenantRole>
               <TenantPayoutsPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/dashboard/tools/masterclass-factory" element={
-            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
+            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']} allowTenantRole>
               <MasterclassFactoryPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/dashboard/tools/masterclass-factory/analyse" element={
-            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
+            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']} allowTenantRole>
               <MasterclassFactoryAnalysePage />
             </ProtectedRoleRoute>
           } />
           <Route path="/dashboard/tools/smartboard" element={
-            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
+            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']} allowTenantRole>
               <SmartboardToolPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/dashboard/liri/orchestrator-live" element={
-            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
+            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']} allowTenantRole>
               <OrchestratorLiveDashboardPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/dashboard/liri/smartboard-stream" element={
-            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
+            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']} allowTenantRole>
               <SmartboardStreamingPage />
             </ProtectedRoleRoute>
           } />
           {/* Liri Brain — assistant IA conversationnel (multi-modèles). Nom canonique
               /liri/brain ; /dashboard/liri conservé en alias legacy (rétro-compat). */}
           <Route path="/liri/brain" element={
-            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
+            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']} allowTenantRole>
               <DashboardLiri />
             </ProtectedRoleRoute>
           } />
           <Route path="/dashboard/liri" element={
-            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
+            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']} allowTenantRole>
               <DashboardLiri />
             </ProtectedRoleRoute>
           } />
@@ -1584,17 +1584,17 @@ isLiriHostDevPreviewRoute;
           } />
 
           <Route path="/secretariat" element={
-            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']} allowTenantRole>
               <Navigate to="/secretariat-space/dashboard" replace />
             </ProtectedRoleRoute>
           } />
           <Route path="/secretariat-space" element={
-            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']} allowTenantRole>
               <Navigate to="/secretariat-space/dashboard" replace />
             </ProtectedRoleRoute>
           } />
           <Route path="/secretariat-space/*" element={
-            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']} allowTenantRole>
               <ErrorBoundary logTag="SecretariatPortal" showDetailsInDev>
                 <SecretariatPortalPage />
               </ErrorBoundary>
@@ -1690,94 +1690,94 @@ isLiriHostDevPreviewRoute;
 
           {/* === SECRETARIAT DEAD LINKS (PLACEHOLDERS/CONTENT) === */}
           <Route path="/courses" element={
-            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']} allowTenantRole>
               <Navigate to="/secretariat-space/courses" replace />
             </ProtectedRoleRoute>
           } />
           <Route path="/teachers" element={
-            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']} allowTenantRole>
               <Navigate to="/secretariat-space/teachers" replace />
             </ProtectedRoleRoute>
           } />
           <Route path="/how-it-works" element={
-            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']} allowTenantRole>
               <Navigate to="/secretariat-space/how-it-works" replace />
             </ProtectedRoleRoute>
           } />
           <Route path="/cycles/:id" element={
-            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']} allowTenantRole>
               <LegacyCycleRedirect />
             </ProtectedRoleRoute>
           } />
 
           {/* === ADMIN (PROTECTED) === */}
           <Route path="/admin" element={
-            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <AdminDashboardPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/admin/users" element={
-            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <UsersAdminPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/admin/logs" element={
-            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <AuditLogsPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/admin/payments" element={
-            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <AdminPaymentsPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/admin/students" element={
-            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <AdminStudentsPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/admin/settings" element={
-            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <AdminSettingsPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/admin/content" element={
-            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <AdminContentEditorPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/admin/billing" element={
-            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <AdminBillingPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/admin/iri" element={
-            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <AdminIriBuilderPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/admin/marketing" element={
-            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <AdminMarketingPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/admin/tenants/:tenantId/embed" element={
-            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <AdminTenantEmbedPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/admin/tenants/:tenantId/branding" element={
-            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <AdminTenantBrandingPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/admin/marketing/tools" element={
-            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <MarketingToolsSuitePage />
             </ProtectedRoleRoute>
           } />
           <Route path="/admin/communities" element={
-            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <AdminCommunitiesPage />
             </ProtectedRoleRoute>
           } />
@@ -1929,17 +1929,17 @@ isLiriHostDevPreviewRoute;
           
           {/* Admin / Owner Specific */}
           <Route path="/reports" element={
-            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <ReportsPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/settings" element={
-            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <SettingsPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/settings/2fa" element={
-            <ProtectedRoleRoute allowedRoles={['admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <TwoFASetupPage />
             </ProtectedRoleRoute>
           } />
@@ -1974,17 +1974,17 @@ isLiriHostDevPreviewRoute;
           
           {/* Admin Dashboard Routes */}
           <Route path="/creator-dashboard" element={
-            <ProtectedRoleRoute allowedRoles={['creator', 'admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['creator', 'admin', 'owner']} allowTenantRole>
               <CreatorDashboardShell />
             </ProtectedRoleRoute>
           } />
           <Route path="/teacher-dashboard" element={
-            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner']} allowTenantRole>
               <Navigate to="/teacher-space/dashboard" replace />
             </ProtectedRoleRoute>
           } />
           <Route path="/teacher-space/*" element={
-            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']}>
+            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat']} allowTenantRole>
               <TeacherPortalPage />
             </ProtectedRoleRoute>
           } />
@@ -1999,7 +1999,7 @@ isLiriHostDevPreviewRoute;
               son tenant_role vit dans le JWT (que supabase n'expose pas via user.app_metadata).
               Route plus spécifique que /studio/* → priorité React Router v6. */}
           <Route path="/studio/live-arena/:sessionId" element={
-            <ProtectedRoleRoute allowedRoles={[]}>
+            <ProtectedRoleRoute allowedRoles={[]} allowTenantRole>
               <LiveHostPageRoute />
             </ProtectedRoleRoute>
           } />
@@ -2051,17 +2051,17 @@ isLiriHostDevPreviewRoute;
           } />
 
           <Route path="/teacher/corrections" element={
-            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner']} allowTenantRole>
               <Navigate to="/teacher-space/corrections" replace />
             </ProtectedRoleRoute>
           } />
           <Route path="/live-manager" element={
-            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner']} allowTenantRole>
               <Navigate to="/teacher-space/live" replace />
             </ProtectedRoleRoute>
           } />
           <Route path="/teacher/classroom/:weekId" element={
-            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['teacher', 'admin', 'owner']} allowTenantRole>
               <Navigate to="/teacher-space/classroom" replace />
             </ProtectedRoleRoute>
           } />
@@ -2103,12 +2103,12 @@ isLiriHostDevPreviewRoute;
 
           {/* Forum secrétariat — mêmes sous-pages immersives (fil / nouvelle question). */}
           <Route path="/secretariat-space/forum/new" element={
-            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']} allowTenantRole>
               <ForumNewQuestionPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/secretariat-space/forum/thread/:threadId" element={
-            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']}>
+            <ProtectedRoleRoute allowedRoles={['secretariat', 'admin', 'owner']} allowTenantRole>
               <ForumThreadPage />
             </ProtectedRoleRoute>
           } />
