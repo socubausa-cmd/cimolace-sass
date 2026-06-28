@@ -688,7 +688,7 @@ const DashboardRedirect = () => {
     return <Navigate to="/liri" replace />;
   }
 
-  if (role === 'owner' || role === 'admin') return <Navigate to="/owner-dashboard" replace />;
+  if (role === 'owner' || role === 'admin') return <Navigate to="/liri" replace />;
   if (role === 'secretariat') return <Navigate to="/secretariat-space/dashboard" replace />;
   if (role === 'teacher') return <Navigate to="/teacher-space/dashboard" replace />;
   if (role === 'creator') return <Navigate to="/creator-dashboard" replace />;
