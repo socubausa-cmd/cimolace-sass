@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Flame, GraduationCap, Users, Lock, Check, ArrowRight, Calendar } from 'lucide-react';
 import { themeProxy as T } from '@/pages/school/student-school-life/sslTheme';
+import { getActiveTenantSlug } from '@/lib/tenant/activeBranding';
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 12 },
@@ -145,6 +146,9 @@ const StudentOfferHub = () => {
   const gold = T.gold;
   const violet = T.violet;
   const teal = T.teal;
+  // La consultation 1:1 « Ngowazulu » est un produit propre à ISNA (plan inexistant
+  // chez les autres tenants) → on ne montre cette carte que sur le tenant ISNA.
+  const isIsna = getActiveTenantSlug() === 'isna';
 
   return (
     <motion.section
@@ -219,22 +223,24 @@ const StudentOfferHub = () => {
           delay={160}
         />
 
-        {/* Carte 3 — Consultation 90 min */}
-        <OfferCard
-          icon={Users}
-          accent={teal}
-          eyebrow="1:1 Ngowazulu"
-          title="Consultation 90 min"
-          subtitle="Une guidance directe, sans filtre."
-          bullets={[
-            'Séance privée 90 min',
-            'Mentorat 55 → 500 €/mois',
-            'RDV à ton rythme',
-          ]}
-          ctaLabel="Réserver"
-          onCta={() => navigate('/t/isna/paiement?plan=ngowazulu-consultation-90min&type=consultation&label=Consultation%2090%20min')}
-          delay={240}
-        />
+        {/* Carte 3 — Consultation 90 min (produit ISNA uniquement) */}
+        {isIsna && (
+          <OfferCard
+            icon={Users}
+            accent={teal}
+            eyebrow="1:1 Ngowazulu"
+            title="Consultation 90 min"
+            subtitle="Une guidance directe, sans filtre."
+            bullets={[
+              'Séance privée 90 min',
+              'Mentorat 55 → 500 €/mois',
+              'RDV à ton rythme',
+            ]}
+            ctaLabel="Réserver"
+            onCta={() => navigate('/t/isna/paiement?plan=ngowazulu-consultation-90min&type=consultation&label=Consultation%2090%20min')}
+            delay={240}
+          />
+        )}
       </div>
 
       {/* ── Bandeau verrouillage doux ── */}

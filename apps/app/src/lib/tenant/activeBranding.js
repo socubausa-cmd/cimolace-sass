@@ -1,4 +1,5 @@
 import { normalizeTenantBranding } from '@/lib/tenant/tenantBranding';
+import { getCachedHostTenant } from '@/lib/tenantResolver';
 
 /**
  * Branding du tenant COURANT, lisible de façon SYNCHRONE — pour le code non-React
@@ -40,4 +41,16 @@ export function getActiveTenantSlug() {
 /** UUID du tenant courant résolu ('' si aucun — hôte plateforme / non hydraté). */
 export function getActiveTenantId() {
   return RESOLVED_ID;
+}
+
+/**
+ * Slug à utiliser pour CONSTRUIRE un lien `/t/:slug` (paiement, live, admin…) :
+ * slug résolu au runtime SINON résolution par DOMAINE (`tenant_domains` en cache).
+ * Ne retombe JAMAIS sur un tenant en dur ('isna') et ne lit pas le localStorage périmé.
+ * Retourne '' sur un hôte plateforme sans tenant (l'appelant doit alors s'abstenir de naviguer).
+ */
+export function resolveTenantSlug() {
+  if (RESOLVED_SLUG) return RESOLVED_SLUG;
+  if (typeof window !== 'undefined') return getCachedHostTenant(window.location.hostname) || '';
+  return '';
 }
