@@ -320,8 +320,9 @@ export function ChartingPage() {
     }
 
     // 3) WebSocket Deepgram (le NAVIGATEUR se connecte directement).
-    //    Auth navigateur = sous-protocole ['token', <token>] (les en-têtes
-    //    Authorization custom sont interdits sur WebSocket côté navigateur).
+    //    Auth navigateur = sous-protocole ['bearer', <token>] : le token éphémère
+    //    (/v1/auth/grant renvoie un JWT) s'authentifie en "bearer" — une clé API
+    //    utiliserait "token". Les en-têtes Authorization custom sont interdits sur WS.
     const params = new URLSearchParams({
       model: 'nova-2',
       language: 'fr',
@@ -331,7 +332,7 @@ export function ChartingPage() {
     });
     let ws: WebSocket;
     try {
-      ws = new WebSocket(`wss://api.deepgram.com/v1/listen?${params.toString()}`, ['token', dgToken]);
+      ws = new WebSocket(`wss://api.deepgram.com/v1/listen?${params.toString()}`, ['bearer', dgToken]);
     } catch {
       teardownLive();
       setLiveStatus('idle');
