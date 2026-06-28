@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { authStore } from '@/lib/auth-store';
+import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import '../../pages/LiriPortal.css';
 
 type RailKey = 'accueil' | 'lives' | 'forum' | 'messages' | 'studio' | 'ecole' | 'biblio' | 'brain' | 'integrations' | 'reglages';
@@ -42,6 +43,9 @@ export function LiriPortalShell({
   const slug = authStore.getTenantSlug?.() || 'École';
   const tenant = String(slug).replace(/-/g, ' ');
   const initials = tenant.slice(0, 2).toUpperCase();
+  // Marque blanche : nom du tenant sur son domaine, « LIRI »/logo sur l'hôte produit LIRI.
+  const _shellIsTenant = !!activeTenantConfig?.slug;
+  const _shellBrand = activeTenantConfig?.branding?.name || 'LIRI';
 
   return (
     <div className="lp-root relative grid h-[100dvh] w-full grid-rows-[56px_1fr_34px] overflow-hidden">
@@ -57,8 +61,8 @@ export function LiriPortalShell({
         <div className="flex items-center gap-2.5">
           <button onClick={() => nav('/liri')} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Retour au portail"><Menu size={17} /></button>
           <button onClick={() => nav('/liri')} className="flex items-center gap-2 lp-tr" aria-label="Portail LIRI">
-            <img src="/lirilogo.png" alt="LIRI" className="h-9 w-9 object-contain" />
-            <span className="text-[17px] font-semibold tracking-tight lp-ink">LIRI</span>
+            {_shellIsTenant ? null : <img src="/lirilogo.png" alt="LIRI" className="h-9 w-9 object-contain" />}
+            <span className="text-[17px] font-semibold tracking-tight lp-ink">{_shellBrand}</span>
           </button>
         </div>
         <div className="flex items-center gap-1.5">
@@ -116,7 +120,7 @@ export function LiriPortalShell({
           {live ? <span className="h-1.5 w-1.5 rounded-full" style={{ background: '#e2553f' }} /> : <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
           {live ? 'En direct' : 'Connecté'} · <span className="capitalize">{tenant}</span>
         </span>
-        <span className="lp-faint flex items-center gap-1.5">LIRI v2.0</span>
+        <span className="lp-faint flex items-center gap-1.5">{_shellBrand} v2.0</span>
       </footer>
     </div>
   );

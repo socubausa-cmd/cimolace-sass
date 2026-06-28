@@ -189,7 +189,7 @@ export const LiveHostRightRailVideoCard = ({
                 </>}
             </div>
             <div style={{position:'absolute',bottom:'6px',left:'8px',zIndex:12,fontSize:'9px',color:'rgba(255,255,255,.65)',background:'rgba(0,0,0,.5)',backdropFilter:'blur(2px)',padding:'1px 5px',borderRadius:'3px',maxWidth:'85%'}}>
-              <span style={{display:'block'}}>{user?.full_name||'Prof. LIRI'}</span>
+              <span style={{display:'block'}}>{user?.full_name||'Hôte'}</span>
               {antennaSoloMode && liveParticipants.length > 0 ? (
                 <span style={{display:'block',marginTop:'3px',fontSize:'8px',color:'rgba(253,230,138,.85)',fontWeight:600}}>Antenne libérée — vue hôte</span>
               ) : null}

@@ -7,7 +7,7 @@ const VARIANTS = {
     label: 'HOTE',
     labelBg: 'rgba(168,118,58,.85)',
     labelColor: '#fff',
-    nameFallback: 'Prof. LIRI',
+    nameFallback: 'Hôte',
   },
   guest: {
     testId: 'live-guest-self-strip-preview',

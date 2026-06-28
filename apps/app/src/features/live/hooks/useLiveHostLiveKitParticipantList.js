@@ -19,7 +19,7 @@ export function useLiveHostLiveKitParticipantList({
       const lpId = lpMeta.userId || lp.identity || lp.sid || 'local';
       all.push({
         id: lpId,
-        name: lp.name || user?.full_name || 'Prof. LIRI',
+        name: lp.name || user?.full_name || 'Hôte',
         isLocal: true,
         isHost: lpIsHost,
         color: '#C8960C',
