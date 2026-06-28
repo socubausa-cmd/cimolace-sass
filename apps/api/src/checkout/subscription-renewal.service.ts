@@ -115,7 +115,7 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
     if (status !== 'COMPLETED') return;
 
     const { data: deposit } = await this.ppDeposits
-      .select('user_id, kind, plan_slug, tenant_id')
+      .select('user_id, kind, plan_slug, tenant_id, amount_cents, currency')
       .eq('deposit_id', depositId)
       .maybeSingle();
 
@@ -124,6 +124,9 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
         tenantId: deposit.tenant_id,
         provider: 'pawapay',
       });
+    } else if (deposit) {
+      // Don / offrande / consultation : pas d'accès, juste un reçu (notif + email).
+      await this.notifyOneOffPayment(deposit.user_id, deposit.tenant_id, deposit.kind, deposit.amount_cents, deposit.currency);
     }
     this.logger.log(`pawaPay COMPLETED traité — depositId=${depositId} kind=${deposit?.kind}`);
   }
@@ -318,6 +321,72 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
   }
 
   /**
+   * Reçu d'un paiement UNIQUE (don / offrande / consultation) — pas d'accès accordé,
+   * juste une notif in-app + un email « merci/reçu » à l'élève. Best-effort. Mêmes
+   * contraintes CHECK que notifyStudentPayment (type='success', priority='normal').
+   */
+  private async notifyOneOffPayment(
+    userId?: string | null,
+    tenantId?: string | null,
+    kind?: string | null,
+    amountCents?: number | null,
+    currency?: string | null,
+  ): Promise<void> {
+    if (!userId || !tenantId) return;
+    const k = String(kind || '').toLowerCase();
+    const label =
+      k === 'donation' ? 'votre don'
+        : k === 'offering' ? 'votre offrande'
+          : k === 'consultation' ? 'votre consultation'
+            : 'votre paiement';
+    const amount = amountCents != null ? `${(Number(amountCents) / 100).toFixed(2)} ${currency || 'EUR'}` : '';
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (this.supabase as any).from('notifications').insert({
+        tenant_id: tenantId,
+        user_id: userId,
+        type: 'success',
+        priority: 'normal',
+        title: 'Paiement reçu ✓',
+        body: `Merci ! Nous confirmons ${label}${amount ? ` (${amount})` : ''}.`,
+        action_url: '/m/eleve',
+        is_read: false,
+        is_silent: false,
+        sent_email: true,
+      });
+    } catch (e) {
+      this.logger.warn(`notif don (user=${userId}): ${(e as Error).message}`);
+    }
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: u } = await (this.supabase as any).auth.admin.getUserById(userId);
+      const to = u?.user?.email;
+      if (!to) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: ns } = await (this.supabase as any)
+        .from('tenant_notification_settings')
+        .select('email_from, email_from_name')
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (this.supabase as any).from('email_queue').insert({
+        tenant_id: tenantId,
+        to,
+        from: ns?.email_from ?? null,
+        from_name: ns?.email_from_name ?? null,
+        subject: 'Reçu de paiement',
+        html_body:
+          `<h2>Merci pour ${label}</h2>` +
+          `<p>Nous confirmons la réception de ${label}${amount ? ` d'un montant de <strong>${amount}</strong>` : ''}.</p>` +
+          `<p>Ceci tient lieu de reçu. Merci de votre soutien.</p>`,
+        status: 'pending',
+      });
+    } catch (e) {
+      this.logger.warn(`email don (user=${userId}): ${(e as Error).message}`);
+    }
+  }
+
+  /**
    * Accorde l'accès élève après un paiement actif : pose une `tenant_memberships`
    * (rôle student, idempotente — n'écrase jamais un rôle supérieur déjà présent) et
    * promeut le rôle GLOBAL visitor→student. Best-effort : toute erreur est seulement loguée.
@@ -398,6 +467,8 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
         this.logger.log(
           `Stripe paiement unique complété — kind=${meta.kind} user=${userId} session=${session.id}`,
         );
+        // Don / offrande / consultation : reçu (notif + email) sans octroi d'accès.
+        await this.notifyOneOffPayment(userId, meta.tenant_id ?? null, meta.kind, session.amount_total ?? null, session.currency ?? null);
       }
       return;
     }
