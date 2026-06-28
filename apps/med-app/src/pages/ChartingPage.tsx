@@ -11,7 +11,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, Upload, FileText, RefreshCw, CheckCircle, XCircle, Loader2, Copy, ClipboardPlus, Pill, Sparkles, AlertTriangle, Plus, Trash2 } from 'lucide-react';
+import { Mic, Upload, FileText, RefreshCw, CheckCircle, XCircle, Loader2, Copy, ClipboardPlus, Pill, Sparkles, AlertTriangle, Plus, Trash2, Square } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4002';
 const POLL_INTERVAL_MS = 2500;
@@ -102,7 +102,21 @@ export function ChartingPage() {
   const [patients, setPatients]   = useState<Patient[]>([]);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [manualText, setManualText] = useState('');
-  const [mode, setMode]           = useState<'audio' | 'text'>('audio');
+  const [mode, setMode]           = useState<'audio' | 'text' | 'live'>('audio');
+
+  // ── Dictée en direct (beta) — streaming Deepgram via token éphémère ────────
+  // Le navigateur ouvre LUI-MÊME le WebSocket Deepgram ; la clé serveur n'est
+  // jamais exposée (le backend mint un token court via POST /med/charting/realtime-token).
+  const [liveStatus, setLiveStatus] = useState<'idle' | 'connecting' | 'listening' | 'stopping'>('idle');
+  const [liveError, setLiveError]   = useState<string | null>(null);
+  const [liveFinal, setLiveFinal]   = useState('');   // transcript final accumulé
+  const [liveInterim, setLiveInterim] = useState(''); // segment en cours (gris/italique)
+
+  const wsRef        = useRef<WebSocket | null>(null);
+  const recorderRef  = useRef<MediaRecorder | null>(null);
+  const streamRef    = useRef<MediaStream | null>(null);
+  const liveFinalRef = useRef('');           // miroir synchrone de liveFinal
+  const keepAliveRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Job state
   const [jobId, setJobId]         = useState<string | null>(null);
@@ -171,6 +185,12 @@ export function ChartingPage() {
     if (!patientId) { setError('Veuillez sélectionner un patient.'); return; }
     if (mode === 'audio' && !audioFile) { setError('Veuillez sélectionner un fichier audio.'); return; }
     if (mode === 'text'  && !manualText.trim()) { setError('Veuillez saisir une transcription.'); return; }
+    // Dictée en direct (beta) : l'analyse part du transcript accumulé (raw_transcript),
+    // exactement comme le mode texte. Refuser si la dictée est encore en cours.
+    if (mode === 'live') {
+      if (liveStatus !== 'idle') { setError('Arrêtez d’abord la dictée en direct avant de lancer l’analyse.'); return; }
+      if (!manualText.trim())    { setError('Aucune transcription — démarrez la dictée puis arrêtez-la, ou complétez le texte.'); return; }
+    }
 
     setError(null);
     setLoading(true);
@@ -219,6 +239,185 @@ export function ChartingPage() {
       setLoading(false);
     }
   }
+
+  // ── Dictée en direct (beta) ────────────────────────────────────────────────
+
+  // Récupère un token éphémère Deepgram auprès de notre API (la clé serveur
+  // reste serveur). Lève une erreur lisible si indisponible.
+  async function fetchRealtimeToken(): Promise<string> {
+    const token = localStorage.getItem('supabase_token') ?? '';
+    const slug  = localStorage.getItem('tenant_slug') ?? '';
+    const res = await fetch(`${API_BASE}/med/charting/realtime-token`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug },
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg = err?.error?.message ?? err?.message
+        ?? (res.status === 503
+          ? 'Dictée en direct non configurée sur ce serveur.'
+          : `Token temps réel indisponible (${res.status}).`);
+      throw new Error(msg);
+    }
+    const raw = await res.json();
+    const dgToken = raw?.data?.token ?? raw?.token;
+    if (!dgToken) throw new Error('Réponse inattendue (token manquant).');
+    return dgToken as string;
+  }
+
+  // Ferme proprement micro + WebSocket + timers (idempotent).
+  function teardownLive() {
+    if (keepAliveRef.current) { clearInterval(keepAliveRef.current); keepAliveRef.current = null; }
+    try {
+      if (recorderRef.current && recorderRef.current.state !== 'inactive') {
+        recorderRef.current.stop();
+      }
+    } catch { /* noop */ }
+    recorderRef.current = null;
+    try {
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        // Demande à Deepgram de finaliser puis fermer.
+        try { wsRef.current.send(JSON.stringify({ type: 'CloseStream' })); } catch { /* noop */ }
+      }
+      wsRef.current?.close();
+    } catch { /* noop */ }
+    wsRef.current = null;
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+  }
+
+  async function startLiveDictation() {
+    if (liveStatus !== 'idle') return;
+    setLiveError(null);
+    setLiveInterim('');
+    setLiveStatus('connecting');
+
+    // 1) Micro
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setLiveStatus('idle');
+      setLiveError('Micro non disponible — utilisez un navigateur récent en HTTPS (ou localhost).');
+      return;
+    }
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+    } catch {
+      setLiveStatus('idle');
+      setLiveError("Micro inaccessible — autorisez l'accès au microphone dans le navigateur.");
+      return;
+    }
+
+    // 2) Token éphémère
+    let dgToken: string;
+    try {
+      dgToken = await fetchRealtimeToken();
+    } catch (e) {
+      teardownLive();
+      setLiveStatus('idle');
+      setLiveError(e instanceof Error ? e.message : 'Token temps réel indisponible.');
+      return;
+    }
+
+    // 3) WebSocket Deepgram (le NAVIGATEUR se connecte directement).
+    //    Auth navigateur = sous-protocole ['token', <token>] (les en-têtes
+    //    Authorization custom sont interdits sur WebSocket côté navigateur).
+    const params = new URLSearchParams({
+      model: 'nova-2',
+      language: 'fr',
+      interim_results: 'true',
+      smart_format: 'true',
+      punctuate: 'true',
+    });
+    let ws: WebSocket;
+    try {
+      ws = new WebSocket(`wss://api.deepgram.com/v1/listen?${params.toString()}`, ['token', dgToken]);
+    } catch {
+      teardownLive();
+      setLiveStatus('idle');
+      setLiveError('Connexion au service de dictée impossible.');
+      return;
+    }
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      // Choisir un mimeType supporté pour MediaRecorder.
+      const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus'];
+      const mimeType = candidates.find(t =>
+        typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported?.(t),
+      );
+      let recorder: MediaRecorder;
+      try {
+        recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      } catch {
+        teardownLive();
+        setLiveStatus('idle');
+        setLiveError("Enregistrement audio non supporté par ce navigateur.");
+        return;
+      }
+      recorderRef.current = recorder;
+      recorder.ondataavailable = (ev: BlobEvent) => {
+        if (ev.data && ev.data.size > 0 && ws.readyState === WebSocket.OPEN) {
+          ws.send(ev.data); // Deepgram accepte les chunks binaires bruts.
+        }
+      };
+      recorder.start(250); // émet un chunk toutes les 250 ms
+      // KeepAlive Deepgram (évite la fermeture après ~10s de silence).
+      keepAliveRef.current = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          try { ws.send(JSON.stringify({ type: 'KeepAlive' })); } catch { /* noop */ }
+        }
+      }, 8000);
+      setLiveStatus('listening');
+    };
+
+    ws.onmessage = (ev: MessageEvent) => {
+      let msg: any;
+      try { msg = JSON.parse(typeof ev.data === 'string' ? ev.data : ''); } catch { return; }
+      if (!msg || msg.type !== 'Results') return;
+      const alt = msg.channel?.alternatives?.[0];
+      const text: string = alt?.transcript ?? '';
+      if (!text) return;
+      if (msg.is_final) {
+        const next = (liveFinalRef.current + ' ' + text).trim();
+        liveFinalRef.current = next;
+        setLiveFinal(next);
+        setLiveInterim('');
+      } else {
+        setLiveInterim(text);
+      }
+    };
+
+    ws.onerror = () => {
+      setLiveError('Connexion temps réel interrompue. Le texte déjà transcrit est conservé.');
+    };
+
+    ws.onclose = () => {
+      if (keepAliveRef.current) { clearInterval(keepAliveRef.current); keepAliveRef.current = null; }
+      // Coupure (volontaire ou non) : revenir à l'état repos. Si l'arrêt est
+      // volontaire, stopLiveDictation() a déjà versé le transcript dans le champ.
+      setLiveStatus('idle');
+    };
+  }
+
+  // Arrêt volontaire : ferme tout et verse le transcript final dans le champ texte.
+  function stopLiveDictation() {
+    setLiveStatus('stopping');
+    teardownLive();
+    const finalText = (liveFinalRef.current + (liveInterim ? ' ' + liveInterim : '')).trim();
+    if (finalText) {
+      // Verse dans le champ raw_transcript existant (append si déjà du texte).
+      setManualText(prev => (prev?.trim() ? `${prev.trim()}\n${finalText}` : finalText));
+    }
+    setLiveInterim('');
+    setLiveStatus('idle');
+  }
+
+  // Nettoyage si on quitte la page en pleine dictée.
+  useEffect(() => {
+    return () => { teardownLive(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function copyNote() {
     if (!job?.soapNote) return;
@@ -419,20 +618,38 @@ export function ChartingPage() {
         </div>
 
         {/* Mode toggle */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-          {(['audio', 'text'] as const).map(m => (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+          {(['audio', 'text', 'live'] as const).map(m => (
             <button
               key={m}
-              onClick={() => setMode(m)}
+              onClick={() => {
+                // Ne pas changer de mode pendant une dictée active.
+                if (liveStatus !== 'idle' && m !== 'live') return;
+                setMode(m);
+              }}
+              disabled={liveStatus !== 'idle' && m !== 'live'}
               style={{
-                padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                cursor: (liveStatus !== 'idle' && m !== 'live') ? 'not-allowed' : 'pointer',
                 background: mode === m ? 'var(--brand-primary)' : 'var(--zw-bg-subtle)',
                 color: mode === m ? '#fff' : 'var(--zw-text-soft)',
                 border: 'none',
                 display: 'flex', alignItems: 'center', gap: 6,
+                opacity: (liveStatus !== 'idle' && m !== 'live') ? 0.5 : 1,
               }}
             >
-              {m === 'audio' ? <><Upload size={14} /> Fichier audio</> : <><FileText size={14} /> Texte manuel</>}
+              {m === 'audio'
+                ? <><Upload size={14} /> Fichier audio</>
+                : m === 'text'
+                ? <><FileText size={14} /> Texte manuel</>
+                : <>
+                    <Mic size={14} /> Dictée en direct
+                    <span style={{
+                      background: mode === m ? 'rgba(255,255,255,0.22)' : '#fef3c7',
+                      color: mode === m ? '#fff' : '#b45309',
+                      borderRadius: 5, padding: '1px 6px', fontSize: 9.5, fontWeight: 800, letterSpacing: 0.5,
+                    }}>BETA</span>
+                  </>}
             </button>
           ))}
         </div>
@@ -466,7 +683,7 @@ export function ChartingPage() {
               onChange={e => setAudioFile(e.target.files?.[0] ?? null)}
             />
           </div>
-        ) : (
+        ) : mode === 'text' ? (
           <div>
             <label style={labelStyle}>Transcription manuelle</label>
             <textarea
@@ -480,6 +697,109 @@ export function ChartingPage() {
                 fontFamily: 'inherit', color: 'var(--zw-text)',
               }}
             />
+          </div>
+        ) : (
+          /* ── Dictée en direct (beta) ─────────────────────────────────── */
+          <div>
+            {/* Disclaimer beta */}
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '11px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, marginBottom: 14 }}>
+              <AlertTriangle size={17} color="#d97706" style={{ flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
+              <p style={{ margin: 0, fontSize: 12.5, color: '#92400e', lineHeight: 1.6 }}>
+                <strong>Fonctionnalité bêta.</strong> La dictée est transcrite en direct par un service tiers (Deepgram).
+                Le texte obtenu est un brouillon à relire ; il n'est versé dans le champ qu'à l'arrêt, puis vous lancez l'analyse SOAP comme d'habitude.
+              </p>
+            </div>
+
+            <label style={labelStyle}>Dictée en direct</label>
+
+            {/* Barre de contrôle */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+              {liveStatus === 'idle' ? (
+                <button
+                  onClick={startLiveDictation}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '10px 20px', borderRadius: 8, fontSize: 14, fontWeight: 600,
+                    border: 'none', cursor: 'pointer', background: 'var(--brand-primary)', color: '#fff',
+                  }}
+                >
+                  <Mic size={16} /> Démarrer la dictée
+                </button>
+              ) : (
+                <button
+                  onClick={stopLiveDictation}
+                  disabled={liveStatus === 'stopping'}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '10px 20px', borderRadius: 8, fontSize: 14, fontWeight: 600,
+                    border: 'none', cursor: liveStatus === 'stopping' ? 'not-allowed' : 'pointer',
+                    background: '#dc2626', color: '#fff',
+                  }}
+                >
+                  <Square size={15} /> Arrêter la dictée
+                </button>
+              )}
+
+              {/* Indicateur d'état */}
+              {liveStatus === 'connecting' && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, color: 'var(--zw-text-muted)' }}>
+                  <Loader2 size={15} className="spin" /> Connexion…
+                </span>
+              )}
+              {liveStatus === 'listening' && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, color: '#16a34a', fontWeight: 600 }}>
+                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#ef4444', display: 'inline-block', animation: 'pulse 1.2s ease-in-out infinite' }} />
+                  À l'écoute…
+                </span>
+              )}
+            </div>
+
+            {/* Transcript en direct (final + interim) */}
+            <div style={{
+              minHeight: 120, padding: '12px 14px', fontSize: 14, lineHeight: 1.7,
+              border: '1px solid var(--zw-border)', borderRadius: 8, background: 'var(--zw-bg)',
+              color: 'var(--zw-text)', whiteSpace: 'pre-wrap',
+            }}>
+              {liveFinal || liveInterim ? (
+                <>
+                  {liveFinal}
+                  {liveInterim && (
+                    <span style={{ color: 'var(--zw-text-faint)', fontStyle: 'italic' }}>
+                      {liveFinal ? ' ' : ''}{liveInterim}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span style={{ color: 'var(--zw-text-faint)', fontStyle: 'italic' }}>
+                  {liveStatus === 'listening'
+                    ? 'Parlez — le texte s’affiche ici en temps réel…'
+                    : 'Cliquez « Démarrer la dictée » et parlez. À l’arrêt, le texte est placé dans le champ de transcription.'}
+                </span>
+              )}
+            </div>
+
+            {liveError && (
+              <div role="alert" style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'flex-start', padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, color: '#dc2626', fontSize: 13, lineHeight: 1.5 }}>
+                <AlertTriangle size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+                <span>{liveError}</span>
+              </div>
+            )}
+
+            {/* Transcription accumulée (éditable) — versée à l'arrêt */}
+            <div style={{ marginTop: 16 }}>
+              <label style={labelStyle}>Transcription (éditable avant analyse)</label>
+              <textarea
+                value={manualText}
+                onChange={e => setManualText(e.target.value)}
+                placeholder="Le texte dicté apparaîtra ici à l'arrêt. Vous pouvez le corriger avant de lancer l'analyse."
+                rows={6}
+                style={{
+                  width: '100%', boxSizing: 'border-box', padding: '12px 14px', fontSize: 14,
+                  border: '1px solid var(--zw-border)', borderRadius: 8, resize: 'vertical',
+                  fontFamily: 'inherit', color: 'var(--zw-text)',
+                }}
+              />
+            </div>
           </div>
         )}
 
@@ -753,6 +1073,7 @@ export function ChartingPage() {
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .spin { animation: spin 1.2s linear infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
       `}</style>
     </div>
   );

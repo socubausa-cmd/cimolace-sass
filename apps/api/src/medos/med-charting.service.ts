@@ -4,6 +4,7 @@ import {
   InternalServerErrorException,
   Logger,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
@@ -149,6 +150,92 @@ export class MedChartingService {
     }
 
     return transcript;
+  }
+
+  // ── Deepgram realtime (streaming) — token éphémère ────────────────────────
+
+  /**
+   * Mint un TOKEN ÉPHÉMÈRE Deepgram (JWT court, scope usage::write) que le
+   * NAVIGATEUR utilise pour ouvrir DIRECTEMENT le WebSocket de streaming
+   * `wss://api.deepgram.com/v1/listen`. La clé serveur DEEPGRAM_API_KEY n'est
+   * JAMAIS exposée au front ; aucun WebSocket ne transite par notre API.
+   *
+   * Endpoint Deepgram : POST https://api.deepgram.com/v1/auth/grant
+   *   Header  : Authorization: Token <DEEPGRAM_API_KEY>
+   *   Body    : { ttl_seconds }   (1..3600 ; défaut Deepgram = 30s)
+   *   Réponse : { access_token, expires_in }
+   *
+   * Le token n'a besoin d'être valide qu'au moment du handshake WS ; la
+   * connexion reste ensuite ouverte. Côté navigateur, l'authentification se
+   * fait via le sous-protocole WebSocket : new WebSocket(url, ['token', token]).
+   *
+   * @param ttlSeconds  durée de vie demandée (bornée 30..60s par défaut).
+   * @returns { token, expires_in }
+   * @throws InternalServerErrorException (503) si la clé est absente,
+   *         ou message clair si Deepgram refuse (scope insuffisant…).
+   */
+  async mintRealtimeToken(
+    ttlSeconds = 60,
+  ): Promise<{ token: string; expires_in: number }> {
+    const apiKey = this.config.get<string>('DEEPGRAM_API_KEY');
+
+    if (!apiKey) {
+      // 503 explicite : la fonctionnalité temps réel n'est pas provisionnée.
+      throw new ServiceUnavailableException(
+        'DEEPGRAM_API_KEY non configuré — dictée en direct indisponible.',
+      );
+    }
+
+    // Borne défensive : Deepgram accepte 1..3600 ; on garde un TTL court.
+    const ttl = Math.min(Math.max(Math.floor(ttlSeconds) || 60, 10), 60);
+
+    let response: Response;
+    try {
+      response = await fetch('https://api.deepgram.com/v1/auth/grant', {
+        method: 'POST',
+        headers: {
+          Authorization: `Token ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ttl_seconds: ttl }),
+      });
+    } catch (err: any) {
+      this.logger.error(`Deepgram grant network error: ${err?.message}`);
+      throw new ServiceUnavailableException(
+        'Service de dictée en direct injoignable — réessayez plus tard.',
+      );
+    }
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      this.logger.error(`Deepgram grant ${response.status}: ${body.slice(0, 200)}`);
+      if (response.status === 401 || response.status === 403) {
+        // La clé existe mais n'a pas le droit de minter un token temporaire.
+        throw new InternalServerErrorException(
+          'Token temps réel indisponible — vérifier les scopes de la clé Deepgram (rôle Member ou supérieur requis).',
+        );
+      }
+      throw new InternalServerErrorException(
+        `Échec de génération du token temps réel Deepgram (${response.status}).`,
+      );
+    }
+
+    const data = (await response.json().catch(() => ({}))) as {
+      access_token?: string;
+      expires_in?: number;
+    };
+
+    if (!data?.access_token) {
+      this.logger.error('Deepgram grant: réponse sans access_token');
+      throw new InternalServerErrorException(
+        'Réponse inattendue de Deepgram (token manquant).',
+      );
+    }
+
+    return {
+      token: data.access_token,
+      expires_in: typeof data.expires_in === 'number' ? data.expires_in : ttl,
+    };
   }
 
   // ── Claude SOAP generation ────────────────────────────────────────────────

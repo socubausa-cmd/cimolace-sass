@@ -104,6 +104,25 @@ export class MedChartingController {
   }
 
   /**
+   * POST /med/charting/realtime-token
+   *
+   * Mint un TOKEN ÉPHÉMÈRE Deepgram (TTL court) pour la DICTÉE EN DIRECT (beta).
+   * Le navigateur ouvre ensuite LUI-MÊME le WebSocket de streaming Deepgram
+   * avec ce token (sous-protocole ['token', token]) — aucun WebSocket ne passe
+   * par notre API, et la clé serveur DEEPGRAM_API_KEY n'est jamais exposée.
+   *
+   * Mêmes gardes que le reste du charting (owner / practitioner / clinic_admin).
+   * Réponse : { token, expires_in }.
+   *   - 503 si DEEPGRAM_API_KEY absent (fonctionnalité non provisionnée) ;
+   *   - 500 + message clair si la clé manque le scope « token temporaire ».
+   */
+  @Post('realtime-token')
+  @AuditResource({ resource: 'charting_job', action: 'transcribe' })
+  mintRealtimeToken() {
+    return this.chartingService.mintRealtimeToken();
+  }
+
+  /**
    * POST /med/charting/:jobId/suggest-prescription
    *
    * Copilote agentique : à partir d'un job SOAP terminé (note + diagnostics
