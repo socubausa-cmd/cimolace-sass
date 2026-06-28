@@ -7,18 +7,23 @@ import { LiveMemberDockScroll } from '@/features/live/host/components/LiveMember
 import { LiveStripActionButton } from '@/features/live/host/components/LiveStripActionButton';
 import { LiveStripOnlineCounter } from '@/features/live/host/components/LiveStripOnlineCounter';
 import { PHASE } from '@/features/live/host/liveHostConstants';
+import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
+
+// Marque blanche : nom du tenant sur son domaine, « LIRI »/logo sur l'hôte produit.
+const _LSB_BRAND = activeTenantConfig?.branding?.name || 'LIRI';
+const _LSB_IS_TENANT = !!activeTenantConfig?.slug;
 
 /** Bloc chrome gauche de la barre du haut : logo + titre de la session. */
 function LiveTopBarBrand({ sessionTitle }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, paddingRight: 4, height: '100%' }}>
-      <LiriWordmark variant="mark" size="rail" bulbColor="#d4a36a" bulbGlow="drop-shadow(0 0 12px rgba(212,163,106,.55))" letterClassName="text-white" className="text-white drop-shadow-[0_2px_10px_rgba(212,163,106,.35)]" />
+      {_LSB_IS_TENANT ? null : <LiriWordmark variant="mark" size="rail" bulbColor="#d4a36a" bulbGlow="drop-shadow(0 0 12px rgba(212,163,106,.55))" letterClassName="text-white" className="text-white drop-shadow-[0_2px_10px_rgba(212,163,106,.35)]" />}
       <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}>
         <span style={{ fontSize: 12.5, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 150 }}>
           {sessionTitle || 'Salle live'}
         </span>
         <span style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', display: 'flex', alignItems: 'center', gap: 3 }}>
-          LIRI <ChevronDown size={10} aria-hidden />
+          {_LSB_BRAND} <ChevronDown size={10} aria-hidden />
         </span>
       </div>
     </div>

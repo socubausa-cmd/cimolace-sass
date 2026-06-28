@@ -146,8 +146,12 @@ export const LH_SIDEBAR_CARD_GLOW = {
   boxShadow: 'none',
 };
 
-/** Nom produit par rôle : pilote (lancement live) vs lien d'invitation. */
+import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
+/** Nom produit par rôle : pilote vs lien d'invitation. Marque blanche : nom du
+ *  tenant sur son domaine, « Liri hot/invit » sur l'hôte produit LIRI. */
+const _LH_BRAND = activeTenantConfig?.branding?.name || 'LIRI';
+const _LH_IS_TENANT = !!activeTenantConfig?.slug;
 export const LIRI_LIVE_UI_LABEL = {
-  host: 'Liri hot',
-  guest: 'Liri invit',
+  host: _LH_IS_TENANT ? _LH_BRAND : 'Liri hot',
+  guest: _LH_IS_TENANT ? _LH_BRAND : 'Liri invit',
 };

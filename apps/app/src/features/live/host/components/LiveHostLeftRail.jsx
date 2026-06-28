@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
+import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import { designerShellCloseBtn } from '@/lib/liriDesignerShellClasses';
 import LiriHostLeftLiveAssistantRail from '@/components/liri/live-room/LiriHostLeftLiveAssistantRail';
 import LiveHostInviteManagementPanel from '@/components/liri/live-room/LiveHostInviteManagementPanel';
@@ -712,14 +713,20 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
                 minHeight: 46,
               }}
             >
-              <LiriWordmark
-                variant="mark"
-                size="rail"
-                bulbColor="#d4a36a"
-                bulbGlow="drop-shadow(0 0 12px rgba(212,163,106,.55))"
-                letterClassName="text-white"
-                className="text-white drop-shadow-[0_2px_10px_rgba(212,163,106,0.35)]"
-              />
+              {(activeTenantConfig?.slug) ? (
+                <span style={{ fontWeight: 700, color: '#fff', fontSize: 13, whiteSpace: 'nowrap' }}>
+                  {activeTenantConfig?.branding?.name || 'LIRI'}
+                </span>
+              ) : (
+                <LiriWordmark
+                  variant="mark"
+                  size="rail"
+                  bulbColor="#d4a36a"
+                  bulbGlow="drop-shadow(0 0 12px rgba(212,163,106,.55))"
+                  letterClassName="text-white"
+                  className="text-white drop-shadow-[0_2px_10px_rgba(212,163,106,0.35)]"
+                />
+              )}
             </div>
             {phase === PHASE.LIVE && (!lhStageFocusLayout || focusHost) ? (
               <button

@@ -25,7 +25,7 @@ export function LiriHostCenterSeatStrip({
   embedded = false,
 }) {
   const local = participants.find((p) => p.isLocal);
-  const hostDisplayName = local?.name?.trim() || 'Prof. LIRI';
+  const hostDisplayName = local?.name?.trim() || 'Hôte';
   const hostId = local?.id ?? 'local-host';
 
   const remotes = remoteParticipants || [];

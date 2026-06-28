@@ -1295,7 +1295,7 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     if (phase === PHASE.LIVE && isFreeTier && !isGuestUi && freeTierRemainingSeconds === 0 && !freeTierEndedRef.current) {
       freeTierEndedRef.current = true;
       try {
-        toast?.({ title: 'Live gratuit terminé', description: 'Limite de 3 minutes atteinte — passez à un forfait LIRI pour des lives illimités.' });
+        toast?.({ title: 'Live gratuit terminé', description: 'Limite de 3 minutes atteinte — passez à un forfait avancé pour des lives illimités.' });
       } catch { /* noop */ }
       handleStop?.();
     }

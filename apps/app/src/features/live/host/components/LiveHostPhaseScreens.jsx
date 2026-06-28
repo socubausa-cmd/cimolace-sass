@@ -1,10 +1,15 @@
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
+import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
+
+// Marque blanche : nom du tenant sur son domaine, logo LIRI sur l'hôte produit.
+const _LPS_BRAND = activeTenantConfig?.branding?.name || 'LIRI';
+const _LPS_IS_TENANT = !!activeTenantConfig?.slug;
 
 export function LiveHostLoadingScreen({ message, phaseError, liveShell, liriLiveUiLabel }) {
   return (
     <div style={{height:'100dvh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:liveShell.pageBg,backgroundImage:liveShell.pageMesh,color:'#fff',fontFamily:'system-ui,-apple-system,sans-serif',gap:'22px'}}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 52 }}>
-        <LiriWordmark variant="official" officialBaseline={false} size="hero" className="justify-center" />
+        {_LPS_IS_TENANT ? <span style={{ fontSize: 38, fontWeight: 800, letterSpacing: '-0.01em', color: '#e5c47a' }}>{_LPS_BRAND}</span> : <LiriWordmark variant="official" officialBaseline={false} size="hero" className="justify-center" />}
       </div>
       <div style={{fontSize:'26px',color:'#e5c47a',fontFamily:'Georgia,serif',letterSpacing:'.04em',fontWeight:600}}>{liriLiveUiLabel}</div>
       <div style={{fontSize:'13px',color:'rgba(255,255,255,.5)'}}>{message}</div>
