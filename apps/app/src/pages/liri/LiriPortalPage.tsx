@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { authStore } from '@/lib/auth-store';
+import { getCachedHostTenant } from '@/lib/tenantResolver';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
@@ -33,8 +34,11 @@ export function LiriPortalPage() {
   const { logout, user } = useAuth();
   const base = getApiBaseUrl();
   const token = authStore.getToken();
-  const slug = authStore.getTenantSlug();
-  const slugLabel = (slug || 'École').replace(/-/g, ' ');
+  // Le portail PRODUIT suit le DOMAINE, PAS le localStorage (qui peut être resté sur 'isna'
+  // d'une session antérieure dans le même navigateur → fuite). Domaine prioritaire, getTenantSlug
+  // en repli (utilisé pour le header X-Tenant-Slug des appels API au boot, avant que l'org charge).
+  const domainSlug = typeof window !== 'undefined' ? getCachedHostTenant(window.location.hostname) : '';
+  const slug = domainSlug || authStore.getTenantSlug();
 
   const [now, setNow] = useState(() => new Date());
   const [stats, setStats] = useState<Stats | null>(null);
@@ -47,9 +51,12 @@ export function LiriPortalPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
+  // orgSlug pour les LIENS /t/:slug : org chargée (vérité) > domaine (fiable) > '' (transitoire).
+  // JAMAIS le localStorage → un /t/isna/... périmé ne peut pas réapparaître sur le portail produit.
+  const orgSlug = org?.slug || domainSlug || '';
   // Identité affichée : vrai nom d'org (API) sinon slug humanisé ; email du compte.
+  const slugLabel = (orgSlug || 'École').replace(/-/g, ' ');
   const orgName = org?.name || slugLabel;
-  const orgSlug = org?.slug || slug;
   const email = user?.email || '';
 
   // État d'abonnement (essai / payant / gratuit) pour le badge + le CTA upgrade.
@@ -73,7 +80,9 @@ export function LiriPortalPage() {
       // host_user_id (colonne NOT NULL de live_sessions) = utilisateur courant = `sub` du JWT.
       let hostId = '';
       try { hostId = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub || ''; } catch { /* noop */ }
-      const h = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
+      // Tenant de la réunion = org chargée en priorité (jamais un slug localStorage périmé).
+      const meetingSlug = org?.slug || slug;
+      const h = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Tenant-Slug': meetingSlug } as Record<string, string>;
       const res = await fetch(`${base}/lives`, {
         method: 'POST',
         headers: h,
@@ -90,7 +99,7 @@ export function LiriPortalPage() {
       if (!id) throw new Error('reunion sans id');
       // Démarrage immédiat (best-effort — l'hôte peut aussi démarrer depuis l'arène).
       try { await fetch(`${base}/lives/${id}/start`, { method: 'POST', headers: h }); } catch { /* noop */ }
-      nav(`/live/host/${id}?tenant=${encodeURIComponent(slug)}`);
+      nav(`/live/host/${id}?tenant=${encodeURIComponent(meetingSlug)}`);
     } catch {
       // Échec rare : rester sur l'accueil LIRI avec un message (pas de route cassée).
       if (typeof window !== 'undefined') window.alert('La réunion n’a pas pu démarrer. Réessayez dans un instant.');
@@ -235,7 +244,7 @@ export function LiriPortalPage() {
         </div>
         <div className="flex items-center gap-1.5">
           <button className="relative grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Notifications"><Bell size={17} /><span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full" style={{ background: 'var(--coral)' }} /></button>
-          <button onClick={() => nav(`/t/${orgSlug}/admin/settings`)} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Réglages de l’organisation"><Settings size={17} /></button>
+          <button onClick={() => orgSlug && nav(`/t/${orgSlug}/admin/settings`)} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Réglages de l’organisation"><Settings size={17} /></button>
 
           {/* ── Avatar → menu compte / organisation ── */}
           <div className="relative" ref={menuRef}>
@@ -305,7 +314,7 @@ export function LiriPortalPage() {
           })}
           <div className="my-1.5 h-px w-9" style={{ background: 'rgba(245,244,238,.08)' }} />
           <button onClick={() => nav('/dashboard')} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Blocks size={20} /></span><span className="lp-nl text-[10px] font-medium">Intégr.</span></button>
-          <button onClick={() => nav(`/t/${orgSlug}/admin/settings`)} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Settings2 size={20} /></span><span className="lp-nl text-[10px] font-medium">Réglages</span></button>
+          <button onClick={() => orgSlug && nav(`/t/${orgSlug}/admin/settings`)} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Settings2 size={20} /></span><span className="lp-nl text-[10px] font-medium">Réglages</span></button>
           <button onClick={openMenu} title={orgName} aria-label="Compte et organisation" className="mt-auto grid h-9 w-9 place-items-center rounded-full text-[11px] font-bold text-white lp-tr lp-railbtn" style={{ background: 'linear-gradient(135deg,#5b7a52,#6d8f60)' }}>{orgName.slice(0, 2).toUpperCase()}</button>
         </aside>
 
