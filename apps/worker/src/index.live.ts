@@ -21,6 +21,7 @@ import { pollLiveInvitations } from './jobs/live-invitations.js';
 import { pollLiveReplayShorts } from './jobs/short-generator.js';
 import { pollDraftSocialPosts } from './jobs/social-poster.js';
 import { pollImapSync }         from './jobs/imap-sync.js';
+import { pollGdprExports }      from './jobs/gdpr-export.js';
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -93,4 +94,15 @@ startPingJob();
   }
 })();
 
-console.log('[worker:live] Pollers actifs ✅ (email 15s · rappels 60s · invitations 120s · imap 90s · shorts 5min · posts 90s)');
+// ── Exports RGPD async (Art. 20) depuis med_gdpr_exports pending (60s) ───────
+(async () => {
+  while (true) {
+    try {
+      const n = await (pollGdprExports as () => Promise<number>)();
+      if (n > 0) console.log(`[worker:live] Exports RGPD: ${n} généré(s)`);
+    } catch (e: unknown) { console.error('[worker:live] GDPR export error:', (e as Error)?.message || e); }
+    await sleep(60_000);
+  }
+})();
+
+console.log('[worker:live] Pollers actifs ✅ (email 15s · rappels 60s · invitations 120s · imap 90s · shorts 5min · posts 90s · rgpd 60s)');

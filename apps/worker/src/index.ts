@@ -14,6 +14,7 @@ import { pollShortGeneration }        from './jobs/short-generator.js';
 import { pollCourseRenderJobs }       from './jobs/courseRender.js';
 import { pollLiveReminders }          from './jobs/live-reminders.js';
 import { pollLiveInvitations }        from './jobs/live-invitations.js';
+import { pollGdprExports }            from './jobs/gdpr-export.js';
 
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
@@ -38,7 +39,7 @@ console.log('[worker] ✓ Video poller (30s)');
 // ── Billing renewal (1h) ─────────────────────────────────────────────────
 (async () => {
   while (true) {
-    try { await (runBillingRenewal as () => Promise<void>)(); }
+    try { await (runBillingRenewal as () => Promise<unknown>)(); }
     catch (e: unknown) { console.error('[worker] Billing error:', (e as Error).message); }
     await sleep(3_600_000);
   }
@@ -48,7 +49,7 @@ console.log('[worker] ✓ Billing renewal (1h)');
 // ── DLQ retry (5min) ─────────────────────────────────────────────────────
 (async () => {
   while (true) {
-    try { await (processDLQ as () => Promise<void>)(); }
+    try { await (processDLQ as () => Promise<unknown>)(); }
     catch (e: unknown) { console.error('[worker] DLQ error:', (e as Error).message); }
     await sleep(300_000);
   }
@@ -138,5 +139,17 @@ console.log('[worker] ✓ Short generation poller (5min)');
   }
 })();
 console.log('[worker] ✓ Course render poller (30s)');
+
+// ── Exports RGPD async (Art. 20) (60s) ──────────────────────────────────
+(async () => {
+  while (true) {
+    try {
+      const count = await (pollGdprExports as () => Promise<number>)();
+      if (count > 0) console.log(`[worker] GDPR exports: ${count} générés`);
+    } catch (e: unknown) { console.error('[worker] GDPR export error:', (e as Error).message); }
+    await sleep(60_000);
+  }
+})();
+console.log('[worker] ✓ GDPR export poller (60s)');
 
 console.log('[worker] Tous les workers actifs ✅');
