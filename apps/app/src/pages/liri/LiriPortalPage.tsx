@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import {
   Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare, MessageCircle, WandSparkles,
   Library, Blocks, Settings2, Mic, ArrowUp, LogIn, CalendarPlus, PenTool,
@@ -31,7 +31,7 @@ interface ActivityItem { id: string; icon: LucideIcon; tint?: 'coral' | 'green' 
 
 export function LiriPortalPage() {
   const nav = useNavigate();
-  const { logout, user } = useAuth();
+  const { logout, user, tenantRole } = useAuth();
   const base = getApiBaseUrl();
   const token = authStore.getToken();
   // Le portail PRODUIT suit le DOMAINE, PAS le localStorage (qui peut être resté sur 'isna'
@@ -224,6 +224,12 @@ export function LiriPortalPage() {
 
   const openMenu = () => setMenuOpen((v) => !v);
   const runMenu = (fn: () => void) => { setMenuOpen(false); fn(); };
+
+  // Un ÉLÈVE n'a rien à faire sur le portail OWNER : si son rôle dans le tenant
+  // courant est 'student', on le renvoie vers SON espace élève (garde AVANT tout
+  // rendu → zéro flash du portail owner). Le staff (owner/admin/teacher/
+  // secretariat) et les rôles soin (practitioner/clinic_admin) restent ici.
+  if (tenantRole === 'student') return <Navigate to="/student-school-life" replace />;
 
   return (
     <div className="lp-root relative h-[100dvh] w-full overflow-hidden grid grid-rows-[56px_1fr_34px]">
