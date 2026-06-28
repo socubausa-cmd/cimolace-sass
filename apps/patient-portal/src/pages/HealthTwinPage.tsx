@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Activity, AlertTriangle, Info, TrendingUp } from 'lucide-react';
+import { Activity, Info, TrendingUp } from 'lucide-react';
 import { patientApi, type MyTwinState } from '../lib/api';
 
 // Couleurs par sévérité (badges d'alerte).
@@ -73,11 +73,34 @@ export function HealthTwinPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 16 }}>
         <h2 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>Mon corps</h2>
         <p style={{ color: '#64748b', marginTop: 6 }}>
-          Vue d'ensemble de votre santé : organes, équilibres, événements et alertes.
+          Vue d'ensemble de votre santé : organes, équilibres, événements et repères.
         </p>
+      </div>
+
+      {/* Bandeau permanent non-diagnostic */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 10,
+          alignItems: 'flex-start',
+          padding: '12px 14px',
+          background: 'var(--brand-primary-soft)',
+          border: '1px solid var(--brand-primary)',
+          borderRadius: 10,
+          color: 'var(--brand-primary)',
+          fontSize: 12.5,
+          lineHeight: 1.5,
+          marginBottom: 20,
+        }}
+      >
+        <Info size={16} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+        <span>
+          Ces repères ne sont <strong>pas un diagnostic</strong> et ne remplacent pas un avis médical.
+          Ils vous aident à suivre votre santé et à préparer vos échanges avec votre praticien.
+        </span>
       </div>
 
       <OrgansSection organs={state.organs_scores} />
@@ -319,45 +342,60 @@ function TimelineSection({ events }: { events: MyTwinState['events'] }) {
   );
 }
 
-// ── Section alertes ───────────────────────────────────────────────────
+// ── Section repères (anciennement « alertes ») ────────────────────────
+// Présentés comme des REPÈRES de prévention non-diagnostiques, jamais comme
+// des diagnostics. Le libellé de sévérité est reformulé en intention douce.
+const SEVERITY_LABELS: Record<string, string> = {
+  low: 'À garder en tête',
+  medium: 'À surveiller',
+  high: 'À signaler à votre praticien',
+  critical: 'À signaler sans tarder',
+};
+
 function AlertsSection({ alerts }: { alerts: MyTwinState['alerts'] }) {
   return (
     <section style={sectionStyle}>
-      <h3 style={sectionTitle}>Mes alertes</h3>
+      <h3 style={sectionTitle}>Mes repères de prévention</h3>
       {alerts.length === 0 ? (
-        <p style={{ color: '#94a3b8', fontSize: 13 }}>Aucune alerte en cours.</p>
+        <p style={{ color: '#94a3b8', fontSize: 13 }}>Aucun repère particulier en ce moment.</p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {alerts.map((a) => {
-            const palette = SEVERITY_COLORS[a.severity] || SEVERITY_COLORS.medium;
-            return (
-              <div
-                key={a.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 10,
-                  padding: 12,
-                  background: palette.bg,
-                  color: palette.fg,
-                  border: `1px solid ${palette.border}`,
-                  borderRadius: 10,
-                }}
-              >
-                <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
-                <div style={{ fontSize: 13 }}>
-                  <div style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: 11 }}>
-                    {a.severity}
-                  </div>
-                  <div>{a.message}</div>
-                  <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>
-                    {new Date(a.created_at).toLocaleDateString('fr')}
+        <>
+          <p style={{ color: '#64748b', fontSize: 12.5, margin: '0 0 10px', lineHeight: 1.5 }}>
+            Ces repères ne sont pas un diagnostic. Ils signalent une mesure à surveiller ou à
+            partager avec votre praticien.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {alerts.map((a) => {
+              const palette = SEVERITY_COLORS[a.severity] || SEVERITY_COLORS.medium;
+              return (
+                <div
+                  key={a.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 10,
+                    padding: 12,
+                    background: palette.bg,
+                    color: palette.fg,
+                    border: `1px solid ${palette.border}`,
+                    borderRadius: 10,
+                  }}
+                >
+                  <Info size={16} style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true" />
+                  <div style={{ fontSize: 13 }}>
+                    <div style={{ fontWeight: 600, fontSize: 11.5 }}>
+                      {SEVERITY_LABELS[a.severity] || 'À surveiller'}
+                    </div>
+                    <div>{a.message}</div>
+                    <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>
+                      {new Date(a.created_at).toLocaleDateString('fr')}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </section>
   );

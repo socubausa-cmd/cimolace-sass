@@ -291,9 +291,15 @@ export function MyHealth() {
             <Plus size={15} aria-hidden="true" /> Ajouter un relevé
           </button>
         </div>
-        <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 14px', lineHeight: 1.5 }}>
+        <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 10px', lineHeight: 1.5 }}>
           Relevez vos mesures d'appareils maison (tensiomètre, glucomètre, balance, oxymètre…). Elles enrichissent votre suivi et celui de votre praticien.
         </p>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', padding: '10px 12px', background: 'var(--brand-primary-soft)', border: '1px solid var(--brand-primary)', borderRadius: 8, color: 'var(--brand-primary)', fontSize: 12, lineHeight: 1.5, marginBottom: 14 }}>
+          <AlertTriangle size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+          <span>
+            Information de prévention, <strong>pas un diagnostic</strong>. En cas de malaise ou de valeur très inhabituelle, contactez votre praticien ou les urgences (15/112).
+          </span>
+        </div>
         {!hasAnyVital ? (
           <p style={{ color: '#94a3b8', fontSize: 14, margin: 0 }}>
             Aucune constante enregistrée pour l'instant. Cliquez sur « Ajouter un relevé » pour commencer.
@@ -595,7 +601,7 @@ export function MyHealth() {
             </div>
 
             <p style={{ fontSize: 12, color: '#94a3b8', margin: '14px 0 0', lineHeight: 1.5 }}>
-              Ces relevés sont indicatifs et ne remplacent pas un avis médical. En cas de malaise ou de valeur très inhabituelle, contactez votre praticien ou les urgences.
+              Ces relevés sont une information de prévention, pas un diagnostic, et ne remplacent pas un avis médical. En cas de malaise ou de valeur très inhabituelle, contactez votre praticien ou les urgences (15/112).
             </p>
 
             {vitalsError && (

@@ -113,6 +113,28 @@ export function HealthAssistant() {
           Votre assistant de suivi {branding.name} — posez vos questions sur vos
           indicateurs, votre roue d'équilibre et votre hygiène de vie.
         </p>
+        {/* Note permanente non-diagnostic (indépendante de la réponse du serveur). */}
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            alignItems: 'flex-start',
+            marginTop: 10,
+            padding: '10px 12px',
+            background: 'var(--brand-primary-soft)',
+            border: '1px solid var(--brand-primary)',
+            borderRadius: 10,
+            color: 'var(--brand-primary)',
+            fontSize: 12.5,
+            lineHeight: 1.5,
+          }}
+        >
+          <Info size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+          <span>
+            Réponses éducatives, <strong>pas un diagnostic</strong>. Elles ne remplacent pas l'avis
+            de votre praticien.
+          </span>
+        </div>
       </header>
 
       <div

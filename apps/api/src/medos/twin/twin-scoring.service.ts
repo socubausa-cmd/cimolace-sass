@@ -387,7 +387,7 @@ export class TwinScoringService {
         kind: 'metabolic_syndrome',
         severity: 'warning',
         message_fr:
-          `Faisceau évocateur d'un syndrome métabolique (résistance insulinique + dyslipidémie). À explorer cliniquement.`,
+          `Plusieurs marqueurs métaboliques sont hors de leur plage optimale en même temps (glycémie/insuline + lipides). Ce n'est pas un diagnostic — ce regroupement mérite d'être relu et interprété avec votre praticien.`,
         evidence: ['HOMA_IR', 'TRIGLYCERIDES', 'HDL', 'HBA1C']
           .filter((c) => valByCode.has(c))
           .map(ev),
@@ -400,7 +400,7 @@ export class TwinScoringService {
         kind: 'chronic_inflammation',
         severity: 'warning',
         message_fr:
-          `Signaux d'inflammation systémique (CRP + ferritine/VS). Rechercher la source inflammatoire.`,
+          `Plusieurs marqueurs liés à l'inflammation sont élevés (CRP + ferritine/VS). Ce n'est pas un diagnostic — ces valeurs sont à montrer à votre praticien, qui jugera s'il faut en chercher l'origine.`,
         evidence: ['CRP_HS', 'FERRITIN', 'ESR'].filter((c) => valByCode.has(c)).map(ev),
       });
     }
@@ -411,7 +411,7 @@ export class TwinScoringService {
       alerts.push({
         kind: 'deficiency',
         severity: deficits.length >= 2 ? 'warning' : 'info',
-        message_fr: `Carence(s) possible(s) : ${deficits.join(', ')}. À corréler aux symptômes.`,
+        message_fr: `Valeur(s) basse(s) à surveiller : ${deficits.join(', ')}. Ce n'est pas un diagnostic — à corréler à votre ressenti et à confirmer avec votre praticien.`,
         evidence: deficits.map(ev),
       });
     }
@@ -422,7 +422,7 @@ export class TwinScoringService {
         kind: 'metabolic_risk',
         severity: 'info',
         message_fr:
-          'Indice de risque métabolique précoce (ratio TG/HDL ou glycémie). Surveillance recommandée.',
+          'Repère métabolique à surveiller (ratio TG/HDL ou glycémie au-dessus de la cible). Ce n\'est pas un diagnostic — un simple suivi à évoquer avec votre praticien.',
         evidence: ['TG_HDL', 'GLUCOSE'].filter((c) => valByCode.has(c)).map(ev),
       });
     }
@@ -438,7 +438,7 @@ export class TwinScoringService {
       alerts.push({
         kind: 'cardiac_risk',
         severity: isCritical ? 'critical' : 'warning',
-        message_fr: `Signal cardiaque (${cardiacSignals.join(', ')}). Évaluation cardiologique recommandée.`,
+        message_fr: `Marqueur(s) cardiaque(s) au-dessus de la plage attendue (${cardiacSignals.join(', ')}). Ce n'est pas un diagnostic — à montrer sans tarder à votre praticien ; en cas de douleur thoracique ou d'essoufflement marqué, appelez le 15/112.`,
         evidence: cardiacSignals.map(ev),
       });
     }
@@ -452,7 +452,7 @@ export class TwinScoringService {
         kind: 'methylation_block',
         severity: 'warning',
         message_fr:
-          'Faisceau évocateur d\'un blocage du cycle de méthylation (homocystéine ± MMA, déficit B9/B12). À explorer avec un test génétique MTHFR.',
+          'Homocystéine élevée associée à des marqueurs B9/B12 hors plage. Ce n\'est pas un diagnostic — ce profil est à relire avec votre praticien, qui jugera de l\'intérêt d\'examens complémentaires.',
         evidence: ['HOMOCYSTEINE', 'MMA', 'VIT_B9_FOLATE', 'FOLATE_RBC', 'B12', 'HOLOTC']
           .filter((c) => valByCode.has(c))
           .map(ev),
@@ -469,7 +469,7 @@ export class TwinScoringService {
         kind: 'gut_permeability',
         severity: 'warning',
         message_fr:
-          'Signaux d\'hyperperméabilité intestinale / dysbiose (zonuline, calprotectine, lactoferrine, sIgA). Investiguer la barrière intestinale.',
+          'Marqueurs intestinaux hors plage (zonuline, calprotectine, lactoferrine, sIgA). Ce n\'est pas un diagnostic — à relire avec votre praticien pour décider de la suite.',
         evidence: ['ZONULIN', 'CALPROTECTIN', 'LACTOFERRIN', 'SECRETORY_IGA']
           .filter((c) => valByCode.has(c))
           .map(ev),
@@ -484,7 +484,7 @@ export class TwinScoringService {
       alerts.push({
         kind: 'oxidative_stress_high',
         severity: 'warning',
-        message_fr: `Stress oxydatif marqué (${oxidativeHigh.length} marqueur(s) d'attaque + ${antioxidantLow.length} défense(s) abaissée(s)). Soutien antioxydant à considérer.`,
+        message_fr: `Déséquilibre des marqueurs du stress oxydatif (${oxidativeHigh.length} marqueur(s) élevé(s) + ${antioxidantLow.length} défense(s) abaissée(s)). Ce n'est pas un diagnostic — à interpréter avec votre praticien.`,
         evidence: [...oxidativeHigh, ...antioxidantLow].map(ev),
       });
     }
@@ -502,7 +502,7 @@ export class TwinScoringService {
         kind: 'thyroid_autoimmune',
         severity,
         message_fr:
-          'Anticorps thyroïdiens positifs (TPO/TG). Évoque une thyroïdite auto-immune (Hashimoto si TSH↑, Basedow si TSH↓). À confirmer en consultation endocrinologique.',
+          'Anticorps thyroïdiens (TPO/TG) au-dessus de la plage attendue, avec une TSH à surveiller. Ce n\'est pas un diagnostic — ces résultats sont à montrer à votre praticien, qui décidera des examens à confirmer.',
         evidence: ['ANTI_TPO', 'ANTI_TG', 'TSH', 'FT4', 'FT3']
           .filter((c) => valByCode.has(c))
           .map(ev),
@@ -519,7 +519,7 @@ export class TwinScoringService {
         alerts.push({
           kind: 'cortisol_dysregulation',
           severity: ratio > 0.8 ? 'warning' : 'info',
-          message_fr: `Pattern de cortisol atypique (rapport PM/AM = ${ratio.toFixed(2)}, attendu < 0.5). Évoque une fatigue surrénalienne ou un stress chronique.`,
+          message_fr: `Rythme du cortisol atypique (rapport PM/AM = ${ratio.toFixed(2)}, attendu < 0.5). Ce n'est pas un diagnostic — ce repère, souvent lié au stress ou au sommeil, est à relire avec votre praticien.`,
           evidence: ['CORTISOL_AM', 'CORTISOL_PM', 'ACTH', 'DHEA_S']
             .filter((c) => valByCode.has(c))
             .map(ev),
@@ -536,7 +536,7 @@ export class TwinScoringService {
         kind: 'insulin_resistance_advanced',
         severity: 'warning',
         message_fr:
-          'Résistance insulinique avec déséquilibre adipocytokines (leptine ↑, adiponectine ↓ ou C-peptide ↑). Profil métabolique avancé à corriger.',
+          'Marqueurs de la régulation du sucre et des adipocytokines hors plage (HOMA-IR, leptine ↑, adiponectine ↓ ou C-peptide ↑). Ce n\'est pas un diagnostic — ce profil métabolique est à relire et accompagner avec votre praticien.',
         evidence: ['HOMA_IR', 'LEPTIN', 'C_PEPTIDE', 'ADIPONECTIN', 'FRUCTOSAMINE']
           .filter((c) => valByCode.has(c))
           .map(ev),
@@ -553,7 +553,7 @@ export class TwinScoringService {
       alerts.push({
         kind: 'electrolyte_imbalance',
         severity: isCritical ? 'critical' : 'warning',
-        message_fr: `Déséquilibre électrolytique sur ${electrolytesAbnormal.length} marqueur(s) (${electrolytesAbnormal.join(', ')}). Vigilance cardiaque/rénale.`,
+        message_fr: `Plusieurs électrolytes hors plage (${electrolytesAbnormal.join(', ')}). Ce n'est pas un diagnostic — à montrer rapidement à votre praticien ; en cas de palpitations, faiblesse marquée ou malaise, appelez le 15/112.`,
         evidence: electrolytesAbnormal.map(ev),
       });
     }
@@ -564,7 +564,7 @@ export class TwinScoringService {
       alerts.push({
         kind: 'liver_strain',
         severity: liverHigh.length >= 3 ? 'warning' : 'info',
-        message_fr: `Atteinte hépatique multiple (${liverHigh.join(', ')} ↑). Évoquer NAFLD, hépatite ou surcharge toxique selon contexte.`,
+        message_fr: `Plusieurs enzymes hépatiques sont élevées (${liverHigh.join(', ')} ↑). Ce n'est pas un diagnostic — ces valeurs sont à relire avec votre praticien, qui en cherchera l'origine selon le contexte.`,
         evidence: liverHigh.map(ev),
       });
     }
@@ -586,8 +586,8 @@ export class TwinScoringService {
         kind: 'hypertension',
         severity: crisis || labCritical ? 'critical' : 'warning',
         message_fr: crisis
-          ? `Tension artérielle très élevée (${sys ?? '?'}/${dia ?? '?'} mmHg). Seuil de crise hypertensive — contactez sans tarder votre praticien ou les urgences.`
-          : `Tension artérielle au-dessus de la cible (${sys ?? '?'}/${dia ?? '?'} mmHg). À recontrôler au calme et à signaler à votre praticien.`,
+          ? `Tension mesurée très élevée (${sys ?? '?'}/${dia ?? '?'} mmHg). Ce n'est pas un diagnostic — montrez cette mesure à votre praticien sans tarder ; en cas de douleur thoracique, maux de tête violents ou troubles visuels, appelez le 15.`
+          : `Tension mesurée au-dessus de la cible (${sys ?? '?'}/${dia ?? '?'} mmHg). Ce n'est pas un diagnostic — à recontrôler au calme et à signaler à votre praticien.`,
         evidence: ['BP_SYSTOLIC', 'BP_DIASTOLIC'].filter((c) => valByCode.has(c)).map(ev),
       });
     }
@@ -597,7 +597,7 @@ export class TwinScoringService {
       alerts.push({
         kind: 'hypotension',
         severity: sys < 80 ? 'warning' : 'info',
-        message_fr: `Tension artérielle basse (${sys} mmHg de systolique). Si vertiges ou malaises, asseyez-vous, hydratez-vous et parlez-en à votre praticien.`,
+        message_fr: `Tension mesurée basse (${sys} mmHg de systolique). Ce n'est pas un diagnostic — si vertiges ou malaises, asseyez-vous, hydratez-vous et parlez-en à votre praticien.`,
         evidence: ['BP_SYSTOLIC', 'BP_DIASTOLIC'].filter((c) => valByCode.has(c)).map(ev),
       });
     }
@@ -610,8 +610,8 @@ export class TwinScoringService {
         kind: tachy ? 'tachycardia' : 'bradycardia',
         severity: hr >= 130 || hr <= 40 ? 'warning' : 'info',
         message_fr: tachy
-          ? `Fréquence cardiaque au repos élevée (${hr} bpm). Au repos et hors effort/stress, à surveiller ; consultez si palpitations ou malaise.`
-          : `Fréquence cardiaque au repos basse (${hr} bpm). Souvent bénin chez les sportifs ; consultez en cas de fatigue, vertiges ou malaise.`,
+          ? `Fréquence cardiaque mesurée élevée au repos (${hr} bpm). Ce n'est pas un diagnostic — hors effort/stress, à surveiller ; consultez votre praticien si palpitations ou malaise.`
+          : `Fréquence cardiaque mesurée basse au repos (${hr} bpm). Ce n'est pas un diagnostic — souvent normal chez les sportifs ; consultez en cas de fatigue, vertiges ou malaise.`,
         evidence: [ev('HEART_RATE')],
       });
     }
@@ -624,8 +624,8 @@ export class TwinScoringService {
         kind: 'hypoxemia',
         severity: severe ? 'critical' : 'warning',
         message_fr: severe
-          ? `Saturation en oxygène basse (SpO2 ${spo2} %). En cas d'essoufflement, appelez le 15/112 ; sinon recontrôlez et contactez votre praticien.`
-          : `Saturation en oxygène un peu basse (SpO2 ${spo2} %). Recontrôlez au repos, doigt réchauffé, et signalez-le à votre praticien.`,
+          ? `Saturation en oxygène mesurée basse (SpO2 ${spo2} %). Ce n'est pas un diagnostic — en cas d'essoufflement, appelez le 15/112 ; sinon recontrôlez et contactez votre praticien.`
+          : `Saturation en oxygène mesurée un peu basse (SpO2 ${spo2} %). Ce n'est pas un diagnostic — recontrôlez au repos, doigt réchauffé, et signalez-le à votre praticien.`,
         evidence: [ev('SPO2')],
       });
     }
@@ -638,8 +638,8 @@ export class TwinScoringService {
         kind: 'fever',
         severity: highFever ? 'warning' : 'info',
         message_fr: highFever
-          ? `Fièvre élevée (${temp} °C). Hydratez-vous et surveillez ; consultez si elle persiste ou s'accompagne de signes de gravité.`
-          : `Température au-dessus de la normale (${temp} °C). Reposez-vous, hydratez-vous et recontrôlez ; consultez si cela dure.`,
+          ? `Température mesurée élevée (${temp} °C). Ce n'est pas un diagnostic — hydratez-vous et surveillez ; consultez votre praticien si elle persiste ou s'accompagne de signes de gravité.`
+          : `Température mesurée au-dessus de la normale (${temp} °C). Ce n'est pas un diagnostic — reposez-vous, hydratez-vous et recontrôlez ; consultez si cela dure.`,
         evidence: [ev('BODY_TEMP')],
       });
     }
@@ -664,8 +664,8 @@ export class TwinScoringService {
           severity: 'warning',
           message_fr:
             'Sommeil insuffisant (< 6 h) associé à un niveau de stress élevé. ' +
-            'Ce cumul favorise la fatigue chronique. Prioriser le repos et la ' +
-            'gestion du stress ; en parler à votre praticien si cela persiste.',
+            'Ce n\'est pas un diagnostic, mais ce cumul peut peser sur votre forme : ' +
+            'prioriser le repos et la gestion du stress ; en parler à votre praticien si cela persiste.',
           evidence: [],
         });
       }

@@ -464,8 +464,8 @@ export function HealthPreceptor() {
       >
         <Info size={16} style={{ flexShrink: 0, marginTop: 1 }} />
         <span>
-          Information pédagogique, ne remplace pas un avis médical. Ces repères
-          ne constituent pas un diagnostic.
+          Information de prévention, <strong>pas un diagnostic</strong>. Ce parcours est
+          pédagogique et ne remplace pas l'avis de votre praticien.
         </span>
       </div>
 

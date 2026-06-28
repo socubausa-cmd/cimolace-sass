@@ -546,6 +546,16 @@ export function ChartingPage() {
                 </div>
               </div>
 
+              {/* DISCLAIMER — brouillon IA, non-diagnostic, visible, non dismissable */}
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '12px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, marginBottom: 16 }}>
+                <AlertTriangle size={18} color="#d97706" style={{ flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
+                <p style={{ margin: 0, fontSize: 12.5, color: '#92400e', lineHeight: 1.6 }}>
+                  <strong>Brouillon généré par IA — à relire, corriger, valider et signer par le praticien.</strong>{' '}
+                  Ne constitue pas un diagnostic. Les sections Analyse et Plan sont des propositions à confirmer
+                  par votre jugement clinique avant insertion au dossier.
+                </p>
+              </div>
+
               {(['subjective', 'objective', 'assessment', 'plan'] as const).map(section => (
                 <div key={section} style={{ marginBottom: 16 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
@@ -555,6 +565,15 @@ export function ChartingPage() {
                     }}>
                       {soapLabels[section]}
                     </span>
+                    {/* Repère « brouillon » sur les sections interprétatives (Analyse / Plan). */}
+                    {(section === 'assessment' || section === 'plan') && (
+                      <span style={{
+                        background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a',
+                        borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase',
+                      }}>
+                        Brouillon — à valider
+                      </span>
+                    )}
                   </div>
                   <p style={{ fontSize: 14, color: 'var(--zw-text)', lineHeight: 1.7, paddingLeft: 8, borderLeft: `3px solid ${soapColors[section]}`, margin: 0 }}>
                     {job.soapNote![section] || <em style={{ color: 'var(--zw-text-faint)' }}>Non renseigné</em>}
@@ -566,8 +585,14 @@ export function ChartingPage() {
               {job.status === 'completed' && (
                 <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px dashed var(--zw-border-strong)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                    <h3 style={{ ...sectionTitle, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <h3 style={{ ...sectionTitle, margin: 0, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                       <Pill size={16} color="var(--brand-primary)" /> Ordonnance suggérée
+                      <span style={{
+                        background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a',
+                        borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase',
+                      }}>
+                        Brouillon — à valider
+                      </span>
                     </h3>
                     {!suggestion && (
                       <button
@@ -601,10 +626,11 @@ export function ChartingPage() {
                       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '12px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, marginBottom: 16 }}>
                         <AlertTriangle size={18} color="#d97706" style={{ flexShrink: 0, marginTop: 1 }} />
                         <p style={{ margin: 0, fontSize: 12.5, color: '#92400e', lineHeight: 1.6 }}>
-                          <strong>Suggestion générée par IA — à vérifier et valider par le praticien.</strong> Aucune
-                          ordonnance n'est créée ni signée automatiquement. Contrôlez chaque ligne (molécule,
-                          posologie, durée), les allergies, contre-indications et interactions avant de
-                          créer le brouillon. Vous restez seul responsable de la prescription.
+                          <strong>Brouillon généré par IA — à relire, corriger, valider et signer par le praticien.</strong>{' '}
+                          Ne constitue pas un diagnostic. Aucune ordonnance n'est créée ni signée
+                          automatiquement. Contrôlez chaque ligne (molécule, posologie, durée), les allergies,
+                          contre-indications et interactions avant de créer le brouillon. Vous restez seul
+                          responsable de la prescription.
                         </p>
                       </div>
 
