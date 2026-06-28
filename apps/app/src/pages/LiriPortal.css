@@ -99,6 +99,11 @@
   --liri-border: rgba(245,244,238,.09);
   --liri-text: #f5f4ee;
   --liri-glow: 0 8px 28px -6px rgba(217,119,87,.35);
+  /* Accent produit du portail = coral. Le forum et la messagerie lisent
+     `var(--school-accent)` (bulles « envoyées », onglets, liens) — sans ça il
+     resterait l'or ISNA et jurerait avec le shell chaud. Scope portail seulement. */
+  --school-accent: #d97757;
+  --school-accent-rgb: 217 119 87;
 }
 .lp-shell-main .live-studio-pane-left {
   background: linear-gradient(180deg,#2b2926 0%,#262624 45%,#211f1d 100%) !important;
