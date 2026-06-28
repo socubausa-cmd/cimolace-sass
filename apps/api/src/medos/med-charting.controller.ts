@@ -118,11 +118,6 @@ export class MedChartingController {
    */
   @Post(':jobId/suggest-prescription')
   @Roles('practitioner', 'clinic_admin')
-  @AuditResource({
-    resource: 'prescription',
-    action: 'generate',
-    idParam: 'jobId',
-  })
   suggestPrescription(
     @Param('jobId') jobId: string,
     @Body() dto: SuggestPrescriptionDto,

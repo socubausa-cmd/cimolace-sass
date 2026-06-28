@@ -981,8 +981,15 @@ export class MedosService {
     })) as unknown as Record<string, unknown>[];
   }
 
-  async getHealthEntries(tenant: TenantContext, patientId: string) {
-    // Un patient ne peut voir que ses propres entrées
+  async getHealthEntries(
+    tenant: TenantContext,
+    patientId: string,
+    actorId?: string,
+  ) {
+    // Un patient ne peut voir QUE ses propres entrées. RLS étant contournée
+    // (client service-role), ce contrôle d'ownership applicatif est le SEUL
+    // filet : sans lui, un patient lirait le journal santé de n'importe quel
+    // autre patient du tenant via un patientId arbitraire (fuite PHI).
     if (tenant.userRole === 'patient') {
       const { data: pat } = await this.supabase.client
         .from('med_patients')
@@ -990,7 +997,9 @@ export class MedosService {
         .eq('tenant_id', tenant.id)
         .eq('id', patientId)
         .single();
-      // patient_user_id sera vérifié via l'auth context (actorId) — géré côté controller
+      if (!pat || (pat as any).patient_user_id !== actorId) {
+        throw new ForbiddenException('Accès refusé');
+      }
     }
 
     const { data, error } = await this.supabase.client
@@ -1033,7 +1042,7 @@ export class MedosService {
   async listMyHealthEntries(tenant: TenantContext, userId: string) {
     const patient = await this.findPatientByUser(tenant.id, userId);
     if (!patient) return [] as Record<string, unknown>[];
-    return this.getHealthEntries(tenant, patient.id);
+    return this.getHealthEntries(tenant, patient.id, userId);
   }
 
   async createMyHealthEntry(

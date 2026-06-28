@@ -425,7 +425,8 @@ export class MedosHealthController {
   getEntries(
     @Param('patientId') patientId: string,
     @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
   ) {
-    return this.medosService.getHealthEntries(tenant, patientId);
+    return this.medosService.getHealthEntries(tenant, patientId, req.user.id);
   }
 }
