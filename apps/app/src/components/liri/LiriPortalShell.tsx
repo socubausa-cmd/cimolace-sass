@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import {
   Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare, MessageCircle,
   WandSparkles, Library, Blocks, Settings2, GraduationCap,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { authStore } from '@/lib/auth-store';
+import { getApiBaseUrl } from '@/lib/apiBase';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import '../../pages/LiriPortal.css';
 
@@ -47,6 +49,29 @@ export function LiriPortalShell({
   const _shellIsTenant = !!activeTenantConfig?.slug;
   const _shellBrand = activeTenantConfig?.branding?.name || 'LIRI';
 
+  // Nom de l'ÉCOLE de la session (résolu côté API). Sur l'hôte produit (liri.cimolace.space),
+  // la marque reste « LIRI » mais on affiche en suffixe l'école à laquelle l'utilisateur est
+  // rattaché (ex. « LIRI · Prorascience ») → lève la confusion « c'est quel tenant ? ».
+  const [sessionSchool, setSessionSchool] = useState('');
+  useEffect(() => {
+    const token = authStore.getToken?.();
+    if (!token) return;
+    let alive = true;
+    fetch(`${getApiBaseUrl()}/tenants/current`, {
+      headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        let t: any = d;
+        while (t && typeof t === 'object' && 'data' in t) t = t.data;
+        if (alive && t?.name) setSessionSchool(String(t.name));
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [slug]);
+  // Suffixe affiché seulement s'il apporte une info (≠ marque déjà montrée).
+  const _schoolSuffix = sessionSchool && sessionSchool !== _shellBrand ? sessionSchool : '';
+
   return (
     <div className="lp-root relative grid h-[100dvh] w-full grid-rows-[56px_1fr_34px] overflow-hidden">
       {/* Glow chaleureux — discret, confiné à la topbar/aux marges (le <main> est opaque,
@@ -63,6 +88,12 @@ export function LiriPortalShell({
           <button onClick={() => nav('/liri')} className="flex items-center gap-2 lp-tr" aria-label="Portail LIRI">
             {_shellIsTenant ? null : <img src="/lirilogo.png" alt="LIRI" className="h-9 w-9 object-contain" />}
             <span className="text-[17px] font-semibold tracking-tight lp-ink">{_shellBrand}</span>
+            {_schoolSuffix && (
+              <span className="hidden items-center gap-2 text-[14px] lp-muted sm:flex">
+                <span className="lp-faint">·</span>
+                <span className="capitalize">{_schoolSuffix}</span>
+              </span>
+            )}
           </button>
         </div>
         <div className="flex items-center gap-1.5">
