@@ -25,7 +25,14 @@ export class TenantService {
       const role = (membership?.role ?? null) as string | null;
       // Both `role` (legacy callers) and `userRole` (TenantContext required by
       // RolesGuard) are returned so we don't break either side.
-      return { ...tenant, role, userRole: role };
+      // `data_region` (additive) defaults to 'global' if the column is absent
+      // (pre-migration) so existing tenants route to the mutualised base.
+      return {
+        ...tenant,
+        role,
+        userRole: role,
+        data_region: (tenant as any).data_region ?? "global",
+      };
     }
     const { data: membership } = await supabase
       .from("tenant_memberships")
@@ -35,7 +42,13 @@ export class TenantService {
       .single();
     if (!membership) return null;
     const role = membership.role as string | null;
-    return { ...(membership.tenants as any), role, userRole: role };
+    const tenant = membership.tenants as any;
+    return {
+      ...tenant,
+      role,
+      userRole: role,
+      data_region: tenant?.data_region ?? "global",
+    };
   }
 
   async resolveForUser(slug: string, userId: string) {

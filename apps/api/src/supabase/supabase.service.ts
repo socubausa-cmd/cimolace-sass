@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { DEFAULT_REGION, RegionService } from '../region/region.service';
 
 export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
 
@@ -23,6 +24,10 @@ type TenantRow = {
   stripe_subscription_status: string | null;
   timezone: string;
   locale: string;
+  // Data residency region (additive). 'global' (default) = mutualised base;
+  // 'eu-hds' = dedicated French HDS instance. See migration
+  // 20260628160000_tenants_data_region.sql.
+  data_region: string;
   created_at: string;
   updated_at: string;
 };
@@ -472,13 +477,91 @@ type Database = {
 
 @Injectable()
 export class SupabaseService {
+  /**
+   * The mutualised ('global' region) Supabase client. UNCHANGED behaviour:
+   * every existing call site (`this.supabase.client`) keeps hitting this exact
+   * instance. forRegion('global') / forTenant(global) return THIS object.
+   */
   readonly client: SupabaseClient<Database>;
 
-  constructor(config: ConfigService) {
+  /**
+   * Per-region client cache. Seeded with the 'global' client so that
+   * forRegion('global') is a pure passthrough (same object identity, no extra
+   * createClient call). Non-'global' regions are created lazily on first use.
+   */
+  private readonly regionClients = new Map<string, SupabaseClient<Database>>();
+
+  constructor(
+    config: ConfigService,
+    // Optional so the historical `new SupabaseService(config)` (and its unit
+    // spec) keeps working; multi-region routing is only available when
+    // RegionModule provides RegionService (it does, globally, in the app).
+    @Optional() private readonly regionService?: RegionService,
+  ) {
     const url = config.getOrThrow<string>('SUPABASE_URL');
     const key = config.getOrThrow<string>('SUPABASE_SERVICE_ROLE_KEY');
     this.client = createClient<Database>(url, key, {
       auth: { persistSession: false },
     });
+    // Prime the cache so 'global' never re-creates a client (identity stable).
+    this.regionClients.set(DEFAULT_REGION, this.client);
+  }
+
+  /**
+   * Returns a SupabaseClient for the given data residency `region`, CACHED per
+   * region (one client per region, reused across calls).
+   *
+   * GOLDEN RULE — passthrough: forRegion('global') (and null/undefined/empty)
+   * returns the EXACT same object as `this.client`. Existing tenants are all
+   * 'global', so nothing about their behaviour changes.
+   *
+   * Other regions create a client lazily via RegionService (which reads the
+   * region's *_EU_HDS-style env vars and throws an explicit error if the
+   * region isn't provisioned). Requires RegionService to be injected; if it
+   * isn't (bare construction without RegionModule), only 'global' is available
+   * and any other region throws.
+   */
+  forRegion(region: string | null | undefined): SupabaseClient<Database> {
+    const normalized =
+      this.regionService?.normalizeRegion(region) ??
+      ((region ?? '').trim() || DEFAULT_REGION);
+
+    // Passthrough for 'global' (and any value that normalises to it): the
+    // mutualised client, same identity, zero new client.
+    if (normalized === DEFAULT_REGION) {
+      return this.client;
+    }
+
+    const cached = this.regionClients.get(normalized);
+    if (cached) return cached;
+
+    if (!this.regionService) {
+      throw new Error(
+        `Région « ${normalized} » indisponible : RegionService non injecté (RegionModule absent). Seule la région '${DEFAULT_REGION}' est servie.`,
+      );
+    }
+
+    const { url, serviceKey } = this.regionService.getConnection(normalized);
+    const client = createClient<Database>(url, serviceKey, {
+      auth: { persistSession: false },
+    });
+    this.regionClients.set(normalized, client);
+    return client;
+  }
+
+  /**
+   * Returns the SupabaseClient for a tenant's data residency region, based on
+   * its `data_region` column (defaulting to 'global' when absent/null). This
+   * is the call site that PHI-handling MEDOS services will adopt incrementally
+   * (`this.supabase.forTenant(tenant)`), once a non-'global' tenant exists.
+   *
+   * GOLDEN RULE: a 'global' tenant (or one without `data_region`) yields the
+   * exact same client as `this.client` — guaranteed zero regression for every
+   * tenant today.
+   */
+  forTenant(
+    tenant: { data_region?: string | null } | null | undefined,
+  ): SupabaseClient<Database> {
+    return this.forRegion(tenant?.data_region ?? DEFAULT_REGION);
   }
 }
