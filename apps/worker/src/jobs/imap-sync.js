@@ -179,7 +179,6 @@ export async function pollImapSync() {
     return 0;
   }
   const active = (boxes || []).filter((b) => b.imap_host);
-  console.log(`[imap] poll: ${active.length} boîte(s) à synchroniser`);
   if (!active.length) return 0;
   let total = 0;
   for (const mb of active) total += await syncMailbox(mb);
