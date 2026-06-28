@@ -150,7 +150,7 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: plan } = await (this.supabase as any)
       .from('billing_plans')
-      .select('key, price_cents, currency, billing_cycle')
+      .select('key, label, price_cents, currency, billing_cycle')
       .eq('key', planSlug)
       .maybeSingle();
     if (!plan) {
@@ -245,6 +245,76 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
     // promotion visitor→student (jamais de downgrade). Sans ça, le contenu pédagogique RLS reste vide
     // et la garde élève ne s'ouvre pas. Tolérant aux erreurs (ne casse jamais le fulfillment).
     await this.grantStudentAccess(userId, tenantId);
+
+    // Reçu : notification in-app + email de confirmation à l'élève (best-effort).
+    await this.notifyStudentPayment(userId, tenantId, plan);
+  }
+
+  /**
+   * Après un paiement actif : NOTIFIE l'élève (in-app + email reçu). Best-effort —
+   * ne casse jamais le fulfillment. ⚠️ `notifications.type` et `priority` sont bornés
+   * par CHECK → seules 'success'/'normal' sont acceptées (sinon UPDATE/INSERT rejeté
+   * en silence — bug vécu 3× cette session sur provider/sync_status/type). L'email part
+   * via `email_queue` (le worker l'envoie par Resend, expéditeur = `email_from` du tenant).
+   */
+  private async notifyStudentPayment(
+    userId: string,
+    tenantId: string,
+    plan: { key: string; label?: string | null; price_cents?: number | null; currency?: string | null },
+  ): Promise<void> {
+    const planLabel = plan?.label || plan?.key || 'votre offre';
+    const amount =
+      plan?.price_cents != null
+        ? `${(Number(plan.price_cents) / 100).toFixed(2)} ${plan.currency || 'EUR'}`
+        : '';
+
+    // 1) Notification in-app
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (this.supabase as any).from('notifications').insert({
+        tenant_id: tenantId,
+        user_id: userId,
+        type: 'success',
+        priority: 'normal',
+        title: 'Paiement confirmé ✓',
+        body: `Votre accès est activé. Merci pour votre paiement — ${planLabel}${amount ? ` (${amount})` : ''}.`,
+        action_url: '/m/eleve',
+        is_read: false,
+        is_silent: false,
+        sent_email: true,
+      });
+    } catch (e) {
+      this.logger.warn(`notif paiement (user=${userId}): ${(e as Error).message}`);
+    }
+
+    // 2) Email reçu — adresse élève via auth admin ; expéditeur via tenant_notification_settings.
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: u } = await (this.supabase as any).auth.admin.getUserById(userId);
+      const to = u?.user?.email;
+      if (!to) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: ns } = await (this.supabase as any)
+        .from('tenant_notification_settings')
+        .select('email_from, email_from_name')
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (this.supabase as any).from('email_queue').insert({
+        tenant_id: tenantId,
+        to,
+        from: ns?.email_from ?? null,
+        from_name: ns?.email_from_name ?? null,
+        subject: 'Paiement confirmé — votre accès est activé',
+        html_body:
+          `<h2>Merci pour votre paiement</h2>` +
+          `<p>Votre paiement${amount ? ` de <strong>${amount}</strong>` : ''} pour « ${planLabel} » est confirmé.</p>` +
+          `<p>Votre accès est désormais <strong>actif</strong> — connectez-vous pour accéder à vos contenus.</p>`,
+        status: 'pending',
+      });
+    } catch (e) {
+      this.logger.warn(`email reçu paiement (user=${userId}): ${(e as Error).message}`);
+    }
   }
 
   /**
