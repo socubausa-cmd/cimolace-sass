@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, UserRound, Building2, Users, CreditCard, Wallet, LogOut, Trash2,
   X, Loader2, Sparkles, Check, ArrowUpRight, SlidersHorizontal, Settings2,
-  Eye, EyeOff, Copy, ShieldCheck, UserPlus,
+  Eye, EyeOff, Copy, ShieldCheck, UserPlus, FileText,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { authStore } from '@/lib/auth-store';
@@ -31,6 +31,7 @@ export default function LiriAccountPage() {
   const [orgs, setOrgs] = useState<OrgRef[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [subs, setSubs] = useState<Sub[]>([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
   const [section, setSection] = useState('general');
   const [delOpen, setDelOpen] = useState(false);
   const [delReason, setDelReason] = useState('');
@@ -87,7 +88,7 @@ export default function LiriAccountPage() {
       .then((d) => { const s = d?.data ?? d; if (s && typeof s.totalLives === 'number' && typeof s.totalMembers === 'number') setStats(s as Stats); })
       .catch(() => {});
     fetch(`${base}/billing/plan`, { headers: h }).then((r) => (r.ok ? r.json() : null))
-      .then((d) => { let t: any = d; while (t && typeof t === 'object' && 'data' in t && !('subscriptions' in t)) t = t.data; const arr = t?.subscriptions ?? []; setSubs(Array.isArray(arr) ? arr : []); })
+      .then((d) => { let t: any = d; while (t && typeof t === 'object' && 'data' in t && !('subscriptions' in t)) t = t.data; const arr = t?.subscriptions ?? []; setSubs(Array.isArray(arr) ? arr : []); const inv = t?.invoices ?? []; setInvoices(Array.isArray(inv) ? inv : []); })
       .catch(() => {});
   }, [base, token, slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -105,6 +106,15 @@ export default function LiriAccountPage() {
 
   const euros = (cents?: number) => ((cents ?? 0) / 100).toLocaleString('fr-FR');
   const roleLabel = (r?: string) => (({ owner: 'Propriétaire', admin: 'Admin', teacher: 'Enseignant', secretariat: 'Secrétariat', student: 'Élève', practitioner: 'Praticien', clinic_admin: 'Admin clinique' } as Record<string, string>)[String(r || '').toLowerCase()] || r || '—');
+  // Formate une facture défensivement (le schéma billing_invoices varie).
+  const invFmt = (inv: any) => {
+    const cents = inv?.amount_cents ?? inv?.amount ?? inv?.total_cents ?? null;
+    const amount = cents != null ? `${euros(Number(cents))} ${String(inv?.currency || 'EUR').toUpperCase()}` : (inv?.description || 'Facture');
+    const d = inv?.created_at || inv?.issued_at || inv?.period_start || null;
+    const date = d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+    const url = inv?.hosted_invoice_url || inv?.invoice_url || inv?.pdf_url || inv?.url || '';
+    return { amount, date, status: inv?.status || '', url };
+  };
 
   const switchOrg = (s: string) => { if (!s || s === orgSlug) return; authStore.setTenantSlug(s); if (typeof window !== 'undefined') window.location.assign('/liri'); };
 
@@ -348,12 +358,30 @@ export default function LiriAccountPage() {
       case 'facturation':
         return (
           <div>
-            <Header title="Facturation & abonnement" subtitle="Votre forfait LIRI et vos factures" />
+            <Header title="Facturation & abonnement" subtitle="Votre forfait LIRI, vos renouvellements et vos factures — sans quitter le portail." />
             <div className="mt-5 border-t lp-line">
-              <Row label="Plan actuel" value={billing.label} action={!billing.isPaid ? <GhostBtn onClick={() => nav('/cimolace/billing?upgrade=liri')}>Passer à un forfait</GhostBtn> : undefined} />
-              {billing.endLabel && <Row label={billing.isPaid ? 'Prochain renouvellement' : "Fin de l'essai"} value={billing.endLabel} />}
+              <Row label="Plan actuel" value={billing.label} action={!billing.isPaid ? (
+                <button onClick={() => nav('/cimolace/billing?upgrade=liri')} className="flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12.5px] font-medium text-white lp-tr" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}><Sparkles size={14} /> Passer à un forfait</button>
+              ) : undefined} />
+              {billing.endLabel && <Row label={billing.isPaid ? 'Prochain renouvellement' : "Fin de l’essai"} value={billing.endLabel} />}
             </div>
-            <div className="mt-6"><GhostBtn onClick={() => nav(`/t/${orgSlug}/admin/billing`)}>Gérer la facturation</GhostBtn></div>
+
+            <div className="mt-7">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] lp-faint">Factures</p>
+              {invoices.length === 0 ? (
+                <p className="mt-3 text-[13px] lp-faint">Aucune facture pour l’instant. Elles apparaîtront ici après votre premier paiement.</p>
+              ) : (
+                <div className="mt-2.5 space-y-1.5">
+                  {invoices.map((inv, i) => { const f = invFmt(inv); return (
+                    <div key={inv?.id || i} className="flex items-center gap-3 rounded-xl border px-3 py-2.5" style={{ borderColor: 'rgba(245,244,238,.08)' }}>
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg" style={{ background: 'rgba(217,119,87,.12)' }}><FileText size={15} className="lp-coral" /></span>
+                      <span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-medium lp-ink">{f.amount}</span><span className="block truncate text-[11.5px] lp-faint">{f.date}{f.status ? ` · ${f.status}` : ''}</span></span>
+                      {f.url && <a href={f.url} target="_blank" rel="noreferrer" className="shrink-0 rounded-md px-2.5 py-1 text-[11.5px] font-medium lp-muted lp-tr hover:bg-[rgba(255,255,255,.06)]" style={{ border: '1px solid rgba(245,244,238,.14)' }}>Voir</a>}
+                    </div>
+                  ); })}
+                </div>
+              )}
+            </div>
           </div>
         );
       case 'encaissements':
