@@ -157,7 +157,7 @@ export function DashboardHome() {
                 fontSize: 22, boxShadow: '0 0 24px -6px rgba(124,58,237,0.7)',
               }}>✦</div>
               <div>
-                <h2 className="text-lg font-bold" style={{ color: '#e5e7eb' }}>LIRI Brain</h2>
+                <h2 className="text-lg font-bold" style={{ color: '#e5e7eb' }}>Copilote IA</h2>
                 <p className="text-sm" style={{ color: '#9ca3af' }}>
                   Assistant IA multi-modèles · DeepSeek · Claude · GPT-4o
                 </p>

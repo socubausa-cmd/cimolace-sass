@@ -331,7 +331,7 @@ function FactoryHeader({ onReset, isRealBrain }) {
               Mode automatique
             </span>
             {isRealBrain ? (
-              <span className="text-[10px] text-emerald-300/90">● LIRI Brain</span>
+              <span className="text-[10px] text-emerald-300/90">● Assistant IA</span>
             ) : null}
           </div>
           <p className="mt-0.5 text-[11.5px] text-white/50">

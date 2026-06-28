@@ -136,7 +136,7 @@ export default function EleveLiveScreen() {
             >
               <p className="min-w-0 flex-1 text-[12px] leading-snug text-amber-100/95">
                 <span className="font-semibold text-amber-50">Mode invité (app mobile).</span> Lancer / animer un live
-                LIRI se fait sur <strong>le site web</strong> (ordinateur). Ici : rejoindre un lien, suivre le direct et
+                se fait sur <strong>le site web</strong> (ordinateur). Ici : rejoindre un lien, suivre le direct et
                 les replays.
               </p>
               <button

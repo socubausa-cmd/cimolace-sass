@@ -20,7 +20,7 @@ export default function EleveVersionScreen() {
   useEffect(() => {
     const prev = typeof document !== 'undefined' ? document.title : '';
     if (typeof document !== 'undefined') {
-      document.title = 'Version · LIRI';
+      document.title = 'Version';
     }
     return () => {
       if (typeof document !== 'undefined' && prev) document.title = prev;

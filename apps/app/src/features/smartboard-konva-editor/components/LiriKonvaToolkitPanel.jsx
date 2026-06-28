@@ -298,7 +298,7 @@ export default function LiriKonvaToolkitPanel({ addObjects, className, quickFilt
       <div className="space-y-2 rounded-xl border border-cyan-500/25 bg-cyan-950/20 p-2.5">
         <p className="flex items-center justify-center gap-1 text-[9px] font-semibold uppercase tracking-wider text-cyan-200/90">
           <BookText className="h-3 w-3" />
-          Design texte LIRI → Konva
+          Design texte → Konva
         </p>
         <select
           value={liriStyleId}
@@ -327,7 +327,7 @@ export default function LiriKonvaToolkitPanel({ addObjects, className, quickFilt
             value={liriClassId}
             onChange={(e) => setLiriClassId(e.target.value)}
             className="min-w-0 flex-1 rounded border border-white/10 bg-black/30 px-1 py-0.5 text-[9px] text-white"
-            title="Classification moteur LIRI"
+            title="Classification IA"
           >
             <option value="title">title</option>
             <option value="definition">definition</option>

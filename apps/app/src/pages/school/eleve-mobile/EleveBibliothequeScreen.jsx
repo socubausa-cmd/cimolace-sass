@@ -140,7 +140,7 @@ function buildCourseRowsFromEnrollments(enrollments) {
         to: f?.id ? ELEVE_MOBILE.course(f.id) : '/formations/mes-formations',
         title: t,
         sub,
-        prof: 'Formateur LIRI',
+        prof: 'Formateur',
         percent: g.percent,
         imageUrl: f?.image_url,
         imageTone: formationCoverStyle(t),
@@ -165,7 +165,7 @@ function buildDoneRowsFromEnrollments(enrollments) {
         to: f?.id ? ELEVE_MOBILE.course(f.id) : '/formations/mes-formations',
         title: f?.title || 'Formation',
         sub: f?.description ? String(f.description).trim().slice(0, 60) : 'Terminé',
-        prof: 'Formateur LIRI',
+        prof: 'Formateur',
         imageUrl: f?.image_url,
         imageTone: formationCoverStyle(f?.title),
       };
@@ -181,7 +181,7 @@ function buildCatalogRows(courses) {
       to: c?.id ? ELEVE_MOBILE.course(c.id) : '/formations/catalogue',
       title: t,
       sub: c?.description ? String(c.description).trim().slice(0, 80) : 'Cours disponible',
-      prof: 'Formateur LIRI',
+      prof: 'Formateur',
       imageUrl: c?.image_url || null,
       imageTone: formationCoverStyle(t),
       symbol: t.toLowerCase().includes('math') ? 'math' : t.toLowerCase().includes('chim') ? 'flask' : 'atom',
@@ -716,7 +716,7 @@ export default function EleveBibliothequeScreen() {
         </AnimatePresence>
 
         <p className="mt-6 pb-2 text-center text-[9px] uppercase tracking-[0.2em] text-white/20">
-          {progressLabel || 'Parcours LIRI'}
+          {progressLabel || 'Parcours'}
         </p>
         </div>
       </div>
