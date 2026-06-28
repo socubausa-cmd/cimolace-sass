@@ -7,7 +7,14 @@ import {
 } from 'lucide-react';
 import { authStore } from '@/lib/auth-store';
 import { getApiBaseUrl } from '@/lib/apiBase';
+import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import '../DashboardLiri.css';
+
+// Marque blanche par tenant : sur le domaine d'un tenant (ex. prorascience.org),
+// l'assistant porte le NOM DU TENANT et n'expose JAMAIS « LIRI » ; sur l'hôte produit
+// LIRI (liri.cimolace.space) il reste « LIRI ». activeTenantConfig = résolu par l'hôte.
+const BRAIN_NAME =
+  (activeTenantConfig && activeTenantConfig.branding && activeTenantConfig.branding.name) || 'LIRI';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -370,7 +377,7 @@ export function DashboardLiri() {
   };
 
   const activeTitle = conversations.find((c) => c.id === activeConvId)?.title ?? 'Nouvelle conversation';
-  const tenantLabel = (slug || 'École').replace(/-/g, ' ');
+  const tenantLabel = BRAIN_NAME || (slug || 'École').replace(/-/g, ' ');
 
   const SUGGESTIONS = [
     { icon: Calendar,   text: 'Quels sont les prochains lives ?' },
@@ -396,7 +403,7 @@ export function DashboardLiri() {
             <div className="px-5 pt-5 pb-4 flex items-center gap-3">
               <div className="lq-pulse relative grid place-items-center h-11 w-11 rounded-2xl lq-ember lq-iris text-white"><Sparkles size={20} /></div>
               <div>
-                <div className="lq-display text-[23px] leading-none font-semibold tracking-tight">LIRI <span className="lq-ember-text">Brain</span></div>
+                <div className="lq-display text-[23px] leading-none font-semibold tracking-tight">{BRAIN_NAME} <span className="lq-ember-text">Brain</span></div>
                 <div className="text-[11.5px] text-stone-500 mt-1 flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> assistant de l'école</div>
               </div>
             </div>
@@ -435,7 +442,7 @@ export function DashboardLiri() {
             <div className="m-2.5 rounded-2xl lq-glass-soft lq-hair p-3.5">
               <div className="flex items-center gap-2.5">
                 <span className="grid place-items-center h-8 w-8 rounded-xl text-white text-[12px] font-bold shrink-0" style={{ background: 'linear-gradient(135deg,#5b7a52,#6d8f60)' }}>{tenantLabel.slice(0, 2).toUpperCase()}</span>
-                <div className="min-w-0 flex-1"><div className="text-[12.5px] font-semibold truncate capitalize">{tenantLabel}</div><div className="text-[10.5px] text-stone-400">espace assistant LIRI</div></div>
+                <div className="min-w-0 flex-1"><div className="text-[12.5px] font-semibold truncate capitalize">{tenantLabel}</div><div className="text-[10.5px] text-stone-400">espace assistant {BRAIN_NAME}</div></div>
               </div>
               <Link to="/dashboard" className="mt-3 flex items-center gap-1.5 text-[12px] text-stone-500 hover:text-stone-800 transition"><ArrowUpRight size={13} className="rotate-180" /> Retour au dashboard</Link>
             </div>
@@ -480,7 +487,7 @@ export function DashboardLiri() {
             {messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center gap-4">
                 <div className="lq-pulse relative grid place-items-center h-[72px] w-[72px] rounded-[22px] lq-ember lq-iris text-white"><Sparkles size={32} /></div>
-                <h2 className="lq-display text-[30px] font-semibold tracking-tight">Bonjour, je suis <span className="lq-ember-text">LIRI</span></h2>
+                <h2 className="lq-display text-[30px] font-semibold tracking-tight">Bonjour, je suis <span className="lq-ember-text">{BRAIN_NAME}</span></h2>
                 <p className="text-stone-500 text-[14.5px] leading-relaxed max-w-[440px]">Ton copilote pour l'école : pose une question, explore tes cours, lives, rendez-vous, le forum ou la base de connaissances. Je peux aussi agir — toujours avec ta confirmation.</p>
                 <div className="flex flex-wrap gap-2 justify-center mt-2 max-w-[540px]">
                   {SUGGESTIONS.map(({ icon: Icon, text }) => (
@@ -507,7 +514,7 @@ export function DashboardLiri() {
                           {msg.content && <p className="text-[14.5px] leading-[1.75] text-stone-700 whitespace-pre-wrap break-words">{msg.content}</p>}
                           {msg.pending && (
                             <div className="inline-flex items-center gap-2 text-[13px] text-stone-500">
-                              <span className="lq-dot" /><span className="lq-dot" /><span className="lq-dot" /><span className="ml-1">LIRI réfléchit…</span>
+                              <span className="lq-dot" /><span className="lq-dot" /><span className="lq-dot" /><span className="ml-1">{BRAIN_NAME} réfléchit…</span>
                             </div>
                           )}
                         </div>
@@ -551,7 +558,7 @@ export function DashboardLiri() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Pose ta question à LIRI…  (Entrée pour envoyer · Maj+Entrée = nouvelle ligne)"
+                  placeholder={`Pose ta question à ${BRAIN_NAME}…  (Entrée pour envoyer · Maj+Entrée = nouvelle ligne)`}
                   disabled={streaming}
                   rows={1}
                   className="flex-1 resize-none bg-transparent py-2.5 text-[15px] leading-relaxed text-stone-900 placeholder:text-stone-400 focus:outline-none max-h-[200px] overflow-auto"
@@ -566,7 +573,7 @@ export function DashboardLiri() {
                 </button>
               </div>
               <p className="mt-2 text-center text-[11px] text-stone-400">
-                Modèle : <strong className="text-stone-600">{currentModel.name}</strong> · LIRI consulte cours, forum, lives, RDV et la base de connaissances · les écritures demandent confirmation
+                Modèle : <strong className="text-stone-600">{currentModel.name}</strong> · {BRAIN_NAME} consulte cours, forum, lives, RDV et la base de connaissances · les écritures demandent confirmation
               </p>
             </div>
           </div>

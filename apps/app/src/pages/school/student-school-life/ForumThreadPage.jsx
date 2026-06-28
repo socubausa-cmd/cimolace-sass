@@ -25,6 +25,12 @@ import { cn } from '@/lib/utils';
 import './forum-dark.css';
 import ForumSommaire, { takeForumPreview } from './ForumSommaire';
 import ForumConvNav from './ForumConvNav';
+import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
+
+// Marque blanche : sur le domaine d'un tenant, l'assistant du forum porte le nom du
+// tenant (jamais « LIRI ») ; sur l'hôte produit LIRI, « LIRI ». Résolu par l'hôte.
+const FORUM_BRAIN_NAME =
+  (activeTenantConfig && activeTenantConfig.branding && activeTenantConfig.branding.name) || 'LIRI';
 
 /**
  * Page détail d'un thread forum avec réponses
@@ -247,13 +253,13 @@ export default function ForumThreadPage() {
       if (!sources.length && ragSources[0]) sources = [{ type: 'kb', label: ragSources[0].title }];
       const { data: inserted, error } = await supabase
         .from('formation_question_answers')
-        .insert({ question_id: threadId, student_id: currentUser?.id || null, author_name: 'LIRI Brain', answer, is_ai: true, is_public: true, sources })
+        .insert({ question_id: threadId, student_id: currentUser?.id || null, author_name: `${FORUM_BRAIN_NAME} Brain`, answer, is_ai: true, is_public: true, sources })
         .select()
         .single();
       if (error) throw error;
       setReplies((prev) => [...prev, { ...inserted, is_solution: false }]);
     } catch (e) {
-      alert('LIRI : ' + (e?.message || e));
+      alert(`${FORUM_BRAIN_NAME} : ` + (e?.message || e));
     } finally {
       setLiriLoading(false);
     }
@@ -639,7 +645,7 @@ export default function ForumThreadPage() {
             disabled={liriLoading}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 15px', borderRadius: 11, background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.3)', color: '#D4AF37', fontSize: 12.5, fontWeight: 600, cursor: liriLoading ? 'wait' : 'pointer', opacity: liriLoading ? 0.7 : 1 }}
           >
-            <span style={{ fontSize: 14, lineHeight: 1 }}>✦</span>{liriLoading ? 'LIRI réfléchit…' : 'Demander à LIRI'}
+            <span style={{ fontSize: 14, lineHeight: 1 }}>✦</span>{liriLoading ? `${FORUM_BRAIN_NAME} réfléchit…` : `Demander à ${FORUM_BRAIN_NAME}`}
           </button>
         </div>
 
@@ -672,7 +678,7 @@ export default function ForumThreadPage() {
                     {reply.is_ai ? '✦' : (reply.author_name || reply.student_id || 'A').slice(0, 1).toUpperCase()}
                   </div>
                   <span className="text-sm font-medium text-gray-900">
-                    {reply.is_ai ? 'LIRI Brain' : (reply.author_name || (reply.student_id === thread.student_id ? 'Auteur' : 'Réponse'))}
+                    {reply.is_ai ? `${FORUM_BRAIN_NAME} Brain` : (reply.author_name || (reply.student_id === thread.student_id ? 'Auteur' : 'Réponse'))}
                   </span>
                   {(() => {
                     const b = reply.is_ai
