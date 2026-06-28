@@ -8,6 +8,7 @@ import { Users, ChevronRight, StopCircle } from 'lucide-react';
 export function LiveHostMobileTopBar({
   isGuestUi,
   liveDuration,
+  freeTierRemainingSeconds,
   onlineMemberCount,
   step,
   stepCount,
@@ -67,16 +68,20 @@ export function LiveHostMobileTopBar({
         </span>
       </div>
 
-      {/* Timer */}
-      <span style={{
-        color: '#fff',
-        fontWeight: 600,
-        fontSize: 13,
-        fontVariantNumeric: 'tabular-nums',
-        textShadow: '0 1px 3px rgba(0,0,0,0.8)',
-        flexShrink: 0,
-      }}>
-        {liveDuration || '00:00'}
+      {/* Timer — palier gratuit : compte à rebours 3 min (ambre, rouge <30s) */}
+      <span
+        title={typeof freeTierRemainingSeconds === 'number' ? 'Forfait gratuit : lives limités à 3 min — passez à un forfait LIRI.' : undefined}
+        style={{
+          color: typeof freeTierRemainingSeconds === 'number' ? (freeTierRemainingSeconds <= 30 ? '#f87171' : '#fbbf24') : '#fff',
+          fontWeight: typeof freeTierRemainingSeconds === 'number' ? 700 : 600,
+          fontSize: 13,
+          fontVariantNumeric: 'tabular-nums',
+          textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+          flexShrink: 0,
+        }}>
+        {typeof freeTierRemainingSeconds === 'number'
+          ? `Gratuit · ${Math.floor(freeTierRemainingSeconds / 60)}:${String(freeTierRemainingSeconds % 60).padStart(2, '0')}`
+          : (liveDuration || '00:00')}
       </span>
 
       {/* Participants count */}

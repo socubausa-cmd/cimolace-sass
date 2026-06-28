@@ -1526,6 +1526,7 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
         sessionTitle={sessionTitle}
         phase={phase}
         liveDuration={liveDuration}
+        freeTierRemainingSeconds={freeTierRemainingSeconds}
         onlineMemberCount={onlineMemberCount}
         step={step}
         stepCount={stepCount}

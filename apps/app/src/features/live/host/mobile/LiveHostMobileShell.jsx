@@ -34,6 +34,7 @@ export function LiveHostMobileShell({
   sessionTitle,
   phase,
   liveDuration,
+  freeTierRemainingSeconds,
   onlineMemberCount,
   step,
   stepCount,
@@ -270,6 +271,7 @@ export function LiveHostMobileShell({
         <LiveHostMobileTopBar
           isGuestUi={isGuestUi}
           liveDuration={liveDuration}
+          freeTierRemainingSeconds={freeTierRemainingSeconds}
           onlineMemberCount={onlineMemberCount}
           step={step}
           stepCount={stepCount}
