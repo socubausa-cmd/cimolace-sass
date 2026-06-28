@@ -1630,7 +1630,11 @@ isLiriHostDevPreviewRoute;
           <Route path="/verify-owner" element={<VerifyOwnerPage />} />
           <Route path="/contact" element={<Navigate to="/nous-contacter" replace />} />
           <Route path="/formations-packages" element={<Navigate to="/forfaits" replace />} />
-          <Route path="/paiement" element={<Navigate to="/paiements/tarifs" replace />} />
+          {/* Checkout PROPRE (domaine tenant) : sur prorascience.org tous les CTA de
+              paiement atterrissent ici (soit /paiement direct, soit /t/isna/paiement
+              strippé par CimolaceDomainHandler). PaiementPage résout le tenant via
+              tenantSlug||DEFAULT_TENANT_SLUG → fonctionne sans :tenantSlug dans l'URL. */}
+          <Route path="/paiement" element={<PaiementPage />} />
 
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           {/* Cross-app SSO landing (med-app → immersive room, no second login) */}

@@ -86,7 +86,7 @@ const CourseDetailPage = () => {
             
             {!isEnrolled && (
               <div className="flex items-center space-x-4">
-                <Link to="/paiement">
+                <Link to="/forfaits">
                   <Button className="btn-primary text-lg px-8 py-4 h-auto">
                     S'inscrire - {course.is_free ? 'Gratuit' : `${course.price} €`}
                   </Button>
