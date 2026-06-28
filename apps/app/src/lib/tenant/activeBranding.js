@@ -18,11 +18,13 @@ import { normalizeTenantBranding } from '@/lib/tenant/tenantBranding';
  */
 let RESOLVED_BRANDING = null;
 let RESOLVED_SLUG = '';
+let RESOLVED_ID = '';
 
 /** Alimenté au boot par `useTenantContext` une fois le tenant résolu (ou null). */
 export function setActiveTenantBranding(tenant) {
   RESOLVED_BRANDING = tenant ? normalizeTenantBranding(tenant) : null;
   RESOLVED_SLUG = tenant && tenant.slug ? String(tenant.slug).trim().toLowerCase() : '';
+  RESOLVED_ID = tenant && (tenant.tenant_id || tenant.id) ? String(tenant.tenant_id || tenant.id) : '';
 }
 
 /** Branding du tenant courant (résolu, sinon repli neutre LIRI conditionné à l'hôte). */
@@ -33,4 +35,9 @@ export function getActiveTenantBranding() {
 /** Slug du tenant courant résolu ('' si aucun — hôte plateforme / non hydraté). */
 export function getActiveTenantSlug() {
   return RESOLVED_SLUG;
+}
+
+/** UUID du tenant courant résolu ('' si aucun — hôte plateforme / non hydraté). */
+export function getActiveTenantId() {
+  return RESOLVED_ID;
 }

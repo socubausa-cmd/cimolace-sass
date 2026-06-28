@@ -7,22 +7,40 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { UserPicker } from '@/components/liri/live/UserPicker';
 import { supabase } from '@/lib/customSupabaseClient';
+import { getActiveTenantId } from '@/lib/tenant/activeBranding';
 import {
   UserPlus, Users, BookOpen, Tag, ChevronDown, ChevronUp,
   X, Check, Loader2, Smartphone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// ─── Rôles disponibles ──────────────────────────────────────────────────────
-const ROLE_OPTIONS = [
-  { value: 'teacher',           label: 'Enseignants',            emoji: '🎓' },
-  { value: 'student',           label: 'Étudiants',              emoji: '📚' },
-  { value: 'secretariat',       label: 'Secrétariat',            emoji: '🗂️' },
-  { value: 'admin',             label: 'Administrateurs',        emoji: '⚙️' },
-  { value: 'ngowazulu_member',  label: 'Membres NGOWAZULU',      emoji: '🌀' },
-  { value: 'patient',           label: 'Patients',               emoji: '🌿' },
-  { value: 'communaute_temple', label: 'Communauté Temple',      emoji: '🏛️' },
-];
+// ─── Rôles ────────────────────────────────────────────────────────────────────
+// Le portail LIRI est multi-tenant : on n'affiche PAS une liste de rôles en dur
+// (qui mêlait du vocabulaire ISNA « Membres NGOWAZULU » / « Communauté Temple » et
+// MEDOS « Patients » à TOUS les tenants). Les rôles ciblables = ceux RÉELLEMENT
+// présents dans le tenant courant (table tenant_memberships), résolus au runtime.
+//
+// Rôles socle (toujours proposés, communs à toute école LIRI) + libellés/emojis
+// des rôles connus (les rôles custom d'un tenant sont humanisés à défaut).
+const UNIVERSAL_ROLES = ['teacher', 'student', 'secretariat', 'admin'];
+const ROLE_META = {
+  teacher:           { label: 'Enseignants',       emoji: '🎓' },
+  student:           { label: 'Étudiants',         emoji: '📚' },
+  secretariat:       { label: 'Secrétariat',       emoji: '🗂️' },
+  admin:             { label: 'Administrateurs',   emoji: '⚙️' },
+  owner:             { label: 'Propriétaires',     emoji: '👑' },
+  creator:           { label: 'Créateurs',         emoji: '🎬' },
+  practitioner:      { label: 'Praticiens',        emoji: '🩺' },
+  patient:           { label: 'Patients',          emoji: '🌿' },
+  ngowazulu_member:  { label: 'Membres NGOWAZULU', emoji: '🌀' },
+  communaute_temple: { label: 'Communauté Temple', emoji: '🏛️' },
+};
+function roleOption(value) {
+  const meta = ROLE_META[value];
+  if (meta) return { value, ...meta };
+  const label = String(value).replace(/[_-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return { value, label, emoji: '👤' };
+}
 
 function InviteSection({ icon: Icon, title, desc, defaultOpen = false, children }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -231,7 +249,27 @@ function ModulesPicker({ selected, onChange }) {
 }
 
 // ─── Roles picker ───────────────────────────────────────────────────────────
+// Rôles RÉELS du tenant courant (tenant_memberships) + socle universel. Aucun rôle
+// en dur d'un tenant donné n'est imposé aux autres → pas de fuite de vocabulaire.
 function RolesPicker({ selected, onChange }) {
+  const [roleValues, setRoleValues] = useState(UNIVERSAL_ROLES);
+
+  useEffect(() => {
+    let cancelled = false;
+    const tid = getActiveTenantId();
+    let q = supabase.from('tenant_memberships').select('role').eq('status', 'active').limit(1000);
+    if (tid) q = q.eq('tenant_id', tid); // scope explicite si l'id est résolu ; sinon RLS.
+    q.then(({ data, error }) => {
+      if (error) { console.warn('[RolesPicker] tenant_memberships', error.message); return; }
+      const distinct = [...new Set((data || []).map((m) => m.role).filter(Boolean))];
+      if (cancelled || !distinct.length) return; // garder le socle universel si rien.
+      // Socle universel d'abord, puis les rôles propres au tenant (ordre stable).
+      const extra = distinct.filter((r) => !UNIVERSAL_ROLES.includes(r));
+      setRoleValues([...UNIVERSAL_ROLES, ...extra]);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
   const toggle = (role) => {
     if (selected.includes(role)) onChange(selected.filter((r) => r !== role));
     else onChange([...selected, role]);
@@ -239,7 +277,7 @@ function RolesPicker({ selected, onChange }) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      {ROLE_OPTIONS.map((r) => {
+      {roleValues.map(roleOption).map((r) => {
         const active = selected.includes(r.value);
         return (
           <button
@@ -338,7 +376,7 @@ export function Step5Inviter({ draft, updateDraft }) {
       <InviteSection
         icon={Tag}
         title="Inviter selon le rôle"
-        desc="Cibler enseignants, membres NGOWAZULU, patients…"
+        desc="Cibler un groupe : enseignants, étudiants, secrétariat…"
       >
         <RolesPicker
           selected={draft.invited_roles || []}
