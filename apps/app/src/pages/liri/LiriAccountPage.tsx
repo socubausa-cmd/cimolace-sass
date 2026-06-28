@@ -229,7 +229,7 @@ export default function LiriAccountPage() {
     if (active !== 'membres' || !token || memLoaded) return;
     const h = { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
     fetch(`${base}/tenant-portal/members`, { headers: h }).then((r) => (r.ok ? r.json() : null))
-      .then((d) => { const a = d?.data ?? d; if (Array.isArray(a)) setMembers(a as Member[]); setMemLoaded(true); })
+      .then((d) => { let a: any = d; while (a && typeof a === 'object' && !Array.isArray(a) && 'data' in a) a = a.data; if (Array.isArray(a)) setMembers(a as Member[]); setMemLoaded(true); })
       .catch(() => setMemLoaded(true));
   }, [active, base, token, slug, memLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
