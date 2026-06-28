@@ -210,19 +210,19 @@ export class OfferingCheckoutService {
     kind: 'subscription' | 'consultation' | 'donation';
     planSlug?: string;
     amountCents?: number;
-  }): Promise<{ amountCents: number; planSlug: string | null; currency: string }> {
+  }): Promise<{ amountCents: number; planSlug: string | null; currency: string; billingCycle: string }> {
     if (dto.kind === 'subscription') {
       const planSlug = dto.planSlug ?? null;
       if (!planSlug) throw new BadRequestException('planSlug requis pour un abonnement');
       // 1) Paliers mentorat Ngowazulu en dur (source serveur historique, EUR).
       const hard = NGOWAZULU_PLAN_AMOUNTS_EUR_CENTS[planSlug];
-      if (hard) return { amountCents: hard, planSlug, currency: 'EUR' };
+      if (hard) return { amountCents: hard, planSlug, currency: 'EUR', billingCycle: 'monthly' };
       // 2) Sinon, TOUT plan de billing_plans (cycles d'initiation / forfaits) : prix lu serveur
       //    depuis la DB (jamais fourni par le client) → permet de brancher /forfaits sur ce moteur.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: plan } = await (this.supabase as any)
         .from('billing_plans')
-        .select('key, price_cents, currency, is_active')
+        .select('key, price_cents, currency, is_active, billing_cycle')
         .eq('key', planSlug)
         .maybeSingle();
       if (!plan || plan.is_active === false || !plan.price_cents) {
@@ -232,6 +232,7 @@ export class OfferingCheckoutService {
         amountCents: plan.price_cents,
         planSlug,
         currency: String(plan.currency || 'EUR').toUpperCase(),
+        billingCycle: String(plan.billing_cycle || 'monthly').toLowerCase(),
       };
     }
     if (!dto.amountCents || dto.amountCents < 100) {
@@ -241,7 +242,7 @@ export class OfferingCheckoutService {
           : 'Montant de la consultation requis (min 1,00)',
       );
     }
-    return { amountCents: dto.amountCents, planSlug: dto.planSlug ?? null, currency: 'EUR' };
+    return { amountCents: dto.amountCents, planSlug: dto.planSlug ?? null, currency: 'EUR', billingCycle: 'monthly' };
   }
 
   /**
@@ -252,7 +253,7 @@ export class OfferingCheckoutService {
    * (POST /offering-checkout/webhook/stripe), comme pour pawaPay.
    */
   async createStripeCheckout(userId: string, dto: CreateOfferingCardDto, userEmail?: string) {
-    const { amountCents, planSlug, currency } = await this.resolveAmount(dto);
+    const { amountCents, planSlug, currency, billingCycle } = await this.resolveAmount(dto);
 
     const { data: tenant } = await this.supabase
       .from('tenants')
@@ -297,7 +298,16 @@ export class OfferingCheckoutService {
     params.append('line_items[0][price_data][unit_amount]', String(amountCents));
     params.append('line_items[0][price_data][product_data][name]', productName);
     if (isSubscription) {
-      params.append('line_items[0][price_data][recurring][interval]', 'month');
+      // Rythme de facturation Stripe selon le billing_cycle du plan : sinon tout
+      // débiterait mensuellement (un abo trimestriel/annuel surfacturerait).
+      if (billingCycle === 'yearly') {
+        params.append('line_items[0][price_data][recurring][interval]', 'year');
+      } else if (billingCycle === 'quarterly') {
+        params.append('line_items[0][price_data][recurring][interval]', 'month');
+        params.append('line_items[0][price_data][recurring][interval_count]', '3');
+      } else {
+        params.append('line_items[0][price_data][recurring][interval]', 'month');
+      }
     }
     params.append('line_items[0][quantity]', '1');
     params.append('success_url', successUrl);

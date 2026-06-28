@@ -150,7 +150,7 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: plan } = await (this.supabase as any)
       .from('billing_plans')
-      .select('key, price_cents, currency')
+      .select('key, price_cents, currency, billing_cycle')
       .eq('key', planSlug)
       .maybeSingle();
     if (!plan) {
@@ -186,14 +186,19 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
       .limit(1)
       .maybeSingle();
 
-    // Période : Stripe fournit la fin faisant foi ; sinon prolonge +30j depuis la fin courante/maintenant.
+    // Durée d'accès selon le cycle du plan (Mobile Money = paiement unique sans
+    // période Stripe) : mensuel=30j, trimestriel=90j, annuel=365j.
+    const cycle = String(plan.billing_cycle || 'monthly').toLowerCase();
+    const periodDays =
+      cycle === 'yearly' ? 365 : cycle === 'quarterly' ? 90 : SubscriptionRenewalService.PERIOD_DAYS;
+    // Période : Stripe fournit la fin faisant foi ; sinon prolonge selon le cycle.
     const computedEnd =
       opts.currentPeriodEnd ??
       this.addDaysISO(
         existing?.current_period_end && new Date(existing.current_period_end) > now
           ? new Date(existing.current_period_end)
           : now,
-        SubscriptionRenewalService.PERIOD_DAYS,
+        periodDays,
       );
 
     if (existing) {
