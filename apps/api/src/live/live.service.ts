@@ -535,7 +535,7 @@ export class LiveService {
     // pour l'enforcement de la durée (palier gratuit). 1 requête.
     const { data: session } = await this.supabase
       .from("live_sessions")
-      .select("host_user_id, tenant_id, status, started_at, tenants(slug)")
+      .select("host_user_id, tenant_id, status, started_at, price_cents, tenants(slug)")
       .eq("id", sessionId)
       .single();
     if (!session) throw new NotFoundException("Session introuvable");
@@ -560,6 +560,26 @@ export class LiveService {
         .maybeSingle();
       if ((wr as any)?.status === "rejected") {
         throw new ForbiddenException("Accès refusé par l'hôte de cette session.");
+      }
+    }
+
+    // ── Gate live PAYANT (Couche B) : un live à price_cents > 0 exige un access_pass
+    //    actif (acheté via POST /checkout/sessions → webhook Stripe). L'hôte/staff
+    //    entre TOUJOURS. Barrière SERVEUR réelle (la garde front est contournable).
+    if (role !== "host" && Number((session as any).price_cents ?? 0) > 0) {
+      const { data: pass } = await (this.supabase as any)
+        .from("access_passes")
+        .select("id")
+        .eq("tenant_id", (session as any).tenant_id)
+        .eq("user_id", userId)
+        .eq("resource_type", "live_session")
+        .eq("resource_id", sessionId)
+        .eq("status", "active")
+        .maybeSingle();
+      if (!pass?.id) {
+        throw new ForbiddenException(
+          "Ce live est payant : complétez votre paiement pour y accéder.",
+        );
       }
     }
 
