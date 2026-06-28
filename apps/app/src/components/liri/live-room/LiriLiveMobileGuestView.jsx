@@ -14,6 +14,7 @@ export default function LiriLiveMobileGuestView({ lesson, className }) {
         title: lesson?.title,
         currentSlide: lesson?.currentSlide,
         totalSlides: lesson?.totalSlides,
+        presenter: lesson?.presenter || lesson?.hostName,
         keyText: lesson?.keyText,
         value: lesson?.value,
         points: lesson?.points,

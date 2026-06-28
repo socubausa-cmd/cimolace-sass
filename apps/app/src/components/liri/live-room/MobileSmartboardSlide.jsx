@@ -41,7 +41,7 @@ export function MobileSmartboardSlide({ slide }) {
         <div className="flex h-full w-full items-center justify-center text-center text-xs text-white/80">Flux vidéo prof</div>
 
         <div className="absolute bottom-0 left-0 right-0 rounded-b-2xl bg-black/50 px-2 py-1 text-[10px] text-white">
-          Prof. Manikongo 🔊
+          {slide.header.presenter || 'Animateur'} 🔊
         </div>
       </div>
 

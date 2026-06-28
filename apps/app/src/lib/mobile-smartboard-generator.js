@@ -40,6 +40,8 @@ export function generateMobileSmartboardSlide(input = {}) {
       chapter: input.chapter || 'Chapitre 3 : Ondes et lumière',
       currentSlide: input.currentSlide || 2,
       totalSlides: input.totalSlides || 8,
+      // Nom du présentateur (label de la vignette vidéo). Fallback neutre, multi-tenant.
+      presenter: input.presenter || 'Animateur',
     },
 
     title: {
