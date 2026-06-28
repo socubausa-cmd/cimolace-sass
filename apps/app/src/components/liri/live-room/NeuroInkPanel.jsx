@@ -200,10 +200,10 @@ function NeuroInkAiSection({ ai }) {
       {!canAI ? (
         <div className="flex flex-col gap-1.5 rounded-lg border border-amber-400/25 bg-amber-500/[0.06] px-2 py-2">
           <p className="m-0 flex items-center gap-1.5 text-[10px] font-semibold text-amber-100/90">
-            <Lock className="h-3 w-3 shrink-0" aria-hidden /> Réservé aux forfaits LIRI
+            <Lock className="h-3 w-3 shrink-0" aria-hidden /> Réservé aux forfaits avancés
           </p>
           <p className="m-0 text-[9px] leading-snug text-white/55">
-            Le copilote IA du tableau (Comprendre, Mettre au propre, Présentation, Illustration) est inclus dès le forfait LIRI.
+            Le copilote IA du tableau (Comprendre, Mettre au propre, Présentation, Illustration) est inclus dans les forfaits avancés.
           </p>
           <Link
             to="/cimolace/billing?upgrade=liri"

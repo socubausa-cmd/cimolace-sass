@@ -7,6 +7,10 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, Headphones, MessageCircle, MessagesSquare, Send, Shield, X, Globe, Link2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
+
+// Marque blanche : nom du tenant sur son domaine, « LIRI » sur l'hôte produit LIRI.
+const BRAND_NAME = activeTenantConfig?.branding?.name || 'LIRI';
 import LiveHostAsideAndMonitorBar from '@/components/liri/live-room/LiveHostAsideAndMonitorBar';
 import LiveHostMemberPanelCard from '@/components/liri/live-room/LiveHostMemberPanelCard';
 import LiveMemberVideoPreviewModal from '@/components/liri/live-room/LiveMemberVideoPreviewModal';
@@ -300,7 +304,7 @@ export default function LiveHostMessagingPanel({
               <div className="shrink-0 border-b border-amber-500/20 bg-amber-950/35 px-3 py-2.5">
                 <p className="mb-1.5 flex items-center gap-1.5 text-[8px] font-semibold uppercase tracking-[0.12em] text-amber-200/80">
                   <MessageCircle className="h-3 w-3 shrink-0 opacity-90" aria-hidden />
-                  App LIRI — chat plein écran
+                  App {BRAND_NAME} — chat plein écran
                 </p>
                 <a
                   href={eleveAppChatUrl}

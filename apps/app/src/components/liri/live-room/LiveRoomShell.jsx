@@ -4,6 +4,7 @@ import {
   Plus, X, Search, PanelRight,
   Bell, GripVertical, BookOpen, Maximize2, Users, Trash2,
 } from 'lucide-react';
+import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import { NeuronQButton, NeuronQStudentModal, QAModeOverlay } from './NeuronQPanel';
 import ImmersiveLiveStageBackdrop from './ImmersiveLiveStageBackdrop';
 import SmartBoardCompositor from './SmartBoardCompositor';
@@ -1746,7 +1747,7 @@ export default function LiveRoomShell({
     const showMemberStrip = !liriHostLockedDesktop && (arenaVideoStrip || hasRealMembers);
     const ARENA_STRIP_SLOTS = 8;
     const canPromoteStrip = Boolean(isHost && onPromoteParticipant && !stripOpensMemberPreview);
-    const motherboardPresenterName = promoted?.name || hostParticipant?.name || 'LIRI';
+    const motherboardPresenterName = promoted?.name || hostParticipant?.name || (activeTenantConfig?.branding?.name || 'LIRI');
     const renderCentralSmartBoardMotion = (surfaceClass) => (
       <motion.div
         key={`${activeScene}-${slideParallaxKey ?? slideIndex}`}

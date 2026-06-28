@@ -1,6 +1,10 @@
 import React, { useMemo } from 'react';
 import LiriMobileMaquetteLayout from '@/components/liri/live-room/LiriMobileMaquetteLayout';
 import { cn } from '@/lib/utils';
+import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
+
+// Marque blanche : nom du tenant sur son domaine, « LIRI » sur l'hôte produit LIRI.
+const BRAND_NAME = activeTenantConfig?.branding?.name || 'LIRI';
 
 /** `LiriMobileMaquetteLayout` / `LivePrimaryVideoStage` attendent un callback, comme l'Arène — pas un objet ref seul. */
 function pipRefToCallback(ref) {
@@ -79,7 +83,7 @@ export default function LiveHostLiriMobileColumn({
         )}
       >
         <div className="min-w-0 text-[9px] font-bold uppercase tracking-wider text-[#c9a962]/80">
-          Maquette LIRI
+          {BRAND_NAME}
         </div>
         <div className="flex items-center gap-2">
           <div className="text-center">
