@@ -175,14 +175,14 @@ export const offeringCheckoutApi = {
 // ── Marketing ───────────────────────────────────────────────────────────────
 
 export const marketingApi = {
-  // Promo codes
-  listPromos: () => apiV2.get<ApiEnvelope<any[]>>('/marketing/promo-codes').then(unwrap),
+  // Promo codes (endpoint réel = /marketing/promos)
+  listPromos: () => apiV2.get<ApiEnvelope<any[]>>('/marketing/promos').then(unwrap),
   createPromo: (body: Record<string, unknown>) =>
-    apiV2.post<ApiEnvelope<any>>('/marketing/promo-codes', body).then(unwrap),
+    apiV2.post<ApiEnvelope<any>>('/marketing/promos', body).then(unwrap),
   updatePromo: (id: string, body: Record<string, unknown>) =>
-    apiV2.patch<ApiEnvelope<any>>(`/marketing/promo-codes/${id}`, body).then(unwrap),
+    apiV2.patch<ApiEnvelope<any>>(`/marketing/promos/${id}`, body).then(unwrap),
   deletePromo: (id: string) =>
-    apiV2.delete<ApiEnvelope<any>>(`/marketing/promo-codes/${id}`).then(unwrap),
+    apiV2.delete<ApiEnvelope<any>>(`/marketing/promos/${id}`).then(unwrap),
   // Popups
   listPopups: () => apiV2.get<ApiEnvelope<any[]>>('/marketing/popups').then(unwrap),
   createPopup: (body: Record<string, unknown>) =>
@@ -519,10 +519,19 @@ export const masterclassApi = {
 // ── Mbolo ───────────────────────────────────────────────────────────────────
 
 export const mboloApi = {
+  install: (body: Record<string, unknown> = {}) =>
+    apiV2.post<ApiEnvelope<any>>('/mbolo/install', body).then(unwrap),
+  listCategories: () => apiV2.get<ApiEnvelope<any[]>>('/mbolo/categories').then(unwrap),
+  createCategory: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/mbolo/categories', body).then(unwrap),
   listProducts: () => apiV2.get<ApiEnvelope<any[]>>('/mbolo/products').then(unwrap),
   getProduct: (id: string) => apiV2.get<ApiEnvelope<any>>(`/mbolo/products/${id}`).then(unwrap),
   createProduct: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/mbolo/products', body).then(unwrap),
+  updateProduct: (id: string, body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>(`/mbolo/products/${id}`, body).then(unwrap),
+  deleteProduct: (id: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/mbolo/products/${id}`).then(unwrap),
   getCart: () => apiV2.get<ApiEnvelope<any[]>>('/mbolo/cart').then(unwrap),
   addToCart: (productId: string, quantity: number) =>
     apiV2.post<ApiEnvelope<any>>('/mbolo/cart', { productId, quantity }).then(unwrap),

@@ -14,6 +14,16 @@ export class MarketingService {
     const { data } = await this.supabase.from("promo_codes").insert({ tenant_id: tenantId, ...dto }).select().single();
     return data;
   }
+  async updatePromo(tenantId: string, id: string, dto: any) {
+    const { id: _omitId, tenant_id: _omitTenant, ...patch } = dto || {};
+    const { data } = await this.supabase
+      .from("promo_codes").update(patch).eq("id", id).eq("tenant_id", tenantId).select().single();
+    return data;
+  }
+  async deletePromo(tenantId: string, id: string) {
+    await this.supabase.from("promo_codes").delete().eq("id", id).eq("tenant_id", tenantId);
+    return { ok: true };
+  }
   async getPopups(tenantId: string) {
     const { data } = await this.supabase.from("popups").select("*").eq("tenant_id", tenantId);
     return data ?? [];

@@ -154,6 +154,31 @@ export class MboloService {
     return data;
   }
 
+  async updateProduct(tenantId: string, id: string, dto: any) {
+    await this.getProduct(tenantId, id); // garantit l'appartenance au tenant
+    const map: Record<string, string> = {
+      name: 'name', slug: 'slug', sku: 'sku', categoryId: 'category_id',
+      description: 'description', tagline: 'tagline', priceCents: 'price_cents',
+      compareAtPriceCents: 'compare_at_price_cents', currency: 'currency',
+      stock: 'stock', isFeatured: 'is_featured', imageUrl: 'image_url', isActive: 'is_active',
+    };
+    const patch: Record<string, any> = {};
+    for (const [k, col] of Object.entries(map)) if (dto?.[k] !== undefined) patch[col] = dto[k];
+    if (Object.keys(patch).length === 0) return this.getProduct(tenantId, id);
+    const { data, error } = await (this.supabase.client as any)
+      .from('mbolo_products').update(patch).eq('id', id).eq('tenant_id', tenantId).select('*').single();
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  async deleteProduct(tenantId: string, id: string) {
+    await this.getProduct(tenantId, id);
+    const { error } = await (this.supabase.client as any)
+      .from('mbolo_products').delete().eq('id', id).eq('tenant_id', tenantId);
+    if (error) throw new BadRequestException(error.message);
+    return { ok: true };
+  }
+
   // ─── Catalogue : images & variantes ──────────────────────────────────────
   async addProductImage(tenantId: string, productId: string, dto: { url: string; alt?: string; sortOrder?: number; isPrimary?: boolean }) {
     await this.getProduct(tenantId, productId); // garantit l'appartenance au tenant

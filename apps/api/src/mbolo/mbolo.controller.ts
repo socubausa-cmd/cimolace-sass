@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -24,6 +24,8 @@ export class MboloController {
   @Get('products') listProducts(@CurrentTenant() t: TenantContext, @Query('category') category?: string) { return this.svc.listProducts(t.id, category); }
   @Get('products/:id') getProduct(@Param('id') id: string, @CurrentTenant() t: TenantContext) { return this.svc.getProduct(t.id, id); }
   @Post('products') @UseGuards(RolesGuard) @Roles('owner','admin') createProduct(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.createProduct(t.id, d); }
+  @Patch('products/:id') @UseGuards(RolesGuard) @Roles('owner','admin') updateProduct(@Param('id') id: string, @Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.updateProduct(t.id, id, d); }
+  @Delete('products/:id') @UseGuards(RolesGuard) @Roles('owner','admin') deleteProduct(@Param('id') id: string, @CurrentTenant() t: TenantContext) { return this.svc.deleteProduct(t.id, id); }
   @Post('products/:id/images') @UseGuards(RolesGuard) @Roles('owner','admin') addImage(@Param('id') id: string, @Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.addProductImage(t.id, id, d); }
   @Post('products/:id/variants') @UseGuards(RolesGuard) @Roles('owner','admin') addVariant(@Param('id') id: string, @Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.addProductVariant(t.id, id, d); }
   @Get('cart') getCart(@CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.getCart(t.id, (r as any).user.id); }
