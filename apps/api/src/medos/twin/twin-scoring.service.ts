@@ -578,7 +578,7 @@ export class TwinScoringService {
     // (≥180/≥110) reste critique même si la borne labo est plus permissive.
     const sys = valByCode.get('BP_SYSTOLIC');
     const dia = valByCode.get('BP_DIASTOLIC');
-    if ((sys != null && high('BP_SYSTOLIC')) || (dia != null && high('BP_DIASTOLIC'))) {
+    if ((sys != null && sys >= 130) || (dia != null && dia >= 85)) {
       const crisis = (sys ?? 0) >= 180 || (dia ?? 0) >= 110;
       const labCritical =
         flags['BP_SYSTOLIC'] === 'critical' || flags['BP_DIASTOLIC'] === 'critical';
@@ -593,10 +593,10 @@ export class TwinScoringService {
     }
 
     // Hypotension marquée (systolique très basse) — sortie de plage labo basse.
-    if (sys != null && low('BP_SYSTOLIC')) {
+    if (sys != null && sys < 90) {
       alerts.push({
         kind: 'hypotension',
-        severity: flags['BP_SYSTOLIC'] === 'critical' ? 'warning' : 'info',
+        severity: sys < 80 ? 'warning' : 'info',
         message_fr: `Tension artérielle basse (${sys} mmHg de systolique). Si vertiges ou malaises, asseyez-vous, hydratez-vous et parlez-en à votre praticien.`,
         evidence: ['BP_SYSTOLIC', 'BP_DIASTOLIC'].filter((c) => valByCode.has(c)).map(ev),
       });
@@ -604,11 +604,11 @@ export class TwinScoringService {
 
     // Fréquence cardiaque au repos anormale (tachycardie / bradycardie).
     const hr = valByCode.get('HEART_RATE');
-    if (hr != null && (high('HEART_RATE') || low('HEART_RATE'))) {
-      const tachy = high('HEART_RATE');
+    if (hr != null && (hr > 100 || hr < 50)) {
+      const tachy = hr > 100;
       alerts.push({
         kind: tachy ? 'tachycardia' : 'bradycardia',
-        severity: flags['HEART_RATE'] === 'critical' ? 'warning' : 'info',
+        severity: hr >= 130 || hr <= 40 ? 'warning' : 'info',
         message_fr: tachy
           ? `Fréquence cardiaque au repos élevée (${hr} bpm). Au repos et hors effort/stress, à surveiller ; consultez si palpitations ou malaise.`
           : `Fréquence cardiaque au repos basse (${hr} bpm). Souvent bénin chez les sportifs ; consultez en cas de fatigue, vertiges ou malaise.`,
@@ -618,7 +618,7 @@ export class TwinScoringService {
 
     // Hypoxémie (SpO2 basse à l'oxymètre) — signal respiratoire potentiellement grave.
     const spo2 = valByCode.get('SPO2');
-    if (spo2 != null && low('SPO2')) {
+    if (spo2 != null && spo2 < 95) {
       const severe = spo2 < 92 || flags['SPO2'] === 'critical';
       alerts.push({
         kind: 'hypoxemia',
@@ -632,7 +632,7 @@ export class TwinScoringService {
 
     // Fièvre (température corporelle élevée) — signal inflammatoire/infectieux aigu.
     const temp = valByCode.get('BODY_TEMP');
-    if (temp != null && high('BODY_TEMP')) {
+    if (temp != null && temp >= 37.8) {
       const highFever = temp >= 39 || flags['BODY_TEMP'] === 'critical';
       alerts.push({
         kind: 'fever',

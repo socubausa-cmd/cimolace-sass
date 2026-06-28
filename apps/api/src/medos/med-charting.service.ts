@@ -58,6 +58,7 @@ Tu reçois la transcription d'une consultation médicale et tu dois en extraire 
 Règles absolues :
 - Pour SUBJECTIF et OBJECTIF : ne jamais inventer — uniquement ce qui est rapporté ou constaté dans la transcription ; si l'information est absente, laisser null.
 - Pour ANALYSE et PLAN : propose un BROUILLON d'aide à la décision — une ou des hypothèses de travail (diagnostic différentiel prudent) et une conduite à tenir raisonnable, déduites des éléments disponibles. Reste nuancé (jamais de diagnostic définitif), signale les incertitudes, ne propose que des conduites standards et sûres. Ce brouillon DOIT être relu, corrigé et validé par le praticien — la note n'est jamais signée automatiquement. Si aucun élément clinique n'est exploitable, laisser null.
+- IMPÉRATIF DE FORMAT : chaque champ (subjective, objective, assessment, plan, free_text) est une SIMPLE CHAÎNE de texte en prose médicale continue — JAMAIS un objet, une liste ou du JSON imbriqué. Pour assessment et plan, rédige des phrases (ex : "Hypothèse principale : pneumonie communautaire... Conduite : radiographie thoracique, antibiothérapie probabiliste...").
 - Les codes ICD-10 doivent être précis et basés uniquement sur ce qui est mentionné.
 - Rédiger en français médical clair, sauf si la transcription est dans une autre langue.
 - Ne jamais inclure d'informations d'identification du patient dans la réponse JSON.
