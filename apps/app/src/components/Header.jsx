@@ -70,6 +70,11 @@ const Header = () => {
   const hideLiriWordmarkImage =
     tenantSlugLc === ISNA_SLUG
     || (pathnameLc.startsWith('/forfaits') && tenantSlugLc !== 'cimolace');
+  // LIRI = le PRODUIT : sans tenant résolu (hôte plateforme), la marque ramène au
+  // PORTAIL /liri (pas la home école) et n'est pas une « Academy ».
+  const isLiriProductContext = !tenantSlugLc;
+  const brandHomeTo = isLiriProductContext ? '/liri' : '/';
+  const brandSubtitle = isLiriProductContext ? 'Portail' : 'Academy';
   const isImmersivePrimaryRoute = useMemo(() => {
     const path = String(location.pathname || '').toLowerCase();
     return (
@@ -389,7 +394,7 @@ const Header = () => {
             
             {/* LEFT: Logo */}
             <div className="flex-shrink-0 flex items-center gap-4 mr-2 lg:mr-8 z-[101]">
-              <Logo size={isScrolled ? "small" : "medium"} variant="dark" hideWordmarkImage={hideLiriWordmarkImage} />
+              <Logo size={isScrolled ? "small" : "medium"} variant="dark" hideWordmarkImage={hideLiriWordmarkImage} to={brandHomeTo} subtitle={brandSubtitle} />
             </div>
 
             {/* CENTER: Navigation (Desktop) */}

@@ -4,17 +4,19 @@ import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
 
-const Logo = ({ 
-  size = 'medium', 
-  variant = 'dark', 
-  showText = true, 
+const Logo = ({
+  size = 'medium',
+  variant = 'dark',
+  showText = true,
   /** Tenant ISNA : pas de marque LIRI (image) dans le header. */
   hideWordmarkImage = false,
   logoSrc,
   title,
   subtitle = 'Academy',
+  /** Cible du clic sur la marque. Défaut = home ; le PRODUIT LIRI passe `/liri` (portail). */
+  to = '/',
   accentColor,
-  className 
+  className
 }) => {
   const isDark = variant === 'dark';
   const { branding } = useTenantBranding();
@@ -54,7 +56,7 @@ const Logo = ({
   const currentSize = sizeClasses[size];
 
   return (
-    <Link to="/" className={cn("inline-flex items-center gap-3 group select-none flex-shrink-0", className)}>
+    <Link to={to} className={cn("inline-flex items-center gap-3 group select-none flex-shrink-0", className)}>
       {!hideWordmarkImage ? (
         <motion.div
           whileHover={{ scale: 1.05, filter: `drop-shadow(0 0 8px ${resolvedAccent}80)` }}
