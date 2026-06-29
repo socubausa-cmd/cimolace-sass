@@ -682,12 +682,12 @@ function paintBoardBackground(bgCanvas) {
     ctx.fillStyle = BOARD_BG_CARREAUX;
     ctx.fillRect(0, 0, W, H);
     ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(212,163,106,0.11)';
+    ctx.strokeStyle = 'rgba(212,163,106,0.24)';
     ctx.beginPath();
     for (let gx = 40; gx < W; gx += 40) { ctx.moveTo(gx + 0.5, 0); ctx.lineTo(gx + 0.5, H); }
     for (let gy = 40; gy < H; gy += 40) { ctx.moveTo(0, gy + 0.5); ctx.lineTo(W, gy + 0.5); }
     ctx.stroke();
-    ctx.strokeStyle = 'rgba(212,163,106,0.20)';
+    ctx.strokeStyle = 'rgba(212,163,106,0.40)';
     ctx.beginPath();
     for (let gx = 200; gx < W; gx += 200) { ctx.moveTo(gx + 0.5, 0); ctx.lineTo(gx + 0.5, H); }
     for (let gy = 200; gy < H; gy += 200) { ctx.moveTo(0, gy + 0.5); ctx.lineTo(W, gy + 0.5); }

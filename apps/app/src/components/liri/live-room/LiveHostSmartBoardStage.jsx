@@ -58,12 +58,18 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
      * Sync pagination + traits page active vers le rail parent (ex. `LiveWhiteboardToolsSidebar` hors compositeur).
      */
     onHostWhiteboardToolsRailSync = null,
+    /**
+     * Scène active au MONTAGE (défaut 'smartboard' = comportement LiveHostPage,
+     * inchangé). La consultation passe 'board' pour ouvrir directement sur le
+     * tableau (carreaux), au lieu de retomber sur la 1re scène activée (diapo vide).
+     */
+    initialScene = 'smartboard',
   },
   ref,
 ) {
   const { toast } = useToast();
 
-  const [activeScene, setActiveScene] = useState('smartboard');
+  const [activeScene, setActiveScene] = useState(initialScene);
   const [slideIndex, setSlideIndex] = useState(0);
   const [nativeSlideIndex, setNativeSlideIndex] = useState(0);
   const [importSlideIndex, setImportSlideIndex] = useState(0);
@@ -101,7 +107,7 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
   const stageCaptureSurfaceRef = useRef(null);
 
   const slideIndexRef = useRef(0);
-  const activeSceneRef = useRef('smartboard');
+  const activeSceneRef = useRef(initialScene);
   // Garde : l'auto-projection de la scène active ne s'exécute qu'une fois (issue #3).
   const autoProjectedRef = useRef(false);
   const nativeSlideIndexRef = useRef(0);

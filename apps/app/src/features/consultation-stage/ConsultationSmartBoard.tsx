@@ -178,6 +178,8 @@ export default function ConsultationSmartBoard({
           camera2FluxParticipants={EMPTY_LIST}
           progressivePlayback
           pipStream={null}
+          // Ouvre DIRECTEMENT sur le tableau (carreaux) — pas la diapo vide.
+          initialScene="board"
           // Réinitialise tableau/annotations au changement de consultation.
           sessionId={sessionId}
           // Praticien = pilote ; patient = lecture (suit le broadcast).
