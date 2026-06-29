@@ -30,7 +30,7 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { teleconsultApi } from '@/lib/api';
 import { getClinicalContext, type ClinicalContext, type CockpitScene } from '@/features/medos-cockpit/cockpit-api';
 import { useCockpitChannel } from '@/features/medos-cockpit/useCockpitChannel';
-import MedTeleconsultCockpit, { SharedSceneView } from '@/features/medos-cockpit/MedTeleconsultCockpit';
+import { SharedSceneView, CockpitDock } from '@/features/medos-cockpit/MedTeleconsultCockpit';
 
 const BG = '#0b0b0c';
 const BAR = 'rgba(22,22,24,0.94)';
@@ -74,7 +74,8 @@ export default function ConsultationRoom() {
   // Canal de partage au niveau de la salle : pilote la SCÈNE centrale — quand le
   // praticien partage un artefact (jumeau / bilan / SOAP), il passe au centre
   // pour tous et la vidéo devient une bande de vignettes.
-  const { scene } = useCockpitChannel(sessionId ?? null, isHost ? 'host' : 'patient');
+  const channel = useCockpitChannel(sessionId ?? null, isHost ? 'host' : 'patient');
+  const scene = channel.scene;
 
   if (error) {
     return (
@@ -119,7 +120,7 @@ export default function ConsultationRoom() {
       </LiveKitRoom>
       {/* Composer clinique MEDOS (praticien seul) ; le patient voit le partage
           directement sur la SCÈNE centrale. */}
-      {isHost ? <MedTeleconsultCockpit sessionId={sessionId} mode="host" /> : null}
+      {isHost && sessionId ? <CockpitDock sessionId={sessionId} mode="host" channel={channel} /> : null}
     </div>
   );
   // Plein écran : portal vers <body> pour échapper à tout ancêtre containing-block

@@ -176,8 +176,8 @@ export function SharedSceneView({ scene }: { scene: CockpitScene | null }) {
 
 // ── Vue PATIENT (passive : rend la scène partagée) ──────────────────────────
 
-function PatientCockpit({ sessionId }: { sessionId: string }) {
-  const { scene } = useCockpitChannel(sessionId, 'patient');
+function PatientCockpit({ channel }: { channel: CockpitChannel }) {
+  const { scene } = channel;
   const [open, setOpen] = useState(true);
 
   const hasScene = scene && scene.kind !== 'clear';
@@ -209,8 +209,8 @@ function PatientCockpit({ sessionId }: { sessionId: string }) {
 
 // ── Vue HOST (praticien : charge, navigue, partage) ─────────────────────────
 
-function HostCockpit({ sessionId }: { sessionId: string }) {
-  const { scene: sharedScene, shareScene, clearScene } = useCockpitChannel(sessionId, 'host');
+function HostCockpit({ sessionId, channel }: { sessionId: string; channel: CockpitChannel }) {
+  const { scene: sharedScene, shareScene, clearScene } = channel;
   const [open, setOpen] = useState(false);
   const [ctx, setCtx] = useState<ClinicalContext | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -357,6 +357,28 @@ function HostCockpit({ sessionId }: { sessionId: string }) {
 
 // ── Point d'entrée ──────────────────────────────────────────────────────────
 
+export type CockpitChannel = ReturnType<typeof useCockpitChannel>;
+
+// Dock cockpit (FAB + panneau) piloté par un canal de partage FOURNI. Permet de
+// PARTAGER le même canal entre le dock et la SCÈNE de la salle Consultation : un
+// seul abonnement Realtime → le partage du praticien se reflète IMMÉDIATEMENT
+// sur sa propre scène (pas de round-trip qui se perd avec broadcast self:false).
+export function CockpitDock({
+  sessionId,
+  mode,
+  channel,
+}: {
+  sessionId: string;
+  mode: 'host' | 'patient';
+  channel: CockpitChannel;
+}) {
+  return mode === 'host' ? (
+    <HostCockpit sessionId={sessionId} channel={channel} />
+  ) : (
+    <PatientCockpit channel={channel} />
+  );
+}
+
 export default function MedTeleconsultCockpit({
   sessionId,
   mode,
@@ -364,12 +386,9 @@ export default function MedTeleconsultCockpit({
   sessionId: string | null | undefined;
   mode: 'host' | 'patient';
 }) {
+  const channel = useCockpitChannel(sessionId ?? null, mode);
   if (!sessionId) return null;
-  return mode === 'host' ? (
-    <HostCockpit sessionId={sessionId} />
-  ) : (
-    <PatientCockpit sessionId={sessionId} />
-  );
+  return <CockpitDock sessionId={sessionId} mode={mode} channel={channel} />;
 }
 
 // ── Styles ──────────────────────────────────────────────────────────────────
