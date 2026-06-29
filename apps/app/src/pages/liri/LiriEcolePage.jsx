@@ -54,13 +54,13 @@ const ECOLE_WARM_CSS = `
   --primary-gold: #d6953f;
 }
 .ecole-warm-scope .premium-panel,
-.ecole-warm-scope .premium-card { background: #1d1916 !important; border-color: rgba(245,241,233,0.10) !important; }
+.ecole-warm-scope .premium-card { background: transparent !important; border-color: rgba(245,241,233,0.08) !important; }
 #root .ecole-warm-scope .premium-dashboard-shell { background-image: none !important; padding: 0 !important; min-height: 0 !important; }
 .ecole-warm-scope [class*="bg-[#0F1419]"],
 .ecole-warm-scope [class*="bg-[#121A25]"],
 .ecole-warm-scope [class*="bg-[#121a25]"],
 .ecole-warm-scope [class*="bg-[#192734]"],
-.ecole-warm-scope [class*="bg-[#16202A]"] { background-color: #1d1916 !important; }
+.ecole-warm-scope [class*="bg-[#16202A]"] { background-color: transparent !important; }
 .ecole-warm-scope [class*="border-[#192734]"],
 .ecole-warm-scope [class*="border-[#121A25]"] { border-color: rgba(245,241,233,0.10) !important; }
 /* DIRECTIVE ARTISTIQUE (réf. Rapports & Analytique) : tableaux DISCRETS, pas de boîte-dans-
