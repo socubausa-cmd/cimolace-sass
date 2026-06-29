@@ -552,7 +552,7 @@ const StudioLiriRouter = lazy(() => import('@/pages/studio-creator/studio/Studio
 const LiveHostPageNativeGate = lazy(() => import('@/components/eleve-mobile/LiveHostPageNativeGate'));
 const LiveHostPageRoute = lazy(() => import('@/pages/liri/LiveHostPage'));
 const LiveGuestPage = lazy(() => import('@/pages/liri/LiveGuestPage'));
-const TeleconsultPatientRoom = lazy(() => import('@/pages/liri/TeleconsultPatientRoom'));
+const ConsultationRoom = lazy(() => import('@/pages/liri/ConsultationRoom'));
 const DevLiriHostEntry = lazy(() => import('@/pages/dev/DevLiriHostEntry'));
 const TableauVivantDemoPage = lazy(() => import('@/pages/dev/TableauVivantDemoPage'));
 const CourseDemoPage = lazy(() => import('@/pages/dev/CourseDemoPage'));
@@ -2025,13 +2025,14 @@ isLiriHostDevPreviewRoute;
             </ProtectedRoute>
           } />
 
-          {/* Salle de téléconsultation PATIENT (native) — vidéo LiveKit + cockpit
-              clinique partagé. Token via le chemin médical /med/teleconsult/:id/token
-              (le patient possède la session). AUTH-ONLY (handoff SSO depuis le portail). */}
+          {/* Salle de CONSULTATION (mode dédié, role-aware) — vidéo face-à-face +
+              cockpit clinique MEDOS. Praticien (host) ET patient/proche (guest) y
+              atterrissent ; le rôle est résolu via /med/teleconsult/:id/clinical-context.
+              Token via le chemin médical. AUTH-ONLY (handoff SSO depuis med-app / portail). */}
           <Route path="/teleconsult/:sessionId" element={
             <ProtectedRoute>
               <ErrorBoundary>
-                <TeleconsultPatientRoom />
+                <ConsultationRoom />
               </ErrorBoundary>
             </ProtectedRoute>
           } />
