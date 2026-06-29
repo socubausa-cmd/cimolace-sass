@@ -167,6 +167,7 @@ import { DemoModeProvider } from '@/contexts/DemoModeContext';
 import DemoModeGuard from '@/components/demo/DemoModeGuard';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import TenantProtectedRoute from '@/components/TenantProtectedRoute';
+import ImmersiveBootLoader from '@/components/liri/ImmersiveBootLoader';
 import ProtectedRoleRoute from '@/components/ProtectedRoleRoute';
 import ProtectedSubscriptionRoute from '@/components/ProtectedSubscriptionRoute';
 import ProtectedLiriRoute from '@/components/ProtectedLiriRoute';
@@ -2049,7 +2050,9 @@ isLiriHostDevPreviewRoute;
           <Route path="/teleconsult/:sessionId" element={
             <ProtectedRoute>
               <ErrorBoundary>
-                <ConsultationRoom />
+                <Suspense fallback={<ImmersiveBootLoader />}>
+                  <ConsultationRoom />
+                </Suspense>
               </ErrorBoundary>
             </ProtectedRoute>
           } />
@@ -2058,7 +2061,9 @@ isLiriHostDevPreviewRoute;
               gardé par le token d'invitation + le consentement RGPD du patient. */}
           <Route path="/teleconsult/:id/proche/:inviteId" element={
             <ErrorBoundary>
-              <ProcheRoom />
+              <Suspense fallback={<ImmersiveBootLoader submessage="Préparation de votre accès…" />}>
+                <ProcheRoom />
+              </Suspense>
             </ErrorBoundary>
           } />
 

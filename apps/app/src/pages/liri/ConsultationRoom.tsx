@@ -39,6 +39,7 @@ import { getClinicalContext, type ClinicalContext, type CockpitScene } from '@/f
 import { useCockpitChannel, type AnnotStroke, type ConsultView } from '@/features/medos-cockpit/useCockpitChannel';
 import { SharedSceneView, CockpitDock } from '@/features/medos-cockpit/MedTeleconsultCockpit';
 import { AnnotationOverlay } from '@/features/medos-cockpit/AnnotationOverlay';
+import ImmersiveBootLoader from '@/components/liri/ImmersiveBootLoader';
 
 const BG = '#0b0b0c';
 const BAR = 'rgba(22,22,24,0.94)';
@@ -129,13 +130,9 @@ export default function ConsultationRoom() {
 
   if (!conn) {
     return (
-      <Screen>
-        <div style={{ textAlign: 'center', color: '#cbd5e1' }}>
-          <div style={{ width: 40, height: 40, margin: '0 auto 14px', border: '3px solid rgba(255,255,255,0.2)', borderTopColor: GOLD, borderRadius: '50%', animation: 'lk-spin 0.9s linear infinite' }} />
-          <p style={{ fontSize: 14 }}>{user?.id ? 'Connexion à la consultation…' : 'Authentification…'}</p>
-          <style>{'@keyframes lk-spin{to{transform:rotate(360deg)}}'}</style>
-        </div>
-      </Screen>
+      <ImmersiveBootLoader
+        submessage={user?.id ? 'Connexion à la consultation en cours…' : 'Authentification en cours…'}
+      />
     );
   }
 
