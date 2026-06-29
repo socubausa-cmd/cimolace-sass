@@ -74,7 +74,7 @@ export default function LivesLibraryContent({ variant = 'default' }) {
       {!mobile ? (
         <div className="text-center space-y-4">
           <h1 className="text-4xl md:text-5xl font-serif font-bold text-white">Bibliothèque des Lives</h1>
-          <p className="text-xl text-gray-400">Retrouvez tous les directs, passés et à venir.</p>
+          <p className="text-xl text-stone-400">Retrouvez tous les directs, passés et à venir.</p>
         </div>
       ) : (
         <div className="space-y-2 pb-1">
@@ -116,10 +116,10 @@ export default function LivesLibraryContent({ variant = 'default' }) {
                 <h4 className={cn('font-bold text-white mb-1', mobile ? 'text-base' : 'text-xl mb-2')}>
                   {live.title}
                 </h4>
-                <p className={cn('text-gray-400 mb-3', mobile ? 'text-xs' : 'text-sm mb-4')}>
+                <p className={cn('text-stone-400 mb-3', mobile ? 'text-xs' : 'text-sm mb-4')}>
                   {live.subtitle}
                 </p>
-                <div className={cn('flex items-center gap-2 text-gray-300 mb-4', mobile ? 'text-xs' : 'text-sm mb-6')}>
+                <div className={cn('flex items-center gap-2 text-stone-300 mb-4', mobile ? 'text-xs' : 'text-sm mb-6')}>
                   <Clock className="h-3.5 w-3.5 shrink-0" />
                   {live.date && !Number.isNaN(new Date(live.date).getTime())
                     ? `${new Date(live.date).toLocaleDateString()} à ${new Date(live.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
@@ -131,7 +131,7 @@ export default function LivesLibraryContent({ variant = 'default' }) {
                     'w-full',
                     mobile
                       ? 'border border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] to-[#6b5a14]/20 text-[#fff4dc] hover:from-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] hover:to-[#6b5a14]/28'
-                      : 'bg-white/10 hover:bg-white/20 border border-white/10',
+                      : 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_24%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_32%,transparent)] text-[#f0d5c6]',
                   )}
                 >
                   {mobile ? 'Rejoindre le direct (invité)' : "S'inscrire / Rejoindre"}
@@ -140,7 +140,7 @@ export default function LivesLibraryContent({ variant = 'default' }) {
             </Card>
           ))}
           {upcomingLives.length === 0 ? (
-            <p className={cn('text-gray-500', mobile && 'text-sm text-white/40')}>
+            <p className={cn('text-stone-400', mobile && 'text-sm text-white/40')}>
               Aucun live programmé pour le moment.
             </p>
           ) : null}
@@ -178,10 +178,10 @@ export default function LivesLibraryContent({ variant = 'default' }) {
               </div>
               <CardContent className={cn(mobile ? 'p-4' : 'p-6')}>
                 <h4 className={cn('font-bold text-white mb-1', mobile ? 'text-sm' : 'text-lg')}>{live.title}</h4>
-                <p className={cn('text-gray-400 mb-2', mobile ? 'text-xs' : 'text-sm mb-4')}>
+                <p className={cn('text-stone-400 mb-2', mobile ? 'text-xs' : 'text-sm mb-4')}>
                   {live.date && !Number.isNaN(new Date(live.date).getTime()) ? new Date(live.date).toLocaleDateString() : ''}
                 </p>
-                <p className={cn('text-gray-300 line-clamp-2', mobile ? 'text-xs' : 'text-sm')}>{live.description}</p>
+                <p className={cn('text-stone-300 line-clamp-2', mobile ? 'text-xs' : 'text-sm')}>{live.description}</p>
               </CardContent>
             </Card>
           ))}
