@@ -8,7 +8,7 @@
 // useCockpitChannel('patient') → le proche SUIT la vue pilotée par le praticien.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   LiveKitRoom,
   RoomAudioRenderer,
@@ -21,7 +21,7 @@ import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { getProcheStatus, getProcheToken, type ProcheStatus } from '@/features/medos-cockpit/procheApi';
 import { useCockpitChannel } from '@/features/medos-cockpit/useCockpitChannel';
-import { ConsultationStage } from './ConsultationRoom';
+import { ConsultationStage, CallEndedScreen } from './ConsultationRoom';
 
 const BG = '#0b0b0c';
 const BAR = 'rgba(22,22,24,0.94)';
@@ -128,6 +128,8 @@ function Gate({ title, text, tone, spinner }: { title: string; text: string; ton
 function ProcheLiveRoom({ url, token, sessionId, clinic }: { url: string; token: string; sessionId: string; clinic?: string }) {
   // Le proche SUIT la vue/scène/annotation pilotées par le praticien (read-only).
   const channel = useCockpitChannel(sessionId, 'patient');
+  const [left, setLeft] = useState(false);
+  if (left) return <CallEndedScreen />;
   const content = (
     <div data-lk-theme="default" style={{ position: 'fixed', inset: 0, zIndex: 2147483000, background: BG, display: 'flex', flexDirection: 'column' }}>
       <LiveKitRoom serverUrl={url} token={token} connect audio video style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -140,7 +142,7 @@ function ProcheLiveRoom({ url, token, sessionId, clinic }: { url: string; token:
           editable={false}
           onStrokes={() => {}}
         />
-        <ProcheBar />
+        <ProcheBar onLeave={() => setLeft(true)} />
         <RoomAudioRenderer />
       </LiveKitRoom>
     </div>
@@ -163,8 +165,7 @@ function ProcheChrome({ clinic }: { clinic?: string }) {
   );
 }
 
-function ProcheBar() {
-  const navigate = useNavigate();
+function ProcheBar({ onLeave }: { onLeave: () => void }) {
   const room = useRoomContext();
   const leave = () => {
     try {
@@ -172,7 +173,7 @@ function ProcheBar() {
     } catch {
       /* ignore */
     }
-    navigate('/');
+    onLeave();
   };
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '10px 14px', background: BAR, borderTop: '1px solid rgba(255,255,255,0.06)' }}>

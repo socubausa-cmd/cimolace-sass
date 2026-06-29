@@ -18,7 +18,7 @@
 // le chemin MÉDICAL (contrôle d'accès patient).
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   LiveKitRoom,
   ParticipantTile,
@@ -42,6 +42,19 @@ const BG = '#0b0b0c';
 const BAR = 'rgba(22,22,24,0.94)';
 const GOLD = '#b08d57';
 const TILE_BG = '#18181b';
+
+// La téléconsult est un moteur MEDOS : à la sortie, le praticien revient à MEDOS
+// (med.cimolace.space, d'où il vient) — JAMAIS au portail LIRI école (/dashboard
+// = nav Formations/Vie Étudiante, hors-sujet pour une clinique wellness).
+function returnToMedos(slug?: string | null) {
+  if (typeof window === 'undefined') return;
+  const ref = document.referrer;
+  if (ref && ref.includes('med.cimolace.space')) {
+    window.location.href = ref;
+    return;
+  }
+  window.location.href = `https://med.cimolace.space/${slug ? `?tenant=${encodeURIComponent(slug)}` : ''}`;
+}
 
 export default function ConsultationRoom() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -85,10 +98,18 @@ export default function ConsultationRoom() {
   const { view, scene, strokes } = channel;
   const [annotate, setAnnotate] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [left, setLeft] = useState(false);
   const hasScene = !!scene && scene.kind !== 'clear';
   // Annotable seulement quand il y a une surface à annoter : le tableau, ou un
   // partage avec un artefact réellement affiché (pas sur un partage vide).
   const annotatable = view === 'board' || (view === 'share' && hasScene);
+  const tenantSlug = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tenant') : null;
+  // Sortie : le praticien revient à MEDOS ; le patient voit un écran de fin
+  // neutre (pas de compte → pas de portail).
+  const handleLeave = () => {
+    if (isHost) returnToMedos(tenantSlug);
+    else setLeft(true);
+  };
 
   if (error) {
     return (
@@ -114,6 +135,8 @@ export default function ConsultationRoom() {
       </Screen>
     );
   }
+
+  if (left) return <CallEndedScreen />;
 
   const content = (
     <div data-lk-theme="default" style={{ position: 'fixed', inset: 0, zIndex: 2147483000, background: BG, display: 'flex', flexDirection: 'column' }}>
@@ -147,6 +170,7 @@ export default function ConsultationRoom() {
           hasStrokes={strokes.length > 0}
           onClearStrokes={channel.clearStrokes}
           onInvite={() => setInviteOpen(true)}
+          onLeave={handleLeave}
         />
         <RoomAudioRenderer />
       </LiveKitRoom>
@@ -375,6 +399,7 @@ function ConsultationBar({
   hasStrokes,
   onClearStrokes,
   onInvite,
+  onLeave,
 }: {
   isHost: boolean;
   annotatable: boolean;
@@ -383,8 +408,8 @@ function ConsultationBar({
   hasStrokes: boolean;
   onClearStrokes: () => void;
   onInvite: () => void;
+  onLeave: () => void;
 }) {
-  const navigate = useNavigate();
   const room = useRoomContext();
   const leave = () => {
     try {
@@ -392,7 +417,7 @@ function ConsultationBar({
     } catch {
       /* ignore */
     }
-    navigate(isHost ? '/dashboard' : '/');
+    onLeave();
   };
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '10px 14px', background: BAR, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
@@ -609,6 +634,19 @@ function PatientConsentGate({ sessionId }: { sessionId: string }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// Écran de fin neutre (patient / proche) : pas de redirection vers un portail.
+export function CallEndedScreen() {
+  return (
+    <Screen>
+      <div style={{ textAlign: 'center', color: '#cbd5e1', maxWidth: 360 }}>
+        <Stethoscope size={28} color={GOLD} style={{ marginBottom: 10 }} aria-hidden="true" />
+        <h2 style={{ margin: '0 0 6px', fontSize: 18, color: '#fff' }}>Consultation terminée</h2>
+        <p style={{ fontSize: 13.5, lineHeight: 1.55 }}>Vous avez quitté la consultation. Vous pouvez fermer cette fenêtre.</p>
+      </div>
+    </Screen>
   );
 }
 
