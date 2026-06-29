@@ -23,14 +23,15 @@ import {
   useTracks,
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
-import { Stethoscope, PhoneOff, Share2 } from 'lucide-react';
+import { Stethoscope, PhoneOff, Share2, Pencil } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { teleconsultApi } from '@/lib/api';
 import { getClinicalContext, type ClinicalContext, type CockpitScene } from '@/features/medos-cockpit/cockpit-api';
-import { useCockpitChannel } from '@/features/medos-cockpit/useCockpitChannel';
+import { useCockpitChannel, type AnnotStroke } from '@/features/medos-cockpit/useCockpitChannel';
 import { SharedSceneView, CockpitDock } from '@/features/medos-cockpit/MedTeleconsultCockpit';
+import { AnnotationOverlay } from '@/features/medos-cockpit/AnnotationOverlay';
 
 const BG = '#0b0b0c';
 const BAR = 'rgba(22,22,24,0.94)';
@@ -76,6 +77,7 @@ export default function ConsultationRoom() {
   // pour tous et la vidéo devient une bande de vignettes.
   const channel = useCockpitChannel(sessionId ?? null, isHost ? 'host' : 'patient');
   const scene = channel.scene;
+  const [annotate, setAnnotate] = useState(false);
 
   if (error) {
     return (
@@ -114,8 +116,20 @@ export default function ConsultationRoom() {
         style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
       >
         <ConsultationChrome patientName={ctx?.patient_name} sharing={sharing} />
-        <ConsultationStage scene={scene} />
-        <ConsultationBar isHost={isHost} />
+        <ConsultationStage
+          scene={scene}
+          strokes={channel.strokes}
+          editable={annotate && isHost}
+          onStrokes={channel.shareStrokes}
+        />
+        <ConsultationBar
+          isHost={isHost}
+          sharing={sharing}
+          annotate={annotate}
+          onToggleAnnotate={() => setAnnotate((v) => !v)}
+          hasStrokes={channel.strokes.length > 0}
+          onClearStrokes={channel.clearStrokes}
+        />
         <RoomAudioRenderer />
       </LiveKitRoom>
       {/* Composer clinique MEDOS (praticien seul) ; le patient voit le partage
@@ -150,7 +164,17 @@ function ConsultationChrome({ patientName, sharing }: { patientName?: string; sh
 }
 
 // ── Scène face-à-face (visages au centre) ────────────────────────────────────
-function ConsultationStage({ scene }: { scene: CockpitScene | null }) {
+function ConsultationStage({
+  scene,
+  strokes,
+  editable,
+  onStrokes,
+}: {
+  scene: CockpitScene | null;
+  strokes: AnnotStroke[];
+  editable: boolean;
+  onStrokes: (s: AnnotStroke[]) => void;
+}) {
   const tracks = useTracks(
     [
       { source: Track.Source.Camera, withPlaceholder: true },
@@ -161,12 +185,13 @@ function ConsultationStage({ scene }: { scene: CockpitScene | null }) {
   const sharing = !!scene && scene.kind !== 'clear';
 
   // État PARTAGE : l'artefact clinique prend la scène centrale ; la vidéo passe
-  // en bande de vignettes en bas.
+  // en bande de vignettes en bas ; calque d'annotation par-dessus l'artefact.
   if (sharing) {
     return (
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 10, padding: 14 }}>
-        <div style={{ flex: 1, minHeight: 0, background: '#fff', borderRadius: 14, overflow: 'hidden' }}>
+        <div style={{ flex: 1, minHeight: 0, background: '#fff', borderRadius: 14, overflow: 'hidden', position: 'relative' }}>
           <SharedSceneView scene={scene} />
+          <AnnotationOverlay strokes={strokes} editable={editable} onStrokes={onStrokes} />
         </div>
         <div style={{ height: 104, flexShrink: 0 }}>
           <GridLayout tracks={tracks} style={{ height: '100%' }}>
@@ -188,7 +213,21 @@ function ConsultationStage({ scene }: { scene: CockpitScene | null }) {
 }
 
 // ── Barre de contrôle (micro / caméra / partage écran / quitter) ─────────────
-function ConsultationBar({ isHost }: { isHost: boolean }) {
+function ConsultationBar({
+  isHost,
+  sharing,
+  annotate,
+  onToggleAnnotate,
+  hasStrokes,
+  onClearStrokes,
+}: {
+  isHost: boolean;
+  sharing: boolean;
+  annotate: boolean;
+  onToggleAnnotate: () => void;
+  hasStrokes: boolean;
+  onClearStrokes: () => void;
+}) {
   const navigate = useNavigate();
   const room = useRoomContext();
   const leave = () => {
@@ -211,6 +250,22 @@ function ConsultationBar({ isHost }: { isHost: boolean }) {
         <TrackToggle source={Track.Source.ScreenShare} showIcon>
           Partager l'écran
         </TrackToggle>
+      ) : null}
+      {isHost && sharing ? (
+        <button
+          onClick={onToggleAnnotate}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 9, border: 'none', cursor: 'pointer', background: annotate ? GOLD : 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 13, fontWeight: 600 }}
+        >
+          <Pencil size={15} aria-hidden="true" /> {annotate ? 'Annotation ON' : 'Annoter'}
+        </button>
+      ) : null}
+      {isHost && sharing && hasStrokes ? (
+        <button
+          onClick={onClearStrokes}
+          style={{ padding: '8px 12px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', background: 'transparent', color: '#cbd5e1', fontSize: 13 }}
+        >
+          Effacer
+        </button>
       ) : null}
       <button
         onClick={leave}
