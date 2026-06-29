@@ -41,8 +41,10 @@ const LiveHostSmartBoardStage = React.lazy(
   () => import('@/components/liri/live-room/LiveHostSmartBoardStage'),
 );
 
-const BG = '#0b0b0c';
-const GOLD = '#b08d57';
+// Aligné sur le shell chaud LIRI (cf. ConsultationRoom / liveHostTheme) — n'est
+// qu'un fallback (le SmartBoard repeint la scène en #1f1e1c + carreaux ambre).
+const BG = '#1f1e1c'; // --lh-stage-bg (chaud, plus le #0b0b0c plat)
+const GOLD = '#d4a36a'; // ambre LIRI (plus le gold/or banni)
 
 // Références stables (évitent de recréer un tableau à chaque rendu → les effets
 // du stage qui dépendent de `.length` restent stables).

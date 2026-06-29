@@ -17,7 +17,7 @@
 // chaque flux est encadré en 16:9 (object-fit cover SANS écrasement). Token via
 // le chemin MÉDICAL (contrôle d'accès patient).
 // ─────────────────────────────────────────────────────────────────────────────
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   LiveKitRoom,
@@ -59,6 +59,29 @@ const GOLD = '#d4a36a'; // --lh-accent (ambre chaud LIRI ; n'est plus du gold)
 const TILE_BG = '#1f1e1c'; // --lh-stage-bg (tuiles vidéo / scène)
 const PANEL_BG = 'rgba(48,48,46,0.97)'; // --lh-panel-bg (panneaux frostés chauds)
 const PANEL_BORDER = '1px solid rgba(245,244,238,0.09)'; // filet ivoire discret
+
+// ── Carreaux du TABLEAU + fond chaud, SCOPÉS à la consultation ──────────────────
+// Le SmartBoard (SCENE_STAGE_GRID) peint `bg-[var(--lh-stage-bg)]` + une grille
+// BLANCHE à 0.045 (quasi invisible). En consultation, on court-circuite
+// LiveHostPage → la var n'est PAS posée → centre NOIR + carreaux invisibles. Ici
+// on (a) repose la var sur la racine `.consult-shell` (cf. style root) ET (b)
+// repeint la scène en #1f1e1c chaud + un VRAI quadrillage AMBRE lisible (cahier
+// quadrillé : carreaux 40px + repères 200px), puis on retire le voile noir du
+// tableau pour que les carreaux le traversent. Préfixé `.consult-shell` → Formation
+// (LiveHostPage, hors de ce scope) reste INTACTE.
+const CONSULT_SHELL_CSS = `
+.consult-shell [class*="lh-stage-bg"]{
+  background-color:#1f1e1c !important;
+  background-image:
+    linear-gradient(rgba(212,163,106,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(212,163,106,0.07) 1px, transparent 1px),
+    linear-gradient(rgba(212,163,106,0.13) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(212,163,106,0.13) 1px, transparent 1px) !important;
+  background-size:40px 40px,40px 40px,200px 200px,200px 200px !important;
+  background-position:center center !important;
+}
+.consult-shell [class*="bg-black/25"][class*="ring-inset"]{ background-color:transparent !important; }
+`;
 
 // La téléconsult est un moteur MEDOS : à la sortie, le praticien revient à MEDOS
 // (med.cimolace.space, d'où il vient) — JAMAIS au portail LIRI école (/dashboard
@@ -188,7 +211,23 @@ export default function ConsultationRoom() {
   if (left) return <CallEndedScreen />;
 
   const content = (
-    <div data-lk-theme="default" style={{ position: 'fixed', inset: 0, zIndex: 2147483000, background: BG, backgroundImage: PAGE_MESH, display: 'flex', flexDirection: 'column' }}>
+    <div
+      data-lk-theme="default"
+      className="consult-shell"
+      style={{
+        position: 'fixed', inset: 0, zIndex: 2147483000,
+        background: BG, backgroundImage: PAGE_MESH,
+        display: 'flex', flexDirection: 'column',
+        // Variables shell LIRI : SANS elles, var(--lh-stage-bg) du SmartBoard
+        // tombait sur du noir (centre vide). Posées ici → tout le sous-arbre hérite.
+        '--lh-page-bg': BG,
+        '--lh-stage-bg': TILE_BG,
+        '--lh-panel-bg': PANEL_BG,
+        '--lh-strip-bg': BAR,
+        '--lh-accent': GOLD,
+      } as CSSProperties}
+    >
+      <style>{CONSULT_SHELL_CSS}</style>
       <LiveKitRoom
         serverUrl={conn.url}
         token={conn.token}
