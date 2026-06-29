@@ -123,7 +123,23 @@ export const BillingProvider = ({ children, graceDays = GRACE_DAYS_DEFAULT }) =>
             return null;
           }
           if (!res.ok) return null;
-          return res.json().catch(() => null);
+          const body = await res.json().catch(() => null);
+          // L'API NestJS emballe la réponse dans { data: ... } (intercepteur de
+          // réponse global). L'ancien code lisait `payload.subscription` au TOP
+          // niveau → toujours `undefined` → abonnement vu comme null → tenant
+          // PAYANT traité en GRATUIT (live/téléconsult coupé à 3 min). On déballe
+          // l'enveloppe { data } si elle est présente.
+          if (
+            body &&
+            body.data &&
+            typeof body.data === 'object' &&
+            ('subscription' in body.data ||
+              'computed' in body.data ||
+              'recentPayments' in body.data)
+          ) {
+            return body.data;
+          }
+          return body;
         };
 
         let payload = await readSubscriptionStatus(token);
