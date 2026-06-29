@@ -62,6 +62,11 @@ monté**.
 2. Le fil d'Ariane suit automatiquement (poussé par `LiriEcolePage` selon l'onglet actif).
 3. Hooks toujours appelés inconditionnellement (règle des hooks) ; le push est no-op hors
    portail.
+4. ⚠️ **Rendre le contenu DIRECTEMENT** (`<div key={active}>{content}</div>`) en mode embarqué —
+   PAS dans `AnimatePresence mode="wait"` ni `<TabsContent value={active}>` (Radix). Dans le
+   scope scrollable, l'exit d'`AnimatePresence` ne se complète pas → le contenu **ne bascule
+   jamais** (bug SILENCIEUX : l'onglet actif change dans l'en-tête mais le panneau reste figé).
+   Au-delà de 6 onglets, le repli « ••• » de `HeaderTabs` s'active automatiquement.
 
 ## Fichiers clés
 - `components/liri/portalHeader.tsx` — contexte + hooks d'en-tête.
