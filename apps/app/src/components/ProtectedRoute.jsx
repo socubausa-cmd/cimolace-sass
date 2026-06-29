@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { getSelectedAccountRole, hasMultiRoleAccess } from '@/lib/accountRoleMode';
 import { CHOOSE_ACCOUNT_TYPE_PATHS, getChooseAccountTypePath } from '@/lib/chooseAccountTypePath';
 import { getLoginEntryPath } from '@/lib/loginEntryPath';
+import ImmersiveBootLoader from '@/components/liri/ImmersiveBootLoader';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -33,6 +34,13 @@ const ProtectedRoute = ({ children }) => {
   if (isPreview) return children;
 
   if (effectiveLoading) {
+    // Salle immersive (téléconsultation) : écran de DÉMARRAGE branché LIRI au lieu
+    // du spinner générique, pour couvrir TOUTE la phase de boot (vérif session
+    // comprise) d'une seule identité de marque. Si ça traîne (>8s), on retombe sur
+    // l'écran générique avec les boutons de secours (réessayer / déconnexion).
+    if (location.pathname.startsWith('/teleconsult') && !slowLoad) {
+      return <ImmersiveBootLoader message="Vérification de votre session sécurisée…" />;
+    }
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-6 bg-[#0F1419] p-6">
         <Loader2 className="h-10 w-10 animate-spin text-[var(--school-accent)]" />
