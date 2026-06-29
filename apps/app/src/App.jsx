@@ -421,6 +421,14 @@ function OwnerForumIndexRedirect() {
   const q = sp.toString();
   return <Navigate to={`/owner-dashboard?tab=forum${q ? `&${q}` : ''}`} replace />;
 }
+// Back-office UNIFIÉ : /owner-dashboard (vieux shell séparé « style isna ») → onglet
+// École du portail LIRI (/liri/ecole), en préservant la query (?tab=…&finance=…).
+// Le back-office est désormais embarqué dans le portail → on ne monte plus le shell séparé.
+function OwnerDashboardLegacyRedirect() {
+  const [sp] = useSearchParams();
+  const q = sp.toString();
+  return <Navigate to={`/liri/ecole${q ? `?${q}` : ''}`} replace />;
+}
 const TenantAdminPayoutSettingsPage = lazy(() => import('@/pages/tenant/TenantAdminPayoutSettingsPage'));
 const TenantMembersPage = lazy(() => import('@/pages/tenant/TenantMembersPage'));
 const ClientProfilePage = lazy(() => import('@/components/accompaniment/ClientProfilePage'));
@@ -695,13 +703,12 @@ const DashboardRedirect = () => {
     return <Navigate to="/liri" replace />;
   }
 
-  // Le DOMAINE décide de l'atterrissage (doc CIMOLACE_ARCHITECTURE_SOURCE_OF_TRUTH + choix user) :
-  // - Domaine PRODUIT LIRI (liri.cimolace.space / app.cimolace.space) → portail produit /liri.
-  // - Domaine d'un TENANT (prorascience.org) → back-office École du tenant, brandé tenant.
-  //   prorascience.org ne doit JAMAIS afficher le portail /liri (marque « LIRI »).
-  const isPlatformHost = typeof window !== 'undefined' && isPlatformOrDevHost(window.location.hostname);
+  // Owner/admin → TOUJOURS le portail LIRI : le back-office école est embarqué dans
+  // l'onglet École (/liri/ecole). Le vieux shell séparé /owner-dashboard est retiré → plus
+  // de rechute « style isna », quel que soit le domaine. Le branding tenant (prorascience.org)
+  // est porté par le shell du portail.
   if (role === 'owner' || role === 'admin') {
-    return <Navigate to={isPlatformHost ? '/liri' : '/owner-dashboard'} replace />;
+    return <Navigate to="/liri" replace />;
   }
   if (role === 'secretariat') return <Navigate to="/secretariat-space/dashboard" replace />;
   if (role === 'teacher') return <Navigate to="/teacher-space/dashboard" replace />;
@@ -1561,9 +1568,16 @@ isLiriHostDevPreviewRoute;
           } />
           {/* Module ÉCOLE HORIZONTAL : le back-office école monté DANS le portail LIRI
               (pour un tenant LIRI sans site vertical /t/:slug). */}
+          {/* Onglet École = back-office complet (owner/admin) embarqué dans le portail.
+              Restreint owner/admin : il expose Finances/Utilisateurs/Paramètres (anti-escalade). */}
           <Route path="/liri/ecole" element={
-            <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat']} allowTenantRole>
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin']} allowTenantRole>
               <LiriEcolePage />
+            </ProtectedLiriRoute>
+          } />
+          <Route path="/liri/ecole/knowledge-base" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin']} allowTenantRole>
+              <KnowledgeBaseManager />
             </ProtectedLiriRoute>
           } />
           {/* Forum CONNECTÉ + messagerie immersive comme app du portail (au lieu de /dashboard).
@@ -2081,13 +2095,9 @@ isLiriHostDevPreviewRoute;
             </ProtectedRoleRoute>
           } />
 
-          <Route path="/owner-dashboard" element={
-            <ProtectedOwnerRoute>
-              <ErrorBoundary logTag="OwnerDashboard" showDetailsInDev>
-                <OwnerDashboard />
-              </ErrorBoundary>
-            </ProtectedOwnerRoute>
-          } />
+          {/* Back-office UNIFIÉ : /owner-dashboard → onglet École du portail (/liri/ecole),
+              query préservée. Le vieux shell séparé « style isna » n'est plus monté. */}
+          <Route path="/owner-dashboard" element={<OwnerDashboardLegacyRedirect />} />
 
           <Route path="/owner-dashboard/post-production/:contentId" element={
             <ProtectedOwnerRoute>

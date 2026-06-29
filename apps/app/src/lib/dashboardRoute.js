@@ -1,12 +1,12 @@
 import { getEffectiveRole } from '@/lib/accountRoleMode';
-import { isPlatformOrDevHost } from '@/lib/tenantResolver';
 
 export function resolveDashboardPath(user) {
   const role = getEffectiveRole(user);
-  // Le DOMAINE décide : hôte produit LIRI (liri.cimolace.space) → portail /liri ;
-  // domaine d'un tenant (prorascience.org) → back-office École, brandé tenant (jamais « LIRI »).
-  const isPlatformHost = typeof window !== 'undefined' && isPlatformOrDevHost(window.location.hostname);
-  if (role === 'owner' || role === 'admin') return isPlatformHost ? '/liri' : '/owner-dashboard';
+  // Owner/admin → TOUJOURS le portail LIRI : le back-office école est embarqué dans
+  // l'onglet École (/liri/ecole). Le vieux shell séparé /owner-dashboard est retiré, on
+  // ne « retombe » plus jamais dessus, quel que soit le domaine. Le branding tenant (sur
+  // prorascience.org) est porté par le shell du portail, pas par la route d'atterrissage.
+  if (role === 'owner' || role === 'admin') return '/liri';
   if (role === 'secretariat') return '/secretariat-space/dashboard';
   if (role === 'teacher') return '/teacher-space/dashboard';
   if (role === 'creator') return '/creator-dashboard';
