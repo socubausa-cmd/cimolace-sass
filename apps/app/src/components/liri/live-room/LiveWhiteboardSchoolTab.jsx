@@ -1561,6 +1561,7 @@ function EnseignantTab() {
       <div className="grid grid-cols-3 gap-1">
         {[
           { id: 'dark', label: 'Sombre', color: 'amber' },
+          { id: 'carreaux', label: 'Carreaux', color: 'amber' },
           { id: 'chalkboard', label: 'Tableau vert', color: 'emerald' },
           { id: 'geoplan', label: 'Géoplan', color: 'blue' },
         ].map(({ id, label, color }) => (

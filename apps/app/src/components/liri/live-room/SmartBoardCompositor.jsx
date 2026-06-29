@@ -653,6 +653,7 @@ function drawCurveDraft(ctx, draft, color, lineWidth) {
 const BOARD_BG_DARK = '#14131c';
 const BOARD_BG_CHALK = '#1a4a3d';
 const BOARD_BG_GEOPLAN = '#f8f7f2';
+const BOARD_BG_CARREAUX = '#1f1e1c'; // tableau IMMERSIF LIRI (fond sombre chaud + carreaux ambre)
 
 function paintBoardBackground(bgCanvas) {
   if (!bgCanvas?.width) return;
@@ -672,6 +673,25 @@ function paintBoardBackground(bgCanvas) {
         ctx.beginPath(); ctx.arc(gx, gy, 1.4, 0, Math.PI * 2); ctx.fill();
       }
     }
+  } else if (surface === 'carreaux') {
+    /* Tableau IMMERSIF LIRI : fond sombre CHAUD + quadrillage AMBRE (cahier
+       quadrillé). Le canevas est dimensionné en px CSS (resize sans DPR) → un pas
+       de 40px = 40px à l'écran. Carreaux fins 40px + repères forts tous les 200px. */
+    const W = bgCanvas.width;
+    const H = bgCanvas.height;
+    ctx.fillStyle = BOARD_BG_CARREAUX;
+    ctx.fillRect(0, 0, W, H);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(212,163,106,0.11)';
+    ctx.beginPath();
+    for (let gx = 40; gx < W; gx += 40) { ctx.moveTo(gx + 0.5, 0); ctx.lineTo(gx + 0.5, H); }
+    for (let gy = 40; gy < H; gy += 40) { ctx.moveTo(0, gy + 0.5); ctx.lineTo(W, gy + 0.5); }
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(212,163,106,0.20)';
+    ctx.beginPath();
+    for (let gx = 200; gx < W; gx += 200) { ctx.moveTo(gx + 0.5, 0); ctx.lineTo(gx + 0.5, H); }
+    for (let gy = 200; gy < H; gy += 200) { ctx.moveTo(0, gy + 0.5); ctx.lineTo(W, gy + 0.5); }
+    ctx.stroke();
   } else {
     ctx.fillStyle = BOARD_BG_DARK;
     ctx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
@@ -1171,7 +1191,9 @@ function WhiteboardScene({
         ? BOARD_BG_CHALK
         : boardSurface === 'geoplan'
           ? BOARD_BG_GEOPLAN
-          : BOARD_BG_DARK;
+          : boardSurface === 'carreaux'
+            ? BOARD_BG_CARREAUX
+            : BOARD_BG_DARK;
     return {
       fontPx,
       lineHeightPx: fontPx * 1.25,
@@ -2448,7 +2470,7 @@ function WhiteboardScene({
     if (kind === 'curtain') {
       if (w < 4 && h < 4) return null;
       const surface = useLiveWhiteboardStore.getState().boardSurface || 'dark';
-      const bgColor = surface === 'chalkboard' ? '#1a4a3d' : surface === 'geoplan' ? '#f8f7f2' : '#14131c';
+      const bgColor = surface === 'chalkboard' ? '#1a4a3d' : surface === 'geoplan' ? '#f8f7f2' : surface === 'carreaux' ? '#1f1e1c' : '#14131c';
       return { kind: 'curtain', x, y, w: Math.max(20, w), h: Math.max(20, h), color: bgColor, opacity: 0.97 };
     }
     return null;

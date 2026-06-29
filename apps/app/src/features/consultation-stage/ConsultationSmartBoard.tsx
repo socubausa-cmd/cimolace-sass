@@ -31,9 +31,10 @@
 // alourdir le bundle de la salle quand le tableau n'est pas ouvert. Konva est
 // déjà une dépendance du repo (utilisée par le compositeur).
 // ─────────────────────────────────────────────────────────────────────────────
-import React, { Suspense, useMemo, useRef } from 'react';
+import React, { Suspense, useEffect, useMemo, useRef } from 'react';
 import { Presentation } from 'lucide-react';
 import { mergeSmartboardSceneFlags } from '@/lib/smartboardNavigatorScenes';
+import { useLiveWhiteboardStore } from '@/components/liri/live-room/useLiveWhiteboardStore';
 
 // Le moteur réel est un module .jsx — import dynamique (lazy) : le wrapper reste
 // léger et `LiveHostSmartBoardStage` (+ Konva) n'est tiré qu'à l'ouverture.
@@ -123,6 +124,16 @@ export default function ConsultationSmartBoard({
   // null → tous les effets « room » du stage no-op (cf. en-tête). `phaseLive`
   // reste false en conséquence.
   const roomRef = useRef<unknown>(null);
+
+  // Surface du tableau = CARREAUX immersifs (fond sombre chaud + quadrillage
+  // ambre), au lieu de l'aplat sombre VIDE par défaut (la demande « tableau
+  // immersif avec les carreaux »). Restaurée à la sortie pour ne pas imposer ce
+  // choix à une éventuelle session Formation ultérieure (même store global).
+  useEffect(() => {
+    const prev = useLiveWhiteboardStore.getState().boardSurface;
+    useLiveWhiteboardStore.getState().setBoardSurface('carreaux');
+    return () => { useLiveWhiteboardStore.getState().setBoardSurface(prev); };
+  }, []);
 
   // viewerMode explicite > déduction depuis isHost. Le patient ne navigue/dessine
   // pas ; il suit l'état diffusé par le praticien.
