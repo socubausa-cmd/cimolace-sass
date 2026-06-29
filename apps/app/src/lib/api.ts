@@ -882,6 +882,15 @@ export interface TeleconsultSession {
   duration_seconds: number | null;
 }
 
+export interface TeleconsultInvite {
+  id: string;
+  display_name: string;
+  relationship: string | null;
+  status: "consent_requested" | "consented" | "denied" | "admitted" | "revoked";
+  consent_at?: string | null;
+  created_at?: string;
+}
+
 export const teleconsultApi = {
   list: (patientId?: string) =>
     api.get<ApiEnvelope<TeleconsultSession[]>>("/med/teleconsult", { params: { patient_id: patientId } }).then(unwrap),
@@ -893,6 +902,15 @@ export const teleconsultApi = {
     api.post<ApiEnvelope<TeleconsultSession>>(`/med/teleconsult/${id}/join`).then(unwrap),
   end: (id: string, body: { ended_reason?: string; connection_quality?: string; quick_note?: string } = {}) =>
     api.post<ApiEnvelope<TeleconsultSession>>(`/med/teleconsult/${id}/end`, body).then(unwrap),
+  // Inviter un proche (+ consentement RGPD du patient)
+  createInvite: (id: string, body: { display_name?: string; relationship?: string }) =>
+    api.post<ApiEnvelope<TeleconsultInvite>>(`/med/teleconsult/${id}/invites`, body).then(unwrap),
+  listInvites: (id: string) =>
+    api.get<ApiEnvelope<TeleconsultInvite[]>>(`/med/teleconsult/${id}/invites`).then(unwrap),
+  consentInvite: (id: string, inviteId: string, granted: boolean) =>
+    api.post<ApiEnvelope<TeleconsultInvite>>(`/med/teleconsult/${id}/invites/${inviteId}/consent`, { granted }).then(unwrap),
+  revokeInvite: (id: string, inviteId: string) =>
+    api.post<ApiEnvelope<TeleconsultInvite>>(`/med/teleconsult/${id}/invites/${inviteId}/revoke`).then(unwrap),
 };
 
 // ─── Attachments ────────────────────────────────────────────────────────────

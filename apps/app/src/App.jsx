@@ -561,6 +561,7 @@ const LiveHostPageNativeGate = lazy(() => import('@/components/eleve-mobile/Live
 const LiveHostPageRoute = lazy(() => import('@/pages/liri/LiveHostPage'));
 const LiveGuestPage = lazy(() => import('@/pages/liri/LiveGuestPage'));
 const ConsultationRoom = lazy(() => import('@/pages/liri/ConsultationRoom'));
+const ProcheRoom = lazy(() => import('@/pages/liri/ProcheRoom'));
 const DevLiriHostEntry = lazy(() => import('@/pages/dev/DevLiriHostEntry'));
 const TableauVivantDemoPage = lazy(() => import('@/pages/dev/TableauVivantDemoPage'));
 const CourseDemoPage = lazy(() => import('@/pages/dev/CourseDemoPage'));
@@ -2049,6 +2050,14 @@ isLiriHostDevPreviewRoute;
                 <ConsultationRoom />
               </ErrorBoundary>
             </ProtectedRoute>
+          } />
+
+          {/* Salle du PROCHE invité — PUBLIQUE (pas de compte tenant). L'accès est
+              gardé par le token d'invitation + le consentement RGPD du patient. */}
+          <Route path="/teleconsult/:id/proche/:inviteId" element={
+            <ErrorBoundary>
+              <ProcheRoom />
+            </ErrorBoundary>
           } />
 
           {/* Invité — alias URL explicite (avant /live/:sessionId pour éviter de capturer « invit » comme id) */}

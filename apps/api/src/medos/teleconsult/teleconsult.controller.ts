@@ -18,6 +18,8 @@ import { TenantGuard } from '../../tenant/tenant.guard';
 import type { TenantContext } from '../../tenant/tenant.types';
 import { MedosEnabledGuard } from '../medos-enabled.guard';
 import {
+  ConsentInviteDto,
+  CreateInviteDto,
   CreateTeleconsultDto,
   EndTeleconsultDto,
 } from './dto/teleconsult.dto';
@@ -92,6 +94,69 @@ export class TeleconsultController {
     );
   }
 
+  // ── Inviter un proche (+ consentement RGPD) ───────────────────────────────
+
+  /** Host : crée une invitation pour un proche → renvoie le token (= id). */
+  @Post(':id/invites')
+  @Roles('owner', 'practitioner', 'clinic_admin')
+  createInvite(
+    @Param('id') id: string,
+    @Body() dto: CreateInviteDto,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.service.createInvite(tenant, req.user.id, id, dto);
+  }
+
+  /** Host OU patient-propriétaire : liste les invitations actives de la session. */
+  @Get(':id/invites')
+  @Roles('owner', 'practitioner', 'clinic_admin', 'patient')
+  listInvites(
+    @Param('id') id: string,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.service.listInvites(tenant, req.user.id, tenant.userRole, id);
+  }
+
+  /** PATIENT uniquement : autorise/refuse la participation du proche (RGPD). */
+  @Post(':id/invites/:inviteId/consent')
+  @Roles('patient')
+  consentInvite(
+    @Param('id') id: string,
+    @Param('inviteId') inviteId: string,
+    @Body() dto: ConsentInviteDto,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.service.consentInvite(
+      tenant,
+      req.user.id,
+      tenant.userRole,
+      id,
+      inviteId,
+      dto.granted,
+    );
+  }
+
+  /** Host OU patient-propriétaire : révoque une invitation. */
+  @Post(':id/invites/:inviteId/revoke')
+  @Roles('owner', 'practitioner', 'clinic_admin', 'patient')
+  revokeInvite(
+    @Param('id') id: string,
+    @Param('inviteId') inviteId: string,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.service.revokeInvite(
+      tenant,
+      req.user.id,
+      tenant.userRole,
+      id,
+      inviteId,
+    );
+  }
+
   /** Marque le participant comme entré (appelé par le frontend après rejoindre) */
   @Post(':id/join')
   @Roles('owner', 'practitioner', 'clinic_admin', 'patient')
@@ -132,5 +197,28 @@ export class TeleconsultController {
       appointmentId,
       req.user.email,
     );
+  }
+}
+
+/**
+ * Endpoints PUBLICS pour le PROCHE invité (pas de compte tenant). Gardés par le
+ * seul token d'invitation (= l'id, non devinable). Fail-closed : le token vidéo
+ * n'est délivré que si le patient a consenti (vérifié dans le service).
+ */
+@ApiTags('MedOS — Téléconsultation (proche)')
+@Controller('med/teleconsult-invite-public')
+export class TeleconsultInvitePublicController {
+  constructor(private readonly service: TeleconsultService) {}
+
+  /** Statut de l'invitation (consentement en attente / accordé / refusé). */
+  @Get(':inviteId/status')
+  status(@Param('inviteId') inviteId: string) {
+    return this.service.getInvitePublicStatus(inviteId);
+  }
+
+  /** Délivre le token vidéo invité — uniquement si le patient a consenti. */
+  @Post(':inviteId/token')
+  token(@Param('inviteId') inviteId: string) {
+    return this.service.issueInviteToken(inviteId);
   }
 }

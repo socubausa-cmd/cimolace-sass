@@ -342,6 +342,232 @@ export class TeleconsultService {
     return data;
   }
 
+  // ── Inviter un PROCHE (+ consentement RGPD du patient) ────────────────────
+  // Un proche n'a pas de compte tenant : il rejoint via un lien token-gaté.
+  // Garde fail-closed : aucun token vidéo n'est délivré tant que le PATIENT
+  // n'a pas explicitement consenti (trace consent_by / consent_at).
+
+  /** Charge la session (tenant-scopée) ou 404. */
+  private async loadSession(tenantId: string, sessionId: string): Promise<any> {
+    const { data, error } = await this.supabase.client
+      .from('med_teleconsult_sessions')
+      .select('id, patient_id, practitioner_id')
+      .eq('tenant_id', tenantId)
+      .eq('id', sessionId)
+      .single();
+    if (error || !data) throw new NotFoundException('Session introuvable');
+    return data;
+  }
+
+  /** Vérifie que l'appelant est BIEN le patient propriétaire de la session. */
+  private async assertPatientOwnsSession(
+    session: any,
+    actorId: string,
+  ): Promise<void> {
+    const { data: pat } = await this.supabase.client
+      .from('med_patients')
+      .select('patient_user_id')
+      .eq('id', session.patient_id)
+      .single();
+    if ((pat as any)?.patient_user_id !== actorId) {
+      throw new ForbiddenException('Accès refusé à cette session');
+    }
+  }
+
+  /** Host : crée une invitation pour un proche → renvoie le token (= id). */
+  async createInvite(
+    tenant: TenantContext,
+    hostId: string,
+    sessionId: string,
+    dto: { display_name?: string; relationship?: string },
+  ): Promise<any> {
+    await this.loadSession(tenant.id, sessionId);
+    const { data, error } = await (this.supabase.client as any)
+      .from('med_teleconsult_invites')
+      .insert({
+        tenant_id: tenant.id,
+        session_id: sessionId,
+        display_name: (dto.display_name || '').trim() || 'Proche',
+        relationship: (dto.relationship || '').trim() || null,
+        status: 'consent_requested',
+        created_by: hostId,
+      })
+      .select('*')
+      .single();
+    if (error || !data) {
+      this.logger.error('createInvite', error?.message);
+      throw new InternalServerErrorException("Création de l'invitation impossible");
+    }
+    return data;
+  }
+
+  /** Host OU patient-propriétaire : liste les invitations actives de la session. */
+  async listInvites(
+    tenant: TenantContext,
+    actorId: string,
+    actorRole: TenantContext['userRole'],
+    sessionId: string,
+  ): Promise<any[]> {
+    const session = await this.loadSession(tenant.id, sessionId);
+    if (actorRole === 'patient') await this.assertPatientOwnsSession(session, actorId);
+    const { data, error } = await this.supabase.client
+      .from('med_teleconsult_invites')
+      .select('id, display_name, relationship, status, consent_at, created_at')
+      .eq('tenant_id', tenant.id)
+      .eq('session_id', sessionId)
+      .neq('status', 'revoked')
+      .order('created_at', { ascending: true });
+    if (error) throw new InternalServerErrorException(error.message);
+    return data ?? [];
+  }
+
+  /**
+   * PATIENT uniquement : tranche le consentement (RGPD). Seul le patient
+   * propriétaire de la session peut autoriser/refuser la participation d'un
+   * proche au partage de ses données de santé. La décision est tracée.
+   */
+  async consentInvite(
+    tenant: TenantContext,
+    actorId: string,
+    actorRole: TenantContext['userRole'],
+    sessionId: string,
+    inviteId: string,
+    granted: boolean,
+  ): Promise<any> {
+    const session = await this.loadSession(tenant.id, sessionId);
+    if (actorRole !== 'patient') {
+      throw new ForbiddenException(
+        'Seul le patient peut consentir à la participation d’un proche',
+      );
+    }
+    await this.assertPatientOwnsSession(session, actorId);
+    const { data, error } = await (this.supabase.client as any)
+      .from('med_teleconsult_invites')
+      .update({
+        status: granted ? 'consented' : 'denied',
+        consent_by: actorId,
+        consent_at: new Date().toISOString(),
+      })
+      .eq('tenant_id', tenant.id)
+      .eq('session_id', sessionId)
+      .eq('id', inviteId)
+      .select('id, status, consent_at')
+      .single();
+    if (error || !data) throw new NotFoundException('Invitation introuvable');
+    return data;
+  }
+
+  /** Host OU patient-propriétaire : révoque une invitation (proche exclu). */
+  async revokeInvite(
+    tenant: TenantContext,
+    actorId: string,
+    actorRole: TenantContext['userRole'],
+    sessionId: string,
+    inviteId: string,
+  ): Promise<any> {
+    const session = await this.loadSession(tenant.id, sessionId);
+    if (actorRole === 'patient') await this.assertPatientOwnsSession(session, actorId);
+    const { data, error } = await (this.supabase.client as any)
+      .from('med_teleconsult_invites')
+      .update({ status: 'revoked' })
+      .eq('tenant_id', tenant.id)
+      .eq('session_id', sessionId)
+      .eq('id', inviteId)
+      .select('id, status')
+      .single();
+    if (error || !data) throw new NotFoundException('Invitation introuvable');
+    return data;
+  }
+
+  /**
+   * PUBLIC (token-gaté) : statut d'une invitation, pour la page du proche.
+   * Renvoie le STRICT minimum (aucune donnée de santé) : où en est le
+   * consentement + le nom du proche + le nom de la clinique.
+   */
+  async getInvitePublicStatus(inviteId: string): Promise<{
+    status: string;
+    display_name: string;
+    session_id: string;
+    clinic_name: string;
+  }> {
+    const { data: invite } = await (this.supabase.client as any)
+      .from('med_teleconsult_invites')
+      .select('id, session_id, tenant_id, display_name, status')
+      .eq('id', inviteId)
+      .maybeSingle();
+    if (!invite) throw new NotFoundException('Invitation introuvable');
+    const { data: tenant } = await this.supabase.client
+      .from('tenants')
+      .select('name')
+      .eq('id', (invite as any).tenant_id)
+      .maybeSingle();
+    return {
+      status: (invite as any).status,
+      display_name: (invite as any).display_name,
+      session_id: (invite as any).session_id,
+      clinic_name: (tenant as any)?.name || 'Consultation',
+    };
+  }
+
+  /**
+   * PUBLIC (token-gaté) : délivre le token vidéo INVITÉ au proche. FAIL-CLOSED —
+   * uniquement si le patient a consenti (status 'consented' ou déjà 'admitted'
+   * pour les reconnexions). Le proche rejoint la MÊME room que la session
+   * (externalRef = session_id) en invité publiant (caméra + micro).
+   */
+  async issueInviteToken(inviteId: string): Promise<{
+    url: string;
+    token: string;
+    display_name: string;
+    session_id: string;
+  }> {
+    const { data: invite } = await (this.supabase.client as any)
+      .from('med_teleconsult_invites')
+      .select('id, session_id, tenant_id, display_name, status')
+      .eq('id', inviteId)
+      .maybeSingle();
+    if (!invite) throw new NotFoundException('Invitation introuvable');
+    const inv = invite as any;
+    if (inv.status !== 'consented' && inv.status !== 'admitted') {
+      throw new ForbiddenException(
+        "En attente de l'autorisation du patient",
+      );
+    }
+
+    const { data: tenant } = await this.supabase.client
+      .from('tenants')
+      .select('slug')
+      .eq('id', inv.tenant_id)
+      .single();
+    if (!tenant) throw new NotFoundException('Tenant introuvable');
+
+    const result = await this.liri.issueTokenForSession({
+      tenantId: inv.tenant_id,
+      tenantSlug: (tenant as any).slug,
+      externalRef: inv.session_id,
+      purpose: 'medical_teleconsult',
+      userId: `proche_${inv.id}`,
+      displayName: inv.display_name,
+      role: 'guest',
+      guestCanPublish: true,
+      metadata: { teleconsult_invite_id: inv.id },
+    });
+
+    if (inv.status !== 'admitted') {
+      await (this.supabase.client as any)
+        .from('med_teleconsult_invites')
+        .update({ status: 'admitted', joined_at: new Date().toISOString() })
+        .eq('id', inv.id);
+    }
+
+    return {
+      url: result.url,
+      token: result.token,
+      display_name: inv.display_name,
+      session_id: inv.session_id,
+    };
+  }
+
   /**
    * Convenience flow for the UI: from an appointment, get-or-create the
    * teleconsult session (doctor) or fetch the existing one (patient),

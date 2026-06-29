@@ -53,7 +53,10 @@ import {
   ProblemsController,
 } from './clinical/clinical.controller';
 import { ClinicalListsService } from './clinical/clinical.service';
-import { TeleconsultController } from './teleconsult/teleconsult.controller';
+import {
+  TeleconsultController,
+  TeleconsultInvitePublicController,
+} from './teleconsult/teleconsult.controller';
 import { TeleconsultService } from './teleconsult/teleconsult.service';
 import { AttachmentsController } from './attachments/attachments.controller';
 import { AttachmentsService } from './attachments/attachments.service';
@@ -184,6 +187,7 @@ import { EmailEngineModule } from '../email-engine/email-engine.module';
     LabResultsController,
     // Teleconsult
     TeleconsultController,
+    TeleconsultInvitePublicController,
     // Attachments
     AttachmentsController,
     // GDPR

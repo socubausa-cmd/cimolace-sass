@@ -28,11 +28,11 @@ import {
   useTracks,
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
-import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser } from 'lucide-react';
+import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
-import { teleconsultApi } from '@/lib/api';
+import { teleconsultApi, type TeleconsultInvite } from '@/lib/api';
 import { getClinicalContext, type ClinicalContext, type CockpitScene } from '@/features/medos-cockpit/cockpit-api';
 import { useCockpitChannel, type AnnotStroke, type ConsultView } from '@/features/medos-cockpit/useCockpitChannel';
 import { SharedSceneView, CockpitDock } from '@/features/medos-cockpit/MedTeleconsultCockpit';
@@ -84,6 +84,7 @@ export default function ConsultationRoom() {
   const channel = useCockpitChannel(sessionId ?? null, isHost ? 'host' : 'patient');
   const { view, scene, strokes } = channel;
   const [annotate, setAnnotate] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const hasScene = !!scene && scene.kind !== 'clear';
   // Annotable seulement quand il y a une surface à annoter : le tableau, ou un
   // partage avec un artefact réellement affiché (pas sur un partage vide).
@@ -145,12 +146,18 @@ export default function ConsultationRoom() {
           onToggleAnnotate={() => setAnnotate((v) => !v)}
           hasStrokes={strokes.length > 0}
           onClearStrokes={channel.clearStrokes}
+          onInvite={() => setInviteOpen(true)}
         />
         <RoomAudioRenderer />
       </LiveKitRoom>
       {/* Composer clinique MEDOS (praticien seul) ; le patient voit le partage
           directement sur la SCÈNE centrale. */}
       {isHost && sessionId ? <CockpitDock sessionId={sessionId} mode="host" channel={channel} /> : null}
+      {/* Inviter un proche (praticien) + consentement RGPD (patient). */}
+      {isHost && sessionId ? (
+        <InviteProcheModal sessionId={sessionId} open={inviteOpen} onClose={() => setInviteOpen(false)} />
+      ) : null}
+      {!isHost && sessionId ? <PatientConsentGate sessionId={sessionId} /> : null}
     </div>
   );
   // Plein écran : portal vers <body> pour échapper à tout ancêtre containing-block
@@ -261,7 +268,7 @@ function VideoTiles({ tracks, variant }: { tracks: any[]; variant: 'stage' | 'st
 }
 
 // ── Scène : rend la vue pilotée par le praticien ─────────────────────────────
-function ConsultationStage({
+export function ConsultationStage({
   view,
   isHost,
   scene,
@@ -367,6 +374,7 @@ function ConsultationBar({
   onToggleAnnotate,
   hasStrokes,
   onClearStrokes,
+  onInvite,
 }: {
   isHost: boolean;
   annotatable: boolean;
@@ -374,6 +382,7 @@ function ConsultationBar({
   onToggleAnnotate: () => void;
   hasStrokes: boolean;
   onClearStrokes: () => void;
+  onInvite: () => void;
 }) {
   const navigate = useNavigate();
   const room = useRoomContext();
@@ -416,12 +425,189 @@ function ConsultationBar({
           <Eraser size={15} aria-hidden="true" /> Effacer
         </button>
       ) : null}
+      {isHost ? (
+        <button
+          onClick={onInvite}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.18)', cursor: 'pointer', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, fontWeight: 600 }}
+        >
+          <UserPlus size={15} aria-hidden="true" /> Inviter un proche
+        </button>
+      ) : null}
       <button
         onClick={leave}
         style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 9, border: 'none', cursor: 'pointer', background: '#b1372f', color: '#fff', fontSize: 13, fontWeight: 600 }}
       >
         <PhoneOff size={16} aria-hidden="true" /> Quitter
       </button>
+    </div>
+  );
+}
+
+// ── Inviter un proche (host) + consentement RGPD (patient) ───────────────────
+const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, zIndex: 2147483600, background: 'rgba(0,0,0,0.55)', display: 'grid', placeItems: 'center', padding: 20 };
+const modalStyle: React.CSSProperties = { width: '100%', maxWidth: 520, background: '#161618', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 18, boxShadow: '0 30px 80px rgba(0,0,0,0.6)' };
+const inputStyle: React.CSSProperties = { flex: 1, minWidth: 0, padding: '9px 11px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13 };
+const primaryBtn: React.CSSProperties = { padding: '9px 14px', borderRadius: 9, border: 'none', cursor: 'pointer', background: GOLD, color: '#1a1a1a', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' };
+const secondaryBtn: React.CSSProperties = { padding: '10px 18px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', background: 'transparent', color: '#cbd5e1', fontSize: 13, fontWeight: 600 };
+const closeBtn: React.CSSProperties = { marginLeft: 'auto', background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', display: 'inline-flex' };
+const iconBtn: React.CSSProperties = { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#cbd5e1', cursor: 'pointer', padding: 7, display: 'inline-flex' };
+const inviteRow: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 10px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' };
+
+function StatusBadge({ status }: { status: TeleconsultInvite['status'] }) {
+  const map: Record<TeleconsultInvite['status'], { label: string; color: string; bg: string }> = {
+    consent_requested: { label: 'En attente du consentement', color: '#fcd34d', bg: 'rgba(251,191,36,0.14)' },
+    consented: { label: 'Autorisé', color: '#86efac', bg: 'rgba(34,197,94,0.14)' },
+    admitted: { label: 'A rejoint', color: '#86efac', bg: 'rgba(34,197,94,0.14)' },
+    denied: { label: 'Refusé', color: '#fca5a5', bg: 'rgba(239,68,68,0.14)' },
+    revoked: { label: 'Révoqué', color: '#9ca3af', bg: 'rgba(255,255,255,0.06)' },
+  };
+  const s = map[status];
+  return <span style={{ display: 'inline-block', marginTop: 3, fontSize: 11, color: s.color, background: s.bg, padding: '2px 8px', borderRadius: 999 }}>{s.label}</span>;
+}
+
+function InviteProcheModal({ sessionId, open, onClose }: { sessionId: string; open: boolean; onClose: () => void }) {
+  const [name, setName] = useState('');
+  const [relationship, setRelationship] = useState('');
+  const [invites, setInvites] = useState<TeleconsultInvite[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const slug = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tenant') : null;
+  const linkFor = (id: string) =>
+    `${window.location.origin}/teleconsult/${sessionId}/proche/${id}${slug ? `?tenant=${encodeURIComponent(slug)}` : ''}`;
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const refresh = () => teleconsultApi.listInvites(sessionId).then(setInvites).catch(() => {});
+    refresh();
+    const t = setInterval(refresh, 4000);
+    return () => clearInterval(t);
+  }, [open, sessionId]);
+
+  if (!open) return null;
+
+  const copy = async (id: string) => {
+    try {
+      await navigator.clipboard.writeText(linkFor(id));
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      /* clipboard refusé */
+    }
+  };
+
+  const create = async () => {
+    setBusy(true);
+    try {
+      const inv = await teleconsultApi.createInvite(sessionId, {
+        display_name: name.trim() || undefined,
+        relationship: relationship.trim() || undefined,
+      });
+      setName('');
+      setRelationship('');
+      setInvites((prev) => [...prev, inv]);
+      copy(inv.id);
+    } catch {
+      /* ignore */
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const revoke = async (id: string) => {
+    await teleconsultApi.revokeInvite(sessionId, id).catch(() => {});
+    teleconsultApi.listInvites(sessionId).then(setInvites).catch(() => {});
+  };
+
+  return (
+    <div onClick={onClose} style={overlayStyle}>
+      <div onClick={(e) => e.stopPropagation()} style={modalStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+          <UserPlus size={18} color={GOLD} aria-hidden="true" />
+          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#fff' }}>Inviter un proche</h3>
+          <button onClick={onClose} style={closeBtn} aria-label="Fermer"><X size={16} /></button>
+        </div>
+        <p style={{ margin: '0 0 12px', fontSize: 12.5, color: '#9ca3af', lineHeight: 1.5 }}>
+          Le proche rejoint via un lien. <strong style={{ color: '#cbd5e1' }}>Le patient devra autoriser</strong> sa participation (partage des données de santé).
+        </p>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du proche" style={inputStyle} />
+          <input value={relationship} onChange={(e) => setRelationship(e.target.value)} placeholder="Lien (ex: Fille)" style={{ ...inputStyle, maxWidth: 130 }} />
+          <button onClick={create} disabled={busy} style={{ ...primaryBtn, opacity: busy ? 0.6 : 1 }}>Créer le lien</button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 240, overflowY: 'auto' }}>
+          {invites.length === 0 ? (
+            <p style={{ fontSize: 12.5, color: '#6b7280', textAlign: 'center', padding: '10px 0' }}>Aucune invitation pour l'instant.</p>
+          ) : (
+            invites.map((inv) => (
+              <div key={inv.id} style={inviteRow}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 13, color: '#fff', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {inv.display_name}{inv.relationship ? ` · ${inv.relationship}` : ''}
+                  </div>
+                  <StatusBadge status={inv.status} />
+                </div>
+                <button onClick={() => copy(inv.id)} title="Copier le lien" style={iconBtn} aria-label="Copier le lien">
+                  {copiedId === inv.id ? <Check size={15} color="#86efac" /> : <Copy size={15} />}
+                </button>
+                <button onClick={() => revoke(inv.id)} title="Révoquer" style={iconBtn} aria-label="Révoquer"><X size={15} /></button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PatientConsentGate({ sessionId }: { sessionId: string }) {
+  const [pending, setPending] = useState<TeleconsultInvite | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    const poll = () =>
+      teleconsultApi
+        .listInvites(sessionId)
+        .then((list) => {
+          if (alive) setPending(list.find((i) => i.status === 'consent_requested') || null);
+        })
+        .catch(() => {});
+    poll();
+    const t = setInterval(poll, 3000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [sessionId]);
+
+  if (!pending) return null;
+
+  const decide = async (granted: boolean) => {
+    setBusy(true);
+    try {
+      await teleconsultApi.consentInvite(sessionId, pending.id, granted);
+      setPending(null);
+    } catch {
+      /* ignore */
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div style={overlayStyle}>
+      <div style={{ ...modalStyle, maxWidth: 420, textAlign: 'center' }}>
+        <ShieldCheck size={30} color={GOLD} style={{ margin: '0 auto 8px' }} aria-hidden="true" />
+        <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 700, color: '#fff' }}>Autoriser un proche ?</h3>
+        <p style={{ margin: '0 0 16px', fontSize: 13.5, color: '#cbd5e1', lineHeight: 1.55 }}>
+          <strong style={{ color: '#fff' }}>{pending.display_name}{pending.relationship ? ` (${pending.relationship})` : ''}</strong> souhaite participer à votre consultation. Autorisez-vous le partage de vos données de santé avec cette personne pendant l'appel ?
+        </p>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+          <button onClick={() => decide(false)} disabled={busy} style={secondaryBtn}>Refuser</button>
+          <button onClick={() => decide(true)} disabled={busy} style={{ ...primaryBtn, padding: '10px 20px' }}>Autoriser</button>
+        </div>
+      </div>
     </div>
   );
 }

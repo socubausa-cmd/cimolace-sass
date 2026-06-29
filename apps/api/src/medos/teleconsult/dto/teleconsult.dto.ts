@@ -24,6 +24,26 @@ export class CreateTeleconsultDto {
   recording_consented?: boolean;
 }
 
+export class CreateInviteDto {
+  @ApiPropertyOptional({ description: 'Nom du proche affiché aux participants' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  display_name?: string;
+
+  @ApiPropertyOptional({ description: 'Lien de parenté (ex: Conjoint, Fille)' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  relationship?: string;
+}
+
+export class ConsentInviteDto {
+  @ApiProperty({ description: 'true = le patient autorise, false = refuse' })
+  @IsBoolean()
+  granted!: boolean;
+}
+
 export class EndTeleconsultDto {
   @ApiPropertyOptional({
     enum: ['normal', 'timeout', 'network', 'manual', 'error'],
