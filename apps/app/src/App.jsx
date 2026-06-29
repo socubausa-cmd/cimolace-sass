@@ -2061,7 +2061,7 @@ isLiriHostDevPreviewRoute;
               gardé par le token d'invitation + le consentement RGPD du patient. */}
           <Route path="/teleconsult/:id/proche/:inviteId" element={
             <ErrorBoundary>
-              <Suspense fallback={<ImmersiveBootLoader submessage="Préparation de votre accès…" />}>
+              <Suspense fallback={<ImmersiveBootLoader message="Préparation de votre accès sécurisé…" />}>
                 <ProcheRoom />
               </Suspense>
             </ErrorBoundary>

@@ -131,7 +131,7 @@ export default function ConsultationRoom() {
   if (!conn) {
     return (
       <ImmersiveBootLoader
-        submessage={user?.id ? 'Connexion à la consultation en cours…' : 'Authentification en cours…'}
+        message={user?.id ? 'Connexion sécurisée à votre consultation' : 'Authentification sécurisée…'}
       />
     );
   }
