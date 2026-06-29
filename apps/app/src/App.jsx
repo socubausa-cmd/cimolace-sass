@@ -552,6 +552,7 @@ const StudioLiriRouter = lazy(() => import('@/pages/studio-creator/studio/Studio
 const LiveHostPageNativeGate = lazy(() => import('@/components/eleve-mobile/LiveHostPageNativeGate'));
 const LiveHostPageRoute = lazy(() => import('@/pages/liri/LiveHostPage'));
 const LiveGuestPage = lazy(() => import('@/pages/liri/LiveGuestPage'));
+const TeleconsultPatientRoom = lazy(() => import('@/pages/liri/TeleconsultPatientRoom'));
 const DevLiriHostEntry = lazy(() => import('@/pages/dev/DevLiriHostEntry'));
 const TableauVivantDemoPage = lazy(() => import('@/pages/dev/TableauVivantDemoPage'));
 const CourseDemoPage = lazy(() => import('@/pages/dev/CourseDemoPage'));
@@ -1027,6 +1028,8 @@ const AppContent = () => {
     '/classroom/live/',
     '/classroom/video',
     '/studio',
+    '/lives',           // Bibliothèque des Lives — APP du portail (LiriPortalShell), pas de header vitrine
+    '/dashboard/liri',  // LIRI Brain — agent IA plein écran (univers dédié), pas de header vitrine
     '/dashboard/tools',
     '/dashboard/medos',
     '/dashboard/infrastructure',
@@ -2019,6 +2022,17 @@ isLiriHostDevPreviewRoute;
           <Route path="/live/host/:sessionId" element={
             <ProtectedRoute>
               <LiveHostPageNativeGate />
+            </ProtectedRoute>
+          } />
+
+          {/* Salle de téléconsultation PATIENT (native) — vidéo LiveKit + cockpit
+              clinique partagé. Token via le chemin médical /med/teleconsult/:id/token
+              (le patient possède la session). AUTH-ONLY (handoff SSO depuis le portail). */}
+          <Route path="/teleconsult/:sessionId" element={
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <TeleconsultPatientRoom />
+              </ErrorBoundary>
             </ProtectedRoute>
           } />
 
