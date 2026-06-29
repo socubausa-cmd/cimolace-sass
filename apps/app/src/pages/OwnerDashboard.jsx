@@ -112,7 +112,7 @@ export const OwnerDashboardBody = ({ activeTab, basePath = '/owner-dashboard' })
       case 'school-info': return <SchoolInfoTab />;
       case 'team': return <TeamManagerPage />;
       case 'users': return <UsersAdminPage />;
-      case 'settings': return <SettingsPage />;
+      case 'settings': return <SettingsPage embedded />;
       default: return <OwnerDashboardOverview />;
     }
   };

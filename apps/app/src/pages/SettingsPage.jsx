@@ -22,7 +22,7 @@ const lightPanel = {
   borderRadius: 14,
 };
 
-const SettingsPage = () => {
+const SettingsPage = ({ embedded = false }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { slug: hostTenantSlug, loading: hostTenantLoading } = useResolvedTenantSlug();
   const tabFromUrl = searchParams.get('tab');
@@ -31,12 +31,14 @@ const SettingsPage = () => {
   );
 
   useEffect(() => {
+    if (embedded) return; // embarqué dans le portail : ?tab= est l'onglet PRINCIPAL (École), pas le sous-onglet settings
     const t = searchParams.get('tab');
     if (t && SETTINGS_TABS.has(t)) setActiveTab(t);
-  }, [searchParams]);
+  }, [searchParams, embedded]);
 
   const handleSettingsTab = (tab) => {
     setActiveTab(tab);
+    if (embedded) return; // embarqué : on NE touche PAS l'URL (?tab= appartient au portail)
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev);
@@ -133,8 +135,7 @@ const SettingsPage = () => {
     }
   };
 
-  return (
-    <OwnerDashboardLayout activeTab="settings" onTabChange={() => {}}>
+  const content = (
        <div className="space-y-6">
           <div className="p-6" style={lightPanel}>
             <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Paramètres</h1>
@@ -164,6 +165,11 @@ const SettingsPage = () => {
             </AnimatePresence>
           </div>
        </div>
+  );
+  if (embedded) return content;
+  return (
+    <OwnerDashboardLayout activeTab="settings" onTabChange={() => {}}>
+      {content}
     </OwnerDashboardLayout>
   );
 };
