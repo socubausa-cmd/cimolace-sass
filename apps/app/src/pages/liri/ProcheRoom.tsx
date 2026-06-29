@@ -16,12 +16,12 @@ import {
   useRoomContext,
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
-import { Stethoscope, PhoneOff, ShieldCheck } from 'lucide-react';
+import { Stethoscope, PhoneOff, ShieldCheck, MessageSquare } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { getProcheStatus, getProcheToken, type ProcheStatus } from '@/features/medos-cockpit/procheApi';
 import { useCockpitChannel } from '@/features/medos-cockpit/useCockpitChannel';
-import { ConsultationStage, CallEndedScreen } from './ConsultationRoom';
+import { ConsultationStage, CallEndedScreen, ChatPanel } from './ConsultationRoom';
 
 const BG = '#0b0b0c';
 const BAR = 'rgba(22,22,24,0.94)';
@@ -129,20 +129,26 @@ function ProcheLiveRoom({ url, token, sessionId, clinic }: { url: string; token:
   // Le proche SUIT la vue/scène/annotation pilotées par le praticien (read-only).
   const channel = useCockpitChannel(sessionId, 'patient');
   const [left, setLeft] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   if (left) return <CallEndedScreen />;
   const content = (
     <div data-lk-theme="default" style={{ position: 'fixed', inset: 0, zIndex: 2147483000, background: BG, display: 'flex', flexDirection: 'column' }}>
       <LiveKitRoom serverUrl={url} token={token} connect audio video style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        <ProcheChrome clinic={clinic} />
-        <ConsultationStage
-          view={channel.view}
-          isHost={false}
-          scene={channel.scene}
-          strokes={channel.strokes}
-          editable={false}
-          onStrokes={() => {}}
-        />
-        <ProcheBar onLeave={() => setLeft(true)} />
+        <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <ProcheChrome clinic={clinic} />
+            <ConsultationStage
+              view={channel.view}
+              isHost={false}
+              scene={channel.scene}
+              strokes={channel.strokes}
+              editable={false}
+              onStrokes={() => {}}
+            />
+            <ProcheBar onLeave={() => setLeft(true)} chatOpen={chatOpen} onToggleChat={() => setChatOpen((v) => !v)} />
+          </div>
+          {chatOpen ? <ChatPanel onClose={() => setChatOpen(false)} /> : null}
+        </div>
         <RoomAudioRenderer />
       </LiveKitRoom>
     </div>
@@ -165,7 +171,7 @@ function ProcheChrome({ clinic }: { clinic?: string }) {
   );
 }
 
-function ProcheBar({ onLeave }: { onLeave: () => void }) {
+function ProcheBar({ onLeave, chatOpen, onToggleChat }: { onLeave: () => void; chatOpen: boolean; onToggleChat: () => void }) {
   const room = useRoomContext();
   const leave = () => {
     try {
@@ -183,6 +189,13 @@ function ProcheBar({ onLeave }: { onLeave: () => void }) {
       <TrackToggle source={Track.Source.Camera} showIcon>
         Caméra
       </TrackToggle>
+      <button
+        onClick={onToggleChat}
+        aria-pressed={chatOpen}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 9, border: 'none', cursor: 'pointer', background: chatOpen ? GOLD : 'rgba(255,255,255,0.1)', color: chatOpen ? '#1a1a1a' : '#fff', fontSize: 13, fontWeight: 600 }}
+      >
+        <MessageSquare size={15} aria-hidden="true" /> Discussion
+      </button>
       <button
         onClick={leave}
         style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 9, border: 'none', cursor: 'pointer', background: '#b1372f', color: '#fff', fontSize: 13, fontWeight: 600 }}

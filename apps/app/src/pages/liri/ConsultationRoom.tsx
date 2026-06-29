@@ -17,18 +17,20 @@
 // chaque flux est encadré en 16:9 (object-fit cover SANS écrasement). Token via
 // le chemin MÉDICAL (contrôle d'accès patient).
 // ─────────────────────────────────────────────────────────────────────────────
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   LiveKitRoom,
   ParticipantTile,
   RoomAudioRenderer,
   TrackToggle,
+  useChat,
+  useLocalParticipant,
   useRoomContext,
   useTracks,
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
-import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X } from 'lucide-react';
+import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -99,6 +101,7 @@ export default function ConsultationRoom() {
   const [annotate, setAnnotate] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [left, setLeft] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const hasScene = !!scene && scene.kind !== 'clear';
   // Annotable seulement quand il y a une surface à annoter : le tableau, ou un
   // partage avec un artefact réellement affiché (pas sur un partage vide).
@@ -148,30 +151,39 @@ export default function ConsultationRoom() {
         video
         style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
       >
-        <ConsultationChrome
-          patientName={ctx?.patient_name}
-          isHost={isHost}
-          view={view}
-          onView={channel.pushView}
-        />
-        <ConsultationStage
-          view={view}
-          isHost={isHost}
-          scene={scene}
-          strokes={strokes}
-          editable={annotate && isHost && annotatable}
-          onStrokes={channel.shareStrokes}
-        />
-        <ConsultationBar
-          isHost={isHost}
-          annotatable={annotatable}
-          annotate={annotate}
-          onToggleAnnotate={() => setAnnotate((v) => !v)}
-          hasStrokes={strokes.length > 0}
-          onClearStrokes={channel.clearStrokes}
-          onInvite={() => setInviteOpen(true)}
-          onLeave={handleLeave}
-        />
+        {/* Corps : colonne principale (chrome + scène + barre) + panneau de
+            discussion écrite à droite (toggle), façon appel vidéo. */}
+        <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <ConsultationChrome
+              patientName={ctx?.patient_name}
+              isHost={isHost}
+              view={view}
+              onView={channel.pushView}
+            />
+            <ConsultationStage
+              view={view}
+              isHost={isHost}
+              scene={scene}
+              strokes={strokes}
+              editable={annotate && isHost && annotatable}
+              onStrokes={channel.shareStrokes}
+            />
+            <ConsultationBar
+              isHost={isHost}
+              annotatable={annotatable}
+              annotate={annotate}
+              onToggleAnnotate={() => setAnnotate((v) => !v)}
+              hasStrokes={strokes.length > 0}
+              onClearStrokes={channel.clearStrokes}
+              onInvite={() => setInviteOpen(true)}
+              onLeave={handleLeave}
+              chatOpen={chatOpen}
+              onToggleChat={() => setChatOpen((v) => !v)}
+            />
+          </div>
+          {chatOpen ? <ChatPanel onClose={() => setChatOpen(false)} /> : null}
+        </div>
         <RoomAudioRenderer />
       </LiveKitRoom>
       {/* Composer clinique MEDOS (praticien seul) ; le patient voit le partage
@@ -291,6 +303,141 @@ function VideoTiles({ tracks, variant }: { tracks: any[]; variant: 'stage' | 'st
   );
 }
 
+// ── Face-à-face (appel vidéo) : grand interlocuteur + soi en incrustation ─────
+function FaceToFace({ tracks }: { tracks: any[] }) {
+  const cams = tracks.filter((t) => t?.source === Track.Source.Camera);
+  const screen = tracks.find((t) => t?.source === Track.Source.ScreenShare && t?.publication);
+  const remotes = cams.filter((t) => !t?.participant?.isLocal);
+  const local = cams.find((t) => t?.participant?.isLocal) || null;
+
+  // Grand plan = partage d'écran si présent, sinon l'interlocuteur, sinon soi.
+  const big = screen || remotes[0] || local;
+  // Incrustation = soi (si on regarde l'autre en grand) ; si on partage l'écran,
+  // l'incrustation montre plutôt l'interlocuteur.
+  const pip = screen ? remotes[0] || local : remotes[0] ? local : null;
+  const extras = remotes.slice(1); // 3ᵉ+ participant (proche)
+  const alone = remotes.length === 0 && !screen;
+
+  if (!big) {
+    return (
+      <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: '#9ca3af', fontSize: 14 }}>
+        Connexion vidéo…
+      </div>
+    );
+  }
+  return (
+    <div style={{ position: 'relative', height: '100%', borderRadius: 18, overflow: 'hidden', background: TILE_BG, border: '1px solid rgba(255,255,255,0.06)' }}>
+      <ParticipantTile trackRef={big} style={{ width: '100%', height: '100%' }} />
+
+      {/* Incrustation « soi » en bas à droite (façon appel vidéo). */}
+      {pip ? (
+        <div style={{ position: 'absolute', right: 16, bottom: 16, width: 216, aspectRatio: '16 / 9', borderRadius: 12, overflow: 'hidden', background: '#000', border: '2px solid rgba(255,255,255,0.28)', boxShadow: '0 12px 34px rgba(0,0,0,0.55)', zIndex: 2 }}>
+          <ParticipantTile trackRef={pip} style={{ width: '100%', height: '100%' }} />
+        </div>
+      ) : null}
+
+      {/* Participants supplémentaires (proche) en colonne, en haut à droite. */}
+      {extras.length > 0 ? (
+        <div style={{ position: 'absolute', right: 16, top: 16, display: 'flex', flexDirection: 'column', gap: 10, zIndex: 2 }}>
+          {extras.map((t, i) => (
+            <div key={tileKey(t, i)} style={{ width: 168, aspectRatio: '16 / 9', borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
+              <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {/* En attente de l'interlocuteur (on se voit en grand). */}
+      {alone ? (
+        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', pointerEvents: 'none' }}>
+          <span style={{ background: 'rgba(0,0,0,0.55)', color: '#fff', padding: '9px 18px', borderRadius: 999, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: GOLD }} /> En attente de votre interlocuteur…
+          </span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// ── Panneau de discussion écrite (chat natif LiveKit, en direct) ─────────────
+function fmtChatTime(ts: number): string {
+  try {
+    return new Date(ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  } catch {
+    return '';
+  }
+}
+
+export function ChatPanel({ onClose }: { onClose: () => void }) {
+  const { chatMessages, send, isSending } = useChat();
+  const { localParticipant } = useLocalParticipant();
+  const [text, setText] = useState('');
+  const endRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages.length]);
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const t = text.trim();
+    if (!t || isSending) return;
+    send(t).catch(() => {});
+    setText('');
+  };
+
+  return (
+    <div style={{ width: 340, flexShrink: 0, background: 'rgba(18,18,20,0.98)', borderLeft: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <MessageSquare size={16} color={GOLD} aria-hidden="true" />
+        <span style={{ fontWeight: 600, fontSize: 14, color: '#fff' }}>Discussion</span>
+        <button onClick={onClose} aria-label="Fermer la discussion" style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', display: 'inline-flex' }}>
+          <X size={16} />
+        </button>
+      </div>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 9 }}>
+        {chatMessages.length === 0 ? (
+          <p style={{ margin: 'auto', textAlign: 'center', fontSize: 12.5, color: '#6b7280', maxWidth: 240, lineHeight: 1.5 }}>
+            Aucun message. Écrivez ici pendant la consultation — visible par tous les participants.
+          </p>
+        ) : (
+          chatMessages.map((m, i) => {
+            const mine = m.from?.identity === localParticipant?.identity;
+            return (
+              <div key={i} style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '86%' }}>
+                {!mine ? (
+                  <div style={{ fontSize: 11, color: '#9ca3af', margin: '0 4px 2px' }}>{m.from?.name || m.from?.identity || 'Invité'}</div>
+                ) : null}
+                <div style={{ background: mine ? GOLD : 'rgba(255,255,255,0.08)', color: mine ? '#1a1a1a' : '#f3f4f6', padding: '8px 11px', borderRadius: 13, fontSize: 13.5, lineHeight: 1.45, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                  {m.message}
+                </div>
+                <div style={{ fontSize: 10, color: '#6b7280', textAlign: mine ? 'right' : 'left', margin: '2px 4px 0' }}>{fmtChatTime(m.timestamp)}</div>
+              </div>
+            );
+          })
+        )}
+        <div ref={endRef} />
+      </div>
+      <form onSubmit={submit} style={{ display: 'flex', gap: 8, padding: 10, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Écrire un message…"
+          style={{ flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13.5, outline: 'none' }}
+        />
+        <button
+          type="submit"
+          disabled={isSending || !text.trim()}
+          aria-label="Envoyer"
+          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 42, borderRadius: 10, border: 'none', cursor: 'pointer', background: GOLD, color: '#1a1a1a', opacity: !text.trim() || isSending ? 0.5 : 1 }}
+        >
+          <Send size={17} />
+        </button>
+      </form>
+    </div>
+  );
+}
+
 // ── Scène : rend la vue pilotée par le praticien ─────────────────────────────
 export function ConsultationStage({
   view,
@@ -315,11 +462,11 @@ export function ConsultationStage({
     { onlySubscribed: false },
   );
 
-  // CONVERSATION : visages au centre.
+  // CONVERSATION : face-à-face — grand flux de l'interlocuteur + soi en incrustation.
   if (view === 'conversation') {
     return (
-      <div style={{ flex: 1, minHeight: 0, padding: 16 }}>
-        <VideoTiles tracks={tracks} variant="stage" />
+      <div style={{ flex: 1, minHeight: 0, padding: 14 }}>
+        <FaceToFace tracks={tracks} />
       </div>
     );
   }
@@ -400,6 +547,8 @@ function ConsultationBar({
   onClearStrokes,
   onInvite,
   onLeave,
+  chatOpen,
+  onToggleChat,
 }: {
   isHost: boolean;
   annotatable: boolean;
@@ -409,6 +558,8 @@ function ConsultationBar({
   onClearStrokes: () => void;
   onInvite: () => void;
   onLeave: () => void;
+  chatOpen: boolean;
+  onToggleChat: () => void;
 }) {
   const room = useRoomContext();
   const leave = () => {
@@ -458,6 +609,13 @@ function ConsultationBar({
           <UserPlus size={15} aria-hidden="true" /> Inviter un proche
         </button>
       ) : null}
+      <button
+        onClick={onToggleChat}
+        aria-pressed={chatOpen}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 9, border: 'none', cursor: 'pointer', background: chatOpen ? GOLD : 'rgba(255,255,255,0.1)', color: chatOpen ? '#1a1a1a' : '#fff', fontSize: 13, fontWeight: 600 }}
+      >
+        <MessageSquare size={15} aria-hidden="true" /> Discussion
+      </button>
       <button
         onClick={leave}
         style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 9, border: 'none', cursor: 'pointer', background: '#b1372f', color: '#fff', fontSize: 13, fontWeight: 600 }}
