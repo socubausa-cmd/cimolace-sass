@@ -41,16 +41,49 @@ const ECOLE_THEME_VARS = {
   '--school-accent-rgb': '217 119 87',
 };
 
-// Certaines surfaces (CalendarSection…) hardcodent des bleus navy → remappés sombre CHAUD.
+// HARMONISATION CHROMATIQUE : les surfaces back-office gardent l'ancien thème « premium »
+// ISNA (navy #121a25/#192734 + violet + or) → on le REMAPPE en chaud, scopé .ecole-warm-scope.
+// Sélecteurs [class*="…"] = robustes à l'opacité (bg-[#121A25]/70 etc.) ; + variables CSS
+// premium + classes globales .premium-*. On préserve vert/rouge (sémantique succès/danger).
 const ECOLE_WARM_CSS = `
-.ecole-warm-scope .bg-\\[\\#0F1419\\],
-.ecole-warm-scope .bg-\\[\\#0F1419\\]\\/50,
-.ecole-warm-scope .bg-\\[\\#0F1419\\]\\/30,
-.ecole-warm-scope .bg-\\[\\#0F1419\\]\\/20 { background-color: #191512 !important; }
-.ecole-warm-scope .bg-\\[\\#192734\\] { background-color: #221f1b !important; }
-.ecole-warm-scope .bg-\\[\\#16202A\\] { background-color: #1d1916 !important; }
-.ecole-warm-scope .from-\\[\\#192734\\] { --tw-gradient-from: #221f1b var(--tw-gradient-from-position) !important; }
-.ecole-warm-scope .to-\\[\\#0F1419\\] { --tw-gradient-to: #191512 var(--tw-gradient-to-position) !important; }
+.ecole-warm-scope {
+  --premium-surface: #1d1916;
+  --premium-surface-2: #221f1b;
+  --bg-navy: #1d1916;
+  --liri-gold: #d6953f;
+  --primary-gold: #d6953f;
+}
+.ecole-warm-scope .premium-panel,
+.ecole-warm-scope .premium-card { background: #1d1916 !important; border-color: rgba(245,241,233,0.10) !important; }
+.ecole-warm-scope .premium-dashboard-shell { background-image: none !important; padding: 0 !important; min-height: 0 !important; }
+.ecole-warm-scope [class*="bg-[#0F1419]"],
+.ecole-warm-scope [class*="bg-[#121A25]"],
+.ecole-warm-scope [class*="bg-[#121a25]"],
+.ecole-warm-scope [class*="bg-[#192734]"],
+.ecole-warm-scope [class*="bg-[#16202A]"] { background-color: #1d1916 !important; }
+.ecole-warm-scope [class*="border-[#192734]"],
+.ecole-warm-scope [class*="border-[#121A25]"] { border-color: rgba(245,241,233,0.10) !important; }
+.ecole-warm-scope [class*="from-[#192734]"],
+.ecole-warm-scope [class*="from-[#0F1419]"],
+.ecole-warm-scope [class*="from-[#121A25]"] { --tw-gradient-from: #221f1b var(--tw-gradient-from-position) !important; }
+.ecole-warm-scope [class*="to-[#0F1419]"],
+.ecole-warm-scope [class*="to-[#121A25]"] { --tw-gradient-to: #191512 var(--tw-gradient-to-position) !important; }
+.ecole-warm-scope [class*="bg-[#b5952f]"],
+.ecole-warm-scope [class*="bg-[#c4a030]"],
+.ecole-warm-scope [class*="bg-[#9a7b1f]"],
+.ecole-warm-scope [class*="bg-[#D4AF37]"] { background-color: #c8893f !important; }
+.ecole-warm-scope [class*="text-[#b5952f]"],
+.ecole-warm-scope [class*="text-[#f0d98a]"],
+.ecole-warm-scope [class*="text-[#c4a030]"] { color: #e6b066 !important; }
+.ecole-warm-scope [class*="from-[#e8c45a]"],
+.ecole-warm-scope [class*="from-[#f0d98a]"] { --tw-gradient-from: #e0a86a var(--tw-gradient-from-position) !important; }
+.ecole-warm-scope [class*="to-[#e8c45a]"],
+.ecole-warm-scope [class*="to-[#f0d98a]"] { --tw-gradient-to: #c8893f var(--tw-gradient-to-position) !important; }
+.ecole-warm-scope [class*="bg-[#7C3AED]"],
+.ecole-warm-scope [class*="bg-[#0EA5E9]"],
+.ecole-warm-scope [class*="bg-[#3B82F6]"] { background-color: #d97757 !important; }
+.ecole-warm-scope [class*="text-[#7C3AED]"],
+.ecole-warm-scope [class*="text-[#0EA5E9]"] { color: #e58a5f !important; }
 `;
 
 const ECOLE_SERVICE_KEYS = ['course_builder', 'school', 'school_module', 'formations'];
