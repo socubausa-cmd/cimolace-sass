@@ -16,17 +16,21 @@ export default function ImmersiveBootLoader({
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 2147483000, background: '#0b0b0c', display: 'grid', placeItems: 'center', padding: 24 }}>
       <div style={{ textAlign: 'center' }}>
-        {/* Logo LIRI animé : respiration + anneau d'accent rotatif + halo pulsé. */}
-        <div style={{ position: 'relative', width: 104, height: 104, margin: '0 auto 24px' }}>
-          <div style={{ position: 'absolute', inset: -18, borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,119,87,0.32), transparent 70%)', animation: 'liriboot-glow 2.2s ease-in-out infinite' }} />
-          <div style={{ position: 'absolute', inset: -6, borderRadius: '50%', border: '2px solid transparent', borderTopColor: '#d97757', borderRightColor: 'rgba(217,119,87,0.45)', animation: 'liriboot-spin 1.1s linear infinite' }} />
+        {/* Logo LIRI animé : respiration + anneau d'accent rotatif + halo clair. */}
+        <div style={{ position: 'relative', width: 124, height: 124, margin: '0 auto 16px' }}>
+          {/* halo clair qui « lève » le mark doré sur le fond sombre */}
+          <div style={{ position: 'absolute', inset: -24, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.10) 0%, rgba(217,119,87,0.28) 38%, transparent 72%)', animation: 'liriboot-glow 2.2s ease-in-out infinite' }} />
+          {/* anneau d'accent rotatif */}
+          <div style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: '2px solid transparent', borderTopColor: '#d97757', borderRightColor: 'rgba(217,119,87,0.45)', animation: 'liriboot-spin 1.1s linear infinite' }} />
+          {/* le logo (le même que le portail LIRI) */}
           <img
             src="/lirilogo.png"
             alt="LIRI"
-            style={{ position: 'absolute', inset: 6, width: 'calc(100% - 12px)', height: 'calc(100% - 12px)', objectFit: 'contain', animation: 'liriboot-breathe 2.2s ease-in-out infinite' }}
+            style={{ position: 'absolute', inset: 12, width: 'calc(100% - 24px)', height: 'calc(100% - 24px)', objectFit: 'contain', filter: 'drop-shadow(0 4px 14px rgba(0,0,0,0.55))', animation: 'liriboot-breathe 2.2s ease-in-out infinite' }}
           />
         </div>
-        <h2 style={{ margin: '0 0 7px', fontSize: 17.5, fontWeight: 600, color: '#fff', letterSpacing: 0.2 }}>{message}</h2>
+        <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: 4, color: '#fff', marginBottom: 16 }}>LIRI</div>
+        <h2 style={{ margin: '0 0 7px', fontSize: 17, fontWeight: 600, color: '#fff', letterSpacing: 0.2 }}>{message}</h2>
         <p style={{ margin: 0, fontSize: 13, color: '#9ca3af' }}>{submessage}</p>
       </div>
       <style>{`
