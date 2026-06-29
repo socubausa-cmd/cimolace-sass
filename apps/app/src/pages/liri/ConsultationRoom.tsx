@@ -30,7 +30,7 @@ import {
   useTracks,
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
-import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send } from 'lucide-react';
+import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -41,6 +41,12 @@ import { useCockpitChannel, type AnnotStroke, type ConsultView } from '@/feature
 import { SharedSceneView, CockpitDock } from '@/features/medos-cockpit/MedTeleconsultCockpit';
 import { AnnotationOverlay } from '@/features/medos-cockpit/AnnotationOverlay';
 import ImmersiveBootLoader from '@/components/liri/ImmersiveBootLoader';
+// ── Briques de la salle de téléconsultation (features/consultation-stage) ─────
+import AmbientAudioEngine, { useAmbientAudio } from '@/features/consultation-stage/AmbientAudioEngine';
+import ConsultationSettings, { ConsultationSettingsButton } from '@/features/consultation-stage/ConsultationSettings';
+import ConsultationSmartBoard from '@/features/consultation-stage/ConsultationSmartBoard';
+import ConsultationCopilot from '@/features/consultation-stage/ConsultationCopilot';
+import ConsultationRecall from '@/features/consultation-stage/ConsultationRecall';
 
 const BG = '#0b0b0c';
 const BAR = 'rgba(22,22,24,0.94)';
@@ -129,7 +135,15 @@ export default function ConsultationRoom() {
   const [annotate, setAnnotate] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [left, setLeft] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
+  // Panneau de droite : un seul ouvert à la fois (façon appel vidéo).
+  //   null | 'chat' | 'copilot' | 'recall'
+  const [rightPanel, setRightPanel] = useState<'chat' | 'copilot' | 'recall' | null>(null);
+  // Réglages : popover ancré au-dessus de la barre. Le fond sonore est logé dans
+  // ce panneau (contrôleur partagé avec la pastille flottante autonome).
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  // Contrôleur d'ambiance partagé : piloté DANS le panneau Réglages ET reflété par
+  // la pastille flottante (host) — même état audio des deux côtés.
+  const ambient = useAmbientAudio();
   const hasScene = !!scene && scene.kind !== 'clear';
   // Annotable seulement quand il y a une surface à annoter : le tableau, ou un
   // partage avec un artefact réellement affiché (pas sur un partage vide).
@@ -177,7 +191,7 @@ export default function ConsultationRoom() {
         style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
       >
         {/* Corps : colonne principale (chrome + scène + barre) + panneau de
-            discussion écrite à droite (toggle), façon appel vidéo. */}
+            droite (discussion / copilote / récap), façon appel vidéo. */}
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <ConsultationChrome
@@ -193,21 +207,46 @@ export default function ConsultationRoom() {
               strokes={strokes}
               editable={annotate && isHost && annotatable}
               onStrokes={channel.shareStrokes}
+              sessionId={sessionId ?? null}
             />
-            <ConsultationBar
-              isHost={isHost}
-              annotatable={annotatable}
-              annotate={annotate}
-              onToggleAnnotate={() => setAnnotate((v) => !v)}
-              hasStrokes={strokes.length > 0}
-              onClearStrokes={channel.clearStrokes}
-              onInvite={() => setInviteOpen(true)}
-              onLeave={handleLeave}
-              chatOpen={chatOpen}
-              onToggleChat={() => setChatOpen((v) => !v)}
-            />
+            {/* Wrapper positionné : ancre le popover Réglages au-dessus de la barre
+                (reste DANS <LiveKitRoom> → ConsultationSettings lit le contexte salle). */}
+            <div style={{ position: 'relative' }}>
+              <ConsultationSettings
+                open={settingsOpen}
+                onClose={() => setSettingsOpen(false)}
+                showAmbientSection
+              >
+                {/* Fond sonore piloté inline dans le panneau Réglages. */}
+                <AmbientInlineControls ctl={ambient} />
+              </ConsultationSettings>
+              <ConsultationBar
+                isHost={isHost}
+                annotatable={annotatable}
+                annotate={annotate}
+                onToggleAnnotate={() => setAnnotate((v) => !v)}
+                hasStrokes={strokes.length > 0}
+                onClearStrokes={channel.clearStrokes}
+                onInvite={() => setInviteOpen(true)}
+                onLeave={handleLeave}
+                rightPanel={rightPanel}
+                onToggleChat={() => setRightPanel((p) => (p === 'chat' ? null : 'chat'))}
+                onToggleCopilot={() => setRightPanel((p) => (p === 'copilot' ? null : 'copilot'))}
+                onToggleRecall={() => setRightPanel((p) => (p === 'recall' ? null : 'recall'))}
+                settingsOpen={settingsOpen}
+                onToggleSettings={() => setSettingsOpen((v) => !v)}
+                ambientPlaying={ambient.playing}
+              />
+            </div>
           </div>
-          {chatOpen ? <ChatPanel onClose={() => setChatOpen(false)} /> : null}
+          {/* Panneau de droite — un seul ouvert à la fois. */}
+          {rightPanel === 'chat' ? <ChatPanel onClose={() => setRightPanel(null)} /> : null}
+          {rightPanel === 'copilot' && isHost ? (
+            <CopilotPanel sessionId={sessionId} onClose={() => setRightPanel(null)} />
+          ) : null}
+          {rightPanel === 'recall' && isHost && sessionId ? (
+            <ConsultationRecall sessionId={sessionId} patientName={ctx?.patient_name} onClose={() => setRightPanel(null)} />
+          ) : null}
         </div>
         <RoomAudioRenderer />
       </LiveKitRoom>
@@ -219,6 +258,9 @@ export default function ConsultationRoom() {
         <InviteProcheModal sessionId={sessionId} open={inviteOpen} onClose={() => setInviteOpen(false)} />
       ) : null}
       {!isHost && sessionId ? <PatientConsentGate sessionId={sessionId} /> : null}
+      {/* Fond sonore — pastille flottante autonome (praticien), pilotée par le même
+          contrôleur que le panneau Réglages. */}
+      {isHost ? <AmbientAudioEngine controller={ambient} /> : null}
     </div>
   );
   // Plein écran : portal vers <body> pour échapper à tout ancêtre containing-block
@@ -478,6 +520,90 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
+// ── Fond sonore : contrôles inline (logés dans le panneau Réglages) ──────────
+// Pilote le contrôleur `useAmbientAudio` partagé (le même que la pastille
+// flottante). Grille de presets + lecture/pause + volume, en styles inline GOLD.
+function AmbientInlineControls({ ctl }: { ctl: ReturnType<typeof useAmbientAudio> }) {
+  const { presets, presetId, preset, volume, playing, selectPreset, setVolume, togglePlay } = ctl;
+  const hasSource = !!preset.src;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+        {presets.map((p) => {
+          const active = presetId === p.id;
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => selectPreset(p.id)}
+              aria-pressed={active}
+              title={p.label}
+              style={{
+                height: 46, borderRadius: 11, cursor: 'pointer',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+                fontSize: 9.5, lineHeight: 1.1,
+                border: active ? `1px solid ${GOLD}` : '1px solid rgba(255,255,255,0.1)',
+                background: active ? 'rgba(176,141,87,0.16)' : 'rgba(255,255,255,0.03)',
+                color: active ? GOLD : 'rgba(255,255,255,0.62)',
+              }}
+            >
+              <span aria-hidden="true" style={{ fontSize: 16, lineHeight: 1 }}>{p.icon}</span>
+              <span style={{ maxWidth: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.label}</span>
+            </button>
+          );
+        })}
+      </div>
+      {hasSource ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            type="button"
+            onClick={togglePlay}
+            aria-label={playing ? 'Mettre en pause' : 'Lire'}
+            style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 32, height: 32, borderRadius: '50%', border: 'none', flexShrink: 0, cursor: 'pointer',
+              background: playing ? GOLD : 'rgba(255,255,255,0.1)', color: playing ? '#1a1a1a' : '#fff',
+            }}
+          >
+            {playing ? <Pause size={15} aria-hidden="true" /> : <Play size={15} aria-hidden="true" />}
+          </button>
+          <input
+            type="range" min={0} max={100} value={volume}
+            onChange={(e) => setVolume(Number(e.target.value))}
+            aria-label="Volume du fond sonore"
+            style={{ flex: 1, minWidth: 0, height: 3, cursor: 'pointer', accentColor: GOLD }}
+          />
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', width: 30, textAlign: 'right', flexShrink: 0 }}>{volume}%</span>
+        </div>
+      ) : (
+        <p style={{ margin: 0, fontSize: 11.5, color: '#6b7280', lineHeight: 1.5 }}>
+          Choisissez une ambiance pour adoucir la consultation.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ── Copilote IA : enveloppe de panneau de droite (en-tête + fermeture) ────────
+// ConsultationCopilot se rend inline (floating=false) ; on l'habille en colonne
+// de droite façon ChatPanel, avec un bandeau et un bouton de fermeture.
+function CopilotPanel({ sessionId, onClose }: { sessionId: string | undefined; onClose: () => void }) {
+  return (
+    <div style={{ width: 300, flexShrink: 0, background: 'rgba(18,18,20,0.98)', borderLeft: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <Sparkles size={16} color={GOLD} aria-hidden="true" />
+        <span style={{ fontWeight: 600, fontSize: 14, color: '#fff' }}>Copilote IA</span>
+        <button onClick={onClose} aria-label="Fermer le copilote" style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', display: 'inline-flex' }}>
+          <X size={16} />
+        </button>
+      </div>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 12 }}>
+        <ConsultationCopilot sessionId={sessionId} floating={false} style={{ width: '100%' }} />
+      </div>
+    </div>
+  );
+}
+
 // ── Scène : rend la vue pilotée par le praticien ─────────────────────────────
 export function ConsultationStage({
   view,
@@ -486,6 +612,7 @@ export function ConsultationStage({
   strokes,
   editable,
   onStrokes,
+  sessionId,
 }: {
   view: ConsultView;
   isHost: boolean;
@@ -493,6 +620,7 @@ export function ConsultationStage({
   strokes: AnnotStroke[];
   editable: boolean;
   onStrokes: (s: AnnotStroke[]) => void;
+  sessionId: string | null;
 }) {
   const tracks = useTracks(
     [
@@ -516,15 +644,21 @@ export function ConsultationStage({
   const hasScene = !!scene && scene.kind !== 'clear';
   return (
     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'row', gap: 12, padding: 14 }}>
-      <div style={{ flex: 1, minWidth: 0, borderRadius: 16, overflow: 'hidden', position: 'relative', background: '#fff' }}>
+      <div style={{ flex: 1, minWidth: 0, borderRadius: 16, overflow: 'hidden', position: 'relative', background: view === 'board' ? '#0b0b0c' : '#fff' }}>
         {view === 'board' ? (
-          <BoardSurface hasStrokes={strokes.length > 0} editable={editable} isHost={isHost} />
+          // Tableau intelligent (SmartBoard Konva) — outils de dessin/formes/texte +
+          // NeuroInk côté praticien ; lecture seule côté patient. Remplace l'ancien
+          // BoardSurface passif. (Sync patient temps-réel : itération ultérieure —
+          // cf. note onBroadcast.)
+          <ConsultationSmartBoard sessionId={sessionId} isHost={isHost} viewerMode={!isHost} />
         ) : hasScene ? (
           <SharedSceneView scene={scene} />
         ) : (
           <SharePlaceholder />
         )}
-        {(view === 'board' || hasScene) ? (
+        {/* L'overlay d'annotation SVG reste pour le PARTAGE d'artefact ; le tableau
+            Konva a ses propres outils de dessin (pas de double calque). */}
+        {hasScene && view !== 'board' ? (
           <AnnotationOverlay strokes={strokes} editable={editable} onStrokes={onStrokes} />
         ) : null}
       </div>
@@ -554,34 +688,6 @@ function MembersRail({ tracks }: { tracks: any[] }) {
   );
 }
 
-// Tableau blanc (mode Tableau) : grille de points discrète + invite si vide.
-function BoardSurface({ hasStrokes, editable, isHost }: { hasStrokes: boolean; editable: boolean; isHost: boolean }) {
-  const hint = editable
-    ? 'Dessinez pour expliquer.'
-    : isHost
-      ? 'Activez « Annoter » pour dessiner.'
-      : 'Le praticien va dessiner ici.';
-  return (
-    <div
-      style={{
-        position: 'absolute', inset: 0,
-        backgroundColor: '#fcfcfd',
-        backgroundImage: 'radial-gradient(rgba(17,24,39,0.07) 1px, transparent 1px)',
-        backgroundSize: '22px 22px',
-        display: 'grid', placeItems: 'center',
-      }}
-    >
-      {!hasStrokes ? (
-        <div style={{ textAlign: 'center', color: '#9ca3af', pointerEvents: 'none' }}>
-          <Presentation size={30} style={{ margin: '0 auto 10px', opacity: 0.6 }} aria-hidden="true" />
-          <p style={{ fontSize: 14, fontWeight: 600, color: '#6b7280' }}>Tableau</p>
-          <p style={{ fontSize: 12.5 }}>{hint}</p>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
 // Vue Partage sans artefact encore choisi (host).
 function SharePlaceholder() {
   return (
@@ -607,8 +713,13 @@ function ConsultationBar({
   onClearStrokes,
   onInvite,
   onLeave,
-  chatOpen,
+  rightPanel,
   onToggleChat,
+  onToggleCopilot,
+  onToggleRecall,
+  settingsOpen,
+  onToggleSettings,
+  ambientPlaying,
 }: {
   isHost: boolean;
   annotatable: boolean;
@@ -618,8 +729,13 @@ function ConsultationBar({
   onClearStrokes: () => void;
   onInvite: () => void;
   onLeave: () => void;
-  chatOpen: boolean;
+  rightPanel: 'chat' | 'copilot' | 'recall' | null;
   onToggleChat: () => void;
+  onToggleCopilot: () => void;
+  onToggleRecall: () => void;
+  settingsOpen: boolean;
+  onToggleSettings: () => void;
+  ambientPlaying: boolean;
 }) {
   const room = useRoomContext();
   const leave = () => {
@@ -671,11 +787,43 @@ function ConsultationBar({
       ) : null}
       <button
         onClick={onToggleChat}
-        aria-pressed={chatOpen}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 9, border: 'none', cursor: 'pointer', background: chatOpen ? GOLD : 'rgba(255,255,255,0.1)', color: chatOpen ? '#1a1a1a' : '#fff', fontSize: 13, fontWeight: 600 }}
+        aria-pressed={rightPanel === 'chat'}
+        style={barBtn(rightPanel === 'chat')}
       >
         <MessageSquare size={15} aria-hidden="true" /> Discussion
       </button>
+      {isHost ? (
+        <button
+          onClick={onToggleCopilot}
+          aria-pressed={rightPanel === 'copilot'}
+          title="Copilote IA du tableau"
+          style={barBtn(rightPanel === 'copilot')}
+        >
+          <Sparkles size={15} aria-hidden="true" /> Copilote
+        </button>
+      ) : null}
+      {isHost ? (
+        <button
+          onClick={onToggleRecall}
+          aria-pressed={rightPanel === 'recall'}
+          title="Générer le récap de consultation"
+          style={barBtn(rightPanel === 'recall')}
+        >
+          <Brain size={15} aria-hidden="true" /> Récap
+        </button>
+      ) : null}
+      {/* Ambiance : raccourci visuel vers le fond sonore (logé dans Réglages). */}
+      {isHost ? (
+        <button
+          onClick={onToggleSettings}
+          aria-pressed={ambientPlaying}
+          title="Fond sonore (dans les Réglages)"
+          style={barBtn(ambientPlaying)}
+        >
+          <Music2 size={15} aria-hidden="true" /> Ambiance
+        </button>
+      ) : null}
+      <ConsultationSettingsButton open={settingsOpen} onToggle={onToggleSettings} />
       <button
         onClick={leave}
         style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 9, border: 'none', cursor: 'pointer', background: '#b1372f', color: '#fff', fontSize: 13, fontWeight: 600 }}
@@ -684,6 +832,16 @@ function ConsultationBar({
       </button>
     </div>
   );
+}
+
+// Style commun des pilules de la barre (état actif = fond GOLD).
+function barBtn(active: boolean): React.CSSProperties {
+  return {
+    display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 9,
+    border: 'none', cursor: 'pointer',
+    background: active ? GOLD : 'rgba(255,255,255,0.1)',
+    color: active ? '#1a1a1a' : '#fff', fontSize: 13, fontWeight: 600,
+  };
 }
 
 // ── Inviter un proche (host) + consentement RGPD (patient) ───────────────────

@@ -1,0 +1,384 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// MOTEUR AUDIO — FOND SONORE DE CONSULTATION (MEDOS / salle de téléconsultation)
+//
+// Composant AUTONOME : un petit panneau de contrôle flottant pour poser une
+// ambiance douce pendant la consultation (Silence, Nature, Océan, Pluie, Café,
+// Lo-Fi, Feu, Focus). Play/pause + slider de volume.
+//
+// RÉUTILISE les ambiances éprouvées de LIRI (cf. AUDIO_PRESETS de
+// components/liri/live-room/LiveSettingsPanel.jsx — mêmes id/label/icône/URL
+// Pixabay). Ce panneau n'EXPORTE pas son tableau ; on le re-déclare ici à
+// l'identique pour rester découplé (LiveSettingsPanel = .jsx + Tailwind + var
+// CSS --school-accent), au lieu d'importer un module non conçu pour cet usage.
+//
+// LECTURE : HTML5 <Audio> en boucle (même logique que LiveSettingsPanel :
+// el.volume = pct/100, el.loop = true, el.play().catch()). N'interfère PAS avec
+// les pistes micro/caméra LiveKit (flux <audio> indépendant côté navigateur).
+//
+// PAR DÉFAUT : COUPÉ (pause) + volume BAS. Le praticien démarre l'ambiance
+// explicitement. Styles inline + GOLD + icônes lucide-react comme
+// ConsultationRoom (pas de Tailwind, pas de dépendance à --school-accent).
+// ─────────────────────────────────────────────────────────────────────────────
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Music2, Volume1, Volume2, VolumeX, Play, Pause, ChevronUp, ChevronDown } from 'lucide-react';
+
+const GOLD = '#b08d57';
+const PANEL_BG = 'rgba(22,22,24,0.94)';
+
+// ── Presets d'ambiance ───────────────────────────────────────────────────────
+// IDENTIQUE à LiveSettingsPanel.AUDIO_PRESETS (réutilisation des sources LIRI).
+// `src=null` ⇒ Silence (coupe le son sans démonter l'élément <audio>).
+export type AmbiencePreset = {
+  id: string;
+  label: string;
+  icon: string;
+  src: string | null;
+};
+
+export const AMBIENCE_PRESETS: AmbiencePreset[] = [
+  { id: 'none', label: 'Silence', icon: '🔇', src: null },
+  { id: 'nature', label: 'Nature', icon: '🌿', src: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_8cb749b581.mp3' },
+  { id: 'ocean', label: 'Océan', icon: '🌊', src: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d1718ab41b.mp3' },
+  { id: 'rain', label: 'Pluie', icon: '🌧️', src: 'https://cdn.pixabay.com/download/audio/2022/03/24/audio_9fcb7a1d0a.mp3' },
+  { id: 'fire', label: 'Feu', icon: '🔥', src: 'https://cdn.pixabay.com/download/audio/2022/07/25/audio_b25d19c3f5.mp3' },
+  { id: 'cafe', label: 'Café', icon: '☕', src: 'https://cdn.pixabay.com/download/audio/2021/08/09/audio_dc39bde5b2.mp3' },
+  { id: 'lo-fi', label: 'Lo-Fi', icon: '🎵', src: 'https://cdn.pixabay.com/download/audio/2022/10/16/audio_b5a3ad6024.mp3' },
+  { id: 'focus', label: 'Focus', icon: '🎯', src: 'https://cdn.pixabay.com/download/audio/2022/11/17/audio_9ee6ccd4a9.mp3' },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HOOK : useAmbientAudio — toute la logique de lecture, sans UI.
+// Permet de piloter le fond sonore depuis un autre chrome si besoin.
+// ─────────────────────────────────────────────────────────────────────────────
+export type UseAmbientAudioOptions = {
+  /** Preset initial (défaut : 'none' = silence). */
+  initialPresetId?: string;
+  /** Volume initial 0–100 (défaut : 22 = bas, conforme à l'esprit LIRI 0.22). */
+  initialVolume?: number;
+  /** Démarrer en lecture (défaut : false = coupé). */
+  autoPlay?: boolean;
+};
+
+export type AmbientAudioController = {
+  presets: AmbiencePreset[];
+  presetId: string;
+  preset: AmbiencePreset;
+  /** 0–100 */
+  volume: number;
+  /** true si une piste audible est censée jouer. */
+  playing: boolean;
+  selectPreset: (id: string) => void;
+  setVolume: (v: number) => void;
+  togglePlay: () => void;
+  play: () => void;
+  pause: () => void;
+};
+
+const SILENCE_ID = 'none';
+
+function clampVolume(v: number): number {
+  if (!Number.isFinite(v)) return 0;
+  return Math.min(100, Math.max(0, Math.round(v)));
+}
+
+export function useAmbientAudio(options: UseAmbientAudioOptions = {}): AmbientAudioController {
+  const { initialPresetId = SILENCE_ID, initialVolume = 22, autoPlay = false } = options;
+
+  const presets = AMBIENCE_PRESETS;
+  const [presetId, setPresetId] = useState<string>(
+    presets.some((p) => p.id === initialPresetId) ? initialPresetId : SILENCE_ID,
+  );
+  const [volume, setVolumeState] = useState<number>(clampVolume(initialVolume));
+  // « playing » = intention de lecture. La lecture réelle ne sonne que si le
+  // preset a une source (≠ Silence) — Silence reste un état « pause sonore ».
+  const [playing, setPlaying] = useState<boolean>(!!autoPlay);
+
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const preset = useMemo(
+    () => presets.find((p) => p.id === presetId) ?? presets[0],
+    [presets, presetId],
+  );
+
+  // Élément <audio> unique, créé paresseusement (évite le SSR + 1 seul flux).
+  const ensureEl = useCallback((): HTMLAudioElement | null => {
+    if (typeof window === 'undefined') return null;
+    if (!audioRef.current) {
+      const el = new Audio();
+      el.loop = true;
+      el.preload = 'auto';
+      el.crossOrigin = 'anonymous';
+      // playsInline n'existe pas sur le type DOM standard → cast volontaire
+      // (utile iOS Safari pour autoriser la lecture inline).
+      (el as HTMLAudioElement & { playsInline?: boolean }).playsInline = true;
+      audioRef.current = el;
+    }
+    return audioRef.current;
+  }, []);
+
+  // Synchronise source + volume + état lecture sur l'élément.
+  useEffect(() => {
+    const el = ensureEl();
+    if (!el) return;
+
+    const src = preset.src;
+    const audible = playing && !!src;
+
+    if (!src) {
+      // Silence : on coupe sans détruire l'élément.
+      try {
+        el.pause();
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+
+    if (el.src !== src) {
+      el.src = src;
+      try {
+        el.load();
+      } catch {
+        /* ignore */
+      }
+    }
+    el.volume = clampVolume(volume) / 100;
+
+    if (audible) {
+      // play() peut être rejeté (autoplay policy) → silencieux, l'utilisateur
+      // a de toute façon déclenché via un clic dans la salle.
+      el.play().catch(() => {});
+    } else {
+      try {
+        el.pause();
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [ensureEl, preset.src, playing, volume]);
+
+  // Nettoyage : couper le flux à la destruction (sortie de consultation).
+  useEffect(() => {
+    return () => {
+      const el = audioRef.current;
+      if (el) {
+        try {
+          el.pause();
+          el.src = '';
+        } catch {
+          /* ignore */
+        }
+      }
+    };
+  }, []);
+
+  const selectPreset = useCallback((id: string) => {
+    setPresetId((prev) => (presets.some((p) => p.id === id) ? id : prev));
+    // Choisir une vraie ambiance = lancer la lecture ; choisir Silence = couper.
+    setPlaying(id !== SILENCE_ID);
+  }, [presets]);
+
+  const setVolume = useCallback((v: number) => setVolumeState(clampVolume(v)), []);
+  const play = useCallback(() => setPlaying(true), []);
+  const pause = useCallback(() => setPlaying(false), []);
+  const togglePlay = useCallback(() => setPlaying((p) => !p), []);
+
+  return {
+    presets,
+    presetId,
+    preset,
+    volume,
+    playing: playing && !!preset.src,
+    selectPreset,
+    setVolume,
+    togglePlay,
+    play,
+    pause,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PANNEAU DE CONTRÔLE (UI) — flottant, repliable, coin bas-gauche par défaut.
+// ─────────────────────────────────────────────────────────────────────────────
+export type AmbientAudioEngineProps = {
+  /** Replié au montage (défaut : true = pastille discrète). */
+  defaultCollapsed?: boolean;
+  /** Positionnement du conteneur (défaut : bas-gauche fixe). Override possible. */
+  style?: React.CSSProperties;
+  /** Réglages initiaux de lecture. */
+  initialPresetId?: string;
+  initialVolume?: number;
+  /** Contrôleur externe (si l'hôte gère déjà l'état via useAmbientAudio). */
+  controller?: AmbientAudioController;
+};
+
+const VOLUME_ICON_THRESHOLD_LOW = 45;
+
+function VolumeIcon({ volume, playing }: { volume: number; playing: boolean }) {
+  if (!playing || volume <= 0) return <VolumeX size={15} aria-hidden="true" />;
+  if (volume < VOLUME_ICON_THRESHOLD_LOW) return <Volume1 size={15} aria-hidden="true" />;
+  return <Volume2 size={15} aria-hidden="true" />;
+}
+
+export default function AmbientAudioEngine({
+  defaultCollapsed = true,
+  style,
+  initialPresetId,
+  initialVolume,
+  controller,
+}: AmbientAudioEngineProps) {
+  // Soit on consomme un contrôleur fourni, soit on en crée un local.
+  const localCtl = useAmbientAudio({ initialPresetId, initialVolume });
+  const ctl = controller ?? localCtl;
+
+  const [collapsed, setCollapsed] = useState<boolean>(defaultCollapsed);
+
+  const { presets, presetId, preset, volume, playing, selectPreset, setVolume, togglePlay } = ctl;
+  const hasSource = !!preset.src;
+
+  const containerStyle: React.CSSProperties = {
+    position: 'fixed',
+    left: 16,
+    bottom: 16,
+    zIndex: 2147483200,
+    width: collapsed ? 'auto' : 248,
+    background: PANEL_BG,
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 14,
+    boxShadow: '0 16px 44px rgba(0,0,0,0.5)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    color: '#fff',
+    overflow: 'hidden',
+    ...style,
+  };
+
+  // ── Replié : pastille (icône + libellé + play/pause rapide) ────────────────
+  if (collapsed) {
+    return (
+      <div style={containerStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px' }}>
+          <button
+            type="button"
+            onClick={togglePlay}
+            disabled={!hasSource}
+            aria-label={playing ? "Couper l'ambiance" : "Activer l'ambiance"}
+            title={!hasSource ? 'Choisissez une ambiance' : playing ? "Couper l'ambiance" : "Activer l'ambiance"}
+            style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 30, height: 30, borderRadius: '50%', border: 'none', flexShrink: 0,
+              cursor: hasSource ? 'pointer' : 'not-allowed',
+              background: playing ? GOLD : 'rgba(255,255,255,0.1)',
+              color: playing ? '#1a1a1a' : '#fff',
+              opacity: hasSource ? 1 : 0.55,
+            }}
+          >
+            {playing ? <Pause size={15} aria-hidden="true" /> : <Play size={15} aria-hidden="true" />}
+          </button>
+          <button
+            type="button"
+            onClick={() => setCollapsed(false)}
+            aria-label="Ouvrir le fond sonore"
+            title="Fond sonore"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 7, padding: '4px 6px',
+              background: 'transparent', border: 'none', cursor: 'pointer', color: '#fff',
+            }}
+          >
+            <span aria-hidden="true" style={{ fontSize: 15, lineHeight: 1 }}>{preset.icon}</span>
+            <span style={{ fontSize: 12.5, color: '#cbd5e1', maxWidth: 120, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {hasSource ? preset.label : 'Fond sonore'}
+            </span>
+            <ChevronUp size={14} color="#9ca3af" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Déplié : titre + grille de presets + play/volume ───────────────────────
+  return (
+    <div style={containerStyle}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <Music2 size={16} color={GOLD} aria-hidden="true" />
+        <span style={{ fontWeight: 600, fontSize: 13.5 }}>Fond sonore</span>
+        <button
+          type="button"
+          onClick={() => setCollapsed(true)}
+          aria-label="Réduire le fond sonore"
+          title="Réduire"
+          style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', display: 'inline-flex' }}
+        >
+          <ChevronDown size={16} aria-hidden="true" />
+        </button>
+      </div>
+
+      <div style={{ padding: 12 }}>
+        {/* Grille de presets (4 colonnes, comme LIRI). */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 12 }}>
+          {presets.map((p) => {
+            const active = presetId === p.id;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => selectPreset(p.id)}
+                aria-pressed={active}
+                title={p.label}
+                style={{
+                  height: 46, borderRadius: 11, cursor: 'pointer',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+                  fontSize: 9.5, lineHeight: 1.1,
+                  border: active ? `1px solid ${GOLD}` : '1px solid rgba(255,255,255,0.1)',
+                  background: active ? 'rgba(176,141,87,0.16)' : 'rgba(255,255,255,0.03)',
+                  color: active ? GOLD : 'rgba(255,255,255,0.62)',
+                  transition: 'background 0.15s, border-color 0.15s, color 0.15s',
+                }}
+              >
+                <span aria-hidden="true" style={{ fontSize: 16, lineHeight: 1 }}>{p.icon}</span>
+                <span style={{ maxWidth: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Play/pause + volume (masqué si Silence : rien à régler). */}
+        {hasSource ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              type="button"
+              onClick={togglePlay}
+              aria-label={playing ? 'Mettre en pause' : 'Lire'}
+              title={playing ? 'Pause' : 'Lecture'}
+              style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: 32, height: 32, borderRadius: '50%', border: 'none', flexShrink: 0, cursor: 'pointer',
+                background: playing ? GOLD : 'rgba(255,255,255,0.1)',
+                color: playing ? '#1a1a1a' : '#fff',
+              }}
+            >
+              {playing ? <Pause size={15} aria-hidden="true" /> : <Play size={15} aria-hidden="true" />}
+            </button>
+            <span style={{ color: '#9ca3af', display: 'inline-flex', flexShrink: 0 }}>
+              <VolumeIcon volume={volume} playing={playing} />
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={volume}
+              onChange={(e) => setVolume(Number(e.target.value))}
+              aria-label="Volume du fond sonore"
+              style={{ flex: 1, minWidth: 0, height: 3, cursor: 'pointer', accentColor: GOLD }}
+            />
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', width: 30, textAlign: 'right', flexShrink: 0 }}>{volume}%</span>
+          </div>
+        ) : (
+          <p style={{ margin: 0, fontSize: 11.5, color: '#6b7280', textAlign: 'center', lineHeight: 1.5 }}>
+            Choisissez une ambiance pour adoucir la consultation.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
