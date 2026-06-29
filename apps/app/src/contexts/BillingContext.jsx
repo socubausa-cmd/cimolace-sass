@@ -169,6 +169,33 @@ export const BillingProvider = ({ children, graceDays = GRACE_DAYS_DEFAULT }) =>
         if (prioErr) throw prioErr;
         fallbackSubscription = Array.isArray(prioritized) ? prioritized[0] || null : null;
       }
+      // Billing TENANT-scopé : un abonnement du tenant (souvent user_id=null,
+      // posé par le checkout tenant / webhook) débloque TOUS ses membres. Le
+      // repli par seul user_id le ratait → un tenant PAYANT (ex zahirwellness)
+      // était vu en GRATUIT (live coupé 3 min) si l'endpoint n'avait pas répondu
+      // (course au montage). Miroir du fix backend getSubscriptionStatus.
+      if (!fallbackSubscription) {
+        try {
+          const { data: mems } = await supabase
+            .from('tenant_memberships')
+            .select('tenant_id')
+            .eq('user_id', user.id);
+          const tenantIds = [...new Set((mems || []).map((m) => m.tenant_id).filter(Boolean))];
+          if (tenantIds.length) {
+            const { data: tenantSubs } = await supabase
+              .from('billing_subscriptions')
+              .select(fallbackSelect)
+              .in('tenant_id', tenantIds)
+              .in('status', ['active', 'past_due'])
+              .order('current_period_end', { ascending: false, nullsFirst: false })
+              .order('created_at', { ascending: false })
+              .limit(1);
+            if (Array.isArray(tenantSubs) && tenantSubs[0]) fallbackSubscription = tenantSubs[0];
+          }
+        } catch {
+          /* RLS / table absente : on conserve le comportement existant */
+        }
+      }
       if (!fallbackSubscription) {
         const { data: latest, error: latestErr } = await supabase
           .from('billing_subscriptions')
