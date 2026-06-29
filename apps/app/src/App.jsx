@@ -1046,6 +1046,8 @@ const AppContent = () => {
     '/dev/masterclass-factory',
     '/embed/',       // LIRI embed iframe — aucun shell
     '/handoff',      // handoff cross-domain (« Connexion à la salle ») — coque neutre, pas de shell école
+    '/teleconsult',  // salle de téléconsultation MEDOS (plein écran immersif) — pas de shell portail :
+                     // pendant le boot du handoff (MEDOS → app), on ne doit PAS voir le Header « …PORTAIL »
     '/liri',         // accueil LIRI standalone (LiriPortalShell a son propre topbar) — pas de header école
     '/messages',     // messagerie immersive (page plein écran, embarquée dans LIRI) — pas de header école
     '/owner-dashboard', // back-office École : LiriDashboardShell est auto-suffisant (sidebar+topbar+user)
