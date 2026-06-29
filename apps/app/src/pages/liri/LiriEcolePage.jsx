@@ -28,8 +28,8 @@ const ECOLE_BASE = '/liri/ecole';
 // Surfaces back-office : tokens `--lt-*` remappés en SOMBRE CHAUD (palette portail).
 const ECOLE_THEME_VARS = {
   '--lt-text': '#f5f1e9',
-  '--lt-sub': 'rgba(245,241,233,0.60)',
-  '--lt-muted': 'rgba(245,241,233,0.42)',
+  '--lt-sub': 'rgba(245,241,233,0.72)',
+  '--lt-muted': 'rgba(245,241,233,0.58)',
   '--lt-border': 'rgba(245,241,233,0.10)',
   '--lt-card-bg': '#211e1a',
   '--lt-card-border': 'rgba(245,241,233,0.08)',
@@ -98,6 +98,36 @@ const ECOLE_WARM_CSS = `
 .ecole-warm-scope [class*="bg-[#3B82F6]"] { background-color: #d97757 !important; }
 .ecole-warm-scope [class*="text-[#7C3AED]"],
 .ecole-warm-scope [class*="text-[#0EA5E9]"] { color: #e58a5f !important; }
+/* LISIBILITÉ : textes foncés (composants conçus pour le mode clair) → clairs sur le sombre */
+.ecole-warm-scope [class*="text-zinc-900"],
+.ecole-warm-scope [class*="text-zinc-800"],
+.ecole-warm-scope [class*="text-gray-900"],
+.ecole-warm-scope [class*="text-gray-800"],
+.ecole-warm-scope [class*="text-slate-900"],
+.ecole-warm-scope [class*="text-slate-800"],
+.ecole-warm-scope [class*="text-stone-900"],
+.ecole-warm-scope [class*="text-neutral-900"],
+.ecole-warm-scope [class*="text-black"] { color: #f5f1e9 !important; }
+.ecole-warm-scope [class*="text-zinc-500"],
+.ecole-warm-scope [class*="text-zinc-600"],
+.ecole-warm-scope [class*="text-zinc-700"],
+.ecole-warm-scope [class*="text-gray-500"],
+.ecole-warm-scope [class*="text-gray-600"],
+.ecole-warm-scope [class*="text-slate-500"],
+.ecole-warm-scope [class*="text-slate-600"] { color: rgba(245,241,233,0.64) !important; }
+/* textes froids (violet/indigo/bleu — ex. alertes) → chaud lisible (vert/rouge sémantiques préservés) */
+.ecole-warm-scope [class*="text-violet-"],
+.ecole-warm-scope [class*="text-purple-"],
+.ecole-warm-scope [class*="text-indigo-"],
+.ecole-warm-scope [class*="text-blue-"],
+.ecole-warm-scope [class*="text-sky-"],
+.ecole-warm-scope [class*="text-cyan-"] { color: #e8b9a4 !important; }
+/* MARIAGE : badges d'icônes à gradient FROID (violet/teal/indigo/bleu, inline) → gradient chaud */
+.ecole-warm-scope [class*="w-8"][class*="justify-center"][style*="gradient"],
+.ecole-warm-scope [class*="w-9"][class*="justify-center"][style*="gradient"],
+.ecole-warm-scope [class*="w-10"][class*="justify-center"][style*="gradient"],
+.ecole-warm-scope [class*="w-11"][class*="justify-center"][style*="gradient"],
+.ecole-warm-scope [class*="w-12"][class*="justify-center"][style*="gradient"] { background-image: linear-gradient(140deg, #e0905f 0%, #c2531f 100%) !important; }
 `;
 
 const ECOLE_SERVICE_KEYS = ['course_builder', 'school', 'school_module', 'formations'];
