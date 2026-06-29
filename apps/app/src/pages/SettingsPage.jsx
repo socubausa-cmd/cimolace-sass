@@ -6,6 +6,7 @@ import TenantPayoutProvidersForm from '@/components/settings/TenantPayoutProvide
 import PaymentMethodsManager from '@/components/settings/PaymentMethodsManager';
 import { AnimatePresence, motion } from 'framer-motion';
 import PremiumSegmentedSelector from '@/components/ui/premium-segmented-selector';
+import { usePortalTabs, useInPortalHeader } from '@/components/liri/portalHeader';
 import { Settings, CalendarDays, CreditCard, Shield, Bell, Plug } from 'lucide-react';
 
 import { FOUNDER_TENANT_CONFIG as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
@@ -23,6 +24,7 @@ const lightPanel = {
 };
 
 const SettingsPage = ({ embedded = false }) => {
+  const inPortal = useInPortalHeader();
   const [searchParams, setSearchParams] = useSearchParams();
   const { slug: hostTenantSlug, loading: hostTenantLoading } = useResolvedTenantSlug();
   const tabFromUrl = searchParams.get('tab');
@@ -48,14 +50,16 @@ const SettingsPage = ({ embedded = false }) => {
       { replace: true },
     );
   };
+  // Anti-redondance : « Paiements » et « Notifications » vivent déjà dans le sous-rail École
+  // (Finances / Pilotage) → on ne les répète PAS ici (leurs vues restent dans le switch).
   const settingsOptions = [
     { value: 'general', label: 'Général', badge: 'Base', icon: Settings },
     { value: 'academic', label: 'Année Scolaire', badge: 'Calendrier', icon: CalendarDays },
-    { value: 'payments', label: 'Paiements', badge: 'Facturation', icon: CreditCard },
     { value: 'security', label: 'Sécurité', badge: 'Accès', icon: Shield },
-    { value: 'notifications', label: 'Notifications', badge: 'Alertes', icon: Bell },
     { value: 'integrations', label: 'Intégrations', badge: 'Services', icon: Plug },
   ];
+  // Dans le portail : sous-vues poussées dans l'EN-TÊTE (pas de barre dans le corps).
+  usePortalTabs(settingsOptions, activeTab, handleSettingsTab);
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -137,19 +141,22 @@ const SettingsPage = ({ embedded = false }) => {
 
   const content = (
        <div className="space-y-6">
-          <div className="p-6" style={lightPanel}>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Paramètres</h1>
-            <p className="text-zinc-500 mt-1.5">Configuration globale de la plateforme.</p>
-          </div>
-
-          <PremiumSegmentedSelector
-            value={activeTab}
-            onChange={handleSettingsTab}
-            options={settingsOptions}
-            layoutId="settings-segment-pill"
-            railClassName="!bg-[var(--lt-inner-bg)] !border-[var(--lt-border)]"
-            optionClassName="!text-zinc-500 [&.text-white]:!text-zinc-900 hover:!bg-black/[0.03]"
-          />
+          {!inPortal && (
+            <>
+              <div className="p-6" style={lightPanel}>
+                <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Paramètres</h1>
+                <p className="text-zinc-500 mt-1.5">Configuration globale de la plateforme.</p>
+              </div>
+              <PremiumSegmentedSelector
+                value={activeTab}
+                onChange={handleSettingsTab}
+                options={settingsOptions}
+                layoutId="settings-segment-pill"
+                railClassName="!bg-[var(--lt-inner-bg)] !border-[var(--lt-border)]"
+                optionClassName="!text-zinc-500 [&.text-white]:!text-zinc-900 hover:!bg-black/[0.03]"
+              />
+            </>
+          )}
 
           <div className="mt-6">
             <AnimatePresence mode="wait">

@@ -2,12 +2,13 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import {
   Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare, MessageCircle,
-  WandSparkles, Library, Blocks, Settings2, GraduationCap,
+  WandSparkles, Library, Blocks, Settings2, GraduationCap, ChevronRight,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { authStore } from '@/lib/auth-store';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
+import { PortalHeaderProvider, usePortalHeaderValues } from './portalHeader';
 import '../../pages/LiriPortal.css';
 
 type RailKey = 'accueil' | 'lives' | 'forum' | 'messages' | 'studio' | 'ecole' | 'biblio' | 'brain' | 'integrations' | 'reglages';
@@ -23,13 +24,50 @@ const RAIL: { key: RailKey; label: string; icon: typeof House; to: string }[] = 
   { key: 'brain', label: 'Brain', icon: Sparkles, to: '/dashboard/liri' },
 ];
 
+/** Onglets de sous-vues (niveau 3) rendus DANS l'en-tête — voir portalHeader + la RÈGLE menus. */
+function HeaderTabs() {
+  const { tabs } = usePortalHeaderValues();
+  if (!tabs || !tabs.items.length) return null;
+  return (
+    <nav className="hidden min-w-0 items-center gap-0.5 overflow-x-auto md:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {tabs.items.map((t) => {
+        const isActive = t.value === tabs.active;
+        return (
+          <button
+            key={t.value}
+            onClick={() => tabs.onChange(t.value)}
+            className={`relative shrink-0 whitespace-nowrap px-3 py-1.5 text-[13px] lp-tr ${isActive ? 'lp-ink font-medium' : 'lp-muted hover:lp-ink'}`}
+          >
+            {t.label}
+            {isActive && <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full" style={{ background: 'var(--coral)' }} />}
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
 /**
- * Shell du portail LIRI (topbar + rail Zoom×Claude + footer) réutilisable, avec
- * un slot `children` plein-hauteur pour la page. Conçu pour envelopper des pages
- * existantes — ex. la LiveHostPage : elle s'affiche dans le `<main>` (sa chrome
- * `height:100dvh` est forcée à `100%` via .lp-shell-main, voir LiriPortal.css).
+ * Shell du portail LIRI (topbar + rail Zoom×Claude + footer) réutilisable, avec un slot
+ * `children` plein-hauteur. La topbar accueille la nav contextuelle (fil d'Ariane + sous-vues)
+ * que la page active pousse via les hooks de `portalHeader` → plus de barre de sous-onglets
+ * dans le corps (RÈGLE D'ORGANISATION DES MENUS).
  */
-export function LiriPortalShell({
+export function LiriPortalShell(props: {
+  active?: RailKey;
+  live?: boolean;
+  /** Affiche le rail latéral du portail. `false` pour l'arène live (cadre épuré, topbar seule). */
+  rail?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <PortalHeaderProvider>
+      <LiriPortalShellInner {...props} />
+    </PortalHeaderProvider>
+  );
+}
+
+function LiriPortalShellInner({
   active = 'lives',
   live = false,
   rail = true,
@@ -37,7 +75,6 @@ export function LiriPortalShell({
 }: {
   active?: RailKey;
   live?: boolean;
-  /** Affiche le rail latéral du portail. `false` pour l'arène live (cadre épuré, topbar seule). */
   rail?: boolean;
   children: ReactNode;
 }) {
@@ -49,9 +86,11 @@ export function LiriPortalShell({
   const _shellIsTenant = !!activeTenantConfig?.slug;
   const _shellBrand = activeTenantConfig?.branding?.name || 'LIRI';
 
+  // Fil d'Ariane contextuel (poussé par la page active, ex. ['École', 'Paramètres']).
+  const { crumb } = usePortalHeaderValues();
+
   // Nom de l'ÉCOLE de la session (résolu côté API). Sur l'hôte produit (liri.cimolace.space),
-  // la marque reste « LIRI » mais on affiche en suffixe l'école à laquelle l'utilisateur est
-  // rattaché (ex. « LIRI · Prorascience ») → lève la confusion « c'est quel tenant ? ».
+  // la marque reste « LIRI » mais on affiche en suffixe l'école rattachée (ex. « LIRI · Prorascience »).
   const [sessionSchool, setSessionSchool] = useState('');
   useEffect(() => {
     const token = authStore.getToken?.();
@@ -69,21 +108,20 @@ export function LiriPortalShell({
       .catch(() => {});
     return () => { alive = false; };
   }, [slug]);
-  // Suffixe affiché seulement s'il apporte une info (≠ marque déjà montrée).
-  const _schoolSuffix = sessionSchool && sessionSchool !== _shellBrand ? sessionSchool : '';
+  // Suffixe affiché seulement s'il apporte une info ET qu'aucun fil d'Ariane ne prend le relais.
+  const _schoolSuffix = !crumb && sessionSchool && sessionSchool !== _shellBrand ? sessionSchool : '';
 
   return (
     <div className="lp-root relative grid h-[100dvh] w-full grid-rows-[56px_1fr_34px] overflow-hidden">
-      {/* Glow chaleureux — discret, confiné à la topbar/aux marges (le <main> est opaque,
-          il ne transparaît donc plus dans le contenu : fini le « halo marron » envahissant). */}
+      {/* Glow chaleureux — discret, confiné à la topbar/aux marges. */}
       <div className="lp-glow">
         <span style={{ width: 460, height: 300, left: '36%', top: -160, background: 'rgba(217,119,87,.05)' }} />
         <span style={{ width: 300, height: 260, right: 40, bottom: -60, background: 'rgba(226,85,63,.035)' }} />
       </div>
 
-      {/* topbar */}
-      <header className="z-30 flex items-center justify-between lp-rail-bg border-b lp-line px-4">
-        <div className="flex items-center gap-2.5">
+      {/* topbar : [menu · logo · fil d'Ariane]  —  [sous-vues]  —  [icônes] */}
+      <header className="z-30 flex items-center gap-3 lp-rail-bg border-b lp-line px-4">
+        <div className="flex shrink-0 items-center gap-2.5">
           <button onClick={() => nav('/liri')} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Retour au portail"><Menu size={17} /></button>
           <button onClick={() => nav('/liri')} className="flex items-center gap-2 lp-tr" aria-label="Portail LIRI">
             {_shellIsTenant ? null : <img src="/lirilogo.png" alt="LIRI" className="h-9 w-9 object-contain" />}
@@ -95,8 +133,24 @@ export function LiriPortalShell({
               </span>
             )}
           </button>
+          {crumb && crumb.length > 0 && (
+            <div className="hidden items-center gap-1.5 pl-1 sm:flex">
+              {crumb.map((c, i) => (
+                <span key={`${c}-${i}`} className="flex items-center gap-1.5">
+                  <ChevronRight size={14} className="lp-faint" />
+                  <span className={i === crumb.length - 1 ? 'text-[14px] font-medium lp-ink' : 'text-[14px] lp-muted'}>{c}</span>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
-        <div className="flex items-center gap-1.5">
+
+        {/* zone centrale : sous-vues de la section active (alignées à droite, remplissent le vide) */}
+        <div className="flex min-w-0 flex-1 justify-end">
+          <HeaderTabs />
+        </div>
+
+        <div className="flex shrink-0 items-center gap-1.5">
           {live && (
             <span className="mr-1 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold" style={{ background: 'rgba(226,85,63,.10)', border: '1px solid rgba(226,85,63,.30)', color: '#ef6a52' }}>
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: '#e2553f' }} /> EN DIRECT
@@ -108,10 +162,8 @@ export function LiriPortalShell({
         </div>
       </header>
 
-      {/* middle : rail | main  (rail masqué = arène live plein cadre).
-          Immersif : aucun gap/padding externe → le contenu remplit l'écran (pas de « contour global »). */}
+      {/* middle : rail | main  (immersif : aucun gap/padding externe → le contenu remplit l'écran). */}
       <div className={`z-10 grid min-h-0 ${rail ? 'grid-cols-[92px_1fr]' : 'grid-cols-[1fr]'}`}>
-        {/* rail */}
         {rail && (
         <aside className="flex min-h-0 flex-col items-center gap-1 lp-rail-bg border-r lp-line py-4">
           {RAIL.map((it) => {
@@ -139,8 +191,6 @@ export function LiriPortalShell({
         </aside>
         )}
 
-        {/* main : la page enveloppée (host) remplit ce conteneur. Fond OPAQUE (base chaude
-            du shell) → les zones non couvertes ne laissent plus voir le glow coral. */}
         <main className="lp-shell-main relative min-h-0 overflow-hidden" style={{ background: 'var(--base)' }}>
           {children}
         </main>

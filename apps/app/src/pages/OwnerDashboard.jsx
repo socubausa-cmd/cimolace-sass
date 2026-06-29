@@ -38,6 +38,7 @@ import CommunicationShell from '@/components/school/CommunicationShell';
 import { SslThemeProvider, SSL_LIGHT_CLASS, ensureSslLightStyles } from '@/pages/school/student-school-life/sslTheme';
 import { useShellTint } from '@/lib/useShellTint';
 import { FormationForumContent } from '@/pages/school/FormationForumPage';
+import { usePortalTabs, useInPortalHeader } from '@/components/liri/portalHeader';
 
 /**
  * Forum communauté de l'admin = MÊME forum riche que l'espace élève
@@ -187,6 +188,7 @@ const FINANCE_SUB_TABS = new Set(['students', 'payments', 'recovery', 'inventory
 
 // Sub-component to handle Financial Navigation within the "Payments" main tab
 const FinanceSection = ({ basePath = '/owner-dashboard' }) => {
+   const inPortal = useInPortalHeader();
    const navigate = useNavigate();
    const location = useLocation();
    const [searchParams] = useSearchParams();
@@ -222,17 +224,21 @@ const FinanceSection = ({ basePath = '/owner-dashboard' }) => {
      { value: 'payout-setup', label: 'Encaissement', badge: 'Config · tutoriel', icon: Plug },
    ];
 
+   usePortalTabs(financeOptions, subTab, onFinanceSubChange);
+
    return (
       <div className="space-y-6">
-         <PremiumSegmentedSelector
-           value={subTab}
-           onChange={onFinanceSubChange}
-           options={financeOptions}
-           layoutId="owner-finance-segment-pill"
-           className="max-w-4xl"
-           railClassName="!bg-[var(--lt-inner-bg)] !border-[var(--lt-border)]"
-           optionClassName="!text-zinc-500 [&.text-white]:!text-zinc-900 hover:!bg-black/[0.03]"
-         />
+         {!inPortal && (
+           <PremiumSegmentedSelector
+             value={subTab}
+             onChange={onFinanceSubChange}
+             options={financeOptions}
+             layoutId="owner-finance-segment-pill"
+             className="max-w-4xl"
+             railClassName="!bg-[var(--lt-inner-bg)] !border-[var(--lt-border)]"
+             optionClassName="!text-zinc-500 [&.text-white]:!text-zinc-900 hover:!bg-black/[0.03]"
+           />
+         )}
          <AnimatePresence mode="wait">
            {subTab === 'students' && (
              <motion.div
