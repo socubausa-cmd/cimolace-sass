@@ -158,6 +158,22 @@ function SoapView({ soap }: { soap: SoapNote | null }) {
   );
 }
 
+// Rendu d'une scène clinique partagée — réutilisé par le cockpit patient ET la
+// SCÈNE CENTRALE de la salle Consultation. Wrappé dans les vars --zw-* pour que
+// les composants portés (jumeau, roue, SOAP) rendent correctement.
+export function SharedSceneView({ scene }: { scene: CockpitScene | null }) {
+  if (!scene || scene.kind === 'clear') return null;
+  return (
+    <div style={{ ...COCKPIT_VARS, width: '100%', height: '100%' }}>
+      {scene.kind === 'twin' && (
+        <TwinView organs={scene.organs} sex={scene.sex} selected={scene.focus} onSelect={() => {}} />
+      )}
+      {scene.kind === 'wheel' && <WheelView domains={scene.domains} organs={scene.organs} />}
+      {scene.kind === 'soap' && <SoapView soap={scene.soap} />}
+    </div>
+  );
+}
+
 // ── Vue PATIENT (passive : rend la scène partagée) ──────────────────────────
 
 function PatientCockpit({ sessionId }: { sessionId: string }) {
@@ -185,11 +201,7 @@ function PatientCockpit({ sessionId }: { sessionId: string }) {
         <button onClick={() => setOpen(false)} style={closeBtn} title="Réduire">—</button>
       </div>
       <div style={bodyStyle}>
-        {scene!.kind === 'twin' && (
-          <TwinView organs={scene!.organs} sex={scene!.sex} selected={scene!.focus} onSelect={() => {}} />
-        )}
-        {scene!.kind === 'wheel' && <WheelView domains={scene!.domains} organs={scene!.organs} />}
-        {scene!.kind === 'soap' && <SoapView soap={scene!.soap} />}
+        <SharedSceneView scene={scene!} />
       </div>
     </div>
   );
