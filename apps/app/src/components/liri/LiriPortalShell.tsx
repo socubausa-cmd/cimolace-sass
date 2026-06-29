@@ -108,11 +108,12 @@ export function LiriPortalShell({
         </div>
       </header>
 
-      {/* middle : rail | main  (rail masqué = arène live plein cadre) */}
-      <div className={`z-10 grid min-h-0 gap-3 p-3 pt-1 ${rail ? 'grid-cols-[100px_1fr]' : 'grid-cols-[1fr]'}`}>
+      {/* middle : rail | main  (rail masqué = arène live plein cadre).
+          Immersif : aucun gap/padding externe → le contenu remplit l'écran (pas de « contour global »). */}
+      <div className={`z-10 grid min-h-0 ${rail ? 'grid-cols-[92px_1fr]' : 'grid-cols-[1fr]'}`}>
         {/* rail */}
         {rail && (
-        <aside className="flex min-h-0 flex-col items-center gap-1 rounded-3xl lp-rail-bg lp-line border py-4 lp-soft">
+        <aside className="flex min-h-0 flex-col items-center gap-1 lp-rail-bg border-r lp-line py-4">
           {RAIL.map((it) => {
             const Icon = it.icon;
             const isActive = it.key === active;
@@ -140,7 +141,7 @@ export function LiriPortalShell({
 
         {/* main : la page enveloppée (host) remplit ce conteneur. Fond OPAQUE (base chaude
             du shell) → les zones non couvertes ne laissent plus voir le glow coral. */}
-        <main className="lp-shell-main relative min-h-0 overflow-hidden rounded-3xl lp-line border lp-soft" style={{ background: 'var(--base)' }}>
+        <main className="lp-shell-main relative min-h-0 overflow-hidden" style={{ background: 'var(--base)' }}>
           {children}
         </main>
       </div>
