@@ -84,7 +84,10 @@ export default function ConsultationRoom() {
   const channel = useCockpitChannel(sessionId ?? null, isHost ? 'host' : 'patient');
   const { view, scene, strokes } = channel;
   const [annotate, setAnnotate] = useState(false);
-  const annotatable = view === 'share' || view === 'board';
+  const hasScene = !!scene && scene.kind !== 'clear';
+  // Annotable seulement quand il y a une surface à annoter : le tableau, ou un
+  // partage avec un artefact réellement affiché (pas sur un partage vide).
+  const annotatable = view === 'board' || (view === 'share' && hasScene);
 
   if (error) {
     return (
@@ -129,6 +132,7 @@ export default function ConsultationRoom() {
         />
         <ConsultationStage
           view={view}
+          isHost={isHost}
           scene={scene}
           strokes={strokes}
           editable={annotate && isHost && annotatable}
@@ -259,12 +263,14 @@ function VideoTiles({ tracks, variant }: { tracks: any[]; variant: 'stage' | 'st
 // ── Scène : rend la vue pilotée par le praticien ─────────────────────────────
 function ConsultationStage({
   view,
+  isHost,
   scene,
   strokes,
   editable,
   onStrokes,
 }: {
   view: ConsultView;
+  isHost: boolean;
   scene: CockpitScene | null;
   strokes: AnnotStroke[];
   editable: boolean;
@@ -293,7 +299,7 @@ function ConsultationStage({
     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 12, padding: 14 }}>
       <div style={{ flex: 1, minHeight: 0, borderRadius: 16, overflow: 'hidden', position: 'relative', background: '#fff' }}>
         {view === 'board' ? (
-          <BoardSurface hasStrokes={strokes.length > 0} editable={editable} />
+          <BoardSurface hasStrokes={strokes.length > 0} editable={editable} isHost={isHost} />
         ) : hasScene ? (
           <SharedSceneView scene={scene} />
         ) : (
@@ -311,7 +317,12 @@ function ConsultationStage({
 }
 
 // Tableau blanc (mode Tableau) : grille de points discrète + invite si vide.
-function BoardSurface({ hasStrokes, editable }: { hasStrokes: boolean; editable: boolean }) {
+function BoardSurface({ hasStrokes, editable, isHost }: { hasStrokes: boolean; editable: boolean; isHost: boolean }) {
+  const hint = editable
+    ? 'Dessinez pour expliquer.'
+    : isHost
+      ? 'Activez « Annoter » pour dessiner.'
+      : 'Le praticien va dessiner ici.';
   return (
     <div
       style={{
@@ -326,9 +337,7 @@ function BoardSurface({ hasStrokes, editable }: { hasStrokes: boolean; editable:
         <div style={{ textAlign: 'center', color: '#9ca3af', pointerEvents: 'none' }}>
           <Presentation size={30} style={{ margin: '0 auto 10px', opacity: 0.6 }} aria-hidden="true" />
           <p style={{ fontSize: 14, fontWeight: 600, color: '#6b7280' }}>Tableau</p>
-          <p style={{ fontSize: 12.5 }}>
-            {editable ? 'Activez « Annoter » puis dessinez pour expliquer.' : 'Le praticien va dessiner ici.'}
-          </p>
+          <p style={{ fontSize: 12.5 }}>{hint}</p>
         </div>
       ) : null}
     </div>
