@@ -68,10 +68,12 @@ export interface SoapNote {
 
 export interface LabResult {
   id?: string;
-  test_name?: string; name?: string; label?: string; code?: string;
-  value?: string | number | null; unit?: string | null;
+  test_name?: string; name?: string; label?: string; code?: string; lab_name?: string | null;
+  value_numeric?: number | null; value_text?: string | null; value?: string | number | null; unit?: string | null;
+  taken_at?: string | null; reported_at?: string | null;
   result_date?: string | null; date?: string | null; created_at?: string | null;
-  reference_range?: string | null; flag?: string | null; interpretation?: string | null;
+  reference_low?: number | null; reference_high?: number | null; reference_range?: string | null;
+  flag?: string | null; interpretation?: string | null;
 }
 export interface RxItem {
   drug_name: string; dosage?: string | null; frequency?: string | null;

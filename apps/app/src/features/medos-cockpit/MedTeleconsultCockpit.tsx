@@ -167,22 +167,40 @@ function SoapView({ soap }: { soap: SoapNote | null }) {
 
 function LabsView({ items }: { items: LabResult[] }) {
   if (!items || items.length === 0) return <div style={emptyHint}>Aucun bilan biologique disponible.</div>;
-  const labName = (l: LabResult) => l.test_name || l.name || l.label || l.code || 'Analyse';
-  const labDate = (l: LabResult) => String(l.result_date || l.date || l.created_at || '').slice(0, 10);
+  const name = (l: LabResult) => l.test_name || l.name || l.label || l.code || 'Analyse';
+  const val = (l: LabResult) => l.value_numeric ?? l.value_text ?? l.value;
+  const range = (l: LabResult) =>
+    l.reference_low != null || l.reference_high != null
+      ? `${l.reference_low ?? ''}–${l.reference_high ?? ''}`
+      : l.reference_range || null;
+  const date = (l: LabResult) => String(l.reported_at || l.taken_at || l.result_date || l.date || l.created_at || '').slice(0, 10);
+  const outOfRange = (l: LabResult) => {
+    const v = Number(l.value_numeric);
+    if (Number.isFinite(v)) {
+      if (l.reference_high != null && v > Number(l.reference_high)) return true;
+      if (l.reference_low != null && v < Number(l.reference_low)) return true;
+    }
+    return !!l.flag;
+  };
   return (
     <div style={{ padding: '8px 12px', overflowY: 'auto', height: '100%' }}>
       <div style={sectionTitle}>Bilans biologiques</div>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        {items.map((l, i) => (
-          <div key={l.id || i} style={{ display: 'flex', alignItems: 'baseline', gap: 8, padding: '7px 0', borderBottom: '1px solid var(--zw-border)' }}>
-            <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'var(--zw-text)' }}>{labName(l)}</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: l.flag ? '#f97316' : 'var(--zw-text)' }}>
-              {l.value ?? '—'}{l.unit ? ` ${l.unit}` : ''}
-            </span>
-            {l.reference_range ? <span style={{ fontSize: 11, color: 'var(--zw-text-muted)' }}>réf. {l.reference_range}</span> : null}
-            {labDate(l) ? <span style={{ fontSize: 11, color: 'var(--zw-text-faint)', width: 74, textAlign: 'right' }}>{labDate(l)}</span> : null}
-          </div>
-        ))}
+        {items.map((l, i) => {
+          const flagged = outOfRange(l);
+          const r = range(l);
+          const d = date(l);
+          return (
+            <div key={l.id || i} style={{ display: 'flex', alignItems: 'baseline', gap: 8, padding: '7px 0', borderBottom: '1px solid var(--zw-border)' }}>
+              <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'var(--zw-text)' }}>{name(l)}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: flagged ? '#f97316' : 'var(--zw-text)' }}>
+                {val(l) ?? '—'}{l.unit ? ` ${l.unit}` : ''}
+              </span>
+              {r ? <span style={{ fontSize: 11, color: 'var(--zw-text-muted)' }}>réf. {r}</span> : null}
+              {d ? <span style={{ fontSize: 11, color: 'var(--zw-text-faint)', width: 74, textAlign: 'right' }}>{d}</span> : null}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
