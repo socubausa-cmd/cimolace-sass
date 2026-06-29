@@ -168,12 +168,16 @@ export function getLabs(patientId: string): Promise<LabResult[]> {
     .catch(() => []);
 }
 
-/** Ordonnances SIGNÉES du patient (les plus récentes d'abord). */
-export function getSignedPrescriptions(patientId: string): Promise<RxDoc[]> {
-  return prescriptionsApi
+/** Ordonnances SIGNÉES du patient (les plus récentes d'abord). Le `list` n'embarque
+ *  PAS les lignes → on enrichit la plus récente avec son détail (items) via `get`. */
+export async function getSignedPrescriptions(patientId: string): Promise<RxDoc[]> {
+  const list: any[] = await prescriptionsApi
     .list({ patient_id: patientId, status: 'signed' })
     .then((r: any) => (Array.isArray(r) ? r : []))
     .catch(() => []);
+  if (!list.length) return [];
+  const full = await prescriptionsApi.get(list[0].id).catch(() => list[0]);
+  return [full, ...list.slice(1)];
 }
 
 /** Pièces jointes du patient (imagerie / scan / PDF) à partager. */
