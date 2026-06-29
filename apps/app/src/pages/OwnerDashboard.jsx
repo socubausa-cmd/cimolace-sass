@@ -47,7 +47,7 @@ import { FormationForumContent } from '@/pages/school/FormationForumPage';
  * sont routées dans App.jsx sous /owner-dashboard/forum/* (forumBase dérivé de l'URL,
  * donc « Retour au forum » revient sur l'onglet forum de l'admin).
  */
-const OwnerForumPanel = () => {
+const OwnerForumPanel = ({ basePath = '/owner-dashboard' }) => {
   useEffect(() => { ensureSslLightStyles(); }, []);
   // Le forum suit la MÊME teinte partagée que l'espace élève (clé localStorage commune
   // `liri-shell-tint`, sombre par défaut) → rendu identique partout, plus de « deux couleurs ».
@@ -56,18 +56,101 @@ const OwnerForumPanel = () => {
   return (
     <SslThemeProvider mode={isLight ? 'light' : 'dark'}>
       <div className={isLight ? SSL_LIGHT_CLASS : ''}>
-        <CommunicationShell forumBasePath="/owner-dashboard/forum" />
+        <CommunicationShell forumBasePath={`${basePath}/forum`} />
       </div>
     </SslThemeProvider>
   );
 };
 
+/**
+ * CONTENU du back-office (en-tête année scolaire + switch d'onglets), SANS shell —
+ * réutilisable tel quel dans le shell admin historique (OwnerDashboardLayout) OU dans
+ * le portail LIRI (LiriEcolePage → LiriPortalShell). `basePath` = base des navigations
+ * internes ('/owner-dashboard' par défaut ; le portail passe '/liri/ecole').
+ */
+export const OwnerDashboardBody = ({ activeTab, basePath = '/owner-dashboard' }) => {
+  const { currentYear, setSchoolYear } = useSchoolYear();
+  const [searchParams] = useSearchParams();
+
+  const renderContent = () => {
+    switch(activeTab) {
+      case 'dashboard': return <OwnerDashboardOverview />;
+      case 'notifications': return <NotificationCenter />;
+      case 'reports': return <ReportsPage />;
+      case 'certificates': return <OwnerCertificatesManagement />;
+      case 'formations': return <OwnerFormationsTab />;
+      case 'coaching-mentoring': return <CoachingMentoringTab />;
+      case 'workshops': return <WorkshopsTab />;
+      case 'ngowazulu-mentorat': return <NgowazuluMentoratManagerTab />;
+      case 'ngowazulu-operations': return <NgowazuluOperationsPanel />;
+      case 'reviews': return <SiteReviewsModerationPanel />;
+      case 'support': return <SupportTab />;
+      case 'school-life': return <SchoolLifeManagementTab />;
+      case 'forum': {
+        const formationId = searchParams.get('formationId');
+        if (formationId) {
+          return (
+            <FormationForumContent
+              formationId={formationId}
+              embedded
+              communityForumTo={`${basePath}?tab=forum`}
+            />
+          );
+        }
+        return <OwnerForumPanel basePath={basePath} />;
+      }
+      case 'payments': return <FinanceSection basePath={basePath} />;
+      case 'catalog': return (
+        <div
+          className="p-4"
+          style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)', borderRadius: 14 }}
+        >
+          <ServiceCatalogManager />
+        </div>
+      );
+      case 'resources': return <ResourcesTab />;
+      case 'school-info': return <SchoolInfoTab />;
+      case 'team': return <TeamManagerPage />;
+      case 'users': return <UsersAdminPage />;
+      case 'settings': return <SettingsPage />;
+      default: return <OwnerDashboardOverview />;
+    }
+  };
+
+  return (
+    <>
+      {activeTab === 'dashboard' && (
+         <div className="mb-6 flex justify-end">
+            <div
+              className="px-3 py-3 rounded-[14px] min-w-[280px]"
+              style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)' }}
+            >
+              <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--lt-muted)' }}>Année scolaire</p>
+              <PremiumSegmentedSelector
+                value={currentYear}
+                onChange={setSchoolYear}
+                options={[
+                  { value: '2024-2025', label: '2024-2025' },
+                  { value: '2023-2024', label: '2023-2024' },
+                ]}
+                layoutId="owner-dashboard-school-year-segment-pill"
+                compact
+                showChevron={false}
+                railClassName="!bg-[var(--lt-inner-bg)] !border-[var(--lt-border)]"
+                optionClassName="!text-zinc-500 [&.text-white]:!text-zinc-900 hover:!bg-black/[0.03]"
+              />
+            </div>
+         </div>
+      )}
+      {renderContent()}
+    </>
+  );
+};
+
 const OwnerDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const { currentYear, setSchoolYear } = useSchoolYear();
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const params = new URLSearchParams(location?.search || '');
@@ -93,77 +176,9 @@ const OwnerDashboard = () => {
     }
   };
 
-  const renderContent = () => {
-    switch(activeTab) {
-      case 'dashboard': return <OwnerDashboardOverview />;
-      case 'notifications': return <NotificationCenter />;
-      case 'reports': return <ReportsPage />;
-      case 'certificates': return <OwnerCertificatesManagement />;
-      case 'formations': return <OwnerFormationsTab />;
-      case 'coaching-mentoring': return <CoachingMentoringTab />;
-      case 'workshops': return <WorkshopsTab />;
-      case 'ngowazulu-mentorat': return <NgowazuluMentoratManagerTab />;
-      case 'ngowazulu-operations': return <NgowazuluOperationsPanel />;
-      case 'reviews': return <SiteReviewsModerationPanel />;
-      case 'support': return <SupportTab />;
-      case 'school-life': return <SchoolLifeManagementTab />;
-      case 'forum': {
-        const formationId = searchParams.get('formationId');
-        if (formationId) {
-          return (
-            <FormationForumContent
-              formationId={formationId}
-              embedded
-              communityForumTo="/owner-dashboard?tab=forum"
-            />
-          );
-        }
-        return <OwnerForumPanel />;
-      }
-      case 'payments': return <FinanceSection />;
-      case 'catalog': return (
-        <div
-          className="p-4"
-          style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)', borderRadius: 14 }}
-        >
-          <ServiceCatalogManager />
-        </div>
-      );
-      case 'resources': return <ResourcesTab />;
-      case 'school-info': return <SchoolInfoTab />;
-      case 'team': return <TeamManagerPage />;
-      case 'users': return <UsersAdminPage />;
-      case 'settings': return <SettingsPage />;
-      default: return <OwnerDashboardOverview />;
-    }
-  };
-
   return (
     <OwnerDashboardLayout activeTab={activeTab} onTabChange={handleTabChange}>
-      {activeTab === 'dashboard' && (
-         <div className="mb-6 flex justify-end">
-            <div
-              className="px-3 py-3 rounded-[14px] min-w-[280px]"
-              style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)' }}
-            >
-              <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--lt-muted)' }}>Année scolaire</p>
-              <PremiumSegmentedSelector
-                value={currentYear}
-                onChange={setSchoolYear}
-                options={[
-                  { value: '2024-2025', label: '2024-2025' },
-                  { value: '2023-2024', label: '2023-2024' },
-                ]}
-                layoutId="owner-dashboard-school-year-segment-pill"
-                compact
-                showChevron={false}
-                railClassName="!bg-[var(--lt-inner-bg)] !border-[var(--lt-border)]"
-                optionClassName="!text-zinc-500 [&.text-white]:!text-zinc-900 hover:!bg-black/[0.03]"
-              />
-            </div>
-         </div>
-      )}
-      {renderContent()}
+      <OwnerDashboardBody activeTab={activeTab} basePath="/owner-dashboard" />
     </OwnerDashboardLayout>
   );
 };
@@ -171,7 +186,7 @@ const OwnerDashboard = () => {
 const FINANCE_SUB_TABS = new Set(['students', 'payments', 'recovery', 'inventory', 'payout-setup']);
 
 // Sub-component to handle Financial Navigation within the "Payments" main tab
-const FinanceSection = () => {
+const FinanceSection = ({ basePath = '/owner-dashboard' }) => {
    const navigate = useNavigate();
    const location = useLocation();
    const [searchParams] = useSearchParams();
@@ -195,7 +210,7 @@ const FinanceSection = () => {
        params.set('finance', next);
        navigate(`${location.pathname}?${params.toString()}`, { replace: true });
      } catch {
-       navigate(`/owner-dashboard?tab=payments&finance=${encodeURIComponent(next)}`, { replace: true });
+       navigate(`${basePath}?tab=payments&finance=${encodeURIComponent(next)}`, { replace: true });
      }
    };
 

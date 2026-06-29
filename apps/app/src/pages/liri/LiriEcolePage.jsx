@@ -1,33 +1,35 @@
 /**
- * LiriEcolePage — Module ÉCOLE HORIZONTAL dans le portail LIRI (`/liri/ecole`).
+ * LiriEcolePage — Module ÉCOLE complet DANS le portail LIRI (`/liri/ecole`).
  *
- * « École façon Zoom-app » : un tenant LIRI (créateur/coach SANS site vertical
- * comme ISNA) gère formations / calendrier / élèves DANS le portail LIRI, sans
- * vitrine `/t/:slug`. HORIZONTAL ≠ VERTICAL (le site ISNA `/t/:slug` reste à part).
+ * Embarque la TOTALITÉ du back-office école (les 6 familles / ~24 onglets) DANS le
+ * shell du portail LIRI (`LiriPortalShell`), au lieu du vieux shell admin séparé
+ * (`LiriDashboardShell` « style isna ») → on ne retombe plus jamais hors du portail.
  *
- * SHELL = chrome chaud du PORTAIL LIRI (`LiriPortalShell` : top-bar « ✦ LIRI »,
- * rail Accueil/Lives/Forum/Studio/École/Biblio/Brain) — PAS le shell admin.
- * CONTENU = surfaces back-office école réutilisées, rendues dans leur thème SSL
- * CLAIR (cream) → s'harmonise avec le terracotta du shell + fournit les tokens
- * `--lt-*` dont SecretariatOverview (Aperçu) a besoin.
- * GATE = visible si le tenant a un moteur école actif (tenant_services).
+ * - SHELL = `LiriPortalShell` (rail Accueil/Lives/Forum/Studio/École/Biblio/Brain).
+ * - SOUS-NAV = sous-rail des familles (SOURCE UNIQUE `buildOwnerMenuGroups`, partagée
+ *   avec l'ancien back-office) → zéro divergence de menu.
+ * - CONTENU = `OwnerDashboardBody` (le switch d'onglets réutilisé tel quel), avec
+ *   `basePath="/liri/ecole"` pour que toutes les navigations internes restent dans le
+ *   portail.
+ * - THÈME = sombre chaud (tokens `--lt-*` remappés terracotta) → épouse le shell.
+ * - GATE = visible si un moteur école est actif (tenant_services), fail-open.
  */
 import React, { useEffect, useState } from 'react';
-import { LayoutDashboard, BookOpen, Calendar, Users, GraduationCap } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { GraduationCap } from 'lucide-react';
 import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
-import OwnerFormationsTab from '@/components/owner/OwnerFormationsTab';
-import { CalendarSection } from '@/components/school/school-life/CalendarComponents';
-import SecretariatOverview from '@/components/secretariat/SecretariatOverview';
-import SecretariatStudentDashboard from '@/components/secretariat/SecretariatStudentDashboard';
+import { OwnerDashboardBody } from '@/pages/OwnerDashboard';
+import { buildOwnerMenuGroups } from '@/components/owner/ownerMenuGroups';
+import { useResolvedTenantSlug } from '@/hooks/useResolvedTenantSlug';
 import { SslThemeProvider } from '@/pages/school/student-school-life/sslTheme';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { catalogApi } from '@/lib/api-v2';
-import PremiumSegmentedSelector from '@/components/ui/premium-segmented-selector';
 
-// Les surfaces réutilisées lisent les tokens `--lt-*` (définis ailleurs sous le shell
-// ADMIN `.premium-app-shell` → indéfinis ici). On les REMAPPE en SOMBRE CHAUD, à la
-// palette du portail LIRI (cartes sombres chaudes + accent terracotta) → le contenu
-// épouse le shell au lieu d'un fond blanc.
+const ECOLE_BASE = '/liri/ecole';
+
+// Les surfaces back-office lisent les tokens `--lt-*` (définis sous le shell admin).
+// On les REMAPPE en SOMBRE CHAUD (palette portail : cartes sombres chaudes + accent
+// terracotta) → le contenu épouse le shell au lieu d'un fond blanc froid.
 const ECOLE_THEME_VARS = {
   '--lt-text': '#f5f1e9',
   '--lt-sub': 'rgba(245,241,233,0.60)',
@@ -39,41 +41,36 @@ const ECOLE_THEME_VARS = {
   '--lt-inner-bg': '#191512',
   '--lt-gold': '#d97757',
   '--lt-gold-ink': '#e58a5f',
-  // Accent terracotta du portail → pille active du sélecteur premium (var(--school-accent)).
   '--school-accent': '#d97757',
+  '--school-accent-rgb': '217 119 87',
 };
 
-// Onglets au format PremiumSegmentedSelector (icône carrée + label + sous-titre) —
-// MÊME composant/animation que le sélecteur de l'espace élève (StudentFormationsPage).
-const TAB_OPTIONS = [
-  { value: 'apercu', label: 'Aperçu', badge: 'Tableau de bord', icon: LayoutDashboard },
-  { value: 'formations', label: 'Formations', badge: 'Cours & ventes', icon: BookOpen },
-  { value: 'calendrier', label: 'Calendrier', badge: 'Planning', icon: Calendar },
-  { value: 'eleves', label: 'Élèves', badge: 'Gestion', icon: Users },
-];
-
-// Le Calendrier (CalendarSection) hardcode des bleus navy (#0F1419/#192734/#16202A)
-// → froid vs le shell. On remappe CES fonds vers du sombre CHAUD, scopé au calendrier
-// (ses accents sont déjà terracotta via --school-accent). Scope = .ecole-cal-warm.
-const CAL_WARM_CSS = `
-.ecole-cal-warm .bg-\\[\\#0F1419\\],
-.ecole-cal-warm .bg-\\[\\#0F1419\\]\\/50,
-.ecole-cal-warm .bg-\\[\\#0F1419\\]\\/30,
-.ecole-cal-warm .bg-\\[\\#0F1419\\]\\/20 { background-color: #191512 !important; }
-.ecole-cal-warm .bg-\\[\\#192734\\] { background-color: #221f1b !important; }
-.ecole-cal-warm .bg-\\[\\#16202A\\] { background-color: #1d1916 !important; }
-.ecole-cal-warm .from-\\[\\#192734\\] { --tw-gradient-from: #221f1b var(--tw-gradient-from-position) !important; }
-.ecole-cal-warm .to-\\[\\#0F1419\\] { --tw-gradient-to: #191512 var(--tw-gradient-to-position) !important; }
+// Certaines surfaces (CalendarSection…) hardcodent des bleus navy froids → on les
+// remappe vers du sombre CHAUD, scopé au contenu École (.ecole-warm-scope).
+const ECOLE_WARM_CSS = `
+.ecole-warm-scope .bg-\\[\\#0F1419\\],
+.ecole-warm-scope .bg-\\[\\#0F1419\\]\\/50,
+.ecole-warm-scope .bg-\\[\\#0F1419\\]\\/30,
+.ecole-warm-scope .bg-\\[\\#0F1419\\]\\/20 { background-color: #191512 !important; }
+.ecole-warm-scope .bg-\\[\\#192734\\] { background-color: #221f1b !important; }
+.ecole-warm-scope .bg-\\[\\#16202A\\] { background-color: #1d1916 !important; }
+.ecole-warm-scope .from-\\[\\#192734\\] { --tw-gradient-from: #221f1b var(--tw-gradient-from-position) !important; }
+.ecole-warm-scope .to-\\[\\#0F1419\\] { --tw-gradient-to: #191512 var(--tw-gradient-to-position) !important; }
 `;
-// Clés tenant_services qui « allument » le moteur école (course_builder = formations).
+
+// Clés tenant_services qui « allument » le moteur école.
 const ECOLE_SERVICE_KEYS = ['course_builder', 'school', 'school_module', 'formations'];
 
 export default function LiriEcolePage() {
-  const [activeTab, setActiveTab] = useState('apercu');
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { slug: payoutTenantSlug } = useResolvedTenantSlug();
+  const activeTab = searchParams.get('tab') || 'dashboard';
   const [ecoleActive, setEcoleActive] = useState(null); // null=inconnu (affiché), false=non activé
 
-  // GATE #3 : l'École s'affiche si un moteur école est actif (tenant_services).
-  // Fail-open : si l'appel échoue, on n'enferme pas l'utilisateur (on affiche).
+  const menuGroups = buildOwnerMenuGroups(payoutTenantSlug, ECOLE_BASE);
+
+  // GATE : l'École s'affiche si un moteur école est actif (tenant_services). Fail-open.
   useEffect(() => {
     let alive = true;
     catalogApi.getTenantServices()
@@ -85,22 +82,17 @@ export default function LiriEcolePage() {
     return () => { alive = false; };
   }, []);
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'formations': return <OwnerFormationsTab />;
-      case 'calendrier': return (
-        <div className="ecole-cal-warm">
-          <style>{CAL_WARM_CSS}</style>
-          <CalendarSection />
-        </div>
-      );
-      case 'eleves': return <SecretariatStudentDashboard />;
-      case 'apercu':
-      default: return <SecretariatOverview />;
+  // Sélection d'un item du sous-rail : href → navigation directe ; sinon → onglet (?tab=).
+  const selectItem = (item) => {
+    if (item.href) {
+      if (/^https?:\/\//.test(item.href)) window.location.assign(item.href);
+      else navigate(item.href);
+      return;
     }
+    navigate(`${ECOLE_BASE}?tab=${item.id}`);
   };
 
-  // Moteur école NON activé pour ce tenant → état d'activation (au lieu d'enfermer).
+  // Moteur école NON activé → état d'activation (au lieu d'enfermer).
   if (ecoleActive === false) {
     return (
       <LiriPortalShell active="ecole">
@@ -108,8 +100,8 @@ export default function LiriEcolePage() {
           <span className="grid h-14 w-14 place-items-center rounded-2xl text-white lp-ember"><GraduationCap size={26} /></span>
           <h2 className="text-[18px] font-semibold lp-ink">L'École n'est pas activée</h2>
           <p className="max-w-md text-[13px] lp-muted">
-            Active le moteur École pour vendre tes formations, gérer un calendrier de formation
-            et tes élèves directement depuis LIRI — sans site web.
+            Active le moteur École pour gérer formations, calendrier, élèves, coaching,
+            certificats et finances directement depuis LIRI — sans site web.
           </p>
         </div>
       </LiriPortalShell>
@@ -118,25 +110,45 @@ export default function LiriEcolePage() {
 
   return (
     <LiriPortalShell active="ecole">
-      <div className="flex h-full min-h-0 flex-col" style={ECOLE_THEME_VARS}>
-        {/* Sous-nav École — sélecteur PREMIUM (même composant + animation que l'espace
-            élève : pille active terracotta animée via layoutId, icône + label + sous-titre). */}
-        <div className="border-b lp-line px-4 py-3">
-          <PremiumSegmentedSelector
-            value={activeTab}
-            onChange={setActiveTab}
-            options={TAB_OPTIONS}
-            layoutId="liri-ecole-segment"
-            railClassName="!bg-white/[0.03] !border-white/[0.06]"
-          />
-        </div>
+      <div className="flex h-full min-h-0" style={ECOLE_THEME_VARS}>
+        <style>{ECOLE_WARM_CSS}</style>
 
-        {/* Contenu en SOMBRE CHAUD (tokens --lt-* remappés → palette portail) → épouse
-            le shell terracotta. SslThemeProvider dark + ErrorBoundary par onglet. */}
-        <div className="min-h-0 flex-1 overflow-auto">
+        {/* Sous-rail École — les 6 familles (source unique partagée avec le back-office) */}
+        <aside className="hidden md:flex w-[212px] shrink-0 flex-col overflow-y-auto border-r lp-line py-3">
+          {menuGroups.map((group) => (
+            <div key={group.section} className="px-2 pb-1.5 pt-3 first:pt-1">
+              <p className="px-2.5 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-stone-500">{group.section}</p>
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = !item.href && item.id === activeTab;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => selectItem(item)}
+                    className={`group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13px] transition-colors ${
+                      isActive
+                        ? 'font-semibold text-[var(--school-accent)]'
+                        : 'text-stone-300 hover:bg-white/[0.04] hover:text-white'
+                    }`}
+                    style={isActive ? { background: 'color-mix(in srgb, var(--school-accent) 16%, transparent)' } : undefined}
+                  >
+                    <Icon size={16} className="shrink-0" />
+                    <span className="truncate">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </aside>
+
+        {/* Contenu — back-office complet réutilisé, sombre chaud, scopé pour le calendrier */}
+        <div className="ecole-warm-scope min-h-0 flex-1 overflow-auto">
           <ErrorBoundary key={activeTab} logTag={`LIRI École · ${activeTab}`}>
             <SslThemeProvider mode="dark">
-              <div className="p-4">{renderContent()}</div>
+              <div className="p-4">
+                <OwnerDashboardBody activeTab={activeTab} basePath={ECOLE_BASE} />
+              </div>
             </SslThemeProvider>
           </ErrorBoundary>
         </div>
