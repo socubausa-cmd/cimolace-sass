@@ -7,7 +7,7 @@
 // studio (praticien) — le patient, lui, ne fetch RIEN : il reçoit les vues
 // déjà résolues via le canal de partage Realtime (cf. useCockpitChannel).
 // ─────────────────────────────────────────────────────────────────────────────
-import { api, medosApi } from '@/lib/api';
+import { api, medosApi, prescriptionsApi, attachmentsApi, clinicalApi } from '@/lib/api';
 
 // Certaines routes /med/* renvoient { data } (enveloppe globale), d'autres la
 // donnée brute. `peelData` pèle au plus une couche, défensivement.
@@ -66,6 +66,25 @@ export interface SoapNote {
   created_at?: string | null;
 }
 
+export interface LabResult {
+  id?: string;
+  test_name?: string; name?: string; label?: string; code?: string;
+  value?: string | number | null; unit?: string | null;
+  result_date?: string | null; date?: string | null; created_at?: string | null;
+  reference_range?: string | null; flag?: string | null; interpretation?: string | null;
+}
+export interface RxItem {
+  drug_name: string; dosage?: string | null; frequency?: string | null;
+  duration?: string | null; route?: string | null; quantity?: string | null; notes?: string | null;
+}
+export interface RxDoc {
+  id: string; prescription_number?: string | null; issued_at?: string | null;
+  patient_instructions?: string | null; items?: RxItem[];
+}
+export interface AttachmentLite {
+  id: string; file_name: string; mime_type?: string | null; created_at?: string | null;
+}
+
 // ── Descripteur de scène partagée (host → patient via Realtime) ──────────────
 // Volontairement SELF-CONTAINED : le patient rend la scène sans aucun appel
 // API (le jumeau est déjà résolu en OrganNode[], la SOAP porte son texte).
@@ -73,6 +92,9 @@ export type CockpitScene =
   | { kind: 'twin'; sex: 'female' | 'male'; organs: OrganNode[]; focus: string | null }
   | { kind: 'wheel'; domains: WheelDomain[]; organs: Array<{ code: string; name_fr: string; score: { score: number; color: OrganColor } | null }> }
   | { kind: 'soap'; soap: SoapNote }
+  | { kind: 'labs'; items: LabResult[] }
+  | { kind: 'prescription'; rx: RxDoc }
+  | { kind: 'image'; url: string; name: string; mime?: string }
   | { kind: 'clear' };
 
 // ── Appels API (host uniquement) ────────────────────────────────────────────
@@ -131,4 +153,39 @@ export function buildOrganNodes(
     position: o.position ?? null,
     score: scoreByCode.get(o.code) || o.score || null,
   }));
+}
+
+// ── Palette du composer de consultation (Phase 2b) ──────────────────────────
+// Réutilise les clients déjà câblés de @/lib/api (auth + tenant via intercepteur).
+
+/** Bilans / résultats de labo du patient (pour partage en consultation). */
+export function getLabs(patientId: string): Promise<LabResult[]> {
+  return clinicalApi.labResults
+    .listForPatient(patientId)
+    .then((r: any) => (Array.isArray(r) ? r : []))
+    .catch(() => []);
+}
+
+/** Ordonnances SIGNÉES du patient (les plus récentes d'abord). */
+export function getSignedPrescriptions(patientId: string): Promise<RxDoc[]> {
+  return prescriptionsApi
+    .list({ patient_id: patientId, status: 'signed' })
+    .then((r: any) => (Array.isArray(r) ? r : []))
+    .catch(() => []);
+}
+
+/** Pièces jointes du patient (imagerie / scan / PDF) à partager. */
+export function getAttachments(patientId: string): Promise<AttachmentLite[]> {
+  return attachmentsApi
+    .listForPatient(patientId)
+    .then((r: any) => (Array.isArray(r) ? r : []))
+    .catch(() => []);
+}
+
+/** URL de téléchargement signée d'une pièce jointe (pour l'afficher en partage). */
+export function getAttachmentUrl(id: string): Promise<string> {
+  return attachmentsApi
+    .getDownloadUrl(id)
+    .then((r: any) => r?.download_url || r?.url || '')
+    .catch(() => '');
 }

@@ -17,6 +17,10 @@ import {
   getLatestSoap,
   getReferential,
   getTwinState,
+  getLabs,
+  getSignedPrescriptions,
+  getAttachments,
+  getAttachmentUrl,
   COLOR_HEX,
   COLOR_LABEL,
   WHEEL_LABELS,
@@ -26,6 +30,9 @@ import {
   type OrganNode,
   type SoapNote,
   type WheelDomain,
+  type LabResult,
+  type RxDoc,
+  type AttachmentLite,
 } from './cockpit-api';
 import { useCockpitChannel } from './useCockpitChannel';
 
@@ -46,7 +53,7 @@ const COCKPIT_VARS = {
 
 const Z = 2147483000; // au-dessus du shell live
 
-type Tab = 'twin' | 'wheel' | 'soap';
+type Tab = 'twin' | 'wheel' | 'soap' | 'labs' | 'rx' | 'image';
 
 // ── Sous-vues (partagées host/patient) ──────────────────────────────────────
 
@@ -158,9 +165,121 @@ function SoapView({ soap }: { soap: SoapNote | null }) {
   );
 }
 
+function LabsView({ items }: { items: LabResult[] }) {
+  if (!items || items.length === 0) return <div style={emptyHint}>Aucun bilan biologique disponible.</div>;
+  const labName = (l: LabResult) => l.test_name || l.name || l.label || l.code || 'Analyse';
+  const labDate = (l: LabResult) => String(l.result_date || l.date || l.created_at || '').slice(0, 10);
+  return (
+    <div style={{ padding: '8px 12px', overflowY: 'auto', height: '100%' }}>
+      <div style={sectionTitle}>Bilans biologiques</div>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {items.map((l, i) => (
+          <div key={l.id || i} style={{ display: 'flex', alignItems: 'baseline', gap: 8, padding: '7px 0', borderBottom: '1px solid var(--zw-border)' }}>
+            <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'var(--zw-text)' }}>{labName(l)}</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: l.flag ? '#f97316' : 'var(--zw-text)' }}>
+              {l.value ?? '—'}{l.unit ? ` ${l.unit}` : ''}
+            </span>
+            {l.reference_range ? <span style={{ fontSize: 11, color: 'var(--zw-text-muted)' }}>réf. {l.reference_range}</span> : null}
+            {labDate(l) ? <span style={{ fontSize: 11, color: 'var(--zw-text-faint)', width: 74, textAlign: 'right' }}>{labDate(l)}</span> : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PrescriptionView({ rx }: { rx: RxDoc | null }) {
+  if (!rx) return <div style={emptyHint}>Aucune ordonnance signée.</div>;
+  return (
+    <div style={{ padding: '8px 12px', overflowY: 'auto', height: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
+        <span style={sectionTitle}>Ordonnance</span>
+        {rx.prescription_number ? <span style={{ fontSize: 11, color: 'var(--zw-text-muted)' }}>n° {rx.prescription_number}</span> : null}
+        {rx.issued_at ? <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--zw-text-faint)' }}>{String(rx.issued_at).slice(0, 10)}</span> : null}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {(rx.items || []).map((it, i) => (
+          <div key={i} style={{ borderLeft: '3px solid var(--brand-primary)', paddingLeft: 10 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--zw-text)' }}>{it.drug_name}</div>
+            <div style={{ fontSize: 12, color: 'var(--zw-text-soft)', lineHeight: 1.5 }}>
+              {[it.dosage, it.frequency, it.duration].filter(Boolean).join(' · ')}
+              {it.route ? ` — ${it.route}` : ''}
+            </div>
+            {it.notes ? <div style={{ fontSize: 11.5, color: 'var(--zw-text-muted)', fontStyle: 'italic' }}>{it.notes}</div> : null}
+          </div>
+        ))}
+      </div>
+      {rx.patient_instructions ? (
+        <div style={{ marginTop: 12, fontSize: 12, color: 'var(--zw-text-soft)', background: 'var(--zw-bg-subtle)', borderRadius: 8, padding: '8px 10px' }}>
+          {rx.patient_instructions}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ImageView({ url, name, mime }: { url: string; name: string; mime?: string }) {
+  const isPdf = (mime || '').includes('pdf') || /\.pdf($|\?)/i.test(url);
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: 8 }}>
+      <div style={{ fontSize: 12, color: 'var(--zw-text-muted)', marginBottom: 6, flexShrink: 0 }}>{name}</div>
+      <div style={{ flex: 1, minHeight: 0, background: 'var(--zw-bg-subtle)', borderRadius: 10, overflow: 'hidden', display: 'grid', placeItems: 'center' }}>
+        {!url ? (
+          <span style={{ color: 'var(--zw-text-faint)', fontSize: 13 }}>Chargement…</span>
+        ) : isPdf ? (
+          <iframe title={name} src={url} style={{ width: '100%', height: '100%', border: 'none' }} />
+        ) : (
+          <img src={url} alt={name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Onglet IMAGERIE côté composer : liste des pièces jointes → on en choisit une
+// (URL signée récupérée) → aperçu, puis « Partager » l'envoie sur la scène.
+function ImageTab({
+  attachments,
+  selectedImg,
+  onPick,
+  onBack,
+}: {
+  attachments: AttachmentLite[];
+  selectedImg: { url: string; name: string; mime?: string } | null;
+  onPick: (a: AttachmentLite) => void;
+  onBack: () => void;
+}) {
+  if (selectedImg) {
+    return (
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <button onClick={onBack} style={{ alignSelf: 'flex-start', margin: '4px 0 6px', padding: '4px 9px', fontSize: 11.5, border: '1px solid var(--zw-border-strong)', borderRadius: 7, background: 'transparent', color: 'var(--zw-text-soft)', cursor: 'pointer' }}>
+          ← Pièces jointes
+        </button>
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <ImageView url={selectedImg.url} name={selectedImg.name} mime={selectedImg.mime} />
+        </div>
+      </div>
+    );
+  }
+  if (!attachments || attachments.length === 0) return <div style={emptyHint}>Aucune pièce jointe (imagerie, scan, PDF).</div>;
+  return (
+    <div style={{ padding: '8px 12px', overflowY: 'auto', height: '100%' }}>
+      <div style={sectionTitle}>Pièces jointes</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {attachments.map((a) => (
+          <button key={a.id} onClick={() => onPick(a)} style={{ display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left', padding: '8px 9px', borderRadius: 8, border: '1px solid var(--zw-border)', background: '#fff', cursor: 'pointer', fontSize: 13, color: 'var(--zw-text)' }}>
+            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.file_name}</span>
+            <span style={{ fontSize: 11, color: 'var(--brand-primary)', fontWeight: 700, flexShrink: 0 }}>Choisir</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Rendu d'une scène clinique partagée — réutilisé par le cockpit patient ET la
 // SCÈNE CENTRALE de la salle Consultation. Wrappé dans les vars --zw-* pour que
-// les composants portés (jumeau, roue, SOAP) rendent correctement.
+// les composants portés (jumeau, roue, SOAP, labs, ordonnance, imagerie) rendent.
 export function SharedSceneView({ scene }: { scene: CockpitScene | null }) {
   if (!scene || scene.kind === 'clear') return null;
   return (
@@ -170,6 +289,9 @@ export function SharedSceneView({ scene }: { scene: CockpitScene | null }) {
       )}
       {scene.kind === 'wheel' && <WheelView domains={scene.domains} organs={scene.organs} />}
       {scene.kind === 'soap' && <SoapView soap={scene.soap} />}
+      {scene.kind === 'labs' && <LabsView items={scene.items} />}
+      {scene.kind === 'prescription' && <PrescriptionView rx={scene.rx} />}
+      {scene.kind === 'image' && <ImageView url={scene.url} name={scene.name} mime={scene.mime} />}
     </div>
   );
 }
@@ -219,6 +341,10 @@ function HostCockpit({ sessionId, channel }: { sessionId: string; channel: Cockp
   const [wheel, setWheel] = useState<WheelDomain[]>([]);
   const [soap, setSoap] = useState<SoapNote | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [labs, setLabs] = useState<LabResult[]>([]);
+  const [prescriptions, setPrescriptions] = useState<RxDoc[]>([]);
+  const [attachments, setAttachments] = useState<AttachmentLite[]>([]);
+  const [selectedImg, setSelectedImg] = useState<{ url: string; name: string; mime?: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Charge le contexte + le dossier (jumeau, bilan, SOAP). Si la session n'est
@@ -238,6 +364,9 @@ function HostCockpit({ sessionId, channel }: { sessionId: string; channel: Cockp
         setOrgans(buildOrganNodes(refs, state));
         setWheel(state?.wheel?.domains || []);
         getLatestSoap(c.patient_id).then((s) => alive && setSoap(s)).catch(() => {});
+        getLabs(c.patient_id).then((r) => alive && setLabs(r)).catch(() => {});
+        getSignedPrescriptions(c.patient_id).then((r) => alive && setPrescriptions(r)).catch(() => {});
+        getAttachments(c.patient_id).then((r) => alive && setAttachments(r)).catch(() => {});
       } catch {
         if (alive) setLoadFailed(true);
       } finally {
@@ -254,18 +383,38 @@ function HostCockpit({ sessionId, channel }: { sessionId: string; channel: Cockp
     [organs],
   );
 
+  const latestRx = prescriptions[0] || null;
+
   const shareCurrent = () => {
     if (tab === 'twin') shareScene({ kind: 'twin', sex: ctx?.sex || 'female', organs, focus: selected });
     else if (tab === 'wheel') shareScene({ kind: 'wheel', domains: wheel, organs: organScores });
     else if (tab === 'soap' && soap) shareScene({ kind: 'soap', soap });
+    else if (tab === 'labs' && labs.length) shareScene({ kind: 'labs', items: labs });
+    else if (tab === 'rx' && latestRx) shareScene({ kind: 'prescription', rx: latestRx });
+    else if (tab === 'image' && selectedImg?.url) shareScene({ kind: 'image', url: selectedImg.url, name: selectedImg.name, mime: selectedImg.mime });
   };
 
+  // Sélection d'une pièce jointe : on récupère l'URL signée puis on l'affiche en
+  // aperçu ; « Partager » l'enverra ensuite sur la scène.
+  const pickAttachment = async (a: AttachmentLite) => {
+    setSelectedImg({ url: '', name: a.file_name, mime: a.mime_type || undefined });
+    const url = await getAttachmentUrl(a.id);
+    setSelectedImg({ url, name: a.file_name, mime: a.mime_type || undefined });
+  };
+
+  const canShare =
+    tab === 'twin' ||
+    tab === 'wheel' ||
+    (tab === 'soap' && !!soap) ||
+    (tab === 'labs' && labs.length > 0) ||
+    (tab === 'rx' && !!latestRx) ||
+    (tab === 'image' && !!selectedImg?.url);
+
   const isSharing = !!sharedScene && sharedScene.kind !== 'clear';
-  const sharingThisTab =
-    isSharing &&
-    ((tab === 'twin' && sharedScene!.kind === 'twin') ||
-      (tab === 'wheel' && sharedScene!.kind === 'wheel') ||
-      (tab === 'soap' && sharedScene!.kind === 'soap'));
+  const tabKind: Record<Tab, CockpitScene['kind']> = {
+    twin: 'twin', wheel: 'wheel', soap: 'soap', labs: 'labs', rx: 'prescription', image: 'image',
+  };
+  const sharingThisTab = isSharing && sharedScene!.kind === tabKind[tab];
 
   if (loadFailed) return null; // session non-médicale → cockpit masqué
 
@@ -279,9 +428,12 @@ function HostCockpit({ sessionId, channel }: { sessionId: string; channel: Cockp
   }
 
   const tabs: Array<[Tab, string]> = [
-    ['twin', 'Jumeau 3D'],
-    ['wheel', 'Bilan'],
-    ['soap', 'Note SOAP'],
+    ['twin', 'Jumeau'],
+    ['wheel', 'Roue'],
+    ['labs', 'Bilans'],
+    ['image', 'Imagerie'],
+    ['rx', 'Ordonnance'],
+    ['soap', 'SOAP'],
   ];
 
   return (
@@ -294,13 +446,13 @@ function HostCockpit({ sessionId, channel }: { sessionId: string; channel: Cockp
       </div>
 
       {/* Onglets */}
-      <div style={{ display: 'flex', gap: 4, padding: '7px 8px 0', background: '#fff', borderBottom: '1px solid var(--zw-border)' }}>
+      <div style={{ display: 'flex', gap: 2, padding: '6px 6px 0', background: '#fff', borderBottom: '1px solid var(--zw-border)', overflowX: 'auto' }}>
         {tabs.map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
             style={{
-              flex: 1, padding: '7px 4px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+              flexShrink: 0, padding: '7px 9px', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
               border: 'none', borderBottom: tab === key ? '2px solid var(--brand-primary)' : '2px solid transparent',
               background: 'transparent', color: tab === key ? 'var(--zw-text)' : 'var(--zw-text-muted)',
             }}
@@ -322,6 +474,11 @@ function HostCockpit({ sessionId, channel }: { sessionId: string; channel: Cockp
             )}
             {tab === 'wheel' && <WheelView domains={wheel} organs={organScores} />}
             {tab === 'soap' && <SoapView soap={soap} />}
+            {tab === 'labs' && <LabsView items={labs} />}
+            {tab === 'rx' && <PrescriptionView rx={latestRx} />}
+            {tab === 'image' && (
+              <ImageTab attachments={attachments} selectedImg={selectedImg} onPick={pickAttachment} onBack={() => setSelectedImg(null)} />
+            )}
           </>
         )}
       </div>
@@ -334,7 +491,7 @@ function HostCockpit({ sessionId, channel }: { sessionId: string; channel: Cockp
           </span>
         ) : (
           <span style={{ fontSize: 11.5, color: 'var(--zw-text-muted)' }}>
-            {tab === 'soap' && !soap ? 'Aucune note à partager' : 'Cette vue n\'est pas partagée'}
+            {!canShare ? 'Rien à partager dans cet onglet' : "Cette vue n'est pas partagée"}
           </span>
         )}
         <span style={{ flex: 1 }} />
@@ -345,8 +502,8 @@ function HostCockpit({ sessionId, channel }: { sessionId: string; channel: Cockp
         )}
         <button
           onClick={shareCurrent}
-          disabled={tab === 'soap' && !soap}
-          style={{ ...shareActionBtn, opacity: tab === 'soap' && !soap ? 0.5 : 1, cursor: tab === 'soap' && !soap ? 'not-allowed' : 'pointer' }}
+          disabled={!canShare}
+          style={{ ...shareActionBtn, opacity: canShare ? 1 : 0.5, cursor: canShare ? 'pointer' : 'not-allowed' }}
         >
           Partager au patient
         </button>
