@@ -55,7 +55,7 @@ const ECOLE_WARM_CSS = `
 }
 .ecole-warm-scope .premium-panel,
 .ecole-warm-scope .premium-card { background: #1d1916 !important; border-color: rgba(245,241,233,0.10) !important; }
-.ecole-warm-scope .premium-dashboard-shell { background-image: none !important; padding: 0 !important; min-height: 0 !important; }
+#root .ecole-warm-scope .premium-dashboard-shell { background-image: none !important; padding: 0 !important; min-height: 0 !important; }
 .ecole-warm-scope [class*="bg-[#0F1419]"],
 .ecole-warm-scope [class*="bg-[#121A25]"],
 .ecole-warm-scope [class*="bg-[#121a25]"],
@@ -63,6 +63,20 @@ const ECOLE_WARM_CSS = `
 .ecole-warm-scope [class*="bg-[#16202A]"] { background-color: #1d1916 !important; }
 .ecole-warm-scope [class*="border-[#192734]"],
 .ecole-warm-scope [class*="border-[#121A25]"] { border-color: rgba(245,241,233,0.10) !important; }
+/* DIRECTIVE ARTISTIQUE (réf. Rapports & Analytique) : tableaux DISCRETS, pas de boîte-dans-
+   la-boîte. Une surface sombre IMBRIQUÉE dans une autre → transparente (le tableau respire
+   sur une seule carte, comme Rapports). En-têtes de tableau aussi → transparents. */
+.ecole-warm-scope [class*="bg-[#121A25]"] [class*="bg-[#121A25]"],
+.ecole-warm-scope [class*="bg-[#121A25]"] [class*="bg-[#0F1419]"],
+.ecole-warm-scope [class*="bg-[#0F1419]"] [class*="bg-[#121A25]"],
+.ecole-warm-scope [class*="bg-[#0F1419]"] [class*="bg-[#0F1419]"],
+.ecole-warm-scope .premium-panel [class*="bg-[#0F1419]"],
+.ecole-warm-scope .premium-panel [class*="bg-[#121A25]"],
+.ecole-warm-scope .premium-panel [class*="bg-[#192734]"],
+.ecole-warm-scope .premium-panel .premium-panel,
+.ecole-warm-scope [class*="bg-[#121A25]"] thead,
+.ecole-warm-scope [class*="bg-[#0F1419]"] thead,
+.ecole-warm-scope .premium-panel thead { background-color: transparent !important; }
 .ecole-warm-scope [class*="from-[#192734]"],
 .ecole-warm-scope [class*="from-[#0F1419]"],
 .ecole-warm-scope [class*="from-[#121A25]"] { --tw-gradient-from: #221f1b var(--tw-gradient-from-position) !important; }
