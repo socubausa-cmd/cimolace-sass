@@ -148,9 +148,8 @@ const ECOLE_WARM_CSS = `
    cible « none ») dans le scope scrollable → forcer la visibilité (KPI/titres invisibles).
    Cible PRÉCISE via « transform: none » → ne touche PAS les sorties AnimatePresence (qui
    gardent transform: translateY(...)), donc ne casse aucune bascule de contenu. */
-.ecole-warm-scope [style*="opacity: 0; transform: none"],
-.ecole-warm-scope [style*="opacity: 0; transform: translate"],
-.ecole-warm-scope [style*="opacity:0;transform:translate"] { opacity: 1 !important; transform: none !important; }
+.ecole-warm-scope [style*="transform: translate"],
+.ecole-warm-scope [style*="opacity: 0; transform: none"] { opacity: 1 !important; transform: none !important; }
 `;
 
 const ECOLE_SERVICE_KEYS = ['course_builder', 'school', 'school_module', 'formations'];
