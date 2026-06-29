@@ -173,6 +173,94 @@ export class TeleconsultService {
   }
 
   /**
+   * Contexte clinique d'une session de téléconsultation, pour le COCKPIT
+   * partagé (jumeau 3D / SOAP / graphiques) — côté studio (praticien) ET
+   * côté patient.
+   *
+   * Ne renvoie QUE le strict nécessaire pour amorcer le chargement du
+   * dossier : l'id du patient + son nom d'affichage + le rôle de l'appelant.
+   * AUCUNE donnée clinique ici — le cockpit charge ensuite le jumeau / la
+   * note via leurs endpoints dédiés (déjà gardés indépendamment).
+   *
+   * Contrôle d'accès STRICT (leçon C1 — la service-role contourne la RLS,
+   * l'isolation est donc 100 % applicative) :
+   *   - patient : doit être LE patient de cette session (patient_user_id) ;
+   *   - staff   : practitioner / owner / clinic_admin du tenant (le select
+   *               est déjà tenant-scopé) ;
+   *   - tout autre cas → 403.
+   */
+  async getClinicalContext(
+    tenant: TenantContext,
+    actorId: string,
+    actorRole: TenantContext['userRole'],
+    sessionId: string,
+  ): Promise<{
+    session_id: string;
+    patient_id: string;
+    patient_name: string;
+    sex: 'female' | 'male';
+    practitioner_id: string;
+    appointment_id: string | null;
+    role: 'host' | 'patient';
+  }> {
+    const { data: session, error } = await this.supabase.client
+      .from('med_teleconsult_sessions')
+      .select('id, patient_id, practitioner_id, appointment_id')
+      .eq('tenant_id', tenant.id)
+      .eq('id', sessionId)
+      .single();
+    if (error || !session) throw new NotFoundException('Session introuvable');
+
+    const isHost =
+      actorRole === 'practitioner' ||
+      actorRole === 'owner' ||
+      actorRole === 'clinic_admin';
+
+    if (actorRole === 'patient') {
+      // Le patient ne voit le contexte QUE de sa propre session.
+      const { data: pat } = await this.supabase.client
+        .from('med_patients')
+        .select('patient_user_id')
+        .eq('id', (session as any).patient_id)
+        .single();
+      if ((pat as any)?.patient_user_id !== actorId) {
+        throw new ForbiddenException('Accès refusé à cette session');
+      }
+    } else if (!isHost) {
+      // Ni patient propriétaire, ni staff soignant → interdit.
+      throw new ForbiddenException('Accès refusé à cette session');
+    }
+
+    const { data: patient } = await this.supabase.client
+      .from('med_patients')
+      .select('first_name, last_name, gender')
+      .eq('tenant_id', tenant.id)
+      .eq('id', (session as any).patient_id)
+      .single();
+
+    const fullName = patient
+      ? `${(patient as any).first_name ?? ''} ${(patient as any).last_name ?? ''}`.trim()
+      : '';
+    // Corps 3D : 'male' uniquement si explicitement masculin, sinon 'female'
+    // (modèle par défaut du jumeau). Aucune autre valeur de gender n'est
+    // exposée — seul le choix de mesh anatomique en dépend.
+    const sex: 'female' | 'male' =
+      String((patient as any)?.gender ?? '').toLowerCase().startsWith('m')
+        ? 'male'
+        : 'female';
+
+    return {
+      session_id: (session as any).id,
+      patient_id: (session as any).patient_id,
+      patient_name: fullName || 'Patient',
+      sex,
+      practitioner_id: (session as any).practitioner_id,
+      appointment_id: (session as any).appointment_id ?? null,
+      role: isHost ? 'host' : 'patient',
+    };
+  }
+
+  /**
    * Mirror a teleconsult session into a `live_sessions` row so the FULL
    * immersive Liri room (LiveHostPage — video grid + SmartBoard for the
    * practitioner to present images / sketch) can mount on it. Idempotent:

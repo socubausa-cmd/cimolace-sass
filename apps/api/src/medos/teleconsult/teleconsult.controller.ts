@@ -70,6 +70,28 @@ export class TeleconsultController {
     );
   }
 
+  /**
+   * Contexte clinique de la session, pour le COCKPIT partagé (jumeau 3D /
+   * SOAP / graphiques). Renvoie { patient_id, patient_name, role } — le
+   * cockpit charge ensuite le dossier via les endpoints jumeau/charting.
+   * Accessible au staff soignant ET au patient (chacun borné à ses droits
+   * dans le service : le patient ne voit QUE sa propre session).
+   */
+  @Get(':id/clinical-context')
+  @Roles('owner', 'practitioner', 'clinic_admin', 'patient')
+  clinicalContext(
+    @Param('id') id: string,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.service.getClinicalContext(
+      tenant,
+      req.user.id,
+      tenant.userRole,
+      id,
+    );
+  }
+
   /** Marque le participant comme entré (appelé par le frontend après rejoindre) */
   @Post(':id/join')
   @Roles('owner', 'practitioner', 'clinic_admin', 'patient')

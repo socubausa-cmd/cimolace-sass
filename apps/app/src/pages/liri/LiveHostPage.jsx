@@ -128,6 +128,7 @@ import {
   LONGIA_PANEL_FILTER,
 } from '@/lib/longiaLiveCopilot';
 import { useLongiaLiveRealtime } from '@/hooks/useLongiaLiveRealtime';
+import MedTeleconsultCockpit from '@/features/medos-cockpit/MedTeleconsultCockpit';
 
 // ── Composant principal ────────────────────────────────────────────────────────
 export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGrant = null }) {
@@ -1491,6 +1492,14 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     );
   }
 
+  // Cockpit clinique téléconsult (jumeau 3D + bilan + SOAP, partage natif au
+  // patient). Monté uniquement pour les sessions de téléconsultation (titre) ;
+  // se masque aussi côté backend si le contexte clinique est inaccessible.
+  // mode = host (praticien) sur /live/host/:id, patient sur l'UI invité.
+  const medCockpit = /t[ée]l[ée]consult/i.test(sessionTitle || '') ? (
+    <MedTeleconsultCockpit sessionId={sessionId} mode={isGuestUi ? 'patient' : 'host'} />
+  ) : null;
+
   // ── Mobile phone render — TikTok style (< 640 px) ────────────────────────
   if (isMobilePhone) {
     // SmartBoard réel injecté comme slot fond plein écran
@@ -1521,6 +1530,7 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     );
 
     return (
+      <>
       <LiveHostMobileShell
         isGuestUi={isGuestUi}
         sessionTitle={sessionTitle}
@@ -1588,11 +1598,14 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
         toggleNeuronQ={toggleNeuronQ}
         setAmbientMasterVolume={setAmbientMasterVolume}
       />
+      {medCockpit}
+      </>
     );
   }
 
   // ── Render desktop/tablet ─────────────────────────────────────────────────
   return (
+    <>
     <LiveHostLiveSessionChrome
       isGuestUi={isGuestUi}
       previewMobileMaquette={previewMobileMaquette}
@@ -1612,5 +1625,7 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
 
       <LiveHostLivePostGridSlots {...liveHostPostGridSlotsSpreadProps} />
     </LiveHostLiveSessionChrome>
+    {medCockpit}
+    </>
   );
 }
