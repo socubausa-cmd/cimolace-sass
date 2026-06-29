@@ -384,7 +384,40 @@ export class BillingAdvancedService {
       .maybeSingle();
     if (prio?.id) {
       subscription = prio;
-    } else {
+    }
+
+    // Billing TENANT-SCOPÉ : un abonnement du TENANT (souvent `user_id = null`,
+    // posé par le checkout tenant / webhook Stripe) débloque TOUS ses membres.
+    // L'ancienne résolution par seul `user_id` ne le voyait pas → le tenant
+    // payant (ex : zahirwellness, forfait 150 €/mois) retombait à tort en tier
+    // GRATUIT (live coupé à 3 min). On résout donc le(s) tenant(s) du user via
+    // `tenant_memberships` et on prend l'abonnement ACTIF du tenant — prioritaire
+    // sur un éventuel sub user annulé.
+    if (!subscription) {
+      const { data: mems } = await this.sb
+        .from('tenant_memberships')
+        .select('tenant_id')
+        .eq('user_id', userId);
+      const tenantIds = [
+        ...new Set(((mems as AnyObj[]) || []).map((m) => m.tenant_id).filter(Boolean)),
+      ];
+      if (tenantIds.length) {
+        const { data: tenantSub } = await this.sb
+          .from('billing_subscriptions')
+          .select(subscriptionSelect)
+          .in('tenant_id', tenantIds)
+          .in('status', ['active', 'past_due'])
+          .order('current_period_end', { ascending: false, nullsFirst: false })
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (tenantSub?.id) subscription = tenantSub;
+      }
+    }
+
+    // Dernier recours : le sub user le plus récent (toute statut) pour conserver
+    // l'historique (renewalLink, paiements) si rien d'actif n'a été trouvé.
+    if (!subscription) {
       const { data: fallback } = await this.sb
         .from('billing_subscriptions')
         .select(subscriptionSelect)
