@@ -57,17 +57,17 @@ const EMPTY_LIST: never[] = [];
  * `sceneFlags`.
  */
 const CONSULT_DEFAULT_SCENE_FLAGS = {
-  smartboard: false,
-  diapo: false,
-  screen: false,
-  browser: false,
+  smartboard: false, // SmartBoard natif (deck IA) : hors-périmètre consult
+  diapo: true, // diapositives importées (PPT/PDF/images)
+  screen: true, // partage d'écran
+  browser: false, // navigateur embarqué : non
   embed: false,
   quiz: false,
   secure_app_share: false,
-  board: true,
-  image: false,
+  board: true, // tableau blanc Konva (scène par défaut)
+  image: true, // galerie d'images (« partager une image »)
   camera2: false,
-  shop: false,
+  shop: true, // boutique / liens (« partager une boutique »)
 } as const;
 
 export interface ConsultationSmartBoardProps {

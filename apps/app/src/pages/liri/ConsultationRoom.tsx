@@ -48,10 +48,17 @@ import ConsultationSmartBoard from '@/features/consultation-stage/ConsultationSm
 import ConsultationCopilot from '@/features/consultation-stage/ConsultationCopilot';
 import ConsultationRecall from '@/features/consultation-stage/ConsultationRecall';
 
-const BG = '#0b0b0c';
-const BAR = 'rgba(22,22,24,0.94)';
-const GOLD = '#b08d57';
-const TILE_BG = '#18181b';
+// Shell visuel ALIGNÉ SUR LE PORTAIL LIRI (cf. liveHostTheme `LH_DESIGN`) : base
+// chaude #262624 + halos coral, panneaux frostés, accent AMBRE #d4a36a — fini le
+// #0b0b0c plat + le gold ISNA (directive artistique : tout chaud, fonds emboîtés).
+const BG = '#262624'; // --lh-page-bg
+const PAGE_MESH =
+  'radial-gradient(ellipse 85% 55% at 50% -15%, rgba(217,119,87,0.06), transparent 58%), radial-gradient(ellipse 55% 40% at 100% 85%, rgba(226,85,63,0.05), transparent 52%), radial-gradient(ellipse 45% 32% at 0% 75%, rgba(194,104,63,0.04), transparent 48%)';
+const BAR = 'rgba(43,41,38,0.96)'; // --lh-strip-bg (barres haut/bas)
+const GOLD = '#d4a36a'; // --lh-accent (ambre chaud LIRI ; n'est plus du gold)
+const TILE_BG = '#1f1e1c'; // --lh-stage-bg (tuiles vidéo / scène)
+const PANEL_BG = 'rgba(48,48,46,0.97)'; // --lh-panel-bg (panneaux frostés chauds)
+const PANEL_BORDER = '1px solid rgba(245,244,238,0.09)'; // filet ivoire discret
 
 // La téléconsult est un moteur MEDOS : à la sortie, le praticien revient à MEDOS
 // (med.cimolace.space, d'où il vient) — JAMAIS au portail LIRI école (/dashboard
@@ -181,7 +188,7 @@ export default function ConsultationRoom() {
   if (left) return <CallEndedScreen />;
 
   const content = (
-    <div data-lk-theme="default" style={{ position: 'fixed', inset: 0, zIndex: 2147483000, background: BG, display: 'flex', flexDirection: 'column' }}>
+    <div data-lk-theme="default" style={{ position: 'fixed', inset: 0, zIndex: 2147483000, background: BG, backgroundImage: PAGE_MESH, display: 'flex', flexDirection: 'column' }}>
       <LiveKitRoom
         serverUrl={conn.url}
         token={conn.token}
@@ -208,6 +215,7 @@ export default function ConsultationRoom() {
               editable={annotate && isHost && annotatable}
               onStrokes={channel.shareStrokes}
               sessionId={sessionId ?? null}
+              rightOpen={rightPanel !== null}
             />
             {/* Wrapper positionné : ancre le popover Réglages au-dessus de la barre
                 (reste DANS <LiveKitRoom> → ConsultationSettings lit le contexte salle). */}
@@ -469,7 +477,7 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div style={{ width: 340, flexShrink: 0, background: 'rgba(18,18,20,0.98)', borderLeft: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <div style={{ width: 340, flexShrink: 0, background: PANEL_BG, borderLeft: PANEL_BORDER, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <MessageSquare size={16} color={GOLD} aria-hidden="true" />
         <span style={{ fontWeight: 600, fontSize: 14, color: '#fff' }}>Discussion</span>
@@ -589,7 +597,7 @@ function AmbientInlineControls({ ctl }: { ctl: ReturnType<typeof useAmbientAudio
 // de droite façon ChatPanel, avec un bandeau et un bouton de fermeture.
 function CopilotPanel({ sessionId, onClose }: { sessionId: string | undefined; onClose: () => void }) {
   return (
-    <div style={{ width: 300, flexShrink: 0, background: 'rgba(18,18,20,0.98)', borderLeft: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <div style={{ width: 300, flexShrink: 0, background: PANEL_BG, borderLeft: PANEL_BORDER, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <Sparkles size={16} color={GOLD} aria-hidden="true" />
         <span style={{ fontWeight: 600, fontSize: 14, color: '#fff' }}>Copilote IA</span>
@@ -613,6 +621,7 @@ export function ConsultationStage({
   editable,
   onStrokes,
   sessionId,
+  rightOpen = false,
 }: {
   view: ConsultView;
   isHost: boolean;
@@ -621,6 +630,9 @@ export function ConsultationStage({
   editable: boolean;
   onStrokes: (s: AnnotStroke[]) => void;
   sessionId: string | null;
+  /** Un panneau de droite (Discussion/Copilote/Récap) est ouvert → on masque le
+   *  rail Participants pour ne JAMAIS avoir 2 colonnes à droite (anti-surcharge). */
+  rightOpen?: boolean;
 }) {
   const tracks = useTracks(
     [
@@ -644,7 +656,7 @@ export function ConsultationStage({
   const hasScene = !!scene && scene.kind !== 'clear';
   return (
     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'row', gap: 12, padding: 14 }}>
-      <div style={{ flex: 1, minWidth: 0, borderRadius: 16, overflow: 'hidden', position: 'relative', background: view === 'board' ? '#0b0b0c' : '#fff' }}>
+      <div style={{ flex: 1, minWidth: 0, borderRadius: 16, overflow: 'hidden', position: 'relative', background: view === 'board' ? TILE_BG : '#fff' }}>
         {view === 'board' ? (
           // Tableau intelligent (SmartBoard Konva) — outils de dessin/formes/texte +
           // NeuroInk côté praticien ; lecture seule côté patient. Remplace l'ancien
@@ -662,7 +674,7 @@ export function ConsultationStage({
           <AnnotationOverlay strokes={strokes} editable={editable} onStrokes={onStrokes} />
         ) : null}
       </div>
-      <MembersRail tracks={tracks} />
+      {!rightOpen ? <MembersRail tracks={tracks} /> : null}
     </div>
   );
 }
@@ -671,7 +683,7 @@ export function ConsultationStage({
 function MembersRail({ tracks }: { tracks: any[] }) {
   const cams = tracks.filter((t) => t?.source === Track.Source.Camera);
   return (
-    <div style={{ width: 224, flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: 0, background: 'rgba(18,18,20,0.6)', borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+    <div style={{ width: 224, flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: 0, background: PANEL_BG, borderRadius: 14, border: PANEL_BORDER, overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <Users size={15} color={GOLD} aria-hidden="true" />
         <span style={{ fontWeight: 600, fontSize: 13, color: '#fff' }}>Participants</span>
@@ -846,7 +858,7 @@ function barBtn(active: boolean): React.CSSProperties {
 
 // ── Inviter un proche (host) + consentement RGPD (patient) ───────────────────
 const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, zIndex: 2147483600, background: 'rgba(0,0,0,0.55)', display: 'grid', placeItems: 'center', padding: 20 };
-const modalStyle: React.CSSProperties = { width: '100%', maxWidth: 520, background: '#161618', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 18, boxShadow: '0 30px 80px rgba(0,0,0,0.6)' };
+const modalStyle: React.CSSProperties = { width: '100%', maxWidth: 520, background: PANEL_BG, border: PANEL_BORDER, borderRadius: 16, padding: 18, boxShadow: '0 30px 80px rgba(0,0,0,0.6)' };
 const inputStyle: React.CSSProperties = { flex: 1, minWidth: 0, padding: '9px 11px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13 };
 const primaryBtn: React.CSSProperties = { padding: '9px 14px', borderRadius: 9, border: 'none', cursor: 'pointer', background: GOLD, color: '#1a1a1a', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' };
 const secondaryBtn: React.CSSProperties = { padding: '10px 18px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', background: 'transparent', color: '#cbd5e1', fontSize: 13, fontWeight: 600 };
