@@ -511,11 +511,12 @@ export function ConsultationStage({
     );
   }
 
-  // PARTAGE / TABLEAU : artefact (ou tableau blanc) au centre + bande vidéo.
+  // PARTAGE / TABLEAU : vue PRÉSENTATEUR — artefact (ou tableau) en grand à gauche
+  // + rail vertical des participants (membres invités) à droite.
   const hasScene = !!scene && scene.kind !== 'clear';
   return (
-    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 12, padding: 14 }}>
-      <div style={{ flex: 1, minHeight: 0, borderRadius: 16, overflow: 'hidden', position: 'relative', background: '#fff' }}>
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'row', gap: 12, padding: 14 }}>
+      <div style={{ flex: 1, minWidth: 0, borderRadius: 16, overflow: 'hidden', position: 'relative', background: '#fff' }}>
         {view === 'board' ? (
           <BoardSurface hasStrokes={strokes.length > 0} editable={editable} isHost={isHost} />
         ) : hasScene ? (
@@ -527,8 +528,27 @@ export function ConsultationStage({
           <AnnotationOverlay strokes={strokes} editable={editable} onStrokes={onStrokes} />
         ) : null}
       </div>
-      <div style={{ height: 92, flexShrink: 0 }}>
-        <VideoTiles tracks={tracks} variant="strip" />
+      <MembersRail tracks={tracks} />
+    </div>
+  );
+}
+
+// ── Rail des participants (membres invités) — vue présentateur (Partage/Tableau) ─
+function MembersRail({ tracks }: { tracks: any[] }) {
+  const cams = tracks.filter((t) => t?.source === Track.Source.Camera);
+  return (
+    <div style={{ width: 224, flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: 0, background: 'rgba(18,18,20,0.6)', borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <Users size={15} color={GOLD} aria-hidden="true" />
+        <span style={{ fontWeight: 600, fontSize: 13, color: '#fff' }}>Participants</span>
+        <span style={{ marginLeft: 'auto', fontSize: 11, color: '#9ca3af', background: 'rgba(255,255,255,0.06)', padding: '1px 8px', borderRadius: 999 }}>{cams.length}</span>
+      </div>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {cams.map((t, i) => (
+          <div key={tileKey(t, i)} style={{ width: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
+          </div>
+        ))}
       </div>
     </div>
   );
