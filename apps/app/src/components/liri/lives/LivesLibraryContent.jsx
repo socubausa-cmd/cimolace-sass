@@ -6,20 +6,34 @@ import { getApiBaseUrl } from '@/lib/apiBase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlayCircle, Calendar, Clock } from 'lucide-react';
+import { PlayCircle, Calendar, Clock, Search, LayoutGrid, List as ListIcon, Sparkles, ChevronRight, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 
+/** Date sûre (gère null / invalide). */
+const safeDate = (v) => {
+  const d = v ? new Date(v) : null;
+  return d && !Number.isNaN(d.getTime()) ? d : null;
+};
+const fmtDateTime = (v) => {
+  const d = safeDate(v);
+  return d ? `${d.toLocaleDateString()} à ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Date à confirmer';
+};
+const fmtDate = (v) => {
+  const d = safeDate(v);
+  return d ? d.toLocaleDateString() : '';
+};
+
 /**
- * Liste lives (à venir + replays) — même agrégation que l'ancienne page /lives.
+ * Liste lives (à venir + replays) — curriculum + lives RÉELS du Studio.
+ * Recherche intelligente, filtres, vue grille/liste, suggestions « Pour toi ».
  * @param {'default' | 'liriMobile'} variant
  */
 export default function LivesLibraryContent({ variant = 'default' }) {
   const { years = [] } = useDataSync();
 
-  // Lives RÉELS créés au Studio (table live_sessions, scopés au tenant via l'API) —
-  // s'ajoutent aux lives du curriculum. Fail-safe : si l'appel échoue, on garde le curriculum.
+  // Lives RÉELS créés au Studio (table live_sessions, scopés au tenant via l'API).
   const [sessions, setSessions] = useState([]);
   useEffect(() => {
     const token = authStore.getToken?.();
@@ -37,7 +51,6 @@ export default function LivesLibraryContent({ variant = 'default' }) {
   const { upcomingLives, pastLives } = useMemo(() => {
     const upcoming = [];
     const past = [];
-    // 1) Lives du CURRICULUM (semaines : ouverture / clôture)
     (Array.isArray(years) ? years : []).forEach((y) =>
       (Array.isArray(y?.modules) ? y.modules : []).forEach((m) =>
         (Array.isArray(m?.weeks) ? m.weeks : []).forEach((w) => {
@@ -50,7 +63,6 @@ export default function LivesLibraryContent({ variant = 'default' }) {
         }),
       ),
     );
-    // 2) Lives RÉELS du Studio (live_sessions)
     (Array.isArray(sessions) ? sessions : []).forEach((s) => {
       if (!s?.id) return;
       const ended = s.status === 'ended' || s.status === 'completed' || !!s.ended_at;
@@ -64,129 +76,275 @@ export default function LivesLibraryContent({ variant = 'default' }) {
       };
       if (ended) past.push(item); else upcoming.push(item);
     });
+    upcoming.sort((a, b) => (safeDate(a.date)?.getTime() || Infinity) - (safeDate(b.date)?.getTime() || Infinity));
+    past.sort((a, b) => (safeDate(b.date)?.getTime() || 0) - (safeDate(a.date)?.getTime() || 0));
     return { upcomingLives: upcoming, pastLives: past };
   }, [years, sessions]);
 
   const mobile = variant === 'liriMobile';
 
-  return (
-    <div className={cn(mobile ? 'space-y-8' : 'max-w-7xl mx-auto space-y-12')}>
-      {!mobile ? (
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-white">Bibliothèque des Lives</h1>
-          <p className="text-xl text-stone-400">Retrouvez tous les directs, passés et à venir.</p>
-        </div>
-      ) : (
+  // ── Recherche · filtre · vue ───────────────────────────────────────────────
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState('all'); // 'all' | 'upcoming' | 'replays'
+  const [view, setView] = useState('grid'); // 'grid' | 'list'
+
+  const matchQuery = (l) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return [l.title, l.subtitle, l.description].filter(Boolean).some((s) => String(s).toLowerCase().includes(q));
+  };
+  const fUpcoming = useMemo(() => upcomingLives.filter(matchQuery), [upcomingLives, query]);
+  const fReplays = useMemo(() => pastLives.filter(matchQuery), [pastLives, query]);
+
+  // ── Suggestions « Pour toi » (heuristique ; la vraie progression se branchera) ─
+  const nextLive = upcomingLives[0] || null; // déjà trié par date croissante
+  const catchUp = pastLives.slice(0, 4); // replays récents = à rattraper
+
+  // ── Variante mobile : rendu compact (inchangé, sans toolbar) ────────────────
+  if (mobile) {
+    return (
+      <div className="space-y-8">
         <div className="space-y-2 pb-1">
           <LiriWordmark size="kicker" className="text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]" />
           <h2 className="font-serif text-lg text-[#faf3e6] tracking-tight">Lives & replays</h2>
           <p className="text-xs text-white/42">
             En invité : accès aux directs et rediffusions. Un lien reçu ? Collez-le dans « Connexion » →{' '}
-            <Link to={`${ELEVE_MOBILE.connexion}/lien`} className="text-sky-300/95 underline-offset-2 hover:underline">
+            <Link to={`${ELEVE_MOBILE.connexion}/lien`} className="text-[color-mix(in_srgb,var(--school-accent)_85%,white)] underline-offset-2 hover:underline">
               Rejoindre avec un lien
-            </Link>
-            .<span className="mt-1 block text-[11px] text-white/35">
-              Animer le live (hôte) : uniquement sur le site web, depuis un ordinateur.
-            </span>
+            </Link>.
           </p>
         </div>
+        <MobileSection title="À venir" icon={Calendar} items={upcomingLives} kind="upcoming" />
+        <MobileSection title="Replays" icon={PlayCircle} items={pastLives} kind="replay" />
+      </div>
+    );
+  }
+
+  const showUpcoming = filter === 'all' || filter === 'upcoming';
+  const showReplays = filter === 'all' || filter === 'replays';
+  const nothing = fUpcoming.length === 0 && fReplays.length === 0;
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-8">
+      {/* En-tête */}
+      <div className="text-center space-y-3">
+        <h1 className="text-4xl md:text-5xl font-serif font-bold text-white">Bibliothèque des Lives</h1>
+        <p className="text-lg text-stone-400">Retrouvez tous les directs, passés et à venir.</p>
+      </div>
+
+      {/* ── Pour toi (suggestions) ── */}
+      {(nextLive || catchUp.length > 0) && (
+        <section className="rounded-2xl border border-[rgba(217,119,87,0.22)] bg-[color-mix(in_srgb,var(--school-accent)_8%,#2b2926)] p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-[var(--school-accent)]" />
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-[color-mix(in_srgb,var(--school-accent)_85%,white)]">Pour toi</h3>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {nextLive && (
+              <div className="flex items-center gap-3 rounded-xl border border-[rgba(245,244,238,0.08)] bg-[#30302e] p-4">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] text-[var(--school-accent)]"><Clock className="h-5 w-5" /></span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] uppercase tracking-wide text-stone-400">Ne manque pas ton prochain live</p>
+                  <p className="truncate text-sm font-semibold text-white">{nextLive.title}</p>
+                  <p className="truncate text-xs text-stone-400">{fmtDateTime(nextLive.date)}</p>
+                </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-stone-500" />
+              </div>
+            )}
+            {catchUp.length > 0 && (
+              <button
+                type="button"
+                onClick={() => { setFilter('replays'); setQuery(''); }}
+                className="flex items-center gap-3 rounded-xl border border-[rgba(245,244,238,0.08)] bg-[#30302e] p-4 text-left transition-colors hover:border-[rgba(217,119,87,0.35)]"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] text-[var(--school-accent)]"><RotateCcw className="h-5 w-5" /></span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] uppercase tracking-wide text-stone-400">À rattraper</p>
+                  <p className="text-sm font-semibold text-white">{catchUp.length} replay{catchUp.length > 1 ? 's' : ''} à revoir</p>
+                  <p className="truncate text-xs text-stone-400">{catchUp.map((c) => c.title).slice(0, 2).join(' · ')}</p>
+                </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-stone-500" />
+              </button>
+            )}
+          </div>
+        </section>
       )}
 
-      <section>
-        <h3
-          className={cn(
-            'font-bold text-white mb-4 flex items-center gap-2',
-            mobile ? 'text-base' : 'text-2xl mb-6',
-          )}
-        >
-          <Calendar className={cn('text-[var(--school-accent)]', mobile ? 'h-4 w-4' : 'h-6 w-6')} />
-          À venir
-        </h3>
-        <div className={cn('grid gap-4', mobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6')}>
-          {upcomingLives.map((live) => (
-            <Card
-              key={live.id}
+      {/* ── Barre d'outils : recherche · filtres · vue ── */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="relative w-full md:max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rechercher un live, un thème…"
+            className="h-10 w-full rounded-xl border border-[rgba(245,244,238,0.1)] bg-[#2b2926] pl-9 pr-3 text-sm text-stone-100 placeholder:text-stone-500 outline-none transition-colors focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          {[
+            { k: 'all', label: 'Tous' },
+            { k: 'upcoming', label: 'À venir' },
+            { k: 'replays', label: 'Replays' },
+          ].map((c) => (
+            <button
+              key={c.k}
+              type="button"
+              onClick={() => setFilter(c.k)}
               className={cn(
-                'border-white/10',
-                mobile ? 'bg-black/40 border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]' : 'bg-[#30302e]',
+                'h-9 rounded-full px-3.5 text-xs font-medium transition-colors',
+                filter === c.k
+                  ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[color-mix(in_srgb,var(--school-accent)_90%,white)] border border-[color-mix(in_srgb,var(--school-accent)_36%,transparent)]'
+                  : 'border border-[rgba(245,244,238,0.1)] bg-[#2b2926] text-stone-400 hover:text-stone-200',
               )}
             >
-              <CardContent className={cn(mobile ? 'p-4' : 'p-6')}>
-                <Badge className="bg-[var(--school-accent)] text-black mb-3 text-[10px]">Programmé</Badge>
-                <h4 className={cn('font-bold text-white mb-1', mobile ? 'text-base' : 'text-xl mb-2')}>
-                  {live.title}
-                </h4>
-                <p className={cn('text-stone-400 mb-3', mobile ? 'text-xs' : 'text-sm mb-4')}>
-                  {live.subtitle}
-                </p>
-                <div className={cn('flex items-center gap-2 text-stone-300 mb-4', mobile ? 'text-xs' : 'text-sm mb-6')}>
-                  <Clock className="h-3.5 w-3.5 shrink-0" />
-                  {live.date && !Number.isNaN(new Date(live.date).getTime())
-                    ? `${new Date(live.date).toLocaleDateString()} à ${new Date(live.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                    : 'Date à confirmer'}
-                </div>
-                <Button
-                  size={mobile ? 'sm' : 'default'}
-                  className={cn(
-                    'w-full',
-                    mobile
-                      ? 'border border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] to-[#6b5a14]/20 text-[#fff4dc] hover:from-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] hover:to-[#6b5a14]/28'
-                      : 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_24%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_32%,transparent)] text-[#f0d5c6]',
-                  )}
-                >
-                  {mobile ? 'Rejoindre le direct (invité)' : "S'inscrire / Rejoindre"}
-                </Button>
-              </CardContent>
-            </Card>
+              {c.label}
+            </button>
           ))}
-          {upcomingLives.length === 0 ? (
-            <p className={cn('text-stone-400', mobile && 'text-sm text-white/40')}>
-              Aucun live programmé pour le moment.
-            </p>
-          ) : null}
+          <div className="ml-1 flex items-center rounded-full border border-[rgba(245,244,238,0.1)] bg-[#2b2926] p-0.5">
+            {[
+              { k: 'grid', Icon: LayoutGrid, label: 'Grille' },
+              { k: 'list', Icon: ListIcon, label: 'Liste' },
+            ].map(({ k, Icon, label }) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setView(k)}
+                aria-label={label}
+                title={label}
+                className={cn(
+                  'grid h-8 w-8 place-items-center rounded-full transition-colors',
+                  view === k ? 'bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] text-[var(--school-accent)]' : 'text-stone-500 hover:text-stone-300',
+                )}
+              >
+                <Icon className="h-4 w-4" />
+              </button>
+            ))}
+          </div>
         </div>
-      </section>
+      </div>
 
-      <section>
-        <h3
-          className={cn(
-            'font-bold text-white mb-4 flex items-center gap-2',
-            mobile ? 'text-base' : 'text-2xl mb-6',
+      {nothing && (
+        <p className="py-10 text-center text-stone-400">
+          {query ? `Aucun résultat pour « ${query} ».` : 'Aucun live pour le moment.'}
+        </p>
+      )}
+
+      {/* ── À venir ── */}
+      {showUpcoming && fUpcoming.length > 0 && (
+        <section>
+          <SectionTitle icon={Calendar}>À venir</SectionTitle>
+          {view === 'grid' ? (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {fUpcoming.map((live) => <UpcomingCard key={live.id} live={live} />)}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {fUpcoming.map((live) => <LiveRow key={live.id} live={live} kind="upcoming" />)}
+            </div>
           )}
-        >
-          <PlayCircle className={cn('text-[var(--school-accent)]', mobile ? 'h-4 w-4' : 'h-6 w-6')} />
-          Replays
-        </h3>
-        <div className={cn('grid gap-4', mobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6')}>
-          {pastLives.map((live) => (
-            <Card
-              key={live.id}
-              className={cn(
-                'border-white/10 group cursor-pointer hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors overflow-hidden',
-                mobile ? 'bg-black/40 border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]' : 'bg-[#30302e]',
-              )}
-            >
-              <div className="aspect-video bg-black relative">
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 group-hover:bg-black/30 transition-colors">
-                  <PlayCircle
-                    className={cn(
-                      'text-white opacity-80 group-hover:scale-110 transition-transform',
-                      mobile ? 'h-12 w-12' : 'h-16 w-16',
-                    )}
-                  />
-                </div>
-              </div>
-              <CardContent className={cn(mobile ? 'p-4' : 'p-6')}>
-                <h4 className={cn('font-bold text-white mb-1', mobile ? 'text-sm' : 'text-lg')}>{live.title}</h4>
-                <p className={cn('text-stone-400 mb-2', mobile ? 'text-xs' : 'text-sm mb-4')}>
-                  {live.date && !Number.isNaN(new Date(live.date).getTime()) ? new Date(live.date).toLocaleDateString() : ''}
-                </p>
-                <p className={cn('text-stone-300 line-clamp-2', mobile ? 'text-xs' : 'text-sm')}>{live.description}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* ── Replays ── */}
+      {showReplays && fReplays.length > 0 && (
+        <section>
+          <SectionTitle icon={PlayCircle}>Replays</SectionTitle>
+          {view === 'grid' ? (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {fReplays.map((live) => <ReplayCard key={live.id} live={live} />)}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {fReplays.map((live) => <LiveRow key={live.id} live={live} kind="replay" />)}
+            </div>
+          )}
+        </section>
+      )}
     </div>
+  );
+}
+
+/* ─── Sous-composants (desktop) ─── */
+function SectionTitle({ icon: Icon, children }) {
+  return (
+    <h3 className="mb-6 flex items-center gap-2 text-2xl font-bold text-white">
+      <Icon className="h-6 w-6 text-[var(--school-accent)]" />
+      {children}
+    </h3>
+  );
+}
+
+function UpcomingCard({ live }) {
+  return (
+    <Card className="border-[rgba(245,244,238,0.08)] bg-[#30302e]">
+      <CardContent className="p-6">
+        <Badge className="mb-3 bg-[var(--school-accent)] text-[10px] text-black">Programmé</Badge>
+        <h4 className="mb-2 text-xl font-bold text-white">{live.title}</h4>
+        <p className="mb-4 text-sm text-stone-400">{live.subtitle}</p>
+        <div className="mb-6 flex items-center gap-2 text-sm text-stone-300">
+          <Clock className="h-3.5 w-3.5 shrink-0 text-[var(--school-accent)]" />
+          {fmtDateTime(live.date)}
+        </div>
+        <Button className="w-full border border-[color-mix(in_srgb,var(--school-accent)_32%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f0d5c6] hover:bg-[color-mix(in_srgb,var(--school-accent)_24%,transparent)]">
+          S'inscrire / Rejoindre
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ReplayCard({ live }) {
+  return (
+    <Card className="group cursor-pointer overflow-hidden border-[rgba(245,244,238,0.08)] bg-[#30302e] transition-colors hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]">
+      <div className="relative aspect-video bg-black">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 transition-colors group-hover:bg-black/30">
+          <PlayCircle className="h-16 w-16 text-white opacity-80 transition-transform group-hover:scale-110" />
+        </div>
+      </div>
+      <CardContent className="p-6">
+        <h4 className="mb-1 text-lg font-bold text-white">{live.title}</h4>
+        <p className="mb-4 text-sm text-stone-400">{fmtDate(live.date)}</p>
+        {live.description ? <p className="line-clamp-2 text-sm text-stone-300">{live.description}</p> : null}
+      </CardContent>
+    </Card>
+  );
+}
+
+function LiveRow({ live, kind }) {
+  return (
+    <div className="flex items-center gap-4 rounded-xl border border-[rgba(245,244,238,0.08)] bg-[#30302e] px-4 py-3 transition-colors hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] text-[var(--school-accent)]">
+        {kind === 'replay' ? <PlayCircle className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-white">{live.title}</p>
+        <p className="truncate text-xs text-stone-400">
+          {kind === 'replay' ? fmtDate(live.date) : `${live.subtitle ? `${live.subtitle} · ` : ''}${fmtDateTime(live.date)}`}
+        </p>
+      </div>
+      <Button size="sm" className="shrink-0 border border-[color-mix(in_srgb,var(--school-accent)_32%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f0d5c6] hover:bg-[color-mix(in_srgb,var(--school-accent)_24%,transparent)]">
+        {kind === 'replay' ? 'Revoir' : 'Rejoindre'}
+      </Button>
+    </div>
+  );
+}
+
+/* ─── Section mobile (compacte) ─── */
+function MobileSection({ title, icon: Icon, items, kind }) {
+  return (
+    <section>
+      <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-white">
+        <Icon className="h-4 w-4 text-[var(--school-accent)]" />
+        {title}
+      </h3>
+      <div className="space-y-2">
+        {items.length === 0 ? (
+          <p className="text-sm text-white/40">{kind === 'replay' ? 'Aucun replay.' : 'Aucun live programmé.'}</p>
+        ) : (
+          items.map((live) => <LiveRow key={live.id} live={live} kind={kind} />)
+        )}
+      </div>
+    </section>
   );
 }
