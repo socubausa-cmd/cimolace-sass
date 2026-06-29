@@ -22,10 +22,12 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 // SecretariatStudentDashboard lit les tokens `--lt-*` (définis sous le shell admin
 // secrétariat). On les remappe ici à la palette SOMBRE du shell tenant-admin (navy +
 // or) pour que le composant épouse le shell au lieu d'un fond clair.
+// Contrastes vérifiés WCAG sur les cartes (--lt-card-bg #12111a) : --lt-muted 0.52 ≈ 5.5:1
+// (≥4.5 AA), --lt-sub 0.70 ≈ 9:1.
 const STUDENTS_THEME_VARS = {
   '--lt-text': '#f5f5f7',
-  '--lt-sub': 'rgba(245,245,247,0.62)',
-  '--lt-muted': 'rgba(245,245,247,0.42)',
+  '--lt-sub': 'rgba(245,245,247,0.70)',
+  '--lt-muted': 'rgba(245,245,247,0.52)',
   '--lt-border': 'rgba(255,255,255,0.10)',
   '--lt-card-bg': '#12111a',
   '--lt-card-border': 'rgba(255,255,255,0.08)',
