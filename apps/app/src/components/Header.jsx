@@ -36,9 +36,12 @@ import { getFreshAccessToken } from '@/lib/authToken';
 import { canServeSecretariatHeartbeat } from '@/lib/staffRole';
 import { getLiriMemberLoginPath } from '@/lib/liriVitrineModel';
 import { useResolvedTenantSlug } from '@/hooks/useResolvedTenantSlug';
-import { FOUNDER_TENANT_CONFIG as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { activeTenantConfig, FOUNDER_TENANT_CONFIG as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const ISNA_SLUG = String(isnaTenantConfig?.slug || 'isna').trim().toLowerCase();
+// Slug du tenant ACTIF résolu par l'hôte (synchrone) : 'isna' sur le domaine
+// fondateur (prorascience.org), '' sur la plateforme neutre (app.cimolace.space).
+const ACTIVE_TENANT_SLUG = String(activeTenantConfig?.slug || '').trim().toLowerCase();
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -65,6 +68,12 @@ const Header = () => {
   const dashboardPath = resolveDashboardPath(user);
   const { slug: resolvedTenantSlug } = useResolvedTenantSlug();
   const tenantSlugLc = String(resolvedTenantSlug || '').trim().toLowerCase();
+  // Tenant ÉCOLE ? Les rubriques scolaires (Formations / Vie Étudiante / Prendre RDV
+  // secrétariat / libellé « Academy ») ne s'affichent QUE pour le moteur école — jamais
+  // pour un tenant MEDOS/wellness (ex. zahirwellness) ni la plateforme LIRI neutre, qui
+  // héritaient sinon de la nav prorascience. Signal SYNCHRONE (hôte fondateur, anti-flash)
+  // + slug résolu = isna. (À étendre à active_modules['ecole'] quand l'API l'exposera.)
+  const isEcoleTenant = ACTIVE_TENANT_SLUG === ISNA_SLUG || tenantSlugLc === ISNA_SLUG;
   const pathnameLc = String(location.pathname || '').toLowerCase();
   /** ISNA : pas de pictogramme LIRI à côté de PRORASCIENCE. Sur /forfaits, masquer aussi si le Host résolu n'est pas clairement CIMOLACE (ex. localhost). */
   const hideLiriWordmarkImage =
@@ -74,7 +83,9 @@ const Header = () => {
   // PORTAIL /liri (pas la home école) et n'est pas une « Academy ».
   const isLiriProductContext = !tenantSlugLc;
   const brandHomeTo = isLiriProductContext ? '/liri' : '/';
-  const brandSubtitle = isLiriProductContext ? 'Portail' : 'Academy';
+  // « Academy » réservé au moteur école ; tout autre tenant (MEDOS/wellness) ou la
+  // plateforme neutre → « Portail » (un cabinet wellness n'est pas une « Academy »).
+  const brandSubtitle = isEcoleTenant ? 'Academy' : 'Portail';
   const isImmersivePrimaryRoute = useMemo(() => {
     const path = String(location.pathname || '').toLowerCase();
     return (
@@ -278,18 +289,23 @@ const Header = () => {
     navigate(resolveDashboardPath({ ...user, role: nextRole }), { replace: true });
   };
 
-  // Nav globale dédoublonnée (~5 essentiels). « Formations » et « Forfaits » pointaient tous
-  // deux vers /forfaits → fusionnés en une seule entrée « Formations ». Le catalogue détaillé
-  // reste atteignable via la page Formations ; « Vie Étudiante » mène au vrai dashboard élève.
+  // Nav SCOLAIRE (Formations / Accompagnement / Vie Étudiante / Ressources / Boutique
+  // école) : ce sont les rubriques du MOTEUR ÉCOLE. Elles ne doivent s'afficher QUE
+  // pour un tenant école — JAMAIS pour un tenant MEDOS/wellness (ex. zahirwellness)
+  // ni pour la plateforme LIRI neutre, qui sinon héritaient de la nav prorascience.
+  // (cf. isEcoleTenant calculé en tête de composant)
   const desktopLinks = useMemo(
-    () => [
-      { id: 'formations', label: 'Formations', icon: GraduationCap, to: '/forfaits' },
-      { id: 'accompagnement', label: 'Accompagnement', icon: Users, to: '/accompagnement/coaching' },
-      { id: 'vie-etudiante', label: 'Vie Étudiante', icon: School, to: '/student-school-life/dashboard' },
-      { id: 'ressources', label: 'Ressources', icon: BookOpen, to: '/resources' },
-      { id: 'boutique', label: 'Boutique', icon: ShoppingBag, to: '/boutique' },
-    ],
-    []
+    () =>
+      isEcoleTenant
+        ? [
+            { id: 'formations', label: 'Formations', icon: GraduationCap, to: '/forfaits' },
+            { id: 'accompagnement', label: 'Accompagnement', icon: Users, to: '/accompagnement/coaching' },
+            { id: 'vie-etudiante', label: 'Vie Étudiante', icon: School, to: '/student-school-life/dashboard' },
+            { id: 'ressources', label: 'Ressources', icon: BookOpen, to: '/resources' },
+            { id: 'boutique', label: 'Boutique', icon: ShoppingBag, to: '/boutique' },
+          ]
+        : [],
+    [isEcoleTenant]
   );
 
   const quickLinks = desktopLinks.slice(0, 3);
@@ -461,19 +477,23 @@ const Header = () => {
                   </motion.div>
                 </Link>
               )}
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="shrink-0 border-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[#f0d78c] hover:bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] hover:text-white shadow-[inset_0_0_0_1px_rgba(212,175,55,0.35)]"
-                title="Calendrier — prendre rendez-vous avec le secrétariat"
-              >
-                <Link to="/appointment/request" className="inline-flex items-center gap-2 font-semibold">
-                  <Calendar className="w-4 h-4 text-[var(--school-accent)]" aria-hidden />
-                  <span className="hidden xl:inline">Prendre RDV</span>
-                  <span className="xl:hidden">RDV</span>
-                </Link>
-              </Button>
+              {/* « Prendre RDV » = prise de RDV secrétariat ÉCOLE → réservé au moteur école
+                  (un tenant MEDOS prend ses RDV via MEDOS, pas par ce bouton). */}
+              {isEcoleTenant && (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0 border-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[#f0d78c] hover:bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] hover:text-white shadow-[inset_0_0_0_1px_rgba(212,175,55,0.35)]"
+                  title="Calendrier — prendre rendez-vous avec le secrétariat"
+                >
+                  <Link to="/appointment/request" className="inline-flex items-center gap-2 font-semibold">
+                    <Calendar className="w-4 h-4 text-[var(--school-accent)]" aria-hidden />
+                    <span className="hidden xl:inline">Prendre RDV</span>
+                    <span className="xl:hidden">RDV</span>
+                  </Link>
+                </Button>
+              )}
               {isAuthenticated && isMultiRoleUser && (
                 <div className="px-2 py-1 rounded-lg border border-white/10 bg-white/5">
                   <select
