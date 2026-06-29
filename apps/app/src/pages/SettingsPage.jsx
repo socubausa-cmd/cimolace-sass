@@ -159,17 +159,23 @@ const SettingsPage = ({ embedded = false }) => {
           )}
 
           <div className="mt-6">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.2 }}
-              >
-                {renderTabContent()}
-              </motion.div>
-            </AnimatePresence>
+            {/* Embarqué (onglets dans l'en-tête) : rendu DIRECT, sans AnimatePresence mode="wait"
+                (sa sortie ne se complète pas dans le scope scrollable → le contenu ne basculait pas). */}
+            {inPortal ? (
+              <div key={activeTab}>{renderTabContent()}</div>
+            ) : (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {renderTabContent()}
+                </motion.div>
+              </AnimatePresence>
+            )}
           </div>
        </div>
   );

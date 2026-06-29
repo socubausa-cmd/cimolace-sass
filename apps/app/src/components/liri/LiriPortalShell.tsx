@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare, MessageCircle,
-  WandSparkles, Library, Blocks, Settings2, GraduationCap, ChevronRight,
+  WandSparkles, Library, Blocks, Settings2, GraduationCap, ChevronRight, ChevronDown, MoreHorizontal,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { authStore } from '@/lib/auth-store';
@@ -24,25 +24,63 @@ const RAIL: { key: RailKey; label: string; icon: typeof House; to: string }[] = 
   { key: 'brain', label: 'Brain', icon: Sparkles, to: '/dashboard/liri' },
 ];
 
-/** Onglets de sous-vues (niveau 3) rendus DANS l'en-tête — voir portalHeader + la RÈGLE menus. */
+/** Onglets de sous-vues (niveau 3) rendus DANS l'en-tête — voir portalHeader + la RÈGLE menus.
+ *  Au-delà de MAX onglets, l'excédent se replie dans un menu « ••• » (RÈGLE menus). */
+const MAX_HEADER_TABS = 6;
 function HeaderTabs() {
   const { tabs } = usePortalHeaderValues();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!moreOpen) return;
+    const close = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setMoreOpen(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [moreOpen]);
   if (!tabs || !tabs.items.length) return null;
+
+  const overflow = tabs.items.length > MAX_HEADER_TABS;
+  const visible = overflow ? tabs.items.slice(0, MAX_HEADER_TABS) : tabs.items;
+  const hidden = overflow ? tabs.items.slice(MAX_HEADER_TABS) : [];
+  const hiddenActive = hidden.find((t) => t.value === tabs.active);
+
+  const TabBtn = (t: { value: string; label: string }) => {
+    const isActive = t.value === tabs!.active;
+    return (
+      <button key={t.value} onClick={() => tabs!.onChange(t.value)}
+        className={`relative shrink-0 whitespace-nowrap px-3 py-1.5 text-[13px] lp-tr ${isActive ? 'lp-ink font-medium' : 'lp-muted hover:lp-ink'}`}>
+        {t.label}
+        {isActive && <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full" style={{ background: 'var(--coral)' }} />}
+      </button>
+    );
+  };
+
   return (
-    <nav className="hidden min-w-0 items-center gap-0.5 overflow-x-auto md:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {tabs.items.map((t) => {
-        const isActive = t.value === tabs.active;
-        return (
-          <button
-            key={t.value}
-            onClick={() => tabs.onChange(t.value)}
-            className={`relative shrink-0 whitespace-nowrap px-3 py-1.5 text-[13px] lp-tr ${isActive ? 'lp-ink font-medium' : 'lp-muted hover:lp-ink'}`}
-          >
-            {t.label}
-            {isActive && <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full" style={{ background: 'var(--coral)' }} />}
+    <nav className="hidden min-w-0 items-center gap-0.5 md:flex">
+      {visible.map(TabBtn)}
+      {overflow && (
+        <div className="relative" ref={ref}>
+          <button onClick={() => setMoreOpen((o) => !o)}
+            className={`flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[13px] lp-tr ${hiddenActive ? 'lp-ink font-medium' : 'lp-muted hover:lp-ink'}`}>
+            {hiddenActive ? hiddenActive.label : <MoreHorizontal size={16} />}
+            <ChevronDown size={13} className="lp-faint" />
           </button>
-        );
-      })}
+          {moreOpen && (
+            <div className="absolute right-0 top-[calc(100%+6px)] z-50 max-h-[60vh] min-w-[190px] overflow-auto rounded-xl border lp-line lp-rail-bg py-1 lp-soft">
+              {hidden.map((t) => {
+                const isActive = t.value === tabs!.active;
+                return (
+                  <button key={t.value} onClick={() => { tabs!.onChange(t.value); setMoreOpen(false); }}
+                    className={`flex w-full items-center whitespace-nowrap px-3.5 py-2 text-left text-[13px] lp-tr ${isActive ? 'lp-ink font-medium' : 'lp-muted hover:lp-ink'}`}
+                    style={isActive ? { background: 'color-mix(in srgb, var(--coral) 16%, transparent)' } : undefined}>
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </nav>
   );
 }

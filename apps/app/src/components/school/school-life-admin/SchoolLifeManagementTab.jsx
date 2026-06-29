@@ -8,9 +8,29 @@ import { AbsencesManager, DelaysManager, IllnessLeaveManager } from './Attendanc
 import { WarningsManager, SanctionsManager, ConvocationsManager, BehaviorManager } from './DisciplineManagers';
 import { LayoutDashboard, Users, Bell, Calendar, AlertTriangle, Clock, Activity, HeartPulse, Gavel, ShieldAlert, Star } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { usePortalTabs, useInPortalHeader } from '@/components/liri/portalHeader';
+
+// Sous-vues (niveau 3). Dans le portail → poussées dans l'en-tête (avec repli « ••• »).
+const LIFE_TABS = [
+  { value: 'dashboard', label: "Vue d'ensemble" },
+  { value: 'students', label: 'Étudiants' },
+  { value: 'announcements', label: 'Annonces' },
+  { value: 'events', label: 'Agenda' },
+  { value: 'warnings', label: 'Avertissements' },
+  { value: 'attendance', label: 'Présence' },
+  { value: 'delays', label: 'Retards' },
+  { value: 'behavior', label: 'Comportement' },
+  { value: 'sanctions', label: 'Sanctions' },
+  { value: 'convocations', label: 'Convocations' },
+  { value: 'health', label: 'Santé' },
+];
 
 const SchoolLifeManagementTab = () => {
+  const inPortal = useInPortalHeader();
   const [activeTab, setActiveTab] = useState('dashboard');
+  // Dans le portail : sous-vues dans l'EN-TÊTE (pas de barre dans le corps).
+  usePortalTabs(LIFE_TABS, activeTab, setActiveTab);
+
   const currentContent = useMemo(() => {
     switch (activeTab) {
       case 'students': return <StudentsManagementPanel />;
@@ -28,6 +48,27 @@ const SchoolLifeManagementTab = () => {
         return <SchoolLifeDashboard />;
     }
   }, [activeTab]);
+
+  const content = (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2 }}
+      >
+        {currentContent}
+      </motion.div>
+    </AnimatePresence>
+  );
+
+  // Dans le portail : onglets dans l'en-tête → contenu rendu DIRECTEMENT, SANS Radix Tabs NI
+  // AnimatePresence (mode="wait" : l'exit ne se complète pas dans le scope scrollable → le
+  // nouveau contenu n'entre jamais et l'ancien reste affiché). Switch nu = bascule fiable.
+  if (inPortal) {
+    return <div key={activeTab} className="space-y-6">{currentContent}</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -54,21 +95,9 @@ const SchoolLifeManagementTab = () => {
             <TabsTrigger value="health" className="gap-2 px-4 py-2"><HeartPulse className="w-4 h-4 text-green-400"/> Santé</TabsTrigger>
           </TabsList>
         </div>
-
-        <TabsContent value={activeTab} className="mt-0">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
-            >
-              {currentContent}
-            </motion.div>
-          </AnimatePresence>
-        </TabsContent>
       </Tabs>
+
+      {content}
     </div>
   );
 };

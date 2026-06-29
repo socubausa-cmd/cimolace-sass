@@ -226,6 +226,23 @@ const FinanceSection = ({ basePath = '/owner-dashboard' }) => {
 
    usePortalTabs(financeOptions, subTab, onFinanceSubChange);
 
+   const financeBody = (
+     <>
+       {subTab === 'students' && <SecretariatBillingPanel />}
+       {subTab === 'payments' && <PaymentsTab />}
+       {subTab === 'recovery' && <RecoveryTab />}
+       {subTab === 'inventory' && <InventoryTab />}
+       {subTab === 'payout-setup' && (
+         <div
+           className="p-4 rounded-[14px]"
+           style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)' }}
+         >
+           <TenantPayoutProvidersForm />
+         </div>
+       )}
+     </>
+   );
+
    return (
       <div className="space-y-6">
          {!inPortal && (
@@ -239,68 +256,16 @@ const FinanceSection = ({ basePath = '/owner-dashboard' }) => {
              optionClassName="!text-zinc-500 [&.text-white]:!text-zinc-900 hover:!bg-black/[0.03]"
            />
          )}
-         <AnimatePresence mode="wait">
-           {subTab === 'students' && (
-             <motion.div
-               key="finance-students"
-               initial={{ opacity: 0, y: 8 }}
-               animate={{ opacity: 1, y: 0 }}
-               exit={{ opacity: 0, y: -8 }}
-               transition={{ duration: 0.22, ease: 'easeOut' }}
-             >
-               <SecretariatBillingPanel />
+         {/* Embarqué : rendu DIRECT (AnimatePresence mode="wait" ne bascule pas dans le scope scrollable). */}
+         {inPortal ? (
+           <div key={subTab}>{financeBody}</div>
+         ) : (
+           <AnimatePresence mode="wait">
+             <motion.div key={subTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.22, ease: 'easeOut' }}>
+               {financeBody}
              </motion.div>
-           )}
-           {subTab === 'payments' && (
-             <motion.div
-               key="finance-payments"
-               initial={{ opacity: 0, y: 8 }}
-               animate={{ opacity: 1, y: 0 }}
-               exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.22, ease: 'easeOut' }}
-             >
-               <PaymentsTab />
-             </motion.div>
-           )}
-           {subTab === 'recovery' && (
-             <motion.div
-               key="finance-recovery"
-               initial={{ opacity: 0, y: 8 }}
-               animate={{ opacity: 1, y: 0 }}
-               exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.22, ease: 'easeOut' }}
-             >
-               <RecoveryTab />
-             </motion.div>
-           )}
-           {subTab === 'inventory' && (
-             <motion.div
-               key="finance-inventory"
-               initial={{ opacity: 0, y: 8 }}
-               animate={{ opacity: 1, y: 0 }}
-               exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.22, ease: 'easeOut' }}
-             >
-               <InventoryTab />
-             </motion.div>
-           )}
-           {subTab === 'payout-setup' && (
-             <motion.div
-               key="finance-payout-setup"
-               initial={{ opacity: 0, y: 8 }}
-               animate={{ opacity: 1, y: 0 }}
-               exit={{ opacity: 0, y: -8 }}
-               transition={{ duration: 0.22, ease: 'easeOut' }}
-             >
-               <div
-                 className="p-4 rounded-[14px]"
-                 style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)' }}
-               >
-                 <TenantPayoutProvidersForm />
-               </div>
-             </motion.div>
-           )}
-         </AnimatePresence>
+           </AnimatePresence>
+         )}
       </div>
    );
 };
