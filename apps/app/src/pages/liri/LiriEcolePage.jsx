@@ -144,6 +144,13 @@ const ECOLE_WARM_CSS = `
 .ecole-warm-scope [class*="gap-6"] { gap: 14px !important; }
 .ecole-warm-scope [class*="p-3"][class*="rounded-xl"] > svg,
 .ecole-warm-scope [class*="p-3"][class*="rounded-2xl"] > svg { width: 18px !important; height: 18px !important; }
+/* Animations d'entrée framer-motion BLOQUÉES (opacity:0 alors que le transform a atteint sa
+   cible « none ») dans le scope scrollable → forcer la visibilité (KPI/titres invisibles).
+   Cible PRÉCISE via « transform: none » → ne touche PAS les sorties AnimatePresence (qui
+   gardent transform: translateY(...)), donc ne casse aucune bascule de contenu. */
+.ecole-warm-scope [style*="opacity: 0; transform: none"],
+.ecole-warm-scope [style*="opacity: 0; transform: translate"],
+.ecole-warm-scope [style*="opacity:0;transform:translate"] { opacity: 1 !important; transform: none !important; }
 `;
 
 const ECOLE_SERVICE_KEYS = ['course_builder', 'school', 'school_module', 'formations'];
