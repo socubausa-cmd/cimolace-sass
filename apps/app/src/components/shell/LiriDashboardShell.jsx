@@ -274,8 +274,8 @@ export default function LiriDashboardShell({
         onMouseLeave={() => setHovered(false)}
         style={{
         // top: 96 → passe SOUS le header global (« Mon École », 89px fixe) au lieu d'être caché dessous.
-        position: 'fixed', top: 96, left: 14, bottom: 14, width: visualCollapsed ? 64 : 220, zIndex: 50,
-        flexDirection: 'column', background: T.panel, border: `1px solid ${T.border}`, borderRadius: 18,
+        position: 'fixed', top: 96, left: 0, bottom: 0, width: visualCollapsed ? 64 : 220, zIndex: 50,
+        flexDirection: 'column', background: T.panel, borderRight: `1px solid ${T.border}`,
         backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', overflow: 'hidden',
         boxShadow: hovered && collapsed ? '0 28px 64px -12px rgba(0,0,0,0.7)' : '0 16px 48px -16px rgba(0,0,0,0.55)',
         transition: 'width 220ms cubic-bezier(0.4,0,0.2,1), box-shadow 220ms ease',
@@ -313,7 +313,7 @@ export default function LiriDashboardShell({
       </AnimatePresence>
 
       {/* Contenu */}
-      <main style={{ flex: 1, overflowX: 'hidden', minHeight: '100dvh', background: isLight ? L.canvas : 'transparent' }} className={`${lightContent ? (isLight ? 'liri-light-content ' : 'liri-dark-content ') : ''}${collapsed ? 'lg:pl-[92px]' : 'lg:pl-[250px]'}`}>
+      <main style={{ flex: 1, overflowX: 'hidden', minHeight: '100dvh', background: isLight ? L.canvas : 'transparent' }} className={`${lightContent ? (isLight ? 'liri-light-content ' : 'liri-dark-content ') : ''}${collapsed ? 'lg:pl-[64px]' : 'lg:pl-[220px]'}`}>
         <header style={isLight
           ? { position: 'sticky', top: 0, zIndex: 30, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '0 24px', background: L.topbar, borderBottom: `1px solid ${L.topbarBorder}` }
           : { position: 'sticky', top: 0, zIndex: 30, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '0 24px', background: 'rgba(11,11,15,0.72)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${T.border}` }}>
@@ -353,7 +353,7 @@ export default function LiriDashboardShell({
           ) : (
             // Cadre contenant (comme l'ancien premium-panel) : regroupe le contenu
             // au lieu de l'éparpiller sur le fond nu. Bordure subtile, fond léger.
-            <div style={{ background: 'rgba(255,255,255,0.018)', border: `1px solid ${T.border}`, borderRadius: 20, padding: '20px 22px', minHeight: 440 }}>
+            <div style={{ background: 'rgba(255,255,255,0.018)', padding: '20px 22px', minHeight: 440 }}>
               {children}
             </div>
           )}

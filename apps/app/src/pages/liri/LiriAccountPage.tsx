@@ -508,7 +508,7 @@ export default function LiriAccountPage() {
           <h1 className="lp-serif text-[22px] font-medium">Mon compte</h1>
         </div>
 
-        <div className="overflow-hidden rounded-3xl border lp-line lp-soft" style={{ background: 'rgba(34,31,27,.55)' }}>
+        <div className="overflow-hidden" style={{ background: 'rgba(34,31,27,.55)' }}>
           <div className="md:grid md:grid-cols-[212px_1fr]">
             {/* ── SIDEBAR (desktop) ── */}
             <aside className="hidden md:flex md:flex-col gap-1 border-r lp-line p-3.5" style={{ background: 'rgba(22,19,16,.6)' }}>

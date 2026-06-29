@@ -395,11 +395,11 @@ export function DashboardLiri() {
         <div className="lq-blob" style={{ width: '38vw', height: '38vw', left: '30vw', bottom: '-14vw', background: 'radial-gradient(circle at 50% 50%, #E5D4FF, #7C5CFF 55%, transparent 72%)', opacity: .5, animationDelay: '-15s' }} />
       </div>
 
-      <div className="relative z-10 h-full p-3 flex gap-3">
+      <div className="relative z-10 h-full flex">
 
         {/* ───────── SIDEBAR ───────── */}
         {sidebarOpen && (
-          <aside className="w-[284px] shrink-0 rounded-[26px] lq-glass lq-hair lq-shadow-glass flex flex-col overflow-hidden">
+          <aside className="w-[284px] shrink-0 lq-glass border-r lq-hair flex flex-col overflow-hidden">
             <div className="px-5 pt-5 pb-4 flex items-center gap-3">
               <div className="lq-pulse relative grid place-items-center h-11 w-11 rounded-2xl lq-ember lq-iris text-white"><Sparkles size={20} /></div>
               <div>
@@ -450,7 +450,7 @@ export function DashboardLiri() {
         )}
 
         {/* ───────── MAIN ───────── */}
-        <main className="flex-1 min-w-0 rounded-[26px] lq-glass lq-hair lq-shadow-glass flex flex-col overflow-hidden relative">
+        <main className="flex-1 min-w-0 lq-glass flex flex-col overflow-hidden relative">
 
           {/* header */}
           <header className="shrink-0 px-4 sm:px-5 h-[68px] flex items-center justify-between border-b lq-hair">

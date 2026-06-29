@@ -300,11 +300,11 @@ export function LiriPortalPage() {
         </div>
       </header>
 
-      {/* ───── MIDDLE : rail | main | right ───── */}
-      <div className="z-10 grid min-h-0 grid-cols-[100px_1fr_344px] gap-3 p-3 pt-1">
+      {/* ───── MIDDLE : rail | main | right ─────  (immersif : pas de gap/padding externe, rails collés) */}
+      <div className="z-10 grid min-h-0 grid-cols-[92px_1fr_344px]">
 
         {/* RAIL */}
-        <aside className="flex min-h-0 flex-col items-center gap-1 rounded-3xl lp-rail-bg lp-line border py-4 lp-soft">
+        <aside className="flex min-h-0 flex-col items-center gap-1 lp-rail-bg border-r lp-line py-4">
           {RAIL.map((it) => {
             const Icon = it.icon;
             return (
@@ -405,7 +405,7 @@ export function LiriPortalPage() {
         </main>
 
         {/* RIGHT PANEL */}
-        <aside className="lp-scroll min-h-0 overflow-y-auto rounded-3xl lp-rightbg px-4 py-5 lp-soft">
+        <aside className="lp-scroll min-h-0 overflow-y-auto border-l lp-line lp-rightbg px-4 py-5">
           {/* horloge */}
           <div className="overflow-hidden rounded-3xl lp-line border lp-soft" style={{ background: 'linear-gradient(160deg,#332e29,#2a2724)' }}>
             <div className="px-5 py-5">
