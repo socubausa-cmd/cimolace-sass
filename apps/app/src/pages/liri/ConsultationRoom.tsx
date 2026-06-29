@@ -303,56 +303,71 @@ function VideoTiles({ tracks, variant }: { tracks: any[]; variant: 'stage' | 'st
   );
 }
 
-// ── Face-à-face (appel vidéo) : grand interlocuteur + soi en incrustation ─────
+// ── Face-à-face (appel vidéo) : grand plan + mini-cartes cliquables ───────────
+// Clé STABLE d'un flux (indépendante de la position grand/mini) = identité + source.
+function stableTrackKey(t: any): string {
+  return `${t?.participant?.identity || 'p'}:${t?.source || 's'}`;
+}
+
 function FaceToFace({ tracks }: { tracks: any[] }) {
   const cams = tracks.filter((t) => t?.source === Track.Source.Camera);
   const screen = tracks.find((t) => t?.source === Track.Source.ScreenShare && t?.publication);
-  const remotes = cams.filter((t) => !t?.participant?.isLocal);
   const local = cams.find((t) => t?.participant?.isLocal) || null;
+  const remotes = cams.filter((t) => !t?.participant?.isLocal);
+  // Quel flux est au GRAND plan (clic d'une mini-carte). null = défaut.
+  const [featuredKey, setFeaturedKey] = useState<string | null>(null);
 
-  // Grand plan = partage d'écran si présent, sinon l'interlocuteur, sinon soi.
-  const big = screen || remotes[0] || local;
-  // Incrustation = soi (si on regarde l'autre en grand) ; si on partage l'écran,
-  // l'incrustation montre plutôt l'interlocuteur.
-  const pip = screen ? remotes[0] || local : remotes[0] ? local : null;
-  const extras = remotes.slice(1); // 3ᵉ+ participant (proche)
-  const alone = remotes.length === 0 && !screen;
+  // Ordre par défaut du grand plan : partage d'écran > interlocuteur > soi.
+  const ordered = [screen, ...remotes, local].filter(Boolean) as any[];
+  const hasOther = !!screen || remotes.length > 0;
+  // Seul (aucun interlocuteur) : le grand plan reste un placeholder « en attente »
+  // et SOI passe en mini-carte (retour de vue), comme WhatsApp.
+  const defaultBig = hasOther ? ordered[0] : null;
+  const featured = featuredKey ? ordered.find((t) => stableTrackKey(t) === featuredKey) : null;
+  const big = featured || defaultBig;
+  // SOI est TOUJOURS visible : en grand si featuré, sinon en mini-carte.
+  const minis = ordered.filter((t) => t !== big);
 
-  if (!big) {
-    return (
-      <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: '#9ca3af', fontSize: 14 }}>
-        Connexion vidéo…
-      </div>
-    );
-  }
   return (
     <div style={{ position: 'relative', height: '100%', borderRadius: 18, overflow: 'hidden', background: TILE_BG, border: '1px solid rgba(255,255,255,0.06)' }}>
-      <ParticipantTile trackRef={big} style={{ width: '100%', height: '100%' }} />
-
-      {/* Incrustation « soi » en bas à droite (façon appel vidéo). */}
-      {pip ? (
-        <div style={{ position: 'absolute', right: 16, bottom: 16, width: 216, aspectRatio: '16 / 9', borderRadius: 12, overflow: 'hidden', background: '#000', border: '2px solid rgba(255,255,255,0.28)', boxShadow: '0 12px 34px rgba(0,0,0,0.55)', zIndex: 2 }}>
-          <ParticipantTile trackRef={pip} style={{ width: '100%', height: '100%' }} />
+      {/* Grand plan (clic → réduire au plan par défaut). */}
+      {big ? (
+        <div
+          onClick={() => setFeaturedKey(null)}
+          title="Cliquer pour revenir à l'interlocuteur"
+          style={{ position: 'absolute', inset: 0, cursor: featured ? 'zoom-out' : 'default' }}
+        >
+          <ParticipantTile trackRef={big} style={{ width: '100%', height: '100%', pointerEvents: 'none' }} />
         </div>
-      ) : null}
-
-      {/* Participants supplémentaires (proche) en colonne, en haut à droite. */}
-      {extras.length > 0 ? (
-        <div style={{ position: 'absolute', right: 16, top: 16, display: 'flex', flexDirection: 'column', gap: 10, zIndex: 2 }}>
-          {extras.map((t, i) => (
-            <div key={tileKey(t, i)} style={{ width: 168, aspectRatio: '16 / 9', borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
-              <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
-            </div>
-          ))}
-        </div>
-      ) : null}
-
-      {/* En attente de l'interlocuteur (on se voit en grand). */}
-      {alone ? (
+      ) : (
         <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', pointerEvents: 'none' }}>
           <span style={{ background: 'rgba(0,0,0,0.55)', color: '#fff', padding: '9px 18px', borderRadius: 999, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: GOLD }} /> En attente de votre interlocuteur…
           </span>
+        </div>
+      )}
+
+      {/* Mini-cartes (dont SOI = retour de vue) en bas à droite — clic pour agrandir. */}
+      {minis.length > 0 ? (
+        <div style={{ position: 'absolute', right: 16, bottom: 16, display: 'flex', flexDirection: 'column', gap: 10, zIndex: 2 }}>
+          {minis.map((t) => {
+            const isSelf = !!t?.participant?.isLocal;
+            return (
+              <div
+                key={stableTrackKey(t)}
+                role="button"
+                tabIndex={0}
+                onClick={() => setFeaturedKey(stableTrackKey(t))}
+                title="Cliquer pour agrandir"
+                style={{ position: 'relative', width: 208, aspectRatio: '16 / 9', borderRadius: 12, overflow: 'hidden', background: '#000', border: '2px solid rgba(255,255,255,0.28)', boxShadow: '0 12px 34px rgba(0,0,0,0.55)', cursor: 'pointer' }}
+              >
+                <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%', pointerEvents: 'none' }} />
+                {isSelf ? (
+                  <span style={{ position: 'absolute', left: 7, top: 7, fontSize: 10, fontWeight: 700, color: '#fff', background: 'rgba(0,0,0,0.55)', padding: '2px 7px', borderRadius: 999, pointerEvents: 'none' }}>Vous</span>
+                ) : null}
+              </div>
+            );
+          })}
         </div>
       ) : null}
     </div>
