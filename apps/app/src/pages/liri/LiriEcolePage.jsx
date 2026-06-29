@@ -31,10 +31,10 @@ const ECOLE_THEME_VARS = {
   '--lt-sub': 'rgba(245,241,233,0.72)',
   '--lt-muted': 'rgba(245,241,233,0.58)',
   '--lt-border': 'rgba(245,241,233,0.10)',
-  '--lt-card-bg': '#2a2a2d',
-  '--lt-card-border': 'rgba(238,240,245,0.07)',
-  '--lt-card-shadow': '0 8px 24px -18px rgba(0,0,0,0.45)',
-  '--lt-inner-bg': '#232326',
+  '--lt-card-bg': 'transparent',
+  '--lt-card-border': 'rgba(238,240,245,0.08)',
+  '--lt-card-shadow': 'none',
+  '--lt-inner-bg': 'transparent',
   '--lt-gold': '#d97757',
   '--lt-gold-ink': '#e58a5f',
   '--school-accent': '#d97757',
@@ -128,6 +128,10 @@ const ECOLE_WARM_CSS = `
 .ecole-warm-scope [class*="w-10"][class*="justify-center"][style*="gradient"],
 .ecole-warm-scope [class*="w-11"][class*="justify-center"][style*="gradient"],
 .ecole-warm-scope [class*="w-12"][class*="justify-center"][style*="gradient"] { background-image: linear-gradient(140deg, #e0905f 0%, #c2531f 100%) !important; }
+/* Animations d'entrée (framer-motion whileInView) BLOQUÉES à opacity:0 une fois embarquées
+   dans le scope scrollable → on force la visibilité, sinon titres/textes restent invisibles. */
+.ecole-warm-scope [style*="opacity: 0;"],
+.ecole-warm-scope [style*="opacity:0;"] { opacity: 1 !important; }
 `;
 
 const ECOLE_SERVICE_KEYS = ['course_builder', 'school', 'school_module', 'formations'];
