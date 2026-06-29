@@ -250,7 +250,7 @@ export function LiriPortalPage() {
         </div>
         <div className="flex items-center gap-1.5">
           <button className="relative grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Notifications"><Bell size={17} /><span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full" style={{ background: 'var(--coral)' }} /></button>
-          <button onClick={() => orgSlug && nav(`/t/${orgSlug}/admin/settings`)} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Réglages de l’organisation"><Settings size={17} /></button>
+          <button onClick={() => nav('/liri/compte')} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Réglages de l’organisation"><Settings size={17} /></button>
 
           {/* ── Avatar → menu compte / organisation ── */}
           <div className="relative" ref={menuRef}>
@@ -319,8 +319,8 @@ export function LiriPortalPage() {
             );
           })}
           <div className="my-1.5 h-px w-9" style={{ background: 'rgba(245,244,238,.08)' }} />
-          <button onClick={() => nav('/dashboard')} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Blocks size={20} /></span><span className="lp-nl text-[10px] font-medium">Intégr.</span></button>
-          <button onClick={() => orgSlug && nav(`/t/${orgSlug}/admin/settings`)} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Settings2 size={20} /></span><span className="lp-nl text-[10px] font-medium">Réglages</span></button>
+          <button onClick={() => nav('/liri')} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Blocks size={20} /></span><span className="lp-nl text-[10px] font-medium">Intégr.</span></button>
+          <button onClick={() => nav('/liri/compte')} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Settings2 size={20} /></span><span className="lp-nl text-[10px] font-medium">Réglages</span></button>
           <button onClick={openMenu} title={orgName} aria-label="Compte et organisation" className="mt-auto grid h-9 w-9 place-items-center rounded-full text-[11px] font-bold text-white lp-tr lp-railbtn" style={{ background: 'linear-gradient(135deg,#5b7a52,#6d8f60)' }}>{orgName.slice(0, 2).toUpperCase()}</button>
         </aside>
 
