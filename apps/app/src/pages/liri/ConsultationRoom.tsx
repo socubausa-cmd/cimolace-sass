@@ -35,6 +35,7 @@ import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { teleconsultApi, type TeleconsultInvite } from '@/lib/api';
+import { getApiBaseUrl } from '@/lib/apiBase';
 import { getClinicalContext, type ClinicalContext, type CockpitScene } from '@/features/medos-cockpit/cockpit-api';
 import { useCockpitChannel, type AnnotStroke, type ConsultView } from '@/features/medos-cockpit/useCockpitChannel';
 import { SharedSceneView, CockpitDock } from '@/features/medos-cockpit/MedTeleconsultCockpit';
@@ -65,6 +66,32 @@ export default function ConsultationRoom() {
   const [conn, setConn] = useState<{ url: string; token: string } | null>(null);
   const [ctx, setCtx] = useState<ClinicalContext | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [clinicName, setClinicName] = useState<string | null>(null);
+
+  // Nom de la clinique (image de marque sur l'écran de démarrage) — résolu ICI
+  // (composant long-vécu = effet fiable) puis caché en localStorage + passé à
+  // ImmersiveBootLoader. Le branding public est token-libre.
+  useEffect(() => {
+    const slug = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tenant') : null;
+    if (!slug) return undefined;
+    let alive = true;
+    fetch(`${getApiBaseUrl()}/tenants/by-slug/${encodeURIComponent(slug)}/branding`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        const n = j?.data?.name || j?.name;
+        if (!n) return;
+        try {
+          localStorage.setItem(`liri:clinic:${slug}`, String(n));
+        } catch {
+          /* ignore */
+        }
+        if (alive) setClinicName(String(n));
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     // On attend l'auth (handoff SSO) avant l'endpoint médical gardé.
@@ -131,6 +158,7 @@ export default function ConsultationRoom() {
   if (!conn) {
     return (
       <ImmersiveBootLoader
+        clinic={clinicName}
         message={user?.id ? 'Connexion sécurisée à votre consultation' : 'Authentification sécurisée…'}
       />
     );

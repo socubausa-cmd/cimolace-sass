@@ -5,41 +5,68 @@
 // (mark doré + inscription « LIRI », PNG transparent) directement sur fond sombre —
 // PAS de boîte blanche — avec halo flou + anneaux concentriques qui irradient.
 // PERSONNALISÉ : nom de la clinique (image de marque/confiance) + phrase sécurité.
-// Le nom de la clinique vient du slug `?tenant=` via l'endpoint public branding.
-// Plein écran (zIndex max) pour couvrir tout shell résiduel.
+//
+// Résolution du nom de clinique (robuste, l'effet passif du loader peut être sauté
+// si le loader se démonte vite au boot) :
+//   1. prop `clinic` (fournie par ConsultationRoom = composant long-vécu, fiable) ;
+//   2. cache localStorage `liri:clinic:<slug>` lu SYNCHRONIQUEMENT (instant si déjà vu) ;
+//   3. fetch branding public (best-effort, alimente le cache).
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useState } from 'react';
 import { Lock } from 'lucide-react';
 import { getApiBaseUrl } from '@/lib/apiBase';
 
+function currentTenantSlug(): string | null {
+  try {
+    return new URLSearchParams(window.location.search).get('tenant');
+  } catch {
+    return null;
+  }
+}
+
+function readCachedClinic(): string | null {
+  try {
+    const slug = currentTenantSlug();
+    return slug ? localStorage.getItem(`liri:clinic:${slug}`) : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function ImmersiveBootLoader({
   message = 'Connexion sécurisée à votre consultation',
+  clinic: clinicProp = null,
 }: {
   message?: string;
+  clinic?: string | null;
 }) {
-  const [clinic, setClinic] = useState<string | null>(null);
+  // Cache synchrone (visite répétée → instant, sans dépendre d'un effet passif).
+  const [clinicState, setClinicState] = useState<string | null>(readCachedClinic);
 
-  // Nom d'affichage de la clinique (ex. « Zahir Wellness ») → image de marque /
-  // confiance dès le chargement. Résolu par le slug `?tenant=` (branding public).
+  // Fetch best-effort qui alimente le cache (et upgrade l'affichage si l'effet tourne).
   useEffect(() => {
     let alive = true;
-    try {
-      const slug = new URLSearchParams(window.location.search).get('tenant');
-      if (!slug) return undefined;
-      fetch(`${getApiBaseUrl()}/tenants/by-slug/${encodeURIComponent(slug)}/branding`)
-        .then((r) => (r.ok ? r.json() : null))
-        .then((j) => {
-          const n = j?.data?.name || j?.name;
-          if (alive && n) setClinic(String(n));
-        })
-        .catch(() => {});
-    } catch {
-      /* ignore */
-    }
+    const slug = currentTenantSlug();
+    if (!slug) return undefined;
+    fetch(`${getApiBaseUrl()}/tenants/by-slug/${encodeURIComponent(slug)}/branding`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        const n = j?.data?.name || j?.name;
+        if (!n) return;
+        try {
+          localStorage.setItem(`liri:clinic:${slug}`, String(n));
+        } catch {
+          /* ignore */
+        }
+        if (alive) setClinicState(String(n));
+      })
+      .catch(() => {});
     return () => {
       alive = false;
     };
   }, []);
+
+  const clinic = clinicProp || clinicState;
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 2147483000, background: '#0b0b0c', display: 'grid', placeItems: 'center', padding: 24 }}>
