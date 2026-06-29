@@ -1,6 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDataSync } from '@/contexts/DataSyncContext';
+import { authStore } from '@/lib/auth-store';
+import { getApiBaseUrl } from '@/lib/apiBase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,23 +18,54 @@ import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 export default function LivesLibraryContent({ variant = 'default' }) {
   const { years = [] } = useDataSync();
 
+  // Lives RÉELS créés au Studio (table live_sessions, scopés au tenant via l'API) —
+  // s'ajoutent aux lives du curriculum. Fail-safe : si l'appel échoue, on garde le curriculum.
+  const [sessions, setSessions] = useState([]);
+  useEffect(() => {
+    const token = authStore.getToken?.();
+    if (!token) return;
+    let alive = true;
+    fetch(`${getApiBaseUrl()}/lives`, {
+      headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': authStore.getTenantSlug?.() || '' },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { const a = d?.data ?? d; if (alive && Array.isArray(a)) setSessions(a); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
   const { upcomingLives, pastLives } = useMemo(() => {
     const upcoming = [];
     const past = [];
+    // 1) Lives du CURRICULUM (semaines : ouverture / clôture)
     (Array.isArray(years) ? years : []).forEach((y) =>
       (Array.isArray(y?.modules) ? y.modules : []).forEach((m) =>
         (Array.isArray(m?.weeks) ? m.weeks : []).forEach((w) => {
           [w?.openingLive, w?.closingLive].forEach((live) => {
             if (!live) return;
-            const liveData = { ...live, moduleTitle: m?.title, weekTitle: w?.title };
+            const liveData = { ...live, subtitle: [m?.title, w?.title].filter(Boolean).join(' • ') };
             if (live.status === 'completed') past.push(liveData);
             else upcoming.push(liveData);
           });
         }),
       ),
     );
+    // 2) Lives RÉELS du Studio (live_sessions)
+    (Array.isArray(sessions) ? sessions : []).forEach((s) => {
+      if (!s?.id) return;
+      const ended = s.status === 'ended' || s.status === 'completed' || !!s.ended_at;
+      const item = {
+        id: s.id,
+        title: s.title || 'Session live',
+        date: s.scheduled_at || s.started_at || s.ended_at || s.created_at,
+        subtitle: 'Session live',
+        description: s.description || '',
+        status: ended ? 'completed' : (s.status || 'scheduled'),
+      };
+      if (ended) past.push(item); else upcoming.push(item);
+    });
     return { upcomingLives: upcoming, pastLives: past };
-  }, [years]);
+  }, [years, sessions]);
 
   const mobile = variant === 'liriMobile';
 
@@ -75,7 +108,7 @@ export default function LivesLibraryContent({ variant = 'default' }) {
               key={live.id}
               className={cn(
                 'border-white/10',
-                mobile ? 'bg-black/40 border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]' : 'bg-[#192734]',
+                mobile ? 'bg-black/40 border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]' : 'bg-[#30302e]',
               )}
             >
               <CardContent className={cn(mobile ? 'p-4' : 'p-6')}>
@@ -84,11 +117,13 @@ export default function LivesLibraryContent({ variant = 'default' }) {
                   {live.title}
                 </h4>
                 <p className={cn('text-gray-400 mb-3', mobile ? 'text-xs' : 'text-sm mb-4')}>
-                  {live.moduleTitle} • {live.weekTitle}
+                  {live.subtitle}
                 </p>
                 <div className={cn('flex items-center gap-2 text-gray-300 mb-4', mobile ? 'text-xs' : 'text-sm mb-6')}>
                   <Clock className="h-3.5 w-3.5 shrink-0" />
-                  {new Date(live.date).toLocaleDateString()} à {new Date(live.date).toLocaleTimeString()}
+                  {live.date && !Number.isNaN(new Date(live.date).getTime())
+                    ? `${new Date(live.date).toLocaleDateString()} à ${new Date(live.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                    : 'Date à confirmer'}
                 </div>
                 <Button
                   size={mobile ? 'sm' : 'default'}
@@ -128,7 +163,7 @@ export default function LivesLibraryContent({ variant = 'default' }) {
               key={live.id}
               className={cn(
                 'border-white/10 group cursor-pointer hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors overflow-hidden',
-                mobile ? 'bg-black/40 border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]' : 'bg-[#192734]',
+                mobile ? 'bg-black/40 border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]' : 'bg-[#30302e]',
               )}
             >
               <div className="aspect-video bg-black relative">
@@ -144,7 +179,7 @@ export default function LivesLibraryContent({ variant = 'default' }) {
               <CardContent className={cn(mobile ? 'p-4' : 'p-6')}>
                 <h4 className={cn('font-bold text-white mb-1', mobile ? 'text-sm' : 'text-lg')}>{live.title}</h4>
                 <p className={cn('text-gray-400 mb-2', mobile ? 'text-xs' : 'text-sm mb-4')}>
-                  {new Date(live.date).toLocaleDateString()}
+                  {live.date && !Number.isNaN(new Date(live.date).getTime()) ? new Date(live.date).toLocaleDateString() : ''}
                 </p>
                 <p className={cn('text-gray-300 line-clamp-2', mobile ? 'text-xs' : 'text-sm')}>{live.description}</p>
               </CardContent>
