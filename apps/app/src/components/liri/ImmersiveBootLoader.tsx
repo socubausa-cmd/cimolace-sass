@@ -21,7 +21,7 @@ export default function ImmersiveBootLoader({
         <div style={{ position: 'relative', display: 'inline-block', marginBottom: 22 }}>
           <div style={{ position: 'absolute', inset: -26, borderRadius: 30, background: 'radial-gradient(circle, rgba(217,119,87,0.32), transparent 70%)', animation: 'liriboot-glow 2.4s ease-in-out infinite' }} />
           <div style={{ position: 'relative', padding: '16px 22px', borderRadius: 20, background: '#ffffff', boxShadow: '0 18px 50px rgba(0,0,0,0.55)', animation: 'liriboot-breathe 2.4s ease-in-out infinite' }}>
-            <img src="/liri-logo-official.png" alt="LIRI" style={{ display: 'block', height: 96, width: 'auto', objectFit: 'contain' }} />
+            <img src="/liri-logo-official.png" alt="LIRI" decoding="async" style={{ display: 'block', width: 152, height: 100, objectFit: 'contain' }} />
           </div>
         </div>
         <h2 style={{ margin: '0 0 7px', fontSize: 17, fontWeight: 600, color: '#fff', letterSpacing: 0.2 }}>{message}</h2>

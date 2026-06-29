@@ -6,6 +6,10 @@
     <title>LIRI</title>
     <link rel="icon" type="image/png" href="/liri-mark.png" />
     <link rel="apple-touch-icon" href="/liri-mark.png" />
+    <!-- Logo officiel LIRI préchargé en priorité haute : l'écran de DÉMARRAGE de la
+         salle immersive (ImmersiveBootLoader) doit l'afficher AVANT que les gros
+         chunks JS ne soient téléchargés, sinon le badge reste vide au boot. -->
+    <link rel="preload" as="image" href="/liri-logo-official.png" fetchpriority="high" />
     <!-- Design system: thème Tangerine (tweakcn) — Inter / Source Serif 4 / JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
