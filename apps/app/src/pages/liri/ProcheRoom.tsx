@@ -106,6 +106,15 @@ export default function ProcheRoom() {
     streamRef.current = null;
   }, []);
 
+  // (Re)attache le flux au <video> dès qu'il est prêt (évite l'écran noir si la
+  // piste arrive avant le montage de l'élément).
+  useEffect(() => {
+    if (videoRef.current && streamRef.current && previewOn) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play?.().catch(() => {});
+    }
+  }, [previewOn]);
+
   const join = async () => {
     if (!inviteId) return;
     // Libère la caméra d'aperçu pour que LiveKit la reprenne proprement.
@@ -162,16 +171,17 @@ export default function ProcheRoom() {
 
               {/* Green room : aperçu caméra + réglages micro/caméra. */}
               <div style={{ aspectRatio: '4 / 3', borderRadius: 16, overflow: 'hidden', background: STAGE_BG, border: PANEL_BORDER, position: 'relative', marginBottom: 14 }}>
-                {previewOn && joinWithCam ? (
+                {joinWithCam ? (
                   <video ref={videoRef} autoPlay muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
-                ) : (
+                ) : null}
+                {(!joinWithCam || !previewOn) ? (
                   <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: '#9a978f' }}>
                     <div style={{ textAlign: 'center' }}>
                       <VideoOff size={26} aria-hidden="true" style={{ opacity: 0.7 }} />
-                      <p style={{ margin: '6px 0 0', fontSize: 12 }}>{joinWithCam ? 'Caméra indisponible' : 'Caméra désactivée'}</p>
+                      <p style={{ margin: '6px 0 0', fontSize: 12 }}>{joinWithCam ? 'Activation de la caméra…' : 'Caméra désactivée'}</p>
                     </div>
                   </div>
-                )}
+                ) : null}
                 <div style={{ position: 'absolute', left: 0, right: 0, bottom: 10, display: 'flex', justifyContent: 'center', gap: 10 }}>
                   <button type="button" onClick={() => setJoinWithMic((v) => !v)} title={joinWithMic ? 'Couper le micro' : 'Activer le micro'} style={greenRoomToggle(joinWithMic)}>
                     {joinWithMic ? <Mic size={17} aria-hidden="true" /> : <MicOff size={17} aria-hidden="true" />}
