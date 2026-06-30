@@ -30,10 +30,13 @@ export function useCockpitChannel(
   const [scene, setScene] = useState<CockpitScene | null>(null);
   const [view, setViewState] = useState<ConsultView>('conversation');
   const [strokes, setStrokes] = useState<AnnotStroke[]>([]);
+  // Nom du PRATICIEN (host) diffusé au patient → « avec qui je parle ».
+  const [hostName, setHostName] = useState<string | null>(null);
   const channelRef = useRef<any>(null);
   const lastSentRef = useRef<CockpitScene | null>(null);
   const lastViewRef = useRef<ConsultView>('conversation');
   const lastStrokesRef = useRef<AnnotStroke[]>([]);
+  const lastHostNameRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!sessionId) return undefined;
@@ -65,6 +68,12 @@ export function useCockpitChannel(
       setStrokes((msg?.payload?.strokes as AnnotStroke[]) || []);
     });
 
+    // Identité du praticien (host) → le patient sait avec qui il parle.
+    channel.on('broadcast', { event: 'host_name' }, (msg: any) => {
+      const n = msg?.payload?.name;
+      if (typeof n === 'string' && n) setHostName(n);
+    });
+
     // Host : un patient demande l'état → on renvoie vue + scène + annotations.
     channel.on('broadcast', { event: 'request_state' }, () => {
       if (mode !== 'host') return;
@@ -74,6 +83,9 @@ export function useCockpitChannel(
       }
       if (lastStrokesRef.current.length) {
         channel.send({ type: 'broadcast', event: 'strokes', payload: { strokes: lastStrokesRef.current } });
+      }
+      if (lastHostNameRef.current) {
+        channel.send({ type: 'broadcast', event: 'host_name', payload: { name: lastHostNameRef.current } });
       }
     });
 
@@ -142,5 +154,13 @@ export function useCockpitChannel(
     setStrokes([]);
   }, []);
 
-  return { scene, view, strokes, shareScene, pushView, clearScene, shareStrokes, clearStrokes };
+  /** Host : diffuse son nom (identité praticien) au patient — idempotent. */
+  const shareHostName = useCallback((name: string) => {
+    const n = (name || '').trim();
+    if (!n || lastHostNameRef.current === n) return;
+    lastHostNameRef.current = n;
+    channelRef.current?.send({ type: 'broadcast', event: 'host_name', payload: { name: n } });
+  }, []);
+
+  return { scene, view, strokes, hostName, shareScene, pushView, clearScene, shareStrokes, clearStrokes, shareHostName };
 }

@@ -107,6 +107,7 @@ export default function ConsultationRoom() {
   const [ctx, setCtx] = useState<ClinicalContext | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [clinicName, setClinicName] = useState<string | null>(null);
+  const [clinicLogo, setClinicLogo] = useState<string | null>(null);
 
   // Nom de la clinique (image de marque sur l'écran de démarrage) — résolu ICI
   // (composant long-vécu = effet fiable) puis caché en localStorage + passé à
@@ -118,6 +119,11 @@ export default function ConsultationRoom() {
     fetch(`${getApiBaseUrl()}/tenants/by-slug/${encodeURIComponent(slug)}/branding`)
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => {
+        const logo = j?.data?.logo_url || j?.logo_url || null;
+        if (logo) {
+          if (alive) setClinicLogo(String(logo));
+          try { localStorage.setItem(`liri:cliniclogo:${slug}`, String(logo)); } catch { /* ignore */ }
+        }
         const n = j?.data?.name || j?.name;
         if (!n) return;
         try {
@@ -166,6 +172,19 @@ export default function ConsultationRoom() {
   // voient pas, broadcast self:false).
   const channel = useCockpitChannel(sessionId ?? null, isHost ? 'host' : 'patient');
   const { view, scene, strokes } = channel;
+
+  // ── Identité praticien (image de marque + « avec qui je parle ») ──────────────
+  // Le host tient son nom de son profil auth et le DIFFUSE au patient (canal
+  // cockpit) ; le patient le LIT depuis ce canal. Logo + nom de clinique : chaque
+  // côté les résout localement par slug (branding public, fetché plus haut).
+  const hostDisplayName = isHost
+    ? ((user?.user_metadata as any)?.full_name || (user?.user_metadata as any)?.name || user?.email || null)
+    : null;
+  useEffect(() => {
+    if (isHost && conn && hostDisplayName) channel.shareHostName(hostDisplayName);
+  }, [isHost, conn, hostDisplayName, channel.shareHostName]);
+  const practitionerName = isHost ? hostDisplayName : channel.hostName;
+
   const [annotate, setAnnotate] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [left, setLeft] = useState(false);
@@ -259,6 +278,7 @@ export default function ConsultationRoom() {
               onStrokes={channel.shareStrokes}
               sessionId={sessionId ?? null}
               rightOpen={rightPanel !== null}
+              identity={{ clinicName, clinicLogo, practitionerName }}
             />
             {/* Wrapper positionné : ancre le popover Réglages au-dessus de la barre
                 (reste DANS <LiveKitRoom> → ConsultationSettings lit le contexte salle). */}
@@ -431,7 +451,36 @@ function stableTrackKey(t: any): string {
   return `${t?.participant?.identity || 'p'}:${t?.source || 's'}`;
 }
 
-function FaceToFace({ tracks }: { tracks: any[] }) {
+export type ConsultIdentity = {
+  clinicName: string | null;
+  clinicLogo: string | null;
+  practitionerName: string | null;
+};
+
+// Lower-third d'identité (logo tenant + nom praticien) — image de marque + « avec
+// qui je parle » pour le patient. Transparent, posé sur la vidéo (vue Conversation).
+function ConsultIdentityBadge({ identity }: { identity?: ConsultIdentity }) {
+  if (!identity) return null;
+  const { clinicName, clinicLogo, practitionerName } = identity;
+  if (!clinicName && !clinicLogo && !practitionerName) return null;
+  return (
+    <div style={{ position: 'absolute', left: 16, bottom: 16, zIndex: 2, display: 'flex', alignItems: 'center', gap: 11, padding: '8px 15px 8px 10px', borderRadius: 14, background: 'rgba(20,19,18,0.42)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(245,244,238,0.14)', boxShadow: '0 10px 30px rgba(0,0,0,0.4)', pointerEvents: 'none', maxWidth: '72%' }}>
+      {clinicLogo ? (
+        <img src={clinicLogo} alt="" style={{ height: 32, width: 'auto', maxWidth: 92, objectFit: 'contain', borderRadius: 6, flexShrink: 0 }} />
+      ) : null}
+      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.25, minWidth: 0 }}>
+        {clinicName ? (
+          <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(245,244,238,0.72)', letterSpacing: 0.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{clinicName}</span>
+        ) : null}
+        <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {practitionerName || 'Votre praticien'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function FaceToFace({ tracks, identity }: { tracks: any[]; identity?: ConsultIdentity }) {
   const cams = tracks.filter((t) => t?.source === Track.Source.Camera);
   const screen = tracks.find((t) => t?.source === Track.Source.ScreenShare && t?.publication);
   const local = cams.find((t) => t?.participant?.isLocal) || null;
@@ -492,6 +541,9 @@ function FaceToFace({ tracks }: { tracks: any[] }) {
           })}
         </div>
       ) : null}
+
+      {/* Image de marque : logo tenant + nom praticien (transparent, sur la vidéo). */}
+      <ConsultIdentityBadge identity={identity} />
     </div>
   );
 }
@@ -669,6 +721,7 @@ export function ConsultationStage({
   onStrokes,
   sessionId,
   rightOpen = false,
+  identity,
 }: {
   view: ConsultView;
   isHost: boolean;
@@ -680,6 +733,8 @@ export function ConsultationStage({
   /** Un panneau de droite (Discussion/Copilote/Récap) est ouvert → on masque le
    *  rail Participants pour ne JAMAIS avoir 2 colonnes à droite (anti-surcharge). */
   rightOpen?: boolean;
+  /** Image de marque : logo tenant + nom praticien (badge vue Conversation). */
+  identity?: ConsultIdentity;
 }) {
   const tracks = useTracks(
     [
@@ -693,7 +748,7 @@ export function ConsultationStage({
   if (view === 'conversation') {
     return (
       <div style={{ flex: 1, minHeight: 0, padding: 14 }}>
-        <FaceToFace tracks={tracks} />
+        <FaceToFace tracks={tracks} identity={identity} />
       </div>
     );
   }
