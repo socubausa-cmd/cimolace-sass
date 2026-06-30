@@ -21,6 +21,7 @@ import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { getProcheStatus, getProcheToken, type ProcheStatus } from '@/features/medos-cockpit/procheApi';
 import { useCockpitChannel } from '@/features/medos-cockpit/useCockpitChannel';
+import { getApiBaseUrl } from '@/lib/apiBase';
 import { ConsultationStage, CallEndedScreen, ChatPanel } from './ConsultationRoom';
 
 const BG = '#0b0b0c';
@@ -130,6 +131,19 @@ function ProcheLiveRoom({ url, token, sessionId, clinic }: { url: string; token:
   const channel = useCockpitChannel(sessionId, 'patient');
   const [left, setLeft] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  // Image de marque : logo du tenant (résolu par slug) + nom praticien (diffusé
+  // par le host sur le canal) → le proche aussi sait avec qui il parle.
+  const [clinicLogo, setClinicLogo] = useState<string | null>(null);
+  useEffect(() => {
+    const slug = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tenant') : null;
+    if (!slug) return undefined;
+    let alive = true;
+    fetch(`${getApiBaseUrl()}/tenants/by-slug/${encodeURIComponent(slug)}/branding`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { const logo = j?.data?.logo_url || j?.logo_url || null; if (alive && logo) setClinicLogo(String(logo)); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
   if (left) return <CallEndedScreen />;
   const content = (
     <div data-lk-theme="default" style={{ position: 'fixed', inset: 0, zIndex: 2147483000, background: BG, display: 'flex', flexDirection: 'column' }}>
@@ -144,6 +158,7 @@ function ProcheLiveRoom({ url, token, sessionId, clinic }: { url: string; token:
               strokes={channel.strokes}
               editable={false}
               onStrokes={() => {}}
+              identity={{ clinicName: clinic ?? null, clinicLogo, practitionerName: channel.hostName }}
             />
             <ProcheBar onLeave={() => setLeft(true)} chatOpen={chatOpen} onToggleChat={() => setChatOpen((v) => !v)} />
           </div>
