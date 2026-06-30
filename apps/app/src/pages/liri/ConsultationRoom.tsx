@@ -47,6 +47,7 @@ import ConsultationSettings, { ConsultationSettingsButton } from '@/features/con
 import ConsultationSmartBoard from '@/features/consultation-stage/ConsultationSmartBoard';
 import ConsultationCopilot from '@/features/consultation-stage/ConsultationCopilot';
 import ConsultationRecall from '@/features/consultation-stage/ConsultationRecall';
+import WaitingRoom from '@/features/consultation-stage/WaitingRoom';
 
 // Shell visuel ALIGNÉ SUR LE PORTAIL LIRI (cf. liveHostTheme `LH_DESIGN`) : base
 // chaude #262624 + halos coral, panneaux frostés, accent AMBRE #d4a36a — fini le
@@ -108,6 +109,11 @@ export default function ConsultationRoom() {
   const [error, setError] = useState<string | null>(null);
   const [clinicName, setClinicName] = useState<string | null>(null);
   const [clinicLogo, setClinicLogo] = useState<string | null>(null);
+  // Salle d'attente patient : `ctxResolved` = le contexte a répondu (ou échoué) ;
+  // `joinCam/joinMic` = choix de la green room, portés ensuite dans la salle.
+  const [ctxResolved, setCtxResolved] = useState(false);
+  const [joinCam, setJoinCam] = useState(true);
+  const [joinMic, setJoinMic] = useState(true);
 
   // Nom de la clinique (image de marque sur l'écran de démarrage) — résolu ICI
   // (composant long-vécu = effet fiable) puis caché en localStorage + passé à
@@ -139,16 +145,36 @@ export default function ConsultationRoom() {
     };
   }, []);
 
+  // 1) Contexte clinique (rôle + nom + heure RDV + agenda + host_present). On le
+  //    RAFRAÎCHIT tant qu'on n'est pas connecté → le patient en salle d'attente
+  //    détecte l'arrivée du praticien (host_present) et bascule automatiquement.
   useEffect(() => {
-    // On attend l'auth (handoff SSO) avant l'endpoint médical gardé.
     if (!sessionId || !user?.id) return undefined;
+    let alive = true;
+    const fetchCtx = () =>
+      getClinicalContext(sessionId)
+        .then((c) => { if (alive) { setCtx(c); setCtxResolved(true); } })
+        .catch(() => { if (alive) setCtxResolved(true); });
+    fetchCtx();
+    const t = setInterval(() => { if (!conn) fetchCtx(); }, 4000);
+    return () => { alive = false; clearInterval(t); };
+  }, [sessionId, user?.id, conn]);
+
+  // 2) Connexion LiveKit. L'HÔTE se connecte tout de suite. Le PATIENT ne se
+  //    connecte QUE lorsque le praticien a démarré (host_present) — sinon il reste
+  //    en salle d'attente. Repli SÛR : si le contexte échoue, on ne bloque pas
+  //    (ancien comportement = connexion directe).
+  // On ne GATE le patient que si le backend dit EXPLICITEMENT host_present===false.
+  // Si le champ est absent (backend pas à jour) ou true → on connecte (pas de
+  // blocage). L'hôte se connecte toujours.
+  const canConnect =
+    ctxResolved &&
+    (!ctx || ctx.role === 'host' || ctx.host_present !== false);
+  useEffect(() => {
+    if (!sessionId || conn || !canConnect) return undefined;
     let alive = true;
     (async () => {
       try {
-        // Contexte (rôle + nom patient) — best-effort, ne bloque pas la vidéo.
-        getClinicalContext(sessionId)
-          .then((c) => alive && setCtx(c))
-          .catch(() => {});
         const res: any = await teleconsultApi.issueToken(sessionId);
         if (!alive) return;
         if (!res?.url || !res?.token) {
@@ -161,10 +187,8 @@ export default function ConsultationRoom() {
         if (alive) setError(e?.message || 'Connexion à la consultation impossible.');
       }
     })();
-    return () => {
-      alive = false;
-    };
-  }, [sessionId, user?.id]);
+    return () => { alive = false; };
+  }, [sessionId, conn, canConnect]);
 
   const isHost = ctx?.role === 'host';
   // Canal de partage au niveau de la salle : pilote la VUE + la SCÈNE centrale +
@@ -217,6 +241,26 @@ export default function ConsultationRoom() {
     else setLeft(true);
   };
 
+  // Aperçu de la salle d'attente (le praticien peut voir ce que voit le patient) :
+  // /teleconsult/:id?preview=lobby — données réelles si dispo, sinon exemple.
+  if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('preview') === 'lobby') {
+    return (
+      <WaitingRoom
+        clinicName={clinicName}
+        clinicLogo={clinicLogo}
+        patientName={ctx?.patient_name || 'Marie Dupont'}
+        practitionerName={practitionerName}
+        scheduledAt={ctx?.scheduled_at || new Date(Date.now() + 8 * 60000).toISOString()}
+        agendaReason={ctx?.agenda_reason || 'Suivi · bilan de santé'}
+        agendaNotes={ctx?.agenda_notes || 'Revoir les résultats récents et ajuster le programme.'}
+        joinCam={joinCam}
+        joinMic={joinMic}
+        onToggleCam={() => setJoinCam((v) => !v)}
+        onToggleMic={() => setJoinMic((v) => !v)}
+      />
+    );
+  }
+
   if (error) {
     return (
       <Screen>
@@ -231,6 +275,25 @@ export default function ConsultationRoom() {
   }
 
   if (!conn) {
+    // Patient arrivé AVANT le praticien → salle d'attente (compte à rebours +
+    // agenda + musique + green room). Bascule auto via le poll de host_present.
+    if (ctxResolved && ctx?.role === 'patient' && ctx?.host_present === false) {
+      return (
+        <WaitingRoom
+          clinicName={clinicName}
+          clinicLogo={clinicLogo}
+          practitionerName={channel.hostName}
+          patientName={ctx?.patient_name}
+          scheduledAt={ctx?.scheduled_at}
+          agendaReason={ctx?.agenda_reason}
+          agendaNotes={ctx?.agenda_notes}
+          joinCam={joinCam}
+          joinMic={joinMic}
+          onToggleCam={() => setJoinCam((v) => !v)}
+          onToggleMic={() => setJoinMic((v) => !v)}
+        />
+      );
+    }
     return (
       <ImmersiveBootLoader
         clinic={clinicName}
@@ -263,8 +326,8 @@ export default function ConsultationRoom() {
         serverUrl={conn.url}
         token={conn.token}
         connect
-        audio
-        video
+        audio={joinMic}
+        video={joinCam}
         style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
       >
         {/* Corps : colonne principale (chrome + scène + barre) + panneau de

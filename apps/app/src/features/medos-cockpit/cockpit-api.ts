@@ -50,6 +50,14 @@ export interface ClinicalContext {
   practitioner_id: string;
   appointment_id: string | null;
   role: 'host' | 'patient';
+  /** Heure du RDV (ISO) — salle d'attente : compte à rebours. */
+  scheduled_at?: string | null;
+  /** Motif du RDV — salle d'attente : « Au programme ». */
+  agenda_reason?: string | null;
+  /** Notes du RDV — détails de l'agenda. */
+  agenda_notes?: string | null;
+  /** Le praticien a démarré (practitioner_joined_at) → bascule auto. */
+  host_present?: boolean;
 }
 
 export interface WheelDomain {
