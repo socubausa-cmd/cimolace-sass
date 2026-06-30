@@ -9,7 +9,7 @@ const AuthCallbackPage = () => {
   const [debugState, setDebugState] = useState('waiting_session');
   const redirectedRef = useRef(false);
   const debugEnabled = import.meta.env.DEV && import.meta.env.VITE_AUTH_DEBUG === 'true';
-  const authFlow = String(import.meta.env.VITE_SUPABASE_AUTH_FLOW || 'pkce').toLowerCase();
+  const authFlow = String(import.meta.env.VITE_SUPABASE_AUTH_FLOW || 'implicit').toLowerCase();
 
   const hasCodeInUrl = useMemo(() => {
     const params = new URLSearchParams(location.search);

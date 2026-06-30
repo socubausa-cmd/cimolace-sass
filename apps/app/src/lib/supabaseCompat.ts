@@ -65,7 +65,9 @@ const realSupabase =
         isSupabaseConfigured ? supabaseKey : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.invalid',
         {
           auth: {
-            flowType: 'pkce',
+            // implicit par défaut : robuste en Safari privé / ITP (pas de code_verifier
+            // localStorage à retrouver au retour OAuth). Repli pkce via VITE_SUPABASE_AUTH_FLOW=pkce.
+            flowType: (import.meta.env.VITE_SUPABASE_AUTH_FLOW === 'pkce' ? 'pkce' : 'implicit') as 'pkce' | 'implicit',
             detectSessionInUrl: true,
             persistSession: true,
           },
