@@ -12,9 +12,12 @@ import {
 } from "@nestjs/common";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { TenantGuard } from "../common/guards/tenant.guard";
+import { RolesGuard } from "../common/guards/roles.guard";
+import { Roles } from "../common/decorators/roles.decorator";
 import { CimolaceStaffGuard } from "../cimolace-backoffice/cimolace-staff.guard";
 import { TenantService } from "./tenant.service";
 import { UpdateBrandingDto } from "./update-branding.dto";
+import { UpdateTenantSettingsDto } from "./update-tenant-settings.dto";
 
 @Controller("tenants")
 export class TenantController {
@@ -82,7 +85,10 @@ export class TenantController {
       logo_url?: string | null;
       brand_colors?: Record<string, string> | null;
       slug: string;
-      metadata?: { site?: Record<string, unknown> | null } | null;
+      metadata?: {
+        site?: Record<string, unknown> | null;
+        settings?: { requiresStudentDossier?: boolean } | null;
+      } | null;
     };
     // Return the bare payload — ResponseInterceptor wraps it in
     // `{ data: ... }`. The pre-existing `/tenants/current` returns
@@ -97,6 +103,8 @@ export class TenantController {
       logo_url: t.logo_url ?? null,
       brand_colors: t.brand_colors ?? {},
       site: t.metadata?.site ?? null,
+      // null = non défini → le client retombe sur sa config (founder ISNA = true).
+      requiresStudentDossier: t.metadata?.settings?.requiresStudentDossier ?? null,
     };
   }
 
@@ -122,12 +130,15 @@ export class TenantController {
       logo_url?: string | null;
       brand_colors?: Record<string, string> | null;
       slug: string;
+      metadata?: { settings?: { requiresStudentDossier?: boolean } | null } | null;
     };
     return {
       slug: t.slug,
       name: t.name ?? t.slug,
       logo_url: t.logo_url ?? null,
       brand_colors: t.brand_colors ?? {},
+      // null = non défini → le client retombe sur sa config (founder ISNA = true).
+      requiresStudentDossier: t.metadata?.settings?.requiresStudentDossier ?? null,
     };
   }
 
@@ -146,6 +157,24 @@ export class TenantController {
   ) {
     return {
       data: await this.tenantService.updateBranding(req.tenant.id, dto),
+    };
+  }
+
+  /**
+   * Self-serve tenant settings (no-code) — RÉSERVÉ owner/admin (RolesGuard).
+   * Distinct du branding : un élève ne doit pas pouvoir désactiver son propre
+   * KYC. Pour l'instant : `requiresStudentDossier` (gating dossier élève →
+   * certificats), stocké dans `tenants.metadata.settings`.
+   */
+  @Patch("current/settings")
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles("owner", "admin")
+  async updateOwnSettings(
+    @Req() req: any,
+    @Body() dto: UpdateTenantSettingsDto,
+  ) {
+    return {
+      data: await this.tenantService.updateTenantSettings(req.tenant.id, dto),
     };
   }
 

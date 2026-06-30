@@ -28,7 +28,7 @@
  * ═══════════════════════════════════════════════════════════════
  */
 import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
-import { isPlatformOrDevHost, getCachedHostTenant } from '@/lib/tenantResolver';
+import { isPlatformOrDevHost, getCachedHostTenant, getCachedTenantSettings } from '@/lib/tenantResolver';
 import { LIRI_PLATFORM_BRANDING } from '@/lib/tenant/liriPlatformBranding';
 
 /** Config du tenant FONDATEUR (ISNA) — identité LITTÉRALE, ne change jamais.
@@ -130,5 +130,23 @@ function resolveActiveTenantConfig() {
 
 /** Config du tenant actif (par défaut, résolue par l'hôte courant). */
 export const activeTenantConfig = resolveActiveTenantConfig();
+
+/**
+ * Gating « dossier élève » (KYC certificats) résolu de façon SYNCHRONE pour les
+ * gardes de routage. Priorité :
+ *   1. réglage tenant en cache (hydraté depuis la DB via le back-office) si défini ;
+ *   2. sinon repli sur la config résolue par l'hôte (founder ISNA = true par défaut,
+ *      LIRI neutre / autre tenant non configuré = false).
+ * → activable/désactivable par tenant depuis /admin/settings, sans toucher au code.
+ */
+export function resolveRequiresStudentDossier() {
+  const host =
+    typeof window !== 'undefined' ? String(window.location.hostname || '').toLowerCase() : '';
+  const cached = getCachedTenantSettings(host);
+  if (cached && typeof cached.requiresStudentDossier === 'boolean') {
+    return cached.requiresStudentDossier;
+  }
+  return !!activeTenantConfig.requiresStudentDossier;
+}
 
 export default activeTenantConfig;

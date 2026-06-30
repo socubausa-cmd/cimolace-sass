@@ -5,8 +5,9 @@
  */
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Settings, Save, Loader2, Check, AlertCircle, Globe, Palette, School, KeyRound, CreditCard, MessageCircle, Mail, Share2, Store } from 'lucide-react';
+import { Settings, Save, Loader2, Check, AlertCircle, Globe, Palette, School, KeyRound, CreditCard, MessageCircle, Mail, Share2, Store, FileText } from 'lucide-react';
 import { tenantsApi } from '@/lib/api-v2';
+import { activeTenantConfig } from '@/lib/tenant/activeTenantConfig';
 import TenantAdminShell from '@/components/admin/TenantAdminShell';
 import { ADMIN_T as T } from '@/lib/tenantAdminTheme';
 import TenantOAuthSettings from '@/components/admin/TenantOAuthSettings';
@@ -73,10 +74,22 @@ export default function TenantAdminSettingsPage() {
     logoUrl: '',
   });
 
+  // Réglage « dossier élève » (KYC) — activable par tenant, sauvegardé à la volée.
+  const [requiresDossier, setRequiresDossier] = useState(false);
+  const [dossierSaving, setDossierSaving] = useState(false);
+  const [dossierSaved, setDossierSaved] = useState(false);
+
   useEffect(() => {
     tenantsApi.current()
       .then(t => {
         setTenant(t);
+        // `current()` double-wrappe ({data:{data:tenant}}) → lecture défensive de metadata.
+        const meta = t?.metadata ?? t?.data?.metadata ?? null;
+        setRequiresDossier(
+          typeof meta?.settings?.requiresStudentDossier === 'boolean'
+            ? meta.settings.requiresStudentDossier
+            : !!activeTenantConfig.requiresStudentDossier,
+        );
         setBranding({
           name: t.branding?.name ?? t.name ?? '',
           description: t.branding?.description ?? t.description ?? '',
@@ -102,6 +115,26 @@ export default function TenantAdminSettingsPage() {
       setError(err?.message ?? 'Erreur lors de la sauvegarde');
     } finally {
       setSaving(false);
+    }
+  }
+
+  // Toggle « dossier élève » : sauvegarde immédiate (endpoint dédié owner/admin),
+  // rollback optimiste en cas d'erreur.
+  async function saveDossier(next) {
+    const prev = requiresDossier;
+    setRequiresDossier(next);
+    setDossierSaving(true);
+    setDossierSaved(false);
+    setError(null);
+    try {
+      await tenantsApi.updateSettings({ requiresStudentDossier: next });
+      setDossierSaved(true);
+      setTimeout(() => setDossierSaved(false), 3000);
+    } catch (err) {
+      setRequiresDossier(prev);
+      setError(err?.message ?? 'Erreur lors de la mise à jour du réglage');
+    } finally {
+      setDossierSaving(false);
     }
   }
 
@@ -184,6 +217,31 @@ export default function TenantAdminSettingsPage() {
               </div>
             </Field>
           </Section>
+
+          {/* Inscription des élèves — gating dossier KYC (activable par tenant) */}
+          {tenant && (
+            <Section title="Inscription des élèves" icon={FileText}>
+              <Field
+                label="Exiger un dossier élève (KYC certificats)"
+                hint="Activé : après paiement, l'élève téléverse pièce d'identité, preuve de résidence, demi-carte photo et signe le consentement avant d'accéder à son espace (requis pour l'édition des certificats). Désactivé : accès direct au tableau de bord."
+              >
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={requiresDossier}
+                    disabled={dossierSaving}
+                    onChange={(e) => saveDossier(e.target.checked)}
+                    style={{ width: 16, height: 16, cursor: 'pointer', accentColor: T.gold }}
+                  />
+                  <span style={{ fontSize: 13, fontWeight: 500, color: requiresDossier ? T.t1 : T.t2 }}>
+                    {requiresDossier ? 'Dossier exigé' : 'Dossier non requis'}
+                  </span>
+                  {dossierSaving && <Loader2 className="animate-spin" style={{ width: 14, height: 14, color: T.t3 }} />}
+                  {dossierSaved && <Check style={{ width: 14, height: 14, color: T.success }} />}
+                </label>
+              </Field>
+            </Section>
+          )}
 
           {/* Branding visuel */}
           <Section title="Branding visuel" icon={Palette}>

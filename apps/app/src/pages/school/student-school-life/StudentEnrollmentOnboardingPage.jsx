@@ -9,7 +9,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useBilling } from '@/contexts/BillingContext';
 import { supabase } from '@/lib/customSupabaseClient';
-import { activeTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { resolveRequiresStudentDossier } from '@/lib/tenant/activeTenantConfig';
 import { FileText, Loader2, ShieldCheck, PenLine } from 'lucide-react';
 
 const StudentEnrollmentOnboardingPage = () => {
@@ -32,7 +32,7 @@ const StudentEnrollmentOnboardingPage = () => {
   if (!user) return <Navigate to="/login" replace />;
   // Flux KYC réservé aux tenants qui l'exigent (école/certificats). Sur le portail
   // LIRI neutre (requiresStudentDossier absent) → pas de dossier, retour au tableau de bord.
-  if (!activeTenantConfig.requiresStudentDossier) return <Navigate to="/dashboard" replace />;
+  if (!resolveRequiresStudentDossier()) return <Navigate to="/dashboard" replace />;
   if (billingLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#262624] text-white">

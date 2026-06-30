@@ -3,7 +3,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import TenantFavicon from '@/components/TenantFavicon';
 import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { getCachedHostTenant, isPlatformOrDevHost } from '@/lib/tenantResolver';
-import { activeTenantConfig } from '@/lib/tenant/activeTenantConfig';
+import { resolveRequiresStudentDossier } from '@/lib/tenant/activeTenantConfig';
 
 /** Redirige "/" vers la bonne destination selon le contexte :
  *  1. access_token dans le hash (magic link / recovery) → /auth/callback
@@ -741,7 +741,7 @@ const DashboardRedirect = () => {
     if (['owner', 'admin', 'practitioner', 'clinic_admin'].includes(tenantRole)) {
       return <Navigate to="/liri" replace />;
     }
-    if (activeTenantConfig.requiresStudentDossier && isPremiumActive && !user?.student_profile_completed) return <Navigate to="/onboarding/eleve" replace />;
+    if (resolveRequiresStudentDossier() && isPremiumActive && !user?.student_profile_completed) return <Navigate to="/onboarding/eleve" replace />;
     if (isPremiumActive && user?.student_profile_completed) return <Navigate to="/student-school-life/dashboard" replace />;
     // Vitrine douce : un visiteur inscrit (même sans abonnement) entre dans son tableau de bord —
     // le hub d'offres + l'entretien gratuit l'y attendent, le contenu premium restant verrouillé en
@@ -749,7 +749,7 @@ const DashboardRedirect = () => {
     return <Navigate to="/student-school-life/dashboard" replace />;
   }
 
-  if (activeTenantConfig.requiresStudentDossier && role === 'student' && isPremiumActive && !user?.student_profile_completed) {
+  if (resolveRequiresStudentDossier() && role === 'student' && isPremiumActive && !user?.student_profile_completed) {
     return <Navigate to="/onboarding/eleve" replace />;
   }
   if (role === 'student' && isPremiumActive && user?.student_profile_completed) {
@@ -800,7 +800,7 @@ const ProtectedStudentJourneyRoute = ({ children }) => {
 
   const isPremiumActive = status === 'active' || (status === 'past_due' && inGrace);
   if (!isPremiumActive) return <Navigate to="/forfaits" replace />;
-  if (activeTenantConfig.requiresStudentDossier && role === 'visitor' && !user?.student_profile_completed) {
+  if (resolveRequiresStudentDossier() && role === 'visitor' && !user?.student_profile_completed) {
     return <Navigate to="/onboarding/eleve" replace />;
   }
   return children;

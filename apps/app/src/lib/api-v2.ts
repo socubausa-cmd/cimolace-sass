@@ -57,6 +57,9 @@ export const tenantsApi = {
   current: () => apiV2.get<ApiEnvelope<any>>('/tenants/current').then(unwrap),
   updateBranding: (body: Record<string, unknown>) =>
     apiV2.patch<ApiEnvelope<any>>('/tenants/current/branding', body).then(unwrap),
+  // Réglages tenant no-code (owner/admin) — ex: requiresStudentDossier (gating KYC).
+  updateSettings: (body: { requiresStudentDossier?: boolean }) =>
+    apiV2.patch<ApiEnvelope<any>>('/tenants/current/settings', body).then(unwrap),
   mine: () => apiV2.get<ApiEnvelope<any[]>>('/tenants/mine').then(unwrap),
   dashboard: () => apiV2.get<ApiEnvelope<any>>('/tenants/current/dashboard').then(unwrap),
   listMembers: () => apiV2.get<ApiEnvelope<any[]>>('/tenants/current/members').then(unwrap),

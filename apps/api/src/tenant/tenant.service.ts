@@ -132,7 +132,7 @@ export class TenantService {
     if (!tenantId) return null;
     const { data } = await supabase
       .from("tenants")
-      .select("slug, name, logo_url, brand_colors, status")
+      .select("slug, name, logo_url, brand_colors, status, metadata")
       .eq("id", tenantId)
       .single();
     if (!data || (data as any).status !== "active") return null;
@@ -235,6 +235,35 @@ export class TenantService {
     const { data } = await supabase
       .from("tenants")
       .update(patch)
+      .eq("id", tenantId)
+      .select("*")
+      .single();
+    return data;
+  }
+
+  /**
+   * Réglages tenant no-code (self-serve owner/admin), stockés dans
+   * `tenants.metadata.settings`. Merge non destructif : on relit la metadata
+   * existante et on ne touche qu'aux clés fournies. Pour l'instant :
+   * `requiresStudentDossier` (gating KYC dossier élève → certificats).
+   */
+  async updateTenantSettings(
+    tenantId: string,
+    dto: { requiresStudentDossier?: boolean },
+  ) {
+    const supabase = this.authService.getClient();
+    const tenant = (await this.getTenantById(tenantId)) as
+      | { metadata?: Record<string, unknown> | null }
+      | null;
+    const metadata: Record<string, any> = { ...((tenant?.metadata as any) ?? {}) };
+    const settings: Record<string, any> = { ...(metadata.settings ?? {}) };
+    if (dto.requiresStudentDossier !== undefined) {
+      settings.requiresStudentDossier = dto.requiresStudentDossier;
+    }
+    metadata.settings = settings;
+    const { data } = await supabase
+      .from("tenants")
+      .update({ metadata })
       .eq("id", tenantId)
       .select("*")
       .single();
