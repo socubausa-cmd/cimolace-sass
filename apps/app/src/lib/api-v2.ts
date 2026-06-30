@@ -873,3 +873,11 @@ export const billingCatalogApi = {
       .delete<ApiEnvelope<{ ok: true; key: string }>>(`/billing/catalog/${key}`)
       .then(unwrap),
 };
+
+// ── Join / résolution d'organisation (self-join par slug) ──
+export const joinApi = {
+  joinTenant: (slug: string) =>
+    apiV2.post<ApiEnvelope<{ ok: boolean; joined: boolean; role: string }>>(`/tenants/${encodeURIComponent(slug)}/join`).then(unwrap),
+  resolveOrg: (slug: string) =>
+    apiV2.get<ApiEnvelope<{ slug: string; name: string; logo_url: string | null } | null>>(`/tenants/by-slug/${encodeURIComponent(slug)}/branding`).then(unwrap),
+};

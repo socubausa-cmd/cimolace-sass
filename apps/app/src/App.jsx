@@ -23,6 +23,11 @@ function RootRedirect() {
   if (CIMOLACE_PUBLIC_HOSTS.has(host)) return <Navigate to="/cimolace" replace />;
   // Domaine fondateur (prorascience.org = tenant ISNA) → vitrine du fondateur en racine propre.
   if (host === 'prorascience.org' || host === 'www.prorascience.org') return <TenantVitrineHome slug={DEFAULT_TENANT_SLUG} />;
+  // Host neutre LIRI (liri.cimolace.space, localhost en dev) NON connecté → page d'accueil « 2 portes »
+  // (Créer mon espace / Rejoindre mon organisation), au lieu de /login. cimolace.space garde /cimolace.
+  if (isPlatformOrDevHost(host) && !hostTenant && !CIMOLACE_PUBLIC_HOSTS.has(host) && host !== 'prorascience.org' && host !== 'www.prorascience.org') {
+    return <LazyShell><LiriLandingPage /></LazyShell>;
+  }
   return <Navigate to="/login" replace />;
 }
 
@@ -409,6 +414,8 @@ const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const HandoffPage = lazy(() => import('@/pages/HandoffPage'));
 const SignupPage = lazy(() => import('@/pages/SignupPage'));
 const OnboardingOrgPage = lazy(() => import('@/pages/OnboardingOrgPage'));
+const LiriLandingPage = lazy(() => import('@/pages/LiriLandingPage'));
+const JoinOrgPage = lazy(() => import('@/pages/JoinOrgPage'));
 const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
 const UpdatePasswordPage = lazy(() => import('@/pages/UpdatePasswordPage'));
 const OwnerDashboard = lazy(() => import('@/pages/OwnerDashboard'));
@@ -715,6 +722,14 @@ const DashboardRedirect = () => {
   if (role === 'secretariat') return <Navigate to="/secretariat-space/dashboard" replace />;
   if (role === 'teacher') return <Navigate to="/teacher-space/dashboard" replace />;
   if (role === 'creator') return <Navigate to="/creator-dashboard" replace />;
+
+  // Garde-fou « pas d'org » : user connecté SANS membership (tenantRole vide) sur host neutre LIRI
+  // (aucun tenant résolu par le domaine) → /student-school-life/dashboard serait vide/cassé.
+  // On l'envoie choisir/rejoindre une organisation. Les owners/membres de tenant sont déjà sortis
+  // plus haut (tenantRole owner/admin/…) ou résolus par leur domaine custom (getCachedHostTenant ≠ '').
+  if (!tenantRole && isPlatformOrDevHost(window.location.hostname) && !getCachedHostTenant(window.location.hostname)) {
+    return <Navigate to="/rejoindre" replace />;
+  }
 
   if (role === 'visitor') {
     // Membre d'un tenant LIRI/MedOS : rôle global faible 'visitor' mais vrai rôle dans
@@ -1031,6 +1046,7 @@ const AppContent = () => {
     '/login',
     '/signup',
     '/creer-organisation',
+    '/rejoindre',
     '/auth/callback',
     '/creator-dashboard',
     '/teacher-dashboard',
@@ -1634,8 +1650,9 @@ isLiriHostDevPreviewRoute;
           } />
           {/* Onboarding self-service LIRI — créer son organisation (POST /signup/tenant) */}
           <Route path="/creer-organisation" element={<OnboardingOrgPage />} />
-          {/* Alias publics — le lien "Rejoindre" du menu vitrine ne doit pas faire 404 */}
-          <Route path="/rejoindre" element={<Navigate to="/signup" replace />} />
+          {/* Rejoindre une organisation par slug (self-join) — accessible connecté OU non */}
+          <Route path="/rejoindre" element={<JoinOrgPage />} />
+          {/* Alias publics — le lien "Inscription" du menu vitrine ne doit pas faire 404 */}
           <Route path="/inscription" element={<Navigate to="/signup" replace />} />
           <Route path="/register" element={<Navigate to="/signup" replace />} />
           

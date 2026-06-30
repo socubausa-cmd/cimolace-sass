@@ -3,9 +3,10 @@
  * Crée un compte Cimolace + un tenant + une membership owner.
  * Utilisé par /onboarding/create?kind=liri sur le public-site.
  */
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { SignupService, type SignupTenantInput, type SignupTenantResult } from './signup.service';
 import { AiBrandRateLimitGuard } from './ai-brand-rate-limit.guard';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 @Controller('signup')
 export class SignupController {
@@ -25,6 +26,26 @@ export class SignupController {
   @UseGuards(AiBrandRateLimitGuard)
   async aiBrand(@Body() body: { description?: string }) {
     return this.svc.generateBrand(body?.description ?? '');
+  }
+
+  /**
+   * POST /signup/tenant-from-oauth — variante OAuth (JWT obligatoire).
+   * L'user existe déjà dans Supabase Auth (Google OAuth etc.).
+   * Corps : { platformName, slug?, kind?, locale?, timezone? }
+   */
+  @Post('tenant-from-oauth')
+  @UseGuards(JwtAuthGuard)
+  async signupTenantFromOAuth(
+    @Req() req: any,
+    @Body() body: { platformName: string; slug?: string; kind?: string; locale?: string; timezone?: string },
+  ): Promise<SignupTenantResult> {
+    return this.svc.signupTenantFromOAuth(req.user.id, req.user.email, {
+      platformName: body.platformName,
+      slug: body.slug,
+      kind: body.kind ?? 'liri',
+      locale: body.locale,
+      timezone: body.timezone,
+    });
   }
 
   /** Health check — utile pour les tests CI et préchauffer le module. */

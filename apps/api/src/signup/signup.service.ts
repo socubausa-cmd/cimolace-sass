@@ -323,6 +323,75 @@ export class SignupService {
   }
 
   /**
+   * signupTenantFromOAuth — variante OAuth de signupTenant.
+   * Utilisé quand l'user existe déjà dans Supabase Auth (ex: Google OAuth).
+   * Saute l'étape createUser et applique les étapes 3-7 identiques.
+   */
+  async signupTenantFromOAuth(
+    userId: string,
+    email: string,
+    input: Omit<SignupTenantInput, 'email' | 'password'>,
+  ): Promise<SignupTenantResult> {
+    const { platformName, kind = 'liri', locale = 'fr', timezone = 'Europe/Paris' } = input;
+
+    if (!platformName) throw new BadRequestException('platformName est requis');
+    if (!VALID_KINDS.includes(kind as Kind)) {
+      throw new BadRequestException(`kind invalide. Valeurs autorisées : ${VALID_KINDS.join(', ')}`);
+    }
+    if (platformName.length < 2 || platformName.length > 80) {
+      throw new BadRequestException('Le nom de la plateforme doit faire 2 à 80 caractères');
+    }
+
+    const slug = (input.slug?.trim() || this.slugify(platformName)).toLowerCase();
+    if (!/^[a-z0-9-]{2,40}$/.test(slug)) {
+      throw new BadRequestException('Slug invalide. Lettres minuscules, chiffres et tirets uniquement (2-40 caractères)');
+    }
+
+    // Vérifier slug libre
+    const { data: existing } = await this.sb.client.from('tenants').select('id').eq('slug', slug).maybeSingle();
+    if (existing) throw new ConflictException(`Le slug "${slug}" est déjà utilisé`);
+
+    // Vérifier que cet user n'a pas déjà un tenant (éviter double création)
+    const { data: ownedTenant } = await this.sb.client
+      .from('tenants').select('id, slug, name, infrastructure_type').eq('owner_user_id', userId).maybeSingle();
+    if (ownedTenant) {
+      const next_url = kind === 'liri' ? '/liri' : `/t/${ownedTenant.slug}/admin`;
+      return {
+        tenant: { id: ownedTenant.id, slug: ownedTenant.slug, name: ownedTenant.name, infrastructure_type: ownedTenant.infrastructure_type ?? kind },
+        user: { id: userId, email },
+        next_url,
+      };
+    }
+
+    // 3) Créer le tenant
+    const { data: tenant, error: tenantErr } = await this.sb.client
+      .from('tenants')
+      .insert({ name: platformName, slug, owner_user_id: userId, infrastructure_type: kind, status: 'active', plan: DEFAULT_PLAN_BY_KIND[kind as Kind] ?? 'free', billing_status: 'free', locale, timezone })
+      .select('id, slug, name, infrastructure_type')
+      .single();
+    if (tenantErr || !tenant) throw new InternalServerErrorException(`Création du tenant échouée: ${tenantErr?.message ?? 'inconnue'}`);
+
+    // 4) Membership owner
+    await this.sb.client.from('tenant_memberships').insert({ tenant_id: tenant.id, user_id: userId, role: 'owner', status: 'active' });
+
+    // 5) AI credits + moteurs LIRI + essai (best-effort, identique à signupTenant)
+    if (kind === 'liri' || kind === 'school' || kind === 'medos') {
+      try { await (this.sb.client as any).rpc('init_tenant_ai_balance', { p_tenant_id: tenant.id, p_plan: 'free' }); } catch (_) {}
+      const LIRI_ENGINES = ['liri_live','liri_replay','studio_creator','liri_brain','liri_masterclass','liri_smartboard','liri_neuro_recall','course_builder'];
+      await (this.sb.client as any).from('tenant_services').insert(LIRI_ENGINES.map((service_key) => ({ tenant_id: tenant.id, service_key, active: true })));
+    }
+    if (kind === 'liri') {
+      const startIso = new Date().toISOString();
+      const endIso = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      await (this.sb.client as any).from('billing_subscriptions').insert({ tenant_id: tenant.id, user_id: userId, plan_id: 'liri-trial', provider: 'free', status: 'active', amount_cents: 0, currency: 'EUR', current_period_start: startIso, current_period_end: endIso, metadata: { trial: true, source: 'signup_oauth', days: 7 } });
+    }
+
+    this.logger.log(`✅ Tenant ${tenant.slug} (${kind}) créé via OAuth pour ${email} (user ${userId})`);
+    const next_url = kind === 'liri' ? '/liri' : `/t/${tenant.slug}/admin/${this.firstAdminTabFor(kind as Kind)}`;
+    return { tenant: { id: tenant.id, slug: tenant.slug, name: tenant.name, infrastructure_type: tenant.infrastructure_type ?? kind }, user: { id: userId, email }, next_url };
+  }
+
+  /**
    * AI Brand-in-a-box — génère une identité de marque complète à partir d'une
    * description en langage naturel. Retourne couleurs + nom + contenu de
    * vitrine (hero, CTA, services) prêt à écrire dans brand_colors + metadata.site.

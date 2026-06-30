@@ -3,10 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { tenantMembersApi } from '../../lib/api';
 import {
   Users, UserPlus, Trash2, RefreshCw, Shield, ChevronDown,
-  CheckCircle2, Clock, AlertCircle, Mail,
+  CheckCircle2, Clock, AlertCircle, Mail, Link2, Copy, Check,
 } from 'lucide-react';
 import TenantAdminShell from '@/components/admin/TenantAdminShell';
 import { ADMIN_T as T } from '@/lib/tenantAdminTheme';
+import { authStore } from '@/lib/auth-store';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -160,6 +161,65 @@ function InviteForm({ onSuccess }: { onSuccess: () => void }) {
           <CheckCircle2 size={14} />Invitation envoyée avec succès.
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── InviteLinkCard ───────────────────────────────────────────────────────────
+
+function InviteLinkCard() {
+  const slug = authStore.getTenantSlug();
+  const [copied, setCopied] = useState(false);
+  if (!slug) return null;
+  const inviteLink = `https://liri.cimolace.space/rejoindre?org=${slug}`;
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard indisponible (contexte non sécurisé) — on ignore silencieusement */
+    }
+  };
+
+  return (
+    <div style={{
+      background: T.surfaceCard, border: `1px solid ${T.border}`, borderRadius: 14,
+      padding: 20, marginBottom: 24,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+        <Link2 size={16} color={T.gold} />
+        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: T.t1 }}>Lien d'invitation</h3>
+      </div>
+      <p style={{ margin: '0 0 14px', fontSize: 13, color: T.t2 }}>
+        Partagez ce lien : toute personne connectée rejoindra votre organisation comme étudiant.
+      </p>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <input
+          type="text"
+          value={inviteLink}
+          readOnly
+          onFocus={e => e.currentTarget.select()}
+          style={{
+            flex: '1 1 280px', boxSizing: 'border-box',
+            padding: '9px 12px', border: `1px solid ${T.border}`,
+            borderRadius: 8, fontSize: 14, color: T.t1,
+            background: T.surface, outline: 'none',
+          }}
+        />
+        <button
+          onClick={copy}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6, flex: '0 1 auto',
+            padding: '9px 18px', background: copied ? T.success : T.gold, color: '#000',
+            border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer',
+          }}
+        >
+          {copied ? <Check size={14} /> : <Copy size={14} />}
+          {copied ? 'Copié' : 'Copier'}
+        </button>
+      </div>
     </div>
   );
 }
@@ -352,9 +412,12 @@ export default function TenantMembersPage() {
         </div>
       )}
 
-      {/* Invite form — owner/admin only */}
+      {/* Invite form + lien d'invitation partageable — owner/admin only */}
       {(currentUserRole === 'owner' || currentUserRole === 'admin') && (
-        <InviteForm onSuccess={refetch} />
+        <>
+          <InviteLinkCard />
+          <InviteForm onSuccess={refetch} />
+        </>
       )}
 
       {/* Member list */}
