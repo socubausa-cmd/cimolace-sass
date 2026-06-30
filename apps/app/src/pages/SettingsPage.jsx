@@ -7,10 +7,11 @@ import PaymentMethodsManager from '@/components/settings/PaymentMethodsManager';
 import { AnimatePresence, motion } from 'framer-motion';
 import PremiumSegmentedSelector from '@/components/ui/premium-segmented-selector';
 import { usePortalTabs, useInPortalHeader } from '@/components/liri/portalHeader';
-import { Settings, CalendarDays, CreditCard, Shield, Bell, Plug } from 'lucide-react';
+import { Settings, CalendarDays, CreditCard, Shield, Bell, Plug, Loader2, Check } from 'lucide-react';
 
 import { FOUNDER_TENANT_CONFIG as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 import { useResolvedTenantSlug } from '@/hooks/useResolvedTenantSlug';
+import { useStudentDossierSetting } from '@/hooks/useStudentDossierSetting';
 
 const SETTINGS_TABS = new Set(['general', 'academic', 'payments', 'security', 'notifications', 'integrations']);
 
@@ -27,6 +28,7 @@ const SettingsPage = ({ embedded = false }) => {
   const inPortal = useInPortalHeader();
   const [searchParams, setSearchParams] = useSearchParams();
   const { slug: hostTenantSlug, loading: hostTenantLoading } = useResolvedTenantSlug();
+  const dossier = useStudentDossierSetting();
   const tabFromUrl = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState(() =>
     tabFromUrl && SETTINGS_TABS.has(tabFromUrl) ? tabFromUrl : 'general',
@@ -64,7 +66,44 @@ const SettingsPage = ({ embedded = false }) => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'general':
-        return <div className="p-4" style={lightPanel}><GeneralSettingsForm /></div>;
+        return (
+          <div className="space-y-4">
+            <div className="p-4" style={lightPanel}><GeneralSettingsForm /></div>
+            <div className="p-6 space-y-4" style={lightPanel}>
+              <div className="border-b border-zinc-200 pb-3">
+                <h2 className="text-base font-semibold text-zinc-900">Inscription des élèves</h2>
+                <p className="mt-0.5 text-sm text-zinc-500">Dossier requis après paiement (KYC certificats).</p>
+              </div>
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={!!dossier.value}
+                  disabled={dossier.value === null || dossier.saving}
+                  onChange={(e) => dossier.save(e.target.checked)}
+                  className="mt-1 h-4 w-4 cursor-pointer"
+                  style={{ accentColor: '#c8893f' }}
+                />
+                <span>
+                  <span className="block text-sm font-medium text-zinc-900">Exiger un dossier élève (KYC certificats)</span>
+                  <span className="mt-0.5 block text-xs text-zinc-500">
+                    Activé : après paiement, l'élève téléverse pièce d'identité, preuve de résidence, demi-carte photo et
+                    signe le consentement avant d'accéder à son espace. Désactivé : accès direct au tableau de bord.
+                  </span>
+                  <span className="mt-1.5 inline-flex items-center gap-2 text-xs">
+                    {dossier.value === null ? (
+                      <span className="text-zinc-400">Chargement…</span>
+                    ) : (
+                      <span className="font-medium text-zinc-700">{dossier.value ? 'Dossier exigé' : 'Dossier non requis'}</span>
+                    )}
+                    {dossier.saving && <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-400" />}
+                    {dossier.saved && <Check className="h-3.5 w-3.5 text-emerald-600" />}
+                  </span>
+                  {dossier.error && <span className="mt-1 block text-xs text-red-600">{dossier.error}</span>}
+                </span>
+              </label>
+            </div>
+          </div>
+        );
       case 'security':
         return <div className="p-4" style={lightPanel}><SecuritySettingsForm /></div>;
       case 'integrations':
