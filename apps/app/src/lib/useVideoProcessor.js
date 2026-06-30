@@ -32,6 +32,8 @@ function chromaMatch(r, g, b, hex, threshold) {
   return (r - tr) ** 2 + (g - tg) ** 2 + (b - tb) ** 2 < threshold * threshold;
 }
 
+const BEAUTY_FILTER = 'saturate(1.32) brightness(1.12) contrast(0.9)';
+
 export function useVideoProcessor(roomRef, {
   chromaKey,
   chromaColor,
@@ -39,14 +41,16 @@ export function useVideoProcessor(roomRef, {
   videoVbg,
   videoBlur,
   customBgUrl,
+  /** Maquillage (retouche) : filtre beauty sur la personne (seg) ou le cadre. */
+  beauty,
   /** Optionnel : canvas de sortie (chroma / fond / flou) pour PiP SmartBoard — appelé avec `null` au nettoyage */
   onCanvasReady,
 }) {
   // Ref toujours à jour — lue dans la boucle de rendu sans redémarrage
-  const sRef = useRef({ chromaKey, chromaColor, chromaSens, videoVbg, videoBlur, customBgUrl });
+  const sRef = useRef({ chromaKey, chromaColor, chromaSens, videoVbg, videoBlur, customBgUrl, beauty });
   useEffect(() => {
-    sRef.current = { chromaKey, chromaColor, chromaSens, videoVbg, videoBlur, customBgUrl };
-  }, [chromaKey, chromaColor, chromaSens, videoVbg, videoBlur, customBgUrl]);
+    sRef.current = { chromaKey, chromaColor, chromaSens, videoVbg, videoBlur, customBgUrl, beauty };
+  }, [chromaKey, chromaColor, chromaSens, videoVbg, videoBlur, customBgUrl, beauty]);
 
   // Cache image de fond — rechargé quand le preset VBG change
   const bgImgRef = useRef(null);
@@ -63,7 +67,7 @@ export function useVideoProcessor(roomRef, {
     img.src = url;
   }, [videoVbg, customBgUrl]);
 
-  const needsCanvas = chromaKey || (videoVbg && videoVbg !== 'none') || videoBlur;
+  const needsCanvas = chromaKey || (videoVbg && videoVbg !== 'none') || videoBlur || beauty;
   const needsSeg    = (videoVbg && videoVbg !== 'none') || videoBlur;
 
   useEffect(() => {
@@ -140,7 +144,9 @@ export function useVideoProcessor(roomRef, {
 
             // ── Couche personne via masque de segmentation ───────────────────
             tCtx.clearRect(0, 0, width, height);
+            tCtx.filter = s.beauty ? BEAUTY_FILTER : 'none';
             tCtx.drawImage(res.image, 0, 0, width, height);
+            tCtx.filter = 'none';
             tCtx.globalCompositeOperation = 'destination-in';
             tCtx.drawImage(res.segmentationMask, 0, 0, width, height);
             tCtx.globalCompositeOperation = 'source-over';
@@ -200,7 +206,10 @@ export function useVideoProcessor(roomRef, {
             }
             ctx.putImageData(imgData, 0, 0);
           } else {
+            // Passthrough (maquillage seul, sans détourage) : filtre beauty sur le cadre.
+            ctx.filter = sRef.current.beauty ? BEAUTY_FILTER : 'none';
             ctx.drawImage(hiddenVideo, 0, 0, width, height);
+            ctx.filter = 'none';
           }
         }
         animId = requestAnimationFrame(loop);

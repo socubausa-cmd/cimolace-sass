@@ -47,6 +47,15 @@ export interface WaitingRoomProps {
   joinMic: boolean;
   onToggleCam: () => void;
   onToggleMic: () => void;
+  // Studio (levé au parent → reporté dans l'appel).
+  camId: string;
+  micId: string;
+  detourage: string;
+  beauty: boolean;
+  onCamId: (id: string) => void;
+  onMicId: (id: string) => void;
+  onDetourage: (id: string) => void;
+  onBeauty: (v: boolean) => void;
 }
 
 function pad(n: number): string {
@@ -65,6 +74,14 @@ export default function WaitingRoom({
   joinMic,
   onToggleCam,
   onToggleMic,
+  camId,
+  micId,
+  detourage,
+  beauty,
+  onCamId,
+  onMicId,
+  onDetourage,
+  onBeauty,
 }: WaitingRoomProps) {
   // ── Compte à rebours ────────────────────────────────────────────────────────
   const [now, setNow] = useState<number>(() => Date.now());
@@ -100,12 +117,8 @@ export default function WaitingRoom({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [previewOn, setPreviewOn] = useState(false);
-  const [camId, setCamId] = useState<string>('');
-  const [micId, setMicId] = useState<string>('');
   const [cams, setCams] = useState<MediaDeviceInfo[]>([]);
   const [mics, setMics] = useState<MediaDeviceInfo[]>([]);
-  const [detourage, setDetourage] = useState<string>('none');
-  const [beauty, setBeauty] = useState<boolean>(false);
 
   // Acquisition caméra (périphérique choisi) → vidéo cachée qui alimente
   // l'aperçu et la segmentation. Ré-acquise quand la caméra change.
@@ -203,14 +216,14 @@ export default function WaitingRoom({
               <div style={{ display: 'flex', gap: 8 }}>
                 <label style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <span style={studioLabel}><Camera size={12} aria-hidden="true" /> Caméra</span>
-                  <select value={camId} onChange={(e) => setCamId(e.target.value)} style={studioSelect}>
+                  <select value={camId} onChange={(e) => onCamId(e.target.value)} style={studioSelect}>
                     <option value="">Par défaut</option>
                     {cams.map((d, i) => <option key={d.deviceId} value={d.deviceId}>{d.label || `Caméra ${i + 1}`}</option>)}
                   </select>
                 </label>
                 <label style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <span style={studioLabel}><Mic size={12} aria-hidden="true" /> Micro</span>
-                  <select value={micId} onChange={(e) => setMicId(e.target.value)} style={studioSelect}>
+                  <select value={micId} onChange={(e) => onMicId(e.target.value)} style={studioSelect}>
                     <option value="">Par défaut</option>
                     {mics.map((d, i) => <option key={d.deviceId} value={d.deviceId}>{d.label || `Micro ${i + 1}`}</option>)}
                   </select>
@@ -224,7 +237,7 @@ export default function WaitingRoom({
                   {DETOURAGE.map((d) => {
                     const active = detourage === d.id;
                     return (
-                      <button key={d.id} type="button" onClick={() => setDetourage(d.id)} style={studioChip(active)}>
+                      <button key={d.id} type="button" onClick={() => onDetourage(d.id)} style={studioChip(active)}>
                         <span aria-hidden="true">{d.icon}</span> {d.label}
                       </button>
                     );
@@ -235,7 +248,7 @@ export default function WaitingRoom({
               {/* Maquillage */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <span style={{ ...studioLabel, display: 'inline-flex' }}><Sparkles size={12} aria-hidden="true" /> Maquillage (retouche)</span>
-                <button type="button" onClick={() => setBeauty((v) => !v)} aria-pressed={beauty} style={studioChip(beauty)}>
+                <button type="button" onClick={() => onBeauty(!beauty)} aria-pressed={beauty} style={studioChip(beauty)}>
                   {beauty ? 'Activé' : 'Désactivé'}
                 </button>
               </div>

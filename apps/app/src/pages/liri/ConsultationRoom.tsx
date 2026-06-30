@@ -48,6 +48,7 @@ import ConsultationSmartBoard from '@/features/consultation-stage/ConsultationSm
 import ConsultationCopilot from '@/features/consultation-stage/ConsultationCopilot';
 import ConsultationRecall from '@/features/consultation-stage/ConsultationRecall';
 import WaitingRoom from '@/features/consultation-stage/WaitingRoom';
+import { useVideoProcessor } from '@/lib/useVideoProcessor';
 
 // Shell visuel ALIGNÉ SUR LE PORTAIL LIRI (cf. liveHostTheme `LH_DESIGN`) : base
 // chaude #262624 + halos coral, panneaux frostés, accent AMBRE #d4a36a — fini le
@@ -114,6 +115,14 @@ export default function ConsultationRoom() {
   const [ctxResolved, setCtxResolved] = useState(false);
   const [joinCam, setJoinCam] = useState(true);
   const [joinMic, setJoinMic] = useState(true);
+  // Studio (réglés en salle d'attente, REPORTÉS dans l'appel via CallVideoFx).
+  // `?fx=blur|nature|...` force le détourage (utile pour prévisualiser côté hôte).
+  const [camId, setCamId] = useState('');
+  const [micId, setMicId] = useState('');
+  const [detourage, setDetourage] = useState<string>(() => {
+    try { return new URLSearchParams(window.location.search).get('fx') || 'none'; } catch { return 'none'; }
+  });
+  const [beauty, setBeauty] = useState(false);
 
   // Nom de la clinique (image de marque sur l'écran de démarrage) — résolu ICI
   // (composant long-vécu = effet fiable) puis caché en localStorage + passé à
@@ -257,6 +266,14 @@ export default function ConsultationRoom() {
         joinMic={joinMic}
         onToggleCam={() => setJoinCam((v) => !v)}
         onToggleMic={() => setJoinMic((v) => !v)}
+        camId={camId}
+        micId={micId}
+        detourage={detourage}
+        beauty={beauty}
+        onCamId={setCamId}
+        onMicId={setMicId}
+        onDetourage={setDetourage}
+        onBeauty={setBeauty}
       />
     );
   }
@@ -291,6 +308,14 @@ export default function ConsultationRoom() {
           joinMic={joinMic}
           onToggleCam={() => setJoinCam((v) => !v)}
           onToggleMic={() => setJoinMic((v) => !v)}
+          camId={camId}
+          micId={micId}
+          detourage={detourage}
+          beauty={beauty}
+          onCamId={setCamId}
+          onMicId={setMicId}
+          onDetourage={setDetourage}
+          onBeauty={setBeauty}
         />
       );
     }
@@ -330,6 +355,8 @@ export default function ConsultationRoom() {
         video={joinCam}
         style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
       >
+        {/* Studio reporté : périphériques + détourage + maquillage sur le flux publié. */}
+        <CallVideoFx camId={camId} micId={micId} detourage={detourage} beauty={beauty} />
         {/* Corps : colonne principale (chrome + scène + barre) + panneau de
             droite (discussion / copilote / récap), façon appel vidéo. */}
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
@@ -407,6 +434,28 @@ export default function ConsultationRoom() {
   // Plein écran : portal vers <body> pour échapper à tout ancêtre containing-block
   // (sinon position:fixed reste contraint sous le header tenant).
   return typeof document !== 'undefined' ? createPortal(content, document.body) : content;
+}
+
+// Reporte les réglages STUDIO (caméra/micro + détourage + maquillage) sur le flux
+// PUBLIÉ : `switchActiveDevice` + `useVideoProcessor` (segmentation → republie un
+// canvas traité sur le track Camera). Rendu DANS <LiveKitRoom>. Inerte si
+// détourage='none' && !beauty (le processor no-op).
+function CallVideoFx({ camId, micId, detourage, beauty }: { camId: string; micId: string; detourage: string; beauty: boolean }) {
+  const room = useRoomContext();
+  const roomRef = useRef<any>(room);
+  useEffect(() => { roomRef.current = room; }, [room]);
+  useEffect(() => {
+    const r = roomRef.current;
+    if (!r) return;
+    (async () => {
+      try { if (camId) await r.switchActiveDevice('videoinput', camId); } catch { /* ignore */ }
+      try { if (micId) await r.switchActiveDevice('audioinput', micId); } catch { /* ignore */ }
+    })();
+  }, [camId, micId]);
+  const videoBlur = detourage === 'blur';
+  const videoVbg = (detourage === 'none' || detourage === 'blur') ? 'none' : detourage;
+  useVideoProcessor(roomRef, { chromaKey: false, videoBlur, videoVbg, beauty });
+  return null;
 }
 
 // ── Bandeau haut : identité + SWITCHER de vue (host) ─────────────────────────
