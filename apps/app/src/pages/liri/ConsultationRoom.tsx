@@ -81,6 +81,10 @@ const CONSULT_SHELL_CSS = `
   background-position:center center !important;
 }
 .consult-shell [class*="bg-black/25"][class*="ring-inset"]{ background-color:transparent !important; }
+/* Guide/aide verbeux du rail tableau (raccourcis, descriptions) : inutile en
+   téléconsult, mange l'espace → masqué. Les outils fonctionnels restent. Les
+   attributs data-wb-guide ne font RIEN hors de ce scope (Formation intacte). */
+.consult-shell [data-wb-guide]{ display:none !important; }
 `;
 
 // La téléconsult est un moteur MEDOS : à la sortie, le praticien revient à MEDOS
@@ -282,7 +286,6 @@ export default function ConsultationRoom() {
                 onToggleRecall={() => setRightPanel((p) => (p === 'recall' ? null : 'recall'))}
                 settingsOpen={settingsOpen}
                 onToggleSettings={() => setSettingsOpen((v) => !v)}
-                ambientPlaying={ambient.playing}
               />
             </div>
           </div>
@@ -770,7 +773,6 @@ function ConsultationBar({
   onToggleRecall,
   settingsOpen,
   onToggleSettings,
-  ambientPlaying,
 }: {
   isHost: boolean;
   annotatable: boolean;
@@ -786,7 +788,6 @@ function ConsultationBar({
   onToggleRecall: () => void;
   settingsOpen: boolean;
   onToggleSettings: () => void;
-  ambientPlaying: boolean;
 }) {
   const room = useRoomContext();
   const leave = () => {
@@ -798,100 +799,65 @@ function ConsultationBar({
     onLeave();
   };
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '10px 14px', background: BAR, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-      <TrackToggle source={Track.Source.Microphone} showIcon>
-        Micro
-      </TrackToggle>
-      <TrackToggle source={Track.Source.Camera} showIcon>
-        Caméra
-      </TrackToggle>
-      {isHost ? (
-        <TrackToggle source={Track.Source.ScreenShare} showIcon>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <MonitorUp size={15} aria-hidden="true" /> Écran
-          </span>
-        </TrackToggle>
-      ) : null}
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '9px 14px', background: BAR, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      {/* Média — icônes seules, légende au survol (title). */}
+      <TrackToggle source={Track.Source.Microphone} showIcon title="Micro" />
+      <TrackToggle source={Track.Source.Camera} showIcon title="Caméra" />
+      {isHost ? <TrackToggle source={Track.Source.ScreenShare} showIcon title="Partager l'écran" /> : null}
+      <BarSep />
+      {/* Outils praticien. */}
       {isHost && annotatable ? (
-        <button
-          onClick={onToggleAnnotate}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 9, border: 'none', cursor: 'pointer', background: annotate ? GOLD : 'rgba(255,255,255,0.1)', color: annotate ? '#1a1a1a' : '#fff', fontSize: 13, fontWeight: 600 }}
-        >
-          <Pencil size={15} aria-hidden="true" /> {annotate ? 'Annotation ON' : 'Annoter'}
+        <button onClick={onToggleAnnotate} aria-pressed={annotate} title={annotate ? 'Annotation activée' : 'Annoter'} style={barBtn(annotate)}>
+          <Pencil size={16} aria-hidden="true" />
         </button>
       ) : null}
       {isHost && annotatable && hasStrokes ? (
-        <button
-          onClick={onClearStrokes}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', background: 'transparent', color: '#cbd5e1', fontSize: 13 }}
-        >
-          <Eraser size={15} aria-hidden="true" /> Effacer
+        <button onClick={onClearStrokes} title="Effacer les annotations" style={barBtn(false)}>
+          <Eraser size={16} aria-hidden="true" />
         </button>
       ) : null}
       {isHost ? (
-        <button
-          onClick={onInvite}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.18)', cursor: 'pointer', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, fontWeight: 600 }}
-        >
-          <UserPlus size={15} aria-hidden="true" /> Inviter un proche
+        <button onClick={onInvite} title="Inviter un proche" style={barBtn(false)}>
+          <UserPlus size={16} aria-hidden="true" />
         </button>
       ) : null}
-      <button
-        onClick={onToggleChat}
-        aria-pressed={rightPanel === 'chat'}
-        style={barBtn(rightPanel === 'chat')}
-      >
-        <MessageSquare size={15} aria-hidden="true" /> Discussion
+      <BarSep />
+      {/* Panneaux droite + réglages. */}
+      <button onClick={onToggleChat} aria-pressed={rightPanel === 'chat'} title="Discussion écrite" style={barBtn(rightPanel === 'chat')}>
+        <MessageSquare size={16} aria-hidden="true" />
       </button>
       {isHost ? (
-        <button
-          onClick={onToggleCopilot}
-          aria-pressed={rightPanel === 'copilot'}
-          title="Copilote IA du tableau"
-          style={barBtn(rightPanel === 'copilot')}
-        >
-          <Sparkles size={15} aria-hidden="true" /> Copilote
+        <button onClick={onToggleCopilot} aria-pressed={rightPanel === 'copilot'} title="Copilote IA du tableau" style={barBtn(rightPanel === 'copilot')}>
+          <Sparkles size={16} aria-hidden="true" />
         </button>
       ) : null}
       {isHost ? (
-        <button
-          onClick={onToggleRecall}
-          aria-pressed={rightPanel === 'recall'}
-          title="Générer le récap de consultation"
-          style={barBtn(rightPanel === 'recall')}
-        >
-          <Brain size={15} aria-hidden="true" /> Récap
+        <button onClick={onToggleRecall} aria-pressed={rightPanel === 'recall'} title="Récap de consultation" style={barBtn(rightPanel === 'recall')}>
+          <Brain size={16} aria-hidden="true" />
         </button>
       ) : null}
-      {/* Ambiance : raccourci visuel vers le fond sonore (logé dans Réglages). */}
-      {isHost ? (
-        <button
-          onClick={onToggleSettings}
-          aria-pressed={ambientPlaying}
-          title="Fond sonore (dans les Réglages)"
-          style={barBtn(ambientPlaying)}
-        >
-          <Music2 size={15} aria-hidden="true" /> Ambiance
-        </button>
-      ) : null}
-      <ConsultationSettingsButton open={settingsOpen} onToggle={onToggleSettings} />
-      <button
-        onClick={leave}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 9, border: 'none', cursor: 'pointer', background: '#b1372f', color: '#fff', fontSize: 13, fontWeight: 600 }}
-      >
+      <ConsultationSettingsButton open={settingsOpen} onToggle={onToggleSettings} label="" />
+      <BarSep />
+      {/* Quitter — seul bouton libellé (sortie sans ambiguïté). */}
+      <button onClick={leave} title="Quitter la consultation" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 38, padding: '0 14px', borderRadius: 9, border: 'none', cursor: 'pointer', background: '#b1372f', color: '#fff', fontSize: 13, fontWeight: 600 }}>
         <PhoneOff size={16} aria-hidden="true" /> Quitter
       </button>
     </div>
   );
 }
 
-// Style commun des pilules de la barre (état actif = fond GOLD).
+// Séparateur fin entre groupes de la barre.
+function BarSep() {
+  return <span aria-hidden="true" style={{ width: 1, height: 22, background: 'rgba(255,255,255,0.12)', margin: '0 3px', flexShrink: 0 }} />;
+}
+
+// Bouton-icône de la barre (carré 38px ; état actif = fond AMBRE).
 function barBtn(active: boolean): React.CSSProperties {
   return {
-    display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 9,
-    border: 'none', cursor: 'pointer',
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    width: 38, height: 38, borderRadius: 9, border: 'none', cursor: 'pointer',
     background: active ? GOLD : 'rgba(255,255,255,0.1)',
-    color: active ? '#1a1a1a' : '#fff', fontSize: 13, fontWeight: 600,
+    color: active ? '#1a1a1a' : '#fff',
   };
 }
 

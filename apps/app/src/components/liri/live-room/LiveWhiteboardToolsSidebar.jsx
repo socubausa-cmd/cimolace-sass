@@ -179,12 +179,12 @@ export default function LiveWhiteboardToolsSidebar({
       {sidebarTab === 'scolaire' ? (
         <LiveWhiteboardSchoolTab className="space-y-1" />
       ) : (<>
-      <p className={cn(designerShellMicroLabel, 'mb-2 text-white/38')}>
+      <p data-wb-guide className={cn(designerShellMicroLabel, 'mb-2 text-white/38')}>
         {hideNeuroInk
           ? 'Outils et couleurs — NeuroInk sur le cadre SmartBoard'
           : 'Outils, couleurs et NeuroInk — même logique que le designer'}
       </p>
-      <p className="mb-2 rounded-lg border border-white/[0.06] bg-black/30 px-2 py-1.5 text-[10px] leading-relaxed text-white/60">
+      <p data-wb-guide className="mb-2 rounded-lg border border-white/[0.06] bg-black/30 px-2 py-1.5 text-[10px] leading-relaxed text-white/60">
         <span className="font-medium text-white/75">Raccourcis</span> (cliquer le canevas pour le clavier) :{' '}
         <span className="font-mono text-[9px] text-amber-200/90">V</span> sélection ·{' '}
         <span className="font-mono text-[9px] text-amber-200/90">M</span> zone ·{' '}
@@ -205,7 +205,7 @@ export default function LiveWhiteboardToolsSidebar({
       {whiteboardPaging ? (
         <div className={cn(designerShellCardInset, 'mb-2 space-y-1.5')}>
           <p className={designerShellMicroLabel}>Écrans tableau</p>
-          <p className="text-[8px] leading-snug text-white/38">
+          <p data-wb-guide className="text-[8px] leading-snug text-white/38">
             Plusieurs pages plein écran : passez d'un écran à l\'autre pendant le cours.
           </p>
           <div className="flex items-center justify-between gap-1">
@@ -329,7 +329,7 @@ export default function LiveWhiteboardToolsSidebar({
             <RotateCcw className="mx-auto h-3.5 w-3.5" />
           </button>
         </div>
-        <p className="text-[10px] leading-snug text-white/55">
+        <p data-wb-guide className="text-[10px] leading-snug text-white/55">
           Gomme : efface les traits sur le calque (gomme « vraie »). Le fond vert reste.
         </p>
       </div>
@@ -600,7 +600,7 @@ export default function LiveWhiteboardToolsSidebar({
 
       <div className={cn(designerShellCardInset, 'mb-2 space-y-1.5')}>
         <p className={designerShellMicroLabel}>Sélection & groupes</p>
-        <p className="text-[8px] leading-snug text-white/38">
+        <p data-wb-guide className="text-[8px] leading-snug text-white/38">
           Clic sur un trait, Maj+clic pour cumuler. Grouper, couper, copier, coller — style calque vectoriel.
         </p>
         <div className="flex flex-wrap gap-1">

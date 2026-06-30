@@ -51,8 +51,11 @@ export function ConsultationSettingsButton({
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 6,
-        padding: '8px 12px',
+        justifyContent: 'center',
+        gap: label ? 6 : 0,
+        padding: label ? '8px 12px' : 0,
+        width: label ? undefined : 38,
+        height: 38,
         borderRadius: 9,
         border: 'none',
         cursor: 'pointer',
@@ -62,7 +65,7 @@ export function ConsultationSettingsButton({
         fontWeight: 600,
       }}
     >
-      <Settings size={15} aria-hidden="true" /> {label}
+      <Settings size={15} aria-hidden="true" />{label ? <> {label}</> : null}
     </button>
   );
 }
