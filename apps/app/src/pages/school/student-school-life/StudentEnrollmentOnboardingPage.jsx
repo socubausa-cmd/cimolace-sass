@@ -31,8 +31,8 @@ const StudentEnrollmentOnboardingPage = () => {
   if (!user) return <Navigate to="/login" replace />;
   if (billingLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#0F1419] text-white">
-        <Loader2 className="h-8 w-8 animate-spin text-[var(--school-accent)]" />
+      <div className="flex h-screen items-center justify-center bg-[#262624] text-white">
+        <Loader2 className="h-8 w-8 animate-spin text-[#d97757]" />
       </div>
     );
   }
@@ -105,15 +105,23 @@ const StudentEnrollmentOnboardingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F1419] text-white px-4 py-10">
+    <div
+      className="liri-onboarding min-h-screen text-white px-4 py-10"
+      style={{
+        background: '#262624',
+        backgroundImage:
+          'radial-gradient(ellipse 85% 55% at 50% -15%, rgba(217,119,87,0.07), transparent 58%), radial-gradient(ellipse 55% 40% at 100% 90%, rgba(226,85,63,0.05), transparent 52%)',
+      }}
+    >
+      <style>{`.liri-onboarding{--school-accent:#d97757}`}</style>
       <div className="mx-auto max-w-3xl space-y-6">
-        <Card className="premium-panel border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#151a21]/95">
+        <Card className="premium-panel border" style={{ background: 'rgba(48,48,46,0.92)', borderColor: 'rgba(245,244,238,0.10)' }}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl">
               <ShieldCheck className="h-6 w-6 text-[var(--school-accent)]" />
               Finaliser mon dossier eleve
             </CardTitle>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-white/60">
               Cette etape est obligatoire apres paiement pour activer votre tableau de bord eleve et vos certificats.
             </p>
           </CardHeader>
@@ -125,7 +133,7 @@ const StudentEnrollmentOnboardingPage = () => {
                   id="full-name"
                   value={legalFullName}
                   onChange={(e) => setLegalFullName(e.target.value)}
-                  className="bg-[#0F1419] border-white/10"
+                  className="bg-[#211f1d] border-white/10"
                   placeholder="Nom et prenoms"
                 />
               </div>
@@ -133,15 +141,15 @@ const StudentEnrollmentOnboardingPage = () => {
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="identity-doc">Piece d identite valide</Label>
-                  <Input id="identity-doc" type="file" accept=".pdf,image/*" onChange={(e) => setIdentityDoc(e.target.files?.[0] || null)} className="bg-[#0F1419] border-white/10" />
+                  <Input id="identity-doc" type="file" accept=".pdf,image/*" onChange={(e) => setIdentityDoc(e.target.files?.[0] || null)} className="bg-[#211f1d] border-white/10" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="residence-doc">Preuve de residence</Label>
-                  <Input id="residence-doc" type="file" accept=".pdf,image/*" onChange={(e) => setResidenceProof(e.target.files?.[0] || null)} className="bg-[#0F1419] border-white/10" />
+                  <Input id="residence-doc" type="file" accept=".pdf,image/*" onChange={(e) => setResidenceProof(e.target.files?.[0] || null)} className="bg-[#211f1d] border-white/10" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="headshot-doc">Demi carte photo</Label>
-                  <Input id="headshot-doc" type="file" accept="image/*,.pdf" onChange={(e) => setHeadshot(e.target.files?.[0] || null)} className="bg-[#0F1419] border-white/10" />
+                  <Input id="headshot-doc" type="file" accept="image/*,.pdf" onChange={(e) => setHeadshot(e.target.files?.[0] || null)} className="bg-[#211f1d] border-white/10" />
                 </div>
               </div>
 
@@ -152,13 +160,13 @@ const StudentEnrollmentOnboardingPage = () => {
                   rows={3}
                   value={signature}
                   onChange={(e) => setSignature(e.target.value)}
-                  className="bg-[#0F1419] border-white/10"
+                  className="bg-[#211f1d] border-white/10"
                   placeholder="Je consens a l utilisation de ces informations pour certification et authentification."
                 />
               </div>
 
               <div className="flex flex-wrap items-center gap-3 pt-2">
-                <Button type="submit" disabled={submitting} className="bg-[var(--school-accent)] text-black hover:bg-amber-500">
+                <Button type="submit" disabled={submitting} className="bg-[var(--school-accent)] text-black hover:opacity-90">
                   {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
                   Valider mon dossier
                 </Button>
@@ -172,7 +180,7 @@ const StudentEnrollmentOnboardingPage = () => {
           </CardContent>
         </Card>
 
-        <div className="rounded-xl border border-white/10 bg-[#151a21]/70 p-4 text-sm text-gray-400">
+        <div className="rounded-xl border border-white/10 p-4 text-sm text-white/60" style={{ background: 'rgba(48,48,46,0.55)' }}>
           <p className="flex items-center gap-2 text-gray-200">
             <PenLine className="h-4 w-4 text-[var(--school-accent)]" />
             Les informations sont utilisees pour l edition de vos certificats et la verification de votre identite.
