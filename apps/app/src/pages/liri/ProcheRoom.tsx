@@ -158,7 +158,7 @@ function ProcheLiveRoom({ url, token, sessionId, clinic }: { url: string; token:
               strokes={channel.strokes}
               editable={false}
               onStrokes={() => {}}
-              identity={{ clinicName: clinic ?? null, clinicLogo, practitionerName: channel.hostName }}
+              identity={{ logo: clinicLogo, label: clinic ?? null, name: channel.hostName }}
             />
             <ProcheBar onLeave={() => setLeft(true)} chatOpen={chatOpen} onToggleChat={() => setChatOpen((v) => !v)} />
           </div>

@@ -184,6 +184,12 @@ export default function ConsultationRoom() {
     if (isHost && conn && hostDisplayName) channel.shareHostName(hostDisplayName);
   }, [isHost, conn, hostDisplayName, channel.shareHostName]);
   const practitionerName = isHost ? hostDisplayName : channel.hostName;
+  // Badge ASYMÉTRIQUE — chacun voit l'AUTRE : le praticien voit le nom du PATIENT
+  // (avec qui il parle) ; le patient/proche voit le LOGO + NOM de l'organisation +
+  // le praticien.
+  const consultIdentity: ConsultIdentity = isHost
+    ? { logo: null, label: ctx?.sex === 'female' ? 'Patiente' : 'Patient', name: ctx?.patient_name || null }
+    : { logo: clinicLogo, label: clinicName, name: practitionerName };
 
   const [annotate, setAnnotate] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -278,7 +284,7 @@ export default function ConsultationRoom() {
               onStrokes={channel.shareStrokes}
               sessionId={sessionId ?? null}
               rightOpen={rightPanel !== null}
-              identity={{ clinicName, clinicLogo, practitionerName }}
+              identity={consultIdentity}
             />
             {/* Wrapper positionné : ancre le popover Réglages au-dessus de la barre
                 (reste DANS <LiveKitRoom> → ConsultationSettings lit le contexte salle). */}
@@ -452,29 +458,37 @@ function stableTrackKey(t: any): string {
 }
 
 export type ConsultIdentity = {
-  clinicName: string | null;
-  clinicLogo: string | null;
-  practitionerName: string | null;
+  /** Logo de l'organisation (côté patient/proche). Absent côté praticien. */
+  logo?: string | null;
+  /** Petite ligne du haut : nom de l'organisation, ou « Patient ». */
+  label?: string | null;
+  /** Grande ligne : nom du praticien (côté patient) ou du patient (côté praticien). */
+  name?: string | null;
 };
 
-// Lower-third d'identité (logo tenant + nom praticien) — image de marque + « avec
-// qui je parle » pour le patient. Transparent, posé sur la vidéo (vue Conversation).
+// Lower-third d'identité ASYMÉTRIQUE — chacun voit l'AUTRE : le praticien voit le
+// nom du patient ; le patient/proche voit le logo + nom de l'organisation + le
+// praticien. Transparent, posé sur la vidéo (vue Conversation).
 function ConsultIdentityBadge({ identity }: { identity?: ConsultIdentity }) {
   if (!identity) return null;
-  const { clinicName, clinicLogo, practitionerName } = identity;
-  if (!clinicName && !clinicLogo && !practitionerName) return null;
+  const { logo, label, name } = identity;
+  if (!logo && !label && !name) return null;
   return (
     <div style={{ position: 'absolute', left: 16, bottom: 16, zIndex: 2, display: 'flex', alignItems: 'center', gap: 11, padding: '8px 15px 8px 10px', borderRadius: 14, background: 'rgba(20,19,18,0.42)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(245,244,238,0.14)', boxShadow: '0 10px 30px rgba(0,0,0,0.4)', pointerEvents: 'none', maxWidth: '72%' }}>
-      {clinicLogo ? (
-        <img src={clinicLogo} alt="" style={{ height: 32, width: 'auto', maxWidth: 92, objectFit: 'contain', borderRadius: 6, flexShrink: 0 }} />
-      ) : null}
-      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.25, minWidth: 0 }}>
-        {clinicName ? (
-          <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(245,244,238,0.72)', letterSpacing: 0.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{clinicName}</span>
-        ) : null}
-        <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {practitionerName || 'Votre praticien'}
+      {logo ? (
+        <img src={logo} alt="" style={{ height: 32, width: 'auto', maxWidth: 92, objectFit: 'contain', borderRadius: 6, flexShrink: 0 }} />
+      ) : (
+        <span style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(245,244,238,0.1)', color: GOLD }}>
+          <Users size={17} aria-hidden="true" />
         </span>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.25, minWidth: 0 }}>
+        {label ? (
+          <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(245,244,238,0.72)', letterSpacing: 0.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+        ) : null}
+        {name ? (
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
+        ) : null}
       </div>
     </div>
   );
