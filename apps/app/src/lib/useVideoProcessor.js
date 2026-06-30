@@ -25,6 +25,32 @@ const VBG_URLS = {
   stage:   'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1280&q=80',
 };
 
+// @mediapipe/selfie_segmentation est un IIFE UMD : `import()` (Vite) n'enregistre
+// pas toujours `globalThis.SelfieSegmentation`. Fallback : script UMD depuis le CDN.
+let mediaPipeScriptPromise = null;
+function loadMediaPipeScript() {
+  if (typeof globalThis.SelfieSegmentation === 'function') return Promise.resolve();
+  if (mediaPipeScriptPromise) return mediaPipeScriptPromise;
+  mediaPipeScriptPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-mediapipe-selfie]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve());
+      existing.addEventListener('error', () => { mediaPipeScriptPromise = null; reject(new Error('mediapipe script error')); });
+      if (typeof globalThis.SelfieSegmentation === 'function') resolve();
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = `${MEDIAPIPE_CDN}/selfie_segmentation.js`;
+    s.async = true;
+    s.crossOrigin = 'anonymous';
+    s.dataset.mediapipeSelfie = '1';
+    s.onload = () => resolve();
+    s.onerror = () => { mediaPipeScriptPromise = null; reject(new Error('mediapipe script load failed')); };
+    document.head.appendChild(s);
+  });
+  return mediaPipeScriptPromise;
+}
+
 function chromaMatch(r, g, b, hex, threshold) {
   const tr = parseInt(hex.slice(1, 3), 16);
   const tg = parseInt(hex.slice(3, 5), 16);
@@ -115,7 +141,14 @@ export function useVideoProcessor(roomRef, {
       // Charger MediaPipe si on a besoin de segmentation
       if (needsSeg) {
         try {
-          const { SelfieSegmentation } = await import('@mediapipe/selfie_segmentation');
+          if (typeof globalThis.SelfieSegmentation !== 'function') {
+            try { await import('@mediapipe/selfie_segmentation'); } catch { /* fallback CDN */ }
+          }
+          if (typeof globalThis.SelfieSegmentation !== 'function') {
+            await loadMediaPipeScript();
+          }
+          const SelfieSegmentation = globalThis.SelfieSegmentation;
+          if (typeof SelfieSegmentation !== 'function') throw new Error('SelfieSegmentation unavailable');
           seg = new SelfieSegmentation({ locateFile: f => `${MEDIAPIPE_CDN}/${f}` });
           seg.setOptions({ modelSelection: 1, selfieMode: true });
 
