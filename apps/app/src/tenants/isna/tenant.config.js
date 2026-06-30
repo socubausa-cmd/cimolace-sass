@@ -11,7 +11,13 @@ export const isnaTenantConfig = {
   name: 'Prorascience',
   email: 'contact@isna.pro',
   status: 'active',
-  
+
+  // Gating « dossier élève » (KYC post-paiement : pièce d'identité + preuve de
+  // résidence + demi-carte photo + signature → certificats). C'est un flux ÉCOLE,
+  // pas un défaut produit : seuls les tenants qui en ont besoin l'activent. NON
+  // copié dans LIRI_NEUTRAL_CONFIG → sur le portail LIRI neutre, pas de KYC imposé.
+  requiresStudentDossier: true,
+
   // Features activées pour ISNA
   features: {
     school_engine: true,
