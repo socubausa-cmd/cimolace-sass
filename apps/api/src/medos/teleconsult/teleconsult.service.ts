@@ -202,10 +202,14 @@ export class TeleconsultService {
     practitioner_id: string;
     appointment_id: string | null;
     role: 'host' | 'patient';
+    scheduled_at: string | null;
+    agenda_reason: string | null;
+    agenda_notes: string | null;
+    host_present: boolean;
   }> {
     const { data: session, error } = await this.supabase.client
       .from('med_teleconsult_sessions')
-      .select('id, patient_id, practitioner_id, appointment_id')
+      .select('id, patient_id, practitioner_id, appointment_id, practitioner_joined_at')
       .eq('tenant_id', tenant.id)
       .eq('id', sessionId)
       .single();
@@ -249,6 +253,24 @@ export class TeleconsultService {
         ? 'male'
         : 'female';
 
+    // Agenda + heure du RDV (pour la salle d'attente patient) : motif + notes +
+    // créneau, depuis le rendez-vous lié. host_present = le praticien a démarré.
+    let scheduledAt: string | null = null;
+    let agendaReason: string | null = null;
+    let agendaNotes: string | null = null;
+    const apptId = (session as any).appointment_id;
+    if (apptId) {
+      const { data: appt } = await this.supabase.client
+        .from('med_appointments')
+        .select('scheduled_at, reason, notes')
+        .eq('tenant_id', tenant.id)
+        .eq('id', apptId)
+        .single();
+      scheduledAt = (appt as any)?.scheduled_at ?? null;
+      agendaReason = (appt as any)?.reason ?? null;
+      agendaNotes = (appt as any)?.notes ?? null;
+    }
+
     return {
       session_id: (session as any).id,
       patient_id: (session as any).patient_id,
@@ -257,6 +279,10 @@ export class TeleconsultService {
       practitioner_id: (session as any).practitioner_id,
       appointment_id: (session as any).appointment_id ?? null,
       role: isHost ? 'host' : 'patient',
+      scheduled_at: scheduledAt,
+      agenda_reason: agendaReason,
+      agenda_notes: agendaNotes,
+      host_present: !!(session as any).practitioner_joined_at,
     };
   }
 
