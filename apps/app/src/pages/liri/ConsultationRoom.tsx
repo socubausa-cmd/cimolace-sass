@@ -177,8 +177,10 @@ export default function ConsultationRoom() {
   // Le host tient son nom de son profil auth et le DIFFUSE au patient (canal
   // cockpit) ; le patient le LIT depuis ce canal. Logo + nom de clinique : chaque
   // côté les résout localement par slug (branding public, fetché plus haut).
+  // Repli PROPRE : si le profil n'a pas de nom d'affichage, on montre « Praticien »
+  // (pas l'email brut) — le patient/proche voit « <clinique> · Praticien ».
   const hostDisplayName = isHost
-    ? ((user?.user_metadata as any)?.full_name || (user?.user_metadata as any)?.name || user?.email || null)
+    ? ((user?.user_metadata as any)?.full_name || (user?.user_metadata as any)?.name || 'Praticien')
     : null;
   useEffect(() => {
     if (isHost && conn && hostDisplayName) channel.shareHostName(hostDisplayName);
@@ -514,7 +516,10 @@ function FaceToFace({ tracks, identity }: { tracks: any[]; identity?: ConsultIde
   const minis = ordered.filter((t) => t !== big);
 
   return (
-    <div style={{ position: 'relative', height: '100%', borderRadius: 18, overflow: 'hidden', background: TILE_BG, border: '1px solid rgba(255,255,255,0.06)' }}>
+    <div className="consult-f2f" style={{ position: 'relative', height: '100%', borderRadius: 18, overflow: 'hidden', background: TILE_BG, border: '1px solid rgba(255,255,255,0.06)' }}>
+      {/* Masque l'étiquette de nom LiveKit par défaut sur les tuiles (redondante
+          avec le badge d'identité ; l'indicateur micro reste visible). */}
+      <style>{`.consult-f2f .lk-participant-name{display:none!important}`}</style>
       {/* Grand plan (clic → réduire au plan par défaut). */}
       {big ? (
         <div
