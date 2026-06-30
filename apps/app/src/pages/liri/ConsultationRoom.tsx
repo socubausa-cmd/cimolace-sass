@@ -25,11 +25,12 @@ import {
   RoomAudioRenderer,
   TrackToggle,
   useChat,
+  useConnectionState,
   useLocalParticipant,
   useRoomContext,
   useTracks,
 } from '@livekit/components-react';
-import { Track } from 'livekit-client';
+import { Track, ConnectionState } from 'livekit-client';
 import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
@@ -442,19 +443,26 @@ export default function ConsultationRoom() {
 // détourage='none' && !beauty (le processor no-op).
 function CallVideoFx({ camId, micId, detourage, beauty }: { camId: string; micId: string; detourage: string; beauty: boolean }) {
   const room = useRoomContext();
+  const connState = useConnectionState();
+  // useVideoProcessor.start() exige une salle CONNECTÉE et son effet ne se relance
+  // pas à la connexion → on n'ACTIVE le traitement (needsCanvas) qu'une fois
+  // connecté (sinon il démarre trop tôt et abandonne).
+  const connected = connState === ConnectionState.Connected;
   const roomRef = useRef<any>(room);
   useEffect(() => { roomRef.current = room; }, [room]);
   useEffect(() => {
+    if (!connected) return;
     const r = roomRef.current;
     if (!r) return;
     (async () => {
       try { if (camId) await r.switchActiveDevice('videoinput', camId); } catch { /* ignore */ }
       try { if (micId) await r.switchActiveDevice('audioinput', micId); } catch { /* ignore */ }
     })();
-  }, [camId, micId]);
-  const videoBlur = detourage === 'blur';
-  const videoVbg = (detourage === 'none' || detourage === 'blur') ? 'none' : detourage;
-  useVideoProcessor(roomRef, { chromaKey: false, videoBlur, videoVbg, beauty });
+  }, [connected, camId, micId]);
+  const fx = connected ? detourage : 'none';
+  const videoBlur = fx === 'blur';
+  const videoVbg = (fx === 'none' || fx === 'blur') ? 'none' : fx;
+  useVideoProcessor(roomRef, { chromaKey: false, videoBlur, videoVbg, beauty: connected ? beauty : false });
   return null;
 }
 
