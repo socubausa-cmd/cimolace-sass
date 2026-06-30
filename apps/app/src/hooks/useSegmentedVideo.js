@@ -77,6 +77,33 @@ function applyGreenSpillRemovalToImageData(imageData, strength = 0.42) {
   }
 }
 
+// Le package @mediapipe/selfie_segmentation est un IIFE UMD : `import()` (Vite)
+// n'enregistre PAS toujours `globalThis.SelfieSegmentation`. Fallback robuste :
+// injecter le script UMD depuis le CDN (qui enregistre window.SelfieSegmentation).
+let mediaPipeScriptPromise = null;
+function loadMediaPipeScript() {
+  if (typeof globalThis.SelfieSegmentation === 'function') return Promise.resolve();
+  if (mediaPipeScriptPromise) return mediaPipeScriptPromise;
+  mediaPipeScriptPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-mediapipe-selfie]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve());
+      existing.addEventListener('error', () => { mediaPipeScriptPromise = null; reject(new Error('mediapipe script error')); });
+      if (typeof globalThis.SelfieSegmentation === 'function') resolve();
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = `${CDN}/selfie_segmentation.js`;
+    s.async = true;
+    s.crossOrigin = 'anonymous';
+    s.dataset.mediapipeSelfie = '1';
+    s.onload = () => resolve();
+    s.onerror = () => { mediaPipeScriptPromise = null; reject(new Error('mediapipe script load failed')); };
+    document.head.appendChild(s);
+  });
+  return mediaPipeScriptPromise;
+}
+
 export function useSegmentedVideo({ videoRef, canvasRef, blur, beauty, vbg, active }) {
   const [segmentationReady, setSegmentationReady] = useState(false);
   const [segmentationFailed, setSegmentationFailed] = useState(false);
@@ -140,8 +167,13 @@ export function useSegmentedVideo({ videoRef, canvasRef, blur, beauty, vbg, acti
 
     const init = async () => {
       try {
-        // Package ships an IIFE that registers on globalThis; Vite may not re-export the class.
-        await import('@mediapipe/selfie_segmentation');
+        // 1) import npm (peut enregistrer le global via IIFE). 2) sinon, script CDN.
+        if (typeof globalThis.SelfieSegmentation !== 'function') {
+          try { await import('@mediapipe/selfie_segmentation'); } catch { /* fallback CDN */ }
+        }
+        if (typeof globalThis.SelfieSegmentation !== 'function') {
+          await loadMediaPipeScript();
+        }
         if (destroyed) return;
 
         const SelfieSegmentation =
