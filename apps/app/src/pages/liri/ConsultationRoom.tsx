@@ -337,8 +337,13 @@ function ConsultationChrome({
   onView: (v: ConsultView) => void;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', background: BAR, color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-      <Stethoscope size={18} color={GOLD} aria-hidden="true" />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: BAR, color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      {/* Logo LIRI (mark officiel, même que login/boot) — image de marque du shell. */}
+      <img
+        src="/lirilogo.png"
+        alt="LIRI"
+        style={{ height: 26, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(212,163,106,0.32))', flexShrink: 0 }}
+      />
       <span style={{ fontWeight: 600, fontSize: 14, whiteSpace: 'nowrap' }}>Consultation</span>
       {patientName ? (
         <span style={{ color: '#cbd5e1', fontSize: 13, whiteSpace: 'nowrap' }}>· {patientName}</span>
