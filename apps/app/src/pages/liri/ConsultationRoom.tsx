@@ -49,7 +49,6 @@ import ConsultationSmartBoard from '@/features/consultation-stage/ConsultationSm
 import ConsultationCopilot from '@/features/consultation-stage/ConsultationCopilot';
 import ConsultationRecall from '@/features/consultation-stage/ConsultationRecall';
 import WaitingRoom from '@/features/consultation-stage/WaitingRoom';
-import { useVideoProcessor } from '@/lib/useVideoProcessor';
 
 // Shell visuel ALIGNÉ SUR LE PORTAIL LIRI (cf. liveHostTheme `LH_DESIGN`) : base
 // chaude #262624 + halos coral, panneaux frostés, accent AMBRE #d4a36a — fini le
@@ -356,8 +355,8 @@ export default function ConsultationRoom() {
         video={joinCam}
         style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
       >
-        {/* Studio reporté : périphériques + détourage + maquillage sur le flux publié. */}
-        <CallVideoFx camId={camId} micId={micId} detourage={detourage} beauty={beauty} />
+        {/* Studio reporté : périphériques caméra/micro choisis appliqués à la salle. */}
+        <CallVideoFx camId={camId} micId={micId} />
         {/* Corps : colonne principale (chrome + scène + barre) + panneau de
             droite (discussion / copilote / récap), façon appel vidéo. */}
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
@@ -437,32 +436,21 @@ export default function ConsultationRoom() {
   return typeof document !== 'undefined' ? createPortal(content, document.body) : content;
 }
 
-// Reporte les réglages STUDIO (caméra/micro + détourage + maquillage) sur le flux
-// PUBLIÉ : `switchActiveDevice` + `useVideoProcessor` (segmentation → republie un
-// canvas traité sur le track Camera). Rendu DANS <LiveKitRoom>. Inerte si
-// détourage='none' && !beauty (le processor no-op).
-function CallVideoFx({ camId, micId, detourage, beauty }: { camId: string; micId: string; detourage: string; beauty: boolean }) {
+// Reporte le choix de PÉRIPHÉRIQUES (caméra/micro) du studio sur la salle, une
+// fois connecté (`switchActiveDevice`). Rendu DANS <LiveKitRoom>. NB : le détourage
+// + le maquillage restent à l'APERÇU ; leur publication sur le flux (moteur
+// `useVideoProcessor`/MediaPipe in-call) est instable → à fiabiliser séparément.
+function CallVideoFx({ camId, micId }: { camId: string; micId: string }) {
   const room = useRoomContext();
   const connState = useConnectionState();
-  // useVideoProcessor.start() exige une salle CONNECTÉE et son effet ne se relance
-  // pas à la connexion → on n'ACTIVE le traitement (needsCanvas) qu'une fois
-  // connecté (sinon il démarre trop tôt et abandonne).
   const connected = connState === ConnectionState.Connected;
-  const roomRef = useRef<any>(room);
-  useEffect(() => { roomRef.current = room; }, [room]);
   useEffect(() => {
-    if (!connected) return;
-    const r = roomRef.current;
-    if (!r) return;
+    if (!connected || !room) return;
     (async () => {
-      try { if (camId) await r.switchActiveDevice('videoinput', camId); } catch { /* ignore */ }
-      try { if (micId) await r.switchActiveDevice('audioinput', micId); } catch { /* ignore */ }
+      try { if (camId) await (room as any).switchActiveDevice('videoinput', camId); } catch { /* ignore */ }
+      try { if (micId) await (room as any).switchActiveDevice('audioinput', micId); } catch { /* ignore */ }
     })();
-  }, [connected, camId, micId]);
-  const fx = connected ? detourage : 'none';
-  const videoBlur = fx === 'blur';
-  const videoVbg = (fx === 'none' || fx === 'blur') ? 'none' : fx;
-  useVideoProcessor(roomRef, { chromaKey: false, videoBlur, videoVbg, beauty: connected ? beauty : false });
+  }, [connected, camId, micId, room]);
   return null;
 }
 
