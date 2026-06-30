@@ -35,15 +35,17 @@ export type AmbiencePreset = {
   src: string | null;
 };
 
+// Sources MP3 FIABLES (hotlink autorisé, 200). Les anciennes URLs pixabay
+// renvoyaient 403 (hotlink protégé) → le fond sonore ne jouait JAMAIS. SoundHelix
+// = pistes instrumentales libres, hébergées de façon stable, parfaites en fond.
 export const AMBIENCE_PRESETS: AmbiencePreset[] = [
   { id: 'none', label: 'Silence', icon: '🔇', src: null },
-  { id: 'nature', label: 'Nature', icon: '🌿', src: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_8cb749b581.mp3' },
-  { id: 'ocean', label: 'Océan', icon: '🌊', src: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d1718ab41b.mp3' },
-  { id: 'rain', label: 'Pluie', icon: '🌧️', src: 'https://cdn.pixabay.com/download/audio/2022/03/24/audio_9fcb7a1d0a.mp3' },
-  { id: 'fire', label: 'Feu', icon: '🔥', src: 'https://cdn.pixabay.com/download/audio/2022/07/25/audio_b25d19c3f5.mp3' },
-  { id: 'cafe', label: 'Café', icon: '☕', src: 'https://cdn.pixabay.com/download/audio/2021/08/09/audio_dc39bde5b2.mp3' },
-  { id: 'lo-fi', label: 'Lo-Fi', icon: '🎵', src: 'https://cdn.pixabay.com/download/audio/2022/10/16/audio_b5a3ad6024.mp3' },
-  { id: 'focus', label: 'Focus', icon: '🎯', src: 'https://cdn.pixabay.com/download/audio/2022/11/17/audio_9ee6ccd4a9.mp3' },
+  { id: 'calm', label: 'Détente', icon: '🍃', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' },
+  { id: 'lo-fi', label: 'Lo-Fi', icon: '🎵', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
+  { id: 'focus', label: 'Focus', icon: '🎯', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
+  { id: 'soft', label: 'Douce', icon: '🎶', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3' },
+  { id: 'warm', label: 'Chill', icon: '☕', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3' },
+  { id: 'deep', label: 'Ambiant', icon: '🌌', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3' },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
