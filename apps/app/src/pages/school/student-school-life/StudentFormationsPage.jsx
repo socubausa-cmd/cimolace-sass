@@ -222,6 +222,13 @@ const StudentFormationsPage = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </motion.div>
+            <Link to="/masterclasses">
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button className="bg-transparent border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] font-bold gap-1.5 shrink-0">
+                  <Sparkles className="w-4 h-4" /> Masterclasses
+                </Button>
+              </motion.div>
+            </Link>
             <Link to="/formations/catalogue">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-bold gap-1.5 shrink-0 shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
