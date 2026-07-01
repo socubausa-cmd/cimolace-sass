@@ -17,6 +17,7 @@ import CommunicationShell from '@/components/school/CommunicationShell';
 import StudentNeuroRecallPage from './StudentNeuroRecallPage';
 import ForumNewQuestionPage from './ForumNewQuestionPage';
 import ForumThreadPage from './ForumThreadPage';
+import TopicThreadPage from './TopicThreadPage';
 import SchoolLifePage from '@/pages/school/SchoolLifePage';
 import BibliothequePage from '@/pages/BibliothequePage';
 import LibraryPage from '@/pages/LibraryPage';
@@ -166,6 +167,7 @@ const StudentSchoolLifePage = () => {
             <Route path="forum" element={<CommunicationShell forumBasePath="/student-school-life/forum" />} />
             <Route path="forum/new" element={<ForumNewQuestionPage />} />
             <Route path="forum/thread/:threadId" element={<ForumThreadPage />} />
+            <Route path="forum/topic/:topicId" element={<TopicThreadPage />} />
             <Route path="vie-scolaire" element={<SchoolLifePage embedded />} />
             <Route path="bibliotheque" element={<BibliothequePage embedded />} />
             <Route path="bibliotheque/:bookId" element={<StudentBookReaderRoute />} />

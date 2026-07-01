@@ -23,16 +23,20 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import CommunicationShell from '@/components/school/CommunicationShell';
 import ForumNewQuestionPage from '@/pages/school/student-school-life/ForumNewQuestionPage';
 import ForumThreadPage from '@/pages/school/student-school-life/ForumThreadPage';
+import TopicThreadPage from '@/pages/school/student-school-life/TopicThreadPage';
 
 export default function LiriForumPage() {
   return (
     <LiriPortalShell active="forum">
-      <div className="h-full min-h-0 overflow-auto">
+      {/* Respiration : le contenu est rentré (px) tandis que le fond immersif du forum
+          (inset négatif -24px) continue de toucher le rail → immersif mais pas collé. */}
+      <div className="h-full min-h-0 overflow-y-auto overflow-x-hidden px-5 pt-3">
         <ErrorBoundary logTag="LIRI Forum">
           <Routes>
             <Route index element={<CommunicationShell forumBasePath="/liri/forum" />} />
             <Route path="new" element={<ForumNewQuestionPage />} />
             <Route path="thread/:threadId" element={<ForumThreadPage />} />
+            <Route path="topic/:topicId" element={<TopicThreadPage />} />
           </Routes>
         </ErrorBoundary>
       </div>

@@ -78,6 +78,13 @@ export function useLiveHostSessionStop({
             console.warn('[LiveHost] publishLiveTopic (consolidation post-live) — échec non bloquant', err);
           });
         void supabase.functions.invoke('neuro-recall-bootstrap', { body: { sessionId } }).catch(() => {});
+        // Agrégation forum : rassemble dans le Sujet du live TOUTES ses productions
+        // (récap, questions NeuronQ, questions du live, chat, replay, transcript) —
+        // « tout ce que recall fait est dans le forum ». Idempotent (sentinelles
+        // `__live_*`), complémentaire de publishLiveTopic / neuro-recall-bootstrap,
+        // non bloquant. NB : le replay (egress asynchrone) sera capté lors d'une
+        // consolidation ultérieure, une fois live_recordings renseignée.
+        void supabase.rpc('consolidate_live_to_forum', { p_live_id: sessionId }).catch(() => {});
         navigate(`/studio/live-post/${sessionId}`);
       } else {
         devLogLiveHostEnded('host_stop_without_session', { navigated: 'back' }, null);

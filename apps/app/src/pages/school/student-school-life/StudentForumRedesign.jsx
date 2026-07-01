@@ -1,11 +1,13 @@
 /**
  * StudentForumRedesign — Charte LIRI Prorascience
  * Source design : /Downloads/interface studio/Prorascience Dashboard & Forum.html
- * Dark theme · Gold #D4AF37 · Violet #7C3AED · Cyan #00E5FF
+ * Charte chaude LIRI (host-aware) · Coral #d97757 · terracotta · ambre (ex-or/navy/violet bannis)
  */
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
+import { getApiBaseUrl } from '@/lib/apiBase';
+import { authStore } from '@/lib/auth-store';
 import { useForumFavorites, useForumVotes } from '@/hooks/useForumNotifications';
 // Thème host-aware : `T` = tokens vivants (clair sous l'espace élève, sombre sous le portail prof).
 import { themeProxy as T, useSslThemeMode, useSslTheme } from '@/pages/school/student-school-life/sslTheme';
@@ -34,8 +36,18 @@ const fmtRelative = (iso) => {
   return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
-// Palette ISNA : nuances d'or (différencient les formations en restant navy/or).
-const ACCENT_COLORS = ['#D4AF37', '#E5C66B', '#C9A227', '#E0B84D', '#B8902B', '#F0D894'];
+// Sujets connectés (conversations kind='topic') : libellé lisible du contexte de la ressource.
+// Sert d'« auteur » de la carte (le Sujet n'a pas d'auteur unique comme une question d'élève).
+const TOPIC_CONTEXT_LABEL = {
+  live: 'Discussion live',
+  video: 'Discussion vidéo',
+  class: 'Discussion de classe',
+  course: 'Discussion du cours',
+};
+const topicContextLabel = (ctx) => TOPIC_CONTEXT_LABEL[ctx] || 'Sujet';
+
+// Palette LIRI : nuances CORAL/terracotta (différencient les formations, tout chaud). Directive artistique.
+const ACCENT_COLORS = ['#d97757', '#e0926a', '#c96846', '#e8a585', '#bb5e3e', '#f0b89a'];
 
 /* ─── SVG Icons ─── */
 const IcMsg = ({ size = 14, col }) => (
@@ -102,215 +114,49 @@ const IcLayers = ({ size = 13, col }) => (
 /* ─── ForumPostCard ─── */
 const ForumPostCard = ({ post, answerCount, formationTitle, formationAccent, onOpenThread, delay = 0, reason }) => {
   const [hov, setHov] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const [showClip, setShowClip] = useState(false);
-  const [clipUrl, setClipUrl] = useState('');
-  const [clipLoading, setClipLoading] = useState(false);
-  const videoRef = useRef(null);
-  const stopAtRef = useRef(null);
-
   const startN = Number(post.clip_start_seconds);
   const endN = Number(post.clip_end_seconds);
-  // Vrai clip uniquement si la fenêtre a une durée (fin > début) — évite le badge "0:00 → 0:00".
+  // Vrai clip uniquement si la fenêtre a une durée (fin > début).
   const hasClip = Number.isFinite(startN) && Number.isFinite(endN) && endN > startN;
-  const canPlay = Boolean(post.video_storage_path || post.video_url);
-  const clipStart = fmtSecs(post.clip_start_seconds);
-  const clipEnd = fmtSecs(post.clip_end_seconds);
-  const initials = (post.author_name || '?').charAt(0).toUpperCase();
-  const accent = formationAccent || T.gold;
-
-  const handlePlayClip = async () => {
-    if (showClip) { setShowClip(false); setClipUrl(''); return; }
-    if (!canPlay) return;
-    setShowClip(true);
-    setClipLoading(true);
-    if (post.video_storage_path) {
-      const { data } = await supabase.storage.from('videos').createSignedUrl(post.video_storage_path, 3600);
-      setClipUrl(data?.signedUrl || '');
-    } else {
-      setClipUrl(String(post.video_url || ''));
-    }
-    setClipLoading(false);
-  };
 
   return (
     <article
+      onClick={() => { if (onOpenThread) onOpenThread(post); }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: hov ? 'rgba(212,175,55,0.045)' : 'transparent',
-        border: 'none',
-        borderBottom: '1px solid rgba(255,255,255,0.055)',
-        borderRadius: 0, padding: '24px 10px',
-        transition: 'background 250ms ease',
+        // Item MINIMAL cliquable (façon liste du Brain) : question + 1 ligne de méta. Tout le reste
+        // (badges empilés, avatar, boutons, clip inline) déplacé dans la page du sujet → anti-surcharge.
+        background: hov ? 'rgba(217,119,87,0.06)' : 'rgba(255,247,240,0.018)',
+        border: `1px solid ${hov ? 'rgba(217,119,87,0.22)' : 'rgba(245,241,233,0.08)'}`,
+        borderRadius: 12, padding: '14px 16px', cursor: 'pointer',
+        transition: 'background 200ms ease, border-color 200ms ease',
         animation: `forumFadeUp 0.4s ease ${delay}ms both`,
-        position: 'relative', overflow: 'hidden',
       }}
     >
-      {/* Gold top accent on hover */}
-      <div style={{
-        position: 'absolute', top: 0, left: 20, right: 20, height: 1,
-        background: hov ? `linear-gradient(90deg,${T.gold},transparent)` : 'transparent',
-        transition: 'background 250ms ease',
-      }}/>
-
-      {/* Header row */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10, gap: 12 }}>
-        {/* Formation badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <IcMsg size={14} col={T.t3}/>
-          <span style={{
-            fontFamily: T.mono, fontSize: 10, fontWeight: 600,
-            color: accent, letterSpacing: '0.05em',
-            background: T.goldDim, border: `1px solid ${T.goldMid}`,
-            borderRadius: 20, padding: '2px 8px',
-          }}>
-            {formationTitle || 'Forum général'}
-          </span>
-          {reason && (
-            <span style={{
-              fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.04em',
-              color: reason.col, background: reason.bg, border: `1px solid ${reason.bd}`,
-              borderRadius: 20, padding: '2px 8px',
-            }}>
-              {reason.label}
-            </span>
-          )}
-        </div>
-        {/* Author + date */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{
-              width: 20, height: 20, borderRadius: '50%',
-              background: 'linear-gradient(135deg,#1e2840,#D4AF37)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 700, fontSize: 9, color: 'white', flexShrink: 0,
-            }}>{initials}</div>
-            <span style={{ fontSize: 11, color: T.t3 }}>{post.author_name || 'Élève'}</span>
-          </div>
-          <span style={{ fontFamily: T.mono, fontSize: 10, color: T.t3 }}>
-            {fmtRelative(post.created_at)}
-          </span>
-        </div>
-      </div>
-
-      {/* Question */}
-      <p style={{
-        fontSize: 15.5, fontWeight: 500, color: T.t1,
-        lineHeight: 1.55, marginBottom: 12,
-        letterSpacing: '-0.005em',
-      }}>
+      {/* Question (titre) */}
+      <p style={{ fontSize: 15, fontWeight: 500, color: T.t1, lineHeight: 1.5, marginBottom: 7, letterSpacing: '-0.005em' }}>
         {post.question}
       </p>
-
-      {/* Tags row */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-        <span style={{
-          fontFamily: T.mono, fontSize: 10, fontWeight: 500,
-          color: T.t2, background: T.surface,
-          border: `1px solid ${T.border}`, borderRadius: 20, padding: '3px 10px',
-        }}>
-          {answerCount} réponse{answerCount !== 1 ? 's' : ''}
-        </span>
-        {hasClip && clipStart && (
-          <span style={{
-            fontFamily: T.mono, fontSize: 10, fontWeight: 600,
-            color: T.gold, background: T.goldDim,
-            border: `1px solid ${T.goldMid}`, borderRadius: 20, padding: '3px 10px',
-            display: 'flex', alignItems: 'center', gap: 5,
-          }}>
-            <span>Clip</span>
-            <span>{clipStart}</span>
-            {clipEnd && <><span style={{ color: T.t3 }}>→</span><span>{clipEnd}</span></>}
+      {/* Méta — une seule ligne discrète */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', fontSize: 11.5, color: T.t3 }}>
+        <span style={{ color: T.t2 }}>{post.author_name || 'Élève'}</span>
+        <span aria-hidden>·</span>
+        <span style={{ fontFamily: T.mono }}>{fmtRelative(post.created_at)}</span>
+        <span aria-hidden>·</span>
+        <span>{answerCount} réponse{answerCount !== 1 ? 's' : ''}</span>
+        {hasClip && (
+          <>
+            <span aria-hidden>·</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: T.gold }}><IcPlay size={11} col={T.gold}/>clip</span>
+          </>
+        )}
+        {reason && (
+          <span style={{ marginLeft: 'auto', fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, color: reason.col, background: reason.bg, border: `1px solid ${reason.bd}`, borderRadius: 6, padding: '1px 7px' }}>
+            {reason.label}
           </span>
         )}
       </div>
-
-      {/* Action buttons */}
-      <div style={{ display: 'flex', gap: 8 }}>
-        <OpenButton
-          expanded={expanded}
-          onClick={() => {
-            setExpanded(!expanded);
-            if (onOpenThread) onOpenThread(post.id);
-          }}
-        />
-        {(hasClip && canPlay) && (
-          <ClipButton active={showClip} onClick={handlePlayClip}/>
-        )}
-      </div>
-
-      {/* Expanded replies */}
-      {expanded && (
-        <div style={{
-          marginTop: 14, padding: 14,
-          background: T.surface, border: `1px solid ${T.border}`,
-          borderRadius: 10, animation: 'forumFadeIn 0.25s ease',
-        }}>
-          <div style={{
-            fontSize: 11, color: T.t3, fontFamily: T.mono,
-            letterSpacing: '0.06em', marginBottom: 8,
-          }}>
-            RÉPONSES ({answerCount})
-          </div>
-          {answerCount === 0 ? (
-            <div style={{ fontSize: 12, color: T.t3, fontStyle: 'italic' }}>
-              Aucune réponse pour l'instant. Sois le premier à répondre !
-            </div>
-          ) : (
-            <div style={{ fontSize: 12, color: T.t2, lineHeight: 1.6 }}>
-              Des réponses sont disponibles. Ouvre la page du sujet pour les consulter.
-            </div>
-          )}
-          <button
-            onClick={() => { if (onOpenThread) onOpenThread(post.id); }}
-            style={{
-              marginTop: 10,
-              display: 'flex', alignItems: 'center', gap: 6,
-              background: T.goldDim, border: `1px solid ${T.goldMid}`,
-              borderRadius: 8, padding: '6px 12px',
-              fontWeight: 600, fontSize: 11, color: T.gold,
-              fontFamily: T.mono, letterSpacing: '0.05em', cursor: 'pointer',
-            }}
-          >
-            <IcChevR size={12} col={T.gold}/>
-            Voir le sujet →
-          </button>
-        </div>
-      )}
-
-      {/* Clip player */}
-      {showClip && (
-        <div style={{ marginTop: 14, borderRadius: 10, overflow: 'hidden', background: '#000' }}>
-          {clipLoading ? (
-            <div style={{ padding: 20, textAlign: 'center' }}>
-              <IcLoader size={20} col={T.gold}/>
-            </div>
-          ) : clipUrl ? (
-            <video
-              ref={videoRef}
-              src={clipUrl}
-              controls
-              style={{ width: '100%', maxHeight: 280, display: 'block' }}
-              onLoadedMetadata={(e) => {
-                const start = Number.isFinite(Number(post.clip_start_seconds)) ? Number(post.clip_start_seconds) : 0;
-                const end = Number.isFinite(Number(post.clip_end_seconds)) ? Number(post.clip_end_seconds) : start + 10;
-                try { e.currentTarget.currentTime = start; } catch {}
-                stopAtRef.current = end;
-              }}
-              onTimeUpdate={(e) => {
-                if (typeof stopAtRef.current === 'number' && e.currentTarget.currentTime >= stopAtRef.current) {
-                  e.currentTarget.pause();
-                }
-              }}
-            />
-          ) : (
-            <div style={{ padding: 20, textAlign: 'center', color: T.t3, fontSize: 12 }}>
-              Clip non disponible
-            </div>
-          )}
-        </div>
-      )}
     </article>
   );
 };
@@ -349,7 +195,7 @@ const ClipButton = ({ active, onClick }) => {
       style={{
         display: 'flex', alignItems: 'center', gap: 6,
         background: T.surface,
-        border: `1px solid ${hov ? 'rgba(0,229,255,0.3)' : T.border}`,
+        border: `1px solid ${hov ? 'rgba(217,119,87,0.3)' : T.border}`,
         borderRadius: 8, padding: '6px 14px',
         fontWeight: 500, fontSize: 12,
         color: active ? T.cyan : hov ? T.cyan : T.t2,
@@ -362,96 +208,83 @@ const ClipButton = ({ active, onClick }) => {
   );
 };
 
-/* ─── Right sidebar: Recherche + Nouvelle question + Formations actives ─── */
-const ForumSidebar = ({ formations, onNewQuestion, onSearch, searchVal }) => {
+/* ─── Sidebar GAUCHE : CTA + recherche + filtres + formations (organisation façon LIRI Brain) ─── */
+const ForumSidebar = ({ formations, onNewQuestion, onSearch, searchVal, feed, onFeedChange, counts }) => {
   const [focused, setFocused] = useState(false);
 
   return (
     <aside style={{
-      width: 240, flexShrink: 0,
+      width: 250, flexShrink: 0,
       display: 'flex', flexDirection: 'column', gap: 16,
       paddingTop: 0,
     }}>
-      {/* Recherche & Repères */}
+      {/* CTA en tête (équivalent « Nouvelle conversation » du Brain) */}
+      <NewQuestionBtn onClick={onNewQuestion}/>
+
+      {/* Recherche */}
       <div style={{
-        background: T.surface2, border: `1px solid ${T.border}`,
-        borderRadius: 14, overflow: 'hidden',
+        display: 'flex', alignItems: 'center', gap: 8,
+        background: T.surface,
+        border: `1px solid ${focused ? T.goldMid : T.border}`,
+        borderRadius: 9, padding: '8px 11px',
+        transition: 'border-color 150ms ease',
       }}>
-        <div style={{ padding: '14px 16px 12px', borderBottom: `1px solid ${T.border}` }}>
-          <div style={{
-            fontFamily: T.mono, fontSize: 9, fontWeight: 700,
-            color: T.t3, letterSpacing: '0.12em', marginBottom: 10,
-          }}>RECHERCHE & REPÈRES</div>
-          <p style={{ fontSize: 12, color: T.t2, lineHeight: 1.6, marginBottom: 12 }}>
-            Filtre par mot-clé pour retrouver les questions et leurs clips.
-          </p>
-          {/* Search input */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: T.surface,
-            border: `1px solid ${focused ? T.goldMid : T.border}`,
-            borderRadius: 9, padding: '7px 10px',
-            transition: 'border-color 150ms ease',
-          }}>
-            <IcSearch size={13} col={T.t3}/>
-            <input
-              value={searchVal}
-              onChange={(e) => onSearch(e.target.value)}
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
-              placeholder="ex: mécanique, concept…"
-              style={{
-                flex: 1, background: 'none', border: 'none', outline: 'none',
-                fontSize: 11, color: T.t1, fontFamily: 'inherit',
-              }}
-            />
-            {searchVal && (
-              <button
-                onClick={() => onSearch('')}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}
-              >
-                <IcX size={11} col={T.t3}/>
-              </button>
-            )}
-          </div>
-        </div>
-        <div style={{ padding: '12px 16px' }}>
-          <div style={{
-            fontFamily: T.mono, fontSize: 8, fontWeight: 700,
-            color: T.t3, letterSpacing: '0.12em', marginBottom: 6,
-          }}>ASTUCE</div>
-          <p style={{ fontSize: 11, color: T.t3, lineHeight: 1.6 }}>
-            Clique sur{' '}
-            <span style={{
-              color: T.gold, fontFamily: T.mono,
-              background: T.goldDim, borderRadius: 3, padding: '0 3px',
-            }}>"Ouvrir"</span>
-            {' '}pour voir les réponses directement.
-          </p>
-        </div>
+        <IcSearch size={13} col={T.t3}/>
+        <input
+          value={searchVal}
+          onChange={(e) => onSearch(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder="Rechercher un sujet…"
+          style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontSize: 12, color: T.t1, fontFamily: 'inherit' }}
+        />
+        {searchVal && (
+          <button onClick={() => onSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}>
+            <IcX size={11} col={T.t3}/>
+          </button>
+        )}
       </div>
 
-      {/* Nouvelle question CTA */}
-      <div style={{
-        background: `linear-gradient(135deg, ${T.surface}, ${T.goldDim})`,
-        border: `1px solid ${T.border}`,
-        borderRadius: 14, padding: 16,
-      }}>
-        <div style={{
-          fontFamily: T.mono, fontSize: 9, fontWeight: 700,
-          color: T.t3, letterSpacing: '0.12em', marginBottom: 10,
-        }}>NOUVELLE QUESTION</div>
-        <p style={{ fontSize: 12, color: T.t2, lineHeight: 1.5, marginBottom: 12 }}>
-          Tu n'as pas compris un passage ? Pose ta question avec le clip vidéo correspondant.
-        </p>
-        <NewQuestionBtn onClick={onNewQuestion}/>
+      {/* Filtres (segments) en liste verticale — ex-chips du corps */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        {FEEDS.map((f) => {
+          const active = feed === f.key;
+          const Icon = f.Icon;
+          const count = counts?.[f.key];
+          return (
+            <button
+              key={f.key}
+              onClick={() => onFeedChange(f.key)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 9, width: '100%',
+                background: active ? '#cc8068' : 'rgba(217,119,87,0.08)',
+                border: `1px solid ${active ? 'transparent' : 'rgba(217,119,87,0.20)'}`,
+                borderRadius: 9, padding: '9px 12px', cursor: 'pointer',
+                fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+                color: active ? '#2a1c14' : T.gold,
+                transition: 'all 150ms ease', textAlign: 'left',
+              }}
+            >
+              <Icon size={14} col={active ? '#2a1c14' : T.gold}/>
+              <span style={{ flex: 1 }}>{f.label}</span>
+              {count != null && count > 0 && (
+                <span style={{
+                  fontFamily: T.mono, fontSize: 10, fontWeight: 700,
+                  color: active ? '#2a1c14' : T.gold,
+                  background: active ? 'rgba(0,0,0,0.12)' : T.goldDim,
+                  borderRadius: 6, padding: '0 6px', minWidth: 18, textAlign: 'center',
+                }}>{count}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Formations actives */}
       {formations.length > 0 && (
         <div style={{
           background: T.surface2, border: `1px solid ${T.border}`,
-          borderRadius: 14, overflow: 'hidden',
+          borderRadius: 12, overflow: 'hidden',
         }}>
           <div style={{
             padding: '12px 16px 10px',
@@ -483,16 +316,16 @@ const NewQuestionBtn = ({ onClick }) => {
       style={{
         width: '100%',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-        background: T.gold, border: 'none', borderRadius: 9,
+        background: '#cc8068', border: 'none', borderRadius: 9,
         padding: '9px 14px', fontWeight: 700, fontSize: 12,
-        color: '#000', cursor: 'pointer',
+        color: '#2a1c14', cursor: 'pointer',
         opacity: hov ? 0.85 : 1,
         transform: hov ? 'translateY(-1px)' : 'none',
         transition: 'all 150ms ease',
         letterSpacing: '0.01em',
       }}
     >
-      <IcPlus size={13} col="#000"/>
+      <IcPlus size={13} col="#2a1c14"/>
       Poser une question
     </button>
   );
@@ -586,22 +419,22 @@ const FeedTab = ({ active, label, count, Icon, onClick }) => {
       onMouseLeave={() => setHov(false)}
       style={{
         display: 'flex', alignItems: 'center', gap: 7,
-        background: active ? T.gold : hov ? T.surface2 : 'transparent',
-        border: `1px solid ${active ? 'transparent' : hov ? T.goldMid : T.border}`,
-        borderRadius: 999, padding: '7px 14px',
+        background: active ? '#cc8068' : 'rgba(217,119,87,0.10)',
+        border: `1px solid ${active ? 'transparent' : 'rgba(217,119,87,0.28)'}`,
+        borderRadius: 11, padding: '7px 14px',
         fontSize: 12.5, fontWeight: 600, fontFamily: 'inherit',
-        color: active ? '#000' : hov ? T.gold : T.t2,
+        color: active ? '#2a1c14' : T.gold,
         cursor: 'pointer', transition: 'all 160ms ease', whiteSpace: 'nowrap',
       }}
     >
-      <Icon size={13} col={active ? '#000' : hov ? T.gold : T.t3}/>
+      <Icon size={13} col={active ? '#2a1c14' : T.gold}/>
       {label}
       {count != null && count > 0 && (
         <span style={{
           fontFamily: T.mono, fontSize: 10, fontWeight: 700,
-          color: active ? '#000' : T.gold,
-          background: active ? 'rgba(0,0,0,0.14)' : T.goldDim,
-          borderRadius: 999, padding: '0 6px', minWidth: 17, textAlign: 'center',
+          color: active ? '#2a1c14' : T.gold,
+          background: active ? 'rgba(0,0,0,0.12)' : T.goldDim,
+          borderRadius: 6, padding: '0 6px', minWidth: 17, textAlign: 'center',
         }}>{count}</span>
       )}
     </button>
@@ -626,17 +459,23 @@ const FeedTabs = ({ value, onChange, counts }) => (
 /* ─── Fond immersif — 3 ambiances testables (host-aware clair/sombre) ─── */
 function ForumBg({ variant }) {
   const { isLight } = useSslTheme();
-  // Bases & halos adaptés au mode : clair = canvas Wix Studio + halos or/navy très doux ;
-  // sombre = backdrop nuit d'origine.
-  const base = isLight
-    ? 'linear-gradient(180deg, #F7F8FA 0%, #F4F5F7 58%, #EFF0F3 100%)'
-    : 'linear-gradient(180deg, #0a0b12 0%, #08090f 58%, #060709 100%)';
-  const vignette = isLight
-    ? 'radial-gradient(135% 100% at 50% 22%, transparent 60%, rgba(0,0,0,0.05) 100%)'
-    : 'radial-gradient(135% 100% at 50% 22%, transparent 50%, rgba(0,0,0,0.55) 100%)';
-  const goldBlob   = isLight ? 'rgba(212,175,55,0.14)' : 'rgba(212,175,55,0.20)';
-  const navyBlob   = isLight ? 'rgba(124,58,237,0.10)' : 'rgba(46,66,112,0.62)';
-  const goldBlob2  = isLight ? 'rgba(212,175,55,0.07)' : 'rgba(212,175,55,0.09)';
+  // SOMBRE (portail) = étalon « Formation Builder » : fond #262624 + grille discrète, SANS halos (simple).
+  if (!isLight) {
+    return (
+      <div aria-hidden className="forum-bg" style={{
+        position: 'absolute', inset: 0,
+        background: '#262624',
+        backgroundImage: 'linear-gradient(rgba(245,244,238,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(245,244,238,0.022) 1px, transparent 1px)',
+        backgroundSize: '44px 44px',
+      }}/>
+    );
+  }
+  // CLAIR (espace élève) : aurore douce d'origine.
+  const base = 'linear-gradient(180deg, #F7F8FA 0%, #F4F5F7 58%, #EFF0F3 100%)';
+  const vignette = 'radial-gradient(135% 100% at 50% 22%, transparent 60%, rgba(0,0,0,0.05) 100%)';
+  const goldBlob   = 'rgba(217,119,87,0.13)';
+  const navyBlob   = 'rgba(198,111,83,0.10)';
+  const goldBlob2  = 'rgba(217,119,87,0.07)';
   if (variant === 'aurore') {
     return (
       <div aria-hidden className="forum-bg" style={{ position: 'absolute', inset: 0, background: base }}>
@@ -648,7 +487,7 @@ function ForumBg({ variant }) {
     );
   }
   if (variant === 'zellige') {
-    const pattern = `url("data:image/svg+xml,${encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><g fill='none' stroke='#D4AF37' stroke-width='1'><path d='M30 2 L37 23 L58 30 L37 37 L30 58 L23 37 L2 30 L23 23 Z'/><circle cx='30' cy='30' r='8'/></g></svg>")}")`;
+    const pattern = `url("data:image/svg+xml,${encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><g fill='none' stroke='#d97757' stroke-width='1'><path d='M30 2 L37 23 L58 30 L37 37 L30 58 L23 37 L2 30 L23 23 Z'/><circle cx='30' cy='30' r='8'/></g></svg>")}")`;
     return (
       <div aria-hidden className="forum-bg" style={{ position: 'absolute', inset: 0, background: base }}>
         <div style={{ position:'absolute', inset:0, opacity: isLight ? 0.05 : 0.07, backgroundImage: pattern, backgroundSize:'54px 54px' }}/>
@@ -666,6 +505,26 @@ function ForumBg({ variant }) {
 }
 
 /* ══════════════════════════ MAIN EXPORT ═══════════════════════════════════ */
+/* ─── Groupes de SOURCE — le forum est organisé par origine de la conversation ───
+   Un live regroupe tout ce qui le concerne (récap/recall, discussions, replay,
+   mindmap, NeuronQ) ; un cours regroupe sa post-production ; le reste = questions
+   communautaires. L'ordre ci-dessous = l'ordre d'affichage des sections. */
+const SOURCE_GROUPS = [
+  { key: 'live',     label: 'Lives',                     Icon: IcPlay,   match: (r) => r._context === 'live' },
+  { key: 'course',   label: 'Cours',                     Icon: IcLayers, match: (r) => ['course', 'video', 'class'].includes(r._context) },
+  { key: 'question', label: 'Questions de la communauté', Icon: IcMsg,    match: (r) => !['live', 'course', 'video', 'class'].includes(r._context) },
+];
+
+/* En-tête de section discret (icône + label + compteur + filet), façon LIRI Brain. */
+const SourceSectionHeader = ({ Icon, label, count }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 12 }}>
+    <Icon size={14} col={T.gold} />
+    <h2 style={{ fontSize: 13, fontWeight: 700, color: T.t1, letterSpacing: '0.01em', margin: 0 }}>{label}</h2>
+    <span style={{ fontFamily: T.mono, fontSize: 10, color: T.t3, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: '1px 8px' }}>{count}</span>
+    <div style={{ flex: 1, height: 1, background: T.border, marginLeft: 4 }} />
+  </div>
+);
+
 export default function StudentForumRedesign({ forumBasePath = '/student-school-life/forum' }) {
   useSslThemeMode(); // publie le mode (clair/sombre) pour `T` AVANT le rendu des sous-composants
   const navigate = useNavigate();
@@ -713,39 +572,47 @@ export default function StudentForumRedesign({ forumBasePath = '/student-school-
     const load = async () => {
       setLoading(true);
       try {
-        const { data: qRows } = await supabase
-          .from('formation_student_questions')
-          .select('id,formation_id,question,video_storage_path,video_url,clip_start_seconds,clip_end_seconds,created_at,student_id,author_name,tags,is_pinned,reply_count,vote_count,accepted_answer_id,status')
-          .eq('is_public', true)
-          .order('is_pinned', { ascending: false })
-          .order('created_at', { ascending: false })
-          .limit(100);
-
+        // Forum UNIFIÉ : une seule source = les Sujets (conversations kind='topic'),
+        // lus via la RPC get_forum_topics (SECURITY DEFINER, RLS répliqué + message_count).
+        // Les anciennes questions d'élèves SONT désormais des Sujets (migration 20260630120000),
+        // donc on NE lit plus formation_student_questions (évite les doublons).
+        const { data: topics } = await supabase.rpc('get_forum_topics', { p_limit: 100 });
         if (!alive) return;
-        const questions = Array.isArray(qRows) ? qRows : [];
-        setRows(questions.map(q => ({ ...q, author_name: q.author_name || 'Élève anonyme' })));
+        const list = Array.isArray(topics) ? topics : [];
+        const rows = list.map(t => {
+          const ctx = t.context_type || null;
+          const isSource = ctx === 'live' || ctx === 'course' || ctx === 'video' || ctx === 'class';
+          return {
+            id: t.id,
+            // Titre : pour un live/cours, le VRAI titre de la source (live_sessions.title /
+            // courses.title, renvoyé par la RPC) ; sinon le sujet de la question.
+            question: (isSource && t.context_title) ? t.context_title : (t.subject || 'Sujet'),
+            author_name: topicContextLabel(ctx),
+            created_at: t.context_at || t.created_at,
+            reply_count: Number(t.message_count) || 0,
+            formation_id: t.source_formation_id || (ctx === 'course' ? t.context_id : null),
+            is_pinned: false,
+            vote_count: 0,
+            status: 'open',
+            _src: 'topic',
+            _context: ctx,
+            _contextStatus: t.context_status || null,
+          };
+        });
+        setRows(rows);
+        setLoading(false);
 
-        // Answer counts
-        const qIds = questions.map(q => q.id).filter(Boolean);
-        if (qIds.length > 0) {
-          const { data: answers } = await supabase
-            .from('formation_question_answers')
-            .select('question_id')
-            .in('question_id', qIds)
-            .eq('is_public', true);
+        // answersCount = message_count par Sujet (le rendu lit answersCount[id] || reply_count).
+        const grouped = {};
+        rows.forEach(r => { grouped[r.id] = r.reply_count; });
+        setAnswersCount(grouped);
 
-          if (!alive) return;
-          const grouped = {};
-          (answers || []).forEach(a => { grouped[a.question_id] = (grouped[a.question_id] || 0) + 1; });
-          setAnswersCount(grouped);
-        }
-
-        // Formations
-        const formationIds = [...new Set(questions.map(q => q.formation_id).filter(Boolean))];
+        // Formations actives (sidebar) : dérivées des Sujets rattachés à un cours.
+        const formationIds = [...new Set(rows.map(r => r.formation_id).filter(Boolean))];
         if (formationIds.length > 0) {
           const { data: formations } = await supabase
             .from('courses')
-            .select('id,title,color')
+            .select('id,title')
             .in('id', formationIds);
 
           if (!alive) return;
@@ -754,7 +621,7 @@ export default function StudentForumRedesign({ forumBasePath = '/student-school-
             map[f.id] = { title: f.title || 'Formation', color: ACCENT_COLORS[i % ACCENT_COLORS.length] };
           });
           setFormationMap(map);
-          setFormationList((formations || []).map((f, i) => ({
+          setFormationList((formations || []).map((f) => ({
             id: f.id,
             title: f.title || 'Formation',
             progress: null,
@@ -770,10 +637,8 @@ export default function StudentForumRedesign({ forumBasePath = '/student-school-
     // Realtime
     const channel = supabase
       .channel('forum-liri')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'formation_student_questions', filter: 'is_public=eq.true' },
-        (payload) => setRows(prev => [{ ...payload.new, author_name: payload.new.author_name || 'Élève anonyme' }, ...prev]))
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'formation_student_questions' },
-        (payload) => setRows(prev => prev.map(q => q.id === payload.new.id ? payload.new : q)))
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'conversations', filter: 'kind=eq.topic' },
+        () => { void load(); })
       .subscribe();
 
     return () => { alive = false; supabase.removeChannel(channel); };
@@ -842,6 +707,16 @@ export default function StudentForumRedesign({ forumBasePath = '/student-school-
     'tous': rows.length,
   }), [pourToiAll, aiderAll, rows]);
 
+  // Groupement PAR SOURCE (Lives / Cours / Questions) — préserve l'ordre du feed
+  // actif à l'intérieur de chaque groupe. C'est l'organisation « par source de
+  // conversation » : un live regroupe recall + discussions + replay + mindmap…
+  const groupedList = useMemo(
+    () => SOURCE_GROUPS
+      .map((g) => ({ ...g, items: activeList.filter(g.match) }))
+      .filter((g) => g.items.length > 0),
+    [activeList],
+  );
+
   const reasonFor = useCallback((r) => {
     const TONE = {
       gold:    { col: T.gold,    bg: T.goldDim,               bd: T.goldMid },
@@ -865,8 +740,17 @@ export default function StudentForumRedesign({ forumBasePath = '/student-school-
     return null;
   }, [feed, enrolledIds, ansCountOf, isUnresolved]);
 
-  const handleOpenThread = (questionId) => {
-    navigate(`${forumBasePath}/thread/${questionId}`);
+  const handleOpenThread = (post) => {
+    const id = post?.id;
+    if (!id) return;
+    // Forum unifié : chaque entrée est un Sujet (conversations kind='topic'). On ouvre
+    // SON fil (récap, questions NeuronQ, chat, replay du live/cours) via TopicThreadPage,
+    // en passant le Sujet dans le state pour un en-tête instantané (titre + type de source).
+    if (post._src === 'topic') {
+      navigate(`${forumBasePath}/topic/${id}`, { state: { topic: post } });
+      return;
+    }
+    navigate(`${forumBasePath}/thread/${id}`);
   };
 
   return (
@@ -887,10 +771,21 @@ export default function StudentForumRedesign({ forumBasePath = '/student-school-
           <ForumBg variant="aurore" />
         </div>
 
-        <div className="forum-root" style={{ display: 'flex', gap: 20, alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
+        <div className="forum-root" style={{ display: 'flex', gap: 24, alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
+
+        {/* ── Sidebar GAUCHE : contrôles regroupés (façon LIRI Brain) ── */}
+        <ForumSidebar
+          formations={formationList}
+          onNewQuestion={() => navigate(`${forumBasePath}/new`)}
+          onSearch={setSearch}
+          searchVal={search}
+          feed={feed}
+          onFeedChange={setFeed}
+          counts={counts}
+        />
 
         {/* ── Main posts column ── */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, maxWidth: 880 }}>
 
           {/* Page header */}
           <div style={{
@@ -909,16 +804,13 @@ export default function StudentForumRedesign({ forumBasePath = '/student-school-
             <div style={{
               display: 'flex', alignItems: 'center', gap: 6,
               background: T.surface, border: `1px solid ${T.border}`,
-              borderRadius: 20, padding: '5px 12px',
+              borderRadius: 8, padding: '5px 12px',
               fontFamily: T.mono, fontSize: 11, color: T.t2, flexShrink: 0,
             }}>
               <span style={{ color: T.gold }}>◎</span>
               {activeList.length} sujet{activeList.length !== 1 ? 's' : ''}
             </div>
           </div>
-
-          {/* Feed adaptatif */}
-          <FeedTabs value={feed} onChange={setFeed} counts={counts} />
 
           {/* Posts list */}
           {loading ? (
@@ -931,33 +823,33 @@ export default function StudentForumRedesign({ forumBasePath = '/student-school-
               ? <EmptyHelp />
               : <EmptyForum search={search} onReset={() => setSearch('')}/>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-              {activeList.map((post, i) => {
-                const formInfo = formationMap[post.formation_id];
-                return (
-                  <ForumPostCard
-                    key={post.id}
-                    post={post}
-                    answerCount={answersCount[post.id] || post.reply_count || 0}
-                    formationTitle={formInfo?.title}
-                    formationAccent={formInfo?.color}
-                    onOpenThread={handleOpenThread}
-                    reason={reasonFor(post)}
-                    delay={i * 50}
-                  />
-                );
-              })}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
+              {groupedList.map((g) => (
+                <section key={g.key}>
+                  <SourceSectionHeader Icon={g.Icon} label={g.label} count={g.items.length} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {g.items.map((post, i) => {
+                      const formInfo = formationMap[post.formation_id];
+                      return (
+                        <ForumPostCard
+                          key={post.id}
+                          post={post}
+                          answerCount={answersCount[post.id] || post.reply_count || 0}
+                          formationTitle={formInfo?.title}
+                          formationAccent={formInfo?.color}
+                          onOpenThread={handleOpenThread}
+                          reason={reasonFor(post)}
+                          delay={i * 40}
+                        />
+                      );
+                    })}
+                  </div>
+                </section>
+              ))}
             </div>
           )}
         </div>
 
-        {/* ── Right sidebar ── */}
-        <ForumSidebar
-          formations={formationList}
-          onNewQuestion={() => navigate(`${forumBasePath}/new`)}
-          onSearch={setSearch}
-          searchVal={search}
-        />
         </div>
       </div>
     </>

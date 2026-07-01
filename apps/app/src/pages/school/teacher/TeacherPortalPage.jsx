@@ -22,6 +22,7 @@ import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 import StudentForumRedesign from '@/pages/school/student-school-life/StudentForumRedesign';
 import ForumNewQuestionPage from '@/pages/school/student-school-life/ForumNewQuestionPage';
 import ForumThreadPage from '@/pages/school/student-school-life/ForumThreadPage';
+import TopicThreadPage from '@/pages/school/student-school-life/TopicThreadPage';
 import { FormationForumContent } from '@/pages/school/FormationForumPage';
 import { FORUM_COMMUNITY_PATH } from '@/lib/forumDashboardPaths';
 import { SslThemeProvider, SSL_LIGHT_CLASS, ensureSslLightStyles } from '@/pages/school/student-school-life/sslTheme';
@@ -105,6 +106,7 @@ const TeacherPortalPage = () => {
             <Route path="forum/formation/:formationId" element={<TeacherFormationForumRoute />} />
             <Route path="forum/new" element={<ForumNewQuestionPage />} />
             <Route path="forum/thread/:threadId" element={<ForumThreadPage />} />
+            <Route path="forum/topic/:topicId" element={<TopicThreadPage />} />
             <Route path="forum" element={<StudentForumRedesign forumBasePath={FORUM_COMMUNITY_PATH.teacher} />} />
             <Route path="vie-scolaire" element={<SchoolLifePage embedded />} />
             <Route path="bibliotheque" element={<BibliothequePage embedded />} />
