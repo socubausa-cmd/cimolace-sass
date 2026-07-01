@@ -208,3 +208,50 @@
   .ofb-pv-toggle svg,
   .ofb-mini-bar i { transition: none !important; animation: none !important; }
 }
+
+/* ============================================================================
+   LIRI Studio — GRILLE VISIBLE (directive artistique : fonds transparents).
+   Scopé au shell StudioDesignerLikeShell (data-school-shell="studio-designer").
+   Problème : sur Cours / Contrôle intégré / Bibliothèque / Import, des fonds
+   de CONTENEURS trop opaques (bg-white/[0.01..0.09], bg-cyan-500/5, etc.) posent
+   un voile blanc/gris sur la grille 44px du shell — et sur le --base #262624
+   (jaune désaturé) ce voile vire olive/bloc. L'étalon = Formation Builder, qui
+   reste transparent. On NEUTRALISE ces fonds (jamais on n'en AJOUTE un opaque).
+   Cible = conteneurs (div/section/aside/main/ul/li) UNIQUEMENT ; les BOUTONS et
+   les champs (input/textarea) gardent leur surface (lisibilité + états intacts).
+   Sélecteurs PLATS (pas de nesting CSS : postcss-nesting non activé ici).
+   ============================================================================ */
+
+/* Fonds « voile blanc » bg-white/[0.0x] (arbitrary Tailwind, x = 0→9) posés sur
+   des conteneurs → transparents pour laisser passer la grille. */
+[data-school-shell="studio-designer"] :is(div, section, aside, main, ul, li, nav, header, footer)[class*="bg-white/[0.0"]:not(button):not([role="button"]):not([type="button"]) {
+  background-color: transparent !important;
+}
+
+/* Fonds bg-white/5 et bg-white/10 (échelle Tailwind standard) sur conteneurs. */
+[data-school-shell="studio-designer"] :is(div, section, aside, main, ul, li, nav)[class*="bg-white/5"]:not(button):not([role="button"]):not([type="button"]),
+[data-school-shell="studio-designer"] :is(div, section, aside, main, ul, li, nav)[class*="bg-white/10"]:not(button):not([role="button"]):not([type="button"]) {
+  background-color: transparent !important;
+}
+
+/* Panneaux d'accent colorés (bg-cyan/amber/violet/emerald/blue-500/5|8) sur les
+   grandes CARTES uniquement (.rounded-xl / .rounded-2xl = rayon des panneaux) →
+   transparents (bordure teintée conservée, remplissage retiré). On NE touche PAS
+   aux petites puces/badges d'icône (rounded-md / rounded-lg), ni aux boutons. */
+[data-school-shell="studio-designer"] :is(.rounded-xl, .rounded-2xl):is(div, section, aside, main):is([class*="bg-cyan-500/5"], [class*="bg-cyan-500/8"], [class*="bg-amber-500/5"], [class*="bg-amber-500/8"], [class*="bg-violet-500/5"], [class*="bg-violet-500/8"], [class*="bg-emerald-500/5"], [class*="bg-emerald-500/8"], [class*="bg-blue-500/5"], [class*="bg-blue-500/8"]):not(button):not([role="button"]):not([type="button"]) {
+  background-color: transparent !important;
+}
+
+/* Journal de commandes (Contrôle intégré) : bg-black/30 = bloc noir opaque sur
+   la grille → transparent (le contenu mono reste lisible sur le #262624). */
+[data-school-shell="studio-designer"] :is(div, section, aside)[class*="bg-black/30"]:not(button):not([role="button"]):not([type="button"]) {
+  background-color: transparent !important;
+}
+
+/* Sticky header (Cours : bg-[#262624]/95) → transparent, mais on garde un blur
+   pour que le texte reste lisible quand du contenu défile dessous. */
+[data-school-shell="studio-designer"] .sticky[class*="bg-[#262624]"] {
+  background-color: transparent !important;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}

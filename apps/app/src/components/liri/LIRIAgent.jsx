@@ -103,18 +103,18 @@ const S = {
 
   // ── Couleurs par type d'étape (adaptées fond sombre) ────────
   typeColor: {
-    ouverture:  '#34d399',
-    corps:      '#60a5fa',
+    ouverture:  '#e0926a',
+    corps:      '#e6b878',
     conclusion: '#C8960C',
   },
   typeBg: {
-    ouverture:  'rgba(52,211,153,0.09)',
-    corps:      'rgba(96,165,250,0.09)',
+    ouverture:  'rgba(217,119,87,0.09)',
+    corps:      'rgba(230,184,120,0.09)',
     conclusion: 'rgba(200,150,12,0.12)',
   },
   typeBorder: {
-    ouverture:  'rgba(52,211,153,0.3)',
-    corps:      'rgba(96,165,250,0.3)',
+    ouverture:  'rgba(217,119,87,0.3)',
+    corps:      'rgba(230,184,120,0.3)',
     conclusion: 'rgba(200,150,12,0.45)',
   },
 
@@ -220,7 +220,7 @@ function GenerationReflectionPanel({ steps, activeIndex, loading }) {
               display: 'flex', gap: '10px', alignItems: 'flex-start',
               padding: '8px 6px', borderRadius: '10px', marginBottom: '4px',
               border: active ? `1.5px solid rgba(200,150,12,.6)` : '1.5px solid transparent',
-              background: active ? S.goldDim : done ? 'rgba(52,211,153,0.07)' : 'transparent',
+              background: active ? S.goldDim : done ? 'rgba(217,119,87,0.07)' : 'transparent',
               opacity: pending ? 0.4 : 1,
               transition: 'background 0.25s, border-color 0.25s, opacity 0.25s',
             }}>
@@ -228,9 +228,9 @@ function GenerationReflectionPanel({ steps, activeIndex, loading }) {
                 flexShrink: 0, width: '26px', height: '26px', borderRadius: '50%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '11px', fontWeight: 700,
-                background: done ? 'rgba(52,211,153,0.18)' : active ? S.goldDim : 'rgba(255,255,255,0.06)',
-                color: done ? '#34d399' : active ? S.gold : S.t3,
-                border: done ? '1px solid rgba(52,211,153,0.4)' : active ? S.goldBorder : '1px solid rgba(255,255,255,0.12)',
+                background: done ? 'rgba(217,119,87,0.18)' : active ? S.goldDim : 'rgba(255,255,255,0.06)',
+                color: done ? '#e0926a' : active ? S.gold : S.t3,
+                border: done ? '1px solid rgba(217,119,87,0.4)' : active ? S.goldBorder : '1px solid rgba(255,255,255,0.12)',
               }}>
                 {done ? '✓' : active ? spinGlyph : i + 1}
               </span>
@@ -416,11 +416,11 @@ function MasterScriptView({ etape, meta, coursData }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '0.75rem' }}>
         {ms.questions?.length > 0 && (
           <BlockCard label="Questions à poser" items={ms.questions}
-            bg="rgba(52,211,153,0.08)" color="#34d399" border="rgba(52,211,153,0.3)" />
+            bg="rgba(217,119,87,0.08)" color="#e0926a" border="rgba(217,119,87,0.3)" />
         )}
         {ms.reponses_attendues?.length > 0 && (
           <BlockCard label="Réponses attendues" items={ms.reponses_attendues}
-            bg="rgba(96,165,250,0.08)" color="#60a5fa" border="rgba(96,165,250,0.3)" />
+            bg="rgba(230,184,120,0.08)" color="#e6b878" border="rgba(230,184,120,0.3)" />
         )}
         {ms.pieges_erreurs?.length > 0 && (
           <BlockCard label="Pièges & erreurs fréquentes" items={ms.pieges_erreurs}
@@ -890,7 +890,7 @@ export default function LIRIAgent() {
             padding: '8px 16px',
             fontSize: '12px',
             color: S.t2,
-            background: generationMeta?.bascule ? 'rgba(200,150,12,0.12)' : 'rgba(96,165,250,0.08)',
+            background: generationMeta?.bascule ? 'rgba(200,150,12,0.12)' : 'rgba(230,184,120,0.08)',
             borderBottom: `1px solid ${S.sep}`,
             lineHeight: 1.5,
           }}
@@ -965,8 +965,8 @@ export default function LIRIAgent() {
             }}
             style={{
               fontSize: '11px', padding: '5px 10px', borderRadius: '8px', cursor: 'pointer',
-              border: '1px solid rgba(96,165,250,0.45)', color: '#93c5fd',
-              background: 'rgba(96,165,250,0.1)',
+              border: '1px solid rgba(230,184,120,0.45)', color: '#93c5fd',
+              background: 'rgba(230,184,120,0.1)',
             }}
             title="Étape 3 du parcours : éditeur Konva, plan Copilot, Coach slide par slide"
           >
