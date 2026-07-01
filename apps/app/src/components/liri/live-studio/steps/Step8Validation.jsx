@@ -5,6 +5,7 @@ import { fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Save, Calendar, Zap, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useSearchParams } from 'react-router-dom';
 import { buildLiriAudioConfigPatch } from '@/lib/liriAudioScene';
 
 const SESSION_TYPES = { classe: 'Classe virtuelle', entretien: 'Entretien privé', conference: 'Conférence' };
@@ -86,6 +87,9 @@ function buildConfig(draft) {
 
 export function Step8Validation({ draft, updateDraft, onSubmit, creating, user, clearDraft }) {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const quickLaunch = searchParams.get('launch') === '1';
+  const autoLaunchedRef = React.useRef(false);
   const scheduledAt = draft.scheduled_at && isValid(new Date(draft.scheduled_at))
     ? format(new Date(draft.scheduled_at), "EEEE d MMMM 'à' HH:mm", { locale: fr })
     : '—';
@@ -185,6 +189,17 @@ export function Step8Validation({ draft, updateDraft, onSubmit, creating, user, 
     await onSubmit(payload);
   };
 
+  // « Lancer le live » (accès direct, ?launch=1) : dès que l'étape finale est prête
+  // (titre présent), on démarre sans clic manuel → création + redirection vers l'arène.
+  // Le garde-fou ref évite toute double-soumission. Sans quickLaunch : flux normal (2 boutons).
+  React.useEffect(() => {
+    if (!quickLaunch || autoLaunchedRef.current || creating) return;
+    if (!draft?.title?.trim()) return;
+    autoLaunchedRef.current = true;
+    void handleLaunch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quickLaunch, creating, draft?.title]);
+
   return (
     <div className="space-y-8">
       <div>
@@ -204,7 +219,7 @@ export function Step8Validation({ draft, updateDraft, onSubmit, creating, user, 
           </div>
           <div className="rounded-xl border border-white/10 bg-black/20 p-3">
             <p className="text-xs text-gray-500">Type</p>
-            <p className="text-sm text-[#7B61FF] mt-1">{SESSION_TYPES[draft.session_type] || draft.session_type}</p>
+            <p className="text-sm text-[#d97757] mt-1">{SESSION_TYPES[draft.session_type] || draft.session_type}</p>
           </div>
           <div className="rounded-xl border border-white/10 bg-black/20 p-3">
             <p className="text-xs text-gray-500">Date</p>
@@ -215,16 +230,16 @@ export function Step8Validation({ draft, updateDraft, onSubmit, creating, user, 
             <p className="text-sm text-white mt-1">{draft.duration_minutes || 60} min</p>
           </div>
           {draft.liri_audio_enabled && (draft.liri_audio_scenes || []).filter((s) => String(s?.name || '').trim()).length > 0 ? (
-            <div className="rounded-xl border border-[#7B61FF]/25 bg-[#7B61FF]/5 p-3 md:col-span-2">
+            <div className="rounded-xl border border-[#d97757]/25 bg-[#d97757]/5 p-3 md:col-span-2">
               <p className="text-xs text-gray-500">Scènes audio LIRI</p>
-              <p className="text-sm text-[#c4b5fd] mt-1">
+              <p className="text-sm text-[#f0b89a] mt-1">
                 {(draft.liri_audio_scenes || []).filter((s) => String(s?.name || '').trim()).length} scène(s) — panneau dans l&apos;Arène
               </p>
             </div>
           ) : null}
         </div>
-        <div className="rounded-xl border border-[#7B61FF]/20 bg-[#7B61FF]/5 p-3 space-y-2">
-          <p className="text-xs text-[#7B61FF] font-medium">Invitations &amp; Accès (LIRI)</p>
+        <div className="rounded-xl border border-[#d97757]/20 bg-[#d97757]/5 p-3 space-y-2">
+          <p className="text-xs text-[#d97757] font-medium">Invitations &amp; Accès (LIRI)</p>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <p className="text-[10px] text-white/40">Mode d'accès</p>
@@ -286,12 +301,12 @@ export function Step8Validation({ draft, updateDraft, onSubmit, creating, user, 
           <div className="rounded-xl border border-white/10 bg-black/20 p-3">
             <p className="text-xs text-gray-500">Outils IA</p>
             <div className="flex flex-wrap gap-1 mt-1.5">
-              {draft.neuronq_enabled && <span className="text-[10px] bg-[#7B61FF]/10 text-[#7B61FF] px-2 py-0.5 rounded-full">Neuron-Q</span>}
-              {draft.neuro_recall_enabled && <span className="text-[10px] bg-[#7B61FF]/10 text-[#7B61FF] px-2 py-0.5 rounded-full">NeuroRecall</span>}
-              {draft.quiz_enabled && <span className="text-[10px] bg-[#7B61FF]/10 text-[#7B61FF] px-2 py-0.5 rounded-full">Quiz</span>}
-              {draft.polls_enabled && <span className="text-[10px] bg-[#7B61FF]/10 text-[#7B61FF] px-2 py-0.5 rounded-full">Sondages</span>}
-              {draft.ai_summary_enabled && <span className="text-[10px] bg-[#7B61FF]/10 text-[#7B61FF] px-2 py-0.5 rounded-full">Résumé IA</span>}
-              {draft.ai_mindmap_enabled && <span className="text-[10px] bg-[#7B61FF]/10 text-[#7B61FF] px-2 py-0.5 rounded-full">Mindmap</span>}
+              {draft.neuronq_enabled && <span className="text-[10px] bg-[#d97757]/10 text-[#d97757] px-2 py-0.5 rounded-full">Neuron-Q</span>}
+              {draft.neuro_recall_enabled && <span className="text-[10px] bg-[#d97757]/10 text-[#d97757] px-2 py-0.5 rounded-full">NeuroRecall</span>}
+              {draft.quiz_enabled && <span className="text-[10px] bg-[#d97757]/10 text-[#d97757] px-2 py-0.5 rounded-full">Quiz</span>}
+              {draft.polls_enabled && <span className="text-[10px] bg-[#d97757]/10 text-[#d97757] px-2 py-0.5 rounded-full">Sondages</span>}
+              {draft.ai_summary_enabled && <span className="text-[10px] bg-[#d97757]/10 text-[#d97757] px-2 py-0.5 rounded-full">Résumé IA</span>}
+              {draft.ai_mindmap_enabled && <span className="text-[10px] bg-[#d97757]/10 text-[#d97757] px-2 py-0.5 rounded-full">Mindmap</span>}
               {!draft.neuronq_enabled && !draft.neuro_recall_enabled && !draft.quiz_enabled && !draft.polls_enabled && !draft.ai_summary_enabled && !draft.ai_mindmap_enabled && (
                 <span className="text-[10px] text-gray-600">Aucun</span>
               )}
@@ -316,7 +331,7 @@ export function Step8Validation({ draft, updateDraft, onSubmit, creating, user, 
 
       <div
         id="studio-validation-actions"
-        className="sticky bottom-0 z-10 -mx-1 mt-8 border-t border-[#7B61FF]/20 bg-[#0a0908]/95 px-1 py-4 backdrop-blur-md supports-[backdrop-filter]:bg-[#0a0908]/88"
+        className="sticky bottom-0 z-10 -mx-1 mt-8 border-t border-[#d97757]/20 bg-[#0a0908]/95 px-1 py-4 backdrop-blur-md supports-[backdrop-filter]:bg-[#0a0908]/88"
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <Button
