@@ -24,6 +24,7 @@ import CommunicationShell from '@/components/school/CommunicationShell';
 import ForumNewQuestionPage from '@/pages/school/student-school-life/ForumNewQuestionPage';
 import ForumThreadPage from '@/pages/school/student-school-life/ForumThreadPage';
 import TopicThreadPage from '@/pages/school/student-school-life/TopicThreadPage';
+import ReplayRoomPage from '@/pages/school/student-school-life/ReplayRoomPage';
 
 export default function LiriForumPage() {
   return (
@@ -37,6 +38,7 @@ export default function LiriForumPage() {
             <Route path="new" element={<ForumNewQuestionPage />} />
             <Route path="thread/:threadId" element={<ForumThreadPage />} />
             <Route path="topic/:topicId" element={<TopicThreadPage />} />
+            <Route path="replay/:sessionId" element={<ReplayRoomPage />} />
           </Routes>
         </ErrorBoundary>
       </div>

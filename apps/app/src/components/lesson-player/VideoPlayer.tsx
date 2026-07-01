@@ -20,6 +20,7 @@ type Props = {
     storagePath?: string;
     type?: string;
     title?: string;
+    posterUrl?: string;
   };
   chapters?: ChapterMarker[];
   notes?: NoteMarker[];
@@ -149,6 +150,7 @@ const LessonVideoPlayer = forwardRef<LessonVideoPlayerHandle, Props>(
           <video
             ref={videoRef}
             src={playableUrl}
+            poster={video?.posterUrl || undefined}
             className="w-full aspect-video"
             controls
             onPlay={onPlay}

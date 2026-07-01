@@ -19,6 +19,7 @@ import { pollEmailQueue }      from './jobs/email.js';
 import { pollLiveReminders }   from './jobs/live-reminders.js';
 import { pollLiveInvitations } from './jobs/live-invitations.js';
 import { pollLiveReplayShorts } from './jobs/short-generator.js';
+import { pollReplayPostprod } from './jobs/replay-postprod.js';
 import { pollDraftSocialPosts } from './jobs/social-poster.js';
 import { pollImapSync }         from './jobs/imap-sync.js';
 import { pollGdprExports }      from './jobs/gdpr-export.js';
@@ -80,6 +81,17 @@ startPingJob();
       if (n > 0) console.log(`[worker:live] Shorts: ${n} clip(s) généré(s)`);
     } catch (e: unknown) { console.error('[worker:live] Shorts error:', (e as Error)?.message || e); }
     await sleep(300_000);
+  }
+})();
+
+// ── Post-production auto des replays (audio → transcription → chapitres, 60s) ─
+(async () => {
+  while (true) {
+    try {
+      const n = await (pollReplayPostprod as () => Promise<number>)();
+      if (n > 0) console.log(`[worker:live] Replay post-prod: ${n} traité(s)`);
+    } catch (e: unknown) { console.error('[worker:live] Replay postprod error:', (e as Error)?.message || e); }
+    await sleep(60_000);
   }
 })();
 
