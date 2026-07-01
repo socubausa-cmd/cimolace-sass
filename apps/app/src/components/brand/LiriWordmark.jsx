@@ -1,5 +1,4 @@
 import { useId } from 'react';
-import { Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /** Ampoule — lavande (#c4b5fd), alignée maquette logo LIRI définitif */
@@ -231,60 +230,42 @@ const SIZES = {
 
 export function LiriWordmark({
   size = 'header',
-  /** `official` = PNG marque · `mark` = lettres + ampoule (historique) · `icon` = SVG R+i (`LiriBrandIcon`). */
+  /**
+   * `icon` = marque officielle SEULE ; sinon (`mark`/`official`) = marque + « LIRI ».
+   * L'ancien wordmark « L + ampoule + RI » (froid, dégradé violet/bleu/cyan) est RETIRÉ :
+   * on affiche partout le logo officiel `/lirilogo.png` (chaud). Les props `bulbColor`,
+   * `bulbGlow`, `officialBaseline`, `subtleGlow` sont conservées pour compat API (ignorées).
+   */
   variant = 'mark',
-  /** Avec `variant="official"` : `true` = wordmark + baseline ; `false` = mot-symbole seul. */
-  officialBaseline = true,
+  officialBaseline = true, // eslint-disable-line no-unused-vars
   className,
   letterClassName,
-  /** Moins de glow (ex. footer discret) — uniquement variant mark */
-  subtleGlow = false,
-  /** Couleur + glow de l'ampoule (variant mark). Défaut = lavande de marque ; surchargé en chaud dans le live. */
-  bulbColor = LIRI_WORDMARK_BULB,
-  bulbGlow = BULB_GLOW,
+  subtleGlow = false, // eslint-disable-line no-unused-vars
+  bulbColor, // eslint-disable-line no-unused-vars
+  bulbGlow, // eslint-disable-line no-unused-vars
 }) {
   const s = SIZES[size] || SIZES.header;
-  const imgClass = OFFICIAL_IMG[size] || OFFICIAL_IMG.header;
+  const iconClass = ICON_SIZE[size] || ICON_SIZE.compact;
 
+  const Mark = (
+    <img
+      src="/lirilogo.png"
+      alt="LIRI"
+      draggable={false}
+      className={cn('shrink-0 select-none object-contain', iconClass)}
+    />
+  );
+
+  // Marque officielle seule (ex-`variant="icon"`).
   if (variant === 'icon') {
-    const iconSizeClass =
-      ICON_SIZE[size]
-      || ICON_SIZE.compact;
-    return (
-      <LiriBrandIcon className={cn(iconSizeClass, className)} />
-    );
+    return <span className={cn('inline-flex shrink-0 select-none', className)}>{Mark}</span>;
   }
 
-  if (variant === 'official') {
-    return (
-      <span className={cn('inline-flex max-w-full shrink-0 select-none', className)}>
-        <LiriOfficialWordmarkSvg
-          showBaseline={officialBaseline}
-          subtleGlow={subtleGlow}
-          className={imgClass}
-        />
-      </span>
-    );
-  }
-
+  // Marque + mot « LIRI » (wordmark officiel).
   return (
-    <span
-      className={cn('inline-flex select-none', s.row, className)}
-      aria-label="LIRI"
-    >
-      <span className={cn(s.letter, letterClassName)}>L</span>
-      <span className={s.bulbWrap}>
-        <Lightbulb
-          className={s.bulb}
-          style={{
-            color: bulbColor,
-            filter: subtleGlow ? 'none' : bulbGlow,
-          }}
-          strokeWidth={2}
-        />
-      </span>
-      <span className={cn(s.letter, letterClassName)}>R</span>
-      <span className={cn(s.letter, letterClassName)}>I</span>
+    <span className={cn('inline-flex select-none items-center gap-1.5', className)} aria-label="LIRI">
+      {Mark}
+      <span className={cn(s.letter, 'leading-none', letterClassName)}>LIRI</span>
     </span>
   );
 }
