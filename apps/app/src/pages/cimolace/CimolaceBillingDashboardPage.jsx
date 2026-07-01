@@ -32,16 +32,26 @@ const FEATURE_FMT = {
   mbolo: (v) => (v ? 'Mbolo — boutique e-commerce' : null),
   forfait: () => null,
 };
+// "liri_live,liri_replay course_builder" → ["LIRI Live", "Replay des lives", "Constructeur de cours"]
+// (les clés de services arrivent souvent collées par des virgules SANS espace → on éclate + on humanise,
+//  sinon la chaîne brute déborde hors de la carte car le navigateur ne peut pas la couper.)
+function splitServices(v) {
+  if (v == null) return [];
+  if (Array.isArray(v)) return v.flatMap(splitServices);
+  return String(v).split(/[\s,;]+/).map((s) => s.trim()).filter(Boolean).map(serviceName);
+}
 function humanizeFeatures(features) {
   if (!features) return [];
-  if (Array.isArray(features)) return features.filter(Boolean).map(String);
+  if (Array.isArray(features)) return features.filter(Boolean).flatMap((x) => (typeof x === 'string' && /[,\s]/.test(x) ? splitServices(x) : [String(x)]));
+  if (typeof features === 'string') return splitServices(features);
   if (typeof features === 'object') {
-    return Object.entries(features).map(([k, v]) => {
+    return Object.entries(features).flatMap(([k, v]) => {
+      if (k === 'services' || k === 'engines' || k === 'moteurs') return splitServices(v);
       const f = FEATURE_FMT[k];
-      if (f) return f(v);
-      if (typeof v === 'boolean') return v ? k.replace(/_/g, ' ') : null;
-      return `${k.replace(/_/g, ' ')} : ${v === -1 ? 'illimité' : v}`;
-    }).filter(Boolean);
+      if (f) { const r = f(v); return r ? [r] : []; }
+      if (typeof v === 'boolean') return v ? [k.replace(/_/g, ' ')] : [];
+      return [`${k.replace(/_/g, ' ')} : ${v === -1 ? 'illimité' : v}`];
+    });
   }
   return [];
 }
@@ -77,7 +87,10 @@ const SERVICE_LABELS = {
   med_ehr: 'MEDOS — Dossiers patients', med_notes: 'MEDOS — Notes SOAP', med_health: 'MEDOS — Journal de santé',
   med_forms: 'MEDOS — Formulaires', med_programs: 'MEDOS — Programmes de soins', wellness_engine: 'Wellness Engine',
   mbolo: 'Mbolo — Boutique e-commerce', mbolo_storefront: 'Mbolo — Storefront', twin: 'Bio Digital Twin',
-  liri_live: 'LIRI Live', liri_smartboard: 'SmartBoard', school_engine: 'Moteur École',
+  liri_live: 'Lives illimités', liri_smartboard: 'SmartBoard IA', school_engine: 'Moteur École',
+  liri_replay: 'Replay des lives', studio_creator: 'Studio créateur', liri_brain: 'LIRI Brain — copilote IA',
+  liri_masterclass: 'Masterclass', liri_neuro_recall: 'Neuro-Recall', course_builder: 'Constructeur de cours',
+  forum: 'Forum communautaire', chat: 'Messagerie', calendar: 'Calendrier', notif: 'Notifications',
 };
 const serviceName = (k) => SERVICE_LABELS[k] || String(k || '').replace(/_/g, ' ');
 
@@ -443,10 +456,10 @@ export default function CimolaceBillingDashboardPage() {
         <aside className="w-64 shrink-0 border-r border-white/[0.06] bg-[#0b0b11] sticky top-0 h-screen self-start flex flex-col">
           <div className="px-5 pt-5 pb-4 border-b border-white/[0.06]">
             <Link to="/cimolace" className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center"><Zap className="w-3.5 h-3.5 text-white" /></div>
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#d97757] to-[#e6b878] flex items-center justify-center"><Zap className="w-3.5 h-3.5 text-white" /></div>
               <span className="text-sm font-black tracking-tight">CIMOLACE</span>
             </Link>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-violet-300/70 flex items-center gap-1"><Building2 className="w-3 h-3" /> Espace tenant</div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-[#e0926a]/70 flex items-center gap-1"><Building2 className="w-3 h-3" /> Espace tenant</div>
             <div className="text-base font-bold truncate mt-0.5">{activeName}</div>
             {tenants.length > 1 && (
               <select value={activeSlug} onChange={(e) => switchTenant(e.target.value)} className="mt-2 w-full bg-black/30 border border-white/[0.1] rounded-lg px-2 py-1.5 text-xs text-white/80">
@@ -463,7 +476,7 @@ export default function CimolaceBillingDashboardPage() {
                   const Icon = t.icon; const danger = id === 'compte';
                   return (
                     <button key={id} onClick={() => setTab(id)}
-                      className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm mb-0.5 transition ${tab === id ? 'bg-violet-500/20 text-white' : danger ? 'text-red-300/70 hover:bg-red-500/10' : 'text-white/55 hover:bg-white/[0.05] hover:text-white'}`}>
+                      className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm mb-0.5 transition ${tab === id ? 'bg-[#d97757]/20 text-white' : danger ? 'text-red-300/70 hover:bg-red-500/10' : 'text-white/55 hover:bg-white/[0.05] hover:text-white'}`}>
                       <Icon className="w-4 h-4 shrink-0" /> <span className="truncate">{t.label}</span>
                     </button>
                   );
@@ -506,7 +519,7 @@ export default function CimolaceBillingDashboardPage() {
                   <XCircle className="w-4 h-4 mt-0.5 shrink-0" />
                   <span><strong>Forfait {badge(primarySub.status).label.toLowerCase()}</strong> — vos moteurs sont en pause et vos clés API renvoient <code className="text-red-200">402 subscription_inactive</code> aux intégrations.</span>
                 </div>
-                <button onClick={() => setTab('marketplace')} className="shrink-0 px-4 py-2 rounded-lg bg-gradient-to-r from-violet-500 to-cyan-500 text-white font-bold text-sm hover:shadow-lg flex items-center gap-1.5">
+                <button onClick={() => setTab('marketplace')} className="shrink-0 px-4 py-2 rounded-lg bg-[#d97757] text-white font-bold text-sm hover:shadow-lg flex items-center gap-1.5">
                   <ShoppingBag className="w-4 h-4" /> Choisir un forfait
                 </button>
               </div>
@@ -520,10 +533,10 @@ export default function CimolaceBillingDashboardPage() {
                 {tab === 'apercu' && (
                   <div className="space-y-6">
                     {primarySub ? (
-                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-white/[0.08] bg-gradient-to-br from-violet-500/10 to-cyan-500/[0.04] p-6">
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[#d97757]/10 to-[#e6b878]/[0.04] p-6">
                         <div className="flex items-start justify-between gap-4 flex-wrap">
                           <div>
-                            <div className="text-xs uppercase tracking-[0.2em] text-violet-300/80 mb-1">Votre abonnement</div>
+                            <div className="text-xs uppercase tracking-[0.2em] text-[#e0926a]/80 mb-1">Votre abonnement</div>
                             <div className="flex items-center gap-2 mb-1">
                               <span className="text-2xl font-black capitalize">{planName(primarySub)}</span>
                               <span className={`px-2 py-0.5 rounded-full border text-[11px] font-medium ${badge(primarySub.status).cls}`}>{badge(primarySub.status).label}</span>
@@ -531,7 +544,7 @@ export default function CimolaceBillingDashboardPage() {
                             <div className="text-sm text-white/60">{eur(primarySub.amount_cents, primarySub.currency)} / mois{primarySub.current_period_end ? ` · échéance ${fmtDate(primarySub.current_period_end)}` : ''}</div>
                           </div>
                           {(primarySub.status === 'pending' || primarySub.status === 'past_due') ? (
-                            <button onClick={() => pay(primarySub)} disabled={payingId === primarySub.id} className="px-5 py-3 bg-gradient-to-r from-violet-500 to-cyan-500 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-violet-500/25 flex items-center gap-2 disabled:opacity-60">
+                            <button onClick={() => pay(primarySub)} disabled={payingId === primarySub.id} className="px-5 py-3 bg-[#d97757] text-white font-bold rounded-xl hover:shadow-lg hover:shadow-[#d97757]/25 flex items-center gap-2 disabled:opacity-60">
                               {payingId === primarySub.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />} Payer par carte
                             </button>
                           ) : primarySub.status === 'active' ? <span className="flex items-center gap-1 text-green-400 text-sm font-medium"><CheckCircle className="w-4 h-4" /> Forfait actif</span> : null}
@@ -581,7 +594,7 @@ export default function CimolaceBillingDashboardPage() {
                                 <div className="text-sm text-white/60">{eur(s.amount_cents, s.currency)} / mois{s.current_period_end ? ` · échéance ${fmtDate(s.current_period_end)}` : ''}{s.provider ? ` · ${s.provider}` : ''}</div>
                               </div>
                               {payable ? (
-                                <button onClick={() => pay(s)} disabled={payingId === s.id} className="px-5 py-3 bg-gradient-to-r from-violet-500 to-cyan-500 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-violet-500/25 flex items-center gap-2 disabled:opacity-60">
+                                <button onClick={() => pay(s)} disabled={payingId === s.id} className="px-5 py-3 bg-[#d97757] text-white font-bold rounded-xl hover:shadow-lg hover:shadow-[#d97757]/25 flex items-center gap-2 disabled:opacity-60">
                                   {payingId === s.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />} Payer par carte
                                 </button>
                               ) : s.status === 'active' ? <span className="flex items-center gap-1 text-green-400 text-sm font-medium"><CheckCircle className="w-4 h-4" /> Service actif</span> : null}
@@ -601,10 +614,10 @@ export default function CimolaceBillingDashboardPage() {
                 {tab === 'moteurs' && (
                   <div className="space-y-4">
                     {!activeSubs.length && (
-                      <div className="rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-500/10 to-cyan-500/[0.04] p-5">
-                        <div className="flex items-center gap-2 mb-1"><Lock className="w-4 h-4 text-violet-300" /> <span className="font-bold">Vos moteurs sont en pause</span></div>
+                      <div className="rounded-2xl border border-[#d97757]/30 bg-gradient-to-br from-[#d97757]/10 to-[#e6b878]/[0.04] p-5">
+                        <div className="flex items-center gap-2 mb-1"><Lock className="w-4 h-4 text-[#e0926a]" /> <span className="font-bold">Vos moteurs sont en pause</span></div>
                         <p className="text-sm text-white/60 mb-3">Activez un forfait pour débloquer {services.length ? `vos ${services.length} moteur(s)` : 'vos moteurs'}{familyCounts.length ? ` : ${familyCounts.map((f) => f.label).join(', ')}` : ''}.</p>
-                        <button onClick={() => setTab('marketplace')} className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 text-white font-bold text-sm hover:shadow-lg flex items-center gap-2 w-fit"><ShoppingBag className="w-4 h-4" /> Voir les forfaits <ArrowRight className="w-4 h-4" /></button>
+                        <button onClick={() => setTab('marketplace')} className="px-4 py-2.5 rounded-xl bg-[#d97757] text-white font-bold text-sm hover:shadow-lg flex items-center gap-2 w-fit"><ShoppingBag className="w-4 h-4" /> Voir les forfaits <ArrowRight className="w-4 h-4" /></button>
                       </div>
                     )}
                     {services.length === 0 ? (activeSubs.length ? <Empty>Aucun moteur activé pour cet espace.</Empty> : null) : (
@@ -652,7 +665,7 @@ export default function CimolaceBillingDashboardPage() {
                     <div className="space-y-4">
                       {showLiriGrille && (
                         <div className="text-center pb-1">
-                          <div className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-violet-300/80 mb-1.5"><Sparkles className="w-3.5 h-3.5" /> Forfaits LIRI</div>
+                          <div className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-[#e0926a]/80 mb-1.5"><Sparkles className="w-3.5 h-3.5" /> Forfaits LIRI</div>
                           <h2 className="text-xl font-black">Débloquez tout LIRI</h2>
                           <p className="text-sm text-white/55 mt-1 max-w-lg mx-auto">Lives illimités, replay, smartboard IA et tous les moteurs LIRI. En gratuit : 3 min / 5 personnes. Choisissez votre forfait pour libérer la pleine puissance.</p>
                         </div>
@@ -660,7 +673,7 @@ export default function CimolaceBillingDashboardPage() {
                       <div className="flex items-center justify-center">
                         <div className="inline-flex items-center gap-1 p-1 rounded-xl border border-white/[0.08] bg-white/[0.03]">
                           {['monthly', 'yearly'].map((c) => (
-                            <button key={c} onClick={() => setMktCycle(c)} className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${mktCycle === c ? 'bg-violet-500/80 text-white' : 'text-white/50 hover:text-white'}`}>
+                            <button key={c} onClick={() => setMktCycle(c)} className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${mktCycle === c ? 'bg-[#d97757]/80 text-white' : 'text-white/50 hover:text-white'}`}>
                               {c === 'monthly' ? 'Mensuel' : 'Annuel'}{c === 'yearly' && <span className="ml-1.5 text-[10px] text-green-400">2 mois offerts</span>}
                             </button>
                           ))}
@@ -676,34 +689,35 @@ export default function CimolaceBillingDashboardPage() {
                           const anchorCents = yearly ? (p.price_cents || 0) * 12 : null;
                           const per = oneTime ? 'paiement unique' : yearly ? 'an' : 'mois';
                           return (
-                            <div key={p.key} className={`relative rounded-2xl border p-5 flex flex-col ${hint.highlight ? 'border-violet-500/50 bg-gradient-to-b from-violet-500/[0.08] to-white/[0.02] ring-1 ring-violet-500/20' : 'border-white/[0.08] bg-white/[0.03]'}`}>
-                              {hint.badge && <span className="absolute -top-2 left-4 px-2 py-0.5 rounded-full bg-violet-500 text-white text-[10px] font-bold uppercase tracking-wide flex items-center gap-1"><Sparkles className="w-3 h-3" />{hint.badge}</span>}
+                            <div key={p.key} className={`relative rounded-2xl border p-6 flex flex-col transition-colors ${hint.highlight ? 'border-[#d97757]/50 bg-[#d97757]/[0.06] ring-1 ring-[#d97757]/25 shadow-[0_10px_44px_-16px_rgba(217,119,87,0.45)]' : 'border-white/[0.08] bg-white/[0.02] hover:border-white/[0.15]'}`}>
+                              {hint.badge && <span className="absolute -top-2.5 left-6 px-2.5 py-0.5 rounded-full bg-[#d97757] text-white text-[10px] font-bold uppercase tracking-wide flex items-center gap-1 shadow-sm"><Sparkles className="w-3 h-3" />{hint.badge}</span>}
                               <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0">
                                   <p className="font-bold truncate">{p.label || p.key}</p>
-                                  {hint.tagline && <p className="text-[11px] text-violet-300/80 mt-0.5">{hint.tagline}</p>}
+                                  {hint.tagline && <p className="text-[11px] text-[#e0926a]/80 mt-0.5">{hint.tagline}</p>}
                                 </div>
                                 {p.subscribed && <span className="px-2 py-0.5 rounded-full border border-green-500/30 bg-green-500/15 text-green-400 text-[11px] whitespace-nowrap shrink-0">Souscrit</span>}
                               </div>
                               {p.description && <p className="text-xs text-white/50 mt-1.5">{p.description}</p>}
                               <div className="mt-3 flex items-end gap-2 flex-wrap">
-                                <div className="text-2xl font-black">{eur(displayCents, p.currency)}</div>
+                                <div className="text-[1.9rem] leading-none font-black tracking-tight">{eur(displayCents, p.currency)}</div>
                                 <div className="text-xs text-white/40 mb-1">/ {per}</div>
                                 {anchorCents && <div className="text-xs text-white/30 line-through mb-1">{eur(anchorCents, p.currency)}</div>}
                               </div>
                               {feats.length > 0 && (
-                                <ul className="mt-3 space-y-1.5 flex-1">
-                                  {feats.slice(0, 6).map((f, i) => (
-                                    <li key={i} className="flex items-start gap-2 text-xs text-white/70"><Check className="w-3.5 h-3.5 text-green-400 shrink-0 mt-0.5" /> {f}</li>
+                                <ul className="mt-4 space-y-2 flex-1 border-t border-white/[0.06] pt-4">
+                                  {feats.slice(0, 8).map((f, i) => (
+                                    <li key={i} className="flex items-start gap-2 text-[13px] text-white/70"><Check className="w-3.5 h-3.5 text-[#d97757] shrink-0 mt-0.5" /><span className="min-w-0 break-words">{f}</span></li>
                                   ))}
+                                  {feats.length > 8 && <li className="pl-[22px] text-xs text-white/35">+ {feats.length - 8} autres moteurs</li>}
                                 </ul>
                               )}
                               {yearly ? (
-                                <button disabled={p.subscribed || busy === `annual-${p.key}`} onClick={() => requestAnnual(p)} className="mt-4 px-4 py-2.5 rounded-xl border border-violet-500/40 bg-violet-500/10 text-white font-bold text-sm hover:bg-violet-500/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                                <button disabled={p.subscribed || busy === `annual-${p.key}`} onClick={() => requestAnnual(p)} className="mt-4 px-4 py-2.5 rounded-xl border border-[#d97757]/40 bg-[#d97757]/10 text-white font-bold text-sm hover:bg-[#d97757]/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                                   {busy === `annual-${p.key}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />} {p.subscribed ? 'Déjà actif' : "Demander l'annuel"}
                                 </button>
                               ) : (
-                                <button disabled={p.subscribed || busy === `sub-${p.key}`} onClick={() => subscribe(p.key)} className="mt-4 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 text-white font-bold text-sm hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                                <button disabled={p.subscribed || busy === `sub-${p.key}`} onClick={() => subscribe(p.key)} className="mt-4 px-4 py-2.5 rounded-xl bg-[#d97757] text-white font-bold text-sm hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                                   {busy === `sub-${p.key}` ? <Loader2 className="w-4 h-4 animate-spin" /> : p.subscribed ? <Check className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />} {p.subscribed ? 'Déjà actif' : (oneTime ? 'Commander' : 'Activer ce forfait')}
                                 </button>
                               )}
@@ -743,7 +757,7 @@ export default function CimolaceBillingDashboardPage() {
                     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
                       <div className="flex items-end gap-2 flex-wrap">
                         <div className="flex-1 min-w-[180px]"><label className="text-xs text-white/40">Nouvelle clé — libellé</label><input value={keyLabel} onChange={(e) => setKeyLabel(e.target.value)} placeholder="ex. zahirwellness.com production" className="mt-1 w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" /></div>
-                        <button disabled={!keyLabel.trim() || busy === 'new-key'} onClick={createKey} className="px-4 py-2 rounded-lg bg-violet-500/80 hover:bg-violet-500 text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'new-key' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Générer</button>
+                        <button disabled={!keyLabel.trim() || busy === 'new-key'} onClick={createKey} className="px-4 py-2 rounded-lg bg-[#d97757]/80 hover:bg-[#d97757] text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'new-key' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Générer</button>
                       </div>
                     </div>
                     {keys.length === 0 ? <Empty>Aucune clé API. Générez-en une pour intégrer vos services (MEDOS, Mbolo) à votre site.</Empty> : (
@@ -751,7 +765,7 @@ export default function CimolaceBillingDashboardPage() {
                         {keys.map((k) => (
                           <div key={k.id} className="flex items-center justify-between p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] gap-3 flex-wrap">
                             <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-xl bg-white/[0.05] flex items-center justify-center"><KeyRound className="w-4 h-4 text-violet-300" /></div>
+                              <div className="w-9 h-9 rounded-xl bg-white/[0.05] flex items-center justify-center"><KeyRound className="w-4 h-4 text-[#e0926a]" /></div>
                               <div><p className="font-medium text-sm">{k.label || 'Clé API'} <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-white/[0.06] text-white/50">{keyFamily(k.key_prefix)}</span></p><p className="text-xs text-white/40 font-mono">{k.key_prefix}… · créée {fmtDate(k.created_at)}{k.last_used_at ? ` · utilisée ${fmtDate(k.last_used_at)}` : ''}</p></div>
                             </div>
                             <button disabled={busy === `rev-${k.id}`} onClick={() => revokeKey(k.id)} className="px-3 py-1.5 rounded-lg border border-red-500/20 text-red-300/80 hover:bg-red-500/10 text-xs flex items-center gap-1 disabled:opacity-40">{busy === `rev-${k.id}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />} Révoquer</button>
@@ -769,7 +783,7 @@ export default function CimolaceBillingDashboardPage() {
                       <div className="text-sm font-semibold">Nouveau ticket</div>
                       <input value={ticketForm.subject} onChange={(e) => setTicketForm((f) => ({ ...f, subject: e.target.value }))} placeholder="Sujet" className="w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" />
                       <textarea value={ticketForm.description} onChange={(e) => setTicketForm((f) => ({ ...f, description: e.target.value }))} placeholder="Décrivez votre demande à l'équipe Cimolace…" rows={3} className="w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" />
-                      <button disabled={!ticketForm.subject.trim() || busy === 'ticket'} onClick={submitTicket} className="px-4 py-2 rounded-lg bg-violet-500/80 hover:bg-violet-500 text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'ticket' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} Envoyer</button>
+                      <button disabled={!ticketForm.subject.trim() || busy === 'ticket'} onClick={submitTicket} className="px-4 py-2 rounded-lg bg-[#d97757]/80 hover:bg-[#d97757] text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'ticket' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} Envoyer</button>
                     </div>
                     {tickets.length === 0 ? <Empty>Aucun ticket. Une question ? Ouvrez-en un ci-dessus.</Empty> : (
                       <div className="space-y-2">
@@ -792,8 +806,8 @@ export default function CimolaceBillingDashboardPage() {
                       <Field label="Nom affiché" value={brandForm.name} onChange={(v) => setBrandForm((f) => ({ ...f, name: v }))} placeholder={activeName} />
                       <Field label="Logo (URL)" value={brandForm.logo_url} onChange={(v) => setBrandForm((f) => ({ ...f, logo_url: v }))} placeholder="https://…/logo.png" />
                       <Field label="Domaine principal" value={brandForm.primary_domain} onChange={(v) => setBrandForm((f) => ({ ...f, primary_domain: v }))} placeholder="zahirwellness.com" />
-                      <Field label="Couleur primaire" value={brandForm.primary} onChange={(v) => setBrandForm((f) => ({ ...f, primary: v }))} placeholder="#7c3aed" />
-                      <button disabled={busy === 'brand'} onClick={saveBranding} className="px-4 py-2 rounded-lg bg-violet-500/80 hover:bg-violet-500 text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'brand' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} Enregistrer</button>
+                      <Field label="Couleur primaire" value={brandForm.primary} onChange={(v) => setBrandForm((f) => ({ ...f, primary: v }))} placeholder="#d97757" />
+                      <button disabled={busy === 'brand'} onClick={saveBranding} className="px-4 py-2 rounded-lg bg-[#d97757]/80 hover:bg-[#d97757] text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'brand' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} Enregistrer</button>
                     </div>
                     <p className="text-xs text-white/40">Espace : <code className="text-white/60">{activeSlug || '—'}</code>. Modifications réservées au rôle owner du tenant.</p>
                   </div>
@@ -821,7 +835,7 @@ export default function CimolaceBillingDashboardPage() {
                           {(() => {
                             const maxCount = Math.max(...familyCounts.map((x) => x.count), 1);
                             const total = familyCounts.reduce((s, x) => s + x.count, 0) || 1;
-                            const colors = ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'];
+                            const colors = ['#e0926a', '#06b6d4', '#10b981', '#f59e0b'];
                             return familyCounts.map((f, i) => (
                               <div key={f.key} className="flex items-center gap-3">
                                 <div className="w-28 shrink-0 text-xs text-white/60 truncate" title={f.label}>{f.label}</div>
@@ -849,7 +863,7 @@ export default function CimolaceBillingDashboardPage() {
                       <div className="flex items-end gap-2 flex-wrap">
                         <div className="flex-1 min-w-[160px]"><label className="text-xs text-white/40">Nom</label><input value={prodForm.name} onChange={(e) => setProdForm((f) => ({ ...f, name: e.target.value }))} placeholder="ex. Consultation bien-être" className="mt-1 w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" /></div>
                         <div className="w-28"><label className="text-xs text-white/40">Prix (€)</label><input value={prodForm.priceEur} onChange={(e) => setProdForm((f) => ({ ...f, priceEur: e.target.value }))} placeholder="49" className="mt-1 w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" /></div>
-                        <button disabled={!prodForm.name.trim() || busy === 'new-prod'} onClick={createProduct} className="px-4 py-2 rounded-lg bg-violet-500/80 hover:bg-violet-500 text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'new-prod' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Ajouter</button>
+                        <button disabled={!prodForm.name.trim() || busy === 'new-prod'} onClick={createProduct} className="px-4 py-2 rounded-lg bg-[#d97757]/80 hover:bg-[#d97757] text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'new-prod' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Ajouter</button>
                       </div>
                     </div>
                     {products.length === 0 ? <Empty>Aucun produit. Si votre boutique Mbolo est activée, ajoutez-en un ci-dessus.</Empty> : (
@@ -857,7 +871,7 @@ export default function CimolaceBillingDashboardPage() {
                         {products.map((p) => (
                           <div key={p.id} className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 space-y-3">
                             <div className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-3"><div className="w-9 h-9 rounded-xl bg-white/[0.05] flex items-center justify-center overflow-hidden shrink-0">{p.primary_image_url || p.image_url ? <img src={p.primary_image_url || p.image_url} alt="" className="w-full h-full object-cover" /> : <Package className="w-4 h-4 text-violet-300" />}</div><div className="min-w-0"><p className="font-medium text-sm truncate">{p.name}</p><p className="text-xs text-white/40 truncate">{p.slug || p.category || '—'}</p></div></div>
+                              <div className="flex items-center gap-3"><div className="w-9 h-9 rounded-xl bg-white/[0.05] flex items-center justify-center overflow-hidden shrink-0">{p.primary_image_url || p.image_url ? <img src={p.primary_image_url || p.image_url} alt="" className="w-full h-full object-cover" /> : <Package className="w-4 h-4 text-[#e0926a]" />}</div><div className="min-w-0"><p className="font-medium text-sm truncate">{p.name}</p><p className="text-xs text-white/40 truncate">{p.slug || p.category || '—'}</p></div></div>
                               <span className="font-medium text-sm shrink-0">{eur(p.price_cents ?? p.priceCents, p.currency)}</span>
                             </div>
                             <div className="flex items-end gap-2">
@@ -879,7 +893,7 @@ export default function CimolaceBillingDashboardPage() {
                       <div className="flex items-end gap-2 flex-wrap">
                         <div className="flex-1 min-w-[180px]"><label className="text-xs text-white/40">Email</label><input value={inviteForm.email} onChange={(e) => setInviteForm((f) => ({ ...f, email: e.target.value }))} placeholder="collaborateur@exemple.com" className="mt-1 w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" /></div>
                         <div className="w-32"><label className="text-xs text-white/40">Rôle</label><select value={inviteForm.role} onChange={(e) => setInviteForm((f) => ({ ...f, role: e.target.value }))} className="mt-1 w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm"><option value="member">Membre</option><option value="admin">Admin</option><option value="owner">Owner</option></select></div>
-                        <button disabled={!inviteForm.email.trim() || busy === 'invite'} onClick={emailInvite} className="px-4 py-2 rounded-lg bg-violet-500/80 hover:bg-violet-500 text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'invite' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />} Inviter par email</button>
+                        <button disabled={!inviteForm.email.trim() || busy === 'invite'} onClick={emailInvite} className="px-4 py-2 rounded-lg bg-[#d97757]/80 hover:bg-[#d97757] text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'invite' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />} Inviter par email</button>
                       </div>
                     </div>
                     {(() => { const team = members.filter((m) => !['patient', 'student', 'eleve'].includes(String(m.role || '').toLowerCase())); return team.length === 0 ? <Empty>Aucun membre d'équipe (les clients/patients ne sont pas comptés ici). Invitez un collaborateur ci-dessus.</Empty> : (
@@ -908,7 +922,7 @@ export default function CimolaceBillingDashboardPage() {
                     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 space-y-3">
                       <div className="text-sm font-semibold">Changer mon mot de passe</div>
                       <input type="password" value={pwd} onChange={(e) => setPwd(e.target.value)} placeholder="Nouveau mot de passe (8 car. min)" className="w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" />
-                      <button disabled={busy === 'pwd'} onClick={changePassword} className="px-4 py-2 rounded-lg bg-violet-500/80 hover:bg-violet-500 text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'pwd' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} Mettre à jour</button>
+                      <button disabled={busy === 'pwd'} onClick={changePassword} className="px-4 py-2 rounded-lg bg-[#d97757]/80 hover:bg-[#d97757] text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'pwd' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} Mettre à jour</button>
                     </div>
                     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 space-y-3">
                       <div className="flex items-center gap-2 text-sm font-semibold"><ShieldCheck className="w-4 h-4 text-green-400" /> Sécurité</div>
@@ -958,14 +972,14 @@ export default function CimolaceBillingDashboardPage() {
                       <div className="flex items-end gap-2 flex-wrap">
                         <div className="w-40"><label className="text-xs text-white/40">Libellé</label><input value={whForm.label} onChange={(e) => setWhForm((f) => ({ ...f, label: e.target.value }))} placeholder="Mon serveur" className="mt-1 w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" /></div>
                         <div className="flex-1 min-w-[200px]"><label className="text-xs text-white/40">URL HTTPS</label><input value={whForm.url} onChange={(e) => setWhForm((f) => ({ ...f, url: e.target.value }))} placeholder="https://votre-site.com/webhooks/cimolace" className="mt-1 w-full bg-black/30 border border-white/[0.1] rounded-lg px-3 py-2 text-sm" /></div>
-                        <button disabled={!whForm.url.trim() || busy === 'new-wh'} onClick={createWh} className="px-4 py-2 rounded-lg bg-violet-500/80 hover:bg-violet-500 text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'new-wh' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Créer</button>
+                        <button disabled={!whForm.url.trim() || busy === 'new-wh'} onClick={createWh} className="px-4 py-2 rounded-lg bg-[#d97757]/80 hover:bg-[#d97757] text-white text-sm font-medium flex items-center gap-1 disabled:opacity-40">{busy === 'new-wh' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Créer</button>
                       </div>
                     </div>
                     {webhooks.length === 0 ? <Empty>Aucun webhook. Créez-en un pour recevoir les événements Cimolace (paiements, abonnements…) sur votre serveur.</Empty> : (
                       <div className="space-y-2">
                         {webhooks.map((w) => (
                           <div key={w.id} className="flex items-center justify-between p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] gap-3 flex-wrap">
-                            <div className="flex items-center gap-3 min-w-0"><div className="w-9 h-9 rounded-xl bg-white/[0.05] flex items-center justify-center shrink-0"><Globe className="w-4 h-4 text-violet-300" /></div><div className="min-w-0"><p className="font-medium text-sm truncate">{w.label}</p><p className="text-xs text-white/40 font-mono truncate">{w.url}</p></div></div>
+                            <div className="flex items-center gap-3 min-w-0"><div className="w-9 h-9 rounded-xl bg-white/[0.05] flex items-center justify-center shrink-0"><Globe className="w-4 h-4 text-[#e0926a]" /></div><div className="min-w-0"><p className="font-medium text-sm truncate">{w.label}</p><p className="text-xs text-white/40 font-mono truncate">{w.url}</p></div></div>
                             <div className="flex items-center gap-2 shrink-0">
                               <button onClick={() => toggleWh(w)} disabled={busy === `wht-${w.id}`} className={`px-2 py-1 rounded-lg text-[11px] border ${w.is_active ? 'border-green-500/30 bg-green-500/15 text-green-400' : 'border-white/10 text-white/40'}`}>{w.is_active ? 'Actif' : 'Inactif'}</button>
                               <button disabled={busy === `wh-${w.id}`} onClick={() => delWh(w.id)} className="px-2.5 py-1.5 rounded-lg border border-red-500/20 text-red-300/80 hover:bg-red-500/10 text-xs"><Trash2 className="w-3 h-3" /></button>
