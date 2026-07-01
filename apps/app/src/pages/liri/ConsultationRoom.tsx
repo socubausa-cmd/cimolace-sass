@@ -49,6 +49,7 @@ import ConsultationSmartBoard from '@/features/consultation-stage/ConsultationSm
 import ConsultationCopilot from '@/features/consultation-stage/ConsultationCopilot';
 import ConsultationRecall from '@/features/consultation-stage/ConsultationRecall';
 import WaitingRoom from '@/features/consultation-stage/WaitingRoom';
+import { BackgroundBlur, VirtualBackground, supportsBackgroundProcessors } from '@livekit/track-processors';
 
 // Shell visuel ALIGNÉ SUR LE PORTAIL LIRI (cf. liveHostTheme `LH_DESIGN`) : base
 // chaude #262624 + halos coral, panneaux frostés, accent AMBRE #d4a36a — fini le
@@ -355,8 +356,8 @@ export default function ConsultationRoom() {
         video={joinCam}
         style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
       >
-        {/* Studio reporté : périphériques caméra/micro choisis appliqués à la salle. */}
-        <CallVideoFx camId={camId} micId={micId} />
+        {/* Studio reporté : périphériques + détourage sur le flux publié. */}
+        <CallVideoFx camId={camId} micId={micId} detourage={detourage} />
         {/* Corps : colonne principale (chrome + scène + barre) + panneau de
             droite (discussion / copilote / récap), façon appel vidéo. */}
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
@@ -436,14 +437,24 @@ export default function ConsultationRoom() {
   return typeof document !== 'undefined' ? createPortal(content, document.body) : content;
 }
 
-// Reporte le choix de PÉRIPHÉRIQUES (caméra/micro) du studio sur la salle, une
-// fois connecté (`switchActiveDevice`). Rendu DANS <LiveKitRoom>. NB : le détourage
-// + le maquillage restent à l'APERÇU ; leur publication sur le flux (moteur
-// `useVideoProcessor`/MediaPipe in-call) est instable → à fiabiliser séparément.
-function CallVideoFx({ camId, micId }: { camId: string; micId: string }) {
+// Images de fond virtuel (détourage type « fond »). Photos libres Unsplash.
+const VBG_IMAGES: Record<string, string> = {
+  nature: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1280&q=80',
+  office: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1280&q=80',
+  library: 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=1280&q=80',
+};
+
+// Reporte le STUDIO sur le flux PUBLIÉ : périphériques (`switchActiveDevice`) +
+// DÉTOURAGE via les track-processors OFFICIELS LiveKit (`setProcessor`
+// BackgroundBlur/VirtualBackground) — pipeline robuste (pas de canvas/republish
+// manuel). Rendu DANS <LiveKitRoom>. (Le maquillage reste à l'aperçu : les
+// track-processors ne font pas de « beauty ».)
+function CallVideoFx({ camId, micId, detourage }: { camId: string; micId: string; detourage: string }) {
   const room = useRoomContext();
+  const { cameraTrack } = useLocalParticipant();
   const connState = useConnectionState();
   const connected = connState === ConnectionState.Connected;
+
   useEffect(() => {
     if (!connected || !room) return;
     (async () => {
@@ -451,6 +462,28 @@ function CallVideoFx({ camId, micId }: { camId: string; micId: string }) {
       try { if (micId) await (room as any).switchActiveDevice('audioinput', micId); } catch { /* ignore */ }
     })();
   }, [connected, camId, micId, room]);
+
+  useEffect(() => {
+    if (!connected) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        if (!supportsBackgroundProcessors()) return;
+        const track: any = (cameraTrack as any)?.track;
+        if (!track || typeof track.setProcessor !== 'function') return;
+        if (cancelled) return;
+        if (detourage === 'none') {
+          if (track.getProcessor?.()) await track.stopProcessor();
+        } else if (detourage === 'blur' || detourage === 'immersive') {
+          await track.setProcessor(BackgroundBlur(detourage === 'immersive' ? 20 : 12));
+        } else if (VBG_IMAGES[detourage]) {
+          await track.setProcessor(VirtualBackground(VBG_IMAGES[detourage]));
+        }
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, [connected, detourage, cameraTrack]);
+
   return null;
 }
 
