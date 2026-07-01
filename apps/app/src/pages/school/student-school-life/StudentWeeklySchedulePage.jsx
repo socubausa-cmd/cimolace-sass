@@ -1032,7 +1032,7 @@ export default function StudentWeeklySchedulePage() {
 
         const { data: path, error: spErr } = await supabase
           .from('school_paths')
-          .select('id, title')
+          .select('id, title, starts_on')
           .eq('id', pathId)
           .maybeSingle();
         if (spErr) throw spErr;
@@ -1043,9 +1043,9 @@ export default function StudentWeeklySchedulePage() {
         }
 
         if (!cancelled) {
-          // starts_on not in schema — use null (page falls back to current Monday)
-          setSchoolPath({ ...path, starts_on: null });
-          await loadWeekData(path.id, null, 0);
+          // Ancre calendrier du parcours : honore school_paths.starts_on (null = lundi courant)
+          setSchoolPath(path);
+          await loadWeekData(path.id, path.starts_on ?? null, 0);
         }
       } catch (err) {
         if (!cancelled) {
@@ -1063,12 +1063,12 @@ export default function StudentWeeklySchedulePage() {
   function handlePrevWeek() {
     const next = weekOffset - 1;
     setWeekOffset(next);
-    if (schoolPath) loadWeekData(schoolPath.id, null, next);
+    if (schoolPath) loadWeekData(schoolPath.id, schoolPath.starts_on ?? null, next);
   }
   function handleNextWeek() {
     const next = weekOffset + 1;
     setWeekOffset(next);
-    if (schoolPath) loadWeekData(schoolPath.id, null, next);
+    if (schoolPath) loadWeekData(schoolPath.id, schoolPath.starts_on ?? null, next);
   }
 
   // Current week Monday
