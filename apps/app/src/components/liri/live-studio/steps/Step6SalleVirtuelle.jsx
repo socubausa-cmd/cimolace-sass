@@ -242,7 +242,7 @@ function StageReviewScreen({ stageKey, title, items = [], data = {} }) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-[#7B61FF]/25 bg-[#7B61FF]/[0.08] p-3">
+      <div className="rounded-xl border border-[#d97757]/25 bg-[#d97757]/[0.08] p-3">
         <div className="mb-2 flex items-center gap-1.5">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => {
             const done = num < activeStepNumber;
@@ -252,7 +252,7 @@ function StageReviewScreen({ stageKey, title, items = [], data = {} }) {
                 key={num}
                 className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold ${
                   active
-                    ? 'bg-[#7B61FF] text-white shadow-[0_0_18px_-6px_rgba(123,97,255,0.9)]'
+                    ? 'bg-[#d97757] text-white shadow-[0_0_18px_-6px_rgba(217,119,87,0.9)]'
                     : done
                       ? 'bg-emerald-500/20 text-emerald-300'
                       : 'bg-white/10 text-gray-500'
@@ -262,7 +262,7 @@ function StageReviewScreen({ stageKey, title, items = [], data = {} }) {
               </div>
             );
           })}
-          <span className="ml-1 text-[10px] uppercase tracking-[0.16em] text-[#c4b5fd]">Validation d'étape</span>
+          <span className="ml-1 text-[10px] uppercase tracking-[0.16em] text-[#f0b89a]">Validation d'étape</span>
         </div>
         <p className="mt-1 text-sm font-semibold text-white">{title || 'Aperçu du rendu'}</p>
         <p className="mt-1 text-[11px] text-gray-300">Écran {activeStepNumber}/8 · {stepTitles[activeStepNumber - 1] || 'Étape'}</p>
@@ -331,17 +331,17 @@ function StageReviewScreen({ stageKey, title, items = [], data = {} }) {
 }
 
 /** Indicateur 1/3 — 2/3 — 3/3 (navigation uniquement via Précédent / Suivant du wizard) — shell Live Studio */
-function Step6SalleSubstepIndicator({ activeIndex, programSceneCount, importedSlideCount }) {
+function Step6SalleSubstepIndicator({ activeIndex, programSceneCount, importedSlideCount, substepMeta = SALLE_SUBSTEP_META }) {
   return (
     <div className="rounded-2xl border border-[#2D3139] bg-[#0d0f14]/90 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-5">
       <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-500">
         Étape 6 · Salle virtuelle ·{' '}
-        <span className="tabular-nums text-[#7B61FF]">{activeIndex + 1}</span>
+        <span className="tabular-nums text-[#d97757]">{activeIndex + 1}</span>
         <span className="text-gray-600"> / </span>
-        {SALLE_SUBSTEP_META.length}
+        {substepMeta.length}
       </p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        {SALLE_SUBSTEP_META.map((meta, i) => {
+        {substepMeta.map((meta, i) => {
           const Icon = meta.icon;
           const done = i < activeIndex;
           const current = i === activeIndex;
@@ -358,7 +358,7 @@ function Step6SalleSubstepIndicator({ activeIndex, programSceneCount, importedSl
               className={cn(
                 'flex gap-2.5 rounded-2xl border px-3 py-2.5 text-left transition-all duration-200',
                 current &&
-                  'border-[#7B61FF]/45 bg-[#7B61FF]/[0.07] shadow-[0_0_0_1px_rgba(123,97,255,0.15)] ring-1 ring-[#7B61FF]/20',
+                  'border-[#d97757]/45 bg-[#d97757]/[0.07] shadow-[0_0_0_1px_rgba(217,119,87,0.15)] ring-1 ring-[#d97757]/20',
                 done && !current && 'border-emerald-500/25 bg-emerald-500/[0.06]',
                 pending && 'border-[#2D3139] bg-[#0a0c10]/80 opacity-[0.72]'
               )}
@@ -366,7 +366,7 @@ function Step6SalleSubstepIndicator({ activeIndex, programSceneCount, importedSl
               <div
                 className={cn(
                   'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold tabular-nums',
-                  current && 'bg-[#7B61FF] text-white shadow-[0_0_12px_-2px_rgba(123,97,255,0.45)]',
+                  current && 'bg-[#d97757] text-white shadow-[0_0_12px_-2px_rgba(217,119,87,0.45)]',
                   done && !current && 'bg-emerald-500/20 text-emerald-400',
                   pending && 'bg-[#2A2F38] text-gray-500'
                 )}
@@ -375,7 +375,7 @@ function Step6SalleSubstepIndicator({ activeIndex, programSceneCount, importedSl
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <Icon className={cn('h-3.5 w-3.5 shrink-0', current ? 'text-[#7B61FF]' : 'text-gray-500')} />
+                  <Icon className={cn('h-3.5 w-3.5 shrink-0', current ? 'text-[#d97757]' : 'text-gray-500')} />
                   <span className="text-[11px] font-semibold uppercase tracking-wide text-white">{meta.label}</span>
                   {countBadge != null ? (
                     <span className="rounded-full border border-white/10 bg-white/[0.08] px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-gray-200">
@@ -391,7 +391,8 @@ function Step6SalleSubstepIndicator({ activeIndex, programSceneCount, importedSl
       </div>
       <p className="mt-3 border-t border-[#2D3139]/80 pt-3 text-[10px] leading-relaxed text-gray-600">
         Navigation : <span className="text-gray-400">Précédent</span> ·{' '}
-        <span className="text-gray-400">Suivant</span> (trois écrans puis étape 7).
+        <span className="text-gray-400">Suivant</span>{' '}
+        ({substepMeta.length === 1 ? 'un écran' : substepMeta.length === 3 ? 'trois écrans' : `${substepMeta.length} écrans`} puis étape 7).
       </p>
     </div>
   );
@@ -405,6 +406,11 @@ export function Step6SalleVirtuelle({
   salleSubStepIndex = 0,
   liriAgentImport,
 }) {
+  // Live MEDOS (santé) : pas de studio SmartBoard Formation → l'étape 6 se limite au seul
+  // écran « Salle & interaction ». Gardé par ?context=medos → studio Formation inchangé.
+  const medosContext = typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('context') === 'medos';
+  const visibleSubsteps = medosContext ? SALLE_SUBSTEP_META.slice(0, 1) : SALLE_SUBSTEP_META;
   const presets = [
     {
       id: 'interactive',
@@ -487,13 +493,15 @@ export function Step6SalleVirtuelle({
   return (
     <div className="space-y-6">
       <div className="flex gap-3 sm:gap-4">
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#7B61FF] bg-[#7B61FF]/12 text-[#7B61FF] shadow-[0_0_16px_-6px_rgba(123,97,255,0.35)]">
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#d97757] bg-[#d97757]/12 text-[#d97757] shadow-[0_0_16px_-6px_rgba(217,119,87,0.35)]">
           <MonitorPlay className="h-4 w-4 stroke-[2.5]" />
         </span>
         <div className="min-w-0 pt-0.5">
           <h2 className="text-xl font-semibold tracking-tight text-white sm:text-[1.35rem]">Salle virtuelle</h2>
           <p className="mt-1 text-sm text-gray-500">
-            Trois écrans — salle & interactions, programme SmartBoard, joker scènes — alignés sur le shell Live Studio.
+            {medosContext
+              ? 'Chat, micro, partage d’écran, salle d’attente et confidentialité pour votre live santé.'
+              : 'Trois écrans — salle & interactions, programme SmartBoard, joker scènes — alignés sur le shell Live Studio.'}
           </p>
         </div>
       </div>
@@ -502,6 +510,7 @@ export function Step6SalleVirtuelle({
         activeIndex={salleSubStepIndex}
         programSceneCount={programSceneCount}
         importedSlideCount={importedSlideCount}
+        substepMeta={visibleSubsteps}
       />
 
       <AnimatePresence mode="wait">
@@ -522,10 +531,10 @@ export function Step6SalleVirtuelle({
                 <Button
                   key={preset.id}
                   variant="outline"
-                  className="rounded-xl border-[#2D3139] bg-[#0a0c10] text-gray-200 hover:border-[#7B61FF]/35 hover:bg-[#7B61FF]/[0.06]"
+                  className="rounded-xl border-[#2D3139] bg-[#0a0c10] text-gray-200 hover:border-[#d97757]/35 hover:bg-[#d97757]/[0.06]"
                   onClick={() => applyPreset(preset)}
                 >
-                  <Sparkles className="mr-2 h-3.5 w-3.5 text-[#7B61FF]" />
+                  <Sparkles className="mr-2 h-3.5 w-3.5 text-[#d97757]" />
                   {preset.label}
                 </Button>
               ))}
@@ -556,7 +565,7 @@ export function Step6SalleVirtuelle({
                         className={cn(
                           'rounded-2xl border p-4 transition-all duration-200',
                           isEnabled
-                            ? 'border-[#7B61FF]/45 bg-[#7B61FF]/[0.08] shadow-[0_0_0_1px_rgba(123,97,255,0.12)]'
+                            ? 'border-[#d97757]/45 bg-[#d97757]/[0.08] shadow-[0_0_0_1px_rgba(217,119,87,0.12)]'
                             : 'border-[#2D3139] bg-[#0a0c10]/70'
                         )}
                       >
@@ -564,7 +573,7 @@ export function Step6SalleVirtuelle({
                           <div className="flex items-start gap-3">
                             <div className={cn(
                               'flex h-10 w-10 items-center justify-center rounded-xl',
-                              isEnabled ? 'bg-[#7B61FF]/20 text-[#7B61FF]' : 'bg-[#2A2F38] text-gray-500'
+                              isEnabled ? 'bg-[#d97757]/20 text-[#d97757]' : 'bg-[#2A2F38] text-gray-500'
                             )}>
                               <Icon className="w-5 h-5" />
                             </div>
@@ -582,7 +591,7 @@ export function Step6SalleVirtuelle({
                                 updateDraft({ [key]: value });
                               }
                             }}
-                            className="data-[state=checked]:bg-[#7B61FF]"
+                            className="data-[state=checked]:bg-[#d97757]"
                           />
                         </div>
                       </motion.div>
@@ -594,7 +603,7 @@ export function Step6SalleVirtuelle({
           </div>
 
           <div className="rounded-2xl border border-[#2D3139] bg-[#12141a]/70 p-4 md:p-5">
-            <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7B61FF]/95">
+            <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#d97757]/95">
               Conseils intelligents
             </h4>
             <div className="space-y-1.5">
@@ -1809,8 +1818,8 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#7B61FF]/25 bg-[#7B61FF]/10">
-          <FileText className="h-5 w-5 text-[#7B61FF]" />
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#d97757]/25 bg-[#d97757]/10">
+          <FileText className="h-5 w-5 text-[#d97757]" />
         </div>
         <div>
           <h3 className="font-semibold text-white">Programme SmartBoard & script</h3>
@@ -1886,7 +1895,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
       <div className="flex flex-wrap gap-2">
         <Button
           type="button"
-          className="bg-[#7B61FF] text-white hover:bg-[#9485ff]"
+          className="bg-[#d97757] text-white hover:bg-[#9485ff]"
           onClick={applyInfographicTemplate}
         >
           <Wand2 className="w-3.5 h-3.5 mr-2" />
@@ -1906,7 +1915,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
       </div>
 
       <div className="rounded-xl border border-white/10 bg-black/25 p-3 space-y-3">
-        <p className="text-xs uppercase tracking-wider text-[#7B61FF]/90 font-semibold">
+        <p className="text-xs uppercase tracking-wider text-[#d97757]/90 font-semibold">
           Importer les scènes d&apos;une session existante
         </p>
         {!canLoadSessions && (
@@ -1950,7 +1959,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
             <Button
               type="button"
               variant="outline"
-              className="border-[#7B61FF]/40 text-[#7B61FF] hover:bg-[#7B61FF]/10 shrink-0"
+              className="border-[#d97757]/40 text-[#d97757] hover:bg-[#d97757]/10 shrink-0"
               disabled={!importSessionId || importScenesLoading}
               onClick={importScenesFromSession}
             >
@@ -1992,7 +2001,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
         />
         {(coachRefineBusy || iaGenerating || coachPipelineStage !== 'idle') && (
           <div className="rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-[11px] text-gray-300">
-            <span className="font-semibold text-[#7B61FF]">Pipeline:</span>{' '}
+            <span className="font-semibold text-[#d97757]">Pipeline:</span>{' '}
             {coachPipelineStage === 'analyse' && 'Analyse du texte'}
             {coachPipelineStage === 'extract_blocks' && 'Extraction des blocs de sens'}
             {coachPipelineStage === 'create_chapters' && 'Création des chapitres'}
@@ -2010,13 +2019,13 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
                 <div className="rounded-md border border-white/10 bg-black/20 px-2 py-2">
                   <div className="mb-1 flex items-center justify-between text-[10px]">
                     <span className="text-white/65">Progression globale</span>
-                    <span className="font-semibold text-[#c4b5fd]">
+                    <span className="font-semibold text-[#f0b89a]">
                       {getCoachPipelinePercent(coachPipelineStage)}%
                     </span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-white/10">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#312e81] via-[#7B61FF] to-[#c4b5fd] transition-[width] duration-300 ease-out"
+                      className="h-full rounded-full bg-gradient-to-r from-[#312e81] via-[#d97757] to-[#f0b89a] transition-[width] duration-300 ease-out"
                       style={{ width: `${getCoachPipelinePercent(coachPipelineStage)}%` }}
                     />
                   </div>
@@ -2033,7 +2042,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
                           done
                             ? 'bg-emerald-500/20 text-emerald-300'
                             : active
-                              ? 'bg-[#7B61FF]/25 text-[#c4b5fd]'
+                              ? 'bg-[#d97757]/25 text-[#f0b89a]'
                               : 'bg-white/10 text-gray-500'
                         }`}
                       >
@@ -2085,13 +2094,13 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
         </div>
 
         {/* ── SmartBoard Architect ── */}
-        <div className="rounded-xl border border-[#7B61FF]/25 bg-[#7B61FF]/[0.06] p-3 space-y-2">
-          <p className="text-[10px] uppercase tracking-widest text-[#7B61FF]/80 font-semibold">
+        <div className="rounded-xl border border-[#d97757]/25 bg-[#d97757]/[0.06] p-3 space-y-2">
+          <p className="text-[10px] uppercase tracking-widest text-[#d97757]/80 font-semibold">
             Avec IA · SmartBoard Architect
           </p>
           {coachCompetences.length > 0 ? (
-            <div className="rounded-lg border border-[#7B61FF]/25 bg-black/25 p-2.5">
-              <p className="text-[10px] uppercase tracking-widest text-[#c4b5fd] font-semibold">
+            <div className="rounded-lg border border-[#d97757]/25 bg-black/25 p-2.5">
+              <p className="text-[10px] uppercase tracking-widest text-[#f0b89a] font-semibold">
                 Compétences coach injectées avant génération
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -2105,7 +2114,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
           ) : null}
           <Button
             type="button"
-            className="bg-gradient-to-r from-[#6366f1] to-[#7B61FF] text-white font-bold hover:from-[#8b7cff] hover:to-[#6d5acf] shadow-[0_0_18px_rgba(123,97,255,0.35)]"
+            className="bg-gradient-to-r from-[#cf7a52] to-[#d97757] text-white font-bold hover:from-[#e9a079] hover:to-[#c2683f] shadow-[0_0_18px_rgba(217,119,87,0.35)]"
             onClick={generateWithGptIA}
             disabled={iaGenerating || mindmapGenerating || coachRefineBusy}
           >
@@ -2118,7 +2127,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
           </Button>
           {iaGenerating && (
             <div
-              className="space-y-2 rounded-xl border border-[#7B61FF]/20 bg-black/35 p-3"
+              className="space-y-2 rounded-xl border border-[#d97757]/20 bg-black/35 p-3"
               role="status"
               aria-live="polite"
               aria-valuenow={iaGenProgress}
@@ -2127,11 +2136,11 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
             >
               <div className="flex justify-between gap-3 text-[11px] text-gray-400">
                 <span className="leading-snug min-w-0">{iaGenLabel || 'Connexion au service…'}</span>
-                <span className="tabular-nums text-[#7B61FF] font-semibold shrink-0">{iaGenProgress}%</span>
+                <span className="tabular-nums text-[#d97757] font-semibold shrink-0">{iaGenProgress}%</span>
               </div>
               <div className="h-2.5 rounded-full bg-white/10 overflow-hidden ring-1 ring-white/5">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#312e81] via-[#7B61FF] to-[#c4b5fd] transition-[width] duration-300 ease-out"
+                  className="h-full rounded-full bg-gradient-to-r from-[#312e81] via-[#d97757] to-[#f0b89a] transition-[width] duration-300 ease-out"
                   style={{ width: `${Math.min(100, Math.max(0, iaGenProgress))}%` }}
                 />
               </div>
@@ -2152,13 +2161,13 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
       {scenes.length > 0 && (
         <div className="rounded-xl border border-white/10 bg-black/25 p-3 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] text-[#7B61FF] font-semibold">{scenes.length} scène(s) dans le brouillon</p>
+            <p className="text-[11px] text-[#d97757] font-semibold">{scenes.length} scène(s) dans le brouillon</p>
             {scenes.some((s) => s.ia_data) && (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="border-[#7B61FF]/40 text-[#7B61FF] hover:bg-[#7B61FF]/10 h-8 text-xs"
+                className="border-[#d97757]/40 text-[#d97757] hover:bg-[#d97757]/10 h-8 text-xs"
                 onClick={openDraftArchitect}
               >
                 <MonitorPlay className="w-3.5 h-3.5 mr-1.5" />
@@ -2202,7 +2211,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
             <Button type="button" variant="outline" className="border-white/20" onClick={() => closeStageReview(false)}>
               Modifier d'abord
             </Button>
-            <Button type="button" className="bg-[#7B61FF] hover:bg-[#8d79ff]" onClick={() => closeStageReview(true)}>
+            <Button type="button" className="bg-[#d97757] hover:bg-[#8d79ff]" onClick={() => closeStageReview(true)}>
               Continuer
             </Button>
           </DialogFooter>
@@ -2213,7 +2222,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
         <DialogContent className="max-w-xl border-white/15 bg-[#11131a] text-white">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <HelpCircle className="h-4 w-4 text-[#7B61FF]" />
+              <HelpCircle className="h-4 w-4 text-[#d97757]" />
               Aide rapide — Coach
             </DialogTitle>
             <DialogDescription className="text-xs text-gray-400">
@@ -2248,7 +2257,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
               type="button"
               onClick={() => void askCoachHelp()}
               disabled={coachHelpLoading}
-              className="bg-[#7B61FF] text-white hover:bg-[#8d79ff]"
+              className="bg-[#d97757] text-white hover:bg-[#8d79ff]"
             >
               {coachHelpLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <HelpCircle className="mr-2 h-4 w-4" />}
               Demander au coach
@@ -2262,9 +2271,9 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
               </div>
             ) : null}
             {masterclassArtifacts ? (
-              <div className="space-y-2 rounded-lg border border-[#7B61FF]/25 bg-[#7B61FF]/[0.06] p-3">
+              <div className="space-y-2 rounded-lg border border-[#d97757]/25 bg-[#d97757]/[0.06] p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs font-semibold text-[#c4b5fd]">Artefacts Masterclass (dernier run)</p>
+                  <p className="text-xs font-semibold text-[#f0b89a]">Artefacts Masterclass (dernier run)</p>
                   <Button
                     type="button"
                     variant="ghost"
@@ -2370,12 +2379,12 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
             '!z-[2200]',
             '!fixed !inset-3 md:!inset-5 !left-3 !top-3 !right-3 !bottom-3 md:!left-5 md:!top-5 md:!right-5 md:!bottom-5',
             '!translate-x-0 !translate-y-0 !max-w-none w-auto h-auto p-0 gap-0 flex flex-col overflow-hidden',
-            'rounded-2xl border border-[#7B61FF]/30 bg-gradient-to-b from-[#080d14] via-[#0a1018] to-[#05080c] shadow-[0_0_0_1px_rgba(123,97,255,0.08),0_24px_80px_rgba(0,0,0,0.65)]'
+            'rounded-2xl border border-[#d97757]/30 bg-gradient-to-b from-[#080d14] via-[#0a1018] to-[#05080c] shadow-[0_0_0_1px_rgba(217,119,87,0.08),0_24px_80px_rgba(0,0,0,0.65)]'
           )}
         >
           <DialogHeader className="px-5 py-4 border-b border-white/[0.08] bg-black/30 shrink-0 text-left space-y-1">
             <DialogTitle className="text-lg md:text-xl font-semibold text-white tracking-tight flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-[#7B61FF]" />
+              <Sparkles className="w-5 h-5 text-[#d97757]" />
               {architectMode === 'audio_setup' ? (
                 <>SmartBoard Architect — audio LIRI (optionnel)</>
               ) : (
@@ -2385,7 +2394,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
             <DialogDescription className="text-xs text-gray-400 max-w-3xl">
               {architectMode === 'audio_setup' ? (
                 <>
-                  <strong className="text-[#7B61FF]/90">Audio LIRI optionnel.</strong> L'agent ne fournit pas de pistes audio :
+                  <strong className="text-[#d97757]/90">Audio LIRI optionnel.</strong> L'agent ne fournit pas de pistes audio :
                   seules les URLs ou fichiers que vous ajoutez ici seront enregistrées dans le moteur de scènes audio (étape 7
                   reste disponible pour affiner ensuite).
                 </>
@@ -2399,7 +2408,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
               )}
             </DialogDescription>
             {architectMode === 'pending' && pendingApiData && !iaGenerating && (
-              <p className="text-[10px] text-[#7B61FF]/80 font-medium pt-1">
+              <p className="text-[10px] text-[#d97757]/80 font-medium pt-1">
                 Pipeline : {pendingApiData.provider || 'ia'}
                 {pendingApiData.pipeline ? ` · ${pendingApiData.pipeline}` : ''} · {pendingApiData.slides?.length || 0} slide(s)
               </p>
@@ -2408,11 +2417,11 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
               <div className="pt-2 space-y-1.5" role="status" aria-live="polite">
                 <div className="flex justify-between gap-2 text-[11px] text-gray-400">
                   <span className="leading-snug min-w-0">{iaGenLabel || 'Génération…'}</span>
-                  <span className="tabular-nums text-[#7B61FF] font-semibold shrink-0">{iaGenProgress}%</span>
+                  <span className="tabular-nums text-[#d97757] font-semibold shrink-0">{iaGenProgress}%</span>
                 </div>
                 <div className="h-2 rounded-full bg-white/10 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#312e81] via-[#7B61FF] to-[#c4b5fd] transition-[width] duration-300 ease-out"
+                    className="h-full rounded-full bg-gradient-to-r from-[#312e81] via-[#d97757] to-[#f0b89a] transition-[width] duration-300 ease-out"
                     style={{ width: `${Math.min(100, Math.max(0, iaGenProgress))}%` }}
                   />
                 </div>
@@ -2435,15 +2444,15 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
                     Aucun fichier n'est ajouté automatiquement par l\'IA. Renseignez une URL ou uploadez un MP3 uniquement pour les
                     slides concernées. Sans piste renseignée, le bloc LIRI du brouillon n'est pas modifié.
                   </span>
-                  <label className="flex items-start gap-2 cursor-pointer select-none text-[#c4b5fd]/90">
+                  <label className="flex items-start gap-2 cursor-pointer select-none text-[#f0b89a]/90">
                     <input
                       type="checkbox"
                       checked={architectLiriMergeExisting}
                       onChange={(e) => setArchitectLiriMergeExisting(e.target.checked)}
-                      className="mt-0.5 rounded border-[#7B61FF]/40"
+                      className="mt-0.5 rounded border-[#d97757]/40"
                     />
                     <span>
-                      <strong className="text-[#7B61FF]">Fusionner</strong> avec les pistes LIRI déjà dans le brouillon (étape 7,
+                      <strong className="text-[#d97757]">Fusionner</strong> avec les pistes LIRI déjà dans le brouillon (étape 7,
                       etc.) — les nouvelles s'ajoutent à la fin ; si un <code className="text-[10px]">id</code> existe déjà, il est
                       renommé automatiquement. Décoché = le bloc LIRI est <strong>remplacé</strong> par les seules pistes saisies
                       ci‑dessous.
@@ -2459,7 +2468,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
                       className="rounded-xl border border-white/[0.1] bg-black/30 p-3 md:p-4 space-y-2"
                     >
                       <p className="text-sm font-medium text-white">
-                        <span className="text-[#7B61FF] tabular-nums">{i + 1}.</span> {s.name || `Slide ${i + 1}`}
+                        <span className="text-[#d97757] tabular-nums">{i + 1}.</span> {s.name || `Slide ${i + 1}`}
                       </p>
                       <div className="flex flex-col sm:flex-row gap-2">
                         <Input
@@ -2498,7 +2507,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
                             onChange={(e) =>
                               patchArchitectAudioRow(i, { volume: Number(e.target.value) / 100 })
                             }
-                            className="w-24 h-1 accent-[#7B61FF]"
+                            className="w-24 h-1 accent-[#d97757]"
                           />
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
@@ -2532,11 +2541,11 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
                         className={cn(
                           'w-full text-left rounded-xl px-3 py-2.5 text-xs transition-colors border',
                           i === architectSlideSafeIdx
-                            ? 'bg-[#7B61FF]/15 border-[#7B61FF]/40 text-white'
+                            ? 'bg-[#d97757]/15 border-[#d97757]/40 text-white'
                             : 'border-transparent text-gray-400 hover:bg-white/[0.06] hover:text-gray-200'
                         )}
                       >
-                        <span className="font-semibold text-[#7B61FF]/90 tabular-nums">{i + 1}.</span>{' '}
+                        <span className="font-semibold text-[#d97757]/90 tabular-nums">{i + 1}.</span>{' '}
                         {s.name || `Slide ${i + 1}`}
                       </button>
                     ))
@@ -2590,7 +2599,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
                   {previewSlide ? (
                     <div className="w-full h-full min-h-[280px] max-h-[min(72vh,calc(100vh-14rem))] flex items-center justify-center">
                       <div
-                        className="relative w-full max-w-[min(100%,56rem)] aspect-[1037/750] max-h-full rounded-2xl overflow-hidden border border-white/12 shadow-[0_20px_60px_rgba(0,0,0,0.5)] ring-1 ring-[#7B61FF]/10"
+                        className="relative w-full max-w-[min(100%,56rem)] aspect-[1037/750] max-h-full rounded-2xl overflow-hidden border border-white/12 shadow-[0_20px_60px_rgba(0,0,0,0.5)] ring-1 ring-[#d97757]/10"
                       >
                         <SlideParallaxStage key={previewSlide.id} slide={previewSlide} />
                       </div>
@@ -2620,7 +2629,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
                   <Button
                     type="button"
                     variant="outline"
-                    className="border-[#7B61FF]/45 text-[#7B61FF] hover:bg-[#7B61FF]/10"
+                    className="border-[#d97757]/45 text-[#d97757] hover:bg-[#d97757]/10"
                     disabled={iaGenerating}
                     onClick={regenerateInArchitect}
                   >
@@ -2657,7 +2666,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
                   <Button
                     type="button"
                     variant="outline"
-                    className="border-[#7B61FF]/40 text-[#c4b5fd] hover:bg-[#7B61FF]/10"
+                    className="border-[#d97757]/40 text-[#f0b89a] hover:bg-[#d97757]/10"
                     onClick={goToArchitectAudioSetup}
                   >
                     <Mic className="w-4 h-4 mr-2" />
@@ -2665,7 +2674,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
                   </Button>
                   <Button
                     type="button"
-                    className="bg-gradient-to-r from-[#6366f1] to-[#7B61FF] text-white font-semibold hover:from-[#8b7cff] hover:to-[#6d5acf] shadow-[0_0_20px_rgba(123,97,255,0.35)]"
+                    className="bg-gradient-to-r from-[#cf7a52] to-[#d97757] text-white font-semibold hover:from-[#e9a079] hover:to-[#c2683f] shadow-[0_0_20px_rgba(217,119,87,0.35)]"
                     onClick={() => applyPendingArchitectToDraft({ withOptionalLiriAudio: false })}
                   >
                     <Check className="w-4 h-4 mr-2" />
@@ -2676,7 +2685,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
               {architectMode === 'audio_setup' && pendingApiData && (
                 <Button
                   type="button"
-                  className="bg-gradient-to-r from-[#6366f1] to-[#7B61FF] text-white font-semibold hover:from-[#8b7cff] hover:to-[#6d5acf] shadow-[0_0_20px_rgba(123,97,255,0.35)]"
+                  className="bg-gradient-to-r from-[#cf7a52] to-[#d97757] text-white font-semibold hover:from-[#e9a079] hover:to-[#c2683f] shadow-[0_0_20px_rgba(217,119,87,0.35)]"
                   onClick={() => applyPendingArchitectToDraft({ withOptionalLiriAudio: true })}
                 >
                   <Check className="w-4 h-4 mr-2" />
@@ -2800,8 +2809,8 @@ function SmartBoardScenesConfig({ draft, updateDraft }) {
       className="space-y-5 rounded-2xl border border-[#2D3139] bg-[#0d0f14]/90 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:p-5"
     >
       <div className="mb-1 flex items-start gap-3">
-        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#7B61FF]/25 bg-[#7B61FF]/10">
-          <LayoutPanelLeft className="h-5 w-5 text-[#7B61FF]" />
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#d97757]/25 bg-[#d97757]/10">
+          <LayoutPanelLeft className="h-5 w-5 text-[#d97757]" />
         </span>
         <div>
           <h3 className="font-semibold text-white">Joker — scènes de l'écran intelligent</h3>
@@ -2823,7 +2832,7 @@ function SmartBoardScenesConfig({ draft, updateDraft }) {
               className={cn(
                 'rounded-2xl border p-3 transition-all duration-200',
                 enabled
-                  ? 'border-[#7B61FF]/40 bg-[#7B61FF]/[0.06]'
+                  ? 'border-[#d97757]/40 bg-[#d97757]/[0.06]'
                   : 'border-[#2D3139] bg-[#0a0c10]/70 opacity-80'
               )}
             >
@@ -2831,7 +2840,7 @@ function SmartBoardScenesConfig({ draft, updateDraft }) {
                 <div className="flex items-start gap-2.5">
                   <div className={cn(
                     'mt-0.5 flex h-8 w-8 items-center justify-center rounded-xl',
-                    enabled ? 'bg-[#7B61FF]/15 text-[#7B61FF]' : 'bg-[#2A2F38] text-gray-500'
+                    enabled ? 'bg-[#d97757]/15 text-[#d97757]' : 'bg-[#2A2F38] text-gray-500'
                   )}>
                     <Icon className="w-4 h-4" />
                   </div>
@@ -2843,7 +2852,7 @@ function SmartBoardScenesConfig({ draft, updateDraft }) {
                 <Switch
                   checked={enabled}
                   onCheckedChange={(v) => toggleScene(id, v)}
-                  className="data-[state=checked]:bg-[#7B61FF]"
+                  className="data-[state=checked]:bg-[#d97757]"
                 />
               </div>
             </div>
@@ -2857,7 +2866,7 @@ function SmartBoardScenesConfig({ draft, updateDraft }) {
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden space-y-3">
             <div className="rounded-xl border border-white/10 bg-black/20 p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-xs uppercase tracking-wider text-[#7B61FF] font-semibold">Slides / Diaporama</p>
+                <p className="text-xs uppercase tracking-wider text-[#d97757] font-semibold">Slides / Diaporama</p>
                 <Button
                   size="sm"
                   variant="outline"
@@ -2898,7 +2907,7 @@ function SmartBoardScenesConfig({ draft, updateDraft }) {
                             openPreview();
                           }
                         }}
-                        className="relative group rounded-xl border border-white/10 overflow-hidden aspect-video bg-black cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7B61FF]/60"
+                        className="relative group rounded-xl border border-white/10 overflow-hidden aspect-video bg-black cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d97757]/60"
                       >
                         {sk === 'image' ? (
                           <img src={s.url} alt="" className="w-full h-full object-cover pointer-events-none" />
@@ -2924,7 +2933,7 @@ function SmartBoardScenesConfig({ draft, updateDraft }) {
                               e.stopPropagation();
                               openPreview();
                             }}
-                            className="rounded-lg bg-black/70 p-1.5 text-[#7B61FF] hover:text-[#c4b5fd] hover:bg-black/90"
+                            className="rounded-lg bg-black/70 p-1.5 text-[#d97757] hover:text-[#f0b89a] hover:bg-black/90"
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </button>
@@ -2958,7 +2967,7 @@ function SmartBoardScenesConfig({ draft, updateDraft }) {
         {scenes.browser !== false && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
             <div className="rounded-xl border border-white/10 bg-black/20 p-4 space-y-2">
-              <p className="text-xs uppercase tracking-wider text-[#7B61FF] font-semibold">Navigateur web — URL par défaut</p>
+              <p className="text-xs uppercase tracking-wider text-[#d97757] font-semibold">Navigateur web — URL par défaut</p>
               <div className="flex gap-2">
                 <div className="flex items-center gap-2 flex-1">
                   <LinkIcon className="w-4 h-4 text-gray-500 flex-shrink-0" />
@@ -2982,7 +2991,7 @@ function SmartBoardScenesConfig({ draft, updateDraft }) {
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
             <div className="rounded-xl border border-white/10 bg-black/20 p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-xs uppercase tracking-wider text-[#7B61FF] font-semibold">Images partagées</p>
+                <p className="text-xs uppercase tracking-wider text-[#d97757] font-semibold">Images partagées</p>
                 <Button
                   size="sm"
                   variant="outline"
@@ -3013,7 +3022,7 @@ function SmartBoardScenesConfig({ draft, updateDraft }) {
                             openSharedPreview();
                           }
                         }}
-                        className="relative group rounded-xl border border-white/10 overflow-hidden aspect-video bg-black cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7B61FF]/60"
+                        className="relative group rounded-xl border border-white/10 overflow-hidden aspect-video bg-black cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d97757]/60"
                       >
                         <img src={img.url} alt="" className="w-full h-full object-cover pointer-events-none" />
                         <div
@@ -3028,7 +3037,7 @@ function SmartBoardScenesConfig({ draft, updateDraft }) {
                               e.stopPropagation();
                               openSharedPreview();
                             }}
-                            className="rounded-lg bg-black/70 p-1.5 text-[#7B61FF] hover:text-[#c4b5fd] hover:bg-black/90"
+                            className="rounded-lg bg-black/70 p-1.5 text-[#d97757] hover:text-[#f0b89a] hover:bg-black/90"
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </button>
@@ -3060,7 +3069,7 @@ function SmartBoardScenesConfig({ draft, updateDraft }) {
                   <Switch
                     checked={draft.smartboard_shared_images_loop === true}
                     onCheckedChange={(v) => updateDraft({ smartboard_shared_images_loop: v })}
-                    className="data-[state=checked]:bg-[#7B61FF]"
+                    className="data-[state=checked]:bg-[#d97757]"
                   />
                 </div>
               )}
@@ -3181,7 +3190,7 @@ function ShopProductsConfig({ draft, updateDraft }) {
       <div className="rounded-2xl border border-white/10 bg-black/20 p-4 space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-wider text-[#7B61FF] font-semibold flex items-center gap-1.5">
+            <p className="text-xs uppercase tracking-wider text-[#d97757] font-semibold flex items-center gap-1.5">
               <ShoppingCart className="w-3.5 h-3.5" /> Boutique en direct
             </p>
             <p className="text-[10px] text-gray-600 mt-0.5">Produits affichés sur le SmartBoard avec lien de paiement cliquable</p>
@@ -3224,7 +3233,7 @@ function ShopProductsConfig({ draft, updateDraft }) {
                     className={cn(
                       'w-full flex items-center justify-between rounded-xl border px-3 py-2 text-left transition-colors',
                       added
-                        ? 'border-[#7B61FF]/30 bg-[#7B61FF]/5 cursor-default'
+                        ? 'border-[#d97757]/30 bg-[#d97757]/5 cursor-default'
                         : 'border-white/8 bg-black/20 hover:border-white/20 hover:bg-white/5'
                     )}
                   >
@@ -3232,7 +3241,7 @@ function ShopProductsConfig({ draft, updateDraft }) {
                       <p className="text-xs text-white truncate">{plan.label}</p>
                       <p className="text-[10px] text-gray-500">{plan.key} · {plan.billing_cycle}</p>
                     </div>
-                    <span className="text-xs font-semibold text-[#7B61FF] ml-2">
+                    <span className="text-xs font-semibold text-[#d97757] ml-2">
                       {added ? '✓' : `${Math.round(Number(plan.price_cents || 0) / 100)} ${plan.currency || 'EUR'}`}
                     </span>
                   </button>
@@ -3246,8 +3255,8 @@ function ShopProductsConfig({ draft, updateDraft }) {
         <AnimatePresence>
           {showAddForm && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden rounded-xl border border-[#7B61FF]/20 bg-[#7B61FF]/5 p-4 space-y-3">
-              <p className="text-xs text-[#7B61FF] font-semibold">Ajouter un produit / lien personnalisé</p>
+              className="overflow-hidden rounded-xl border border-[#d97757]/20 bg-[#d97757]/5 p-4 space-y-3">
+              <p className="text-xs text-[#d97757] font-semibold">Ajouter un produit / lien personnalisé</p>
               <div className="grid grid-cols-2 gap-2">
                 <Input
                   value={newProduct.name}
@@ -3314,7 +3323,7 @@ function ShopProductsConfig({ draft, updateDraft }) {
             <p className="text-[10px] text-gray-500">Produits configurés ({products.length})</p>
             {products.map((p, i) => (
               <div key={p.id || i} className="flex items-center gap-3 rounded-xl border border-white/8 bg-black/20 px-3 py-2">
-                <ShoppingCart className="w-3.5 h-3.5 text-[#7B61FF]/60 flex-shrink-0" />
+                <ShoppingCart className="w-3.5 h-3.5 text-[#d97757]/60 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-white truncate">{p.name}</p>
                   <p className="text-[10px] text-gray-500 truncate">{p.category} · {p.price != null ? `${p.price} ${p.currency || 'EUR'}` : 'Gratuit'}</p>
