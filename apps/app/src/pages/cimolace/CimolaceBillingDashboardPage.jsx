@@ -674,7 +674,7 @@ export default function CimolaceBillingDashboardPage() {
                         <div className="inline-flex items-center gap-1 p-1 rounded-xl border border-white/[0.08] bg-white/[0.03]">
                           {['monthly', 'yearly'].map((c) => (
                             <button key={c} onClick={() => setMktCycle(c)} className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${mktCycle === c ? 'bg-[#d97757]/80 text-white' : 'text-white/50 hover:text-white'}`}>
-                              {c === 'monthly' ? 'Mensuel' : 'Annuel'}{c === 'yearly' && <span className="ml-1.5 text-[10px] text-green-400">2 mois offerts</span>}
+                              {c === 'monthly' ? 'Mensuel' : 'Annuel'}{c === 'yearly' && <span className="ml-1.5 text-[10px] font-bold text-[#e6b878]">2 mois offerts</span>}
                             </button>
                           ))}
                         </div>
@@ -725,7 +725,7 @@ export default function CimolaceBillingDashboardPage() {
                           );
                         })}
                       </div>
-                      <p className="text-xs text-white/40 flex items-center gap-1.5 flex-wrap"><ShieldCheck className="w-3.5 h-3.5 text-green-400 shrink-0" /> Paiement sécurisé Stripe · Conforme RGPD · Selon le service, des frais d'activation uniques peuvent s'appliquer (forfait boutique : 500 €), détaillés avant paiement.</p>
+                      <p className="text-xs text-white/40 flex items-center gap-1.5 flex-wrap"><ShieldCheck className="w-3.5 h-3.5 text-[#e6b878] shrink-0" /> Paiement sécurisé Stripe · Conforme RGPD · Selon le service, des frais d'activation uniques peuvent s'appliquer (forfait boutique : 500 €), détaillés avant paiement.</p>
                       {isLiriUpgrade && (
                         <div className="text-center pt-1">
                           <button onClick={() => setShowAllPlans((v) => !v)} className="text-xs text-white/45 hover:text-white/75 underline underline-offset-2">
