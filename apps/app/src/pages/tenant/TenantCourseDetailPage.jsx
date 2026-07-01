@@ -131,6 +131,8 @@ export default function TenantCourseDetailPage() {
   const [error, setError] = useState(null);
   const [mode, setMode] = useState('continue');       // Phase 2 : présentation adaptative
   const [modeBusy, setModeBusy] = useState(false);
+  const [lockedWeeks, setLockedWeeks] = useState(() => new Set()); // #44 — semaines verrouillées (cursus)
+  const [lockedAt, setLockedAt] = useState({});
 
   useEffect(() => { load(); }, [courseId]);
 
@@ -156,6 +158,11 @@ export default function TenantCourseDetailPage() {
       setLessons(lessonsMap);
       if (mods.length > 0) setExpandedModules(new Set([mods[0].id]));
       setProgress(Array.isArray(prog) ? prog : []);
+      // #44 — semaines verrouillées (n'a d'effet que si le cours est en mode cursus).
+      const { data: locked } = await supabase.rpc('get_course_locked_week_ids', { p_course_id: courseId });
+      const lw = Array.isArray(locked) ? locked : [];
+      setLockedWeeks(new Set(lw.map((r) => r.week_id)));
+      setLockedAt(Object.fromEntries(lw.map((r) => [r.week_id, r.unlock_at])));
     } catch (err) {
       setError(err?.message ?? 'Impossible de charger le cours');
     } finally {
@@ -467,13 +474,18 @@ export default function TenantCourseDetailPage() {
                     )}
                     {modLessons.map((lesson, j) => {
                       const done = isCompleted(lesson.id);
+                      const locked = lockedWeeks.has(lesson.week_id);
+                      const unlockTxt = locked && lockedAt[lesson.week_id] ? new Date(lockedAt[lesson.week_id]).toLocaleDateString() : null;
                       return (
                         <button
                           key={lesson.id}
                           type="button"
-                          onClick={() => navigate(`/formation/${courseId}/learn`)}
+                          disabled={locked}
+                          onClick={() => { if (!locked) navigate(`/formation/${courseId}/learn`); }}
+                          title={locked ? (unlockTxt ? `Disponible le ${unlockTxt}` : 'Semaine verrouillée') : undefined}
                           className="group relative flex w-full items-center gap-3 rounded-xl py-3 pl-5 pr-3 text-left transition-colors"
-                          onMouseEnter={(e) => { e.currentTarget.style.background = T.goldDim; }}
+                          style={{ cursor: locked ? 'not-allowed' : 'pointer' }}
+                          onMouseEnter={(e) => { if (!locked) e.currentTarget.style.background = T.goldDim; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                         >
                           {/* rail */}
@@ -488,27 +500,33 @@ export default function TenantCourseDetailPage() {
                             style={{ background: T.border }}
                           />
                           <span className="flex h-6 w-6 shrink-0 items-center justify-center">
-                            {done
-                              ? <CheckCircle className="h-[18px] w-[18px]" style={{ color: T.success }} />
-                              : <Play className="h-3.5 w-3.5" style={{ color: T.gold }} />}
+                            {locked
+                              ? <Lock className="h-3.5 w-3.5" style={{ color: T.t3 }} />
+                              : done
+                                ? <CheckCircle className="h-[18px] w-[18px]" style={{ color: T.success }} />
+                                : <Play className="h-3.5 w-3.5" style={{ color: T.gold }} />}
                           </span>
                           <span className="min-w-0 flex-1">
                             <span
                               className={`block truncate text-sm font-medium ${done ? 'line-through' : ''}`}
-                              style={{ color: done ? T.t3 : T.t1 }}
+                              style={{ color: locked || done ? T.t3 : T.t1 }}
                             >
                               {lesson.title}
                             </span>
                           </span>
-                          {lesson.video_url
-                            ? <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide" style={{ color: T.gold }}>Vidéo</span>
-                            : lesson.content
-                              ? <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide" style={{ color: T.t3 }}>Texte</span>
-                              : null}
-                          <ChevronRight
-                            className="h-4 w-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-                            style={{ color: T.gold }}
-                          />
+                          {locked
+                            ? <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide" style={{ color: T.gold }}>{unlockTxt ? `Dispo ${unlockTxt}` : 'Verrouillé'}</span>
+                            : lesson.video_url
+                              ? <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide" style={{ color: T.gold }}>Vidéo</span>
+                              : lesson.content
+                                ? <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide" style={{ color: T.t3 }}>Texte</span>
+                                : null}
+                          {!locked && (
+                            <ChevronRight
+                              className="h-4 w-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                              style={{ color: T.gold }}
+                            />
+                          )}
                         </button>
                       );
                     })}

@@ -82,6 +82,7 @@ const toOutline = (modulesRows) => {
                   const data = c.data || {};
                   lessons.push({
                     id: c.id,
+                    week_id: w.id, // #44 — pour le gating de déblocage par semaine
                     title: String(
                       data.title || data.name || (c.type === 'video' ? 'Vidéo' : c.type || 'Contenu')
                     ).trim(),
