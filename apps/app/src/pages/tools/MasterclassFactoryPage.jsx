@@ -45,6 +45,7 @@ import {
   DOCUMENT_ANALYZE_FIRST_WINDOW_CHARS,
 } from '@/hooks/useMasterclassProject';
 import { savePendingMasterclassForLiveStudio } from '@/lib/liriAgentExportToLiveStudio';
+import { masterclassProjectToPrecepteurCourse } from '@/lib/precepteur/fromMasterclass';
 
 const EXAMPLE_TYPES = [
   'Cours théologique',
@@ -1676,6 +1677,7 @@ function Step8Export({ stats, project, onPrev, onReset, onDownloadJson, onDownlo
   const downloadable = project.exports?.downloadable || {};
   const exportDocs = [
     { label: 'Studio Live + SmartBoard', kind: 'smartboard-live', enabled: true },
+    { label: 'Cours numérique (Précepteur)', kind: 'precepteur', enabled: true },
     { label: 'PDF Professeur', kind: 'pdf-professor', enabled: Boolean(downloadable.pdf_professor) },
     { label: 'PDF Élève', kind: 'pdf-student', enabled: Boolean(downloadable.pdf_student) },
     { label: 'SmartBoard', kind: 'smartboard', enabled: Boolean(downloadable.smartboard) },
@@ -1956,6 +1958,21 @@ export default function MasterclassFactoryPage() {
   };
 
   const handleDownloadExport = (kind) => {
+    if (kind === 'precepteur') {
+      // Cours numérique « Le Précepteur » : on dépose le MasterclassProject brut en
+      // localStorage (PrecepteurCoursePage le transforme via masterclassProjectToPrecepteurCourse)
+      // puis on ouvre le lecteur immersif. On vérifie d'abord qu'il produit un cours jouable.
+      const course = masterclassProjectToPrecepteurCourse(m.project);
+      const playable = course && Array.isArray(course.concepts)
+        && course.concepts.some((c) => Array.isArray(c.scenes) && c.scenes.length > 0);
+      if (!playable) {
+        window.alert('Ce projet ne contient pas encore de contenu pédagogique jouable (leçons, atelier, analogies). Génère la Masterclass complète avant l’export Précepteur.');
+        return;
+      }
+      try { window.localStorage.setItem('precepteur:sourceProject', JSON.stringify(m.project)); } catch { /* quota/private mode */ }
+      navigate('/precepteur/cours');
+      return;
+    }
     if (kind === 'smartboard-live') {
       const text = buildMarkdown(m.project);
       const title = m.project.analysis?.global_subject || 'Masterclass LIRI';

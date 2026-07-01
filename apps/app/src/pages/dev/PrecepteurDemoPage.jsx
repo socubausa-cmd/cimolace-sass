@@ -12,6 +12,26 @@ import AtelierPrompt from '@/components/school/course-builder/AtelierPrompt';
 import { supabase } from '@/lib/supabaseCompat';
 import { invokeGenerateVisualImage } from '@/features/smartboard-konva-editor/lib/designerIaImageHistory';
 import { CANONICAL_COURSE } from './precepteurCanonicalCourse';
+import { masterclassProjectToPrecepteurCourse } from '@/lib/precepteur/fromMasterclass';
+
+// Clé localStorage : un MasterclassProject déposé ici est transformé et joué à la
+// place du cours canonique figé (qui reste le FALLBACK). Voir fromMasterclass.js.
+const SOURCE_PROJECT_KEY = 'precepteur:sourceProject';
+
+// Lit un MasterclassProject en localStorage → PrecepteurCourse ; null si absent/invalide.
+// Ne jette JAMAIS (démo publique) : toute erreur → null → repli sur le canonique.
+function loadCourseFromStorage() {
+  try {
+    const raw = window.localStorage.getItem(SOURCE_PROJECT_KEY);
+    if (!raw) return null;
+    const project = JSON.parse(raw);
+    const course = masterclassProjectToPrecepteurCourse(project);
+    // Garde-fou : un cours sans concept exploitable ne doit pas remplacer le canonique.
+    if (!course || !Array.isArray(course.concepts) || course.concepts.length === 0) return null;
+    const hasScenes = course.concepts.some((c) => Array.isArray(c.scenes) && c.scenes.length > 0);
+    return hasScenes ? course : null;
+  } catch { return null; }
+}
 
 // décode base64 MP3 -> URL blob jouable
 function b64ToAudioUrl(b64, mime) {
@@ -114,8 +134,14 @@ function Board({ children, className = '' }) {
   );
 }
 
-export default function PrecepteurDemoPage() {
-  const course = CANONICAL_COURSE;
+/**
+ * PrecepteurPlayer — LE MOTEUR DE RENDU réutilisable (voix, croquis, atelier, images…).
+ * Prend un `course` (forme `PrecepteurCourse`, cf. contrat) et le joue scène par scène.
+ * Réutilisé tel quel par la démo canonique (`PrecepteurDemoPage`) ET par le cours
+ * numérique issu d'un MasterclassProject (`PrecepteurCoursePage`).
+ * @param {{ course: { title: string, concepts: Array<{ title: string, scenes: Object[] }> } }} props
+ */
+export function PrecepteurPlayer({ course }) {
   const scenes = useMemo(
     () => course.concepts.flatMap((c) => c.scenes.map((s) => ({ ...s, conceptTitle: c.title }))),
     [course],
@@ -567,4 +593,14 @@ export default function PrecepteurDemoPage() {
       </div>
     </div>
   );
+}
+
+/**
+ * PrecepteurDemoPage — route publique /precepteur (démo « temps → spirale »).
+ * Si un MasterclassProject est déposé dans localStorage → on joue CE cours (transformé) ;
+ * sinon on garde le cours canonique figé (fallback, démo intacte). Lu UNE fois au montage.
+ */
+export default function PrecepteurDemoPage() {
+  const course = useMemo(() => loadCourseFromStorage() || CANONICAL_COURSE, []);
+  return <PrecepteurPlayer course={course} />;
 }
