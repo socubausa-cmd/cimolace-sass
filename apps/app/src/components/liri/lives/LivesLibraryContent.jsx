@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useDataSync } from '@/contexts/DataSyncContext';
 import { authStore } from '@/lib/auth-store';
 import { getApiBaseUrl } from '@/lib/apiBase';
@@ -73,6 +73,7 @@ export default function LivesLibraryContent({ variant = 'default' }) {
         subtitle: 'Session live',
         description: s.description || '',
         status: ended ? 'completed' : (s.status || 'scheduled'),
+        replayable: ended,   // vraie live_session terminée → a une salle de replay (get_replay_room)
       };
       if (ended) past.push(item); else upcoming.push(item);
     });
@@ -295,8 +296,16 @@ function UpcomingCard({ live }) {
 }
 
 function ReplayCard({ live }) {
+  const navigate = useNavigate();
+  const canOpen = !!live.replayable;
   return (
-    <Card className="group cursor-pointer overflow-hidden border-[rgba(245,244,238,0.08)] bg-[#30302e] transition-colors hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]">
+    <Card
+      onClick={() => canOpen && navigate(`/liri/forum/replay/${live.id}`)}
+      role={canOpen ? 'button' : undefined}
+      className={cn(
+        'group overflow-hidden border-[rgba(245,244,238,0.08)] bg-[#30302e] transition-colors hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]',
+        canOpen ? 'cursor-pointer' : 'cursor-default',
+      )}>
       <div className="relative aspect-video bg-black">
         <div className="absolute inset-0 flex items-center justify-center bg-black/50 transition-colors group-hover:bg-black/30">
           <PlayCircle className="h-16 w-16 text-white opacity-80 transition-transform group-hover:scale-110" />
@@ -312,6 +321,8 @@ function ReplayCard({ live }) {
 }
 
 function LiveRow({ live, kind }) {
+  const navigate = useNavigate();
+  const canOpen = kind === 'replay' && !!live.replayable;
   return (
     <div className="flex items-center gap-4 rounded-xl border border-[rgba(245,244,238,0.08)] bg-[#30302e] px-4 py-3 transition-colors hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] text-[var(--school-accent)]">
@@ -323,7 +334,7 @@ function LiveRow({ live, kind }) {
           {kind === 'replay' ? fmtDate(live.date) : `${live.subtitle ? `${live.subtitle} · ` : ''}${fmtDateTime(live.date)}`}
         </p>
       </div>
-      <Button size="sm" className="shrink-0 border border-[color-mix(in_srgb,var(--school-accent)_32%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f0d5c6] hover:bg-[color-mix(in_srgb,var(--school-accent)_24%,transparent)]">
+      <Button size="sm" onClick={() => canOpen && navigate(`/liri/forum/replay/${live.id}`)} className="shrink-0 border border-[color-mix(in_srgb,var(--school-accent)_32%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f0d5c6] hover:bg-[color-mix(in_srgb,var(--school-accent)_24%,transparent)]">
         {kind === 'replay' ? 'Revoir' : 'Rejoindre'}
       </Button>
     </div>
