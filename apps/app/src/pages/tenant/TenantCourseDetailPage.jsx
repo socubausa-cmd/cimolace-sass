@@ -13,24 +13,34 @@ import { useFormationStructure } from '@/hooks/useFormationStructure';
 import TenantAdminShell from '@/components/admin/TenantAdminShell';
 import { SafeHtml } from '@/components/common/SafeHtml';
 
-// ── Design tokens navy + or ─────────────────────────────────────────────────────
+// ── Design tokens CHAUDS (directive artistique LIRI : coral, bannir or/navy) ──────
+// Les clés gardent leur nom historique (gold/goldDim/goldMid) pour un diff minimal ;
+// leurs VALEURS sont désormais du coral. « gold » = coral #d97757 partout.
 const T = {
-  surface: '#12111a',
-  surface2: 'rgba(25,39,52,0.5)',
-  border: 'rgba(255,255,255,0.07)',
-  borderMid: 'rgba(255,255,255,0.12)',
-  gold: '#D4AF37',
-  goldDim: 'rgba(212,175,55,0.12)',
-  goldMid: 'rgba(212,175,55,0.28)',
-  success: '#22C55E',
-  warning: '#F59E0B',
-  danger: '#EF4444',
-  t1: '#F5F5F7',
-  t2: 'rgba(245,245,247,0.65)',
-  t3: 'rgba(245,245,247,0.38)',
-  t4: 'rgba(245,245,247,0.16)',
+  surface: '#1c1a17',
+  surface2: 'rgba(245,241,233,0.05)',
+  border: 'rgba(245,241,233,0.08)',
+  borderMid: 'rgba(245,241,233,0.14)',
+  gold: '#d97757',
+  goldDim: 'rgba(217,119,87,0.12)',
+  goldMid: 'rgba(217,119,87,0.30)',
+  success: '#6cc08b',
+  warning: '#e0a458',
+  danger: '#f0a58a',
+  t1: '#f5f1e9',
+  t2: 'rgba(245,241,233,0.66)',
+  t3: 'rgba(245,241,233,0.40)',
+  t4: 'rgba(245,241,233,0.16)',
   mono: "'JetBrains Mono','Fira Code',monospace",
 };
+
+// ── Modes de cours (Phase 2, présentation adaptative) ────────────────────────────
+const MODE_META = {
+  cursus:      { label: 'Parcours',       hint: 'Progression structurée, semaine par semaine' },
+  continue:    { label: 'Formation libre', hint: 'Accès complet, à ton rythme' },
+  masterclass: { label: 'Masterclass',    hint: 'Session unique premium' },
+};
+const MODE_ORDER = ['cursus', 'continue', 'masterclass'];
 
 // ── Lecteur leçon ─────────────────────────────────────────────────────────────
 function LessonPlayer({ lesson, onComplete, onClose }) {
@@ -48,7 +58,7 @@ function LessonPlayer({ lesson, onComplete, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#0a0910' }}>
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#14120f' }}>
       {/* Top bar */}
       <div
         className="flex items-center justify-between px-5 py-3"
@@ -68,7 +78,7 @@ function LessonPlayer({ lesson, onComplete, onClose }) {
           className="rounded-lg px-3 py-1.5 text-xs font-semibold transition-opacity disabled:opacity-50"
           style={completed
             ? { background: T.goldDim, color: T.gold, border: `1px solid ${T.goldMid}` }
-            : { background: T.gold, color: '#0a0910' }}
+            : { background: T.gold, color: '#14120f' }}
           onClick={markDone}
           disabled={marking || completed}
         >
@@ -119,6 +129,8 @@ export default function TenantCourseDetailPage() {
   const [expandedModules, setExpandedModules] = useState(new Set());
   const [activeLesson, setActiveLesson] = useState(null);
   const [error, setError] = useState(null);
+  const [mode, setMode] = useState('continue');       // Phase 2 : présentation adaptative
+  const [modeBusy, setModeBusy] = useState(false);
 
   useEffect(() => { load(); }, [courseId]);
 
@@ -131,11 +143,12 @@ export default function TenantCourseDetailPage() {
     setLoading(true); setError(null);
     try {
       const [{ data: c }, outline, { data: prog }] = await Promise.all([
-        supabase.from('courses').select('id, title, description, category, status').eq('id', courseId).maybeSingle(),
+        supabase.from('courses').select('id, title, description, category, status, mode').eq('id', courseId).maybeSingle(),
         fetchOutline(courseId),
         supabase.from('student_progress').select('lesson_id, status, course_id').eq('course_id', courseId),
       ]);
       setCourse(c || null);
+      setMode(c?.mode || 'continue');
       const mods = outline?.data ?? [];
       setModules(mods.map((m) => ({ id: m.id, title: m.title })));
       const lessonsMap = {};
@@ -169,6 +182,19 @@ export default function TenantCourseDetailPage() {
       if (existing) return prev.map(p => p.lesson_id === lessonId ? { ...p, status: 'completed' } : p);
       return [...prev, { lesson_id: lessonId, status: 'completed' }];
     });
+  }
+
+  // Phase 2 — l'encadrant change le mode de présentation du cours (garde côté RPC :
+  // set_course_mode refuse si l'appelant n'est pas encadrant du tenant).
+  async function changeMode(target) {
+    if (modeBusy || target === mode) return;
+    setModeBusy(true);
+    try {
+      const { error: e } = await supabase.rpc('set_course_mode', { p_course_id: courseId, p_mode: target });
+      if (e) throw e;
+      setMode(target);
+    } catch (_) { /* garde RPC = refus silencieux si pas encadrant */ }
+    finally { setModeBusy(false); }
   }
 
   const totalLessons = Object.values(lessons).flat().length;
@@ -211,7 +237,7 @@ export default function TenantCourseDetailPage() {
   const statusMeta = {
     published: { label: 'Publié', color: T.success, bg: 'rgba(34,197,94,0.14)' },
     draft: { label: 'Brouillon', color: T.warning, bg: 'rgba(245,158,11,0.14)' },
-  }[course?.status] || { label: course?.status || 'Cours', color: T.t2, bg: 'rgba(255,255,255,0.06)' };
+  }[course?.status] || { label: course?.status || 'Cours', color: T.t2, bg: 'rgba(245,241,233,0.06)' };
   const started = completedCount > 0;
   const C = (n) => (n > 1 ? 's' : '');
 
@@ -228,31 +254,31 @@ export default function TenantCourseDetailPage() {
     <div
       aria-hidden
       className="pointer-events-none fixed top-0 bottom-0 right-0 left-0 z-0 overflow-hidden lg:left-[234px]"
-      style={{ background: '#0b0b0f' }}
+      style={{ background: '#1c1a17' }}
     >
       <div
         className="absolute inset-0"
         style={{
           background:
-            'radial-gradient(80% 50% at 50% -5%, rgba(212,175,55,0.12), transparent 55%),' +
-            'radial-gradient(65% 55% at 92% 104%, rgba(111,76,255,0.06), transparent 62%),' +
-            'radial-gradient(55% 50% at 4% 98%, rgba(15,179,255,0.045), transparent 62%)',
+            'radial-gradient(80% 50% at 50% -5%, rgba(217,119,87,0.14), transparent 55%),' +
+            'radial-gradient(65% 55% at 92% 104%, rgba(224,164,88,0.06), transparent 62%),' +
+            'radial-gradient(55% 50% at 4% 98%, rgba(217,119,87,0.05), transparent 62%)',
         }}
       />
       <div
         className="absolute left-1/2 top-0 h-[140vh] w-[140vh] -translate-x-1/2"
         style={{
           background:
-            'conic-gradient(from 198deg at 50% 32%, transparent 0deg, rgba(212,175,55,0.09) 38deg, transparent 80deg, transparent 188deg, rgba(15,179,255,0.04) 224deg, transparent 300deg)',
+            'conic-gradient(from 198deg at 50% 32%, transparent 0deg, rgba(217,119,87,0.10) 38deg, transparent 80deg, transparent 188deg, rgba(224,164,88,0.05) 224deg, transparent 300deg)',
           opacity: 0.42,
           filter: 'blur(3px)',
           WebkitMaskImage: 'radial-gradient(ellipse 50% 40% at 50% 28%, #000 0%, transparent 72%)',
           maskImage: 'radial-gradient(ellipse 50% 40% at 50% 28%, #000 0%, transparent 72%)',
         }}
       />
-      <span className="tcd-orb absolute -left-10 top-16 h-72 w-72 rounded-full" style={{ background: '#D4AF37' }} />
-      <span className="tcd-orb alt absolute -right-10 top-1/4 h-80 w-80 rounded-full" style={{ background: '#6f4cff', opacity: 0.1 }} />
-      <span className="tcd-orb absolute bottom-10 left-1/3 h-64 w-64 rounded-full" style={{ background: '#0fb3ff', opacity: 0.09 }} />
+      <span className="tcd-orb absolute -left-10 top-16 h-72 w-72 rounded-full" style={{ background: '#d97757' }} />
+      <span className="tcd-orb alt absolute -right-10 top-1/4 h-80 w-80 rounded-full" style={{ background: '#e0a458', opacity: 0.1 }} />
+      <span className="tcd-orb absolute bottom-10 left-1/3 h-64 w-64 rounded-full" style={{ background: '#d97757', opacity: 0.09 }} />
       <div className="absolute inset-0" style={{ boxShadow: 'inset 0 0 220px 50px rgba(0,0,0,0.5)' }} />
     </div>
 
@@ -274,16 +300,25 @@ export default function TenantCourseDetailPage() {
         <div className="flex flex-col items-center text-center">
           <span
             className="flex h-16 w-16 items-center justify-center rounded-2xl"
-            style={{ background: T.goldDim, border: `1px solid ${T.goldMid}`, color: T.gold, boxShadow: '0 0 46px rgba(212,175,55,0.30)' }}
+            style={{ background: T.goldDim, border: `1px solid ${T.goldMid}`, color: T.gold, boxShadow: '0 0 46px rgba(217,119,87,0.28)' }}
           >
             <GraduationCap className="h-7 w-7" />
           </span>
-          <span
-            className="mt-4 rounded-full px-3 py-1 text-[11px] font-semibold"
-            style={{ background: statusMeta.bg, color: statusMeta.color }}
-          >
-            {statusMeta.label}
-          </span>
+          <div className="mt-4 flex items-center gap-2">
+            <span
+              className="rounded-full px-3 py-1 text-[11px] font-semibold"
+              style={{ background: statusMeta.bg, color: statusMeta.color }}
+            >
+              {statusMeta.label}
+            </span>
+            <span
+              className="rounded-full px-3 py-1 text-[11px] font-semibold"
+              style={{ background: T.goldDim, color: T.gold, border: `1px solid ${T.goldMid}` }}
+              title={MODE_META[mode]?.hint}
+            >
+              {MODE_META[mode]?.label || 'Formation libre'}
+            </span>
+          </div>
           <h1
             className="mt-5 text-3xl font-bold leading-[1.08] md:text-[40px]"
             style={{ color: T.t1, textWrap: 'balance', letterSpacing: '-0.02em' }}
@@ -302,6 +337,36 @@ export default function TenantCourseDetailPage() {
             <span className="inline-flex items-center gap-1.5"><Play className="h-4 w-4" style={{ color: T.t3 }} />{totalLessons} leçon{C(totalLessons)}</span>
             {course?.category && <span style={{ color: T.t3 }}>{course.category}</span>}
           </div>
+
+          {/* Sélecteur de mode — réservé encadrant (contexte admin = tenantSlug présent) */}
+          {tenantSlug && (
+            <div className="mt-5 flex flex-col items-center gap-1.5">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.14em]" style={{ color: T.t3 }}>Mode de présentation</span>
+              <div className="flex gap-1.5">
+                {MODE_ORDER.map((m) => {
+                  const active = mode === m;
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      disabled={modeBusy}
+                      onClick={() => changeMode(m)}
+                      title={MODE_META[m].hint}
+                      className="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
+                      style={{
+                        cursor: modeBusy ? 'wait' : 'pointer',
+                        background: active ? T.gold : 'transparent',
+                        color: active ? '#1c1a17' : T.t2,
+                        border: `1px solid ${active ? T.gold : T.border}`,
+                      }}
+                    >
+                      {MODE_META[m].label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Anneau de progression — seulement si l'élève a commencé */}
           {started && totalLessons > 0 && (
@@ -325,7 +390,7 @@ export default function TenantCourseDetailPage() {
             type="button"
             onClick={() => navigate(`/formation/${courseId}/learn`)}
             className="mt-8 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition-transform active:scale-[0.99]"
-            style={{ background: T.gold, color: '#0b0b0f', boxShadow: '0 12px 36px rgba(212,175,55,0.32)' }}
+            style={{ background: T.gold, color: '#1c1a17', boxShadow: '0 12px 36px rgba(217,119,87,0.34)' }}
             onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.06)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; }}
           >
@@ -364,7 +429,7 @@ export default function TenantCourseDetailPage() {
                 <button
                   className="flex w-full items-center gap-3.5 px-5 py-4 text-left transition-colors"
                   onClick={() => toggleModule(mod.id)}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.025)'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245,241,233,0.03)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                 >
                   <span
