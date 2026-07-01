@@ -196,6 +196,8 @@ import { isSupabaseConfigured } from '@/lib/supabase';
 const OwnerFormationBuilder = lazy(() => import('@/components/school/formations/OwnerFormationBuilder'));
 const CreatorDashboardShell = lazy(() => import('@/pages/creator/CreatorDashboardShell'));
 const CoursePlayerInterface = lazy(() => import('@/components/school/formations/CoursePlayerInterface'));
+const MasterclassRoomPage = lazy(() => import('@/pages/school/MasterclassRoomPage'));
+const MasterclassesListPage = lazy(() => import('@/pages/school/MasterclassesListPage'));
 const StudentNotebook = lazy(() => import('@/components/school/student/StudentNotebook'));
 const PublicFormationsPage = lazy(() => import('@/pages/school/PublicFormationsPage'));
 const FormationDetailPage = lazy(() => import('@/pages/school/FormationDetailPage'));
@@ -1741,6 +1743,16 @@ isLiriHostDevPreviewRoute;
             </ProtectedRoute>
           } />
           <Route path="/formation/:id" element={<FormationDetailPage />} />
+          <Route path="/masterclasses" element={
+            <ProtectedRoute>
+              <MasterclassesListPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/masterclass/:masterclassId" element={
+            <ProtectedRoute>
+              <MasterclassRoomPage />
+            </ProtectedRoute>
+          } />
           <Route path="/formations/list" element={<PublicFormationsPage />} />
           <Route path="/cours-publics" element={<Navigate to="/formations/list" replace />} />
 
