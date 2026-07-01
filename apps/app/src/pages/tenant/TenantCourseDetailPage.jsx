@@ -365,6 +365,14 @@ export default function TenantCourseDetailPage() {
                   );
                 })}
               </div>
+              <button
+                type="button"
+                onClick={() => navigate(`/cours/${courseId}/deblocage`)}
+                className="mt-1 text-[11px] font-semibold underline-offset-2 transition-colors hover:underline"
+                style={{ color: T.gold }}
+              >
+                ⏱ Programmer le déblocage des semaines
+              </button>
             </div>
           )}
 

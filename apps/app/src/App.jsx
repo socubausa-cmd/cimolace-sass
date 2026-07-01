@@ -198,6 +198,8 @@ const CreatorDashboardShell = lazy(() => import('@/pages/creator/CreatorDashboar
 const CoursePlayerInterface = lazy(() => import('@/components/school/formations/CoursePlayerInterface'));
 const MasterclassRoomPage = lazy(() => import('@/pages/school/MasterclassRoomPage'));
 const MasterclassesListPage = lazy(() => import('@/pages/school/MasterclassesListPage'));
+const ClassesAdminPage = lazy(() => import('@/pages/school/ClassesAdminPage'));
+const CourseUnlockAdminPage = lazy(() => import('@/pages/school/CourseUnlockAdminPage'));
 const StudentNotebook = lazy(() => import('@/components/school/student/StudentNotebook'));
 const PublicFormationsPage = lazy(() => import('@/pages/school/PublicFormationsPage'));
 const FormationDetailPage = lazy(() => import('@/pages/school/FormationDetailPage'));
@@ -1746,6 +1748,16 @@ isLiriHostDevPreviewRoute;
           <Route path="/masterclasses" element={
             <ProtectedRoute>
               <MasterclassesListPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/classes" element={
+            <ProtectedRoute>
+              <ClassesAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/cours/:courseId/deblocage" element={
+            <ProtectedRoute>
+              <CourseUnlockAdminPage />
             </ProtectedRoute>
           } />
           <Route path="/masterclass/:masterclassId" element={
