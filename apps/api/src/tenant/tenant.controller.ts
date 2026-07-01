@@ -94,6 +94,7 @@ export class TenantController {
       logo_url?: string | null;
       brand_colors?: Record<string, string> | null;
       slug: string;
+      primary_domain?: string | null;
       metadata?: {
         site?: Record<string, unknown> | null;
         settings?: { requiresStudentDossier?: boolean } | null;
@@ -118,6 +119,9 @@ export class TenantController {
       // qui le traite comme « introuvable » sur le host neutre LIRI (on ne le
       // rejoint QUE par son domaine). Le branding reste renvoyé pour ses apps.
       embedded: isEmbeddedTenant(tenant),
+      // Domaine propre (public) — cible de redirection du garde-fou : un membre
+      // d'un tenant embarqué qui atterrit sur le host neutre est renvoyé ici.
+      primary_domain: t.primary_domain ?? null,
     };
   }
 

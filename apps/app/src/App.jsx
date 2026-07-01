@@ -4,6 +4,8 @@ import TenantFavicon from '@/components/TenantFavicon';
 import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { getCachedHostTenant, isPlatformOrDevHost } from '@/lib/tenantResolver';
 import { resolveRequiresStudentDossier } from '@/lib/tenant/activeTenantConfig';
+import { joinApi } from '@/lib/api-v2';
+import { authStore } from '@/lib/auth-store';
 
 /** Redirige "/" vers la bonne destination selon le contexte :
  *  1. access_token dans le hash (magic link / recovery) → /auth/callback
@@ -656,10 +658,51 @@ const PageLoader = () => (
 
 const LazyShell = ({ children }) => <Suspense fallback={null}>{children}</Suspense>;
 
+// Cache module (par slug) du statut hébergé/embarqué — évite de re-résoudre à chaque
+// passage dans DashboardRedirect. { embedded:boolean, primary_domain:string|null }.
+const _embeddedHostCache = new Map();
+
 const DashboardRedirect = () => {
   const { user, loading, tenantRole, supabase: authSupabase } = useAuth();
   const { loading: billingLoading, status, inGrace } = useBilling();
   const [slowLoad, setSlowLoad] = useState(false);
+  // Garde-fou « embarqué » : un membre d'un tenant EMBARQUÉ (site propre) qui atterrit
+  // CONNECTÉ sur le host NEUTRE LIRI est renvoyé vers SON domaine — jamais de contexte
+  // tenant embarqué sur liri.cimolace.space (les deux mondes ne se rencontrent pas).
+  const [embeddedGate, setEmbeddedGate] = useState(() => {
+    try {
+      const host = typeof window !== 'undefined' ? window.location.hostname : '';
+      const slug = (authStore.getTenantSlug?.() || '').trim();
+      return isPlatformOrDevHost(host) && slug ? 'pending' : 'clear';
+    } catch { return 'clear'; }
+  });
+
+  useEffect(() => {
+    let alive = true;
+    const host = typeof window !== 'undefined' ? window.location.hostname : '';
+    const slug = (authStore.getTenantSlug?.() || '').trim();
+    if (!isPlatformOrDevHost(host) || !slug) { setEmbeddedGate('clear'); return; }
+    const apply = (info) => {
+      if (!alive) return;
+      if (info?.embedded && info?.primary_domain) {
+        setEmbeddedGate('redirecting');
+        window.location.replace(`https://${info.primary_domain}`);
+      } else {
+        setEmbeddedGate('clear');
+      }
+    };
+    const cached = _embeddedHostCache.get(slug);
+    if (cached) { apply(cached); return () => { alive = false; }; }
+    joinApi
+      .resolveOrg(slug)
+      .then((org) => {
+        const info = { embedded: !!org?.embedded, primary_domain: org?.primary_domain || null };
+        _embeddedHostCache.set(slug, info);
+        apply(info);
+      })
+      .catch(() => { if (alive) setEmbeddedGate('clear'); });
+    return () => { alive = false; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!loading && !billingLoading) return;
@@ -694,6 +737,16 @@ const DashboardRedirect = () => {
     );
   }
   if (!user) return <Navigate to="/login" replace />;
+
+  // Tenant embarqué + host neutre : on attend la résolution / on redirige vers le
+  // domaine propre (cf. useEffect ci-dessus) avant tout routage par rôle.
+  if (embeddedGate === 'pending' || embeddedGate === 'redirecting') {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-[#0F1419]">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#D4AF37] border-t-transparent" />
+      </div>
+    );
+  }
 
   if (hasMultiRoleAccess(user) && !getSelectedAccountRole()) {
     return <Navigate to={getChooseAccountTypePath()} replace />;

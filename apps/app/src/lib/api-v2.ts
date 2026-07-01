@@ -882,5 +882,5 @@ export const joinApi = {
   joinTenant: (slug: string) =>
     apiV2.post<ApiEnvelope<{ ok: boolean; joined: boolean; role: string }>>(`/tenants/${encodeURIComponent(slug)}/join`).then(unwrap),
   resolveOrg: (slug: string) =>
-    apiV2.get<ApiEnvelope<{ slug: string; name: string; logo_url: string | null; embedded?: boolean } | null>>(`/tenants/by-slug/${encodeURIComponent(slug)}/branding`).then(unwrap),
+    apiV2.get<ApiEnvelope<{ slug: string; name: string; logo_url: string | null; embedded?: boolean; primary_domain?: string | null } | null>>(`/tenants/by-slug/${encodeURIComponent(slug)}/branding`).then(unwrap),
 };
