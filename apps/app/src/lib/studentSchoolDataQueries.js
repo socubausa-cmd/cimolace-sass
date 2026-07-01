@@ -48,6 +48,24 @@ export function schoolCalendarRowsOverlappingFrom({ fromIso, limit = 200 } = {})
 }
 
 /**
+ * Semaines du CALENDRIER ANNUEL pédagogique (annual_program_weeks) des calendriers
+ * PUBLIÉS — relie l'agenda élève au programme de l'année (#46). La RLS scope déjà
+ * au tenant du membre (via school_year_calendars). `!inner` + filtre status =
+ * 'published' → on ne montre que les calendriers publiés (jamais les brouillons).
+ */
+export function annualProgramWeeksFrom({ fromIso, limit = 60 } = {}) {
+  const from =
+    fromIso || new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+  return supabase
+    .from('annual_program_weeks')
+    .select('id, week_start, week_end, title, module_title, theme, is_holiday, school_year_calendars!inner(status)')
+    .eq('school_year_calendars.status', 'published')
+    .gte('week_start', from)
+    .order('week_start', { ascending: true })
+    .limit(limit);
+}
+
+/**
  * Même requête que `useStudentAttendanceRecords` (absent, late, excused).
  * Utilisé aussi par le dashboard / vie scolaire (filtrage absent / retard côté UI).
  */

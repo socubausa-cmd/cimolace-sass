@@ -2,7 +2,7 @@ import { useMemo, useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useDataSync } from '@/contexts/DataSyncContext';
 import { useStudentAppointments } from '@/hooks/useStudentAppointments';
-import { schoolCalendarRowsOverlappingFrom, schoolEventsForStudentWindow } from '@/lib/studentSchoolDataQueries';
+import { schoolCalendarRowsOverlappingFrom, schoolEventsForStudentWindow, annualProgramWeeksFrom } from '@/lib/studentSchoolDataQueries';
 import { addDays, startOfWeek, isValid } from 'date-fns';
 
 /**
@@ -86,6 +86,7 @@ export function useLiriMobileAgendaMerged(userId) {
   const [schoolEvents, setSchoolEvents] = useState([]);
   const [calendarRows, setCalendarRows] = useState([]);
   const [dayContents, setDayContents] = useState([]);
+  const [programWeeks, setProgramWeeks] = useState([]);   // #46 — calendrier annuel
   const [extraLoading, setExtraLoading] = useState(true);
 
   const loadExtra = useCallback(async () => {
@@ -103,9 +104,12 @@ export function useLiriMobileAgendaMerged(userId) {
 
     const dcData = await publishedDayContentsFromIso(past);
 
+    const apwRes = await annualProgramWeeksFrom({ fromIso: past, limit: 60 });
+
     setSchoolEvents(seRes.error ? [] : seRes.data || []);
     setCalendarRows(scData);
     setDayContents(dcData);
+    setProgramWeeks(apwRes.error ? [] : apwRes.data || []);
     setExtraLoading(false);
   }, []);
 
@@ -152,7 +156,19 @@ export function useLiriMobileAgendaMerged(userId) {
 
     const courseVideos = dayContentsToEvents(dayContents);
 
-    const all = [...formation, ...school, ...cal, ...student, ...courseVideos];
+    // #46 — semaines du calendrier annuel pédagogique (rythme de l'année scolaire).
+    const program = (programWeeks || []).map((w) => ({
+      id: `apw-${w.id}`,
+      title: w.module_title || w.title || w.theme || 'Semaine du programme',
+      type: w.is_holiday ? 'holiday' : 'program_week',
+      startAt: w.week_start,
+      endAt: w.week_end || null,
+      location: 'Programme annuel',
+      href: null,
+      videoUrl: null,
+    }));
+
+    const all = [...formation, ...school, ...cal, ...student, ...courseVideos, ...program];
     const seen = new Set();
     return all
       .filter((ev) => {
@@ -161,7 +177,7 @@ export function useLiriMobileAgendaMerged(userId) {
         return true;
       })
       .sort((a, b) => new Date(a.startAt) - new Date(b.startAt));
-  }, [years, schoolEvents, calendarRows, upcomingEvents, dayContents]);
+  }, [years, schoolEvents, calendarRows, upcomingEvents, dayContents, programWeeks]);
 
   const loading = (userId ? apptLoading : false) || extraLoading;
 
