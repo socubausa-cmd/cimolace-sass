@@ -1,6 +1,30 @@
 import { Injectable } from "@nestjs/common";
 import { AuthService } from "../auth/auth.service";
 
+/**
+ * Un tenant est « EMBARQUÉ » (licence d'intégration : LIRI vit invisible dans SON
+ * site, façon Zoom/Stripe/LiveKit) — à distinguer d'un tenant « HÉBERGÉ » sur
+ * liri.cimolace.space. Un embarqué ne doit JAMAIS être résolu/joignable depuis le
+ * host neutre LIRI (les deux mondes ne se rencontrent pas).
+ *
+ * Source de vérité = flag EXPLICITE `metadata.hosting_mode` ('embedded' | 'hosted').
+ * Défaut sûr en son absence : un tenant à domaine propre (`primary_domain`) est
+ * présumé embarqué → protège ISNA/zahirwellness immédiatement, sans écrire en base.
+ */
+export function isEmbeddedTenant(tenant: any): boolean {
+  const mode = tenant?.metadata?.hosting_mode;
+  if (mode === "embedded") return true;
+  if (mode === "hosted") return false;
+  return !!tenant?.primary_domain;
+}
+
+/** Host « plateforme LIRI » (neutre) — d'où un embarqué doit rester invisible. */
+export function isPlatformOrigin(originOrReferer: string | undefined): boolean {
+  const s = String(originOrReferer || "").toLowerCase();
+  if (!s) return false;
+  return /(^|\/\/|\.)cimolace\.space([/:]|$)/.test(s) || /localhost|127\.0\.0\.1/.test(s);
+}
+
 @Injectable()
 export class TenantService {
   constructor(private authService: AuthService) {}
@@ -63,14 +87,17 @@ export class TenantService {
    * /t/:slug/signup (SchoolSignupPage.autoJoinTenant → POST /tenants/:slug/join).
    * Renvoie null si le tenant n'existe pas ou n'est pas actif.
    */
-  async joinAsStudent(userId: string, slug: string) {
+  async joinAsStudent(userId: string, slug: string, fromPlatformHost = false) {
     const supabase = this.authService.getClient();
     const { data: tenant } = await supabase
       .from("tenants")
-      .select("id, status")
+      .select("id, status, primary_domain, metadata")
       .eq("slug", slug)
       .single();
     if (!tenant || (tenant as any).status !== "active") return null;
+    // Séparation dure : un tenant EMBARQUÉ n'est PAS joignable depuis le host
+    // neutre LIRI. On le rejoint uniquement par SON propre domaine.
+    if (fromPlatformHost && isEmbeddedTenant(tenant)) return null;
     const tenantId = (tenant as any).id as string;
     const { data: existing } = await supabase
       .from("tenant_memberships")
@@ -99,7 +126,7 @@ export class TenantService {
     const supabase = this.authService.getClient();
     const { data } = await supabase
       .from("tenants")
-      .select("slug, name, logo_url, brand_colors, status, metadata")
+      .select("slug, name, logo_url, brand_colors, status, metadata, primary_domain")
       .eq("slug", slug)
       .single();
     if (!data || (data as any).status !== "active") return null;

@@ -15,7 +15,7 @@ import { TenantGuard } from "../common/guards/tenant.guard";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
 import { CimolaceStaffGuard } from "../cimolace-backoffice/cimolace-staff.guard";
-import { TenantService } from "./tenant.service";
+import { TenantService, isEmbeddedTenant, isPlatformOrigin } from "./tenant.service";
 import { UpdateBrandingDto } from "./update-branding.dto";
 import { UpdateTenantSettingsDto } from "./update-tenant-settings.dto";
 
@@ -56,7 +56,16 @@ export class TenantController {
   @Post(":slug/join")
   @UseGuards(JwtAuthGuard)
   async join(@Req() req: any, @Param("slug") slug: string) {
-    const result = await this.tenantService.joinAsStudent(req.user.id, slug);
+    // Depuis le host neutre LIRI, on refuse de rejoindre un tenant EMBARQUÉ
+    // (il a son propre site). Depuis le domaine du tenant, le self-join reste OK.
+    const fromPlatformHost = isPlatformOrigin(
+      req.headers?.origin || req.headers?.referer,
+    );
+    const result = await this.tenantService.joinAsStudent(
+      req.user.id,
+      slug,
+      fromPlatformHost,
+    );
     if (!result) throw new NotFoundException("École introuvable ou inactive.");
     return { data: result };
   }
@@ -105,6 +114,10 @@ export class TenantController {
       site: t.metadata?.site ?? null,
       // null = non défini → le client retombe sur sa config (founder ISNA = true).
       requiresStudentDossier: t.metadata?.settings?.requiresStudentDossier ?? null,
+      // Séparation dure : un tenant EMBARQUÉ (site propre) est signalé au front,
+      // qui le traite comme « introuvable » sur le host neutre LIRI (on ne le
+      // rejoint QUE par son domaine). Le branding reste renvoyé pour ses apps.
+      embedded: isEmbeddedTenant(tenant),
     };
   }
 

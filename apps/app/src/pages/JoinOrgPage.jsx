@@ -90,6 +90,11 @@ export default function JoinOrgPage() {
       setError("Saisissez le code ou l'identifiant de votre organisation.");
       return;
     }
+    if (org?.embedded) {
+      // Embarqué : injoignable depuis le host neutre LIRI (on passe par son domaine).
+      setError('Aucune organisation ne correspond à cet identifiant.');
+      return;
+    }
     setError('');
 
     // Non connecté → mémoriser le slug et router vers /login avec retour.
@@ -112,7 +117,10 @@ export default function JoinOrgPage() {
   };
 
   const orgName = org?.name?.trim();
-  const notFound = resolved && !resolving && slug.length >= 2 && !org;
+  // Séparation dure : un tenant EMBARQUÉ (site propre) est traité comme INTROUVABLE
+  // sur le host neutre LIRI — on ne révèle ni ne rejoint ISNA & co via liri.cimolace.space.
+  const isEmbedded = org?.embedded === true;
+  const notFound = resolved && !resolving && slug.length >= 2 && (!org || isEmbedded);
 
   return (
     <div
@@ -176,14 +184,14 @@ export default function JoinOrgPage() {
               {resolving && (
                 <Loader2 className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-white/35" />
               )}
-              {!resolving && org && (
+              {!resolving && org && !isEmbedded && (
                 <Check className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-400" />
               )}
             </div>
           </div>
 
-          {/* Carte org résolue */}
-          {orgName && (
+          {/* Carte org résolue (jamais pour un embarqué → séparation dure) */}
+          {orgName && !isEmbedded && (
             <div className="mt-4 flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3.5">
               {org?.logo_url ? (
                 <img src={org.logo_url} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" />
