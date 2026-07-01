@@ -1,0 +1,169 @@
+/*
+ * studioWarm.css — Remap froid→chaud de TOUT l'écosystème Studio (/studio/*).
+ * Scopé `.studio-warm-scope` (posé sur le wrapper de StudioRouter) → couvre tous les
+ * écrans Studio (builders, SmartBoard Designer/Konva, wizard live programmé, post-prod,
+ * ad-creator, préparation live…) sans toucher chaque fichier.
+ * Directive artistique LIRI : zéro froid (violet/indigo/bleu/cyan/teal/emerald + or).
+ * Vert (green-) et rouge (red-) PURS = sémantiques succès/danger → préservés.
+ * NB : ne remappe que les CLASSES Tailwind ; les hex inline (style={{}}) restent à corriger
+ * à la source dans les quelques fichiers les plus chargés.
+ */
+
+/* ── Texte ── */
+.studio-warm-scope [class*="text-violet-"],
+.studio-warm-scope [class*="text-purple-"],
+.studio-warm-scope [class*="text-indigo-"],
+.studio-warm-scope [class*="text-blue-"],
+.studio-warm-scope [class*="text-sky-"],
+.studio-warm-scope [class*="text-cyan-"],
+.studio-warm-scope [class*="text-teal-"],
+.studio-warm-scope [class*="text-emerald-"] { color: #e0926a !important; }
+.studio-warm-scope [class*="text-amber-"],
+.studio-warm-scope [class*="text-yellow-"] { color: #e6b878 !important; }
+
+/* ── Fonds ── */
+.studio-warm-scope [class*="bg-violet-"],
+.studio-warm-scope [class*="bg-purple-"],
+.studio-warm-scope [class*="bg-indigo-"],
+.studio-warm-scope [class*="bg-blue-"],
+.studio-warm-scope [class*="bg-sky-"],
+.studio-warm-scope [class*="bg-cyan-"],
+.studio-warm-scope [class*="bg-teal-"],
+.studio-warm-scope [class*="bg-emerald-"] { background-color: rgba(217,119,87,0.15) !important; }
+.studio-warm-scope [class*="bg-amber-"],
+.studio-warm-scope [class*="bg-yellow-"] { background-color: rgba(217,154,78,0.15) !important; }
+
+/* ── Bordures ── */
+.studio-warm-scope [class*="border-violet-"],
+.studio-warm-scope [class*="border-purple-"],
+.studio-warm-scope [class*="border-indigo-"],
+.studio-warm-scope [class*="border-blue-"],
+.studio-warm-scope [class*="border-sky-"],
+.studio-warm-scope [class*="border-cyan-"],
+.studio-warm-scope [class*="border-teal-"],
+.studio-warm-scope [class*="border-emerald-"] { border-color: rgba(217,119,87,0.32) !important; }
+.studio-warm-scope [class*="border-amber-"],
+.studio-warm-scope [class*="border-yellow-"] { border-color: rgba(217,154,78,0.32) !important; }
+
+/* ── Anneaux (focus) ── */
+.studio-warm-scope [class*="ring-violet-"],
+.studio-warm-scope [class*="ring-blue-"],
+.studio-warm-scope [class*="ring-indigo-"],
+.studio-warm-scope [class*="ring-cyan-"],
+.studio-warm-scope [class*="ring-teal-"],
+.studio-warm-scope [class*="ring-emerald-"] { --tw-ring-color: rgba(217,119,87,0.40) !important; }
+
+/* ── Dégradés ── */
+.studio-warm-scope [class*="from-violet-"],
+.studio-warm-scope [class*="from-purple-"],
+.studio-warm-scope [class*="from-indigo-"],
+.studio-warm-scope [class*="from-blue-"],
+.studio-warm-scope [class*="from-sky-"],
+.studio-warm-scope [class*="from-cyan-"],
+.studio-warm-scope [class*="from-teal-"],
+.studio-warm-scope [class*="from-emerald-"] {
+  --tw-gradient-from: #d97757 var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(217,119,87,0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+.studio-warm-scope [class*="to-violet-"],
+.studio-warm-scope [class*="to-purple-"],
+.studio-warm-scope [class*="to-indigo-"],
+.studio-warm-scope [class*="to-blue-"],
+.studio-warm-scope [class*="to-sky-"],
+.studio-warm-scope [class*="to-cyan-"],
+.studio-warm-scope [class*="to-teal-"],
+.studio-warm-scope [class*="to-emerald-"] { --tw-gradient-to: #c2683f var(--tw-gradient-to-position) !important; }
+.studio-warm-scope [class*="via-violet-"],
+.studio-warm-scope [class*="via-blue-"],
+.studio-warm-scope [class*="via-indigo-"],
+.studio-warm-scope [class*="via-cyan-"] {
+  --tw-gradient-via: #cf7a52 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to) !important;
+}
+
+/* ── Survols ── */
+.studio-warm-scope [class*="hover:bg-violet-"]:hover,
+.studio-warm-scope [class*="hover:bg-blue-"]:hover,
+.studio-warm-scope [class*="hover:bg-indigo-"]:hover,
+.studio-warm-scope [class*="hover:bg-cyan-"]:hover,
+.studio-warm-scope [class*="hover:bg-emerald-"]:hover { background-color: rgba(217,119,87,0.22) !important; }
+.studio-warm-scope [class*="hover:text-violet-"]:hover,
+.studio-warm-scope [class*="hover:text-blue-"]:hover,
+.studio-warm-scope [class*="hover:text-cyan-"]:hover,
+.studio-warm-scope [class*="hover:text-indigo-"]:hover { color: #ecae90 !important; }
+
+/* ── Hex froids fréquents posés en classe arbitraire Tailwind (bg-[#xxxxxx]) ── */
+.studio-warm-scope [class*="bg-[#7c3aed]"], .studio-warm-scope [class*="bg-[#7C3AED]"],
+.studio-warm-scope [class*="bg-[#3b82f6]"], .studio-warm-scope [class*="bg-[#3B82F6]"],
+.studio-warm-scope [class*="bg-[#06b6d4]"], .studio-warm-scope [class*="bg-[#00e5ff]"],
+.studio-warm-scope [class*="bg-[#00E5FF]"], .studio-warm-scope [class*="bg-[#14b8a6]"] { background-color: rgba(217,119,87,0.15) !important; }
+.studio-warm-scope [class*="text-[#7c3aed]"], .studio-warm-scope [class*="text-[#7C3AED]"],
+.studio-warm-scope [class*="text-[#00e5ff]"], .studio-warm-scope [class*="text-[#06b6d4]"],
+.studio-warm-scope [class*="text-[#3b82f6]"] { color: #e0926a !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * Shell « Studio de création live » (liveCreationShell / wizard /studio/live) :
+ * fonds NAVY (#0a0c10 & co.) + accent VIOLET (#7B61FF) hex hardcodés → charte
+ * chaude LIRI (#262624 page / #2b2a27 panneaux / ambre #d4a36a). Non couverts
+ * par les remaps de classes NOMMÉES ci-dessus (hex arbitraires Tailwind).
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Fonds navy → surfaces chaudes (page / panneau / champ) ── */
+.studio-warm-scope [class*="bg-[#0a0c10]"] { background-color: #262624 !important; }
+.studio-warm-scope [class*="bg-[#0d0f14]"],
+.studio-warm-scope [class*="bg-[#12141a]"],
+.studio-warm-scope [class*="bg-[#14161c]"],
+.studio-warm-scope [class*="bg-[#151a21]"] { background-color: #2b2a27 !important; }
+.studio-warm-scope [class*="bg-[#181B22]"],
+.studio-warm-scope [class*="bg-[#181b22]"],
+.studio-warm-scope [class*="bg-[#192734]"],
+.studio-warm-scope [class*="bg-[#223244]"] { background-color: #33322f !important; }
+
+/* ── Bordures navy → filet ivoire discret ── */
+.studio-warm-scope [class*="border-[#2D3139]"], .studio-warm-scope [class*="border-[#2d3139]"],
+.studio-warm-scope [class*="border-[#3D424C]"], .studio-warm-scope [class*="border-[#3d424c]"] {
+  border-color: rgba(245,244,238,0.10) !important;
+}
+
+/* ── Accent violet #7B61FF / #c4b5fd → ambre LIRI ── */
+/* Fond PLEIN (bouton « Suivant » variant accent) → ambre plein + encre sombre. */
+.studio-warm-scope [class~="bg-[#7B61FF]"] { background-color: #d4a36a !important; color: #1a1a1a !important; }
+/* Fonds translucides bg-[#7B61FF]/NN → ambre translucide. */
+.studio-warm-scope [class*="bg-[#7B61FF]/"] { background-color: rgba(212,163,106,0.14) !important; }
+.studio-warm-scope [class*="border-[#7B61FF]"] { border-color: rgba(212,163,106,0.38) !important; }
+.studio-warm-scope [class*="text-[#7B61FF]"], .studio-warm-scope [class*="text-[#c4b5fd]"] { color: #d4a36a !important; }
+.studio-warm-scope [class*="ring-[#7B61FF]"] { --tw-ring-color: rgba(212,163,106,0.45) !important; }
+
+/* ── Classes CSS custom du shell live (liri-brand-theme.css) → chaud ── */
+.studio-warm-scope .live-studio-premium { background-color: #262624 !important; }
+.studio-warm-scope .live-studio-global-progress-fill { background: linear-gradient(90deg, #d4a36a, #c2683f) !important; }
+
+/* ── Gris Tailwind légèrement BLEUTÉS (gray/slate/zinc) → gris CHAUDS sobres.
+ *    (#6b7280 gray-500 etc. = hue ~220 = froid → dénote dans la charte « tout chaud ».
+ *    Teintes proches en clarté, juste réchauffées ; PAS de saturation orangée.) ── */
+.studio-warm-scope [class*="text-gray-300"], .studio-warm-scope [class*="text-slate-300"], .studio-warm-scope [class*="text-zinc-300"] { color: #c4beb4 !important; }
+.studio-warm-scope [class*="text-gray-400"], .studio-warm-scope [class*="text-slate-400"], .studio-warm-scope [class*="text-zinc-400"] { color: #a8a299 !important; }
+.studio-warm-scope [class*="text-gray-500"], .studio-warm-scope [class*="text-slate-500"], .studio-warm-scope [class*="text-zinc-500"] { color: #8a847b !important; }
+.studio-warm-scope [class*="text-gray-600"], .studio-warm-scope [class*="text-slate-600"], .studio-warm-scope [class*="text-zinc-600"] { color: #6b655c !important; }
+.studio-warm-scope [class*="bg-gray-800"], .studio-warm-scope [class*="bg-slate-800"], .studio-warm-scope [class*="bg-zinc-800"] { background-color: #2b2a27 !important; }
+.studio-warm-scope [class*="bg-gray-900"], .studio-warm-scope [class*="bg-slate-900"], .studio-warm-scope [class*="bg-zinc-900"] { background-color: #232220 !important; }
+
+/* ── Fonds/badges navy hex résiduels (maquette live) → surface chaude ── */
+.studio-warm-scope [class*="bg-[#2a2f38]"], .studio-warm-scope [class*="bg-[#0f1117]"],
+.studio-warm-scope [class*="bg-[#161a22]"], .studio-warm-scope [class*="bg-[#0c0e12]"],
+.studio-warm-scope [class*="bg-[#1a1e28]"], .studio-warm-scope [class*="bg-[#14161c]"] { background-color: #2b2a27 !important; }
+.studio-warm-scope [class*="text-[#6b7280]"] { color: #8a847b !important; }
+
+/* ── Hex froids écrits en MAJUSCULES dans le code (#2A2F38 navy, #B8A3FF/#9485FF/#4C1D95
+ *    violets) : les sélecteurs d'attribut CSS sont SENSIBLES À LA CASSE → flag `i`. ── */
+.studio-warm-scope [class*="bg-[#2a2f38]" i] { background-color: #2b2a27 !important; }
+.studio-warm-scope [class*="text-[#b8a3ff]" i],
+.studio-warm-scope [class*="text-[#9485ff]" i],
+.studio-warm-scope [class*="text-[#c4b5fd]" i],
+.studio-warm-scope [class*="text-[#7b61ff]" i] { color: #e6c79a !important; }
+.studio-warm-scope [class*="bg-[#b8a3ff]" i],
+.studio-warm-scope [class*="bg-[#9485ff]" i],
+.studio-warm-scope [class*="bg-[#4c1d95]" i] { background-color: rgba(212, 163, 106, 0.18) !important; }
+.studio-warm-scope [class*="border-[#b8a3ff]" i],
+.studio-warm-scope [class*="border-[#9485ff]" i] { border-color: rgba(212, 163, 106, 0.38) !important; }

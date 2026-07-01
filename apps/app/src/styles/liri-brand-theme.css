@@ -343,13 +343,13 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-/* Inputs : pas de !important sur bordures — les étapes utilisent Tailwind (#7B61FF, #2D3139) */
+/* Inputs : caret ambre (charte chaude LIRI). */
 .live-studio-premium input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
 .live-studio-premium textarea,
 .live-studio-premium [role='combobox'],
 .live-studio-premium select {
   color: var(--liri-text);
-  caret-color: #7b61ff;
+  caret-color: #d4a36a;
 }
 
 .live-studio-premium input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):focus-visible,
@@ -361,15 +361,16 @@ body {
 
 
 .live-studio-frame {
-  border-top: 1px solid #2d3139;
+  border-top: 1px solid rgba(245, 244, 238, 0.08);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
-/* Colonnes plein écran — même langage visuel que la maquette (#0F1117, #2D3139, #7B61FF) */
+/* Colonnes — charte chaude LIRI : surfaces #1f1e1c sobres, filet ivoire, centre
+   TRANSPARENT (laisse le fond #262624 + grille de la coque). Zéro navy/violet. */
 .live-studio-premium .live-studio-pane-head {
   flex-shrink: 0;
-  border-bottom: 1px solid #2d3139;
-  background: linear-gradient(180deg, rgba(22, 26, 34, 0.98) 0%, rgba(15, 17, 23, 0.96) 100%);
+  border-bottom: 1px solid rgba(245, 244, 238, 0.08);
+  background: #1f1e1c;
   padding: 0.625rem 0.75rem;
 }
 
@@ -378,16 +379,16 @@ body {
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #6b7280;
+  color: #9a938a;
 }
 
 .live-studio-premium .live-studio-pane-left {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: linear-gradient(180deg, #161a22 0%, #0f1117 45%, #0c0e12 100%);
-  border-right: 1px solid #2d3139;
-  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.04);
+  background: #1f1e1c;
+  border-right: 1px solid rgba(245, 244, 238, 0.07);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03);
 }
 
 .live-studio-premium .live-studio-pane-center {
@@ -396,11 +397,8 @@ body {
   flex: 1;
   flex-direction: column;
   min-height: 0;
-  background:
-    radial-gradient(ellipse 90% 55% at 50% -15%, rgba(123, 97, 255, 0.08), transparent 52%),
-    radial-gradient(ellipse 70% 40% at 80% 100%, rgba(59, 130, 246, 0.04), transparent 50%),
-    #0f1117;
-  border-right: 1px solid #2d3139;
+  background: transparent;
+  border-right: 1px solid rgba(245, 244, 238, 0.07);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
 
@@ -408,39 +406,39 @@ body {
   display: flex;
   min-height: 0;
   flex-direction: column;
-  background: linear-gradient(180deg, #14161c 0%, #0f1117 55%, #0c0e12 100%);
-  border-left: 1px solid #2d3139;
+  background: #1f1e1c;
+  border-left: 1px solid rgba(245, 244, 238, 0.07);
   box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.03);
 }
 
 .live-studio-premium .live-studio-global-progress {
   height: 3px;
   flex-shrink: 0;
-  background: #1a1e28;
+  background: rgba(245, 244, 238, 0.06);
 }
 
 .live-studio-premium .live-studio-global-progress-fill {
   height: 100%;
   border-radius: 0 2px 2px 0;
-  background: linear-gradient(90deg, #4c1d95, #7b61ff 45%, #c4b5fd);
+  background: linear-gradient(90deg, #c2683f, #d4a36a);
   transition: width 0.35s ease;
 }
 
 .live-studio-premium .live-studio-stepper-track {
   border-radius: 0.5rem;
-  border: 1px solid #2d3139;
-  background: rgba(18, 20, 26, 0.92);
+  border: 1px solid rgba(245, 244, 238, 0.08);
+  background: rgba(48, 48, 46, 0.55);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .live-studio-premium .premium-topbar {
-  background: linear-gradient(180deg, rgba(20, 22, 28, 0.98) 0%, rgba(15, 17, 23, 0.99) 100%) !important;
-  box-shadow: inset 0 -1px 0 rgba(45, 49, 57, 0.9);
+  background: #1f1e1c !important;
+  box-shadow: inset 0 -1px 0 rgba(245, 244, 238, 0.08);
 }
 
 .live-studio-premium .premium-panel {
   border-radius: 14px !important;
-  box-shadow: 0 10px 34px -24px rgba(123, 97, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 10px 34px -24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 
 @keyframes shimmer {

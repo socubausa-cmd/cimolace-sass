@@ -81,6 +81,7 @@ export async function runLiveHostSessionAndLiveKitInit(ctx) {
     setTeacherId,
     setSessionFormationId,
     setSessionType,
+    setProductionLiveType,
     setLiveEtapes,
     setStep,
     setSmartboardSceneFlags,
@@ -126,7 +127,7 @@ export async function runLiveHostSessionAndLiveKitInit(ctx) {
         const { data: sess, error: sessErr } = await supabase
           .from('live_sessions')
           .select(`
-            id, title, teacher_id, formation_id, status, config, started_at, session_type, debate_id,
+            id, title, teacher_id, formation_id, status, config, started_at, session_type, debate_id, production_live_type,
             slides:live_scenes(id, name, order_index, content_payload_json, is_active)
           `)
           .eq('id', sessionId)
@@ -152,6 +153,9 @@ export async function runLiveHostSessionAndLiveKitInit(ctx) {
         // Normaliser le config
         let cfg = {};
         try { cfg = typeof sess.config === 'string' ? JSON.parse(sess.config) : (sess.config || {}); } catch { /* ignore */ }
+
+        // Type de production (ex. 'medos' = live santé → cockpit clinique embarqué).
+        setProductionLiveType?.(cfg?.production_live_type ?? sess.production_live_type ?? null);
 
         // Affichage initial : config arène persistée sinon dérivé du type de live (Formation/Conférence/Débat).
         try {
@@ -179,7 +183,15 @@ export async function runLiveHostSessionAndLiveKitInit(ctx) {
           setStep(savedStep);
         }
 
-        setSmartboardSceneFlags(mergeSmartboardSceneFlags(cfg?.smartboard_scenes));
+        // Live MEDOS (santé) : PAS de smartboard Formation (deck IA/mindmaps, quiz) — le
+        // partage clinique passe par le cockpit (jumeau 3D/examens/SOAP). On garde tableau
+        // blanc + galerie image + partage d'écran + diapo importée.
+        const isMedosLiveScenes = (cfg?.production_live_type ?? sess.production_live_type) === 'medos';
+        setSmartboardSceneFlags(mergeSmartboardSceneFlags(
+          isMedosLiveScenes
+            ? { smartboard: false, quiz: false, browser: false, shop: false, embed: false, secure_app_share: false, camera2: false, board: true, image: true, screen: true, diapo: true }
+            : cfg?.smartboard_scenes,
+        ));
         setSessionQuickIaFlags({
           quiz_enabled: cfg.quiz_enabled === true,
           polls_enabled: cfg.polls_enabled === true,

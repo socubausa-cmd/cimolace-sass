@@ -47,6 +47,10 @@ export function StudioBuilder({
   lastStepScrollToActionsId = null,
   /** Shell pixel-perfect « Studio de création live » (#0a0c10, stepper or, colonnes live-studio-*) */
   liveCreationShell = false,
+  /** Imbriqué dans la coque « LIRI Studio » (StudioDesignerLikeShell) : pas de
+   *  plein écran `fixed inset-0`, header propre MASQUÉ (la coque fournit topbar +
+   *  rail + footer). Le corps (sidebar étapes + contenu + preview) vit dedans. */
+  embedInShell = false,
 }) {
   const totalSteps = steps.length;
   const [currentStep, setCurrentStep] = useState(1);
@@ -256,8 +260,11 @@ export function StudioBuilder({
   return (
     <div
       className={cn(
-        'fixed inset-0 z-[2000] flex flex-col overflow-hidden text-white',
-        liveCreationShell ? 'live-studio-premium bg-[#0a0c10]' : studioCreatorShellBg,
+        'flex flex-col overflow-hidden text-white',
+        embedInShell ? 'min-h-0 flex-1' : 'fixed inset-0 z-[2000]',
+        liveCreationShell
+          ? cn('live-studio-premium', !embedInShell && 'bg-[#0a0c10]')
+          : studioCreatorShellBg,
       )}
     >
       {!liveCreationShell && (
@@ -267,6 +274,7 @@ export function StudioBuilder({
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(212,175,55,0.07),transparent)]" />
         </div>
       )}
+      {!embedInShell && (
       <header
         className={cn(
           'relative z-30 shrink-0',
@@ -429,6 +437,7 @@ export function StudioBuilder({
           </div>
         )}
       </header>
+      )}
 
       {liveCreationShell && (
         <div className="live-studio-global-progress" role="presentation" aria-hidden>

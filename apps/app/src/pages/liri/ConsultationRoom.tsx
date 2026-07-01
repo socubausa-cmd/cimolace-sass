@@ -31,7 +31,7 @@ import {
   useTracks,
 } from '@livekit/components-react';
 import { Track, ConnectionState } from 'livekit-client';
-import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause } from 'lucide-react';
+import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -48,6 +48,7 @@ import ConsultationSettings, { ConsultationSettingsButton } from '@/features/con
 import ConsultationSmartBoard from '@/features/consultation-stage/ConsultationSmartBoard';
 import ConsultationCopilot from '@/features/consultation-stage/ConsultationCopilot';
 import ConsultationRecall from '@/features/consultation-stage/ConsultationRecall';
+import ConsultationScriptPanel from '@/features/consultation-stage/ConsultationScriptPanel';
 import WaitingRoom from '@/features/consultation-stage/WaitingRoom';
 import { BackgroundBlur, VirtualBackground, supportsBackgroundProcessors } from '@livekit/track-processors';
 
@@ -232,7 +233,7 @@ export default function ConsultationRoom() {
   const [left, setLeft] = useState(false);
   // Panneau de droite : un seul ouvert à la fois (façon appel vidéo).
   //   null | 'chat' | 'copilot' | 'recall'
-  const [rightPanel, setRightPanel] = useState<'chat' | 'copilot' | 'recall' | null>(null);
+  const [rightPanel, setRightPanel] = useState<'chat' | 'copilot' | 'recall' | 'script' | null>(null);
   // Réglages : popover ancré au-dessus de la barre. Le fond sonore est logé dans
   // ce panneau (contrôleur partagé avec la pastille flottante autonome).
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -249,6 +250,17 @@ export default function ConsultationRoom() {
   const handleLeave = () => {
     if (isHost) returnToMedos(tenantSlug);
     else setLeft(true);
+  };
+
+  // Studio de création de live — nouvel onglet (préserve le tenant ; ne coupe pas la
+  // salle en cours). launch=true → « Lancer le live » (accès direct, saute à l'étape
+  // Validation) ; launch=false → « Préparer le live » (wizard complet).
+  const openLiveStudio = (launch: boolean) => {
+    const q = new URLSearchParams();
+    if (tenantSlug) q.set('tenant', tenantSlug);
+    if (launch) q.set('launch', '1');
+    q.set('context', 'medos'); // live santé → cockpit clinique embarqué (jumeau 3D éducation)
+    window.open(`/studio/live?${q.toString()}`, '_blank', 'noopener,noreferrer');
   };
 
   // Aperçu de la salle d'attente (le praticien peut voir ce que voit le patient) :
@@ -403,6 +415,9 @@ export default function ConsultationRoom() {
                 onToggleChat={() => setRightPanel((p) => (p === 'chat' ? null : 'chat'))}
                 onToggleCopilot={() => setRightPanel((p) => (p === 'copilot' ? null : 'copilot'))}
                 onToggleRecall={() => setRightPanel((p) => (p === 'recall' ? null : 'recall'))}
+                onToggleScript={() => setRightPanel((p) => (p === 'script' ? null : 'script'))}
+                onOpenStudio={() => openLiveStudio(false)}
+                onLaunchLive={() => openLiveStudio(true)}
                 settingsOpen={settingsOpen}
                 onToggleSettings={() => setSettingsOpen((v) => !v)}
               />
@@ -415,6 +430,9 @@ export default function ConsultationRoom() {
           ) : null}
           {rightPanel === 'recall' && isHost && sessionId ? (
             <ConsultationRecall sessionId={sessionId} patientName={ctx?.patient_name} onClose={() => setRightPanel(null)} />
+          ) : null}
+          {rightPanel === 'script' && isHost && sessionId ? (
+            <ConsultationScriptPanel sessionId={sessionId} onClose={() => setRightPanel(null)} />
           ) : null}
         </div>
         <RoomAudioRenderer />
@@ -991,6 +1009,9 @@ function ConsultationBar({
   onToggleChat,
   onToggleCopilot,
   onToggleRecall,
+  onToggleScript,
+  onOpenStudio,
+  onLaunchLive,
   settingsOpen,
   onToggleSettings,
 }: {
@@ -1006,6 +1027,9 @@ function ConsultationBar({
   onToggleChat: () => void;
   onToggleCopilot: () => void;
   onToggleRecall: () => void;
+  onToggleScript: () => void;
+  onOpenStudio: () => void;
+  onLaunchLive: () => void;
   settingsOpen: boolean;
   onToggleSettings: () => void;
 }) {
@@ -1041,6 +1065,16 @@ function ConsultationBar({
           <UserPlus size={16} aria-hidden="true" />
         </button>
       ) : null}
+      {isHost ? (
+        <button onClick={onLaunchLive} title="Lancer un live maintenant" style={barBtn(false)}>
+          <Radio size={16} aria-hidden="true" />
+        </button>
+      ) : null}
+      {isHost ? (
+        <button onClick={onOpenStudio} title="Préparer un live (studio complet)" style={barBtn(false)}>
+          <LayoutTemplate size={16} aria-hidden="true" />
+        </button>
+      ) : null}
       <BarSep />
       {/* Panneaux droite + réglages. */}
       <button onClick={onToggleChat} aria-pressed={rightPanel === 'chat'} title="Discussion écrite" style={barBtn(rightPanel === 'chat')}>
@@ -1054,6 +1088,11 @@ function ConsultationBar({
       {isHost ? (
         <button onClick={onToggleRecall} aria-pressed={rightPanel === 'recall'} title="Récap de consultation" style={barBtn(rightPanel === 'recall')}>
           <Brain size={16} aria-hidden="true" />
+        </button>
+      ) : null}
+      {isHost ? (
+        <button onClick={onToggleScript} aria-pressed={rightPanel === 'script'} title="Conducteur (script + prompteur)" style={barBtn(rightPanel === 'script')}>
+          <FileText size={16} aria-hidden="true" />
         </button>
       ) : null}
       <ConsultationSettingsButton open={settingsOpen} onToggle={onToggleSettings} label="" />

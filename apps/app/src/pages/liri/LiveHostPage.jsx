@@ -217,6 +217,7 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
   const [sessionFormationId, setSessionFormationId] = useState(null);
   /** Type de session live ('classe' | 'conference' | 'entretien'). 'classe' = cours/formation → mode épuré auto (smartboard dominant). */
   const [sessionType, setSessionType] = useState(null);
+  const [productionLiveType, setProductionLiveType] = useState(null);
   const [liveEtapes, setLiveEtapes] = useState([]);
   const [liveScenes, setLiveScenes] = useState([]); // scènes SmartBoard normalisées
   const [smartboardSceneFlags, setSmartboardSceneFlags] = useState(() => mergeSmartboardSceneFlags());
@@ -865,7 +866,7 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
       roomRef, liveDisconnectTimerRef, pendingMeshRestoreRef, sharingScreenRef, isGuestUiRef,
       guestJoyKitDriveRef, guestResyncSmartboardFromDbRef, resyncSmartboardRef, arenaHostAlertSoundRef, hostSfxCtxRef,
       setPhase, setPhaseError, setLiveKitMediaAvailable, setLiriLiveKitDomFlag, setLiriLiveKitDomError, setSessionTitle,
-      setStartedAt, setTeacherId, setSessionFormationId, setSessionType, setLiveEtapes, setStep,
+      setStartedAt, setTeacherId, setSessionFormationId, setSessionType, setProductionLiveType, setLiveEtapes, setStep,
       setSmartboardSceneFlags, setSessionQuickIaFlags, setSessionCommFlags, setSessionGuestPermissions, setHostMultilang,
       setGuestMultilangConfig, setSharedImageGallery, setSharedImageLoop, setShopProducts, setProgressivePlayback,
       setAmbientTracks, applyLiriAudioFromConfig, setMeshGrantsByUserId, setLiveScenes, setPanels,
@@ -1496,8 +1497,16 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
   // patient). Monté uniquement pour les sessions de téléconsultation (titre) ;
   // se masque aussi côté backend si le contexte clinique est inaccessible.
   // mode = host (praticien) sur /live/host/:id, patient sur l'UI invité.
-  const medCockpit = /t[ée]l[ée]consult/i.test(sessionTitle || '') ? (
-    <MedTeleconsultCockpit sessionId={sessionId} mode={isGuestUi ? 'patient' : 'host'} />
+  // Cockpit clinique : téléconsult 1-1 (titre → dossier PATIENT) OU live MEDOS
+  // (production_live_type='medos' → mode ÉDUCATION : jumeau 3D générique, sans patient).
+  const isMedosLive = productionLiveType === 'medos';
+  const isTeleconsultLive = /t[ée]l[ée]consult/i.test(sessionTitle || '');
+  const medCockpit = (isMedosLive || isTeleconsultLive) ? (
+    <MedTeleconsultCockpit
+      sessionId={sessionId}
+      mode={isGuestUi ? 'patient' : 'host'}
+      eduMode={isMedosLive && !isTeleconsultLive}
+    />
   ) : null;
 
   // ── Mobile phone render — TikTok style (< 640 px) ────────────────────────

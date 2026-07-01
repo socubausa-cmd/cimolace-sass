@@ -35,6 +35,7 @@ import {
   type AttachmentLite,
 } from './cockpit-api';
 import { useCockpitChannel } from './useCockpitChannel';
+import { MEDOS_STUDY_CASES, applyCaseOrganScores } from './medosStudyCases';
 
 const BodyViewer3D = lazy(() =>
   import('./BodyViewer3D').then((m) => ({ default: m.BodyViewer3D })),
@@ -349,7 +350,7 @@ function PatientCockpit({ channel }: { channel: CockpitChannel }) {
 
 // ── Vue HOST (praticien : charge, navigue, partage) ─────────────────────────
 
-function HostCockpit({ sessionId, channel }: { sessionId: string; channel: CockpitChannel }) {
+function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: string; channel: CockpitChannel; eduMode?: boolean }) {
   const { scene: sharedScene, shareScene, clearScene } = channel;
   const [open, setOpen] = useState(false);
   const [ctx, setCtx] = useState<ClinicalContext | null>(null);
@@ -364,6 +365,10 @@ function HostCockpit({ sessionId, channel }: { sessionId: string; channel: Cockp
   const [attachments, setAttachments] = useState<AttachmentLite[]>([]);
   const [selectedImg, setSelectedImg] = useState<{ url: string; name: string; mime?: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  // Mode éducation : jumeau anatomique GÉNÉRIQUE + cas d'étude anonymisé sélectionné.
+  const [genericOrgans, setGenericOrgans] = useState<OrganNode[]>([]);
+  const [studyCaseId, setStudyCaseId] = useState<string | null>(null);
+  const studyCase = eduMode && studyCaseId ? MEDOS_STUDY_CASES.find((c) => c.id === studyCaseId) || null : null;
 
   // Charge le contexte + le dossier (jumeau, bilan, SOAP). Si la session n'est
   // pas une téléconsult (404) ou accès refusé → on n'affiche rien (pas de FAB).
@@ -371,6 +376,23 @@ function HostCockpit({ sessionId, channel }: { sessionId: string; channel: Cockp
     let alive = true;
     (async () => {
       try {
+        if (eduMode) {
+          // Live MEDOS « éducation » : pas de patient → jumeau 3D anatomique GÉNÉRIQUE.
+          // ROBUSTE : jamais de loadFailed ici (le FAB doit s'afficher même si le
+          // référentiel est indisponible → jumeau vide). Un cas d'étude anonymisé
+          // applique ensuite des scores fictifs + SOAP/bilans fictifs.
+          let generic: OrganNode[] = [];
+          try {
+            const refs = await getReferential().catch(() => ({ organs: [], biomarkers: [] }));
+            if (!alive) return;
+            generic = buildOrganNodes(refs, { organs: [], biomarkers: [], wheel: null } as any);
+          } catch { generic = []; }
+          if (!alive) return;
+          setGenericOrgans(generic);
+          setOrgans(generic);
+          setLoading(false);
+          return;
+        }
         const c = await getClinicalContext(sessionId);
         if (!alive) return;
         setCtx(c);
@@ -394,7 +416,7 @@ function HostCockpit({ sessionId, channel }: { sessionId: string; channel: Cockp
     return () => {
       alive = false;
     };
-  }, [sessionId]);
+  }, [sessionId, eduMode]);
 
   const organScores = useMemo(
     () => organs.map((o) => ({ code: o.code, name_fr: o.name_fr, score: o.score })),
@@ -403,8 +425,28 @@ function HostCockpit({ sessionId, channel }: { sessionId: string; channel: Cockp
 
   const latestRx = prescriptions[0] || null;
 
+  const displaySex: 'female' | 'male' = studyCase?.sex || ctx?.sex || 'female';
+
+  // Charge un cas d'étude anonymisé (scores fictifs sur le jumeau + SOAP/bilans/roue).
+  const loadStudyCase = (id: string) => {
+    const c = id ? MEDOS_STUDY_CASES.find((x) => x.id === id) || null : null;
+    setStudyCaseId(c ? c.id : null);
+    if (c) {
+      setOrgans(applyCaseOrganScores(genericOrgans, c.organScores));
+      setWheel(c.wheel);
+      setSoap(c.soap);
+      setLabs(c.labs);
+      setTab('twin');
+    } else {
+      setOrgans(genericOrgans);
+      setWheel([]);
+      setSoap(null);
+      setLabs([]);
+    }
+  };
+
   const shareCurrent = () => {
-    if (tab === 'twin') shareScene({ kind: 'twin', sex: ctx?.sex || 'female', organs, focus: selected });
+    if (tab === 'twin') shareScene({ kind: 'twin', sex: displaySex, organs, focus: selected });
     else if (tab === 'wheel') shareScene({ kind: 'wheel', domains: wheel, organs: organScores });
     else if (tab === 'soap' && soap) shareScene({ kind: 'soap', soap });
     else if (tab === 'labs' && labs.length) shareScene({ kind: 'labs', items: labs });
@@ -438,30 +480,51 @@ function HostCockpit({ sessionId, channel }: { sessionId: string; channel: Cockp
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} style={fabStyle} title="Dossier clinique du patient">
+      <button onClick={() => setOpen(true)} style={fabStyle} title={eduMode ? 'Jumeau 3D — éducation santé' : 'Dossier clinique du patient'}>
         🩺
         {isSharing && <span style={fabDot} />}
       </button>
     );
   }
 
-  const tabs: Array<[Tab, string]> = [
-    ['twin', 'Jumeau'],
-    ['wheel', 'Roue'],
-    ['labs', 'Bilans'],
-    ['image', 'Imagerie'],
-    ['rx', 'Ordonnance'],
-    ['soap', 'SOAP'],
-  ];
+  const tabs: Array<[Tab, string]> = eduMode
+    ? (studyCase
+        ? [['twin', 'Jumeau 3D'], ['wheel', 'Roue'], ['labs', 'Bilans'], ['soap', 'SOAP']]
+        : [['twin', 'Jumeau 3D'], ['wheel', 'Roue de santé']])
+    : [
+        ['twin', 'Jumeau'],
+        ['wheel', 'Roue'],
+        ['labs', 'Bilans'],
+        ['image', 'Imagerie'],
+        ['rx', 'Ordonnance'],
+        ['soap', 'SOAP'],
+      ];
 
   return (
     <div style={{ ...panelStyle, ...COCKPIT_VARS }}>
       <div style={headerStyle}>
         <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {ctx?.patient_name || 'Dossier patient'}
+          {eduMode ? (studyCase ? `Cas : ${studyCase.title}` : 'Jumeau 3D — Éducation santé') : (ctx?.patient_name || 'Dossier patient')}
         </span>
         <button onClick={() => setOpen(false)} style={closeBtn} title="Réduire">—</button>
       </div>
+
+      {/* Cas d'étude anonymisé (mode éducation) — données 100 % fictives. */}
+      {eduMode && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: '#fff', borderBottom: '1px solid var(--zw-border)' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--zw-text-muted)', whiteSpace: 'nowrap' }}>Cas d&apos;étude</span>
+          <select
+            value={studyCaseId || ''}
+            onChange={(e) => loadStudyCase(e.target.value)}
+            style={{ flex: 1, minWidth: 0, padding: '6px 8px', borderRadius: 8, border: '1px solid var(--zw-border-strong)', background: '#fff', color: 'var(--zw-text)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}
+          >
+            <option value="">Jumeau générique (anatomie)</option>
+            {MEDOS_STUDY_CASES.map((c) => (
+              <option key={c.id} value={c.id}>{c.title}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Onglets */}
       <div style={{ display: 'flex', gap: 2, padding: '6px 6px 0', background: '#fff', borderBottom: '1px solid var(--zw-border)', overflowX: 'auto' }}>
@@ -488,7 +551,7 @@ function HostCockpit({ sessionId, channel }: { sessionId: string; channel: Cockp
         ) : (
           <>
             {tab === 'twin' && (
-              <TwinView organs={organs} sex={ctx?.sex || 'female'} selected={selected} onSelect={setSelected} />
+              <TwinView organs={organs} sex={displaySex} selected={selected} onSelect={setSelected} />
             )}
             {tab === 'wheel' && <WheelView domains={wheel} organs={organScores} />}
             {tab === 'soap' && <SoapView soap={soap} />}
@@ -505,7 +568,7 @@ function HostCockpit({ sessionId, channel }: { sessionId: string; channel: Cockp
       <div style={shareBar}>
         {sharingThisTab ? (
           <span style={{ fontSize: 11.5, color: '#22c55e', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }} /> Partagé au patient
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }} /> {eduMode ? 'Partagé au live' : 'Partagé au patient'}
           </span>
         ) : (
           <span style={{ fontSize: 11.5, color: 'var(--zw-text-muted)' }}>
@@ -523,7 +586,7 @@ function HostCockpit({ sessionId, channel }: { sessionId: string; channel: Cockp
           disabled={!canShare}
           style={{ ...shareActionBtn, opacity: canShare ? 1 : 0.5, cursor: canShare ? 'pointer' : 'not-allowed' }}
         >
-          Partager au patient
+          {eduMode ? 'Partager au live' : 'Partager au patient'}
         </button>
       </div>
     </div>
@@ -542,13 +605,15 @@ export function CockpitDock({
   sessionId,
   mode,
   channel,
+  eduMode = false,
 }: {
   sessionId: string;
   mode: 'host' | 'patient';
   channel: CockpitChannel;
+  eduMode?: boolean;
 }) {
   return mode === 'host' ? (
-    <HostCockpit sessionId={sessionId} channel={channel} />
+    <HostCockpit sessionId={sessionId} channel={channel} eduMode={eduMode} />
   ) : (
     <PatientCockpit channel={channel} />
   );
@@ -557,13 +622,17 @@ export function CockpitDock({
 export default function MedTeleconsultCockpit({
   sessionId,
   mode,
+  eduMode = false,
 }: {
   sessionId: string | null | undefined;
   mode: 'host' | 'patient';
+  /** Live MEDOS « éducation » : jumeau 3D anatomique GÉNÉRIQUE, sans dossier
+   *  patient (pas de labs/SOAP/Rx). Pour partager de l'anatomie à un groupe. */
+  eduMode?: boolean;
 }) {
   const channel = useCockpitChannel(sessionId ?? null, mode);
   if (!sessionId) return null;
-  return <CockpitDock sessionId={sessionId} mode={mode} channel={channel} />;
+  return <CockpitDock sessionId={sessionId} mode={mode} channel={channel} eduMode={eduMode} />;
 }
 
 // ── Styles ──────────────────────────────────────────────────────────────────

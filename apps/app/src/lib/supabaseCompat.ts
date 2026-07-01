@@ -257,8 +257,19 @@ class QueryBuilder<T = any> {
     if (!result || result.error) return result;
     const isListQuery =
       !this.singleFlag && !this.insertData && !this.updateData && !this.upsertData && !this.isDelete;
-    if (!isListQuery) return result;
     const d: any = result.data;
+    if (!isListQuery) {
+      // Requête single (maybeSingle/single/insert/update/delete-with-id) : l'API NestJS
+      // enveloppe parfois la ligne dans { data: {...} }. Une VRAIE ligne porte plusieurs
+      // colonnes ; une enveloppe pure n'a QUE la clé `data`. On déballe uniquement ce cas —
+      // sinon sess.title/config/production_live_type sont undefined et l'arène live chargeait
+      // sa config en mode dégradé (cockpit MEDOS jamais monté). Symétrique au déballage liste.
+      if (d && typeof d === 'object' && !Array.isArray(d)
+          && Object.keys(d).length === 1 && Object.prototype.hasOwnProperty.call(d, 'data')) {
+        return { ...result, data: (d as any).data as T };
+      }
+      return result;
+    }
     if (Array.isArray(d)) return result;
     if (d && Array.isArray(d.data)) return { ...result, data: d.data as any };
     if (d == null) return { ...result, data: [] as any };

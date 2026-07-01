@@ -9,9 +9,9 @@ const buttonVariants = cva(
 		variants: {
 			variant: {
 				default: 'bg-gradient-to-r from-[var(--school-accent)] to-[#e8c45a] text-black hover:brightness-105 shadow-[0_8px_22px_rgba(212,175,55,0.2)]',
-				/** Violet plein (accent app mobile / Live Studio) — sans dégradé or du default */
+				/** Accent LIRI plein (ambre chaud) — sans dégradé or du default ; charte « tout chaud » */
 				accent:
-					'bg-none bg-[#7B61FF] text-white hover:bg-[#9485ff] shadow-[0_8px_28px_-6px_rgba(123,97,255,0.45)] focus-visible:ring-[#7B61FF]/45',
+					'bg-none bg-[#d4a36a] text-black hover:bg-[#e0b47e] shadow-[0_8px_28px_-6px_rgba(212,163,106,0.45)] focus-visible:ring-[#d4a36a]/45',
 				destructive:
           'bg-destructive text-destructive-foreground hover:bg-destructive/90',
 				outline:

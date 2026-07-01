@@ -5,6 +5,8 @@ import { useTeacherAppointments } from '@/hooks/useTeacherAppointments';
 import { useProfilesSearch } from '@/hooks/useProfilesSearch';
 import { useLiveStudioDraft } from '@/hooks/useLiveStudioDraft';
 import { LiveStudioBuilder } from '@/components/studio-creator/studio/builders/LiveStudioBuilder';
+import StudioDesignerLikeShell from '@/components/liri/liri-ecosystem/StudioDesignerLikeShell';
+import { Radio } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { pushWizardSmartboardToLiveScenes } from '@/lib/pushWizardSmartboardToLiveScenes';
 import { formatJoinCodeDisplay } from '@/lib/liveJoinCode';
@@ -16,9 +18,18 @@ export default function LiveStudioPage() {
   const liriAgentImport = location.state?.liriAgentImport;
   const [searchParams] = useSearchParams();
   /** Import depuis l'Agent LIRI : ouvrir l'étape 6, sous-écran « Programme SmartBoard » (textarea Architect) */
+  // « Lancer le live » (accès direct depuis MEDOS) : ouvre le wizard DIRECTEMENT à
+  // l'étape 8 (Validation) → le praticien clique « Lancer maintenant » (1 clic).
+  // « Préparer le live » = wizard normal depuis l'étape 1.
+  const quickLaunch = searchParams.get('launch') === '1';
+  // Live lancé depuis MEDOS (santé) → marque le live → cockpit clinique embarqué.
+  const medosContext = searchParams.get('context') === 'medos';
   const liriWizardBootRef = useRef(null);
   if (liriWizardBootRef.current === null && searchParams.get('liriImport') === '1') {
     liriWizardBootRef.current = { stepId: 6, nestedIndex: 1 };
+  }
+  if (liriWizardBootRef.current === null && quickLaunch) {
+    liriWizardBootRef.current = { stepId: 8 };
   }
   const { toast } = useToast();
   const isStaff = ['secretariat', 'admin', 'owner'].includes(String(user?.role || '').toLowerCase());
@@ -44,6 +55,13 @@ export default function LiveStudioPage() {
     }
   }, [searchParams, navigate]);
 
+  // Lancement direct : pré-remplit un titre (le champ Titre est requis pour lancer).
+  useEffect(() => {
+    if (quickLaunch && draft && !String(draft.title || '').trim()) {
+      updateDraft({ title: `Live — ${new Date().toLocaleDateString('fr-FR')}` });
+    }
+  }, [quickLaunch, draft, updateDraft]);
+
   const handleSubmit = async (payload) => {
     if (!user?.id) {
       toast({ title: 'Session requise', description: 'Veuillez vous reconnecter.', variant: 'destructive' });
@@ -57,6 +75,11 @@ export default function LiveStudioPage() {
     const fullPayload = {
       ...payload,
       teacher_id: isStaff ? selectedTeacherId : undefined,
+      // Live MEDOS (santé) : persiste le marqueur dans `config` (JSONB déjà sauvegardé)
+      // → au runtime, le moteur live monte le cockpit clinique (jumeau 3D éducation).
+      ...(medosContext
+        ? { config: { ...(payload.config || {}), production_live_type: 'medos' } }
+        : {}),
     };
     const { error: err, sessionId, inviteEmailReport, join_code } = await createLiveSession(fullPayload);
     setCreating(false);
@@ -133,23 +156,34 @@ export default function LiveStudioPage() {
   };
 
   return (
-    <LiveStudioBuilder
-      draft={draft}
-      updateDraft={updateDraft}
-      lastSavedAt={lastSavedAt}
-      saveStatus={saveStatus}
-      saveError={saveError}
-      onClose={handleClose}
-      onSubmit={handleSubmit}
-      creating={creating}
-      isStaff={isStaff}
-      teachers={teachers}
-      selectedTeacherId={selectedTeacherId}
-      onTeacherChange={setSelectedTeacherId}
-      user={user}
-      initialNavigation={liriWizardBootRef.current || undefined}
-      liriAgentImport={liriAgentImport}
-    />
+    <StudioDesignerLikeShell
+      railActiveKey="live"
+      pageLabel="Live"
+      pageAccent="violet"
+      TitleIcon={Radio}
+      titleLine="Live Studio Créateur"
+      hideRail
+      hideEcosystemActions
+    >
+      <LiveStudioBuilder
+        draft={draft}
+        updateDraft={updateDraft}
+        lastSavedAt={lastSavedAt}
+        saveStatus={saveStatus}
+        saveError={saveError}
+        onClose={handleClose}
+        onSubmit={handleSubmit}
+        creating={creating}
+        isStaff={isStaff}
+        teachers={teachers}
+        selectedTeacherId={selectedTeacherId}
+        onTeacherChange={setSelectedTeacherId}
+        user={user}
+        initialNavigation={liriWizardBootRef.current || undefined}
+        liriAgentImport={liriAgentImport}
+        embedInShell
+      />
+    </StudioDesignerLikeShell>
   );
 }
 
