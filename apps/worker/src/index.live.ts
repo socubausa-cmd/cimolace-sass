@@ -117,4 +117,4 @@ startPingJob();
   }
 })();
 
-console.log('[worker:live] Pollers actifs ✅ (email 15s · rappels 60s · invitations 120s · imap 90s · shorts 5min · posts 90s · rgpd 60s)');
+console.log('[worker:live] Pollers actifs ✅ (email 15s · rappels 60s · invitations 120s · imap 90s · shorts 5min · posts 90s · rgpd 60s · replay post-prod 60s)');
