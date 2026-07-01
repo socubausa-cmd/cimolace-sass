@@ -9,12 +9,21 @@ import { fromReplay } from '@/components/lesson-player/unified/fromReplay';
  * get_replay_room, puis monte le UnifiedVideoPlayer (fromReplay) → mêmes
  * fonctionnalités que le player de cours (vidéo + chapitres + transcript + mindmap
  * + notes + questions), avec vignette (poster). Directive artistique LIRI (chaud).
+ *
+ * Barre encadrant (can_manage) : « Envoyer en post-production » (transcription +
+ * chapitres via worker) et « Publier au forum » Public/Privé (Lot 3).
  */
 const COL = {
   coral: '#d97757',
   cream: '#f5f1e9',
   t3: 'rgba(245,241,233,0.5)',
   mono: "'JetBrains Mono','Fira Code',monospace",
+};
+
+const WORKFLOW_LABEL = {
+  processing: '⏳ Traitement en cours…',
+  published: '✓ Enrichi (transcription + chapitres)',
+  error: '⚠️ Échec du traitement',
 };
 
 export default function ReplayRoomPage() {
@@ -26,6 +35,9 @@ export default function ReplayRoomPage() {
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [proc, setProc] = useState('');
+  const [vis, setVis] = useState('context');     // visibilité forum courante
+  const [visBusy, setVisBusy] = useState(false);
+  const [visMsg, setVisMsg] = useState('');
 
   useEffect(() => {
     if (!sessionId) return;
@@ -34,12 +46,15 @@ export default function ReplayRoomPage() {
     supabase.rpc('get_replay_room', { p_session_id: sessionId }).then(({ data }) => {
       if (!alive) return;
       setRoom(data || null);
+      setVis(data?.forum?.visibility || 'context');
       setLoading(false);
     });
     return () => { alive = false; };
   }, [sessionId]);
 
   const session = room?.session;
+  const canManage = Boolean(room?.can_manage);
+  const workflowStatus = room?.state?.workflow_status || null;
   const data = session
     ? fromReplay({
         session,
@@ -60,9 +75,6 @@ export default function ReplayRoomPage() {
     });
   };
 
-  // Envoie le replay en post-production : transcription (Whisper) → mindmap →
-  // écriture live_neuro_recall_state. Réutilise les edges déployées. Réservé
-  // encadrant (garde côté RPC). ⚠️ gated : GROQ_API_KEY + audio ≤ 25 Mo.
   // Envoie le replay en post-production : marque l'état 'processing' → le worker
   // (pollReplayPostprod) extrait l'audio, transcrit (Whisper) et génère les
   // chapitres, puis écrit chapitres + transcript (status 'published'). Réservé
@@ -78,11 +90,39 @@ export default function ReplayRoomPage() {
     }
   };
 
+  // Lot 3 — publie le Sujet forum du live en public (communautaire) ou privé
+  // (participants). Réservé encadrant (garde côté RPC).
+  const publish = async (target) => {
+    if (visBusy || target === vis) return;
+    setVisBusy(true);
+    setVisMsg('');
+    try {
+      const { error } = await supabase.rpc('set_replay_forum_visibility', { p_session_id: sessionId, p_visibility: target });
+      if (error) throw error;
+      setVis(target);
+      setVisMsg(target === 'public' ? '✓ Publié au forum communautaire' : '✓ Restreint aux participants');
+    } catch (e) {
+      setVisMsg('Échec : ' + (e?.message || e));
+    } finally {
+      setVisBusy(false);
+    }
+  };
+
   const processing = proc === 'Envoi en post-production…';
+  const isPublic = vis === 'public' || vis === 'context';
+
+  const segBtn = (active) => ({
+    padding: '6px 14px', borderRadius: 8, cursor: visBusy ? 'wait' : 'pointer',
+    fontSize: 12.5, fontWeight: 600, transition: 'background 160ms, color 160ms, border-color 160ms',
+    background: active ? COL.coral : 'transparent',
+    color: active ? '#1c1a17' : COL.cream,
+    border: `1px solid ${active ? COL.coral : 'rgba(245,241,233,0.22)'}`,
+  });
 
   return (
     <div style={{ maxWidth: 1040, margin: '0 auto', padding: '4px 0 40px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18, paddingTop: 4 }}>
+      {/* En-tête : retour + titre */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, paddingTop: 4 }}>
         <button
           onClick={() => navigate(backBase || '..')}
           style={{
@@ -100,22 +140,53 @@ export default function ReplayRoomPage() {
             {session?.title || 'Replay'}
           </h1>
         </div>
-        <button
-          onClick={runPostProd}
-          disabled={processing}
-          title="Générer transcription + carte mentale depuis le replay (réservé encadrant)"
-          style={{
-            flexShrink: 0, padding: '8px 14px', borderRadius: 9, cursor: processing ? 'wait' : 'pointer',
-            background: 'rgba(217,119,87,0.14)', border: '1px solid rgba(217,119,87,0.34)',
-            color: COL.coral, fontSize: 12.5, fontWeight: 600,
-          }}
-        >
-          ⚙️ Envoyer en post-production
-        </button>
       </div>
+
+      {/* Barre encadrant : post-production + publication forum (réservé encadrant) */}
+      {canManage ? (
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12,
+          marginBottom: 14, padding: '10px 12px', borderRadius: 12,
+          background: 'rgba(217,119,87,0.06)', border: '1px solid rgba(217,119,87,0.18)',
+        }}>
+          <button
+            onClick={runPostProd}
+            disabled={processing}
+            title="Générer transcription + chapitres depuis le replay (worker)"
+            style={{
+              flexShrink: 0, padding: '8px 14px', borderRadius: 9, cursor: processing ? 'wait' : 'pointer',
+              background: 'rgba(217,119,87,0.14)', border: '1px solid rgba(217,119,87,0.34)',
+              color: COL.coral, fontSize: 12.5, fontWeight: 600,
+            }}
+          >
+            ⚙️ Envoyer en post-production
+          </button>
+          {workflowStatus && WORKFLOW_LABEL[workflowStatus] ? (
+            <span style={{ fontSize: 11.5, fontFamily: COL.mono, color: workflowStatus === 'error' ? '#f0a58a' : COL.t3 }}>
+              {WORKFLOW_LABEL[workflowStatus]}
+            </span>
+          ) : null}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+            <span style={{ fontSize: 10.5, fontFamily: COL.mono, color: COL.t3, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Publier au forum
+            </span>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button onClick={() => publish('public')} disabled={visBusy} style={segBtn(isPublic)} title="Visible par tous les membres (forum communautaire)">Public</button>
+              <button onClick={() => publish('private')} disabled={visBusy} style={segBtn(!isPublic)} title="Réservé aux participants">Privé</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {proc ? (
-        <div style={{ marginBottom: 14, fontSize: 12.5, fontFamily: COL.mono, color: proc.startsWith('Échec') ? '#f0a58a' : COL.coral }}>
+        <div style={{ marginBottom: 12, fontSize: 12.5, fontFamily: COL.mono, color: proc.startsWith('Échec') ? '#f0a58a' : COL.coral }}>
           {proc}
+        </div>
+      ) : null}
+      {visMsg ? (
+        <div style={{ marginBottom: 12, fontSize: 12.5, fontFamily: COL.mono, color: visMsg.startsWith('Échec') ? '#f0a58a' : COL.coral }}>
+          {visMsg}
         </div>
       ) : null}
 
