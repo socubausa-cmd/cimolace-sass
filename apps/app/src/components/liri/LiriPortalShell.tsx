@@ -9,6 +9,7 @@ import type { ReactNode } from 'react';
 import { authStore } from '@/lib/auth-store';
 import { useAuth } from '@/hooks/useAuth';
 import { isCreatorRole } from '@/lib/liri/creatorRole';
+import { useSchoolActive } from '@/hooks/useSchoolActive';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import { PortalHeaderProvider, usePortalHeaderValues } from './portalHeader';
@@ -24,7 +25,7 @@ type RailKey =
   | 'biblio-eleve' | 'documents'
   | 'studio' | 'ecole' | 'biblio' | 'brain' | 'integrations' | 'reglages';
 
-type RailItem = { key: RailKey; label: string; icon: typeof House; to: string; creator?: boolean; student?: boolean };
+type RailItem = { key: RailKey; label: string; icon: typeof House; to: string; creator?: boolean; school?: boolean };
 
 // Rail GROUPÉ (familles) : LIRI embarque ISNA Academy (Vie scolaire) → l'élève a TOUTES
 // ses fonctionnalités école dans le portail. Visibilité :
@@ -36,15 +37,15 @@ const RAIL_GROUPS: { section?: string; items: RailItem[] }[] = [
     { key: 'accueil', label: 'Accueil', icon: House, to: '/liri' },
   ] },
   { section: 'Parcours', items: [
-    { key: 'semaine', label: 'Ma semaine', icon: CalendarDays, to: '/liri/semaine', student: true },
-    { key: 'formations', label: 'Mes cours', icon: BookOpen, to: '/liri/formations', student: true },
+    { key: 'semaine', label: 'Ma semaine', icon: CalendarDays, to: '/liri/semaine', school: true },
+    { key: 'formations', label: 'Mes cours', icon: BookOpen, to: '/liri/formations', school: true },
   ] },
   { section: 'Scolarité', items: [
-    { key: 'vie-scolaire', label: 'Vie scolaire', icon: School, to: '/liri/vie-scolaire', student: true },
-    { key: 'agenda', label: 'Agenda', icon: Calendar, to: '/liri/agenda', student: true },
-    { key: 'notes', label: 'Notes', icon: FileText, to: '/liri/notes', student: true },
-    { key: 'evaluations', label: 'Évals', icon: Award, to: '/liri/evaluations', student: true },
-    { key: 'absences', label: 'Absences', icon: AlertTriangle, to: '/liri/absences', student: true },
+    { key: 'vie-scolaire', label: 'Vie scolaire', icon: School, to: '/liri/vie-scolaire', school: true },
+    { key: 'agenda', label: 'Agenda', icon: Calendar, to: '/liri/agenda', school: true },
+    { key: 'notes', label: 'Notes', icon: FileText, to: '/liri/notes', school: true },
+    { key: 'evaluations', label: 'Évals', icon: Award, to: '/liri/evaluations', school: true },
+    { key: 'absences', label: 'Absences', icon: AlertTriangle, to: '/liri/absences', school: true },
   ] },
   { section: 'Communauté', items: [
     { key: 'lives', label: 'Lives', icon: Video, to: '/lives' },
@@ -52,8 +53,8 @@ const RAIL_GROUPS: { section?: string; items: RailItem[] }[] = [
     { key: 'messages', label: 'Messages', icon: MessageCircle, to: '/liri/messages' },
   ] },
   { section: 'Ressources', items: [
-    { key: 'biblio-eleve', label: 'Biblio.', icon: Library, to: '/liri/bibliotheque', student: true },
-    { key: 'documents', label: 'Documents', icon: FolderOpen, to: '/liri/documents', student: true },
+    { key: 'biblio-eleve', label: 'Biblio.', icon: Library, to: '/liri/bibliotheque', school: true },
+    { key: 'documents', label: 'Documents', icon: FolderOpen, to: '/liri/documents', school: true },
   ] },
   { section: 'Création', items: [
     { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri', creator: true },
@@ -160,6 +161,8 @@ function LiriPortalShellInner({
   // Même coupe que LiriPortalPage (helper partagé, fail-closed sur le rôle JWT).
   const { tenantRole } = useAuth();
   const isCreator = isCreatorRole(tenantRole);
+  // Mode ÉCOLE activé pour ce tenant ? Sinon = LIRI SIMPLE (Zoom) → sections Vie scolaire masquées.
+  const schoolActive = useSchoolActive() === true;
   const slug = authStore.getTenantSlug?.() || 'École';
   const tenant = String(slug).replace(/-/g, ' ');
   const initials = tenant.slice(0, 2).toUpperCase();
@@ -249,7 +252,10 @@ function LiriPortalShellInner({
         {rail && (
         <aside className="flex min-h-0 flex-col items-center gap-0.5 overflow-y-auto lp-rail-bg border-r lp-line py-3 lp-rail-scroll">
           {RAIL_GROUPS.map((group, gi) => {
-            const items = group.items.filter((it) => (it.creator ? isCreator : it.student ? !isCreator : true));
+            // Visibilité 3 niveaux : creator (owner…) / school (élève d'un tenant ÉCOLE
+            // activé) / partagé (LIRI simple = Zoom). Sans mode école → sections Vie
+            // scolaire masquées.
+            const items = group.items.filter((it) => (it.creator ? isCreator : it.school ? (!isCreator && schoolActive) : true));
             if (!items.length) return null;
             return (
               <div key={group.section || `g${gi}`} className="flex w-full flex-col items-center gap-0.5">
