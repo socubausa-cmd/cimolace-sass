@@ -65,6 +65,26 @@ export default function LiveStudioPage() {
     }
   }, [quickLaunch, draft, updateDraft]);
 
+  // Pré-remplissage depuis MEDOS (bouton « Préparer » d'un RDV téléconsult) :
+  // titre = patient, date/heure = RDV, mode santé (cockpit clinique) activé —
+  // UNIQUEMENT si le brouillon est vierge (on n'écrase pas un draft en cours).
+  const prefillRef = useRef(false);
+  useEffect(() => {
+    if (!draft || prefillRef.current) return;
+    const t = searchParams.get('title');
+    const d = searchParams.get('date');
+    const tm = searchParams.get('time');
+    const patch = {};
+    if (t && !String(draft.title || '').trim()) patch.title = t;
+    if (d && !draft.scheduled_at) patch.scheduled_at = d;
+    if (tm && !draft.scheduled_time) patch.scheduled_time = tm;
+    if (medosContext && draft.medos_mode !== true) patch.medos_mode = true;
+    if (Object.keys(patch).length) {
+      prefillRef.current = true;
+      updateDraft(patch);
+    }
+  }, [draft, searchParams, medosContext, updateDraft]);
+
   const handleSubmit = async (payload) => {
     if (!user?.id) {
       toast({ title: 'Session requise', description: 'Veuillez vous reconnecter.', variant: 'destructive' });
