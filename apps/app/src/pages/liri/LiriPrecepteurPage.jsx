@@ -53,6 +53,8 @@ const PRECEPTEUR_LIRI_CSS = `
   background: transparent !important;
   --school-accent: #d97757 !important;
   min-height: 100% !important;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
 }
 .precepteur-liri-scope [class*="from-[#11161f]"],
 .precepteur-liri-scope [class*="to-[#0c1119]"],
@@ -69,6 +71,12 @@ const PRECEPTEUR_LIRI_CSS = `
 .precepteur-liri-scope [class*="bg-[#d4a36a]"],
 .precepteur-liri-scope [class*="bg-[#c9a04e]"],
 .precepteur-liri-scope [class*="bg-[#d4a"] { background-color: #d97757 !important; }
+/* — Compacter l'écran de config LIRI : titre sur UNE ligne + remonter (top-align) +
+     paddings resserrés → le bouton « Commencer le cours » visible SANS scroller. — */
+.precepteur-liri-scope [class*="flex-1"][class*="items-center"] { align-items: flex-start !important; }
+.precepteur-liri-scope [class*="max-w-lg"][class*="rounded-[28px]"] { padding: 14px 20px !important; }
+.precepteur-liri-scope [class*="h-16"][class*="w-16"] { height: 46px !important; width: 46px !important; margin-bottom: 10px !important; }
+.precepteur-liri-scope [class*="max-w-lg"] h2 { white-space: nowrap !important; font-size: 1.55rem !important; }
 `;
 
 /**
