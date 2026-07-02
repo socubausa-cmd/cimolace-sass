@@ -21,6 +21,7 @@ import {
   LayoutGrid,
   Lightbulb,
   ListOrdered,
+  Loader2,
   MessageCircle,
   Monitor,
   Network,
@@ -46,6 +47,8 @@ import {
 } from '@/hooks/useMasterclassProject';
 import { savePendingMasterclassForLiveStudio } from '@/lib/liriAgentExportToLiveStudio';
 import { masterclassProjectToPrecepteurCourse } from '@/lib/precepteur/fromMasterclass';
+import { enrichCourseWithCroquis, buildCroquisSeeds } from '@/lib/precepteur/enrichCroquis';
+import { supabase } from '@/lib/supabaseCompat';
 
 const EXAMPLE_TYPES = [
   'Cours théologique',
@@ -1673,7 +1676,7 @@ function Step7Script({ scripts, chapters, onContinue, onPrev, onDownloadScript }
 
 /* ──────────────────────────── Step 8 — Export ──────────────────────────── */
 
-function Step8Export({ stats, project, onPrev, onReset, onDownloadJson, onDownloadMarkdown, onDownloadExport }) {
+function Step8Export({ stats, project, onPrev, onReset, onDownloadJson, onDownloadMarkdown, onDownloadExport, precepteurLoading }) {
   const downloadable = project.exports?.downloadable || {};
   const exportDocs = [
     { label: 'Studio Live + SmartBoard', kind: 'smartboard-live', enabled: true },
@@ -1697,30 +1700,39 @@ function Step8Export({ stats, project, onPrev, onReset, onDownloadJson, onDownlo
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
-          {exportDocs.map((doc) => (
-            <button
-              key={doc.kind}
-              type="button"
-              disabled={!doc.enabled}
-              onClick={() => {
-                if (!doc.enabled) return;
-                if (doc.kind === 'json') onDownloadJson();
-                else if (doc.kind === 'markdown') onDownloadMarkdown();
-                else onDownloadExport?.(doc.kind);
-              }}
-              className={`rounded-2xl border p-5 text-left transition ${
-                doc.enabled
-                  ? 'border-white/10 bg-[#0A101D] text-white/85 hover:border-violet-400'
-                  : 'border-white/10 bg-white/[0.02] text-white/35'
-              }`}
-            >
-              <Download className="mb-3 text-violet-300" />
-              <p className="text-sm font-semibold">{doc.label}</p>
-              <p className="mt-1 text-[11px] text-white/45">
-                {doc.enabled ? 'Téléchargement immédiat' : 'Bientôt disponible'}
-              </p>
-            </button>
-          ))}
+          {exportDocs.map((doc) => {
+            const isPrecepteur = doc.kind === 'precepteur';
+            const loading = isPrecepteur && precepteurLoading;
+            const disabled = !doc.enabled || loading;
+            return (
+              <button
+                key={doc.kind}
+                type="button"
+                disabled={disabled}
+                onClick={() => {
+                  if (disabled) return;
+                  if (doc.kind === 'json') onDownloadJson();
+                  else if (doc.kind === 'markdown') onDownloadMarkdown();
+                  else onDownloadExport?.(doc.kind);
+                }}
+                className={`rounded-2xl border p-5 text-left transition ${
+                  disabled
+                    ? 'border-white/10 bg-white/[0.02] text-white/35'
+                    : 'border-white/10 bg-[#0A101D] text-white/85 hover:border-violet-400'
+                }`}
+              >
+                {loading
+                  ? <Loader2 className="mb-3 animate-spin text-violet-300" />
+                  : <Download className="mb-3 text-violet-300" />}
+                <p className="text-sm font-semibold">{doc.label}</p>
+                <p className="mt-1 text-[11px] text-white/45">
+                  {loading
+                    ? 'Génération des croquis…'
+                    : (doc.enabled ? 'Téléchargement immédiat' : 'Bientôt disponible')}
+                </p>
+              </button>
+            );
+          })}
         </div>
 
         {project.quality?.missing_requirements?.length ? (
@@ -1896,6 +1908,7 @@ export default function MasterclassFactoryPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const m = useMasterclassProject();
+  const [precepteurLoading, setPrecepteurLoading] = useState(false);
   const factoryStats = useMemo(() => deriveFactoryStats(m.project), [m.project]);
   const pipelineStage = useMemo(() => derivePipelineStage(m.status, m.step), [m.status, m.step]);
 
@@ -1957,11 +1970,12 @@ export default function MasterclassFactoryPage() {
     }
   };
 
-  const handleDownloadExport = (kind) => {
+  const handleDownloadExport = async (kind) => {
     if (kind === 'precepteur') {
-      // Cours numérique « Le Précepteur » : on dépose le MasterclassProject brut en
-      // localStorage (PrecepteurCoursePage le transforme via masterclassProjectToPrecepteurCourse)
-      // puis on ouvre le lecteur immersif. On vérifie d'abord qu'il produit un cours jouable.
+      // Cours numérique « Le Précepteur ». On transforme le MasterclassProject en
+      // PrecepteurCourse, on l'ENRICHIT avec de vraies scènes croquis vectorielles
+      // générées par l'edge `liri-preceptor-course` (une par concept), puis on ouvre
+      // le lecteur immersif. On vérifie d'abord qu'il produit un cours jouable.
       const course = masterclassProjectToPrecepteurCourse(m.project);
       const playable = course && Array.isArray(course.concepts)
         && course.concepts.some((c) => Array.isArray(c.scenes) && c.scenes.length > 0);
@@ -1969,6 +1983,42 @@ export default function MasterclassFactoryPage() {
         window.alert('Ce projet ne contient pas encore de contenu pédagogique jouable (leçons, atelier, analogies). Génère la Masterclass complète avant l’export Précepteur.');
         return;
       }
+
+      // Appel authentifié de l'edge (même pattern que ttsFetch : getSession +
+      // Authorization Bearer). L'edge renvoie TOUJOURS { sketch: { caption?, elements } }
+      // en succès et { error } en échec. On déballe `data.sketch` et on renvoie
+      // { caption, elements } | null — null sur TOUTE erreur (fail-safe, jamais de throw).
+      const invokeEdge = async (seed) => {
+        try {
+          const { data: sess } = await supabase.auth.getSession();
+          const token = sess?.session?.access_token;
+          if (!token) return null; // pas de session → pas de croquis (jamais bloquant)
+          const { data, error } = await supabase.functions.invoke('liri-preceptor-course', {
+            body: {
+              chapterTitle: seed?.chapterTitle,
+              centralIdea: seed?.centralIdea,
+              lessonText: seed?.lessonText,
+            },
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (error || !data || data.error) return null;
+          const sketch = data.sketch;
+          if (!sketch || !Array.isArray(sketch.elements) || sketch.elements.length === 0) return null;
+          return { caption: sketch.caption, elements: sketch.elements };
+        } catch { return null; }
+      };
+
+      setPrecepteurLoading(true);
+      let enriched = course; // GARDE-FOU : par défaut le cours NON enrichi (jamais bloquant)
+      try {
+        const seeds = buildCroquisSeeds(m.project);
+        enriched = await enrichCourseWithCroquis(course, seeds, invokeEdge);
+      } catch { /* enrichissement optionnel : on garde le cours non enrichi */ }
+      finally { setPrecepteurLoading(false); }
+
+      // On dépose le cours DÉJÀ enrichi (lu en priorité par PrecepteurCoursePage) ET on
+      // garde l'écriture du MasterclassProject brut (fallback : transform sans croquis).
+      try { window.localStorage.setItem('precepteur:sourceCourse', JSON.stringify(enriched)); } catch { /* quota/private mode */ }
       try { window.localStorage.setItem('precepteur:sourceProject', JSON.stringify(m.project)); } catch { /* quota/private mode */ }
       navigate('/precepteur/cours');
       return;
@@ -2080,13 +2130,14 @@ export default function MasterclassFactoryPage() {
             onDownloadJson={handleDownloadJson}
             onDownloadMarkdown={handleDownloadMarkdown}
             onDownloadExport={handleDownloadExport}
+            precepteurLoading={precepteurLoading}
           />
         );
       default:
         return null;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [m.step, m.status, m.project, factoryStats, pipelineStage]);
+  }, [m.step, m.status, m.project, factoryStats, pipelineStage, precepteurLoading]);
 
   return (
     <main className="premium-dashboard-shell h-[100dvh] overflow-hidden bg-[#070B14] text-white">

@@ -7,30 +7,51 @@ import { masterclassProjectToPrecepteurCourse } from '@/lib/precepteur/fromMaste
 /**
  * PrecepteurCoursePage — route /precepteur/cours.
  *
- * REND un « Cours numérique (Précepteur) » exporté depuis la Masterclass Factory :
- * on lit le `MasterclassProject` déposé en localStorage (clé identique à celle écrite
- * par le bouton d'export de MasterclassFactoryPage), on le TRANSFORME en `PrecepteurCourse`
- * via `masterclassProjectToPrecepteurCourse`, puis on le joue avec le MOTEUR partagé
- * `PrecepteurPlayer` (le même que la démo /precepteur — aucune duplication du rendu).
+ * REND un « Cours numérique (Précepteur) » exporté depuis la Masterclass Factory.
+ * Deux sources, dans cet ordre de priorité :
+ *   1. `precepteur:sourceCourse` — un `PrecepteurCourse` DÉJÀ enrichi par la Factory
+ *      (transform + scènes croquis générées par l'edge `liri-preceptor-course`). Rendu
+ *      tel quel (déjà au bon format, croquis inclus).
+ *   2. `precepteur:sourceProject` — repli : le `MasterclassProject` brut, qu'on TRANSFORME
+ *      via `masterclassProjectToPrecepteurCourse` (SANS croquis) pour rester rétro-compatible.
+ * Puis on le joue avec le MOTEUR partagé `PrecepteurPlayer` (le même que la démo /precepteur
+ * — aucune duplication du rendu).
  *
- * Si aucun projet exploitable n'est présent → écran vide explicite (on NE rejoue PAS la
+ * Si aucune source exploitable n'est présente → écran vide explicite (on NE rejoue PAS la
  * démo canonique ici : cette page est dédiée au cours exporté).
  */
 
-// Doit correspondre EXACTEMENT à la clé écrite par MasterclassFactoryPage (bouton export).
-const SOURCE_PROJECT_KEY = 'precepteur:sourceProject';
+// Doivent correspondre EXACTEMENT aux clés écrites par MasterclassFactoryPage (bouton export).
+const SOURCE_COURSE_KEY = 'precepteur:sourceCourse'; // cours déjà enrichi (prioritaire)
+const SOURCE_PROJECT_KEY = 'precepteur:sourceProject'; // MasterclassProject brut (repli)
 
-// Lit + transforme le MasterclassProject de localStorage → PrecepteurCourse ; null si absent/vide.
+// Un `PrecepteurCourse` est jouable s'il a au moins un concept portant au moins une scène.
+// Même prédicat que la garde de « jouabilité » côté Factory.
+function isPlayableCourse(course) {
+  if (!course || !Array.isArray(course.concepts) || course.concepts.length === 0) return false;
+  return course.concepts.some((c) => Array.isArray(c.scenes) && c.scenes.length > 0);
+}
+
+// Lit le cours à jouer depuis localStorage ; null si absent/vide.
 // Ne jette JAMAIS : toute erreur (JSON invalide, projet partiel) → null → écran vide.
+// PRIORITÉ au cours DÉJÀ enrichi (croquis inclus) ; sinon repli sur la transform du projet brut.
 function loadExportedCourse() {
+  // 1) Cours déjà enrichi (rendu direct, croquis inclus).
   try {
-    const raw = window.localStorage.getItem(SOURCE_PROJECT_KEY);
-    if (!raw) return null;
-    const project = JSON.parse(raw);
+    const rawCourse = window.localStorage.getItem(SOURCE_COURSE_KEY);
+    if (rawCourse) {
+      const enriched = JSON.parse(rawCourse);
+      if (isPlayableCourse(enriched)) return enriched;
+    }
+  } catch { /* JSON invalide → on tente le repli */ }
+
+  // 2) Repli : MasterclassProject brut → transform (sans croquis).
+  try {
+    const rawProject = window.localStorage.getItem(SOURCE_PROJECT_KEY);
+    if (!rawProject) return null;
+    const project = JSON.parse(rawProject);
     const course = masterclassProjectToPrecepteurCourse(project);
-    if (!course || !Array.isArray(course.concepts) || course.concepts.length === 0) return null;
-    const hasScenes = course.concepts.some((c) => Array.isArray(c.scenes) && c.scenes.length > 0);
-    return hasScenes ? course : null;
+    return isPlayableCourse(course) ? course : null;
   } catch {
     return null;
   }
