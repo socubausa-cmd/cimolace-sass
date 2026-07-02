@@ -64,6 +64,17 @@ function isCimolaceOperator(candidate) {
   );
 }
 
+/**
+ * Staff Cimolace décidé directement d'après la SESSION Supabase.
+ * Le JWT porte `user_metadata.cimolace_staff` (exactement ce que lit
+ * CimolaceProtectedOwnerRoute → useAuth). C'est la source de vérité :
+ * `/auth/me` ne resurface pas toujours ce flag, si bien qu'un owner était
+ * traité en non-staff et renvoyé vers /cimolace/billing au lieu de /admin.
+ */
+function isCimolaceStaffFromSession(session) {
+  return session?.user?.user_metadata?.cimolace_staff === true;
+}
+
 async function checkCimolaceStaff(token) {
   if (!token) return false;
   try {
@@ -191,7 +202,9 @@ export default function CimolaceGoogleCallback() {
         clearStoredOAuthTenant();
         authStore.setTenantSlug('isna');
 
-        const isStaff = await checkCimolaceStaff(session.access_token);
+        const isStaff =
+          isCimolaceStaffFromSession(session) ||
+          (await checkCimolaceStaff(session.access_token));
 
         if (!cancelled) {
           if (isStaff) {
