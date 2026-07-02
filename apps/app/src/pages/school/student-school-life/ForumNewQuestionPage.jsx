@@ -37,6 +37,7 @@ export default function ForumNewQuestionPage() {
   const [loading, setLoading] = useState(true);
   const [replays, setReplays] = useState([]);
   const [courseVideos, setCourseVideos] = useState([]);
+  const [cursusVideos, setCursusVideos] = useState([]);
   const [query, setQuery] = useState('');
 
   const [selected, setSelected] = useState(null); // { source, contextType, contextId, data, title }
@@ -79,6 +80,14 @@ export default function ForumNewQuestionPage() {
           .filter((v) => v.courseId);
         if (alive) setCourseVideos(vids);
       } catch { /* noop */ }
+      // Vidéos du cursus (école) : formation_day_contents type='video' (video_url direct).
+      try {
+        const { data } = await supabase.from('formation_day_contents').select('id, data').eq('type', 'video').limit(300);
+        const fdc = (Array.isArray(data) ? data : [])
+          .filter((r) => r?.data && (r.data.videoUrl || r.data.url))
+          .map((r) => ({ id: r.id, title: r.data.title || 'Leçon vidéo', videoUrl: r.data.videoUrl || r.data.url, posterUrl: r.data.posterUrl || null }));
+        if (alive) setCursusVideos(fdc);
+      } catch { /* noop */ }
       if (alive) setLoading(false);
     })();
     return () => { alive = false; };
@@ -107,10 +116,26 @@ export default function ForumNewQuestionPage() {
     setSelected({ source: 'course', contextType: 'course', contextId: c.courseId, data, title: data.title });
     setSentCount(0);
   };
+  const pickCursus = (v) => {
+    const data = {
+      lessonId: v.id, title: v.title,
+      video: { url: v.videoUrl, posterUrl: v.posterUrl || undefined, resolution: 'direct' },
+      chapters: [], timestamps: [], transcript: [], mindmap: null,
+      enableQuiz: false, enableQuestion: true, notesScope: 'lesson', source: 'course',
+    };
+    // Contexte 'cursus' : le back (post_topic_question) ne résout pas encore le cursus
+    // école (formation_days ≠ courses) → post gaté dans handleAsk. Lecture/clip OK.
+    setSelected({ source: 'cursus', contextType: 'cursus', contextId: v.id, data, title: data.title });
+    setSentCount(0);
+  };
 
   // 3) Poser la question sur l'extrait → RPC (référence, pas d'upload).
   const handleAsk = async ({ question, clipStart, clipEnd, isPublic }) => {
     if (clipStart == null || clipEnd == null) return;
+    if (selected.contextType === 'cursus') {
+      window.alert('Les questions sur les vidéos du cursus arrivent bientôt. Pour l’instant, choisis un replay ou une vidéo de cours.');
+      return;
+    }
     setAsking(true);
     try {
       await supabase.rpc('post_topic_question', {
@@ -131,7 +156,8 @@ export default function ForumNewQuestionPage() {
   const q = query.trim().toLowerCase();
   const fReplays = useMemo(() => replays.filter((r) => !q || (r.title || '').toLowerCase().includes(q)), [replays, q]);
   const fCourses = useMemo(() => courseVideos.filter((c) => !q || (c.title || '').toLowerCase().includes(q)), [courseVideos, q]);
-  const nothing = !loading && fReplays.length === 0 && fCourses.length === 0;
+  const fCursus = useMemo(() => cursusVideos.filter((c) => !q || (c.title || '').toLowerCase().includes(q)), [cursusVideos, q]);
+  const nothing = !loading && fReplays.length === 0 && fCourses.length === 0 && fCursus.length === 0;
 
   // ————————————————————————————————————————————————————————————— rendu
 
@@ -203,20 +229,27 @@ export default function ForumNewQuestionPage() {
           <p style={{ fontSize: 12.5, margin: 0 }}>Les replays de tes lives et les vidéos de cours apparaîtront ici.</p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
           {fReplays.length > 0 && (
-            <Section icon={PlayCircle} label="Replays" count={fReplays.length}>
+            <Rail icon={PlayCircle} label="Replays" count={fReplays.length}>
               {fReplays.map((r) => (
-                <VideoRow key={r.id} icon={PlayCircle} title={r.title} sub={fmtDate(r.date)} onClick={() => pickReplay(r)} />
+                <VideoCard key={r.id} kind="replay" title={r.title} sub={fmtDate(r.date)} onClick={() => pickReplay(r)} />
               ))}
-            </Section>
+            </Rail>
           )}
           {fCourses.length > 0 && (
-            <Section icon={GraduationCap} label="Vidéos de cours" count={fCourses.length}>
+            <Rail icon={GraduationCap} label="Vidéos de cours" count={fCourses.length}>
               {fCourses.map((c) => (
-                <VideoRow key={c.id} icon={Clapperboard} title={c.title} sub={c.courseTitle || 'Leçon'} onClick={() => pickCourse(c)} />
+                <VideoCard key={c.id} kind="course" title={c.title} sub={c.courseTitle || 'Leçon'} onClick={() => pickCourse(c)} />
               ))}
-            </Section>
+            </Rail>
+          )}
+          {fCursus.length > 0 && (
+            <Rail icon={Clapperboard} label="Vidéos du cursus" count={fCursus.length}>
+              {fCursus.map((v) => (
+                <VideoCard key={v.id} kind="cursus" title={v.title} sub="Leçon" poster={v.posterUrl} onClick={() => pickCursus(v)} />
+              ))}
+            </Rail>
           )}
         </div>
       )}
@@ -224,41 +257,61 @@ export default function ForumNewQuestionPage() {
   );
 }
 
-function Section({ icon: Icon, label, count, children }) {
+// Rail = rangée horizontale scrollable (façon catalogue). L'en-tête reste fixe ; les
+// cartes défilent avec scroll-snap.
+function Rail({ icon: Icon, label, count, children }) {
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
         <Icon size={15} style={{ color: T.coral }} />
         <span style={{ fontFamily: T.mono, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: T.cream, textTransform: 'uppercase' }}>{label}</span>
         <span style={{ fontFamily: T.mono, fontSize: 11, color: T.t3, background: T.card, border: `1px solid ${T.line}`, borderRadius: 20, padding: '1px 8px' }}>{count}</span>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{children}</div>
+      <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 6, scrollSnapType: 'x proximity', WebkitOverflowScrolling: 'touch' }}>
+        {children}
+      </div>
     </div>
   );
 }
 
-function VideoRow({ icon: Icon, title, sub, onClick }) {
+const KIND_META = {
+  replay: { badge: 'REPLAY', icon: PlayCircle, g1: '#3a2118', g2: '#5c2f1e' },
+  course: { badge: 'COURS', icon: Clapperboard, g1: '#33241d', g2: '#4a2f22' },
+  cursus: { badge: 'CURSUS', icon: GraduationCap, g1: '#2e2620', g2: '#453528' },
+};
+
+function VideoCard({ kind, title, sub, poster, onClick }) {
   const [hover, setHover] = useState(false);
+  const meta = KIND_META[kind] || KIND_META.course;
+  const Icon = meta.icon;
   return (
     <button
       onClick={onClick}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
-        display: 'flex', alignItems: 'center', gap: 13, width: '100%', textAlign: 'left', cursor: 'pointer',
-        padding: '12px 15px', borderRadius: 12,
-        background: hover ? T.cardHover : T.card, border: `1px solid ${hover ? 'rgba(217,119,87,0.32)' : T.line}`,
-        transition: 'background .14s, border-color .14s',
+        flexShrink: 0, width: 216, scrollSnapAlign: 'start', textAlign: 'left', cursor: 'pointer', padding: 0,
+        borderRadius: 14, overflow: 'hidden', background: T.card,
+        border: `1px solid ${hover ? 'rgba(217,119,87,0.42)' : T.line}`,
+        transform: hover ? 'translateY(-2px)' : 'none', transition: 'border-color .14s, transform .14s',
       }}
     >
-      <span style={{ display: 'grid', placeItems: 'center', width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: 'rgba(217,119,87,0.12)', color: T.coral }}>
-        <Icon size={18} />
-      </span>
-      <span style={{ minWidth: 0, flex: 1 }}>
-        <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: T.cream, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
-        {sub ? <span style={{ display: 'block', fontFamily: T.mono, fontSize: 11, color: T.t3, marginTop: 1 }}>{sub}</span> : null}
-      </span>
-      <span style={{ flexShrink: 0, fontSize: 12.5, fontWeight: 600, color: hover ? T.coral : T.t3 }}>Choisir →</span>
+      {/* Poster 16:9 : dégradé chaud + icône TOUJOURS en base ; image par-dessus si elle
+          charge (onError → on la masque, le dégradé reste). Jamais de carte vide. */}
+      <div style={{ position: 'relative', aspectRatio: '16 / 9', display: 'grid', placeItems: 'center',
+        background: `linear-gradient(135deg, ${meta.g1}, ${meta.g2})` }}>
+        <Icon size={30} style={{ color: 'rgba(245,241,233,0.55)' }} />
+        {poster ? <img src={poster} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
+        <span style={{ position: 'absolute', top: 8, left: 8, fontFamily: T.mono, fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', color: T.coral, background: 'rgba(28,26,23,0.82)', border: '1px solid rgba(217,119,87,0.3)', borderRadius: 5, padding: '2px 6px' }}>{meta.badge}</span>
+        <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', opacity: hover ? 1 : 0, transition: 'opacity .14s', background: 'rgba(28,26,23,0.35)' }}>
+          <span style={{ display: 'grid', placeItems: 'center', width: 42, height: 42, borderRadius: '50%', background: T.coral, color: '#1c1a17' }}><PlayCircle size={22} /></span>
+        </span>
+      </div>
+      {/* Titre + sous-titre */}
+      <div style={{ padding: '10px 12px 12px' }}>
+        <div style={{ fontSize: 13.5, fontWeight: 600, color: T.cream, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 35 }}>{title}</div>
+        {sub ? <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.t3, marginTop: 4 }}>{sub}</div> : null}
+      </div>
     </button>
   );
 }
