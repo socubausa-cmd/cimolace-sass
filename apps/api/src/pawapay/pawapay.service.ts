@@ -5,7 +5,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createHmac } from 'crypto';
+import { createHash, createHmac, createSign } from 'crypto';
 import type {
   PawaPayActiveConfig,
   PawaPayDepositCallback,
@@ -23,10 +23,18 @@ export class PawaPayService {
   private readonly apiToken: string;
   private readonly baseUrl: string;
   private readonly signingSecret: string;
+  private readonly privateKeyPem: string; // PEM ECDSA P-256 pour signer les requêtes (RFC 9421)
+  private readonly keyId: string;          // nom de la clé publique déclarée dans le dashboard PawaPay
 
   constructor(config: ConfigService) {
     this.apiToken = config.get<string>('PAWAPAY_API_TOKEN') ?? '';
     this.signingSecret = config.get<string>('PAWAPAY_SIGNING_SECRET') ?? '';
+    // Clé de signature des requêtes (RFC 9421). PAWAPAY_PRIVATE_KEY = PEM ECDSA P-256
+    // encodé en base64 (env mono-ligne) ; PAWAPAY_KEY_ID = nom de la clé publique déclarée
+    // dans le dashboard. Si absent → requêtes non signées (comportement précédent).
+    const privB64 = config.get<string>('PAWAPAY_PRIVATE_KEY') ?? '';
+    this.privateKeyPem = privB64 ? Buffer.from(privB64, 'base64').toString('utf8') : '';
+    this.keyId = config.get<string>('PAWAPAY_KEY_ID') ?? '';
     // Sandbox par défaut si non configuré en production
     const env = config.get<string>('NODE_ENV');
     this.baseUrl =
@@ -38,6 +46,61 @@ export class PawaPayService {
 
   get isConfigured(): boolean {
     return Boolean(this.apiToken && this.apiToken !== 'replace_me');
+  }
+
+  /**
+   * Signe une requête financière selon RFC 9421 (exigé par PawaPay si « Only accept
+   * signed requests » est activé). Algo ECDSA P-256 SHA-256 ; en-têtes Content-Digest
+   * (SHA-512) + Signature-Date + Signature-Input + Signature. Renvoie {} si la clé
+   * privée n'est pas configurée → la requête part non signée (comportement précédent).
+   */
+  private signHeaders(
+    method: string,
+    url: string,
+    body: string,
+    contentType: string,
+  ): Record<string, string> {
+    if (!this.privateKeyPem || !this.keyId) return {};
+    try {
+      const u = new URL(url);
+      const created = Math.floor(Date.now() / 1000);
+      const expires = created + 60;
+      const sigDate = new Date().toISOString();
+      const contentDigest = `sha-512=:${createHash('sha512').update(body).digest('base64')}:`;
+      const components = [
+        '@method',
+        '@authority',
+        '@path',
+        'signature-date',
+        'content-digest',
+        'content-type',
+      ];
+      const params = `(${components.map((c) => `"${c}"`).join(' ')});alg="ecdsa-p256-sha256";keyid="${this.keyId}";created=${created};expires=${expires}`;
+      const base = [
+        `"@method": ${method.toUpperCase()}`,
+        `"@authority": ${u.host}`,
+        `"@path": ${u.pathname}`,
+        `"signature-date": ${sigDate}`,
+        `"content-digest": ${contentDigest}`,
+        `"content-type": ${contentType}`,
+        `"@signature-params": ${params}`,
+      ].join('\n');
+      const signature = createSign('SHA256')
+        .update(base)
+        .sign(
+          { key: this.privateKeyPem, dsaEncoding: 'ieee-p1363' },
+          'base64',
+        );
+      return {
+        'Content-Digest': contentDigest,
+        'Signature-Date': sigDate,
+        'Signature-Input': `sig-pp=${params}`,
+        Signature: `sig-pp=:${signature}:`,
+      };
+    } catch (e) {
+      this.logger.error(`pawaPay signHeaders échec: ${(e as Error).message}`);
+      return {};
+    }
   }
 
   /** Vérifie que le service est prêt, lève ServiceUnavailableException sinon */
@@ -76,13 +139,16 @@ export class PawaPayService {
       );
     }
 
-    const response = await fetch(`${baseUrl}/v2/deposits`, {
+    const body = JSON.stringify(payload);
+    const url = `${baseUrl}/v2/deposits`;
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiToken}`,
         'Content-Type': 'application/json',
+        ...this.signHeaders('POST', url, body, 'application/json'),
       },
-      body: JSON.stringify(payload),
+      body,
     });
 
     if (!response.ok) {
