@@ -42,6 +42,9 @@ export class PawaPayService {
       (env === 'production'
         ? 'https://api.pawapay.io'
         : 'https://api.sandbox.pawapay.io');
+    this.logger.log(
+      `PawaPay init: signing=${this.privateKeyPem && this.keyId ? `ON(keyId=${this.keyId})` : 'OFF'} baseUrl=${this.baseUrl}`,
+    );
   }
 
   get isConfigured(): boolean {
@@ -67,6 +70,7 @@ export class PawaPayService {
       const expires = created + 60;
       const sigDate = new Date().toISOString();
       const contentDigest = `sha-512=:${createHash('sha512').update(body).digest('base64')}:`;
+      const contentLength = Buffer.byteLength(body).toString();
       const components = [
         '@method',
         '@authority',
@@ -74,6 +78,7 @@ export class PawaPayService {
         'signature-date',
         'content-digest',
         'content-type',
+        'content-length',
       ];
       const params = `(${components.map((c) => `"${c}"`).join(' ')});alg="ecdsa-p256-sha256";keyid="${this.keyId}";created=${created};expires=${expires}`;
       const base = [
@@ -83,16 +88,17 @@ export class PawaPayService {
         `"signature-date": ${sigDate}`,
         `"content-digest": ${contentDigest}`,
         `"content-type": ${contentType}`,
+        `"content-length": ${contentLength}`,
         `"@signature-params": ${params}`,
       ].join('\n');
+      // PawaPay vérifie la signature ECDSA en DER (encodage par DÉFAUT de crypto.sign,
+      // cf. leur exemple officiel signed-deposit-example.js), PAS en IEEE-P1363.
       const signature = createSign('SHA256')
         .update(base)
-        .sign(
-          { key: this.privateKeyPem, dsaEncoding: 'ieee-p1363' },
-          'base64',
-        );
+        .sign(this.privateKeyPem, 'base64');
       return {
         'Content-Digest': contentDigest,
+        'Content-Length': contentLength,
         'Signature-Date': sigDate,
         'Signature-Input': `sig-pp=${params}`,
         Signature: `sig-pp=:${signature}:`,
