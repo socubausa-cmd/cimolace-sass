@@ -146,18 +146,13 @@ export default function ForumNewQuestionPage() {
       chapters: [], timestamps: [], transcript: [], mindmap: null,
       enableQuiz: false, enableQuestion: true, notesScope: 'lesson', source: 'course',
     };
-    // Même contexte non-résolu que le cursus (content_id ≠ courses.id) → post gaté.
-    setSelected({ source: 'precepteur', contextType: 'cursus', contextId: v.id, data, title: data.title });
+    setSelected({ source: 'precepteur', contextType: 'precepteur', contextId: v.id, data, title: data.title });
     setSentCount(0);
   };
 
   // 3) Poser la question sur l'extrait → RPC (référence, pas d'upload).
   const handleAsk = async ({ question, clipStart, clipEnd, isPublic }) => {
     if (clipStart == null || clipEnd == null) return;
-    if (selected.contextType === 'cursus') {
-      window.alert('Les questions sur les vidéos du cursus arrivent bientôt. Pour l’instant, choisis un replay ou une vidéo de cours.');
-      return;
-    }
     setAsking(true);
     try {
       await supabase.rpc('post_topic_question', {
