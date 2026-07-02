@@ -91,6 +91,16 @@ export default function TopicThreadPage() {
     });
   }, [msgs]);
 
+  // Source du Sujet (live + quelle session) → lien vers la Salle de révision
+  // (le lecteur canonique), plutôt qu'un player vidéo inline concurrent.
+  const topicContext = useMemo(() => ({
+    type: msgs[0]?.context_type || meta?._context || null,
+    id: msgs[0]?.context_id || meta?.context_id || null,
+  }), [msgs, meta]);
+  const salleLink = topicContext.type === 'live' && topicContext.id
+    ? `${forumBase}/replay/${topicContext.id}`
+    : null;
+
   return (
     <div style={{ maxWidth: 820, margin: '0 auto', padding: '4px 0 40px' }}>
       {/* En-tête */}
@@ -131,7 +141,6 @@ export default function TopicThreadPage() {
           {ordered.map((m) => {
             const cat = classify(m.subject);
             const link = cat.key === 'replay' ? urlOf(m.content) : null;
-            const isVideo = link && /\.(mp4|webm|mov|m3u8)(\?|$)/i.test(link);
             return (
               <article
                 key={m.message_id}
@@ -150,17 +159,27 @@ export default function TopicThreadPage() {
                   <span style={{ fontFamily: COL.mono, fontSize: 11, color: COL.t3 }}>{fmtRelative(m.created_at)}</span>
                 </div>
 
-                {/* Contenu */}
+                {/* Contenu — REPLAY : pas de lecteur inline concurrent. On renvoie
+                    vers la Salle de révision (lecteur canonique : vidéo + chapitres
+                    + transcription + carte mentale). Repli sur le fichier brut si
+                    on ne connaît pas la session (vieux Sujets). */}
                 {cat.key === 'replay' ? (
                   <div>
-                    {isVideo ? (
-                      <video controls src={link} style={{ width: '100%', maxHeight: 340, borderRadius: 10, background: '#000', marginBottom: 8 }} />
-                    ) : null}
-                    {link && (
+                    <p style={{ fontSize: 13.5, color: COL.t2, lineHeight: 1.55, margin: '0 0 10px' }}>
+                      Le replay est disponible dans la salle de révision — vidéo, chapitres, transcription et carte mentale au même endroit.
+                    </p>
+                    {salleLink ? (
+                      <button
+                        onClick={() => navigate(salleLink)}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 16px', borderRadius: 10, cursor: 'pointer', background: COL.coral, border: 'none', color: '#1c1a17', fontSize: 13, fontWeight: 700 }}
+                      >
+                        ▶️ Revoir dans la salle de révision
+                      </button>
+                    ) : link ? (
                       <a href={link} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: COL.coral, textDecoration: 'none', fontWeight: 600 }}>
-                        ▶️ Ouvrir le replay
+                        ▶️ Ouvrir le fichier replay
                       </a>
-                    )}
+                    ) : null}
                   </div>
                 ) : (
                   <p style={{ fontSize: 14, color: cat.key === 'chat' ? COL.t2 : COL.cream, lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>

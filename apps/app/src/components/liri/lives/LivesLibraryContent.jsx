@@ -130,7 +130,7 @@ export default function LivesLibraryContent({ variant = 'default' }) {
       {/* En-tête */}
       <div className="text-center space-y-3">
         <h1 className="text-4xl md:text-5xl font-serif font-bold text-white">Bibliothèque des Lives</h1>
-        <p className="text-lg text-stone-400">Retrouvez tous les directs, passés et à venir.</p>
+        <p className="text-lg text-stone-400">Le catalogue : trouvez et regardez vos directs et replays.</p>
       </div>
 
       {/* ── Pour toi (suggestions) ── */}

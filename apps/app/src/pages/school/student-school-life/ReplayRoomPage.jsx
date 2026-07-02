@@ -140,6 +140,18 @@ export default function ReplayRoomPage() {
             {session?.title || 'Replay'}
           </h1>
         </div>
+        {room?.forum?.topic_id ? (
+          <button
+            onClick={() => navigate(`${backBase}/topic/${room.forum.topic_id}`)}
+            title="Voir la discussion du live (récap, questions, carte mentale)"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0,
+              padding: '7px 13px', borderRadius: 9, cursor: 'pointer',
+              background: 'rgba(217,119,87,0.10)', border: '1px solid rgba(217,119,87,0.28)',
+              color: COL.coral, fontSize: 12.5, fontWeight: 600,
+            }}
+          >💬 Discussion du live</button>
+        ) : null}
       </div>
 
       {/* Barre encadrant : post-production + publication forum (réservé encadrant) */}
