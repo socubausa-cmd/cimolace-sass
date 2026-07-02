@@ -936,7 +936,7 @@ export function ConsultationStage({
   const hasScene = !!scene && scene.kind !== 'clear';
   return (
     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'row', gap: 12, padding: 14 }}>
-      <div style={{ flex: 1, minWidth: 0, borderRadius: 16, overflow: 'hidden', position: 'relative', background: view === 'board' ? TILE_BG : '#fff' }}>
+      <div style={{ flex: 1, minWidth: 0, borderRadius: 16, overflow: 'hidden', position: 'relative', background: view === 'board' ? TILE_BG : '#f6f4ee' }}>
         {view === 'board' ? (
           // Tableau intelligent (SmartBoard Konva) — outils de dessin/formes/texte +
           // NeuroInk côté praticien ; lecture seule côté patient. Remplace l'ancien
@@ -944,7 +944,9 @@ export function ConsultationStage({
           // cf. note onBroadcast.)
           <ConsultationSmartBoard sessionId={sessionId} isHost={isHost} viewerMode={!isHost} />
         ) : hasScene ? (
-          <SharedSceneView scene={scene} />
+          <div style={{ height: '100%', width: '100%', overflow: 'auto', padding: 18 }}>
+            <SharedSceneView scene={scene} />
+          </div>
         ) : (
           <SharePlaceholder />
         )}
@@ -983,11 +985,11 @@ function MembersRail({ tracks }: { tracks: any[] }) {
 // Vue Partage sans artefact encore choisi (host).
 function SharePlaceholder() {
   return (
-    <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: '#6b7280', background: '#f8fafc' }}>
-      <div style={{ textAlign: 'center', maxWidth: 320 }}>
-        <Share2 size={30} style={{ margin: '0 auto 10px', opacity: 0.6 }} aria-hidden="true" />
-        <p style={{ fontSize: 14, fontWeight: 600, color: '#475569' }}>Aucun élément partagé</p>
-        <p style={{ fontSize: 12.5 }}>
+    <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: '#6b6259', background: '#f6f4ee' }}>
+      <div style={{ textAlign: 'center', maxWidth: 340, padding: '0 24px' }}>
+        <Share2 size={30} style={{ margin: '0 auto 10px', opacity: 0.7, color: '#c1743f' }} aria-hidden="true" />
+        <p style={{ fontSize: 14.5, fontWeight: 700, color: '#2b2420', marginBottom: 5 }}>Aucun élément partagé</p>
+        <p style={{ fontSize: 12.5, lineHeight: 1.5 }}>
           Ouvrez le cockpit clinique <span aria-hidden="true">🩺</span> (en bas à droite), puis « Partager » un jumeau, un bilan, une ordonnance…
         </p>
       </div>
