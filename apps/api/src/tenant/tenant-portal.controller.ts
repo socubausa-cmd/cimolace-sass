@@ -28,14 +28,22 @@ export class TenantPortalController {
       this.db.from('billing_plans').select('key, label, description, price_cents, currency, billing_cycle, features').eq('is_active', true),
       this.db.from('billing_subscriptions').select('plan_id, status').eq('tenant_id', req.tenant.id),
     ]);
+    // « Déjà actif » = abo RÉELLEMENT payé/actif. Un abo 'pending' = paiement lancé
+    // mais NON abouti → ne doit PAS s'afficher comme souscrit (sinon on voit « Déjà
+    // actif » sans avoir payé). On l'expose séparément (pendingPayment) pour info.
     const subscribedKeys = new Set(
       (subsRes.data ?? [])
-        .filter((s: any) => ['active', 'trialing', 'past_due', 'pending'].includes(s.status))
+        .filter((s: any) => ['active', 'trialing', 'past_due'].includes(s.status))
+        .map((s: any) => s.plan_id),
+    );
+    const pendingKeys = new Set(
+      (subsRes.data ?? [])
+        .filter((s: any) => s.status === 'pending')
         .map((s: any) => s.plan_id),
     );
     const available = (plansRes.data ?? [])
       .filter((p: any) => !String(p.key).startsWith('ngowazulu-')) // exclut les plans mentorat perso
-      .map((p: any) => ({ ...p, subscribed: subscribedKeys.has(p.key) }))
+      .map((p: any) => ({ ...p, subscribed: subscribedKeys.has(p.key), pendingPayment: pendingKeys.has(p.key) }))
       .sort((a: any, b: any) => (a.price_cents ?? 0) - (b.price_cents ?? 0));
     return { data: available };
   }
