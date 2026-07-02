@@ -10,7 +10,6 @@
  *   onNavigate  (path: string) => void
  */
 import React, { useState, useRef } from 'react';
-import { getActiveTenantSlug } from '@/lib/tenant/activeBranding';
 import {
   CheckCircle2,
   Monitor,
@@ -37,16 +36,16 @@ const T = {
   gold: '#D4AF37',
   goldDim: 'rgba(212,175,55,0.14)',
   goldGlow: 'rgba(212,175,55,0.25)',
-  teal: '#2dd4bf',
-  tealDim: 'rgba(45,212,191,0.12)',
-  tealGlow: 'rgba(45,212,191,0.25)',
+  teal: '#e08a5f',
+  tealDim: 'rgba(224,138,95,0.12)',
+  tealGlow: 'rgba(224,138,95,0.25)',
   success: '#22C55E',
   successDim: 'rgba(34,197,94,0.12)',
   danger: '#EF4444',
   warning: '#F59E0B',
   warningDim: 'rgba(245,158,11,0.12)',
-  violet: '#7C3AED',
-  cyan: '#00E5FF',
+  violet: '#e0a458',
+  cyan: '#e3aa6b',
   t1: '#F5F5F7',
   t2: 'rgba(245,245,247,0.65)',
   t3: 'rgba(245,245,247,0.38)',
@@ -208,9 +207,9 @@ if (typeof document !== 'undefined' && !document.getElementById('pbr-styles')) {
   style.id = 'pbr-styles';
   style.textContent = `
     @keyframes pbr-pulse {
-      0%   { box-shadow: 0 0 0 0 rgba(45,212,191,0.6); }
-      70%  { box-shadow: 0 0 0 7px rgba(45,212,191,0); }
-      100% { box-shadow: 0 0 0 0 rgba(45,212,191,0); }
+      0%   { box-shadow: 0 0 0 0 rgba(224,138,95,0.6); }
+      70%  { box-shadow: 0 0 0 7px rgba(224,138,95,0); }
+      100% { box-shadow: 0 0 0 0 rgba(224,138,95,0); }
     }
     @keyframes pbr-pulse-gold {
       0%   { box-shadow: 0 0 0 0 rgba(212,175,55,0.6); }
@@ -351,6 +350,13 @@ function LiveBlock({ block, isActive, isCompleted, onNavigate }) {
   const isOpening = block.type === 'opening_live';
   const accentColor = T.gold;
 
+  // Neutral intra-LIRI target : la salle live précise si le bloc porte un id de
+  // session, sinon le hub « Lives » partagé. On ne route JAMAIS vers /t/:slug/*
+  // (frontière stricte des 3 realms — un bloc pédagogique LIRI ne doit pas
+  // entrer dans le realm tenant).
+  const liveSessionId = block.data?.live_session_id ?? block.data?.session_id ?? null;
+  const liveHref = liveSessionId ? `/live/${liveSessionId}` : '/lives';
+
   function formatDate(isoStr) {
     try {
       const d = new Date(isoStr);
@@ -397,7 +403,7 @@ function LiveBlock({ block, isActive, isCompleted, onNavigate }) {
         <div style={{ marginTop: 14 }}>
           <ActionButton
             color={T.gold}
-            onClick={() => onNavigate(`/t/${getActiveTenantSlug()}/live`)}
+            onClick={() => onNavigate(liveHref)}
           >
             <Radio size={14} />
             Rejoindre le LIVE
@@ -415,7 +421,7 @@ function SmartboardBlock({ block, isActive, isCompleted, onNavigate }) {
 
   return (
     <BlockCard isActive={isActive} isCompleted={isCompleted} accentColor={accentColor}>
-      <Badge color={T.violet} bg="rgba(124,58,237,0.12)">
+      <Badge color={T.violet} bg="rgba(224,164,88,0.12)">
         SmartBoard
       </Badge>
 
@@ -432,7 +438,7 @@ function SmartboardBlock({ block, isActive, isCompleted, onNavigate }) {
             width: 52,
             height: 52,
             borderRadius: 12,
-            background: 'rgba(124,58,237,0.15)',
+            background: 'rgba(224,164,88,0.15)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -647,7 +653,7 @@ function QuizBlock({ block, isActive, isCompleted, onComplete }) {
   const [feedback, setFeedback] = useState(null); // 'correct' | 'incorrect'
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
-  const accentColor = '#a78bfa';
+  const accentColor = '#dd8f74';
 
   function handleAnswer(answerIdx) {
     if (selected !== null) return;
@@ -671,7 +677,7 @@ function QuizBlock({ block, isActive, isCompleted, onComplete }) {
   if (!questions.length) {
     return (
       <BlockCard isActive={isActive} isCompleted={isCompleted} accentColor={accentColor}>
-        <Badge color={accentColor} bg="rgba(167,139,250,0.12)">
+        <Badge color={accentColor} bg="rgba(221,143,116,0.12)">
           Quiz
         </Badge>
         <BlockTitle>{block.title}</BlockTitle>
@@ -695,7 +701,7 @@ function QuizBlock({ block, isActive, isCompleted, onComplete }) {
   return (
     <BlockCard isActive={isActive} isCompleted={isCompleted} accentColor={accentColor}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Badge color={accentColor} bg="rgba(167,139,250,0.12)">
+        <Badge color={accentColor} bg="rgba(221,143,116,0.12)">
           Quiz
         </Badge>
         {!finished && (
@@ -836,7 +842,7 @@ function QuizBlock({ block, isActive, isCompleted, onComplete }) {
 /* ── MindmapBlock ───────────────────────────────────────────────────── */
 function MindmapNode({ node, depth = 0 }) {
   const indent = depth * 18;
-  const colors = [T.gold, T.teal, '#a78bfa', T.warning, T.success];
+  const colors = [T.gold, T.teal, '#dd8f74', T.warning, T.success];
   const color = colors[depth % colors.length];
 
   if (typeof node === 'string') {
