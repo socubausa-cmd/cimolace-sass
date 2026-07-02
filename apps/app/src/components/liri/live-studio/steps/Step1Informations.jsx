@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Sparkles, GraduationCap, Video, Presentation, Info, Swords } from 'lucide-react';
+import { Sparkles, GraduationCap, Video, Presentation, Info, Swords, Stethoscope } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
   Select,
   SelectContent,
@@ -35,7 +36,7 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
   return (
     <div className="space-y-6">
       <div className="flex gap-3 sm:gap-4">
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#7B61FF] bg-[#7B61FF]/12 text-[#7B61FF] shadow-[0_0_16px_-6px_rgba(123,97,255,0.35)]">
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#d97757] bg-[#d97757]/12 text-[#d97757] shadow-[0_0_16px_-6px_rgba(217,119,87,0.35)]">
           <Info className="h-4 w-4 stroke-[2.5]" />
         </span>
         <div className="min-w-0 pt-0.5">
@@ -57,7 +58,7 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
             </SelectTrigger>
             <SelectContent className="rounded-xl border-[#2D3139] bg-[#151a21]">
               {teachers.map((t) => (
-                <SelectItem key={t.id} value={t.id} className="rounded-lg focus:bg-[#7B61FF]/10 focus:text-[#7B61FF]">
+                <SelectItem key={t.id} value={t.id} className="rounded-lg focus:bg-[#d97757]/10 focus:text-[#d97757]">
                   {t.name || t.email || t.id}
                 </SelectItem>
               ))}
@@ -75,7 +76,7 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
               onChange={(e) => updateDraft({ title: e.target.value })}
               placeholder="ex: Classe virtuelle Module 2 — Cosmologie"
               maxLength={100}
-              className="h-12 rounded-lg border-[#7B61FF]/50 bg-[#0a0c10] pr-16 text-white placeholder:text-gray-600 transition-all focus-visible:border-[#7B61FF] focus-visible:shadow-[0_0_0_2px_rgba(123,97,255,0.15)]"
+              className="h-12 rounded-lg border-[#d97757]/50 bg-[#0a0c10] pr-16 text-white placeholder:text-gray-600 transition-all focus-visible:border-[#d97757] focus-visible:shadow-[0_0_0_2px_rgba(217,119,87,0.15)]"
             />
             <span className="pointer-events-none absolute bottom-2 right-3 text-[11px] tabular-nums text-gray-500">
               {titleLen} / 100
@@ -92,7 +93,7 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
               placeholder="Décrivez le contenu et les objectifs de cette session..."
               rows={4}
               maxLength={500}
-              className="min-h-[120px] resize-y rounded-lg border-[#2D3139] bg-[#0a0c10] px-3 pb-7 pt-3 pr-16 text-white placeholder:text-gray-600 transition-all focus-visible:border-[#7B61FF]/70 focus-visible:shadow-[0_0_0_2px_rgba(123,97,255,0.12)]"
+              className="min-h-[120px] resize-y rounded-lg border-[#2D3139] bg-[#0a0c10] px-3 pb-7 pt-3 pr-16 text-white placeholder:text-gray-600 transition-all focus-visible:border-[#d97757]/70 focus-visible:shadow-[0_0_0_2px_rgba(217,119,87,0.12)]"
             />
             <span className="pointer-events-none absolute bottom-2 right-3 text-[11px] tabular-nums text-gray-500">
               {descLen} / 500
@@ -107,7 +108,7 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
           <Select value={draft.session_type} onValueChange={(v) => updateDraft({ session_type: v })}>
             <SelectTrigger className="h-12 rounded-lg border-[#2D3139] bg-[#0a0c10] px-3 text-white">
               <div className="flex items-center gap-2">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#7B61FF]/28 text-[#B8A3FF]">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#d97757]/28 text-[#B8A3FF]">
                   <Video className="h-4 w-4" />
                 </span>
                 <SelectValue />
@@ -117,7 +118,7 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
               {SESSION_TYPES.map((t) => {
                 const Icon = t.icon;
                 return (
-                  <SelectItem key={t.value} value={t.value} className="rounded-lg focus:bg-[#7B61FF]/10 focus:text-[#7B61FF]">
+                  <SelectItem key={t.value} value={t.value} className="rounded-lg focus:bg-[#d97757]/10 focus:text-[#d97757]">
                     <span className="inline-flex items-center gap-2">
                       <Icon className="h-3.5 w-3.5" />
                       {t.label}
@@ -133,7 +134,7 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
           <Select value={draft.category} onValueChange={(v) => updateDraft({ category: v })}>
             <SelectTrigger className="h-12 rounded-lg border-[#2D3139] bg-[#0a0c10] px-3 text-white">
               <div className="flex items-center gap-2">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#3B82F6]/24 text-[#93C5FD]">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#cf7a52]/24 text-[#e8c3a0]">
                   <GraduationCap className="h-4 w-4" />
                 </span>
                 <SelectValue />
@@ -143,7 +144,7 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
               {CATEGORIES.map((c) => {
                 const Icon = c.icon;
                 return (
-                  <SelectItem key={c.value} value={c.value} className="rounded-lg focus:bg-[#7B61FF]/10 focus:text-[#7B61FF]">
+                  <SelectItem key={c.value} value={c.value} className="rounded-lg focus:bg-[#d97757]/10 focus:text-[#d97757]">
                     <span className="inline-flex items-center gap-2">
                       <Icon className="h-3.5 w-3.5" />
                       {c.label}
@@ -156,8 +157,50 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
         </div>
       </div>
 
+      {/* Live santé (MEDOS) : active le cockpit clinique embarqué (jumeau 3D / roue / bilans / SOAP). */}
+      <button
+        type="button"
+        onClick={() => updateDraft({ medos_mode: !draft.medos_mode })}
+        className={cn(
+          'flex w-full items-center justify-between gap-3 rounded-xl border p-4 text-left transition-colors',
+          draft.medos_mode
+            ? 'border-[#d97757]/45 bg-[#d97757]/[0.08]'
+            : 'border-[#2D3139] bg-[#0a0c10]/60 hover:border-[#d97757]/30',
+        )}
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span
+            className={cn(
+              'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
+              draft.medos_mode ? 'bg-[#d97757] text-white' : 'bg-[#d97757]/20 text-[#d97757]',
+            )}
+          >
+            <Stethoscope className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[14px] font-semibold text-white">Live santé (MEDOS)</p>
+            <p className="text-[12px] leading-snug text-gray-400">
+              Cockpit clinique embarqué : jumeau 3D, roue de transformation, bilans et note SOAP à partager au patient.
+            </p>
+          </div>
+        </div>
+        <span
+          className={cn(
+            'relative h-6 w-11 shrink-0 rounded-full transition-colors',
+            draft.medos_mode ? 'bg-[#d97757]' : 'bg-white/15',
+          )}
+        >
+          <span
+            className={cn(
+              'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
+              draft.medos_mode ? 'translate-x-[22px]' : 'translate-x-0.5',
+            )}
+          />
+        </span>
+      </button>
+
       {draft.session_type === 'debate' ? (
-        <div className="grid grid-cols-1 gap-4 rounded-lg border border-[#7B61FF]/30 bg-[#7B61FF]/[0.06] p-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 rounded-lg border border-[#d97757]/30 bg-[#d97757]/[0.06] p-4 md:grid-cols-2">
           <div className="md:col-span-2 -mb-1 flex items-center gap-2 text-[13px] font-medium text-[#B8A3FF]">
             <Swords className="h-4 w-4" /> Paramètres du débat
           </div>

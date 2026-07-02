@@ -408,8 +408,9 @@ export function Step6SalleVirtuelle({
 }) {
   // Live MEDOS (santé) : pas de studio SmartBoard Formation → l'étape 6 se limite au seul
   // écran « Salle & interaction ». Gardé par ?context=medos → studio Formation inchangé.
-  const medosContext = typeof window !== 'undefined'
-    && new URLSearchParams(window.location.search).get('context') === 'medos';
+  const medosContext = draft?.medos_mode === true
+    || (typeof window !== 'undefined'
+      && new URLSearchParams(window.location.search).get('context') === 'medos');
   const visibleSubsteps = medosContext ? SALLE_SUBSTEP_META.slice(0, 1) : SALLE_SUBSTEP_META;
   const presets = [
     {

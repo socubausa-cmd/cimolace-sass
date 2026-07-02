@@ -80,7 +80,7 @@ export default function LiveStudioPage() {
       teacher_id: isStaff ? selectedTeacherId : undefined,
       // Live MEDOS (santé) : persiste le marqueur dans `config` (JSONB déjà sauvegardé)
       // → au runtime, le moteur live monte le cockpit clinique (jumeau 3D éducation).
-      ...(medosContext
+      ...((medosContext || draft?.medos_mode === true)
         ? { config: { ...(payload.config || {}), production_live_type: 'medos' } }
         : {}),
     };

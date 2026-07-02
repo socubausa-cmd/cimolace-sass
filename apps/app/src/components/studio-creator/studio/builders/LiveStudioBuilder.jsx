@@ -62,8 +62,9 @@ function getLiveStepCompletion({ stepKey, draft }) {
 export function LiveStudioBuilder(props) {
   // Live MEDOS (santé) : l'étape 6 se limite à « Salle & interaction » — le bouton « Suivant »
   // saute directement à l'étape 7 (l'affichage des onglets est filtré dans Step6SalleVirtuelle).
-  const medosContext = typeof window !== 'undefined'
-    && new URLSearchParams(window.location.search).get('context') === 'medos';
+  const medosContext = props.draft?.medos_mode === true
+    || (typeof window !== 'undefined'
+      && new URLSearchParams(window.location.search).get('context') === 'medos');
   return (
     <StudioBuilder
       steps={STEPS}
