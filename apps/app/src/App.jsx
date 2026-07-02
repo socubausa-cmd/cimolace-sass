@@ -582,6 +582,9 @@ const TableauVivantDemoPage = lazy(() => import('@/pages/dev/TableauVivantDemoPa
 const CourseDemoPage = lazy(() => import('@/pages/dev/CourseDemoPage'));
 const PrecepteurDemoPage = lazy(() => import('@/pages/dev/PrecepteurDemoPage'));
 const PrecepteurCoursePage = lazy(() => import('@/pages/precepteur/PrecepteurCoursePage'));
+// Le Précepteur ENVELOPPÉ dans le chrome du portail LIRI (LiriPortalShell, rail « École ») —
+// même moteur (PrecepteurPlayer) que /precepteur, dual-mode démo + :masterclassId.
+const LiriPrecepteurPage = lazy(() => import('@/pages/liri/LiriPrecepteurPage'));
 const LiveWaitingRoomPage = lazy(() => import('@/pages/studio-creator/studio/LiveWaitingRoomPage'));
 const LiveWaitingRoomMaquettePage = lazy(() => import('@/pages/dev/LiveWaitingRoomMaquettePage'));
 const SecretariatPortalPage = lazy(() => import('@/pages/secretariat/SecretariatPortalPage'));
@@ -1124,7 +1127,9 @@ const AppContent = () => {
     '/handoff',      // handoff cross-domain (« Connexion à la salle ») — coque neutre, pas de shell école
     '/teleconsult',  // salle de téléconsultation MEDOS (plein écran immersif) — pas de shell portail :
                      // pendant le boot du handoff (MEDOS → app), on ne doit PAS voir le Header « …PORTAIL »
-    '/liri',         // accueil LIRI standalone (LiriPortalShell a son propre topbar) — pas de header école
+    '/liri',         // accueil LIRI standalone (LiriPortalShell a son propre topbar) — pas de header école.
+                     // Le match `startsWith('/liri')` couvre AUSSI /liri/precepteur[/cours/:id] (Le Précepteur
+                     // enveloppé dans LiriPortalShell) → pas de header vitrine ISNA par-dessus le shell LIRI.
     '/messages',     // messagerie immersive (page plein écran, embarquée dans LIRI) — pas de header école
     '/owner-dashboard', // back-office École : LiriDashboardShell est auto-suffisant (sidebar+topbar+user)
                         // et déjà brandé tenant (Prorascience). Le Header global = bandeau VITRINE du
@@ -1397,6 +1402,19 @@ isLiriHostDevPreviewRoute;
           <Route path="/precepteur" element={
             <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0b0f17] text-white/60">Chargement du Précepteur…</div>}>
               <PrecepteurDemoPage />
+            </React.Suspense>
+          } />
+          {/* LE PRÉCEPTEUR DANS LE PORTAIL LIRI — PUBLIC (aucune garde, capturable déconnecté,
+              exactement comme /precepteur). Enveloppé dans LiriPortalShell (fond chaud, rail « École »).
+              Route la plus spécifique (:masterclassId) EN PREMIER. */}
+          <Route path="/liri/precepteur/cours/:masterclassId" element={
+            <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0b0f17] text-white/60">Chargement du cours…</div>}>
+              <LiriPrecepteurPage />
+            </React.Suspense>
+          } />
+          <Route path="/liri/precepteur" element={
+            <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0b0f17] text-white/60">Chargement du Précepteur…</div>}>
+              <LiriPrecepteurPage />
             </React.Suspense>
           } />
           {import.meta.env.DEV && (

@@ -224,6 +224,9 @@ export function LiriPortalPage() {
     { label: 'Converser', icon: MessageCircle, to: '/liri/messages' },
     { label: 'Programmer', icon: CalendarPlus, to: '/studio/live', creator: true },
     { label: 'SmartBoard', icon: PenTool, to: '/studio/smartboard', creator: true },
+    // Le Précepteur — cours enseigné (narré + dessiné main), monté DANS le portail
+    // (LiriPrecepteurPage → LiriPortalShell rail « École »). Route publique /liri/precepteur.
+    { label: 'Précepteur', icon: GraduationCap, to: '/liri/precepteur', creator: true },
     { label: 'Acheter', icon: ShoppingBag, to: '/dashboard', creator: true },
   ];
 
