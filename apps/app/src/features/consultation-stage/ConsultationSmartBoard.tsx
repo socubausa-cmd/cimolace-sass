@@ -71,6 +71,7 @@ const CONSULT_DEFAULT_SCENE_FLAGS = {
   image: true, // galerie d'images (« partager une image »)
   camera2: false,
   shop: true, // boutique / liens (« partager une boutique »)
+  medos: true, // Dossier MEDOS : jumeau/roue/labs/SOAP partagés (scène du tableau, comme en Formation)
 } as const;
 
 export interface ConsultationSmartBoardProps {
