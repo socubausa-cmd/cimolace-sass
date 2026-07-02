@@ -292,14 +292,15 @@ export function Appointments() {
     }
   }
 
-  // PRÉPARER : ouvre le Studio de préparation du live pour la MÊME session
-  // (scènes, contenus, boutique, ambiance…) avant de la diffuser.
+  // PRÉPARER : ouvre le Studio Live Créateur (wizard de création de live —
+  // Informations, Couverture, Date, Sécurité, Inviter, Salle virtuelle,
+  // Interactions & IA, Validation) pour MONTER un live avant de le diffuser.
+  // Le RDV est passé en contexte (référence / pré-remplissage éventuel).
   async function prepareLive(appointmentId: string) {
     try {
-      const sessionId = await joinTeleconsult(appointmentId);
-      if (!sessionId) return;
       const slug = localStorage.getItem('tenant_slug') || '';
-      await openStudio(`/studio/live-preparation/${sessionId}?tenant=${encodeURIComponent(slug)}`);
+      const qp = appointmentId ? `&appointment=${encodeURIComponent(appointmentId)}` : '';
+      await openStudio(`/studio/live?tenant=${encodeURIComponent(slug)}${qp}`);
     } catch (err: any) {
       setError(err?.message || 'Echec');
     }
