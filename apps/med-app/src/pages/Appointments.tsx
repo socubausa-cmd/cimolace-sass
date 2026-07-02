@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth, useSupabase } from '../lib/auth';
-import { Calendar, Plus, X, Clock, Trash2, CheckCircle, XCircle, AlertCircle, Video } from 'lucide-react';
+import { Calendar, Plus, X, Clock, Trash2, CheckCircle, XCircle, AlertCircle, Video, Clapperboard } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
@@ -228,62 +228,78 @@ export function Appointments() {
     }
   }
 
-  async function startTeleconsult(appointmentId: string) {
-    try {
-      const res = await fetch(API + '/med/teleconsult/appointment/' + appointmentId + '/join', {
-        method: 'POST',
-        headers: authHeaders(),
-      });
-      if (!res.ok) {
-        const b = await res.json().catch(() => ({}));
-        setError(b?.message || `Erreur ${res.status}`);
-        return;
-      }
-      const d = await res.json();
-      const payload = d?.data || d; // API peut emballer en { data: ... }
-      const sessionId = payload?.session_id;
-      if (!sessionId) {
-        setError('Réponse téléconsultation invalide');
-        return;
-      }
-      // Liri complet : on ouvre la VRAIE salle immersive (grille vidéo +
-      // SmartBoard), hébergée par le studio (app.cimolace.space). La salle
-      // live_sessions porte le même id que la session téléconsult → praticien
-      // (host) et patient (peer) sont dans la même room.
-      const studio = (import.meta.env.VITE_STUDIO_URL as string) || 'https://app.cimolace.space';
-      const slug = localStorage.getItem('tenant_slug') || '';
-      // Mode CONSULTATION dédié (salle face-à-face + cockpit clinique MEDOS),
-      // role-aware : le praticien y est résolu en host. PAS le studio Formation.
-      const next = `/teleconsult/${sessionId}?tenant=${encodeURIComponent(slug)}`;
-      let url = `${studio}${next}`;
+  // Rejoint (ou crée) la session téléconsult liée au RDV → renvoie son id.
+  // La salle live_sessions porte le MÊME id → praticien (host) et patient (peer)
+  // partagent la room, en consultation directe COMME en studio de préparation.
+  async function joinTeleconsult(appointmentId: string): Promise<string | null> {
+    const res = await fetch(API + '/med/teleconsult/appointment/' + appointmentId + '/join', {
+      method: 'POST',
+      headers: authHeaders(),
+    });
+    if (!res.ok) {
+      const b = await res.json().catch(() => ({}));
+      setError(b?.message || `Erreur ${res.status}`);
+      return null;
+    }
+    const d = await res.json();
+    const sessionId = (d?.data || d)?.session_id; // API peut emballer en { data }
+    if (!sessionId) {
+      setError('Réponse téléconsultation invalide');
+      return null;
+    }
+    return sessionId;
+  }
 
-      // SSO handoff : le studio est une autre origine. On crée un code à usage
-      // unique (TTL 2 min, jamais de token dans l'URL) pour que le praticien y
-      // soit authentifié sans second login. En cas d'échec → on ouvre la salle
-      // directement (le studio demandera la connexion).
-      try {
-        if (supabase) {
-          const { data: sess } = await supabase.auth.getSession();
-          const refresh = sess?.session?.refresh_token;
-          if (refresh) {
-            const hr = await fetch(API + '/auth/handoff', {
-              method: 'POST',
-              headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-              body: JSON.stringify({ refresh_token: refresh }),
-            });
-            if (hr.ok) {
-              const hd = await hr.json();
-              const code = (hd?.data || hd)?.code;
-              if (code) {
-                url = `${studio}/handoff?code=${encodeURIComponent(code)}&next=${encodeURIComponent(next)}`;
-              }
-            }
+  // Ouvre une page du studio (autre origine : app.cimolace.space) via SSO handoff
+  // — code à usage unique (TTL 2 min, jamais de token dans l'URL). En cas d'échec,
+  // ouverture directe (le studio demandera la connexion).
+  async function openStudio(nextPath: string) {
+    const studio = (import.meta.env.VITE_STUDIO_URL as string) || 'https://app.cimolace.space';
+    let url = `${studio}${nextPath}`;
+    try {
+      if (supabase) {
+        const { data: sess } = await supabase.auth.getSession();
+        const refresh = sess?.session?.refresh_token;
+        if (refresh) {
+          const hr = await fetch(API + '/auth/handoff', {
+            method: 'POST',
+            headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refresh }),
+          });
+          if (hr.ok) {
+            const hd = await hr.json();
+            const code = (hd?.data || hd)?.code;
+            if (code) url = `${studio}/handoff?code=${encodeURIComponent(code)}&next=${encodeURIComponent(nextPath)}`;
           }
         }
-      } catch {
-        /* fallback: ouvrir la salle directement */
       }
-      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch {
+      /* fallback: ouvrir directement */
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  // DÉMARRER (direct) : ouvre la salle de CONSULTATION dédiée (face-à-face +
+  // cockpit clinique MEDOS), role-aware (praticien = host). PAS le studio Formation.
+  async function startTeleconsult(appointmentId: string) {
+    try {
+      const sessionId = await joinTeleconsult(appointmentId);
+      if (!sessionId) return;
+      const slug = localStorage.getItem('tenant_slug') || '';
+      await openStudio(`/teleconsult/${sessionId}?tenant=${encodeURIComponent(slug)}`);
+    } catch (err: any) {
+      setError(err?.message || 'Echec');
+    }
+  }
+
+  // PRÉPARER : ouvre le Studio de préparation du live pour la MÊME session
+  // (scènes, contenus, boutique, ambiance…) avant de la diffuser.
+  async function prepareLive(appointmentId: string) {
+    try {
+      const sessionId = await joinTeleconsult(appointmentId);
+      if (!sessionId) return;
+      const slug = localStorage.getItem('tenant_slug') || '';
+      await openStudio(`/studio/live-preparation/${sessionId}?tenant=${encodeURIComponent(slug)}`);
     } catch (err: any) {
       setError(err?.message || 'Echec');
     }
@@ -430,13 +446,22 @@ export function Appointments() {
                       </div>
                       <ApptStatusBadge status={appt.status} />
                       {appt.appointment_type === 'teleconsult' && appt.status !== 'cancelled' && appt.status !== 'completed' && (
-                        <button
-                          onClick={() => startTeleconsult(appt.id)}
-                          title="Démarrer la téléconsultation"
-                          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', background: 'var(--zw-violet)', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
-                        >
-                          <Video size={14} /> Démarrer
-                        </button>
+                        <>
+                          <button
+                            onClick={() => prepareLive(appt.id)}
+                            title="Préparer le live dans le studio (scènes, contenus, boutique, ambiance…) avant de le diffuser"
+                            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', background: '#fff', color: 'var(--zw-violet)', border: '1px solid var(--zw-violet)', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
+                          >
+                            <Clapperboard size={14} /> Préparer
+                          </button>
+                          <button
+                            onClick={() => startTeleconsult(appt.id)}
+                            title="Démarrer la téléconsultation maintenant"
+                            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', background: 'var(--zw-violet)', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
+                          >
+                            <Video size={14} /> Démarrer
+                          </button>
+                        </>
                       )}
                       <ApptActions status={appt.status} onAction={(a) => appointmentAction(appt.id, a)} />
                     </div>
