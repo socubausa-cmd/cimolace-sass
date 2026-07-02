@@ -305,6 +305,7 @@ export default function CimolaceBillingDashboardPage() {
   const [busy, setBusy] = useState(null);
   const [mmPlan, setMmPlan] = useState(null); // forfait pour lequel le modal Mobile Money (PawaPay) est ouvert
   const [refundState, setRefundState] = useState(null); // { subId, status:'pending'|'refunded'|'failed', amount_cents, currency } — remboursement à l'annulation
+  const [refundConfirm, setRefundConfirm] = useState(null); // abo en attente de confirmation de remboursement (modale propre)
   const [newKey, setNewKey] = useState(null);
   const [copied, setCopied] = useState(false);
   const [keyLabel, setKeyLabel] = useState('');
@@ -531,9 +532,9 @@ export default function CimolaceBillingDashboardPage() {
     finally { setBusy(null); }
   };
   // Annulation AVEC remboursement du dernier paiement mobile money (PawaPay).
-  // ⚠️ Déplace de l'argent réel vers le numéro payeur → confirmation explicite.
+  // ⚠️ Déplace de l'argent réel → confirmé via une modale dédiée (setRefundConfirm), pas window.confirm.
   const cancelAndRefund = async (sub) => {
-    if (!window.confirm(`Annuler « ${planName(sub)} » ET rembourser le dernier paiement (${eur(sub.amount_cents, sub.currency)}) sur le numéro Mobile Money du payeur ?\n\n⚠️ Ceci renvoie de l'argent RÉEL. Confirmer ?`)) return;
+    setRefundConfirm(null);
     setBusy(`refund-${sub.id}`); setError(null);
     try {
       withSlug();
@@ -788,16 +789,18 @@ export default function CimolaceBillingDashboardPage() {
                               ) : s.status === 'active' ? (
                                 <div className="flex flex-col items-end gap-2">
                                   <span className="flex items-center gap-1 text-green-400 text-sm font-medium"><CheckCircle className="w-4 h-4" /> Service actif</span>
-                                  {refundState?.subId === s.id && refundState.status === 'refunded' ? (
-                                    <span className="flex items-center gap-1 text-xs font-medium text-[#e6b878]"><CheckCircle className="w-3.5 h-3.5" /> Remboursé ({eur(refundState.amount_cents, refundState.currency)})</span>
-                                  ) : refundState?.subId === s.id && refundState.status === 'failed' ? (
-                                    <span className="flex items-center gap-1 text-xs font-medium text-red-300"><XCircle className="w-3.5 h-3.5" /> Remboursement échoué</span>
-                                  ) : refundState?.subId === s.id && refundState.status === 'pending' ? (
-                                    <span className="flex items-center gap-1.5 text-xs text-white/60"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Remboursement en cours…</span>
-                                  ) : (
-                                    <button onClick={() => cancelAndRefund(s)} disabled={busy === `refund-${s.id}`} className="text-xs px-3 py-1.5 rounded-lg border border-red-400/30 text-red-300 hover:bg-red-400/10 flex items-center gap-1.5 disabled:opacity-50">
-                                      {busy === `refund-${s.id}` ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Annuler et être remboursé
-                                    </button>
+                                  {s.provider === 'pawapay' && (Number(s.amount_cents) > 0) && (
+                                    refundState?.subId === s.id && refundState.status === 'refunded' ? (
+                                      <span className="flex items-center gap-1 text-xs font-medium text-[#e6b878]"><CheckCircle className="w-3.5 h-3.5" /> Remboursé ({eur(refundState.amount_cents, refundState.currency)})</span>
+                                    ) : refundState?.subId === s.id && refundState.status === 'failed' ? (
+                                      <span className="flex items-center gap-1 text-xs font-medium text-red-300"><XCircle className="w-3.5 h-3.5" /> Remboursement échoué</span>
+                                    ) : refundState?.subId === s.id && refundState.status === 'pending' ? (
+                                      <span className="flex items-center gap-1.5 text-xs text-white/60"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Remboursement en cours…</span>
+                                    ) : (
+                                      <button onClick={() => setRefundConfirm(s)} disabled={busy === `refund-${s.id}`} className="text-xs px-3 py-1.5 rounded-lg border border-red-400/30 text-red-300 hover:bg-red-400/10 flex items-center gap-1.5 disabled:opacity-50">
+                                        {busy === `refund-${s.id}` ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Annuler et être remboursé
+                                      </button>
+                                    )
                                   )}
                                 </div>
                               ) : null}
@@ -936,6 +939,22 @@ export default function CimolaceBillingDashboardPage() {
                         })}
                       </div>
                       {mmPlan && <MobileMoneyModal plan={mmPlan} onClose={() => setMmPlan(null)} onPaid={() => loadAll(activeSlug)} />}
+      {refundConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setRefundConfirm(null)}>
+          <div className="w-full max-w-sm rounded-2xl border border-white/[0.1] bg-[#1b1712] p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-[#d97757]/15 flex items-center justify-center shrink-0"><RefreshCw className="w-5 h-5 text-[#d97757]" /></div>
+              <h3 className="font-bold text-white text-lg leading-tight">Annuler et rembourser</h3>
+            </div>
+            <p className="text-sm text-white/70 mb-3">Annuler <strong className="text-white capitalize">{planName(refundConfirm)}</strong> et renvoyer <strong className="text-white">{eur(refundConfirm.amount_cents, refundConfirm.currency)}</strong> sur le numéro Mobile Money du payeur ?</p>
+            <div className="rounded-xl border border-[#d97757]/25 bg-[#d97757]/[0.07] px-3.5 py-2.5 text-xs text-white/65 mb-5 flex items-start gap-2"><AlertCircle className="w-4 h-4 text-[#e0926a] shrink-0 mt-px" /> Remboursement d'argent réel, immédiat et irréversible.</div>
+            <div className="flex gap-2.5">
+              <button onClick={() => setRefundConfirm(null)} className="flex-1 px-4 py-2.5 rounded-xl border border-white/[0.12] text-white/70 text-sm font-medium hover:bg-white/[0.06] transition-colors">Garder l'abo</button>
+              <button onClick={() => cancelAndRefund(refundConfirm)} className="flex-1 px-4 py-2.5 rounded-xl bg-[#d97757] text-white text-sm font-bold hover:bg-[#c9673f] flex items-center justify-center gap-2 transition-colors"><RefreshCw className="w-4 h-4" /> Rembourser</button>
+            </div>
+          </div>
+        </div>
+      )}
                       <p className="text-xs text-white/40 flex items-center gap-1.5 flex-wrap"><ShieldCheck className="w-3.5 h-3.5 text-[#e6b878] shrink-0" /> Carte (Stripe) ou Mobile Money (PawaPay) · Conforme RGPD · Selon le service, des frais d'activation uniques peuvent s'appliquer (forfait boutique : 500 €), détaillés avant paiement.</p>
                       {isLiriUpgrade && (
                         <div className="text-center pt-1">
