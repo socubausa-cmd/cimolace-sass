@@ -168,8 +168,24 @@ export class PawaPayService {
     }
 
     const json = (await response.json()) as PawaPayDepositInitResponse;
+    const status = String((json as any)?.status ?? '');
+    const phone = (payload.payer as any)?.accountDetails?.phoneNumber;
+    const provider = (payload.payer as any)?.accountDetails?.provider;
+    // PawaPay renvoie 200 même pour un dépôt refusé (status REJECTED/FAILED/DUPLICATE)
+    // → on remonte la vraie raison à l'appelant au lieu d'un faux « OK ».
+    if (['REJECTED', 'FAILED', 'DUPLICATE_IGNORED'].includes(status)) {
+      const reason = JSON.stringify(
+        (json as any)?.failureReason ?? (json as any)?.rejectionReason ?? json,
+      );
+      this.logger.error(
+        `pawaPay deposit ${status} depositId=${payload.depositId} phone=${phone} provider=${provider} reason=${reason}`,
+      );
+      throw new BadRequestException(
+        `Dépôt refusé par PawaPay (${status}) : ${reason}`,
+      );
+    }
     this.logger.log(
-      `pawaPay deposit OK depositId=${payload.depositId} status=${(json as any)?.status} phone=${(payload.payer as any)?.accountDetails?.phoneNumber} provider=${(payload.payer as any)?.accountDetails?.provider}`,
+      `pawaPay deposit OK depositId=${payload.depositId} status=${status} phone=${phone} provider=${provider}`,
     );
     return json;
   }
