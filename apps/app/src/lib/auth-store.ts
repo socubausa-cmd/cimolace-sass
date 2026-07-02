@@ -16,19 +16,31 @@ function normalizeTenantSlug(value?: string | null) {
 
 function inferTenantSlugFromLocation() {
   if (typeof window === 'undefined') return '';
+  const host = String(window.location.hostname || '').toLowerCase();
   // Résolution par DOMAINE custom (tenant_domains via API, en cache) — prioritaire, multi-tenant.
-  const byHost = getCachedHostTenant(window.location.hostname);
+  const byHost = getCachedHostTenant(host);
   if (byHost) return byHost;
   const pathname = normalizeTenantSlug(window.location.pathname);
   const search = normalizeTenantSlug(window.location.search);
+  // `/t/:slug` EXPLICITE nomme un tenant : légitime sur N'IMPORTE quel host (deep-link inter-tenant).
+  const tenantMatch = pathname.match(/^\/t\/([a-z0-9-]+)/);
+  if (tenantMatch?.[1]) return tenantMatch[1];
+  // HOST NEUTRE DE PRODUCTION (*.cimolace.space = liri./app.cimolace.space) = realm NEUTRE : on ne
+  // DEVINE JAMAIS un tenant depuis un chemin PARTAGÉ (/student-school-life, /live/, /cimolace…). Ces
+  // chemins sont montés dans PLUSIEURS realms ; inférer le tenant par défaut y ferait FUITER le host
+  // neutre vers ISNA (cf. audit cloison 3-realms, fuite « realm décidé par le chemin/compte », #①).
+  // Sur ce host, seul un domaine custom (ci-dessus) ou un /t/:slug explicite nomme un tenant.
+  // NB : le dev local (localhost/.local) est VOLONTAIREMENT exclu — il conserve le tenant par défaut
+  // comme commodité de test (aucun realm de production n'est en jeu).
+  const isProdPlatformHost = host === 'cimolace.space' || host.endsWith('.cimolace.space');
+  if (isProdPlatformHost) return '';
+  // HOST TENANT (ex. prorascience.org) OU dev local : l'inférence par chemin reste légitime (mono-realm).
   if (pathname.includes('/prorascience') || search.includes('prorascience')) return DEFAULT_TENANT_SLUG;
   if (pathname.startsWith('/m/eleve') || pathname.startsWith('/dev/liri-host-live')) return DEFAULT_TENANT_SLUG;
   if (pathname.startsWith('/student-school-life') || pathname.startsWith('/teacher-space')) return DEFAULT_TENANT_SLUG;
   if (pathname.startsWith('/secretariat-space') || pathname.startsWith('/classroom')) return DEFAULT_TENANT_SLUG;
   if (pathname.startsWith('/live/') || pathname.startsWith('/live-manager')) return DEFAULT_TENANT_SLUG;
   if (pathname.startsWith('/cimolace')) return DEFAULT_TENANT_SLUG;
-  const tenantMatch = pathname.match(/^\/t\/([a-z0-9-]+)/);
-  if (tenantMatch?.[1]) return tenantMatch[1];
   return '';
 }
 
