@@ -1264,7 +1264,7 @@ export const billingApi = {
     api.post<ApiEnvelope<{ subscription_id: string; invoice_id: string | null; plan: any; status: string }>>("/billing/subscribe", { planKey, provider }).then(unwrap),
   // Opérateurs mobile money par pays ISO3 (ex: ORANGE_CMR, MTN_MOMO_CMR)
   pawapayProviders: (country: string) =>
-    api.get<ApiEnvelope<any[]>>(`/checkout/pawapay/providers?country=${encodeURIComponent(country)}`).then(unwrap),
+    api.get<ApiEnvelope<any[]>>(`/offering-checkout/providers?country=${encodeURIComponent(country)}`).then(unwrap),
   // Mobile money (PawaPay — Afrique)
   collect: (subscriptionId: string, body: { phoneNumber: string; provider: string; country?: string }) =>
     api.post<ApiEnvelope<BillingCollectResult>>(`/billing/subscriptions/${subscriptionId}/collect`, body).then(unwrap),
