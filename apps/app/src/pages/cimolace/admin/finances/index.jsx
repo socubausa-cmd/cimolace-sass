@@ -25,6 +25,13 @@ export default function CimolaceAdminFinances() {
   const [confirm, setConfirm] = useState(false);
   const [sending, setSending] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [walletKey, setWalletKey] = useState('');
+  const [newKey, setNewKey] = useState('');
+  const [newLabel, setNewLabel] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [allocFor, setAllocFor] = useState(null);
+  const [allocAmt, setAllocAmt] = useState('');
+  const [wMsg, setWMsg] = useState(null);
 
   const amountCents = () => { const n = parseFloat(amount); if (Number.isNaN(n)) return 0; return ZERO_DECIMAL.has('XAF') ? Math.round(n) : Math.round(n * 100); };
 
@@ -38,7 +45,7 @@ export default function CimolaceAdminFinances() {
     if (sending || amountCents() <= 0 || !phone.trim()) return;
     setSending(true); setMsg(null);
     try {
-      const r = await apiV2.post('/cimolace-backoffice/finances/payout', { amountCents: amountCents(), currency: 'XAF', phoneNumber: phone.trim(), mno, reason: reason.trim() || undefined });
+      const r = await apiV2.post('/cimolace-backoffice/finances/payout', { amountCents: amountCents(), currency: 'XAF', phoneNumber: phone.trim(), mno, wallet: walletKey || undefined, reason: reason.trim() || undefined });
       const d = unwrap(r);
       setMsg({ ok: true, text: `Retrait initié (${d?.status || 'pending'}) — ${money(amountCents(), 'XAF')}.` });
       setAmount(''); setPhone(''); setReason(''); setConfirm(false); load();
@@ -46,6 +53,20 @@ export default function CimolaceAdminFinances() {
       setMsg({ ok: false, text: e?.response?.data?.error?.message || e?.response?.data?.message || e?.message || 'Retrait impossible.' });
       setConfirm(false);
     } finally { setSending(false); }
+  };
+
+  const createWallet = async () => {
+    if (creating || !newKey.trim() || !newLabel.trim()) return;
+    setCreating(true); setWMsg(null);
+    try { await apiV2.post('/cimolace-backoffice/finances/wallets', { key: newKey.trim(), label: newLabel.trim() }); setNewKey(''); setNewLabel(''); load(); }
+    catch (e) { setWMsg({ ok: false, text: e?.response?.data?.error?.message || e?.response?.data?.message || 'Création impossible.' }); }
+    finally { setCreating(false); }
+  };
+  const allocate = async () => {
+    const c = Math.round(parseFloat(allocAmt) || 0);
+    if (!allocFor || !c) return;
+    try { await apiV2.post(`/cimolace-backoffice/finances/wallets/${allocFor}/allocate`, { amountCents: c, note: 'Attribution manuelle' }); setAllocFor(null); setAllocAmt(''); load(); }
+    catch (e) { setWMsg({ ok: false, text: e?.response?.data?.message || 'Attribution impossible.' }); }
   };
 
   const balances = (fin?.walletBalances || []).filter((b) => Number(b.balance) > 0);
@@ -61,7 +82,33 @@ export default function CimolaceAdminFinances() {
           <h1 style={{ fontSize: 26, fontWeight: 700, margin: '0 0 4px' }}>Finances</h1>
           <p style={{ color: C.muted, margin: '0 0 24px', fontSize: 14 }}>Vos revenus (ce que chaque tenant vous paie pour vos services) — soldes réels + retrait vers mobile money, sans passer par pawaPay.</p>
 
-          <div style={{ marginBottom: 8, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, color: C.muted }}>Solde disponible (wallet pawaPay)</div>
+          {/* Porte-monnaie par produit (couche logique) */}
+          <div style={{ marginBottom: 8, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, color: C.muted }}>Porte-monnaie (par produit)</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(160px,1fr))', gap: 12, marginBottom: 10 }}>
+            {(fin?.wallets || []).map((w) => (
+              <div key={w.key} style={{ ...card, borderLeft: `3px solid ${w.color || C.violet}` }}>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{w.label}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, marginTop: 2 }}>{money(w.balanceCents || 0, w.currency || 'XAF')}</div>
+                <button onClick={() => { setAllocFor(w.key); setAllocAmt(''); }} style={{ marginTop: 8, background: 'transparent', color: C.muted, border: `1px solid ${C.border2}`, borderRadius: 6, padding: '4px 10px', fontSize: 12, cursor: 'pointer' }}>Attribuer</button>
+              </div>
+            ))}
+          </div>
+          {allocFor && (
+            <div style={{ ...card, marginBottom: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 13 }}>Attribuer à <b>{allocFor}</b> :</span>
+              <input type="number" value={allocAmt} onChange={(e) => setAllocAmt(e.target.value)} placeholder="montant XAF (négatif pour retirer)" style={{ ...input, width: 240 }} />
+              <button onClick={allocate} style={{ background: C.violet, color: 'white', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 13, cursor: 'pointer' }}>OK</button>
+              <button onClick={() => setAllocFor(null)} style={{ background: 'transparent', color: C.muted, border: `1px solid ${C.border2}`, borderRadius: 6, padding: '6px 12px', fontSize: 13, cursor: 'pointer' }}>Annuler</button>
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 22, alignItems: 'center', flexWrap: 'wrap' }}>
+            <input value={newKey} onChange={(e) => setNewKey(e.target.value)} placeholder="clé (ex: ecole)" style={{ ...input, width: 140 }} />
+            <input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} placeholder="Nom affiché" style={{ ...input, width: 180 }} />
+            <button onClick={createWallet} disabled={creating || !newKey.trim() || !newLabel.trim()} style={{ background: C.green, color: 'white', border: 'none', borderRadius: 6, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: (creating || !newKey.trim() || !newLabel.trim()) ? 0.5 : 1 }}>+ Créer un porte-monnaie</button>
+            {wMsg && <span style={{ fontSize: 12, color: wMsg.ok ? C.green : C.red }}>{wMsg.text}</span>}
+          </div>
+
+          <div style={{ marginBottom: 8, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, color: C.muted }}>Solde réel (wallet pawaPay physique)</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 12, marginBottom: 8 }}>
             {balances.length === 0 ? (
               <div style={{ ...card, color: C.muted, fontSize: 14 }}>{fin ? 'Aucun solde disponible.' : 'Chargement…'}</div>
@@ -79,6 +126,13 @@ export default function CimolaceAdminFinances() {
 
           <div style={{ ...card, marginBottom: 24 }}>
             <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Retirer vers mobile money</div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 12, color: C.muted }}>Depuis quel porte-monnaie ?</label>
+              <select value={walletKey} onChange={(e) => setWalletKey(e.target.value)} style={{ ...input, marginTop: 6 }}>
+                <option value="">— (non attribué)</option>
+                {(fin?.wallets || []).map((w) => <option key={w.key} value={w.key}>{w.label} · {money(w.balanceCents || 0, w.currency || 'XAF')}</option>)}
+              </select>
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div><label style={{ fontSize: 12, color: C.muted }}>Montant (XAF)</label><input type="number" min="1" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="2000" style={{ ...input, marginTop: 6 }} /></div>
               <div><label style={{ fontSize: 12, color: C.muted }}>Numéro mobile money</label><input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="24177000000" style={{ ...input, marginTop: 6 }} /></div>

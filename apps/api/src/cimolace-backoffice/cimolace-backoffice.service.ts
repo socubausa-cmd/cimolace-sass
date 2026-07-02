@@ -32,7 +32,36 @@ export class CimolaceBackofficeService {
     const revenuePaidCents = (invoices ?? []).filter((i: any) => String(i.status || '').toLowerCase() === 'paid').reduce((s: number, i: any) => s + Number(i.amount_cents || 0), 0);
     const { data: payouts } = await sb.from('billing_payouts').select('amount_cents, status').is('tenant_id', null);
     const withdrawnCents = (payouts ?? []).filter((p: any) => !['failed', 'rejected'].includes(String(p.status || '').toLowerCase())).reduce((s: number, p: any) => s + Number(p.amount_cents || 0), 0);
-    return { walletBalances, revenuePaidCents, withdrawnCents };
+    const wallets = await this.listWallets();
+    return { walletBalances, revenuePaidCents, withdrawnCents, wallets };
+  }
+
+  /** Porte-monnaie (couche logique par produit : afritrack, liri, mbolo, medos…). Solde = Σ entries. */
+  async listWallets() {
+    const sb = this.supabase.client as any;
+    const { data: wallets } = await sb.from('cimolace_wallets').select('*').order('created_at', { ascending: true });
+    const { data: entries } = await sb.from('cimolace_wallet_entries').select('wallet_key, amount_cents');
+    const bal: Record<string, number> = {};
+    for (const e of entries ?? []) bal[e.wallet_key] = (bal[e.wallet_key] || 0) + Number(e.amount_cents || 0);
+    return (wallets ?? []).map((w: any) => ({ key: w.key, label: w.label, color: w.color, currency: w.currency, balanceCents: bal[w.key] || 0 }));
+  }
+
+  async createWallet(dto: { key?: string; label?: string; color?: string }) {
+    const key = String(dto?.key || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    const label = String(dto?.label || '').trim();
+    if (!key || !label) throw new BadRequestException('key et label requis');
+    const { data, error } = await (this.supabase.client as any).from('cimolace_wallets').insert({ key, label, color: dto?.color || '#7c3aed' }).select('*').single();
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  /** Attribuer (ou désattribuer si négatif) un montant à un porte-monnaie — attribution manuelle. */
+  async allocateWallet(walletKey: string, dto: { amountCents?: number; note?: string; currency?: string }, createdBy: string | null) {
+    const amountCents = Math.round(Number(dto?.amountCents) || 0);
+    if (!amountCents) throw new BadRequestException('amountCents requis (négatif pour désattribuer)');
+    const { error } = await (this.supabase.client as any).from('cimolace_wallet_entries').insert({ wallet_key: walletKey, amount_cents: amountCents, currency: (dto?.currency || 'XAF').toUpperCase(), kind: 'allocation', note: dto?.note ?? null, created_by: createdBy });
+    if (error) throw new BadRequestException(error.message);
+    return { ok: true };
   }
 
   async getPlatformPayouts() {
@@ -43,7 +72,7 @@ export class CimolaceBackofficeService {
   /** Retrait PLATEFORME : envoie depuis le wallet pawaPay Cimolace vers un mobile money (owner SaaS). */
   async createPlatformPayout(
     createdBy: string | null,
-    dto: { amountCents?: number; currency?: string; phoneNumber?: string; mno?: string; recipientName?: string; reason?: string },
+    dto: { amountCents?: number; currency?: string; phoneNumber?: string; mno?: string; recipientName?: string; reason?: string; wallet?: string },
   ) {
     const amountCents = Math.round(Number(dto?.amountCents) || 0);
     if (amountCents <= 0) throw new BadRequestException('amountCents (> 0) requis');
@@ -54,7 +83,7 @@ export class CimolaceBackofficeService {
     await sb.from('billing_payouts').insert({
       tenant_id: null, payout_id: payoutId, provider: 'pawapay', status: 'pending',
       amount_cents: amountCents, currency, phone_number: dto.phoneNumber, mno: dto.mno,
-      recipient_name: dto.recipientName ?? null, reason: dto.reason ?? 'Retrait plateforme Cimolace', created_by: createdBy,
+      recipient_name: dto.recipientName ?? null, reason: dto.reason ?? 'Retrait plateforme Cimolace', created_by: createdBy, wallet: dto.wallet ?? null,
     });
     const amount = CimolaceBackofficeService.ZERO_DECIMAL.has(currency) ? String(amountCents) : (amountCents / 100).toFixed(2);
     let initStatus = 'pending';
@@ -67,6 +96,9 @@ export class CimolaceBackofficeService {
       });
       initStatus = (init.status || 'ACCEPTED').toLowerCase();
       await sb.from('billing_payouts').update({ status: initStatus, updated_at: new Date().toISOString() }).eq('payout_id', payoutId);
+      if (dto.wallet) {
+        await sb.from('cimolace_wallet_entries').insert({ wallet_key: dto.wallet, amount_cents: -amountCents, currency, kind: 'payout', note: dto.reason ?? 'Retrait', ref_id: payoutId, created_by: createdBy });
+      }
     } catch (e) {
       await sb.from('billing_payouts').update({ status: 'failed', failure_message: (e as Error).message, updated_at: new Date().toISOString() }).eq('payout_id', payoutId);
       throw e;

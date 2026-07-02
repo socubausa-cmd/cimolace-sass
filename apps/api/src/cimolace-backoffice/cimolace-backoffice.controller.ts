@@ -16,6 +16,10 @@ export class CimolaceBackofficeController {
   @Get('finances') getFinances() { return this.svc.getPlatformFinances(); }
   @Get('finances/payouts') listFinancePayouts() { return this.svc.getPlatformPayouts(); }
   @Post('finances/payout') createFinancePayout(@Req() req: any, @Body() b: any) { return this.svc.createPlatformPayout(req.user?.id ?? null, b); }
+  // Porte-monnaie par produit (afritrack, liri, mbolo, medos…)
+  @Get('finances/wallets') listWallets() { return this.svc.listWallets(); }
+  @Post('finances/wallets') createWallet(@Body() b: any) { return this.svc.createWallet(b); }
+  @Post('finances/wallets/:key/allocate') allocateWallet(@Req() req: any, @Param('key') key: string, @Body() b: any) { return this.svc.allocateWallet(key, b, req.user?.id ?? null); }
 
   @Get('clients') listClients() { return this.svc.listClients(); }
   @Post('clients') createClient(@Body() d: CreateClientDto) { return this.svc.createClient(d); }
