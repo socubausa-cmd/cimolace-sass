@@ -657,7 +657,11 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
             accountDetails: { phoneNumber: lastDep.phone_number, provider: lastDep.provider },
           },
           statementDescription: 'PRORASCIENCE',
-          metadata: { userId: sub.user_id, kind: 'subscription', planSlug },
+          metadata: [
+            { fieldName: 'userId', fieldValue: String(sub.user_id ?? '') },
+            { fieldName: 'kind', fieldValue: 'subscription' },
+            { fieldName: 'planSlug', fieldValue: String(planSlug ?? '') },
+          ],
         });
         await this.ppDeposits.update({ pawapay_status: res.status }).eq('deposit_id', depositId);
         await this.subs

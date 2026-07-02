@@ -139,12 +139,12 @@ export class OfferingCheckoutService {
           accountDetails: { phoneNumber: dto.phoneNumber, provider: dto.provider },
         },
         statementDescription: 'PRORASCIENCE'.slice(0, 22),
-        metadata: {
-          userId,
-          tenantId: tenant.id,
-          kind: dto.kind,
-          planSlug: planSlug ?? '',
-        },
+        metadata: [
+          { fieldName: 'userId', fieldValue: String(userId ?? '') },
+          { fieldName: 'tenantId', fieldValue: String(tenant.id) },
+          { fieldName: 'kind', fieldValue: String(dto.kind ?? '') },
+          { fieldName: 'planSlug', fieldValue: planSlug ?? '' },
+        ],
       },
       ppOverride,
     );
