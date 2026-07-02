@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare, MessageCircle, WandSparkles,
   Library, Blocks, Settings2, Mic, ArrowUp, LogIn, CalendarPlus, PenTool,
@@ -24,6 +24,10 @@ const PORTAL_BRAND =
 interface Live { id: string; title?: string; status?: string; scheduled_at?: string; started_at?: string | null; ended_at?: string | null; price_cents?: number; }
 interface Stats { totalMembers: number; totalLives: number; totalCourses: number; totalRevenueCents: number; }
 interface Org { name: string; slug: string; role?: string | null; plan?: string | null; billingStatus?: string | null; }
+
+// Rôles CRÉATEUR / staff : voient tout l'outillage du portail. Tout le reste
+// (élève 'student', ou rôle non résolu) → vue ALLÉGÉE. Fail-closed volontaire.
+const CREATOR_ROLES = ['owner', 'admin', 'teacher', 'secretariat', 'practitioner', 'clinic_admin', 'staff'];
 interface Sub { status?: string; plan_id?: string; provider?: string; current_period_end?: string | null; }
 
 interface ResumeItem { id: string; icon: LucideIcon; title: string; sub: string; to: string; }
@@ -203,33 +207,35 @@ export function LiriPortalPage() {
   }
   function euros(cents?: number) { return ((cents ?? 0) / 100).toLocaleString('fr-FR'); }
 
-  const RAIL: { key: string; label: string; icon: LucideIcon; to: string; active?: boolean; live?: boolean; badge?: number }[] = [
+  // `creator: true` = outil réservé au CRÉATEUR (masqué pour l'élève).
+  const RAIL: { key: string; label: string; icon: LucideIcon; to: string; active?: boolean; live?: boolean; badge?: number; creator?: boolean }[] = [
     { key: 'accueil', label: 'Accueil', icon: House, to: '/liri', active: true },
     { key: 'lives', label: 'Lives', icon: Video, to: '/lives', live: liveNow.length > 0 },
     { key: 'forum', label: 'Forum', icon: MessagesSquare, to: '/liri/forum', badge: 5 },
     { key: 'messages', label: 'Messages', icon: MessageCircle, to: '/liri/messages' },
-    { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri' },
-    { key: 'ecole', label: 'École', icon: GraduationCap, to: '/liri/ecole' },
+    { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri', creator: true },
+    { key: 'ecole', label: 'École', icon: GraduationCap, to: '/liri/ecole', creator: true },
     { key: 'biblio', label: 'Biblio.', icon: Library, to: '/studio/liri/bibliotheque' },
-    { key: 'brain', label: 'Brain', icon: Sparkles, to: '/dashboard/liri' },
+    { key: 'brain', label: 'Brain', icon: Sparkles, to: '/dashboard/liri', creator: true },
   ];
-  const QUICK = [
-    { label: 'Démarrer', icon: Video, hero: true, to: '/lives' },
+  const QUICK: { label: string; icon: LucideIcon; to: string; hero?: boolean; creator?: boolean }[] = [
+    { label: 'Démarrer', icon: Video, hero: true, to: '/lives', creator: true },
     { label: 'Rejoindre', icon: LogIn, to: '/lives' },
     { label: 'Converser', icon: MessageCircle, to: '/liri/messages' },
-    { label: 'Programmer', icon: CalendarPlus, to: '/studio/live' },
-    { label: 'SmartBoard', icon: PenTool, to: '/studio/smartboard' },
-    { label: 'Acheter', icon: ShoppingBag, to: '/dashboard' },
+    { label: 'Programmer', icon: CalendarPlus, to: '/studio/live', creator: true },
+    { label: 'SmartBoard', icon: PenTool, to: '/studio/smartboard', creator: true },
+    { label: 'Acheter', icon: ShoppingBag, to: '/dashboard', creator: true },
   ];
 
   const openMenu = () => setMenuOpen((v) => !v);
   const runMenu = (fn: () => void) => { setMenuOpen(false); fn(); };
 
-  // Un ÉLÈVE n'a rien à faire sur le portail OWNER : si son rôle dans le tenant
-  // courant est 'student', on le renvoie vers SON espace élève (garde AVANT tout
-  // rendu → zéro flash du portail owner). Le staff (owner/admin/teacher/
-  // secretariat) et les rôles soin (practitioner/clinic_admin) restent ici.
-  if (tenantRole === 'student') return <Navigate to="/student-school-life" replace />;
+  // L'ÉLÈVE RESTE dans le portail LIRI, mais en vue ADAPTÉE : tout l'outillage
+  // créateur (Studio, Programmer, Acheter, École-gestion, Intégr, Réglages,
+  // métriques revenus/quota) est masqué plus bas via `isCreator`. Plus de
+  // redirection vers l'ancienne « Vie scolaire » — un seul monde : LIRI.
+  const effectiveRole = String(tenantRole || org?.role || '').toLowerCase();
+  const isCreator = CREATOR_ROLES.includes(effectiveRole);
 
   return (
     <div className="lp-root relative h-[100dvh] w-full overflow-hidden grid grid-rows-[56px_1fr_34px]">
@@ -250,7 +256,7 @@ export function LiriPortalPage() {
         </div>
         <div className="flex items-center gap-1.5">
           <button className="relative grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Notifications"><Bell size={17} /><span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full" style={{ background: 'var(--coral)' }} /></button>
-          <button onClick={() => nav('/liri/compte')} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Réglages de l’organisation"><Settings size={17} /></button>
+          {isCreator && <button onClick={() => nav('/liri/compte')} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Réglages de l’organisation"><Settings size={17} /></button>}
 
           {/* ── Avatar → menu compte / organisation ── */}
           <div className="relative" ref={menuRef}>
@@ -305,7 +311,7 @@ export function LiriPortalPage() {
 
         {/* RAIL */}
         <aside className="flex min-h-0 flex-col items-center gap-1 lp-rail-bg border-r lp-line py-4">
-          {RAIL.map((it) => {
+          {RAIL.filter((it) => isCreator || !it.creator).map((it) => {
             const Icon = it.icon;
             return (
               <button key={it.key} onClick={() => nav(it.to)} className={`lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr ${it.active ? 'lp-nav-active' : ''}`}>
@@ -318,9 +324,13 @@ export function LiriPortalPage() {
               </button>
             );
           })}
-          <div className="my-1.5 h-px w-9" style={{ background: 'rgba(245,244,238,.08)' }} />
-          <button onClick={() => nav('/liri')} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Blocks size={20} /></span><span className="lp-nl text-[10px] font-medium">Intégr.</span></button>
-          <button onClick={() => nav('/liri/compte')} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Settings2 size={20} /></span><span className="lp-nl text-[10px] font-medium">Réglages</span></button>
+          {isCreator && (
+            <>
+              <div className="my-1.5 h-px w-9" style={{ background: 'rgba(245,244,238,.08)' }} />
+              <button onClick={() => nav('/liri')} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Blocks size={20} /></span><span className="lp-nl text-[10px] font-medium">Intégr.</span></button>
+              <button onClick={() => nav('/liri/compte')} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Settings2 size={20} /></span><span className="lp-nl text-[10px] font-medium">Réglages</span></button>
+            </>
+          )}
           <button onClick={openMenu} title={orgName} aria-label="Compte et organisation" className="mt-auto grid h-9 w-9 place-items-center rounded-full text-[11px] font-bold text-white lp-tr lp-railbtn" style={{ background: 'linear-gradient(135deg,#5b7a52,#6d8f60)' }}>{orgName.slice(0, 2).toUpperCase()}</button>
         </aside>
 
@@ -331,17 +341,19 @@ export function LiriPortalPage() {
             <h1 className="mt-3 text-center lp-serif text-[34px] font-medium leading-tight tracking-tight lp-rise">{greet}<span className="lp-coral"> sur {PORTAL_BRAND}</span></h1>
             <p className="mt-2 text-center text-[14px] lp-muted lp-rise">Que voulez-vous lancer aujourd'hui&nbsp;?</p>
 
-            {/* command bar → Brain */}
-            <button onClick={() => nav('/dashboard/liri')} className="lp-tr lp-soft group mt-7 flex h-14 w-full max-w-xl items-center gap-3 rounded-2xl lp-line border lp-panel px-4 text-left hover:border-[rgba(217,119,87,.4)]">
-              <span className="grid h-8 w-8 place-items-center rounded-xl lp-coral lp-coral-tint"><Sparkles size={18} /></span>
-              <span className="flex-1 text-[15px] lp-muted">Demandez à {PORTAL_BRAND} ou lancez une action…</span>
-              <span className="grid h-7 w-7 place-items-center rounded-lg lp-faint lp-railbtn lp-tr"><Mic size={16} /></span>
-              <span className="grid h-9 w-9 place-items-center rounded-xl text-white lp-ember"><ArrowUp size={18} /></span>
-            </button>
+            {/* command bar → Brain (créateur uniquement ; l'élève ne pilote pas d'actions) */}
+            {isCreator && (
+              <button onClick={() => nav('/dashboard/liri')} className="lp-tr lp-soft group mt-7 flex h-14 w-full max-w-xl items-center gap-3 rounded-2xl lp-line border lp-panel px-4 text-left hover:border-[rgba(217,119,87,.4)]">
+                <span className="grid h-8 w-8 place-items-center rounded-xl lp-coral lp-coral-tint"><Sparkles size={18} /></span>
+                <span className="flex-1 text-[15px] lp-muted">Demandez à {PORTAL_BRAND} ou lancez une action…</span>
+                <span className="grid h-7 w-7 place-items-center rounded-lg lp-faint lp-railbtn lp-tr"><Mic size={16} /></span>
+                <span className="grid h-9 w-9 place-items-center rounded-xl text-white lp-ember"><ArrowUp size={18} /></span>
+              </button>
+            )}
 
             {/* quick actions */}
             <div className="mt-10 flex flex-wrap items-start justify-center gap-x-6 gap-y-7">
-              {QUICK.map((q) => {
+              {QUICK.filter((q) => isCreator || !q.creator).map((q) => {
                 const Icon = q.icon;
                 return (
                   <button key={q.label} onClick={() => (q.hero ? startInstantMeeting() : nav(q.to))} disabled={q.hero && starting} className="group relative flex w-24 flex-col items-center gap-2.5 disabled:cursor-wait disabled:opacity-70">
@@ -371,7 +383,7 @@ export function LiriPortalPage() {
               ) : (
                 <button onClick={() => nav('/studio/live')} className="lp-tr lp-soft flex w-full items-center gap-3 rounded-2xl lp-line border lp-panel70 px-4 py-3.5 text-left lp-panelhov">
                   <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg lp-coral lp-coral-tint"><CalendarPlus size={17} /></span>
-                  <span className="flex-1 min-w-0"><span className="block text-[13.5px] font-medium">Rien à reprendre pour l’instant</span><span className="block text-[12px] lp-faint">Programmez votre premier live ou créez un cours</span></span>
+                  <span className="flex-1 min-w-0"><span className="block text-[13.5px] font-medium">Rien à reprendre pour l’instant</span><span className="block text-[12px] lp-faint">{isCreator ? 'Programmez votre premier live ou créez un cours' : 'Reprends un cours ou un replay dès que tu en commences un'}</span></span>
                   <ChevronRight size={18} className="lp-faint" />
                 </button>
               )}
@@ -447,28 +459,37 @@ export function LiriPortalPage() {
               <p className="mt-2 text-[13.5px] font-medium">{upcoming[0].title || 'Session live'}</p>
               <p className="mt-1 flex items-center gap-1.5 text-[11px] lp-faint capitalize"><UserRound size={12} /> {orgName}</p>
             </button>
-          ) : (
+          ) : isCreator ? (
             <button onClick={() => nav('/studio/live')} className="lp-tr lp-soft w-full rounded-2xl lp-line border lp-panel70 p-3.5 text-left lp-panelhov">
               <p className="text-[13px] font-medium">Aucun live programmé</p>
               <p className="mt-1 flex items-center gap-1.5 text-[11px] lp-faint"><CalendarPlus size={12} /> Programmer une session</p>
             </button>
+          ) : (
+            <div className="w-full rounded-2xl lp-line border lp-panel70 p-3.5">
+              <p className="text-[13px] font-medium">Aucun live à venir</p>
+              <p className="mt-1 text-[11px] lp-faint">Tes prochains lives apparaîtront ici.</p>
+            </div>
           )}
 
-          {/* ce mois — chiffres réels du tenant (0 pour une organisation neuve) */}
-          <h3 className="mb-2 mt-6 text-[11px] font-semibold uppercase tracking-[0.16em] lp-faint">Ce mois</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { v: stats?.totalLives ?? 0, l: 'sessions' },
-              { v: stats?.totalMembers ?? 0, l: 'membres' },
-              { v: liveMinutes, l: 'min en live' },
-              { v: `${euros(stats?.totalRevenueCents)} €`, l: 'revenus', coral: true },
-            ].map((s, i) => (
-              <div key={i} className="lp-soft rounded-2xl lp-line border lp-panel70 p-3">
-                <p className={`lp-serif text-[20px] font-medium ${s.coral ? 'lp-coral' : ''}`}>{s.v}</p>
-                <p className="text-[11px] lp-faint">{s.l}</p>
+          {/* ce mois — métriques CRÉATEUR (sessions/membres/revenus) : masquées pour l'élève */}
+          {isCreator && (
+            <>
+              <h3 className="mb-2 mt-6 text-[11px] font-semibold uppercase tracking-[0.16em] lp-faint">Ce mois</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { v: stats?.totalLives ?? 0, l: 'sessions' },
+                  { v: stats?.totalMembers ?? 0, l: 'membres' },
+                  { v: liveMinutes, l: 'min en live' },
+                  { v: `${euros(stats?.totalRevenueCents)} €`, l: 'revenus', coral: true },
+                ].map((s, i) => (
+                  <div key={i} className="lp-soft rounded-2xl lp-line border lp-panel70 p-3">
+                    <p className={`lp-serif text-[20px] font-medium ${s.coral ? 'lp-coral' : ''}`}>{s.v}</p>
+                    <p className="text-[11px] lp-faint">{s.l}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </aside>
       </div>
 
@@ -476,8 +497,12 @@ export function LiriPortalPage() {
       <footer className="z-30 flex items-center justify-between border-t lp-line lp-rail-bg px-5 text-[11px] lp-muted">
         <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Connecté · <span className="capitalize">{orgName}</span></span>
         <span className="hidden items-center gap-4 sm:flex">
-          <span className="lp-faint">{liveMinutes} / 2 000 min ce mois</span>
-          <span className="h-3 w-px" style={{ background: 'rgba(255,255,255,.10)' }} />
+          {isCreator && (
+            <>
+              <span className="lp-faint">{liveMinutes} / 2 000 min ce mois</span>
+              <span className="h-3 w-px" style={{ background: 'rgba(255,255,255,.10)' }} />
+            </>
+          )}
           <button onClick={() => nav('/dashboard')} className="lp-railbtn lp-tr rounded px-1">Aide</button>
           <span className="lp-faint flex items-center gap-1.5"><Radio size={12} /> {PORTAL_BRAND} v2.0</span>
         </span>
