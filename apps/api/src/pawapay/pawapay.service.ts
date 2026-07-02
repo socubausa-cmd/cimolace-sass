@@ -320,13 +320,19 @@ export class PawaPayService {
   ): Promise<PawaPayPayoutInitResponse> {
     this.assertConfigured();
 
-    const response = await fetch(`${this.baseUrl}/v2/payouts`, {
+    const body = JSON.stringify(payload);
+    const url = `${this.baseUrl}/v2/payouts`;
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${this.apiToken}`,
         'Content-Type': 'application/json',
+        // Les payouts (money-out) EXIGENT la signature RFC 9421 côté pawaPay
+        // (« Financial Signatures »). Sans elle → 401 HTTP_SIGNATURE_ERROR.
+        // initiateDeposit/initiateRefund la posaient déjà ; le payout l'oubliait.
+        ...this.signHeaders('POST', url, body, 'application/json'),
       },
-      body: JSON.stringify(payload),
+      body,
     });
 
     if (!response.ok) {
@@ -337,7 +343,23 @@ export class PawaPayService {
       );
     }
 
-    return (await response.json()) as PawaPayPayoutInitResponse;
+    const json = (await response.json()) as PawaPayPayoutInitResponse;
+    const status = String((json as any)?.status ?? '');
+    // PawaPay renvoie 200 même pour un payout refusé → on remonte la vraie raison
+    // (cohérent avec initiateDeposit / initiateRefund).
+    if (['REJECTED', 'FAILED', 'DUPLICATE_IGNORED'].includes(status)) {
+      const reason = JSON.stringify(
+        (json as any)?.failureReason ?? (json as any)?.rejectionReason ?? json,
+      );
+      this.logger.error(
+        `pawaPay payout ${status} payoutId=${(payload as any)?.payoutId} reason=${reason}`,
+      );
+      throw new BadRequestException(
+        `Payout refusé par PawaPay (${status}) : ${reason}`,
+      );
+    }
+
+    return json;
   }
 
   /** Statut d'un payout par polling (si pas de callback). */
