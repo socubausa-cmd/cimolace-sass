@@ -1,6 +1,6 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
 import { Sparkles, ChevronDown, ScanEye, WandSparkles, LayoutTemplate, ImagePlus, Loader2, X, Lock } from 'lucide-react';
+import LiriUpgradeWall from '@/components/liri/LiriUpgradeWall';
 import { cn } from '@/lib/utils';
 import { NEURO_INK_MODE } from '@/lib/neuroInk';
 import { useLiriEntitlements } from '@/hooks/useLiriEntitlements';
@@ -173,6 +173,7 @@ function NeuroInkAiSection({ ai }) {
   const state = ai?.state || {};
   const { enabled, premium, busy, activeKind, comprehension, error } = state;
   const suggestions = state.suggestions || [];
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-amber-400/20 bg-amber-500/[0.05] p-2">
@@ -205,12 +206,14 @@ function NeuroInkAiSection({ ai }) {
           <p className="m-0 text-[9px] leading-snug text-white/55">
             Le copilote IA du tableau (Comprendre, Mettre au propre, Présentation, Illustration) est inclus dans les forfaits avancés.
           </p>
-          <Link
-            to="/cimolace/billing?upgrade=liri"
+          <button
+            type="button"
+            onClick={() => setShowUpgrade(true)}
             className="mt-0.5 inline-flex w-fit items-center gap-1 rounded-md border border-amber-400/40 bg-amber-500/[0.16] px-2 py-0.5 text-[9px] font-semibold text-amber-100 transition hover:bg-amber-500/25"
           >
             Passer au complet
-          </Link>
+          </button>
+          {showUpgrade && <LiriUpgradeWall asModal onClose={() => setShowUpgrade(false)} />}
         </div>
       ) : enabled ? (
         <>
