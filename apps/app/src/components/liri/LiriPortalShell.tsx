@@ -164,11 +164,13 @@ function LiriPortalShellInner({
   // Mode ÉCOLE activé pour ce tenant ? Sinon = LIRI SIMPLE (Zoom) → sections Vie scolaire masquées.
   const schoolActive = useSchoolActive() === true;
   const slug = authStore.getTenantSlug?.() || 'École';
-  const tenant = String(slug).replace(/-/g, ' ');
-  const initials = tenant.slice(0, 2).toUpperCase();
   // Marque blanche : nom du tenant sur son domaine, « LIRI »/logo sur l'hôte produit LIRI.
   const _shellIsTenant = !!activeTenantConfig?.slug;
   const _shellBrand = activeTenantConfig?.branding?.name || 'LIRI';
+  // Cloison LIRI↔ISNA : sur l'hôte produit LIRI (config neutre → _shellIsTenant=false) on
+  // n'expose AUCUNE identité tenant ; nom + initiales restent neutres (marque « LIRI » → « LI »).
+  const tenant = _shellIsTenant ? String(slug).replace(/-/g, ' ') : '';
+  const initials = (_shellIsTenant ? tenant : _shellBrand).slice(0, 2).toUpperCase();
 
   // Fil d'Ariane contextuel (poussé par la page active, ex. ['École', 'Paramètres']).
   const { crumb } = usePortalHeaderValues();
@@ -177,6 +179,8 @@ function LiriPortalShellInner({
   // la marque reste « LIRI » mais on affiche en suffixe l'école rattachée (ex. « LIRI · Prorascience »).
   const [sessionSchool, setSessionSchool] = useState('');
   useEffect(() => {
+    // Hôte produit LIRI : NE PAS résoudre le tenant (cloison) → le suffixe topbar reste vide.
+    if (!_shellIsTenant) return;
     const token = authStore.getToken?.();
     if (!token) return;
     let alive = true;
@@ -191,7 +195,7 @@ function LiriPortalShellInner({
       })
       .catch(() => {});
     return () => { alive = false; };
-  }, [slug]);
+  }, [slug, _shellIsTenant]);
   // Suffixe affiché seulement s'il apporte une info ET qu'aucun fil d'Ariane ne prend le relais.
   const _schoolSuffix = !crumb && sessionSchool && sessionSchool !== _shellBrand ? sessionSchool : '';
 
@@ -303,7 +307,7 @@ function LiriPortalShellInner({
       <footer className="z-30 flex items-center justify-between border-t lp-line lp-rail-bg px-5 text-[11px] lp-muted">
         <span className="flex items-center gap-2">
           {live ? <span className="h-1.5 w-1.5 rounded-full" style={{ background: '#e2553f' }} /> : <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
-          {live ? 'En direct' : 'Connecté'} · <span className="capitalize">{tenant}</span>
+          {live ? 'En direct' : 'Connecté'}{tenant && <> · <span className="capitalize">{tenant}</span></>}
         </span>
         <span className="lp-faint flex items-center gap-1.5">{_shellBrand} v2.0</span>
       </footer>
