@@ -27,7 +27,8 @@ import {
   type ClinicalContext,
   type CockpitScene,
   type ShopProduct,
-  getShopProducts,
+  type ShopBrand,
+  getStorefront,
   type OrganColor,
   type OrganNode,
   type SoapNote,
@@ -349,26 +350,116 @@ function ImageTab({
 
 // Boutique : grille de produits/services vendables. Le bouton « Payer » ouvre le
 // lien de paiement (checkout Stripe/PawaPay). Rendu côté praticien ET patient.
-function ShopView({ products }: { products: ShopProduct[] }) {
+// Prix formaté façon boutique (ex. « 61,00 € », « 38,64 € »).
+function fmtPrice(v: number | null | undefined, cur: string): string {
+  if (v == null) return 'Gratuit';
+  const s = v.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return cur === 'EUR' ? `${s} €` : `${s} ${cur}`;
+}
+
+// CÔTÉ PRATICIEN — grille de vignettes cliquables pour CHOISIR les produits à
+// présenter au patient (sélection multiple ; seul le choix est partagé).
+function ShopPicker({
+  products, selected, onToggle, brand,
+}: {
+  products: ShopProduct[];
+  selected: Set<string>;
+  onToggle: (id: string) => void;
+  brand: ShopBrand;
+}) {
   if (!products || products.length === 0) return <div style={emptyHint}>Aucun produit dans la boutique.</div>;
   return (
     <div style={{ padding: '10px 12px', overflowY: 'auto', height: '100%' }}>
-      <div style={sectionTitle}>Boutique</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))', gap: 10 }}>
-        {products.map((p) => (
-          <div key={p.id} style={{ border: '1px solid var(--zw-border)', borderRadius: 12, overflow: 'hidden', background: 'var(--zw-bg-subtle)', display: 'flex', flexDirection: 'column' }}>
-            {p.image ? <img src={p.image} alt={p.name} style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover' }} /> : null}
-            <div style={{ padding: '9px 10px', display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-              {p.badge ? <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand-primary)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{p.badge}</span> : null}
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--zw-text)' }}>{p.name}</div>
-              {p.description ? <div style={{ fontSize: 11.5, color: 'var(--zw-text-muted)', lineHeight: 1.4 }}>{p.description}</div> : null}
-              <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, paddingTop: 6 }}>
-                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--zw-text)', whiteSpace: 'nowrap' }}>{p.price != null ? `${p.price.toLocaleString('fr-FR')} ${p.currency}` : 'Gratuit'}</span>
-                <button onClick={() => { if (typeof window !== 'undefined' && p.payUrl) window.open(p.payUrl, '_blank', 'noopener'); }} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: 'var(--brand-primary)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>{p.cta || 'Payer'}</button>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8, gap: 8 }}>
+        <div style={sectionTitle}>{brand.name || 'Boutique'}</div>
+        <span style={{ fontSize: 11, color: 'var(--zw-text-muted)', textAlign: 'right' }}>
+          {selected.size > 0 ? `${selected.size} produit${selected.size > 1 ? 's' : ''} choisi${selected.size > 1 ? 's' : ''}` : 'Choisissez à présenter'}
+        </span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(138px, 1fr))', gap: 10 }}>
+        {products.map((p) => {
+          const on = selected.has(p.id);
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => onToggle(p.id)}
+              aria-pressed={on}
+              title={p.name}
+              style={{
+                textAlign: 'left', padding: 0, cursor: 'pointer', position: 'relative',
+                border: on ? '2px solid var(--brand-primary)' : '1px solid var(--zw-border)',
+                borderRadius: 12, overflow: 'hidden', background: 'var(--zw-bg-subtle)',
+                display: 'flex', flexDirection: 'column',
+                boxShadow: on ? '0 4px 14px rgba(0,0,0,0.14)' : 'none',
+              }}
+            >
+              {on && (
+                <span style={{ position: 'absolute', top: 6, right: 6, zIndex: 2, width: 20, height: 20, borderRadius: '50%', background: 'var(--brand-primary)', color: '#fff', fontSize: 12, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>✓</span>
+              )}
+              <div style={{ width: '100%', aspectRatio: '1 / 1', background: '#efece6', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                {p.image ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 24 }}>🌿</span>}
               </div>
-            </div>
+              <div style={{ padding: '8px 9px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--zw-text)', lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
+                <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--zw-text)' }}>{fmtPrice(p.price, p.currency)}</span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// CÔTÉ PATIENT (+ Tableau) — vitrine « comme en ligne » des produits choisis :
+// grande photo, description, prix, bouton Acheter, avec le branding du tenant.
+function ShopShowcase({ products, brand }: { products: ShopProduct[]; brand?: ShopBrand }) {
+  if (!products || products.length === 0) return null;
+  const single = products.length === 1;
+  return (
+    <div style={{ height: '100%', overflowY: 'auto', background: 'var(--zw-bg, #f6f4ee)' }}>
+      {(brand?.name || brand?.domain) && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid var(--zw-border)' }}>
+          {brand?.logo ? <img src={brand.logo} alt="" style={{ height: 26, width: 'auto', borderRadius: 6 }} /> : <span style={{ fontSize: 18 }} aria-hidden="true">🌿</span>}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {brand?.name && <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--zw-text)' }}>{brand.name}</span>}
+            {brand?.domain && <span style={{ fontSize: 11.5, color: 'var(--zw-text-muted)' }}>{brand.domain}</span>}
           </div>
+          <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--zw-text-muted)', border: '1px solid var(--zw-border)', borderRadius: 999, padding: '3px 10px', whiteSpace: 'nowrap' }}>Recommandé en consultation</span>
+        </div>
+      )}
+      <div style={{ display: single ? 'block' : 'grid', gridTemplateColumns: single ? undefined : 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16, padding: 16, maxWidth: single ? 760 : undefined, margin: single ? '0 auto' : undefined }}>
+        {products.map((p) => (
+          <ShowcaseCard key={p.id} p={p} big={single} />
         ))}
+      </div>
+    </div>
+  );
+}
+
+function ShowcaseCard({ p, big }: { p: ShopProduct; big: boolean }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: big ? 'row' : 'column', background: '#fff', border: '1px solid var(--zw-border)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 6px 22px rgba(0,0,0,0.06)' }}>
+      <div style={{ position: 'relative', flex: big ? '0 0 44%' : undefined, aspectRatio: big ? undefined : '4 / 3', background: '#efece6', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: big ? 280 : undefined, overflow: 'hidden' }}>
+        {p.image ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 44 }} aria-hidden="true">🌿</span>}
+        {p.badge && <span style={{ position: 'absolute', top: 12, left: 12, background: 'var(--brand-primary)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.4 }}>{p.badge}</span>}
+      </div>
+      <div style={{ flex: 1, padding: big ? '24px 26px' : '16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ fontSize: big ? 23 : 16, fontWeight: 800, color: 'var(--zw-text)', lineHeight: 1.15 }}>{p.name}</div>
+        {p.description && <div style={{ fontSize: big ? 14 : 12.5, color: 'var(--zw-text-muted)', lineHeight: 1.55 }}>{p.description}</div>}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 4 }}>
+          <span style={{ fontSize: big ? 25 : 18, fontWeight: 800, color: 'var(--zw-text)' }}>{fmtPrice(p.price, p.currency)}</span>
+          {p.compareAtPrice != null && p.compareAtPrice > (p.price ?? 0) && (
+            <span style={{ fontSize: big ? 15 : 13, color: 'var(--zw-text-muted)', textDecoration: 'line-through' }}>{fmtPrice(p.compareAtPrice, p.currency)}</span>
+          )}
+        </div>
+        <button
+          onClick={() => { if (typeof window !== 'undefined' && p.payUrl) window.open(p.payUrl, '_blank', 'noopener'); }}
+          style={{ marginTop: 'auto', alignSelf: big ? 'flex-start' : 'stretch', padding: big ? '12px 28px' : '11px 18px', borderRadius: 12, border: 'none', background: 'var(--brand-primary)', color: '#fff', fontSize: big ? 15 : 13.5, fontWeight: 800, cursor: 'pointer' }}
+        >
+          {p.cta || 'Acheter'}
+        </button>
       </div>
     </div>
   );
@@ -389,7 +480,7 @@ export function SharedSceneView({ scene }: { scene: CockpitScene | null }) {
       {scene.kind === 'labs' && <LabsView items={scene.items} />}
       {scene.kind === 'prescription' && <PrescriptionView rx={scene.rx} />}
       {scene.kind === 'image' && <ImageView url={scene.url} name={scene.name} mime={scene.mime} />}
-      {scene.kind === 'shop' && <ShopView products={scene.products} />}
+      {scene.kind === 'shop' && <ShopShowcase products={scene.products} brand={scene.brand} />}
     </div>
   );
 }
@@ -443,6 +534,8 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
   const [prescriptions, setPrescriptions] = useState<RxDoc[]>([]);
   const [attachments, setAttachments] = useState<AttachmentLite[]>([]);
   const [shopProducts, setShopProducts] = useState<ShopProduct[]>([]);
+  const [shopBrand, setShopBrand] = useState<ShopBrand>({});
+  const [selectedShopIds, setSelectedShopIds] = useState<Set<string>>(new Set());
   const [selectedImg, setSelectedImg] = useState<{ url: string; name: string; mime?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   // Mode éducation : jumeau anatomique GÉNÉRIQUE + cas d'étude anonymisé sélectionné.
@@ -500,7 +593,7 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
         getLabs(c.patient_id).then((r) => alive && setLabs(r)).catch(() => {});
         getSignedPrescriptions(c.patient_id).then((r) => alive && setPrescriptions(r)).catch(() => {});
         getAttachments(c.patient_id).then((r) => alive && setAttachments(r)).catch(() => {});
-        getShopProducts().then((r) => alive && setShopProducts(r)).catch(() => {});
+        getStorefront().then((r) => { if (alive) { setShopProducts(r.products); setShopBrand(r.brand); } }).catch(() => {});
       } catch {
         if (alive) setLoadFailed(true);
       } finally {
@@ -546,8 +639,15 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
     else if (tab === 'labs' && labs.length) shareScene({ kind: 'labs', items: labs });
     else if (tab === 'rx' && latestRx) shareScene({ kind: 'prescription', rx: latestRx });
     else if (tab === 'image' && selectedImg?.url) shareScene({ kind: 'image', url: selectedImg.url, name: selectedImg.name, mime: selectedImg.mime });
-    else if (tab === 'shop' && shopProducts.length) shareScene({ kind: 'shop', products: shopProducts });
+    else if (tab === 'shop' && selectedShopIds.size) shareScene({ kind: 'shop', products: shopProducts.filter((p) => selectedShopIds.has(p.id)), brand: shopBrand });
   };
+
+  const toggleShopProduct = (id: string) =>
+    setSelectedShopIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
 
   // Sélection d'une pièce jointe : on récupère l'URL signée puis on l'affiche en
   // aperçu ; « Partager » l'enverra ensuite sur la scène.
@@ -596,7 +696,7 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
     (tab === 'labs' && labs.length > 0) ||
     (tab === 'rx' && !!latestRx) ||
     (tab === 'image' && !!selectedImg?.url) ||
-    (tab === 'shop' && shopProducts.length > 0);
+    (tab === 'shop' && selectedShopIds.size > 0);
 
   const isSharing = !!sharedScene && sharedScene.kind !== 'clear';
   const tabKind: Record<Tab, CockpitScene['kind']> = {
@@ -689,7 +789,7 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
             {tab === 'image' && (
               <ImageTab attachments={attachments} selectedImg={selectedImg} onPick={pickAttachment} onBack={() => setSelectedImg(null)} onUpload={handleUploadImage} uploading={uploadingImg} />
             )}
-            {tab === 'shop' && <ShopView products={shopProducts} />}
+            {tab === 'shop' && <ShopPicker products={shopProducts} selected={selectedShopIds} onToggle={toggleShopProduct} brand={shopBrand} />}
           </>
         )}
       </div>

@@ -101,9 +101,12 @@ export interface AttachmentLite {
 // Volontairement SELF-CONTAINED : le patient rend la scène sans aucun appel
 // API (le jumeau est déjà résolu en OrganNode[], la SOAP porte son texte).
 export interface ShopProduct {
-  id: string; name: string; price: number | null; currency: string;
-  payUrl: string; description?: string; badge?: string; cta?: string; image?: string;
+  id: string; name: string; price: number | null; compareAtPrice?: number | null; currency: string;
+  payUrl: string; description?: string; badge?: string; cta?: string; image?: string; images?: string[];
 }
+
+/** Identité de la boutique du tenant (présentation « comme en ligne »). */
+export interface ShopBrand { name?: string; domain?: string; logo?: string; }
 
 export type CockpitScene =
   | { kind: 'twin'; sex: 'female' | 'male'; organs: OrganNode[]; focus: string | null }
@@ -112,7 +115,7 @@ export type CockpitScene =
   | { kind: 'labs'; items: LabResult[] }
   | { kind: 'prescription'; rx: RxDoc }
   | { kind: 'image'; url: string; name: string; mime?: string }
-  | { kind: 'shop'; products: ShopProduct[] }
+  | { kind: 'shop'; products: ShopProduct[]; brand?: ShopBrand }
   | { kind: 'clear' };
 
 // ── Appels API (host uniquement) ────────────────────────────────────────────
@@ -137,11 +140,15 @@ interface StorefrontConfig {
   baseUrl?: string;
   productPath?: string;
   currency?: string; // 'eur' | 'usd' | 'xaf'
+  brand?: ShopBrand;
   catalog?: {
     url?: string; anonKey?: string; table?: string;
     select?: string; activeFilter?: string; orderBy?: string;
+    imageRel?: string; // relation PostgREST des images (ex: product_images(url,is_primary,sort_order))
   };
 }
+
+export interface Storefront { products: ShopProduct[]; brand: ShopBrand; }
 
 async function getStorefrontConfig(): Promise<StorefrontConfig | null> {
   const slug = authStore.getTenantSlug?.();
@@ -155,20 +162,27 @@ async function getStorefrontConfig(): Promise<StorefrontConfig | null> {
   return data[0].metadata as StorefrontConfig;
 }
 
-/** Catalogue LIVE de la boutique du tenant → scène Boutique. Chaque « Payer »
- *  ouvre la fiche produit de la boutique du tenant (paiement du tenant). */
-export async function getShopProducts(): Promise<ShopProduct[]> {
+/** Catalogue LIVE de la boutique du tenant (produits + photos + branding) →
+ *  scène Boutique. Chaque « Acheter » ouvre la fiche produit de la boutique du
+ *  tenant (paiement du tenant). Les images viennent de la relation `imageRel`
+ *  (ex. product_images) embarquée en un seul fetch PostgREST. */
+export async function getStorefront(): Promise<Storefront> {
+  const empty: Storefront = { products: [], brand: {} };
   const cfg = await getStorefrontConfig();
   const cat = cfg?.catalog;
-  if (!cfg || !cat?.url || !cat?.anonKey) return [];
+  if (!cfg || !cat?.url || !cat?.anonKey) return empty;
 
   const baseUrl = (cfg.baseUrl || '').replace(/\/$/, '');
   const productPath = cfg.productPath || '/produit/';
   const currency = (cfg.currency || 'eur').toLowerCase();
   const priceField = currency === 'usd' ? 'price_usd' : currency === 'xaf' ? 'price_xaf' : 'price_eur';
+  const cmpField = currency === 'usd' ? 'compare_at_price_usd' : 'compare_at_price_eur';
   const curLabel = currency === 'usd' ? 'USD' : currency === 'xaf' ? 'XAF' : 'EUR';
 
-  const select = cat.select || 'id,slug,name_fr,name_en,tagline,featured_image_url,price_eur,price_usd,price_xaf,is_active,is_featured';
+  const imageRel = cat.imageRel || 'product_images';
+  const baseSelect = cat.select
+    || 'id,slug,name_fr,name_en,tagline,short_description,badge,price_eur,price_usd,price_xaf,compare_at_price_eur,compare_at_price_usd,is_active,is_featured';
+  const select = `${baseSelect},${imageRel}(url,is_primary,sort_order)`;
   let url = `${cat.url.replace(/\/$/, '')}/rest/v1/${cat.table || 'products'}?select=${encodeURIComponent(select)}`;
   if (cat.activeFilter) url += `&${cat.activeFilter}`;
   url += `&order=${encodeURIComponent(cat.orderBy || 'is_featured.desc')}&limit=60`;
@@ -178,22 +192,37 @@ export async function getShopProducts(): Promise<ShopProduct[]> {
     const res = await fetch(url, { headers: { apikey: cat.anonKey, Authorization: `Bearer ${cat.anonKey}` } });
     rows = res.ok ? await res.json() : [];
   } catch {
-    return [];
+    return empty;
   }
-  if (!Array.isArray(rows)) return [];
+  if (!Array.isArray(rows)) return empty;
 
-  return rows
+  const products: ShopProduct[] = rows
     .filter((p) => p && p.slug)
-    .map((p: any) => ({
-      id: String(p.id ?? p.slug),
-      name: p.name_fr || p.name_en || p.name || String(p.slug),
-      price: p[priceField] != null ? Number(p[priceField]) : null,
-      currency: curLabel,
-      payUrl: baseUrl ? `${baseUrl}${productPath}${p.slug}` : `${productPath}${p.slug}`,
-      description: p.tagline || undefined,
-      image: p.featured_image_url || p.image_url || undefined,
-      cta: 'Acheter',
-    }));
+    .map((p: any) => {
+      const imgs = Array.isArray(p[imageRel]) ? [...p[imageRel]] : [];
+      imgs.sort((a, b) => (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0) || (a.sort_order ?? 0) - (b.sort_order ?? 0));
+      const gallery = imgs.map((i) => i.url).filter(Boolean);
+      return {
+        id: String(p.id ?? p.slug),
+        name: p.name_fr || p.name_en || p.name || String(p.slug),
+        price: p[priceField] != null ? Number(p[priceField]) : null,
+        compareAtPrice: p[cmpField] != null ? Number(p[cmpField]) : null,
+        currency: curLabel,
+        payUrl: baseUrl ? `${baseUrl}${productPath}${p.slug}` : `${productPath}${p.slug}`,
+        description: p.short_description || p.tagline || undefined,
+        image: gallery[0] || p.featured_image_url || undefined,
+        images: gallery,
+        badge: p.badge || undefined,
+        cta: 'Acheter',
+      };
+    });
+
+  const brand: ShopBrand = {
+    name: cfg.brand?.name,
+    domain: cfg.brand?.domain || (baseUrl ? baseUrl.replace(/^https?:\/\//, '') : undefined),
+    logo: cfg.brand?.logo,
+  };
+  return { products, brand };
 }
 
 export function getReferential(): Promise<{ organs: any[]; biomarkers: any[] }> {
