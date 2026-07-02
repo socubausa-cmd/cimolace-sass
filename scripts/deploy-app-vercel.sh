@@ -63,6 +63,7 @@ cd "$ROOT/apps/app"
 
 vercel \
   --cwd . \
+  --archive=tgz \
   $VERCEL_ARGS \
   --build-env VITE_API_URL="${API_URL:-$DEFAULT_API_URL}" \
   --build-env VITE_SUPABASE_URL="$SUPABASE_URL" \
