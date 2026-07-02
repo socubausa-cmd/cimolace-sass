@@ -272,7 +272,8 @@ export class BillingService {
       depositId,
       amount: String(invoice.amount_cents),
       currency: invoice.currency,
-      payer: { type: "MMO", accountDetails: { phoneNumber: dto.phoneNumber, provider: dto.provider } },
+      // PawaPay v2 : MSISDN en chiffres SEULS (pas de "+"), ex. "24177514015".
+      payer: { type: "MMO", accountDetails: { phoneNumber: String(dto.phoneNumber).replace(/[^0-9]/g, ""), provider: dto.provider } },
       clientReferenceId: String(invoice.invoice_number ?? invoice.id),
       customerMessage: "Cimolace LIRI",
       // PawaPay v2 : metadata = TABLEAU ; statementDescription/customerTimestamp NON supportés.

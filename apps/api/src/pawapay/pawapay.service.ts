@@ -167,7 +167,11 @@ export class PawaPayService {
       );
     }
 
-    return (await response.json()) as PawaPayDepositInitResponse;
+    const json = (await response.json()) as PawaPayDepositInitResponse;
+    this.logger.log(
+      `pawaPay deposit OK depositId=${payload.depositId} status=${(json as any)?.status} phone=${(payload.payer as any)?.accountDetails?.phoneNumber} provider=${(payload.payer as any)?.accountDetails?.provider}`,
+    );
+    return json;
   }
 
   /**
