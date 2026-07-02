@@ -62,6 +62,9 @@ export default function TopicThreadPage() {
 
   const [msgs, setMsgs] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Filtre par TYPE de contenu (Carte mentale, Récap/Recall, NeuronQ, Question, Replay,
+  // Transcript, Discussion) — sur un live riche, l'élève cible directement ce qu'il veut.
+  const [filter, setFilter] = useState('Tout');
 
   const load = useCallback(async () => {
     if (!topicId) return;
@@ -90,6 +93,26 @@ export default function TopicThreadPage() {
       return new Date(a.created_at) - new Date(b.created_at);
     });
   }, [msgs]);
+
+  // Catégories PRÉSENTES dans ce Sujet (ordre d'apparition) → chips de filtre. On ne
+  // montre un chip que si le type existe réellement dans le fil (pas de filtre vide).
+  const categories = useMemo(() => {
+    const seen = new Map();
+    for (const m of ordered) {
+      const c = classify(m.subject);
+      if (!seen.has(c.label)) seen.set(c.label, { label: c.label, icon: c.icon, accent: c.accent, count: 0 });
+      seen.get(c.label).count += 1;
+    }
+    return [...seen.values()];
+  }, [ordered]);
+  const visible = useMemo(
+    () => (filter === 'Tout' ? ordered : ordered.filter((m) => classify(m.subject).label === filter)),
+    [ordered, filter],
+  );
+  // Le filtre actif a disparu (changement de sujet / rechargement) → retour à « Tout ».
+  useEffect(() => {
+    if (filter !== 'Tout' && !categories.some((c) => c.label === filter)) setFilter('Tout');
+  }, [categories, filter]);
 
   // Source du Sujet (live + quelle session) → lien vers la Salle de révision
   // (le lecteur canonique), plutôt qu'un player vidéo inline concurrent.
@@ -127,6 +150,32 @@ export default function TopicThreadPage() {
         </span>
       </div>
 
+      {/* Filtre par type de contenu — visible seulement s'il y a plusieurs types dans le fil. */}
+      {!loading && categories.length > 1 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
+          {[{ label: 'Tout', icon: '◍', count: ordered.length }, ...categories].map((c) => {
+            const active = filter === c.label;
+            return (
+              <button
+                key={c.label}
+                onClick={() => setFilter(c.label)}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px',
+                  borderRadius: 999, cursor: 'pointer', fontFamily: COL.mono, fontSize: 12, fontWeight: 700,
+                  letterSpacing: '0.01em', transition: 'background .15s,border-color .15s,color .15s',
+                  background: active ? COL.coral : 'rgba(217,119,87,0.08)',
+                  border: `1px solid ${active ? COL.coral : 'rgba(217,119,87,0.22)'}`,
+                  color: active ? '#1c1a17' : COL.coral,
+                }}
+              >
+                <span aria-hidden>{c.icon}</span>{c.label}
+                <span style={{ opacity: 0.65, fontWeight: 600 }}>{c.count}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {loading ? (
         <div style={{ textAlign: 'center', padding: '48px 0', fontFamily: COL.mono, fontSize: 10, letterSpacing: '0.12em', color: COL.t3 }}>
           CHARGEMENT…
@@ -138,7 +187,7 @@ export default function TopicThreadPage() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {ordered.map((m) => {
+          {visible.map((m) => {
             const cat = classify(m.subject);
             const link = cat.key === 'replay' ? urlOf(m.content) : null;
             return (

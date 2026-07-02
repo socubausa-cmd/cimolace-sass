@@ -454,8 +454,8 @@ export default function ForumThreadPage() {
               style={{
                 position: 'absolute', top: 2, right: -10, zIndex: 6,
                 width: 22, height: 22, borderRadius: '50%',
-                background: '#12111a', border: '1px solid rgba(255,255,255,0.12)',
-                color: 'rgba(245,245,247,0.65)', cursor: 'pointer',
+                background: '#1a1714', border: '1px solid rgba(255,247,240,0.12)',
+                color: 'rgba(245,241,233,0.65)', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, lineHeight: 1,
               }}
             >‹</button>
@@ -674,7 +674,7 @@ export default function ForumThreadPage() {
               {/* Reply header */}
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold" style={{ background: reply.is_ai ? 'linear-gradient(135deg,#D4AF37,#7a5c12)' : 'linear-gradient(135deg,#1e2840,#D4AF37)', flexShrink: 0 }}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold" style={{ background: reply.is_ai ? 'linear-gradient(135deg,#e0926a,#8a3f28)' : 'linear-gradient(135deg,#33241d,#d97757)', flexShrink: 0 }}>
                     {reply.is_ai ? '✦' : (reply.author_name || reply.student_id || 'A').slice(0, 1).toUpperCase()}
                   </div>
                   <span className="text-sm font-medium text-gray-900">
