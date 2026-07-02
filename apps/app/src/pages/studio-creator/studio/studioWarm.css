@@ -136,7 +136,16 @@
 .studio-warm-scope [class*="ring-[#7B61FF]"] { --tw-ring-color: rgba(212,163,106,0.45) !important; }
 
 /* ── Classes CSS custom du shell live (liri-brand-theme.css) → chaud ── */
-.studio-warm-scope .live-studio-premium { background-color: #262624 !important; }
+/* Fond studio = base chaude #262624 + grille discrète (comme le shell portail LIRI).
+ * La grille est posée ICI (sur le fond visible du builder) et pas seulement sur le shell,
+ * sinon elle est masquée par ce fond opaque. */
+.studio-warm-scope .live-studio-premium {
+  background-color: #262624 !important;
+  background-image:
+    linear-gradient(rgba(245,244,238,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,244,238,0.07) 1px, transparent 1px) !important;
+  background-size: 44px 44px !important;
+}
 .studio-warm-scope .live-studio-global-progress-fill { background: linear-gradient(90deg, #d4a36a, #c2683f) !important; }
 
 /* ── Gris Tailwind légèrement BLEUTÉS (gray/slate/zinc) → gris CHAUDS sobres.
