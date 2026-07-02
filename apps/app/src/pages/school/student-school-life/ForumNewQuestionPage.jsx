@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Search, PlayCircle, GraduationCap, Loader2, CheckCircle2, Clapperboard } from 'lucide-react';
+import { ArrowLeft, Search, PlayCircle, GraduationCap, Loader2, CheckCircle2, Clapperboard, LayoutGrid, List } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { authStore } from '@/lib/auth-store';
 import { getApiBaseUrl } from '@/lib/apiBase';
@@ -39,6 +39,8 @@ export default function ForumNewQuestionPage() {
   const [courseVideos, setCourseVideos] = useState([]);
   const [cursusVideos, setCursusVideos] = useState([]);
   const [query, setQuery] = useState('');
+  const [cat, setCat] = useState('recent'); // 'recent' | 'replay' | 'course' | 'cursus'
+  const [view, setView] = useState('rail'); // 'rail' | 'list'
 
   const [selected, setSelected] = useState(null); // { source, contextType, contextId, data, title }
   const [loadingVideo, setLoadingVideo] = useState(false);
@@ -65,7 +67,7 @@ export default function ForumNewQuestionPage() {
       // `courses.id`), donc on remonte jusqu'à courses.id.
       try {
         const [lessonsRes, modulesRes, coursesRes] = await Promise.all([
-          supabase.from('course_lessons').select('id, title, video_url, module_id').limit(400),
+          supabase.from('course_lessons').select('id, title, video_url, module_id, created_at').limit(400),
           supabase.from('course_modules').select('id, course_id').limit(400),
           supabase.from('courses').select('id, title').limit(400),
         ]);
@@ -75,17 +77,17 @@ export default function ForumNewQuestionPage() {
           .filter((l) => l.video_url)
           .map((l) => {
             const courseId = modToCourse.get(l.module_id);
-            return { id: l.id, title: l.title || 'Leçon', videoUrl: l.video_url, courseId, courseTitle: courseTitle.get(courseId) };
+            return { id: l.id, title: l.title || 'Leçon', videoUrl: l.video_url, courseId, courseTitle: courseTitle.get(courseId), createdAt: l.created_at };
           })
           .filter((v) => v.courseId);
         if (alive) setCourseVideos(vids);
       } catch { /* noop */ }
       // Vidéos du cursus (école) : formation_day_contents type='video' (video_url direct).
       try {
-        const { data } = await supabase.from('formation_day_contents').select('id, data').eq('type', 'video').limit(300);
+        const { data } = await supabase.from('formation_day_contents').select('id, data, created_at').eq('type', 'video').limit(300);
         const fdc = (Array.isArray(data) ? data : [])
           .filter((r) => r?.data && (r.data.videoUrl || r.data.url))
-          .map((r) => ({ id: r.id, title: r.data.title || 'Leçon vidéo', videoUrl: r.data.videoUrl || r.data.url, posterUrl: r.data.posterUrl || null }));
+          .map((r) => ({ id: r.id, title: r.data.title || 'Leçon vidéo', videoUrl: r.data.videoUrl || r.data.url, posterUrl: r.data.posterUrl || null, createdAt: r.created_at }));
         if (alive) setCursusVideos(fdc);
       } catch { /* noop */ }
       if (alive) setLoading(false);
@@ -157,7 +159,31 @@ export default function ForumNewQuestionPage() {
   const fReplays = useMemo(() => replays.filter((r) => !q || (r.title || '').toLowerCase().includes(q)), [replays, q]);
   const fCourses = useMemo(() => courseVideos.filter((c) => !q || (c.title || '').toLowerCase().includes(q)), [courseVideos, q]);
   const fCursus = useMemo(() => cursusVideos.filter((c) => !q || (c.title || '').toLowerCase().includes(q)), [cursusVideos, q]);
-  const nothing = !loading && fReplays.length === 0 && fCourses.length === 0 && fCursus.length === 0;
+
+  // Normalise toutes les sources en cartes uniformes (filtre catégorie + tri récence + rendu rail|liste).
+  const norm = useMemo(() => ({
+    replay: fReplays.map((r) => ({ key: 'r-' + r.id, kind: 'replay', title: r.title, sub: fmtDate(r.date), date: r.date, poster: null, onClick: () => pickReplay(r) })),
+    course: fCourses.map((c) => ({ key: 'c-' + c.id, kind: 'course', title: c.title, sub: c.courseTitle || 'Leçon', date: c.createdAt, poster: null, onClick: () => pickCourse(c) })),
+    cursus: fCursus.map((v) => ({ key: 'u-' + v.id, kind: 'cursus', title: v.title, sub: 'Leçon', date: v.createdAt, poster: v.posterUrl, onClick: () => pickCursus(v) })),
+  }), [fReplays, fCourses, fCursus]);
+
+  const cats = useMemo(() => [
+    { key: 'recent', label: 'Récents', count: norm.replay.length + norm.course.length + norm.cursus.length },
+    { key: 'replay', label: 'Replays', count: norm.replay.length },
+    { key: 'course', label: 'Vidéos de cours', count: norm.course.length },
+    { key: 'cursus', label: 'Cursus', count: norm.cursus.length },
+  ].filter((c) => c.key === 'recent' || c.count > 0), [norm]);
+
+  const shown = useMemo(() => {
+    const ts = (d) => { const t = d ? Date.parse(d) : NaN; return Number.isFinite(t) ? t : 0; };
+    const base = cat === 'recent' ? [...norm.replay, ...norm.course, ...norm.cursus] : (norm[cat] || []);
+    return base.slice().sort((a, b) => ts(b.date) - ts(a.date));
+  }, [norm, cat]);
+
+  // La catégorie active a disparu (recherche/filtre) → retour à « Récents ».
+  useEffect(() => { if (cat !== 'recent' && !cats.some((c) => c.key === cat)) setCat('recent'); }, [cats, cat]);
+
+  const nothing = !loading && shown.length === 0;
 
   // ————————————————————————————————————————————————————————————— rendu
 
@@ -229,27 +255,34 @@ export default function ForumNewQuestionPage() {
           <p style={{ fontSize: 12.5, margin: 0 }}>Les replays de tes lives et les vidéos de cours apparaîtront ici.</p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
-          {fReplays.length > 0 && (
-            <Rail icon={PlayCircle} label="Replays" count={fReplays.length}>
-              {fReplays.map((r) => (
-                <VideoCard key={r.id} kind="replay" title={r.title} sub={fmtDate(r.date)} onClick={() => pickReplay(r)} />
+        <div>
+          {/* Barre filtre : Récents / par catégorie  +  bascule rail | liste */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
+              {cats.map((c) => (
+                <button key={c.key} onClick={() => setCat(c.key)} style={chip(cat === c.key)}>
+                  {c.label} <span style={{ opacity: 0.6 }}>{c.count}</span>
+                </button>
               ))}
-            </Rail>
-          )}
-          {fCourses.length > 0 && (
-            <Rail icon={GraduationCap} label="Vidéos de cours" count={fCourses.length}>
-              {fCourses.map((c) => (
-                <VideoCard key={c.id} kind="course" title={c.title} sub={c.courseTitle || 'Leçon'} onClick={() => pickCourse(c)} />
+            </div>
+            <div style={{ display: 'inline-flex', borderRadius: 9, overflow: 'hidden', border: `1px solid ${T.line}`, flexShrink: 0 }}>
+              <button onClick={() => setView('rail')} title="Affichage rail" aria-label="Affichage rail" style={viewBtn(view === 'rail')}><LayoutGrid size={15} /></button>
+              <button onClick={() => setView('list')} title="Affichage liste" aria-label="Affichage liste" style={viewBtn(view === 'list')}><List size={15} /></button>
+            </div>
+          </div>
+
+          {view === 'rail' ? (
+            <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 6, scrollSnapType: 'x proximity', WebkitOverflowScrolling: 'touch' }}>
+              {shown.map((it) => (
+                <VideoCard key={it.key} kind={it.kind} title={it.title} sub={it.sub} poster={it.poster} onClick={it.onClick} />
               ))}
-            </Rail>
-          )}
-          {fCursus.length > 0 && (
-            <Rail icon={Clapperboard} label="Vidéos du cursus" count={fCursus.length}>
-              {fCursus.map((v) => (
-                <VideoCard key={v.id} kind="cursus" title={v.title} sub="Leçon" poster={v.posterUrl} onClick={() => pickCursus(v)} />
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {shown.map((it) => (
+                <VideoListRow key={it.key} kind={it.kind} title={it.title} sub={it.sub} poster={it.poster} onClick={it.onClick} />
               ))}
-            </Rail>
+            </div>
           )}
         </div>
       )}
@@ -257,20 +290,55 @@ export default function ForumNewQuestionPage() {
   );
 }
 
-// Rail = rangée horizontale scrollable (façon catalogue). L'en-tête reste fixe ; les
-// cartes défilent avec scroll-snap.
-function Rail({ icon: Icon, label, count, children }) {
+// Chip de filtre catégorie + bouton de bascule d'affichage (rail | liste).
+function chip(active) {
+  return {
+    display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 13px', borderRadius: 999, cursor: 'pointer',
+    fontFamily: T.mono, fontSize: 12, fontWeight: 700, letterSpacing: '0.01em',
+    background: active ? T.coral : 'rgba(217,119,87,0.08)',
+    border: `1px solid ${active ? T.coral : 'rgba(217,119,87,0.22)'}`,
+    color: active ? '#1c1a17' : T.coral,
+    transition: 'background .14s, border-color .14s, color .14s',
+  };
+}
+function viewBtn(active) {
+  return {
+    display: 'grid', placeItems: 'center', width: 34, height: 30, cursor: 'pointer', border: 'none',
+    background: active ? 'rgba(217,119,87,0.18)' : 'transparent',
+    color: active ? T.coral : T.t3, transition: 'background .14s, color .14s',
+  };
+}
+
+// Rangée « liste » : vignette 16:9 + badge + titre + sous-titre.
+function VideoListRow({ kind, title, sub, poster, onClick }) {
+  const [hover, setHover] = useState(false);
+  const meta = KIND_META[kind] || KIND_META.course;
+  const Icon = meta.icon;
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <Icon size={15} style={{ color: T.coral }} />
-        <span style={{ fontFamily: T.mono, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: T.cream, textTransform: 'uppercase' }}>{label}</span>
-        <span style={{ fontFamily: T.mono, fontSize: 11, color: T.t3, background: T.card, border: `1px solid ${T.line}`, borderRadius: 20, padding: '1px 8px' }}>{count}</span>
-      </div>
-      <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 6, scrollSnapType: 'x proximity', WebkitOverflowScrolling: 'touch' }}>
-        {children}
-      </div>
-    </div>
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 13, width: '100%', textAlign: 'left', cursor: 'pointer',
+        padding: '9px 12px', borderRadius: 12,
+        background: hover ? T.cardHover : T.card, border: `1px solid ${hover ? 'rgba(217,119,87,0.32)' : T.line}`,
+        transition: 'background .14s, border-color .14s',
+      }}
+    >
+      <span style={{ position: 'relative', flexShrink: 0, width: 78, aspectRatio: '16 / 9', borderRadius: 8, overflow: 'hidden', display: 'grid', placeItems: 'center', background: `linear-gradient(135deg, ${meta.g1}, ${meta.g2})` }}>
+        <Icon size={16} style={{ color: 'rgba(245,241,233,0.5)' }} />
+        {poster ? <img src={poster} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
+      </span>
+      <span style={{ minWidth: 0, flex: 1 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
+          <span style={{ fontFamily: T.mono, fontSize: 9, fontWeight: 700, letterSpacing: '0.05em', color: T.coral, background: 'rgba(217,119,87,0.10)', border: '1px solid rgba(217,119,87,0.24)', borderRadius: 5, padding: '1px 6px', flexShrink: 0 }}>{meta.badge}</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: T.cream, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
+        </span>
+        {sub ? <span style={{ display: 'block', fontFamily: T.mono, fontSize: 10.5, color: T.t3, marginTop: 3 }}>{sub}</span> : null}
+      </span>
+      <span style={{ flexShrink: 0, fontSize: 12.5, fontWeight: 600, color: hover ? T.coral : T.t3 }}>Choisir →</span>
+    </button>
   );
 }
 
