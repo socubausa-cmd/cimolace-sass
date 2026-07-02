@@ -171,7 +171,10 @@ function InviteLinkCard() {
   const slug = authStore.getTenantSlug();
   const [copied, setCopied] = useState(false);
   if (!slug) return null;
-  const inviteLink = `https://liri.cimolace.space/rejoindre?org=${slug}`;
+  // CLOISON : l'invitation utilise le DOMAINE COURANT (un tenant embarqué type
+  // prorascience.org reste sur SON domaine) — jamais l'hôte LIRI neutre en dur.
+  const inviteOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://liri.cimolace.space';
+  const inviteLink = `${inviteOrigin}/rejoindre?org=${slug}`;
 
   const copy = async () => {
     try {

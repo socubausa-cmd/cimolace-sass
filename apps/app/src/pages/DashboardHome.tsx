@@ -5,7 +5,7 @@ import { formatServiceKey } from '../lib/infrastructures';
 
 const INFRA_LABELS: Record<string, { label: string; action: string; href: string; status: string }> = {
   school: {
-    label: 'Ecole / ISNA',
+    label: 'École', // CLOISON : nom du PRODUIT (moteur), pas d'un tenant précis (ex-« ISNA »)
     action: 'Ouvrir le dashboard école',
     href: '/dashboard/school',
     status: 'MVP actif',
