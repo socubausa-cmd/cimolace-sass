@@ -84,6 +84,45 @@ function TwinView({
   );
 }
 
+const wheelColorForScore = (s: number): OrganColor =>
+  s >= 75 ? 'green' : s >= 55 ? 'yellow' : s >= 35 ? 'orange' : 'red';
+
+/** Vraie roue circulaire (radar) des domaines de transformation. */
+function WheelRadar({ domains }: { domains: WheelDomain[] }) {
+  const N = Math.max(1, domains.length);
+  const cx = 170, cy = 172, R = 118;
+  const ang = (i: number) => -Math.PI / 2 + (i * 2 * Math.PI) / N;
+  const pt = (i: number, r: number) => [cx + r * Math.cos(ang(i)), cy + r * Math.sin(ang(i))] as const;
+  const poly = domains
+    .map((d, i) => pt(i, (Math.max(0, Math.min(100, d.score)) / 100) * R).join(','))
+    .join(' ');
+  return (
+    <svg viewBox="0 0 340 344" style={{ width: '100%', maxWidth: 360, height: 'auto', margin: '0 auto', display: 'block' }}>
+      {[0.25, 0.5, 0.75, 1].map((f) => (
+        <circle key={f} cx={cx} cy={cy} r={R * f} fill="none" stroke="var(--zw-border)" strokeWidth={1} />
+      ))}
+      {domains.map((d, i) => {
+        const [ax, ay] = pt(i, R);
+        const [lx, ly] = pt(i, R + 18);
+        const anchor = lx < cx - 6 ? 'end' : lx > cx + 6 ? 'start' : 'middle';
+        return (
+          <g key={d.domain}>
+            <line x1={cx} y1={cy} x2={ax} y2={ay} stroke="var(--zw-border)" strokeWidth={1} />
+            <text x={lx} y={ly} fontSize={10} fontWeight={600} fill="var(--zw-text-soft)" textAnchor={anchor} dominantBaseline="middle">
+              {(WHEEL_LABELS[d.domain] || d.domain).slice(0, 15)}
+            </text>
+          </g>
+        );
+      })}
+      <polygon points={poly} fill="var(--brand-primary)" fillOpacity={0.16} stroke="var(--brand-primary)" strokeWidth={2} strokeLinejoin="round" />
+      {domains.map((d, i) => {
+        const [px, py] = pt(i, (Math.max(0, Math.min(100, d.score)) / 100) * R);
+        return <circle key={d.domain} cx={px} cy={py} r={4.5} fill={COLOR_HEX[wheelColorForScore(d.score)]} stroke="#fff" strokeWidth={1.2} />;
+      })}
+    </svg>
+  );
+}
+
 function WheelView({
   domains,
   organs,
@@ -91,29 +130,14 @@ function WheelView({
   domains: WheelDomain[];
   organs: Array<{ code: string; name_fr: string; score: { score: number; color: OrganColor } | null }>;
 }) {
-  const colorForScore = (s: number): OrganColor =>
-    s >= 75 ? 'green' : s >= 55 ? 'yellow' : s >= 35 ? 'orange' : 'red';
   const scored = organs.filter((o) => o.score).sort((a, b) => (a.score!.score - b.score!.score));
   return (
     <div style={{ padding: '4px 2px', overflowY: 'auto', height: '100%' }}>
       {domains && domains.length > 0 && (
         <>
           <div style={sectionTitle}>Roue de transformation</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 16 }}>
-            {domains.map((d) => {
-              const c = COLOR_HEX[colorForScore(d.score)];
-              return (
-                <div key={d.domain} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 116, fontSize: 12, color: 'var(--zw-text-soft)', flexShrink: 0 }}>
-                    {WHEEL_LABELS[d.domain] || d.domain}
-                  </span>
-                  <span style={{ flex: 1, height: 9, borderRadius: 999, background: 'var(--zw-bg-subtle)', overflow: 'hidden' }}>
-                    <span style={{ display: 'block', height: '100%', width: `${Math.max(3, Math.min(100, d.score))}%`, background: c, borderRadius: 999 }} />
-                  </span>
-                  <span style={{ width: 30, textAlign: 'right', fontSize: 12, fontWeight: 700, color: 'var(--zw-text)' }}>{Math.round(d.score)}</span>
-                </div>
-              );
-            })}
+          <div style={{ marginBottom: 16 }}>
+            <WheelRadar domains={domains} />
           </div>
         </>
       )}
