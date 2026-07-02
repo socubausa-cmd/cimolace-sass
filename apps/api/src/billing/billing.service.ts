@@ -273,12 +273,14 @@ export class BillingService {
       amount: String(invoice.amount_cents),
       currency: invoice.currency,
       payer: { type: "MMO", accountDetails: { phoneNumber: dto.phoneNumber, provider: dto.provider } },
-      statementDescription: "MEDOS Cimolace",
-      metadata: {
-        tenant: tenantId,
-        invoice: String(invoice.invoice_number ?? invoice.id),
-        subscription: subscriptionId,
-      },
+      customerTimestamp: new Date().toISOString(),
+      statementDescription: "Cimolace LIRI",
+      // PawaPay v2 : metadata = TABLEAU de { fieldName, fieldValue } (pas un objet).
+      metadata: [
+        { fieldName: "tenant", fieldValue: tenantId },
+        { fieldName: "invoice", fieldValue: String(invoice.invoice_number ?? invoice.id) },
+        { fieldName: "subscription", fieldValue: subscriptionId },
+      ],
     });
 
     await sb.from("billing_invoices").update({
