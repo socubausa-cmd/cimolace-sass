@@ -296,11 +296,23 @@ export function Appointments() {
   // Informations, Couverture, Date, Sécurité, Inviter, Salle virtuelle,
   // Interactions & IA, Validation) pour MONTER un live avant de le diffuser.
   // Le RDV est passé en contexte (référence / pré-remplissage éventuel).
-  async function prepareLive(appointmentId: string) {
+  async function prepareLive(appt: { id: string; scheduled_at?: string | null }, patientLabel: string) {
     try {
       const slug = localStorage.getItem('tenant_slug') || '';
-      const qp = appointmentId ? `&appointment=${encodeURIComponent(appointmentId)}` : '';
-      await openStudio(`/studio/live?tenant=${encodeURIComponent(slug)}${qp}`);
+      // context=medos → active « Live santé (MEDOS) » ; title/date/time pré-remplissent
+      // le wizard depuis le RDV (seulement si le brouillon est vierge, géré côté studio).
+      const params = new URLSearchParams({ tenant: slug, context: 'medos' });
+      if (appt?.id) params.set('appointment', appt.id);
+      if (patientLabel) params.set('title', `Téléconsultation — ${patientLabel}`);
+      if (appt?.scheduled_at) {
+        const dt = new Date(appt.scheduled_at);
+        if (!Number.isNaN(dt.getTime())) {
+          const pad = (n: number) => String(n).padStart(2, '0');
+          params.set('date', `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`);
+          params.set('time', `${pad(dt.getHours())}:${pad(dt.getMinutes())}`);
+        }
+      }
+      await openStudio(`/studio/live?${params.toString()}`);
     } catch (err: any) {
       setError(err?.message || 'Echec');
     }
@@ -449,7 +461,7 @@ export function Appointments() {
                       {appt.appointment_type === 'teleconsult' && appt.status !== 'cancelled' && appt.status !== 'completed' && (
                         <>
                           <button
-                            onClick={() => prepareLive(appt.id)}
+                            onClick={() => prepareLive(appt, patientName(p))}
                             title="Préparer le live dans le studio (scènes, contenus, boutique, ambiance…) avant de le diffuser"
                             style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', background: '#fff', color: 'var(--zw-violet)', border: '1px solid var(--zw-violet)', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
                           >
