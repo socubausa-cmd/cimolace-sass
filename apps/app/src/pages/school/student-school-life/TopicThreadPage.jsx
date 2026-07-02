@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
+import ForumMindMap from './ForumMindMap';
 
 /**
  * Fil d'un SUJET du forum unifié (conversations kind='topic').
@@ -230,6 +231,17 @@ export default function TopicThreadPage() {
                       </a>
                     ) : null}
                   </div>
+                ) : cat.key === 'plan' ? (
+                  /* Carte mentale : mindmap NAVIGABLE (nœuds) au lieu d'une liste plate. */
+                  <ForumMindMap
+                    content={m.content}
+                    rootLabel={
+                      title && title !== 'Sujet'
+                        ? title
+                        : (m.subject || '').replace(/^🗂️?\s*/, '').replace(/carte mentale\s*[—–-]?\s*/i, '').trim() || 'Carte mentale'
+                    }
+                    seekBase={salleLink}
+                  />
                 ) : (
                   <p style={{ fontSize: 14, color: cat.key === 'chat' ? COL.t2 : COL.cream, lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>
                     {m.content}
