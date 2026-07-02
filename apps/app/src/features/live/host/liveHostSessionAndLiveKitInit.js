@@ -189,7 +189,7 @@ export async function runLiveHostSessionAndLiveKitInit(ctx) {
         const isMedosLiveScenes = (cfg?.production_live_type ?? sess.production_live_type) === 'medos';
         setSmartboardSceneFlags(mergeSmartboardSceneFlags(
           isMedosLiveScenes
-            ? { smartboard: false, quiz: false, browser: false, shop: false, embed: false, secure_app_share: false, camera2: false, board: true, image: true, screen: true, diapo: true }
+            ? { smartboard: false, quiz: false, browser: false, shop: false, embed: false, secure_app_share: false, camera2: false, board: true, image: true, screen: true, diapo: true, medos: true }
             : cfg?.smartboard_scenes,
         ));
         setSessionQuickIaFlags({

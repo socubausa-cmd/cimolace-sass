@@ -623,14 +623,28 @@ export default function MedTeleconsultCockpit({
   sessionId,
   mode,
   eduMode = false,
+  onSharedSceneChange,
 }: {
   sessionId: string | null | undefined;
   mode: 'host' | 'patient';
   /** Live MEDOS « éducation » : jumeau 3D anatomique GÉNÉRIQUE, sans dossier
    *  patient (pas de labs/SOAP/Rx). Pour partager de l'anatomie à un groupe. */
   eduMode?: boolean;
+  /** Remonte la scène clinique actuellement partagée (jumeau/roue/SOAP/labs…)
+   *  au parent → permet de l'afficher sur le SMARTBOARD CENTRAL du live. */
+  onSharedSceneChange?: (scene: CockpitScene | null) => void;
 }) {
   const channel = useCockpitChannel(sessionId ?? null, mode);
+  useEffect(() => {
+    const scene = channel.scene ?? null;
+    onSharedSceneChange?.(scene);
+    // Découplé : le SmartBoardCompositor (scène « Dossier MEDOS ») écoute cet event pour
+    // afficher le contenu clinique sur le SMARTBOARD CENTRAL, sans threading à travers
+    // les couches de l'arène (mobile ET desktop). Cf. LIRI_LIVE_ARCHITECT_APPLY.
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('LIRI_MEDOS_SHARED_SCENE', { detail: { scene } }));
+    }
+  }, [channel.scene, onSharedSceneChange]);
   if (!sessionId) return null;
   return <CockpitDock sessionId={sessionId} mode={mode} channel={channel} eduMode={eduMode} />;
 }

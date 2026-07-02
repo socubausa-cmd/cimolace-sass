@@ -41,6 +41,8 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
     pipStream = null,
     /** Pour réinitialiser annotations / modale / cam2 lors d'un changement de session */
     sessionId = null,
+    /** Live MEDOS : scène clinique partagée à afficher sur la scène 'medos' du smartboard. */
+    medosSharedScene = null,
     /** Invité : pas de navigation locale, sync depuis le broadcast hôte */
     viewerMode = false,
     /**
@@ -1029,6 +1031,7 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
     <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-none bg-transparent">
       <SmartBoardCompositor
         stageCaptureSurfaceRef={stageCaptureSurfaceRef}
+        medosSharedScene={medosSharedScene}
         expandStageToViewport
         slide={parallaxSlide}
         spotlight={spotlight}

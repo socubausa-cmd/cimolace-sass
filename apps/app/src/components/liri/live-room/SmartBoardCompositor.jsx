@@ -65,6 +65,9 @@ import {
   SMARTBOARD_INTELLIGENT_SCENES,
 } from '@/lib/smartboardNavigatorScenes';
 import { playSmartboardSceneNavigationSound } from '@/lib/smartboardSceneNavSound';
+// Scène « Dossier MEDOS » : rend la scène clinique partagée (jumeau 3D / roue / SOAP / labs)
+// sur le smartboard central du live. SharedSceneView est la même vue que le cockpit patient.
+import { SharedSceneView } from '@/features/medos-cockpit/MedTeleconsultCockpit';
 import {
   cloneStrokesDeep,
   offsetWhiteboardStroke,
@@ -5306,6 +5309,8 @@ export default function SmartBoardCompositor({
   onLaserPointerChange = null,
   /** Ref sur le cadre visuel principal (bordure) — capture PNG (cahier invité, etc.) */
   stageCaptureSurfaceRef = null,
+  /** Live MEDOS : scène clinique partagée (CockpitScene) à rendre sur la scène 'medos'. */
+  medosSharedScene = null,
 }) {
   const useFooterSceneDock = sceneDockPlacement === 'footer';
   const sceneFlags = useMemo(() => mergeSmartboardSceneFlags(sceneFlagsProp), [sceneFlagsProp]);
@@ -5317,6 +5322,16 @@ export default function SmartBoardCompositor({
   const prevIndexRef = useRef(currentIndex);
   const [sceneDirection, setSceneDirection] = useState(1);
   const [sceneFlash, setSceneFlash] = useState(false);
+  // Scène « Dossier MEDOS » : le cockpit clinique (MedTeleconsultCockpit) émet la scène
+  // partagée via l'event global LIRI_MEDOS_SHARED_SCENE — on l'écoute ici pour l'afficher
+  // sur le smartboard central sans threading. Le prop medosSharedScene reste un fallback.
+  const [medosSceneFromEvent, setMedosSceneFromEvent] = useState(null);
+  useEffect(() => {
+    const onMedosScene = (e) => setMedosSceneFromEvent(e?.detail?.scene ?? null);
+    window.addEventListener('LIRI_MEDOS_SHARED_SCENE', onMedosScene);
+    return () => window.removeEventListener('LIRI_MEDOS_SHARED_SCENE', onMedosScene);
+  }, []);
+  const effectiveMedosScene = medosSharedScene ?? medosSceneFromEvent;
   const screenOverIntelligent =
     screenActive
     && (currentScene === 'screen' || SMARTBOARD_INTELLIGENT_SCENES.includes(currentScene));
@@ -5781,6 +5796,25 @@ export default function SmartBoardCompositor({
             )}
             {currentScene === 'shop' && (
               <ShopScene products={shopProducts} onProductClick={onShopProductClick} />
+            )}
+            {currentScene === 'medos' && (
+              <div className="absolute inset-0 flex items-center justify-center overflow-hidden bg-[#f6f4ee]">
+                {effectiveMedosScene && effectiveMedosScene.kind !== 'clear' ? (
+                  <div className="h-full w-full overflow-auto p-3 sm:p-5">
+                    <SharedSceneView scene={effectiveMedosScene} />
+                  </div>
+                ) : (
+                  <div className="flex max-w-md flex-col items-center gap-2 px-6 text-center">
+                    <span className="text-3xl">🩺</span>
+                    <p className="text-[15px] font-semibold text-[#2b2420]">Dossier MEDOS</p>
+                    <p className="text-[13px] leading-snug text-[#6b6259]">
+                      Ouvrez le cockpit clinique (bouton 🩺) puis partagez le jumeau 3D, la roue de
+                      transformation, un bilan ou la note SOAP : le contenu s'affiche ici, visible par
+                      tous les participants du live.
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
           </motion.div>
         </AnimatePresence>

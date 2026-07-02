@@ -14,6 +14,7 @@ export const DEFAULT_SMARTBOARD_SCENE_FLAGS = {
   image: true,
   camera2: false,
   shop: true,
+  medos: false,
 };
 
 export function mergeSmartboardSceneFlags(raw) {
@@ -63,6 +64,9 @@ export function buildSmartboardNavigatorScenes(opts = {}) {
     });
   }
   if (on(f, 'shop')) list.push({ id: 'shop', label: 'Boutique', hint: 'Liens & paiement' });
+  if (on(f, 'medos')) {
+    list.push({ id: 'medos', label: 'Dossier MEDOS', hint: 'Jumeau 3D / roue / bilans / SOAP partagés au live' });
+  }
 
   return list.length > 0 ? list : [{ id: 'smartboard', label: 'SmartBoard natif', hint: '' }];
 }
