@@ -656,7 +656,7 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
             type: 'MMO',
             accountDetails: { phoneNumber: lastDep.phone_number, provider: lastDep.provider },
           },
-          statementDescription: 'PRORASCIENCE',
+          customerMessage: 'PRORASCIENCE',
           metadata: [
             { fieldName: 'userId', fieldValue: String(sub.user_id ?? '') },
             { fieldName: 'kind', fieldValue: 'subscription' },

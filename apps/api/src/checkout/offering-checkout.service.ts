@@ -138,7 +138,7 @@ export class OfferingCheckoutService {
           type: 'MMO',
           accountDetails: { phoneNumber: dto.phoneNumber, provider: dto.provider },
         },
-        statementDescription: 'PRORASCIENCE'.slice(0, 22),
+        customerMessage: 'PRORASCIENCE',
         metadata: [
           { fieldName: 'userId', fieldValue: String(userId ?? '') },
           { fieldName: 'tenantId', fieldValue: String(tenant.id) },

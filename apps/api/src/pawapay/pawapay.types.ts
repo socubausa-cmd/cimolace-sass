@@ -27,8 +27,8 @@ export interface PawaPayDepositRequest {
   amount: string; // ex: "1000"
   currency: string; // ex: "XAF", "RWF", "GHS"...
   payer: PawaPayPayer;
-  customerTimestamp?: string; // ISO 8601 (PawaPay v2)
-  statementDescription?: string; // max 22 chars
+  clientReferenceId?: string; // ex: numéro de facture (PawaPay v2)
+  customerMessage?: string; // 4-22 alphanum + espaces (remplace statementDescription en v2)
   metadata?: Array<{ fieldName: string; fieldValue: string; isPII?: boolean }>; // PawaPay v2 = TABLEAU
 }
 
