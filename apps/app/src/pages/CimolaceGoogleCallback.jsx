@@ -78,7 +78,18 @@ async function checkCimolaceStaff(token) {
   }
 }
 
-/** Nettoie les clés PKCE / OAuth Supabase laissées dans le storage après le callback. */
+/**
+ * Nettoie UNIQUEMENT les artefacts transitoires PKCE / code-verifier laissés par
+ * le flux OAuth dans le storage.
+ *
+ * ⚠️ NE JAMAIS supprimer la session elle-même (`sb-<ref>-auth-token`) : le callback
+ * vient de l'établir (flux implicite → detectSessionInUrl a écrit le token), et les
+ * routes protégées en aval (CimolaceProtectedOwnerRoute → useAuth) la relisent
+ * immédiatement. L'ancienne version matchait `sb-*` + `-auth-token`, ce qui incluait
+ * la clé de session → session détruite juste avant `navigate('/cimolace/admin')` →
+ * rebond systématique vers `/cimolace/login`. En flux implicite il n'y a d'ailleurs
+ * aucun code-verifier à nettoyer : cette fonction est alors un no-op inoffensif.
+ */
 function clearOAuthState() {
   try {
     const storages = [window.sessionStorage, window.localStorage].filter(Boolean);
@@ -86,8 +97,8 @@ function clearOAuthState() {
       for (let i = st.length - 1; i >= 0; i -= 1) {
         const k = st.key(i);
         if (!k) continue;
-        if (k.startsWith('sb-') && k.includes('-auth-token')) st.removeItem(k);
-        if (k.includes('supabase') && (k.includes('pkce') || k.includes('code-verifier') || k.includes('oauth'))) st.removeItem(k);
+        // Clés transitoires PKCE seulement — surtout PAS la session `-auth-token`.
+        if (k.includes('code-verifier') || k.includes('pkce')) st.removeItem(k);
       }
     });
   } catch { /* ignore */ }
