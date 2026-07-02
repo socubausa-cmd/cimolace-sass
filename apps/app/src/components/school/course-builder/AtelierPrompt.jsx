@@ -3,6 +3,11 @@ import { motion } from 'framer-motion';
 import { MessageCircleQuestion, Send, ArrowRight, Sparkles } from 'lucide-react';
 import SketchRenderer from './SketchRenderer';
 import { speakText, cancelSpeech } from './TableauVivant';
+import { classifyLocal, resolveAtelierVerdict } from '@/lib/precepteur/judgeAtelier';
+
+// L'heuristique locale vit désormais dans judgeAtelier.js (repli SÛR, sans réseau).
+// Réexportée depuis son domicile historique pour compat (ne pas casser d'anciens imports).
+export { classifyLocal };
 
 /**
  * ATELIER — l'interaction socratique NOMINATIVE.
@@ -11,20 +16,10 @@ import { speakText, cancelSpeech } from './TableauVivant';
  * Interpelle l'élève par son prénom, attend sa réponse, la classe (juge), répond en
  * VARIANT les formulations (jamais le même mot), puis révèle (souvent + 2e croquis).
  *
- * Démo publique : le juge est un HEURISTIQUE LOCAL (mots-clés). En production, c'est
- * l'edge function `liri-preceptor-atelier-judge` (LLM) qui classe la réponse.
+ * Le VERDICT vient de l'edge `liri-preceptor-atelier-judge` (LLM) via la prop
+ * `judgeAnswer` (injectée) ; en son absence ou sur échec, `resolveAtelierVerdict`
+ * retombe sur l'heuristique locale `classifyLocal` (mots-clés). JAMAIS bloquant.
  */
-
-const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-
-function classifyLocal(answer, expectedAnswers = [], expectedErrors = []) {
-  const a = norm(answer);
-  if (!a.trim()) return 'partial';
-  if (expectedAnswers.some((k) => a.includes(norm(k)))) return 'ok';
-  if (expectedErrors.some((k) => a.includes(norm(k)))) return 'wrong';
-  const partial = expectedAnswers.some((k) => norm(k).split(/\s+/).some((w) => w.length > 3 && a.includes(w)));
-  return partial ? 'partial' : 'wrong';
-}
 
 const pick = (arr, fallback) => (arr && arr.length ? arr[Math.floor(Math.random() * arr.length)] : fallback);
 
@@ -35,10 +30,10 @@ const ACK_TONE = {
   skip: 'text-slate-500',
 };
 
-export default function AtelierPrompt({ scene, studentName = '', speak = false, onNarrate, onContinue }) {
+export default function AtelierPrompt({ scene, studentName = '', speak = false, onNarrate, onContinue, judgeAnswer }) {
   const name = (studentName || '').trim() || 'l’élève';
   const question = String(scene?.question || '').replace('{{student_name}}', name);
-  const [phase, setPhase] = useState('asking'); // asking | revealed
+  const [phase, setPhase] = useState('asking'); // asking | judging | revealed
   const [answer, setAnswer] = useState('');
   const [ack, setAck] = useState(null);
   const inputRef = useRef(null);
@@ -53,8 +48,9 @@ export default function AtelierPrompt({ scene, studentName = '', speak = false, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const goReveal = useCallback((cat) => {
-    const msg = cat === 'skip' ? '' : pick((scene.ack_variants || {})[cat], 'Voyons ensemble.');
+  // Révèle avec un verdict + un ack DÉJÀ résolus (edge LLM ou repli local).
+  // `cat` ∈ {ok,partial,wrong,skip} ; `msg` = la réaction à afficher/dire ('' pour skip).
+  const goReveal = useCallback((cat, msg = '') => {
     setAck({ cat, msg });
     const delay = msg ? 1500 : 200;
     if (msg) say(msg);
@@ -64,7 +60,23 @@ export default function AtelierPrompt({ scene, studentName = '', speak = false, 
     }, delay);
   }, [scene, say]);
 
-  const submit = () => { if (phase !== 'asking') return; goReveal(classifyLocal(answer, scene.expected_answers, scene.expected_errors)); };
+  const submit = async () => {
+    if (phase !== 'asking') return;
+    setPhase('judging'); // « Le professeur réfléchit… » (bouton désactivé)
+    // Edge LLM (injectée) — JAMAIS bloquant : tout échec → null → repli local.
+    const edgeRes = judgeAnswer
+      ? await judgeAnswer({
+        question,
+        studentAnswer: answer,
+        studentName: name,
+        expectedAnswers: scene.expected_answers,
+        expectedErrors: scene.expected_errors,
+        hint: scene.hint,
+      }).catch(() => null)
+      : null;
+    const { verdict, ack: resolvedAck } = resolveAtelierVerdict(scene, answer, edgeRes);
+    goReveal(verdict, resolvedAck);
+  };
 
   return (
     <motion.div
@@ -86,7 +98,7 @@ export default function AtelierPrompt({ scene, studentName = '', speak = false, 
         <p className="mt-2 text-sm italic text-slate-500">Indice : {scene.hint}</p>
       ) : null}
 
-      {phase === 'asking' ? (
+      {phase === 'asking' || phase === 'judging' ? (
         <div className="mt-5">
           <div className="flex flex-col gap-2 sm:flex-row">
             <input
@@ -95,20 +107,28 @@ export default function AtelierPrompt({ scene, studentName = '', speak = false, 
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
+              disabled={phase === 'judging'}
               placeholder="Écris ta lecture de la situation…"
-              className="flex-1 rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-base text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="flex-1 rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-base text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:opacity-60"
             />
             <button
               type="button"
               onClick={submit}
-              className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white hover:bg-blue-700"
+              disabled={phase === 'judging'}
+              className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Répondre <Send className="h-4 w-4" />
+              {phase === 'judging' ? (
+                <>Le professeur réfléchit… <Sparkles className="h-4 w-4 animate-pulse" /></>
+              ) : (
+                <>Répondre <Send className="h-4 w-4" /></>
+              )}
             </button>
           </div>
-          <button type="button" onClick={() => goReveal('skip')} className="mt-3 text-xs font-semibold text-slate-400 hover:text-slate-600">
-            Voir la réponse du professeur →
-          </button>
+          {phase === 'asking' ? (
+            <button type="button" onClick={() => goReveal('skip')} className="mt-3 text-xs font-semibold text-slate-400 hover:text-slate-600">
+              Voir la réponse du professeur →
+            </button>
+          ) : null}
         </div>
       ) : null}
 

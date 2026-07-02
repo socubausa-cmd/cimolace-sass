@@ -100,6 +100,24 @@ const serverTtsFetch = (text, provider, opts) => {
   return openaiTtsFetch(text, opts?.voice, opts?.speed); // 'openai' (défaut)
 };
 
+// JUGE de l'atelier (edge `liri-preceptor-atelier-judge`, LLM) — EXIGE le token de session.
+// Même patron que ttsFetch. Renvoie { verdict, ack } (data déballée) ou null sur TOUTE erreur.
+// Non bloquant côté AtelierPrompt : null → repli local via resolveAtelierVerdict.
+async function judgeAnswerFetch(payload) {
+  try {
+    const { data: sess } = await supabase.auth.getSession();
+    const token = sess?.session?.access_token;
+    if (!token) return null; // non connecté → repli local
+    const { data, error } = await supabase.functions.invoke('liri-preceptor-atelier-judge', {
+      body: payload,
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (error) return null;
+    if (data && typeof data.verdict === 'string') return { verdict: data.verdict, ack: data.ack };
+    return null;
+  } catch { return null; }
+}
+
 const imgCacheKey = (prompt) => {
   try { return 'precepteur_img_' + btoa(unescape(encodeURIComponent(prompt))).slice(0, 48); } catch { return null; }
 };
@@ -322,6 +340,10 @@ export function PrecepteurPlayer({ course }) {
     if (speak) speakText(text);
   }, [speak, stopAudio, playAudioUrl, useServerVoice, serverTts, openaiVoice, voiceSpeed]);
 
+  // JUGE de l'atelier (edge LLM, token de session) — passé à AtelierPrompt.
+  // Renvoie { verdict, ack } ou null (repli local). Jamais bloquant.
+  const judgeAnswer = useCallback((payload) => judgeAnswerFetch(payload), []);
+
   // --- rendu d'une scène ---
   const renderScene = (s) => {
     if (s.type === 'lecon') {
@@ -407,7 +429,7 @@ export function PrecepteurPlayer({ course }) {
     if (s.type === 'atelier') {
       return (
         <div className="w-full max-w-4xl">
-          <AtelierPrompt scene={s} studentName={name} speak={speak} onNarrate={narrateNow} onContinue={advance} />
+          <AtelierPrompt scene={s} studentName={name} speak={speak} onNarrate={narrateNow} onContinue={advance} judgeAnswer={judgeAnswer} />
         </div>
       );
     }
