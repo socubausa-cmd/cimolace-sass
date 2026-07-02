@@ -642,6 +642,9 @@ export default function MedTeleconsultCockpit({
     // afficher le contenu clinique sur le SMARTBOARD CENTRAL, sans threading à travers
     // les couches de l'arène (mobile ET desktop). Cf. LIRI_LIVE_ARCHITECT_APPLY.
     if (typeof window !== 'undefined') {
+      // Dernier état courant : lu au MONTAGE d'un compositeur ouvert APRÈS le partage
+      // (ex. onglet Tableau de la téléconsult sélectionné après « Partager »).
+      (window as unknown as { __liriMedosScene?: CockpitScene | null }).__liriMedosScene = scene;
       window.dispatchEvent(new CustomEvent('LIRI_MEDOS_SHARED_SCENE', { detail: { scene } }));
     }
   }, [channel.scene, onSharedSceneChange]);

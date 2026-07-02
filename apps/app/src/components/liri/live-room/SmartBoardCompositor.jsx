@@ -5325,7 +5325,9 @@ export default function SmartBoardCompositor({
   // Scène « Dossier MEDOS » : le cockpit clinique (MedTeleconsultCockpit) émet la scène
   // partagée via l'event global LIRI_MEDOS_SHARED_SCENE — on l'écoute ici pour l'afficher
   // sur le smartboard central sans threading. Le prop medosSharedScene reste un fallback.
-  const [medosSceneFromEvent, setMedosSceneFromEvent] = useState(null);
+  const [medosSceneFromEvent, setMedosSceneFromEvent] = useState(
+    () => (typeof window !== 'undefined' ? window.__liriMedosScene ?? null : null),
+  );
   useEffect(() => {
     const onMedosScene = (e) => setMedosSceneFromEvent(e?.detail?.scene ?? null);
     window.addEventListener('LIRI_MEDOS_SHARED_SCENE', onMedosScene);
