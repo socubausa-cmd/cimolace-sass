@@ -20,7 +20,7 @@
 // ConsultationRoom (pas de Tailwind, pas de dépendance à --school-accent).
 // ─────────────────────────────────────────────────────────────────────────────
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Music2, Volume1, Volume2, VolumeX, Play, Pause, ChevronUp, ChevronDown } from 'lucide-react';
+import { Music2, Volume1, Volume2, VolumeX, Play, Pause, ChevronUp, ChevronDown, Upload } from 'lucide-react';
 
 const GOLD = '#b08d57';
 const PANEL_BG = 'rgba(22,22,24,0.94)';
@@ -74,6 +74,8 @@ export type AmbientAudioController = {
   togglePlay: () => void;
   play: () => void;
   pause: () => void;
+  /** Charge une piste locale (fichier de l'appareil) → l'ajoute aux ambiances et la lance. */
+  addCustomTrack: (file: File) => void;
 };
 
 const SILENCE_ID = 'none';
@@ -86,9 +88,11 @@ function clampVolume(v: number): number {
 export function useAmbientAudio(options: UseAmbientAudioOptions = {}): AmbientAudioController {
   const { initialPresetId = SILENCE_ID, initialVolume = 22, autoPlay = false } = options;
 
-  const presets = AMBIENCE_PRESETS;
+  // Ambiances de base + pistes chargées par le praticien (fichiers locaux).
+  const [customPresets, setCustomPresets] = useState<AmbiencePreset[]>([]);
+  const presets = useMemo(() => [...AMBIENCE_PRESETS, ...customPresets], [customPresets]);
   const [presetId, setPresetId] = useState<string>(
-    presets.some((p) => p.id === initialPresetId) ? initialPresetId : SILENCE_ID,
+    AMBIENCE_PRESETS.some((p) => p.id === initialPresetId) ? initialPresetId : SILENCE_ID,
   );
   const [volume, setVolumeState] = useState<number>(clampVolume(initialVolume));
   // « playing » = intention de lecture. La lecture réelle ne sonne que si le
@@ -96,6 +100,9 @@ export function useAmbientAudio(options: UseAmbientAudioOptions = {}): AmbientAu
   const [playing, setPlaying] = useState<boolean>(!!autoPlay);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Object URLs des pistes chargées (révoquées à la destruction) + compteur d'id stable.
+  const customUrlsRef = useRef<string[]>([]);
+  const customIdRef = useRef<number>(1);
 
   const preset = useMemo(
     () => presets.find((p) => p.id === presetId) ?? presets[0],
@@ -171,6 +178,14 @@ export function useAmbientAudio(options: UseAmbientAudioOptions = {}): AmbientAu
           /* ignore */
         }
       }
+      customUrlsRef.current.forEach((u) => {
+        try {
+          URL.revokeObjectURL(u);
+        } catch {
+          /* ignore */
+        }
+      });
+      customUrlsRef.current = [];
     };
   }, []);
 
@@ -179,6 +194,25 @@ export function useAmbientAudio(options: UseAmbientAudioOptions = {}): AmbientAu
     // Choisir une vraie ambiance = lancer la lecture ; choisir Silence = couper.
     setPlaying(id !== SILENCE_ID);
   }, [presets]);
+
+  // Charge une piste locale (fichier de l'appareil) via object URL, l'ajoute aux
+  // ambiances et la lance. Lecture PUREMENT LOCALE (comme les presets) — pas de
+  // dépendance au bucket, pas de diffusion réseau. Révoquée à la destruction.
+  const addCustomTrack = useCallback((file: File) => {
+    if (typeof window === 'undefined' || !file) return;
+    let url: string;
+    try {
+      url = URL.createObjectURL(file);
+    } catch {
+      return;
+    }
+    customUrlsRef.current.push(url);
+    const base = (file.name || '').replace(/\.[^./\\]+$/, '').trim().slice(0, 20) || 'Ma piste';
+    const id = `custom-${customIdRef.current++}`;
+    setCustomPresets((prev) => [...prev, { id, label: base, icon: '🎧', src: url }]);
+    setPresetId(id);
+    setPlaying(true);
+  }, []);
 
   const setVolume = useCallback((v: number) => setVolumeState(clampVolume(v)), []);
   const play = useCallback(() => setPlaying(true), []);
@@ -196,6 +230,7 @@ export function useAmbientAudio(options: UseAmbientAudioOptions = {}): AmbientAu
     togglePlay,
     play,
     pause,
+    addCustomTrack,
   };
 }
 
@@ -235,7 +270,7 @@ export default function AmbientAudioEngine({
 
   const [collapsed, setCollapsed] = useState<boolean>(defaultCollapsed);
 
-  const { presets, presetId, preset, volume, playing, selectPreset, setVolume, togglePlay } = ctl;
+  const { presets, presetId, preset, volume, playing, selectPreset, setVolume, togglePlay, addCustomTrack } = ctl;
   const hasSource = !!preset.src;
 
   const containerStyle: React.CSSProperties = {
@@ -343,6 +378,30 @@ export default function AmbientAudioEngine({
             );
           })}
         </div>
+
+        {/* Charger une piste depuis l'appareil (ambiance personnalisée). */}
+        <label
+          title="Charger une piste depuis votre appareil"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            height: 32, marginBottom: 12, borderRadius: 10, cursor: 'pointer',
+            border: `1px dashed ${GOLD}66`, background: 'rgba(176,141,87,0.08)',
+            color: GOLD, fontSize: 11.5, fontWeight: 600,
+          }}
+        >
+          <Upload size={13} aria-hidden="true" />
+          Charger une piste
+          <input
+            type="file"
+            accept="audio/*"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) addCustomTrack(f);
+              e.currentTarget.value = '';
+            }}
+          />
+        </label>
 
         {/* Play/pause + volume (masqué si Silence : rien à régler). */}
         {hasSource ? (

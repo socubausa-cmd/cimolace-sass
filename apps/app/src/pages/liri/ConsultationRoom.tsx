@@ -31,7 +31,7 @@ import {
   useTracks,
 } from '@livekit/components-react';
 import { Track, ConnectionState } from 'livekit-client';
-import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio } from 'lucide-react';
+import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -809,7 +809,7 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
 // Pilote le contrôleur `useAmbientAudio` partagé (le même que la pastille
 // flottante). Grille de presets + lecture/pause + volume, en styles inline GOLD.
 function AmbientInlineControls({ ctl }: { ctl: ReturnType<typeof useAmbientAudio> }) {
-  const { presets, presetId, preset, volume, playing, selectPreset, setVolume, togglePlay } = ctl;
+  const { presets, presetId, preset, volume, playing, selectPreset, setVolume, togglePlay, addCustomTrack } = ctl;
   const hasSource = !!preset.src;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -838,6 +838,28 @@ function AmbientInlineControls({ ctl }: { ctl: ReturnType<typeof useAmbientAudio
           );
         })}
       </div>
+      <label
+        title="Charger une piste depuis votre appareil"
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          height: 32, borderRadius: 10, cursor: 'pointer',
+          border: `1px dashed ${GOLD}66`, background: 'rgba(176,141,87,0.08)',
+          color: GOLD, fontSize: 11.5, fontWeight: 600,
+        }}
+      >
+        <Upload size={13} aria-hidden="true" />
+        Charger une piste
+        <input
+          type="file"
+          accept="audio/*"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) addCustomTrack(f);
+            e.currentTarget.value = '';
+          }}
+        />
+      </label>
       {hasSource ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button
