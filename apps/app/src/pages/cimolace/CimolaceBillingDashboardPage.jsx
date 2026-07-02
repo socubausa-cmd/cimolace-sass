@@ -13,9 +13,13 @@ import { billingApi, tenantMembersApi, catalogApi, tenantApiKeysApi, tenantPorta
 import { authStore } from '@/lib/auth-store';
 import { supabase } from '@/lib/supabase';
 
+// Devises sans centime (le montant stocké EST déjà en unité entière — pas de /100).
+const ZERO_DECIMAL_CUR = new Set(['XAF', 'XOF', 'XPF', 'JPY', 'KRW', 'VND', 'CLP', 'RWF', 'BIF', 'GNF', 'DJF', 'KMF', 'UGX']);
 const eur = (cents, cur = 'EUR') => {
-  try { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: cur }).format((Number(cents) || 0) / 100); }
-  catch { return `${((Number(cents) || 0) / 100).toFixed(2)} ${cur}`; }
+  const c = String(cur || 'EUR').toUpperCase();
+  const value = ZERO_DECIMAL_CUR.has(c) ? (Number(cents) || 0) : (Number(cents) || 0) / 100;
+  try { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: c }).format(value); }
+  catch { return `${value.toLocaleString('fr-FR')} ${c}`; }
 };
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
 
