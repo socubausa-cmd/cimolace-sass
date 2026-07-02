@@ -320,7 +320,34 @@ export class PawaPayService {
   ): Promise<PawaPayPayoutInitResponse> {
     this.assertConfigured();
 
-    const body = JSON.stringify(payload);
+    // ── Normalisation v2 (défensive, couvre TOUS les appelants) ──────────────
+    // 1) metadata : pawaPay v2 EXIGE un TABLEAU d'objets à une clé (comme les
+    //    deposits/refunds). Un objet `{ k: v }` ou un metadata absent → 400
+    //    MISSING_PARAMETER 'metadata'. On coerce objet → [objet], vide → défaut.
+    const rawMd: any = (payload as any).metadata;
+    const mdArray = Array.isArray(rawMd)
+      ? rawMd
+      : rawMd && typeof rawMd === 'object'
+        ? Object.entries(rawMd).map(([k, v]) => ({ [k]: v }))
+        : [];
+    // 2) MSISDN : chiffres SEULS + format INTERNATIONAL. Le suffixe provider
+    //    (_GAB / _CMR) donne l'indicatif pays ; un « 0 » local → indicatif.
+    //    Ex. 077514015 + AIRTEL_GAB → 24177514015 (comme le dépôt qui marche).
+    const acc: any = payload.recipient?.accountDetails ?? {};
+    let phone = String(acc.phoneNumber ?? '').replace(/[^0-9]/g, '');
+    const prov = String(acc.provider ?? '');
+    const cc = prov.endsWith('_GAB') ? '241' : prov.endsWith('_CMR') ? '237' : '';
+    if (cc && phone.startsWith('0')) phone = cc + phone.slice(1);
+
+    const normalized = {
+      ...payload,
+      recipient: {
+        ...payload.recipient,
+        accountDetails: { ...acc, phoneNumber: phone },
+      },
+      metadata: mdArray.length ? mdArray : [{ source: 'cimolace' }],
+    };
+    const body = JSON.stringify(normalized);
     const url = `${this.baseUrl}/v2/payouts`;
     const response = await fetch(url, {
       method: 'POST',
