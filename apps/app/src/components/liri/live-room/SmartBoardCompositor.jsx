@@ -5810,7 +5810,7 @@ export default function SmartBoardCompositor({
                     <p className="text-[13px] leading-snug text-[#6b6259]">
                       Ouvrez le cockpit clinique (bouton 🩺) puis partagez le jumeau 3D, la roue de
                       transformation, un bilan ou la note SOAP : le contenu s'affiche ici, visible par
-                      tous les participants du live.
+                      tous les participants de la séance.
                     </p>
                   </div>
                 )}

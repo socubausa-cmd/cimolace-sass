@@ -286,7 +286,7 @@ function ImageTab({
       <div style={sectionTitle}>Pièces jointes</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {attachments.map((a) => (
-          <button key={a.id} onClick={() => onPick(a)} style={{ display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left', padding: '8px 9px', borderRadius: 8, border: '1px solid var(--zw-border)', background: '#fff', cursor: 'pointer', fontSize: 13, color: 'var(--zw-text)' }}>
+          <button key={a.id} onClick={() => onPick(a)} style={{ display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left', padding: '8px 9px', borderRadius: 8, border: '1px solid var(--zw-border)', background: '#f6f4ee', cursor: 'pointer', fontSize: 13, color: 'var(--zw-text)' }}>
             <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.file_name}</span>
             <span style={{ fontSize: 11, color: 'var(--brand-primary)', fontWeight: 700, flexShrink: 0 }}>Choisir</span>
           </button>
@@ -511,12 +511,12 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
 
       {/* Cas d'étude anonymisé (mode éducation) — données 100 % fictives. */}
       {eduMode && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: '#fff', borderBottom: '1px solid var(--zw-border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: '#f6f4ee', borderBottom: '1px solid var(--zw-border)' }}>
           <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--zw-text-muted)', whiteSpace: 'nowrap' }}>Cas d&apos;étude</span>
           <select
             value={studyCaseId || ''}
             onChange={(e) => loadStudyCase(e.target.value)}
-            style={{ flex: 1, minWidth: 0, padding: '6px 8px', borderRadius: 8, border: '1px solid var(--zw-border-strong)', background: '#fff', color: 'var(--zw-text)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}
+            style={{ flex: 1, minWidth: 0, padding: '6px 8px', borderRadius: 8, border: '1px solid var(--zw-border-strong)', background: '#f6f4ee', color: 'var(--zw-text)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}
           >
             <option value="">Jumeau générique (anatomie)</option>
             {MEDOS_STUDY_CASES.map((c) => (
@@ -527,7 +527,7 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
       )}
 
       {/* Onglets */}
-      <div style={{ display: 'flex', gap: 2, padding: '6px 6px 0', background: '#fff', borderBottom: '1px solid var(--zw-border)', overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: 2, padding: '6px 6px 0', background: '#f6f4ee', borderBottom: '1px solid var(--zw-border)', overflowX: 'auto' }}>
         {tabs.map(([key, label]) => (
           <button
             key={key}
@@ -662,9 +662,9 @@ const fabDot: React.CSSProperties = {
 };
 const panelStyle: React.CSSProperties = {
   position: 'fixed', right: 18, bottom: 18, zIndex: Z, width: 'min(440px, calc(100vw - 36px))',
-  height: 'min(76vh, 720px)', background: '#fff', borderRadius: 16, overflow: 'hidden',
+  height: 'min(76vh, 720px)', background: '#f6f4ee', borderRadius: 16, overflow: 'hidden',
   display: 'flex', flexDirection: 'column', boxShadow: '0 18px 60px rgba(0,0,0,0.42)',
-  border: '1px solid rgba(0,0,0,0.12)',
+  border: '1px solid rgba(43,36,32,0.14)',
 };
 const headerStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 8, padding: '11px 14px',
@@ -675,7 +675,7 @@ const closeBtn: React.CSSProperties = {
   background: 'rgba(255,255,255,0.16)', color: '#fff', fontSize: 16, lineHeight: 1, flexShrink: 0,
 };
 const bodyStyle: React.CSSProperties = {
-  flex: 1, minHeight: 0, padding: 12, background: '#fff', overflow: 'hidden',
+  flex: 1, minHeight: 0, padding: 12, background: '#f6f4ee', overflow: 'hidden',
 };
 const shareBar: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px',
