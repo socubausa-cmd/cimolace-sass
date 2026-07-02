@@ -220,6 +220,15 @@ const KnowledgeBaseManager = lazy(() => import('@/pages/KnowledgeBaseManager'));
 const StudentSchoolLifePage = lazy(() => import('@/pages/school/student-school-life/StudentSchoolLifePage'));
 const StudentWeeklySchedulePage = lazy(() => import('@/pages/school/student-school-life/StudentWeeklySchedulePage'));
 const StudentDashboardPage = lazy(() => import('@/pages/school/StudentDashboardPage'));
+// ISNA Academy embarqué dans LIRI : pages école montées sous /liri/* (LiriSchoolShell).
+const LiriSchoolShell = lazy(() => import('@/pages/liri/LiriSchoolShell'));
+const StudentFormationsPage = lazy(() => import('@/pages/school/student-school-life/StudentFormationsPage'));
+const StudentAgendaPage = lazy(() => import('@/pages/school/student-school-life/StudentAgendaPage'));
+const StudentNotesPage = lazy(() => import('@/pages/school/student-school-life/StudentNotesPage'));
+const StudentEvaluationsPage = lazy(() => import('@/pages/school/student-school-life/StudentEvaluationsPage'));
+const StudentAbsencesPage = lazy(() => import('@/pages/school/student-school-life/StudentAbsencesPage'));
+const StudentDocumentsPage = lazy(() => import('@/pages/school/student-school-life/StudentDocumentsPage'));
+const StudentProfilePage = lazy(() => import('@/pages/school/student-school-life/StudentProfilePage'));
 const StudentEnrollmentOnboardingPage = lazy(() => import('@/pages/school/student-school-life/StudentEnrollmentOnboardingPage'));
 const OnboardingPage = lazy(() => import('@/pages/OnboardingPage'));
 const NgowazuluIntakePage = lazy(() => import('@/pages/ngowazulu/NgowazuluIntakePage'));
@@ -1703,6 +1712,22 @@ isLiriHostDevPreviewRoute;
               <LiriMessagesPage />
             </ProtectedImmersiveMessagingRoute>
           } />
+
+          {/* ═══ ISNA Academy EMBARQUÉ : les pages « Vie scolaire » de l'élève montées DANS
+              le shell chaud du portail LIRI (LiriSchoolShell). Même garde que /liri/forum
+              (student + créateurs, allowTenantRole). L'élève garde agenda/notes/cours/etc.
+              sans jamais quitter LIRI. ═══ */}
+          <Route path="/liri/semaine" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="semaine"><StudentWeeklySchedulePage /></LiriSchoolShell></ProtectedLiriRoute>} />
+          <Route path="/liri/formations" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="formations"><StudentFormationsPage /></LiriSchoolShell></ProtectedLiriRoute>} />
+          <Route path="/liri/vie-scolaire" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="vie-scolaire"><SchoolLifePage embedded /></LiriSchoolShell></ProtectedLiriRoute>} />
+          <Route path="/liri/agenda" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="agenda"><StudentAgendaPage /></LiriSchoolShell></ProtectedLiriRoute>} />
+          <Route path="/liri/notes" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="notes"><StudentNotesPage /></LiriSchoolShell></ProtectedLiriRoute>} />
+          <Route path="/liri/evaluations" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="evaluations"><StudentEvaluationsPage /></LiriSchoolShell></ProtectedLiriRoute>} />
+          <Route path="/liri/absences" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="absences"><StudentAbsencesPage /></LiriSchoolShell></ProtectedLiriRoute>} />
+          <Route path="/liri/bibliotheque" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="biblio-eleve"><BibliothequePage embedded /></LiriSchoolShell></ProtectedLiriRoute>} />
+          <Route path="/liri/documents" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="documents"><StudentDocumentsPage /></LiriSchoolShell></ProtectedLiriRoute>} />
+          <Route path="/liri/profil" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="accueil"><StudentProfilePage /></LiriSchoolShell></ProtectedLiriRoute>} />
+
           <Route path="/choose-account-type" element={
             <ProtectedRoute>
               <ChooseAccountTypePage />
