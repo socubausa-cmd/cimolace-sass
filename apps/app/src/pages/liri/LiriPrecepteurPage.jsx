@@ -39,18 +39,51 @@ function isPlayableCourse(course) {
 }
 
 /**
- * Coquille de contenu : fond chaud `var(--base)`, plein-hauteur + scroll interne
- * (le `<main>` du shell force 100% et `overflow-hidden`, comme LiriForumPage), et pose
- * `--school-accent: #d97757` pour réchauffer les accents thémables du rendu Précepteur.
- * Tout le chrome que l'on AJOUTE (états de chargement / introuvable) utilise les classes
- * `.lp-*` du portail — aucune couleur navy/violet ajoutée par nous.
+ * CSS CHAUD SCOPÉ (même technique que `ECOLE_WARM_CSS` de LiriEcolePage) : réchauffe le
+ * rendu Précepteur DANS le portail LIRI, SANS toucher le moteur partagé (ISNA /precepteur
+ * reste INTACT). Directive [[directive-artistique-liri]] : tout chaud, BANNIR l'or, immersif
+ * (pas de boîte-dans-boîte), fond #262624.
+ *   - le fond navy imposé du player (`bg-[#0b0f17]`) → transparent (laisse voir le #262624) ;
+ *   - l'accent OR inline (`--school-accent:#d4a36a`) → coral (via `!important`) ;
+ *   - la CARTE de config/états (gradient sombre + bord + ombre) → DISSOUTE (immersif) ;
+ *   - tout l'OR (`text/border/bg-amber-*` + hex dorés) → coral chaud.
+ */
+const PRECEPTEUR_LIRI_CSS = `
+.precepteur-liri-scope [class*="bg-[#0b0f17]"] {
+  background: transparent !important;
+  --school-accent: #d97757 !important;
+  min-height: 100% !important;
+}
+.precepteur-liri-scope [class*="from-[#11161f]"],
+.precepteur-liri-scope [class*="to-[#0c1119]"],
+.precepteur-liri-scope [class*="from-[#11161F]"],
+.precepteur-liri-scope [class*="to-[#0c1119]"] {
+  background-image: none !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+.precepteur-liri-scope [class*="text-amber-"] { color: #e58a5f !important; }
+.precepteur-liri-scope [class*="border-amber-"] { border-color: rgba(217,119,87,0.40) !important; }
+.precepteur-liri-scope [class*="bg-amber-"] { background-color: rgba(217,119,87,0.14) !important; }
+.precepteur-liri-scope [class*="bg-[#d4a36a]"],
+.precepteur-liri-scope [class*="bg-[#c9a04e]"],
+.precepteur-liri-scope [class*="bg-[#d4a"] { background-color: #d97757 !important; }
+`;
+
+/**
+ * Coquille de contenu : fond chaud `var(--base)` (#262624), plein-hauteur + scroll interne
+ * (le `<main>` du shell force 100% et `overflow-hidden`, comme LiriForumPage). La classe
+ * `precepteur-liri-scope` + le `<style>` ci-dessus réchauffent le rendu (or→coral, carte
+ * dissoute, fond navy→transparent). Le chrome AJOUTÉ (états) utilise les classes `.lp-*`.
  */
 function PrecepteurCanvas({ children }) {
   return (
     <div
-      className="h-full min-h-0 overflow-y-auto overflow-x-hidden"
+      className="precepteur-liri-scope h-full min-h-0 overflow-y-auto overflow-x-hidden"
       style={{ background: 'var(--base)', '--school-accent': '#d97757' }}
     >
+      <style>{PRECEPTEUR_LIRI_CSS}</style>
       {children}
     </div>
   );
