@@ -11,6 +11,12 @@ export class CimolaceBackofficeController {
   constructor(private readonly svc: CimolaceBackofficeService) {}
 
   @Get('stats') getStats() { return this.svc.getStats(); }
+
+  // ─── Finances plateforme (console SaaS : vrais soldes wallet pawaPay + retrait) ──
+  @Get('finances') getFinances() { return this.svc.getPlatformFinances(); }
+  @Get('finances/payouts') listFinancePayouts() { return this.svc.getPlatformPayouts(); }
+  @Post('finances/payout') createFinancePayout(@Req() req: any, @Body() b: any) { return this.svc.createPlatformPayout(req.user?.id ?? null, b); }
+
   @Get('clients') listClients() { return this.svc.listClients(); }
   @Post('clients') createClient(@Body() d: CreateClientDto) { return this.svc.createClient(d); }
   @Patch('clients/:id') updateClient(@Param('id') id: string, @Body() d: UpdateClientDto) { return this.svc.updateClient(id, d); }

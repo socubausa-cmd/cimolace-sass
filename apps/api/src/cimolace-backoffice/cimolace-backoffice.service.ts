@@ -1,5 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { SupabaseService } from '../supabase/supabase.service';
+import { PawaPayService } from '../pawapay/pawapay.service';
 import { CreateClientDto, UpdateClientDto } from './dto/backoffice.dto';
 import {
   SCHOOL_ENGINE_MANIFEST,
@@ -13,7 +15,64 @@ const provConfigured = (p: string) => SCHOOL_CONFIGURED_PROVIDERS.has(p) || p.en
 
 @Injectable()
 export class CimolaceBackofficeService {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly pawapay: PawaPayService,
+  ) {}
+
+  // ─── Finances PLATEFORME (console SaaS Cimolace) ──────────────────────────
+  private static ZERO_DECIMAL = new Set(['XAF', 'XOF', 'XPF', 'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV']);
+
+  /** Vue financière SaaS : VRAIS soldes wallet pawaPay + revenus tenants payés + retraits plateforme. */
+  async getPlatformFinances() {
+    const sb = this.supabase.client as any;
+    let walletBalances: Array<{ country: string; balance: string; currency: string; provider?: string }> = [];
+    try { walletBalances = await this.pawapay.getWalletBalances(); } catch { walletBalances = []; }
+    const { data: invoices } = await sb.from('billing_invoices').select('amount_cents, status');
+    const revenuePaidCents = (invoices ?? []).filter((i: any) => String(i.status || '').toLowerCase() === 'paid').reduce((s: number, i: any) => s + Number(i.amount_cents || 0), 0);
+    const { data: payouts } = await sb.from('billing_payouts').select('amount_cents, status').is('tenant_id', null);
+    const withdrawnCents = (payouts ?? []).filter((p: any) => !['failed', 'rejected'].includes(String(p.status || '').toLowerCase())).reduce((s: number, p: any) => s + Number(p.amount_cents || 0), 0);
+    return { walletBalances, revenuePaidCents, withdrawnCents };
+  }
+
+  async getPlatformPayouts() {
+    const { data } = await (this.supabase.client as any).from('billing_payouts').select('*').is('tenant_id', null).order('created_at', { ascending: false });
+    return data ?? [];
+  }
+
+  /** Retrait PLATEFORME : envoie depuis le wallet pawaPay Cimolace vers un mobile money (owner SaaS). */
+  async createPlatformPayout(
+    createdBy: string | null,
+    dto: { amountCents?: number; currency?: string; phoneNumber?: string; mno?: string; recipientName?: string; reason?: string },
+  ) {
+    const amountCents = Math.round(Number(dto?.amountCents) || 0);
+    if (amountCents <= 0) throw new BadRequestException('amountCents (> 0) requis');
+    if (!dto?.phoneNumber || !dto?.mno) throw new BadRequestException('phoneNumber et mno (opérateur) requis');
+    const currency = (dto.currency || 'XAF').toUpperCase();
+    const sb = this.supabase.client as any;
+    const payoutId = randomUUID();
+    await sb.from('billing_payouts').insert({
+      tenant_id: null, payout_id: payoutId, provider: 'pawapay', status: 'pending',
+      amount_cents: amountCents, currency, phone_number: dto.phoneNumber, mno: dto.mno,
+      recipient_name: dto.recipientName ?? null, reason: dto.reason ?? 'Retrait plateforme Cimolace', created_by: createdBy,
+    });
+    const amount = CimolaceBackofficeService.ZERO_DECIMAL.has(currency) ? String(amountCents) : (amountCents / 100).toFixed(2);
+    let initStatus = 'pending';
+    try {
+      const init = await this.pawapay.initiatePayout({
+        payoutId, amount, currency,
+        recipient: { type: 'MMO', accountDetails: { phoneNumber: dto.phoneNumber, provider: dto.mno } },
+        customerMessage: (dto.reason ?? 'Cimolace payout').slice(0, 22),
+        metadata: { platform: 'cimolace' },
+      });
+      initStatus = (init.status || 'ACCEPTED').toLowerCase();
+      await sb.from('billing_payouts').update({ status: initStatus, updated_at: new Date().toISOString() }).eq('payout_id', payoutId);
+    } catch (e) {
+      await sb.from('billing_payouts').update({ status: 'failed', failure_message: (e as Error).message, updated_at: new Date().toISOString() }).eq('payout_id', payoutId);
+      throw e;
+    }
+    return { payout_id: payoutId, status: initStatus, amount_cents: amountCents, currency };
+  }
 
   async getStats() {
     const [tenants, clients, sites] = await Promise.all([

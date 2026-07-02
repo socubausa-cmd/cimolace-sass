@@ -287,6 +287,30 @@ export class PawaPayService {
   }
 
   /**
+   * Soldes du/des wallet(s) pawaPay du compte (par pays/devise). Sert à la
+   * console financière SaaS : le VRAI argent disponible, pas une estimation DB.
+   * GET /v2/wallet-balances (optionnel ?country=ISO3).
+   */
+  async getWalletBalances(
+    country?: string,
+  ): Promise<Array<{ country: string; balance: string; currency: string; provider?: string }>> {
+    this.assertConfigured();
+    const url = `${this.baseUrl}/v2/wallet-balances${country ? `?country=${encodeURIComponent(country)}` : ''}`;
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${this.apiToken}` },
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      this.logger.error(`pawaPay wallet-balances ${response.status}: ${text}`);
+      throw new BadRequestException(
+        `Erreur pawaPay wallet-balances (${response.status})`,
+      );
+    }
+    const data: any = await response.json();
+    return Array.isArray(data?.balances) ? data.balances : [];
+  }
+
+  /**
    * Initie un PAYOUT (retrait / versement vers un mobile money). C'est l'inverse
    * d'un dépôt : on ENVOIE de l'argent au destinataire. Nécessite la permission
    * payouts (PAF) sur le token. Retourne { payoutId, status }.
