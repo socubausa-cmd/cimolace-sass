@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import ProtectedRoleRoute from '@/components/ProtectedRoleRoute';
 import { useBilling } from '@/contexts/BillingContext';
 import { catalogApi } from '@/lib/api-v2';
+import LiriUpgradeWall from '@/components/liri/LiriUpgradeWall';
 
 /**
  * Gate « produit LIRI » : l'accès au portail créateur LIRI (/liri, /studio/*) est
@@ -45,7 +45,6 @@ const Loader = () => (
 
 function LiriAccessGate({ children }) {
   const { loading: billingLoading, status, inGrace } = useBilling();
-  const location = useLocation();
   const [svc, setSvc] = useState({ loading: true, hasLiri: false, errored: false });
 
   useEffect(() => {
@@ -75,7 +74,10 @@ function LiriAccessGate({ children }) {
   const allow = svc.errored || svc.hasLiri || subOk;
 
   if (allow) return children;
-  return <Navigate to="/cimolace/billing?upgrade=liri" state={{ from: location }} replace />;
+  // Pas de forfait LIRI → mur d'upgrade rendu EN PLACE, DANS le realm LIRI (audit cloison
+  // 3-realms, racine ② : ne JAMAIS renvoyer vers /cimolace/billing). La facturation — grille
+  // des forfaits + carte Stripe + Mobile Money PawaPay — se fait ici même, sur le host neutre.
+  return <LiriUpgradeWall />;
 }
 
 export default function ProtectedLiriRoute({ children, allowedRoles = [], allowTenantRole = false }) {
