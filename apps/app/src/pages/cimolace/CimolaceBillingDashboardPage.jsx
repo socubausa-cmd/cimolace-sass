@@ -142,6 +142,18 @@ const MM_COUNTRIES = [
   { code: 'COD', name: 'RD Congo', dial: '+243' },
   { code: 'GHA', name: 'Ghana', dial: '+233' },
 ];
+// Opérateurs de secours (codes PawaPay standard) si l'active-conf ne renvoie rien.
+const MM_FALLBACK_PROVIDERS = {
+  CMR: [{ provider: 'MTN_MOMO_CMR', displayName: 'MTN MoMo' }, { provider: 'ORANGE_CMR', displayName: 'Orange Money' }],
+  CIV: [{ provider: 'MTN_MOMO_CIV', displayName: 'MTN MoMo' }, { provider: 'ORANGE_CIV', displayName: 'Orange Money' }, { provider: 'MOOV_CIV', displayName: 'Moov Money' }, { provider: 'WAVE_CIV', displayName: 'Wave' }],
+  SEN: [{ provider: 'ORANGE_SEN', displayName: 'Orange Money' }, { provider: 'FREE_SEN', displayName: 'Free Money' }, { provider: 'WAVE_SEN', displayName: 'Wave' }],
+  GAB: [{ provider: 'AIRTEL_GAB', displayName: 'Airtel Money' }, { provider: 'MOOV_GAB', displayName: 'Moov Money' }],
+  BEN: [{ provider: 'MTN_MOMO_BEN', displayName: 'MTN MoMo' }, { provider: 'MOOV_BEN', displayName: 'Moov Money' }],
+  TGO: [{ provider: 'TOGOCOM_TGO', displayName: 'Togocom T-Money' }, { provider: 'MOOV_TGO', displayName: 'Moov Money' }],
+  BFA: [{ provider: 'ORANGE_BFA', displayName: 'Orange Money' }, { provider: 'MOOV_BFA', displayName: 'Moov Money' }],
+  COD: [{ provider: 'ORANGE_COD', displayName: 'Orange Money' }, { provider: 'AIRTEL_COD', displayName: 'Airtel Money' }, { provider: 'VODACOM_MPESA_COD', displayName: 'M-Pesa (Vodacom)' }],
+  GHA: [{ provider: 'MTN_MOMO_GHA', displayName: 'MTN MoMo' }, { provider: 'VODAFONE_GHA', displayName: 'Telecel Cash' }, { provider: 'AIRTELTIGO_GHA', displayName: 'AirtelTigo' }],
+};
 const mmProviderCode = (p) => (typeof p === 'string' ? p : (p?.provider || p?.code || p?.correspondent || p?.id || ''));
 const mmProviderName = (p) => (typeof p === 'string' ? p : (p?.name || p?.displayName || p?.label || mmProviderCode(p)));
 
@@ -161,9 +173,13 @@ function MobileMoneyModal({ plan, onClose }) {
     let cancelled = false;
     setProviders([]); setProvider('');
     setDial((MM_COUNTRIES.find((x) => x.code === country) || {}).dial || '+237');
+    const applyList = (list) => {
+      const arr = (Array.isArray(list) && list.length) ? list : (MM_FALLBACK_PROVIDERS[country] || []);
+      setProviders(arr); setProvider(mmProviderCode(arr[0]) || '');
+    };
     billingApi.pawapayProviders(country)
-      .then((list) => { if (!cancelled) { const arr = Array.isArray(list) ? list : []; setProviders(arr); setProvider(mmProviderCode(arr[0]) || ''); } })
-      .catch(() => { if (!cancelled) setProviders([]); });
+      .then((list) => { if (!cancelled) applyList(list); })
+      .catch(() => { if (!cancelled) applyList([]); });
     return () => { cancelled = true; };
   }, [country]);
 
