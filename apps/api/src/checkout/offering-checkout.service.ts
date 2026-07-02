@@ -136,15 +136,21 @@ export class OfferingCheckoutService {
         currency: depositCurrency,
         payer: {
           type: 'MMO',
-          accountDetails: { phoneNumber: dto.phoneNumber, provider: dto.provider },
+          accountDetails: {
+            phoneNumber: String(dto.phoneNumber ?? '').replace(/[^0-9]/g, ''),
+            provider: dto.provider,
+          },
         },
         customerMessage: 'PRORASCIENCE',
-        metadata: [
-          { fieldName: 'userId', fieldValue: String(userId ?? '') },
-          { fieldName: 'tenantId', fieldValue: String(tenant.id) },
-          { fieldName: 'kind', fieldValue: String(dto.kind ?? '') },
-          { fieldName: 'planSlug', fieldValue: planSlug ?? '' },
-        ],
+        // PawaPay v2 : metadata = tableau d'objets à UNE clé (nom = clé) ; on écarte les valeurs vides.
+        metadata: ([
+          { userId: String(userId ?? '') },
+          { tenantId: String(tenant.id) },
+          { kind: String(dto.kind ?? '') },
+          { planSlug: planSlug ?? '' },
+        ] as Record<string, string>[]).filter(
+          (m) => String(Object.values(m)[0] ?? '').length > 0,
+        ),
       },
       ppOverride,
     );

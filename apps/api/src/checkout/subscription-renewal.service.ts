@@ -654,14 +654,20 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
           currency: lastDep.currency || 'EUR',
           payer: {
             type: 'MMO',
-            accountDetails: { phoneNumber: lastDep.phone_number, provider: lastDep.provider },
+            accountDetails: {
+              phoneNumber: String(lastDep.phone_number ?? '').replace(/[^0-9]/g, ''),
+              provider: lastDep.provider,
+            },
           },
           customerMessage: 'PRORASCIENCE',
-          metadata: [
-            { fieldName: 'userId', fieldValue: String(sub.user_id ?? '') },
-            { fieldName: 'kind', fieldValue: 'subscription' },
-            { fieldName: 'planSlug', fieldValue: String(planSlug ?? '') },
-          ],
+          // PawaPay v2 : metadata = tableau d'objets à UNE clé (nom = clé) ; on écarte les valeurs vides.
+          metadata: ([
+            { userId: String(sub.user_id ?? '') },
+            { kind: 'subscription' },
+            { planSlug: String(planSlug ?? '') },
+          ] as Record<string, string>[]).filter(
+            (m) => String(Object.values(m)[0] ?? '').length > 0,
+          ),
         });
         await this.ppDeposits.update({ pawapay_status: res.status }).eq('deposit_id', depositId);
         await this.subs

@@ -276,11 +276,12 @@ export class BillingService {
       payer: { type: "MMO", accountDetails: { phoneNumber: String(dto.phoneNumber).replace(/[^0-9]/g, ""), provider: dto.provider } },
       clientReferenceId: String(invoice.invoice_number ?? invoice.id),
       customerMessage: "Cimolace LIRI",
-      // PawaPay v2 : metadata = TABLEAU ; statementDescription/customerTimestamp NON supportés.
+      // PawaPay v2 : metadata = TABLEAU d'objets À UNE CLÉ (la clé = nom du champ, unique).
+      // ⚠️ PAS { fieldName, fieldValue } → PawaPay verrait « fieldValue » dupliqué (DUPLICATE_METADATA_FIELD).
       metadata: [
-        { fieldName: "tenant", fieldValue: tenantId },
-        { fieldName: "invoice", fieldValue: String(invoice.invoice_number ?? invoice.id) },
-        { fieldName: "subscription", fieldValue: subscriptionId },
+        { tenant: tenantId },
+        { invoice: String(invoice.invoice_number ?? invoice.id) },
+        { subscription: subscriptionId },
       ],
     });
 

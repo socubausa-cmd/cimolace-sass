@@ -29,7 +29,7 @@ export interface PawaPayDepositRequest {
   payer: PawaPayPayer;
   clientReferenceId?: string; // ex: numéro de facture (PawaPay v2)
   customerMessage?: string; // 4-22 alphanum + espaces (remplace statementDescription en v2)
-  metadata?: Array<{ fieldName: string; fieldValue: string; isPII?: boolean }>; // PawaPay v2 = TABLEAU
+  metadata?: Array<Record<string, string | boolean>>; // PawaPay v2 : [{ <nom>: <valeur>, isPII?: bool }] — clés uniques
 }
 
 /** Réponse de POST /v2/deposits (status ACCEPTED) */
