@@ -32,6 +32,15 @@ export class BillingController {
   @Post("mobile-money/sync") async syncMobileMoney(@Req() req: any) {
     return this.svc.syncPendingPawaPayDeposits(req.tenant.id);
   }
+  // Remboursement à l'annulation (owner/admin — ⚠️ déplace de l'argent réel vers le payeur)
+  @Post("subscriptions/:id/refund") @UseGuards(RolesGuard) @Roles("owner", "admin")
+  async refund(@Req() req: any, @Param("id") id: string) {
+    return this.svc.refundSubscriptionPayment(req.tenant.id, id);
+  }
+  // Polling du statut de remboursement (le front l'appelle jusqu'à 'refunded')
+  @Post("refunds/sync") async syncRefunds(@Req() req: any) {
+    return this.svc.syncPendingRefunds(req.tenant.id);
+  }
   // Carte bancaire (Stripe — Europe / international)
   @Post("subscriptions/:id/card-checkout") async cardCheckout(@Req() req: any, @Param("id") id: string) {
     return this.svc.createCardCheckout(req.tenant.id, id);

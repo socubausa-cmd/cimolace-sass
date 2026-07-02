@@ -55,6 +55,30 @@ export interface PawaPayDepositCallback {
   failureReason?: { failureCode: string; failureMessage?: string };
 }
 
+/** ─── Refunds : remboursement d'un dépôt COMPLETED (renvoie l'argent au payeur) ─── */
+export interface PawaPayRefundRequest {
+  refundId: string; // UUIDv4 généré par nous
+  depositId: string; // le dépôt COMPLETED à rembourser
+  amount: string;
+  currency: string;
+  clientReferenceId?: string;
+  metadata?: Array<Record<string, string | boolean>>; // idem dépôts : [{ <nom>: <valeur> }]
+}
+export interface PawaPayRefundInitResponse {
+  refundId: string;
+  status: PawaPayDepositStatus; // ACCEPTED / REJECTED / DUPLICATE_IGNORED
+  created?: string;
+}
+export interface PawaPayRefundCallback {
+  refundId: string;
+  depositId?: string;
+  status: PawaPayDepositStatus;
+  amount?: string;
+  currency?: string;
+  providerTransactionId?: string;
+  failureReason?: { failureCode: string; failureMessage?: string };
+}
+
 /** ─── Payouts : retraits / versements vers un mobile money (disbursement) ─── */
 export interface PawaPayRecipient {
   type: 'MMO';

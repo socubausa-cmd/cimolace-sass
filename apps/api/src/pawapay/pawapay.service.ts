@@ -14,6 +14,9 @@ import type {
   PawaPayPayoutRequest,
   PawaPayPayoutInitResponse,
   PawaPayPayoutCallback,
+  PawaPayRefundRequest,
+  PawaPayRefundInitResponse,
+  PawaPayRefundCallback,
 } from './pawapay.types';
 
 @Injectable()
@@ -218,6 +221,69 @@ export class PawaPayService {
     if (!json || json.status === 'NOT_FOUND') return null;
     const dep = json.data ?? json;
     return (dep ?? null) as PawaPayDepositCallback | null;
+  }
+
+  /**
+   * Initie un REMBOURSEMENT d'un dépôt COMPLETED (renvoie l'argent au payeur).
+   * Requête SIGNÉE (comme les dépôts). Remonte la vraie raison si REJECTED/FAILED.
+   */
+  async initiateRefund(
+    payload: PawaPayRefundRequest,
+  ): Promise<PawaPayRefundInitResponse> {
+    this.assertConfigured();
+    const body = JSON.stringify(payload);
+    const url = `${this.baseUrl}/v2/refunds`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.apiToken}`,
+        'Content-Type': 'application/json',
+        ...this.signHeaders('POST', url, body, 'application/json'),
+      },
+      body,
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      this.logger.error(`pawaPay initiateRefund ${response.status}: ${text}`);
+      throw new BadRequestException(
+        `Erreur pawaPay remboursement (${response.status}): ${text || 'inconnu'}`,
+      );
+    }
+    const json = (await response.json()) as PawaPayRefundInitResponse;
+    const status = String((json as any)?.status ?? '');
+    // PawaPay renvoie 200 même pour un refund refusé → on remonte la vraie raison.
+    if (['REJECTED', 'FAILED'].includes(status)) {
+      const reason = JSON.stringify((json as any)?.failureReason ?? json);
+      this.logger.error(
+        `pawaPay refund ${status} refundId=${payload.refundId} depositId=${payload.depositId} reason=${reason}`,
+      );
+      throw new BadRequestException(
+        `Remboursement refusé par PawaPay (${status}) : ${reason}`,
+      );
+    }
+    this.logger.log(
+      `pawaPay refund OK refundId=${payload.refundId} status=${status} depositId=${payload.depositId}`,
+    );
+    return json;
+  }
+
+  /** Statut d'un remboursement par polling (enveloppe v2 { data, status:"FOUND" }). */
+  async getRefundStatus(
+    refundId: string,
+  ): Promise<PawaPayRefundCallback | null> {
+    this.assertConfigured();
+    const response = await fetch(`${this.baseUrl}/v2/refunds/${refundId}`, {
+      headers: { Authorization: `Bearer ${this.apiToken}` },
+    });
+    if (!response.ok) {
+      this.logger.warn(
+        `pawaPay getRefundStatus ${response.status} pour ${refundId}`,
+      );
+      return null;
+    }
+    const json = (await response.json()) as any;
+    if (!json || json.status === 'NOT_FOUND') return null;
+    return (json.data ?? json) as PawaPayRefundCallback;
   }
 
   /**

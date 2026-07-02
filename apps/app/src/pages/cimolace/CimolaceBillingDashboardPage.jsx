@@ -304,6 +304,7 @@ export default function CimolaceBillingDashboardPage() {
   const [tickets, setTickets] = useState([]);
   const [busy, setBusy] = useState(null);
   const [mmPlan, setMmPlan] = useState(null); // forfait pour lequel le modal Mobile Money (PawaPay) est ouvert
+  const [refundState, setRefundState] = useState(null); // { subId, status:'pending'|'refunded'|'failed', amount_cents, currency } — remboursement à l'annulation
   const [newKey, setNewKey] = useState(null);
   const [copied, setCopied] = useState(false);
   const [keyLabel, setKeyLabel] = useState('');
@@ -358,6 +359,22 @@ export default function CimolaceBillingDashboardPage() {
       setError(e?.message || 'Chargement impossible');
     } finally { setLoading(false); }
   }, []);
+
+  // Polling du statut de remboursement (compte PawaPay partagé → pas de webhook cimolace).
+  useEffect(() => {
+    if (!refundState || refundState.status !== 'pending') return undefined;
+    let tries = 0;
+    const id = setInterval(async () => {
+      tries += 1;
+      try {
+        const s = await billingApi.syncRefunds();
+        if (s?.refunded) { setRefundState((r) => (r ? { ...r, status: 'refunded' } : r)); clearInterval(id); loadAll(activeSlug); return; }
+        if (s?.failed) { setRefundState((r) => (r ? { ...r, status: 'failed' } : r)); clearInterval(id); return; }
+      } catch { /* réseau : on retente au tick suivant */ }
+      if (tries >= 45) clearInterval(id); // ~3 min max
+    }, 4000);
+    return () => clearInterval(id);
+  }, [refundState?.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     (async () => {
@@ -512,6 +529,22 @@ export default function CimolaceBillingDashboardPage() {
     try { withSlug(); await tenantPortalApi.cancelSubscription(id); await loadAll(activeSlug); setNotice('Abonnement annulé.'); }
     catch (e) { setError(e?.message || 'Annulation impossible'); }
     finally { setBusy(null); }
+  };
+  // Annulation AVEC remboursement du dernier paiement mobile money (PawaPay).
+  // ⚠️ Déplace de l'argent réel vers le numéro payeur → confirmation explicite.
+  const cancelAndRefund = async (sub) => {
+    if (!window.confirm(`Annuler « ${planName(sub)} » ET rembourser le dernier paiement (${eur(sub.amount_cents, sub.currency)}) sur le numéro Mobile Money du payeur ?\n\n⚠️ Ceci renvoie de l'argent RÉEL. Confirmer ?`)) return;
+    setBusy(`refund-${sub.id}`); setError(null);
+    try {
+      withSlug();
+      const r = await billingApi.refund(sub.id);         // initie le remboursement PawaPay
+      await tenantPortalApi.cancelSubscription(sub.id);  // puis annule l'abo
+      setRefundState({ subId: sub.id, status: 'pending', amount_cents: r.amount_cents, currency: r.currency });
+      setNotice(`Remboursement de ${eur(r.amount_cents, r.currency)} initié — traitement PawaPay en cours.`);
+      await loadAll(activeSlug);
+    } catch (e) {
+      setError(e?.response?.data?.message || e?.message || 'Remboursement impossible.');
+    } finally { setBusy(null); }
   };
   const openBillingPortal = async () => {
     setBusy('portal'); setError(null);
@@ -752,7 +785,22 @@ export default function CimolaceBillingDashboardPage() {
                                 <button onClick={() => pay(s)} disabled={payingId === s.id} className="px-5 py-3 bg-[#d97757] text-white font-bold rounded-xl hover:shadow-lg hover:shadow-[#d97757]/25 flex items-center gap-2 disabled:opacity-60">
                                   {payingId === s.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />} Payer par carte
                                 </button>
-                              ) : s.status === 'active' ? <span className="flex items-center gap-1 text-green-400 text-sm font-medium"><CheckCircle className="w-4 h-4" /> Service actif</span> : null}
+                              ) : s.status === 'active' ? (
+                                <div className="flex flex-col items-end gap-2">
+                                  <span className="flex items-center gap-1 text-green-400 text-sm font-medium"><CheckCircle className="w-4 h-4" /> Service actif</span>
+                                  {refundState?.subId === s.id && refundState.status === 'refunded' ? (
+                                    <span className="flex items-center gap-1 text-xs font-medium text-[#e6b878]"><CheckCircle className="w-3.5 h-3.5" /> Remboursé ({eur(refundState.amount_cents, refundState.currency)})</span>
+                                  ) : refundState?.subId === s.id && refundState.status === 'failed' ? (
+                                    <span className="flex items-center gap-1 text-xs font-medium text-red-300"><XCircle className="w-3.5 h-3.5" /> Remboursement échoué</span>
+                                  ) : refundState?.subId === s.id && refundState.status === 'pending' ? (
+                                    <span className="flex items-center gap-1.5 text-xs text-white/60"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Remboursement en cours…</span>
+                                  ) : (
+                                    <button onClick={() => cancelAndRefund(s)} disabled={busy === `refund-${s.id}`} className="text-xs px-3 py-1.5 rounded-lg border border-red-400/30 text-red-300 hover:bg-red-400/10 flex items-center gap-1.5 disabled:opacity-50">
+                                      {busy === `refund-${s.id}` ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Annuler et être remboursé
+                                    </button>
+                                  )}
+                                </div>
+                              ) : null}
                             </div>
                           </motion.div>
                         );

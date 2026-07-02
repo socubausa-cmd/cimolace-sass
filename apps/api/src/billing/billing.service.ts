@@ -376,6 +376,150 @@ export class BillingService {
     };
   }
 
+  /**
+   * Rembourse le dernier paiement mobile money PAYÉ d'un abonnement (à l'annulation).
+   * Appelle PawaPay /v2/refunds sur le dépôt d'origine, trace le refundId dans la
+   * facture et la bascule en 'refund_pending'. Le statut final vient du polling.
+   */
+  async refundSubscriptionPayment(tenantId: string, subscriptionId: string) {
+    const sb = this.supabase;
+    const { data: sub } = await sb
+      .from("billing_subscriptions")
+      .select("*")
+      .eq("id", subscriptionId)
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
+    if (!sub) throw new NotFoundException("Abonnement introuvable");
+
+    const { data: invoices } = await sb
+      .from("billing_invoices")
+      .select("*")
+      .eq("subscription_id", subscriptionId)
+      .eq("provider", "pawapay")
+      .eq("status", "paid")
+      .not("provider_transaction_id", "is", null)
+      .order("paid_at", { ascending: false })
+      .limit(1);
+    const invoice = (invoices ?? [])[0];
+    if (!invoice)
+      throw new BadRequestException(
+        "Aucun paiement mobile money remboursable pour cet abonnement",
+      );
+
+    const depositId = String(invoice.provider_transaction_id);
+    const currency = String(invoice.currency || "XAF").toUpperCase();
+    const amount = BillingService.ZERO_DECIMAL.has(currency)
+      ? String(invoice.amount_cents)
+      : (invoice.amount_cents / 100).toFixed(2);
+    const refundId = randomUUID();
+
+    const init = await this.pawapay.initiateRefund({
+      refundId,
+      depositId,
+      amount,
+      currency,
+      clientReferenceId: String(invoice.invoice_number ?? invoice.id),
+      metadata: [
+        { tenant: tenantId },
+        { invoice: String(invoice.invoice_number ?? invoice.id) },
+        { subscription: subscriptionId },
+      ],
+    });
+
+    await sb
+      .from("billing_invoices")
+      .update({
+        status: "refund_pending",
+        metadata: {
+          ...(invoice.metadata ?? {}),
+          pawapay_refund_id: refundId,
+          refund_status: init.status,
+        },
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", invoice.id);
+
+    return {
+      refundId,
+      status: init.status,
+      amount_cents: invoice.amount_cents,
+      currency,
+      depositId,
+      invoiceId: invoice.id,
+    };
+  }
+
+  /**
+   * Polling des remboursements en cours (compte PawaPay partagé → pas de webhook).
+   * Pour chaque facture 'refund_pending' du tenant, interroge PawaPay et bascule
+   * la facture en 'refunded' (COMPLETED) ou la remet 'paid' (refund échoué).
+   */
+  async syncPendingRefunds(tenantId: string) {
+    const sb = this.supabase;
+    const { data: subs } = await sb
+      .from("billing_subscriptions")
+      .select("id")
+      .eq("tenant_id", tenantId);
+    const subIds = (subs ?? []).map((s: any) => s.id);
+    if (!subIds.length) return { synced: [], refunded: false, failed: false };
+
+    const { data: invoices } = await sb
+      .from("billing_invoices")
+      .select("id, metadata, status, subscription_id")
+      .in("subscription_id", subIds)
+      .eq("status", "refund_pending");
+
+    const synced: Array<{
+      refundId: string;
+      refundStatus?: string;
+      applied?: string;
+    }> = [];
+    for (const inv of invoices ?? []) {
+      const refundId = (inv as any)?.metadata?.pawapay_refund_id as
+        | string
+        | undefined;
+      if (!refundId) continue;
+      const ref = await this.pawapay.getRefundStatus(refundId);
+      if (!ref) continue;
+      const status = String((ref as any).status ?? "");
+      let applied = status;
+      if (status === "COMPLETED") {
+        await sb
+          .from("billing_invoices")
+          .update({
+            status: "refunded",
+            metadata: {
+              ...((inv as any).metadata ?? {}),
+              refund_status: "COMPLETED",
+              refunded_at: new Date().toISOString(),
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", (inv as any).id);
+        applied = "refunded";
+      } else if (["FAILED", "REJECTED"].includes(status)) {
+        await sb
+          .from("billing_invoices")
+          .update({
+            status: "paid", // le refund a échoué → la facture reste payée
+            metadata: {
+              ...((inv as any).metadata ?? {}),
+              refund_status: status,
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", (inv as any).id);
+        applied = "failed";
+      }
+      synced.push({ refundId, refundStatus: status, applied });
+    }
+    return {
+      synced,
+      refunded: synced.some((s) => s.applied === "refunded"),
+      failed: synced.some((s) => s.applied === "failed"),
+    };
+  }
+
   // ─── Paiement carte (Stripe) — pour les clients hors mobile money (Europe) ─
   private stripeAuth() {
     const secret = process.env.STRIPE_SECRET_KEY;
