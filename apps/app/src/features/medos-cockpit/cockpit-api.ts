@@ -8,6 +8,7 @@
 // déjà résolues via le canal de partage Realtime (cf. useCockpitChannel).
 // ─────────────────────────────────────────────────────────────────────────────
 import { api, medosApi, prescriptionsApi, attachmentsApi, clinicalApi } from '@/lib/api';
+import { supabase } from '@/lib/customSupabaseClient';
 
 // Certaines routes /med/* renvoient { data } (enveloppe globale), d'autres la
 // donnée brute. `peelData` pèle au plus une couche, défensivement.
@@ -98,6 +99,11 @@ export interface AttachmentLite {
 // ── Descripteur de scène partagée (host → patient via Realtime) ──────────────
 // Volontairement SELF-CONTAINED : le patient rend la scène sans aucun appel
 // API (le jumeau est déjà résolu en OrganNode[], la SOAP porte son texte).
+export interface ShopProduct {
+  id: string; name: string; price: number | null; currency: string;
+  payUrl: string; description?: string; badge?: string; cta?: string; image?: string;
+}
+
 export type CockpitScene =
   | { kind: 'twin'; sex: 'female' | 'male'; organs: OrganNode[]; focus: string | null }
   | { kind: 'wheel'; domains: WheelDomain[]; organs: Array<{ code: string; name_fr: string; score: { score: number; color: OrganColor } | null }> }
@@ -105,12 +111,35 @@ export type CockpitScene =
   | { kind: 'labs'; items: LabResult[] }
   | { kind: 'prescription'; rx: RxDoc }
   | { kind: 'image'; url: string; name: string; mime?: string }
+  | { kind: 'shop'; products: ShopProduct[] }
   | { kind: 'clear' };
 
 // ── Appels API (host uniquement) ────────────────────────────────────────────
 
 export function getClinicalContext(sessionId: string): Promise<ClinicalContext> {
   return api.get(`/med/teleconsult/${sessionId}/clinical-context`).then(peelData);
+}
+
+/** Produits/services vendables du tenant (billing_plans category='produit') → scène Boutique.
+ *  Le lien de paiement pointe vers /paiements/payer (checkout Stripe/PawaPay existant). */
+export async function getShopProducts(): Promise<ShopProduct[]> {
+  const { data, error } = await supabase
+    .from('billing_plans')
+    .select('key,label,description,price_cents,currency,billing_cycle,metadata,sort_order')
+    .eq('category', 'produit')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+  if (error || !Array.isArray(data)) return [];
+  return data.map((p: any) => ({
+    id: p.key,
+    name: p.label,
+    price: p.price_cents != null ? Math.round(p.price_cents / 100) : null,
+    currency: p.currency || 'EUR',
+    payUrl: `/paiements/payer?plan=${encodeURIComponent(p.key)}&interval=${encodeURIComponent(p.billing_cycle || 'one_time')}`,
+    description: p.description || undefined,
+    image: p.metadata?.image || undefined,
+    cta: 'Payer',
+  }));
 }
 
 export function getReferential(): Promise<{ organs: any[]; biomarkers: any[] }> {

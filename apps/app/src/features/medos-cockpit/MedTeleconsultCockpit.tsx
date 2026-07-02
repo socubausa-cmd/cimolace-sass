@@ -26,6 +26,8 @@ import {
   WHEEL_LABELS,
   type ClinicalContext,
   type CockpitScene,
+  type ShopProduct,
+  getShopProducts,
   type OrganColor,
   type OrganNode,
   type SoapNote,
@@ -55,7 +57,7 @@ const COCKPIT_VARS = {
 
 const Z = 2147483000; // au-dessus du shell live
 
-type Tab = 'twin' | 'wheel' | 'soap' | 'labs' | 'rx' | 'image';
+type Tab = 'twin' | 'wheel' | 'soap' | 'labs' | 'rx' | 'image' | 'shop';
 
 // ── Sous-vues (partagées host/patient) ──────────────────────────────────────
 
@@ -345,6 +347,33 @@ function ImageTab({
   );
 }
 
+// Boutique : grille de produits/services vendables. Le bouton « Payer » ouvre le
+// lien de paiement (checkout Stripe/PawaPay). Rendu côté praticien ET patient.
+function ShopView({ products }: { products: ShopProduct[] }) {
+  if (!products || products.length === 0) return <div style={emptyHint}>Aucun produit dans la boutique.</div>;
+  return (
+    <div style={{ padding: '10px 12px', overflowY: 'auto', height: '100%' }}>
+      <div style={sectionTitle}>Boutique</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))', gap: 10 }}>
+        {products.map((p) => (
+          <div key={p.id} style={{ border: '1px solid var(--zw-border)', borderRadius: 12, overflow: 'hidden', background: 'var(--zw-bg-subtle)', display: 'flex', flexDirection: 'column' }}>
+            {p.image ? <img src={p.image} alt={p.name} style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover' }} /> : null}
+            <div style={{ padding: '9px 10px', display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+              {p.badge ? <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand-primary)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{p.badge}</span> : null}
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--zw-text)' }}>{p.name}</div>
+              {p.description ? <div style={{ fontSize: 11.5, color: 'var(--zw-text-muted)', lineHeight: 1.4 }}>{p.description}</div> : null}
+              <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, paddingTop: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--zw-text)', whiteSpace: 'nowrap' }}>{p.price != null ? `${p.price.toLocaleString('fr-FR')} ${p.currency}` : 'Gratuit'}</span>
+                <button onClick={() => { if (typeof window !== 'undefined' && p.payUrl) window.open(p.payUrl, '_blank', 'noopener'); }} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: 'var(--brand-primary)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>{p.cta || 'Payer'}</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Rendu d'une scène clinique partagée — réutilisé par le cockpit patient ET la
 // SCÈNE CENTRALE de la salle Consultation. Wrappé dans les vars --zw-* pour que
 // les composants portés (jumeau, roue, SOAP, labs, ordonnance, imagerie) rendent.
@@ -360,6 +389,7 @@ export function SharedSceneView({ scene }: { scene: CockpitScene | null }) {
       {scene.kind === 'labs' && <LabsView items={scene.items} />}
       {scene.kind === 'prescription' && <PrescriptionView rx={scene.rx} />}
       {scene.kind === 'image' && <ImageView url={scene.url} name={scene.name} mime={scene.mime} />}
+      {scene.kind === 'shop' && <ShopView products={scene.products} />}
     </div>
   );
 }
@@ -412,6 +442,7 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
   const [labs, setLabs] = useState<LabResult[]>([]);
   const [prescriptions, setPrescriptions] = useState<RxDoc[]>([]);
   const [attachments, setAttachments] = useState<AttachmentLite[]>([]);
+  const [shopProducts, setShopProducts] = useState<ShopProduct[]>([]);
   const [selectedImg, setSelectedImg] = useState<{ url: string; name: string; mime?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   // Mode éducation : jumeau anatomique GÉNÉRIQUE + cas d'étude anonymisé sélectionné.
@@ -469,6 +500,7 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
         getLabs(c.patient_id).then((r) => alive && setLabs(r)).catch(() => {});
         getSignedPrescriptions(c.patient_id).then((r) => alive && setPrescriptions(r)).catch(() => {});
         getAttachments(c.patient_id).then((r) => alive && setAttachments(r)).catch(() => {});
+        getShopProducts().then((r) => alive && setShopProducts(r)).catch(() => {});
       } catch {
         if (alive) setLoadFailed(true);
       } finally {
@@ -514,6 +546,7 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
     else if (tab === 'labs' && labs.length) shareScene({ kind: 'labs', items: labs });
     else if (tab === 'rx' && latestRx) shareScene({ kind: 'prescription', rx: latestRx });
     else if (tab === 'image' && selectedImg?.url) shareScene({ kind: 'image', url: selectedImg.url, name: selectedImg.name, mime: selectedImg.mime });
+    else if (tab === 'shop' && shopProducts.length) shareScene({ kind: 'shop', products: shopProducts });
   };
 
   // Sélection d'une pièce jointe : on récupère l'URL signée puis on l'affiche en
@@ -562,11 +595,12 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
     (tab === 'soap' && !!soap) ||
     (tab === 'labs' && labs.length > 0) ||
     (tab === 'rx' && !!latestRx) ||
-    (tab === 'image' && !!selectedImg?.url);
+    (tab === 'image' && !!selectedImg?.url) ||
+    (tab === 'shop' && shopProducts.length > 0);
 
   const isSharing = !!sharedScene && sharedScene.kind !== 'clear';
   const tabKind: Record<Tab, CockpitScene['kind']> = {
-    twin: 'twin', wheel: 'wheel', soap: 'soap', labs: 'labs', rx: 'prescription', image: 'image',
+    twin: 'twin', wheel: 'wheel', soap: 'soap', labs: 'labs', rx: 'prescription', image: 'image', shop: 'shop',
   };
   const sharingThisTab = isSharing && sharedScene!.kind === tabKind[tab];
 
@@ -592,6 +626,7 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
         ['image', 'Imagerie'],
         ['rx', 'Ordonnance'],
         ['soap', 'SOAP'],
+        ['shop', 'Boutique'],
       ];
 
   return (
@@ -654,6 +689,7 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
             {tab === 'image' && (
               <ImageTab attachments={attachments} selectedImg={selectedImg} onPick={pickAttachment} onBack={() => setSelectedImg(null)} onUpload={handleUploadImage} uploading={uploadingImg} />
             )}
+            {tab === 'shop' && <ShopView products={shopProducts} />}
           </>
         )}
       </div>
