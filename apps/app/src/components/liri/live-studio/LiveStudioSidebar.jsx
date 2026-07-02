@@ -7,11 +7,14 @@ function sidebarTitle(step) {
 }
 
 /**
- * Timeline verticale progressive (remplace l'ancienne liste de boutons) :
- * des nœuds ronds reliés par une ligne qui se colore en ambre au fil de
- * l'avancement — complété = ambre plein + ✓, actif = coral + halo, à venir = contour discret.
+ * Timeline verticale progressive — stepper commun du Studio de création (live ET formation) :
+ * des nœuds ronds reliés par une ligne qui se colore en ambre au fil de l'avancement —
+ * complété = ambre plein + ✓, actif = coral + halo, à venir = contour discret, verrouillé = cadenas.
  */
-export function LiveStudioSidebar({ steps, currentStep, onStepClick, stepStates = {} }) {
+export function LiveStudioSidebar({ steps, currentStep, onStepClick, stepStates = {}, compact = false }) {
+  const nodeSize = compact ? 'h-7 w-7' : 'h-8 w-8';
+  const gapBelow = compact ? 'pb-3.5' : 'pb-5';
+
   return (
     <nav className="w-full">
       <ol className="relative pl-0.5">
@@ -44,7 +47,8 @@ export function LiveStudioSidebar({ steps, currentStep, onStepClick, stepStates 
                 <div className="relative flex flex-col items-center">
                   <span
                     className={cn(
-                      'relative z-10 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold tabular-nums transition-all duration-200',
+                      'relative z-10 mt-1 flex shrink-0 items-center justify-center rounded-full text-[11px] font-bold tabular-nums transition-all duration-200',
+                      nodeSize,
                       isActive &&
                         'bg-[#d97757] text-white ring-4 ring-[#d97757]/18 shadow-[0_0_18px_-3px_rgba(217,119,87,0.6)]',
                       isCompleted && !isActive && !hasError && 'bg-[#d4a36a] text-[#1a1a1a]',
@@ -81,7 +85,7 @@ export function LiveStudioSidebar({ steps, currentStep, onStepClick, stepStates 
                 </div>
 
                 {/* Colonne libellé */}
-                <div className={cn('min-w-0 flex-1 pt-1.5', isLast ? 'pb-1.5' : 'pb-5')}>
+                <div className={cn('min-w-0 flex-1 pt-1.5', isLast ? 'pb-1.5' : gapBelow)}>
                   <div className="flex items-center gap-1.5">
                     <span
                       className={cn(
@@ -106,7 +110,8 @@ export function LiveStudioSidebar({ steps, currentStep, onStepClick, stepStates 
                   </div>
                   <p
                     className={cn(
-                      'mt-0.5 truncate text-[11px] font-semibold uppercase leading-tight tracking-[0.05em] transition-colors',
+                      'mt-0.5 truncate font-semibold uppercase leading-tight tracking-[0.05em] transition-colors',
+                      compact ? 'text-[10px]' : 'text-[11px]',
                       isActive && 'text-white',
                       isCompleted && !isActive && 'text-gray-200',
                       hasError && !isActive && 'text-red-300',
