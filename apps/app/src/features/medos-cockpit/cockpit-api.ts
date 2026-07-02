@@ -9,6 +9,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { api, medosApi, prescriptionsApi, attachmentsApi, clinicalApi } from '@/lib/api';
 import { supabase } from '@/lib/customSupabaseClient';
+import { authStore } from '@/lib/auth-store';
 
 // Certaines routes /med/* renvoient { data } (enveloppe globale), d'autres la
 // donnée brute. `peelData` pèle au plus une couche, défensivement.
@@ -120,26 +121,79 @@ export function getClinicalContext(sessionId: string): Promise<ClinicalContext> 
   return api.get(`/med/teleconsult/${sessionId}/clinical-context`).then(peelData);
 }
 
-/** Produits/services vendables du tenant (billing_plans category='produit') → scène Boutique.
- *  Le lien de paiement pointe vers /paiements/payer (checkout Stripe/PawaPay existant). */
-export async function getShopProducts(): Promise<ShopProduct[]> {
+// ── Boutique DU TENANT (catalogue live + lien produit) ──────────────────────
+// La boutique dépend du tenant : chaque tenant a SA boutique e-commerce, avec
+// SES produits et SES moyens de paiement (ex. zahirwellness.com + Stripe). On NE
+// renvoie donc JAMAIS vers le checkout d'abonnement LIRI. Le catalogue est lu en
+// direct sur la boutique du tenant ; « Payer » ouvre la fiche produit de CETTE
+// boutique (où le paiement du tenant est déjà branché).
+//
+// Config résolue par slug (tenant courant) via une ligne `billing_plans` dédiée
+// `key = __storefront__<slug>` — lisible côté front, tenant-scopée. metadata :
+//   { baseUrl, productPath, currency, catalog: { url, anonKey, table, select, activeFilter, orderBy } }
+// (Design front-only : aucune dépendance à l'API/back — cf. boutique zahirwellness.)
+
+interface StorefrontConfig {
+  baseUrl?: string;
+  productPath?: string;
+  currency?: string; // 'eur' | 'usd' | 'xaf'
+  catalog?: {
+    url?: string; anonKey?: string; table?: string;
+    select?: string; activeFilter?: string; orderBy?: string;
+  };
+}
+
+async function getStorefrontConfig(): Promise<StorefrontConfig | null> {
+  const slug = authStore.getTenantSlug?.();
+  if (!slug) return null;
   const { data, error } = await supabase
     .from('billing_plans')
-    .select('key,label,description,price_cents,currency,billing_cycle,metadata,sort_order')
-    .eq('category', 'produit')
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true });
-  if (error || !Array.isArray(data)) return [];
-  return data.map((p: any) => ({
-    id: p.key,
-    name: p.label,
-    price: p.price_cents != null ? Math.round(p.price_cents / 100) : null,
-    currency: p.currency || 'EUR',
-    payUrl: `/paiements/payer?plan=${encodeURIComponent(p.key)}&interval=${encodeURIComponent(p.billing_cycle || 'one_time')}`,
-    description: p.description || undefined,
-    image: p.metadata?.image || undefined,
-    cta: 'Payer',
-  }));
+    .select('metadata')
+    .eq('key', `__storefront__${slug}`)
+    .limit(1);
+  if (error || !Array.isArray(data) || !data[0]?.metadata) return null;
+  return data[0].metadata as StorefrontConfig;
+}
+
+/** Catalogue LIVE de la boutique du tenant → scène Boutique. Chaque « Payer »
+ *  ouvre la fiche produit de la boutique du tenant (paiement du tenant). */
+export async function getShopProducts(): Promise<ShopProduct[]> {
+  const cfg = await getStorefrontConfig();
+  const cat = cfg?.catalog;
+  if (!cfg || !cat?.url || !cat?.anonKey) return [];
+
+  const baseUrl = (cfg.baseUrl || '').replace(/\/$/, '');
+  const productPath = cfg.productPath || '/produit/';
+  const currency = (cfg.currency || 'eur').toLowerCase();
+  const priceField = currency === 'usd' ? 'price_usd' : currency === 'xaf' ? 'price_xaf' : 'price_eur';
+  const curLabel = currency === 'usd' ? 'USD' : currency === 'xaf' ? 'XAF' : 'EUR';
+
+  const select = cat.select || 'id,slug,name_fr,name_en,tagline,featured_image_url,price_eur,price_usd,price_xaf,is_active,is_featured';
+  let url = `${cat.url.replace(/\/$/, '')}/rest/v1/${cat.table || 'products'}?select=${encodeURIComponent(select)}`;
+  if (cat.activeFilter) url += `&${cat.activeFilter}`;
+  url += `&order=${encodeURIComponent(cat.orderBy || 'is_featured.desc')}&limit=60`;
+
+  let rows: any[] = [];
+  try {
+    const res = await fetch(url, { headers: { apikey: cat.anonKey, Authorization: `Bearer ${cat.anonKey}` } });
+    rows = res.ok ? await res.json() : [];
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(rows)) return [];
+
+  return rows
+    .filter((p) => p && p.slug)
+    .map((p: any) => ({
+      id: String(p.id ?? p.slug),
+      name: p.name_fr || p.name_en || p.name || String(p.slug),
+      price: p[priceField] != null ? Number(p[priceField]) : null,
+      currency: curLabel,
+      payUrl: baseUrl ? `${baseUrl}${productPath}${p.slug}` : `${productPath}${p.slug}`,
+      description: p.tagline || undefined,
+      image: p.featured_image_url || p.image_url || undefined,
+      cta: 'Acheter',
+    }));
 }
 
 export function getReferential(): Promise<{ organs: any[]; biomarkers: any[] }> {
