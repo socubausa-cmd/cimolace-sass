@@ -418,7 +418,12 @@ function ShopShowcase({ products, brand }: { products: ShopProduct[]; brand?: Sh
   if (!products || products.length === 0) return null;
   const single = products.length === 1;
   return (
-    <div style={{ height: '100%', overflowY: 'auto', background: 'var(--zw-bg, #f6f4ee)' }}>
+    <div style={{
+      height: '100%', overflowY: 'auto',
+      backgroundColor: '#e7ddcd',
+      backgroundImage: 'linear-gradient(rgba(125,95,65,0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(125,95,65,0.09) 1px, transparent 1px)',
+      backgroundSize: '28px 28px',
+    }}>
       {(brand?.name || brand?.domain) && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid var(--zw-border)' }}>
           {brand?.logo ? <img src={brand.logo} alt="" style={{ height: 26, width: 'auto', borderRadius: 6 }} /> : <span style={{ fontSize: 18 }} aria-hidden="true">🌿</span>}
@@ -440,7 +445,7 @@ function ShopShowcase({ products, brand }: { products: ShopProduct[]; brand?: Sh
 
 function ShowcaseCard({ p, big }: { p: ShopProduct; big: boolean }) {
   return (
-    <div style={{ display: 'flex', flexDirection: big ? 'row' : 'column', background: '#fff', border: '1px solid var(--zw-border)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 6px 22px rgba(0,0,0,0.06)' }}>
+    <div style={{ display: 'flex', flexDirection: big ? 'row' : 'column', background: '#fffcf7', border: '1px solid rgba(125,95,65,0.18)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 10px 30px rgba(90,60,30,0.12)' }}>
       <div style={{ position: 'relative', flex: big ? '0 0 44%' : undefined, aspectRatio: big ? undefined : '4 / 3', background: '#efece6', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: big ? 280 : undefined, overflow: 'hidden' }}>
         {p.image ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 44 }} aria-hidden="true">🌿</span>}
         {p.badge && <span style={{ position: 'absolute', top: 12, left: 12, background: 'var(--brand-primary)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 0.4 }}>{p.badge}</span>}
