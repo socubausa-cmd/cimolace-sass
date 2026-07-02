@@ -138,6 +138,11 @@ export default function CimolaceGoogleCallback() {
           tenant = getStoredOAuthTenant();
         }
 
+        // ── CLOISON STRICTE (règle codée en dur) ────────────────────────────
+        //  tenant PRÉSENT  = realm LIRI/école → /t/:slug/* ou /student-school-life
+        //  tenant ABSENT   = realm Cimolace   → /cimolace/billing ou /cimolace/admin
+        //  Les deux realms ne se croisent JAMAIS. La porte /cimolace/login purge
+        //  tout tenant avant l'OAuth (cf. CimolaceLoginPage) → arrive ici SANS tenant.
         // 4. Si tenant présent → flux école (owner / élève / prof / membre)
         if (tenant) {
           authStore.setTenantSlug(tenant);
@@ -182,8 +187,12 @@ export default function CimolaceGoogleCallback() {
             clearOAuthState();
             navigate('/cimolace/admin', { replace: true });
           } else {
+            // CLOISON : porte Cimolace sans tenant → un membre non-staff atterrit sur
+            // SON back-office facturation (/cimolace/billing), jamais LIRI, jamais
+            // « forbidden » (cohérent avec le login mot de passe).
             clearOAuthState();
-            navigate('/cimolace/login?error=forbidden', { replace: true });
+            authStore.setTenantSlug('');
+            navigate('/cimolace/billing', { replace: true });
           }
         }
       } catch (err) {

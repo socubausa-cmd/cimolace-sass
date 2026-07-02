@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { authStore } from '@/lib/auth-store';
-import { startGoogleOAuth } from '@/lib/googleOAuth';
+import { startGoogleOAuth, clearStoredOAuthTenant } from '@/lib/googleOAuth';
 
 const DEV_CIMOLACE_EMAIL    = 'cimolace-admin@prorascience.local';
 const DEV_CIMOLACE_PASSWORD = 'CimolaceDev2026';
@@ -75,6 +75,11 @@ export default function CimolaceLoginPage() {
     setError('');
     setIsGoogleLoading(true);
     try {
+      // ── CLOISON STRICTE (règle codée en dur) ──────────────────────────────
+      // La porte Cimolace (/cimolace/login) n'emporte JAMAIS de tenant. On purge
+      // tout tenant résiduel en sessionStorage pour que le callback route vers
+      // Cimolace (billing/admin) et JAMAIS vers LIRI (/t/:slug/*, /student-*).
+      clearStoredOAuthTenant();
       const { error: authError } = await startGoogleOAuth(supabase, {
         redirectTo: `${window.location.origin}/cimolace/auth/google/callback`,
         // Pas de tenantSlug = flux opérateur Cimolace
