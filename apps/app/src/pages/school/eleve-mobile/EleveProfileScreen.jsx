@@ -37,17 +37,17 @@ import { getLoginEntryPath } from '@/lib/loginEntryPath';
 import { EV_BG, EV_MUTED, EV_LINE, EV_R } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const PAGE_AMBIENT =
-  'radial-gradient(50% 32% at 50% 0%, rgba(123, 97, 255, 0.14), transparent 70%)';
+  'radial-gradient(50% 32% at 50% 0%, rgba(217, 119, 87, 0.14), transparent 70%)';
 /** Bordure avatar maquette */
-const RING = '#7B61FF';
+const RING = '#d97757';
 
 function profileHeroCardSurface() {
   return {
     background: [
-      'radial-gradient(ellipse 100% 80% at 20% 0%, rgba(99, 102, 241, 0.12) 0%, transparent 55%)',
-      'linear-gradient(180deg, rgba(20, 20, 34, 0.98) 0%, rgba(8, 8, 16, 0.99) 100%)',
+      'radial-gradient(ellipse 100% 80% at 20% 0%, rgba(217, 119, 87, 0.12) 0%, transparent 55%)',
+      'linear-gradient(180deg, rgba(20,16,12,0.98) 0%, rgba(11,9,8,0.99) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.18)',
+    border: '1px solid rgba(240, 200, 175, 0.18)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 28px -10px rgba(0,0,0,0.5)',
   };
 }
@@ -55,26 +55,26 @@ function profileHeroCardSurface() {
 function globalProgressCardSurface() {
   return {
     background: [
-      'radial-gradient(ellipse 100% 70% at 0% 0%, rgba(124, 58, 237, 0.14) 0%, transparent 55%)',
-      'linear-gradient(192deg, rgba(22, 24, 40, 0.98) 0%, rgba(10, 12, 24, 0.99) 100%)',
+      'radial-gradient(ellipse 100% 70% at 0% 0%, rgba(201, 106, 76, 0.14) 0%, transparent 55%)',
+      'linear-gradient(192deg, rgba(22,18,13,0.98) 0%, rgba(14,11,9,0.99) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.18)',
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07), 0 4px 20px -8px rgba(79, 70, 229, 0.2)',
+    border: '1px solid rgba(240, 200, 175, 0.18)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07), 0 4px 20px -8px rgba(201, 106, 76, 0.2)',
   };
 }
 
 function statPillStyle() {
   return {
-    background: 'linear-gradient(180deg, rgba(20, 24, 32, 0.95) 0%, rgba(12, 14, 20, 0.98) 100%)',
-    border: '1px solid rgba(165, 180, 252, 0.14)',
+    background: 'linear-gradient(180deg, rgba(20,17,13,0.95) 0%, rgba(14,11,9,0.98) 100%)',
+    border: '1px solid rgba(240, 200, 175, 0.14)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
   };
 }
 
 function menuPanelSurface() {
   return {
-    background: 'linear-gradient(195deg, rgba(18, 20, 32, 0.97) 0%, rgba(10, 10, 18, 0.99) 100%)',
-    border: '1px solid rgba(165, 180, 252, 0.16)',
+    background: 'linear-gradient(195deg, rgba(18,15,11,0.97) 0%, rgba(12,10,8,0.99) 100%)',
+    border: '1px solid rgba(240, 200, 175, 0.16)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 20px -8px rgba(0,0,0,0.4)',
   };
 }
@@ -82,10 +82,10 @@ function menuPanelSurface() {
 function achievementCardSurface() {
   return {
     background: [
-      'radial-gradient(ellipse 80% 60% at 30% 0%, rgba(99, 102, 241, 0.1) 0%, transparent 60%)',
-      'linear-gradient(185deg, rgba(22, 24, 34, 0.96) 0%, rgba(12, 14, 22, 0.99) 100%)',
+      'radial-gradient(ellipse 80% 60% at 30% 0%, rgba(217, 119, 87, 0.1) 0%, transparent 60%)',
+      'linear-gradient(185deg, rgba(22,18,13,0.96) 0%, rgba(14,11,9,0.99) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.14)',
+    border: '1px solid rgba(240, 200, 175, 0.14)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
   };
 }
@@ -99,13 +99,13 @@ function computeAchievements(progress) {
     badges.push({
       id: 'streak7', tone: 'violet', top: String(streak), subIcon: 'stars',
       title: 'Semaine de feu 🔥', sub: `${streak} jours d'affilée`, xp: '15 XP',
-      grad: 'from-violet-600 to-fuchsia-600',
+      grad: 'from-orange-600 to-rose-600',
     });
   else if (streak >= 3)
     badges.push({
       id: 'streak3', tone: 'violet', top: String(streak), subIcon: 'stars',
       title: 'En route 🚀', sub: `${streak} jours d'affilée`, xp: '5 XP',
-      grad: 'from-violet-500 to-indigo-600',
+      grad: 'from-orange-500 to-amber-600',
     });
 
   if (completedLessons >= 10)
@@ -113,14 +113,14 @@ function computeAchievements(progress) {
       id: 'courses10', tone: 'emerald',
       top: <BookOpen className="h-4 w-4 text-white" strokeWidth={2.2} />, subIcon: null,
       title: 'Apprenti assidu', sub: `${completedLessons} cours terminés`, xp: '20 XP',
-      grad: 'from-emerald-500 to-teal-600',
+      grad: 'from-emerald-500 to-amber-600',
     });
   else if (completedLessons >= 1)
     badges.push({
       id: 'courses1', tone: 'emerald',
       top: <BookOpen className="h-4 w-4 text-white" strokeWidth={2.2} />, subIcon: null,
       title: 'Premier cours ✅', sub: `${completedLessons} cours terminé${completedLessons > 1 ? 's' : ''}`, xp: '10 XP',
-      grad: 'from-emerald-500 to-cyan-600',
+      grad: 'from-emerald-500 to-amber-600',
     });
 
   if (totalTimeMinutes >= 60)
@@ -128,7 +128,7 @@ function computeAchievements(progress) {
       id: 'time60', tone: 'blue',
       top: <Target className="h-4 w-4 text-white" strokeWidth={2.2} />, subIcon: null,
       title: 'Focus master', sub: `${Math.round(totalTimeMinutes / 60)}h de contenu`, xp: '15 XP',
-      grad: 'from-sky-500 to-indigo-600',
+      grad: 'from-amber-500 to-amber-600',
     });
 
   if (xp >= 100)
@@ -148,7 +148,7 @@ const MENU = [
     title: 'Informations personnelles',
     sub: 'Gère ton profil (ouvre le portail web)',
     icon: User,
-    iconClass: 'text-violet-400',
+    iconClass: 'text-orange-400',
   },
   {
     to: '/dashboard',
@@ -169,28 +169,28 @@ const MENU = [
     title: '21 modules',
     sub: 'Catalogue pédagogique et coaching',
     icon: BookOpen,
-    iconClass: 'text-sky-400',
+    iconClass: 'text-amber-400',
   },
   {
     to: ELEVE_MOBILE.forfaits,
     title: 'Forfaits',
     sub: 'Abonnement par cycle (mois, trimestre, année)',
     icon: Layers,
-    iconClass: 'text-fuchsia-400',
+    iconClass: 'text-rose-400',
   },
   {
     to: '/notebook',
     title: 'Mes notes',
     sub: 'Tes notes sauvegardées (ouvre le portail web)',
     icon: Bookmark,
-    iconClass: 'text-sky-400',
+    iconClass: 'text-amber-400',
   },
   {
     to: ELEVE_MOBILE.neuron,
     title: 'Neuron (mémoire IA)',
     sub: 'Ton assistant personnel intelligent',
     icon: Brain,
-    iconClass: 'text-violet-400',
+    iconClass: 'text-orange-400',
     badge: 'NOUVEAU',
   },
 ];
@@ -281,8 +281,8 @@ function GlobalProgressBlock({ percent, completedCh, totalCh }) {
             />
             <defs>
               <linearGradient id="pf-ring" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#7C3AED" />
-                <stop offset="100%" stopColor="#6D28D9" />
+                <stop offset="0%" stopColor="#c96a4c" />
+                <stop offset="100%" stopColor="#a94f33" />
               </linearGradient>
             </defs>
           </svg>
@@ -301,12 +301,12 @@ function GlobalProgressBlock({ percent, completedCh, totalCh }) {
           className="h-full rounded-full"
           style={{
             width: `${pct}%`,
-            background: 'linear-gradient(90deg, #6D28D9 0%, #7C3AED 100%)',
+            background: 'linear-gradient(90deg, #a94f33 0%, #c96a4c 100%)',
           }}
         />
       </div>
       <div className="mt-1.5 flex items-center justify-between text-[11.5px]">
-        <span className="font-semibold" style={{ color: '#7C3AED' }}>
+        <span className="font-semibold" style={{ color: '#c96a4c' }}>
           {Math.round(pct)}% complété
         </span>
         <span className="text-white/45">
@@ -331,7 +331,7 @@ function MenuRow({ to, title, sub, icon: Icon, iconClass, badge }) {
           <div className="flex flex-wrap items-center gap-1.5">
             <p className="text-[15px] font-semibold leading-tight tracking-tight text-white">{title}</p>
             {badge ? (
-              <span className="inline-flex items-center rounded-full bg-[#2563EB] px-1.5 py-0.5 text-[6.5px] font-extrabold uppercase leading-none tracking-wide text-white">
+              <span className="inline-flex items-center rounded-full bg-[#c96844] px-1.5 py-0.5 text-[6.5px] font-extrabold uppercase leading-none tracking-wide text-white">
                 {badge}
               </span>
             ) : null}
@@ -428,7 +428,7 @@ export default function EleveProfileScreen() {
           <div
             aria-hidden
             className="pointer-events-none absolute -right-8 -top-6 h-32 w-32 rounded-full opacity-35 blur-3xl"
-            style={{ background: 'radial-gradient(circle, rgba(196, 181, 253, 0.28) 0%, transparent 70%)' }}
+            style={{ background: 'radial-gradient(circle, rgba(235, 200, 170, 0.28) 0%, transparent 70%)' }}
           />
           <div className="relative flex min-w-0 items-stretch gap-2.5">
             <div className="flex min-h-0 min-w-0 flex-1 items-start gap-2.5 pr-0.5">
@@ -436,11 +436,11 @@ export default function EleveProfileScreen() {
                 <div
                   className="rounded-full p-[2.5px]"
                   style={{
-                    background: `linear-gradient(145deg, ${RING}, #5c3ad6)`,
+                    background: `linear-gradient(145deg, ${RING}, #c96a4c)`,
                     boxShadow: `0 0 0 1px ${RING}55, 0 0 20px -2px ${RING}99`,
                   }}
                 >
-                  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-[#0B0B15] sm:h-[84px] sm:w-[84px]">
+                  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-[#0c0b0a] sm:h-[84px] sm:w-[84px]">
                     {avatarUrl ? (
                       <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
                     ) : (
@@ -450,7 +450,7 @@ export default function EleveProfileScreen() {
                 </div>
                 <Link
                   to="/settings"
-                  className="absolute -bottom-0.5 -right-0.5 flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-[#0D0D14] text-white shadow-md"
+                  className="absolute -bottom-0.5 -right-0.5 flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-[#0e0c0b] text-white shadow-md"
                   aria-label="Modifier la photo"
                 >
                   <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
@@ -459,8 +459,8 @@ export default function EleveProfileScreen() {
 
               <div className="min-w-0 flex-1 pt-0.5">
                 <p className="text-[17px] font-extrabold leading-tight tracking-[-0.02em] text-white">{displayName}</p>
-                <span className="mt-1.5 inline-flex max-w-full items-center gap-1 rounded-full border border-violet-500/25 bg-[#1a0f2e] px-2 py-0.5 text-[9.5px] font-semibold text-violet-100">
-                  <GraduationCap className="h-3 w-3 shrink-0 text-violet-200" strokeWidth={2.2} />
+                <span className="mt-1.5 inline-flex max-w-full items-center gap-1 rounded-full border border-orange-500/25 bg-[#1a120d] px-2 py-0.5 text-[9.5px] font-semibold text-orange-100">
+                  <GraduationCap className="h-3 w-3 shrink-0 text-orange-200" strokeWidth={2.2} />
                   Élève
                 </span>
                 <div className="mt-1.5 flex items-center gap-1.5 text-[12px] font-medium text-white">
@@ -472,8 +472,8 @@ export default function EleveProfileScreen() {
             </div>
 
             <div
-              className="flex w-[32%] max-w-[120px] min-w-0 shrink-0 flex-col justify-center rounded-2xl border border-violet-500/20 bg-[#12101a] px-1.5 py-2"
-              style={{ boxShadow: 'inset 0 1px 0 rgba(123, 97, 255, 0.12)' }}
+              className="flex w-[32%] max-w-[120px] min-w-0 shrink-0 flex-col justify-center rounded-2xl border border-orange-500/20 bg-[#140f0c] px-1.5 py-2"
+              style={{ boxShadow: 'inset 0 1px 0 rgba(217, 119, 87, 0.12)' }}
             >
               <p className="text-center text-[9px] font-medium text-white/45">Niveau</p>
               <div className="my-0.5 flex min-h-[2.5rem] items-end justify-center gap-0.5">
@@ -481,8 +481,8 @@ export default function EleveProfileScreen() {
                   {level}
                 </span>
                 <span
-                  className="mb-1.5 text-[12px] leading-none text-violet-400"
-                  style={{ textShadow: '0 0 10px rgba(167, 139, 250, 0.8)' }}
+                  className="mb-1.5 text-[12px] leading-none text-orange-400"
+                  style={{ textShadow: '0 0 10px rgba(224, 146, 106, 0.8)' }}
                   aria-hidden
                 >
                   ✦
@@ -497,22 +497,22 @@ export default function EleveProfileScreen() {
         </motion.div>
 
         <div className="mb-5 flex gap-2">
-          <StatPill icon={BookOpen} label="Cours suivis" value={statSuivis} color="#7C3AED" />
+          <StatPill icon={BookOpen} label="Cours suivis" value={statSuivis} color="#c96a4c" />
           <StatPill icon={CheckCircle2} label="Cours terminés" value={statTerminés} color="#22C55E" />
           <StatPill icon={Flame} label="Jours d'affilée" value={statStreak} color="#F97316" />
-          <StatPill icon={Trophy} label="Points XP" value={statXp} color="#3B82F6" />
+          <StatPill icon={Trophy} label="Points XP" value={statXp} color="#e2854f" />
         </div>
 
         <p className="mb-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white/40">Ton progrès global</p>
         <GlobalProgressBlock percent={globalPct} completedCh={chDone} totalCh={chTotal} />
 
-        <EleveSectionTitle action="Voir tout" actionTo={ELEVE_MOBILE.bibliotheque} className="mb-2" actionClassName="!text-[#7C3AED]">
+        <EleveSectionTitle action="Voir tout" actionTo={ELEVE_MOBILE.bibliotheque} className="mb-2" actionClassName="!text-[#c96a4c]">
           Réalisations récentes
         </EleveSectionTitle>
 
         {achievements.length === 0 ? (
           <div className="mb-6 rounded-xl border border-white/[0.08] px-4 py-5 text-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
-            <Trophy className="mx-auto mb-2 h-6 w-6 text-violet-400/40" strokeWidth={1.8} />
+            <Trophy className="mx-auto mb-2 h-6 w-6 text-orange-400/40" strokeWidth={1.8} />
             <p className="text-[12.5px] font-medium" style={{ color: EV_MUTED }}>
               Termine ton premier cours pour débloquer des réalisations.
             </p>
@@ -546,7 +546,7 @@ export default function EleveProfileScreen() {
               <p
                 className="mt-2 text-[10.5px] font-extrabold"
                 style={{
-                  color: a.tone === 'violet' ? '#A78BFA' : a.tone === 'emerald' ? '#34D399' : '#38BDF8',
+                  color: a.tone === 'violet' ? '#e0926a' : a.tone === 'emerald' ? '#34D399' : '#e2854f',
                 }}
               >
                 {a.xp}

@@ -7,7 +7,7 @@ import { EV_MUTED, EV_ACCENT, EV_LINE, EV_R, EV_SH } from '@/pages/school/eleve-
 const GRAD_BTN =
   'flex w-full items-center gap-3 px-4 py-3.5 text-left shadow-lg transition active:scale-[0.99] sm:py-4';
 const CTA_GRAD = {
-  background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #5B21B6 100%)`,
+  background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #a94f33 100%)`,
   boxShadow: EV_SH.cta,
   borderRadius: EV_R.lg,
 };

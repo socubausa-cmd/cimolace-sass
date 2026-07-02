@@ -34,10 +34,10 @@ import {
 } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
-const LAV_TITLE = 'rgb(196, 181, 253)';
+const LAV_TITLE = 'rgb(235, 200, 170)';
 
 const GRAD_CTA = {
-  background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #5B21B6 100%)`,
+  background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #a94f33 100%)`,
   boxShadow: EV_SH.cta,
 };
 
@@ -49,23 +49,23 @@ function LienChainHero3d() {
     >
       <div
         className="absolute bottom-3 left-1/2 h-10 w-24 -translate-x-1/2 rounded-full opacity-60 blur-2xl"
-        style={{ background: 'radial-gradient(ellipse, rgba(123, 97, 255, 0.55) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(ellipse, rgba(217, 119, 87, 0.55) 0%, transparent 70%)' }}
       />
       <div
         className="absolute bottom-2.5 left-1/2 h-3 w-[4.2rem] -translate-x-1/2 rounded-full"
         style={{
-          background: 'radial-gradient(ellipse at 50% 0%, #2e1064 0%, #0a0514 80%)',
+          background: 'radial-gradient(ellipse at 50% 0%, #3a1810 0%, #0f0a08 80%)',
           boxShadow: '0 0 0 1px rgba(255,255,255,0.08), 0 6px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12)',
         }}
       />
       <div
         className="relative z-10 mb-4 flex h-[76px] w-[88px] items-center justify-center"
-        style={{ filter: 'drop-shadow(0 14px 32px rgba(88, 28, 135, 0.55))' }}
+        style={{ filter: 'drop-shadow(0 14px 32px rgba(122,54,32,0.55))' }}
       >
         <div
           className="flex h-[3.2rem] w-[4.5rem] items-center justify-center rounded-2xl"
           style={{
-            background: 'linear-gradient(150deg, #7B61FF 0%, #5E4BFF 45%, #4c1d95 100%)',
+            background: 'linear-gradient(150deg, #d97757 0%, #d97757 45%, #7a3620 100%)',
             boxShadow: `
               inset 0 2px 0 rgba(255,255,255,0.2),
               inset 0 -2px 0 rgba(0,0,0,0.35),
@@ -195,7 +195,7 @@ export default function EleveConnectionLien() {
         <div className="mb-1 flex items-center justify-between gap-2 pt-0.5">
           <Link
             to={ELEVE_MOBILE.connexion}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/[0.1] bg-[#1a1a22] text-white transition active:scale-95"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/[0.1] bg-[#1a1712] text-white transition active:scale-95"
             aria-label="Retour"
           >
             <ChevronLeft className="h-5 w-5" strokeWidth={2.1} />
@@ -203,9 +203,9 @@ export default function EleveConnectionLien() {
           <Link
             to="/support"
             className="inline-flex max-w-[min(100%,210px)] items-center gap-1 rounded-full border px-2.5 py-1.5 text-[12px] font-medium text-white/80"
-            style={{ borderColor: 'rgba(255,255,255,0.12)', background: 'rgba(22,22,30,0.8)' }}
+            style={{ borderColor: 'rgba(255,255,255,0.12)', background: 'rgba(22,18,13,0.8)' }}
           >
-            <HelpCircle className="h-3.5 w-3.5 shrink-0 text-violet-300/90" strokeWidth={2} />
+            <HelpCircle className="h-3.5 w-3.5 shrink-0 text-orange-300/90" strokeWidth={2} />
             <span className="leading-tight">Besoin d'aide ?</span>
           </Link>
         </div>
@@ -216,8 +216,8 @@ export default function EleveConnectionLien() {
           className="mt-3"
         >
           <span
-            className="inline-flex w-fit items-center gap-1.5 rounded-full border border-violet-500/25 px-2.5 py-1 text-[11px] font-semibold"
-            style={{ background: 'rgba(91, 33, 182, 0.15)', color: '#DDD6FE' }}
+            className="inline-flex w-fit items-center gap-1.5 rounded-full border border-orange-500/25 px-2.5 py-1 text-[11px] font-semibold"
+            style={{ background: 'rgba(138, 63, 40, 0.15)', color: '#f0d0be' }}
           >
             <Zap className="h-3.5 w-3.5 text-amber-200" strokeWidth={2} />
             Accès instantané
@@ -242,7 +242,7 @@ export default function EleveConnectionLien() {
           </div>
         </motion.div>
 
-        {/* Section carte « Rejoindre avec un lien » — specs maquette: carte #0E0E1F, rayons ~28px, CTA dégradé violet, input ~16px */}
+        {/* Section carte « Rejoindre avec un lien » — specs maquette: carte #120c0a, rayons ~28px, CTA dégradé violet, input ~16px */}
         <div
           className="mt-5 border px-[18px] pb-5 pt-[18px] sm:px-5 sm:pb-[22px] sm:pt-[20px]"
             style={{
@@ -256,8 +256,8 @@ export default function EleveConnectionLien() {
             <div
               className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
               style={{
-                background: `linear-gradient(180deg, ${EV_ACCENT} 0%, #6344E5 100%)`,
-                boxShadow: '0 2px 8px rgba(123, 97, 255, 0.35), inset 0 1px 0 rgba(255,255,255,0.2)',
+                background: `linear-gradient(180deg, ${EV_ACCENT} 0%, #c96a4c 100%)`,
+                boxShadow: '0 2px 8px rgba(217, 119, 87, 0.35), inset 0 1px 0 rgba(255,255,255,0.2)',
               }}
             >
               <Link2 className="h-[22px] w-[22px] text-white" strokeWidth={2.1} />
@@ -279,7 +279,7 @@ export default function EleveConnectionLien() {
             className="flex min-h-[56px] items-stretch overflow-hidden border pl-3 pr-1.5"
             style={{
               borderColor: 'rgba(255,255,255,0.07)',
-              background: '#08080E',
+              background: '#09080a',
               borderRadius: 16,
             }}
           >
@@ -370,10 +370,10 @@ export default function EleveConnectionLien() {
             to={`${ELEVE_MOBILE.login}?${loginQ}`}
             title="Se connecter"
             sub="J'ai déjà un compte LIRI"
-            chevronClass="text-[#60A5FA]"
+            chevronClass="text-[#e8a487]"
             iconWrapClass="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
-            iconStyle={{ background: 'rgba(23, 37, 84, 0.9)' }}
-            left={<User className="h-[22px] w-[22px] text-sky-300" strokeWidth={2.1} />}
+            iconStyle={{ background: 'rgba(90,60,40,0.9)' }}
+            left={<User className="h-[22px] w-[22px] text-amber-300" strokeWidth={2.1} />}
           />
         </div>
 
@@ -388,9 +388,9 @@ export default function EleveConnectionLien() {
         >
           <div
             className="flex h-12 w-12 shrink-0 items-center justify-center self-center rounded-full"
-            style={{ background: 'rgba(50, 15, 80, 0.65)' }}
+            style={{ background: 'rgba(90,40,25,0.65)' }}
           >
-            <Lock className="h-[22px] w-[22px] text-[#C4B5FD]" strokeWidth={1.9} />
+            <Lock className="h-[22px] w-[22px] text-[#eab89a]" strokeWidth={1.9} />
           </div>
           <div className="min-w-0 flex-1 self-center">
             <h3 className="text-[14px] font-bold leading-tight text-white">Tes données sont protégées</h3>

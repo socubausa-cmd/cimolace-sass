@@ -57,7 +57,7 @@ import { LiriPageFooterLine, LiriWordmark } from '@/components/brand/LiriWordmar
 
 /**
  * Gris secondaire de l'accueil — plus clair que `EV_MUTED` (#8E8E93) pour remonter le
- * contraste du texte secondaire sur fond #0B0B0F (≈ 4.7:1 → ≈ 7:1, lisible). Local à cet
+ * contraste du texte secondaire sur fond #0b0b0a (≈ 4.7:1 → ≈ 7:1, lisible). Local à cet
  * écran ; on ne touche pas le token partagé `EV_MUTED`.
  */
 const EV_MUTED_HOME = '#B9B9C2';
@@ -65,10 +65,10 @@ const EV_MUTED_HOME = '#B9B9C2';
 function homeHeroCardSurface() {
   return {
     background: [
-      'radial-gradient(ellipse 100% 80% at 20% 0%, rgba(99, 102, 241, 0.14) 0%, transparent 55%)',
-      'linear-gradient(180deg, rgba(20, 20, 34, 0.98) 0%, rgba(8, 8, 16, 0.99) 100%)',
+      'radial-gradient(ellipse 100% 80% at 20% 0%, rgba(217, 119, 87, 0.14) 0%, transparent 55%)',
+      'linear-gradient(180deg, rgba(20,16,12,0.98) 0%, rgba(11,9,8,0.99) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.18)',
+    border: '1px solid rgba(240, 200, 175, 0.18)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 28px -10px rgba(0,0,0,0.5)',
   };
 }
@@ -89,7 +89,7 @@ function HelloHero({ firstName }) {
       <div
         aria-hidden
         className="pointer-events-none absolute -right-6 -top-8 h-36 w-36 rounded-full opacity-40 blur-3xl"
-        style={{ background: 'radial-gradient(circle, rgba(196, 181, 253, 0.35) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(235, 200, 170, 0.35) 0%, transparent 70%)' }}
       />
       <div className="relative flex items-stretch gap-1">
         <div className="min-w-0 max-w-[62%] flex-1">
@@ -101,10 +101,10 @@ function HelloHero({ firstName }) {
           </p>
           <Link
             to={ELEVE_MOBILE.vieScolaire}
-            className="mt-3.5 inline-flex h-11 min-h-[44px] items-center justify-center gap-0.5 rounded-[20px] bg-white px-4 text-[13px] font-bold text-[#5B3CC4] shadow-[0_8px_24px_-6px_rgba(255,255,255,0.35)] transition-transform active:scale-[0.98]"
+            className="mt-3.5 inline-flex h-11 min-h-[44px] items-center justify-center gap-0.5 rounded-[20px] bg-white px-4 text-[13px] font-bold text-[#a94f33] shadow-[0_8px_24px_-6px_rgba(255,255,255,0.35)] transition-transform active:scale-[0.98]"
           >
             Vie scolaire
-            <ChevronRight className="h-4 w-4 text-[#5B3CC4]" strokeWidth={2.5} />
+            <ChevronRight className="h-4 w-4 text-[#a94f33]" strokeWidth={2.5} />
           </Link>
         </div>
         <div className="flex shrink-0 items-end" style={{ width: 120 }}>
@@ -121,29 +121,29 @@ function GraduationIllustration() {
       viewBox="0 0 140 150"
       width="100%"
       height="148"
-      className="max-h-[148px] drop-shadow-[0_10px_28px_rgba(168,85,247,0.5)]"
+      className="max-h-[148px] drop-shadow-[0_10px_28px_rgba(224, 146, 106,0.5)]"
       aria-hidden
     >
       <defs>
         <linearGradient id="ev-bookA" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#7c5cff" />
-          <stop offset="100%" stopColor="#5b3dcf" />
+          <stop offset="0%" stopColor="#c96a4c" />
+          <stop offset="100%" stopColor="#a94f33" />
         </linearGradient>
         <linearGradient id="ev-bookB" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#5b8def" />
-          <stop offset="100%" stopColor="#3a5ec4" />
+          <stop offset="0%" stopColor="#e0926a" />
+          <stop offset="100%" stopColor="#a94f33" />
         </linearGradient>
         <linearGradient id="ev-bookC" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#a855f7" />
-          <stop offset="100%" stopColor="#7c3aed" />
+          <stop offset="0%" stopColor="#e0926a" />
+          <stop offset="100%" stopColor="#c96a4c" />
         </linearGradient>
         <linearGradient id="ev-cap" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#1a1d2e" />
-          <stop offset="100%" stopColor="#0a0c1a" />
+          <stop offset="0%" stopColor="#1a130d" />
+          <stop offset="100%" stopColor="#0f0b09" />
         </linearGradient>
         <radialGradient id="ev-halo" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="rgba(168,85,247,0.45)" />
-          <stop offset="100%" stopColor="rgba(168,85,247,0)" />
+          <stop offset="0%" stopColor="rgba(224, 146, 106,0.45)" />
+          <stop offset="100%" stopColor="rgba(224, 146, 106,0)" />
         </radialGradient>
       </defs>
       <ellipse cx="70" cy="118" rx="58" ry="12" fill="url(#ev-halo)" />
@@ -229,7 +229,7 @@ function LiveJoinCta({ href, children, className: outerClassName }) {
     outerClassName,
   );
   const style = {
-    background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #3b41de 100%)`,
+    background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #c96a4c 100%)`,
     boxShadow: `${EV_SH.cta}, inset 0 1px 0 rgba(255,255,255,0.18)`,
   };
   if (isExternalLiveHref(href)) {
@@ -271,13 +271,13 @@ function LiveThumb({ coverUrl, title, upcoming }) {
           <div
             aria-hidden
             className="absolute inset-0"
-            style={{ background: 'linear-gradient(135deg, #1a1e2a 0%, #0b0e14 100%)' }}
+            style={{ background: 'linear-gradient(135deg, #1a140e 0%, #0c0b0a 100%)' }}
           />
           <div
             aria-hidden
             className="absolute inset-0"
             style={{
-              background: 'radial-gradient(50% 50% at 50% 40%, rgba(124,92,255,0.3), transparent 75%)',
+              background: 'radial-gradient(50% 50% at 50% 40%, rgba(217, 119, 87,0.3), transparent 75%)',
             }}
           />
           <svg viewBox="0 0 110 90" className="absolute inset-0 h-full w-full opacity-80" aria-hidden>
@@ -364,13 +364,13 @@ function LiveNowCard({ session, viewerUserId, isUpcoming, className: wrapClassNa
   const frameStyle = showAsUpcoming
     ? {
         background:
-          'linear-gradient(135deg, rgba(90, 120, 220, 0.55) 0%, rgba(20, 22, 40, 0.45) 50%, rgba(80, 100, 255, 0.5) 100%)',
+          'linear-gradient(135deg, rgba(226, 133, 79, 0.55) 0%, rgba(20,16,12,0.45) 50%, rgba(217, 119, 87, 0.5) 100%)',
         boxShadow:
-          '0 0 0 1px rgba(91, 141, 239, 0.2), 0 20px 48px -24px rgba(0,0,0,0.7), 0 0 40px -12px rgba(60, 80, 200, 0.12)',
+          '0 0 0 1px rgba(226, 133, 79, 0.2), 0 20px 48px -24px rgba(0,0,0,0.7), 0 0 40px -12px rgba(201, 106, 76, 0.12)',
       }
     : {
         background:
-          'linear-gradient(135deg, rgba(100, 90, 180, 0.55) 0%, rgba(20, 22, 40, 0.45) 40%, rgba(255, 77, 77, 0.65) 100%)',
+          'linear-gradient(135deg, rgba(201,106,76,0.55) 0%, rgba(20,16,12,0.45) 40%, rgba(255, 77, 77, 0.65) 100%)',
         boxShadow:
           '0 0 0 1px rgba(255, 77, 77, 0.15), 0 20px 48px -24px rgba(0,0,0,0.7), 0 0 40px -12px rgba(255, 60, 80, 0.15)',
       };
@@ -384,7 +384,7 @@ function LiveNowCard({ session, viewerUserId, isUpcoming, className: wrapClassNa
       style={frameStyle}
     >
       <div
-        className="relative overflow-hidden rounded-[21px] bg-[#0a0a0c] px-4 py-4"
+        className="relative overflow-hidden rounded-[21px] bg-[#0a0a09] px-4 py-4"
         style={{
           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
         }}
@@ -396,13 +396,13 @@ function LiveNowCard({ session, viewerUserId, isUpcoming, className: wrapClassNa
                 <>
                   <span
                     className="inline-flex h-[20px] items-center rounded-[5px] px-2 text-[8px] font-extrabold leading-none tracking-[0.1em] text-white"
-                    style={{ background: 'linear-gradient(90deg, #3b4ede 0%, #5b8def 100%)' }}
+                    style={{ background: 'linear-gradient(90deg, #c96a4c 0%, #e0926a 100%)' }}
                   >
                     PROCHAIN
                   </span>
                   <span
-                    className="text-[9.5px] font-extrabold uppercase leading-none tracking-[0.18em] text-[#4A90E2]"
-                    style={{ textShadow: '0 0 16px rgba(91, 141, 239, 0.25)' }}
+                    className="text-[9.5px] font-extrabold uppercase leading-none tracking-[0.18em] text-[#e0926a]"
+                    style={{ textShadow: '0 0 16px rgba(226, 133, 79, 0.25)' }}
                   >
                     {formatSessionScheduleLabel(session.scheduled_at) || 'BIENTÔT'}
                   </span>
@@ -438,7 +438,7 @@ function LiveNowCard({ session, viewerUserId, isUpcoming, className: wrapClassNa
                 <div
                   className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[9px] font-extrabold text-white"
                   style={{
-                    background: 'linear-gradient(145deg, #4a6cff, #5b8def)',
+                    background: 'linear-gradient(145deg, #d97757, #e0926a)',
                     boxShadow: '0 0 0 1px rgba(255,255,255,0.12)',
                   }}
                 >
@@ -449,7 +449,7 @@ function LiveNowCard({ session, viewerUserId, isUpcoming, className: wrapClassNa
               {hostName ? (
                 <span
                   className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full"
-                  style={{ background: 'linear-gradient(145deg, #7c3aed, #5b21b6)' }}
+                  style={{ background: 'linear-gradient(145deg, #c96a4c, #a94f33)' }}
                   title="Hôte vérifié"
                 >
                   <BadgeCheck className="h-2.5 w-2.5 text-white" aria-hidden strokeWidth={2.4} />
@@ -501,8 +501,8 @@ function LiveNowCard({ session, viewerUserId, isUpcoming, className: wrapClassNa
 
 function UpcomingItem({ icon: Icon, accent, when, title, sub, prof, profInitial, in_, to }) {
   const palettes = {
-    blue: { from: '#3B6FE8', to: '#5B8DEF', soft: 'rgba(91,141,239,0.2)', when: '#5B8DEF' },
-    purple: { from: '#9333EA', to: '#A855F7', soft: 'rgba(168,85,247,0.2)', when: '#C084FC' },
+    blue: { from: '#d97757', to: '#e0926a', soft: 'rgba(226, 133, 79,0.2)', when: '#e0926a' },
+    purple: { from: '#c96a4c', to: '#e0926a', soft: 'rgba(224, 146, 106,0.2)', when: '#e0926a' },
   };
   const p = palettes[accent] || palettes.blue;
   return (
@@ -514,9 +514,9 @@ function UpcomingItem({ icon: Icon, accent, when, title, sub, prof, profInitial,
           borderRadius: EV_R.lg,
           background: [
             `radial-gradient(ellipse 100% 80% at 0% 0%, ${p.soft} 0%, transparent 58%)`,
-            'linear-gradient(195deg, rgba(22, 24, 40, 0.97) 0%, rgba(10, 12, 24, 0.99) 100%)',
+            'linear-gradient(195deg, rgba(22,18,13,0.97) 0%, rgba(14,11,9,0.99) 100%)',
           ].join(', '),
-          border: '1px solid rgba(165, 180, 252, 0.16)',
+          border: '1px solid rgba(240, 200, 175, 0.16)',
           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px -4px rgba(0,0,0,0.35)',
         }}
       >

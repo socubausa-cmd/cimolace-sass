@@ -35,9 +35,9 @@ export default function EleveVieScolaireCalendrierTab() {
         >
           <div
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl"
-            style={{ background: 'rgba(99, 102, 241, 0.15)' }}
+            style={{ background: 'rgba(217, 119, 87, 0.15)' }}
           >
-            <CalendarDays className="h-5 w-5 text-violet-300" />
+            <CalendarDays className="h-5 w-5 text-orange-300" />
           </div>
           <div>
             <p className="text-[14px] font-extrabold text-white/95">Aucun événement bientôt</p>
@@ -46,7 +46,7 @@ export default function EleveVieScolaireCalendrierTab() {
             </p>
             <Link
               to={ELEVE_MOBILE.agenda}
-              className="mt-2.5 inline-flex text-[12px] font-bold text-violet-300/95 underline-offset-2 hover:underline"
+              className="mt-2.5 inline-flex text-[12px] font-bold text-orange-300/95 underline-offset-2 hover:underline"
             >
               Ouvrir l'agenda LIRI
             </Link>
@@ -64,7 +64,7 @@ export default function EleveVieScolaireCalendrierTab() {
               style={{ borderRadius: EV_R.lg, ...listCardSurface() }}
             >
               <div
-                className="absolute bottom-0 left-0 top-0 w-1 bg-gradient-to-b from-sky-400/90 to-violet-500/70"
+                className="absolute bottom-0 left-0 top-0 w-1 bg-gradient-to-b from-amber-400/90 to-orange-500/70"
                 aria-hidden
               />
               <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: EV_MUTED }}>

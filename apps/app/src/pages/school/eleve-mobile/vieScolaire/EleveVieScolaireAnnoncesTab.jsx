@@ -34,9 +34,9 @@ export default function EleveVieScolaireAnnoncesTab() {
         >
           <div
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl"
-            style={{ background: 'rgba(139, 92, 246, 0.12)' }}
+            style={{ background: 'rgba(217, 119, 87, 0.12)' }}
           >
-            <Bell className="h-5 w-5 text-violet-300" />
+            <Bell className="h-5 w-5 text-orange-300" />
           </div>
           <div>
             <p className="text-[14px] font-extrabold text-white/95">Aucune annonce récente</p>
@@ -45,7 +45,7 @@ export default function EleveVieScolaireAnnoncesTab() {
             </p>
             <Link
               to="/notifications"
-              className="mt-2.5 inline-flex text-[12px] font-bold text-violet-300/95 underline-offset-2 hover:underline"
+              className="mt-2.5 inline-flex text-[12px] font-bold text-orange-300/95 underline-offset-2 hover:underline"
             >
               Ouvrir les notifications
             </Link>
@@ -59,7 +59,7 @@ export default function EleveVieScolaireAnnoncesTab() {
               className="flex items-start gap-2.5 p-2.5"
               style={{ borderRadius: EV_R.lg, ...listCardSurface() }}
             >
-              <Bell className="mt-0.5 h-3.5 w-3.5 shrink-0 text-violet-300" />
+              <Bell className="mt-0.5 h-3.5 w-3.5 shrink-0 text-orange-300" />
               <div className="min-w-0">
                 <p className="line-clamp-3 text-[12px] leading-snug text-white/92">{n.line}</p>
                 <p className="mt-0.5 text-[9.5px] font-medium" style={{ color: EV_MUTED }}>

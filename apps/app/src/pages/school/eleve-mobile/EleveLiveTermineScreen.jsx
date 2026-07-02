@@ -29,17 +29,17 @@ import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { EV_BG, EV_CARD, EV_MUTED, EV_ACCENT, EV_LINE, EV_R, EV_SH } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const PAGE_AMBIENT =
-  'radial-gradient(50% 32% at 50% 0%, rgba(123, 97, 255, 0.14), transparent 70%)';
+  'radial-gradient(50% 32% at 50% 0%, rgba(217, 119, 87, 0.14), transparent 70%)';
 const R = 42;
 const C = 2 * Math.PI * R;
 
 const CONFETTI = [
-  { l: '8%', t: '18%', c: '#7B61FF', r: 4, rot: -12 },
+  { l: '8%', t: '18%', c: '#d97757', r: 4, rot: -12 },
   { l: '78%', t: '12%', c: '#22C55E', r: 3, rot: 20 },
   { l: '18%', t: '72%', c: '#F59E0B', r: 3.5, rot: 8 },
-  { l: '88%', t: '58%', c: '#3B82F6', r: 3, rot: -25 },
+  { l: '88%', t: '58%', c: '#e2854f', r: 3, rot: -25 },
   { l: '42%', t: '8%', c: '#EC4899', r: 2.5, rot: 15 },
-  { l: '65%', t: '78%', c: '#A855F7', r: 3, rot: -8 },
+  { l: '65%', t: '78%', c: '#e0926a', r: 3, rot: -8 },
 ];
 
 const LEARN_TILES = [
@@ -48,15 +48,15 @@ const LEARN_TILES = [
     label: 'Voir le replay',
     sub: 'Regarde le cours en replay',
     icon: Play,
-    accent: 'from-violet-600 to-indigo-700',
-    glow: 'rgba(123, 97, 255, 0.45)',
+    accent: 'from-orange-600 to-amber-700',
+    glow: 'rgba(217, 119, 87, 0.45)',
   },
   {
     to: ELEVE_MOBILE.neuron,
     label: 'Résumé IA',
     sub: 'Obtiens le résumé du cours',
     icon: FileText,
-    accent: 'from-emerald-600 to-teal-700',
+    accent: 'from-emerald-600 to-amber-700',
     glow: 'rgba(34, 197, 94, 0.4)',
   },
   {
@@ -64,8 +64,8 @@ const LEARN_TILES = [
     label: 'Prendre des notes',
     sub: 'Revois et complète tes notes',
     icon: ClipboardList,
-    accent: 'from-blue-600 to-sky-700',
-    glow: 'rgba(59, 130, 246, 0.4)',
+    accent: 'from-orange-600 to-amber-700',
+    glow: 'rgba(226, 133, 79, 0.4)',
   },
   {
     to: ELEVE_MOBILE.bibliotheque,
@@ -112,7 +112,7 @@ function ChapterProgressRing({ pct }) {
     <div className="relative flex h-[120px] w-[120px] shrink-0 items-center justify-center">
       <div
         className="absolute inset-0 rounded-full opacity-30 blur-xl"
-        style={{ background: 'radial-gradient(circle, rgba(123, 97, 255, 0.5) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(217, 119, 87, 0.5) 0%, transparent 70%)' }}
         aria-hidden
       />
       <svg className="relative z-10 h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden>
@@ -129,8 +129,8 @@ function ChapterProgressRing({ pct }) {
         />
         <defs>
           <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#7B61FF" />
-            <stop offset="100%" stopColor="#5B8DEF" />
+            <stop offset="0%" stopColor="#d97757" />
+            <stop offset="100%" stopColor="#e0926a" />
           </linearGradient>
         </defs>
       </svg>
@@ -248,8 +248,8 @@ export default function EleveLiveTermineScreen() {
           <div
             className="relative z-10 flex h-[88px] w-[88px] items-center justify-center rounded-full"
             style={{
-              background: 'linear-gradient(145deg, #7B61FF 0%, #5E4BFF 50%, #4c1d95 100%)',
-              boxShadow: '0 0 0 1px rgba(255,255,255,0.12), 0 16px 40px -8px rgba(123, 97, 255, 0.55), inset 0 1px 0 rgba(255,255,255,0.2)',
+              background: 'linear-gradient(145deg, #d97757 0%, #d97757 50%, #7a3620 100%)',
+              boxShadow: '0 0 0 1px rgba(255,255,255,0.12), 0 16px 40px -8px rgba(217, 119, 87, 0.55), inset 0 1px 0 rgba(255,255,255,0.2)',
             }}
           >
             <Check className="h-10 w-10 text-white" strokeWidth={3} />
@@ -267,7 +267,7 @@ export default function EleveLiveTermineScreen() {
         style={{ background: EV_CARD, borderRadius: EV_R.lg, border: `1px solid ${EV_LINE}` }}
       >
         <div className="flex gap-3">
-          <div className="relative h-[88px] w-[88px] shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-violet-800 to-slate-900">
+          <div className="relative h-[88px] w-[88px] shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-orange-800 to-slate-900">
             <div className="absolute inset-0 flex items-end justify-center pb-1 text-2xl font-bold text-white/30">
               PM
             </div>
@@ -290,11 +290,11 @@ export default function EleveLiveTermineScreen() {
               <div
                 className="h-6 w-6 shrink-0 rounded-full"
                 style={{
-                  background: 'linear-gradient(135deg, #6366F1, #4F46E5)',
+                  background: 'linear-gradient(135deg, #d97757, #c96a4c)',
                 }}
               />
               <span className="text-[13px] font-semibold text-white">Prof. Manikongo</span>
-              <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-sky-400" strokeWidth={2.2} />
+              <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-amber-400" strokeWidth={2.2} />
             </div>
           </div>
         </div>
@@ -321,7 +321,7 @@ export default function EleveLiveTermineScreen() {
       <div className="mb-2 mt-7 flex items-center gap-2">
         <span
           className="flex h-8 w-8 items-center justify-center rounded-xl"
-          style={{ background: 'rgba(123, 97, 255, 0.2)' }}
+          style={{ background: 'rgba(217, 119, 87, 0.2)' }}
         >
           <BookOpen className="h-4 w-4" style={{ color: EV_ACCENT }} strokeWidth={2.2} />
         </span>
@@ -357,7 +357,7 @@ export default function EleveLiveTermineScreen() {
       <section
         className="mt-5 overflow-hidden p-4"
         style={{
-          background: 'linear-gradient(135deg, rgba(123, 97, 255, 0.12) 0%, rgba(15, 15, 30, 0.95) 100%)',
+          background: 'linear-gradient(135deg, rgba(217, 119, 87, 0.12) 0%, rgba(17,13,10,0.95) 100%)',
           borderRadius: EV_R.lg,
           border: `1px solid ${EV_LINE}`,
         }}
@@ -366,7 +366,7 @@ export default function EleveLiveTermineScreen() {
           <div
             className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl"
             style={{
-              background: 'linear-gradient(135deg, #7B61FF 0%, #4c1d95 100%)',
+              background: 'linear-gradient(135deg, #d97757 0%, #7a3620 100%)',
               boxShadow: '0 0 0 1px rgba(255,255,255,0.1)',
             }}
             aria-hidden
@@ -375,7 +375,7 @@ export default function EleveLiveTermineScreen() {
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[14px] font-bold text-white">
-              Neuron IA t'accompagne <span className="text-[10px] font-semibold text-violet-300">(BÊTA)</span>
+              Neuron IA t'accompagne <span className="text-[10px] font-semibold text-orange-300">(BÊTA)</span>
             </p>
             <p className="mt-0.5 text-[11.5px] leading-relaxed" style={{ color: EV_MUTED }}>
               Pose des questions sur le cours pour des explications personnalisées.
@@ -386,7 +386,7 @@ export default function EleveLiveTermineScreen() {
           to={ELEVE_MOBILE.neuron}
           className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[15px] font-bold text-white transition active:scale-[0.99]"
           style={{
-            background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #5B21B6 100%)`,
+            background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #a94f33 100%)`,
             boxShadow: EV_SH.cta,
           }}
         >
@@ -396,14 +396,14 @@ export default function EleveLiveTermineScreen() {
       </section>
 
       <div className="mt-6">
-        <EleveSectionTitle action="Voir tout" actionTo={ELEVE_MOBILE.live} actionClassName="!text-violet-400">
+        <EleveSectionTitle action="Voir tout" actionTo={ELEVE_MOBILE.live} actionClassName="!text-orange-400">
           Prochains lives
         </EleveSectionTitle>
         <div className="overflow-hidden p-3.5" style={{ background: EV_CARD, borderRadius: EV_R.lg, border: `1px solid ${EV_LINE}` }}>
           <div className="flex gap-3">
             <div
               className="flex w-[4.5rem] shrink-0 flex-col items-center justify-center rounded-xl border border-white/10 py-2 text-center"
-              style={{ background: 'rgba(123, 97, 255, 0.1)' }}
+              style={{ background: 'rgba(217, 119, 87, 0.1)' }}
             >
               <span className="text-[8px] font-extrabold uppercase tracking-wider" style={{ color: EV_ACCENT }}>
                 Demain
@@ -437,8 +437,8 @@ export default function EleveLiveTermineScreen() {
                   to={ELEVE_MOBILE.live}
                   className="inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-bold text-white"
                   style={{
-                    background: `linear-gradient(90deg, ${EV_ACCENT}, #5E4BFF)`,
-                    boxShadow: '0 4px 14px -3px rgba(123, 97, 255, 0.5)',
+                    background: `linear-gradient(90deg, ${EV_ACCENT}, #d97757)`,
+                    boxShadow: '0 4px 14px -3px rgba(217, 119, 87, 0.5)',
                   }}
                 >
                   <Star className="h-3.5 w-3.5" strokeWidth={2.2} />

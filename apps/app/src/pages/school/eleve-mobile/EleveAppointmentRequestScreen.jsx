@@ -434,8 +434,8 @@ export default function EleveAppointmentRequestScreen() {
               <motion.div key="slot" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }}>
                 <AppCard>
                   <div className="flex items-start gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-sky-400/20 bg-sky-400/10">
-                      <CalendarClock className="h-5 w-5 text-sky-300" />
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-amber-400/20 bg-amber-400/10">
+                      <CalendarClock className="h-5 w-5 text-amber-300" />
                     </div>
                     <div>
                       <p className="text-[17px] font-extrabold text-white">Date et créneau</p>
@@ -537,7 +537,7 @@ export default function EleveAppointmentRequestScreen() {
           </AnimatePresence>
         </main>
 
-        <footer className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-[#0B0B0F]/92 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl">
+        <footer className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-[#0b0b0a]/92 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl">
           <button
             type="button"
             disabled={booking}

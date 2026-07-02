@@ -11,7 +11,7 @@ import {
 import { EV_MUTED, EV_R, EV_LINE, EV_SH, EV_ACCENT } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const CTA = {
-  background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #5B21B6 100%)`,
+  background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #a94f33 100%)`,
   boxShadow: EV_SH.cta,
   borderRadius: EV_R.lg,
 };
@@ -35,10 +35,10 @@ export function InstallAppGate({ onContinueWeb, onOpenStore }) {
     >
       <div className="mb-6 flex justify-center">
         <div
-          className="flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-500/30 bg-violet-500/10"
+          className="flex h-16 w-16 items-center justify-center rounded-2xl border border-orange-500/30 bg-orange-500/10"
           style={{ borderRadius: EV_R.lg }}
         >
-          <Smartphone className="h-8 w-8 text-violet-200" aria-hidden />
+          <Smartphone className="h-8 w-8 text-orange-200" aria-hidden />
         </div>
       </div>
       <h1
@@ -70,7 +70,7 @@ export function InstallAppGate({ onContinueWeb, onOpenStore }) {
           <Button
             type="button"
             variant="outline"
-            className="h-12 w-full border-violet-500/40 text-violet-100 hover:bg-violet-500/10"
+            className="h-12 w-full border-orange-500/40 text-orange-100 hover:bg-orange-500/10"
             style={{ borderColor: EV_LINE }}
             onClick={() => {
               setStudentWebLimitedOptIn();
@@ -86,7 +86,7 @@ export function InstallAppGate({ onContinueWeb, onOpenStore }) {
           <Button
             type="button"
             variant="outline"
-            className="h-12 w-full border-violet-500/40 text-violet-100 hover:bg-violet-500/10"
+            className="h-12 w-full border-orange-500/40 text-orange-100 hover:bg-orange-500/10"
             style={{ borderColor: EV_LINE }}
             asChild
           >

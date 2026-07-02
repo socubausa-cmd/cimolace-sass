@@ -26,7 +26,7 @@ import { useLiveSessionChat } from '@/hooks/useLiveSessionChat';
 import { useLiveSessionHeaderInfo } from '@/hooks/useLiveSessionHeaderInfo';
 import { cn } from '@/lib/utils';
 
-const PURPLE = '#7B61FF';
+const PURPLE = '#d97757';
 const TABS = [
   { id: 'cours', label: 'Cours', icon: BookOpen },
   { id: 'chat', label: 'Chat', icon: MessageCircle },
@@ -152,7 +152,7 @@ export default function EleveLiveSessionChatScreen() {
         <div
           className="shrink-0 pt-[max(0.35rem,env(safe-area-inset-top))]"
           style={{
-            backgroundImage: 'radial-gradient(50% 40% at 50% 0%, rgba(123, 97, 255, 0.1), transparent 65%)',
+            backgroundImage: 'radial-gradient(50% 40% at 50% 0%, rgba(217, 119, 87, 0.1), transparent 65%)',
           }}
         >
           <LiriStatusBar />
@@ -205,12 +205,12 @@ export default function EleveLiveSessionChatScreen() {
                 <div
                   key={t.id}
                   className={cn('relative flex flex-col items-center gap-1 rounded-xl py-2.5', on ? 'text-white' : 'text-white/40')}
-                  style={on ? { background: 'rgba(123, 97, 255, 0.2)' } : { background: 'transparent' }}
+                  style={on ? { background: 'rgba(217, 119, 87, 0.2)' } : { background: 'transparent' }}
                 >
                   {on && (
                     <span
                       className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full"
-                      style={{ background: `linear-gradient(90deg, ${EV_ACCENT}, #a78bfa)`, boxShadow: `0 0 12px ${EV_ACCENT}` }}
+                      style={{ background: `linear-gradient(90deg, ${EV_ACCENT}, #e0926a)`, boxShadow: `0 0 12px ${EV_ACCENT}` }}
                     />
                   )}
                   <Ic className="h-5 w-5" strokeWidth={on ? 2.2 : 1.8} />
@@ -252,7 +252,7 @@ export default function EleveLiveSessionChatScreen() {
             <>
               <div
                 className="mb-3 border p-3"
-                style={{ borderRadius: EV_R.md, borderColor: `${PURPLE}50`, background: 'rgba(123, 97, 255, 0.1)', boxShadow: EV_SH.sm }}
+                style={{ borderRadius: EV_R.md, borderColor: `${PURPLE}50`, background: 'rgba(217, 119, 87, 0.1)', boxShadow: EV_SH.sm }}
               >
                 <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide" style={{ color: PURPLE }}>
                   <Pin className="h-3.5 w-3.5" strokeWidth={2.2} />
@@ -303,14 +303,14 @@ export default function EleveLiveSessionChatScreen() {
                         className="h-9 w-9 shrink-0 rounded-full ring-1 ring-white/10"
                         style={{
                           background: isProf
-                            ? 'linear-gradient(135deg, #5b21b6, #7B61FF)'
-                            : 'linear-gradient(135deg, #3b82f6, #6366F1)',
+                            ? 'linear-gradient(135deg, #a94f33, #d97757)'
+                            : 'linear-gradient(135deg, #e2854f, #d97757)',
                         }}
                       />
                       <div className="min-w-0 flex-1">
                         <div className="mb-0.5 flex items-center gap-1.5">
                           <span
-                            className={cn('text-[12.5px] font-bold', isProf ? 'text-violet-300' : 'text-sky-300')}
+                            className={cn('text-[12.5px] font-bold', isProf ? 'text-orange-300' : 'text-amber-300')}
                           >
                             {who}
                             {String(m.user_id) === String(user?.id) ? ' (toi)' : ''}
@@ -318,7 +318,7 @@ export default function EleveLiveSessionChatScreen() {
                           {isProf ? (
                             <span
                               className="rounded px-1 py-px text-[7px] font-extrabold tracking-wide"
-                              style={{ background: 'rgba(123, 97, 255, 0.35)', color: '#e9d5ff' }}
+                              style={{ background: 'rgba(217, 119, 87, 0.35)', color: '#f0d0be' }}
                             >
                               PROF
                             </span>
@@ -326,7 +326,7 @@ export default function EleveLiveSessionChatScreen() {
                         </div>
                         <div
                           className="inline-block max-w-[92%] rounded-2xl rounded-tl-sm border px-3 py-2"
-                          style={{ borderColor: EV_LINE, background: 'rgba(22, 22, 30, 0.95)' }}
+                          style={{ borderColor: EV_LINE, background: 'rgba(22,18,13,0.95)' }}
                         >
                           <p className="text-[13px] leading-relaxed text-white/95 whitespace-pre-wrap break-words">
                             {m.message}
@@ -353,7 +353,7 @@ export default function EleveLiveSessionChatScreen() {
         >
           {live && !user?.id ? (
             <div className="mx-auto max-w-lg pb-2 text-center text-[12px] text-amber-100/90">
-              <Link to={loginRedirect} className="font-semibold text-violet-300 underline-offset-2 hover:underline">
+              <Link to={loginRedirect} className="font-semibold text-orange-300 underline-offset-2 hover:underline">
                 Se connecter
               </Link>{' '}
               pour écrire dans le chat de session
@@ -385,7 +385,7 @@ export default function EleveLiveSessionChatScreen() {
               type="submit"
               className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white disabled:opacity-40"
               style={{
-                background: `linear-gradient(135deg, ${EV_ACCENT} 0%, #5B21B6 100%)`,
+                background: `linear-gradient(135deg, ${EV_ACCENT} 0%, #a94f33 100%)`,
                 boxShadow: EV_SH.cta,
               }}
               disabled={!canPost || !draft.trim()}
@@ -419,15 +419,15 @@ function DemoMessageRow({ m }) {
     <li className="flex gap-2">
       <div
         className="h-9 w-9 shrink-0 rounded-full ring-1 ring-white/10"
-        style={{ background: isProf ? 'linear-gradient(135deg, #5b21b6, #7B61FF)' : 'linear-gradient(135deg, #3b82f6, #6366F1)' }}
+        style={{ background: isProf ? 'linear-gradient(135deg, #a94f33, #d97757)' : 'linear-gradient(135deg, #e2854f, #d97757)' }}
       />
       <div className="min-w-0 flex-1">
         <div className="mb-0.5 flex items-center gap-1.5">
-          <span className={cn('text-[12.5px] font-bold', isProf ? 'text-violet-300' : 'text-sky-300')}>{m.who}</span>
+          <span className={cn('text-[12.5px] font-bold', isProf ? 'text-orange-300' : 'text-amber-300')}>{m.who}</span>
           {isProf ? (
             <span
               className="rounded px-1 py-px text-[7px] font-extrabold tracking-wide"
-              style={{ background: 'rgba(123, 97, 255, 0.35)', color: '#e9d5ff' }}
+              style={{ background: 'rgba(217, 119, 87, 0.35)', color: '#f0d0be' }}
             >
               PROF
             </span>
@@ -436,7 +436,7 @@ function DemoMessageRow({ m }) {
         <div className="flex items-end gap-2">
           <div
             className="inline-block max-w-[88%] rounded-2xl rounded-tl-sm border px-3 py-2"
-            style={{ borderColor: EV_LINE, background: 'rgba(22, 22, 30, 0.95)' }}
+            style={{ borderColor: EV_LINE, background: 'rgba(22,18,13,0.95)' }}
           >
             <p className="text-[13px] leading-relaxed text-white/95">{m.text}</p>
             <p className="mt-0.5 text-right text-[10px] tabular-nums" style={{ color: EV_MUTED }}>
@@ -444,7 +444,7 @@ function DemoMessageRow({ m }) {
             </p>
           </div>
           <div
-            className={cn('mb-0.5 flex shrink-0 flex-col items-center gap-0.5 rounded-lg px-1 py-0.5', m.heartGlow && 'text-violet-300')}
+            className={cn('mb-0.5 flex shrink-0 flex-col items-center gap-0.5 rounded-lg px-1 py-0.5', m.heartGlow && 'text-orange-300')}
           >
             <Heart
               className={cn('h-4 w-4', m.liked && 'fill-red-500 text-red-500', !m.liked && 'text-white/35')}

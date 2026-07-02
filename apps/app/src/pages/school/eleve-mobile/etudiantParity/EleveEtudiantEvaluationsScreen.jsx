@@ -42,7 +42,7 @@ export default function EleveEtudiantEvaluationsScreen() {
       >
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3" aria-busy>
-            <Loader2 className="h-8 w-8 animate-spin text-violet-300" />
+            <Loader2 className="h-8 w-8 animate-spin text-orange-300" />
           </div>
         ) : (
           <>
@@ -66,7 +66,7 @@ export default function EleveEtudiantEvaluationsScreen() {
                 ))}
               </div>
             )}
-            <h3 className="mb-2 text-[11px] font-extrabold uppercase tracking-wider text-violet-200/80">Résultats</h3>
+            <h3 className="mb-2 text-[11px] font-extrabold uppercase tracking-wider text-orange-200/80">Résultats</h3>
             {completed.length === 0 ? (
               <p className="text-sm font-medium" style={{ color: EV_MUTED }}>
                 Aucune note enregistrée.

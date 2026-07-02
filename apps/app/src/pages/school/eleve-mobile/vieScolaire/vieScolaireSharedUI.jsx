@@ -9,10 +9,10 @@ export { EV_BG, EV_PAGE_AMBIENT, EV_R, EV_SH, EV_ACCENT, EV_MUTED, EV_LINE } fro
 export function pagePanelSurface() {
   return {
     background: [
-      'radial-gradient(ellipse 100% 80% at 0% 0%, rgba(99, 102, 241, 0.12) 0%, transparent 55%)',
-      'linear-gradient(195deg, rgba(20, 22, 40, 0.96) 0%, rgba(8, 10, 20, 0.98) 100%)',
+      'radial-gradient(ellipse 100% 80% at 0% 0%, rgba(217, 119, 87, 0.12) 0%, transparent 55%)',
+      'linear-gradient(195deg, rgba(20,16,12,0.96) 0%, rgba(12,10,8,0.98) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.14)',
+    border: '1px solid rgba(240, 200, 175, 0.14)',
     boxShadow: ['inset 0 1px 0 rgba(255,255,255,0.05)', EV_SH.sm].join(', '),
   };
 }
@@ -20,8 +20,8 @@ export function pagePanelSurface() {
 export function listCardSurface() {
   return {
     background: [
-      'radial-gradient(ellipse 90% 70% at 8% 0%, rgba(123, 97, 255, 0.1) 0%, transparent 50%)',
-      'linear-gradient(198deg, rgba(22, 24, 38, 0.95) 0%, rgba(12, 14, 24, 0.99) 100%)',
+      'radial-gradient(ellipse 90% 70% at 8% 0%, rgba(217, 119, 87, 0.1) 0%, transparent 50%)',
+      'linear-gradient(198deg, rgba(22,18,13,0.95) 0%, rgba(15,11,9,0.99) 100%)',
     ].join(', '),
     border: `1px solid ${EV_LINE}`,
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 2px 14px -4px rgba(0,0,0,0.4)',
@@ -51,9 +51,9 @@ const TONE = {
     glow: '0 0 22px -5px rgba(251, 113, 133, 0.22), inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 14px -4px rgba(0,0,0,0.4)',
   },
   sky: {
-    bar: 'from-sky-500/45 to-sky-600/5',
-    icon: 'text-sky-200',
-    glow: '0 0 22px -5px rgba(56, 189, 248, 0.22), inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 14px -4px rgba(0,0,0,0.4)',
+    bar: 'from-amber-500/45 to-amber-600/5',
+    icon: 'text-amber-200',
+    glow: '0 0 22px -5px rgba(230, 160, 110, 0.22), inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 14px -4px rgba(0,0,0,0.4)',
   },
 };
 

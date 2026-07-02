@@ -69,7 +69,7 @@ export default function EleveBoutiqueSacreeScreen() {
         className="relative flex w-full flex-1 flex-col pb-[calc(5.5rem+env(safe-area-inset-bottom))]"
         style={{
           minHeight: '100dvh',
-          backgroundColor: '#0B0B0F',
+          backgroundColor: '#0b0b0a',
           backgroundImage: EV_PAGE_AMBIENT,
         }}
       >
@@ -98,7 +98,7 @@ export default function EleveBoutiqueSacreeScreen() {
           <SectionCard
             className="border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
             style={{
-              background: `linear-gradient(165deg, ${GOLD}18 0%, rgba(9, 10, 16, 0.96) 55%)`,
+              background: `linear-gradient(165deg, ${GOLD}18 0%, rgba(12,10,8,0.96) 55%)`,
             }}
           >
             <p className="text-[14px] italic leading-relaxed text-white/90">
@@ -272,7 +272,7 @@ export default function EleveBoutiqueSacreeScreen() {
         </div>
 
         <div
-          className="fixed bottom-0 left-0 right-0 z-20 border-t border-white/[0.07] bg-[#0B0B0F]/95 px-4 py-3 backdrop-blur-md"
+          className="fixed bottom-0 left-0 right-0 z-20 border-t border-white/[0.07] bg-[#0b0b0a]/95 px-4 py-3 backdrop-blur-md"
           style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
         >
           <div className="mx-auto flex max-w-lg flex-col gap-2">

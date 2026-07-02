@@ -23,28 +23,28 @@ import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 
 // ── Couleurs session ──────────────────────────────────────────────────────────
 const SESSION_STYLES = {
-  cours:      { dot: '#38bdf8', label: 'Cours',       bg: 'rgba(56,189,248,0.1)'  },
+  cours:      { dot: '#e2854f', label: 'Cours',       bg: 'rgba(230, 160, 110,0.1)'  },
   live:       { dot: '#f43f5e', label: 'Live',        bg: 'rgba(244,63,94,0.1)'   },
   atelier:    { dot: '#34d399', label: 'Atelier',     bg: 'rgba(52,211,153,0.1)'  },
   evaluation: { dot: '#D4AF37', label: 'Évaluation',  bg: 'rgba(212,175,55,0.1)'  },
-  revision:   { dot: '#a78bfa', label: 'Révision',    bg: 'rgba(167,139,250,0.1)' },
-  conge:      { dot: '#475569', label: 'Congé',       bg: 'rgba(71,85,105,0.08)'  },
+  revision:   { dot: '#e0926a', label: 'Révision',    bg: 'rgba(224, 146, 106,0.1)' },
+  conge:      { dot: '#475569', label: 'Congé',       bg: 'rgba(90,72,58,0.08)'  },
 };
 
 const CYCLE_META = {
-  fondements:        { label: 'Fondements',        icon: '📗', color: '#38bdf8' },
-  approfondissement: { label: 'Approfondissement',  icon: '📘', color: '#7B61FF' },
+  fondements:        { label: 'Fondements',        icon: '📗', color: '#e2854f' },
+  approfondissement: { label: 'Approfondissement',  icon: '📘', color: '#d97757' },
   maitrise:          { label: 'Maîtrise',           icon: '📙', color: '#D4AF37' },
 };
 
 // ── Helpers surface ───────────────────────────────────────────────────────────
 const cardSurface = (active = false) => ({
   background: active
-    ? `radial-gradient(ellipse 100% 80% at 10% 0%, rgba(123,97,255,0.18), transparent 65%), ${EV_CARD}`
+    ? `radial-gradient(ellipse 100% 80% at 10% 0%, rgba(217, 119, 87,0.18), transparent 65%), ${EV_CARD}`
     : EV_CARD,
-  border:     `1px solid ${active ? 'rgba(123,97,255,0.3)' : EV_LINE}`,
+  border:     `1px solid ${active ? 'rgba(217, 119, 87,0.3)' : EV_LINE}`,
   borderRadius: EV_R.lg,
-  boxShadow:    active ? `0 0 0 1px rgba(123,97,255,0.15), ${EV_SH.md}` : EV_SH.md,
+  boxShadow:    active ? `0 0 0 1px rgba(217, 119, 87,0.15), ${EV_SH.md}` : EV_SH.md,
 });
 
 // ── Barre de progression ──────────────────────────────────────────────────────
@@ -174,7 +174,7 @@ function WeekCard({ week, isCurrent, isExpanded, onToggle, onEnterClass }) {
                   <div className="flex flex-wrap gap-1.5">
                     {week.liri_segments.map(seg => (
                       <span key={seg} className="text-[9px] px-2 py-0.5 rounded-full"
-                        style={{ background: 'rgba(56,189,248,0.1)', color: '#38bdf8' }}>
+                        style={{ background: 'rgba(230, 160, 110,0.1)', color: '#e2854f' }}>
                         {seg}
                       </span>
                     ))}

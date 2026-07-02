@@ -13,12 +13,12 @@ import { format } from 'date-fns';
 import { fr as frLocale } from 'date-fns/locale';
 
 const PAGE_AMBIENT =
-  'radial-gradient(50% 32% at 50% 0%, rgba(123, 97, 255, 0.14), transparent 70%)';
+  'radial-gradient(50% 32% at 50% 0%, rgba(217, 119, 87, 0.14), transparent 70%)';
 
 const LIST_HALO = [
-  'rgba(45, 212, 191, 0.1)',
-  'rgba(99, 102, 241, 0.12)',
-  'rgba(124, 58, 237, 0.1)',
+  'rgba(230, 160, 110, 0.1)',
+  'rgba(217, 119, 87, 0.12)',
+  'rgba(201, 106, 76, 0.1)',
 ];
 
 function replayRowSurface(index) {
@@ -26,9 +26,9 @@ function replayRowSurface(index) {
   return {
     background: [
       `radial-gradient(ellipse 100% 80% at 0% 0%, ${h} 0%, transparent 55%)`,
-      'linear-gradient(195deg, rgba(24, 26, 40, 0.97) 0%, rgba(10, 12, 24, 0.99) 100%)',
+      'linear-gradient(195deg, rgba(24,20,15,0.97) 0%, rgba(14,11,9,0.99) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.18)',
+    border: '1px solid rgba(240, 200, 175, 0.18)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07), 0 2px 12px -4px rgba(0,0,0,0.4)',
   };
 }
@@ -36,13 +36,13 @@ function replayRowSurface(index) {
 function continueCardSurface() {
   return {
     background: [
-      'radial-gradient(ellipse 100% 70% at 20% 0%, rgba(99, 102, 241, 0.2) 0%, transparent 58%)',
-      'linear-gradient(190deg, rgba(26, 22, 48, 0.98) 0%, rgba(10, 10, 22, 0.99) 100%)',
+      'radial-gradient(ellipse 100% 70% at 20% 0%, rgba(217, 119, 87, 0.2) 0%, transparent 58%)',
+      'linear-gradient(190deg, rgba(26,18,13,0.98) 0%, rgba(12,10,8,0.99) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.22)',
+    border: '1px solid rgba(240, 200, 175, 0.22)',
     boxShadow: [
       'inset 0 1px 0 rgba(255,255,255,0.1)',
-      '0 12px 32px -12px rgba(99, 102, 241, 0.25)',
+      '0 12px 32px -12px rgba(217, 119, 87, 0.25)',
       '0 4px 16px -4px rgba(0,0,0,0.45)',
     ].join(', '),
   };
@@ -59,8 +59,8 @@ function ReplaysFilterBar({ value, onChange }) {
     <div
       className="mb-4 flex gap-1.5 rounded-[14px] border p-1"
       style={{
-        borderColor: 'rgba(165, 180, 252, 0.18)',
-        background: 'linear-gradient(180deg, rgba(22, 24, 40, 0.85) 0%, rgba(10, 10, 20, 0.92) 100%)',
+        borderColor: 'rgba(240, 200, 175, 0.18)',
+        background: 'linear-gradient(180deg, rgba(22,18,13,0.85) 0%, rgba(12,10,8,0.92) 100%)',
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 14px -6px rgba(0,0,0,0.45)',
       }}
     >
@@ -75,10 +75,10 @@ function ReplaysFilterBar({ value, onChange }) {
             style={
               on
                 ? {
-                    background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #5E4BFF 50%, #4F46E5 100%)`,
+                    background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #d97757 50%, #c96a4c 100%)`,
                     boxShadow: [
                       '0 0 0 1px rgba(255,255,255,0.12)',
-                      '0 4px 18px -4px rgba(99, 102, 241, 0.45)',
+                      '0 4px 18px -4px rgba(217, 119, 87, 0.45)',
                       EV_SH.tab,
                     ].join(', '),
                   }
@@ -252,7 +252,7 @@ export default function EleveReplaysScreen() {
           {/* Featured */}
           {!loading && featured && (
             <>
-              <p className="mb-2 text-[9px] font-extrabold uppercase tracking-[0.2em] text-indigo-200/50">À la une</p>
+              <p className="mb-2 text-[9px] font-extrabold uppercase tracking-[0.2em] text-amber-200/50">À la une</p>
               <ReplayFeaturedCard replay={featured} />
             </>
           )}
@@ -303,7 +303,7 @@ function ReplayFeaturedCard({ replay: r }) {
       <div
         aria-hidden
         className="pointer-events-none absolute -right-6 -top-4 h-24 w-24 rounded-full opacity-45 blur-2xl"
-        style={{ background: 'radial-gradient(circle, rgba(196, 181, 253, 0.35) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(235, 200, 170, 0.35) 0%, transparent 70%)' }}
       />
       <div className="relative aspect-[16/9] w-full">
         {s?.cover_image_url ? (
@@ -311,11 +311,11 @@ function ReplayFeaturedCard({ replay: r }) {
         ) : (
           <div
             className="absolute inset-0"
-            style={{ background: 'linear-gradient(135deg, #1a0a2e 0%, #312e81 40%, #0f172a 100%)' }}
+            style={{ background: 'linear-gradient(135deg, #1a120d 0%, #3a2418 40%, #1c1a17 100%)' }}
           />
         )}
         <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-white/10 shadow-[0_0_32px_-8px_rgba(99,102,241,0.5)] backdrop-blur-sm">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-white/10 shadow-[0_0_32px_-8px_rgba(217, 119, 87,0.5)] backdrop-blur-sm">
             <Play className="ml-0.5 h-7 w-7 fill-white text-white" />
           </span>
         </div>
@@ -363,7 +363,7 @@ function ReplayRowCard({ replay: r, index }) {
           className="relative h-[4.5rem] w-28 shrink-0 overflow-hidden rounded-[12px] border"
           style={{
             borderColor: 'rgba(255,255,255,0.1)',
-            background: 'linear-gradient(145deg, #1e1b4b, #312e81)',
+            background: 'linear-gradient(145deg, #1f160f, #3a2418)',
           }}
         >
           {s?.cover_image_url ? (

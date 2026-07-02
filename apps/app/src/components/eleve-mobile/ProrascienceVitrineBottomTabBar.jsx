@@ -11,7 +11,7 @@ function VitrineSideTab({ to, label, icon: Icon, end }) {
       className={({ isActive }) =>
         cn(
           'flex min-w-0 flex-col items-center justify-end gap-1 rounded-xl py-1.5 transition-colors',
-          isActive ? 'text-violet-400' : 'text-white/50 hover:text-white/85',
+          isActive ? 'text-orange-400' : 'text-white/50 hover:text-white/85',
         )
       }
     >
@@ -46,7 +46,7 @@ function VitrineCenterRdvTab({ to, label, shortLabel, icon: Icon }) {
               )}
               style={{
                 background:
-                  'radial-gradient(circle, rgba(56,189,248,0.88) 0%, rgba(124,92,255,0.55) 38%, rgba(123,97,255,0.2) 55%, transparent 72%)',
+                  'radial-gradient(circle, rgba(230, 160, 110,0.88) 0%, rgba(217, 119, 87,0.55) 38%, rgba(217, 119, 87,0.2) 55%, transparent 72%)',
               }}
             />
             <span
@@ -54,13 +54,13 @@ function VitrineCenterRdvTab({ to, label, shortLabel, icon: Icon }) {
               className="pointer-events-none absolute -inset-1 rounded-full opacity-60 blur-md transition-opacity"
               style={{
                 background:
-                  'radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(200,220,255,0.12) 45%, transparent 70%)',
+                  'radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(240, 210, 190,0.12) 45%, transparent 70%)',
               }}
             />
             <span
-              className="relative flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-full shadow-[0_12px_40px_-6px_rgba(123,97,255,0.55),0_0_0_1px_rgba(255,255,255,0.14),inset_0_1px_0_rgba(255,255,255,0.32),inset_0_-1px_0_rgba(0,0,0,0.2),0_0_0_0.5px_rgba(123,97,255,0.4)] transition-transform active:scale-95"
+              className="relative flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-full shadow-[0_12px_40px_-6px_rgba(217, 119, 87,0.55),0_0_0_1px_rgba(255,255,255,0.14),inset_0_1px_0_rgba(255,255,255,0.32),inset_0_-1px_0_rgba(0,0,0,0.2),0_0_0_0.5px_rgba(217, 119, 87,0.4)] transition-transform active:scale-95"
               style={{
-                background: 'linear-gradient(165deg, #7B61FF 0%, #6D28D9 40%, #5B21B6 100%)',
+                background: 'linear-gradient(165deg, #d97757 0%, #a94f33 40%, #a94f33 100%)',
               }}
             >
               <Icon className="h-7 w-7 text-white" strokeWidth={2.2} />
@@ -68,7 +68,7 @@ function VitrineCenterRdvTab({ to, label, shortLabel, icon: Icon }) {
             <span
               className={cn(
                 'mt-1.5 line-clamp-2 max-w-[4.8rem] text-center text-[8px] font-semibold leading-tight',
-                isRdv ? 'text-violet-300' : 'text-white/50',
+                isRdv ? 'text-orange-300' : 'text-white/50',
               )}
             >
               {shortLabel}
@@ -91,10 +91,10 @@ export function ProrascienceVitrineBottomTabBar() {
       <div className="relative">
         <div
           aria-hidden
-          className="absolute inset-0 border-t border-white/[0.1] shadow-[0_-8px_32px_rgba(0,0,0,0.5),0_-20px_48px_-12px_rgba(99,102,241,0.12),0_-1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl backdrop-saturate-150"
+          className="absolute inset-0 border-t border-white/[0.1] shadow-[0_-8px_32px_rgba(0,0,0,0.5),0_-20px_48px_-12px_rgba(217, 119, 87,0.12),0_-1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl backdrop-saturate-150"
           style={{
             background:
-              'linear-gradient(180deg, rgba(24,24,36,0.78) 0%, rgba(14,14,22,0.94) 40%, rgba(11, 11, 15, 0.96) 100%)',
+              'linear-gradient(180deg, rgba(24,20,15,0.78) 0%, rgba(15,12,10,0.94) 40%, rgba(11, 11, 15, 0.96) 100%)',
           }}
         />
         <div className="relative mx-auto grid max-w-lg grid-cols-5 items-end gap-0.5 px-0.5 pb-1.5 pt-2 sm:px-2">

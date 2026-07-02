@@ -39,7 +39,7 @@ export default function EleveEtudiantNotesScreen() {
       >
         {loading ? (
           <div className="flex flex-col items-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-violet-300" />
+            <Loader2 className="h-8 w-8 animate-spin text-orange-300" />
           </div>
         ) : (
           <>

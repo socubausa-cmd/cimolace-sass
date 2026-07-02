@@ -164,7 +164,7 @@ function SectionLink({ to, icon: Icon, title, sub }) {
         className="flex items-center gap-3 p-3"
         style={{ borderRadius: EV_R.lg, ...listCardSurface() }}
       >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-violet-500/15 text-violet-200 ring-1 ring-violet-400/25">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-orange-500/15 text-orange-200 ring-1 ring-orange-400/25">
           <Icon className="h-[18px] w-[18px]" strokeWidth={2.1} />
         </div>
         <div className="min-w-0 flex-1 text-left">

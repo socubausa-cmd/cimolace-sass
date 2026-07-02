@@ -143,7 +143,7 @@ export function EleveMobileShell({
                 className="h-8 max-w-[140px] object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]"
               />
             ) : (
-              <LiriWordmark variant="official" officialBaseline={false} size="header" className="drop-shadow-[0_2px_12px_rgba(91,141,239,0.2)]" />
+              <LiriWordmark variant="official" officialBaseline={false} size="header" className="drop-shadow-[0_2px_12px_rgba(226, 133, 79,0.2)]" />
             )}
             <p className="mt-1.5 text-[9px] font-bold uppercase tracking-[0.4em] text-white/50">
               {branding?.name ? branding.name.toUpperCase() : 'LEARN • LIVE • GROW'}
@@ -158,7 +158,7 @@ export function EleveMobileShell({
             >
               <BellIcon />
               {notificationCount > 0 ? (
-                <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#E53935] px-1 text-[9px] font-extrabold text-white ring-2 ring-[#0B0B0F]">
+                <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#E53935] px-1 text-[9px] font-extrabold text-white ring-2 ring-[#0b0b0a]">
                   {notificationCount > 99 ? '99+' : notificationCount}
                 </span>
               ) : null}
@@ -173,7 +173,7 @@ export function EleveMobileShell({
               >
                 <AvatarContent user={user} initials={initials} />
                 {showAvatarOnline && user ? (
-                  <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0B0B0F] bg-[#22C55E] shadow-[0_0_6px_rgba(34,197,94,0.9)]" />
+                  <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0b0b0a] bg-[#22C55E] shadow-[0_0_6px_rgba(34,197,94,0.9)]" />
                 ) : null}
               </button>
             ) : (
@@ -184,7 +184,7 @@ export function EleveMobileShell({
               >
                 <AvatarContent user={user} initials={initials} />
                 {showAvatarOnline && user ? (
-                  <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0B0B0F] bg-[#22C55E] shadow-[0_0_6px_rgba(34,197,94,0.9)]" />
+                  <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0b0b0a] bg-[#22C55E] shadow-[0_0_6px_rgba(34,197,94,0.9)]" />
                 ) : null}
               </Link>
             )}
@@ -218,7 +218,7 @@ function AvatarContent({ user, initials }) {
     <div
       className="flex h-full w-full items-center justify-center text-[12px] font-bold text-white"
       style={{
-        background: 'linear-gradient(145deg, #4a6cff 0%, #7c5cff 55%, #a855f7 100%)',
+        background: 'linear-gradient(145deg, #d97757 0%, #c96a4c 55%, #e0926a 100%)',
       }}
     >
       {initials || <User className="h-4 w-4" />}
@@ -284,10 +284,10 @@ function EleveBottomTabBar({ messagesTabBadge = 0 }) {
       <div className="relative">
         <div
           aria-hidden
-          className="absolute inset-0 border-t border-white/[0.1] shadow-[0_-8px_32px_rgba(0,0,0,0.5),0_-20px_48px_-12px_rgba(99,102,241,0.12),0_-1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl backdrop-saturate-150"
+          className="absolute inset-0 border-t border-white/[0.1] shadow-[0_-8px_32px_rgba(0,0,0,0.5),0_-20px_48px_-12px_rgba(217, 119, 87,0.12),0_-1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl backdrop-saturate-150"
           style={{
             background:
-              'linear-gradient(180deg, rgba(24,24,36,0.78) 0%, rgba(14,14,22,0.94) 40%, rgba(11, 11, 15, 0.96) 100%)',
+              'linear-gradient(180deg, rgba(24,20,15,0.78) 0%, rgba(15,12,10,0.94) 40%, rgba(11, 11, 15, 0.96) 100%)',
           }}
         />
         <div className="relative mx-auto grid max-w-lg grid-cols-6 items-end gap-0 px-0.5 pb-1.5 pt-2 sm:px-1">
@@ -373,7 +373,7 @@ function CenterLiveTab() {
               )}
               style={{
                 background:
-                  'radial-gradient(circle, rgba(91,141,239,0.9) 0%, rgba(124,92,255,0.6) 38%, rgba(123,97,255,0.2) 55%, transparent 72%)',
+                  'radial-gradient(circle, rgba(226, 133, 79,0.9) 0%, rgba(217, 119, 87,0.6) 38%, rgba(217, 119, 87,0.2) 55%, transparent 72%)',
               }}
             />
             <span
@@ -381,13 +381,13 @@ function CenterLiveTab() {
               className="pointer-events-none absolute -inset-1 rounded-full opacity-60 blur-md transition-opacity"
               style={{
                 background:
-                  'radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(200,220,255,0.12) 45%, transparent 70%)',
+                  'radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(240, 210, 190,0.12) 45%, transparent 70%)',
               }}
             />
             <span
-              className="relative flex h-[58px] w-[58px] items-center justify-center rounded-full shadow-[0_12px_40px_-6px_rgba(91,141,239,0.8),0_0_0_1px_rgba(255,255,255,0.14),inset_0_1px_0_rgba(255,255,255,0.32),inset_0_-1px_0_rgba(0,0,0,0.2),0_0_0_0.5px_rgba(123,97,255,0.4)] transition-transform active:scale-95"
+              className="relative flex h-[58px] w-[58px] items-center justify-center rounded-full shadow-[0_12px_40px_-6px_rgba(226, 133, 79,0.8),0_0_0_1px_rgba(255,255,255,0.14),inset_0_1px_0_rgba(255,255,255,0.32),inset_0_-1px_0_rgba(0,0,0,0.2),0_0_0_0.5px_rgba(217, 119, 87,0.4)] transition-transform active:scale-95"
               style={{
-                background: 'linear-gradient(165deg, #5b8def 0%, #5c6cff 35%, #7c5cff 65%, #8b4dff 100%)',
+                background: 'linear-gradient(165deg, #e0926a 0%, #c96a4c 35%, #c96a4c 65%, #a94f33 100%)',
               }}
             >
               <Radio className="h-7 w-7 text-white" strokeWidth={2.2} />
@@ -412,12 +412,12 @@ function CenterLiveTab() {
 /** Tuile d'accès rapide — icône colorée 3D dans un carré arrondi. */
 export function QuickTile({ to, icon: Icon, label, accent = 'blue', live = false, soon = false }) {
   const palettes = {
-    blue: { from: '#4A6CFF', to: '#5B8DEF', glow: 'rgba(74,108,255,0.5)', icon: '#5B8DEF' },
-    purple: { from: '#7C5CFF', to: '#A855F7', glow: 'rgba(168,85,247,0.45)', icon: '#A855F7' },
+    blue: { from: '#d97757', to: '#e0926a', glow: 'rgba(217, 119, 87,0.5)', icon: '#e0926a' },
+    purple: { from: '#c96a4c', to: '#e0926a', glow: 'rgba(224, 146, 106,0.45)', icon: '#e0926a' },
     green: { from: '#10B981', to: '#34D399', glow: 'rgba(16,185,129,0.45)', icon: '#22C55E' },
     red: { from: '#EF4444', to: '#F87171', glow: 'rgba(239,68,68,0.55)', icon: '#EF4444' },
     orange: { from: '#F59E0B', to: '#FBBF24', glow: 'rgba(245,158,11,0.45)', icon: '#F59E0B' },
-    teal: { from: '#0EA5E9', to: '#22D3EE', glow: 'rgba(14,165,233,0.4)', icon: '#0EA5E9' },
+    teal: { from: '#d97757', to: '#e6b878', glow: 'rgba(217,119,87,0.4)', icon: '#d97757' },
   };
   const palette = palettes[accent] || palettes.blue;
   return (
@@ -484,7 +484,7 @@ export function EleveCard({ children, className, glow, ...rest }) {
   );
 }
 
-/** Titre de section (avec lien « Voir tout » optionnel). Maquette : lien violet #7B61FF. */
+/** Titre de section (avec lien « Voir tout » optionnel). Maquette : lien violet #d97757. */
 export function EleveSectionTitle({ children, action, actionTo, className, dot, actionClassName }) {
   return (
     <div className={cn('flex items-center justify-between gap-3 mb-3', className)}>
@@ -499,7 +499,7 @@ export function EleveSectionTitle({ children, action, actionTo, className, dot, 
           <Link
             to={actionTo}
             className={cn(
-              'flex shrink-0 items-center gap-0.5 text-[12px] font-semibold text-violet-400/95 active:opacity-80',
+              'flex shrink-0 items-center gap-0.5 text-[12px] font-semibold text-orange-400/95 active:opacity-80',
               actionClassName,
             )}
           >
@@ -507,7 +507,7 @@ export function EleveSectionTitle({ children, action, actionTo, className, dot, 
             <span className="text-[14px] font-light leading-none text-white/90">&gt;</span>
           </Link>
         ) : (
-          <span className={cn('text-[12px] font-semibold text-violet-400/95', actionClassName)}>{action}</span>
+          <span className={cn('text-[12px] font-semibold text-orange-400/95', actionClassName)}>{action}</span>
         )
       ) : null}
     </div>
@@ -518,8 +518,8 @@ export function EleveSectionTitle({ children, action, actionTo, className, dot, 
 export function EleveInfoBanner({ icon: Icon, title, description, accent = 'green', to }) {
   const accents = {
     green: { bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.25)', icon: '#22C55E' },
-    blue: { bg: 'rgba(74,108,255,0.12)', border: 'rgba(74,108,255,0.25)', icon: '#5B8DEF' },
-    purple: { bg: 'rgba(168,85,247,0.12)', border: 'rgba(168,85,247,0.25)', icon: '#a855f7' },
+    blue: { bg: 'rgba(217, 119, 87,0.12)', border: 'rgba(217, 119, 87,0.25)', icon: '#e0926a' },
+    purple: { bg: 'rgba(224, 146, 106,0.12)', border: 'rgba(224, 146, 106,0.25)', icon: '#e0926a' },
   };
   const c = accents[accent] || accents.green;
   const inner = (
@@ -570,16 +570,16 @@ export function EleveEmptyState({ icon: Icon, title, description, primary, secon
       style={{
         borderRadius: EV_R.lg,
         background: [
-          'radial-gradient(ellipse 90% 70% at 50% 0%, rgba(99, 102, 241, 0.1) 0%, transparent 55%)',
-          'linear-gradient(188deg, rgba(22, 24, 36, 0.96) 0%, rgba(12, 14, 22, 0.99) 100%)',
+          'radial-gradient(ellipse 90% 70% at 50% 0%, rgba(217, 119, 87, 0.1) 0%, transparent 55%)',
+          'linear-gradient(188deg, rgba(22,18,13,0.96) 0%, rgba(14,11,9,0.99) 100%)',
         ].join(', '),
-        border: '1px solid rgba(165, 180, 252, 0.14)',
+        border: '1px solid rgba(240, 200, 175, 0.14)',
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
       }}
     >
       {Icon ? (
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-violet-400/20 bg-gradient-to-br from-indigo-500/20 to-violet-600/18 shadow-[0_4px_16px_-4px_rgba(99,102,241,0.35),inset_0_1px_0_rgba(255,255,255,0.1)]">
-          <Icon className="h-6 w-6 text-violet-200" strokeWidth={2} />
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-orange-400/20 bg-gradient-to-br from-amber-500/20 to-orange-600/18 shadow-[0_4px_16px_-4px_rgba(217, 119, 87,0.35),inset_0_1px_0_rgba(255,255,255,0.1)]">
+          <Icon className="h-6 w-6 text-orange-200" strokeWidth={2} />
         </div>
       ) : null}
       <p className="text-[15px] font-bold leading-tight text-white/95">{title}</p>
@@ -599,7 +599,7 @@ export function EleveEmptyState({ icon: Icon, title, description, primary, secon
                 style={
                   primaryIsGhost
                     ? { border: `1px solid ${EV_LINE}`, background: 'rgba(255,255,255,0.06)' }
-                    : { background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #5B21B6 100%)`, boxShadow: EV_SH.cta }
+                    : { background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #a94f33 100%)`, boxShadow: EV_SH.cta }
                 }
               >
                 {primary.label}
@@ -610,7 +610,7 @@ export function EleveEmptyState({ icon: Icon, title, description, primary, secon
                 onClick={primary.onClick}
                 className={cn(primaryClass, 'text-white')}
                 style={{
-                  background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #5B21B6 100%)`,
+                  background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #a94f33 100%)`,
                   boxShadow: EV_SH.cta,
                 }}
               >
@@ -652,7 +652,7 @@ export function EleveSurface({ variant = 'plate', className, children, ...rest }
 
 export function EleveBadge({ children, tone = 'violet', className }) {
   const tones = {
-    violet: 'border-violet-400/35 bg-violet-500/12 text-violet-200 shadow-[0_0_0_1px_rgba(124,92,255,0.2)]',
+    violet: 'border-orange-400/35 bg-orange-500/12 text-orange-200 shadow-[0_0_0_1px_rgba(217, 119, 87,0.2)]',
   };
   return (
     <span

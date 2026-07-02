@@ -133,28 +133,28 @@ const VISION_MISSION_FONDATEUR = [
 ];
 
 const PREMIUM_CARD =
-  'linear-gradient(168deg, rgba(52, 88, 138, 0.95) 0%, rgba(28, 58, 98, 0.96) 40%, rgba(16, 36, 72, 0.99) 100%)';
+  'linear-gradient(168deg, rgba(169,79,51,0.95) 0%, rgba(90,55,35,0.96) 40%, rgba(122,54,32,0.99) 100%)';
 
 const TONE_HALO = {
   gold: {
-    spread: 'from-sky-300/30 via-blue-500/24 to-transparent',
-    border: 'border-sky-400/38',
-    iconBg: 'bg-gradient-to-br from-sky-500/20 to-blue-800/18 ring-1 ring-sky-400/25',
+    spread: 'from-amber-300/30 via-orange-500/24 to-transparent',
+    border: 'border-amber-400/38',
+    iconBg: 'bg-gradient-to-br from-amber-500/20 to-orange-800/18 ring-1 ring-amber-400/25',
   },
   blue: {
-    spread: 'from-sky-300/30 via-blue-500/25 to-transparent',
-    border: 'border-sky-400/40',
-    iconBg: 'bg-gradient-to-br from-sky-500/20 to-blue-800/20 ring-1 ring-sky-400/25',
+    spread: 'from-amber-300/30 via-orange-500/25 to-transparent',
+    border: 'border-amber-400/40',
+    iconBg: 'bg-gradient-to-br from-amber-500/20 to-orange-800/20 ring-1 ring-amber-400/25',
   },
   violet: {
-    spread: 'from-violet-300/25 via-fuchsia-500/22 to-transparent',
-    border: 'border-violet-400/38',
-    iconBg: 'bg-gradient-to-br from-violet-500/20 to-fuchsia-900/15 ring-1 ring-violet-400/22',
+    spread: 'from-orange-300/25 via-rose-500/22 to-transparent',
+    border: 'border-orange-400/38',
+    iconBg: 'bg-gradient-to-br from-orange-500/20 to-rose-900/15 ring-1 ring-orange-400/22',
   },
   amber: {
-    spread: 'from-indigo-300/25 via-violet-500/22 to-transparent',
-    border: 'border-indigo-400/35',
-    iconBg: 'bg-gradient-to-br from-indigo-500/18 to-violet-800/15 ring-1 ring-indigo-400/22',
+    spread: 'from-amber-300/25 via-orange-500/22 to-transparent',
+    border: 'border-amber-400/35',
+    iconBg: 'bg-gradient-to-br from-amber-500/18 to-orange-800/15 ring-1 ring-amber-400/22',
   },
 };
 
@@ -175,9 +175,9 @@ const fadeUpItem = (reduce) => ({
 });
 
 const VOIE_TONE = {
-  sky: { border: 'border-sky-500/30', iconWrap: 'from-sky-500/30 to-blue-600/20 text-sky-200' },
-  violet: { border: 'border-violet-500/30', iconWrap: 'from-violet-500/30 to-fuchsia-700/20 text-violet-200' },
-  gold: { border: 'border-sky-500/30', iconWrap: 'from-sky-500/30 to-blue-800/20 text-sky-200' },
+  sky: { border: 'border-amber-500/30', iconWrap: 'from-amber-500/30 to-orange-600/20 text-amber-200' },
+  violet: { border: 'border-orange-500/30', iconWrap: 'from-orange-500/30 to-rose-700/20 text-orange-200' },
+  gold: { border: 'border-amber-500/30', iconWrap: 'from-amber-500/30 to-orange-800/20 text-amber-200' },
 };
 
 function ActionCard({ to, label, sub, icon: Icon, tone, itemVariants }) {
@@ -201,8 +201,8 @@ function ActionCard({ to, label, sub, icon: Icon, tone, itemVariants }) {
           boxShadow: [
             'inset 0 1px 0 rgba(255,255,255,0.12)',
             'inset 0 0 0 1px rgba(255,255,255,0.05)',
-            '0 14px 40px -10px rgba(15, 50, 100, 0.7)',
-            '0 0 56px -12px rgba(59, 130, 246, 0.28)',
+            '0 14px 40px -10px rgba(122,54,32,0.7)',
+            '0 0 56px -12px rgba(226, 133, 79, 0.28)',
           ].join(', '),
         }}
       >
@@ -218,7 +218,7 @@ function ActionCard({ to, label, sub, icon: Icon, tone, itemVariants }) {
           <p className="text-[14px] font-semibold text-white drop-shadow-sm">{label}</p>
           <p className="text-[11px] font-medium text-slate-300/90">{sub}</p>
         </div>
-        <ChevronRight className="h-5 w-5 shrink-0 text-sky-300/60" />
+        <ChevronRight className="h-5 w-5 shrink-0 text-amber-300/60" />
       </motion.div>
     </Link>
   );
@@ -252,13 +252,13 @@ export default function EleveProrascienceVitrineScreen() {
       notificationCount={inboxUnread}
       hideHeader
       hideTabBar
-      contentClassName="!px-0 !bg-[#0B0B0F] !pb-0"
+      contentClassName="!px-0 !bg-[#0b0b0a] !pb-0"
     >
       <div
         className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden"
         style={{ backgroundColor: PAGE_BG }}
       >
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent_50%),radial-gradient(ellipse_60%_40%_at_100%_20%,rgba(124,58,237,0.1),transparent_45%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_-10%,rgba(226, 133, 79,0.12),transparent_50%),radial-gradient(ellipse_60%_40%_at_100%_20%,rgba(201, 106, 76,0.1),transparent_45%)]" />
 
         <div className="relative z-10 flex min-h-0 w-full flex-1 flex-col">
           <div className="shrink-0 px-4 pt-[max(0.35rem,env(safe-area-inset-top))]">
@@ -275,7 +275,7 @@ export default function EleveProrascienceVitrineScreen() {
             <motion.button
               type="button"
               onClick={() => setMenuOpen(true)}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-sky-500/25 bg-sky-500/10 text-sky-100 shadow-[0_0_24px_-6px_rgba(56,189,248,0.45),inset_0_1px_0_rgba(255,255,255,0.12)] active:scale-95"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-amber-500/25 bg-amber-500/10 text-amber-100 shadow-[0_0_24px_-6px_rgba(230, 160, 110,0.45),inset_0_1px_0_rgba(255,255,255,0.12)] active:scale-95"
               aria-label="Ouvrir le menu de navigation"
               whileTap={{ scale: 0.94 }}
               whileHover={prefersReducedMotion ? undefined : { scale: 1.05, transition: { duration: 0.2 } }}
@@ -297,7 +297,7 @@ export default function EleveProrascienceVitrineScreen() {
               transition={{ delay: prefersReducedMotion ? 0 : 0.05, duration: 0.45, ease: EASE_PREMIUM }}
             >
               <p
-                className="bg-gradient-to-r from-sky-200 via-white to-cyan-200/90 bg-clip-text text-[11px] font-black uppercase tracking-[0.28em] text-transparent sm:text-xs"
+                className="bg-gradient-to-r from-amber-200 via-white to-amber-200/90 bg-clip-text text-[11px] font-black uppercase tracking-[0.28em] text-transparent sm:text-xs"
                 style={{ fontSize: '0.7rem' }}
               >
                 {SCHOOL}
@@ -313,7 +313,7 @@ export default function EleveProrascienceVitrineScreen() {
             >
               <Link
                 to={profileTo}
-                className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-gradient-to-br from-sky-600/40 to-violet-600/50 text-white shadow-[0_0_22px_2px_rgba(99,102,241,0.55)] active:scale-95"
+                className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-gradient-to-br from-amber-600/40 to-orange-600/50 text-white shadow-[0_0_22px_2px_rgba(217, 119, 87,0.55)] active:scale-95"
                 aria-label={user ? 'Mon profil' : 'Connexion'}
               >
                 {user ? (
@@ -334,7 +334,7 @@ export default function EleveProrascienceVitrineScreen() {
               transition={{ duration: prefersReducedMotion ? 0 : 0.65, ease: EASE_PREMIUM, delay: prefersReducedMotion ? 0 : 0.06 }}
             >
               <div
-                className="relative overflow-hidden rounded-2xl border border-violet-500/25 bg-[#0B0B0F] shadow-[0_20px_60px_-20px_rgba(123,97,255,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]"
+                className="relative overflow-hidden rounded-2xl border border-orange-500/25 bg-[#0b0b0a] shadow-[0_20px_60px_-20px_rgba(217, 119, 87,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]"
               >
                 <div className="relative aspect-[4/3] w-full sm:max-h-[240px]">
                   <motion.img
@@ -350,18 +350,18 @@ export default function EleveProrascienceVitrineScreen() {
                   {/*
                     Dégradé léger : lisibilité texte en bas sans voiler tout le visuel (évite l'effet “flou de bouillie”).
                   */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0F] via-[#0B0B0F]/25 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0b0b0a] via-[#0b0b0a]/25 to-transparent" />
                   <div
                     className="absolute inset-0 opacity-40"
                     style={{
                       background:
-                        'radial-gradient(ellipse 70% 45% at 50% 32%, rgba(56, 189, 248, 0.06), transparent 58%), conic-gradient(from 180deg at 50% 50%, rgba(99,102,241,0.08), transparent 30%, rgba(59,130,246,0.05), transparent 55%)',
+                        'radial-gradient(ellipse 70% 45% at 50% 32%, rgba(230, 160, 110, 0.06), transparent 58%), conic-gradient(from 180deg at 50% 50%, rgba(217, 119, 87,0.08), transparent 30%, rgba(226, 133, 79,0.05), transparent 55%)',
                     }}
                     aria-hidden
                   />
                   <div className="absolute inset-0 flex items-start justify-center pt-12 sm:pt-14">
                     <motion.div
-                      className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-sky-400/40 bg-black/18 ring-1 ring-sky-400/25 will-change-transform"
+                      className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-amber-400/40 bg-black/18 ring-1 ring-amber-400/25 will-change-transform"
                       initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.88 }}
                       animate={
                         prefersReducedMotion
@@ -371,9 +371,9 @@ export default function EleveProrascienceVitrineScreen() {
                               scale: 1,
                               y: [0, 7, 0],
                               boxShadow: [
-                                '0 0 22px 5px rgba(56, 189, 248, 0.18)',
-                                '0 0 38px 12px rgba(56, 189, 248, 0.38)',
-                                '0 0 22px 5px rgba(56, 189, 248, 0.18)',
+                                '0 0 22px 5px rgba(230, 160, 110, 0.18)',
+                                '0 0 38px 12px rgba(230, 160, 110, 0.38)',
+                                '0 0 22px 5px rgba(230, 160, 110, 0.18)',
                               ],
                             }
                       }
@@ -417,9 +417,9 @@ export default function EleveProrascienceVitrineScreen() {
                 </div>
                 <div className="space-y-4 px-4 pb-5 pt-2">
                   <h1 className="text-center text-[22px] font-black leading-tight tracking-[-0.03em] text-white sm:text-2xl">
-                    La science du <span className="text-sky-300">réel</span>
+                    La science du <span className="text-amber-300">réel</span>
                     <br />
-                    au service de <span className="text-cyan-200/95">l'humain</span>.
+                    au service de <span className="text-amber-200/95">l'humain</span>.
                   </h1>
                   <p className="text-center text-[13px] font-medium leading-relaxed text-slate-300/95">
                     Une école initiatique, scientifique et spirituelle pour comprendre l'univers, maîtriser la
@@ -428,7 +428,7 @@ export default function EleveProrascienceVitrineScreen() {
                   <div className="flex flex-col gap-2.5">
                     <Button
                       type="button"
-                      className="h-12 w-full gap-2 rounded-2xl border-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-[12px] font-extrabold uppercase tracking-wide text-white shadow-[0_8px_32px_-4px_rgba(59,130,246,0.55),0_0_40px_-8px_rgba(124,58,237,0.4)]"
+                      className="h-12 w-full gap-2 rounded-2xl border-0 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 text-[12px] font-extrabold uppercase tracking-wide text-white shadow-[0_8px_32px_-4px_rgba(226, 133, 79,0.55),0_0_40px_-8px_rgba(201, 106, 76,0.4)]"
                       onClick={() => navigate(ELEVE_MOBILE.connexion)}
                     >
                       <GraduationCap className="h-5 w-5" />
@@ -438,10 +438,10 @@ export default function EleveProrascienceVitrineScreen() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="h-12 w-full gap-2 rounded-2xl border-sky-400/40 bg-white/[0.03] text-[12px] font-bold uppercase tracking-wide text-slate-100 shadow-[0_0_24px_-6px_rgba(56,189,248,0.35)] hover:bg-white/[0.08]"
+                      className="h-12 w-full gap-2 rounded-2xl border-amber-400/40 bg-white/[0.03] text-[12px] font-bold uppercase tracking-wide text-slate-100 shadow-[0_0_24px_-6px_rgba(230, 160, 110,0.35)] hover:bg-white/[0.08]"
                       onClick={openVitrineVideo}
                     >
-                      <Play className="h-5 w-5 text-sky-300" />
+                      <Play className="h-5 w-5 text-amber-300" />
                       {`Découvrir ${SCHOOL}`}
                     </Button>
                   </div>
@@ -461,7 +461,7 @@ export default function EleveProrascienceVitrineScreen() {
                     variants={itemV}
                     className={cn('flex min-w-0 flex-1 flex-col items-center gap-1.5 px-1 text-center', i > 0 && 'border-l border-white/10')}
                   >
-                    <s.Icon className="h-5 w-5 text-sky-300/80 shadow-[0_0_12px_rgba(56,189,248,0.35)]" strokeWidth={1.5} />
+                    <s.Icon className="h-5 w-5 text-amber-300/80 shadow-[0_0_12px_rgba(230, 160, 110,0.35)]" strokeWidth={1.5} />
                     <span className="text-lg font-black tabular-nums text-white">{s.value}</span>
                     <span className="px-0.5 text-[7px] font-bold uppercase leading-tight tracking-wide text-slate-400">
                       {s.caption}
@@ -485,11 +485,11 @@ export default function EleveProrascienceVitrineScreen() {
                 viewport={{ once: true }}
                 transition={{ duration: prefersReducedMotion ? 0 : 0.4 }}
               >
-                <span className="h-1.5 w-1.5 rotate-45 bg-sky-400/90 shadow-[0_0_10px_rgba(56,189,248,0.65)]" />
-                <h2 className="bg-gradient-to-r from-sky-200 to-white/95 bg-clip-text text-center text-[12px] font-extrabold uppercase tracking-[0.2em] text-transparent">
+                <span className="h-1.5 w-1.5 rotate-45 bg-amber-400/90 shadow-[0_0_10px_rgba(230, 160, 110,0.65)]" />
+                <h2 className="bg-gradient-to-r from-amber-200 to-white/95 bg-clip-text text-center text-[12px] font-extrabold uppercase tracking-[0.2em] text-transparent">
                   Une voie unique
                 </h2>
-                <span className="h-1.5 w-1.5 rotate-45 bg-sky-400/90 shadow-[0_0_10px_rgba(56,189,248,0.65)]" />
+                <span className="h-1.5 w-1.5 rotate-45 bg-amber-400/90 shadow-[0_0_10px_rgba(230, 160, 110,0.65)]" />
               </motion.div>
               <motion.div
                 className="space-y-3"
@@ -513,7 +513,7 @@ export default function EleveProrascienceVitrineScreen() {
                       <div className="flex gap-3">
                         <div
                           className={cn(
-                            'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br shadow-[0_0_20px_-4px_rgba(56,189,248,0.3)]',
+                            'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br shadow-[0_0_20px_-4px_rgba(230, 160, 110,0.3)]',
                             cardTone.iconWrap,
                           )}
                         >
@@ -540,7 +540,7 @@ export default function EleveProrascienceVitrineScreen() {
               transition={{ duration: prefersReducedMotion ? 0 : 0.5, ease: EASE_PREMIUM }}
             >
               <div className="mb-2.5 flex items-center gap-2 pl-0.5">
-                <div className="h-2 w-2 rounded-full bg-gradient-to-br from-sky-400 to-violet-500" />
+                <div className="h-2 w-2 rounded-full bg-gradient-to-br from-amber-400 to-orange-500" />
                 <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-slate-400">Institution</p>
               </div>
               <motion.div
@@ -553,9 +553,9 @@ export default function EleveProrascienceVitrineScreen() {
                 {VISION_MISSION_FONDATEUR.map((b, idx) => {
                   const IconB = b.icon;
                   const halos = [
-                    'from-sky-400/18 via-blue-500/12 to-slate-900/0',
-                    'from-sky-400/20 via-blue-500/12 to-violet-500/8',
-                    'from-violet-400/18 via-sky-500/10 to-blue-500/5',
+                    'from-amber-400/18 via-orange-500/12 to-slate-900/0',
+                    'from-amber-400/20 via-orange-500/12 to-orange-500/8',
+                    'from-orange-400/18 via-amber-500/10 to-orange-500/5',
                   ];
                   return (
                     <motion.div key={b.key} className="relative" variants={itemV}>
@@ -567,18 +567,18 @@ export default function EleveProrascienceVitrineScreen() {
                         aria-hidden
                       />
                       <div
-                        className="relative rounded-2xl border border-sky-400/30 p-3.5"
+                        className="relative rounded-2xl border border-amber-400/30 p-3.5"
                         style={{
                           background: PREMIUM_CARD,
-                          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 10px 32px -10px rgba(30, 70, 130, 0.5)',
+                          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 10px 32px -10px rgba(138,63,40,0.5)',
                         }}
                       >
                         <div className="flex items-start gap-2.5">
-                          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500/25 to-indigo-900/35 ring-1 ring-sky-400/30">
-                            <IconB className="h-4 w-4 text-sky-100/95" strokeWidth={2} />
+                          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/25 to-amber-900/35 ring-1 ring-amber-400/30">
+                            <IconB className="h-4 w-4 text-amber-100/95" strokeWidth={2} />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-sky-300/95">{b.title}</p>
+                            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-amber-300/95">{b.title}</p>
                             <p className="mt-1.5 text-[12px] leading-relaxed" style={{ color: EV_MUTED }}>
                               {b.text}
                             </p>
@@ -595,7 +595,7 @@ export default function EleveProrascienceVitrineScreen() {
                   className="inline-flex items-center gap-1 rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2 text-[12px] font-semibold text-white/90"
                 >
                   Biographie &amp; mandat
-                  <ArrowRight className="h-3.5 w-3.5 text-sky-400/90" />
+                  <ArrowRight className="h-3.5 w-3.5 text-amber-400/90" />
                 </Link>
                 <Link
                   to={`${ELEVE_MOBILE.prorascience}/a-propos`}
@@ -615,10 +615,10 @@ export default function EleveProrascienceVitrineScreen() {
               transition={{ duration: prefersReducedMotion ? 0 : 0.6, ease: EASE_PREMIUM }}
             >
               <div
-                className="pointer-events-none absolute -inset-1 rounded-[24px] bg-gradient-to-b from-sky-500/20 via-cyan-500/12 to-indigo-600/10 opacity-80 blur-3xl"
+                className="pointer-events-none absolute -inset-1 rounded-[24px] bg-gradient-to-b from-amber-500/20 via-amber-500/12 to-amber-600/10 opacity-80 blur-3xl"
                 aria-hidden
               />
-              <div className="relative overflow-hidden rounded-[22px] border border-sky-400/25">
+              <div className="relative overflow-hidden rounded-[22px] border border-amber-400/25">
                 <p className="sr-only">{`Visuels vitrine (mêmes que le site) — ${SCHOOL} · LIRI`}</p>
                 <ProrascienceHomeHeroCarousel
                   prefersReducedMotion={!!prefersReducedMotion}
@@ -630,7 +630,7 @@ export default function EleveProrascienceVitrineScreen() {
 
             <div>
               <div className="mb-2.5 flex items-center gap-2 pl-0.5">
-                <div className="h-2 w-2 rounded-full bg-gradient-to-br from-sky-400 to-violet-500" />
+                <div className="h-2 w-2 rounded-full bg-gradient-to-br from-amber-400 to-orange-500" />
                 <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-slate-400">Accès rapides</p>
               </div>
               <motion.div

@@ -24,9 +24,9 @@ import { EV_PAGE_AMBIENT } from '@/pages/school/eleve-mobile/eleveMobileScreensS
  * (`public/maquettes/liri-live-mobile-reference.png`). Côté invité : pas de carrousel
  * (pilotage des slides côté hôte). Autres variantes : `lib/eleveLiveImmersive.js`, ex. `/live/maquette/alpha`.
  */
-const LIVE_ROOM_BG = '#0A0B14';
-const PURPLE = '#6339F9';
-const PURPLE_MUTED = 'rgba(99, 57, 249, 0.16)';
+const LIVE_ROOM_BG = '#0b0b0a';
+const PURPLE = '#d97757';
+const PURPLE_MUTED = 'rgba(217, 119, 87, 0.16)';
 const GREEN = '#1DB954';
 const RED = '#E53E3E';
 
@@ -35,7 +35,7 @@ const REF_MAQUETTE = '/maquettes/liri-live-mobile-reference.png';
 
 const MOCK_MEMBERS = [
   { name: 'Manikongo', isProf: true, src: null },
-  { name: 'Aïcha', src: null, bg: 'linear-gradient(145deg, #e879a8 0%, #a21caf 100%)' },
+  { name: 'Aïcha', src: null, bg: 'linear-gradient(145deg, #e879a8 0%, #a94f33 100%)' },
   { name: 'Jean', src: null, bg: 'linear-gradient(145deg, #4ade80 0%, #15803d 100%)' },
   { name: 'Léa', src: null, bg: 'linear-gradient(145deg, #fbbf24 0%, #c2410c 100%)' },
 ];
@@ -146,8 +146,8 @@ function SmartboardStage() {
       <div
         className="flex min-h-0 w-full max-w-md flex-col overflow-hidden rounded-[18px] border"
         style={{
-          borderColor: 'rgba(99, 57, 249, 0.3)',
-          background: 'linear-gradient(175deg, rgba(16,18,30,0.99) 0%, rgba(6,7,14,0.995) 100%)',
+          borderColor: 'rgba(217, 119, 87, 0.3)',
+          background: 'linear-gradient(175deg, rgba(18,14,11,0.99) 0%, rgba(10,9,8,0.995) 100%)',
           boxShadow: `inset 0 1px 0 rgba(255,255,255,0.08), 0 22px 50px -28px ${PURPLE}99`,
         }}
       >
@@ -155,7 +155,7 @@ function SmartboardStage() {
           className="relative max-h-[min(52vh,420px)] min-h-[200px] flex-1 overflow-y-auto overflow-x-hidden p-3.5 sm:max-h-[min(55vh,480px)]"
           style={{
             background: [
-              'radial-gradient(ellipse 100% 60% at 50% 0%, rgba(99, 57, 249, 0.14) 0%, transparent 58%)',
+              'radial-gradient(ellipse 100% 60% at 50% 0%, rgba(217, 119, 87, 0.14) 0%, transparent 58%)',
               'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.1) 100%)',
             ].join(','),
           }}
@@ -165,7 +165,7 @@ function SmartboardStage() {
           <div className="relative z-[1] pb-1 pr-[118px] min-[400px]:pr-[130px]">
             <div
               className="inline-flex rounded-md px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.15em] text-white"
-              style={{ background: `linear-gradient(100deg, ${PURPLE} 0%, #7c3aed 100%)` }}
+              style={{ background: `linear-gradient(100deg, ${PURPLE} 0%, #c96a4c 100%)` }}
             >
               Chapitre 3
             </div>
@@ -174,7 +174,7 @@ function SmartboardStage() {
             </h1>
             <div
               className="mt-3.5 h-[3px] w-14 rounded-full"
-              style={{ background: `linear-gradient(90deg, ${PURPLE} 0%, #a78bfa 100%)` }}
+              style={{ background: `linear-gradient(90deg, ${PURPLE} 0%, #e0926a 100%)` }}
             />
 
             <p className="mt-3 max-w-[300px] text-[14px] leading-[1.55]" style={{ color: 'rgba(255,255,255,0.8)' }}>
@@ -196,7 +196,7 @@ function SmartboardStage() {
             <div
               className="mt-4 rounded-[14px] border p-3"
               style={{
-                borderColor: 'rgba(99, 57, 249, 0.4)',
+                borderColor: 'rgba(217, 119, 87, 0.4)',
                 background: PURPLE_MUTED,
                 boxShadow: `0 0 32px -12px ${PURPLE}cc`,
               }}
@@ -210,7 +210,7 @@ function SmartboardStage() {
               <div className="flex items-center justify-between gap-2">
                 <p
                   className="min-w-0 text-[20px] font-extrabold leading-tight min-[400px]:text-[22px]"
-                  style={{ color: '#c4b5fd' }}
+                  style={{ color: '#eab89a' }}
                 >
                   c = 299 792 458 m/s
                   <br />
@@ -277,7 +277,7 @@ function SpeedGauge() {
   return (
     <div
       className="relative h-[72px] w-[72px] shrink-0 rounded-full border bg-black/35"
-      style={{ borderColor: 'rgba(167, 139, 250, 0.35)', boxShadow: 'inset 0 0 20px rgba(99, 57, 249, 0.35)' }}
+      style={{ borderColor: 'rgba(224, 146, 106, 0.35)', boxShadow: 'inset 0 0 20px rgba(217, 119, 87, 0.35)' }}
     >
       <div
         className="absolute left-1/2 top-1/2 h-1.5 w-[34px] origin-left -translate-y-1/2 rotate-[-32deg] rounded-full"
@@ -298,7 +298,7 @@ function HostVideoInset() {
   return (
     <div
       className="absolute right-2 top-[52px] z-10 w-[120px] overflow-hidden rounded-2xl border border-white/15 bg-black/80 min-[400px]:right-3 min-[400px]:top-14 min-[400px]:w-[132px]"
-      style={{ boxShadow: '0 18px 40px -12px rgba(0,0,0,0.85), 0 0 0 1px rgba(99, 57, 249, 0.15)' }}
+      style={{ boxShadow: '0 18px 40px -12px rgba(0,0,0,0.85), 0 0 0 1px rgba(217, 119, 87, 0.15)' }}
     >
       <div className="relative aspect-[4/5] overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">
@@ -354,7 +354,7 @@ function AudioWaveIcon() {
       {[0.3, 0.65, 0.4, 0.85, 0.5].map((f, i) => (
         <span
           key={i}
-          className="w-0.5 rounded-[0.5px] bg-sky-400"
+          className="w-0.5 rounded-[0.5px] bg-amber-400"
           style={{ height: 4 + 9 * f }}
         />
       ))}
@@ -383,8 +383,8 @@ function ConnectedMembersRow() {
         </div>
         <button
           type="button"
-          className="shrink-0 rounded-full border border-[#6339F9]/5 px-2.5 py-1 text-[10px] font-semibold"
-          style={{ borderColor: 'rgba(99, 57, 249, 0.55)', color: PURPLE, background: 'rgba(99, 57, 249, 0.08)' }}
+          className="shrink-0 rounded-full border border-[#d97757]/5 px-2.5 py-1 text-[10px] font-semibold"
+          style={{ borderColor: 'rgba(217, 119, 87, 0.55)', color: PURPLE, background: 'rgba(217, 119, 87, 0.08)' }}
         >
           Voir tous
         </button>
@@ -439,7 +439,7 @@ function ConnectedMembersRow() {
         <div className="flex w-[50px] shrink-0 flex-col items-center gap-0.5">
           <div
             className="flex h-10 w-10 items-center justify-center rounded-full text-[10px] font-bold text-white/95"
-            style={{ background: `linear-gradient(145deg, ${PURPLE} 0%, #4c1d95 100%)` }}
+            style={{ background: `linear-gradient(145deg, ${PURPLE} 0%, #7a3620 100%)` }}
           >
             +120
           </div>
@@ -455,7 +455,7 @@ function GuestActionFooter() {
       className="z-20 shrink-0 border-t"
       style={{
         borderColor: 'rgba(255,255,255,0.06)',
-        background: 'linear-gradient(0deg, rgba(0,0,0,0.55) 0%, rgba(10,11,20,0.65) 100%)',
+        background: 'linear-gradient(0deg, rgba(0,0,0,0.55) 0%, rgba(13,10,8,0.65) 100%)',
         paddingBottom: 'max(6px, env(safe-area-inset-bottom, 0px))',
         paddingTop: 8,
       }}
@@ -472,8 +472,8 @@ function GuestActionFooter() {
               type="button"
               className="flex h-[60px] w-[60px] items-center justify-center rounded-full text-white"
               style={{
-                background: `radial-gradient(circle at 30% 25%, #8b5cf6 0%, ${PURPLE} 45%, #3b0ca8 100%)`,
-                boxShadow: `0 0 0 2px rgba(99, 57, 249, 0.45), 0 12px 32px -6px ${PURPLE}cc, inset 0 1px 0 rgba(255,255,255,0.25)`,
+                background: `radial-gradient(circle at 30% 25%, #d97757 0%, ${PURPLE} 45%, #7a3620 100%)`,
+                boxShadow: `0 0 0 2px rgba(217, 119, 87, 0.45), 0 12px 32px -6px ${PURPLE}cc, inset 0 1px 0 rgba(255,255,255,0.25)`,
               }}
               disabled
               aria-label="Micro"

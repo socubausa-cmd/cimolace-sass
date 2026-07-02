@@ -15,7 +15,7 @@ import {
 import { EleveConnectionLayout } from '@/pages/school/eleve-mobile/connection/EleveConnectionLayout';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 
-const PURPLE = '#7B61FF';
+const PURPLE = '#d97757';
 const GREEN = '#27AE60';
 const MUTED = '#94A3B8';
 
@@ -57,8 +57,8 @@ function SparkleField() {
             width: d.s,
             height: d.s,
             opacity: d.o,
-            background: 'linear-gradient(135deg, rgba(123, 97, 255, 0.5), rgba(59, 130, 246, 0.4))',
-            boxShadow: '0 0 6px rgba(123, 97, 255, 0.4)',
+            background: 'linear-gradient(135deg, rgba(217, 119, 87, 0.5), rgba(226, 133, 79, 0.4))',
+            boxShadow: '0 0 6px rgba(217, 119, 87, 0.4)',
           }}
         />
       ))}
@@ -72,15 +72,15 @@ function ProgressRing({ pct }) {
     <div className="relative flex h-[200px] w-[200px] items-center justify-center sm:h-[220px] sm:w-[220px]">
       <div
         className="absolute inset-0 rounded-full opacity-40 blur-2xl"
-        style={{ background: 'radial-gradient(circle, rgba(123, 97, 255, 0.4) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(217, 119, 87, 0.4) 0%, transparent 70%)' }}
         aria-hidden
       />
       <svg className="relative z-10 h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden>
         <defs>
           <linearGradient id="llRing" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.9" />
+            <stop offset="0%" stopColor="#e2854f" stopOpacity="0.9" />
             <stop offset="50%" stopColor={PURPLE} stopOpacity="1" />
-            <stop offset="100%" stopColor="#A78BFA" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#e0926a" stopOpacity="0.95" />
           </linearGradient>
         </defs>
         <circle
@@ -101,7 +101,7 @@ function ProgressRing({ pct }) {
           strokeLinecap="round"
           strokeDasharray={`${dash} ${C}`}
           className="transition-[stroke-dasharray] duration-150 ease-out"
-          style={{ filter: 'drop-shadow(0 0 8px rgba(123, 97, 255, 0.5))' }}
+          style={{ filter: 'drop-shadow(0 0 8px rgba(217, 119, 87, 0.5))' }}
         />
       </svg>
       <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center">
@@ -195,7 +195,7 @@ export default function EleveLiveLoadingScreen() {
 
         <div
           className="mt-5 overflow-hidden rounded-2xl border"
-          style={{ background: 'rgba(18, 18, 30, 0.7)', borderColor: 'rgba(255,255,255,0.08)' }}
+          style={{ background: 'rgba(18,15,12,0.7)', borderColor: 'rgba(255,255,255,0.08)' }}
         >
           {CHECKS.map((row, i) => {
             const Ic = row.icon;
@@ -206,12 +206,12 @@ export default function EleveLiveLoadingScreen() {
                 className={`flex items-center gap-3 px-3.5 py-3 sm:px-4 ${i > 0 ? 'border-t border-white/[0.06]' : ''}`}
               >
                 <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${row.id === 'net' ? 'bg-emerald-500/15' : 'bg-violet-500/15'}`}
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${row.id === 'net' ? 'bg-emerald-500/15' : 'bg-orange-500/15'}`}
                 >
                   {row.id === 'net' ? (
                     <Wifi className="h-5 w-5" style={{ color: GREEN }} strokeWidth={2} />
                   ) : (
-                    <Ic className="h-5 w-5 text-violet-300" strokeWidth={1.8} />
+                    <Ic className="h-5 w-5 text-orange-300" strokeWidth={1.8} />
                   )}
                 </div>
                 <div className="min-w-0 flex-1 text-left">
@@ -242,24 +242,24 @@ export default function EleveLiveLoadingScreen() {
         <div
           className="mt-3 rounded-2xl border p-3.5"
           style={{
-            borderColor: 'rgba(123, 97, 255, 0.35)',
-            background: 'linear-gradient(135deg, rgba(123, 97, 255, 0.08) 0%, rgba(15, 15, 25, 0.95) 100%)',
+            borderColor: 'rgba(217, 119, 87, 0.35)',
+            background: 'linear-gradient(135deg, rgba(217, 119, 87, 0.08) 0%, rgba(16,13,10,0.95) 100%)',
           }}
         >
           <div className="flex gap-3">
             <div
-              className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-violet-500/30"
+              className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-orange-500/30"
               style={{
-                background: 'linear-gradient(145deg, #4c1d95, #1e1b2e)',
-                boxShadow: '0 0 20px rgba(123, 97, 255, 0.2)',
+                background: 'linear-gradient(145deg, #7a3620, #1e160f)',
+                boxShadow: '0 0 20px rgba(217, 119, 87, 0.2)',
               }}
             >
-              <div className="flex h-full w-full items-center justify-center text-sm font-bold text-violet-100">
+              <div className="flex h-full w-full items-center justify-center text-sm font-bold text-orange-100">
                 M
               </div>
             </div>
             <div className="min-w-0 flex-1">
-              <div className="mb-0.5 inline-block rounded border border-violet-500/40 bg-violet-500/20 px-1.5 py-px text-[9px] font-bold text-violet-200">
+              <div className="mb-0.5 inline-block rounded border border-orange-500/40 bg-orange-500/20 px-1.5 py-px text-[9px] font-bold text-orange-200">
                 PROF
               </div>
               <p className="text-[15px] font-bold text-white">Prof. Manikongo</p>
@@ -285,7 +285,7 @@ export default function EleveLiveLoadingScreen() {
                     className="w-[3px] rounded-sm"
                     style={{
                       height: `${4 + h * 2.5}px`,
-                      background: `linear-gradient(180deg, ${PURPLE}, rgba(123, 97, 255, 0.3))`,
+                      background: `linear-gradient(180deg, ${PURPLE}, rgba(217, 119, 87, 0.3))`,
                       opacity: 0.5 + (i % 3) * 0.15,
                     }}
                   />
@@ -295,7 +295,7 @@ export default function EleveLiveLoadingScreen() {
           </div>
         </div>
 
-        <div className="mt-4 rounded-2xl border border-violet-500/15 bg-violet-500/[0.06] p-3.5">
+        <div className="mt-4 rounded-2xl border border-orange-500/15 bg-orange-500/[0.06] p-3.5">
           <div className="mb-1 flex items-center gap-1.5">
             <Lightbulb className="h-3.5 w-3.5" style={{ color: PURPLE }} strokeWidth={2.1} />
             <span className="text-[12px] font-bold" style={{ color: PURPLE }}>

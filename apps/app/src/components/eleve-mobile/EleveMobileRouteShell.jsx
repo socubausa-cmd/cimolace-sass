@@ -54,8 +54,8 @@ function EleveAuthGate() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-[#0F1419]">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-300 border-t-transparent" />
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[#17130f]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-orange-300 border-t-transparent" />
       </div>
     );
   }

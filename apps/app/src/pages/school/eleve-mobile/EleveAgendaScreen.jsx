@@ -37,19 +37,19 @@ const TYPE_STYLES = {
   live: 'bg-red-500/18 text-red-100 border-red-500/30',
   formation_live: 'bg-amber-500/12 text-amber-100 border-amber-500/28',
   appointment: 'bg-emerald-500/12 text-emerald-100 border-emerald-500/28',
-  exam: 'bg-violet-500/15 text-violet-100 border-violet-500/30',
-  school: 'bg-sky-500/12 text-sky-100 border-sky-500/25',
-  calendar: 'bg-[rgba(123,97,255,0.2)] text-violet-100 border-violet-500/35',
-  course_video: 'bg-teal-500/14 text-teal-100 border-teal-500/30',
+  exam: 'bg-orange-500/15 text-orange-100 border-orange-500/30',
+  school: 'bg-amber-500/12 text-amber-100 border-amber-500/25',
+  calendar: 'bg-[rgba(217, 119, 87,0.2)] text-orange-100 border-orange-500/35',
+  course_video: 'bg-amber-500/14 text-amber-100 border-amber-500/30',
 };
 
 /** Halos (lun–ven, idx 0–4) : bleu → indigo → violet — se détachent du fond noir. */
 const WEEKDAY_TOP_HALO = [
-  'rgba(59, 130, 246, 0.24)',
-  'rgba(99, 102, 241, 0.22)',
-  'rgba(124, 58, 237, 0.2)',
-  'rgba(139, 92, 246, 0.2)',
-  'rgba(79, 70, 229, 0.24)',
+  'rgba(226, 133, 79, 0.24)',
+  'rgba(217, 119, 87, 0.22)',
+  'rgba(201, 106, 76, 0.2)',
+  'rgba(217, 119, 87, 0.2)',
+  'rgba(201, 106, 76, 0.24)',
 ];
 
 function getWeekdayCellSurface({ idx, today, isWeekday }) {
@@ -57,13 +57,13 @@ function getWeekdayCellSurface({ idx, today, isWeekday }) {
   if (today) {
     return {
       background: [
-        'radial-gradient(ellipse 115% 88% at 50% 0%, rgba(167, 139, 250, 0.4) 0%, transparent 56%)',
-        'linear-gradient(180deg, rgba(55, 35, 95, 0.78) 0%, rgba(20, 16, 42, 0.99) 100%)',
+        'radial-gradient(ellipse 115% 88% at 50% 0%, rgba(224, 146, 106, 0.4) 0%, transparent 56%)',
+        'linear-gradient(180deg, rgba(90,45,30,0.78) 0%, rgba(22,15,10,0.99) 100%)',
       ].join(', '),
-      border: '1px solid rgba(196, 181, 253, 0.5)',
+      border: '1px solid rgba(235, 200, 170, 0.5)',
       boxShadow: [
         'inset 0 1px 0 rgba(255,255,255,0.14)',
-        '0 0 24px -6px rgba(124, 58, 237, 0.48)',
+        '0 0 24px -6px rgba(201, 106, 76, 0.48)',
         '0 2px 10px -2px rgba(0,0,0,0.4)',
       ].join(', '),
     };
@@ -72,11 +72,11 @@ function getWeekdayCellSurface({ idx, today, isWeekday }) {
   return {
     background: [
       `radial-gradient(ellipse 100% 78% at 50% 0%, ${halo} 0%, transparent 60%)`,
-      'radial-gradient(ellipse 70% 45% at 100% 100%, rgba(30, 64, 175, 0.14) 0%, transparent 58%)',
-      'linear-gradient(195deg, rgba(26, 28, 44, 0.97) 0%, rgba(11, 12, 24, 0.99) 100%)',
+      'radial-gradient(ellipse 70% 45% at 100% 100%, rgba(138,63,40,0.14) 0%, transparent 58%)',
+      'linear-gradient(195deg, rgba(26,21,15,0.97) 0%, rgba(15,11,9,0.99) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.22)',
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.09), 0 2px 12px -4px rgba(15, 23, 42, 0.55)',
+    border: '1px solid rgba(240, 200, 175, 0.22)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.09), 0 2px 12px -4px rgba(28,20,14,0.55)',
   };
 }
 
@@ -139,7 +139,7 @@ export default function EleveAgendaScreen() {
         style={{
           minHeight: '100dvh',
           backgroundColor: EV_BG,
-          backgroundImage: 'radial-gradient(50% 32% at 50% 0%, rgba(123, 97, 255, 0.14), transparent 70%)',
+          backgroundImage: 'radial-gradient(50% 32% at 50% 0%, rgba(217, 119, 87, 0.14), transparent 70%)',
         }}
       >
         <div className="px-4 pt-[max(0.35rem,env(safe-area-inset-top))]">
@@ -221,7 +221,7 @@ export default function EleveAgendaScreen() {
                     className={cn(
                       'flex min-h-[76px] flex-col rounded-xl p-1',
                       isWeekend && !today && 'border border-white/[0.08] bg-black/25',
-                      today && isWeekend && 'border border-violet-500/45 bg-violet-500/10',
+                      today && isWeekend && 'border border-orange-500/45 bg-orange-500/10',
                     )}
                     style={cellSurface ?? undefined}
                   >
@@ -230,9 +230,9 @@ export default function EleveAgendaScreen() {
                         className={cn(
                           'text-[8px] uppercase leading-none',
                           today
-                            ? 'text-violet-200/65'
+                            ? 'text-orange-200/65'
                             : isWeekday
-                              ? 'text-indigo-200/48'
+                              ? 'text-amber-200/48'
                               : 'text-white/30',
                         )}
                       >
@@ -241,7 +241,7 @@ export default function EleveAgendaScreen() {
                       <div
                         className={cn(
                           'text-xs font-bold leading-tight',
-                          today ? 'text-violet-200' : isWeekday ? 'text-white/92' : 'text-white/88',
+                          today ? 'text-orange-200' : isWeekday ? 'text-white/92' : 'text-white/88',
                         )}
                       >
                         {safeFmt(day, 'd')}
@@ -314,17 +314,17 @@ export default function EleveAgendaScreen() {
               className="relative overflow-hidden p-6 text-center"
               style={{
                 borderRadius: EV_R.lg,
-                border: '1px solid rgba(123, 97, 255, 0.22)',
+                border: '1px solid rgba(217, 119, 87, 0.22)',
                 background: [
-                  'radial-gradient(ellipse 95% 65% at 50% 0%, rgba(123, 97, 255, 0.2) 0%, transparent 58%)',
-                  'radial-gradient(ellipse 55% 45% at 0% 100%, rgba(59, 130, 246, 0.12) 0%, transparent 65%)',
-                  'radial-gradient(ellipse 50% 40% at 100% 85%, rgba(168, 85, 247, 0.1) 0%, transparent 60%)',
-                  'linear-gradient(170deg, rgba(32, 30, 48, 0.98) 0%, rgba(22, 22, 32, 0.99) 45%, rgba(16, 14, 28, 1) 100%)',
+                  'radial-gradient(ellipse 95% 65% at 50% 0%, rgba(217, 119, 87, 0.2) 0%, transparent 58%)',
+                  'radial-gradient(ellipse 55% 45% at 0% 100%, rgba(226, 133, 79, 0.12) 0%, transparent 65%)',
+                  'radial-gradient(ellipse 50% 40% at 100% 85%, rgba(224, 146, 106, 0.1) 0%, transparent 60%)',
+                  'linear-gradient(170deg, rgba(30,24,18,0.98) 0%, rgba(22,18,13,0.99) 45%, rgba(18,13,10,1) 100%)',
                 ].join(', '),
                 boxShadow: [
                   'inset 0 1px 0 rgba(255, 255, 255, 0.1)',
                   'inset 0 0 0 1px rgba(255, 255, 255, 0.04)',
-                  '0 8px 28px -6px rgba(99, 102, 241, 0.22)',
+                  '0 8px 28px -6px rgba(217, 119, 87, 0.22)',
                   '0 4px 16px -4px rgba(0, 0, 0, 0.45)',
                 ].join(', '),
               }}
@@ -332,12 +332,12 @@ export default function EleveAgendaScreen() {
               <div
                 aria-hidden
                 className="pointer-events-none absolute -right-6 -top-8 h-32 w-32 rounded-full opacity-50 blur-3xl"
-                style={{ background: 'radial-gradient(circle, rgba(124, 92, 255, 0.45) 0%, transparent 70%)' }}
+                style={{ background: 'radial-gradient(circle, rgba(217, 119, 87, 0.45) 0%, transparent 70%)' }}
               />
               <div
                 aria-hidden
                 className="pointer-events-none absolute -bottom-6 -left-4 h-24 w-24 rounded-full opacity-40 blur-2xl"
-                style={{ background: 'radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, transparent 70%)' }}
+                style={{ background: 'radial-gradient(circle, rgba(226, 133, 79, 0.35) 0%, transparent 70%)' }}
               />
               <div className="relative">
                 <div
@@ -355,11 +355,11 @@ export default function EleveAgendaScreen() {
                   />
                 </div>
                 <p className="text-[14px] text-white/85">Aucun événement sur cette période.</p>
-                <p className="mt-1 text-[12px] text-violet-200/55">Change de semaine ou jette un œil aux lives.</p>
+                <p className="mt-1 text-[12px] text-orange-200/55">Change de semaine ou jette un œil aux lives.</p>
                 <Link
                   to={ELEVE_MOBILE.live}
                   className="mt-4 inline-flex items-center justify-center rounded-full px-5 py-2.5 text-[13px] font-bold text-white transition-transform active:scale-[0.98]"
-                  style={{ background: `linear-gradient(135deg, ${EV_ACCENT} 0%, #5B21B6 100%)`, boxShadow: EV_SH.cta }}
+                  style={{ background: `linear-gradient(135deg, ${EV_ACCENT} 0%, #a94f33 100%)`, boxShadow: EV_SH.cta }}
                 >
                   Voir les lives
                 </Link>

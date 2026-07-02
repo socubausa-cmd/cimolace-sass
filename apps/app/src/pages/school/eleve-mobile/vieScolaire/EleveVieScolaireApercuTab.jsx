@@ -87,8 +87,8 @@ export default function EleveVieScolaireApercuTab() {
               className="flex h-11 w-11 shrink-0 items-center justify-center"
               style={{
                 borderRadius: EV_R.md,
-                background: 'linear-gradient(145deg, rgba(123,97,255,0.4) 0%, rgba(59,130,246,0.25) 100%)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 6px 20px -8px rgba(99, 102, 241, 0.45)',
+                background: 'linear-gradient(145deg, rgba(217, 119, 87,0.4) 0%, rgba(226, 133, 79,0.25) 100%)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 6px 20px -8px rgba(217, 119, 87, 0.45)',
                 border: '1px solid rgba(255,255,255,0.12)',
               }}
             >
@@ -125,7 +125,7 @@ export default function EleveVieScolaireApercuTab() {
             {lives.length > 0 ? (
               <div className="mb-4">
                 <div className="mb-2 flex items-center gap-1.5">
-                  <Radio className="h-3.5 w-3.5 text-violet-300/90" />
+                  <Radio className="h-3.5 w-3.5 text-orange-300/90" />
                   <span className="text-[9px] font-extrabold uppercase tracking-wider text-white/45">
                     Lives à venir
                   </span>
@@ -147,7 +147,7 @@ export default function EleveVieScolaireApercuTab() {
                               En direct
                             </span>
                           ) : (
-                            <span className="inline-flex items-center rounded-full bg-violet-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-violet-200">
+                            <span className="inline-flex items-center rounded-full bg-orange-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-orange-200">
                               À venir
                             </span>
                           )}
@@ -165,7 +165,7 @@ export default function EleveVieScolaireApercuTab() {
                           style={{
                             background: onAir
                               ? 'linear-gradient(100deg,#ef4444 0%,#b91c1c 100%)'
-                              : `linear-gradient(100deg, ${EV_ACCENT} 0%, #3b3cde 100%)`,
+                              : `linear-gradient(100deg, ${EV_ACCENT} 0%, #c96a4c 100%)`,
                             boxShadow: EV_SH.cta,
                           }}
                         >
@@ -204,7 +204,7 @@ export default function EleveVieScolaireApercuTab() {
                 to={ELEVE_MOBILE.agenda}
                 className="inline-flex h-10 min-h-[40px] items-center gap-1.5 rounded-full px-3.5 text-[12px] font-bold text-white transition-transform active:scale-[0.99]"
                 style={{
-                  background: `linear-gradient(100deg, ${EV_ACCENT} 0%, #3b3cde 100%)`,
+                  background: `linear-gradient(100deg, ${EV_ACCENT} 0%, #c96a4c 100%)`,
                   boxShadow: EV_SH.cta,
                 }}
               >
@@ -233,7 +233,7 @@ export default function EleveVieScolaireApercuTab() {
                 className="mb-0 flex items-start gap-2.5 px-3.5 py-2.5"
                 style={{ borderRadius: EV_R.lg, ...listCardSurface() }}
               >
-                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-violet-300/90" />
+                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-orange-300/90" />
                 <p className="text-[12px] font-medium leading-snug" style={{ color: EV_MUTED }}>
                   <span className="mb-0.5 block text-[9px] font-extrabold uppercase tracking-wider text-white/45">
                     Parcours

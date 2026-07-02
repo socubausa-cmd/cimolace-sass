@@ -6,9 +6,9 @@ import { EleveConnectionLayout } from '@/pages/school/eleve-mobile/connection/El
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 
 const MUTED = '#8E8E93';
-const PURPLE = '#7B61FF';
+const PURPLE = '#d97757';
 const LINE = 'rgba(255,255,255,0.08)';
-const CARD = '#12121E';
+const CARD = '#151210';
 
 const SPARKS = [
   { l: '10%', t: '14%', s: 1, o: 0.2 },
@@ -30,8 +30,8 @@ function SparkleField() {
             width: d.s,
             height: d.s,
             opacity: d.o,
-            background: 'linear-gradient(135deg, rgba(123, 97, 255, 0.5), rgba(59, 130, 246, 0.35))',
-            boxShadow: '0 0 8px rgba(123, 97, 255, 0.35)',
+            background: 'linear-gradient(135deg, rgba(217, 119, 87, 0.5), rgba(226, 133, 79, 0.35))',
+            boxShadow: '0 0 8px rgba(217, 119, 87, 0.35)',
           }}
         />
       ))}
@@ -65,18 +65,18 @@ export default function EleveLiveWaitingScreen() {
 
         <div className="mt-2 flex flex-col items-center text-center">
           <div className="mb-3 flex h-[100px] w-[100px] items-center justify-center">
-            <div className="absolute h-[100px] w-[100px] rounded-full bg-violet-500/20 blur-2xl" aria-hidden />
+            <div className="absolute h-[100px] w-[100px] rounded-full bg-orange-500/20 blur-2xl" aria-hidden />
             <motion.div
               className="relative flex h-[88px] w-[88px] items-center justify-center rounded-full border-2"
               style={{
-                borderColor: 'rgba(123, 97, 255, 0.5)',
-                background: 'linear-gradient(145deg, rgba(123, 97, 255, 0.25) 0%, rgba(30, 20, 60, 0.9) 100%)',
-                boxShadow: '0 0 0 1px rgba(255,255,255,0.08), 0 12px 40px -8px rgba(123, 97, 255, 0.4)',
+                borderColor: 'rgba(217, 119, 87, 0.5)',
+                background: 'linear-gradient(145deg, rgba(217, 119, 87, 0.25) 0%, rgba(55,32,20,0.9) 100%)',
+                boxShadow: '0 0 0 1px rgba(255,255,255,0.08), 0 12px 40px -8px rgba(217, 119, 87, 0.4)',
               }}
               animate={{ scale: [1, 1.02, 1] }}
               transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <Radio className="h-9 w-9 text-violet-200" strokeWidth={2} />
+              <Radio className="h-9 w-9 text-orange-200" strokeWidth={2} />
             </motion.div>
           </div>
           <div className="mb-1 inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 pr-3">
@@ -93,10 +93,10 @@ export default function EleveLiveWaitingScreen() {
           className="mt-6 overflow-hidden rounded-2xl border p-4"
           style={{ background: CARD, borderColor: LINE }}
         >
-          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-violet-300/90">Aperçu de la séance</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-orange-300/90">Aperçu de la séance</p>
           <div className="mt-3 flex gap-3">
             <div
-              className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-violet-800/80 to-slate-900"
+              className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-orange-800/80 to-slate-900"
             >
               <div className="absolute inset-0 flex items-end justify-center pb-1 text-lg font-bold text-white/30">
                 PM
@@ -131,10 +131,10 @@ export default function EleveLiveWaitingScreen() {
         </div>
 
         <div
-          className="mt-4 flex items-start gap-2.5 rounded-2xl border border-violet-500/20 p-3.5"
-          style={{ background: 'rgba(123, 97, 255, 0.08)' }}
+          className="mt-4 flex items-start gap-2.5 rounded-2xl border border-orange-500/20 p-3.5"
+          style={{ background: 'rgba(217, 119, 87, 0.08)' }}
         >
-          <Clock className="mt-0.5 h-4 w-4 shrink-0 text-violet-300" strokeWidth={2.2} />
+          <Clock className="mt-0.5 h-4 w-4 shrink-0 text-orange-300" strokeWidth={2.2} />
           <p className="text-left text-[12.5px] leading-relaxed" style={{ color: MUTED }}>
             Reste sur cet écran : tu n'as rien à refaire. Si tu quittes, tu pourras rejoindre via le même lien ou le code
             classe.
@@ -142,9 +142,9 @@ export default function EleveLiveWaitingScreen() {
         </div>
 
         <div className="mt-5 flex items-start gap-2 text-left">
-          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-violet-400/90" />
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-orange-400/90" />
           <p className="text-[12px] leading-relaxed" style={{ color: MUTED }}>
-            <span className="font-semibold text-violet-300/95">Conseil : </span>
+            <span className="font-semibold text-orange-300/95">Conseil : </span>
             mets un casque pour l'arrivée dans le studio et réduis les bruits de fond.
           </p>
         </div>

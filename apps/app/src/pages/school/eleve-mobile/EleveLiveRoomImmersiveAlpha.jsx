@@ -19,12 +19,12 @@ import { cn } from '@/lib/utils';
  * Route : `/m/eleve/live/maquette/alpha` (cf. `eleveMobileRoutes`).
  */
 const BG = '#000000';
-const PURPLE = '#7C4DFF';
-const PURPLE_MUTED = 'rgba(124, 77, 255, 0.32)';
-const PURPLE_DEEP = '#5B3FD9';
+const PURPLE = '#d97757';
+const PURPLE_MUTED = 'rgba(217, 119, 87, 0.32)';
+const PURPLE_DEEP = '#c96a4c';
 const GREEN = '#00E676';
 const RED = '#FF5252';
-const CARD = '#0a0c10';
+const CARD = '#0b0a09';
 const LINE = 'rgba(255, 255, 255, 0.06)';
 /** Aperçu du flux hôte (visio / scène — recadrage naturel, pas de maquette de téléphone). */
 const HOST_STREAM_POSTER = '/image-pro/hero-liri-village-visio-connaissance.png';
@@ -33,8 +33,8 @@ const REF_AVATAR_HOST = HOST_STREAM_POSTER;
 const MEMBRES = [
   { n: 'Manikongo', prof: true, bg: null },
   { n: 'Amina K.', prof: false, bg: 'linear-gradient(140deg, #f472b6, #9d174d)' },
-  { n: 'Yannick D.', prof: false, bg: 'linear-gradient(140deg, #60a5fa, #1d4ed8)' },
-  { n: 'Sarah L.', prof: false, bg: 'linear-gradient(140deg, #a78bfa, #5b21b6)' },
+  { n: 'Yannick D.', prof: false, bg: 'linear-gradient(140deg, #e8a487, #a94f33)' },
+  { n: 'Sarah L.', prof: false, bg: 'linear-gradient(140deg, #e0926a, #a94f33)' },
 ];
 
 function LiveWaveform({ className }) {
@@ -43,7 +43,7 @@ function LiveWaveform({ className }) {
       {[0.3, 0.75, 0.5, 0.9, 0.4].map((f, i) => (
         <span
           key={i}
-          className="w-[3px] rounded-[1px] bg-cyan-300/95"
+          className="w-[3px] rounded-[1px] bg-amber-300/95"
           style={{ height: 3 + 8 * f }}
         />
       ))}
@@ -96,7 +96,7 @@ export default function EleveLiveRoomImmersiveAlpha() {
                 <div className="min-w-0 flex-1 pr-0.5">
                   <div
                     className="mb-1 inline-block rounded-md px-2.5 py-[5px] text-[7px] font-black uppercase tracking-[0.12em] text-white min-[400px]:px-3 min-[400px]:text-[8px]"
-                    style={{ background: `linear-gradient(98deg, ${PURPLE} 0%, #9B7CFF 100%)` }}
+                    style={{ background: `linear-gradient(98deg, ${PURPLE} 0%, #e0926a 100%)` }}
                   >
                     Chapitre 3
                   </div>
@@ -126,7 +126,7 @@ export default function EleveLiveRoomImmersiveAlpha() {
 
               <div
                 className="shrink-0 rounded-2xl border p-2"
-                style={{ borderColor: 'rgba(124, 77, 255, 0.45)', background: 'rgba(124, 77, 255, 0.08)' }}
+                style={{ borderColor: 'rgba(217, 119, 87, 0.45)', background: 'rgba(217, 119, 87, 0.08)' }}
               >
                 <div
                   className="mb-1 inline-block rounded px-2 py-[3px] text-[6px] font-black uppercase tracking-[0.1em] text-white min-[400px]:text-[7px]"
@@ -134,12 +134,12 @@ export default function EleveLiveRoomImmersiveAlpha() {
                 >
                   Valeur officielle
                 </div>
-                <p className="text-[15px] font-extrabold leading-snug min-[400px]:text-base" style={{ color: '#d4c4ff' }}>
+                <p className="text-[15px] font-extrabold leading-snug min-[400px]:text-base" style={{ color: '#f0d0be' }}>
                   c = 299 792 458 m/s
                 </p>
                 <p
                   className="mt-0.5 text-[10.5px] font-bold leading-tight min-[400px]:text-xs"
-                  style={{ color: 'rgba(200, 190, 255, 0.72)' }}
+                  style={{ color: 'rgba(240,208,190,0.72)' }}
                 >
                   ≈ 300 000 km/s
                 </p>
@@ -209,7 +209,7 @@ function HostVideoSection({ className }) {
         className,
       )}
       style={{
-        background: '#08080c',
+        background: '#08080a',
         boxShadow: `inset 0 1px 0 ${LINE}, 0 4px 24px -8px rgba(0,0,0,0.6)`,
       }}
     >
@@ -278,9 +278,9 @@ function SpeedGaugeAlpha() {
     <div
       className="relative h-12 w-12 rounded-full border-2 min-[400px]:h-14 min-[400px]:w-14"
       style={{
-        borderColor: 'rgba(124, 77, 255, 0.5)',
-        background: 'radial-gradient(circle at 40% 35%, rgba(124,77,255,0.25) 0%, #0a0a0f 70%)',
-        boxShadow: 'inset 0 0 20px rgba(124, 77, 255, 0.25), 0 0 20px -8px rgba(124, 77, 255, 0.4)',
+        borderColor: 'rgba(217, 119, 87, 0.5)',
+        background: 'radial-gradient(circle at 40% 35%, rgba(217, 119, 87,0.25) 0%, #0b0a09 70%)',
+        boxShadow: 'inset 0 0 20px rgba(217, 119, 87, 0.25), 0 0 20px -8px rgba(217, 119, 87, 0.4)',
       }}
     >
       <div
@@ -308,17 +308,17 @@ function MaVideoTile() {
       <div
         className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border"
         style={{
-          background: 'linear-gradient(160deg, #1a1d2e 0%, #0a0a12 100%)',
+          background: 'linear-gradient(160deg, #1a130d 0%, #0b0a08 100%)',
           borderColor: 'rgba(255,255,255,0.1)',
         }}
       >
         <div
           className="absolute inset-0 opacity-80"
-          style={{ background: 'radial-gradient(ellipse at 50% 20%, rgba(80, 120, 200, 0.25) 0%, transparent 50%)' }}
+          style={{ background: 'radial-gradient(ellipse at 50% 20%, rgba(226, 133, 79, 0.25) 0%, transparent 50%)' }}
         />
         <div
           className="absolute right-1.5 top-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-md border bg-black/45"
-          style={{ borderColor: 'rgba(124,77,255,0.4)' }}
+          style={{ borderColor: 'rgba(217, 119, 87,0.4)' }}
         >
           <Camera className="h-2.5 w-2.5" style={{ color: PURPLE }} />
         </div>
@@ -353,7 +353,7 @@ function MembresBlock() {
         <button
           type="button"
           className="shrink-0 rounded-full border px-1 py-0.5 text-[7px] font-semibold min-[400px]:px-1.5 min-[400px]:text-[8px]"
-          style={{ borderColor: 'rgba(124, 77, 255, 0.5)', color: PURPLE, background: 'rgba(124, 77, 255, 0.08)' }}
+          style={{ borderColor: 'rgba(217, 119, 87, 0.5)', color: PURPLE, background: 'rgba(217, 119, 87, 0.08)' }}
         >
           Voir tous
         </button>
@@ -395,7 +395,7 @@ function MembresBlock() {
         <div className="w-[32px] shrink-0 text-center min-[400px]:w-10">
           <div
             className="mx-auto flex h-7 w-7 min-[400px]:h-8 min-[400px]:w-8 items-center justify-center rounded-full text-[7px] font-extrabold min-[400px]:text-[7.5px]"
-            style={{ background: `linear-gradient(140deg, ${PURPLE} 0%, #4a1d7a 100%)` }}
+            style={{ background: `linear-gradient(140deg, ${PURPLE} 0%, #6b2f28 100%)` }}
           >
             +124
           </div>
@@ -428,8 +428,8 @@ function ImmersiveAlphaFooter({ className }) {
               type="button"
               className="flex h-10 w-10 min-[400px]:h-11 min-[400px]:w-11 items-center justify-center rounded-full text-white"
               style={{
-                background: `radial-gradient(circle at 30% 25%, #9d7cff 0%, ${PURPLE} 50%, #4a1d9e 100%)`,
-                boxShadow: `0 0 0 1.5px rgba(124, 77, 255, 0.45), 0 4px 16px -3px ${PURPLE}cc, inset 0 1px 0 rgba(255,255,255,0.2)`,
+                background: `radial-gradient(circle at 30% 25%, #e0926a 0%, ${PURPLE} 50%, #7a3620 100%)`,
+                boxShadow: `0 0 0 1.5px rgba(217, 119, 87, 0.45), 0 4px 16px -3px ${PURPLE}cc, inset 0 1px 0 rgba(255,255,255,0.2)`,
               }}
               disabled
               aria-label="Micro"

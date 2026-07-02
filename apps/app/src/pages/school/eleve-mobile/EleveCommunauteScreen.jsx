@@ -22,12 +22,12 @@ import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { EV_BG, EV_MUTED, EV_ACCENT, EV_LINE, EV_R, EV_SH } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const PAGE_AMBIENT =
-  'radial-gradient(50% 32% at 50% 0%, rgba(123, 97, 255, 0.14), transparent 70%)';
+  'radial-gradient(50% 32% at 50% 0%, rgba(217, 119, 87, 0.14), transparent 70%)';
 
 function listPanelSurface() {
   return {
-    background: 'linear-gradient(195deg, rgba(18, 20, 32, 0.97) 0%, rgba(10, 10, 18, 0.99) 100%)',
-    border: '1px solid rgba(165, 180, 252, 0.16)',
+    background: 'linear-gradient(195deg, rgba(18,15,11,0.97) 0%, rgba(12,10,8,0.99) 100%)',
+    border: '1px solid rgba(240, 200, 175, 0.16)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 20px -8px rgba(0,0,0,0.4)',
   };
 }
@@ -35,10 +35,10 @@ function listPanelSurface() {
 function feedCardSurface() {
   return {
     background: [
-      'radial-gradient(ellipse 90% 70% at 10% 0%, rgba(99, 102, 241, 0.12) 0%, transparent 55%)',
-      'linear-gradient(190deg, rgba(22, 24, 36, 0.98) 0%, rgba(12, 14, 22, 0.99) 100%)',
+      'radial-gradient(ellipse 90% 70% at 10% 0%, rgba(217, 119, 87, 0.12) 0%, transparent 55%)',
+      'linear-gradient(190deg, rgba(22,18,13,0.98) 0%, rgba(14,11,9,0.99) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.15)',
+    border: '1px solid rgba(240, 200, 175, 0.15)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 14px -4px rgba(0,0,0,0.4)',
   };
 }
@@ -111,7 +111,7 @@ function HubRow({ to, title, sub, icon: Icon }) {
             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
           }}
         >
-          <Icon className="h-[18px] w-[18px]" style={{ color: '#C4B5FD' }} strokeWidth={2.1} />
+          <Icon className="h-[18px] w-[18px]" style={{ color: '#eab89a' }} strokeWidth={2.1} />
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[14px] font-medium tracking-tight text-white/95">{title}</p>
@@ -142,11 +142,11 @@ function FeedCard({ to, kicker, title, sub, icon: Icon, badge }) {
             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
           }}
         >
-          <Icon className="h-[18px] w-[18px]" style={{ color: '#C4B5FD' }} strokeWidth={2.1} />
+          <Icon className="h-[18px] w-[18px]" style={{ color: '#eab89a' }} strokeWidth={2.1} />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-300/85">{kicker}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-orange-300/85">{kicker}</p>
             {badge ? <EleveBadge tone="violet">{badge}</EleveBadge> : null}
           </div>
           <p className="mt-1.5 line-clamp-2 text-[15px] font-semibold leading-snug tracking-tight text-white/95">
@@ -214,7 +214,7 @@ export default function EleveCommunauteScreen() {
               className="mb-5 overflow-hidden p-4"
               style={{ borderRadius: EV_R.lg, ...listPanelSurface() }}
             >
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-300/80">Bienvenue</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-orange-300/80">Bienvenue</p>
               <p className="mt-2 text-[18px] font-extrabold leading-tight text-white">Rejoins la conversation</p>
               <p className="mt-1.5 text-[13px] leading-relaxed" style={{ color: EV_MUTED }}>
                 Connecte-toi pour échanger avec les autres élèves et l'école.
@@ -224,7 +224,7 @@ export default function EleveCommunauteScreen() {
                   to={ELEVE_MOBILE.login}
                   className="flex h-12 items-center justify-center rounded-2xl text-[14px] font-semibold text-white transition active:scale-[0.98]"
                   style={{
-                    background: `linear-gradient(135deg, ${EV_ACCENT} 0%, #5B21B6 100%)`,
+                    background: `linear-gradient(135deg, ${EV_ACCENT} 0%, #a94f33 100%)`,
                     boxShadow: EV_SH.cta,
                   }}
                 >
@@ -255,13 +255,13 @@ export default function EleveCommunauteScreen() {
             className="mb-2.5"
             action="Tout voir"
             actionTo="/community"
-            actionClassName="!text-violet-400/95"
+            actionClassName="!text-orange-400/95"
           >
             {topics.length > 0 ? 'Forum — Récents' : 'À la une'}
           </EleveSectionTitle>
           {forumLoading ? (
             <div className="flex justify-center py-6">
-              <Loader2 className="h-5 w-5 animate-spin text-violet-400/60" />
+              <Loader2 className="h-5 w-5 animate-spin text-orange-400/60" />
             </div>
           ) : (
             <div className="flex flex-col gap-2.5">
@@ -272,7 +272,7 @@ export default function EleveCommunauteScreen() {
           )}
 
           <div className="mt-8 flex items-center justify-center gap-1.5 text-white/25">
-            <Sparkles className="h-3 w-3 text-violet-400/50" />
+            <Sparkles className="h-3 w-3 text-orange-400/50" />
             <span className="text-[10px] uppercase tracking-[0.2em]">Esprit · Respect · Bienveillance</span>
           </div>
           <LiriPageFooterLine marginClass="mt-5" suffix="Communauté" />

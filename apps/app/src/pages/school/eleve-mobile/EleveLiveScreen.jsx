@@ -22,12 +22,12 @@ import { format, isToday, isTomorrow } from 'date-fns';
 import { fr as frLocale } from 'date-fns/locale';
 
 const PAGE_AMBIENT =
-  'radial-gradient(50% 32% at 50% 0%, rgba(123, 97, 255, 0.14), transparent 70%)';
+  'radial-gradient(50% 32% at 50% 0%, rgba(217, 119, 87, 0.14), transparent 70%)';
 
 function liveHubPanelSurface() {
   return {
-    background: 'linear-gradient(198deg, rgba(18, 20, 32, 0.98) 0%, rgba(10, 10, 18, 0.99) 100%)',
-    border: '1px solid rgba(165, 180, 252, 0.14)',
+    background: 'linear-gradient(198deg, rgba(18,15,11,0.98) 0%, rgba(12,10,8,0.99) 100%)',
+    border: '1px solid rgba(240, 200, 175, 0.14)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 20px -8px rgba(0,0,0,0.45)',
   };
 }
@@ -69,9 +69,9 @@ const TONE_STYLES = {
     ring: 'rgba(16,185,129,0.22)',
   },
   violet: {
-    iconBg: 'rgba(139,92,246,0.14)',
-    icon: '#c4b5fd',
-    ring: 'rgba(139,92,246,0.24)',
+    iconBg: 'rgba(217, 119, 87,0.14)',
+    icon: '#eab89a',
+    ring: 'rgba(217, 119, 87,0.24)',
   },
 };
 
@@ -208,7 +208,7 @@ export default function EleveLiveScreen() {
               {/* Featured */}
               {featuredSession ? (
                 <section>
-                  <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.18em] text-sky-300/90">
+                  <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.18em] text-amber-300/90">
                     {isArenaLiveJoinable(featuredSession, user?.id) ? 'En direct' : 'À venir'}
                   </p>
                   <LiveSessionCard session={featuredSession} userId={user?.id} featured />
@@ -244,9 +244,9 @@ export default function EleveLiveScreen() {
               {/* Panneau info */}
               <div
                 className="flex items-start gap-3 rounded-3xl border p-4"
-                style={{ ...liveHubPanelSurface(), borderColor: 'rgba(56,189,248,0.16)' }}
+                style={{ ...liveHubPanelSurface(), borderColor: 'rgba(230, 160, 110,0.16)' }}
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky-400/10 text-sky-300">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-400/10 text-amber-300">
                   <Info className="h-5 w-5" />
                 </div>
                 <div>
@@ -283,11 +283,11 @@ function LiveSessionCard({ session: s, userId, featured = false }) {
   const card = (
     <div
       className={`group flex gap-3 rounded-3xl border p-3 transition active:scale-[0.99] ${
-        featured ? 'shadow-[0_16px_42px_-20px_rgba(59,130,246,0.6)]' : ''
+        featured ? 'shadow-[0_16px_42px_-20px_rgba(226, 133, 79,0.6)]' : ''
       }`}
       style={{
         background: featured
-          ? 'linear-gradient(180deg, rgba(22,22,34,0.98) 0%, rgba(13,13,22,0.99) 100%)'
+          ? 'linear-gradient(180deg, rgba(22,18,13,0.98) 0%, rgba(14,12,10,0.99) 100%)'
           : 'rgba(255,255,255,0.035)',
         borderColor: featured ? styles.ring : EV_LINE,
       }}
@@ -315,10 +315,10 @@ function LiveSessionCard({ session: s, userId, featured = false }) {
             style={{
               background: isLive
                 ? 'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)'
-                : 'linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%)',
+                : 'linear-gradient(90deg, #c96844 0%, #a94f33 100%)',
               boxShadow: isLive
                 ? '0 10px 24px -12px rgba(239,68,68,0.85)'
-                : '0 10px 24px -12px rgba(37,99,235,0.85)',
+                : '0 10px 24px -12px rgba(169,79,51,0.85)',
             }}
           >
             {ctaLabel}

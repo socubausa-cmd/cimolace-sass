@@ -55,7 +55,7 @@ export default function EleveVieScolaireResultatsTab() {
               <div
                 className="shrink-0 rounded-xl px-2.5 py-1.5 text-right"
                 style={{
-                  background: 'linear-gradient(150deg, rgba(245,158,11,0.22) 0%, rgba(20,20,32,0.5) 100%)',
+                  background: 'linear-gradient(150deg, rgba(245,158,11,0.22) 0%, rgba(20,16,12,0.5) 100%)',
                   border: '1px solid rgba(245, 200, 120, 0.2)',
                 }}
               >

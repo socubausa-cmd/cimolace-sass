@@ -5,7 +5,7 @@ import { EV_BG } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 /** Même atmosphère que les écrans `EleveMobileShell` (Agenda, Accueil, etc.). */
 const PAGE_AMBIENT =
-  'radial-gradient(50% 32% at 50% 0%, rgba(123, 97, 255, 0.14), transparent 70%)';
+  'radial-gradient(50% 32% at 50% 0%, rgba(217, 119, 87, 0.14), transparent 70%)';
 
 /**
  * Barre d'état iOS (maquette) — utile en navigateur. Sur app Capacitor, la vraie status bar

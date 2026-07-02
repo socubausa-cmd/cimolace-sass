@@ -24,11 +24,11 @@ const fadeUpItem = (reduce) => ({
 });
 
 const btnPrimary =
-  'h-10 w-full gap-2 rounded-2xl border-0 bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 text-[12px] font-bold text-white shadow-[0_6px_28px_-6px_rgba(56,189,248,0.5)] hover:brightness-110 sm:w-auto';
+  'h-10 w-full gap-2 rounded-2xl border-0 bg-gradient-to-r from-amber-500 via-orange-600 to-amber-600 text-[12px] font-bold text-white shadow-[0_6px_28px_-6px_rgba(230, 160, 110,0.5)] hover:brightness-110 sm:w-auto';
 
-const btnPrimarySm = 'h-10 w-full gap-2 rounded-2xl border-0 bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 text-[12px] font-bold text-white shadow-[0_6px_28px_-6px_rgba(56,189,248,0.5)] hover:brightness-110';
+const btnPrimarySm = 'h-10 w-full gap-2 rounded-2xl border-0 bg-gradient-to-r from-amber-500 via-orange-600 to-amber-600 text-[12px] font-bold text-white shadow-[0_6px_28px_-6px_rgba(230, 160, 110,0.5)] hover:brightness-110';
 
-const filterActive = 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-[0_0_20px_-4px_rgba(56,189,248,0.45)]';
+const filterActive = 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-[0_0_20px_-4px_rgba(230, 160, 110,0.45)]';
 const filterIdle = 'bg-white/5 text-slate-400 hover:bg-white/10';
 
 /**
@@ -64,14 +64,14 @@ export default function Ecoles21SciencesMobileScreen() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: prefersReducedMotion ? 0 : 0.55, ease: EASE_PREMIUM }}
       >
-        <ProrascienceVitrineImmersiveCard variant="default" className="mb-1 border-sky-500/25 p-4 text-center !shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-          <span className="inline-flex items-center gap-2 rounded-full border border-sky-500/35 bg-sky-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-sky-200/95">
-            <BookOpen className="h-3.5 w-3.5 text-sky-300" strokeWidth={2} />
+        <ProrascienceVitrineImmersiveCard variant="default" className="mb-1 border-amber-500/25 p-4 text-center !shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+          <span className="inline-flex items-center gap-2 rounded-full border border-amber-500/35 bg-amber-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-amber-200/95">
+            <BookOpen className="h-3.5 w-3.5 text-amber-300" strokeWidth={2} />
             Curriculum officiel
           </span>
           <h1 className="mt-3 font-sans text-xl font-bold leading-tight tracking-tight text-white">
             Les 21 Sciences
-            <span className="mt-0.5 block bg-gradient-to-r from-sky-200 via-cyan-200 to-sky-300 bg-clip-text font-bold text-transparent">
+            <span className="mt-0.5 block bg-gradient-to-r from-amber-200 via-amber-200 to-amber-300 bg-clip-text font-bold text-transparent">
               Mystiques africaines
             </span>
           </h1>
@@ -87,20 +87,20 @@ export default function Ecoles21SciencesMobileScreen() {
               Page commerciale premium
             </Link>
           </Button>
-          <Button asChild variant="outline" className="h-10 w-full border-sky-500/35 bg-sky-500/[0.07] text-white hover:bg-sky-500/15 sm:w-auto" size="sm">
+          <Button asChild variant="outline" className="h-10 w-full border-amber-500/35 bg-amber-500/[0.07] text-white hover:bg-amber-500/15 sm:w-auto" size="sm">
             <Link to="/signup" className="inline-flex w-full items-center justify-center sm:w-auto">
               Commencer maintenant
             </Link>
           </Button>
         </div>
         {prefersReducedMotion ? (
-          <ChevronDown className="mx-auto mt-5 h-5 w-5 text-sky-500/50" />
+          <ChevronDown className="mx-auto mt-5 h-5 w-5 text-amber-500/50" />
         ) : (
           <motion.div
             animate={{ y: [0, 4, 0] }}
             transition={{ duration: 2.4, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
           >
-            <ChevronDown className="mx-auto mt-5 h-5 w-5 text-sky-500/50" />
+            <ChevronDown className="mx-auto mt-5 h-5 w-5 text-amber-500/50" />
           </motion.div>
         )}
       </motion.div>
@@ -138,7 +138,7 @@ export default function Ecoles21SciencesMobileScreen() {
                       key={num}
                       className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.04] px-2.5 py-1.5"
                     >
-                      {Ic && <Ic className={`h-3.5 w-3.5 shrink-0 ${p?.accent || 'text-sky-400'}`} />}
+                      {Ic && <Ic className={`h-3.5 w-3.5 shrink-0 ${p?.accent || 'text-amber-400'}`} />}
                       <span className="text-left text-[11px] text-slate-300">{sc?.name}</span>
                     </li>
                   );
@@ -190,7 +190,7 @@ export default function Ecoles21SciencesMobileScreen() {
       </motion.div>
 
       <ProrascienceVitrineImmersiveCard variant="sky" className="mt-4 p-4 text-center">
-        <GraduationCap className="mx-auto mb-2 h-7 w-7 text-sky-400/90" />
+        <GraduationCap className="mx-auto mb-2 h-7 w-7 text-amber-400/90" />
         <h2 className="font-sans text-base font-bold text-white">Une science complète de la réalité africaine</h2>
         <p className="mt-1.5 text-[11px] text-slate-400">
           Comprendre le monde, voir l'invisible, agir sur la réalité, guider la société.
@@ -198,7 +198,7 @@ export default function Ecoles21SciencesMobileScreen() {
       </ProrascienceVitrineImmersiveCard>
 
       <div className="mt-4 text-center">
-        <Crown className="mx-auto mb-2 h-8 w-8 text-sky-400/70" />
+        <Crown className="mx-auto mb-2 h-8 w-8 text-amber-400/70" />
         <p className="text-[12px] leading-relaxed text-slate-400">
           Ce système est comparable aux grandes traditions : académie initiatique, université spirituelle, doctrine
           africaine.
@@ -215,7 +215,7 @@ export default function Ecoles21SciencesMobileScreen() {
               Voir les formations
             </Link>
           </Button>
-          <Button asChild variant="outline" className="h-10 w-full border-sky-500/30 text-white hover:bg-sky-500/10" size="sm">
+          <Button asChild variant="outline" className="h-10 w-full border-amber-500/30 text-white hover:bg-amber-500/10" size="sm">
             <a href="/appointment/request" className="inline-flex w-full items-center justify-center">
               Prendre rendez-vous
             </a>

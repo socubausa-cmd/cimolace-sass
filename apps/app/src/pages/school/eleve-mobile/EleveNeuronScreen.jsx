@@ -17,12 +17,12 @@ import { cn } from '@/lib/utils';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
 
 const PAGE_AMBIENT =
-  'radial-gradient(50% 32% at 50% 0%, rgba(123, 97, 255, 0.14), transparent 70%)';
+  'radial-gradient(50% 32% at 50% 0%, rgba(217, 119, 87, 0.14), transparent 70%)';
 
 const ROW_HALO = [
-  'rgba(56, 189, 248, 0.12)',
+  'rgba(230, 160, 110, 0.12)',
   'rgba(245, 158, 11, 0.12)',
-  'rgba(123, 97, 255, 0.14)',
+  'rgba(217, 119, 87, 0.14)',
   'rgba(16, 185, 129, 0.12)',
 ];
 
@@ -31,9 +31,9 @@ function featRowSurface(index) {
   return {
     background: [
       `radial-gradient(ellipse 100% 78% at 8% 0%, ${h} 0%, transparent 55%)`,
-      'linear-gradient(195deg, rgba(24, 26, 40, 0.97) 0%, rgba(10, 12, 24, 0.99) 100%)',
+      'linear-gradient(195deg, rgba(24,20,15,0.97) 0%, rgba(14,11,9,0.99) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.18)',
+    border: '1px solid rgba(240, 200, 175, 0.18)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07), 0 2px 12px -4px rgba(0,0,0,0.4)',
   };
 }
@@ -41,14 +41,14 @@ function featRowSurface(index) {
 function heroSurface() {
   return {
     background: [
-      'radial-gradient(ellipse 100% 80% at 20% 0%, rgba(56, 189, 248, 0.15) 0%, transparent 58%)',
-      'radial-gradient(ellipse 60% 50% at 100% 100%, rgba(123, 97, 255, 0.12) 0%, transparent 55%)',
-      'linear-gradient(168deg, rgba(28, 32, 52, 0.98) 0%, rgba(14, 16, 30, 0.99) 100%)',
+      'radial-gradient(ellipse 100% 80% at 20% 0%, rgba(230, 160, 110, 0.15) 0%, transparent 58%)',
+      'radial-gradient(ellipse 60% 50% at 100% 100%, rgba(217, 119, 87, 0.12) 0%, transparent 55%)',
+      'linear-gradient(168deg, rgba(28,22,16,0.98) 0%, rgba(17,13,10,0.99) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.2)',
+    border: '1px solid rgba(240, 200, 175, 0.2)',
     boxShadow: [
       'inset 0 1px 0 rgba(255,255,255,0.1)',
-      '0 12px 36px -14px rgba(79, 70, 229, 0.3)',
+      '0 12px 36px -14px rgba(201, 106, 76, 0.3)',
       '0 4px 16px -4px rgba(0,0,0,0.45)',
     ].join(', '),
   };
@@ -57,10 +57,10 @@ function heroSurface() {
 function lastConvSurface() {
   return {
     background: [
-      'radial-gradient(ellipse 90% 70% at 0% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 60%)',
-      'linear-gradient(188deg, rgba(22, 24, 34, 0.96) 0%, rgba(12, 14, 22, 0.99) 100%)',
+      'radial-gradient(ellipse 90% 70% at 0% 50%, rgba(217, 119, 87, 0.1) 0%, transparent 60%)',
+      'linear-gradient(188deg, rgba(22,18,13,0.96) 0%, rgba(14,11,9,0.99) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.14)',
+    border: '1px solid rgba(240, 200, 175, 0.14)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
   };
 }
@@ -71,8 +71,8 @@ const FEATS = [
     title: 'Résumer ce cours',
     sub: 'Synthèse claire de tes supports',
     icon: BookOpen,
-    iconBox: 'bg-sky-500/20 border-sky-500/35',
-    iconColor: 'text-sky-200',
+    iconBox: 'bg-amber-500/20 border-amber-500/35',
+    iconColor: 'text-amber-200',
   },
   {
     to: '/notebook',
@@ -87,8 +87,8 @@ const FEATS = [
     title: 'Créer un quiz',
     sub: 'Questions à choix sur ton chapitre',
     icon: ListChecks,
-    iconBox: 'bg-violet-500/20 border-violet-500/35',
-    iconColor: 'text-violet-200',
+    iconBox: 'bg-orange-500/20 border-orange-500/35',
+    iconColor: 'text-orange-200',
   },
   {
     to: '/notebook',
@@ -111,11 +111,11 @@ function BrainArt() {
       <div
         aria-hidden
         className="absolute inset-0 scale-110 rounded-full opacity-60 blur-2xl"
-        style={{ background: 'radial-gradient(circle, rgba(56, 189, 248, 0.55) 0%, rgba(123, 97, 255, 0.4) 45%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(230, 160, 110, 0.55) 0%, rgba(217, 119, 87, 0.4) 45%, transparent 70%)' }}
       />
       <svg
         viewBox="0 0 200 180"
-        className="relative h-full w-full drop-shadow-[0_0_24px_rgba(56,189,248,0.45)]"
+        className="relative h-full w-full drop-shadow-[0_0_24px_rgba(230, 160, 110,0.45)]"
         aria-hidden
       >
         <path
@@ -136,9 +136,9 @@ function BrainArt() {
         />
         <defs>
           <linearGradient id="nr-br" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#7dd3fc" />
-            <stop offset="0.45" stopColor="#7B61FF" />
-            <stop offset="1" stopColor="#4c1d95" />
+            <stop offset="0" stopColor="#eab89a" />
+            <stop offset="0.45" stopColor="#d97757" />
+            <stop offset="1" stopColor="#7a3620" />
           </linearGradient>
         </defs>
       </svg>
@@ -173,8 +173,8 @@ export default function EleveNeuronScreen() {
               <div className="mt-0.5 flex flex-wrap items-center gap-2">
                 <h1 className="text-[22px] font-extrabold leading-tight tracking-[-0.02em] text-white">Neuron IA</h1>
                 <span
-                  className="shrink-0 rounded-md border border-violet-500/40 px-1.5 py-0.5 text-[7.5px] font-extrabold uppercase tracking-wider"
-                  style={{ background: 'rgba(123, 97, 255, 0.2)', color: 'rgba(196, 181, 253, 0.95)' }}
+                  className="shrink-0 rounded-md border border-orange-500/40 px-1.5 py-0.5 text-[7.5px] font-extrabold uppercase tracking-wider"
+                  style={{ background: 'rgba(217, 119, 87, 0.2)', color: 'rgba(235, 200, 170, 0.95)' }}
                 >
                   BÊTA
                 </span>
@@ -202,7 +202,7 @@ export default function EleveNeuronScreen() {
           <div
             aria-hidden
             className="pointer-events-none absolute -right-4 -top-6 h-28 w-28 rounded-full opacity-40 blur-2xl"
-            style={{ background: 'radial-gradient(circle, rgba(196, 181, 253, 0.35) 0%, transparent 70%)' }}
+            style={{ background: 'radial-gradient(circle, rgba(235, 200, 170, 0.35) 0%, transparent 70%)' }}
           />
           <div className="relative min-w-0 flex-1 pr-1">
             <p className="text-[19px] font-extrabold leading-tight text-white">
@@ -250,7 +250,7 @@ export default function EleveNeuronScreen() {
               style={{ borderRadius: EV_R.sm, ...lastConvSurface() }}
             >
               <div className="flex min-w-0 items-center gap-2">
-                <MessageCircle className="h-4 w-4 shrink-0 text-violet-300/85" strokeWidth={2} />
+                <MessageCircle className="h-4 w-4 shrink-0 text-orange-300/85" strokeWidth={2} />
                 <span className="line-clamp-1 text-[13px] font-medium text-white/95">{x.t}</span>
               </div>
               <span className="shrink-0 pl-1 text-[10.5px] tabular-nums" style={{ color: EV_MUTED }}>

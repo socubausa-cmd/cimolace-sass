@@ -11,7 +11,7 @@ import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { EV_ACCENT, EV_BG, EV_PAGE_AMBIENT } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const HEADER_GLASS =
-  'linear-gradient(180deg, rgba(24,24,36,0.78) 0%, rgba(14,14,22,0.94) 40%, rgba(11, 11, 15, 0.96) 100%)';
+  'linear-gradient(180deg, rgba(24,20,15,0.78) 0%, rgba(15,12,10,0.94) 40%, rgba(11, 11, 15, 0.96) 100%)';
 
 /**
  * Confirmation d'achat e‑commerce dans le shell LIRI élève (retour paiement Stripe, etc.).

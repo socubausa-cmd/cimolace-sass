@@ -18,16 +18,16 @@ import { EleveConnectionLayout } from '@/pages/school/eleve-mobile/connection/El
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 
 const MUTED = '#8E8E93';
-const CARD = '#12121E';
+const CARD = '#151210';
 const LINE = 'rgba(255,255,255,0.08)';
-const PURPLE = '#7B61FF';
+const PURPLE = '#d97757';
 const RED = '#F43F5E';
-const BLUE = '#3B82F6';
+const BLUE = '#e2854f';
 const GREEN = '#22C55E';
 
 const GRAD_CTA = {
-  background: 'linear-gradient(90deg, #7B61FF 0%, #5E4BFF 45%, #4F46E5 100%)',
-  boxShadow: '0 10px 32px -8px rgba(123, 97, 255, 0.45), 0 4px 12px -4px rgba(79, 70, 229, 0.35)',
+  background: 'linear-gradient(90deg, #d97757 0%, #d97757 45%, #c96a4c 100%)',
+  boxShadow: '0 10px 32px -8px rgba(217, 119, 87, 0.45), 0 4px 12px -4px rgba(201, 106, 76, 0.35)',
 };
 
 /** Illustration 3D simplifiée : cadenas + symbole interdit rouge. */
@@ -41,13 +41,13 @@ function PadlockDeniedHero() {
         className="absolute inset-0 overflow-hidden rounded-[2rem] opacity-90"
         style={{
           background:
-            'radial-gradient(ellipse 80% 60% at 50% 100%, rgba(88, 28, 135, 0.25), transparent 60%), radial-gradient(ellipse 50% 40% at 30% 20%, rgba(59, 130, 246, 0.12), transparent 50%)',
+            'radial-gradient(ellipse 80% 60% at 50% 100%, rgba(122,54,32,0.25), transparent 60%), radial-gradient(ellipse 50% 40% at 30% 20%, rgba(226, 133, 79, 0.12), transparent 50%)',
         }}
       />
       {['+', '·', '+', '·'].map((c, i) => (
         <span
           key={i}
-          className="absolute text-[10px] font-light text-violet-400/30"
+          className="absolute text-[10px] font-light text-orange-400/30"
           style={{
             left: `${12 + i * 22}%`,
             top: `${18 + (i % 2) * 12}%`,
@@ -59,17 +59,17 @@ function PadlockDeniedHero() {
       ))}
       <div
         className="absolute bottom-2 left-1/2 h-10 w-28 -translate-x-1/2 rounded-full opacity-50 blur-2xl"
-        style={{ background: 'radial-gradient(ellipse, rgba(123, 97, 255, 0.5) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(ellipse, rgba(217, 119, 87, 0.5) 0%, transparent 70%)' }}
       />
       <div className="relative z-10 flex flex-col items-center pb-1">
         <div
           className="relative flex h-[100px] w-[72px] items-start justify-center pt-1"
-          style={{ filter: 'drop-shadow(0 16px 36px rgba(88, 28, 135, 0.55))' }}
+          style={{ filter: 'drop-shadow(0 16px 36px rgba(122,54,32,0.55))' }}
         >
           <div
             className="absolute top-0 h-[52px] w-[64px] rounded-2xl"
             style={{
-              background: 'linear-gradient(165deg, #8B5CF6 0%, #6D28D9 50%, #4C1D95 100%)',
+              background: 'linear-gradient(165deg, #d97757 0%, #a94f33 50%, #7a3620 100%)',
               boxShadow: `
                 inset 0 2px 0 rgba(255,255,255,0.22),
                 inset 0 -2px 0 rgba(0,0,0,0.4),
@@ -80,16 +80,16 @@ function PadlockDeniedHero() {
           <div
             className="absolute top-10 h-14 w-[60px] rounded-b-[1.1rem] rounded-t-sm"
             style={{
-              background: 'linear-gradient(180deg, #6D28D9 0%, #4c1d95 100%)',
+              background: 'linear-gradient(180deg, #a94f33 0%, #7a3620 100%)',
               boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)',
             }}
           />
           <div
             className="absolute top-3.5 h-7 w-10 rounded-b-lg"
             style={{
-              border: '4px solid rgba(124, 58, 237, 0.95)',
+              border: '4px solid rgba(201, 106, 76, 0.95)',
               borderTop: 'none',
-              background: 'linear-gradient(180deg, rgba(15,5,30,0.3), rgba(0,0,0,0.5))',
+              background: 'linear-gradient(180deg, rgba(22,12,8,0.3), rgba(0,0,0,0.5))',
             }}
           />
           <div
@@ -131,7 +131,7 @@ function ActionRow({ to, left, title, sub, chevronClass, iconWrapClass, iconStyl
     <Link
       to={to}
       className="flex w-full min-h-[72px] items-center gap-3.5 px-4 py-3.5 transition active:scale-[0.99]"
-      style={{ background: '#0E0E1F' }}
+      style={{ background: '#120c0a' }}
     >
       <span className={iconWrapClass} style={iconStyle}>
         {left}
@@ -205,8 +205,8 @@ export default function EleveLiveAccessDeniedScreen() {
               />
               <WhyRow
                 icon={ShieldCheck}
-                iconBg="rgba(123, 97, 255, 0.2)"
-                iconClass="text-violet-300"
+                iconBg="rgba(217, 119, 87, 0.2)"
+                iconClass="text-orange-300"
                 title="Accès non autorisé"
                 sub="Seuls les élèves invités peuvent rejoindre ce live."
               />
@@ -266,14 +266,14 @@ export default function EleveLiveAccessDeniedScreen() {
               <div
                 className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(123, 97, 255, 0.35), rgba(30, 20, 60, 0.9))',
+                  background: 'linear-gradient(135deg, rgba(217, 119, 87, 0.35), rgba(55,32,20,0.9))',
                   boxShadow: '0 0 0 1px rgba(255,255,255,0.1)',
                 }}
                 aria-hidden
               >
-                <div className="absolute bottom-0 left-1/2 h-8 w-10 -translate-x-1/2 rounded-t-full bg-violet-900/60" />
+                <div className="absolute bottom-0 left-1/2 h-8 w-10 -translate-x-1/2 rounded-t-full bg-orange-900/60" />
                 <div className="absolute left-1/2 top-2 h-7 w-7 -translate-x-1/2 rounded-full bg-amber-800/80" />
-                <span className="absolute right-0 top-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-violet-200 shadow-sm" style={{ background: PURPLE }}>
+                <span className="absolute right-0 top-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-orange-200 shadow-sm" style={{ background: PURPLE }}>
                   ?
                 </span>
               </div>
@@ -287,7 +287,7 @@ export default function EleveLiveAccessDeniedScreen() {
             <Link
               to="/support"
               className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-semibold transition hover:bg-white/5"
-              style={{ borderColor: 'rgba(123, 97, 255, 0.6)', color: PURPLE }}
+              style={{ borderColor: 'rgba(217, 119, 87, 0.6)', color: PURPLE }}
             >
               <Headphones className="h-4 w-4" strokeWidth={2.2} />
               Contacter le support
@@ -310,7 +310,7 @@ export default function EleveLiveAccessDeniedScreen() {
             Aller à mon espace
           </Link>
           <p className="flex items-center justify-center gap-2 text-center text-[11px] leading-relaxed" style={{ color: MUTED }}>
-            <Shield className="h-3.5 w-3.5 shrink-0 text-violet-400/90" strokeWidth={2.2} />
+            <Shield className="h-3.5 w-3.5 shrink-0 text-orange-400/90" strokeWidth={2.2} />
             Tes données sont protégées et sécurisées.
           </p>
         </motion.div>

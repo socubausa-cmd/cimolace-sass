@@ -48,7 +48,7 @@ export default function EleveEtudiantAbsencesScreen() {
       >
         {loading ? (
           <div className="flex justify-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-violet-300" />
+            <Loader2 className="h-8 w-8 animate-spin text-orange-300" />
           </div>
         ) : (
           <>

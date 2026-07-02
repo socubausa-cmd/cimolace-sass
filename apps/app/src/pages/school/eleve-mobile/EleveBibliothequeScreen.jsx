@@ -29,29 +29,29 @@ import { fetchPublishedFormationsForModules } from '@/pages/school/eleve-mobile/
 
 /** Même filet d'atmosphère que l'agenda (aligné `EleveMobileShell`). */
 const PAGE_AMBIENT =
-  'radial-gradient(50% 32% at 50% 0%, rgba(123, 97, 255, 0.14), transparent 70%)';
+  'radial-gradient(50% 32% at 50% 0%, rgba(217, 119, 87, 0.14), transparent 70%)';
 
 const CARD_INNER_HAZE =
-  'radial-gradient(55% 40% at 8% 0%, rgba(59, 130, 246, 0.1), transparent 60%), radial-gradient(45% 35% at 100% 8%, rgba(124, 58, 237, 0.08), transparent 55%)';
+  'radial-gradient(55% 40% at 8% 0%, rgba(226, 133, 79, 0.1), transparent 60%), radial-gradient(45% 35% at 100% 8%, rgba(201, 106, 76, 0.08), transparent 55%)';
 
 const COURSE_ROW_HALO = [
-  'rgba(99, 102, 241, 0.14)',
-  'rgba(59, 130, 246, 0.12)',
-  'rgba(124, 58, 237, 0.12)',
+  'rgba(217, 119, 87, 0.14)',
+  'rgba(226, 133, 79, 0.12)',
+  'rgba(201, 106, 76, 0.12)',
   'rgba(16, 185, 129, 0.1)',
-  'rgba(168, 85, 247, 0.1)',
+  'rgba(224, 146, 106, 0.1)',
 ];
 
 function progressCardSurface() {
   return {
     background: [
-      'radial-gradient(ellipse 100% 75% at 20% 0%, rgba(99, 102, 241, 0.22) 0%, transparent 58%)',
-      'linear-gradient(150deg, rgba(22, 32, 58, 0.98) 0%, rgba(9, 14, 32, 0.99) 100%)',
+      'radial-gradient(ellipse 100% 75% at 20% 0%, rgba(217, 119, 87, 0.22) 0%, transparent 58%)',
+      'linear-gradient(150deg, rgba(22,18,13,0.98) 0%, rgba(20,14,10,0.99) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.2)',
+    border: '1px solid rgba(240, 200, 175, 0.2)',
     boxShadow: [
       'inset 0 1px 0 rgba(255,255,255,0.1)',
-      '0 12px 36px -14px rgba(30, 64, 175, 0.35)',
+      '0 12px 36px -14px rgba(138,63,40,0.35)',
       '0 4px 16px -4px rgba(0,0,0,0.45)',
     ].join(', '),
   };
@@ -62,9 +62,9 @@ function courseInProgressSurface(index) {
   return {
     background: [
       `radial-gradient(ellipse 100% 80% at 50% 0%, ${h} 0%, transparent 55%)`,
-      'linear-gradient(195deg, rgba(22, 24, 38, 0.97) 0%, rgba(10, 12, 22, 0.99) 100%)',
+      'linear-gradient(195deg, rgba(22,18,13,0.97) 0%, rgba(14,11,9,0.99) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.18)',
+    border: '1px solid rgba(240, 200, 175, 0.18)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07), 0 4px 16px -6px rgba(0,0,0,0.4)',
   };
 }
@@ -73,7 +73,7 @@ function courseDoneSurface() {
   return {
     background: [
       'radial-gradient(ellipse 100% 70% at 0% 0%, rgba(16, 185, 129, 0.1) 0%, transparent 55%)',
-      'linear-gradient(188deg, rgba(22, 30, 28, 0.98) 0%, rgba(12, 18, 16, 0.99) 100%)',
+      'linear-gradient(188deg, rgba(22,18,13,0.98) 0%, rgba(14,12,9,0.99) 100%)',
     ].join(', '),
     border: '1px solid rgba(52, 211, 153, 0.18)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 10px -3px rgba(0,0,0,0.35)',
@@ -83,11 +83,11 @@ function courseDoneSurface() {
 function longiaRowSurface() {
   return {
     background: [
-      'radial-gradient(ellipse 80% 70% at 0% 50%, rgba(123, 97, 255, 0.12) 0%, transparent 60%)',
-      'linear-gradient(90deg, rgba(26, 24, 44, 0.95) 0%, rgba(16, 14, 28, 0.98) 100%)',
+      'radial-gradient(ellipse 80% 70% at 0% 50%, rgba(217, 119, 87, 0.12) 0%, transparent 60%)',
+      'linear-gradient(90deg, rgba(26,20,15,0.95) 0%, rgba(18,13,10,0.98) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.18)',
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px -4px rgba(99, 102, 241, 0.15)',
+    border: '1px solid rgba(240, 200, 175, 0.18)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px -4px rgba(217, 119, 87, 0.15)',
   };
 }
 
@@ -99,10 +99,10 @@ function subjectIcon(key) {
 
 function formationCoverStyle(title) {
   const t = String(title || '').toLowerCase();
-  if (t.includes('math') || t.includes('calcul')) return 'from-emerald-900/50 via-slate-800/50 to-cyan-900/30';
-  if (t.includes('chim')) return 'from-violet-900/50 via-indigo-900/40 to-slate-900/50';
-  if (t.includes('phys')) return 'from-sky-900/50 via-blue-900/40 to-slate-900/50';
-  return 'from-indigo-900/50 via-slate-800/50 to-fuchsia-900/40';
+  if (t.includes('math') || t.includes('calcul')) return 'from-emerald-900/50 via-slate-800/50 to-amber-900/30';
+  if (t.includes('chim')) return 'from-orange-900/50 via-amber-900/40 to-slate-900/50';
+  if (t.includes('phys')) return 'from-amber-900/50 via-orange-900/40 to-slate-900/50';
+  return 'from-amber-900/50 via-slate-800/50 to-rose-900/40';
 }
 
 /** Group lesson-level rows by course, computing real per-course completion ratio. */
@@ -146,9 +146,9 @@ function buildCourseRowsFromEnrollments(enrollments) {
         imageTone: formationCoverStyle(t),
         symbol: t.toLowerCase().includes('math') ? 'math' : t.toLowerCase().includes('chim') ? 'flask' : 'atom',
         accent: {
-          badge: 'from-violet-500/90 to-fuchsia-600/80',
-          bar: 'from-violet-500 to-fuchsia-500',
-          pct: 'text-violet-300',
+          badge: 'from-orange-500/90 to-rose-600/80',
+          bar: 'from-orange-500 to-rose-500',
+          pct: 'text-orange-300',
         },
       };
     });
@@ -231,8 +231,8 @@ function CoursSegmented({ value, onChange }) {
     <div
       className="mb-5 flex rounded-[14px] border p-1"
       style={{
-        borderColor: 'rgba(165, 180, 252, 0.18)',
-        background: 'linear-gradient(180deg, rgba(22, 24, 40, 0.85) 0%, rgba(10, 10, 20, 0.92) 100%)',
+        borderColor: 'rgba(240, 200, 175, 0.18)',
+        background: 'linear-gradient(180deg, rgba(22,18,13,0.85) 0%, rgba(12,10,8,0.92) 100%)',
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 14px -6px rgba(0,0,0,0.45)',
       }}
     >
@@ -250,10 +250,10 @@ function CoursSegmented({ value, onChange }) {
             style={
               on
                 ? {
-                    background: 'linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%)',
+                    background: 'linear-gradient(90deg, #c96a4c 0%, #c96a4c 100%)',
                     boxShadow: [
                       '0 0 0 1px rgba(255,255,255,0.12)',
-                      '0 4px 18px -4px rgba(99, 102, 241, 0.45)',
+                      '0 4px 18px -4px rgba(217, 119, 87, 0.45)',
                       '0 2px 8px -2px rgba(0,0,0,0.35)',
                     ].join(', '),
                   }
@@ -289,7 +289,7 @@ function GlobalProgressCard({ globalPct, coursEnCours, loading }) {
       <div
         aria-hidden
         className="pointer-events-none absolute -right-6 -top-8 h-28 w-28 rounded-full opacity-50 blur-2xl"
-        style={{ background: 'radial-gradient(circle, rgba(196, 181, 253, 0.35) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(235, 200, 170, 0.35) 0%, transparent 70%)' }}
       />
       <div className="relative flex items-start gap-2 sm:gap-3">
         <div className="relative h-[100px] w-[100px] shrink-0">
@@ -308,8 +308,8 @@ function GlobalProgressCard({ globalPct, coursEnCours, loading }) {
               />
               <defs>
                 <linearGradient id="gc" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#4F46E5" />
-                  <stop offset="100%" stopColor="#7C3AED" />
+                  <stop offset="0%" stopColor="#c96a4c" />
+                  <stop offset="100%" stopColor="#c96a4c" />
                 </linearGradient>
               </defs>
             </svg>
@@ -333,7 +333,7 @@ function GlobalProgressCard({ globalPct, coursEnCours, loading }) {
                 className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${pct}%`,
-                  background: 'linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%)',
+                  background: 'linear-gradient(90deg, #c96a4c 0%, #c96a4c 100%)',
                 }}
               />
             </div>
@@ -354,8 +354,8 @@ function BarChartArt() {
     <svg viewBox="0 0 100 90" className="h-full w-full opacity-90">
       <defs>
         <linearGradient id="b1" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#7C3AED" />
-          <stop offset="1" stopColor="#4F46E5" stopOpacity="0.4" />
+          <stop offset="0" stopColor="#c96a4c" />
+          <stop offset="1" stopColor="#c96a4c" stopOpacity="0.4" />
         </linearGradient>
         <filter id="glow">
           <feGaussianBlur stdDeviation="1.2" result="b" />
@@ -365,7 +365,7 @@ function BarChartArt() {
           </feMerge>
         </filter>
       </defs>
-      <path d="M50 4 L60 8 L58 20 Z" fill="#A855F7" filter="url(#glow)" />
+      <path d="M50 4 L60 8 L58 20 Z" fill="#e0926a" filter="url(#glow)" />
       <rect x="18" y="40" width="16" height="40" rx="3" fill="url(#b1)" opacity="0.9" />
       <rect x="42" y="25" width="16" height="55" rx="3" fill="url(#b1)" />
       <rect x="66" y="32" width="16" height="48" rx="3" fill="url(#b1)" opacity="0.75" />
@@ -511,7 +511,7 @@ function LongiaHelpRow() {
       className="mb-2 flex items-center gap-3 rounded-2xl px-3.5 py-3.5 transition-transform active:scale-[0.99]"
       style={{ borderRadius: EV_R.lg, ...longiaRowSurface() }}
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-violet-500/25 bg-violet-500/12 text-violet-200 shadow-[0_0_20px_-4px_rgba(123,97,255,0.4)]">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-500/25 bg-orange-500/12 text-orange-200 shadow-[0_0_20px_-4px_rgba(217, 119, 87,0.4)]">
         <Sparkles className="h-5 w-5" strokeWidth={2} />
       </span>
       <div className="min-w-0 flex-1">
@@ -605,7 +605,7 @@ export default function EleveBibliothequeScreen() {
                 <p className="mb-3 -mt-3 text-center text-[10px] text-white/35">Inscris-toi à un cours pour voir ta progression</p>
               ) : null}
 
-              <EleveSectionTitle action="Voir tout" actionTo="/formations/mes-formations" className="mb-3" actionClassName="!text-violet-400">
+              <EleveSectionTitle action="Voir tout" actionTo="/formations/mes-formations" className="mb-3" actionClassName="!text-orange-400">
                 En cours
               </EleveSectionTitle>
               {inProgressRows.length > 0 ? (
@@ -618,7 +618,7 @@ export default function EleveBibliothequeScreen() {
                   className="mb-2 flex items-center gap-3 rounded-2xl px-3.5 py-4 transition-transform active:scale-[0.99]"
                   style={{ borderRadius: EV_R.lg, ...courseInProgressSurface(0) }}
                 >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-violet-500/25 bg-violet-500/12 text-violet-200">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-500/25 bg-orange-500/12 text-orange-200">
                     <BookOpen className="h-5 w-5" strokeWidth={2} />
                   </span>
                   <div className="min-w-0 flex-1">
@@ -631,7 +631,7 @@ export default function EleveBibliothequeScreen() {
 
               {doneRows.length > 0 ? (
                 <div className="mt-1">
-                  <EleveSectionTitle action="Voir tout" actionTo="/formations/mes-formations" className="mb-3" actionClassName="!text-violet-400">
+                  <EleveSectionTitle action="Voir tout" actionTo="/formations/mes-formations" className="mb-3" actionClassName="!text-orange-400">
                     Terminés récemment
                   </EleveSectionTitle>
                   {doneRows.map((row, i) => (
@@ -679,9 +679,9 @@ export default function EleveBibliothequeScreen() {
                 to="/formations/catalogue"
                 className="mt-4 flex h-12 items-center justify-center gap-1 rounded-2xl text-[15px] font-bold text-white transition-transform active:scale-[0.99]"
                 style={{
-                  background: 'linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%)',
+                  background: 'linear-gradient(90deg, #c96a4c 0%, #c96a4c 100%)',
                   boxShadow: [
-                    '0 8px 28px -6px rgba(79, 70, 229, 0.55)',
+                    '0 8px 28px -6px rgba(201, 106, 76, 0.55)',
                     'inset 0 1px 0 rgba(255,255,255,0.15)',
                   ].join(', '),
                 }}
@@ -707,7 +707,7 @@ export default function EleveBibliothequeScreen() {
                   className="flex flex-col items-center justify-center rounded-2xl px-3 py-6 text-center active:scale-[0.98]"
                   style={courseInProgressSurface(i + 2)}
                 >
-                  <BookOpen className="mb-2 h-6 w-6 text-violet-300/90" />
+                  <BookOpen className="mb-2 h-6 w-6 text-orange-300/90" />
                   <span className="text-[13px] font-semibold text-white/90">{c}</span>
                 </Link>
               ))}

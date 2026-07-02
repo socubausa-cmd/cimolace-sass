@@ -9,15 +9,15 @@ import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenan
 function iconPillClass(sectionId) {
   switch (sectionId) {
     case 'principale':
-      return 'border-sky-500/40 bg-sky-500/20 text-sky-300';
+      return 'border-amber-500/40 bg-amber-500/20 text-amber-300';
     case 'accompagnement':
-      return 'border-violet-500/40 bg-violet-500/20 text-violet-300';
+      return 'border-orange-500/40 bg-orange-500/20 text-orange-300';
     case 'institution':
-      return 'border-indigo-500/40 bg-indigo-500/20 text-indigo-300';
+      return 'border-amber-500/40 bg-amber-500/20 text-amber-300';
     case 'communaute':
-      return 'border-cyan-500/40 bg-cyan-500/18 text-cyan-300';
+      return 'border-amber-500/40 bg-amber-500/18 text-amber-300';
     default:
-      return 'border-sky-500/35 bg-sky-500/15 text-sky-200';
+      return 'border-amber-500/35 bg-amber-500/15 text-amber-200';
   }
 }
 

@@ -22,12 +22,12 @@ import {
 } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const HERO =
-  'linear-gradient(140deg, #1e0b3d 0%, #4C1D95 28%, #5B21B6 45%, #7B61FF 58%, #312e81 100%)';
+  'linear-gradient(140deg, #1c120c 0%, #7a3620 28%, #a94f33 45%, #d97757 58%, #3a2418 100%)';
 
 /** Halos légèrement différenciés par tuile (Lun.– style cases agenda). */
 const ACTION_TILE_HALO = [
-  'rgba(124, 58, 237, 0.16)',
-  'rgba(59, 130, 246, 0.16)',
+  'rgba(201, 106, 76, 0.16)',
+  'rgba(226, 133, 79, 0.16)',
   'rgba(245, 158, 11, 0.14)',
   'rgba(16, 185, 129, 0.15)',
 ];
@@ -37,20 +37,20 @@ function actionTileStyle(index) {
   return {
     background: [
       `radial-gradient(ellipse 100% 80% at 50% 0%, ${h} 0%, transparent 58%)`,
-      'linear-gradient(192deg, rgba(26, 28, 44, 0.97) 0%, rgba(12, 14, 24, 0.99) 100%)',
+      'linear-gradient(192deg, rgba(26,21,15,0.97) 0%, rgba(15,11,9,0.99) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.2)',
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 12px -4px rgba(15, 23, 42, 0.5)',
+    border: '1px solid rgba(240, 200, 175, 0.2)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 12px -4px rgba(28,20,14,0.5)',
   };
 }
 
 function annonceCardStyle() {
   return {
     background: [
-      'radial-gradient(ellipse 100% 70% at 12% 0%, rgba(99, 102, 241, 0.12) 0%, transparent 55%)',
-      'linear-gradient(188deg, rgba(24, 24, 36, 0.98) 0%, rgba(14, 14, 22, 0.99) 100%)',
+      'radial-gradient(ellipse 100% 70% at 12% 0%, rgba(217, 119, 87, 0.12) 0%, transparent 55%)',
+      'linear-gradient(188deg, rgba(24,20,15,0.98) 0%, rgba(15,12,10,0.99) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.16)',
+    border: '1px solid rgba(240, 200, 175, 0.16)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 10px -3px rgba(0,0,0,0.4)',
   };
 }
@@ -59,7 +59,7 @@ function sondageCardStyle() {
   return {
     background: [
       'radial-gradient(ellipse 100% 80% at 50% 0%, rgba(16, 185, 129, 0.12) 0%, transparent 58%)',
-      'linear-gradient(190deg, rgba(22, 32, 30, 0.98) 0%, rgba(12, 18, 20, 0.99) 100%)',
+      'linear-gradient(190deg, rgba(22,18,13,0.98) 0%, rgba(14,12,9,0.99) 100%)',
     ].join(', '),
     border: '1px solid rgba(52, 211, 153, 0.22)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 10px -3px rgba(0,0,0,0.35)',
@@ -72,15 +72,15 @@ const TILES = [
     icon: Megaphone,
     label: 'Annonces',
     badge: null,
-    iconRing: 'border-violet-500/30 bg-violet-500/15',
-    iconColor: 'text-violet-200',
+    iconRing: 'border-orange-500/30 bg-orange-500/15',
+    iconColor: 'text-orange-200',
   },
   {
     to: `${ELEVE_MOBILE.classe}#membres`,
     icon: Users,
     label: 'Membres',
-    iconRing: 'border-sky-500/30 bg-sky-500/12',
-    iconColor: 'text-sky-200',
+    iconRing: 'border-amber-500/30 bg-amber-500/12',
+    iconColor: 'text-amber-200',
   },
   {
     to: ELEVE_MOBILE.bibliotheque,
@@ -101,40 +101,40 @@ const TILES = [
 /** Couleurs de gradient pour les avatars membres (cycle) */
 const AVATAR_GRADIENTS = [
   'from-amber-400 to-rose-500',
-  'from-sky-400 to-indigo-500',
-  'from-emerald-400 to-cyan-500',
-  'from-fuchsia-400 to-violet-600',
+  'from-amber-400 to-amber-500',
+  'from-emerald-400 to-amber-500',
+  'from-rose-400 to-orange-600',
   'from-orange-400 to-pink-500',
-  'from-teal-400 to-blue-500',
+  'from-amber-400 to-orange-500',
   'from-lime-400 to-emerald-500',
-  'from-purple-400 to-indigo-600',
+  'from-orange-400 to-amber-600',
 ];
 
 /** Mappe un tone d'annonce vers les classes CSS Tailwind */
 function toneToTagC(tone) {
   if (tone === 'violet')
-    return { bg: 'bg-violet-500/18', t: 'text-violet-200', border: 'border border-violet-500/30' };
-  return { bg: 'bg-sky-500/15', t: 'text-sky-200', border: 'border border-sky-500/25' };
+    return { bg: 'bg-orange-500/18', t: 'text-orange-200', border: 'border border-orange-500/30' };
+  return { bg: 'bg-amber-500/15', t: 'text-amber-200', border: 'border border-amber-500/25' };
 }
 
 function CapBooksArt() {
   return (
-    <svg viewBox="0 0 120 100" className="h-[88px] w-[104px] shrink-0 drop-shadow-[0_12px_28px_rgba(123,97,255,0.35)]" aria-hidden>
+    <svg viewBox="0 0 120 100" className="h-[88px] w-[104px] shrink-0 drop-shadow-[0_12px_28px_rgba(217, 119, 87,0.35)]" aria-hidden>
       <defs>
         <linearGradient id="cl-cap" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#c4b5fd" />
-          <stop offset="1" stopColor="#6d28d9" />
+          <stop offset="0" stopColor="#eab89a" />
+          <stop offset="1" stopColor="#a94f33" />
         </linearGradient>
         <linearGradient id="cl-bk" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#8b5cf6" />
-          <stop offset="1" stopColor="#4c1d95" />
+          <stop offset="0" stopColor="#d97757" />
+          <stop offset="1" stopColor="#7a3620" />
         </linearGradient>
       </defs>
       <rect x="18" y="55" width="24" height="32" rx="2" fill="url(#cl-bk)" opacity="0.95" />
       <rect x="48" y="48" width="24" height="40" rx="2" fill="url(#cl-cap)" />
-      <rect x="78" y="60" width="20" height="28" rx="2" fill="#4c1d95" />
+      <rect x="78" y="60" width="20" height="28" rx="2" fill="#7a3620" />
       <path d="M58 28 L40 38 L40 50 L60 50 L60 32 Z" fill="url(#cl-cap)" />
-      <ellipse cx="50" cy="32" rx="20" ry="4.5" fill="#0a0a12" opacity="0.25" />
+      <ellipse cx="50" cy="32" rx="20" ry="4.5" fill="#0b0a08" opacity="0.25" />
     </svg>
   );
 }
@@ -219,7 +219,7 @@ function WeekContextBanner({ weekId, weekNumber, weekTitle, onEnterCourse, onDis
             borderRadius: EV_R.md,
             padding: '10px 16px',
             background: 'linear-gradient(135deg, #D4AF37 0%, #f59e0b 100%)',
-            color: '#0B0B0F',
+            color: '#0b0b0a',
             fontWeight: 800,
             fontSize: 13,
             border: 'none',
@@ -273,7 +273,7 @@ export default function EleveClasseScreen() {
         style={{
           minHeight: '100dvh',
           backgroundColor: EV_BG,
-          backgroundImage: 'radial-gradient(50% 32% at 50% 0%, rgba(123, 97, 255, 0.14), transparent 70%)',
+          backgroundImage: 'radial-gradient(50% 32% at 50% 0%, rgba(217, 119, 87, 0.14), transparent 70%)',
         }}
       >
         <div className="px-4 pt-[max(0.35rem,env(safe-area-inset-top))]">
@@ -318,7 +318,7 @@ export default function EleveClasseScreen() {
                 to={ELEVE_MOBILE.communaute}
                 className="flex h-10 w-10 items-center justify-center rounded-full"
                 style={{
-                  background: `linear-gradient(135deg, ${EV_ACCENT} 0%, #5B21B6 100%)`,
+                  background: `linear-gradient(135deg, ${EV_ACCENT} 0%, #a94f33 100%)`,
                   boxShadow: EV_SH.cta,
                 }}
                 aria-label="Communauté"
@@ -350,21 +350,21 @@ export default function EleveClasseScreen() {
           style={{
             borderRadius: EV_R.lg,
             background: HERO,
-            borderColor: 'rgba(123, 97, 255, 0.3)',
+            borderColor: 'rgba(217, 119, 87, 0.3)',
             boxShadow: EV_SH.hero,
           }}
         >
           <div
             aria-hidden
             className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full opacity-50 blur-3xl"
-            style={{ background: 'radial-gradient(circle, rgba(196, 181, 253, 0.35) 0%, transparent 70%)' }}
+            style={{ background: 'radial-gradient(circle, rgba(235, 200, 170, 0.35) 0%, transparent 70%)' }}
           />
           <div className="relative flex items-center justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[20px] font-extrabold leading-tight text-white">
                 {tenant?.name ?? 'ISNA'}
               </p>
-              <p className="mt-1 text-[12.5px] text-violet-100/90">
+              <p className="mt-1 text-[12.5px] text-orange-100/90">
                 {membersLoading ? '…' : `${membersTotal} membre${membersTotal !== 1 ? 's' : ''} actif${membersTotal !== 1 ? 's' : ''}`}
               </p>
             </div>
@@ -395,14 +395,14 @@ export default function EleveClasseScreen() {
           action="Voir tout"
           actionTo={ELEVE_MOBILE.communaute}
           className="mb-2.5"
-          actionClassName="!text-violet-400/95"
+          actionClassName="!text-orange-400/95"
         >
           Annonces récentes
         </EleveSectionTitle>
         <div className="mb-6 space-y-2.5">
           {annoncesLoading ? (
             <div className="flex justify-center py-4">
-              <Loader2 className="h-4 w-4 animate-spin text-violet-400/50" />
+              <Loader2 className="h-4 w-4 animate-spin text-orange-400/50" />
             </div>
           ) : annonces.length === 0 ? (
             <div className="py-3 px-3.5 text-[12.5px]" style={{ color: EV_MUTED }}>
@@ -419,7 +419,7 @@ export default function EleveClasseScreen() {
                 <div className="flex items-start gap-2.5">
                   <div
                     className="h-9 w-9 shrink-0 rounded-full ring-1 ring-white/10"
-                    style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
+                    style={{ background: 'linear-gradient(135deg, #c96a4c, #c96a4c)' }}
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
@@ -447,12 +447,12 @@ export default function EleveClasseScreen() {
         </div>
         </div>
 
-        <p id="membres" className="mb-2.5 scroll-mt-6 text-[10px] font-bold uppercase tracking-[0.12em] text-indigo-200/45">
+        <p id="membres" className="mb-2.5 scroll-mt-6 text-[10px] font-bold uppercase tracking-[0.12em] text-amber-200/45">
           Membres · {membersLoading ? '…' : membersTotal}
         </p>
         <div className="flex max-w-full items-center gap-2.5 overflow-x-auto pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {membersLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin text-violet-400/50" />
+            <Loader2 className="h-4 w-4 animate-spin text-orange-400/50" />
           ) : members.length === 0 ? (
             <p className="text-[11.5px]" style={{ color: EV_MUTED }}>Aucun membre pour l'instant.</p>
           ) : (
@@ -466,7 +466,7 @@ export default function EleveClasseScreen() {
                     {m.avatarUrl ? (
                       <img src={m.avatarUrl} alt={m.name} className="h-full w-full rounded-full object-cover" />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center rounded-full bg-[#0B0B0F] text-[10px] font-bold text-white/90">
+                      <div className="flex h-full w-full items-center justify-center rounded-full bg-[#0b0b0a] text-[10px] font-bold text-white/90">
                         {m.initials}
                       </div>
                     )}

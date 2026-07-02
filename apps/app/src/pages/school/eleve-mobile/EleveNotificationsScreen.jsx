@@ -12,19 +12,19 @@ import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { EV_BG, EV_MUTED, EV_ACCENT, EV_LINE, EV_R } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const PAGE_AMBIENT =
-  'radial-gradient(50% 28% at 50% 0%, rgba(123, 97, 255, 0.13), transparent 70%)';
+  'radial-gradient(50% 28% at 50% 0%, rgba(217, 119, 87, 0.13), transparent 70%)';
 
 function notifCardSurface(isRead) {
   return {
     background: isRead
-      ? 'linear-gradient(192deg, rgba(18, 20, 32, 0.95) 0%, rgba(10, 10, 18, 0.98) 100%)'
+      ? 'linear-gradient(192deg, rgba(18,15,11,0.95) 0%, rgba(12,10,8,0.98) 100%)'
       : [
-          'radial-gradient(ellipse 90% 70% at 8% 0%, rgba(99, 102, 241, 0.13) 0%, transparent 55%)',
-          'linear-gradient(190deg, rgba(22, 24, 38, 0.97) 0%, rgba(12, 14, 24, 0.99) 100%)',
+          'radial-gradient(ellipse 90% 70% at 8% 0%, rgba(217, 119, 87, 0.13) 0%, transparent 55%)',
+          'linear-gradient(190deg, rgba(22,18,13,0.97) 0%, rgba(15,11,9,0.99) 100%)',
         ].join(', '),
     border: isRead
-      ? '1px solid rgba(165, 180, 252, 0.10)'
-      : '1px solid rgba(165, 180, 252, 0.20)',
+      ? '1px solid rgba(240, 200, 175, 0.10)'
+      : '1px solid rgba(240, 200, 175, 0.20)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 10px -4px rgba(0,0,0,0.35)',
   };
 }
@@ -39,8 +39,8 @@ function notifIcon(type) {
 
 function notifIconColor(type) {
   if (type === 'live' || type === 'session') return '#F87171';
-  if (type === 'course' || type === 'formation') return '#A78BFA';
-  if (type === 'announcement') return '#60A5FA';
+  if (type === 'course' || type === 'formation') return '#e0926a';
+  if (type === 'announcement') return '#e8a487';
   if (type === 'event' || type === 'calendar') return '#34D399';
   return '#94A3B8';
 }
@@ -122,9 +122,9 @@ function EmptyState() {
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div
         className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10"
-        style={{ background: 'rgba(123,97,255,0.1)' }}
+        style={{ background: 'rgba(217, 119, 87,0.1)' }}
       >
-        <Bell className="h-7 w-7 text-violet-400/70" strokeWidth={1.8} />
+        <Bell className="h-7 w-7 text-orange-400/70" strokeWidth={1.8} />
       </div>
       <p className="text-[15px] font-bold text-white/70">Tout est à jour</p>
       <p className="mt-1.5 max-w-[18rem] text-[12.5px] leading-relaxed" style={{ color: EV_MUTED }}>
@@ -232,7 +232,7 @@ export default function EleveNotificationsScreen() {
           {/* Content */}
           {loading ? (
             <div className="flex justify-center py-12">
-              <Loader2 className="h-5 w-5 animate-spin text-violet-400/60" />
+              <Loader2 className="h-5 w-5 animate-spin text-orange-400/60" />
             </div>
           ) : notifs.length === 0 ? (
             <EmptyState />
@@ -266,7 +266,7 @@ export default function EleveNotificationsScreen() {
               <Link
                 to={ELEVE_MOBILE.login}
                 className="inline-flex h-11 items-center rounded-2xl px-6 text-[14px] font-bold text-white"
-                style={{ background: `linear-gradient(135deg, ${EV_ACCENT} 0%, #5B21B6 100%)` }}
+                style={{ background: `linear-gradient(135deg, ${EV_ACCENT} 0%, #a94f33 100%)` }}
               >
                 Se connecter
               </Link>

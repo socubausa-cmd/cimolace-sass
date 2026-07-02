@@ -13,9 +13,9 @@ import { useDemoMode } from '@/contexts/DemoModeContext';
 import { themeProxy as T, useSslThemeMode } from '@/pages/school/student-school-life/sslTheme';
 
 const TYPE_META = {
-  live:  { label: 'Cours / live', col: '#D4AF37', bg: 'rgba(212,175,55,0.14)',  bd: 'rgba(212,175,55,0.30)' },
+  live:  { label: 'Cours / live', col: '#e0a458', bg: 'rgba(224,164,88,0.14)',  bd: 'rgba(224,164,88,0.30)' },
   exam:  { label: 'Examen',       col: '#F0936B', bg: 'rgba(240,147,107,0.13)', bd: 'rgba(240,147,107,0.32)' },
-  event: { label: 'Événement',    col: '#8B9CFF', bg: 'rgba(139,156,255,0.13)', bd: 'rgba(139,156,255,0.32)' },
+  event: { label: 'Événement',    col: '#e0b088', bg: 'rgba(224,176,136,0.13)', bd: 'rgba(224,176,136,0.32)' },
 };
 const FILTERS = [
   { key: 'all',   label: 'Tout' },

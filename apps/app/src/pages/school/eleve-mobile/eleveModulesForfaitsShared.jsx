@@ -163,7 +163,7 @@ export function PlanIntervalSegmented({ value, onChange }) {
             onClick={() => onChange(it.id)}
             className={cn(
               'flex-1 rounded-[10px] py-2 text-center text-[11px] font-bold transition-all duration-200',
-              on ? 'text-[#0b0b0f]' : 'text-white/40',
+              on ? 'text-[#0b0b0a]' : 'text-white/40',
             )}
             style={
               on
@@ -186,7 +186,7 @@ export function forfaitCardSurface() {
   return {
     background: [
       'radial-gradient(ellipse 90% 70% at 0% 0%, rgba(212, 175, 55, 0.12) 0%, transparent 55%)',
-      'linear-gradient(190deg, rgba(26, 24, 20, 0.96) 0%, rgba(12, 12, 16, 0.99) 100%)',
+      'linear-gradient(190deg, rgba(26, 24, 20, 0.96) 0%, rgba(13,11,9,0.99) 100%)',
     ].join(', '),
     border: '1px solid rgba(212, 175, 55, 0.22)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 18px -8px rgba(0,0,0,0.4)',
@@ -199,7 +199,7 @@ export function moduleCatalogSurface(available) {
       available
         ? 'radial-gradient(ellipse 110% 80% at 0% 0%, rgba(212, 175, 55, 0.13) 0%, transparent 55%)'
         : 'radial-gradient(ellipse 110% 80% at 0% 0%, rgba(148, 163, 184, 0.08) 0%, transparent 55%)',
-      'linear-gradient(196deg, rgba(22, 24, 36, 0.97) 0%, rgba(9, 10, 16, 0.99) 100%)',
+      'linear-gradient(196deg, rgba(22,18,13,0.97) 0%, rgba(12,10,8,0.99) 100%)',
     ].join(', '),
     border: available ? '1px solid rgba(212, 175, 55, 0.24)' : '1px solid rgba(255, 255, 255, 0.09)',
     boxShadow: available

@@ -31,7 +31,7 @@ export default function EleveEspaceEnLigneScreen() {
             className="mb-3 p-3.5"
             style={{ borderRadius: EV_R.lg, ...listCardSurface() }}
           >
-            <p className="text-[9px] font-extrabold uppercase tracking-wider text-violet-300/90">Espace en ligne</p>
+            <p className="text-[9px] font-extrabold uppercase tracking-wider text-orange-300/90">Espace en ligne</p>
             <p className="mt-1.5 text-[12.5px] font-medium leading-relaxed" style={{ color: EV_MUTED }}>
               Navigue entre les rubriques du portail étudiant (même menu que le site). Chaque carte ouvre la page
               correspondante.

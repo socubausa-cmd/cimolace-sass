@@ -75,7 +75,7 @@ export default function EleveForfaitsScreen() {
         className="flex w-full flex-1 flex-col"
         style={{
           minHeight: '100dvh',
-          backgroundColor: '#0B0B0F',
+          backgroundColor: '#0b0b0a',
           backgroundImage: PAGE_AMBIENT,
         }}
       >
@@ -94,7 +94,7 @@ export default function EleveForfaitsScreen() {
             </p>
             <Link
               to={ELEVE_MOBILE.modules}
-              className="mt-2 inline-flex items-center text-[12px] font-semibold text-indigo-300/90 underline-offset-2 hover:underline"
+              className="mt-2 inline-flex items-center text-[12px] font-semibold text-amber-300/90 underline-offset-2 hover:underline"
             >
               ← Catalogue des 21 modules
             </Link>
@@ -183,7 +183,7 @@ export default function EleveForfaitsScreen() {
                                 p.interval_type || 'monthly',
                               )}`,
                             )}
-                            className="inline-flex h-9 min-h-[40px] shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-amber-500/90 to-amber-600/90 px-4 text-[12px] font-bold text-[#0b0b0f] shadow-md transition active:scale-[0.98]"
+                            className="inline-flex h-9 min-h-[40px] shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-amber-500/90 to-amber-600/90 px-4 text-[12px] font-bold text-[#0b0b0a] shadow-md transition active:scale-[0.98]"
                           >
                             Choisir
                           </Link>
@@ -200,7 +200,7 @@ export default function EleveForfaitsScreen() {
 
           <p className="mt-4 text-center text-[11px] text-white/35">
             Détail des cycles sur{' '}
-            <a href="/forfaits" className="text-indigo-300/90 underline-offset-2 hover:underline">
+            <a href="/forfaits" className="text-amber-300/90 underline-offset-2 hover:underline">
               prorascience.org/forfaits
             </a>
           </p>

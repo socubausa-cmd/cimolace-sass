@@ -63,13 +63,13 @@ const FORMATION_CATALOG_CYCLE_FILTERS = [
 ];
 
 const VITRINE_MODULE_THUMB_PRESETS = [
-  { g: 'from-violet-500/45 to-slate-950/75', b: 'border-violet-500/35', i: 'text-violet-100' },
-  { g: 'from-sky-500/45 to-slate-950/75', b: 'border-sky-500/35', i: 'text-sky-100' },
+  { g: 'from-orange-500/45 to-slate-950/75', b: 'border-orange-500/35', i: 'text-orange-100' },
+  { g: 'from-amber-500/45 to-slate-950/75', b: 'border-amber-500/35', i: 'text-amber-100' },
   { g: 'from-emerald-500/40 to-slate-950/75', b: 'border-emerald-500/30', i: 'text-emerald-100' },
-  { g: 'from-sky-500/45 to-slate-950/75', b: 'border-sky-500/35', i: 'text-sky-100' },
+  { g: 'from-amber-500/45 to-slate-950/75', b: 'border-amber-500/35', i: 'text-amber-100' },
   { g: 'from-rose-500/40 to-slate-950/75', b: 'border-rose-500/30', i: 'text-rose-100' },
-  { g: 'from-indigo-500/45 to-slate-950/75', b: 'border-indigo-500/35', i: 'text-indigo-100' },
-  { g: 'from-fuchsia-500/40 to-slate-950/75', b: 'border-fuchsia-500/30', i: 'text-fuchsia-100' },
+  { g: 'from-amber-500/45 to-slate-950/75', b: 'border-amber-500/35', i: 'text-amber-100' },
+  { g: 'from-rose-500/40 to-slate-950/75', b: 'border-rose-500/30', i: 'text-rose-100' },
 ];
 
 function vitrineModuleSearchHaystack(m) {
@@ -163,27 +163,27 @@ function VitrineForfaitIncludeIcon({ label, index = 0 }) {
     const fallbacks = [PlayCircle, Monitor, History, Sparkles];
     Comp = fallbacks[index % 4];
   }
-  return <Comp className="h-4 w-4 shrink-0 text-sky-400/95" strokeWidth={2} aria-hidden />;
+  return <Comp className="h-4 w-4 shrink-0 text-amber-400/95" strokeWidth={2} aria-hidden />;
 }
 
 function VitrineForfaitCyclePremiumCard({ children, className }) {
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-2xl border border-sky-500/35 bg-slate-950/90 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.75),inset_0_1px_0_rgba(255,255,255,0.09)]',
-        'ring-1 ring-sky-500/20',
+        'relative overflow-hidden rounded-2xl border border-amber-500/35 bg-slate-950/90 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.75),inset_0_1px_0_rgba(255,255,255,0.09)]',
+        'ring-1 ring-amber-500/20',
         className,
       )}
     >
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,rgba(56,189,248,0.14),transparent_50%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,rgba(230, 160, 110,0.14),transparent_50%)]"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-sky-500/12 blur-3xl"
+        className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-amber-500/12 blur-3xl"
         aria-hidden
       />
-      <div className="h-0.5 w-full bg-gradient-to-r from-sky-600/80 via-sky-400/50 to-sky-700/30" aria-hidden />
+      <div className="h-0.5 w-full bg-gradient-to-r from-amber-600/80 via-amber-400/50 to-amber-700/30" aria-hidden />
       <div className="relative z-[1]">{children}</div>
     </div>
   );
@@ -239,8 +239,8 @@ export function VitrineForfaitsMobileScreen() {
       title="Forfaits & tarifs"
       lead="Choisis un cycle, puis un rythme de facturation — un tarif par écran"
     >
-      <div className="mb-3 rounded-2xl border border-sky-500/20 bg-gradient-to-br from-sky-950/20 via-slate-950/50 to-slate-950/90 p-4 shadow-inner">
-        <p className="text-center font-serif text-base font-bold tracking-wide text-sky-50/95 sm:text-lg">
+      <div className="mb-3 rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-950/20 via-slate-950/50 to-slate-950/90 p-4 shadow-inner">
+        <p className="text-center font-serif text-base font-bold tracking-wide text-amber-50/95 sm:text-lg">
           Cycles d'initiation
         </p>
         <p
@@ -253,7 +253,7 @@ export function VitrineForfaitsMobileScreen() {
 
       {loading && (
         <div className="flex justify-center py-10">
-          <Loader2 className="h-8 w-8 animate-spin text-sky-400/80" />
+          <Loader2 className="h-8 w-8 animate-spin text-amber-400/80" />
         </div>
       )}
 
@@ -261,7 +261,7 @@ export function VitrineForfaitsMobileScreen() {
         <>
           <div className="mb-3 space-y-3">
             <div>
-              <p className="mb-1.5 text-[9px] font-extrabold uppercase tracking-[0.2em] text-sky-500/80">Cycle</p>
+              <p className="mb-1.5 text-[9px] font-extrabold uppercase tracking-[0.2em] text-amber-500/80">Cycle</p>
               <div
                 className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 role="tablist"
@@ -279,7 +279,7 @@ export function VitrineForfaitsMobileScreen() {
                       className={cn(
                         'shrink-0 rounded-2xl border px-3 py-2.5 text-left transition-colors',
                         on
-                          ? 'border-sky-400/55 bg-sky-500/18 text-sky-50 shadow-[0_0_0_1px_rgba(56,189,248,0.28)]'
+                          ? 'border-amber-400/55 bg-amber-500/18 text-amber-50 shadow-[0_0_0_1px_rgba(230, 160, 110,0.28)]'
                           : 'border-white/10 bg-slate-950/60 text-slate-400 hover:border-white/18 hover:text-slate-200',
                       )}
                     >
@@ -292,11 +292,11 @@ export function VitrineForfaitsMobileScreen() {
               </div>
             </div>
             <div>
-              <p className="mb-1.5 text-[9px] font-extrabold uppercase tracking-[0.2em] text-sky-500/80">
+              <p className="mb-1.5 text-[9px] font-extrabold uppercase tracking-[0.2em] text-amber-500/80">
                 Mode de paiement
               </p>
               <div
-                className="flex rounded-[14px] border border-sky-500/20 p-1"
+                className="flex rounded-[14px] border border-amber-500/20 p-1"
                 style={{
                   background: 'linear-gradient(180deg, rgba(26, 22, 16, 0.9) 0%, rgba(8, 8, 12, 0.95) 100%)',
                   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 12px -4px rgba(0,0,0,0.4)',
@@ -320,9 +320,9 @@ export function VitrineForfaitsMobileScreen() {
                       style={
                         on
                           ? {
-                              background: 'linear-gradient(180deg, #0ea5e9 0%, #2563eb 100%)',
+                              background: 'linear-gradient(180deg, #d97757 0%, #c96844 100%)',
                               boxShadow:
-                                '0 0 0 1px rgba(255,255,255,0.2), 0 4px 14px -4px rgba(14, 165, 233, 0.5)',
+                                '0 0 0 1px rgba(255,255,255,0.2), 0 4px 14px -4px rgba(217,119,87,0.5)',
                             }
                           : undefined
                       }
@@ -338,14 +338,14 @@ export function VitrineForfaitsMobileScreen() {
           {c && (
             <VitrineForfaitCyclePremiumCard>
               <div className="px-4 pb-4 pt-4 sm:px-5 sm:pb-5 sm:pt-5">
-                <p className="text-[9px] font-extrabold uppercase tracking-[0.22em] text-sky-400/95">
+                <p className="text-[9px] font-extrabold uppercase tracking-[0.22em] text-amber-400/95">
                   {c.tierBadge}
                 </p>
                 <h2 className="mt-2.5 font-serif text-xl font-bold leading-[1.2] tracking-tight text-white sm:text-2xl">
                   {c.headline}
                 </h2>
                 {c.tagline ? (
-                  <p className="mt-2 text-[11px] font-semibold leading-snug text-sky-200/85 sm:text-xs">{c.tagline}</p>
+                  <p className="mt-2 text-[11px] font-semibold leading-snug text-amber-200/85 sm:text-xs">{c.tagline}</p>
                 ) : null}
                 <p
                   className="mt-3 text-[13px] font-medium leading-[1.7] text-slate-200/95 antialiased [text-rendering:optimizeLegibility] sm:text-[14px] sm:leading-[1.65]"
@@ -363,7 +363,7 @@ export function VitrineForfaitsMobileScreen() {
                       key={x}
                       className="flex items-start gap-3 border-b border-white/[0.06] py-2.5 last:border-b-0 first:pt-0"
                     >
-                      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-sky-500/30 bg-sky-500/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+                      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
                         <VitrineForfaitIncludeIcon label={x} index={i} />
                       </span>
                       <span className="min-w-0 flex-1 pt-0.5 text-[13px] font-medium leading-[1.55] text-slate-100/95 sm:text-[13.5px] sm:leading-[1.5]">
@@ -373,15 +373,15 @@ export function VitrineForfaitsMobileScreen() {
                   ))}
                 </ul>
 
-                <div className="mt-5 rounded-2xl border border-sky-500/25 bg-gradient-to-b from-sky-950/30 to-slate-950/80 p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:p-4">
+                <div className="mt-5 rounded-2xl border border-amber-500/25 bg-gradient-to-b from-amber-950/30 to-slate-950/80 p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:p-4">
                   {selectedPlan ? (
                     <div className="flex flex-col gap-3">
                       <div className="flex flex-wrap items-end justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sky-500/90">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-500/90">
                             Tarif {formatInterval(interval)}
                           </p>
-                          <p className="mt-1 text-3xl font-extrabold tabular-nums tracking-tight text-sky-50 sm:text-4xl">
+                          <p className="mt-1 text-3xl font-extrabold tabular-nums tracking-tight text-amber-50 sm:text-4xl">
                             {formatPrice(selectedPlan.price_amount, selectedPlan.price_currency)}
                           </p>
                         </div>
@@ -391,7 +391,7 @@ export function VitrineForfaitsMobileScreen() {
                               selectedPlan.interval_type || 'monthly',
                             )}`,
                           )}
-                          className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-sky-400 via-sky-500 to-indigo-600 px-5 text-[13px] font-extrabold text-white shadow-[0_4px_24px_-4px_rgba(14,165,233,0.45),inset_0_1px_0_rgba(255,255,255,0.22)] transition hover:brightness-105 active:scale-[0.98] sm:px-6"
+                          className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 px-5 text-[13px] font-extrabold text-white shadow-[0_4px_24px_-4px_rgba(217,119,87,0.45),inset_0_1px_0_rgba(255,255,255,0.22)] transition hover:brightness-105 active:scale-[0.98] sm:px-6"
                         >
                           Choisir ce forfait
                         </Link>
@@ -476,7 +476,7 @@ export function VitrineFormationsMobileScreen() {
                 className={cn(
                   'shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide transition-colors',
                   active
-                    ? 'border-sky-400/50 bg-sky-500/15 text-sky-100'
+                    ? 'border-amber-400/50 bg-amber-500/15 text-amber-100'
                     : 'border-white/10 bg-slate-950/60 text-slate-400 hover:border-white/20 hover:text-slate-200',
                 )}
               >
@@ -506,9 +506,9 @@ export function VitrineFormationsMobileScreen() {
                     <VitrineModuleThumbBox mod={m} icon={Icon} preset={th} />
                     <div className="min-w-0 flex-1">
                       <p className="line-clamp-2 text-[13px] font-semibold leading-snug text-white">{m.title}</p>
-                      <p className="mt-0.5 line-clamp-1 text-[11px] text-violet-200/70">{m.subtitle}</p>
+                      <p className="mt-0.5 line-clamp-1 text-[11px] text-orange-200/70">{m.subtitle}</p>
                     </div>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-violet-400/50" aria-hidden />
+                    <ChevronRight className="h-4 w-4 shrink-0 text-orange-400/50" aria-hidden />
                   </button>
                 </ProrascienceVitrineImmersiveCard>
               </li>
@@ -522,7 +522,7 @@ export function VitrineFormationsMobileScreen() {
           side="bottom"
           className={cn(
             'flex h-[100dvh] max-h-[100dvh] min-h-0 w-full max-w-lg flex-col overflow-hidden gap-0 rounded-none border-0 p-0',
-            'bg-[#05080f] shadow-none',
+            'bg-[#050403] shadow-none',
             /* Fiche produit plein écran : le panneau occupe tout l'écran, plus de bande noire “vide” au-dessus */
             '[&>button]:right-3 [&>button]:top-[max(0.6rem,env(safe-area-inset-top,0.6rem))] [&>button]:z-[60] [&>button]:rounded-full [&>button]:border [&>button]:border-white/15 [&>button]:bg-black/40 [&>button]:p-2 [&>button]:backdrop-blur-sm [&>button]:hover:bg-black/60',
           )}
@@ -533,38 +533,38 @@ export function VitrineFormationsMobileScreen() {
                 <div className="relative w-full shrink-0 [height:min(42vh,320px)] min-h-[200px]">
                   <img src={detail.thumbnail} alt="" className="h-full w-full object-cover" />
                   <div
-                    className="absolute inset-0 bg-gradient-to-t from-[#05080f] via-[#05080f]/55 to-black/30"
+                    className="absolute inset-0 bg-gradient-to-t from-[#050403] via-[#050403]/55 to-black/30"
                     aria-hidden
                   />
                   <div className="absolute left-0 right-0 top-0 flex items-start justify-between gap-2 pt-[max(0.5rem,env(safe-area-inset-top,0.5rem))] pl-3 pr-14">
                     <div className="mt-0.5 flex items-center gap-1.5 rounded-full border border-white/15 bg-black/30 px-2.5 py-1 backdrop-blur-md">
-                      <Sparkles className="h-3 w-3 text-sky-300/95" strokeWidth={2} aria-hidden />
+                      <Sparkles className="h-3 w-3 text-amber-300/95" strokeWidth={2} aria-hidden />
                       <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-white/90">Prorascience</span>
                     </div>
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 space-y-1 px-4 pb-4 text-left">
-                    <p className="font-mono text-[10px] font-bold text-sky-200/90">
+                    <p className="font-mono text-[10px] font-bold text-amber-200/90">
                       MODULE {detail.number.toString().padStart(2, '0')}
                     </p>
                     <SheetTitle className="font-serif text-2xl font-bold leading-tight text-white [text-wrap:balance]">
                       {detail.title}
                     </SheetTitle>
-                    <p className="text-[14px] font-medium leading-snug text-sky-100/90">{detail.subtitle}</p>
+                    <p className="text-[14px] font-medium leading-snug text-amber-100/90">{detail.subtitle}</p>
                   </div>
                 </div>
               ) : (
                 <div
-                  className="relative w-full shrink-0 border-b border-white/10 bg-gradient-to-b from-[#121a2e] to-[#05080f] px-4 pb-5 pr-14 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))]"
+                  className="relative w-full shrink-0 border-b border-white/10 bg-gradient-to-b from-[#1a120d] to-[#050403] px-4 pb-5 pr-14 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))]"
                 >
                   <div className="mb-3 flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5 text-sky-400/90" strokeWidth={2} />
-                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-sky-200/85">Catalogue Prorascience</p>
+                    <Sparkles className="h-3.5 w-3.5 text-amber-400/90" strokeWidth={2} />
+                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-amber-200/85">Catalogue Prorascience</p>
                   </div>
-                  <p className="font-mono text-[10px] font-bold text-violet-300/90">MODULE {detail.number.toString().padStart(2, '0')}</p>
+                  <p className="font-mono text-[10px] font-bold text-orange-300/90">MODULE {detail.number.toString().padStart(2, '0')}</p>
                   <SheetTitle className="mt-1 font-serif text-2xl font-bold leading-tight text-white [text-wrap:balance]">
                     {detail.title}
                   </SheetTitle>
-                  <p className="mt-1.5 text-[14px] font-medium text-sky-200/90">{detail.subtitle}</p>
+                  <p className="mt-1.5 text-[14px] font-medium text-amber-200/90">{detail.subtitle}</p>
                 </div>
               )}
 
@@ -574,7 +574,7 @@ export function VitrineFormationsMobileScreen() {
                     <p className="mb-3 text-left text-[11px] text-slate-500">Contenu issu du catalogue public des 21 sciences.</p>
                   ) : null}
                   <div
-                    className="rounded-2xl border border-sky-500/20 bg-slate-950/90 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                    className="rounded-2xl border border-amber-500/20 bg-slate-950/90 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                     style={{ textWrap: 'pretty' }}
                   >
                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">À retenir</p>
@@ -594,14 +594,14 @@ export function VitrineIsnaProMobileScreen() {
   return (
     <ProrascienceMobileVitrineShell title="ISNA Pro" lead="Pédagogie, immersion">
       <div className="mb-3 flex justify-center">
-        <div className="rounded-full border border-sky-500/30 bg-sky-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-sky-200/90">
+        <div className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-200/90">
           Expérience pro
         </div>
       </div>
       <div className="space-y-3">
         {VITRINE_ISNA_PRO.pillars.map((x) => (
           <ProrascienceVitrineImmersiveCard key={x.t} variant="sky">
-            <h3 className="font-serif text-base font-bold text-sky-50/95">{x.t}</h3>
+            <h3 className="font-serif text-base font-bold text-amber-50/95">{x.t}</h3>
             <p className="mt-1.5 text-[12px] leading-relaxed" style={{ color: EV_MUTED }}>
               {x.b}
             </p>
@@ -612,7 +612,7 @@ export function VitrineIsnaProMobileScreen() {
       <div className="mt-2 space-y-2.5">
         {VITRINE_ISNA_PRO.future.map((x) => (
           <ProrascienceVitrineImmersiveCard key={x.t} variant="violet" className="!py-3">
-            <p className="text-[13px] font-semibold text-violet-100/95">{x.t}</p>
+            <p className="text-[13px] font-semibold text-orange-100/95">{x.t}</p>
             <p className="mt-1 text-[12px] leading-relaxed" style={{ color: EV_MUTED }}>
               {x.d}
             </p>
@@ -623,7 +623,7 @@ export function VitrineIsnaProMobileScreen() {
       <ul className="mt-1 space-y-1.5 text-[12px] text-slate-300/90">
         {VITRINE_ISNA_PRO.mastery.map((x) => (
           <li key={x} className="flex gap-2">
-            <span className="text-sky-400/90">·</span>
+            <span className="text-amber-400/90">·</span>
             {x}
           </li>
         ))}
@@ -661,7 +661,7 @@ export function VitrineMentoratMobileScreen() {
           {h.kicker}
         </span>
         <h2 className="text-center font-serif text-lg font-bold text-white">{h.title}</h2>
-        <p className="text-center text-[11px] text-sky-200/80">{h.also}</p>
+        <p className="text-center text-[11px] text-amber-200/80">{h.also}</p>
         <p className="text-center text-[9px] text-slate-500">{h.line}</p>
       </div>
       <ProrascienceVitrineImmersiveProse className="mb-3 text-center text-[12px]">{m.preambleObjective}</ProrascienceVitrineImmersiveProse>
@@ -683,7 +683,7 @@ export function VitrineMentoratMobileScreen() {
       <ul className="mb-3 space-y-1.5 text-[12px] text-slate-300/90">
         {m.whenCases.map((x) => (
           <li key={x} className="flex gap-1.5">
-            <span className="text-sky-500/80">·</span>
+            <span className="text-amber-500/80">·</span>
             {x}
           </li>
         ))}
@@ -692,7 +692,7 @@ export function VitrineMentoratMobileScreen() {
       <div className="mb-3 space-y-2">
         {m.typesMentorat.map((t) => (
           <ProrascienceVitrineImmersiveCard key={t.title} className="!py-2.5">
-            <p className="text-[12px] font-bold text-sky-100/90">{t.title}</p>
+            <p className="text-[12px] font-bold text-amber-100/90">{t.title}</p>
             <p className="text-[11px] text-slate-400">{t.desc}</p>
           </ProrascienceVitrineImmersiveCard>
         ))}
@@ -711,14 +711,14 @@ export function VitrineCoachingMobileScreen() {
   const c = WEB_COACHING;
   return (
     <ProrascienceMobileVitrineShell title="Coaching" lead={c.lead}>
-      <p className="mb-1 text-center text-[10px] font-bold uppercase tracking-widest text-sky-500/80">{c.kicker}</p>
+      <p className="mb-1 text-center text-[10px] font-bold uppercase tracking-widest text-amber-500/80">{c.kicker}</p>
       <h2 className="text-center font-serif text-xl font-bold text-white">{c.title}</h2>
       <p className="mb-2 text-center text-[9px] text-slate-500">{c.line}</p>
       <p className="mb-1 text-[11px] text-slate-500">{c.metierIntro}</p>
       <ul className="mb-3 space-y-1.5 text-[12px] text-slate-300/90">
         {c.metierItems.map((x) => (
           <li key={x} className="flex gap-1.5">
-            <span className="text-sky-500/80">·</span>
+            <span className="text-amber-500/80">·</span>
             {x}
           </li>
         ))}
@@ -738,7 +738,7 @@ export function VitrineCoachingVsMentoratMobileScreen() {
       ))}
       <ProrascienceVitrineMobileSectionTitle>Coaching</ProrascienceVitrineMobileSectionTitle>
       <ProrascienceVitrineImmersiveCard variant="sky" className="mb-4">
-        <p className="text-[12px] font-bold text-sky-100/90">{v.partCoaching.title}</p>
+        <p className="text-[12px] font-bold text-amber-100/90">{v.partCoaching.title}</p>
         {v.partCoaching.paras.map((p) => (
           <ProrascienceVitrineImmersiveProse key={p.slice(0, 48)} className="!mt-2 !text-[12px] leading-relaxed">
             {p}
@@ -747,7 +747,7 @@ export function VitrineCoachingVsMentoratMobileScreen() {
       </ProrascienceVitrineImmersiveCard>
       <ProrascienceVitrineMobileSectionTitle>Mentorat</ProrascienceVitrineMobileSectionTitle>
       <ProrascienceVitrineImmersiveCard variant="violet">
-        <p className="text-[12px] font-bold text-violet-100/90">{v.partMentorat.title}</p>
+        <p className="text-[12px] font-bold text-orange-100/90">{v.partMentorat.title}</p>
         {v.partMentorat.paras.map((p) => (
           <ProrascienceVitrineImmersiveProse key={p.slice(0, 48)} className="!mt-2 !text-[12px] leading-relaxed">
             {p}
@@ -764,7 +764,7 @@ export function VitrineFondateurMobileScreen() {
   return (
     <ProrascienceMobileVitrineShell title="Le fondateur" lead={h.subtitle}>
       <div className="mb-3 text-center">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-sky-500/80">{h.kicker}</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-amber-500/80">{h.kicker}</p>
         <h2 className="whitespace-pre-line font-serif text-lg font-bold leading-tight text-white">{h.title}</h2>
         <p className="mt-2 text-[12px] italic text-slate-300/90">« {h.quote} »</p>
       </div>
@@ -777,14 +777,14 @@ export function VitrineFondateurMobileScreen() {
       <div className="space-y-2.5">
         {f.identity.map((row) => (
           <ProrascienceVitrineImmersiveCard key={row.title} variant="sky" className="!py-2.5">
-            <p className="text-[10px] font-bold uppercase text-sky-500/70">{row.title}</p>
+            <p className="text-[10px] font-bold uppercase text-amber-500/70">{row.title}</p>
             <p className="text-[14px] font-semibold text-white">{row.value}</p>
             <p className="mt-1 text-[11px] text-slate-400">{row.detail}</p>
           </ProrascienceVitrineImmersiveCard>
         ))}
       </div>
       <ProrascienceVitrineImmersiveCard variant="violet" className="mt-3">
-        <p className="text-[12px] font-bold text-violet-100/90">{f.manikongoExplainer.title}</p>
+        <p className="text-[12px] font-bold text-orange-100/90">{f.manikongoExplainer.title}</p>
         <p className="mt-1.5 text-[12px] leading-relaxed" style={{ color: EV_MUTED }}>
           {f.manikongoExplainer.text}
         </p>
@@ -802,7 +802,7 @@ export function VitrineEquipeMobileScreen() {
       {t.founders.map((f) => (
         <ProrascienceVitrineImmersiveCard key={f.name} variant="default" className="mb-3">
           <h3 className="font-serif text-lg font-bold text-white">{f.name}</h3>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-400/90">{f.role}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-400/90">{f.role}</p>
           <p className="mt-2 text-[12px] leading-relaxed" style={{ color: EV_MUTED }}>
             {f.bio}
           </p>
@@ -814,12 +814,12 @@ export function VitrineEquipeMobileScreen() {
           <ProrascienceVitrineImmersiveCard key={p.name} className="!p-2.5 text-center">
             <p className="text-[12px] font-bold text-white">{p.name}</p>
             <p className="text-[10px] text-slate-500">{p.module}</p>
-            <p className="text-[9px] text-sky-500/60">{p.spec}</p>
+            <p className="text-[9px] text-amber-500/60">{p.spec}</p>
           </ProrascienceVitrineImmersiveCard>
         ))}
       </div>
       <ProrascienceVitrineImmersiveCard variant="violet" className="mt-3">
-        <p className="text-[13px] font-bold text-violet-100/95">{t.cta.title}</p>
+        <p className="text-[13px] font-bold text-orange-100/95">{t.cta.title}</p>
         <p className="mt-1 text-[12px] text-slate-400">{t.cta.text}</p>
       </ProrascienceVitrineImmersiveCard>
     </ProrascienceMobileVitrineShell>
@@ -845,7 +845,7 @@ export function VitrineFaqMobileScreen() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Rechercher…"
-          className="w-full rounded-2xl border border-white/10 bg-slate-950/80 py-2.5 pl-10 pr-3 text-[13px] text-white placeholder:text-slate-500 focus:border-sky-500/30 focus:outline-none"
+          className="w-full rounded-2xl border border-white/10 bg-slate-950/80 py-2.5 pl-10 pr-3 text-[13px] text-white placeholder:text-slate-500 focus:border-amber-500/30 focus:outline-none"
         />
       </div>
       <p className="mb-2 text-[11px] text-slate-500">Questions transverses — mêmes réponses source que l'espace public.</p>
@@ -858,10 +858,10 @@ export function VitrineFaqMobileScreen() {
               className="flex w-full items-start justify-between gap-2 px-3.5 py-3 text-left"
             >
               <span className="text-[12.5px] font-semibold leading-snug text-white">{item.q}</span>
-              <ChevronDown className={cn('h-4 w-4 shrink-0 text-sky-400/50', openQ === item.q && 'rotate-180')} />
+              <ChevronDown className={cn('h-4 w-4 shrink-0 text-amber-400/50', openQ === item.q && 'rotate-180')} />
             </button>
             {openQ === item.q && (
-              <p className="border-t border-violet-500/15 bg-slate-950/50 px-3.5 py-2.5 text-[12px] leading-relaxed" style={{ color: EV_MUTED }}>
+              <p className="border-t border-orange-500/15 bg-slate-950/50 px-3.5 py-2.5 text-[12px] leading-relaxed" style={{ color: EV_MUTED }}>
                 {item.a}
               </p>
             )}
@@ -905,7 +905,7 @@ export function VitrineContactMobileScreen() {
       <ProrascienceVitrineImmersiveProse className="mb-3 text-center !text-[12px]">{wc.hero.title}</ProrascienceVitrineImmersiveProse>
       {wc.info.map((block) => (
         <ProrascienceVitrineImmersiveCard key={block.title} variant="default" className="mb-2 !py-2.5">
-          <p className="text-[10px] font-bold uppercase text-sky-500/70">{block.title}</p>
+          <p className="text-[10px] font-bold uppercase text-amber-500/70">{block.title}</p>
           {block.lines.map((line, idx) => (
             <p key={`${block.title}-${idx}`} className="text-[12px] text-slate-300/90">
               {line}
@@ -914,7 +914,7 @@ export function VitrineContactMobileScreen() {
         </ProrascienceVitrineImmersiveCard>
       ))}
       <ProrascienceVitrineImmersiveCard variant="sky" className="mb-4 flex items-center gap-2">
-        <Mail className="h-5 w-5 shrink-0 text-sky-400/90" />
+        <Mail className="h-5 w-5 shrink-0 text-amber-400/90" />
         <div>
           <p className="text-[13px] font-semibold text-white">
             {wc.info.find((i) => i.email)?.email || vitrineEmail}
@@ -976,7 +976,7 @@ export function VitrineContactMobileScreen() {
           <Button
             type="submit"
             disabled={loading}
-            className="h-12 w-full rounded-2xl bg-gradient-to-r from-sky-600 via-indigo-600 to-violet-600 font-semibold shadow-lg shadow-indigo-900/30"
+            className="h-12 w-full rounded-2xl bg-gradient-to-r from-amber-600 via-amber-600 to-orange-600 font-semibold shadow-lg shadow-amber-900/30"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : (
               <span className="inline-flex items-center gap-2">
@@ -1001,7 +1001,7 @@ export function VitrineCommunauteMobileScreen() {
       </ProrascienceVitrineImmersiveCard>
       <div className="space-y-2.5">
         <Link to="/signup" className="block">
-          <Button className="h-12 w-full rounded-2xl bg-gradient-to-r from-sky-600 to-sky-800 font-semibold text-white shadow-lg shadow-sky-900/20">
+          <Button className="h-12 w-full rounded-2xl bg-gradient-to-r from-amber-600 to-amber-800 font-semibold text-white shadow-lg shadow-amber-900/20">
             Créer un compte
           </Button>
         </Link>
@@ -1009,7 +1009,7 @@ export function VitrineCommunauteMobileScreen() {
           <Button
             type="button"
             variant="outline"
-            className="h-12 w-full rounded-2xl border-sky-400/40 bg-slate-950/50 text-sky-100"
+            className="h-12 w-full rounded-2xl border-amber-400/40 bg-slate-950/50 text-amber-100"
           >
             Ouvrir la communauté LIRI
           </Button>

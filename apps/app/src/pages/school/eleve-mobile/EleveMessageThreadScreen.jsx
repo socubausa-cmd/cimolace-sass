@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { EV_BG, EV_MUTED, EV_LINE, EV_R } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const PAGE_AMBIENT =
-  'radial-gradient(50% 32% at 50% 0%, rgba(123, 97, 255, 0.14), transparent 70%)';
+  'radial-gradient(50% 32% at 50% 0%, rgba(217, 119, 87, 0.14), transparent 70%)';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -130,7 +130,7 @@ export default function EleveMessageThreadScreen() {
                 <div
                   className={cn(
                     'max-w-[min(100%,20rem)] rounded-2xl px-3 py-2.5',
-                    mine ? 'rounded-br-sm bg-violet-600/90 text-white' : 'rounded-bl-sm border bg-white/[0.06] text-white/95',
+                    mine ? 'rounded-br-sm bg-orange-600/90 text-white' : 'rounded-bl-sm border bg-white/[0.06] text-white/95',
                   )}
                   style={mine ? {} : { borderColor: EV_LINE }}
                 >
@@ -172,7 +172,7 @@ export default function EleveMessageThreadScreen() {
               type="button"
               disabled={!draft.trim() || sending}
               onClick={onSend}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white disabled:opacity-40"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-orange-600 text-white disabled:opacity-40"
               aria-label="Envoyer"
             >
               <Send className="h-5 w-5" />

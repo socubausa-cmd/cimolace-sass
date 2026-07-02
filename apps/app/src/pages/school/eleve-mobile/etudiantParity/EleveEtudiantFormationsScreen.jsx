@@ -34,7 +34,7 @@ export default function EleveEtudiantFormationsScreen() {
       >
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3" aria-busy>
-            <Loader2 className="h-8 w-8 animate-spin text-violet-300" />
+            <Loader2 className="h-8 w-8 animate-spin text-orange-300" />
             <p className="text-sm font-medium" style={{ color: EV_MUTED }}>
               Chargement…
             </p>
@@ -57,7 +57,7 @@ export default function EleveEtudiantFormationsScreen() {
                 {f.id ? (
                   <Link
                     to={ELEVE_MOBILE.course(f.id)}
-                    className="mt-3 flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] font-bold text-violet-200"
+                    className="mt-3 flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] font-bold text-orange-200"
                   >
                     <span className="flex items-center gap-2">
                       <BookOpen className="h-4 w-4" />

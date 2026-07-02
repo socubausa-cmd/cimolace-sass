@@ -8,7 +8,7 @@ import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { EV_BG, EV_MUTED, EV_LINE } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const PAGE_AMBIENT =
-  'radial-gradient(50% 32% at 50% 0%, rgba(123, 97, 255, 0.14), transparent 70%)';
+  'radial-gradient(50% 32% at 50% 0%, rgba(217, 119, 87, 0.14), transparent 70%)';
 
 /**
  * Même contenu informatif que {@link VersionPage} (`/version`), en coque LIRI élève.
@@ -54,7 +54,7 @@ export default function EleveVersionScreen() {
             </div>
             <Link
               to={ELEVE_MOBILE.profil}
-              className="mt-1 shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium text-violet-300/90"
+              className="mt-1 shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium text-orange-300/90"
               style={{ borderColor: EV_LINE, background: 'rgba(255,255,255,0.05)' }}
             >
               Profil
@@ -67,7 +67,7 @@ export default function EleveVersionScreen() {
             <AppVersionContent variant="eleve" />
           </div>
           <p className="text-center text-[12px]" style={{ color: EV_MUTED }}>
-            <Link to={ELEVE_MOBILE.home} className="text-violet-300/90">
+            <Link to={ELEVE_MOBILE.home} className="text-orange-300/90">
               Accueil LIRI
             </Link>
           </p>

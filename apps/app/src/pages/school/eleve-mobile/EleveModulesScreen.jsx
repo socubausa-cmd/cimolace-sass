@@ -95,7 +95,7 @@ export default function EleveModulesScreen() {
         className="flex w-full flex-1 flex-col"
         style={{
           minHeight: '100dvh',
-          backgroundColor: '#0B0B0F',
+          backgroundColor: '#0b0b0a',
           backgroundImage: PAGE_AMBIENT,
         }}
       >
@@ -114,7 +114,7 @@ export default function EleveModulesScreen() {
             </p>
             <Link
               to={ELEVE_MOBILE.forfaits}
-              className="mt-2 inline-flex items-center text-[12px] font-semibold text-indigo-300/90 underline-offset-2 hover:underline"
+              className="mt-2 inline-flex items-center text-[12px] font-semibold text-amber-300/90 underline-offset-2 hover:underline"
             >
               Forfaits & abonnement →
             </Link>
@@ -128,7 +128,7 @@ export default function EleveModulesScreen() {
             className="mb-4 overflow-hidden rounded-[24px] border border-white/[0.08] bg-white/[0.035] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
             style={{
               backgroundImage:
-                'radial-gradient(ellipse 90% 75% at 0% 0%, rgba(212,175,55,0.12), transparent 55%), linear-gradient(188deg, rgba(18,20,30,0.94), rgba(8,9,14,0.98))',
+                'radial-gradient(ellipse 90% 75% at 0% 0%, rgba(212,175,55,0.12), transparent 55%), linear-gradient(188deg, rgba(18,15,11,0.94), rgba(11,9,8,0.98))',
             }}
           >
             <div className="flex items-start justify-between gap-3">
@@ -290,7 +290,7 @@ export default function EleveModulesScreen() {
               Parler à un conseiller
             </Link>
             {' · '}
-            <Link to={ELEVE_MOBILE.forfaits} className="text-indigo-300/90 underline-offset-2 hover:underline">
+            <Link to={ELEVE_MOBILE.forfaits} className="text-amber-300/90 underline-offset-2 hover:underline">
               Voir les forfaits
             </Link>
           </p>

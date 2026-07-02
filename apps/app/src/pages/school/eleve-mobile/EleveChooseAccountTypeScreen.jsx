@@ -81,7 +81,7 @@ export default function EleveChooseAccountTypeScreen() {
 
   if (!shouldStayOnNative) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-[#0B0B0F] text-white/50">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[#0b0b0a] text-white/50">
         <p className="text-[12px]">Redirection…</p>
       </div>
     );
@@ -105,7 +105,7 @@ export default function EleveChooseAccountTypeScreen() {
         className="relative flex w-full flex-1 flex-col"
         style={{
           minHeight: '100dvh',
-          backgroundColor: '#0B0B0F',
+          backgroundColor: '#0b0b0a',
           backgroundImage: EV_PAGE_AMBIENT,
         }}
       >
@@ -175,7 +175,7 @@ export default function EleveChooseAccountTypeScreen() {
         </div>
 
         <div
-          className="fixed bottom-0 left-0 right-0 z-20 border-t border-white/[0.07] bg-[#0B0B0F]/95 px-4 pt-3 backdrop-blur-md"
+          className="fixed bottom-0 left-0 right-0 z-20 border-t border-white/[0.07] bg-[#0b0b0a]/95 px-4 pt-3 backdrop-blur-md"
           style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
         >
           <Button

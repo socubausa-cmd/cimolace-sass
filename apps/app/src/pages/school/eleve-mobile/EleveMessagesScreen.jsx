@@ -14,9 +14,9 @@ import { LiriWordmark } from '@/components/brand/LiriWordmark';
 import { EV_BG, EV_MUTED, EV_ACCENT, EV_LINE, EV_R, EV_SH, EV_PAGE_AMBIENT } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const CHAT_HALO = [
-  'rgba(99, 102, 241, 0.14)',
-  'rgba(59, 130, 246, 0.12)',
-  'rgba(124, 58, 237, 0.12)',
+  'rgba(217, 119, 87, 0.14)',
+  'rgba(226, 133, 79, 0.12)',
+  'rgba(201, 106, 76, 0.12)',
   'rgba(16, 185, 129, 0.1)',
 ];
 
@@ -25,9 +25,9 @@ function chatRowSurface(index) {
   return {
     background: [
       `radial-gradient(ellipse 100% 75% at 20% 0%, ${h} 0%, transparent 58%)`,
-      'linear-gradient(195deg, rgba(24, 26, 40, 0.97) 0%, rgba(10, 12, 24, 0.99) 100%)',
+      'linear-gradient(195deg, rgba(24,20,15,0.97) 0%, rgba(14,11,9,0.99) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.18)',
+    border: '1px solid rgba(240, 200, 175, 0.18)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07), 0 2px 12px -4px rgba(0,0,0,0.4)',
   };
 }
@@ -65,8 +65,8 @@ function MessagesFilterTabs({ value, onChange }) {
     <div
       className="mb-4 flex gap-1.5 rounded-[14px] border p-1"
       style={{
-        borderColor: 'rgba(165, 180, 252, 0.18)',
-        background: 'linear-gradient(180deg, rgba(22, 24, 40, 0.85) 0%, rgba(10, 10, 20, 0.92) 100%)',
+        borderColor: 'rgba(240, 200, 175, 0.18)',
+        background: 'linear-gradient(180deg, rgba(22,18,13,0.85) 0%, rgba(12,10,8,0.92) 100%)',
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 14px -6px rgba(0,0,0,0.45)',
       }}
     >
@@ -84,10 +84,10 @@ function MessagesFilterTabs({ value, onChange }) {
             style={
               on
                 ? {
-                    background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #5E4BFF 50%, #4F46E5 100%)`,
+                    background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #d97757 50%, #c96a4c 100%)`,
                     boxShadow: [
                       '0 0 0 1px rgba(255,255,255,0.12)',
-                      '0 4px 18px -4px rgba(99, 102, 241, 0.45)',
+                      '0 4px 18px -4px rgba(217, 119, 87, 0.45)',
                       EV_SH.tab,
                     ].join(', '),
                   }
@@ -259,7 +259,7 @@ export default function EleveMessagesScreen() {
                         className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-white/10"
                       />
                     ) : (
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-violet-700 ring-1 ring-white/12">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-600 to-orange-700 ring-1 ring-white/12">
                         <User className="h-5 w-5 text-white/90" />
                       </div>
                     )}
@@ -280,7 +280,7 @@ export default function EleveMessagesScreen() {
                               {c.unreadCount > 9 ? '9+' : c.unreadCount}
                             </span>
                           ) : showReadReceipt ? (
-                            <CheckCheck className="h-4 w-4 shrink-0 text-violet-300/90" strokeWidth={2.2} />
+                            <CheckCheck className="h-4 w-4 shrink-0 text-orange-300/90" strokeWidth={2.2} />
                           ) : null}
                         </div>
                       </div>

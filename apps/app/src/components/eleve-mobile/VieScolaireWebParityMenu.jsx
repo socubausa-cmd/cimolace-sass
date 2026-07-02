@@ -56,7 +56,7 @@ const RUBRIQUES = [
 
 const accentRing = {
   amber: 'bg-amber-500/12 text-amber-200 ring-amber-400/25',
-  violet: 'bg-violet-500/12 text-violet-200 ring-violet-400/25',
+  violet: 'bg-orange-500/12 text-orange-200 ring-orange-400/25',
   default: 'bg-white/[0.06] text-white/80 ring-white/10',
 };
 
@@ -87,8 +87,8 @@ export function VieScolaireWebParityMenu({ className }) {
                 style={{
                   borderRadius: EV_R.lg,
                   background: [
-                    'radial-gradient(ellipse 90% 60% at 0% 0%, rgba(123, 97, 255, 0.1) 0%, transparent 55%)',
-                    'linear-gradient(198deg, rgba(20, 22, 40, 0.92) 0%, rgba(8, 10, 20, 0.96) 100%)',
+                    'radial-gradient(ellipse 90% 60% at 0% 0%, rgba(217, 119, 87, 0.1) 0%, transparent 55%)',
+                    'linear-gradient(198deg, rgba(20,16,12,0.92) 0%, rgba(12,10,8,0.96) 100%)',
                   ].join(', '),
                   border: `1px solid ${EV_LINE}`,
                   boxShadow: ['inset 0 1px 0 rgba(255,255,255,0.04)', EV_SH.sm].join(', '),

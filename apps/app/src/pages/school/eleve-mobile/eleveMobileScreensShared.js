@@ -1,13 +1,13 @@
 /**
  * Fond & surfaces — **référence branding** : accueil connexion LIRI (`/m/eleve/connexion`).
- * Fond #0B0B0F, cartes #16161E / #12121E, accent violet #7B61FF, texte secondaire #8E8E93.
+ * Fond #0b0b0a, cartes #16161E / #151210, accent violet #d97757, texte secondaire #8E8E93.
  * Grille de base 8px (marges / gaps en multiples de 4px).
  */
-export const EV_BG = '#0B0B0F';
+export const EV_BG = '#0b0b0a';
 export const EV_CARD = '#16161E';
-export const EV_CARD_INNER = '#12121E';
+export const EV_CARD_INNER = '#151210';
 export const EV_MUTED = '#8E8E93';
-// Directive LIRI : accent CORAL chaud (fini le violet #7B61FF). Token partagé → re-skin
+// Directive LIRI : accent CORAL chaud (fini le violet #d97757). Token partagé → re-skin
 // tout l'élève-mobile d'un coup (boutons, halos, titres…).
 export const EV_ACCENT = '#d97757';
 /** Coral clair — titres type « En direct. » (accueil connexion). */
@@ -59,9 +59,9 @@ export const EV_SH = {
   sm: '0 4px 16px -4px rgba(0,0,0,0.4)',
   md: '0 8px 24px -8px rgba(0,0,0,0.48)',
   lg: '0 16px 40px -16px rgba(0,0,0,0.55)',
-  hero: '0 24px 50px -20px rgba(40, 20, 80, 0.45), inset 0 1px 0 rgba(255,255,255,0.1)',
-  tab: '0 4px 18px -4px rgba(123, 97, 255, 0.4)',
-  cta: '0 8px 28px -6px rgba(123, 97, 255, 0.42)',
+  hero: '0 24px 50px -20px rgba(70,35,22,0.45), inset 0 1px 0 rgba(255,255,255,0.1)',
+  tab: '0 4px 18px -4px rgba(217, 119, 87, 0.4)',
+  cta: '0 8px 28px -6px rgba(217, 119, 87, 0.42)',
 };
 
 /**

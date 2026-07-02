@@ -114,13 +114,13 @@ export default function EleveEtudiantDocumentsScreen() {
       >
         {loading ? (
           <div className="flex justify-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-violet-300" />
+            <Loader2 className="h-8 w-8 animate-spin text-orange-300" />
           </div>
         ) : (
           <div className="space-y-4">
             {allDocs.map((g) => (
               <div key={g.key}>
-                <p className="mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-violet-300/90">{g.section}</p>
+                <p className="mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-orange-300/90">{g.section}</p>
                 {g.items.length === 0 ? (
                   <p className="text-sm font-medium" style={{ color: EV_MUTED }}>
                     Aucun document.

@@ -55,7 +55,7 @@ export function LiveImmersiveScreenSwitcher({ active, className }) {
               style={
                 on
                   ? {
-                      background: 'linear-gradient(180deg, rgba(123, 97, 255, 0.45) 0%, rgba(99, 57, 249, 0.35) 100%)',
+                      background: 'linear-gradient(180deg, rgba(217, 119, 87, 0.45) 0%, rgba(217, 119, 87, 0.35) 100%)',
                       boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
                     }
                   : { background: 'transparent' }

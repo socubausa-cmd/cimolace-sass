@@ -16,7 +16,7 @@ import {
 import { useTenantBranding } from '@/hooks/useTenantBranding';
 
 const LIRI_CTA = {
-  background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #5B21B6 100%)`,
+  background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #a94f33 100%)`,
   boxShadow: EV_SH.cta,
   borderRadius: EV_R.lg,
 };

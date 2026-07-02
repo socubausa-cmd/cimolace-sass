@@ -25,9 +25,9 @@ function OrbitIcon({ className, style, children, i, reduce }) {
         transition={reduce ? {} : { duration: 2.8 + i * 0.18, repeat: Infinity, ease: 'easeInOut' }}
         className={[
           'relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-2xl sm:h-10 sm:w-10',
-          'border border-white/30 text-violet-50',
-          'bg-gradient-to-br from-white/15 via-violet-400/20 to-indigo-600/15',
-          'shadow-[0_4px_24px_rgba(88,28,135,0.4),inset_0_1px_0_0_rgba(255,255,255,0.35),inset_0_-1px_0_0_rgba(0,0,0,0.12)]',
+          'border border-white/30 text-orange-50',
+          'bg-gradient-to-br from-white/15 via-orange-400/20 to-amber-600/15',
+          'shadow-[0_4px_24px_rgba(122,54,32,0.4),inset_0_1px_0_0_rgba(255,255,255,0.35),inset_0_-1px_0_0_rgba(0,0,0,0.12)]',
           'backdrop-blur-xl backdrop-saturate-150',
           'ring-1 ring-white/15',
         ].join(' ')}
@@ -59,14 +59,14 @@ function ImmersiveAfricanPortrait() {
           <stop offset="1" stopColor="#c46b5a" stopOpacity="0" />
         </radialGradient>
         <linearGradient id="liriHood" x1="30" y1="175" x2="170" y2="240">
-          <stop stopColor="#4c1d95" />
-          <stop offset="0.5" stopColor="#5b21b6" />
-          <stop offset="1" stopColor="#3b0764" />
+          <stop stopColor="#7a3620" />
+          <stop offset="0.5" stopColor="#a94f33" />
+          <stop offset="1" stopColor="#3a1810" />
         </linearGradient>
         <linearGradient id="liriRim" x1="0" y1="0" x2="1" y2="1">
-          <stop stopColor="#a78bfa" stopOpacity="0.5" />
-          <stop offset="0.5" stopColor="#3b82f6" stopOpacity="0.15" />
-          <stop offset="1" stopColor="#7c3aed" stopOpacity="0.3" />
+          <stop stopColor="#e0926a" stopOpacity="0.5" />
+          <stop offset="0.5" stopColor="#e2854f" stopOpacity="0.15" />
+          <stop offset="1" stopColor="#c96a4c" stopOpacity="0.3" />
         </linearGradient>
         <filter id="liriSOft" x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur in="SourceAlpha" stdDeviation="1" result="b" />
@@ -211,7 +211,7 @@ export function LiriConnectionHeroAvatar({ className, compact = false }) {
             {/* Disque type verre dépoli derrière le portrait (sans bordure nette) */}
             <div
               aria-hidden
-              className="pointer-events-none absolute left-1/2 top-1/2 h-[min(200px,55vw)] w-[min(200px,55vw)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10 bg-gradient-to-b from-white/[0.07] to-violet-500/[0.06] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] backdrop-blur-md"
+              className="pointer-events-none absolute left-1/2 top-1/2 h-[min(200px,55vw)] w-[min(200px,55vw)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10 bg-gradient-to-b from-white/[0.07] to-orange-500/[0.06] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] backdrop-blur-md"
             />
             <motion.div
               animate={reduce ? {} : { y: [0, -2.5, 0] }}

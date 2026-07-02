@@ -10,16 +10,16 @@ import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 import { EV_BG, EV_MUTED, EV_LINE, EV_R } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const PAGE_AMBIENT =
-  'radial-gradient(50% 32% at 50% 0%, rgba(123, 97, 255, 0.14), transparent 70%)';
+  'radial-gradient(50% 32% at 50% 0%, rgba(217, 119, 87, 0.14), transparent 70%)';
 
 function rowStyle(i) {
-  const h = ['rgba(99, 102, 241, 0.12)', 'rgba(59, 130, 246, 0.1)'][i % 2];
+  const h = ['rgba(217, 119, 87, 0.12)', 'rgba(226, 133, 79, 0.1)'][i % 2];
   return {
     background: [
       `radial-gradient(ellipse 100% 70% at 0% 0%, ${h} 0%, transparent 50%)`,
-      'linear-gradient(195deg, rgba(22, 24, 36, 0.97) 0%, rgba(10, 12, 20, 0.99) 100%)',
+      'linear-gradient(195deg, rgba(22,18,13,0.97) 0%, rgba(13,10,8,0.99) 100%)',
     ].join(', '),
-    border: '1px solid rgba(165, 180, 252, 0.16)',
+    border: '1px solid rgba(240, 200, 175, 0.16)',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
   };
 }
@@ -101,7 +101,7 @@ export default function EleveMessagesNewScreen() {
                 {u.avatar_url ? (
                   <img src={u.avatar_url} alt="" className="h-11 w-11 shrink-0 rounded-full object-cover" />
                 ) : (
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-violet-700 text-white">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-600 to-orange-700 text-white">
                     <User className="h-5 w-5" />
                   </div>
                 )}

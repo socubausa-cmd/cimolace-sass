@@ -11,10 +11,10 @@ import { buildEleveJoinCodeUrl, redeemEleveAccessCode } from '@/lib/eleveMobileJ
 import { resolveLiveJoinCodeFromPaste } from '@/lib/liveJoinCode';
 import { EV_MUTED, EV_ACCENT, EV_LINE, EV_R, EV_SH } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
-const LAV_SOFT = 'rgb(196, 181, 253)';
+const LAV_SOFT = 'rgb(232, 183, 154)';
 
 const GRAD_STYLE = {
-  background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #5B21B6 100%)`,
+  background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #a94f33 100%)`,
   boxShadow: EV_SH.cta,
   borderRadius: EV_R.lg,
 };
@@ -108,13 +108,13 @@ export default function EleveConnectionCode() {
 
         <div className="mt-1 flex flex-col items-center">
           <div
-            className="relative flex h-20 w-20 items-center justify-center rounded-full border border-sky-500/30"
+            className="relative flex h-20 w-20 items-center justify-center rounded-full border border-amber-500/30"
             style={{
-              background: 'radial-gradient(circle, rgba(59,130,246,0.2) 0%, rgba(15,12,32,0.85) 70%)',
-              boxShadow: '0 0 40px -8px rgba(59, 130, 246, 0.5)',
+              background: 'radial-gradient(circle, rgba(226, 133, 79,0.2) 0%, rgba(18,13,9,0.85) 70%)',
+              boxShadow: '0 0 40px -8px rgba(226, 133, 79, 0.5)',
             }}
           >
-            <LayoutGrid className="h-9 w-9 text-sky-200" strokeWidth={2.2} />
+            <LayoutGrid className="h-9 w-9 text-amber-200" strokeWidth={2.2} />
           </div>
         </div>
 

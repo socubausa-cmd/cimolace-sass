@@ -42,7 +42,7 @@ export default function EleveConnectionWelcome() {
             title="Rejoindre avec un lien"
             sub="Accès instantané à ton cours"
             bright
-            className="!shadow-violet-500/30"
+            className="!shadow-orange-500/30"
           />
           <LiriActionRow
             to={`${ELEVE_MOBILE.connexion}/code`}
@@ -68,7 +68,7 @@ export default function EleveConnectionWelcome() {
 
         <Link
           to={`${ELEVE_MOBILE.signup}?${signupQ}`}
-          className="mt-3 flex h-14 w-full items-center justify-center rounded-[18px] border border-violet-500/40 bg-transparent text-[15px] font-bold transition active:scale-[0.99]"
+          className="mt-3 flex h-14 w-full items-center justify-center rounded-[18px] border border-orange-500/40 bg-transparent text-[15px] font-bold transition active:scale-[0.99]"
           style={{ color: EV_ACCENT }}
         >
           Créer un compte élève

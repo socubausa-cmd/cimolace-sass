@@ -18,7 +18,7 @@ const TABS = [
 export function VieScolaireSubMenu() {
   return (
     <div
-      className="sticky top-0 z-20 border-b border-white/[0.08] bg-[#0B0B0F]/90 px-1 py-2 backdrop-blur-md"
+      className="sticky top-0 z-20 border-b border-white/[0.08] bg-[#0b0b0a]/90 px-1 py-2 backdrop-blur-md"
       style={{ marginLeft: 0, marginRight: 0 }}
     >
       <div
@@ -38,10 +38,10 @@ export function VieScolaireSubMenu() {
                   'flex min-w-0 flex-shrink-0 items-center justify-center gap-1.5 rounded-full px-3.5 py-2 text-center text-[12px] font-extrabold leading-none text-white/45 transition hover:text-white/80',
                   isActive && 'text-white',
                   isActive
-                    ? 'ring-1 ring-violet-400/45'
+                    ? 'ring-1 ring-orange-400/45'
                     : 'ring-1 ring-white/[0.08]',
                   isActive
-                    ? 'bg-gradient-to-b from-violet-500/35 to-violet-950/40'
+                    ? 'bg-gradient-to-b from-orange-500/35 to-orange-950/40'
                     : 'bg-white/[0.04]',
                 )
               }
@@ -52,7 +52,7 @@ export function VieScolaireSubMenu() {
                   <Icon
                     className="h-3.5 w-3.5 shrink-0"
                     strokeWidth={2.1}
-                    style={{ color: isActive ? '#c4b5fd' : EV_MUTED }}
+                    style={{ color: isActive ? '#eab89a' : EV_MUTED }}
                   />
                   <span className="whitespace-nowrap sm:hidden">{t.short}</span>
                   <span className="hidden sm:inline">{t.label}</span>

@@ -39,7 +39,7 @@ export function ProrascienceMobileVitrineShell({ title, children, showBack = tru
       notificationCount={0}
       hideHeader
       hideTabBar
-      contentClassName="!px-0 !bg-[#0B0B0F] !pb-0"
+      contentClassName="!px-0 !bg-[#0b0b0a] !pb-0"
     >
       <div
         className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden"
@@ -51,9 +51,9 @@ export function ProrascienceMobileVitrineShell({ title, children, showBack = tru
           aria-hidden
           style={{
             background: [
-              'radial-gradient(ellipse 100% 45% at 50% 0%, rgba(56, 189, 248, 0.14), transparent 55%)',
-              'radial-gradient(ellipse 70% 40% at 0% 50%, rgba(59, 130, 246, 0.14), transparent 50%)',
-              'radial-gradient(ellipse 60% 50% at 100% 60%, rgba(124, 58, 247, 0.12), transparent 52%)',
+              'radial-gradient(ellipse 100% 45% at 50% 0%, rgba(230, 160, 110, 0.14), transparent 55%)',
+              'radial-gradient(ellipse 70% 40% at 0% 50%, rgba(226, 133, 79, 0.14), transparent 50%)',
+              'radial-gradient(ellipse 60% 50% at 100% 60%, rgba(217,119,87,0.12), transparent 52%)',
             ].join(',\n'),
             zIndex: 0,
           }}
@@ -69,7 +69,7 @@ export function ProrascienceMobileVitrineShell({ title, children, showBack = tru
           </div>
 
           <motion.header
-            className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#0B0B0F]/80 px-2 pb-3 pt-2 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(123,97,255,0.04)] backdrop-blur-xl sm:px-4"
+            className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#0b0b0a]/80 px-2 pb-3 pt-2 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(217, 119, 87,0.04)] backdrop-blur-xl sm:px-4"
             initial={reduceMotion ? false : { opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.45, ease: PREMIUM_EASE }}
@@ -92,7 +92,7 @@ export function ProrascienceMobileVitrineShell({ title, children, showBack = tru
                 <button
                   type="button"
                   onClick={() => setMenuOpen(true)}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-sky-500/25 bg-sky-500/10 text-sky-100 shadow-[0_0_24px_-6px_rgba(56,189,248,0.45),inset_0_1px_0_rgba(255,255,255,0.12)] active:scale-95"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-amber-500/25 bg-amber-500/10 text-amber-100 shadow-[0_0_24px_-6px_rgba(230, 160, 110,0.45),inset_0_1px_0_rgba(255,255,255,0.12)] active:scale-95"
                   aria-label="Ouvrir le menu de navigation"
                 >
                   <Menu className="h-5 w-5" strokeWidth={2} />
@@ -109,7 +109,7 @@ export function ProrascienceMobileVitrineShell({ title, children, showBack = tru
 
               <div className="min-w-0 max-w-full justify-self-stretch self-center text-center [overflow-wrap:anywhere]">
                 <h1
-                  className="line-clamp-2 break-words font-serif text-[0.7rem] font-bold uppercase leading-tight tracking-[0.14em] text-sky-100/95 [text-wrap:balance] sm:text-xs sm:tracking-[0.16em]"
+                  className="line-clamp-2 break-words font-serif text-[0.7rem] font-bold uppercase leading-tight tracking-[0.14em] text-amber-100/95 [text-wrap:balance] sm:text-xs sm:tracking-[0.16em]"
                   title={title}
                 >
                   {title}
@@ -122,7 +122,7 @@ export function ProrascienceMobileVitrineShell({ title, children, showBack = tru
                     {lead}
                   </p>
                 )}
-                <p className="mt-0.5 text-[6px] font-semibold uppercase tracking-[0.2em] text-sky-400/50 sm:text-[7px]">
+                <p className="mt-0.5 text-[6px] font-semibold uppercase tracking-[0.2em] text-amber-400/50 sm:text-[7px]">
                   Immersion LIRI
                 </p>
               </div>
@@ -130,7 +130,7 @@ export function ProrascienceMobileVitrineShell({ title, children, showBack = tru
               <div className="flex shrink-0 justify-self-end">
                 <Link
                   to={profileTo}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-violet-400/30 bg-gradient-to-br from-sky-600/50 via-indigo-600/40 to-violet-700/50 text-white shadow-[0_0_28px_2px_rgba(99,102,241,0.45),inset_0_1px_0_rgba(255,255,255,0.15)] active:scale-95"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-orange-400/30 bg-gradient-to-br from-amber-600/50 via-amber-600/40 to-orange-700/50 text-white shadow-[0_0_28px_2px_rgba(217, 119, 87,0.45),inset_0_1px_0_rgba(255,255,255,0.15)] active:scale-95"
                   aria-label={user ? 'Mon profil' : 'Connexion'}
                 >
                   {user ? (
@@ -142,7 +142,7 @@ export function ProrascienceMobileVitrineShell({ title, children, showBack = tru
               </div>
             </div>
             <motion.div
-              className="mx-auto mt-2 h-px max-w-xs origin-center bg-gradient-to-r from-transparent via-sky-500/40 to-transparent"
+              className="mx-auto mt-2 h-px max-w-xs origin-center bg-gradient-to-r from-transparent via-amber-500/40 to-transparent"
               initial={reduceMotion ? false : { scaleX: 0, opacity: 0 }}
               animate={{ scaleX: 1, opacity: 1 }}
               transition={{ delay: reduceMotion ? 0 : 0.12, duration: reduceMotion ? 0 : 0.5, ease: PREMIUM_EASE }}
@@ -178,11 +178,11 @@ export function ProrascienceVitrineImmersiveCard({ className, children, variant 
       className={cn(
         'relative overflow-hidden rounded-2xl border p-4 shadow-lg',
         variant === 'sky' &&
-          'border-sky-500/30 bg-gradient-to-b from-sky-950/30 to-slate-950/80 shadow-sky-900/15',
+          'border-amber-500/30 bg-gradient-to-b from-amber-950/30 to-slate-950/80 shadow-amber-900/15',
         variant === 'default' &&
-          'border-sky-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/95 shadow-sky-900/5',
+          'border-amber-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/95 shadow-amber-900/5',
         variant === 'violet' &&
-          'border-violet-500/25 bg-gradient-to-b from-violet-950/30 to-slate-950/90 shadow-violet-900/10',
+          'border-orange-500/25 bg-gradient-to-b from-orange-950/30 to-slate-950/90 shadow-orange-900/10',
         'shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]',
         className,
       )}
@@ -208,7 +208,7 @@ export function ProrascienceVitrineImmersiveProse({ className, children, ...rest
 export function ProrascienceVitrineMobileSectionTitle({ children, hint }) {
   return (
     <div className="mb-2.5 mt-5 first:mt-0">
-      <h2 className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-sky-400/90">{children}</h2>
+      <h2 className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-amber-400/90">{children}</h2>
       {hint && <p className="mt-0.5 text-[10px] text-slate-500">{hint}</p>}
     </div>
   );
@@ -218,7 +218,7 @@ export function ProrascienceVitrineMobileCard({ className, children, ...rest }) 
   return (
     <div
       className={cn(
-        'rounded-2xl border border-sky-500/20 bg-slate-950/70 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]',
+        'rounded-2xl border border-amber-500/20 bg-slate-950/70 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]',
         className,
       )}
       {...rest}

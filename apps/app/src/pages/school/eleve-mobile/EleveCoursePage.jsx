@@ -25,9 +25,9 @@ import { getBillingCheckoutPath } from '@/lib/eleveBillingPath';
 import { LiriPageFooterLine } from '@/components/brand/LiriWordmark';
 import { EV_LINE, EV_PAGE_AMBIENT } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
-const WEB_FORMATION_BG = '#0F1419';
+const WEB_FORMATION_BG = '#17130f';
 const GOLD = '#D4AF37';
-const PANEL = 'rgba(21, 26, 33, 0.85)';
+const PANEL = 'rgba(22,18,14,0.85)';
 
 /**
  * Fiche formation élève — alignée sur `FormationDetailPage` (web) : même données,
@@ -380,11 +380,11 @@ export default function EleveCoursePage() {
                   {formation.image_url ? (
                     <img src={formation.image_url} alt="" className="h-full w-full object-cover" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-[#0F1419]">
+                    <div className="flex h-full w-full items-center justify-center bg-[#17130f]">
                       <BookOpen className="h-16 w-16 text-white/20" />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#151a21] via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#171310] via-transparent to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-4">
                     <div className="mb-2 flex flex-wrap gap-1.5">
                       <span
