@@ -6,93 +6,125 @@ function sidebarTitle(step) {
   return step?.progressLabel || String(step?.label || '').toUpperCase();
 }
 
+/**
+ * Timeline verticale progressive (remplace l'ancienne liste de boutons) :
+ * des nœuds ronds reliés par une ligne qui se colore en ambre au fil de
+ * l'avancement — complété = ambre plein + ✓, actif = coral + halo, à venir = contour discret.
+ */
 export function LiveStudioSidebar({ steps, currentStep, onStepClick, stepStates = {} }) {
   return (
-    <nav className="w-full space-y-1.5">
-      {steps.map((step) => {
-        const isActive = step.id === currentStep;
-        const state = stepStates[step.key] || {};
-        const isCompleted = Boolean(state.completed || step.id < currentStep);
-        const isLocked = Boolean(state.locked);
-        const hasError = Boolean(state.error);
-        const StepIcon = step.icon;
-        const title = sidebarTitle(step);
-        const canClick = !isLocked;
+    <nav className="w-full">
+      <ol className="relative pl-0.5">
+        {steps.map((step, idx) => {
+          const isActive = step.id === currentStep;
+          const state = stepStates[step.key] || {};
+          const isCompleted = Boolean(state.completed || step.id < currentStep);
+          const isLocked = Boolean(state.locked);
+          const hasError = Boolean(state.error);
+          const StepIcon = step.icon;
+          const isLast = idx === steps.length - 1;
+          const canClick = !isLocked;
+          // Le segment de ligne SOUS ce nœud est « rempli » dès que l'étape a été dépassée.
+          const segmentFilled = step.id < currentStep;
+          const title = sidebarTitle(step);
 
-        return (
-          <button
-            key={step.id}
-            type="button"
-            onClick={() => canClick && onStepClick(step.id)}
-            disabled={isLocked}
-            title={`Étape ${step.id} — ${step.label}`}
-            className={cn(
-              'group relative flex min-h-[48px] w-full items-center gap-2.5 overflow-hidden rounded-xl border text-left transition-all duration-200',
-              'pl-3 pr-2',
-              isActive &&
-                'border-[#7B61FF]/35 bg-gradient-to-r from-[#7B61FF]/12 via-[#7B61FF]/05 to-transparent text-white shadow-[inset_4px_0_0_0_#7B61FF]',
-              isCompleted &&
-                !isActive &&
-                !hasError &&
-                'border-emerald-500/18 bg-emerald-500/[0.05] text-emerald-200/85',
-              hasError &&
-                !isActive &&
-                'border-red-500/25 bg-red-500/[0.06] text-red-200/90',
-              !isActive &&
-                !isCompleted &&
-                !hasError &&
-                'border-[#2D3139] bg-[#14161c]/80 text-gray-500 hover:border-white/10 hover:bg-white/[0.03] hover:text-gray-300',
-              isLocked && 'opacity-55 cursor-not-allowed',
-            )}
-          >
-            <span
-              className={cn(
-                'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold tabular-nums',
-                isActive && 'bg-[#7B61FF] text-white shadow-[0_0_12px_-2px_rgba(123,97,255,0.45)]',
-                isCompleted && !isActive && !hasError && 'bg-emerald-500/22 text-emerald-300',
-                hasError && !isActive && 'bg-red-500/20 text-red-300',
-                !isActive && !isCompleted && !hasError && 'bg-[#2A2F38] text-gray-400',
-              )}
-            >
-              {isLocked ? (
-                <Lock className="h-3.5 w-3.5" strokeWidth={2.25} />
-              ) : isActive ? (
-                <Check className="h-3.5 w-3.5 stroke-[2.75]" />
-              ) : isCompleted ? (
-                <Check className="h-3.5 w-3.5 stroke-[2.5]" />
-              ) : hasError ? (
-                <AlertCircle className="h-3.5 w-3.5" />
-              ) : (
-                step.id
-              )}
-            </span>
-            <div className="min-w-0 flex-1 pr-6">
-              <p
+          return (
+            <li key={step.id}>
+              <button
+                type="button"
+                onClick={() => canClick && onStepClick(step.id)}
+                disabled={isLocked}
+                title={`Étape ${step.id} — ${step.label}`}
                 className={cn(
-                  'truncate text-[10px] font-bold uppercase leading-tight tracking-[0.08em]',
-                  isActive && 'text-white',
-                  !isActive && 'text-gray-500 group-hover:text-gray-400',
+                  'group relative flex w-full items-stretch gap-3 text-left outline-none',
+                  isLocked ? 'cursor-not-allowed' : 'cursor-pointer',
                 )}
               >
-                <span className="tabular-nums text-gray-500">{step.id}</span>{' '}
-                <span className={cn(isActive && 'text-white')}>{title}</span>
-              </p>
-              {hasError && state.errorMessage && (
-                <p className="mt-0.5 truncate text-[10px] text-red-300/90">{state.errorMessage}</p>
-              )}
-            </div>
-            <StepIcon
-              className={cn(
-                'absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 shrink-0',
-                isActive && 'text-[#7B61FF]',
-                isCompleted && !isActive && !hasError && 'text-emerald-500/65',
-                hasError && !isActive && 'text-red-400/80',
-                !isActive && !isCompleted && !hasError && 'text-gray-600',
-              )}
-            />
-          </button>
-        );
-      })}
+                {/* Colonne timeline : nœud + connecteur */}
+                <div className="relative flex flex-col items-center">
+                  <span
+                    className={cn(
+                      'relative z-10 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold tabular-nums transition-all duration-200',
+                      isActive &&
+                        'bg-[#d97757] text-white ring-4 ring-[#d97757]/18 shadow-[0_0_18px_-3px_rgba(217,119,87,0.6)]',
+                      isCompleted && !isActive && !hasError && 'bg-[#d4a36a] text-[#1a1a1a]',
+                      hasError && !isActive && 'bg-red-500/85 text-white',
+                      !isActive && !isCompleted && !hasError &&
+                        cn(
+                          'border bg-[#262624]',
+                          isLocked
+                            ? 'border-white/10 text-gray-600'
+                            : 'border-[#d4a36a]/30 text-gray-400 group-hover:border-[#d4a36a]/60 group-hover:text-[#d4a36a]',
+                        ),
+                    )}
+                  >
+                    {hasError && !isActive ? (
+                      <AlertCircle className="h-4 w-4" />
+                    ) : isCompleted && !isActive ? (
+                      <Check className="h-4 w-4 stroke-[3]" />
+                    ) : isLocked && !isActive ? (
+                      <Lock className="h-3.5 w-3.5" strokeWidth={2.25} />
+                    ) : (
+                      step.id
+                    )}
+                  </span>
+
+                  {/* Connecteur vers l'étape suivante */}
+                  {!isLast && (
+                    <span
+                      className={cn(
+                        'w-0.5 flex-1 rounded-full transition-colors duration-300',
+                        segmentFilled ? 'bg-[#d4a36a]' : 'bg-white/[0.09]',
+                      )}
+                    />
+                  )}
+                </div>
+
+                {/* Colonne libellé */}
+                <div className={cn('min-w-0 flex-1 pt-1.5', isLast ? 'pb-1.5' : 'pb-5')}>
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={cn(
+                        'text-[10px] font-semibold tabular-nums',
+                        isActive ? 'text-[#d97757]' : isCompleted ? 'text-[#d4a36a]/80' : 'text-gray-600',
+                      )}
+                    >
+                      {String(step.id).padStart(2, '0')}
+                    </span>
+                    <StepIcon
+                      className={cn(
+                        'h-3.5 w-3.5 shrink-0',
+                        isActive
+                          ? 'text-[#d97757]'
+                          : isCompleted && !isActive
+                            ? 'text-[#d4a36a]/70'
+                            : hasError
+                              ? 'text-red-400/80'
+                              : 'text-gray-600',
+                      )}
+                    />
+                  </div>
+                  <p
+                    className={cn(
+                      'mt-0.5 truncate text-[11px] font-semibold uppercase leading-tight tracking-[0.05em] transition-colors',
+                      isActive && 'text-white',
+                      isCompleted && !isActive && 'text-gray-200',
+                      hasError && !isActive && 'text-red-300',
+                      !isActive && !isCompleted && !hasError &&
+                        (isLocked ? 'text-gray-600' : 'text-gray-400 group-hover:text-gray-200'),
+                    )}
+                  >
+                    {title}
+                  </p>
+                  {hasError && state.errorMessage && (
+                    <p className="mt-0.5 truncate text-[10px] text-red-300/90">{state.errorMessage}</p>
+                  )}
+                </div>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
     </nav>
   );
 }
