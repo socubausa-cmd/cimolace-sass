@@ -1381,6 +1381,12 @@ isLiriHostDevPreviewRoute;
               <CourseDemoPage />
             </React.Suspense>
           } />
+          {/* LE PRÉCEPTEUR — cours numérique PERSISTÉ (masterclass par id) — même page, source backend */}
+          <Route path="/precepteur/cours/:masterclassId" element={
+            <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0b0f17] text-white/60">Chargement du cours…</div>}>
+              <PrecepteurCoursePage />
+            </React.Suspense>
+          } />
           {/* LE PRÉCEPTEUR — cours numérique EXPORTÉ depuis la Masterclass Factory (route la plus spécifique en premier) */}
           <Route path="/precepteur/cours" element={
             <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0b0f17] text-white/60">Chargement du cours…</div>}>

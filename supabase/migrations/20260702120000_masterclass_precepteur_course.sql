@@ -1,0 +1,12 @@
+-- Le Précepteur — « cours numérique » attaché à une masterclass.
+--
+-- La Masterclass Factory (export « Cours numérique (Précepteur) ») persiste le
+-- PrecepteurCourse enrichi (concepts + scènes leçon/amorce/croquis/atelier/analogie)
+-- dans cette colonne. MasterclassRoomPage (/masterclass/:id) propose alors un
+-- « Mode Précepteur » ; la route /precepteur/cours/:id le joue.
+--
+-- getMasterclass() fait `select('*')` → renvoie la colonne automatiquement.
+-- RLS héritée de `masterclasses` (policy tenant_isolation_masterclasses, FOR ALL)
+-- → les membres du tenant (dont les élèves) peuvent la lire. Additive + nullable :
+-- aucune donnée existante affectée.
+ALTER TABLE masterclasses ADD COLUMN IF NOT EXISTS precepteur_course JSONB;

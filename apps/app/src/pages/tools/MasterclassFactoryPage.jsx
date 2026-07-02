@@ -49,6 +49,7 @@ import { savePendingMasterclassForLiveStudio } from '@/lib/liriAgentExportToLive
 import { masterclassProjectToPrecepteurCourse } from '@/lib/precepteur/fromMasterclass';
 import { enrichCourseWithCroquis, buildCroquisSeeds } from '@/lib/precepteur/enrichCroquis';
 import { supabase } from '@/lib/supabaseCompat';
+import { masterclassApi } from '@/lib/api-v2';
 
 const EXAMPLE_TYPES = [
   'Cours théologique',
@@ -2018,8 +2019,25 @@ export default function MasterclassFactoryPage() {
 
       // On dépose le cours DÉJÀ enrichi (lu en priorité par PrecepteurCoursePage) ET on
       // garde l'écriture du MasterclassProject brut (fallback : transform sans croquis).
+      // Ces écritures restent le CHEMIN DE REPLI (offline/mode privé, échec backend).
       try { window.localStorage.setItem('precepteur:sourceCourse', JSON.stringify(enriched)); } catch { /* quota/private mode */ }
       try { window.localStorage.setItem('precepteur:sourceProject', JSON.stringify(m.project)); } catch { /* quota/private mode */ }
+
+      // On PERSISTE le cours enrichi côté backend (POST /masterclass-factory/precepteur).
+      // Si ça réussit → route porteuse d'id (rechargeable, partageable). Sinon (ou exception)
+      // → repli sur le flux localStorage ci-dessus. Ne bloque JAMAIS l'ouverture du cours.
+      try {
+        const saved = await masterclassApi.savePrecepteur({
+          title: enriched?.title || m.project?.analysis?.global_subject || 'Cours du Précepteur',
+          precepteurCourse: enriched,
+          sourceText: m.project?.rawText || '',
+        });
+        if (saved?.id) {
+          navigate(`/precepteur/cours/${saved.id}`);
+          return;
+        }
+      } catch { /* persistance optionnelle : on retombe sur le flux localStorage */ }
+
       navigate('/precepteur/cours');
       return;
     }

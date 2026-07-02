@@ -307,6 +307,59 @@ Règles :
     return { ...mc, modules: modules ?? [] };
   }
 
+  // ─── 5b. Cours numérique « Le Précepteur » ────────────────────────────────
+
+  /**
+   * Persiste un « cours numérique Précepteur » (PrecepteurCourse enrichi produit par
+   * la Masterclass Factory : concepts + scènes leçon/amorce/croquis/atelier/analogie)
+   * comme une masterclass FIRST-CLASS : une ligne `masterclasses` portant le rendu dans
+   * la colonne JSONB `precepteur_course` → visible dans /masterclasses, ouvrable en
+   * « Mode Précepteur ». Pas de modules/lessons : le rendu Précepteur EST le contenu.
+   * `getMasterclass` (select *) renvoie la colonne automatiquement. RLS + `created_by`
+   * gérés comme `persistMasterclass`.
+   */
+  async savePrecepteurCourse(
+    tenantId: string,
+    userId: string,
+    title: string,
+    precepteurCourse: unknown,
+    sourceText = '',
+  ) {
+    if (!precepteurCourse || typeof precepteurCourse !== 'object') {
+      throw new BadRequestException('precepteurCourse (objet) requis');
+    }
+
+    let createdBy = userId;
+    if (!createdBy || createdBy === '00000000-0000-0000-0000-000000000000') {
+      const { data: tenant } = await (this.supabase.client as any)
+        .from('tenants')
+        .select('owner_user_id')
+        .eq('id', tenantId)
+        .maybeSingle();
+      createdBy = (tenant as any)?.owner_user_id ?? userId;
+    }
+
+    const { data: mc, error } = await (this.supabase.client as any)
+      .from('masterclasses')
+      .insert({
+        tenant_id: tenantId,
+        created_by: createdBy,
+        title: (title || 'Cours du Précepteur').slice(0, 300),
+        source_text: String(sourceText || '').slice(0, 50000),
+        module_count: 0,
+        precepteur_course: precepteurCourse,
+      })
+      .select('*')
+      .single();
+
+    if (error || !mc) {
+      this.logger.error(`Insert precepteur masterclass error: ${error?.message}`);
+      throw new BadRequestException(`Échec création cours Précepteur: ${error?.message ?? 'inconnu'}`);
+    }
+
+    return this.getMasterclass(tenantId, mc.id);
+  }
+
   // ─── 6. Analyse document (placeholder pour futur RAG) ────────────────────
 
   async analyzeDocument(tenantId: string, url: string) {

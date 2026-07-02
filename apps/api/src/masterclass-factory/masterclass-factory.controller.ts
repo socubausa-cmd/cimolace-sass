@@ -13,6 +13,7 @@ import { MasterclassFactoryService } from './masterclass-factory.service';
 export class MasterclassFactoryController {
   constructor(private readonly svc: MasterclassFactoryService) {}
   @Post('generate') generate(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.generateFromText(t.id, (r as any).user.id, d.title, d.sourceText); }
+  @Post('precepteur') savePrecepteur(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.savePrecepteurCourse(t.id, (r as any).user.id, d.title, d.precepteurCourse, d.sourceText); }
   @Get() list(@CurrentTenant() t: TenantContext) { return this.svc.listMasterclasses(t.id); }
   @Get(':id') get(@Param('id') id: string, @CurrentTenant() t: TenantContext) { return this.svc.getMasterclass(t.id, id); }
   @Post('analyze') analyzeDoc(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.analyzeDocument(t.id, d.url); }

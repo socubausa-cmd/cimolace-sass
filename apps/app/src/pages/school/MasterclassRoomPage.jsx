@@ -80,6 +80,23 @@ export default function MasterclassRoomPage() {
         </div>
       ) : null}
 
+      {/* Mode Précepteur : proéminent, UNIQUEMENT si la masterclass porte un cours Précepteur (champ DB). */}
+      {!loading && !err && mc?.precepteur_course ? (
+        <button
+          onClick={() => navigate(`/precepteur/cours/${masterclassId}`)}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 9, marginTop: 20,
+            padding: '13px 22px', borderRadius: 12, cursor: 'pointer',
+            background: COL.coral, border: '1px solid rgba(217,119,87,0.55)',
+            color: '#1a120e', fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em',
+            boxShadow: '0 6px 22px rgba(217,119,87,0.28)',
+          }}
+        >
+          <span style={{ fontSize: 13 }}>▶</span>
+          Mode Précepteur — cours enseigné
+        </button>
+      ) : null}
+
       {loading ? (
         <div style={{ textAlign: 'center', padding: '48px 0', fontFamily: COL.mono, fontSize: 10, letterSpacing: '0.12em', color: COL.t3 }}>CHARGEMENT…</div>
       ) : err ? (

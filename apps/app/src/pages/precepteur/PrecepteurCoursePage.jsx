@@ -1,19 +1,26 @@
-import React, { useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { GraduationCap } from 'lucide-react';
 import { PrecepteurPlayer } from '@/pages/dev/PrecepteurDemoPage';
 import { masterclassProjectToPrecepteurCourse } from '@/lib/precepteur/fromMasterclass';
+import { masterclassApi } from '@/lib/api-v2';
 
 /**
- * PrecepteurCoursePage — route /precepteur/cours.
+ * PrecepteurCoursePage — routes /precepteur/cours ET /precepteur/cours/:masterclassId.
  *
  * REND un « Cours numérique (Précepteur) » exporté depuis la Masterclass Factory.
- * Deux sources, dans cet ordre de priorité :
- *   1. `precepteur:sourceCourse` — un `PrecepteurCourse` DÉJÀ enrichi par la Factory
- *      (transform + scènes croquis générées par l'edge `liri-preceptor-course`). Rendu
- *      tel quel (déjà au bon format, croquis inclus).
- *   2. `precepteur:sourceProject` — repli : le `MasterclassProject` brut, qu'on TRANSFORME
- *      via `masterclassProjectToPrecepteurCourse` (SANS croquis) pour rester rétro-compatible.
+ *
+ * DEUX MODES :
+ *   A. Avec `:masterclassId` (route porteuse d'id) → on charge la masterclass persistée via
+ *      `masterclassApi.get(id)` (GET /masterclass-factory/:id) et on joue son
+ *      `precepteur_course` s'il est jouable. Sinon → écran « cours introuvable » propre.
+ *   B. Sans param → on lit localStorage, dans cet ordre de priorité :
+ *        1. `precepteur:sourceCourse` — un `PrecepteurCourse` DÉJÀ enrichi par la Factory
+ *           (transform + scènes croquis générées par l'edge `liri-preceptor-course`). Rendu
+ *           tel quel (déjà au bon format, croquis inclus).
+ *        2. `precepteur:sourceProject` — repli : le `MasterclassProject` brut, qu'on TRANSFORME
+ *           via `masterclassProjectToPrecepteurCourse` (SANS croquis) pour rester rétro-compatible.
+ *
  * Puis on le joue avec le MOTEUR partagé `PrecepteurPlayer` (le même que la démo /precepteur
  * — aucune duplication du rendu).
  *
@@ -57,16 +64,90 @@ function loadExportedCourse() {
   }
 }
 
-export default function PrecepteurCoursePage() {
-  const course = useMemo(() => loadExportedCourse(), []);
+// Écran plein sombre partagé (chargement / vide / introuvable) — reprend le style de l'écran vide.
+function PrecepteurScreen({ children }) {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#0b0f17] px-6 text-center">
+      <div className="mb-4 flex items-center gap-2 text-amber-400/90">
+        <GraduationCap className="h-6 w-6" />
+        <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Le Précepteur · cours numérique</span>
+      </div>
+      {children}
+    </div>
+  );
+}
 
+export default function PrecepteurCoursePage() {
+  const { masterclassId } = useParams();
+
+  // MODE B (sans id) : cours localStorage, calculé une fois au montage (inchangé).
+  const localCourse = useMemo(() => (masterclassId ? null : loadExportedCourse()), [masterclassId]);
+
+  // MODE A (avec id) : cours chargé depuis le backend.
+  const [remoteCourse, setRemoteCourse] = useState(null);
+  const [loading, setLoading] = useState(Boolean(masterclassId));
+  const [notFound, setNotFound] = useState(false);
+
+  useEffect(() => {
+    if (!masterclassId) return; // MODE B : rien à charger.
+    let alive = true;
+    setLoading(true);
+    setNotFound(false);
+    setRemoteCourse(null);
+    masterclassApi
+      .get(masterclassId)
+      .then((mc) => {
+        if (!alive) return;
+        const course = mc?.precepteur_course;
+        if (isPlayableCourse(course)) setRemoteCourse(course);
+        else setNotFound(true); // masterclass existante mais pas un cours Précepteur jouable
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setNotFound(true);
+        setLoading(false);
+      });
+    return () => { alive = false; };
+  }, [masterclassId]);
+
+  // MODE A — chargement en cours.
+  if (masterclassId && loading) {
+    return (
+      <PrecepteurScreen>
+        <h1 className="text-2xl font-extrabold text-white">Chargement du cours…</h1>
+        <p className="mt-3 max-w-md text-sm leading-relaxed text-white/55">
+          Récupération de la Masterclass enseignée par Le Précepteur.
+        </p>
+      </PrecepteurScreen>
+    );
+  }
+
+  // MODE A — masterclass introuvable ou sans cours Précepteur jouable.
+  if (masterclassId && (notFound || !remoteCourse)) {
+    return (
+      <PrecepteurScreen>
+        <h1 className="text-2xl font-extrabold text-white">Cours introuvable</h1>
+        <p className="mt-3 max-w-md text-sm leading-relaxed text-white/55">
+          Cette Masterclass n’existe pas, ou elle ne contient pas de{' '}
+          <strong className="text-white/80">Cours numérique (Précepteur)</strong> jouable.
+        </p>
+        <Link
+          to="/dashboard/tools/masterclass-factory"
+          className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#7C3AED] px-6 py-3 text-sm font-bold text-white hover:bg-violet-500"
+        >
+          Ouvrir la Masterclass Factory
+        </Link>
+      </PrecepteurScreen>
+    );
+  }
+
+  const course = masterclassId ? remoteCourse : localCourse;
+
+  // MODE B — aucune source localStorage exploitable → écran vide explicite (inchangé).
   if (!course) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#0b0f17] px-6 text-center">
-        <div className="mb-4 flex items-center gap-2 text-amber-400/90">
-          <GraduationCap className="h-6 w-6" />
-          <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Le Précepteur · cours numérique</span>
-        </div>
+      <PrecepteurScreen>
         <h1 className="text-2xl font-extrabold text-white">Aucun cours à jouer</h1>
         <p className="mt-3 max-w-md text-sm leading-relaxed text-white/55">
           Génère une Masterclass, puis choisis l’export{' '}
@@ -79,7 +160,7 @@ export default function PrecepteurCoursePage() {
         >
           Ouvrir la Masterclass Factory
         </Link>
-      </div>
+      </PrecepteurScreen>
     );
   }
 

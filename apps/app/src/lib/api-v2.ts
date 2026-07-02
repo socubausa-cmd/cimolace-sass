@@ -517,6 +517,8 @@ export const masterclassApi = {
     apiV2.get<ApiEnvelope<any>>(`/masterclass-factory/${id}`).then(unwrap),
   analyzeDoc: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/masterclass-factory/analyze', body).then(unwrap),
+  savePrecepteur: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/masterclass-factory/precepteur', body).then(unwrap),
 };
 
 // ── Mbolo ───────────────────────────────────────────────────────────────────
