@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from "@nestjs/common";
+import { Injectable, BadRequestException, NotFoundException, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import { randomUUID, createHmac, timingSafeEqual } from "crypto";
 import { AuthService } from "../auth/auth.service";
 import { PawaPayService } from "../pawapay/pawapay.service";
@@ -7,7 +7,8 @@ import { EmailEngineService } from "../email-engine/email-engine.service";
 import { resolvePlanServices } from "./plan-services";
 
 @Injectable()
-export class BillingService {
+export class BillingService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(BillingService.name);
   constructor(
     private auth: AuthService,
     private pawapay: PawaPayService,
@@ -15,6 +16,21 @@ export class BillingService {
     private email: EmailEngineService,
   ) {}
   private get supabase() { return this.auth.getClient(); }
+
+  // Cron INTERNE léger (sans @nestjs/schedule) : renouvellement mobile money
+  // quotidien (push-to-approve). renewDueSubscriptions est idempotent (anti
+  // double-relance) → sûr même si relancé. Complète l'endpoint /billing/renewals/run.
+  onApplicationBootstrap() {
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const run = () =>
+      this.renewDueSubscriptions()
+        .then((r) => {
+          if (r.initiated) this.logger.log(`Renouvellements relancés: ${r.initiated}/${r.scanned}`);
+        })
+        .catch((e) => this.logger.warn(`renewDueSubscriptions: ${(e as Error).message}`));
+    // 1er passage 60 s après le boot, puis toutes les 24 h.
+    setTimeout(() => { void run(); setInterval(() => void run(), DAY_MS); }, 60_000);
+  }
 
   /**
    * Notifie les endpoints webhook du tenant (tenant_webhooks, HMAC
