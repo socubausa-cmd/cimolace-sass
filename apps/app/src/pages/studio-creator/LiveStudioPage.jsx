@@ -6,6 +6,9 @@ import { useProfilesSearch } from '@/hooks/useProfilesSearch';
 import { useLiveStudioDraft } from '@/hooks/useLiveStudioDraft';
 import { LiveStudioBuilder } from '@/components/studio-creator/studio/builders/LiveStudioBuilder';
 import StudioDesignerLikeShell from '@/components/liri/liri-ecosystem/StudioDesignerLikeShell';
+// Remap froid→chaud de tout le studio (le wizard /studio/live ne passe pas par StudioRouter
+// qui posait le scope) : réchauffe stepper, champs, aperçu… conformément à la charte LIRI.
+import '@/pages/studio-creator/studio/studioWarm.css';
 import { Radio } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { pushWizardSmartboardToLiveScenes } from '@/lib/pushWizardSmartboardToLiveScenes';
@@ -156,6 +159,7 @@ export default function LiveStudioPage() {
   };
 
   return (
+    <div className="studio-warm-scope contents">
     <StudioDesignerLikeShell
       railActiveKey="live"
       pageLabel="Live"
@@ -184,6 +188,7 @@ export default function LiveStudioPage() {
         embedInShell
       />
     </StudioDesignerLikeShell>
+    </div>
   );
 }
 
