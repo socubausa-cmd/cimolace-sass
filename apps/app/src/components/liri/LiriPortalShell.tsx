@@ -6,22 +6,30 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { authStore } from '@/lib/auth-store';
+import { useAuth } from '@/hooks/useAuth';
+import { isCreatorRole } from '@/lib/liri/creatorRole';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import { PortalHeaderProvider, usePortalHeaderValues } from './portalHeader';
 import '../../pages/LiriPortal.css';
+// Scope froid→chaud (même règles que le Studio) réutilisé sur tout le contenu du portail
+// → filet de sécurité : Lives, Brain, etc. n'ont plus de classes froides résiduelles.
+import '../../pages/studio-creator/studio/studioWarm.css';
 
 type RailKey = 'accueil' | 'lives' | 'forum' | 'messages' | 'studio' | 'ecole' | 'biblio' | 'brain' | 'integrations' | 'reglages';
 
-const RAIL: { key: RailKey; label: string; icon: typeof House; to: string }[] = [
+// `creator: true` = outil réservé au CRÉATEUR (masqué pour l'élève), IDENTIQUE au RAIL de
+// LiriPortalPage. Sans ce filtre, l'élève retombait sur toute la nav créateur dès qu'il
+// quittait l'accueil (Studio, École, Brain, Biblio-studio… tous gardés côté route).
+const RAIL: { key: RailKey; label: string; icon: typeof House; to: string; creator?: boolean }[] = [
   { key: 'accueil', label: 'Accueil', icon: House, to: '/liri' },
   { key: 'lives', label: 'Lives', icon: Video, to: '/lives' },
   { key: 'forum', label: 'Forum', icon: MessagesSquare, to: '/liri/forum' },
   { key: 'messages', label: 'Messages', icon: MessageCircle, to: '/liri/messages' },
-  { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri' },
-  { key: 'ecole', label: 'École', icon: GraduationCap, to: '/liri/ecole' },
-  { key: 'biblio', label: 'Biblio.', icon: Library, to: '/studio/liri/bibliotheque' },
-  { key: 'brain', label: 'Brain', icon: Sparkles, to: '/dashboard/liri' },
+  { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri', creator: true },
+  { key: 'ecole', label: 'École', icon: GraduationCap, to: '/liri/ecole', creator: true },
+  { key: 'biblio', label: 'Biblio.', icon: Library, to: '/studio/liri/bibliotheque', creator: true },
+  { key: 'brain', label: 'Brain', icon: Sparkles, to: '/dashboard/liri', creator: true },
 ];
 
 /** Onglets de sous-vues (niveau 3) rendus DANS l'en-tête — voir portalHeader + la RÈGLE menus.
@@ -117,6 +125,10 @@ function LiriPortalShellInner({
   children: ReactNode;
 }) {
   const nav = useNavigate();
+  // Vue ADAPTÉE par rôle : l'élève reste dans le portail mais sans l'outillage créateur.
+  // Même coupe que LiriPortalPage (helper partagé, fail-closed sur le rôle JWT).
+  const { tenantRole } = useAuth();
+  const isCreator = isCreatorRole(tenantRole);
   const slug = authStore.getTenantSlug?.() || 'École';
   const tenant = String(slug).replace(/-/g, ' ');
   const initials = tenant.slice(0, 2).toUpperCase();
@@ -195,7 +207,8 @@ function LiriPortalShellInner({
             </span>
           )}
           <button className="relative grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Notifications"><Bell size={17} /><span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full" style={{ background: 'var(--coral)' }} /></button>
-          <button onClick={() => nav('/liri/compte')} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Paramètres"><Settings size={17} /></button>
+          {/* Réglages du compte tenant (facturation, membres…) = créateur only. */}
+          {isCreator && <button onClick={() => nav('/liri/compte')} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Paramètres"><Settings size={17} /></button>}
           <span className="ml-1 grid h-8 w-8 place-items-center rounded-full text-[12px] font-semibold text-white lp-ember">{initials}</span>
         </div>
       </header>
@@ -204,7 +217,7 @@ function LiriPortalShellInner({
       <div className={`z-10 grid min-h-0 ${rail ? 'grid-cols-[92px_1fr]' : 'grid-cols-[1fr]'}`}>
         {rail && (
         <aside className="flex min-h-0 flex-col items-center gap-1 lp-rail-bg border-r lp-line py-4">
-          {RAIL.map((it) => {
+          {RAIL.filter((it) => isCreator || !it.creator).map((it) => {
             const Icon = it.icon;
             const isActive = it.key === active;
             return (
@@ -222,14 +235,19 @@ function LiriPortalShellInner({
               </button>
             );
           })}
-          <div className="my-1.5 h-px w-9" style={{ background: 'rgba(245,244,238,.08)' }} />
-          <button onClick={() => nav('/liri')} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Blocks size={20} /></span><span className="lp-nl text-[10px] font-medium">Intégr.</span></button>
-          <button onClick={() => nav('/liri/compte')} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Settings2 size={20} /></span><span className="lp-nl text-[10px] font-medium">Réglages</span></button>
+          {/* Intégrations + Réglages = outils créateur → masqués pour l'élève. */}
+          {isCreator && (
+            <>
+              <div className="my-1.5 h-px w-9" style={{ background: 'rgba(245,244,238,.08)' }} />
+              <button onClick={() => nav('/liri')} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Blocks size={20} /></span><span className="lp-nl text-[10px] font-medium">Intégr.</span></button>
+              <button onClick={() => nav('/liri/compte')} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Settings2 size={20} /></span><span className="lp-nl text-[10px] font-medium">Réglages</span></button>
+            </>
+          )}
           <button className="mt-auto grid h-9 w-9 place-items-center rounded-full text-[11px] font-bold text-white lp-tr lp-railbtn" style={{ background: 'linear-gradient(135deg,#5b7a52,#6d8f60)' }} title={tenant}>{initials}</button>
         </aside>
         )}
 
-        <main className="lp-shell-main relative min-h-0 overflow-hidden" style={{ background: 'var(--base)' }}>
+        <main className="lp-shell-main studio-warm-scope relative min-h-0 overflow-hidden" style={{ background: 'var(--base)' }}>
           {children}
         </main>
       </div>

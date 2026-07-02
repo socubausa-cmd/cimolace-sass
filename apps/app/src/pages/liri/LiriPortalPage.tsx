@@ -11,6 +11,7 @@ import { authStore } from '@/lib/auth-store';
 import { getCachedHostTenant } from '@/lib/tenantResolver';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
+import { isCreatorRole } from '@/lib/liri/creatorRole';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import '../LiriPortal.css';
 
@@ -25,9 +26,6 @@ interface Live { id: string; title?: string; status?: string; scheduled_at?: str
 interface Stats { totalMembers: number; totalLives: number; totalCourses: number; totalRevenueCents: number; }
 interface Org { name: string; slug: string; role?: string | null; plan?: string | null; billingStatus?: string | null; }
 
-// Rôles CRÉATEUR / staff : voient tout l'outillage du portail. Tout le reste
-// (élève 'student', ou rôle non résolu) → vue ALLÉGÉE. Fail-closed volontaire.
-const CREATOR_ROLES = ['owner', 'admin', 'teacher', 'secretariat', 'practitioner', 'clinic_admin', 'staff'];
 interface Sub { status?: string; plan_id?: string; provider?: string; current_period_end?: string | null; }
 
 interface ResumeItem { id: string; icon: LucideIcon; title: string; sub: string; to: string; }
@@ -215,7 +213,9 @@ export function LiriPortalPage() {
     { key: 'messages', label: 'Messages', icon: MessageCircle, to: '/liri/messages' },
     { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri', creator: true },
     { key: 'ecole', label: 'École', icon: GraduationCap, to: '/liri/ecole', creator: true },
-    { key: 'biblio', label: 'Biblio.', icon: Library, to: '/studio/liri/bibliotheque' },
+    // Biblio → /studio/liri/bibliotheque (bibliothèque communautaire du STUDIO, gardée
+    // teacher/admin/owner…). Réservée au créateur : l'élève y serait bloqué par la garde.
+    { key: 'biblio', label: 'Biblio.', icon: Library, to: '/studio/liri/bibliotheque', creator: true },
     { key: 'brain', label: 'Brain', icon: Sparkles, to: '/dashboard/liri', creator: true },
   ];
   const QUICK: { label: string; icon: LucideIcon; to: string; hero?: boolean; creator?: boolean }[] = [
@@ -234,8 +234,7 @@ export function LiriPortalPage() {
   // créateur (Studio, Programmer, Acheter, École-gestion, Intégr, Réglages,
   // métriques revenus/quota) est masqué plus bas via `isCreator`. Plus de
   // redirection vers l'ancienne « Vie scolaire » — un seul monde : LIRI.
-  const effectiveRole = String(tenantRole || org?.role || '').toLowerCase();
-  const isCreator = CREATOR_ROLES.includes(effectiveRole);
+  const isCreator = isCreatorRole(tenantRole, org?.role);
 
   return (
     <div className="lp-root relative h-[100dvh] w-full overflow-hidden grid grid-rows-[56px_1fr_34px]">

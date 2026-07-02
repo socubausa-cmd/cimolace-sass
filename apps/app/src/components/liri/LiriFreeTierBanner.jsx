@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { useLiriEntitlements } from '@/hooks/useLiriEntitlements';
+import { useAuth } from '@/hooks/useAuth';
+import { isCreatorRole } from '@/lib/liri/creatorRole';
 
 /**
  * Bandeau de palier LIRI (Couche A : Cimolace facture le tenant). Affiché si le
@@ -11,7 +13,11 @@ import { useLiriEntitlements } from '@/hooks/useLiriEntitlements';
  * Additif et sans risque : aucune logique de moteur, juste l'affichage du palier.
  */
 export default function LiriFreeTierBanner({ className = '' }) {
+  const { tenantRole } = useAuth();
   const { tier, limits } = useLiriEntitlements();
+  // Palier + facturation = affaire du CRÉATEUR (CTA → /cimolace/billing). L'élève ne
+  // voit jamais l'upsell d'abonnement du tenant. Fail-closed (rôle non résolu → masqué).
+  if (!isCreatorRole(tenantRole)) return null;
   if (tier === 'paid') return null;
   const isTrial = tier === 'trial';
   return (
