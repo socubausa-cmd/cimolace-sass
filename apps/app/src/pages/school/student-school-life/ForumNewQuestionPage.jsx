@@ -1,471 +1,272 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import {
-  ArrowLeft,
-  Send,
-  Loader2,
-  Video,
-  X,
-  Tag,
-  HelpCircle,
-  AlertCircle,
-  CheckCircle2,
-} from 'lucide-react';
+import { ArrowLeft, Search, PlayCircle, GraduationCap, Loader2, CheckCircle2, Clapperboard } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
-import { cn } from '@/lib/utils';
-import './forum-dark.css';
+import { authStore } from '@/lib/auth-store';
+import { getApiBaseUrl } from '@/lib/apiBase';
+import UnifiedVideoPlayer from '@/components/lesson-player/unified/UnifiedVideoPlayer';
+import { fromReplay } from '@/components/lesson-player/unified/fromReplay';
 
 /**
- * Page création de nouvelle question forum
- * Features:
- * - Titre + contenu éditeur
- * - Sélection formation
- * - Upload vidéo clip (optionnel)
- * - Tags (autocomplete)
- * - Preview avant publication
+ * Poser une question = TOUJOURS sur une vidéo DÉJÀ existante (aucun upload — trop de
+ * stockage). L'élève : (1) cherche/choisit une vidéo — cours ou replay ; (2) la charge ;
+ * (3) marque un extrait (IN/OUT) sur la timeline ; (4) pose sa question sur cet extrait ;
+ * il peut en poser une autre (nouvel extrait) et ainsi de suite. On réutilise
+ * UnifiedVideoPlayer (+ ClipQuestionComposer, clip obligatoire) et la RPC
+ * post_topic_question (référence contexte + clip_start/end — pas de fichier stocké).
  */
+
+const T = {
+  coral: '#d97757', cream: '#f5f1e9',
+  t2: 'rgba(245,241,233,0.72)', t3: 'rgba(245,241,233,0.5)',
+  card: 'rgba(255,247,240,0.03)', cardHover: 'rgba(255,247,240,0.06)',
+  line: 'rgba(245,241,233,0.10)', mono: "'JetBrains Mono','Fira Code',monospace",
+};
+
+const fmtDate = (v) => {
+  if (!v) return '';
+  try { return new Date(v).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }); }
+  catch { return ''; }
+};
+
 export default function ForumNewQuestionPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const forumBase = (location.pathname.split('/forum')[0] || '') + '/forum';
-  const [loading, setLoading] = useState(false);
-  const [formations, setFormations] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
 
-  // Form state
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [selectedFormation, setSelectedFormation] = useState('');
-  const [tags, setTags] = useState([]);
-  const [tagInput, setTagInput] = useState('');
-  const [isPublic, setIsPublic] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [replays, setReplays] = useState([]);
+  const [courseVideos, setCourseVideos] = useState([]);
+  const [query, setQuery] = useState('');
 
-  // Video clip state
-  const [videoFile, setVideoFile] = useState(null);
-  const [clipStart, setClipStart] = useState('');
-  const [clipEnd, setClipEnd] = useState('');
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const fileInputRef = useRef(null);
+  const [selected, setSelected] = useState(null); // { source, contextType, contextId, data, title }
+  const [loadingVideo, setLoadingVideo] = useState(false);
+  const [asking, setAsking] = useState(false);
+  const [sentCount, setSentCount] = useState(0);
+  const [justSent, setJustSent] = useState(false);
 
-  // Error/Success state
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-
-  // Load user + formations
+  // 1) Vidéos disponibles : replays (GET /lives terminés) + cours (formation_day_contents).
   useEffect(() => {
-    const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUser(user);
-
-      if (!user) return;
-
-      // Formations visibles par l'élève (RLS) depuis "courses".
-      const { data: forms } = await supabase
-        .from('courses')
-        .select('id, title, color')
-        .order('title', { ascending: true });
-      setFormations(forms || []);
-      if (forms?.[0]) setSelectedFormation(forms[0].id);
-    };
-    load();
+    let alive = true;
+    (async () => {
+      setLoading(true);
+      const token = authStore.getToken();
+      const slug = authStore.getTenantSlug?.() || '';
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/lives`, { headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } });
+        const j = await res.json().catch(() => ({}));
+        const arr = j?.data ?? j;
+        const past = (Array.isArray(arr) ? arr : []).filter((s) => s.status === 'ended' || s.status === 'completed' || s.ended_at);
+        if (alive) setReplays(past.map((s) => ({ id: s.id, title: s.title || 'Réunion', date: s.ended_at || s.started_at || s.scheduled_at })));
+      } catch { /* noop */ }
+      // Vidéos de cours : course_lessons(video_url) → module → cours. Le CONTEXTE forum
+      // d'une question de cours est le COURS (post_topic_question résout le tenant via
+      // `courses.id`), donc on remonte jusqu'à courses.id.
+      try {
+        const [lessonsRes, modulesRes, coursesRes] = await Promise.all([
+          supabase.from('course_lessons').select('id, title, video_url, module_id').limit(400),
+          supabase.from('course_modules').select('id, course_id').limit(400),
+          supabase.from('courses').select('id, title').limit(400),
+        ]);
+        const modToCourse = new Map((modulesRes?.data || []).map((m) => [m.id, m.course_id]));
+        const courseTitle = new Map((coursesRes?.data || []).map((c) => [c.id, c.title]));
+        const vids = (lessonsRes?.data || [])
+          .filter((l) => l.video_url)
+          .map((l) => {
+            const courseId = modToCourse.get(l.module_id);
+            return { id: l.id, title: l.title || 'Leçon', videoUrl: l.video_url, courseId, courseTitle: courseTitle.get(courseId) };
+          })
+          .filter((v) => v.courseId);
+        if (alive) setCourseVideos(vids);
+      } catch { /* noop */ }
+      if (alive) setLoading(false);
+    })();
+    return () => { alive = false; };
   }, []);
 
-  // Suggested tags
-  const suggestedTags = [
-    'fiqh', 'aqida', 'tawhid', 'tajwid', 'coran',
-    'hadith', 'sira', 'langue arabe', 'grammaire', 'conjugaison',
-    'prononciation', 'mémorisation', 'révisions', 'examen', 'méthode',
-    'aide', 'urgent', 'clarification', 'astuce', 'organisation'
-  ];
-
-  const addTag = (tag) => {
-    if (!tag || tags.includes(tag) || tags.length >= 5) return;
-    setTags([...tags, tag]);
-    setTagInput('');
-  };
-
-  const removeTag = (tagToRemove) => {
-    setTags(tags.filter(t => t !== tagToRemove));
-  };
-
-  const handleFileSelect = (e) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith('video/')) {
-      setVideoFile(file);
-    }
-  };
-
-  const clearVideo = () => {
-    setVideoFile(null);
-    setClipStart('');
-    setClipEnd('');
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const validate = () => {
-    if (!title.trim() || title.length < 10) {
-      return 'Le titre doit contenir au moins 10 caractères';
-    }
-    if (!content.trim() || content.length < 20) {
-      return 'Le contenu doit contenir au moins 20 caractères';
-    }
-    if (!selectedFormation) {
-      return 'Veuillez sélectionner une formation';
-    }
-    if (videoFile && (clipStart || clipEnd)) {
-      const start = parseFloat(clipStart);
-      const end = parseFloat(clipEnd);
-      if (isNaN(start) || isNaN(end) || start >= end) {
-        return 'Les timestamps du clip sont invalides';
-      }
-    }
-    return '';
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
-    setLoading(true);
-
+  // 2) Sélection → adaptateur → UnifiedPlayerData.
+  const pickReplay = async (r) => {
+    setLoadingVideo(true);
     try {
-      let videoStoragePath = null;
-
-      // Upload video if present
-      if (videoFile) {
-        const fileExt = videoFile.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `forum_clips/${currentUser.id}/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('videos')
-          .upload(filePath, videoFile, {
-            cacheControl: '3600',
-            upsert: false,
-          });
-
-        if (uploadError) throw uploadError;
-        videoStoragePath = filePath;
-      }
-
-      // Create question
-      const { data: question, error: insertError } = await supabase
-        .from('formation_student_questions')
-        .insert({
-          formation_id: selectedFormation,
-          student_id: currentUser.id,
-          author_name:
-            currentUser.user_metadata?.full_name ||
-            currentUser.user_metadata?.name ||
-            (currentUser.email ? currentUser.email.split('@')[0] : 'Élève'),
-          question: title,
-          content: content,
-          tags: tags,
-          is_public: isPublic,
-          video_storage_path: videoStoragePath,
-          clip_start_seconds: clipStart ? parseFloat(clipStart) : null,
-          clip_end_seconds: clipEnd ? parseFloat(clipEnd) : null,
-        })
-        .select('id')
-        .single();
-
-      if (insertError) throw insertError;
-
-      setSuccess(true);
-      setTimeout(() => {
-        navigate(`${forumBase}/thread/${question.id}`);
-      }, 1500);
-
-    } catch (err) {
-      setError(err.message || 'Une erreur est survenue');
-    } finally {
-      setLoading(false);
-    }
+      const { data: room } = await supabase.rpc('get_replay_room', { p_session_id: r.id });
+      const session = room?.session || { id: r.id, title: r.title };
+      const data = fromReplay({ session, state: room?.state || null, posterUrl: room?.state?.replay_poster_url || session?.cover_image_url });
+      setSelected({ source: 'replay', contextType: 'live', contextId: r.id, data, title: data.title });
+      setSentCount(0);
+    } catch { window.alert('Impossible de charger ce replay. Réessaie.'); }
+    finally { setLoadingVideo(false); }
+  };
+  const pickCourse = (c) => {
+    // video_url direct (bucket public / URL) → resolution 'direct'. Contexte = COURS.
+    const data = {
+      lessonId: c.id, title: c.title,
+      video: { url: c.videoUrl, resolution: 'direct' },
+      chapters: [], timestamps: [], transcript: [], mindmap: null,
+      enableQuiz: false, enableQuestion: true, notesScope: 'lesson', source: 'course',
+    };
+    setSelected({ source: 'course', contextType: 'course', contextId: c.courseId, data, title: data.title });
+    setSentCount(0);
   };
 
-  if (success) {
+  // 3) Poser la question sur l'extrait → RPC (référence, pas d'upload).
+  const handleAsk = async ({ question, clipStart, clipEnd, isPublic }) => {
+    if (clipStart == null || clipEnd == null) return;
+    setAsking(true);
+    try {
+      await supabase.rpc('post_topic_question', {
+        p_context_type: selected.contextType,
+        p_context_id: selected.contextId,
+        p_question: question,
+        p_clip_start: clipStart,
+        p_clip_end: clipEnd,
+        p_is_public: isPublic,
+      });
+      setSentCount((c) => c + 1);
+      setJustSent(true);
+      setTimeout(() => setJustSent(false), 1600);
+    } catch { window.alert("La question n'a pas pu être envoyée. Réessaie."); }
+    finally { setAsking(false); }
+  };
+
+  const q = query.trim().toLowerCase();
+  const fReplays = useMemo(() => replays.filter((r) => !q || (r.title || '').toLowerCase().includes(q)), [replays, q]);
+  const fCourses = useMemo(() => courseVideos.filter((c) => !q || (c.title || '').toLowerCase().includes(q)), [courseVideos, q]);
+  const nothing = !loading && fReplays.length === 0 && fCourses.length === 0;
+
+  // ————————————————————————————————————————————————————————————— rendu
+
+  if (selected) {
     return (
-      <div className="forum-dark min-h-[60vh] flex items-center justify-center">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-center"
-        >
-          <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Question publiée !</h2>
-          <p className="text-gray-600">Redirection vers votre question...</p>
-        </motion.div>
+      <div style={{ maxWidth: 820, margin: '0 auto', padding: '4px 0 40px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+          <button onClick={() => setSelected(null)} style={backBtn()}>← Changer de vidéo</button>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: T.coral, textTransform: 'uppercase' }}>
+              {selected.source === 'replay' ? 'Replay' : 'Cours'} · Poser une question sur un extrait
+            </div>
+            <h1 style={{ fontSize: 19, fontWeight: 700, color: T.cream, margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selected.title}</h1>
+          </div>
+          {sentCount > 0 && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0, fontFamily: T.mono, fontSize: 11.5, fontWeight: 700, color: justSent ? '#7bbf6a' : T.coral, background: 'rgba(217,119,87,0.10)', border: `1px solid rgba(217,119,87,0.28)`, borderRadius: 20, padding: '4px 11px' }}>
+              <CheckCircle2 size={13} /> {sentCount} envoyée{sentCount > 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+
+        <p style={{ fontSize: 13, color: T.t2, margin: '0 0 14px', lineHeight: 1.5 }}>
+          Place-toi sur la vidéo, <strong style={{ color: T.cream }}>définis un extrait (IN → OUT)</strong>, écris ta question, envoie —
+          puis recommence pour en poser une autre. Rien n'est réuploadé : ta question pointe simplement ce moment de la vidéo.
+        </p>
+
+        <UnifiedVideoPlayer data={selected.data} layout="embed" onAskQuestion={handleAsk} requireClip />
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 18 }}>
+          <button onClick={() => navigate(forumBase)} style={{ ...backBtn(), color: T.t2 }}>
+            {sentCount > 0 ? 'Terminer' : 'Retour au forum'}
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="forum-dark max-w-3xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => navigate(forumBase)}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Nouvelle question</h1>
-          <p className="text-sm text-gray-600">Posez votre question à la communauté</p>
-        </div>
+    <div style={{ maxWidth: 820, margin: '0 auto', padding: '4px 0 40px' }}>
+      {/* En-tête */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+        <button onClick={() => navigate(forumBase)} style={backBtn()}><ArrowLeft size={16} /></button>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: T.cream, margin: 0 }}>Poser une question</h1>
+      </div>
+      <p style={{ fontSize: 13.5, color: T.t2, margin: '0 0 18px 44px' }}>
+        Choisis une vidéo de ton cours ou un replay, puis pose ta question sur un extrait précis.
+      </p>
+
+      {/* Recherche */}
+      <div style={{ position: 'relative', marginBottom: 20 }}>
+        <Search size={16} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: T.t3 }} />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Rechercher un cours, un replay…"
+          style={{ width: '100%', padding: '11px 14px 11px 38px', borderRadius: 11, background: '#1a1714', border: `1px solid ${T.line}`, color: T.cream, fontSize: 14, outline: 'none' }}
+        />
       </div>
 
-      {/* Error */}
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3"
-        >
-          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-700">{error}</p>
-        </motion.div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Formation */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Formation concernée
-          </label>
-          <select
-            value={selectedFormation}
-            onChange={(e) => setSelectedFormation(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            required
-          >
-            <option value="">Choisir une formation</option>
-            {formations.map((f) => (
-              <option key={f.id} value={f.id}>{f.title}</option>
-            ))}
-          </select>
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '48px 0', color: T.t3, fontFamily: T.mono, fontSize: 10, letterSpacing: '0.12em' }}>CHARGEMENT…</div>
+      ) : loadingVideo ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '48px 0', color: T.t2 }}>
+          <Loader2 size={16} className="animate-spin" /> Chargement de la vidéo…
         </div>
-
-        {/* Title */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Titre de votre question
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Ex: Quelle est la différence entre le Fiqh et l'Aqida ?"
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            required
-            minLength={10}
-            maxLength={200}
-          />
-          <p className="mt-1 text-xs text-gray-500">
-            {title.length}/200 caractères minimum 10
-          </p>
+      ) : nothing ? (
+        <div style={{ textAlign: 'center', padding: '44px 20px', color: T.t3, background: T.card, border: `1px solid ${T.line}`, borderRadius: 14 }}>
+          <p style={{ color: T.t2, fontSize: 14, margin: '0 0 4px' }}>Aucune vidéo disponible pour l'instant.</p>
+          <p style={{ fontSize: 12.5, margin: 0 }}>Les replays de tes lives et les vidéos de cours apparaîtront ici.</p>
         </div>
-
-        {/* Content */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Détaillez votre question
-          </label>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Expliquez votre problème en détail..."
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-h-[150px] resize-y"
-            required
-            minLength={20}
-            maxLength={2000}
-          />
-          <p className="mt-1 text-xs text-gray-500">
-            {content.length}/2000 caractères minimum 20
-          </p>
-        </div>
-
-        {/* Tags */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Tags ({tags.length}/5)
-          </label>
-          <div className="flex flex-wrap gap-2 mb-3">
-            {tags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm"
-              >
-                {tag}
-                <button
-                  type="button"
-                  onClick={() => removeTag(tag)}
-                  className="hover:bg-indigo-200 rounded-full p-0.5"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  addTag(tagInput.trim().toLowerCase());
-                }
-              }}
-              placeholder="Ajouter un tag..."
-              className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              disabled={tags.length >= 5}
-            />
-            <button
-              type="button"
-              onClick={() => addTag(tagInput.trim().toLowerCase())}
-              disabled={tags.length >= 5 || !tagInput.trim()}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 rounded-lg transition-colors"
-            >
-              <Tag className="w-4 h-4" />
-            </button>
-          </div>
-          {/* Suggested tags */}
-          <div className="mt-3 flex flex-wrap gap-2">
-            {suggestedTags
-              .filter(t => !tags.includes(t))
-              .slice(0, 8)
-              .map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => addTag(tag)}
-                  className="px-2 py-1 text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-full transition-colors"
-                >
-                  + {tag}
-                </button>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+          {fReplays.length > 0 && (
+            <Section icon={PlayCircle} label="Replays" count={fReplays.length}>
+              {fReplays.map((r) => (
+                <VideoRow key={r.id} icon={PlayCircle} title={r.title} sub={fmtDate(r.date)} onClick={() => pickReplay(r)} />
               ))}
-          </div>
-        </div>
-
-        {/* Video Clip */}
-        <div className="border border-gray-200 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Video className="w-5 h-5 text-gray-500" />
-            <span className="font-medium text-gray-700">Clip vidéo (optionnel)</span>
-          </div>
-
-          {!videoFile ? (
-            <div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="video/*"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full py-8 border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors text-center"
-              >
-                <Video className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">Cliquez pour ajouter une vidéo</p>
-                <p className="text-xs text-gray-500 mt-1">MP4, WebM, MOV - Max 50MB</p>
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm text-gray-700 truncate">{videoFile.name}</span>
-                <button
-                  type="button"
-                  onClick={clearVideo}
-                  className="p-1 hover:bg-gray-200 rounded-full"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <label className="text-xs text-gray-600">Début clip (sec)</label>
-                  <input
-                    type="number"
-                    value={clipStart}
-                    onChange={(e) => setClipStart(e.target.value)}
-                    placeholder="0"
-                    min="0"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="text-xs text-gray-600">Fin clip (sec)</label>
-                  <input
-                    type="number"
-                    value={clipEnd}
-                    onChange={(e) => setClipEnd(e.target.value)}
-                    placeholder="10"
-                    min="1"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                  />
-                </div>
-              </div>
-            </div>
+            </Section>
+          )}
+          {fCourses.length > 0 && (
+            <Section icon={GraduationCap} label="Vidéos de cours" count={fCourses.length}>
+              {fCourses.map((c) => (
+                <VideoRow key={c.id} icon={Clapperboard} title={c.title} sub={c.courseTitle || 'Leçon'} onClick={() => pickCourse(c)} />
+              ))}
+            </Section>
           )}
         </div>
-
-        {/* Visibility */}
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            id="isPublic"
-            checked={isPublic}
-            onChange={(e) => setIsPublic(e.target.checked)}
-            className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-          />
-          <label htmlFor="isPublic" className="text-sm text-gray-700">
-            Rendre cette question publique (visible par toute la communauté)
-          </label>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center justify-between pt-4 border-t">
-          <button
-            type="button"
-            onClick={() => navigate(forumBase)}
-            className="px-6 py-2 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            Annuler
-          </button>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            type="submit"
-            disabled={loading}
-            className="flex items-center gap-2 px-8 py-3 bg-[#0a0a0f] text-white rounded-lg font-medium hover:bg-[#5b3df5] disabled:opacity-50 transition-colors"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Publication...
-              </>
-            ) : (
-              <>
-                <Send className="w-4 h-4" />
-                Publier la question
-              </>
-            )}
-          </motion.button>
-        </div>
-      </form>
+      )}
     </div>
   );
+}
+
+function Section({ icon: Icon, label, count, children }) {
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <Icon size={15} style={{ color: T.coral }} />
+        <span style={{ fontFamily: T.mono, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: T.cream, textTransform: 'uppercase' }}>{label}</span>
+        <span style={{ fontFamily: T.mono, fontSize: 11, color: T.t3, background: T.card, border: `1px solid ${T.line}`, borderRadius: 20, padding: '1px 8px' }}>{count}</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{children}</div>
+    </div>
+  );
+}
+
+function VideoRow({ icon: Icon, title, sub, onClick }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 13, width: '100%', textAlign: 'left', cursor: 'pointer',
+        padding: '12px 15px', borderRadius: 12,
+        background: hover ? T.cardHover : T.card, border: `1px solid ${hover ? 'rgba(217,119,87,0.32)' : T.line}`,
+        transition: 'background .14s, border-color .14s',
+      }}
+    >
+      <span style={{ display: 'grid', placeItems: 'center', width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: 'rgba(217,119,87,0.12)', color: T.coral }}>
+        <Icon size={18} />
+      </span>
+      <span style={{ minWidth: 0, flex: 1 }}>
+        <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: T.cream, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
+        {sub ? <span style={{ display: 'block', fontFamily: T.mono, fontSize: 11, color: T.t3, marginTop: 1 }}>{sub}</span> : null}
+      </span>
+      <span style={{ flexShrink: 0, fontSize: 12.5, fontWeight: 600, color: hover ? T.coral : T.t3 }}>Choisir →</span>
+    </button>
+  );
+}
+
+function backBtn() {
+  return {
+    display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0, padding: '7px 13px', borderRadius: 9,
+    cursor: 'pointer', background: 'rgba(217,119,87,0.10)', border: '1px solid rgba(217,119,87,0.28)',
+    color: T.coral, fontSize: 12.5, fontWeight: 600,
+  };
 }

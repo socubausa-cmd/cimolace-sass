@@ -46,6 +46,8 @@ export interface UnifiedVideoPlayerProps {
   className?: string;
   /** Envoi d'une question + clip (le parent gère la persistance). */
   onAskQuestion?: (payload: { question: string; clipStart: number | null; clipEnd: number | null; isPublic: boolean }) => Promise<void> | void;
+  /** Exige un extrait (IN/OUT) avant de pouvoir poser la question (flux « question sur clip »). */
+  requireClip?: boolean;
 }
 
 const COL = {
@@ -55,7 +57,7 @@ const COL = {
   mono: "'JetBrains Mono','Fira Code',monospace",
 };
 
-const UnifiedVideoPlayer: React.FC<UnifiedVideoPlayerProps> = ({ data, layout = 'embed', className = '', onAskQuestion }) => {
+const UnifiedVideoPlayer: React.FC<UnifiedVideoPlayerProps> = ({ data, layout = 'embed', className = '', onAskQuestion, requireClip = false }) => {
   const playerRef = useRef<LessonVideoPlayerHandle | null>(null);
   const [currentTimeSeconds, setCurrentTimeSeconds] = useState(0);
   const [noteMarkers, setNoteMarkers] = useState<{ id: string; timeSeconds: number }[]>([]);
@@ -148,7 +150,7 @@ const UnifiedVideoPlayer: React.FC<UnifiedVideoPlayerProps> = ({ data, layout = 
                 sent ? (
                   <div style={{ textAlign: 'center', padding: '30px 0', color: COL.coral, fontWeight: 600 }}>✓ Question envoyée</div>
                 ) : (
-                  <ClipQuestionComposer videoUrl={resolvedUrl || ''} storagePath={data.video.storagePath || ''} onSubmit={handleAsk} submitting={asking} />
+                  <ClipQuestionComposer videoUrl={resolvedUrl || ''} storagePath={data.video.storagePath || ''} onSubmit={handleAsk} submitting={asking} requireClip={requireClip} />
                 )
               ) : null}
             </div>

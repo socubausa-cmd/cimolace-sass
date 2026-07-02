@@ -13,7 +13,7 @@ const fmt = (s) => {
   return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, '0')}`;
 };
 
-export default function ClipQuestionComposer({ videoUrl = '', storagePath = '', onSubmit, submitting = false }) {
+export default function ClipQuestionComposer({ videoUrl = '', storagePath = '', onSubmit, submitting = false, requireClip = false }) {
   const clipVideoRef = useRef(null);
   const clipStopAtRef = useRef(null);
   const [clipDuration, setClipDuration] = useState(null);
@@ -59,7 +59,8 @@ export default function ClipQuestionComposer({ videoUrl = '', storagePath = '', 
     clipVideoRef.current.play();
   };
 
-  const canSend = question.trim().length > 0 && !submitting;
+  const hasClip = start !== '' && end !== '';
+  const canSend = question.trim().length > 0 && !submitting && (!requireClip || hasClip);
   const submit = () => {
     if (!canSend) return;
     const cs = start === '' ? null : round05(Number(start));
@@ -144,10 +145,15 @@ export default function ClipQuestionComposer({ videoUrl = '', storagePath = '', 
             <input type="radio" name="clipq_vis" checked={!isPublic} onChange={() => setIsPublic(false)} style={{ accentColor: T.coral }} /> Privée
           </label>
         </div>
-        <button type="button" onClick={submit} disabled={!canSend}
-          style={{ padding: '9px 18px', borderRadius: 9, border: 'none', cursor: canSend ? 'pointer' : 'not-allowed', background: T.coral, color: '#1a1108', fontWeight: 700, fontSize: 13, opacity: canSend ? 1 : 0.5 }}>
-          {submitting ? 'Envoi…' : 'Poser la question'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {requireClip && !hasClip ? (
+            <span style={{ fontSize: 11.5, color: T.t3 }}>Marque un extrait (IN/OUT) pour activer l'envoi</span>
+          ) : null}
+          <button type="button" onClick={submit} disabled={!canSend}
+            style={{ padding: '9px 18px', borderRadius: 9, border: 'none', cursor: canSend ? 'pointer' : 'not-allowed', background: T.coral, color: '#1a1108', fontWeight: 700, fontSize: 13, opacity: canSend ? 1 : 0.5 }}>
+            {submitting ? 'Envoi…' : 'Poser la question'}
+          </button>
+        </div>
       </div>
     </div>
   );
