@@ -612,6 +612,18 @@ export function CockpitDock({
   channel: CockpitChannel;
   eduMode?: boolean;
 }) {
+  // Diffuse la scène clinique partagée vers un éventuel SmartBoardCompositor (scène
+  // « Dossier MEDOS ») — en TÉLÉCONSULT (Tableau) comme en live/formation. CockpitDock
+  // est monté dans les deux cas (téléconsult via ConsultationRoom, live via
+  // MedTeleconsultCockpit), donc l'event part bien partout. window.__liriMedosScene =
+  // dernier état, lu au montage d'un compositeur ouvert APRÈS le partage.
+  useEffect(() => {
+    const scene = channel.scene ?? null;
+    if (typeof window !== 'undefined') {
+      (window as unknown as { __liriMedosScene?: CockpitScene | null }).__liriMedosScene = scene;
+      window.dispatchEvent(new CustomEvent('LIRI_MEDOS_SHARED_SCENE', { detail: { scene } }));
+    }
+  }, [channel.scene]);
   return mode === 'host' ? (
     <HostCockpit sessionId={sessionId} channel={channel} eduMode={eduMode} />
   ) : (
@@ -635,18 +647,11 @@ export default function MedTeleconsultCockpit({
   onSharedSceneChange?: (scene: CockpitScene | null) => void;
 }) {
   const channel = useCockpitChannel(sessionId ?? null, mode);
+  // L'émission de la scène partagée (window.__liriMedosScene + event LIRI_MEDOS_SHARED_SCENE)
+  // vit désormais dans CockpitDock, monté en téléconsult ET en live. Ici on ne garde que
+  // le callback de compat (fallback prop).
   useEffect(() => {
-    const scene = channel.scene ?? null;
-    onSharedSceneChange?.(scene);
-    // Découplé : le SmartBoardCompositor (scène « Dossier MEDOS ») écoute cet event pour
-    // afficher le contenu clinique sur le SMARTBOARD CENTRAL, sans threading à travers
-    // les couches de l'arène (mobile ET desktop). Cf. LIRI_LIVE_ARCHITECT_APPLY.
-    if (typeof window !== 'undefined') {
-      // Dernier état courant : lu au MONTAGE d'un compositeur ouvert APRÈS le partage
-      // (ex. onglet Tableau de la téléconsult sélectionné après « Partager »).
-      (window as unknown as { __liriMedosScene?: CockpitScene | null }).__liriMedosScene = scene;
-      window.dispatchEvent(new CustomEvent('LIRI_MEDOS_SHARED_SCENE', { detail: { scene } }));
-    }
+    onSharedSceneChange?.(channel.scene ?? null);
   }, [channel.scene, onSharedSceneChange]);
   if (!sessionId) return null;
   return <CockpitDock sessionId={sessionId} mode={mode} channel={channel} eduMode={eduMode} />;
