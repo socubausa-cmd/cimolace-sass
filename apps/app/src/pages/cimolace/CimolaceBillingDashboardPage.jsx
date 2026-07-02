@@ -7,7 +7,7 @@ import {
   Zap, Loader2, Building2, Boxes, Power, LayoutGrid, ArrowRight, ExternalLink,
   KeyRound, ShoppingBag, LifeBuoy, Settings, Plus, Trash2, Copy, Check, Send,
   Package, Users, Activity, UserCircle, ShieldAlert, Mail, XCircle,
-  Webhook, ShieldCheck, LogOut, Image as ImageIcon, Printer, Globe, Lock, Sparkles,
+  Webhook, ShieldCheck, LogOut, Image as ImageIcon, Printer, Globe, Lock, Sparkles, Smartphone, X,
 } from 'lucide-react';
 import { billingApi, tenantMembersApi, catalogApi, tenantApiKeysApi, tenantPortalApi, tenantsApi, mboloApi, teamInvitesApi } from '@/lib/api';
 import { authStore } from '@/lib/auth-store';
@@ -130,6 +130,106 @@ const ENGINE_FAMILIES = [
 ];
 const familyOf = (k) => ENGINE_FAMILIES.find((f) => f.match(String(k || '')))?.label || 'Autre';
 
+// Pays Mobile Money (PawaPay) — Afrique. Indicatif utilisé pour préfixer le numéro E.164.
+const MM_COUNTRIES = [
+  { code: 'CMR', name: 'Cameroun', dial: '+237' },
+  { code: 'CIV', name: "Côte d'Ivoire", dial: '+225' },
+  { code: 'SEN', name: 'Sénégal', dial: '+221' },
+  { code: 'GAB', name: 'Gabon', dial: '+241' },
+  { code: 'BEN', name: 'Bénin', dial: '+229' },
+  { code: 'TGO', name: 'Togo', dial: '+228' },
+  { code: 'BFA', name: 'Burkina Faso', dial: '+226' },
+  { code: 'COD', name: 'RD Congo', dial: '+243' },
+  { code: 'GHA', name: 'Ghana', dial: '+233' },
+];
+const mmProviderCode = (p) => (typeof p === 'string' ? p : (p?.provider || p?.code || p?.correspondent || p?.id || ''));
+const mmProviderName = (p) => (typeof p === 'string' ? p : (p?.name || p?.displayName || p?.label || mmProviderCode(p)));
+
+// Modal de paiement Mobile Money (PawaPay) pour un forfait LIRI : pays -> opérateur ->
+// téléphone -> subscribe(provider='pawapay') (facture en XAF) -> collect -> push USSD.
+function MobileMoneyModal({ plan, onClose }) {
+  const [country, setCountry] = useState('CMR');
+  const [providers, setProviders] = useState([]);
+  const [provider, setProvider] = useState('');
+  const [dial, setDial] = useState('+237');
+  const [phone, setPhone] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setProviders([]); setProvider('');
+    setDial((MM_COUNTRIES.find((x) => x.code === country) || {}).dial || '+237');
+    billingApi.pawapayProviders(country)
+      .then((list) => { if (!cancelled) { const arr = Array.isArray(list) ? list : []; setProviders(arr); setProvider(mmProviderCode(arr[0]) || ''); } })
+      .catch(() => { if (!cancelled) setProviders([]); });
+    return () => { cancelled = true; };
+  }, [country]);
+
+  const pay = async () => {
+    setBusy(true); setError(null); setResult(null);
+    try {
+      const digits = phone.replace(/[^0-9]/g, '');
+      const phoneNumber = phone.trim().startsWith('+') ? phone.replace(/\s/g, '') : `${dial}${digits.replace(/^0+/, '')}`;
+      if (!provider) throw new Error('Choisis un opérateur mobile money.');
+      if (digits.length < 6) throw new Error('Numéro de téléphone invalide.');
+      const sub = await billingApi.subscribe(plan.key, 'pawapay');
+      const r = await billingApi.collect(sub.subscription_id, { phoneNumber, provider, country });
+      setResult({ ...r, phoneNumber });
+    } catch (e) {
+      setError(e?.response?.data?.message || e?.message || 'Échec de la collecte mobile money.');
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="w-full max-w-sm rounded-2xl border border-white/[0.1] bg-[#1b1712] p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2"><Smartphone className="w-5 h-5 text-[#e6b878]" /><h3 className="font-bold text-white">Payer en Mobile Money</h3></div>
+          <button onClick={onClose} className="p-1 rounded-lg text-white/40 hover:bg-white/10 hover:text-white/70"><X className="w-4 h-4" /></button>
+        </div>
+        <p className="text-xs text-white/50 mb-4">{plan?.label} — Orange Money · MTN MoMo · Moov… (Afrique).</p>
+        {result ? (
+          <div className="rounded-xl border border-[#e6b878]/30 bg-[#e6b878]/[0.08] p-4 text-sm text-white/80">
+            <div className="flex items-center gap-2 font-semibold text-[#e6b878] mb-1.5"><Check className="w-4 h-4" /> Demande envoyée</div>
+            <p>📲 Une demande de <strong>{result.currency} {result.amount}</strong> a été poussée sur <strong>{result.phoneNumber}</strong>. Compose ton code Mobile Money sur ton téléphone pour valider — l'abonnement s'active dès confirmation.</p>
+            <button onClick={onClose} className="mt-3 w-full px-4 py-2 rounded-lg border border-white/[0.12] text-white/70 text-sm hover:bg-white/[0.06]">Fermer</button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <label className="block">
+              <span className="text-[11px] text-white/50">Pays</span>
+              <select value={country} onChange={(e) => setCountry(e.target.value)} className="mt-1 w-full rounded-lg border border-white/[0.1] bg-white/[0.04] px-3 py-2 text-sm text-white">
+                {MM_COUNTRIES.map((c) => <option key={c.code} value={c.code} className="bg-[#1b1712]">{c.name}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-[11px] text-white/50">Opérateur</span>
+              <select value={provider} onChange={(e) => setProvider(e.target.value)} disabled={!providers.length} className="mt-1 w-full rounded-lg border border-white/[0.1] bg-white/[0.04] px-3 py-2 text-sm text-white disabled:opacity-50">
+                {!providers.length && <option value="" className="bg-[#1b1712]">— chargement… —</option>}
+                {providers.map((p, i) => <option key={i} value={mmProviderCode(p)} className="bg-[#1b1712]">{mmProviderName(p)}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-[11px] text-white/50">Numéro Mobile Money</span>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="rounded-lg border border-white/[0.1] bg-white/[0.04] px-2.5 py-2 text-sm text-white/60 shrink-0">{dial}</span>
+                <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="6XX XX XX XX" inputMode="tel" className="w-full rounded-lg border border-white/[0.1] bg-white/[0.04] px-3 py-2 text-sm text-white placeholder-white/30" />
+              </div>
+            </label>
+            {error && <p className="text-xs text-red-300 flex items-start gap-1.5"><AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />{error}</p>}
+            <button onClick={pay} disabled={busy} className="w-full mt-1 px-4 py-2.5 rounded-xl bg-[#d97757] text-white font-bold text-sm hover:bg-[#c9673f] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors">
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Smartphone className="w-4 h-4" />} Envoyer le paiement
+            </button>
+            <p className="text-[10px] text-white/35 text-center">Tu recevras une demande de validation sur ton téléphone.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function CimolaceBillingDashboardPage() {
   const [tenants, setTenants] = useState([]);
   const [activeSlug, setActiveSlug] = useState('');
@@ -149,6 +249,7 @@ export default function CimolaceBillingDashboardPage() {
   const [showAllPlans, setShowAllPlans] = useState(false); // ?upgrade=liri → grille LIRI seule, ce flag révèle tous les forfaits
   const [tickets, setTickets] = useState([]);
   const [busy, setBusy] = useState(null);
+  const [mmPlan, setMmPlan] = useState(null); // forfait pour lequel le modal Mobile Money (PawaPay) est ouvert
   const [newKey, setNewKey] = useState(null);
   const [copied, setCopied] = useState(false);
   const [keyLabel, setKeyLabel] = useState('');
@@ -717,15 +818,23 @@ export default function CimolaceBillingDashboardPage() {
                                   {busy === `annual-${p.key}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />} {p.subscribed ? 'Déjà actif' : "Demander l'annuel"}
                                 </button>
                               ) : (
-                                <button disabled={p.subscribed || busy === `sub-${p.key}`} onClick={() => subscribe(p.key)} className="mt-4 px-4 py-2.5 rounded-xl bg-[#d97757] text-white font-bold text-sm hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                                  {busy === `sub-${p.key}` ? <Loader2 className="w-4 h-4 animate-spin" /> : p.subscribed ? <Check className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />} {p.subscribed ? 'Déjà actif' : (oneTime ? 'Commander' : 'Activer ce forfait')}
-                                </button>
+                                <>
+                                  <button disabled={p.subscribed || busy === `sub-${p.key}`} onClick={() => subscribe(p.key)} className="mt-4 px-4 py-2.5 rounded-xl bg-[#d97757] text-white font-bold text-sm hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                                    {busy === `sub-${p.key}` ? <Loader2 className="w-4 h-4 animate-spin" /> : p.subscribed ? <Check className="w-4 h-4" /> : <CreditCard className="w-4 h-4" />} {p.subscribed ? 'Déjà actif' : (oneTime ? 'Commander' : 'Payer par carte')}
+                                  </button>
+                                  {!oneTime && !p.subscribed && (
+                                    <button onClick={() => setMmPlan(p)} className="mt-2 px-4 py-2 rounded-xl border border-[#e6b878]/40 text-[#e6b878] font-semibold text-[13px] hover:bg-[#e6b878]/[0.08] flex items-center justify-center gap-2 transition-colors">
+                                      <Smartphone className="w-4 h-4" /> Mobile Money (Afrique)
+                                    </button>
+                                  )}
+                                </>
                               )}
                             </div>
                           );
                         })}
                       </div>
-                      <p className="text-xs text-white/40 flex items-center gap-1.5 flex-wrap"><ShieldCheck className="w-3.5 h-3.5 text-[#e6b878] shrink-0" /> Paiement sécurisé Stripe · Conforme RGPD · Selon le service, des frais d'activation uniques peuvent s'appliquer (forfait boutique : 500 €), détaillés avant paiement.</p>
+                      {mmPlan && <MobileMoneyModal plan={mmPlan} onClose={() => setMmPlan(null)} />}
+                      <p className="text-xs text-white/40 flex items-center gap-1.5 flex-wrap"><ShieldCheck className="w-3.5 h-3.5 text-[#e6b878] shrink-0" /> Carte (Stripe) ou Mobile Money (PawaPay) · Conforme RGPD · Selon le service, des frais d'activation uniques peuvent s'appliquer (forfait boutique : 500 €), détaillés avant paiement.</p>
                       {isLiriUpgrade && (
                         <div className="text-center pt-1">
                           <button onClick={() => setShowAllPlans((v) => !v)} className="text-xs text-white/45 hover:text-white/75 underline underline-offset-2">

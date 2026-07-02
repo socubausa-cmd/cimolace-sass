@@ -142,14 +142,30 @@ export class BillingService {
     const sb = this.supabase;
     const { data: plan } = await sb
       .from("billing_plans")
-      .select("key, label, price_cents, currency, is_active")
+      .select("key, label, price_cents, currency, is_active, metadata")
       .eq("key", planKey)
       .maybeSingle();
     if (!plan || (plan as any).is_active === false) {
       throw new NotFoundException(`Plan "${planKey}" introuvable ou inactif`);
     }
-    const amountCents = Number((plan as any).price_cents ?? 0);
-    const currency = String((plan as any).currency ?? "EUR");
+    // Devise selon le moyen de paiement : PawaPay (mobile money Afrique) collecte en
+    // XAF/XOF (sans décimale) → prix DÉDIÉ lu dans metadata.price_xaf (montant entier,
+    // ex. 3000 = 3000 XAF). Stripe (carte) garde le prix EUR inline (price_cents).
+    const meta = ((plan as any).metadata ?? {}) as Record<string, any>;
+    let amountCents: number;
+    let currency: string;
+    if (prov === "pawapay") {
+      amountCents = Number(meta.price_xaf ?? 0);
+      currency = String(meta.price_xaf_currency ?? "XAF");
+      if (!amountCents) {
+        throw new BadRequestException(
+          `Paiement mobile money indisponible pour "${planKey}" : prix XAF non configuré (billing_plans.metadata.price_xaf).`,
+        );
+      }
+    } else {
+      amountCents = Number((plan as any).price_cents ?? 0);
+      currency = String((plan as any).currency ?? "EUR");
+    }
 
     // Réutilise un abo EN ATTENTE existant pour ce plan (évite d'empiler les pending).
     const { data: existing } = await sb
