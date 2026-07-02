@@ -36,6 +36,7 @@ import {
 } from './cockpit-api';
 import { useCockpitChannel } from './useCockpitChannel';
 import { MEDOS_STUDY_CASES, applyCaseOrganScores } from './medosStudyCases';
+import { attachmentsApi } from '@/lib/api';
 
 const BodyViewer3D = lazy(() =>
   import('./BodyViewer3D').then((m) => ({ default: m.BodyViewer3D })),
@@ -286,12 +287,28 @@ function ImageTab({
   selectedImg,
   onPick,
   onBack,
+  onUpload,
+  uploading = false,
 }: {
   attachments: AttachmentLite[];
   selectedImg: { url: string; name: string; mime?: string } | null;
   onPick: (a: AttachmentLite) => void;
   onBack: () => void;
+  onUpload: (file: File) => void;
+  uploading?: boolean;
 }) {
+  const uploadBtn = (
+    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 9, border: '1px dashed var(--brand-primary)', background: 'var(--zw-bg-subtle)', color: 'var(--brand-primary)', fontSize: 12.5, fontWeight: 700, cursor: uploading ? 'wait' : 'pointer', marginBottom: 10 }}>
+      {uploading ? 'Chargement…' : '＋ Charger une image / photo'}
+      <input
+        type="file"
+        accept="image/*,application/pdf"
+        style={{ display: 'none' }}
+        disabled={uploading}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); e.currentTarget.value = ''; }}
+      />
+    </label>
+  );
   if (selectedImg) {
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -304,9 +321,17 @@ function ImageTab({
       </div>
     );
   }
-  if (!attachments || attachments.length === 0) return <div style={emptyHint}>Aucune pièce jointe (imagerie, scan, PDF).</div>;
+  if (!attachments || attachments.length === 0) {
+    return (
+      <div style={{ padding: '8px 12px', height: '100%', overflowY: 'auto' }}>
+        {uploadBtn}
+        <div style={{ ...emptyHint, height: 'auto', padding: '24px 8px' }}>Aucune pièce jointe. Chargez une image ou une photo à partager pendant la consultation.</div>
+      </div>
+    );
+  }
   return (
     <div style={{ padding: '8px 12px', overflowY: 'auto', height: '100%' }}>
+      {uploadBtn}
       <div style={sectionTitle}>Pièces jointes</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {attachments.map((a) => (
@@ -499,6 +524,38 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
     setSelectedImg({ url, name: a.file_name, mime: a.mime_type || undefined });
   };
 
+  // Charger une image/photo À LA VOLÉE pendant la consultation : upload dans le bucket
+  // Storage `medos` (comme une pièce jointe patient, catégorie imagerie, visible patient),
+  // puis sélection + aperçu → le praticien clique « Partager » pour la diffuser.
+  const [uploadingImg, setUploadingImg] = useState(false);
+  const handleUploadImage = async (file: File) => {
+    if (!file || !ctx?.patient_id) return;
+    setUploadingImg(true);
+    try {
+      const { upload_url, storage_path } = await attachmentsApi.getUploadUrl('medos');
+      const put = await fetch(upload_url, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true' },
+      });
+      if (!put.ok) throw new Error(`upload ${put.status}`);
+      const created = await attachmentsApi.register({
+        owner_type: 'patient', owner_id: ctx.patient_id, patient_id: ctx.patient_id,
+        file_name: file.name, file_size_bytes: file.size,
+        mime_type: file.type || 'application/octet-stream', storage_path,
+        category: 'imaging', visible_to_patient: true,
+      } as any);
+      const list = await getAttachments(ctx.patient_id);
+      setAttachments(list);
+      const fresh = list.find((x) => x.id === (created as any)?.id) || (created as any);
+      if (fresh) await pickAttachment(fresh);
+    } catch (e) {
+      console.error('[cockpit] upload image', e);
+    } finally {
+      setUploadingImg(false);
+    }
+  };
+
   const canShare =
     tab === 'twin' ||
     tab === 'wheel' ||
@@ -595,7 +652,7 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
             {tab === 'labs' && <LabsView items={labs} />}
             {tab === 'rx' && <PrescriptionView rx={latestRx} />}
             {tab === 'image' && (
-              <ImageTab attachments={attachments} selectedImg={selectedImg} onPick={pickAttachment} onBack={() => setSelectedImg(null)} />
+              <ImageTab attachments={attachments} selectedImg={selectedImg} onPick={pickAttachment} onBack={() => setSelectedImg(null)} onUpload={handleUploadImage} uploading={uploadingImg} />
             )}
           </>
         )}
