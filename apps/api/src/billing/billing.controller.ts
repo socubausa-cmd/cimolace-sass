@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Req, UseGuards } from "@nestjs/common";
+import { Controller, Get, Post, Body, Param, Req, UseGuards, Headers, UnauthorizedException } from "@nestjs/common";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { CimolaceStaffGuard } from "../cimolace-backoffice/cimolace-staff.guard";
 import { TenantGuard } from "../common/guards/tenant.guard";
@@ -73,5 +73,21 @@ export class AdminBillingController {
   @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
   async activate(@Param("tenantId") tenantId: string, @Body() body: { plan?: string }) {
     return { data: await this.svc.activateTenantSubscription(tenantId, body?.plan || "zahir-forfait") };
+  }
+}
+
+/**
+ * Cron interne — renouvellement mobile money « push-to-approve » de TOUS les
+ * tenants échus. Protégé par l'en-tête x-internal-key == INTERNAL_CRON_KEY.
+ * À appeler périodiquement (worker / scheduler), jamais par un utilisateur.
+ */
+@Controller("billing")
+export class BillingCronController {
+  constructor(private svc: BillingService) {}
+  @Post("renewals/run")
+  runRenewals(@Headers("x-internal-key") key?: string) {
+    const expected = process.env.INTERNAL_CRON_KEY;
+    if (!expected || key !== expected) throw new UnauthorizedException("Clé interne invalide");
+    return this.svc.renewDueSubscriptions();
   }
 }

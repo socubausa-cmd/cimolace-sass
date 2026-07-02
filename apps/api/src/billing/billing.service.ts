@@ -567,6 +567,82 @@ export class BillingService {
     };
   }
 
+  /**
+   * Renouvellement « push-to-approve » (mobile money). Pour chaque abonnement
+   * PawaPay ÉCHU (current_period_end passé) avec un moyen de paiement mémorisé,
+   * crée une facture de renouvellement et RE-POUSSE un USSD vers le numéro connu.
+   * Le client valide avec son PIN → applyPawaPayDeposit prolonge la période.
+   * ⚠️ Le mobile money ne permet PAS de prélèvement silencieux (comme une carte) :
+   * on re-sollicite le PIN à chaque cycle. À déclencher par un cron/worker.
+   */
+  async renewDueSubscriptions(limit = 50) {
+    const sb = this.supabase;
+    const nowIso = new Date().toISOString();
+    const { data: due } = await sb
+      .from("billing_subscriptions")
+      .select("*")
+      .eq("provider", "pawapay")
+      .eq("status", "active")
+      .lte("current_period_end", nowIso)
+      .limit(limit);
+    const rows: any[] = Array.isArray(due) ? due : [];
+    let initiated = 0;
+    let skipped = 0;
+    for (const sub of rows) {
+      const pm = (sub as any)?.metadata?.payment_method;
+      if (!pm?.phone || !pm?.provider) {
+        skipped++;
+        continue;
+      }
+      // Anti double-relance : une facture pending/processing est-elle déjà ouverte ?
+      const { data: openInv } = await sb
+        .from("billing_invoices")
+        .select("id")
+        .eq("subscription_id", sub.id)
+        .in("status", ["pending", "processing"])
+        .limit(1);
+      if ((openInv ?? []).length) {
+        skipped++;
+        continue;
+      }
+      try {
+        const { data: plan } = await sb
+          .from("billing_plans")
+          .select("price_cents, currency, metadata")
+          .eq("key", sub.plan_id)
+          .maybeSingle();
+        if (!plan) {
+          skipped++;
+          continue;
+        }
+        const meta = ((plan as any).metadata ?? {}) as any;
+        const amountCents = Number(meta.price_xaf ?? (plan as any).price_cents ?? 0);
+        const currency = String(meta.price_xaf_currency ?? "XAF");
+        if (!amountCents) {
+          skipped++;
+          continue;
+        }
+        // Facture de renouvellement (pending) puis push USSD via le collect existant.
+        await sb.from("billing_invoices").insert({
+          tenant_id: sub.tenant_id,
+          subscription_id: sub.id,
+          status: "pending",
+          amount_cents: amountCents,
+          currency,
+          invoice_number: `LIRI-R-${Date.now().toString(36).toUpperCase()}`,
+        });
+        await this.collectSubscriptionViaPawaPay(sub.tenant_id, sub.id, {
+          phoneNumber: pm.phone,
+          provider: pm.provider,
+        });
+        initiated++;
+      } catch {
+        skipped++;
+      }
+    }
+    return { scanned: rows.length, initiated, skipped };
+  }
+
   // ─── Paiement carte (Stripe) — pour les clients hors mobile money (Europe) ─
   private stripeAuth() {
     const secret = process.env.STRIPE_SECRET_KEY;
