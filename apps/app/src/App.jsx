@@ -656,9 +656,9 @@ class LazyChunkErrorBoundary extends React.Component {
 }
 
 const PlaceholderPage = ({ title }) => (
-  <div className="min-h-screen bg-[#0F1419] text-white flex items-center justify-center p-20 text-center">
+  <div className="min-h-screen bg-[#262624] text-white flex items-center justify-center p-20 text-center">
     <div className="max-w-xl">
-      <div className="w-24 h-1 bg-[#D4AF37] mx-auto rounded-full mb-8"></div>
+      <div className="w-24 h-1 bg-[#d97757] mx-auto rounded-full mb-8"></div>
       <h1 className="text-4xl md:text-5xl font-serif font-bold text-white mb-6">{title}</h1>
       <button onClick={() => window.history.back()} className="px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white transition-colors">
         Retour
@@ -668,8 +668,8 @@ const PlaceholderPage = ({ title }) => (
 );
 
 const PageLoader = () => (
-  <div className="flex flex-1 min-h-[100dvh] w-full items-center justify-center bg-[#0F1419]">
-    <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#D4AF37] border-t-transparent" />
+  <div className="flex flex-1 min-h-[100dvh] w-full items-center justify-center bg-[#262624]">
+    <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#d97757] border-t-transparent" />
   </div>
 );
 
@@ -733,8 +733,8 @@ const DashboardRedirect = () => {
 
   if (loading || billingLoading) {
     return (
-      <div className="flex h-screen w-full flex-col items-center justify-center gap-6 bg-[#0F1419] p-6">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#D4AF37] border-t-transparent" />
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-6 bg-[#262624] p-6">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#d97757] border-t-transparent" />
         <p className="text-center text-sm text-gray-400">Chargement de votre espace…</p>
         {slowLoad && (
           <div className="max-w-sm rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-center">
@@ -744,7 +744,7 @@ const DashboardRedirect = () => {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="mt-3 rounded-lg bg-[#D4AF37] px-4 py-2 text-sm font-medium text-black hover:bg-amber-500"
+              className="mt-3 rounded-lg bg-[#d97757] px-4 py-2 text-sm font-medium text-black hover:bg-amber-500"
             >
               Réessayer
             </button>
@@ -759,8 +759,8 @@ const DashboardRedirect = () => {
   // domaine propre (cf. useEffect ci-dessus) avant tout routage par rôle.
   if (embeddedGate === 'pending' || embeddedGate === 'redirecting') {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#0F1419]">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#D4AF37] border-t-transparent" />
+      <div className="flex h-screen w-full items-center justify-center bg-[#262624]">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#d97757] border-t-transparent" />
       </div>
     );
   }
@@ -837,8 +837,8 @@ const RedirectIfAuthenticated = ({ children }) => {
   const location = useLocation();
   if (loading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#0F1419]">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#D4AF37] border-t-transparent" />
+      <div className="flex h-screen w-full items-center justify-center bg-[#262624]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#d97757] border-t-transparent" />
       </div>
     );
   }
@@ -857,8 +857,8 @@ const ProtectedStudentJourneyRoute = ({ children }) => {
 
   if (loading || billingLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#0F1419]">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#D4AF37] border-t-transparent" />
+      <div className="flex h-screen w-full items-center justify-center bg-[#262624]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#d97757] border-t-transparent" />
       </div>
     );
   }
@@ -920,8 +920,8 @@ const ProtectedImmersiveMessagingRoute = ({ children }) => {
 
   if (loading || billingLoading || checkingVisitorAccess) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#0F1419]">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#D4AF37] border-t-transparent" />
+      <div className="flex h-screen w-full items-center justify-center bg-[#262624]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#d97757] border-t-transparent" />
       </div>
     );
   }
@@ -1391,25 +1391,25 @@ isLiriHostDevPreviewRoute;
           )}
           {/* Cours-démo PUBLIC (watchable, sans auth) — le « prof virtuel » qui se joue seul */}
           <Route path="/cours-demo" element={
-            <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0b0f17] text-white/60">Chargement du cours…</div>}>
+            <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#262624] text-white/60">Chargement du cours…</div>}>
               <CourseDemoPage />
             </React.Suspense>
           } />
           {/* LE PRÉCEPTEUR — cours numérique PERSISTÉ (masterclass par id) — même page, source backend */}
           <Route path="/precepteur/cours/:masterclassId" element={
-            <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0b0f17] text-white/60">Chargement du cours…</div>}>
+            <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#262624] text-white/60">Chargement du cours…</div>}>
               <PrecepteurCoursePage />
             </React.Suspense>
           } />
           {/* LE PRÉCEPTEUR — cours numérique EXPORTÉ depuis la Masterclass Factory (route la plus spécifique en premier) */}
           <Route path="/precepteur/cours" element={
-            <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0b0f17] text-white/60">Chargement du cours…</div>}>
+            <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#262624] text-white/60">Chargement du cours…</div>}>
               <PrecepteurCoursePage />
             </React.Suspense>
           } />
           {/* LE PRÉCEPTEUR — preuve immersive (leçon → croquis → atelier → analogie) */}
           <Route path="/precepteur" element={
-            <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0b0f17] text-white/60">Chargement du Précepteur…</div>}>
+            <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#262624] text-white/60">Chargement du Précepteur…</div>}>
               <PrecepteurDemoPage />
             </React.Suspense>
           } />
@@ -1417,24 +1417,24 @@ isLiriHostDevPreviewRoute;
               exactement comme /precepteur). Enveloppé dans LiriPortalShell (fond chaud, rail « École »).
               Route la plus spécifique (:masterclassId) EN PREMIER. */}
           <Route path="/liri/precepteur/cours/:masterclassId" element={
-            <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0b0f17] text-white/60">Chargement du cours…</div>}>
+            <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#262624] text-white/60">Chargement du cours…</div>}>
               <LiriPrecepteurPage />
             </React.Suspense>
           } />
           <Route path="/liri/precepteur" element={
-            <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0b0f17] text-white/60">Chargement du Précepteur…</div>}>
+            <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#262624] text-white/60">Chargement du Précepteur…</div>}>
               <LiriPrecepteurPage />
             </React.Suspense>
           } />
           {import.meta.env.DEV && (
             <Route path="/dev/liri/*" element={
-              <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0F1117] text-white/50 text-sm">Chargement LIRI…</div>}>
+              <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#262624] text-white/50 text-sm">Chargement LIRI…</div>}>
                 <StudioLiriRouter />
               </React.Suspense>
             } />
           )}
 <Route path="/dev/smartboard-designer" element={
-              <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0F1117] text-white/50 text-sm">Chargement Designer…</div>}>
+              <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#262624] text-white/50 text-sm">Chargement Designer…</div>}>
                 <StudioSmartboardKonvaPageLazy />
               </React.Suspense>
             } />
@@ -2064,7 +2064,7 @@ isLiriHostDevPreviewRoute;
                 <Suspense
                   fallback={
                     <div className="flex h-[calc(100dvh-5rem)] w-full items-center justify-center bg-[#090D14]">
-                      <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#D4AF37] border-t-transparent" />
+                      <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#d97757] border-t-transparent" />
                     </div>
                   }
                 >

@@ -7,27 +7,29 @@ export const EV_BG = '#0B0B0F';
 export const EV_CARD = '#16161E';
 export const EV_CARD_INNER = '#12121E';
 export const EV_MUTED = '#8E8E93';
-export const EV_ACCENT = '#7B61FF';
-/** Lavande — titres type « En direct. » (accueil connexion). */
-export const EV_LAVENDER = '#c4b5fd';
-export const EV_LINE = 'rgba(255,255,255,0.08)';
+// Directive LIRI : accent CORAL chaud (fini le violet #7B61FF). Token partagé → re-skin
+// tout l'élève-mobile d'un coup (boutons, halos, titres…).
+export const EV_ACCENT = '#d97757';
+/** Coral clair — titres type « En direct. » (accueil connexion). */
+export const EV_LAVENDER = '#eab89a';
+export const EV_LINE = 'rgba(255,247,240,0.08)';
 
-/** Filet d'atmosphère haut d'écran (accueil, messages, agenda…) — unifier les fonds. */
+/** Filet d'atmosphère haut d'écran (accueil, messages, agenda…) — CORAL chaud. */
 export const EV_PAGE_AMBIENT =
-  'radial-gradient(50% 32% at 50% 0%, rgba(123, 97, 255, 0.14), transparent 70%)';
+  'radial-gradient(50% 32% at 50% 0%, rgba(217, 119, 87, 0.13), transparent 70%)';
 
 /**
- * Fond d'atmosphère type Apple (LIRI sombre) : halos violets/bleus, profondeur, sans assets.
+ * Fond d'atmosphère type Apple (LIRI sombre) : halos CORAL/ambre chauds (fini indigo/bleu/violet).
  * @param {string} base — ex. `EV_BG`
  */
 export function evHaloAtmosphere(base = EV_BG) {
   return [
-    'radial-gradient(ellipse 120% 70% at 50% -15%, rgba(99, 102, 241, 0.28) 0%, rgba(99, 102, 241, 0.06) 38%, transparent 58%)',
-    'radial-gradient(ellipse 90% 55% at -5% 18%, rgba(59, 130, 246, 0.2) 0%, transparent 52%)',
-    'radial-gradient(ellipse 85% 50% at 102% 22%, rgba(168, 85, 247, 0.18) 0%, transparent 52%)',
-    'radial-gradient(ellipse 100% 55% at 50% 108%, rgba(15, 15, 35, 0.65) 0%, rgba(0,0,0,0.35) 40%, transparent 65%)',
-    'radial-gradient(ellipse 70% 40% at 50% 48%, rgba(123, 97, 255, 0.05) 0%, transparent 65%)',
-    `linear-gradient(180deg, #101018 0%, ${base} 16%, ${base} 84%, #040408 100%)`,
+    'radial-gradient(ellipse 120% 70% at 50% -15%, rgba(217, 119, 87, 0.24) 0%, rgba(217, 119, 87, 0.06) 38%, transparent 58%)',
+    'radial-gradient(ellipse 90% 55% at -5% 18%, rgba(226, 133, 79, 0.16) 0%, transparent 52%)',
+    'radial-gradient(ellipse 85% 50% at 102% 22%, rgba(224, 146, 106, 0.16) 0%, transparent 52%)',
+    'radial-gradient(ellipse 100% 55% at 50% 108%, rgba(28, 20, 14, 0.65) 0%, rgba(0,0,0,0.35) 40%, transparent 65%)',
+    'radial-gradient(ellipse 70% 40% at 50% 48%, rgba(217, 119, 87, 0.05) 0%, transparent 65%)',
+    `linear-gradient(180deg, #17130f 0%, ${base} 16%, ${base} 84%, #050403 100%)`,
   ].join(',\n          ');
 }
 
