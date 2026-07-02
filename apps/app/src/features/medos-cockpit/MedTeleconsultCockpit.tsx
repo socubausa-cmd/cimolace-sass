@@ -426,7 +426,20 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
         ]);
         if (!alive) return;
         setOrgans(buildOrganNodes(refs, state));
-        setWheel(state?.wheel?.domains || []);
+        // Le backend (twin.service.getState) renvoie state.wheel = ARRAY de lignes
+        // med_transformation_wheel (order by measured_at desc), PAS { domains: [...] }.
+        // On garde la dernière mesure par domaine.
+        {
+          const wheelRows = Array.isArray(state?.wheel) ? state.wheel : (state?.wheel?.domains || []);
+          const seenDom = new Set<string>();
+          const wheelDomains = [] as Array<{ domain: string; score: number }>;
+          for (const w of wheelRows) {
+            if (!w || w.domain == null || seenDom.has(w.domain)) continue;
+            seenDom.add(w.domain);
+            wheelDomains.push({ domain: w.domain, score: Number(w.score) || 0 });
+          }
+          setWheel(wheelDomains);
+        }
         getLatestSoap(c.patient_id).then((s) => alive && setSoap(s)).catch(() => {});
         getLabs(c.patient_id).then((r) => alive && setLabs(r)).catch(() => {});
         getSignedPrescriptions(c.patient_id).then((r) => alive && setPrescriptions(r)).catch(() => {});
