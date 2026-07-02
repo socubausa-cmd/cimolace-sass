@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Search, PlayCircle, GraduationCap, Loader2, CheckCircle2, Clapperboard, LayoutGrid, List } from 'lucide-react';
+import { ArrowLeft, Search, PlayCircle, GraduationCap, Loader2, CheckCircle2, Clapperboard, LayoutGrid, List, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { authStore } from '@/lib/auth-store';
 import { getApiBaseUrl } from '@/lib/apiBase';
@@ -38,6 +38,7 @@ export default function ForumNewQuestionPage() {
   const [replays, setReplays] = useState([]);
   const [courseVideos, setCourseVideos] = useState([]);
   const [cursusVideos, setCursusVideos] = useState([]);
+  const [precepteurVideos, setPrecepteurVideos] = useState([]);
   const [query, setQuery] = useState('');
   const [cat, setCat] = useState('recent'); // 'recent' | 'replay' | 'course' | 'cursus'
   const [view, setView] = useState('rail'); // 'rail' | 'list'
@@ -90,6 +91,14 @@ export default function ForumNewQuestionPage() {
           .map((r) => ({ id: r.id, title: r.data.title || 'Leçon vidéo', videoUrl: r.data.videoUrl || r.data.url, posterUrl: r.data.posterUrl || null, createdAt: r.created_at }));
         if (alive) setCursusVideos(fdc);
       } catch { /* noop */ }
+      // Vidéos du Précepteur : course_render_jobs (agent → cours enseigné rendu en vidéo).
+      try {
+        const { data } = await supabase.from('course_render_jobs').select('id, content_id, status, payload, output_url, created_at').limit(200);
+        const pre = (Array.isArray(data) ? data : [])
+          .filter((r) => r.output_url && (r.status === 'done' || r.status === 'completed' || r.status === 'ready'))
+          .map((r) => ({ id: r.id, contentId: r.content_id, title: (r.payload && (r.payload.title || r.payload.name)) || 'Cours Précepteur', videoUrl: r.output_url, createdAt: r.created_at }));
+        if (alive) setPrecepteurVideos(pre);
+      } catch { /* noop */ }
       if (alive) setLoading(false);
     })();
     return () => { alive = false; };
@@ -130,6 +139,17 @@ export default function ForumNewQuestionPage() {
     setSelected({ source: 'cursus', contextType: 'cursus', contextId: v.id, data, title: data.title });
     setSentCount(0);
   };
+  const pickPrecepteur = (v) => {
+    const data = {
+      lessonId: v.id, title: v.title,
+      video: { url: v.videoUrl, resolution: 'direct' },
+      chapters: [], timestamps: [], transcript: [], mindmap: null,
+      enableQuiz: false, enableQuestion: true, notesScope: 'lesson', source: 'course',
+    };
+    // Même contexte non-résolu que le cursus (content_id ≠ courses.id) → post gaté.
+    setSelected({ source: 'precepteur', contextType: 'cursus', contextId: v.id, data, title: data.title });
+    setSentCount(0);
+  };
 
   // 3) Poser la question sur l'extrait → RPC (référence, pas d'upload).
   const handleAsk = async ({ question, clipStart, clipEnd, isPublic }) => {
@@ -159,31 +179,35 @@ export default function ForumNewQuestionPage() {
   const fReplays = useMemo(() => replays.filter((r) => !q || (r.title || '').toLowerCase().includes(q)), [replays, q]);
   const fCourses = useMemo(() => courseVideos.filter((c) => !q || (c.title || '').toLowerCase().includes(q)), [courseVideos, q]);
   const fCursus = useMemo(() => cursusVideos.filter((c) => !q || (c.title || '').toLowerCase().includes(q)), [cursusVideos, q]);
+  const fPrecepteur = useMemo(() => precepteurVideos.filter((c) => !q || (c.title || '').toLowerCase().includes(q)), [precepteurVideos, q]);
 
-  // Normalise toutes les sources en cartes uniformes (filtre catégorie + tri récence + rendu rail|liste).
+  // Normalise toutes les sources vidéo en cartes uniformes (filtre catégorie + tri récence + rendu rail|liste).
   const norm = useMemo(() => ({
     replay: fReplays.map((r) => ({ key: 'r-' + r.id, kind: 'replay', title: r.title, sub: fmtDate(r.date), date: r.date, poster: null, onClick: () => pickReplay(r) })),
     course: fCourses.map((c) => ({ key: 'c-' + c.id, kind: 'course', title: c.title, sub: c.courseTitle || 'Leçon', date: c.createdAt, poster: null, onClick: () => pickCourse(c) })),
     cursus: fCursus.map((v) => ({ key: 'u-' + v.id, kind: 'cursus', title: v.title, sub: 'Leçon', date: v.createdAt, poster: v.posterUrl, onClick: () => pickCursus(v) })),
-  }), [fReplays, fCourses, fCursus]);
+    precepteur: fPrecepteur.map((v) => ({ key: 'p-' + v.id, kind: 'precepteur', title: v.title, sub: 'Précepteur', date: v.createdAt, poster: null, onClick: () => pickPrecepteur(v) })),
+  }), [fReplays, fCourses, fCursus, fPrecepteur]);
 
+  // TAXONOMIE COMPLÈTE des sources vidéo — chips TOUJOURS affichés (même à 0) pour montrer
+  // que chaque source est filtrable. `video_assets` (store unifié) branchera les futures.
   const cats = useMemo(() => [
-    { key: 'recent', label: 'Récents', count: norm.replay.length + norm.course.length + norm.cursus.length },
-    { key: 'replay', label: 'Replays', count: norm.replay.length },
-    { key: 'course', label: 'Vidéos de cours', count: norm.course.length },
-    { key: 'cursus', label: 'Cursus', count: norm.cursus.length },
-  ].filter((c) => c.key === 'recent' || c.count > 0), [norm]);
+    { key: 'recent', label: 'Récents' },
+    { key: 'replay', label: 'Replays' },
+    { key: 'course', label: 'Cours numérique' },
+    { key: 'masterclass', label: 'Masterclass' },
+    { key: 'cursus', label: 'Cursus' },
+    { key: 'precepteur', label: 'Précepteur' },
+  ].map((c) => ({ ...c, count: c.key === 'recent' ? Object.values(norm).reduce((n, a) => n + a.length, 0) : (norm[c.key] || []).length })), [norm]);
 
   const shown = useMemo(() => {
     const ts = (d) => { const t = d ? Date.parse(d) : NaN; return Number.isFinite(t) ? t : 0; };
-    const base = cat === 'recent' ? [...norm.replay, ...norm.course, ...norm.cursus] : (norm[cat] || []);
+    const base = cat === 'recent' ? Object.values(norm).flat() : (norm[cat] || []);
     return base.slice().sort((a, b) => ts(b.date) - ts(a.date));
   }, [norm, cat]);
 
-  // La catégorie active a disparu (recherche/filtre) → retour à « Récents ».
-  useEffect(() => { if (cat !== 'recent' && !cats.some((c) => c.key === cat)) setCat('recent'); }, [cats, cat]);
-
-  const nothing = !loading && shown.length === 0;
+  const totalCount = cats.find((c) => c.key === 'recent')?.count || 0;
+  const totalEmpty = !loading && totalCount === 0;
 
   // ————————————————————————————————————————————————————————————— rendu
 
@@ -249,18 +273,18 @@ export default function ForumNewQuestionPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '48px 0', color: T.t2 }}>
           <Loader2 size={16} className="animate-spin" /> Chargement de la vidéo…
         </div>
-      ) : nothing ? (
+      ) : totalEmpty ? (
         <div style={{ textAlign: 'center', padding: '44px 20px', color: T.t3, background: T.card, border: `1px solid ${T.line}`, borderRadius: 14 }}>
           <p style={{ color: T.t2, fontSize: 14, margin: '0 0 4px' }}>Aucune vidéo disponible pour l'instant.</p>
-          <p style={{ fontSize: 12.5, margin: 0 }}>Les replays de tes lives et les vidéos de cours apparaîtront ici.</p>
+          <p style={{ fontSize: 12.5, margin: 0 }}>Tes replays, cours numériques, cursus et cours du Précepteur apparaîtront ici.</p>
         </div>
       ) : (
         <div>
-          {/* Barre filtre : Récents / par catégorie  +  bascule rail | liste */}
+          {/* Barre filtre : Récents + TAXONOMIE complète des sources  +  bascule rail | liste */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
               {cats.map((c) => (
-                <button key={c.key} onClick={() => setCat(c.key)} style={chip(cat === c.key)}>
+                <button key={c.key} onClick={() => setCat(c.key)} style={chip(cat === c.key, c.count === 0)}>
                   {c.label} <span style={{ opacity: 0.6 }}>{c.count}</span>
                 </button>
               ))}
@@ -271,7 +295,11 @@ export default function ForumNewQuestionPage() {
             </div>
           </div>
 
-          {view === 'rail' ? (
+          {shown.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: T.t3, background: T.card, border: `1px solid ${T.line}`, borderRadius: 14 }}>
+              <p style={{ color: T.t2, fontSize: 13.5, margin: 0 }}>Aucune vidéo dans cette catégorie pour l'instant.</p>
+            </div>
+          ) : view === 'rail' ? (
             <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 6, scrollSnapType: 'x proximity', WebkitOverflowScrolling: 'touch' }}>
               {shown.map((it) => (
                 <VideoCard key={it.key} kind={it.kind} title={it.title} sub={it.sub} poster={it.poster} onClick={it.onClick} />
@@ -291,13 +319,13 @@ export default function ForumNewQuestionPage() {
 }
 
 // Chip de filtre catégorie + bouton de bascule d'affichage (rail | liste).
-function chip(active) {
+function chip(active, empty) {
   return {
     display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 13px', borderRadius: 999, cursor: 'pointer',
     fontFamily: T.mono, fontSize: 12, fontWeight: 700, letterSpacing: '0.01em',
-    background: active ? T.coral : 'rgba(217,119,87,0.08)',
-    border: `1px solid ${active ? T.coral : 'rgba(217,119,87,0.22)'}`,
-    color: active ? '#1c1a17' : T.coral,
+    background: active ? T.coral : (empty ? 'rgba(245,241,233,0.03)' : 'rgba(217,119,87,0.08)'),
+    border: `1px solid ${active ? T.coral : (empty ? 'rgba(245,241,233,0.10)' : 'rgba(217,119,87,0.22)')}`,
+    color: active ? '#1c1a17' : (empty ? T.t3 : T.coral),
     transition: 'background .14s, border-color .14s, color .14s',
   };
 }
@@ -346,6 +374,7 @@ const KIND_META = {
   replay: { badge: 'REPLAY', icon: PlayCircle, g1: '#3a2118', g2: '#5c2f1e' },
   course: { badge: 'COURS', icon: Clapperboard, g1: '#33241d', g2: '#4a2f22' },
   cursus: { badge: 'CURSUS', icon: GraduationCap, g1: '#2e2620', g2: '#453528' },
+  precepteur: { badge: 'PRÉCEPTEUR', icon: Sparkles, g1: '#33221c', g2: '#52301f' },
 };
 
 function VideoCard({ kind, title, sub, poster, onClick }) {
