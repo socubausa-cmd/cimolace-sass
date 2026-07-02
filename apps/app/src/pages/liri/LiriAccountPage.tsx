@@ -389,6 +389,11 @@ export default function LiriAccountPage() {
           <div>
             <Header title="Encaissements" subtitle="Encaissez vos lives et vos cours — l’argent arrive directement sur VOTRE compte Stripe." />
 
+            <button onClick={() => nav('/liri/finances')} className="mt-4 flex w-full items-center justify-between rounded-2xl border lp-line lp-panel70 p-4 text-left lp-tr hover:border-[rgba(217,119,87,.3)]">
+              <span className="min-w-0"><span className="block text-[14px] font-medium lp-ink">Mes finances &amp; retraits</span><span className="block text-[12px] lp-faint">Voir l’argent encaissé (mobile money) et retirer sur Airtel / Moov.</span></span>
+              <ArrowUpRight size={18} className="lp-coral shrink-0" />
+            </button>
+
             {!payLoaded ? (
               <div className="mt-6 flex items-center gap-2 text-[13px] lp-faint"><Loader2 size={15} className="animate-spin" /> Chargement…</div>
             ) : stripeSet && !reconfig ? (

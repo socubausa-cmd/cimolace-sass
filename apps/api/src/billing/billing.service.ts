@@ -848,6 +848,32 @@ export class BillingService implements OnApplicationBootstrap {
     return data ?? [];
   }
 
+  /**
+   * Solde ESTIMÉ du tenant pour l'écran « Mes finances » :
+   *   encaissé (dépôts mobile money COMPLETED) − retiré (payouts non échoués).
+   * Estimation d'après NOS enregistrements ; le disponible réel pour un retrait
+   * dépend du wallet pawaPay. Montants en unité mineure (XAF = entier direct).
+   */
+  async getBalance(tenantId: string) {
+    const sb = this.supabase;
+    const { data: deps } = await sb
+      .from("pawapay_deposits")
+      .select("amount_cents, pawapay_status")
+      .eq("tenant_id", tenantId);
+    const { data: pays } = await sb
+      .from("billing_payouts")
+      .select("amount_cents, status")
+      .eq("tenant_id", tenantId);
+    const collectedCents = (deps ?? [])
+      .filter((d: any) => String(d.pawapay_status || "").toUpperCase() === "COMPLETED")
+      .reduce((s: number, d: any) => s + Number(d.amount_cents || 0), 0);
+    const withdrawnCents = (pays ?? [])
+      .filter((p: any) => !["failed", "rejected"].includes(String(p.status || "").toLowerCase()))
+      .reduce((s: number, p: any) => s + Number(p.amount_cents || 0), 0);
+    const availableCents = Math.max(0, collectedCents - withdrawnCents);
+    return { collectedCents, withdrawnCents, availableCents, currency: "XAF" };
+  }
+
   /** Callback PawaPay payout : met à jour le statut du retrait. */
   async applyPayoutCallback(cb: { payoutId?: string; status?: string; providerTransactionId?: string; failureReason?: { failureCode?: string; failureMessage?: string } }) {
     if (!cb?.payoutId) return { received: true, matched: false };

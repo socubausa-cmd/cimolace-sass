@@ -51,6 +51,8 @@ export class BillingController {
 
   // Retraits / versements mobile money (PawaPay payouts) — owner/admin
   @Get("payouts") async listPayouts(@Req() req: any) { return this.svc.listPayouts(req.tenant.id); }
+  // Solde estimé (encaissé mobile money − retiré) pour l'écran « Mes finances ».
+  @Get("balance") async balance(@Req() req: any) { return this.svc.getBalance(req.tenant.id); }
   @Post("payouts") @UseGuards(RolesGuard) @Roles("owner", "admin") async createPayout(@Req() req: any, @Body() b: any) {
     return this.svc.createPayout(req.tenant.id, req.user?.id ?? null, b);
   }

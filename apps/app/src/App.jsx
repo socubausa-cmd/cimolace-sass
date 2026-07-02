@@ -219,6 +219,10 @@ const VideoPostProductionPage = lazy(() => import('@/pages/VideoPostProductionPa
 const KnowledgeBaseManager = lazy(() => import('@/pages/KnowledgeBaseManager')); // --- Student School Life (NEW) ---
 const StudentSchoolLifePage = lazy(() => import('@/pages/school/student-school-life/StudentSchoolLifePage'));
 const StudentWeeklySchedulePage = lazy(() => import('@/pages/school/student-school-life/StudentWeeklySchedulePage'));
+// Provider de thème de l'espace élève (student-school-life). Sert à FORCER le CLAIR sur les
+// routes standalone hors-shell (ex. /student-school-life/semaine-courante) : ces pages sont
+// désormais host-aware (défaut SOMBRE = portail LIRI), donc le clair legacy est opt-in ici.
+import { SslThemeProvider } from '@/pages/school/student-school-life/sslTheme';
 const StudentDashboardPage = lazy(() => import('@/pages/school/StudentDashboardPage'));
 // ISNA Academy embarqué dans LIRI : pages école montées sous /liri/* (LiriSchoolShell).
 const LiriSchoolShell = lazy(() => import('@/pages/liri/LiriSchoolShell'));
@@ -568,6 +572,7 @@ const DashboardLiri = lazy(() => import('@/pages/liri/DashboardLiri').then((m) =
 // Portail LIRI — accueil/hub (rail Accueil/Lives/Forum/Studio/Biblio/Brain + stats live)
 const LiriPortalPage = lazy(() => import('@/pages/liri/LiriPortalPage').then((m) => ({ default: m.LiriPortalPage })));
 const LiriAccountPage = lazy(() => import('@/pages/liri/LiriAccountPage'));
+const LiriFinancesPage = lazy(() => import('@/pages/liri/LiriFinancesPage'));
 // Module ÉCOLE HORIZONTAL dans le portail LIRI (vertical = /t/:slug ; ici = app activable dans /liri)
 const LiriEcolePage = lazy(() => import('@/pages/liri/LiriEcolePage'));
 // Forum CONNECTÉ + messagerie immersive comme app du portail LIRI
@@ -1684,6 +1689,13 @@ isLiriHostDevPreviewRoute;
               <LiriAccountPage />
             </ProtectedLiriRoute>
           } />
+          {/* « Mes finances » : solde encaissé (mobile money) + retrait vers Airtel/Moov
+              via pawaPay. Mouvement d'argent réel → owner/admin uniquement. */}
+          <Route path="/liri/finances" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin']} allowTenantRole>
+              <LiriFinancesPage />
+            </ProtectedLiriRoute>
+          } />
           {/* Module ÉCOLE HORIZONTAL : le back-office école monté DANS le portail LIRI
               (pour un tenant LIRI sans site vertical /t/:slug). */}
           {/* Onglet École = back-office complet (owner/admin) embarqué dans le portail.
@@ -2010,7 +2022,7 @@ isLiriHostDevPreviewRoute;
 
           {/* Main Dashboard entry point */}
           {/* 🎨 DESIGN PREVIEW — guards désactivés temporairement */}
-          <Route path="/student-school-life/semaine-courante" element={<StudentWeeklySchedulePage />} />
+          <Route path="/student-school-life/semaine-courante" element={<SslThemeProvider mode="light"><StudentWeeklySchedulePage /></SslThemeProvider>} />
           <Route path="/student-school-life/*" element={<StudentSchoolLifePage />} />
 
           {/* === CLASSROOM ROUTES (PROTECTED) === */}
