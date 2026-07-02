@@ -207,7 +207,7 @@ export default function LiriUpgradeWall({ asModal = false, onClose } = {}) {
 
   // MODE PAGE : plein écran dans le shell du portail (bg chaud fourni par le shell).
   return (
-    <LiriPortalShell active="compte">
+    <LiriPortalShell active="reglages">
       <div className="h-full min-h-0 overflow-y-auto overflow-x-hidden" style={{ background: 'var(--base)' }}>
         {body}
         {mm}

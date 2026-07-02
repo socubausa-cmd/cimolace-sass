@@ -15,6 +15,10 @@ import {
  *   le portail passe '/liri/ecole' pour que les href restent dans le portail).
  */
 export function buildOwnerMenuGroups(payoutTenantSlug, basePath = '/owner-dashboard') {
+  // Consommé aussi par le portail LIRI (basePath '/liri/ecole') : dans ce cas l'item
+  // « Encaissement » doit RESTER dans le realm LIRI — jamais /t/:slug/* (= realm ISNA/tenant),
+  // qui téléporterait l'utilisateur LIRI dans le back-office tenant (fuite cloison 3-realms).
+  const isLiri = String(basePath || '').startsWith('/liri');
   return [
     {
       section: 'Pilotage',
@@ -49,7 +53,7 @@ export function buildOwnerMenuGroups(payoutTenantSlug, basePath = '/owner-dashbo
       items: [
         { id: 'catalog', icon: Tags, label: 'Catalogue & tarifs' },
         { id: 'payments', icon: CreditCard, label: 'Paiements' },
-        { id: 'tenant-encaissement', icon: ExternalLink, label: 'Encaissement (URL tenant)', href: `/t/${payoutTenantSlug}/admin/settings` },
+        { id: 'tenant-encaissement', icon: ExternalLink, label: 'Encaissement (URL tenant)', href: isLiri ? '/liri/compte' : `/t/${payoutTenantSlug}/admin/settings` },
         { id: 'chariow-externes', icon: Link2, label: 'Chariow Externes', href: '/admin/billing?tab=external' },
       ],
     },
