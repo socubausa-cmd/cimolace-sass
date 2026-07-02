@@ -23,6 +23,8 @@ const footerLinks = {
   Entreprise: [
     { label: "Contact", href: "/contact" },
     { label: "Mentions légales", href: "/mentions-legales" },
+    { label: "Conditions d'utilisation", href: "/terms" },
+    { label: "Remboursement", href: "/refunds" },
     { label: "RGPD", href: "/rgpd" },
   ],
 };
