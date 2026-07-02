@@ -1799,7 +1799,8 @@ isLiriHostDevPreviewRoute;
           <Route path="/redeem/:slug" element={<RedeemPrivilegedLinkPage />} />
 
           {/* === PUBLIC FORMATIONS & PRICING — pas de ProtectedRoute : le prospect doit voir les prix avant de s'inscrire === */}
-          <Route path="/formations" element={<Navigate to="/t/isna/courses" replace />} />
+          {/* Realm-neutre : /formations & /catalogue → liste publique (PublicFormationsPage via /formations/list). JAMAIS de redirection vers /t/:slug — sur le host neutre (liri.cimolace.space) ça basculerait le visiteur dans le tenant ISNA (fuite cross-realm ANY→ISNA). */}
+          <Route path="/formations" element={<Navigate to="/formations/list" replace />} />
           <Route path="/forfaits" element={<ForfaitsPage />} />
           <Route path="/pricing" element={<Navigate to="/forfaits" replace />} />
           <Route path="/formation/:id/learn" element={
@@ -1836,7 +1837,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/formations/list" element={<PublicFormationsPage />} />
           <Route path="/cours-publics" element={<Navigate to="/formations/list" replace />} />
 
-          <Route path="/catalogue" element={<Navigate to="/t/isna/courses" replace />} />
+          <Route path="/catalogue" element={<Navigate to="/formations/list" replace />} /> {/* alias realm-neutre — cf. /formations ci-dessus */}
 
           <Route path="/create-owner-account" element={<CreateOwnerAccountPage />} />
           <Route path="/verify-owner" element={<VerifyOwnerPage />} />
