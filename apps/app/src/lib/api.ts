@@ -1268,6 +1268,9 @@ export const billingApi = {
   // Mobile money (PawaPay — Afrique)
   collect: (subscriptionId: string, body: { phoneNumber: string; provider: string; country?: string }) =>
     api.post<ApiEnvelope<BillingCollectResult>>(`/billing/subscriptions/${subscriptionId}/collect`, body).then(unwrap),
+  // Mobile money : polling du statut → active l'abo dès COMPLETED (compte PawaPay partagé, pas de webhook cimolace)
+  syncMobileMoney: () =>
+    api.post<ApiEnvelope<{ synced: any[]; activated: boolean; failed: boolean }>>(`/billing/mobile-money/sync`).then(unwrap),
   // Carte bancaire (Stripe — Europe / international)
   cardCheckout: (subscriptionId: string) =>
     api.post<ApiEnvelope<{ url: string; session_id: string; amount_cents: number; currency: string }>>(`/billing/subscriptions/${subscriptionId}/card-checkout`).then(unwrap),

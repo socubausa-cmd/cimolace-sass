@@ -159,7 +159,7 @@ const mmProviderName = (p) => (typeof p === 'string' ? p : (p?.name || p?.displa
 
 // Modal de paiement Mobile Money (PawaPay) pour un forfait LIRI : pays -> opérateur ->
 // téléphone -> subscribe(provider='pawapay') (facture en XAF) -> collect -> push USSD.
-function MobileMoneyModal({ plan, onClose }) {
+function MobileMoneyModal({ plan, onClose, onPaid }) {
   const [country, setCountry] = useState('CMR');
   const [providers, setProviders] = useState([]);
   const [provider, setProvider] = useState('');
@@ -168,6 +168,25 @@ function MobileMoneyModal({ plan, onClose }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
+  const [payStatus, setPayStatus] = useState(null); // null | 'waiting' | 'activated' | 'failed'
+
+  // Compte PawaPay partagé (pas de webhook cimolace) → on interroge nous-mêmes le
+  // statut du dépôt après « Demande envoyée », jusqu'à activation (COMPLETED) ou échec.
+  useEffect(() => {
+    if (!result) return undefined;
+    setPayStatus('waiting');
+    let tries = 0;
+    const id = setInterval(async () => {
+      tries += 1;
+      try {
+        const s = await billingApi.syncMobileMoney();
+        if (s?.activated) { setPayStatus('activated'); clearInterval(id); onPaid?.(); return; }
+        if (s?.failed) { setPayStatus('failed'); clearInterval(id); return; }
+      } catch { /* réseau : on retente au tick suivant */ }
+      if (tries >= 45) clearInterval(id); // ~3 min max
+    }, 4000);
+    return () => clearInterval(id);
+  }, [result]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     let cancelled = false;
@@ -208,8 +227,23 @@ function MobileMoneyModal({ plan, onClose }) {
         <p className="text-xs text-white/50 mb-4">{plan?.label} — Orange Money · MTN MoMo · Moov… (Afrique).</p>
         {result ? (
           <div className="rounded-xl border border-[#e6b878]/30 bg-[#e6b878]/[0.08] p-4 text-sm text-white/80">
-            <div className="flex items-center gap-2 font-semibold text-[#e6b878] mb-1.5"><Check className="w-4 h-4" /> Demande envoyée</div>
-            <p>📲 Une demande de <strong>{result.currency} {result.amount}</strong> a été poussée sur <strong>{result.phoneNumber}</strong>. Compose ton code Mobile Money sur ton téléphone pour valider — l'abonnement s'active dès confirmation.</p>
+            {payStatus === 'activated' ? (
+              <>
+                <div className="flex items-center gap-2 font-semibold text-[#d97757] mb-1.5"><Check className="w-4 h-4" /> Paiement confirmé</div>
+                <p>Ton abonnement <strong>{plan?.label}</strong> est désormais <strong>activé</strong>. Merci ! 🎉</p>
+              </>
+            ) : payStatus === 'failed' ? (
+              <>
+                <div className="flex items-center gap-2 font-semibold text-red-300 mb-1.5"><AlertCircle className="w-4 h-4" /> Paiement non abouti</div>
+                <p>Le paiement a été refusé ou annulé sur le téléphone. Ferme cette fenêtre et réessaie.</p>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 font-semibold text-[#e6b878] mb-1.5"><Check className="w-4 h-4" /> Demande envoyée</div>
+                <p>📲 Une demande de <strong>{result.currency} {result.amount}</strong> a été poussée sur <strong>{result.phoneNumber}</strong>. Compose ton code Mobile Money sur ton téléphone pour valider.</p>
+                <div className="mt-2 flex items-center gap-2 text-xs text-white/60"><Loader2 className="w-3.5 h-3.5 animate-spin" /> En attente de ta validation sur le téléphone…</div>
+              </>
+            )}
             <button onClick={onClose} className="mt-3 w-full px-4 py-2 rounded-lg border border-white/[0.12] text-white/70 text-sm hover:bg-white/[0.06]">Fermer</button>
           </div>
         ) : (
@@ -849,7 +883,7 @@ export default function CimolaceBillingDashboardPage() {
                           );
                         })}
                       </div>
-                      {mmPlan && <MobileMoneyModal plan={mmPlan} onClose={() => setMmPlan(null)} />}
+                      {mmPlan && <MobileMoneyModal plan={mmPlan} onClose={() => setMmPlan(null)} onPaid={() => loadAll(activeSlug)} />}
                       <p className="text-xs text-white/40 flex items-center gap-1.5 flex-wrap"><ShieldCheck className="w-3.5 h-3.5 text-[#e6b878] shrink-0" /> Carte (Stripe) ou Mobile Money (PawaPay) · Conforme RGPD · Selon le service, des frais d'activation uniques peuvent s'appliquer (forfait boutique : 500 €), détaillés avant paiement.</p>
                       {isLiriUpgrade && (
                         <div className="text-center pt-1">

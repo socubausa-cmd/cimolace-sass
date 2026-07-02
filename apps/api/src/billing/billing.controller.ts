@@ -27,6 +27,11 @@ export class BillingController {
   @Post("subscriptions/:id/collect") async collect(@Req() req: any, @Param("id") id: string, @Body() b: any) {
     return this.svc.collectSubscriptionViaPawaPay(req.tenant.id, id, b);
   }
+  // Mobile money : polling du statut (compte PawaPay partagé → pas de webhook cimolace).
+  // Le front appelle ceci après « Demande envoyée » jusqu'à activation de l'abo.
+  @Post("mobile-money/sync") async syncMobileMoney(@Req() req: any) {
+    return this.svc.syncPendingPawaPayDeposits(req.tenant.id);
+  }
   // Carte bancaire (Stripe — Europe / international)
   @Post("subscriptions/:id/card-checkout") async cardCheckout(@Req() req: any, @Param("id") id: string) {
     return this.svc.createCardCheckout(req.tenant.id, id);

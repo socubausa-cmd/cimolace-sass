@@ -212,7 +212,12 @@ export class PawaPayService {
       return null;
     }
 
-    return (await response.json()) as PawaPayDepositCallback;
+    // PawaPay v2 renvoie une enveloppe { data: {...dépôt...}, status: "FOUND"|"NOT_FOUND" }.
+    // Le vrai statut du dépôt est data.status (PROCESSING/COMPLETED/…), PAS l'enveloppe.
+    const json = (await response.json()) as any;
+    if (!json || json.status === 'NOT_FOUND') return null;
+    const dep = json.data ?? json;
+    return (dep ?? null) as PawaPayDepositCallback | null;
   }
 
   /**

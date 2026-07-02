@@ -328,6 +328,54 @@ export class BillingService {
     return { received: true, matched: true, status: cb.status };
   }
 
+  /**
+   * Polling PawaPay. Le compte PawaPay étant partagé (le webhook global pointe
+   * ailleurs), cimolace interroge LUI-MÊME le statut de chaque dépôt mobile
+   * money « en cours » du tenant et applique le résultat (COMPLETED → abo actif)
+   * via applyPawaPayDeposit. Appelé par le front après « Demande envoyée ».
+   */
+  async syncPendingPawaPayDeposits(tenantId: string) {
+    const sb = this.supabase;
+    const { data: subs } = await sb
+      .from("billing_subscriptions")
+      .select("id")
+      .eq("tenant_id", tenantId);
+    const subIds = (subs ?? []).map((s: any) => s.id);
+    if (!subIds.length) return { synced: [], activated: false, failed: false };
+
+    const { data: invoices } = await sb
+      .from("billing_invoices")
+      .select("id, provider_transaction_id, subscription_id, status")
+      .in("subscription_id", subIds)
+      .eq("provider", "pawapay")
+      .in("status", ["processing", "pending"])
+      .not("provider_transaction_id", "is", null);
+
+    const synced: Array<{
+      depositId: string;
+      depositStatus?: string;
+      applied?: string;
+    }> = [];
+    for (const inv of invoices ?? []) {
+      const depositId = (inv as any).provider_transaction_id as string;
+      if (!depositId) continue;
+      const dep = await this.pawapay.getDepositStatus(depositId);
+      if (!dep) continue;
+      const status = (dep as any).status as string | undefined;
+      const res = await this.applyPawaPayDeposit({
+        depositId,
+        status,
+        failureReason: (dep as any).failureReason,
+      });
+      synced.push({ depositId, depositStatus: status, applied: res.status });
+    }
+    return {
+      synced,
+      activated: synced.some((s) => s.applied === "paid"),
+      failed: synced.some((s) => s.applied === "failed"),
+    };
+  }
+
   // ─── Paiement carte (Stripe) — pour les clients hors mobile money (Europe) ─
   private stripeAuth() {
     const secret = process.env.STRIPE_SECRET_KEY;
