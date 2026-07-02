@@ -22,6 +22,14 @@ const eur = (cents, cur = 'EUR') => {
   catch { return `${value.toLocaleString('fr-FR')} ${c}`; }
 };
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+// Libellé lisible du moyen de paiement d'un abonnement (numéro Mobile Money mémorisé, sinon provider).
+const payMethodLabel = (s) => {
+  const pm = s?.metadata?.payment_method;
+  if (pm?.phone) return `${pm.provider ? String(pm.provider).replace(/_/g, ' ') : 'Mobile Money'} · +${pm.phone}`;
+  if (s?.provider === 'pawapay') return 'Mobile Money';
+  if (s?.provider === 'stripe') return 'Carte bancaire';
+  return s?.provider || null;
+};
 
 // ─── Marketplace : humanisation des features (3 formes réelles en DB :
 // objet de limites {max_courses:10,…}, tableau de strings, booléens {medos:true}) ───
@@ -163,7 +171,7 @@ const mmProviderName = (p) => (typeof p === 'string' ? p : (p?.name || p?.displa
 
 // Modal de paiement Mobile Money (PawaPay) pour un forfait LIRI : pays -> opérateur ->
 // téléphone -> subscribe(provider='pawapay') (facture en XAF) -> collect -> push USSD.
-function MobileMoneyModal({ plan, onClose, onPaid }) {
+function MobileMoneyModal({ plan, onClose, onPaid, onViewInvoices }) {
   const [country, setCountry] = useState('CMR');
   const [providers, setProviders] = useState([]);
   const [provider, setProvider] = useState('');
@@ -235,6 +243,7 @@ function MobileMoneyModal({ plan, onClose, onPaid }) {
               <>
                 <div className="flex items-center gap-2 font-semibold text-[#d97757] mb-1.5"><Check className="w-4 h-4" /> Paiement confirmé</div>
                 <p>Ton abonnement <strong>{plan?.label}</strong> est désormais <strong>activé</strong>. Merci ! 🎉</p>
+                {onViewInvoices && <button onClick={onViewInvoices} className="mt-3 w-full px-4 py-2 rounded-lg bg-[#d97757] text-white text-sm font-semibold hover:bg-[#c9673f] flex items-center justify-center gap-2"><FileText className="w-4 h-4" /> Voir ma facture / mon reçu</button>}
               </>
             ) : payStatus === 'failed' ? (
               <>
@@ -730,7 +739,7 @@ export default function CimolaceBillingDashboardPage() {
                               <span className="text-2xl font-black capitalize">{planName(primarySub)}</span>
                               <span className={`px-2 py-0.5 rounded-full border text-[11px] font-medium ${badge(primarySub.status).cls}`}>{badge(primarySub.status).label}</span>
                             </div>
-                            <div className="text-sm text-white/60">{eur(primarySub.amount_cents, primarySub.currency)} / mois{primarySub.current_period_end ? ` · échéance ${fmtDate(primarySub.current_period_end)}` : ''}</div>
+                            <div className="text-sm text-white/60">{eur(primarySub.amount_cents, primarySub.currency)} / mois{primarySub.current_period_end ? ` · échéance ${fmtDate(primarySub.current_period_end)}` : ''}{payMethodLabel(primarySub) ? ` · ${payMethodLabel(primarySub)}` : ''}</div>
                           </div>
                           {(primarySub.status === 'pending' || primarySub.status === 'past_due') ? (
                             <button onClick={() => pay(primarySub)} disabled={payingId === primarySub.id} className="px-5 py-3 bg-[#d97757] text-white font-bold rounded-xl hover:shadow-lg hover:shadow-[#d97757]/25 flex items-center gap-2 disabled:opacity-60">
@@ -780,7 +789,7 @@ export default function CimolaceBillingDashboardPage() {
                             <div className="flex items-start justify-between gap-4 flex-wrap">
                               <div>
                                 <div className="flex items-center gap-2 mb-1"><span className="text-xl font-black capitalize">{planName(s)}</span><span className={`px-2 py-0.5 rounded-full border text-[11px] font-medium ${b.cls}`}>{b.label}</span></div>
-                                <div className="text-sm text-white/60">{eur(s.amount_cents, s.currency)} / mois{s.current_period_end ? ` · échéance ${fmtDate(s.current_period_end)}` : ''}{s.provider ? ` · ${s.provider}` : ''}</div>
+                                <div className="text-sm text-white/60">{eur(s.amount_cents, s.currency)} / mois{s.current_period_end ? ` · échéance ${fmtDate(s.current_period_end)}` : ''}{payMethodLabel(s) ? ` · ${payMethodLabel(s)}` : ''}</div>
                               </div>
                               {payable ? (
                                 <button onClick={() => pay(s)} disabled={payingId === s.id} className="px-5 py-3 bg-[#d97757] text-white font-bold rounded-xl hover:shadow-lg hover:shadow-[#d97757]/25 flex items-center gap-2 disabled:opacity-60">
@@ -938,7 +947,7 @@ export default function CimolaceBillingDashboardPage() {
                           );
                         })}
                       </div>
-                      {mmPlan && <MobileMoneyModal plan={mmPlan} onClose={() => setMmPlan(null)} onPaid={() => loadAll(activeSlug)} />}
+                      {mmPlan && <MobileMoneyModal plan={mmPlan} onClose={() => setMmPlan(null)} onPaid={() => loadAll(activeSlug)} onViewInvoices={() => { setMmPlan(null); setTab('factures'); }} />}
                       <p className="text-xs text-white/40 flex items-center gap-1.5 flex-wrap"><ShieldCheck className="w-3.5 h-3.5 text-[#e6b878] shrink-0" /> Carte (Stripe) ou Mobile Money (PawaPay) · Conforme RGPD · Selon le service, des frais d'activation uniques peuvent s'appliquer (forfait boutique : 500 €), détaillés avant paiement.</p>
                       {isLiriUpgrade && (
                         <div className="text-center pt-1">

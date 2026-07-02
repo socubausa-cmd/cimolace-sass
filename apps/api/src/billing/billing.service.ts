@@ -3,6 +3,7 @@ import { randomUUID, createHmac, timingSafeEqual } from "crypto";
 import { AuthService } from "../auth/auth.service";
 import { PawaPayService } from "../pawapay/pawapay.service";
 import { WebhookService } from "../liri-public/webhook.service";
+import { EmailEngineService } from "../email-engine/email-engine.service";
 import { resolvePlanServices } from "./plan-services";
 
 @Injectable()
@@ -11,6 +12,7 @@ export class BillingService {
     private auth: AuthService,
     private pawapay: PawaPayService,
     private tenantWebhooks: WebhookService,
+    private email: EmailEngineService,
   ) {}
   private get supabase() { return this.auth.getClient(); }
 
@@ -316,8 +318,22 @@ export class BillingService {
     if (cb.status === "COMPLETED") {
       await sb.from("billing_invoices").update({ status: "paid", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", inv.id);
       if (inv.subscription_id) {
+        const start = new Date();
         const end = new Date(); end.setMonth(end.getMonth() + 1);
-        await sb.from("billing_subscriptions").update({ status: "active", current_period_end: end.toISOString(), updated_at: new Date().toISOString() }).eq("id", inv.subscription_id);
+        // Moyen de paiement : le numéro/opérateur utilisé (stocké sur la facture au moment du collect).
+        const payMethod = (inv.metadata as any)?.payer_phone
+          ? { type: "mobile_money", provider: (inv.metadata as any).payer_provider ?? null, phone: (inv.metadata as any).payer_phone }
+          : null;
+        const { data: subRow } = await sb.from("billing_subscriptions").select("metadata, user_id, tenant_id").eq("id", inv.subscription_id).maybeSingle();
+        await sb.from("billing_subscriptions").update({
+          status: "active",
+          current_period_start: start.toISOString(),
+          current_period_end: end.toISOString(),
+          metadata: { ...((subRow as any)?.metadata ?? {}), ...(payMethod ? { payment_method: payMethod } : {}) },
+          updated_at: new Date().toISOString(),
+        }).eq("id", inv.subscription_id);
+        // Reçu email de confirmation (best-effort ; no-op silencieux si Resend non configuré).
+        void this.sendPaymentReceiptEmail(inv, subRow, payMethod, end);
       }
       return { received: true, matched: true, status: "paid" };
     }
@@ -326,6 +342,37 @@ export class BillingService {
       return { received: true, matched: true, status: "failed" };
     }
     return { received: true, matched: true, status: cb.status };
+  }
+
+  /** Envoie un reçu de paiement par email (best-effort, silencieux si Resend absent). */
+  private async sendPaymentReceiptEmail(inv: any, sub: any, payMethod: any, periodEnd: Date) {
+    try {
+      const userId = sub?.user_id;
+      const tenantId = sub?.tenant_id ?? inv?.tenant_id;
+      if (!userId || !tenantId) return;
+      const { data: userRes } = await (this.supabase as any).auth.admin.getUserById(userId);
+      const to = userRes?.user?.email;
+      if (!to) return;
+      const cur = String(inv.currency ?? "").toUpperCase();
+      const amount = BillingService.ZERO_DECIMAL.has(cur)
+        ? `${inv.amount_cents} ${cur}`
+        : `${(inv.amount_cents / 100).toFixed(2)} ${cur}`;
+      const echeance = periodEnd.toISOString().slice(0, 10);
+      const pm = payMethod
+        ? `Mobile Money${payMethod.provider ? ` (${payMethod.provider})` : ""} ${payMethod.phone}`
+        : "—";
+      const html = this.email.brandedHtml({
+        title: "Paiement confirmé",
+        body: `Merci ! Votre paiement de <strong>${amount}</strong> a bien été reçu.<br/><br/>
+          Facture : <strong>${inv.invoice_number ?? inv.id}</strong><br/>
+          Moyen de paiement : ${pm}<br/>
+          Abonnement actif jusqu'au : <strong>${echeance}</strong>`,
+        brand: "#d97757",
+      });
+      await this.email.sendRaw(tenantId, to, "Votre reçu de paiement — Cimolace LIRI", html);
+    } catch {
+      /* best-effort : ne jamais casser l'activation pour un email */
+    }
   }
 
   /**
