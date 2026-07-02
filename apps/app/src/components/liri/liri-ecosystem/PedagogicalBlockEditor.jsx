@@ -133,16 +133,91 @@ function VideoFields({ data, onChange }) {
 }
 
 function LiveFields({ data, onChange }) {
+  const [sessions, setSessions] = useState([]);
+  const [loadingSessions, setLoadingSessions] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoadingSessions(true);
+      try {
+        // RLS scope ce que l'auteur a le droit de voir — pas de sur-filtrage ici.
+        const { data: rows, error } = await supabase
+          .from('live_sessions')
+          .select('id,title,scheduled_at,status')
+          .in('status', ['scheduled', 'live'])
+          .order('scheduled_at', { ascending: true })
+          .limit(100);
+        if (!cancelled) setSessions(!error && Array.isArray(rows) ? rows : []);
+      } catch {
+        if (!cancelled) setSessions([]);
+      } finally {
+        if (!cancelled) setLoadingSessions(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const fmtSession = (iso) => {
+    if (!iso) return 'date non planifiée';
+    try {
+      return new Date(iso).toLocaleString('fr-FR', {
+        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+      });
+    } catch {
+      return iso;
+    }
+  };
+
+  const handlePickSession = (id) => {
+    if (!id) {
+      // Délier : on garde la date déjà saisie, on retire seulement le lien.
+      const next = { ...(data || {}) };
+      delete next.live_session_id;
+      onChange(next);
+      return;
+    }
+    const s = sessions.find((x) => x.id === id);
+    // La session liée fait autorité sur la date affichée dans le bloc.
+    onChange({ ...data, live_session_id: id, scheduled_at: s?.scheduled_at || data.scheduled_at || '' });
+  };
+
   return (
-    <FieldGroup>
-      {label('Date/heure planifiée', true)}
-      <input
-        type="datetime-local"
-        value={data.scheduled_at ? data.scheduled_at.slice(0, 16) : ''}
-        onChange={(e) => onChange({ ...data, scheduled_at: e.target.value })}
-        style={inputStyle({ width: 240 })}
-      />
-    </FieldGroup>
+    <>
+      <FieldGroup>
+        {label('Session live à rejoindre')}
+        <select
+          value={data.live_session_id || ''}
+          onChange={(e) => handlePickSession(e.target.value)}
+          disabled={loadingSessions}
+          style={inputStyle()}
+        >
+          <option value="">
+            {loadingSessions ? 'Chargement des sessions…' : '— Aucune (bouton → hub Lives) —'}
+          </option>
+          {sessions.map((s) => (
+            <option key={s.id} value={s.id}>
+              {(s.title || 'Live sans titre')} · {fmtSession(s.scheduled_at)}
+              {s.status === 'live' ? ' · EN DIRECT' : ''}
+            </option>
+          ))}
+        </select>
+        <p style={{ fontSize: 10.5, color: T.t3, margin: '4px 0 0', lineHeight: 1.4 }}>
+          Reliez ce bloc à une vraie salle : « Rejoindre le LIVE » ouvrira alors /live/&lt;id&gt;.
+          Sinon le bouton mène au hub neutre /lives.
+        </p>
+      </FieldGroup>
+
+      <FieldGroup>
+        {label('Date/heure planifiée', true)}
+        <input
+          type="datetime-local"
+          value={data.scheduled_at ? data.scheduled_at.slice(0, 16) : ''}
+          onChange={(e) => onChange({ ...data, scheduled_at: e.target.value })}
+          style={inputStyle({ width: 240 })}
+        />
+      </FieldGroup>
+    </>
   );
 }
 
