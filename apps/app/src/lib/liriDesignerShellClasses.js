@@ -1,17 +1,17 @@
 /**
  * Classes Tailwind alignées sur le shell Smartboard Designer
- * (StudioSmartboardKonvaPage — #0F1117, rails #12111a, panneaux #14131c, grille canvas).
+ * (StudioSmartboardKonvaPage — #262624, rails #211f1c, panneaux #30302e, grille canvas).
  * Réutilisable par les tiroirs live (messagerie, paramètres studio).
  */
 
 export const designerShellBackdrop =
-  'fixed inset-0 z-[190] bg-[#080910]/86 backdrop-blur-[22px]';
+  'fixed inset-0 z-[190] bg-[#100d0a]/86 backdrop-blur-[22px]';
 
 /**
  * Voile très léger — plateau bien visible ; à peine assombri / flouté pour marquer le tiroir messagerie (live salle).
  */
 export const designerShellBackdropLiveStage =
-  'fixed inset-0 z-[190] cursor-pointer bg-[#080910]/14 backdrop-blur-[4px]';
+  'fixed inset-0 z-[190] cursor-pointer bg-[#100d0a]/14 backdrop-blur-[4px]';
 
 /** Tiroir droit — bord gauche net, fond shell principal */
 export function designerShellDrawerClass(widthClass = 'w-[min(100vw,460px)]') {
@@ -19,27 +19,27 @@ export function designerShellDrawerClass(widthClass = 'w-[min(100vw,460px)]') {
     'fixed right-0 top-0 bottom-0 z-[200] flex flex-col',
     widthClass,
     'border-l border-white/[0.08]',
-    'bg-[#0F1117]',
+    'bg-[#262624]',
     'shadow-[-28px_0_80px_-16px_rgba(0,0,0,0.72)]',
     'ring-1 ring-inset ring-white/[0.03]',
   ].join(' ');
 }
 
 export const designerShellHeader =
-  'flex shrink-0 items-center justify-between border-b border-white/[0.08] bg-[#12111a] px-5 py-3.5';
+  'flex shrink-0 items-center justify-between border-b border-white/[0.08] bg-[#211f1c] px-5 py-3.5';
 
 export const designerShellSidebar =
-  'shrink-0 overflow-y-auto border-r border-white/[0.08] bg-[#12111a]/70 px-2 py-3 [scrollbar-width:thin] [scrollbar-color:rgba(245,158,11,0.15)_transparent]';
+  'shrink-0 overflow-y-auto border-r border-white/[0.08] bg-[#211f1c]/70 px-2 py-3 [scrollbar-width:thin] [scrollbar-color:rgba(245,158,11,0.15)_transparent]';
 
 export const designerShellMainScroll =
   'min-h-0 flex-1 overflow-y-auto px-4 py-3 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.12)_transparent] bg-[#1f1e1c] bg-[linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px)] [background-size:44px_44px]';
 
 export const designerShellComposer =
-  'shrink-0 border-t border-white/[0.08] bg-[#12111a]/95 px-4 py-3 backdrop-blur-sm';
+  'shrink-0 border-t border-white/[0.08] bg-[#211f1c]/95 px-4 py-3 backdrop-blur-sm';
 
 /** Composer unique type ChatGPT — un seul bloc arrondi ; textarea / input sans bordure à l'intérieur */
 export const designerShellComposerUnified =
-  'flex w-full max-w-full items-end gap-0.5 rounded-[1.25rem] border border-white/[0.11] bg-[#12111a] px-1 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-[border-color,box-shadow]';
+  'flex w-full max-w-full items-end gap-0.5 rounded-[1.25rem] border border-white/[0.11] bg-[#211f1c] px-1 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-[border-color,box-shadow]';
 
 /** Icônes (galerie, caméra, plus) incrustées à gauche du champ */
 export const designerShellComposerUnifiedIconBtn =
@@ -65,7 +65,7 @@ export const designerShellCloseBtn =
   'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white/50 transition-all hover:border-white/14 hover:bg-white/[0.08] hover:text-white';
 
 export const designerShellInput =
-  'min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1f1e1c] px-3 py-2.5 text-[12px] text-white/95 outline-none placeholder:text-white/35 focus:border-cyan-500/35 focus:ring-1 focus:ring-cyan-500/15';
+  'min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1f1e1c] px-3 py-2.5 text-[12px] text-white/95 outline-none placeholder:text-white/35 focus:border-amber-500/35 focus:ring-1 focus:ring-amber-500/15';
 
 export const designerShellBtnGold =
   'shrink-0 rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-2.5 text-[12px] font-semibold text-amber-100/95 transition-colors hover:bg-amber-500/16 disabled:cursor-not-allowed disabled:opacity-40';
@@ -75,7 +75,7 @@ export const designerShellMessageBubble = (mine) =>
     'mb-2 rounded-2xl border px-3 py-2.5',
     mine
       ? 'border-amber-500/20 bg-amber-500/[0.07] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
-      : 'border-white/[0.08] bg-[#14131c]/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]',
+      : 'border-white/[0.08] bg-[#30302e]/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]',
   ].join(' ');
 
 export const designerShellMemberRowActive =
@@ -85,9 +85,9 @@ export const designerShellMemberRowIdle =
   'mb-1 flex w-full items-center gap-2 rounded-xl border border-transparent px-2 py-2 text-left text-[11px] text-white/80 transition-colors hover:border-white/[0.06] hover:bg-white/[0.04]';
 
 export const designerShellIconBadge =
-  'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cyan-500/20 bg-cyan-500/[0.08] text-cyan-300 shadow-[0_0_20px_-8px_rgba(34,211,238,0.35)]';
+  'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/[0.08] text-amber-200 shadow-[0_0_20px_-8px_rgba(212,163,106,0.35)]';
 
-/** Panneau incrusté (colonne live — Control Mesh, etc.) — fond chaud (était #14131c bleu). */
+/** Panneau incrusté (colonne live — Control Mesh, etc.) — fond chaud (était #30302e bleu). */
 export const designerShellEmbedPanel =
   'flex flex-col overflow-hidden rounded-2xl border border-white/[0.09] bg-[#211f1c]/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ring-1 ring-inset ring-white/[0.02]';
 

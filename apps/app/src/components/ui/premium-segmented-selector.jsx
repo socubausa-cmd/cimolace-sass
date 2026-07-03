@@ -18,7 +18,7 @@ export default function PremiumSegmentedSelector({
     <div className={cn('w-full', className)}>
       <div
         className={cn(
-          'flex flex-wrap gap-2 p-2 rounded-2xl bg-[#151a21]/80 backdrop-blur-xl border border-white/5',
+          'flex flex-wrap gap-2 p-2 rounded-2xl bg-[#30302e]/80 backdrop-blur-xl border border-white/5',
           railClassName
         )}
       >
@@ -37,10 +37,10 @@ export default function PremiumSegmentedSelector({
                 'relative flex items-center gap-2 rounded-xl px-4 py-2.5 text-left transition-colors',
                 compact ? 'min-w-[120px]' : 'min-w-[150px]',
                 option.disabled
-                  ? 'cursor-not-allowed opacity-50 text-gray-500'
+                  ? 'cursor-not-allowed opacity-50 text-white/40'
                   : isActive
                     ? 'text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5',
+                    : 'text-white/50 hover:text-white hover:bg-white/5',
                 optionClassName
               )}
             >
@@ -56,7 +56,7 @@ export default function PremiumSegmentedSelector({
                 <span
                   className={cn(
                     'relative z-10 flex h-8 w-8 items-center justify-center rounded-lg',
-                    isActive ? 'bg-[var(--school-accent)] text-black' : 'bg-white/5 text-gray-400'
+                    isActive ? 'bg-[var(--school-accent)] text-black' : 'bg-white/5 text-white/50'
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -64,7 +64,7 @@ export default function PremiumSegmentedSelector({
               ) : null}
               <span className="relative z-10 min-w-0">
                 <span className="block truncate text-sm font-medium">{option.label}</span>
-                {option.badge ? <span className="block truncate text-xs text-gray-500">{option.badge}</span> : null}
+                {option.badge ? <span className="block truncate text-xs text-white/40">{option.badge}</span> : null}
               </span>
               {showChevron && isActive ? (
                 <ChevronRight className="relative z-10 ml-auto h-4 w-4 text-[var(--school-accent)]" />

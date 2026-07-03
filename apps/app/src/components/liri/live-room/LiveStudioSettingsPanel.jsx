@@ -102,7 +102,7 @@ function StudioPanelSection({ title, subtitle, icon: Icon, children, className }
 
 // ─── Virtual BG images ────────────────────────────────────────────────────────
 const VBG_PRESETS = [
-  { id: 'none',    label: 'Aucun',     thumb: null, color: '#111827' },
+  { id: 'none',    label: 'Aucun',     thumb: null, color: '#262624' },
   {
     id: 'immersive',
     label: 'Verre IA',
@@ -388,9 +388,9 @@ export default function LiveStudioSettingsPanel({
           <motion.aside
             key="panel"
             {...liveDrawerAsideRight}
-            className={cn(designerShellDrawerClass('w-[min(100vw,400px)]'), '!bg-[#1f1e1c] !shadow-[-16px_0_44px_-22px_rgba(0,0,0,0.5)]')}
+            className={cn(designerShellDrawerClass('w-[min(100vw,400px)]'), '!shadow-[-16px_0_44px_-22px_rgba(0,0,0,0.5)]')}
           >
-            <div className={cn(designerShellHeader, '!bg-[#211f1c] !py-3')}>
+            <div className={cn(designerShellHeader, '!py-3')}>
               <div>
                 <p className="text-[12px] font-semibold tracking-wide text-white/95">
                   {participantMode ? 'Votre audio & vidéo' : 'LONGIA — Contrôle studio'}
@@ -538,7 +538,7 @@ export default function LiveStudioSettingsPanel({
                               className="flex h-9 flex-1 cursor-pointer items-center justify-center rounded-xl border-2 border-white/20 transition-all hover:border-white/40"
                               style={{
                                 background:
-                                  chromaColor && !chromaColors.find((c) => c.hex === chromaColor) ? chromaColor : '#1a1a2e',
+                                  chromaColor && !chromaColors.find((c) => c.hex === chromaColor) ? chromaColor : '#211f1c',
                               }}
                             >
                               <input
@@ -863,7 +863,7 @@ export default function LiveStudioSettingsPanel({
                             max={100}
                             onChange={onLiriGateChange}
                             unit="%"
-                            color="#94a3b8"
+                            color="#d4a36a"
                           />
                         </>
                       ) : null}

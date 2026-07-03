@@ -76,7 +76,7 @@
   --accent-violet: var(--liri-primary);
   --accent-blue: var(--liri-charte-blue);
   --premium-surface: #121a25;
-  --premium-surface-2: #192734;
+  --premium-surface-2: #30302e;
   /* Typo charte : Inter en premier (weights 300–800 chargées dans index.html) */
   --app-font-main: 'Inter', -apple-system, blinkmacsystemfont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
   --app-font-display: -apple-system, blinkmacsystemfont, 'SF Pro Display', 'Cinzel', 'Playfair Display', serif;
@@ -157,7 +157,7 @@ body {
 .premium-panel {
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.07);
-  background: #192734;
+  background: #30302e;
   box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.5);
 }
 
@@ -438,6 +438,9 @@ body {
 
 .live-studio-premium .premium-panel {
   border-radius: 14px !important;
+  /* Charte LIRI : panneau chaud (le défaut global .premium-panel est en navy #192734,
+     ici surchargé pour le shell studio afin de ne pas laisser fuir le froid). */
+  background: #30302e !important;
   box-shadow: 0 10px 34px -24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 
