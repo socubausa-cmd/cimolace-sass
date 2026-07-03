@@ -19,7 +19,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import {
-  designerShellBackdrop,
+  designerShellBackdropLiveStage,
   designerShellCloseBtn,
   designerShellDrawerClass,
   designerShellHeader,
@@ -84,7 +84,7 @@ function StudioPanelSection({ title, subtitle, icon: Icon, children, className }
   return (
     <div
       className={cn(
-        'rounded-2xl border border-white/[0.09] bg-[#14131c]/90 p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,.04)]',
+        'rounded-xl border border-white/[0.08] bg-[#1f1e1c]/60 p-3',
         className,
       )}
     >
@@ -120,15 +120,14 @@ const VBG_PRESETS = [
 
 // ─── Tabs principaux (sous-onglets anciens fusionnés : Vidéo + fond + étalonnage + choix caméra) ─
 const MAIN_STUDIO_TABS = [
-  { id: 'video', icon: Video, label: 'Vidéo & salle', badge: 'Flux, fond, étalonnage' },
-  { id: 'audio', icon: Volume2, label: 'Audio & ambiance', badge: 'Micro, LIRI, ambiance' },
+  { id: 'video', icon: Video, label: 'Vidéo & salle' },
+  { id: 'audio', icon: Volume2, label: 'Audio & ambiance' },
 ];
-const SALLE_IA_TAB = { id: 'salle', icon: Network, label: 'Salle & IA', badge: 'Lien, canaux, IA' };
+const SALLE_IA_TAB = { id: 'salle', icon: Network, label: 'Salle & IA' };
 const GUEST_PERMISSIONS_TAB = {
   id: 'permissions',
   icon: GraduationCap,
   label: 'Permissions élèves',
-  badge: 'Ce que les invités peuvent faire',
 };
 
 /**
@@ -337,7 +336,7 @@ export default function LiveStudioSettingsPanel({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={LIVE_DRAWER_BACKDROP_TRANSITION}
-            className={designerShellBackdrop}
+            className={designerShellBackdropLiveStage}
             onClick={onClose}
           />
 
@@ -354,7 +353,7 @@ export default function LiveStudioSettingsPanel({
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 className={cn(
-                  'fixed z-[205] flex flex-col bg-[#06060a]/94 backdrop-blur-[18px]',
+                  'fixed z-[205] flex flex-col bg-[#100d0a]/94 backdrop-blur-[18px]',
                   'inset-0 min-[920px]:inset-y-0 min-[920px]:left-0 min-[920px]:right-[min(460px,100vw)] min-[920px]:w-auto min-[920px]:h-full',
                 )}
               >
@@ -389,9 +388,9 @@ export default function LiveStudioSettingsPanel({
           <motion.aside
             key="panel"
             {...liveDrawerAsideRight}
-            className={designerShellDrawerClass('w-[min(100vw,460px)]')}
+            className={cn(designerShellDrawerClass('w-[min(100vw,400px)]'), '!bg-[#1f1e1c] !shadow-[-16px_0_44px_-22px_rgba(0,0,0,0.5)]')}
           >
-            <div className={designerShellHeader}>
+            <div className={cn(designerShellHeader, '!bg-[#211f1c] !py-3')}>
               <div>
                 <p className="text-[12px] font-semibold tracking-wide text-white/95">
                   {participantMode ? 'Votre audio & vidéo' : 'LONGIA — Contrôle studio'}
@@ -426,7 +425,7 @@ export default function LiveStudioSettingsPanel({
                 />
               </div>
 
-              <div className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[var(--lh-stage-bg)] bg-[linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px)] [background-size:44px_44px] px-5 py-4 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.12)_transparent]">
+              <div className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[var(--lh-stage-bg)] px-5 py-4 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.12)_transparent]">
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={tab}
@@ -1167,7 +1166,7 @@ export default function LiveStudioSettingsPanel({
             </Tabs>
 
             {/* Footer */}
-            <div className="border-t border-white/[0.08] bg-[#1a1815]/95 px-5 py-3">
+            <div className="border-t border-white/[0.08] bg-[#1f1e1c]/95 px-5 py-3">
               <p className="text-center text-[10px] text-white/25">
                 Effets vidéo et traitement audio appliqués en temps réel sur votre flux — décor aligné sur le plateau LIRI.
               </p>
