@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Track } from 'livekit-client';
 import { Settings, ChevronDown } from 'lucide-react';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
@@ -98,6 +98,9 @@ export const LiveStripBandeau = React.forwardRef(function LiveStripBandeau(
   // le dock membres (+ vignette locale + compteur) de la bande du haut, qui devient
   // une simple barre de contrôle (marque + STOP + menu hôte).
   const stripConference = arenaLayoutMode === 'conference';
+  // Déclutter : par défaut les tuiles membres sont repliées derrière la pastille
+  // « en ligne » ; un clic sur le compteur les déroule (barre plus lisible).
+  const [membersExpanded, setMembersExpanded] = useState(false);
   const wrapperStyle = {
     position: 'relative',
     zIndex: 95,
@@ -148,21 +151,40 @@ export const LiveStripBandeau = React.forwardRef(function LiveStripBandeau(
             title={phase === PHASE.LIVE ? 'Arrêter la session live' : 'Quitter'}
           />
           {!stripConference ? (
-            <LiveStripOnlineCounter count={onlineMemberCount} variant="host" />
+            <button
+              type="button"
+              onClick={() => setMembersExpanded((v) => !v)}
+              title={membersExpanded ? 'Replier les membres' : 'Voir les membres en ligne'}
+              aria-expanded={membersExpanded}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0 }}
+            >
+              <LiveStripOnlineCounter count={onlineMemberCount} variant="host" />
+              <ChevronDown
+                size={12}
+                aria-hidden
+                style={{ color: 'rgba(255,255,255,.5)', transform: membersExpanded ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}
+              />
+            </button>
           ) : null}
           {!stripConference ? (
-            <LiveMemberDockScroll
-              ref={ref}
-              liveStripDockMembers={liveStripDockMembers}
-              livekitParticipantsMap={livekitParticipantsMap}
-              liveKitMediaEpoch={liveKitMediaEpoch}
-              promotedId={promotedId}
-              isGuestUi={isGuestUi}
-              onMemberClick={memberClickHandler}
-              onPlusClick={plusClickHandler}
-              emptySlotKeyPrefix="strip-empty"
-              trailingSpacerKey="strip-dock-trail-spacer"
-            />
+            <>
+              {/* Dock toujours monté (ref préservée) mais masqué quand replié → barre allégée par défaut. */}
+              <div style={{ display: membersExpanded ? 'flex' : 'none', flex: 1, minWidth: 0, height: '100%', alignItems: 'center', overflow: 'hidden' }}>
+                <LiveMemberDockScroll
+                  ref={ref}
+                  liveStripDockMembers={liveStripDockMembers}
+                  livekitParticipantsMap={livekitParticipantsMap}
+                  liveKitMediaEpoch={liveKitMediaEpoch}
+                  promotedId={promotedId}
+                  isGuestUi={isGuestUi}
+                  onMemberClick={memberClickHandler}
+                  onPlusClick={plusClickHandler}
+                  emptySlotKeyPrefix="strip-empty"
+                  trailingSpacerKey="strip-dock-trail-spacer"
+                />
+              </div>
+              {!membersExpanded ? <div style={{ flex: 1 }} /> : null}
+            </>
           ) : (
             <div style={{ flex: 1 }} />
           )}
