@@ -8,34 +8,131 @@ import { supabase } from '@/lib/supabase';
 
 /**
  * Vie scolaire (natif) — hub à onglets : Notes · Absences · Évaluations ·
- * Documents · Agenda. Lecture défensive Supabase (la table peut être absente →
- * état vide, comme les maquettes web). Thème élève violet.
+ * Documents · Agenda. Les requêtes reprennent les contrats utilisés par le web
+ * afin qu'un même enregistrement soit visible sur les deux plateformes.
  */
-const EV = { bg: '#0B0B0F', card: '#16161E', muted: '#8E8E93', accent: '#7B61FF', line: 'rgba(255,255,255,0.08)', ink: '#FFFFFF' };
+// Palette alignée sur la charte chaude du portail (fond #262624, accent coral
+// #d97757) — plus de violet/navy hors-thème (directive « tout chaud », zéro fuite).
+const EV = { bg: '#262624', card: '#2e2b28', muted: '#a8a29a', accent: '#d97757', line: 'rgba(245,244,238,0.08)', ink: '#FFFFFF' };
 
 type TabKey = 'notes' | 'absences' | 'evaluations' | 'documents' | 'agenda';
 type IconName = React.ComponentProps<typeof Feather>['name'];
 
-const TABS: { key: TabKey; label: string; icon: IconName; table: string; color: string; empty: string }[] = [
-  { key: 'notes', label: 'Notes', icon: 'bar-chart-2', table: 'grades', color: '#A78BFA', empty: 'Aucune note pour le moment.' },
-  { key: 'absences', label: 'Absences', icon: 'user-x', table: 'attendance', color: '#FB7185', empty: 'Aucune absence enregistrée.' },
-  { key: 'evaluations', label: 'Évaluations', icon: 'check-square', table: 'evaluations', color: '#34D399', empty: 'Aucune évaluation pour le moment.' },
-  { key: 'documents', label: 'Documents', icon: 'folder', table: 'documents', color: '#FBBF24', empty: 'Aucun document disponible.' },
-  { key: 'agenda', label: 'Agenda', icon: 'calendar', table: 'agenda_events', color: '#38BDF8', empty: 'Aucun évènement à venir.' },
+const TABS: { key: TabKey; label: string; icon: IconName; color: string; empty: string }[] = [
+  { key: 'notes', label: 'Notes', icon: 'bar-chart-2', color: '#d97757', empty: 'Aucune note pour le moment.' },
+  { key: 'absences', label: 'Absences', icon: 'user-x', color: '#d46a5f', empty: 'Aucune absence enregistrée.' },
+  { key: 'evaluations', label: 'Évaluations', icon: 'check-square', color: '#c98b6a', empty: 'Aucune évaluation pour le moment.' },
+  { key: 'documents', label: 'Documents', icon: 'folder', color: '#d99a6a', empty: 'Aucun document disponible.' },
+  { key: 'agenda', label: 'Agenda', icon: 'calendar', color: '#e0926a', empty: 'Aucun évènement à venir.' },
 ];
 
 type Row = Record<string, unknown>;
+type FetchResult = { rows: Row[]; error: string | null };
 
-async function fetchTable(table: string): Promise<Row[]> {
+async function fetchTab(tab: TabKey): Promise<FetchResult> {
   try {
     const uid = await myUserId();
-    let q = supabase.from(table).select('*').limit(100);
-    if (uid) q = q.eq('user_id', uid);
-    const { data, error } = await q;
-    if (error || !data) return [];
-    return data as Row[];
-  } catch {
-    return [];
+    if (!uid) return { rows: [], error: 'Connectez-vous pour consulter vos données scolaires.' };
+
+    if (tab === 'notes' || tab === 'evaluations') {
+      const { data, error } = await supabase
+        .from('student_evaluations')
+        .select('id,title,score,max_score,evaluated_at,formation_id,comment')
+        .eq('student_id', uid)
+        .order('evaluated_at', { ascending: false })
+        .limit(200);
+      return {
+        rows: (data ?? []).map((row) => ({
+          ...row,
+          date: row.evaluated_at,
+          value: `${row.score ?? 0}/${row.max_score ?? 20}`,
+        })),
+        error: error?.message ?? null,
+      };
+    }
+
+    if (tab === 'absences') {
+      const { data, error } = await supabase
+        .from('attendance_records')
+        .select('id,status,attendance_date,note')
+        .eq('student_id', uid)
+        .in('status', ['absent', 'late', 'excused'])
+        .order('attendance_date', { ascending: false })
+        .limit(200);
+      return {
+        rows: (data ?? []).map((row) => ({
+          ...row,
+          title: row.status === 'late' ? 'Retard' : row.status === 'excused' ? 'Absence justifiée' : 'Absence',
+          date: row.attendance_date,
+        })),
+        error: error?.message ?? null,
+      };
+    }
+
+    if (tab === 'documents') {
+      const [certificates, reports] = await Promise.all([
+        supabase
+          .from('certificates')
+          .select('id,title,file_url,issued_at')
+          .eq('student_id', uid)
+          .order('issued_at', { ascending: false }),
+        supabase
+          .from('student_live_reports')
+          .select('id,report_text,created_at')
+          .eq('student_id', uid)
+          .order('created_at', { ascending: false }),
+      ]);
+      return {
+        rows: [
+          ...(certificates.data ?? []).map((row) => ({ ...row, date: row.issued_at })),
+          ...(reports.data ?? []).map((row) => ({
+            ...row,
+            title: 'Rapport de session',
+            description: row.report_text,
+            date: row.created_at,
+          })),
+        ],
+        error: certificates.error?.message ?? reports.error?.message ?? null,
+      };
+    }
+
+    const fromIso = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+    const [events, calendar, weeks] = await Promise.all([
+      supabase
+        .from('school_events')
+        .select('id,title,start_at,end_at,location,description,target_role')
+        .in('target_role', ['all', 'student'])
+        .gte('start_at', fromIso)
+        .order('start_at', { ascending: true })
+        .limit(100),
+      supabase
+        .from('school_calendar')
+        .select('id,title,start_date,end_date,description')
+        .gte('end_date', fromIso.slice(0, 10))
+        .order('start_date', { ascending: true })
+        .limit(200),
+      supabase
+        .from('annual_program_weeks')
+        .select('id,week_start,week_end,title,module_title,theme,is_holiday,school_year_calendars!inner(status)')
+        .eq('school_year_calendars.status', 'published')
+        .gte('week_start', fromIso.slice(0, 10))
+        .order('week_start', { ascending: true })
+        .limit(60),
+    ]);
+    return {
+      rows: [
+        ...(events.data ?? []).map((row) => ({ ...row, date: row.start_at })),
+        ...(calendar.data ?? []).map((row) => ({ ...row, date: row.start_date })),
+        ...(weeks.data ?? []).map((row) => ({
+          ...row,
+          title: row.title || row.module_title || row.theme || 'Programme pédagogique',
+          date: row.week_start,
+        })),
+      ].sort((a, b) => +new Date(String(a.date)) - +new Date(String(b.date))),
+      error: events.error?.message ?? calendar.error?.message ?? weeks.error?.message ?? null,
+    };
+  } catch (error) {
+    return { rows: [], error: error instanceof Error ? error.message : 'Chargement impossible.' };
   }
 }
 
@@ -50,13 +147,17 @@ const str = (r: Row, keys: string[], fallback = ''): string => {
 export default function VieScolaireScreen() {
   const [tab, setTab] = useState<TabKey>('notes');
   const [rows, setRows] = useState<Row[] | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const active = useMemo(() => TABS.find((t) => t.key === tab)!, [tab]);
 
   const load = useCallback(async () => {
     setRows(null);
-    setRows(await fetchTable(active.table));
-  }, [active.table]);
+    setErrorMessage(null);
+    const result = await fetchTab(active.key);
+    setRows(result.rows);
+    setErrorMessage(result.error);
+  }, [active.key]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -85,6 +186,13 @@ export default function VieScolaireScreen() {
 
         {rows === null ? (
           <View style={s.fill}><ActivityIndicator color={EV.accent} /></View>
+        ) : errorMessage ? (
+          <View style={s.fill}>
+            <View style={[s.emptyMark, { backgroundColor: '#FB718522' }]}><Feather name="alert-triangle" size={26} color="#FB7185" /></View>
+            <Text style={s.emptyTitle}>Données indisponibles</Text>
+            <Text style={s.emptySub}>{errorMessage}</Text>
+            <Pressable style={s.retry} onPress={() => void load()}><Text style={s.retryTxt}>Réessayer</Text></Pressable>
+          </View>
         ) : list.length === 0 ? (
           <View style={s.fill}>
             <View style={[s.emptyMark, { backgroundColor: active.color + '22' }]}><Feather name={active.icon} size={26} color={active.color} /></View>
@@ -137,4 +245,6 @@ const s = StyleSheet.create({
   emptyMark: { width: 60, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   emptyTitle: { color: EV.ink, fontSize: 18, fontWeight: '700', marginTop: 16 },
   emptySub: { color: EV.muted, fontSize: 13.5, textAlign: 'center', marginTop: 6 },
+  retry: { marginTop: 16, borderRadius: 12, backgroundColor: EV.accent, paddingHorizontal: 18, paddingVertical: 10 },
+  retryTxt: { color: '#fff', fontSize: 13.5, fontWeight: '700' },
 });
