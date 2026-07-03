@@ -55,6 +55,15 @@ export class OfferingCheckoutService {
     return this.auth.getClient();
   }
 
+  /**
+   * Tenant qui ENCAISSE : celui fourni par le client (dto.tenantSlug) ou, à
+   * défaut, 'isna' (rétrocompatible — le flux historique ne passe pas de slug).
+   * Permet à n'importe quel tenant de vendre via ce moteur avec SES creds.
+   */
+  private resolveTenantSlug(tenantSlug?: string | null): string {
+    return String(tenantSlug || ISNA_TENANT_SLUG).trim().toLowerCase();
+  }
+
   /** Accès non-typé à pawapay_deposits (table hors types Supabase générés). */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private get ppDeposits() {
@@ -78,14 +87,15 @@ export class OfferingCheckoutService {
       dto.country,
     );
 
-    // 2) Tenant isna actif
+    // 2) Tenant qui encaisse (dto.tenantSlug, défaut 'isna' — rétrocompatible)
+    const tenantSlug = this.resolveTenantSlug(dto.tenantSlug);
     const { data: tenant } = await this.supabase
       .from('tenants')
       .select('id')
-      .eq('slug', ISNA_TENANT_SLUG)
+      .eq('slug', tenantSlug)
       .eq('status', 'active')
       .maybeSingle();
-    if (!tenant) throw new NotFoundException('Tenant isna introuvable ou inactif');
+    if (!tenant) throw new NotFoundException(`Tenant « ${tenantSlug} » introuvable ou inactif`);
 
     // 2.bis) Credentials PawaPay DU TENANT (si configurés + enabled) — sinon null → env.
     //         Lecture serveur-à-serveur ; resolveTenantProviderCreds ne lève jamais.
@@ -261,13 +271,15 @@ export class OfferingCheckoutService {
   async createStripeCheckout(userId: string, dto: CreateOfferingCardDto, userEmail?: string) {
     const { amountCents, planSlug, currency, billingCycle } = await this.resolveAmount(dto);
 
+    // Tenant qui encaisse (dto.tenantSlug, défaut 'isna' — rétrocompatible).
+    const tenantSlug = this.resolveTenantSlug(dto.tenantSlug);
     const { data: tenant } = await this.supabase
       .from('tenants')
       .select('id')
-      .eq('slug', ISNA_TENANT_SLUG)
+      .eq('slug', tenantSlug)
       .eq('status', 'active')
       .maybeSingle();
-    if (!tenant) throw new NotFoundException('Tenant isna introuvable ou inactif');
+    if (!tenant) throw new NotFoundException(`Tenant « ${tenantSlug} » introuvable ou inactif`);
 
     // Clé Stripe DU TENANT (si configurée + enabled) — sinon null → env plateforme.
     // resolveTenantProviderCreds ne lève jamais : pas de config → fallback transparent.
@@ -295,8 +307,8 @@ export class OfferingCheckoutService {
     const fallbackBase = process.env.SCHOOL_FRONTEND_URL ?? 'https://prorascience.org';
     const successUrl =
       dto.successUrl ??
-      `${fallbackBase}/t/${ISNA_TENANT_SLUG}/paiement?card=success&session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = dto.cancelUrl ?? `${fallbackBase}/t/${ISNA_TENANT_SLUG}/paiement?card=cancel`;
+      `${fallbackBase}/t/${tenantSlug}/paiement?card=success&session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = dto.cancelUrl ?? `${fallbackBase}/t/${tenantSlug}/paiement?card=cancel`;
 
     const params = new URLSearchParams();
     params.append('mode', isSubscription ? 'subscription' : 'payment');

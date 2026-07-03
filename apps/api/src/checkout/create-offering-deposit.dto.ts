@@ -46,4 +46,17 @@ export class CreateOfferingDepositDto {
   /** Pays ISO 3166-1 alpha-3 (ex: 'CMR', 'CIV', 'RWA'). */
   @IsISO31661Alpha3()
   country: string;
+
+  /**
+   * Slug du tenant qui ENCAISSE. Défaut serveur : 'isna' (rétrocompatible).
+   * Permet à un AUTRE tenant de vendre via ce moteur (ses propres creds
+   * PawaPay/Stripe + ses URLs de retour /t/:slug/paiement).
+   */
+  @IsOptional()
+  @IsString()
+  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+    message: 'tenantSlug invalide (minuscules, chiffres, tirets)',
+  })
+  @Length(2, 64)
+  tenantSlug?: string;
 }

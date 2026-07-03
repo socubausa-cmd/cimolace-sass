@@ -1,4 +1,4 @@
-import { IsIn, IsInt, IsOptional, IsString, IsUrl, Length, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, IsUrl, Length, Matches, Min } from 'class-validator';
 
 /**
  * Paiement CARTE (Stripe Checkout) pour une offre PRORASCIENCE / Ngowazulu :
@@ -33,4 +33,17 @@ export class CreateOfferingCardDto {
   @IsOptional()
   @IsUrl({ require_tld: false })
   cancelUrl?: string;
+
+  /**
+   * Slug du tenant qui ENCAISSE. Défaut serveur : 'isna' (rétrocompatible).
+   * Permet à un AUTRE tenant de vendre via ce moteur (sa propre clé Stripe +
+   * ses URLs de retour /t/:slug/paiement).
+   */
+  @IsOptional()
+  @IsString()
+  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+    message: 'tenantSlug invalide (minuscules, chiffres, tirets)',
+  })
+  @Length(2, 64)
+  tenantSlug?: string;
 }
