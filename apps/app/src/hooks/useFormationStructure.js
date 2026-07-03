@@ -318,6 +318,23 @@ export const useFormationStructure = () => {
 
     const normalized = normalizeUiIds(modules);
 
+    const { modulesInsert, weeksInsert, daysInsert, contentsInsert } = buildDbInserts({
+      formationId,
+      modules: normalized,
+    });
+
+    // GARDE ANTI-EFFACEMENT (audit P0) : la sauvegarde remplace la structure par un
+    // DELETE-cascade + ré-insertion (pas de transaction côté client). Si la structure
+    // entrante est VIDE — souvent un état UI vidé par une erreur de chargement — on NE
+    // SUPPRIME RIEN : un save accidentel effacerait sinon tout le cours sans retour.
+    // Vider un cours doit passer par une action explicite, pas par un save à blanc.
+    if (modulesInsert.length === 0) {
+      setLoading(false);
+      return {
+        error: new Error('Structure vide — le cours existant n’a pas été modifié (rien à sauvegarder).'),
+      };
+    }
+
     const { error: deleteErr } = await supabase
       .from('modules')
       .delete()
@@ -328,11 +345,6 @@ export const useFormationStructure = () => {
       setLoading(false);
       return { error: deleteErr };
     }
-
-    const { modulesInsert, weeksInsert, daysInsert, contentsInsert } = buildDbInserts({
-      formationId,
-      modules: normalized,
-    });
 
     if (modulesInsert.length > 0) {
       const { error: err } = await supabase.from('modules').insert(modulesInsert);
