@@ -45,19 +45,25 @@ Deno.serve(async (req: Request) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
+    // Aligné sur l'API getTenantByHost : SEUL un domaine `custom_host` ACTIF d'un
+    // tenant ACTIF résout un slug (un embed_origin — simple whitelist CORS — ou un
+    // domaine révoqué/pending ne doit JAMAIS brander un host). Anti-fuite cloison.
     const { data: doms } = await admin
       .from('tenant_domains')
       .select('tenant_id, domain')
       .in('domain', candidates)
+      .eq('usage', 'custom_host')
+      .eq('status', 'active')
       .limit(1);
     const tenantId = doms?.[0]?.tenant_id;
     if (!tenantId) return json({ slug: null });
 
     const { data: tenant } = await admin
       .from('tenants')
-      .select('slug, name')
+      .select('slug, name, status')
       .eq('id', tenantId)
       .maybeSingle();
+    if (tenant && tenant.status !== 'active') return json({ slug: null });
 
     return json({ slug: tenant?.slug || null, name: tenant?.name || null });
   } catch (e) {
