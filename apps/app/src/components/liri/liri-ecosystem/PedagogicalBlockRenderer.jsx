@@ -27,15 +27,16 @@ import {
 
 /* ─── design tokens ────────────────────────────────────────────────────── */
 const T = {
-  bg: '#12111a',
-  surface: '#12111a',
-  surface2: 'rgba(25,39,52,0.5)',
-  surface3: '#1e2840',
-  border: 'rgba(255,255,255,0.08)',
-  borderMid: 'rgba(255,255,255,0.12)',
-  gold: '#D4AF37',
-  goldDim: 'rgba(212,175,55,0.14)',
-  goldGlow: 'rgba(212,175,55,0.25)',
+  bg: '#262624',
+  surface: '#2e2b28',
+  surface2: 'rgba(46,43,40,0.5)',
+  surface3: '#332f2b',
+  border: 'rgba(245,244,238,0.08)',
+  borderMid: 'rgba(245,244,238,0.12)',
+  // Charte chaude : `gold` (nom hérité) = coral #d97757, plus l'or #D4AF37 d'ISNA.
+  gold: '#d97757',
+  goldDim: 'rgba(217,119,87,0.14)',
+  goldGlow: 'rgba(217,119,87,0.25)',
   teal: '#e08a5f',
   tealDim: 'rgba(224,138,95,0.12)',
   tealGlow: 'rgba(224,138,95,0.25)',
@@ -212,9 +213,9 @@ if (typeof document !== 'undefined' && !document.getElementById('pbr-styles')) {
       100% { box-shadow: 0 0 0 0 rgba(224,138,95,0); }
     }
     @keyframes pbr-pulse-gold {
-      0%   { box-shadow: 0 0 0 0 rgba(212,175,55,0.6); }
-      70%  { box-shadow: 0 0 0 7px rgba(212,175,55,0); }
-      100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); }
+      0%   { box-shadow: 0 0 0 0 rgba(217,119,87,0.6); }
+      70%  { box-shadow: 0 0 0 7px rgba(217,119,87,0); }
+      100% { box-shadow: 0 0 0 0 rgba(217,119,87,0); }
     }
   `;
   document.head.appendChild(style);
@@ -937,7 +938,7 @@ function MindmapNode({ node, depth = 0 }) {
 
 function MindmapBlock({ block, isActive, isCompleted }) {
   const { mindmap_data } = block.data || {};
-  const accentColor = '#34d399';
+  const accentColor = '#d97757';
 
   const renderTree = (data) => {
     if (Array.isArray(data)) {
