@@ -146,6 +146,24 @@ Portail LIRI (`/liri`), back-office tenant (`/cimolace/billing`, 14 sections), e
 
 ---
 
+## 11. SIMULATION CLIENT E2E — vérifiée NON-DESTRUCTIVE en prod (2026-07-03)
+
+Parcours « je suis un client qui active un moteur, crée son org, embarque/intègre » joué **contre `api.cimolace.space` live, en lecture/dry-run seul (0 org, 0 paiement créés)** :
+
+| Étape | Endpoint | Résultat | Verdict |
+|---|---|---|---|
+| ① Découverte | `GET app/cimolace` | 200 (homepage refonte) | ✅ vivant |
+| ② Créer org | `POST /signup/tenant` (corps vide) | 400 (validation, aucun compte créé) | ✅ route vivante |
+| ③ Activer moteur | `GET /school-onboarding/engines` · `POST …/provision/preview` | 401 (gardé staff ; **était 404**) | ✅ ressuscité + gardé |
+| ④ Payer | `POST /billing/webhook/pawapay` (forge) | `{matched:false,status:"unverified"}` | ✅ **anti-forge live** |
+| ⑤ Embarquer | `POST /v1/medos/embed/token` · storefront `mbk_` · public `lk_` | 403 / 401 / 401 | ✅ embed gardés |
+
+**Manques constatés (⇒ nécessitent USER)** :
+- `/sdk/cimolace-sdk.js` → sert encore le fallback SPA (HTML) : **serving SDK committé (`1165b570`) mais PAS déployé** → déployer le front pour l'activer.
+- **E2E « write » complet** (créer une VRAIE org → activer → payer une VRAIE transaction → embarquer avec une vraie clé) = écrit en prod → **exige accord USER explicite** ; ensuite ancrer en CI + nettoyer les données test.
+
+---
+
 ## 10. RÈGLE DOCUMENTAIRE
 
 UN seul doc canonique daté (celui-ci). Interdiction des « source of truth » auto-proclamées sans date de péremption. Toute décision d'architecture postérieure met à jour CE fichier (section + date), jamais un nouveau doc concurrent.
