@@ -151,9 +151,11 @@ export const LiveHostRightColumn = React.forwardRef(function LiveHostRightColumn
       className="lh-sy"
       style={{
         order: isGuestUi && lhLayoutCompact ? 2 : hostCompactColOrder.right,
-        background: collapsed ? liveShell.panelBg : 'var(--lh-page-bg, #262624)',
-        borderRadius: collapsed ? liveShell.panelRadius : 0,
-        border: collapsed ? liveShell.panelBorder : 'none',
+        // Replié : plat comme le rail latéral gauche (fond commun + simple liseré à gauche).
+        background: collapsed ? 'transparent' : 'var(--lh-page-bg, #262624)',
+        borderRadius: 0,
+        border: 'none',
+        borderLeft: collapsed ? '1px solid rgba(245,244,238,0.09)' : 'none',
         padding: collapsed ? '10px 6px' : '14px',
         display: hidden ? 'none' : 'flex',
         flexDirection: 'column',
@@ -168,8 +170,9 @@ export const LiveHostRightColumn = React.forwardRef(function LiveHostRightColumn
         minHeight: 0,
         minWidth: 0,
         alignSelf: 'stretch',
-        boxShadow:
-          'inset 0 1px 0 rgba(255,255,255,.04), 0 18px 42px rgba(0,0,0,.34), 0 0 0 1px rgba(255,255,255,.02) inset',
+        boxShadow: collapsed
+          ? 'none'
+          : 'inset 0 1px 0 rgba(255,255,255,.04), 0 18px 42px rgba(0,0,0,.34), 0 0 0 1px rgba(255,255,255,.02) inset',
         // Languette repliée : centrée verticalement dans la fine colonne in-flow.
         justifyContent: collapsed ? 'center' : undefined,
       }}
@@ -181,7 +184,7 @@ export const LiveHostRightColumn = React.forwardRef(function LiveHostRightColumn
             onClick={() => setLiveRightRailOpen(true)}
             title="Ouvrir le panneau droit"
             aria-label="Ouvrir le panneau droit"
-            className="flex items-center justify-center rounded-l-xl border border-r-0 border-white/12 bg-[#15131f]/95 px-1.5 py-6 text-white/70 shadow-[0_12px_30px_rgba(0,0,0,.4)] transition hover:border-amber-400/45 hover:text-white"
+            className="flex items-center justify-center rounded-lg px-1.5 py-6 text-white/55 transition hover:bg-white/[0.06] hover:text-white/90"
           >
             <ChevronLeft className="h-5 w-5" strokeWidth={2} aria-hidden />
           </button>
