@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -27,6 +28,46 @@ type ApiKeyRequest = Request & {
  * - `mbk_` : clé spécifique Mbolo (storefront e-commerce)
  */
 const VALID_PREFIXES = ['cml_', 'mdk_', 'mbk_'];
+
+/**
+ * Moteur porté par le PRÉFIXE d'une clé : `mdk_`=medos, `mbk_`=mbolo,
+ * `cml_`=générique (wildcard, tous moteurs). null = wildcard.
+ */
+function keyEngineFromPrefix(raw: string): 'medos' | 'mbolo' | null {
+  if (raw.startsWith('mdk_')) return 'medos';
+  if (raw.startsWith('mbk_')) return 'mbolo';
+  return null; // cml_ = générique
+}
+
+/**
+ * Moteur ciblé par le CHEMIN de la requête (les endpoints gardés par ce guard
+ * sont path-séparés : /v1/medos/*, /v1/mbolo/*). null = endpoint générique.
+ */
+function endpointEngineFromPath(path: string): 'medos' | 'mbolo' | null {
+  const p = String(path || '');
+  if (p.includes('/medos/') || p.includes('/medos')) return 'medos';
+  if (p.includes('/mbolo/') || p.includes('/mbolo')) return 'mbolo';
+  return null;
+}
+
+/**
+ * Least-privilege : une clé spécifique à un moteur ne devrait PAS ouvrir un
+ * autre moteur (ex : une `mbk_` fuitée chez un vendeur storefront ne doit pas
+ * atteindre les endpoints MEDOS/PHI). Renvoie le détail de la violation, ou
+ * null si l'accès est légitime (clé générique cml_, ou moteurs concordants,
+ * ou endpoint générique). Fonction PURE (testable).
+ */
+export function apiKeyScopeViolation(
+  raw: string,
+  path: string,
+): { keyEngine: string; endpointEngine: string } | null {
+  const keyEngine = keyEngineFromPrefix(raw);
+  const endpointEngine = endpointEngineFromPath(path);
+  if (keyEngine && endpointEngine && keyEngine !== endpointEngine) {
+    return { keyEngine, endpointEngine };
+  }
+  return null;
+}
 
 /**
  * Guard d'authentification par clé API tenant.
@@ -138,6 +179,24 @@ export class ApiKeyGuard implements CanActivate {
           HttpStatus.PAYMENT_REQUIRED,
         );
       }
+    }
+
+    // ─── Least-privilege : scope moteur par préfixe de clé ────────────────────
+    // Une clé `mbk_`/`mdk_` ne doit pas ouvrir un autre moteur (cml_ = wildcard).
+    // Déployé en OBSERVE (warn) par défaut → 0 régression ; passe en 403 dur via
+    // API_KEY_SCOPE_ENFORCE=1 une fois les logs confirmés propres.
+    const reqPath = req.originalUrl || req.path || (req as any).url || '';
+    const violation = apiKeyScopeViolation(raw, reqPath);
+    if (violation) {
+      if (process.env.API_KEY_SCOPE_ENFORCE === '1') {
+        throw new ForbiddenException(
+          `Clé « ${violation.keyEngine} » non autorisée sur un endpoint « ${violation.endpointEngine} ». Utilisez une clé cml_ (générique) ou ${violation.endpointEngine}.`,
+        );
+      }
+      this.logger.warn(
+        `[api-key scope] clé ${violation.keyEngine} sur endpoint ${violation.endpointEngine} ` +
+          `(tenant=${key.tenant_id}, key=${key.id}) — OBSERVÉ (flip API_KEY_SCOPE_ENFORCE=1 pour bloquer)`,
+      );
     }
 
     req.tenant = {
