@@ -6,6 +6,9 @@ import { getCachedHostTenant, isPlatformOrDevHost } from '@/lib/tenantResolver';
 import { resolveRequiresStudentDossier } from '@/lib/tenant/activeTenantConfig';
 import { joinApi } from '@/lib/api-v2';
 import { authStore } from '@/lib/auth-store';
+import LiveHostPage from '@/pages/liri/LiveHostPage';
+import ConsultationRoom from '@/pages/liri/ConsultationRoom';
+import HandoffPage from '@/pages/HandoffPage';
 
 /** Redirige "/" vers la bonne destination selon le contexte :
  *  1. access_token dans le hash (magic link / recovery) → /auth/callback
@@ -229,6 +232,9 @@ const LiriSchoolShell = lazy(() => import('@/pages/liri/LiriSchoolShell'));
 const StudentFormationsPage = lazy(() => import('@/pages/school/student-school-life/StudentFormationsPage'));
 const StudentAgendaPage = lazy(() => import('@/pages/school/student-school-life/StudentAgendaPage'));
 const StudentNotesPage = lazy(() => import('@/pages/school/student-school-life/StudentNotesPage'));
+// Hub « Mes notes » (prise de notes multi-source) — remplace le bulletin sur /liri/notes ;
+// le bulletin/grades vit désormais dans « Évals ».
+const StudentNotesHubPage = lazy(() => import('@/pages/school/student-school-life/StudentNotesHubPage'));
 const StudentEvaluationsPage = lazy(() => import('@/pages/school/student-school-life/StudentEvaluationsPage'));
 const StudentAbsencesPage = lazy(() => import('@/pages/school/student-school-life/StudentAbsencesPage'));
 const StudentDocumentsPage = lazy(() => import('@/pages/school/student-school-life/StudentDocumentsPage'));
@@ -377,6 +383,7 @@ const EleveMobileRouteShell = lazy(() => import('@/components/eleve-mobile/Eleve
 // ── LIRI Embed (iframe, pas de shell, pas d'auth) ─────────────────────────────
 const LiveEmbedPage = lazy(() => import('@/pages/embed/LiveEmbedPage'));
 const LiveEmbedStudioPage = lazy(() => import('@/pages/embed/LiveEmbedStudioPage'));
+const MboloStorefrontEmbedPage = lazy(() => import('@/pages/embed/MboloStorefrontEmbedPage'));
 
 // --- Other Pages ---
 const NotificationCenter = lazy(() => import('@/pages/NotificationCenter'));
@@ -431,7 +438,6 @@ const ProrascienceAppleStoryLandingLazy = lazy(() => import('@/pages/Prorascienc
 const ProrascienceAppleStoryV3Lazy = lazy(() => import('@/pages/ProrascienceAppleStoryV3'));
 const IsnaProPage = lazy(() => import('@/pages/IsnaProPage'));
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
-const HandoffPage = lazy(() => import('@/pages/HandoffPage'));
 const SignupPage = lazy(() => import('@/pages/SignupPage'));
 const OnboardingOrgPage = lazy(() => import('@/pages/OnboardingOrgPage'));
 const LiriLandingPage = lazy(() => import('@/pages/LiriLandingPage'));
@@ -552,6 +558,7 @@ const MarketingToolsSuitePage = lazy(() => import('@/pages/admin/MarketingToolsS
 const CommunityListPage = lazy(() => import('@/pages/CommunityListPage'));
 const CommunityChatPage = lazy(() => import('@/pages/CommunityChatPage'));
 const RequestAppointmentPage = lazy(() => import('@/pages/RequestAppointmentPage'));
+const LiriRendezVousPage = lazy(() => import('@/pages/liri/LiriRendezVousPage'));
 const ImmersiveWaitingRoomPage = lazy(() => import('@/pages/ImmersiveWaitingRoomPage'));
 const SatisfactionPage = lazy(() => import('@/pages/SatisfactionPage'));
 const ModuleCatalogPageNew = lazy(() => import('@/pages/modules/ModuleCatalogPage'));
@@ -587,9 +594,7 @@ const SmartboardToolPage = lazy(() => import('@/app/dashboard/tools/smartboard/p
 const StudioRouter = lazy(() => import('@/pages/studio-creator/studio/StudioRouter'));
 const StudioLiriRouter = lazy(() => import('@/pages/studio-creator/studio/StudioLiriRouter'));
 const LiveHostPageNativeGate = lazy(() => import('@/components/eleve-mobile/LiveHostPageNativeGate'));
-const LiveHostPageRoute = lazy(() => import('@/pages/liri/LiveHostPage'));
 const LiveGuestPage = lazy(() => import('@/pages/liri/LiveGuestPage'));
-const ConsultationRoom = lazy(() => import('@/pages/liri/ConsultationRoom'));
 const ProcheRoom = lazy(() => import('@/pages/liri/ProcheRoom'));
 const DevLiriHostEntry = lazy(() => import('@/pages/dev/DevLiriHostEntry'));
 const TableauVivantDemoPage = lazy(() => import('@/pages/dev/TableauVivantDemoPage'));
@@ -1362,6 +1367,17 @@ isLiriHostDevPreviewRoute;
               </Suspense>
             }
           />
+          {/* mbolo — boutique publique embarquable (catalogue lecture seule par slug) */}
+          <Route
+            path="/embed/boutique"
+            element={
+              <Suspense fallback={
+                <div style={{ minHeight: '100vh', background: '#0f1419' }} />
+              }>
+                <MboloStorefrontEmbedPage />
+              </Suspense>
+            }
+          />
 
           {/* CIMOLACE - SaaS complètement isolé - Router séparé, en dehors du main */}
           <Route path="/cimolace/*" element={<CimolaceRouter />} />
@@ -1733,7 +1749,9 @@ isLiriHostDevPreviewRoute;
           <Route path="/liri/formations" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="formations"><StudentFormationsPage /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/vie-scolaire" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="vie-scolaire"><SchoolLifePage embedded /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/agenda" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="agenda"><StudentAgendaPage /></LiriSchoolShell></ProtectedLiriRoute>} />
-          <Route path="/liri/notes" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="notes"><StudentNotesPage /></LiriSchoolShell></ProtectedLiriRoute>} />
+          {/* Prise de rendez-vous EMBARQUÉE dans LIRI (anti-fuite : la version standalone /appointment/request est une page ISNA pleine). */}
+          <Route path="/liri/rendez-vous" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriRendezVousPage /></ProtectedLiriRoute>} />
+          <Route path="/liri/notes" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="notes"><StudentNotesHubPage /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/evaluations" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="evaluations"><StudentEvaluationsPage /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/absences" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="absences"><StudentAbsencesPage /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/bibliotheque" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="biblio-eleve"><BibliothequePage embedded /></LiriSchoolShell></ProtectedLiriRoute>} />
@@ -2185,7 +2203,7 @@ isLiriHostDevPreviewRoute;
               Route plus spécifique que /studio/* → priorité React Router v6. */}
           <Route path="/studio/live-arena/:sessionId" element={
             <ProtectedRoleRoute allowedRoles={[]} allowTenantRole>
-              <LiveHostPageRoute />
+              <LiveHostPage />
             </ProtectedRoleRoute>
           } />
           <Route path="/studio/*" element={

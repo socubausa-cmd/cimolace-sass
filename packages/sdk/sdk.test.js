@@ -36,16 +36,17 @@ test('medos → handoff SSO (code = token minté serveur), origine med', () => {
   assert.strictEqual(ENGINES.medos.originOf(BASES), 'https://med.cimolace.space');
 });
 
-test('mbolo → route /embed/boutique (preview), app base', () => {
-  const url = ENGINES.mbolo.iframeUrl({ tenant: 'ma-boutique' }, BASES);
+test('mbolo → route publique /embed/boutique par slug, app base', () => {
+  const url = ENGINES.mbolo.iframeUrl({ tenant: 'ma-boutique', category: 'cat1' }, BASES);
   assert.ok(url.startsWith('https://app.cimolace.space/embed/boutique'), url);
   assert.ok(url.includes('tenant=ma-boutique'));
+  assert.ok(url.includes('category=cat1'));
 });
 
-test('statut de disponibilité honnête par moteur', () => {
+test('statut de disponibilité honnête par moteur (3 ready)', () => {
   assert.strictEqual(ENGINES.liri.status, 'ready');
   assert.strictEqual(ENGINES.medos.status, 'ready');
-  assert.strictEqual(ENGINES.mbolo.status, 'preview'); // route publique pas encore livrée
+  assert.strictEqual(ENGINES.mbolo.status, 'ready'); // /embed/boutique livré
 });
 
 test('option requise manquante → erreur claire', () => {

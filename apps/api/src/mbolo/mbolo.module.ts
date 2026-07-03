@@ -15,13 +15,14 @@ import { EngineEnabledGuard } from '../common/guards/engine-enabled.guard';
 import { MboloController } from './mbolo.controller';
 import { MboloService } from './mbolo.service';
 import { MboloStorefrontController } from './mbolo-storefront.controller';
+import { MboloEmbedController } from './mbolo-embed.controller';
 import { MboloLiveController } from './mbolo-live.controller';
 import { MboloLiveService } from './mbolo-live.service';
 
 @Module({
   imports: [SupabaseModule, TenantModule, AuthModule, LiveModule],
   providers: [MboloService, MboloLiveService, ApiKeyGuard, EngineEnabledGuard],
-  controllers: [MboloController, MboloStorefrontController, MboloLiveController],
+  controllers: [MboloController, MboloStorefrontController, MboloEmbedController, MboloLiveController],
   exports: [MboloService],
 })
 export class MboloModule {}

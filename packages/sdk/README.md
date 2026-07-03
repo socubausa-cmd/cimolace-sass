@@ -70,10 +70,10 @@ live.unmount();
 |---|---|---|---|
 | `liri`  | `tenant`, `liveId` | ✅ ready | iframe `/embed/live/:id` (+ `/embed/studio`) |
 | `medos` | `token` (code SSO minté serveur) | ✅ ready | handoff SSO `med.cimolace.space/handoff?code=…` |
-| `mbolo` | `tenant` | 🟡 preview | route publique `/embed/boutique` à livrer (backend) — `mount()` rend un placeholder |
+| `mbolo` | `tenant` | ✅ ready | iframe `/embed/boutique?tenant=…` → catalogue public `GET /v1/mbolo/embed/:slug/catalog` |
 
 - **MEDOS** : le `token` est un **code SSO à usage unique** que VOTRE backend mint via `POST /v1/medos/embed/practitioner-token` (clé `mdk_`). La clé API n'est jamais exposée au navigateur.
-- **mbolo** : en attendant la route publique (catalogue anonyme via token Origin-whitelist, façon MEDOS Niveau 1), `mount({engine:'mbolo'})` affiche un placeholder « intégration bientôt disponible » + un `console.warn`, jamais une iframe cassée.
+- **mbolo** : catalogue **public** par slug (produits/catégories actifs + branding) — **aucune clé exposée** au navigateur. `option.category` filtre par catégorie. Le clic sur un produit ouvre la boutique hébergée (panier/checkout gardés). L'iframe remonte sa hauteur au parent (`postMessage {type:'resize'}`).
 
 `Cimolace.engines` liste les moteurs à l'exécution ; chaque entrée porte un `status` (`ready`/`preview`).
 

@@ -214,6 +214,40 @@ export class MboloService {
   }
 
   /**
+   * CATALOGUE PUBLIC par slug de tenant — pour l'EMBED navigateur (`/embed/boutique`).
+   * Ne renvoie QUE des données publiques (produits/catégories actifs + branding),
+   * résolues par slug → aucune clé `mbk_` exposée au navigateur. Les écritures
+   * (panier/commande/paiement) restent gardées (clé mbk_ ou session membre).
+   * Un catalogue est PUBLIC par nature (l'acheteur le parcourt) → lecture ouverte.
+   */
+  async getPublicCatalog(tenantSlug: string, categoryId?: string) {
+    const slug = String(tenantSlug || '').trim().toLowerCase();
+    if (!slug) throw new BadRequestException('tenant slug requis');
+    const { data: tenant } = await (this.supabase.client as any)
+      .from('tenants')
+      .select('id, slug, name, logo_url, brand_colors, status')
+      .eq('slug', slug)
+      .maybeSingle();
+    if (!tenant || tenant.status !== 'active') {
+      throw new NotFoundException(`Boutique « ${slug} » introuvable ou inactive`);
+    }
+    const [categories, products] = await Promise.all([
+      this.listCategories(tenant.id),
+      this.listProducts(tenant.id, categoryId),
+    ]);
+    return {
+      tenant: {
+        slug: tenant.slug,
+        name: tenant.name ?? tenant.slug,
+        logo_url: tenant.logo_url ?? null,
+        colors: tenant.brand_colors ?? {},
+      },
+      categories,
+      products,
+    };
+  }
+
+  /**
    * Checkout invité (storefront sur le site du client, sans compte Cimolace).
    * Les prix sont TOUJOURS recalculés depuis la base — jamais ceux du client.
    * dto = { customer: {email,name?,phone?,address?}, items: [{productId?|slug?, variantId?, quantity}] }

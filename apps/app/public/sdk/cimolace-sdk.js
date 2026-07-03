@@ -60,12 +60,11 @@
     },
     mbolo: {
       label: 'mbolo storefront',
-      // PREVIEW : la route publique /embed/boutique (catalogue anonyme via token
-      // Origin-whitelist, façon MEDOS Niveau 1) n'est PAS encore livrée côté
-      // backend. mount() rend un placeholder plutôt qu'une iframe cassée.
-      status: 'preview',
+      // READY : catalogue PUBLIC par slug — /embed/boutique lit
+      // GET /v1/mbolo/embed/:slug/catalog (aucune clé exposée au navigateur).
+      status: 'ready',
       iframeUrl: function (o, bases) {
-        var q = query({ tenant: required(o, 'tenant'), mode: o.mode || 'storefront', theme: o.theme });
+        var q = query({ tenant: required(o, 'tenant'), category: o.category || undefined, theme: o.theme });
         return join(bases.appBase, '/embed/boutique') + q;
       },
       originOf: function (bases) { return origin(bases.appBase); },
