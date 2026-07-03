@@ -243,7 +243,42 @@ export class MboloService {
         colors: tenant.brand_colors ?? {},
       },
       categories,
-      products,
+      products: (Array.isArray(products) ? products : []).map((p: any) =>
+        this.toPublicProduct(p),
+      ),
+    };
+  }
+
+  /**
+   * Projette un produit vers sa forme PUBLIQUE (embed navigateur). N'expose QUE
+   * les champs vitrine ; EXCLUT le sensible : `created_by` (UUID auth.users),
+   * `stock` exact (info concurrentielle → seulement un booléen `in_stock`),
+   * `sku`, `track_stock`, `unlimited_stock`, `status`, `tenant_id`.
+   */
+  private toPublicProduct(p: any) {
+    if (!p) return p;
+    const stock = Number(p.stock ?? 0);
+    return {
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      tagline: p.tagline ?? null,
+      description: p.description ?? null,
+      short_desc: p.short_desc ?? null,
+      price: p.price ?? null,
+      price_cents: p.price_cents ?? null,
+      compare_price: p.compare_price ?? null,
+      compare_at_price_cents: p.compare_at_price_cents ?? null,
+      currency: p.currency ?? 'XAF',
+      product_type: p.product_type ?? null,
+      category_id: p.category_id ?? null,
+      is_featured: !!p.is_featured,
+      benefits: p.benefits ?? [],
+      ingredients: p.ingredients ?? [],
+      seo_title: p.seo_title ?? null,
+      seo_description: p.seo_description ?? null,
+      images: Array.isArray(p.images) ? p.images : [],
+      in_stock: !!p.unlimited_stock || stock > 0, // dispo, JAMAIS le compte exact
     };
   }
 
