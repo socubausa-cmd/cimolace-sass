@@ -21,7 +21,7 @@ const FormationCard = ({ formation, type, index = 0 }) => (
     whileTap={{ scale: 0.98 }}
     className="h-full"
   >
-    <Card className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#151a21]/80 backdrop-blur-xl hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-all duration-300 group h-full flex flex-col">
+    <Card className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#2e2b28]/80 backdrop-blur-xl hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-all duration-300 group h-full flex flex-col">
       <div className="relative h-40 overflow-hidden">
         <motion.img
           src={formation.thumbnail || "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=1000&auto=format&fit=crop"}
@@ -30,7 +30,7 @@ const FormationCard = ({ formation, type, index = 0 }) => (
           whileHover={{ scale: 1.08 }}
           transition={{ duration: 0.5 }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#192734] via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#2e2b28] via-transparent to-transparent" />
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -94,7 +94,7 @@ const FormationCard = ({ formation, type, index = 0 }) => (
         {type === 'in_progress' && (
           <Link to={`/formation/${formation.id}/learn`} className="w-full">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button className="w-full bg-[var(--school-accent)] text-black hover:bg-amber-500 gap-2 shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
+              <Button className="w-full bg-[var(--school-accent)] text-black hover:bg-[#c9673f] gap-2 shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                 <PlayCircle className="w-4 h-4" /> Continuer le cours
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -217,7 +217,7 @@ const StudentFormationsPage = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <Input
                 placeholder="Rechercher une formation..."
-                className="pl-9 bg-[#151a21]/80 backdrop-blur-xl border-white/10 text-white"
+                className="pl-9 bg-[#2e2b28]/80 backdrop-blur-xl border-white/10 text-white"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -231,7 +231,7 @@ const StudentFormationsPage = () => {
             </Link>
             <Link to="/formations/catalogue">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-bold gap-1.5 shrink-0 shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
+                <Button className="bg-[var(--school-accent)] text-black hover:bg-[#c9673f] font-bold gap-1.5 shrink-0 shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                   <GraduationCap className="w-4 h-4" /> Catalogue
                 </Button>
               </motion.div>
@@ -252,7 +252,7 @@ const StudentFormationsPage = () => {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-amber-500/10 border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center"
+                className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-[#d97757]/10 border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center"
                 whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(212,175,55,0.2)' }}
               >
                 <GraduationCap className="w-12 h-12 text-[var(--school-accent)]" />
@@ -263,7 +263,7 @@ const StudentFormationsPage = () => {
               </div>
               <Link to="/formations/catalogue">
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-bold gap-2 h-12 px-8 shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
+                  <Button className="bg-[var(--school-accent)] text-black hover:bg-[#c9673f] font-bold gap-2 h-12 px-8 shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                     <GraduationCap className="w-5 h-5" /> Voir le catalogue <ArrowRight className="w-4 h-4" />
                   </Button>
                 </motion.div>
@@ -340,10 +340,10 @@ const StudentFormationsPage = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: i * 0.06 }}
-                        className="cursor-pointer rounded-2xl border border-white/10 bg-[#151a21]/80 p-5 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
+                        className="cursor-pointer rounded-2xl border border-white/10 bg-[#2e2b28]/80 p-5 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
                         onClick={() => navigate(`/student-school-life/cours/${f.courseId}`)}
                       >
-                        <div className="mb-3 inline-block rounded-full bg-blue-900/40 px-2 py-0.5 text-xs text-blue-300">
+                        <div className="mb-3 inline-block rounded-full bg-[#d97757]/15 px-2 py-0.5 text-xs text-[#e58a5f]">
                           {f.category}
                         </div>
                         <h3 className="font-bold text-white mb-1 line-clamp-2">{f.title}</h3>
