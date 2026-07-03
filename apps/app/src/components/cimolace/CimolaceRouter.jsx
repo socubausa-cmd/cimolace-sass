@@ -53,7 +53,6 @@ import CimolaceAdminClients from '@/pages/cimolace/admin/clients/index';
 import CimolaceAdminClientDetail from '@/pages/cimolace/admin/clients/[id]';
 import CimolaceAdminSchoolProvisioning from '@/pages/cimolace/admin/school-provisioning/index';
 import CimolaceAdminSites from '@/pages/cimolace/admin/sites/index';
-import CimolaceAdminBilling from '@/pages/cimolace/admin/billing/index';
 import CimolaceAdminFinances from '@/pages/cimolace/admin/finances/index';
 import CimolaceAdminSupport from '@/pages/cimolace/admin/support/index';
 import CimolaceAdminMonitoring from '@/pages/cimolace/admin/monitoring/index';
@@ -131,7 +130,10 @@ export default function CimolaceRouter() {
           <Route path="admin/clients/:id" element={<CimolaceProtectedOwnerRoute><CimolaceAdminClientDetail /></CimolaceProtectedOwnerRoute>} />
           <Route path="admin/school-provisioning" element={<CimolaceProtectedOwnerRoute><CimolaceAdminSchoolProvisioning /></CimolaceProtectedOwnerRoute>} />
           <Route path="admin/sites" element={<CimolaceProtectedOwnerRoute><CimolaceAdminSites /></CimolaceProtectedOwnerRoute>} />
-          <Route path="admin/billing" element={<CimolaceProtectedOwnerRoute><CimolaceAdminBilling /></CimolaceProtectedOwnerRoute>} />
+          {/* La page « billing » legacy lisait cimolace_invoices (tables vides) → l'opérateur
+              voyait 0 revenu. Redirigée vers /admin/finances qui lit la VRAIE API
+              (cimolace-backoffice/finances : revenus, payouts, wallets réels). */}
+          <Route path="admin/billing" element={<Navigate to="/cimolace/admin/finances" replace />} />
           <Route path="admin/finances" element={<CimolaceProtectedOwnerRoute><CimolaceAdminFinances /></CimolaceProtectedOwnerRoute>} />
           <Route path="admin/support" element={<CimolaceProtectedOwnerRoute><CimolaceAdminSupport /></CimolaceProtectedOwnerRoute>} />
           <Route path="admin/monitoring" element={<CimolaceProtectedOwnerRoute><CimolaceAdminMonitoring /></CimolaceProtectedOwnerRoute>} />
