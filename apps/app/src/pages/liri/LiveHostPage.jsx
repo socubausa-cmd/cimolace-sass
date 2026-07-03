@@ -94,6 +94,8 @@ import {
   PHASE,
 } from '@/features/live/host/liveHostConstants';
 import { runLiveHostSessionAndLiveKitInit } from '@/features/live/host/liveHostSessionAndLiveKitInit';
+import { useLiveDataSaver } from '@/hooks/useLiveDataSaver';
+import { useLiveKitCameraSubscription } from '@/features/live/hooks/useLiveKitCameraSubscription';
 import {
   formatTimer,
   nt,
@@ -400,6 +402,11 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     {id:"waiting",title:"SALLE D ATTENTE",emptyMsg:"Aucun membre en attente.",emptyDesc:"Les demandes pour rejoindre apparaitront ici.",iconColor:"#38bdf8",events:[],mode:"feed"},
     {id:"notifs",title:"NOTIFICATIONS",emptyMsg:"Pas de notification.",emptyDesc:"Les activites temps reel s afficheront ici.",iconColor:"#fde68a",events:[],mode:"feed"},
   ]);
+
+  // ── Mode « basse conso / audio-first » : coupe la RÉCEPTION des caméras distantes
+  // (garde audio + partage d'écran/slides). Vrai levier downlink en connexion faible.
+  const { dataSaver: liveDataSaver } = useLiveDataSaver();
+  useLiveKitCameraSubscription(roomRef, liveDataSaver, liveKitMediaEpoch);
 
   const { kickParticipant, muteParticipant, resolveHandRaise } = useLiveHostParticipantModeration({
     sessionId, roomRef, setLiveParticipants, setModal, setPanels,

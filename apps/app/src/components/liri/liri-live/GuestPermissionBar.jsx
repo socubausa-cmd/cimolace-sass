@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
 import { assertGuestLiveAction } from '@/lib/liriLive/assertGuestPermissionServer';
 import JoyKitActiveBadge from '@/components/liri/liri-live/JoyKitActiveBadge';
+import { useLiveDataSaver } from '@/hooks/useLiveDataSaver';
 
 /**
  * Barre permissions invité (micro, médias, JoyKit, NeuronQ, demandes d'accès).
@@ -50,6 +51,7 @@ export default function GuestPermissionBar({
     [sessionIdParam],
   );
   const { user } = useAuth();
+  const { dataSaver, toggleDataSaver } = useLiveDataSaver();
 
   const withGuestServerPermission = useCallback(
     async (action, fn) => {
@@ -158,6 +160,25 @@ export default function GuestPermissionBar({
           }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" /></svg>
+        </button>
+        <button
+          type="button"
+          onClick={toggleDataSaver}
+          title={dataSaver
+            ? 'Mode éco data ACTIVÉ : caméras coupées (audio + partage d’écran gardés). Cliquer pour réafficher la vidéo.'
+            : 'Mode éco data : coupe les caméras pour tenir en connexion faible (garde l’audio + le partage d’écran).'}
+          style={{
+            borderRadius: '4px',
+            border: `1px solid ${dataSaver ? 'rgba(251,191,36,.55)' : 'rgba(255,255,255,.1)'}`,
+            background: dataSaver ? 'rgba(251,191,36,.16)' : 'rgba(255,255,255,.04)',
+            padding: '9px',
+            color: dataSaver ? '#fde68a' : 'rgba(255,255,255,.8)',
+            display: 'flex',
+            alignItems: 'center',
+            cursor: 'pointer',
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" /><path d="M2 21c0-3 1.85-5.36 5.08-6" /></svg>
         </button>
         {permCtx ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
