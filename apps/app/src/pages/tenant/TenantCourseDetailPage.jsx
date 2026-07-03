@@ -208,7 +208,10 @@ export default function TenantCourseDetailPage() {
   const completedCount = progress.filter(p => p.status === 'completed').length;
   const progressPct = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
 
-  const backPath = tenantSlug ? `/t/${tenantSlug}/admin/courses` : '/student-school-life/cours';
+  // Élève : '/student-school-life/cours' (sans :id) n'a PAS de route → page blanche
+  // (audit élève #14). On renvoie vers le tableau de bord élève, qui existe et liste
+  // les cours. (Admin : back vers la gestion des cours du tenant, inchangé.)
+  const backPath = tenantSlug ? `/t/${tenantSlug}/admin/courses` : '/student-school-life/dashboard';
 
   // Shell conditionnel : la route élève (/student-school-life/cours/:id) est DÉJÀ rendue
   // dans le shell de StudentSchoolLifePage (sidebar + main lg:pl-[250px] + conteneur). Re-wrapper
