@@ -123,14 +123,24 @@ Portail LIRI (`/liri`), back-office tenant (`/cimolace/billing`, 14 sections), e
 
 ---
 
-## 9. FEUILLE DE ROUTE (vagues — état 2026-07-03)
+## 9. FEUILLE DE ROUTE (vagues — état 2026-07-03, **API+front DÉPLOYÉS en prod**)
 
 - **Vague 0 — Hygiène** : corriger la carte des repos (mémoire globale + runbooks), bannières OBSOLÈTE, aligner la branche canonique. 🟡
-- **Vague 1 — Colmater argent+données** : webhooks PawaPay anti-forge, IDOR PHI, branding/toggle/cron rôles, CGU. ✅ (commit `000ef646`, 2026-07-03).
-- **Vague 2 — Rendre le business réel** : gating runtime générique · ressusciter le provisioning école · dé-hardcoder `isna` (offering) · override tenant sur getDepositStatus (✅ brique posée). 🔴
-- **Vague 3 — Opérabilité SaaS** : facturation admin sur vraies tables · monitoring réel · route branding admin · UI staff · consolidation double catalogue. 🔴
-- **Vague 4 — SDK universel** : clés/scopes unifiés, package `@cimolace/sdk`, sécurité embed, modes A-D, docs dev. 🔴
-- **Vague 5 — Preuve** : E2E client complet (activer → org → payer → embarquer) rejoué + ancré en CI ; nettoyage données test en prod. 🔴
+- **Vague 1 — Colmater argent+données** : webhooks PawaPay anti-forge, IDOR PHI, branding/toggle/cron rôles, CGU. ✅ **LIVE** (commit `000ef646` ; forge rejetée prouvée en prod).
+- **Vague 2 — Rendre le business réel** :
+  - gating runtime générique (opt-in) ✅ **LIVE** (`5c65a2e9`, test 7/7) ;
+  - ressusciter le provisioning école ✅ **LIVE** (`ce7d27d0`, 404→401 prouvé prod, test 3/3) ;
+  - override tenant sur getDepositStatus ✅ (brique posée dans Vague 1) ;
+  - 🔴 **RESTE** : dé-hardcoder `isna` dans `offering-checkout.service.ts` (l.29/82/264) — refacto paiement LIVE, à faire avec test + revue (ne PAS bâcler en aveugle).
+- **Vague 3 — Opérabilité SaaS** : facturation admin sur vraies tables (`billing_invoices`) · monitoring réel (enregistrer `HealthCheckSchedulerService`) · route `PATCH .../app-tenant/branding` · UI gestion staff · consolidation double catalogue. 🔴
+- **Vague 4 — SDK universel** :
+  - package `@cimolace/sdk` + API cliente unifiée `Cimolace.mount()` + postMessage sécurisé ✅ (`801a29bf`, test 7/7) ;
+  - servi en statique `/sdk/cimolace-sdk.js` ✅ (`1165b570`, live au prochain déploiement front) ;
+  - postMessage embed `'*'`→origine hôte ✅ **LIVE** (`c66cd5c5`) ;
+  - 🔴 **RESTE (backend)** : clé unique `cml_<tenant>_<secret>` scopée par moteur (générateur + rotation) + secret JWT embed unique + routes iframe manquantes (`/embed/boutique`, med `/embed`) + modes A/B (wildcard + Cloudflare for SaaS).
+- **Vague 5 — Sécurité « tout vert » + Preuve** :
+  - 🔴 stubs billing-advanced (PayPal/Chariow/CinetPay/NowPayments) → 501 + chiffrer creds ; `/dev/*` en prod (gate DEV ou rôle) ; RLS write `tenant_services`.
+  - 🔴 E2E client complet en prod (créer org → activer → payer → embarquer) — **écrit en prod, exige accord USER explicite** (dernier arbitrage : « déployer », pas « E2E write »). Ensuite ancrer en CI + nettoyer données test.
 
 ---
 
