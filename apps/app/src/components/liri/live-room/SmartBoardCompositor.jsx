@@ -314,7 +314,7 @@ function drawShapeDraft(ctx, draft, { color, lineWidth, fill }) {
     ctx.fillStyle = hexToRgba(color, 0.5); ctx.fillRect(x, y, w, h);
     ctx.strokeRect(x, y, w, h);
     ctx.font = '10px ui-sans-serif,system-ui,sans-serif';
-    ctx.fillStyle = hexToRgba(color === '#14131c' ? '#D4AF37' : '#333', 0.7);
+    ctx.fillStyle = hexToRgba(color === '#1f1e1c' ? '#D4AF37' : '#333', 0.7);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('▓ Rideau', x + w / 2, y + h / 2);
     ctx.restore(); return;
@@ -653,7 +653,7 @@ function drawCurveDraft(ctx, draft, color, lineWidth) {
   ctx.restore();
 }
 
-const BOARD_BG_DARK = '#14131c';
+const BOARD_BG_DARK = '#1f1e1c';
 const BOARD_BG_CHALK = '#1a4a3d';
 const BOARD_BG_GEOPLAN = '#f8f7f2';
 const BOARD_BG_CARREAUX = '#1f1e1c'; // tableau IMMERSIF LIRI (fond sombre chaud + carreaux ambre)
@@ -2473,7 +2473,7 @@ function WhiteboardScene({
     if (kind === 'curtain') {
       if (w < 4 && h < 4) return null;
       const surface = useLiveWhiteboardStore.getState().boardSurface || 'dark';
-      const bgColor = surface === 'chalkboard' ? '#1a4a3d' : surface === 'geoplan' ? '#f8f7f2' : surface === 'carreaux' ? '#1f1e1c' : '#14131c';
+      const bgColor = surface === 'chalkboard' ? '#1a4a3d' : surface === 'geoplan' ? '#f8f7f2' : surface === 'carreaux' ? '#1f1e1c' : '#1f1e1c';
       return { kind: 'curtain', x, y, w: Math.max(20, w), h: Math.max(20, h), color: bgColor, opacity: 0.97 };
     }
     return null;
@@ -3789,8 +3789,8 @@ function WhiteboardScene({
               <div className={cn(
                 'rounded-2xl border px-4 py-2.5 backdrop-blur-sm shadow-lg',
                 wbTimer.remainingSec <= 30 && wbTimer.remainingSec > 0
-                  ? 'border-red-500/50 bg-[#14131c]/95'
-                  : 'border-amber-500/30 bg-[#14131c]/90',
+                  ? 'border-red-500/50 bg-[#1f1e1c]/95'
+                  : 'border-amber-500/30 bg-[#1f1e1c]/90',
               )}>
                 <div className={cn(
                   'text-[28px] font-mono font-bold tabular-nums text-center tracking-widest',
@@ -3986,7 +3986,7 @@ function WhiteboardScene({
                 onMouseDown preventDefault : cliquer un contrôle ne retire PAS le focus du champ
                 (pas de blur → la saisie continue, et Annuler reste « annuler »). */}
             <div
-              className="flex flex-col gap-1.5 rounded-lg border border-white/10 bg-[#15131a]/90 p-1.5 shadow-lg backdrop-blur-sm"
+              className="flex flex-col gap-1.5 rounded-lg border border-white/10 bg-[#1f1e1c]/90 p-1.5 shadow-lg backdrop-blur-sm"
               onMouseDown={(e) => e.preventDefault()}
             >
             {composerToolsOpen ? (
@@ -4884,7 +4884,7 @@ function Camera2Scene({
               onClick={() => setSourcePickerOpen(false)}
             >
               <div
-                className="relative max-h-[88%] w-full max-w-md overflow-y-auto rounded-2xl border border-white/[0.09] bg-[#14131c]/95 py-4 shadow-2xl ring-1 ring-inset ring-white/[0.02] [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.12)_transparent]"
+                className="relative max-h-[88%] w-full max-w-md overflow-y-auto rounded-2xl border border-white/[0.09] bg-[#1f1e1c]/95 py-4 shadow-2xl ring-1 ring-inset ring-white/[0.02] [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.12)_transparent]"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between gap-2 border-b border-white/[0.08] px-4 pb-3">
@@ -5052,7 +5052,7 @@ function SceneNavTooltip({ scene, premiumArenaHostTray, children }) {
         className={cn(
           'max-w-[min(92vw,268px)] border px-3 py-2.5 text-left shadow-[0_14px_44px_-14px_rgba(0,0,0,0.82)]',
           premiumArenaHostTray
-            ? 'border-amber-400/35 bg-[#0c0820]/97 text-amber-50'
+            ? 'border-amber-400/35 bg-[#1f1e1c]/97 text-amber-50'
             : 'border-amber-400/32 bg-[#0f0e0a]/97 text-amber-50',
         )}
       >
@@ -5090,14 +5090,14 @@ function DockChromeTooltip({ label, description, children }) {
   );
 }
 
-/** Boutons chrome dock — alignés shell designer (cartes #14131c, hover discret) */
+/** Boutons chrome dock — alignés shell designer (cartes #1f1e1c, hover discret) */
 function dockChromeBtnClass(premiumArenaHostTray) {
   return cn(
     'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border transition-all duration-200 ease-out',
-    'border-white/[0.08] bg-[#14131c]/95 text-white/52',
+    'border-white/[0.08] bg-[#1f1e1c]/95 text-white/52',
     'shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]',
     premiumArenaHostTray
-      ? 'hover:border-amber-400/35 hover:bg-[#16122a] hover:text-amber-100 hover:shadow-[0_0_28px_-10px_rgba(212,163,106,0.28)]'
+      ? 'hover:border-amber-400/35 hover:bg-[#2a2723] hover:text-amber-100 hover:shadow-[0_0_28px_-10px_rgba(212,163,106,0.28)]'
       : 'hover:border-amber-400/32 hover:bg-[#1a1814] hover:text-amber-100/95 hover:shadow-[0_0_28px_-10px_rgba(251,191,36,0.22)]',
     'active:scale-[0.96] disabled:pointer-events-none disabled:opacity-[0.22]',
   );
@@ -5112,14 +5112,14 @@ const SceneThumbnail = forwardRef(function SceneThumbnail(
     'relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border transition-all duration-200 ease-out',
     active
       ? premiumArenaHostTray
-        ? 'border-amber-400/45 bg-gradient-to-b from-amber-500/22 to-[#0c0a18] text-amber-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_0_20px_-12px_rgba(212,163,106,0.45)]'
+        ? 'border-amber-400/45 bg-gradient-to-b from-amber-500/22 to-[#1a1512] text-amber-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_0_20px_-12px_rgba(212,163,106,0.45)]'
         : 'border-amber-400/42 bg-gradient-to-b from-amber-500/18 to-[#14100c] text-amber-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_20px_-12px_rgba(245,158,11,0.3)]'
       : cn(
-          'border-white/[0.07] bg-[#14131c]/90 text-white/48',
+          'border-white/[0.07] bg-[#1f1e1c]/90 text-white/48',
           'shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
           !readOnly &&
             (premiumArenaHostTray
-              ? 'hover:border-amber-400/28 hover:bg-[#16122a] hover:text-amber-100/90'
+              ? 'hover:border-amber-400/28 hover:bg-[#2a2723] hover:text-amber-100/90'
               : 'hover:border-amber-400/26 hover:bg-[#1c1a16] hover:text-amber-100/90'),
         ),
     readOnly ? 'cursor-default opacity-[0.96]' : 'cursor-pointer',
@@ -5824,9 +5824,9 @@ export default function SmartBoardCompositor({
             {showEmbeddedWhiteboardToolsRail ? (
               <div
                 className={cn(
-                  'pointer-events-auto absolute left-1.5 top-1/2 z-[51] w-[min(13.5rem,42vw)] max-h-[min(78vh,520px)] -translate-y-1/2 overflow-y-auto overflow-x-hidden rounded-2xl border border-white/[0.09] bg-[#14131c]/94 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03] sm:left-2',
+                  'pointer-events-auto absolute left-1.5 top-1/2 z-[51] w-[min(13.5rem,42vw)] max-h-[min(78vh,520px)] -translate-y-1/2 overflow-y-auto overflow-x-hidden rounded-2xl border border-white/[0.09] bg-[#1f1e1c]/94 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03] sm:left-2',
                   premiumArenaHostTray &&
-                    'border-amber-500/20 bg-[#14131c]/96 shadow-[inset_0_1px_0_rgba(212,163,106,0.08),0_16px_44px_-14px_rgba(212,163,106,0.12)]',
+                    'border-amber-500/20 bg-[#1f1e1c]/96 shadow-[inset_0_1px_0_rgba(212,163,106,0.08),0_16px_44px_-14px_rgba(212,163,106,0.12)]',
                 )}
               >
                 <LiveWhiteboardToolsSidebar
@@ -5922,9 +5922,9 @@ export default function SmartBoardCompositor({
           <div
             className={cn(
               'pointer-events-auto absolute right-1.5 top-1/2 z-50 flex h-[min(78vh,520px)] w-[58px] -translate-y-1/2 flex-col items-center gap-2 overflow-hidden rounded-2xl px-2 py-2.5 sm:right-2.5 sm:w-[62px] sm:gap-2.5 sm:px-2.5 sm:py-3',
-              'border border-white/[0.09] bg-[#14131c]/94 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03]',
+              'border border-white/[0.09] bg-[#1f1e1c]/94 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03]',
               premiumArenaHostTray &&
-                'border-amber-500/22 bg-[#14131c]/96 shadow-[inset_0_1px_0_rgba(251,191,36,0.06),0_16px_44px_-14px_rgba(251,191,36,0.1)]',
+                'border-amber-500/22 bg-[#1f1e1c]/96 shadow-[inset_0_1px_0_rgba(251,191,36,0.06),0_16px_44px_-14px_rgba(251,191,36,0.1)]',
             )}
             {...(dockMagnificationEnabled
               ? { onMouseMove: handleSceneDockMove, onMouseLeave: handleSceneDockLeave }
@@ -5996,7 +5996,7 @@ export default function SmartBoardCompositor({
                       dockChromeBtnClass(premiumArenaHostTray),
                       pipEnabled &&
                         (premiumArenaHostTray
-                          ? 'border-amber-400/40 bg-gradient-to-b from-amber-500/20 to-[#0c0a18] text-amber-50 shadow-[0_0_18px_-8px_rgba(212,163,106,0.35)]'
+                          ? 'border-amber-400/40 bg-gradient-to-b from-amber-500/20 to-[#1a1512] text-amber-50 shadow-[0_0_18px_-8px_rgba(212,163,106,0.35)]'
                           : 'border-amber-400/40 bg-gradient-to-b from-amber-500/16 to-[#14100c] text-amber-50 shadow-[0_0_18px_-8px_rgba(251,191,36,0.28)]'),
                     )}
                   >
@@ -6015,7 +6015,7 @@ export default function SmartBoardCompositor({
                         dockChromeBtnClass(premiumArenaHostTray),
                         pipEditMode &&
                           (premiumArenaHostTray
-                            ? 'border-amber-400/48 bg-gradient-to-b from-amber-500/24 to-[#0c0a18] text-amber-50 shadow-[0_0_20px_-8px_rgba(212,163,106,0.4)]'
+                            ? 'border-amber-400/48 bg-gradient-to-b from-amber-500/24 to-[#1a1512] text-amber-50 shadow-[0_0_20px_-8px_rgba(212,163,106,0.4)]'
                             : 'border-amber-400/45 bg-gradient-to-b from-amber-500/20 to-[#14100c] text-amber-50 shadow-[0_0_20px_-8px_rgba(251,191,36,0.32)]'),
                       )}
                     >
@@ -6031,9 +6031,9 @@ export default function SmartBoardCompositor({
         <TooltipProvider delayDuration={200} skipDelayDuration={100}>
           <div
             className={cn(
-              'pointer-events-auto absolute right-1.5 top-1/2 z-50 flex w-[58px] -translate-y-1/2 flex-col items-center gap-2 overflow-hidden rounded-2xl border border-white/[0.09] bg-[#14131c]/94 px-2 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03] sm:right-2.5 sm:w-[62px] sm:py-3',
+              'pointer-events-auto absolute right-1.5 top-1/2 z-50 flex w-[58px] -translate-y-1/2 flex-col items-center gap-2 overflow-hidden rounded-2xl border border-white/[0.09] bg-[#1f1e1c]/94 px-2 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03] sm:right-2.5 sm:w-[62px] sm:py-3',
               premiumArenaHostTray &&
-                'border-amber-500/22 bg-[#14131c]/96 shadow-[inset_0_1px_0_rgba(251,191,36,0.06),0_16px_44px_-14px_rgba(251,191,36,0.1)]',
+                'border-amber-500/22 bg-[#1f1e1c]/96 shadow-[inset_0_1px_0_rgba(251,191,36,0.06),0_16px_44px_-14px_rgba(251,191,36,0.1)]',
             )}
             role="toolbar"
             aria-label="PiP vidéo SmartBoard"
@@ -6052,7 +6052,7 @@ export default function SmartBoardCompositor({
                   dockChromeBtnClass(premiumArenaHostTray),
                   pipEnabled &&
                     (premiumArenaHostTray
-                      ? 'border-amber-400/40 bg-gradient-to-b from-amber-500/20 to-[#0c0a18] text-amber-50 shadow-[0_0_18px_-8px_rgba(212,163,106,0.35)]'
+                      ? 'border-amber-400/40 bg-gradient-to-b from-amber-500/20 to-[#1a1512] text-amber-50 shadow-[0_0_18px_-8px_rgba(212,163,106,0.35)]'
                       : 'border-amber-400/40 bg-gradient-to-b from-amber-500/16 to-[#14100c] text-amber-50 shadow-[0_0_18px_-8px_rgba(251,191,36,0.28)]'),
                 )}
               >
@@ -6071,7 +6071,7 @@ export default function SmartBoardCompositor({
                     dockChromeBtnClass(premiumArenaHostTray),
                     pipEditMode &&
                       (premiumArenaHostTray
-                        ? 'border-amber-400/48 bg-gradient-to-b from-amber-500/24 to-[#0c0a18] text-amber-50 shadow-[0_0_20px_-8px_rgba(212,163,106,0.4)]'
+                        ? 'border-amber-400/48 bg-gradient-to-b from-amber-500/24 to-[#1a1512] text-amber-50 shadow-[0_0_20px_-8px_rgba(212,163,106,0.4)]'
                         : 'border-amber-400/45 bg-gradient-to-b from-amber-500/20 to-[#14100c] text-amber-50 shadow-[0_0_20px_-8px_rgba(251,191,36,0.32)]'),
                   )}
                 >
@@ -6086,10 +6086,10 @@ export default function SmartBoardCompositor({
       {useFooterSceneDock && currentScene === 'board' && !readOnlySceneNavigator ? (
         <div
           className={cn(
-            'pointer-events-auto absolute top-1/2 z-[52] w-[min(13.5rem,38vw)] max-h-[min(78vh,520px)] -translate-y-1/2 overflow-y-auto overflow-x-hidden rounded-2xl border border-white/[0.09] bg-[#14131c]/94 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03]',
+            'pointer-events-auto absolute top-1/2 z-[52] w-[min(13.5rem,38vw)] max-h-[min(78vh,520px)] -translate-y-1/2 overflow-y-auto overflow-x-hidden rounded-2xl border border-white/[0.09] bg-[#1f1e1c]/94 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03]',
             footerNeuroInkRight,
             premiumArenaHostTray &&
-              'border-amber-500/20 bg-[#14131c]/96 shadow-[inset_0_1px_0_rgba(212,163,106,0.08),0_16px_44px_-14px_rgba(212,163,106,0.12)]',
+              'border-amber-500/20 bg-[#1f1e1c]/96 shadow-[inset_0_1px_0_rgba(212,163,106,0.08),0_16px_44px_-14px_rgba(212,163,106,0.12)]',
           )}
         >
           <p className="mb-1.5 font-serif text-[11px] font-semibold uppercase tracking-wide text-white/55">

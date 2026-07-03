@@ -32,7 +32,7 @@ export const designerShellSidebar =
   'shrink-0 overflow-y-auto border-r border-white/[0.08] bg-[#12111a]/70 px-2 py-3 [scrollbar-width:thin] [scrollbar-color:rgba(245,158,11,0.15)_transparent]';
 
 export const designerShellMainScroll =
-  'min-h-0 flex-1 overflow-y-auto px-4 py-3 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.12)_transparent] bg-[#0a0b0f] bg-[linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px)] [background-size:44px_44px]';
+  'min-h-0 flex-1 overflow-y-auto px-4 py-3 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.12)_transparent] bg-[#1f1e1c] bg-[linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px)] [background-size:44px_44px]';
 
 export const designerShellComposer =
   'shrink-0 border-t border-white/[0.08] bg-[#12111a]/95 px-4 py-3 backdrop-blur-sm';
@@ -65,7 +65,7 @@ export const designerShellCloseBtn =
   'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white/50 transition-all hover:border-white/14 hover:bg-white/[0.08] hover:text-white';
 
 export const designerShellInput =
-  'min-w-0 flex-1 rounded-xl border border-white/10 bg-[#0a0b0f] px-3 py-2.5 text-[12px] text-white/95 outline-none placeholder:text-white/35 focus:border-cyan-500/35 focus:ring-1 focus:ring-cyan-500/15';
+  'min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1f1e1c] px-3 py-2.5 text-[12px] text-white/95 outline-none placeholder:text-white/35 focus:border-cyan-500/35 focus:ring-1 focus:ring-cyan-500/15';
 
 export const designerShellBtnGold =
   'shrink-0 rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-2.5 text-[12px] font-semibold text-amber-100/95 transition-colors hover:bg-amber-500/16 disabled:cursor-not-allowed disabled:opacity-40';
@@ -91,7 +91,7 @@ export const designerShellIconBadge =
 export const designerShellEmbedPanel =
   'flex flex-col overflow-hidden rounded-2xl border border-white/[0.09] bg-[#211f1c]/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ring-1 ring-inset ring-white/[0.02]';
 
-/** Bloc interne type « carte » sur fond canvas — chaud (était #0a0b0f bleu-noir). */
+/** Bloc interne type « carte » sur fond canvas — chaud (était #1f1e1c bleu-noir). */
 export const designerShellCardInset =
   'rounded-xl border border-white/[0.08] bg-[#13110e]/95 p-2.5 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.1)_transparent]';
 
@@ -117,7 +117,7 @@ export const designerShellChipRose =
 
 /** Rail segmenté 2 options (ex. deux caméras / deux micros) */
 export const designerShellSegmentedRail =
-  'flex gap-1 rounded-xl border border-white/[0.09] bg-[#0a0b0f] p-1';
+  'flex gap-1 rounded-xl border border-white/[0.09] bg-[#1f1e1c] p-1';
 
 export function designerShellSegmentedSlot(active) {
   return [
@@ -134,6 +134,6 @@ export function designerShellDeviceRow(active) {
     'flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all',
     active
       ? 'border-amber-500/35 bg-amber-500/[0.1] text-amber-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
-      : 'border-white/[0.08] bg-[#0a0b0f]/80 text-white/65 hover:border-white/14 hover:bg-white/[0.04] hover:text-white/88',
+      : 'border-white/[0.08] bg-[#1f1e1c]/80 text-white/65 hover:border-white/14 hover:bg-white/[0.04] hover:text-white/88',
   ].join(' ');
 }

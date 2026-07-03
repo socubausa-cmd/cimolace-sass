@@ -1288,7 +1288,7 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     return () => cancelAnimationFrame(id);
   }, [hostLiriMobileHostBranch, promotedId, liveKitMediaEpoch, syncLhMaquetteVideo]);
 
-  const guestFooterBarBg = 'linear-gradient(170deg,#1a1816,#090a18)';
+  const guestFooterBarBg = 'linear-gradient(170deg,#262624,#1f1e1c)';
 
   const {
     footerWhisperTargets, guestFooterMessagingAllowed, memberModalWhisperPickable, memberModalAllowSchoolLife, guestMicLocked,

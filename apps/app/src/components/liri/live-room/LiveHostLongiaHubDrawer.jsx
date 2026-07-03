@@ -31,7 +31,7 @@ const HUB_BORDER = '1px solid rgba(245,244,238,.1)';
 const HUB_ACCENT = 'var(--lh-accent, #d4a36a)';
 const HUB_PILL_BG = 'var(--lh-page-bg, #262624)';
 const HUB_SHADOW =
-  '0 30px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.07)';
+  '0 16px 44px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.05)';
 
 /**
  * Hub LONGIA pendant le live hôte — vue Signaux (journal, mains levées, Mesh, Zone 3…).
@@ -139,9 +139,9 @@ export default function LiveHostLongiaHubDrawer({
           left: 'var(--lh-rail-edge, 78px)',
           top: 'var(--lh-stage-top-vw, 150px)',
           bottom: 'var(--lh-stage-bottom-vw, 84px)',
-          width: `min(92vw, ${Math.max(320, drawerWidthPx)}px)`,
+          width: `min(92vw, ${Math.max(300, drawerWidthPx)}px)`,
           maxWidth: '92vw',
-          borderRadius: 18,
+          borderRadius: 16,
           border: HUB_BORDER,
           background: HUB_PANEL_BG,
           backdropFilter: 'blur(16px)',
@@ -150,8 +150,8 @@ export default function LiveHostLongiaHubDrawer({
         }}
       >
         <header
-          className="flex shrink-0 items-start justify-between gap-3 px-3.5 py-3"
-          style={{ borderBottom: '1px solid rgba(255,255,255,.07)' }}
+          className="flex shrink-0 items-center justify-between gap-3 px-3 py-2.5"
+          style={{ borderBottom: '1px solid rgba(255,255,255,.06)' }}
         >
           <div className="min-w-0 flex-1 space-y-0.5 pt-0.5">
             <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/45">Signaux &amp; salle</p>
@@ -170,7 +170,7 @@ export default function LiveHostLongiaHubDrawer({
                 title="Aperçu — ouvrir la vue participant (nouvel onglet)"
                 aria-label="Ouvrir la vue participant dans un nouvel onglet"
                 className={cn(
-                  'flex h-9 w-9 items-center justify-center rounded-xl border p-0 transition-colors',
+                  'flex h-8 w-8 items-center justify-center rounded-lg border p-0 transition-colors',
                   layoutPreviewHubActive
                     ? 'border-amber-400/45 bg-amber-500/15 text-amber-100'
                     : 'border-white/12 text-white/65 hover:border-amber-400/35 hover:bg-amber-500/10 hover:text-amber-100',
@@ -184,7 +184,7 @@ export default function LiveHostLongiaHubDrawer({
               onClick={onClose}
               title="Fermer le hub LONGIA"
               aria-label="Fermer le hub LONGIA"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/12 text-white/55 transition-colors hover:border-red-500/30 hover:bg-red-950/30 hover:text-red-200"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/12 text-white/55 transition-colors hover:border-red-500/30 hover:bg-red-950/30 hover:text-red-200"
             >
               <X className="h-4 w-4" strokeWidth={2} aria-hidden />
             </button>

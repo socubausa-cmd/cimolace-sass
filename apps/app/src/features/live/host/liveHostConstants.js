@@ -5,7 +5,7 @@ import {
 } from '@/lib/longiaLiveCopilot';
 
 /** Largeur du tiroir LONGIA (hôte, desktop) — aligner avec `LiveHostLongiaHubDrawer`. */
-export const LONGIA_HOST_HUB_DRAWER_W_PX = 392;
+export const LONGIA_HOST_HUB_DRAWER_W_PX = 340;
 
 /** Rail latéral replié (desktop) : bandeau icônes seulement */
 export const LIVE_HOST_RAIL_COLLAPSED_PX = 52;

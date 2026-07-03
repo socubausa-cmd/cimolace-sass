@@ -381,7 +381,7 @@ export default function Zone3Panel({
             designerShellEmbedPanel,
             'flex min-h-0 flex-col',
             embedded
-              ? 'relative z-auto h-full max-h-[min(94vh,800px)] min-h-0 w-full flex-1'
+              ? 'relative z-auto h-full max-h-[min(94vh,800px)] min-h-0 w-full flex-1 border-transparent bg-transparent shadow-none ring-0'
               : cn(
                   'absolute z-[35] max-h-[min(86vh,720px)]',
                   mobileLayout
@@ -391,15 +391,12 @@ export default function Zone3Panel({
           )}
         >
           {/* En-tête — même gabarit que LIRI Control Mesh */}
-          <div className="flex shrink-0 flex-col gap-2 border-b border-white/[0.08] px-3 py-2.5">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1 space-y-0.5">
-                <div className="text-[11px] font-extrabold uppercase tracking-[0.1em] text-amber-200/95">
+          <div className="flex shrink-0 flex-col gap-2 border-b border-white/[0.06] px-3 py-2">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-amber-200/90">
                   Zone interactive
                 </div>
-                <p className="text-[8px] leading-snug text-white/38">
-                  Présence · salle privilégiée · mains · script
-                </p>
               </div>
               {!embedded ? (
                 <button
