@@ -13,6 +13,7 @@ import { SupabaseService } from '../../supabase/supabase.service';
 // minutes, and any future provider swap. After P5.4, MEDOS no longer
 // imports LiveKitService or LiveKitModule at all.
 import { LiveService } from '../../live/live.service';
+import { EmailEngineService } from '../../email-engine/email-engine.service';
 import type { TenantContext } from '../../tenant/tenant.types';
 import {
   CreateTeleconsultDto,
@@ -26,6 +27,7 @@ export class TeleconsultService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly liri: LiveService,
+    private readonly email: EmailEngineService,
   ) {}
 
   /**
@@ -400,22 +402,60 @@ export class TeleconsultService {
     }
   }
 
-  /** Host : crée une invitation pour un proche → renvoie le token (= id). */
+  /**
+   * Host : crée une invitation. DEUX types :
+   *  - 'member' (invited_user_id fourni) : un COMPTE du tenant (soignant) → admis
+   *    d'office (status 'consented' dès la création : secret médical, pas de
+   *    consentement patient requis pour un professionnel du cabinet). On récupère
+   *    son nom + email depuis son compte auth si non fournis.
+   *  - 'proche' (défaut) : un TIERS → status 'consent_requested' (RGPD : le token
+   *    vidéo reste refusé tant que le patient n'a pas autorisé — fail-closed).
+   * Si un email est connu, on lui envoie le LIEN d'invitation (best-effort ;
+   * `email_status` trace sent/failed/disabled/skipped pour l'UI).
+   */
   async createInvite(
     tenant: TenantContext,
     hostId: string,
     sessionId: string,
-    dto: { display_name?: string; relationship?: string },
+    dto: {
+      display_name?: string;
+      relationship?: string;
+      email?: string;
+      invited_user_id?: string;
+      kind?: 'proche' | 'member';
+    },
   ): Promise<any> {
     await this.loadSession(tenant.id, sessionId);
+
+    const isMember = dto.kind === 'member' || !!dto.invited_user_id;
+    let displayName = (dto.display_name || '').trim();
+    let email = (dto.email || '').trim().toLowerCase();
+
+    // Membre : compléter nom + email depuis le compte auth si absents.
+    if (isMember && dto.invited_user_id) {
+      try {
+        const { data: u } = await (this.supabase.client as any).auth.admin.getUserById(dto.invited_user_id);
+        const meta = u?.user?.user_metadata || {};
+        if (!displayName) displayName = String(meta.full_name || meta.name || u?.user?.email || 'Membre');
+        if (!email) email = String(u?.user?.email || '').toLowerCase();
+      } catch {
+        /* best-effort : on garde ce qui a été fourni */
+      }
+    }
+    if (!displayName) displayName = isMember ? 'Membre' : 'Proche';
+
     const { data, error } = await (this.supabase.client as any)
       .from('med_teleconsult_invites')
       .insert({
         tenant_id: tenant.id,
         session_id: sessionId,
-        display_name: (dto.display_name || '').trim() || 'Proche',
+        display_name: displayName,
         relationship: (dto.relationship || '').trim() || null,
-        status: 'consent_requested',
+        invited_email: email || null,
+        invited_user_id: isMember ? dto.invited_user_id || null : null,
+        kind: isMember ? 'member' : 'proche',
+        status: isMember ? 'consented' : 'consent_requested',
+        consent_at: isMember ? new Date().toISOString() : null,
         created_by: hostId,
       })
       .select('*')
@@ -424,7 +464,50 @@ export class TeleconsultService {
       this.logger.error('createInvite', error?.message);
       throw new InternalServerErrorException("Création de l'invitation impossible");
     }
-    return data;
+
+    // Envoi email du lien (best-effort) + trace du statut.
+    const emailStatus = await this.sendInviteEmail(tenant.id, data);
+    try {
+      await (this.supabase.client as any)
+        .from('med_teleconsult_invites')
+        .update({ email_status: emailStatus })
+        .eq('id', data.id);
+    } catch { /* trace best-effort */ }
+    return { ...data, email_status: emailStatus };
+  }
+
+  /**
+   * Construit le lien d'invitation token-gaté et envoie l'email au concerné via
+   * EmailEngine (depuis le domaine du tenant). Best-effort : renvoie le statut
+   * ('sent' | 'failed' | 'disabled' | 'skipped' | 'error') sans jamais jeter.
+   */
+  private async sendInviteEmail(tenantId: string, invite: any): Promise<string> {
+    const to = String(invite.invited_email || '').trim();
+    if (!to) return 'skipped';
+    const { data: t } = await this.supabase.client
+      .from('tenants')
+      .select('slug, name')
+      .eq('id', tenantId)
+      .maybeSingle();
+    const slug = (t as any)?.slug || '';
+    const clinic = (t as any)?.name || 'votre praticien';
+    const base = process.env.APP_URL || 'https://app.cimolace.space';
+    const link = `${base}/teleconsult/${invite.session_id}/proche/${invite.id}${slug ? `?tenant=${encodeURIComponent(slug)}` : ''}`;
+    const html = this.email.brandedHtml({
+      title: 'Invitation à une téléconsultation',
+      body:
+        invite.kind === 'member'
+          ? `Vous êtes invité·e à rejoindre une téléconsultation avec ${clinic}. Cliquez pour entrer dans la salle sécurisée.`
+          : `Vous êtes invité·e à rejoindre une téléconsultation avec ${clinic}. L'accès s'ouvrira dès que le patient aura autorisé votre participation.`,
+      ctaLabel: 'Rejoindre la consultation',
+      ctaUrl: link,
+    });
+    try {
+      const r = await this.email.sendRaw(tenantId, to, `Invitation — téléconsultation ${clinic}`, html);
+      return r.status;
+    } catch {
+      return 'error';
+    }
   }
 
   /** Host OU patient-propriétaire : liste les invitations actives de la session. */
@@ -712,6 +795,13 @@ export class TeleconsultService {
       .single();
     if (error || !data)
       throw new InternalServerErrorException('Fin de session impossible');
+
+    // La salle LIRI miroir porte la salle d'attente et les clients invités.
+    // La terminer ici déclenche leur expulsion et clôt les demandes pendantes.
+    await this.supabase.client
+      .from('live_sessions')
+      .update({ status: 'ended', ended_at: now })
+      .eq('id', sessionId);
 
     // Tell Liri the session ended so its ledger row gets a duration. Failing
     // here would not invalidate the MEDOS-side end, so we swallow the error.

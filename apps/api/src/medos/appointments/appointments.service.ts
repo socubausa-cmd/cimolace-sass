@@ -8,6 +8,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service';
+import { EmailEngineService } from '../../email-engine/email-engine.service';
 import type { TenantContext } from '../../tenant/tenant.types';
 import {
   CancelAppointmentDto,
@@ -59,7 +60,10 @@ export type AppointmentRow = {
 export class AppointmentsService {
   private readonly logger = new Logger(AppointmentsService.name);
 
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly email: EmailEngineService,
+  ) {}
 
   private async writeAudit(
     tenantId: string,
@@ -270,7 +274,54 @@ export class AppointmentsService {
     await this.writeAudit(tenant.id, actorId, (data as any).id, 'create', {
       status: initialStatus,
     });
+
+    // RDV téléconsultation confirmé → notifie le patient par email (best-effort).
+    if (initialStatus === 'confirmed' && (dto.appointment_type ?? 'in_person') === 'teleconsult') {
+      void this.notifyPatientAppointment(tenant.id, dto.patient_id, data as AppointmentRow);
+    }
     return data as AppointmentRow;
+  }
+
+  /**
+   * Email de confirmation d'un RDV téléconsultation au patient (depuis le domaine
+   * du tenant). Best-effort : ne jette jamais (l'échec email ne bloque pas le RDV).
+   */
+  private async notifyPatientAppointment(
+    tenantId: string,
+    patientId: string,
+    appt: AppointmentRow,
+  ): Promise<void> {
+    try {
+      const { data: pat } = await (this.supabase.client as any)
+        .from('med_patients')
+        .select('patient_user_id')
+        .eq('id', patientId)
+        .maybeSingle();
+      const userId = (pat as any)?.patient_user_id;
+      if (!userId) return;
+      const { data: u } = await (this.supabase.client as any).auth.admin.getUserById(userId);
+      const to = String(u?.user?.email || '').trim();
+      if (!to) return;
+      const { data: t } = await this.supabase.client
+        .from('tenants')
+        .select('name')
+        .eq('id', tenantId)
+        .maybeSingle();
+      const clinic = (t as any)?.name || 'votre praticien';
+      const when = new Date((appt as any).scheduled_at).toLocaleString('fr-FR', {
+        weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
+      });
+      const base = process.env.APP_URL || 'https://app.cimolace.space';
+      const html = this.email.brandedHtml({
+        title: 'Votre téléconsultation est confirmée',
+        body: `Rendez-vous avec ${clinic} le ${when}. À l'heure prévue, ouvrez votre espace pour rejoindre la salle sécurisée.`,
+        ctaLabel: 'Voir mon rendez-vous',
+        ctaUrl: base,
+      });
+      await this.email.sendRaw(tenantId, to, `Téléconsultation confirmée — ${clinic}`, html);
+    } catch (e) {
+      this.logger.warn(`notifyPatientAppointment: ${String(e)}`);
+    }
   }
 
   async list(

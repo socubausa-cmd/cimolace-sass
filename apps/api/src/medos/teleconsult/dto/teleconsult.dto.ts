@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
+  IsEmail,
   IsEnum,
   IsOptional,
   IsString,
@@ -36,6 +37,22 @@ export class CreateInviteDto {
   @IsString()
   @MaxLength(40)
   relationship?: string;
+
+  @ApiPropertyOptional({ description: 'Email du concerné → reçoit le lien d’invitation' })
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(160)
+  email?: string;
+
+  @ApiPropertyOptional({ description: 'Membre du tenant à inviter (compte existant) → admis d’office' })
+  @IsOptional()
+  @IsUUID()
+  invited_user_id?: string;
+
+  @ApiPropertyOptional({ enum: ['proche', 'member'], default: 'proche' })
+  @IsOptional()
+  @IsEnum(['proche', 'member'])
+  kind?: 'proche' | 'member';
 }
 
 export class ConsentInviteDto {
