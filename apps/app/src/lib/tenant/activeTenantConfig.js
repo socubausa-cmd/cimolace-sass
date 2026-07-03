@@ -28,7 +28,12 @@
  * ═══════════════════════════════════════════════════════════════
  */
 import { isnaTenantConfig } from '@/tenants/isna/tenant.config';
-import { isPlatformOrDevHost, getCachedHostTenant, getCachedTenantSettings } from '@/lib/tenantResolver';
+import {
+  isPlatformOrDevHost,
+  getCachedHostTenant,
+  getCachedTenantSettings,
+  getCachedHostBranding,
+} from '@/lib/tenantResolver';
 import { LIRI_PLATFORM_BRANDING } from '@/lib/tenant/liriPlatformBranding';
 
 /** Config du tenant FONDATEUR (ISNA) — identité LITTÉRALE, ne change jamais.
@@ -115,6 +120,36 @@ function isFounderHost(host) {
   return false;
 }
 
+/**
+ * Config GÉNÉRIQUE d'un tenant à domaine perso, construite depuis le cache
+ * host→branding (hydraté par hydrateHostTenant). MÊME FORME que la config tenant
+ * (drop-in pour les ~65 consommateurs) : le tenant affiche SON identité (nom,
+ * logo, couleurs) dès le premier paint — exactement comme le fondateur, sans
+ * config littérale dans le code. Champs non brandés → défauts neutres LIRI.
+ */
+function buildCachedTenantConfig(host, slug) {
+  const b = getCachedHostBranding(host) || {};
+  const colors = b.brand_colors && typeof b.brand_colors === 'object' ? b.brand_colors : {};
+  const name = String(b.name || '').trim() || LIRI_NEUTRAL_CONFIG.name;
+  return {
+    ...LIRI_NEUTRAL_CONFIG,
+    slug,
+    name,
+    branding: {
+      ...LIRI_NEUTRAL_CONFIG.branding,
+      name,
+      fullName: name,
+      logo: String(b.logo_url || '').trim() || LIRI_NEUTRAL_CONFIG.branding.logo,
+      primaryColor: colors.primary || LIRI_NEUTRAL_CONFIG.branding.primaryColor,
+      secondaryColor: colors.secondary || LIRI_NEUTRAL_CONFIG.branding.secondaryColor,
+      accentColor: colors.accent || colors.primary || LIRI_NEUTRAL_CONFIG.branding.accentColor,
+      // Canonicals/SEO + repli API : le domaine du tenant lui-même.
+      domain: host,
+      publicSiteOrigin: `https://${host}`,
+    },
+  };
+}
+
 /** Résolution SYNCHRONE de l'identité par défaut selon l'hôte (voir en-tête). */
 function resolveActiveTenantConfig() {
   const host =
@@ -123,8 +158,16 @@ function resolveActiveTenantConfig() {
   if (isFounderHost(host)) return FOUNDER_TENANT_CONFIG;
   // 2) Plateforme / dev (cimolace.space, localhost, build sans window) → LIRI neutre.
   if (isPlatformOrDevHost(host)) return LIRI_NEUTRAL_CONFIG;
-  // 3) Autre domaine custom : si le cache host→slug pointe le fondateur → ISNA, sinon neutre.
-  if (FOUNDER_SLUG && getCachedHostTenant(host) === FOUNDER_SLUG) return FOUNDER_TENANT_CONFIG;
+  // 3) Autre domaine custom : résolu par le cache host→slug (hydraté au boot —
+  //    cf. le gate de main.tsx qui ATTEND l'hydratation au tout premier visit).
+  //    Fondateur → sa config littérale ; TOUT AUTRE tenant → config générique
+  //    construite depuis le cache branding (nom/logo/couleurs de l'org). Plus de
+  //    privilège fondateur : chaque client à domaine perso a son identité au boot.
+  const cachedSlug = getCachedHostTenant(host);
+  if (cachedSlug) {
+    if (FOUNDER_SLUG && cachedSlug === FOUNDER_SLUG) return FOUNDER_TENANT_CONFIG;
+    return buildCachedTenantConfig(host, cachedSlug);
+  }
   return LIRI_NEUTRAL_CONFIG;
 }
 

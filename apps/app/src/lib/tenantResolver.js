@@ -55,6 +55,24 @@ export function getCachedTenantSettings(host) {
 }
 
 /**
+ * BRANDING tenant en cache pour un hôte custom ({name, logo_url, brand_colors}
+ * ou `null`). SYNCHRONE — permet à `activeTenantConfig` de rendre l'identité du
+ * tenant (nom/logo/couleurs) DÈS LE PREMIER PAINT pour N'IMPORTE quel tenant à
+ * domaine perso (pas seulement le fondateur). Hydraté par hydrateHostTenant().
+ */
+export function getCachedHostBranding(host) {
+  if (typeof window === 'undefined') return null;
+  const h = String(host ?? window.location.hostname ?? '').toLowerCase();
+  if (isPlatformOrDevHost(h)) return null;
+  try {
+    const raw = localStorage.getItem(CACHE_PREFIX + h + ':branding');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Résout le tenant du domaine custom courant via l'API et le met en cache.
  * Non bloquant, idempotent, sans effet sur les hôtes plateforme/dev.
  * Retourne le slug résolu ('' sinon).
@@ -72,17 +90,30 @@ export async function hydrateHostTenant() {
     );
     if (!res.ok) return getCachedHostTenant(host);
     const body = await res.json().catch(() => null);
-    const slug = String(body?.data?.slug ?? body?.slug ?? '').trim().toLowerCase();
+    const payload = body?.data ?? body ?? {};
+    const slug = String(payload?.slug ?? '').trim().toLowerCase();
     // Réglages tenant (ex: requiresStudentDossier). `null` = non défini côté DB
     // → le client retombe sur sa config résolue par l'hôte (founder ISNA = true).
-    const requiresStudentDossier =
-      body?.data?.requiresStudentDossier ?? body?.requiresStudentDossier ?? null;
+    const requiresStudentDossier = payload?.requiresStudentDossier ?? null;
     if (slug) {
       try { localStorage.setItem(CACHE_PREFIX + host, slug); } catch { /* quota / privé */ }
       try {
         localStorage.setItem(
           CACHE_PREFIX + host + ':settings',
           JSON.stringify({ requiresStudentDossier }),
+        );
+      } catch { /* quota / privé */ }
+      // BRANDING (name/logo/couleurs) mis en cache pour le rendu SYNCHRONE au boot
+      // suivant : n'importe quel tenant à domaine perso affiche SON identité dès le
+      // premier paint (cf. activeTenantConfig — plus de privilège fondateur).
+      try {
+        localStorage.setItem(
+          CACHE_PREFIX + host + ':branding',
+          JSON.stringify({
+            name: payload?.name ?? '',
+            logo_url: payload?.logo_url ?? '',
+            brand_colors: payload?.brand_colors ?? null,
+          }),
         );
       } catch { /* quota / privé */ }
       return slug;

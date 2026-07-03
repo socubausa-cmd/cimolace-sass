@@ -21,6 +21,7 @@ import { InstallAppGate } from '@/components/eleve-mobile/InstallAppGate';
 import { EV_ACCENT, EV_MUTED, EV_LINE, EV_CARD, EV_CARD_INNER, EV_R, EV_SH } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
 import { isPlatformOrDevHost } from '@/lib/tenantResolver';
+import { FOUNDER_SLUG } from '@/lib/tenant/activeTenantConfig';
 import { Ripple, AnimatedForm } from '@/components/ui/animated-sign-in';
 
 const LIRI_CTA = {
@@ -44,16 +45,30 @@ const LoginPage = () => {
   // prorascience.org ne doit JAMAIS afficher « LIRI » : LIRI est le moteur invisible (façon Shopify).
   const isPlatformLiri =
     typeof window !== 'undefined' && isPlatformOrDevHost(window.location.hostname) && !tenantCtx.slug;
+  // FONDATEUR (isna) = habillage LITTÉRAL historique (or, Œil d'Horus, Institut Nocturne,
+  // NGOWAZULU). TOUT AUTRE tenant = SON branding DB (nom/logo/couleurs) — jamais
+  // l'habillage d'ISNA (cloison : chaque org a son identité, réf audit multi-tenant).
+  const isFounderTenant = !isPlatformLiri && String(tenantCtx.slug || '') === FOUNDER_SLUG;
   const schoolBrand = isPlatformLiri ? 'LIRI' : (branding.name || 'École');
   const schoolAcademyTitle = isPlatformLiri ? 'LIRI — Intelligence Live Augmentée' : `${schoolBrand} Academy`;
   // LIRI = terracotta du PORTAIL (--coral #d97757), pas un violet inventé. Cohérent avec
-  // LiriPortalShell / le logo lirilogo.png. ISNA (tenant) = or #D4AF37.
-  const accentColor = isPlatformLiri ? '#d97757' : '#D4AF37';
-  const brandTagline = isPlatformLiri ? 'Intelligence Live Augmentée' : 'Institut Nocturne';
-  const footerOrg = isPlatformLiri ? 'Cimolace' : 'NGOWAZULU';
-  // Logo ISNA (Œil d'Horus) — utilisé hors plateforme ; sur LIRI on rend <LiriBrandIcon/>.
-  const logo = '/prorascience-logo-2.jpeg';
-  const STATS = isPlatformLiri
+  // LiriPortalShell / le logo lirilogo.png. ISNA (tenant fondateur) = or #D4AF37.
+  // Tenant tiers = SON accent (brand_colors), repli terracotta produit.
+  const accentColor = isPlatformLiri
+    ? '#d97757'
+    : isFounderTenant
+      ? '#D4AF37'
+      : (branding.accentColor || branding.primaryColor || '#d97757');
+  const brandTagline = isPlatformLiri
+    ? 'Intelligence Live Augmentée'
+    : isFounderTenant
+      ? 'Institut Nocturne'
+      : 'Espace membre';
+  const footerOrg = isPlatformLiri ? 'Cimolace' : isFounderTenant ? 'NGOWAZULU' : schoolBrand;
+  // Logo : Œil d'Horus pour le FONDATEUR uniquement ; tenant tiers = SON logo DB
+  // (repli : aucun logo → on garde le rond neutre côté rendu). Sur LIRI : <LiriBrandIcon/>.
+  const logo = isFounderTenant ? '/prorascience-logo-2.jpeg' : (branding.logo || '');
+  const STATS = isPlatformLiri || !isFounderTenant
     ? [
         { icon: Radio, value: 'HD', label: 'Live' },
         { icon: Sparkles, value: 'IA', label: 'Tableau' },
@@ -416,11 +431,20 @@ const LoginPage = () => {
 
           <div className="mb-6 text-center">
             <Link to={ELEVE_MOBILE.home} className="inline-flex flex-col items-center gap-2">
-              <img
-                src={logo}
-                alt={schoolBrand}
-                className="h-12 w-auto max-w-[min(260px,88vw)] object-contain px-1 py-2 drop-shadow-[0_0_28px_rgba(123,97,255,0.25)]"
-              />
+              {logo ? (
+                <img
+                  src={logo}
+                  alt={schoolBrand}
+                  className="h-12 w-auto max-w-[min(260px,88vw)] object-contain px-1 py-2 drop-shadow-[0_0_28px_rgba(123,97,255,0.25)]"
+                />
+              ) : (
+                <span
+                  className="flex h-12 w-12 items-center justify-center rounded-full text-lg font-black text-white"
+                  style={{ background: accentColor }}
+                >
+                  {(schoolBrand || 'É').slice(0, 1).toUpperCase()}
+                </span>
+              )}
               <span className="font-sans text-[24px] font-extrabold tracking-tight text-white">{schoolBrand}</span>
               <span
                 className="text-[10px] font-bold uppercase tracking-[0.35em] text-violet-300/95"
@@ -498,13 +522,20 @@ const LoginPage = () => {
             <div className="absolute h-40 w-40 scale-110 rounded-full blur-2xl" style={{ backgroundColor: `${accentColor}33` }} />
             {isPlatformLiri ? (
               <img src="/lirilogo.png" alt="LIRI" className="relative z-10 h-48 w-48 object-contain" style={{ filter: 'drop-shadow(0 0 42px rgba(217,119,87,0.5))' }} />
-            ) : (
+            ) : logo ? (
               <img
                 src={logo}
                 alt={schoolBrand}
                 className="relative z-10 h-44 w-44 rounded-full border-2 bg-black object-contain shadow-2xl"
                 style={{ borderColor: `${accentColor}80` }}
               />
+            ) : (
+              <span
+                className="relative z-10 grid h-44 w-44 place-items-center rounded-full border-2 bg-black text-6xl font-black text-white shadow-2xl"
+                style={{ borderColor: `${accentColor}80`, color: accentColor }}
+              >
+                {(schoolBrand || 'É').slice(0, 1).toUpperCase()}
+              </span>
             )}
           </div>
         </div>
@@ -552,8 +583,12 @@ const LoginPage = () => {
             <Link to="/" className="inline-flex flex-col items-center gap-2">
               {isPlatformLiri ? (
                 <img src="/lirilogo.png" alt="LIRI" className="h-24 w-24 object-contain" style={{ filter: 'drop-shadow(0 0 24px rgba(217,119,87,0.5))' }} />
-              ) : (
+              ) : logo ? (
                 <img src={logo} alt={schoolBrand} className="h-20 w-20 rounded-full border-2 bg-black object-contain" style={{ borderColor: `${accentColor}80` }} />
+              ) : (
+                <span className="grid h-20 w-20 place-items-center rounded-full border-2 bg-black text-3xl font-black" style={{ borderColor: `${accentColor}80`, color: accentColor }}>
+                  {(schoolBrand || 'É').slice(0, 1).toUpperCase()}
+                </span>
               )}
               <span className="font-serif text-2xl font-bold tracking-wider text-white">{schoolBrand}</span>
               <span className="text-[0.6rem] uppercase tracking-[0.3em]" style={{ color: accentColor }}>{brandTagline}</span>
