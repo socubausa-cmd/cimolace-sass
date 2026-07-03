@@ -7,6 +7,12 @@ Embarquez **n'importe quel moteur Cimolace** (LIRI live, MEDOS, mbolo…) dans
 
 > Réf produit : `docs/CAHIER_DE_CHARGE_CIMOLACE.md` §6.
 
+> **Exemple complet, copier-coller : [`example.html`](./example.html)** — un fichier HTML
+> statique (aucun build, aucun backend) qui embarque la boutique mbolo LIVE d'un tenant.
+> Ouvrez-le dans un navigateur : le SDK se charge depuis `app.cimolace.space/sdk/` et
+> monte l'iframe `/embed/boutique` (l'origine de l'iframe = `app.cimolace.space`, donc le
+> catalogue se charge via CORS). C'est littéralement tout ce qu'un intégrateur écrit.
+
 ## Installation
 
 **Script tag (le plus simple, aucun build) :**

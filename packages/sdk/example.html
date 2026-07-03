@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cimolace SDK — embarquer un moteur sur N'IMPORTE QUEL site</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; padding: 40px 24px; background: #0f1419; color: #f4efe6;
+           font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    h1 { font-size: clamp(1.5rem, 4vw, 2.4rem); margin: 0 0 6px; }
+    .sub { color: #aeb6bf; margin: 0 0 28px; }
+    .gold { color: #d8b468; }
+    pre { background: #161d25; border: 1px solid rgba(244,239,230,.1); border-radius: 12px;
+          padding: 16px 18px; overflow: auto; font-size: 13px; color: #cfe3d4; }
+    .label { font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+             color: #7c858f; margin: 26px 0 10px; }
+    .frame { border: 1px solid rgba(244,239,230,.1); border-radius: 16px; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Intégration <span class="gold">Cimolace</span> — 2 lignes, n'importe quel site</h1>
+    <p class="sub">
+      Ce fichier HTML statique (aucun build, aucun backend) embarque un moteur Cimolace
+      LIVE. C'est tout ce qu'un développeur écrit pour intégrer.
+    </p>
+
+    <div class="label">Le code (copier-coller)</div>
+    <pre>&lt;div data-cimolace-engine="mbolo" data-tenant="zahirwellness" data-height="720"&gt;&lt;/div&gt;
+&lt;script src="https://app.cimolace.space/sdk/cimolace-sdk.js" defer&gt;&lt;/script&gt;
+
+&lt;!-- ou en JS : Cimolace.mount({ engine:'mbolo', tenant:'zahirwellness', container:'#boutique' }) --&gt;
+&lt;!-- LIRI live : { engine:'liri', liveId:'&lt;id&gt;' }  ·  MEDOS : { engine:'medos', token:'&lt;code SSO&gt;' } --&gt;</pre>
+
+    <div class="label">Le rendu LIVE (boutique mbolo du tenant « zahirwellness »)</div>
+    <div class="frame">
+      <div data-cimolace-engine="mbolo" data-tenant="zahirwellness" data-height="720"></div>
+    </div>
+  </div>
+
+  <!-- SDK universel servi en prod (statique) -->
+  <script src="https://app.cimolace.space/sdk/cimolace-sdk.js"></script>
+</body>
+</html>
