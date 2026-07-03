@@ -1,10 +1,20 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { MoreHorizontal, QrCode, Sparkles, Leaf, Layers, Sun, Maximize2, MessagesSquare, Link2, Check } from 'lucide-react';
 import { ARENA_LAYOUT } from '@/lib/liriArenaLayout';
 import { buildSmartboardNavigatorScenes } from '@/lib/smartboardNavigatorScenes';
 import { SmartboardNavigatorSceneIcon } from '@/components/liri/live-room/SmartboardNavigatorSceneIcon';
 import GuestPermissionBar from '@/components/liri/liri-live/GuestPermissionBar';
 import LiveHostFooterMessaging from '@/components/liri/live-room/LiveHostFooterMessaging';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useLiveDataSaver } from '@/hooks/useLiveDataSaver';
 
@@ -302,26 +312,6 @@ export default function LiveHostArenaLiveBar({
               })}
             </div>
           )}
-          <button
-            type="button"
-            onClick={onOpenMobileCameraQr}
-            title="QR : caméra secondaire sur téléphone (scène Cam 2)"
-            className="lh-premium-btn"
-            style={{
-              borderRadius: '8px',
-              border: '1px solid rgba(212,163,106,.4)',
-              background: 'rgba(200,148,62,.12)',
-              padding: hub ? '4px 7px' : '6px 10px',
-              fontSize: '10px',
-              fontWeight: 700,
-              color: '#e3c79a',
-              cursor: 'pointer',
-              letterSpacing: '.04em',
-              flexShrink: 0,
-            }}
-          >
-            QR mobile
-          </button>
         </>
       ) : (
         <>
@@ -387,48 +377,6 @@ export default function LiveHostArenaLiveBar({
           </button>
         </>
       )}
-      {!isGuestUi ? (
-        <button
-          type="button"
-          onClick={() => sessionId && void supabase.functions.invoke('neuro-recall-bootstrap', { body: { sessionId } }).catch(() => {})}
-          title="Neuro Recall"
-          style={{
-            borderRadius: '4px',
-            border: '1px solid rgba(212,163,106,.35)',
-            background: 'rgba(168,118,58,.12)',
-            padding: hub ? '6px 8px' : '8px 10px',
-            color: '#e3c79a',
-            fontSize: '11px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            flexShrink: 0,
-          }}
-        >
-          AI
-        </button>
-      ) : null}
-      {!isGuestUi ? (
-        <button
-          type="button"
-          onClick={toggleDataSaver}
-          title={dataSaver
-            ? 'Mode éco data ACTIVÉ : caméras coupées en réception (audio + partage d’écran gardés). Cliquer pour réafficher.'
-            : 'Mode éco data : couper la réception des caméras pour tenir en connexion faible (garde l’audio + le partage d’écran).'}
-          style={{
-            borderRadius: '4px',
-            border: `1px solid ${dataSaver ? 'rgba(251,191,36,.55)' : 'rgba(212,163,106,.35)'}`,
-            background: dataSaver ? 'rgba(251,191,36,.16)' : 'rgba(168,118,58,.12)',
-            padding: hub ? '6px 8px' : '8px 10px',
-            color: dataSaver ? '#fde68a' : '#e3c79a',
-            display: 'flex',
-            alignItems: 'center',
-            cursor: 'pointer',
-            flexShrink: 0,
-          }}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" /><path d="M2 21c0-3 1.85-5.36 5.08-6" /></svg>
-        </button>
-      ) : null}
       <button
         type="button"
         data-testid={!isGuestUi ? 'live-host-open-studio-settings' : undefined}
@@ -693,114 +641,98 @@ export default function LiveHostArenaLiveBar({
           >
             ›
           </button>
-          <button
-            type="button"
-            onClick={toggleProgressivePlayback}
-            title="Révélation progressive"
-            style={{
-              borderRadius: '4px',
-              border: `1px solid ${progressivePlayback ? 'rgba(200,148,62,.45)' : 'rgba(255,255,255,.1)'}`,
-              background: progressivePlayback ? 'rgba(200,148,62,.14)' : 'rgba(255,255,255,.04)',
-              padding: '6px 7px',
-              color: progressivePlayback ? '#e3c79a' : 'rgba(255,255,255,.55)',
-              fontSize: '10px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-            }}
-          >
-            Prog.
-          </button>
-          <button
-            type="button"
-            onClick={() => setSpotlightOn((v) => !v)}
-            style={{
-              borderRadius: '4px',
-              border: `1px solid ${spotlightOn ? 'rgba(200,150,12,.6)' : 'rgba(200,150,12,.35)'}`,
-              background: spotlightOn ? 'rgba(200,150,12,.25)' : 'rgba(200,150,12,.12)',
-              padding: '6px 8px',
-              color: '#C8960C',
-              fontSize: '11px',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="5" />
-              <path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3" />
-            </svg>
-            Spot
-          </button>
-          <button
-            type="button"
-            onClick={() => setFocusMode((v) => !v)}
-            title={focusMode ? 'Quitter le focus formation' : 'Focus formation (tableau plein écran)'}
-            style={{
-              borderRadius: '4px',
-              border: `1px solid ${focusMode ? 'rgba(248,152,56,.5)' : 'rgba(255,255,255,.1)'}`,
-              background: focusMode ? 'rgba(248,152,56,.15)' : 'rgba(255,255,255,.04)',
-              padding: '6px 8px',
-              color: focusMode ? '#38bdf8' : 'rgba(255,255,255,.5)',
-              fontSize: '11px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
-          >
-            {focusMode ? '⊠' : '⊞'}
-          </button>
-          {sessionFormationId
-            ? (
-              <Link
-                to={`/formation/${sessionFormationId}/forum`}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Forum formation"
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                title="Plus d'outils du live (éco data, spotlight, focus, forum, inviter…)"
+                aria-label="Plus d'outils"
                 style={{
-                  borderRadius: '4px',
-                  border: '1px solid rgba(212,163,106,.35)',
-                  background: 'rgba(168,118,58,.12)',
-                  padding: '6px 7px',
-                  color: '#e3c79a',
-                  fontSize: '10px',
+                  borderRadius: '999px',
+                  border: '1px solid rgba(255,255,255,.12)',
+                  background: 'rgba(255,255,255,.04)',
+                  padding: '6px 11px',
+                  color: 'rgba(255,255,255,.82)',
+                  fontSize: '11px',
                   fontWeight: 700,
-                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  cursor: 'pointer',
                   whiteSpace: 'nowrap',
                   flexShrink: 0,
                 }}
               >
-                Forum
-              </Link>
-              )
-            : null}
-          <button
-            type="button"
-            onClick={copyInviteLink}
-            title="Copier le lien d'invitation"
-            style={{
-              borderRadius: '999px',
-              border: `1px solid ${inviteCopied ? 'rgba(200,148,62,.55)' : 'rgba(255,255,255,.12)'}`,
-              background: inviteCopied ? 'rgba(200,148,62,.18)' : 'rgba(255,255,255,.04)',
-              padding: '6px 10px',
-              color: inviteCopied ? '#6ee7b7' : 'rgba(255,255,255,.8)',
-              fontSize: '11px',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-            }}
-          >
-            <span style={{ fontSize: '10px' }}>{inviteCopied ? '✓' : '🔗'}</span>
-            {inviteCopied ? 'Copié' : 'Inviter'}
-          </button>
+                <MoreHorizontal size={15} aria-hidden />
+                Outils
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              side="top"
+              align="end"
+              className="w-60 border-[rgba(212,163,106,0.28)] bg-[#171310]/97"
+            >
+              <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#e3c79a]/70">
+                Outils du live
+              </DropdownMenuLabel>
+              <DropdownMenuItem onSelect={onOpenMobileCameraQr} className="gap-2 text-[12px]">
+                <QrCode className="h-4 w-4 text-[#e3c79a]" /> Caméra mobile (QR)
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => sessionId && void supabase.functions.invoke('neuro-recall-bootstrap', { body: { sessionId } }).catch(() => {})}
+                className="gap-2 text-[12px]"
+              >
+                <Sparkles className="h-4 w-4 text-[#e3c79a]" /> Neuro Recall (IA)
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={(e) => { e.preventDefault(); toggleDataSaver(); }}
+                className={cn('gap-2 text-[12px]', dataSaver && 'text-[var(--school-accent)]')}
+              >
+                <Leaf className="h-4 w-4" /> Mode éco data
+                {dataSaver ? <Check className="ml-auto h-3.5 w-3.5" /> : null}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={(e) => { e.preventDefault(); toggleProgressivePlayback(); }}
+                className={cn('gap-2 text-[12px]', progressivePlayback && 'text-[var(--school-accent)]')}
+              >
+                <Layers className="h-4 w-4" /> Révélation progressive
+                {progressivePlayback ? <Check className="ml-auto h-3.5 w-3.5" /> : null}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={(e) => { e.preventDefault(); setSpotlightOn((v) => !v); }}
+                className={cn('gap-2 text-[12px]', spotlightOn && 'text-[var(--school-accent)]')}
+              >
+                <Sun className="h-4 w-4" /> Spotlight
+                {spotlightOn ? <Check className="ml-auto h-3.5 w-3.5" /> : null}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={(e) => { e.preventDefault(); setFocusMode((v) => !v); }}
+                className={cn('gap-2 text-[12px]', focusMode && 'text-[var(--school-accent)]')}
+              >
+                <Maximize2 className="h-4 w-4" /> Focus tableau plein écran
+                {focusMode ? <Check className="ml-auto h-3.5 w-3.5" /> : null}
+              </DropdownMenuItem>
+              {sessionFormationId ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild className="gap-2 text-[12px]">
+                    <Link to={`/formation/${sessionFormationId}/forum`} target="_blank" rel="noopener noreferrer">
+                      <MessagesSquare className="h-4 w-4 text-[#e3c79a]" /> Forum formation
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              ) : null}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={() => copyInviteLink?.()}
+                className={cn('gap-2 text-[12px]', inviteCopied && 'text-emerald-300')}
+              >
+                {inviteCopied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4 text-[#e3c79a]" />}
+                {inviteCopied ? 'Lien copié' : 'Inviter (copier le lien)'}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </>
     )
