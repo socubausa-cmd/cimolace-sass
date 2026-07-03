@@ -32,11 +32,16 @@ export function useCockpitChannel(
   const [strokes, setStrokes] = useState<AnnotStroke[]>([]);
   // Nom du PRATICIEN (host) diffusé au patient → « avec qui je parle ».
   const [hostName, setHostName] = useState<string | null>(null);
+  // État ACCUMULÉ du tableau intelligent (SmartBoard) : patchs incrémentaux de
+  // l'hôte (annotationStrokes, activeScene, sharedImageIdx…) mergés → le patient
+  // rejoue le dessin/la scène du praticien sur la vue Tableau.
+  const [smartboard, setSmartboard] = useState<Record<string, unknown>>({});
   const channelRef = useRef<any>(null);
   const lastSentRef = useRef<CockpitScene | null>(null);
   const lastViewRef = useRef<ConsultView>('conversation');
   const lastStrokesRef = useRef<AnnotStroke[]>([]);
   const lastHostNameRef = useRef<string | null>(null);
+  const lastSmartboardRef = useRef<Record<string, unknown>>({});
 
   useEffect(() => {
     if (!sessionId) return undefined;
@@ -74,6 +79,16 @@ export function useCockpitChannel(
       if (typeof n === 'string' && n) setHostName(n);
     });
 
+    // Patchs du tableau intelligent (SmartBoard) — mergés côté patient pour
+    // rejouer dessin/scène du praticien (annotationStrokes, activeScene…).
+    channel.on('broadcast', { event: 'smartboard' }, (msg: any) => {
+      const patch = msg?.payload;
+      if (patch && typeof patch === 'object') {
+        lastSmartboardRef.current = { ...lastSmartboardRef.current, ...patch };
+        setSmartboard(lastSmartboardRef.current);
+      }
+    });
+
     // Host : un patient demande l'état → on renvoie vue + scène + annotations.
     channel.on('broadcast', { event: 'request_state' }, () => {
       if (mode !== 'host') return;
@@ -86,6 +101,9 @@ export function useCockpitChannel(
       }
       if (lastHostNameRef.current) {
         channel.send({ type: 'broadcast', event: 'host_name', payload: { name: lastHostNameRef.current } });
+      }
+      if (Object.keys(lastSmartboardRef.current).length) {
+        channel.send({ type: 'broadcast', event: 'smartboard', payload: lastSmartboardRef.current });
       }
     });
 
@@ -162,5 +180,14 @@ export function useCockpitChannel(
     channelRef.current?.send({ type: 'broadcast', event: 'host_name', payload: { name: n } });
   }, []);
 
-  return { scene, view, strokes, hostName, shareScene, pushView, clearScene, shareStrokes, clearStrokes, shareHostName };
+  /** Host : relaie un patch du tableau intelligent (SmartBoard) au patient
+   *  (annotationStrokes, activeScene, whiteboardPages, sbTacticalSync…). Mergé et
+   *  rejoué à la demande d'état (request_state) d'un patient qui rejoint. */
+  const shareSmartboard = useCallback((patch?: Record<string, unknown>) => {
+    if (!patch || typeof patch !== 'object') return;
+    lastSmartboardRef.current = { ...lastSmartboardRef.current, ...patch };
+    channelRef.current?.send({ type: 'broadcast', event: 'smartboard', payload: patch });
+  }, []);
+
+  return { scene, view, strokes, hostName, smartboard, shareScene, pushView, clearScene, shareStrokes, clearStrokes, shareHostName, shareSmartboard };
 }

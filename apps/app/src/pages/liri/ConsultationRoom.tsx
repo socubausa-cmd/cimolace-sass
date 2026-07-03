@@ -32,6 +32,7 @@ import {
 } from '@livekit/components-react';
 import { Track, ConnectionState } from 'livekit-client';
 import { getStableLiveKitRoomOptions, stableLiveKitConnectOptions } from '@/lib/livekitStableClient';
+import LiveDataSaverEffect from '@/features/live/LiveDataSaverEffect';
 import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
@@ -371,6 +372,7 @@ export default function ConsultationRoom() {
         connectOptions={stableLiveKitConnectOptions}
         style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
       >
+        <LiveDataSaverEffect />
         {/* Studio reporté : périphériques + détourage sur le flux publié. */}
         <CallVideoFx camId={camId} micId={micId} detourage={detourage} />
         {/* Corps : colonne principale (chrome + scène + barre) + panneau de
@@ -390,6 +392,8 @@ export default function ConsultationRoom() {
               strokes={strokes}
               editable={annotate && isHost && annotatable}
               onStrokes={channel.shareStrokes}
+              smartboard={channel.smartboard}
+              onSmartboardBroadcast={channel.shareSmartboard}
               sessionId={sessionId ?? null}
               rightOpen={rightPanel !== null}
               identity={consultIdentity}
@@ -922,6 +926,8 @@ export function ConsultationStage({
   strokes,
   editable,
   onStrokes,
+  smartboard,
+  onSmartboardBroadcast,
   sessionId,
   rightOpen = false,
   identity,
@@ -932,6 +938,10 @@ export function ConsultationStage({
   strokes: AnnotStroke[];
   editable: boolean;
   onStrokes: (s: AnnotStroke[]) => void;
+  /** Patient : état SmartBoard reçu du canal (rejoué sur le tableau). */
+  smartboard?: Record<string, unknown>;
+  /** Host : relaie un patch SmartBoard sur le canal med-cockpit. */
+  onSmartboardBroadcast?: (p?: Record<string, unknown>) => void;
   sessionId: string | null;
   /** Un panneau de droite (Discussion/Copilote/Récap) est ouvert → on masque le
    *  rail Participants pour ne JAMAIS avoir 2 colonnes à droite (anti-surcharge). */
@@ -964,10 +974,16 @@ export function ConsultationStage({
       <div style={{ flex: 1, minWidth: 0, borderRadius: 16, overflow: 'hidden', position: 'relative', background: view === 'board' ? TILE_BG : '#f6f4ee' }}>
         {view === 'board' ? (
           // Tableau intelligent (SmartBoard Konva) — outils de dessin/formes/texte +
-          // NeuroInk côté praticien ; lecture seule côté patient. Remplace l'ancien
-          // BoardSurface passif. (Sync patient temps-réel : itération ultérieure —
-          // cf. note onBroadcast.)
-          <ConsultationSmartBoard sessionId={sessionId} isHost={isHost} viewerMode={!isHost} />
+          // NeuroInk côté praticien ; lecture seule côté patient. Sync patient
+          // temps-réel : l'hôte relaie ses patchs via onBroadcast → canal
+          // med-cockpit ; le patient les rejoue via incomingBroadcast.
+          <ConsultationSmartBoard
+            sessionId={sessionId}
+            isHost={isHost}
+            viewerMode={!isHost}
+            onBroadcast={isHost ? onSmartboardBroadcast : undefined}
+            incomingBroadcast={!isHost ? smartboard : undefined}
+          />
         ) : hasScene ? (
           <div style={{ height: '100%', width: '100%', overflow: 'auto', padding: 18 }}>
             <SharedSceneView scene={scene} />

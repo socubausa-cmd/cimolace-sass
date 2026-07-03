@@ -91,6 +91,12 @@ export interface ConsultationSmartBoardProps {
    */
   onBroadcast?: (payload?: Record<string, unknown>) => void;
   /**
+   * Patchs SmartBoard REÇUS de l'hôte (côté patient/viewer), état accumulé
+   * (merge) → ré-appliqués au stage via applyHostSmartboardBroadcast pour que le
+   * patient VOIE le dessin/la scène du praticien. Sûr si absent.
+   */
+  incomingBroadcast?: Record<string, unknown> | null;
+  /**
    * Surcharge fine des scènes disponibles (fusionnée avec les défauts
    * « tableau seul »). Laisser vide en consultation standard.
    */
@@ -116,10 +122,14 @@ export default function ConsultationSmartBoard({
   isHost,
   viewerMode,
   onBroadcast,
+  incomingBroadcast,
   sceneFlags,
   hideEmbeddedWhiteboardToolsRail = false,
   onSceneChange,
 }: ConsultationSmartBoardProps) {
+  // Ref impératif du stage : côté patient (viewer), on lui ré-applique les patchs
+  // reçus du canal via applyHostSmartboardBroadcast (cf. LiveHostSmartBoardStage).
+  const stageRef = useRef<{ applyHostSmartboardBroadcast?: (p: Record<string, unknown>) => void } | null>(null);
   // Pas de salle LiveKit ici : la sync vidéo/écran passe ailleurs (LiveKit dans
   // ConsultationRoom) et le tableau Konva est purement client. `roomRef` reste
   // null → tous les effets « room » du stage no-op (cf. en-tête). `phaseLive`
@@ -139,6 +149,13 @@ export default function ConsultationSmartBoard({
   // viewerMode explicite > déduction depuis isHost. Le patient ne navigue/dessine
   // pas ; il suit l'état diffusé par le praticien.
   const readOnly = typeof viewerMode === 'boolean' ? viewerMode : !isHost;
+
+  // Patient (viewer) : à chaque nouvel état SmartBoard reçu du canal, on le
+  // rejoue dans le stage (setActiveScene/setAnnotationStrokes/… en interne).
+  useEffect(() => {
+    if (!readOnly || !incomingBroadcast) return;
+    stageRef.current?.applyHostSmartboardBroadcast?.(incomingBroadcast);
+  }, [readOnly, incomingBroadcast]);
 
   // Scènes : défauts « tableau seul » fusionnés avec une éventuelle surcharge,
   // puis re-normalisés par le helper officiel (mêmes clés que le wizard).
@@ -160,6 +177,7 @@ export default function ConsultationSmartBoard({
     >
       <Suspense fallback={<SmartBoardLoading />}>
         <LiveHostSmartBoardStage
+          ref={stageRef}
           // displaySlides DOIT être un tableau : aucune diapo en consultation.
           displaySlides={EMPTY_SLIDES}
           sceneFlags={mergedSceneFlags}
