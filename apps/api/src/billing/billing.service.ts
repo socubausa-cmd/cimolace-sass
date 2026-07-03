@@ -890,6 +890,50 @@ export class BillingService implements OnApplicationBootstrap {
     return { received: true, matched: true, status: mapped };
   }
 
+  // ─── Entrées WEBHOOK PawaPay (anti-forge) ──────────────────────────────────
+  /**
+   * SÉCURITÉ : le webhook /billing/webhook/pawapay est PUBLIC et sa signature
+   * n'est pas garantie (secret non configuré → fail-open). Or le payeur connaît
+   * son depositId (il initie le collect) : accepter le statut du corps permettait
+   * de forger { status:'COMPLETED' } et d'activer un abonnement SANS payer.
+   * Règle : le callback n'est qu'un RÉVEIL, jamais une preuve — on re-lit
+   * TOUJOURS le statut à la source (API PawaPay) et on n'applique QUE ce statut
+   * vérifié. (Le cron syncPendingPayments passe déjà par getDepositStatus.)
+   */
+  async applyPawaPayDepositFromWebhook(cb: { depositId?: string }) {
+    if (!cb?.depositId) return { received: true, matched: false };
+    const dep = await this.pawapay.getDepositStatus(cb.depositId).catch(() => null);
+    const status = (dep as any)?.status ? String((dep as any).status).toUpperCase() : null;
+    if (!status) {
+      // API injoignable ou dépôt inconnu chez PawaPay : ne RIEN appliquer
+      // (PawaPay re-tentera ; le cron de synchronisation couvre aussi).
+      return { received: true, matched: false, status: "unverified" };
+    }
+    return this.applyPawaPayDeposit({
+      depositId: cb.depositId,
+      status,
+      failureReason: (dep as any)?.failureReason ?? null,
+    });
+  }
+
+  /** Entrée WEBHOOK payout : même règle — statut re-lu à la source, jamais celui du corps. */
+  async applyPayoutCallbackFromWebhook(cb: { payoutId?: string }) {
+    if (!cb?.payoutId) return { received: true, matched: false };
+    const raw = await this.pawapay.getPayoutStatus(cb.payoutId).catch(() => null);
+    // v2 peut renvoyer une enveloppe { data: {...payout...}, status: "FOUND" } — déballer.
+    const payout = (raw as any)?.data ?? raw;
+    const status = (payout as any)?.status ? String((payout as any).status) : null;
+    if (!status || status === "FOUND" || status === "NOT_FOUND") {
+      return { received: true, matched: false, status: "unverified" };
+    }
+    return this.applyPayoutCallback({
+      payoutId: cb.payoutId,
+      status,
+      providerTransactionId: (payout as any)?.providerTransactionId,
+      failureReason: (payout as any)?.failureReason,
+    });
+  }
+
   // ─── Webhook Stripe (abonnements plateforme) ──────────────────────────────
   // Source de vérité du cycle de vie d'un abonnement : Stripe pousse les
   // événements, on synchronise billing_subscriptions. La signature est vérifiée

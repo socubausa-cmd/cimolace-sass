@@ -47,7 +47,6 @@ export class EmbedService {
     tenantSlug: string;
     mode: string;
     origin: string | undefined;
-    requestedPatientUserId?: string | null;
   }): Promise<{
     token: string;
     expires_in: number;
@@ -66,7 +65,7 @@ export class EmbedService {
       colors: Record<string, string>;
     };
   }> {
-    const { tenantSlug, mode, origin, requestedPatientUserId } = input;
+    const { tenantSlug, mode, origin } = input;
 
     if (!isValidEmbedMode(mode)) {
       throw new BadRequestException(`Mode d'embed invalide : ${mode}`);
@@ -122,13 +121,17 @@ export class EmbedService {
     // 3. Construire le payload
     const scope = EMBED_SCOPES_BY_MODE[mode as EmbedMode];
 
+    // SÉCURITÉ (IDOR/PHI) : le flux Niveau 1 est ANONYME et validé par la seule
+    // Origin HTTP (falsifiable hors navigateur). Il ne DOIT JAMAIS fixer `sub` à
+    // un patient : accepter un `patient_user_id` du corps ouvrait le dossier
+    // médical de n'importe quel patient du tenant. La résolution d'un patient
+    // n'appartient qu'au Niveau 2 (server-token, clé API `mdk_`, résolu serveur).
     const payload: EmbedJwtPayload = {
       tenant_id: (tenant as any).id,
       mode: mode as EmbedMode,
       scope,
       origin: normalizedOrigin,
       iss: 'cimolace-medos-embed',
-      ...(requestedPatientUserId ? { sub: requestedPatientUserId } : {}),
     };
 
     const secret = this.config.get<string>('MEDOS_EMBED_JWT_SECRET');

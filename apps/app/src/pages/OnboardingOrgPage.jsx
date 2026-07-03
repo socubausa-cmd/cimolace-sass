@@ -431,9 +431,9 @@ export default function OnboardingOrgPage() {
           {/* Mention légale sous la carte */}
           <p className="mt-5 text-center text-[11px] leading-relaxed text-white/22">
             En créant votre espace, vous acceptez les{' '}
-            <Link to="/cgu" className="hover:text-white/40 transition-colors">Conditions d'utilisation</Link>
+            <Link to="/conditions-utilisation" className="hover:text-white/40 transition-colors">Conditions d'utilisation</Link>
             {' '}et la{' '}
-            <Link to="/confidentialite" className="hover:text-white/40 transition-colors">Politique de confidentialité</Link>.
+            <Link to="/politique-confidentialite" className="hover:text-white/40 transition-colors">Politique de confidentialité</Link>.
           </p>
         </motion.div>
       </main>

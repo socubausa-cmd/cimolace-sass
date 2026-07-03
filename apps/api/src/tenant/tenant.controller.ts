@@ -165,9 +165,13 @@ export class TenantController {
    * `X-Tenant-Slug` and we trust the auth context.
    *
    * Used by the self-serve branding editor in apps/app (tenantsApi.updateBranding).
+   * RÉSERVÉ owner/admin : le branding (nom, logo, couleurs) est l'identité publique
+   * du tenant — un simple membre/élève ne doit pas pouvoir défigurer l'école
+   * (aligné sur current/settings ; audit sécurité 2026-07-03).
    */
   @Patch("current/branding")
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles("owner", "admin")
   async updateOwnBranding(
     @Req() req: any,
     @Body() dto: UpdateBrandingDto,

@@ -976,7 +976,16 @@ export class BillingAdvancedService {
 
   private ensureInternalKey(provided: string | undefined) {
     const expected = String(this.config.get('BILLING_INTERNAL_JOB_KEY') || '').trim();
-    if (!expected) return; // No key configured → allow (dev).
+    if (!expected) {
+      // FAIL-CLOSED en production : sans clé configurée, ces crons (retries de
+      // paiement, DLQ, réconciliation) seraient exposés publiquement → on REFUSE.
+      // L'absence de clé n'est tolérée qu'en dev/test (audit 2026-07-03).
+      const env = String(this.config.get('NODE_ENV') || process.env.NODE_ENV || '').toLowerCase();
+      if (env === 'production' || env === 'prod') {
+        throw new UnauthorizedException('BILLING_INTERNAL_JOB_KEY non configuré');
+      }
+      return; // dev/test uniquement
+    }
     if (String(provided ?? '').trim() !== expected) {
       throw new UnauthorizedException('Unauthorized');
     }

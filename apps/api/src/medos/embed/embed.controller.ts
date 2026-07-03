@@ -9,7 +9,9 @@ import { EmbedService } from './embed.service';
 type IssueEmbedTokenDto = {
   tenant_slug: string;
   mode: string;
-  patient_user_id?: string;
+  // NB : PAS de patient_user_id ici. Le Niveau 1 est anonyme (validé par la seule
+  // Origin) ; fixer un patient est réservé au Niveau 2 (server-token, clé mdk_).
+  // Un patient_user_id envoyé ici serait IGNORÉ côté service (anti-IDOR/PHI).
 };
 
 type ApiKeyRequest = Request & {
@@ -38,7 +40,6 @@ export class MedosEmbedController {
       tenantSlug: dto.tenant_slug,
       mode: dto.mode,
       origin,
-      requestedPatientUserId: dto.patient_user_id ?? null,
     });
   }
 

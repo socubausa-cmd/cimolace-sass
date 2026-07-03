@@ -195,16 +195,23 @@ export class PawaPayService {
 
   /**
    * Vérifie le statut d'un dépôt par polling (si pas de callback configuré).
+   * `override` = credentials du TENANT (même sémantique qu'initiateDeposit) :
+   * un dépôt initié sur le compte PawaPay d'un tenant n'est visible QUE par ce
+   * compte — sans l'override il restait invérifiable (client débité, accès
+   * jamais confirmé).
    */
   async getDepositStatus(
     depositId: string,
+    override?: { apiToken?: string; baseUrl?: string },
   ): Promise<PawaPayDepositCallback | null> {
-    this.assertConfigured();
+    const apiToken = override?.apiToken || this.apiToken;
+    const baseUrl = override?.baseUrl || this.baseUrl;
+    if (!override?.apiToken) this.assertConfigured();
 
     const response = await fetch(
-      `${this.baseUrl}/v2/deposits/${depositId}`,
+      `${baseUrl}/v2/deposits/${depositId}`,
       {
-        headers: { Authorization: `Bearer ${this.apiToken}` },
+        headers: { Authorization: `Bearer ${apiToken}` },
       },
     );
 

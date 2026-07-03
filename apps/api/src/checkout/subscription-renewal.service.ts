@@ -8,6 +8,7 @@ import {
 import { randomUUID } from 'crypto';
 import { AuthService } from '../auth/auth.service';
 import { PawaPayService } from '../pawapay/pawapay.service';
+import { TenantPaymentConfigService } from '../billing/tenant-payment-config/tenant-payment-config.service';
 import {
   verifyStripeSignature,
   stripeFetchSubscription,
@@ -36,6 +37,7 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
   constructor(
     private readonly auth: AuthService,
     private readonly pawapay: PawaPayService,
+    private readonly tenantPayments: TenantPaymentConfigService,
   ) {}
 
   /**
@@ -78,57 +80,96 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
   // ── Webhook pawaPay ────────────────────────────────────────────────────────
   /**
    * Traite le callback pawaPay (POST /offering-checkout/webhook/pawapay).
-   * Met à jour le dépôt ; sur COMPLETED + kind=subscription, crée/prolonge l'abonnement.
+   *
+   * SÉCURITÉ anti-forge : l'endpoint est PUBLIC et la signature n'est pas
+   * garantie (secret non configuré → verifyCallbackSignature permissive). Or le
+   * payeur connaît son depositId : accepter le statut du CORPS permettait de
+   * forger { status:'COMPLETED' } et d'obtenir l'abonnement sans payer. Le
+   * callback n'est donc qu'un RÉVEIL — le statut est TOUJOURS re-lu à la source
+   * (compte PawaPay du tenant si configuré, sinon plateforme), puis appliqué via
+   * applyDepositTerminal (transition ATOMIQUE anti-double, partagée avec le
+   * poller — l'ancien chemin webhook doublonnait la logique SANS le claim →
+   * risque de double prolongation webhook+poller).
    */
   async handlePawaPayCallback(rawBody: Buffer, signature?: string): Promise<void> {
-    if (signature !== undefined && !this.pawapay.verifyCallbackSignature(rawBody, signature)) {
+    // Vérifiée INCONDITIONNELLEMENT (avant : sautée si l'en-tête était absent).
+    if (!this.pawapay.verifyCallbackSignature(rawBody, signature ?? '')) {
       throw new BadRequestException('Signature callback pawaPay invalide');
     }
 
-    let payload: {
-      depositId?: string;
-      status?: string;
-      providerTransactionId?: string;
-      failureReason?: { failureCode?: string; failureMessage?: string };
-    };
+    let payload: { depositId?: string };
     try {
       payload = JSON.parse(rawBody.toString('utf8'));
     } catch {
       throw new BadRequestException('Payload pawaPay invalide (JSON malformé)');
     }
 
-    const { depositId, status, providerTransactionId, failureReason } = payload;
-    if (!depositId || !status) {
-      this.logger.warn('Callback pawaPay sans depositId/status');
+    const depositId = payload?.depositId;
+    if (!depositId) {
+      this.logger.warn('Callback pawaPay sans depositId');
       return;
     }
 
+    const { data: dep } = await this.ppDeposits
+      .select('deposit_id, user_id, kind, plan_slug, tenant_id, pawapay_status, amount_cents, currency')
+      .eq('deposit_id', depositId)
+      .maybeSingle();
+    if (!dep) {
+      this.logger.warn(`Callback pawaPay : dépôt inconnu ${depositId}`);
+      return;
+    }
+
+    const remote = await this.verifiedDepositStatus(depositId, dep.tenant_id ?? null);
+    if (!remote?.status) {
+      this.logger.warn(`Callback pawaPay : statut invérifiable ${depositId} — rien appliqué (poller/retry couvrent)`);
+      return;
+    }
+
+    // Métadonnées VÉRIFIÉES (tx opérateur, raison d'échec) — jamais celles du corps.
     await this.ppDeposits
       .update({
-        pawapay_status: status,
-        provider_tx_id: providerTransactionId ?? null,
-        failure_code: failureReason?.failureCode ?? null,
-        failure_message: failureReason?.failureMessage ?? null,
+        provider_tx_id: (remote as any).providerTransactionId ?? null,
+        failure_code: (remote as any).failureReason?.failureCode ?? null,
+        failure_message: (remote as any).failureReason?.failureMessage ?? null,
       })
       .eq('deposit_id', depositId);
 
-    if (status !== 'COMPLETED') return;
+    await this.applyDepositTerminal(dep, String(remote.status).toUpperCase());
+    this.logger.log(`pawaPay callback vérifié — depositId=${depositId} status=${remote.status} kind=${dep.kind}`);
+  }
 
-    const { data: deposit } = await this.ppDeposits
-      .select('user_id, kind, plan_slug, tenant_id, amount_cents, currency')
-      .eq('deposit_id', depositId)
-      .maybeSingle();
-
-    if (deposit?.kind === 'subscription' && deposit.plan_slug) {
-      await this.createOrExtendSubscription(deposit.user_id, deposit.plan_slug, {
-        tenantId: deposit.tenant_id,
-        provider: 'pawapay',
-      });
-    } else if (deposit) {
-      // Don / offrande / consultation : pas d'accès, juste un reçu (notif + email).
-      await this.notifyOneOffPayment(deposit.user_id, deposit.tenant_id, deposit.kind, deposit.amount_cents, deposit.currency);
+  /**
+   * Statut d'un dépôt re-lu À LA SOURCE. Essaie le compte PawaPay DU TENANT
+   * (si configuré — c'est peut-être lui qui a initié le dépôt, cf. ppOverride
+   * d'offering-checkout), puis le compte plateforme. Sans cet override, un dépôt
+   * initié avec le token tenant restait invérifiable (client débité, accès
+   * jamais accordé).
+   */
+  private async verifiedDepositStatus(depositId: string, tenantId: string | null) {
+    if (tenantId) {
+      try {
+        const tp = await this.tenantPayments.resolveTenantProviderCreds(tenantId, 'pawapay');
+        const token = (tp as any)?.creds?.api_token || null;
+        if (token) {
+          const viaTenant = await this.pawapay.getDepositStatus(depositId, {
+            apiToken: token,
+            baseUrl: this.pawapayBaseFromMode((tp as any)?.mode ?? null),
+          });
+          if (viaTenant?.status) return viaTenant;
+        }
+      } catch {
+        /* repli plateforme */
+      }
     }
-    this.logger.log(`pawaPay COMPLETED traité — depositId=${depositId} kind=${deposit?.kind}`);
+    if (!this.pawapay.isConfigured) return null;
+    return this.pawapay.getDepositStatus(depositId).catch(() => null);
+  }
+
+  private pawapayBaseFromMode(mode: string | null): string | undefined {
+    const m = (mode ?? '').toLowerCase();
+    if (m === 'sandbox' || m === 'test') return 'https://api.sandbox.pawapay.io';
+    if (m === 'production' || m === 'live') return 'https://api.pawapay.io';
+    return undefined;
   }
 
   /**
@@ -524,6 +565,8 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
       plan_slug?: string | null;
       tenant_id?: string | null;
       pawapay_status?: string;
+      amount_cents?: number | null;
+      currency?: string | null;
     },
     remoteStatus: string,
   ): Promise<void> {
@@ -544,6 +587,11 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
         tenantId: dep.tenant_id ?? null,
         provider: 'pawapay',
       });
+    } else {
+      // Don / offrande / consultation : pas d'accès à ouvrir, juste un reçu
+      // (notif + email). Le claim atomique ci-dessus garantit l'envoi UNIQUE
+      // même si webhook et poller confirment le même dépôt.
+      await this.notifyOneOffPayment(dep.user_id, dep.tenant_id ?? null, dep.kind, dep.amount_cents ?? undefined, dep.currency ?? undefined);
     }
   }
 
@@ -557,7 +605,7 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
     if (!this.pawapay.isConfigured) return { scanned: 0, completed: 0, failed: 0 };
     const floor = this.addDaysISO(new Date(), -2);
     const { data: pending } = await this.ppDeposits
-      .select('deposit_id, user_id, kind, plan_slug, tenant_id, pawapay_status')
+      .select('deposit_id, user_id, kind, plan_slug, tenant_id, pawapay_status, amount_cents, currency')
       .in('pawapay_status', ['PENDING', 'ACCEPTED', 'SUBMITTED'])
       .gte('created_at', floor)
       .limit(limit);
@@ -566,7 +614,10 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
     let failed = 0;
     for (const dep of rows) {
       try {
-        const remote = await this.pawapay.getDepositStatus(dep.deposit_id);
+        // Re-lecture à la source avec les credentials qui ont pu initier le dépôt
+        // (tenant d'abord, sinon plateforme) — sans ça, un dépôt initié sur le
+        // compte tenant restait invérifiable à jamais.
+        const remote = await this.verifiedDepositStatus(dep.deposit_id, dep.tenant_id ?? null);
         if (!remote?.status || remote.status === dep.pawapay_status) continue;
         await this.applyDepositTerminal(dep, remote.status);
         if (remote.status === 'COMPLETED') completed++;
