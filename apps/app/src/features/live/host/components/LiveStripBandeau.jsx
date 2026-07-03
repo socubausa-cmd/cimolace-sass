@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Track } from 'livekit-client';
-import { Settings, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import LiriProductBadge from '@/components/brand/LiriProductBadge';
 import { LiveLocalUserVignette } from '@/features/live/host/components/LiveLocalUserVignette';
 import { LiveMemberDockScroll } from '@/features/live/host/components/LiveMemberDockScroll';
@@ -24,34 +24,6 @@ function LiveTopBarBrand({ sessionTitle }) {
         <span style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', display: 'flex', alignItems: 'center', gap: 3 }}>
           {_LSB_IS_TENANT ? <>{_LSB_BRAND} </> : null}<LiriProductBadge product="academy" size="xs" /> <ChevronDown size={10} aria-hidden />
         </span>
-      </div>
-    </div>
-  );
-}
-
-/** Bloc chrome droit : réglages + identité hôte. */
-function LiveTopBarHostMenu({ user }) {
-  const name = user?.full_name || (user?.email ? String(user.email).split('@')[0] : 'Hôte');
-  const initials = name.slice(0, 2).toUpperCase();
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, paddingLeft: 4, height: '100%' }}>
-      <button
-        type="button"
-        title="Paramètres de la salle"
-        aria-label="Paramètres"
-        className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/12 bg-white/[0.05] text-white/70 transition hover:border-white/25 hover:text-white"
-      >
-        <Settings size={17} aria-hidden />
-      </button>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div className="flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#c8943e,#c8843e)' }}>
-          {initials}
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-          <span style={{ fontSize: 12.5, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap' }}>{name}</span>
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,.45)' }}>Hôte</span>
-        </div>
-        <ChevronDown size={13} className="text-white/45" aria-hidden />
       </div>
     </div>
   );
@@ -189,7 +161,6 @@ export const LiveStripBandeau = React.forwardRef(function LiveStripBandeau(
           ) : (
             <div style={{ flex: 1 }} />
           )}
-          <LiveTopBarHostMenu user={user} />
         </div>
       </div>
     );
