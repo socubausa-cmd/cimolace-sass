@@ -108,7 +108,7 @@ Portail LIRI (`/liri`), back-office tenant (`/cimolace/billing`, 14 sections), e
 
 ## 7. BACK-OFFICE
 
-- **Opérateur SaaS** (`/cimolace/admin`) : garde `CimolaceStaffGuard` (table `cimolace_staff_members` en RLS, PAS le JWT) ; fiche client 9 onglets réelle ; finances/payouts/wallets. ✅ · 🔴 monitoring simulé + facturation sur tables legacy vides + provisioning école mort + UI staff absente.
+- **Opérateur SaaS** (`/cimolace/admin`) : garde `CimolaceStaffGuard` (table `cimolace_staff_members` en RLS, PAS le JWT) ; fiche client 9 onglets réelle ; **finances/payouts/wallets réels** (`/cimolace/admin/finances` ← API `cimolace-backoffice/finances`). ✅ · **facturation legacy (tables vides) → redirigée vers finances réelles** (`1c81eafc`) ✅ · **provisioning école LIVE** (`ce7d27d0`) ✅ · 🔴 reste : monitoring simulé + UI gestion staff (SQL manuel).
 - **Client / tenant** (`/cimolace/billing`, 14 sections) : abonnement, moteurs, marketplace, factures, clés API, équipe, webhooks HMAC, MFA. ✅
 
 ---
