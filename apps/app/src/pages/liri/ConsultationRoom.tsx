@@ -27,6 +27,7 @@ import {
   useChat,
   useConnectionState,
   useLocalParticipant,
+  useParticipants,
   useRoomContext,
   useTracks,
 } from '@livekit/components-react';
@@ -55,6 +56,8 @@ import ConsultationRecall from '@/features/consultation-stage/ConsultationRecall
 import ConsultationScriptPanel from '@/features/consultation-stage/ConsultationScriptPanel';
 import WaitingRoom from '@/features/consultation-stage/WaitingRoom';
 import { BackgroundBlur, VirtualBackground, supportsBackgroundProcessors } from '@livekit/track-processors';
+import { useLiveHostWaitingRoom } from '@/features/live/hooks/useLiveHostWaitingRoom';
+import { supabase } from '@/lib/customSupabaseClient';
 
 // Shell visuel ALIGNÉ SUR LE PORTAIL LIRI (cf. liveHostTheme `LH_DESIGN`) : base
 // chaude #262624 + halos coral, panneaux frostés, accent AMBRE #d4a36a — fini le
@@ -112,7 +115,7 @@ const CONSULT_SHELL_CSS = `
    La salle desktop (rails fixes 340/300/224 + barre large) déborde sur téléphone.
    On replie : panneaux droite en FEUILLE par le bas (bottom-sheet), rail
    participants masqué, barre d'outils qui passe à la ligne, cockpit quasi plein
-   écran. Scopé `.consult-shell` → Formation (LiveHostPage) reste INTACTE. */
+   écran. Scopé à .consult-shell → Formation (LiveHostPage) reste INTACTE. */
 @media (max-width: 820px) {
   .consult-shell [data-cr="rightdock"]{
     position:fixed !important; left:0 !important; right:0 !important; bottom:0 !important; top:auto !important;
@@ -164,6 +167,7 @@ export default function ConsultationRoom() {
     try { return new URLSearchParams(window.location.search).get('fx') || 'none'; } catch { return 'none'; }
   });
   const [beauty, setBeauty] = useState(false);
+  const [patientWaitingStatus, setPatientWaitingStatus] = useState<string | null>(null);
 
   // Nom de la clinique (image de marque sur l'écran de démarrage) — résolu ICI
   // (composant long-vécu = effet fiable) puis caché en localStorage + passé à
@@ -210,16 +214,63 @@ export default function ConsultationRoom() {
     return () => { alive = false; clearInterval(t); };
   }, [sessionId, user?.id, conn]);
 
-  // 2) Connexion LiveKit. L'HÔTE se connecte tout de suite. Le PATIENT ne se
-  //    connecte QUE lorsque le praticien a démarré (host_present) — sinon il reste
-  //    en salle d'attente. Repli SÛR : si le contexte échoue, on ne bloque pas
-  //    (ancien comportement = connexion directe).
-  // On ne GATE le patient que si le backend dit EXPLICITEMENT host_present===false.
-  // Si le champ est absent (backend pas à jour) ou true → on connecte (pas de
-  // blocage). L'hôte se connecte toujours.
+  // Le patient enregistre réellement sa demande dans la salle d'attente commune
+  // LIRI. Sans cette ligne, le praticien ne peut ni la voir ni l'autoriser.
+  useEffect(() => {
+    if (!sessionId || !user?.id || !ctxResolved || ctx?.role !== 'patient') return undefined;
+    let alive = true;
+    const ensureAndReadWaiting = async () => {
+      const { data: existing } = await supabase
+        .from('live_waiting_room_entries')
+        .select('id,status')
+        .eq('live_session_id', sessionId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      let row = existing;
+      if (!row) {
+        const { data } = await supabase
+          .from('live_waiting_room_entries')
+          .insert({ live_session_id: sessionId, user_id: user.id, status: 'waiting' })
+          .select('id,status')
+          .single();
+        row = data;
+      } else if (['left', 'lobby'].includes(String(row.status))) {
+        const { data } = await supabase
+          .from('live_waiting_room_entries')
+          .update({ status: 'waiting' })
+          .eq('id', row.id)
+          .select('id,status')
+          .single();
+        row = data;
+      }
+      if (alive && row?.status) setPatientWaitingStatus(String(row.status));
+    };
+    void ensureAndReadWaiting();
+    const ch = supabase
+      .channel(`medos-patient-waiting-${sessionId}-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'live_waiting_room_entries', filter: `live_session_id=eq.${sessionId}` },
+        (payload) => {
+          if (payload.new?.user_id === user.id && payload.new?.status) {
+            setPatientWaitingStatus(String(payload.new.status));
+          }
+        },
+      )
+      .subscribe();
+    const pollId = window.setInterval(ensureAndReadWaiting, 3000);
+    return () => {
+      alive = false;
+      window.clearInterval(pollId);
+      supabase.removeChannel(ch);
+    };
+  }, [sessionId, user?.id, ctxResolved, ctx?.role]);
+
+  // 2) Connexion LiveKit. L'hôte entre immédiatement. Le patient attend une
+  //    admission explicite ; Realtime + polling ci-dessus rendent le flux fiable.
   const canConnect =
     ctxResolved &&
-    (!ctx || ctx.role === 'host' || ctx.host_present !== false);
+    (!ctx || ctx.role === 'host' || patientWaitingStatus === 'admitted');
   useEffect(() => {
     if (!sessionId || conn || !canConnect) return undefined;
     let alive = true;
@@ -241,6 +292,9 @@ export default function ConsultationRoom() {
   }, [sessionId, conn, canConnect]);
 
   const isHost = ctx?.role === 'host';
+  const { waitingEntries, approveWaiting, rejectWaiting } = useLiveHostWaitingRoom({
+    sessionId: isHost ? sessionId : null,
+  });
   // Canal de partage au niveau de la salle : pilote la VUE + la SCÈNE centrale +
   // l'annotation. Un seul abonnement, partagé avec le cockpit (sinon les 2 ne se
   // voient pas, broadcast self:false).
@@ -286,10 +340,58 @@ export default function ConsultationRoom() {
   const tenantSlug = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tenant') : null;
   // Sortie : le praticien revient à MEDOS ; le patient voit un écran de fin
   // neutre (pas de compte → pas de portail).
-  const handleLeave = () => {
-    if (isHost) returnToMedos(tenantSlug);
-    else setLeft(true);
+  const [ending, setEnding] = useState(false);
+  const handleLeave = async () => {
+    if (!isHost) {
+      setLeft(true);
+      return;
+    }
+    if (ending) return;
+    setEnding(true);
+    try {
+      await teleconsultApi.end(sessionId!, { ended_reason: 'manual' });
+      await supabase
+        .from('live_sessions')
+        .update({ status: 'ended', ended_at: new Date().toISOString() })
+        .eq('id', sessionId);
+      setLeft(true);
+      window.setTimeout(() => returnToMedos(tenantSlug), 500);
+    } catch (e: any) {
+      setError(e?.message || 'Impossible de terminer la consultation.');
+      setEnding(false);
+    }
   };
+
+  // Le patient doit sortir même si l'événement Realtime est perdu : abonnement
+  // instantané + vérification périodique de la session miroir LIRI.
+  useEffect(() => {
+    if (!sessionId || isHost) return undefined;
+    const handleStatus = (status: unknown) => {
+      if (['ended', 'cancelled'].includes(String(status || ''))) setLeft(true);
+    };
+    const poll = async () => {
+      const { data } = await supabase
+        .from('live_sessions')
+        .select('status')
+        .eq('id', sessionId)
+        .maybeSingle();
+      handleStatus(data?.status);
+    };
+    const ch = supabase
+      .channel(`medos-consult-end-${sessionId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'live_sessions', filter: `id=eq.${sessionId}` },
+        (payload) => handleStatus(payload.new?.status),
+      )
+      .subscribe();
+    const pollId = window.setInterval(poll, 3000);
+    void poll();
+    return () => {
+      window.clearInterval(pollId);
+      supabase.removeChannel(ch);
+    };
+  }, [sessionId, isHost]);
 
   // Studio de création de live — nouvel onglet (préserve le tenant ; ne coupe pas la
   // salle en cours). launch=true → « Lancer le live » (accès direct, saute à l'étape
@@ -346,7 +448,7 @@ export default function ConsultationRoom() {
   if (!conn) {
     // Patient arrivé AVANT le praticien → salle d'attente (compte à rebours +
     // agenda + musique + green room). Bascule auto via le poll de host_present.
-    if (ctxResolved && ctx?.role === 'patient' && ctx?.host_present === false) {
+    if (ctxResolved && ctx?.role === 'patient' && patientWaitingStatus !== 'admitted') {
       return (
         <WaitingRoom
           clinicName={clinicName}
@@ -399,6 +501,43 @@ export default function ConsultationRoom() {
       } as CSSProperties}
     >
       <style>{CONSULT_SHELL_CSS}</style>
+      {isHost && waitingEntries.length > 0 ? (
+        <div
+          role="alert"
+          style={{
+            position: 'fixed', top: 76, right: 20, zIndex: 2147483640,
+            width: 330, padding: 16, borderRadius: 16,
+            background: 'rgba(35,33,30,0.98)', border: '1px solid rgba(212,163,106,0.5)',
+            boxShadow: '0 18px 48px rgba(0,0,0,0.55)', color: '#f5f4ee',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <Users size={20} color={GOLD} />
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>Patient en salle d’attente</div>
+              <div style={{ marginTop: 2, fontSize: 12, color: 'rgba(245,244,238,0.62)' }}>
+                {waitingEntries[0]?.profile?.name || 'Un participant'} demande à entrer.
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              type="button"
+              onClick={() => rejectWaiting(waitingEntries[0].id)}
+              style={{ flex: 1, padding: '9px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#f5f4ee', cursor: 'pointer' }}
+            >
+              Refuser
+            </button>
+            <button
+              type="button"
+              onClick={() => approveWaiting(waitingEntries[0].id)}
+              style={{ flex: 1, padding: '9px 12px', borderRadius: 10, border: 0, background: GOLD, color: '#211d18', fontWeight: 700, cursor: 'pointer' }}
+            >
+              Autoriser
+            </button>
+          </div>
+        </div>
+      ) : null}
       <LiveKitRoom
         serverUrl={conn.url}
         token={conn.token}
@@ -410,6 +549,7 @@ export default function ConsultationRoom() {
         style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
       >
         <LiveDataSaverEffect />
+        <ConnectedParticipantsCard />
         {/* Studio reporté : périphériques + détourage sur le flux publié. */}
         <CallVideoFx camId={camId} micId={micId} detourage={detourage} />
         {/* Corps : colonne principale (chrome + scène + barre) + panneau de
@@ -454,7 +594,7 @@ export default function ConsultationRoom() {
                 hasStrokes={strokes.length > 0}
                 onClearStrokes={channel.clearStrokes}
                 onInvite={() => setInviteOpen(true)}
-                onLeave={handleLeave}
+                onLeave={() => void handleLeave()}
                 rightPanel={rightPanel}
                 onToggleChat={() => setRightPanel((p) => (p === 'chat' ? null : 'chat'))}
                 onToggleCopilot={() => setRightPanel((p) => (p === 'copilot' ? null : 'copilot'))}
@@ -553,6 +693,41 @@ function CallVideoFx({ camId, micId, detourage }: { camId: string; micId: string
   }, [connected, detourage, cameraTrack]);
 
   return null;
+}
+
+function ConnectedParticipantsCard() {
+  const participants = useParticipants();
+  const visible = participants.map((participant: any) => ({
+    id: participant.identity,
+    name: participant.name || participant.identity || 'Participant',
+    local: participant.isLocal === true,
+  }));
+  return (
+    <div
+      data-testid="connected-participants"
+      style={{
+        position: 'fixed', top: 76, left: 20, zIndex: 2147483635,
+        minWidth: 190, maxWidth: 290, padding: '11px 13px', borderRadius: 13,
+        background: 'rgba(35,33,30,0.96)', border: '1px solid rgba(245,244,238,0.13)',
+        boxShadow: '0 12px 32px rgba(0,0,0,0.4)', color: '#f5f4ee',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, fontWeight: 700 }}>
+        <Users size={15} color={GOLD} />
+        {visible.length} connecté{visible.length > 1 ? 's' : ''}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 8 }}>
+        {visible.map((participant) => (
+          <div key={participant.id} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: 'rgba(245,244,238,0.72)' }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#4ade80', flexShrink: 0 }} />
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {participant.local ? 'Vous' : participant.name}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 // ── Bandeau haut : identité + SWITCHER de vue (host) ─────────────────────────
@@ -1273,8 +1448,12 @@ function StatusBadge({ status }: { status: TeleconsultInvite['status'] }) {
 }
 
 function InviteProcheModal({ sessionId, open, onClose }: { sessionId: string; open: boolean; onClose: () => void }) {
+  const [mode, setMode] = useState<'member' | 'guest'>('guest');
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [relationship, setRelationship] = useState('');
+  const [members, setMembers] = useState<{ user_id: string; email: string | null; full_name: string | null; role: string; status: string }[]>([]);
+  const [selectedMember, setSelectedMember] = useState('');
   const [invites, setInvites] = useState<TeleconsultInvite[]>([]);
   const [busy, setBusy] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -1287,6 +1466,10 @@ function InviteProcheModal({ sessionId, open, onClose }: { sessionId: string; op
     if (!open) return undefined;
     const refresh = () => teleconsultApi.listInvites(sessionId).then(setInvites).catch(() => {});
     refresh();
+    teleconsultApi
+      .tenantMembers()
+      .then((m) => setMembers(Array.isArray(m) ? m.filter((x) => x.status === 'active') : []))
+      .catch(() => {});
     const t = setInterval(refresh, 4000);
     return () => clearInterval(t);
   }, [open, sessionId]);
@@ -1306,14 +1489,23 @@ function InviteProcheModal({ sessionId, open, onClose }: { sessionId: string; op
   const create = async () => {
     setBusy(true);
     try {
-      const inv = await teleconsultApi.createInvite(sessionId, {
-        display_name: name.trim() || undefined,
-        relationship: relationship.trim() || undefined,
-      });
-      setName('');
-      setRelationship('');
+      let inv: TeleconsultInvite;
+      if (mode === 'member') {
+        if (!selectedMember) return;
+        inv = await teleconsultApi.createInvite(sessionId, { invited_user_id: selectedMember, kind: 'member' });
+        setSelectedMember('');
+      } else {
+        inv = await teleconsultApi.createInvite(sessionId, {
+          display_name: name.trim() || undefined,
+          email: email.trim() || undefined,
+          relationship: relationship.trim() || undefined,
+          kind: 'proche',
+        });
+        setName(''); setEmail(''); setRelationship('');
+      }
       setInvites((prev) => [...prev, inv]);
-      copy(inv.id);
+      // Repli : si l'email n'est pas parti, on copie le lien pour l'envoyer soi-même.
+      if (inv?.email_status !== 'sent') copy(inv.id);
     } catch {
       /* ignore */
     } finally {
@@ -1326,23 +1518,60 @@ function InviteProcheModal({ sessionId, open, onClose }: { sessionId: string; op
     teleconsultApi.listInvites(sessionId).then(setInvites).catch(() => {});
   };
 
+  const memberLabel = (m: { full_name: string | null; email: string | null; user_id: string }) =>
+    m.full_name || m.email || m.user_id.slice(0, 8);
+
+  const tabStyle = (active: boolean): React.CSSProperties => ({
+    flex: 1, padding: '8px 0', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', borderRadius: 8,
+    border: 'none', background: active ? 'rgba(212,163,106,0.18)' : 'transparent',
+    color: active ? '#e8c3a0' : 'rgba(245,244,238,0.6)',
+  });
+
   return (
     <div onClick={onClose} style={overlayStyle}>
       <div onClick={(e) => e.stopPropagation()} style={modalStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
           <UserPlus size={18} color={GOLD} aria-hidden="true" />
-          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#fff' }}>Inviter un proche</h3>
+          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#fff' }}>Inviter au live</h3>
           <button onClick={onClose} style={closeBtn} aria-label="Fermer"><X size={16} /></button>
         </div>
-        <p style={{ margin: '0 0 12px', fontSize: 12.5, color: '#9ca3af', lineHeight: 1.5 }}>
-          Le proche rejoint via un lien. <strong style={{ color: '#cbd5e1' }}>Le patient devra autoriser</strong> sa participation (partage des données de santé).
-        </p>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du proche" style={inputStyle} />
-          <input value={relationship} onChange={(e) => setRelationship(e.target.value)} placeholder="Lien (ex: Fille)" style={{ ...inputStyle, maxWidth: 130 }} />
-          <button onClick={create} disabled={busy} style={{ ...primaryBtn, opacity: busy ? 0.6 : 1 }}>Créer le lien</button>
+
+        {/* Type d'invité : membre du cabinet (compte) vs invité libre (nom+email). */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 10, background: 'rgba(255,255,255,0.05)', padding: 4, borderRadius: 10 }}>
+          <button type="button" onClick={() => setMode('member')} style={tabStyle(mode === 'member')}>Membre du cabinet</button>
+          <button type="button" onClick={() => setMode('guest')} style={tabStyle(mode === 'guest')}>Invité (nom + email)</button>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 240, overflowY: 'auto' }}>
+
+        {mode === 'member' ? (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <select value={selectedMember} onChange={(e) => setSelectedMember(e.target.value)} style={{ ...inputStyle, flex: 1 }}>
+              <option value="">Choisir un membre…</option>
+              {members.map((m) => (
+                <option key={m.user_id} value={m.user_id}>{memberLabel(m)} · {m.role}</option>
+              ))}
+            </select>
+            <button onClick={create} disabled={busy || !selectedMember} style={{ ...primaryBtn, opacity: busy || !selectedMember ? 0.6 : 1 }}>Inviter</button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom de l'invité" style={inputStyle} />
+              <input value={relationship} onChange={(e) => setRelationship(e.target.value)} placeholder="Lien (ex: Fille)" style={{ ...inputStyle, maxWidth: 120 }} />
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email de l'invité" style={{ ...inputStyle, flex: 1 }} />
+              <button onClick={create} disabled={busy} style={{ ...primaryBtn, opacity: busy ? 0.6 : 1 }}>Inviter</button>
+            </div>
+          </div>
+        )}
+
+        <p style={{ margin: '2px 0 12px', fontSize: 11.5, color: '#9ca3af', lineHeight: 1.5 }}>
+          {mode === 'member'
+            ? "Un membre du cabinet rejoint directement (soignant, secret médical) — il reçoit le lien par email."
+            : <>L'invité reçoit le lien par email. <strong style={{ color: '#cbd5e1' }}>Le patient devra autoriser</strong> sa participation (données de santé).</>}
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 220, overflowY: 'auto' }}>
           {invites.length === 0 ? (
             <p style={{ fontSize: 12.5, color: '#6b7280', textAlign: 'center', padding: '10px 0' }}>Aucune invitation pour l'instant.</p>
           ) : (
@@ -1352,7 +1581,10 @@ function InviteProcheModal({ sessionId, open, onClose }: { sessionId: string; op
                   <div style={{ fontSize: 13, color: '#fff', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {inv.display_name}{inv.relationship ? ` · ${inv.relationship}` : ''}
                   </div>
-                  <StatusBadge status={inv.status} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <StatusBadge status={inv.status} />
+                    <EmailStatusBadge status={inv.email_status} />
+                  </div>
                 </div>
                 <button onClick={() => copy(inv.id)} title="Copier le lien" style={iconBtn} aria-label="Copier le lien">
                   {copiedId === inv.id ? <Check size={15} color="#86efac" /> : <Copy size={15} />}
@@ -1364,6 +1596,21 @@ function InviteProcheModal({ sessionId, open, onClose }: { sessionId: string; op
         </div>
       </div>
     </div>
+  );
+}
+
+// Petit badge du résultat d'envoi email de l'invitation (best-effort côté serveur).
+function EmailStatusBadge({ status }: { status?: string | null }) {
+  if (!status || status === 'skipped') return null;
+  const map: Record<string, { label: string; color: string; bg: string }> = {
+    sent: { label: '✉ email envoyé', color: '#86efac', bg: 'rgba(134,239,172,0.12)' },
+    failed: { label: '✉ email échoué', color: '#fca5a5', bg: 'rgba(252,165,165,0.12)' },
+    error: { label: '✉ email échoué', color: '#fca5a5', bg: 'rgba(252,165,165,0.12)' },
+    disabled: { label: '✉ email non configuré', color: '#fcd34d', bg: 'rgba(252,211,77,0.12)' },
+  };
+  const s = map[status] || { label: `✉ ${status}`, color: '#cbd5e1', bg: 'rgba(255,255,255,0.06)' };
+  return (
+    <span style={{ fontSize: 10.5, fontWeight: 600, color: s.color, background: s.bg, padding: '1px 7px', borderRadius: 999 }}>{s.label}</span>
   );
 }
 

@@ -895,6 +895,9 @@ export interface TeleconsultInvite {
   display_name: string;
   relationship: string | null;
   status: "consent_requested" | "consented" | "denied" | "admitted" | "revoked";
+  kind?: "proche" | "member";
+  invited_email?: string | null;
+  email_status?: string | null; // sent | failed | disabled | skipped | error
   consent_at?: string | null;
   created_at?: string;
 }
@@ -915,9 +918,21 @@ export const teleconsultApi = {
     api.post<ApiEnvelope<TeleconsultSession>>(`/med/teleconsult/appointment/${appointmentId}/join`).then(unwrap),
   end: (id: string, body: { ended_reason?: string; connection_quality?: string; quick_note?: string } = {}) =>
     api.post<ApiEnvelope<TeleconsultSession>>(`/med/teleconsult/${id}/end`, body).then(unwrap),
-  // Inviter un proche (+ consentement RGPD du patient)
-  createInvite: (id: string, body: { display_name?: string; relationship?: string }) =>
+  // Inviter au live : un MEMBRE du tenant (invited_user_id, kind:'member' → admis
+  // d'office) OU un PROCHE (nom + email, kind:'proche' → consentement RGPD patient).
+  // L'email d'invitation part si un email est connu (voir email_status retourné).
+  createInvite: (
+    id: string,
+    body: { display_name?: string; relationship?: string; email?: string; invited_user_id?: string; kind?: 'proche' | 'member' },
+  ) =>
     api.post<ApiEnvelope<TeleconsultInvite>>(`/med/teleconsult/${id}/invites`, body).then(unwrap),
+  // Membres du tenant (comptes existants) — pour inviter un soignant au live.
+  tenantMembers: () =>
+    api
+      .get<ApiEnvelope<{ user_id: string; email: string | null; full_name: string | null; role: string; status: string }[]>>(
+        '/tenant-portal/members',
+      )
+      .then(unwrap),
   listInvites: (id: string) =>
     api.get<ApiEnvelope<TeleconsultInvite[]>>(`/med/teleconsult/${id}/invites`).then(unwrap),
   consentInvite: (id: string, inviteId: string, granted: boolean) =>
