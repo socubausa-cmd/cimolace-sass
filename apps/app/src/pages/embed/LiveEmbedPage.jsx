@@ -17,6 +17,7 @@ import {
   ControlBar,
 } from '@livekit/components-react';
 import '@livekit/components-styles';
+import { getStableLiveKitRoomOptions, stableLiveKitConnectOptions } from '@/lib/livekitStableClient';
 
 // ── Styles inline (pas de Tailwind — page embed minimaliste) ─────────────────
 const S = {
@@ -297,6 +298,8 @@ export default function LiveEmbedPage() {
             connect={true}
             video={canPublish}
             audio={canPublish}
+            options={getStableLiveKitRoomOptions({ adaptiveStream: true, dynacast: true })}
+            connectOptions={stableLiveKitConnectOptions}
             onDisconnected={() => {
               setPhase('ended');
               window.parent?.postMessage(

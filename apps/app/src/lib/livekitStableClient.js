@@ -1,4 +1,4 @@
-import { DefaultReconnectPolicy } from 'livekit-client';
+import { DefaultReconnectPolicy, VideoPresets, ScreenSharePresets } from 'livekit-client';
 
 /**
  * Backoff reconnexion (ms) — plus d'essais et étalement que le défaut LiveKit
@@ -14,11 +14,30 @@ const STABLE_RETRY_DELAYS_MS = [
  * @returns {import('livekit-client').RoomOptions}
  */
 export function getStableLiveKitRoomOptions(overrides = {}) {
+  const { publishDefaults: overridePublishDefaults, ...restOverrides } = overrides;
   return {
     /** Par défaut le SDK appelle disconnect() sur pagehide/beforeunload/freeze — très agressif sur mobile / multi-onglets. */
     disconnectOnPageLeave: false,
     reconnectPolicy: new DefaultReconnectPolicy(STABLE_RETRY_DELAYS_MS),
-    ...overrides,
+    /**
+     * Plafond d'émission (uplink) pour tenir en connexion faible (3G Afrique) :
+     * caméra bornée à ~500 kbps@20fps, avec une couche basse h180 (~150 kbps)
+     * toujours disponible quand le lien s'effondre ; audio protégé (RED anti-perte
+     * de paquets + DTX). Sans ça, l'émetteur part au défaut SDK 720p/1,7 Mbps et
+     * sature son lien montant. Priorité au débit fluide (maintain-framerate) pour
+     * une caméra parlante. Surchargeable par tenant/écran via overrides.publishDefaults.
+     */
+    publishDefaults: {
+      simulcast: true,
+      dtx: true,
+      red: true,
+      videoSimulcastLayers: [VideoPresets.h180, VideoPresets.h360],
+      videoEncoding: { maxBitrate: 500_000, maxFramerate: 20 },
+      screenShareEncoding: ScreenSharePresets.h1080fps15.encoding,
+      degradationPreference: 'maintain-framerate',
+      ...(overridePublishDefaults || {}),
+    },
+    ...restOverrides,
   };
 }
 

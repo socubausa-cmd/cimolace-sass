@@ -3,6 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { LiveKitRoom, VideoConference } from '@livekit/components-react';
 import { livesApi, checkoutApi } from '@/lib/api';
+import { getStableLiveKitRoomOptions, stableLiveKitConnectOptions } from '@/lib/livekitStableClient';
 
 export function LiveJoin() {
   const { id } = useParams<{ id: string }>();
@@ -35,6 +36,8 @@ export function LiveJoin() {
         connect={true}
         video={true}
         audio={true}
+        options={getStableLiveKitRoomOptions({ adaptiveStream: true, dynacast: true })}
+        connectOptions={stableLiveKitConnectOptions}
         style={{ height: '100vh' }}
       >
         <VideoConference />

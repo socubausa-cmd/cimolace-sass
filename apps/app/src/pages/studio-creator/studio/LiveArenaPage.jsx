@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Room, RoomEvent, Track, VideoPresets, ConnectionState,
+  Room, RoomEvent, Track, ConnectionState,
 } from 'livekit-client';
 import { supabase } from '@/lib/customSupabaseClient';
 import { getSupabaseFunctionErrorMessage } from '@/lib/supabaseEdgeInvoke';
@@ -1623,9 +1623,9 @@ export default function LiveArenaPage() {
       getStableLiveKitRoomOptions({
         adaptiveStream: true,
         dynacast: true,
-        videoCaptureDefaults: {
-          resolution: VideoPresets.h720.resolution,
-        },
+        // Pas de résolution de capture imposée : l'uplink est déjà borné par
+        // publishDefaults (getStableLiveKitRoomOptions). Laisser la caméra décider
+        // évite le sur-encodage CPU et les OverconstrainedError sur réseau faible.
         audioCaptureDefaults: {
           echoCancellation: true,
           noiseSuppression: true,

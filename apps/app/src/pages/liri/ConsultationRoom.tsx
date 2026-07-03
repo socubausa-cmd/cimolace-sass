@@ -31,6 +31,7 @@ import {
   useTracks,
 } from '@livekit/components-react';
 import { Track, ConnectionState } from 'livekit-client';
+import { getStableLiveKitRoomOptions, stableLiveKitConnectOptions } from '@/lib/livekitStableClient';
 import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
@@ -366,6 +367,8 @@ export default function ConsultationRoom() {
         connect
         audio={joinMic}
         video={joinCam}
+        options={getStableLiveKitRoomOptions({ adaptiveStream: true, dynacast: true })}
+        connectOptions={stableLiveKitConnectOptions}
         style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
       >
         {/* Studio reporté : périphériques + détourage sur le flux publié. */}
