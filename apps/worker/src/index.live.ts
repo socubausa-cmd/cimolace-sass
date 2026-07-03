@@ -23,6 +23,7 @@ import { pollReplayPostprod } from './jobs/replay-postprod.js';
 import { pollDraftSocialPosts } from './jobs/social-poster.js';
 import { pollImapSync }         from './jobs/imap-sync.js';
 import { pollGdprExports }      from './jobs/gdpr-export.js';
+import { pollCourseRenderJobs } from './jobs/courseRender.js';
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -117,4 +118,17 @@ startPingJob();
   }
 })();
 
-console.log('[worker:live] Pollers actifs ✅ (email 15s · rappels 60s · invitations 120s · imap 90s · shorts 5min · posts 90s · rgpd 60s · replay post-prod 60s)');
+// ── Rendu vidéo des cours (Précepteur/Tableau Vivant → MP4, 60s) ─────────────
+//    ⚠️ Ce poller vivait dans index.ts (jamais déployé) → le rendu de cours ne
+//    tournait PAS en prod. Rapatrié ici, le seul entrypoint déployé (audit P0).
+(async () => {
+  while (true) {
+    try {
+      const n = await (pollCourseRenderJobs as () => Promise<number>)();
+      if (n > 0) console.log(`[worker:live] Rendu cours: ${n} traité(s)`);
+    } catch (e: unknown) { console.error('[worker:live] Course render error:', (e as Error)?.message || e); }
+    await sleep(60_000);
+  }
+})();
+
+console.log('[worker:live] Pollers actifs ✅ (email 15s · rappels 60s · invitations 120s · imap 90s · shorts 5min · posts 90s · rgpd 60s · replay post-prod 60s · rendu cours 60s)');
