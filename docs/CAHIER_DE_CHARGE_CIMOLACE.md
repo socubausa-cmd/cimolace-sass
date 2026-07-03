@@ -142,7 +142,8 @@ Portail LIRI (`/liri`), back-office tenant (`/cimolace/billing`, 14 sections), e
   - 🔴 **RESTE (backend)** : clé unique `cml_<tenant>_<secret>` scopée par moteur (générateur + rotation) + secret JWT embed unique + routes iframe manquantes (`/embed/boutique`, med `/embed`) + modes A/B (wildcard + Cloudflare for SaaS).
 - **Vague 5 — Sécurité « tout vert » + Preuve** :
   - ✅ **Vraies failles P0/P1 corrigées + LIVE** ; 3 faux positifs de l'audit **vérifiés non-failles** (tenant-token, webhooks billing-advanced no-ops, creds non-persistés — cf. §8).
-  - 🟡 propreté (pas sécurité) : stubs billing-advanced → 501 ; `/dev/*` (cosmétique, données gatées serveur) ; RLS write `tenant_services` (owner-scoped).
+  - ✅ **RLS `tenant_services` durcie** (migration `20260703170000`, APPLIQUÉE+VÉRIFIÉE prod) : bypass paywall fermé (owner ne peut plus auto-activer un moteur via PostgREST ; écriture service_role only ; 0 régression lecture/gating).
+  - 🟡 propreté (pas sécurité, non déployable — HEAD front cassé) : stubs billing-advanced → 501 ; `/dev/*` (cosmétique, données gatées serveur).
   - 🔴 E2E client complet en prod (créer org → activer → payer → embarquer) — **écrit en prod, exige accord USER explicite** (dernier arbitrage : « déployer », pas « E2E write »). Ensuite ancrer en CI + nettoyer données test.
 
 ---
