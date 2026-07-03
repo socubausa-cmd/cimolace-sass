@@ -190,6 +190,14 @@ export const tenantPortalApi = {
     api.post<ApiEnvelope<any>>("/tenant-portal/account/request-deletion", { reason }).then(unwrap).then(peel),
   billingPortal: () =>
     api.post<ApiEnvelope<any>>("/tenant-portal/billing-portal").then(unwrap).then(peel),
+  // Domaine personnalisé (self-service owner) : mon-ecole.com → vitrine brandée du tenant.
+  domains: () => api.get<ApiEnvelope<any>>("/tenant-portal/domains").then(unwrap).then(peel),
+  addDomain: (domain: string) =>
+    api.post<ApiEnvelope<any>>("/tenant-portal/domains", { domain }).then(unwrap).then(peel),
+  verifyDomain: (id: string) =>
+    api.post<ApiEnvelope<any>>(`/tenant-portal/domains/${id}/verify`).then(unwrap).then(peel),
+  deleteDomain: (id: string) =>
+    api.delete<ApiEnvelope<any>>(`/tenant-portal/domains/${id}`).then(unwrap).then(peel),
   webhooks: () => api.get<ApiEnvelope<any>>("/tenant-portal/webhooks").then(unwrap).then(peel),
   createWebhook: (body: { label: string; url: string; events?: string[] }) =>
     api.post<ApiEnvelope<any>>("/tenant-portal/webhooks", body).then(unwrap).then(peel),

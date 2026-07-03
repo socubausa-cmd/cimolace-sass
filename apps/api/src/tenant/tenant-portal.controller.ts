@@ -1,5 +1,6 @@
 import { BadRequestException, Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { randomBytes } from 'crypto';
+import { resolve4, resolveCname } from 'dns/promises';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../common/guards/tenant.guard';
 import { SupabaseService } from '../supabase/supabase.service';
@@ -380,6 +381,197 @@ export class TenantPortalController {
   async deleteWebhook(@Req() req: any, @Param('id') id: string) {
     if (!['owner', 'admin'].includes(req.tenant?.userRole)) throw new BadRequestException('Rôle owner/admin requis.');
     await this.db.from('tenant_webhooks').delete().eq('id', id).eq('tenant_id', req.tenant.id);
+    return { data: { ok: true } };
+  }
+
+  // ─── Domaine personnalisé (self-service owner) ────────────────────────────
+  // Le tenant branche SON domaine (ex. academy-ngowazulu.com) : ses élèves
+  // atterrissent sur SA vitrine brandée (résolution host→tenant via
+  // tenant_domains + GET /tenants/by-host — cf. tenantResolver front).
+  // Flux façon Vercel/Stripe : add (pending) → le client pose les 2 DNS →
+  // verify (check DNS réel) → attach Vercel (SSL auto) → active + embed_origin
+  // (CORS). Owner/admin uniquement — contrairement à l'endpoint opérateur
+  // /admin/tenants/:id/domains (CimolaceStaffGuard), celui-ci est self-service.
+
+  /** Enregistrements DNS que le client doit poser chez son registrar. */
+  private static readonly DNS_EXPECTED = {
+    apexA: '76.76.21.21',
+    cname: 'cname.vercel-dns.com',
+  } as const;
+
+  /** Hôtes qu'un tenant ne peut PAS revendiquer (plateforme + infra). */
+  private static readonly RESERVED_DOMAIN_SUFFIXES = [
+    'cimolace.space',
+    'vercel.app',
+    'vercel-dns.com',
+    'supabase.co',
+    'railway.app',
+    'localhost',
+  ];
+
+  private normalizeDomain(raw?: string): string {
+    const d = String(raw || '')
+      .trim()
+      .toLowerCase()
+      .replace(/^https?:\/\//, '')
+      .replace(/\/.*$/, '')
+      .replace(/\.+$/, '');
+    // Hostname DNS plausible (labels alphanum/tirets, un point minimum).
+    if (!/^(?!-)[a-z0-9-]{1,63}(?<!-)(\.(?!-)[a-z0-9-]{1,63}(?<!-))+$/.test(d)) {
+      throw new BadRequestException('Domaine invalide — attendu : mon-ecole.com (sans http:// ni chemin).');
+    }
+    for (const suffix of TenantPortalController.RESERVED_DOMAIN_SUFFIXES) {
+      if (d === suffix || d.endsWith('.' + suffix)) {
+        throw new BadRequestException(`Ce domaine est réservé à la plateforme (${suffix}).`);
+      }
+    }
+    return d;
+  }
+
+  /** Le DNS du domaine pointe-t-il vers Vercel ? (A apex OU CNAME) */
+  private async dnsPointsToVercel(domain: string): Promise<{ ok: boolean; observed: string }> {
+    const { apexA, cname } = TenantPortalController.DNS_EXPECTED;
+    try {
+      const cnames = await resolveCname(domain).catch(() => [] as string[]);
+      if (cnames.some((c) => String(c).toLowerCase().replace(/\.$/, '').endsWith(cname))) {
+        return { ok: true, observed: `CNAME ${cnames.join(', ')}` };
+      }
+      const ips = await resolve4(domain).catch(() => [] as string[]);
+      if (ips.includes(apexA)) return { ok: true, observed: `A ${ips.join(', ')}` };
+      const observed = [
+        cnames.length ? `CNAME ${cnames.join(', ')}` : '',
+        ips.length ? `A ${ips.join(', ')}` : '',
+      ].filter(Boolean).join(' · ');
+      return { ok: false, observed: observed || 'aucun enregistrement résolu (propagation en cours ?)' };
+    } catch (e) {
+      return { ok: false, observed: `résolution DNS impossible (${(e as Error).message})` };
+    }
+  }
+
+  /**
+   * Attache le domaine au projet Vercel `app` (SSL auto). Best-effort : sans
+   * VERCEL_TOKEN on n'échoue pas (l'opérateur peut attacher à la main) ; 409 =
+   * déjà attaché (idempotent). Patron : signup.service provisionPatientSubdomain.
+   */
+  private async attachDomainToVercel(domain: string): Promise<{ attached: boolean; note: string }> {
+    const token = process.env.VERCEL_TOKEN;
+    if (!token) return { attached: false, note: 'VERCEL_TOKEN absent — attachement Vercel à faire côté opérateur.' };
+    const projectId = process.env.VERCEL_APP_PROJECT_ID || 'prj_Ytxn7g7wLgvZEmBUXf7phfSxYGJX';
+    const teamId = process.env.VERCEL_TEAM_ID || 'team_88680YTZRMqaKYKSg6anHLBZ';
+    try {
+      const res = await fetch(`https://api.vercel.com/v10/projects/${projectId}/domains?teamId=${teamId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: domain }),
+      });
+      if (res.ok || res.status === 409) return { attached: true, note: res.status === 409 ? 'déjà attaché (ok)' : 'attaché — certificat SSL en cours d’émission' };
+      const body = await res.text().catch(() => '');
+      return { attached: false, note: `Vercel ${res.status} : ${body.slice(0, 160)}` };
+    } catch (e) {
+      return { attached: false, note: `Vercel injoignable : ${(e as Error).message}` };
+    }
+  }
+
+  /** Domaines du tenant + instructions DNS (pour l'onglet « Domaine »). */
+  @Get('domains')
+  async listDomains(@Req() req: any) {
+    const { data } = await this.db
+      .from('tenant_domains')
+      .select('id, domain, usage, status, verified_at, created_at')
+      .eq('tenant_id', req.tenant.id)
+      .eq('usage', 'custom_host')
+      .order('created_at', { ascending: false });
+    return { data: { domains: data ?? [], dns: TenantPortalController.DNS_EXPECTED } };
+  }
+
+  /** Déclare un domaine (status=pending) + tente l'attachement Vercel. Owner/admin. */
+  @Post('domains')
+  async addDomain(@Req() req: any, @Body() body: { domain?: string }) {
+    if (!['owner', 'admin'].includes(req.tenant?.userRole)) throw new BadRequestException('Rôle owner/admin requis.');
+    const domain = this.normalizeDomain(body?.domain);
+    // Déjà revendiqué par un AUTRE tenant → erreur claire (UNIQUE(domain,usage) en filet).
+    const { data: existing } = await this.db
+      .from('tenant_domains')
+      .select('id, tenant_id, status')
+      .eq('domain', domain)
+      .eq('usage', 'custom_host')
+      .maybeSingle();
+    if (existing && existing.tenant_id !== req.tenant.id) {
+      throw new BadRequestException('Ce domaine est déjà relié à une autre organisation.');
+    }
+    let row = existing;
+    if (!row) {
+      const { data, error } = await this.db
+        .from('tenant_domains')
+        .insert({
+          tenant_id: req.tenant.id,
+          domain,
+          usage: 'custom_host',
+          status: 'pending',
+          verify_token: `dv_${randomBytes(12).toString('hex')}`,
+          created_by: req.user?.id ?? null,
+        })
+        .select('id, domain, status, created_at')
+        .single();
+      if (error) throw new BadRequestException(error.message);
+      row = data;
+    }
+    // Attachement Vercel immédiat (idempotent) : le domaine sert dès que le DNS pointe.
+    const vercel = await this.attachDomainToVercel(domain);
+    return { data: { ...row, dns: TenantPortalController.DNS_EXPECTED, vercel } };
+  }
+
+  /** Vérifie le DNS ; si OK → active + ligne CORS embed_origin. Owner/admin. */
+  @Post('domains/:id/verify')
+  async verifyDomain(@Req() req: any, @Param('id') id: string) {
+    if (!['owner', 'admin'].includes(req.tenant?.userRole)) throw new BadRequestException('Rôle owner/admin requis.');
+    const { data: row } = await this.db
+      .from('tenant_domains')
+      .select('id, domain, status')
+      .eq('id', id)
+      .eq('tenant_id', req.tenant.id)
+      .eq('usage', 'custom_host')
+      .maybeSingle();
+    if (!row) throw new NotFoundException('Domaine introuvable');
+    const dns = await this.dnsPointsToVercel(row.domain);
+    if (!dns.ok) {
+      return { data: { id: row.id, domain: row.domain, status: row.status, verified: false, dnsObserved: dns.observed, dns: TenantPortalController.DNS_EXPECTED } };
+    }
+    const vercel = await this.attachDomainToVercel(row.domain);
+    const now = new Date().toISOString();
+    await this.db
+      .from('tenant_domains')
+      .update({ status: 'active', verified_at: now, ssl_status: vercel.attached ? 'provisioning' : null, updated_at: now })
+      .eq('id', row.id);
+    // CORS : l'Origin du domaine doit être whitelisté (main.ts loadTenantDomains lit embed_origin).
+    await this.db
+      .from('tenant_domains')
+      .upsert(
+        { tenant_id: req.tenant.id, domain: row.domain, usage: 'embed_origin', status: 'active', created_by: req.user?.id ?? null },
+        { onConflict: 'domain,usage' },
+      );
+    return { data: { id: row.id, domain: row.domain, status: 'active', verified: true, dnsObserved: dns.observed, vercel } };
+  }
+
+  /** Retire un domaine (custom_host + sa ligne CORS). Owner/admin. */
+  @Delete('domains/:id')
+  async deleteDomain(@Req() req: any, @Param('id') id: string) {
+    if (!['owner', 'admin'].includes(req.tenant?.userRole)) throw new BadRequestException('Rôle owner/admin requis.');
+    const { data: row } = await this.db
+      .from('tenant_domains')
+      .select('id, domain')
+      .eq('id', id)
+      .eq('tenant_id', req.tenant.id)
+      .eq('usage', 'custom_host')
+      .maybeSingle();
+    if (!row) throw new NotFoundException('Domaine introuvable');
+    await this.db.from('tenant_domains').delete().eq('id', row.id);
+    await this.db
+      .from('tenant_domains')
+      .delete()
+      .eq('tenant_id', req.tenant.id)
+      .eq('domain', row.domain)
+      .eq('usage', 'embed_origin');
     return { data: { ok: true } };
   }
 }
