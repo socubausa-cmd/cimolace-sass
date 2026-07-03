@@ -98,7 +98,6 @@ export class AuthService {
       userMeta.cimolace_staff === true || appMeta.cimolace_staff === true;
     let staffRole: string | null = null;
     let profileMetadata: Record<string, unknown> = {};
-    let profileRole = '';
 
     if (email && this.cimolaceAdminEmails.has(email)) {
       cimolaceStaff = true;
@@ -123,12 +122,11 @@ export class AuthService {
     try {
       const { data: profile } = await (this.supabase as any)
         .from('profiles')
-        .select('metadata,status,role')
+        .select('metadata,status')
         .eq('id', userId)
         .maybeSingle();
       if (profile) {
         profileMetadata = (profile.metadata as Record<string, unknown>) ?? {};
-        profileRole = String(profile.role ?? '').toLowerCase();
         if (profile.status === 'active' && profileMetadata.cimolace_staff === true) {
           cimolaceStaff = true;
         }
@@ -137,11 +135,13 @@ export class AuthService {
       // idem : lecture profil best-effort.
     }
 
+    // `role` reflète UNIQUEMENT le statut opérateur Cimolace, aligné sur
+    // CimolaceStaffGuard qui IGNORE profiles.role : on ne dérive JAMAIS le rôle de
+    // profiles.role pour un non-staff (sinon un tenant profiles.role="admin" serait
+    // vu opérateur). Non-staff → rôle JWT ("authenticated").
     const role =
       staffRole ||
-      (cimolaceStaff
-        ? 'owner'
-        : profileRole || String(user.role ?? 'authenticated').toLowerCase());
+      (cimolaceStaff ? 'owner' : String(user.role ?? 'authenticated').toLowerCase());
 
     return {
       id: userId,
