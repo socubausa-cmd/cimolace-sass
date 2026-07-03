@@ -11,6 +11,7 @@ import { LiveModule } from '../live/live.module';
 // ApiKeyGuard authentifie les appels storefront par clé API tenant (mbk_…).
 // Sa seule dépendance est SupabaseService (fourni par SupabaseModule, importé ici).
 import { ApiKeyGuard } from '../auth/api-key.guard';
+import { EngineEnabledGuard } from '../common/guards/engine-enabled.guard';
 import { MboloController } from './mbolo.controller';
 import { MboloService } from './mbolo.service';
 import { MboloStorefrontController } from './mbolo-storefront.controller';
@@ -19,7 +20,7 @@ import { MboloLiveService } from './mbolo-live.service';
 
 @Module({
   imports: [SupabaseModule, TenantModule, AuthModule, LiveModule],
-  providers: [MboloService, MboloLiveService, ApiKeyGuard],
+  providers: [MboloService, MboloLiveService, ApiKeyGuard, EngineEnabledGuard],
   controllers: [MboloController, MboloStorefrontController, MboloLiveController],
   exports: [MboloService],
 })
