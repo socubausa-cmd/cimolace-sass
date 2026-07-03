@@ -970,6 +970,10 @@ export function ConsultationStage({
   // PARTAGE / TABLEAU : vue PRÉSENTATEUR — artefact (ou tableau) en grand à gauche
   // + rail vertical des participants (membres invités) à droite.
   const hasScene = !!scene && scene.kind !== 'clear';
+  // Écran partagé par le praticien (publié via LiveKit). Il ne doit JAMAIS être
+  // silencieusement masqué : si aucun artefact clinique n'occupe le grand cadre,
+  // on l'y affiche en plein ; sinon il reste visible dans le rail (MembersRail).
+  const screen = tracks.find((t) => t?.source === Track.Source.ScreenShare && t?.publication);
   return (
     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'row', gap: 12, padding: 14 }}>
       <div style={{ flex: 1, minWidth: 0, borderRadius: 16, overflow: 'hidden', position: 'relative', background: view === 'board' ? TILE_BG : '#f6f4ee' }}>
@@ -989,6 +993,12 @@ export function ConsultationStage({
           <div style={{ height: '100%', width: '100%', overflow: 'auto', padding: 18 }}>
             <SharedSceneView scene={scene} />
           </div>
+        ) : screen ? (
+          // Aucun artefact poussé mais le praticien partage son écran → l'écran EST
+          // le contenu partagé : plein cadre (host ET patient le voient).
+          <div style={{ position: 'absolute', inset: 0, background: '#000' }}>
+            <ParticipantTile trackRef={screen} style={{ width: '100%', height: '100%' }} />
+          </div>
         ) : (
           <SharePlaceholder />
         )}
@@ -1006,6 +1016,10 @@ export function ConsultationStage({
 // ── Rail des participants (membres invités) — vue présentateur (Partage/Tableau) ─
 function MembersRail({ tracks }: { tracks: any[] }) {
   const cams = tracks.filter((t) => t?.source === Track.Source.Camera);
+  // Écran partagé : vignette dédiée EN TÊTE du rail (label ambre) → quand un
+  // artefact/tableau occupe le grand cadre, le patient garde l'écran du praticien
+  // sous les yeux (jamais masqué silencieusement).
+  const screen = tracks.find((t) => t?.source === Track.Source.ScreenShare && t?.publication);
   return (
     <div style={{ width: 224, flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: 0, background: PANEL_BG, borderRadius: 14, border: PANEL_BORDER, overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
@@ -1014,6 +1028,16 @@ function MembersRail({ tracks }: { tracks: any[] }) {
         <span style={{ marginLeft: 'auto', fontSize: 11, color: '#9ca3af', background: 'rgba(255,255,255,0.06)', padding: '1px 8px', borderRadius: 999 }}>{cams.length}</span>
       </div>
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {screen ? (
+          <div style={{ width: '100%', flexShrink: 0 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 5, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <MonitorUp size={12} aria-hidden="true" /> Écran partagé
+            </div>
+            <div style={{ width: '100%', aspectRatio: '16 / 9', borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(212,163,106,0.55)' }}>
+              <ParticipantTile trackRef={screen} style={{ width: '100%', height: '100%' }} />
+            </div>
+          </div>
+        ) : null}
         {cams.map((t, i) => (
           <div key={tileKey(t, i)} style={{ width: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)' }}>
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
