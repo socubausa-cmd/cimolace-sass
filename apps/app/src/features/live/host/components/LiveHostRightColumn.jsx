@@ -301,9 +301,8 @@ export const LiveHostRightColumn = React.forwardRef(function LiveHostRightColumn
                 className="lh-premium-card"
                 style={{
                   ...LH_SIDEBAR_CARD,
-                  border: '1px solid rgba(212,163,106,.28)',
-                  background:
-                    'radial-gradient(120% 90% at 10% -10%, rgba(212,163,106,.1), transparent 52%), linear-gradient(160deg, rgba(168,118,58,.05), rgba(255,255,255,.012))',
+                  border: '1px solid rgba(245,244,238,.08)',
+                  background: 'rgba(255,255,255,.02)',
                   overflow: 'hidden',
                   padding: '10px',
                 }}

@@ -29,7 +29,7 @@ export const LiveHostMasterScriptDock = ({
         flexDirection: 'column',
         overflow: 'hidden',
         border: '1px solid rgba(255,255,255,.08)',
-        background: '#1a1815',
+        background: 'rgba(255,255,255,.02)',
       }}
     >
       <div
@@ -163,10 +163,10 @@ export const LiveHostMasterScriptDock = ({
             fontStyle: 'italic',
             padding: '10px',
             background: 'rgba(0,0,0,.25)',
-            border: '1px solid rgba(200,150,12,.15)',
+            border: '1px solid rgba(255,255,255,.08)',
             borderRadius: '4px',
             scrollbarWidth: 'thin',
-            scrollbarColor: 'rgba(200,150,12,.3) transparent',
+            scrollbarColor: 'rgba(255,255,255,.2) transparent',
           }}
         >
           {msTyped}

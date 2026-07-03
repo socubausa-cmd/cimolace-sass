@@ -97,8 +97,9 @@ export const LiveMindmapCard = ({
                       padding: '5px 7px',
                       borderRadius: '4px',
                       cursor: isGuestUi ? 'default' : 'pointer',
-                      border: `1px solid ${active ? c : 'rgba(255,255,255,.06)'}`,
-                      background: active ? `${c}18` : 'transparent',
+                      border: `1px solid ${active ? `${c}66` : 'rgba(255,255,255,.06)'}`,
+                      borderLeft: `2px solid ${active ? c : 'transparent'}`,
+                      background: active ? 'var(--lh-stage-bg, #1f1e1c)' : 'transparent',
                       transition: 'all .12s',
                     }}
                   >
