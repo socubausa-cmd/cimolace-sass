@@ -15,13 +15,17 @@ import {
 
 // Type de live → pilote l'affichage par défaut en salle (cf. arenaLayoutForSessionType) :
 // Formation → SmartBoard · Conférence → grille membres · Débat → panel débatteurs.
+// `medical: true` = réservé au Live santé (MEDOS) ; grisé hors mode MEDOS (et
+// inversement, les types non-médicaux sont grisés EN mode MEDOS).
 const SESSION_TYPES = [
+  { value: 'teleconsult', label: 'Téléconsultation', icon: Stethoscope, medical: true },
   { value: 'classe', label: 'Formation', icon: GraduationCap }, // → mappé 'class' à la création
   { value: 'conference', label: 'Conférence', icon: Sparkles },
   { value: 'debate', label: 'Débat', icon: Swords },
 ];
 
 const CATEGORIES = [
+  { value: 'teleconsultation', label: 'Téléconsultation', icon: Stethoscope, medical: true },
   { value: 'formation', label: 'Formation', icon: GraduationCap },
   { value: 'mentorat', label: 'Mentorat', icon: Sparkles },
   { value: 'coaching', label: 'Coaching', icon: Presentation },
@@ -32,6 +36,23 @@ const CATEGORIES = [
 export function Step1Informations({ draft, updateDraft, isStaff, teachers, selectedTeacherId, onTeacherChange }) {
   const titleLen = String(draft.title || '').length;
   const descLen = String(draft.description || '').length;
+
+  // Cloison MEDOS : en Live santé, Type + Catégorie sont forcés sur « Téléconsultation »
+  // (les autres — Formation, Conférence, Débat… — sont grisés). Hors MEDOS, on restaure
+  // des valeurs Formation. Piloté par le seul basculement du mode (aussi au montage
+  // quand le brouillon arrive déjà en medos_mode, ex. préparé depuis MEDOS).
+  React.useEffect(() => {
+    const patch = {};
+    if (draft.medos_mode) {
+      if (draft.session_type !== 'teleconsult') patch.session_type = 'teleconsult';
+      if (draft.category !== 'teleconsultation') patch.category = 'teleconsultation';
+    } else {
+      if (draft.session_type === 'teleconsult') patch.session_type = 'classe';
+      if (draft.category === 'teleconsultation') patch.category = 'formation';
+    }
+    if (Object.keys(patch).length) updateDraft(patch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft.medos_mode]);
 
   return (
     <div className="space-y-6">
@@ -109,7 +130,7 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
             <SelectTrigger className="h-12 rounded-lg border-[#2D3139] bg-[#0a0c10] px-3 text-white">
               <div className="flex items-center gap-2">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#d97757]/28 text-[#B8A3FF]">
-                  <Video className="h-4 w-4" />
+                  {draft.medos_mode ? <Stethoscope className="h-4 w-4" /> : <Video className="h-4 w-4" />}
                 </span>
                 <SelectValue />
               </div>
@@ -117,8 +138,10 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
             <SelectContent className="rounded-xl border-[#2D3139] bg-[#151a21]">
               {SESSION_TYPES.map((t) => {
                 const Icon = t.icon;
+                // Grisé : type médical hors MEDOS, ou type non-médical en mode MEDOS.
+                const disabled = draft.medos_mode ? !t.medical : !!t.medical;
                 return (
-                  <SelectItem key={t.value} value={t.value} className="rounded-lg focus:bg-[#d97757]/10 focus:text-[#d97757]">
+                  <SelectItem key={t.value} value={t.value} disabled={disabled} className="rounded-lg focus:bg-[#d97757]/10 focus:text-[#d97757]">
                     <span className="inline-flex items-center gap-2">
                       <Icon className="h-3.5 w-3.5" />
                       {t.label}
@@ -135,7 +158,7 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
             <SelectTrigger className="h-12 rounded-lg border-[#2D3139] bg-[#0a0c10] px-3 text-white">
               <div className="flex items-center gap-2">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#cf7a52]/24 text-[#e8c3a0]">
-                  <GraduationCap className="h-4 w-4" />
+                  {draft.medos_mode ? <Stethoscope className="h-4 w-4" /> : <GraduationCap className="h-4 w-4" />}
                 </span>
                 <SelectValue />
               </div>
@@ -143,8 +166,10 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
             <SelectContent className="rounded-xl border-[#2D3139] bg-[#151a21]">
               {CATEGORIES.map((c) => {
                 const Icon = c.icon;
+                // Grisé : catégorie médicale hors MEDOS, ou catégorie non-médicale en mode MEDOS.
+                const disabled = draft.medos_mode ? !c.medical : !!c.medical;
                 return (
-                  <SelectItem key={c.value} value={c.value} className="rounded-lg focus:bg-[#d97757]/10 focus:text-[#d97757]">
+                  <SelectItem key={c.value} value={c.value} disabled={disabled} className="rounded-lg focus:bg-[#d97757]/10 focus:text-[#d97757]">
                     <span className="inline-flex items-center gap-2">
                       <Icon className="h-3.5 w-3.5" />
                       {c.label}
