@@ -587,6 +587,10 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
             day_id: dayId,
             video_id: videoId,
             content: notesText,
+            // Rattachement à la source pour le hub « Mes notes » (source polymorphe).
+            source_type: 'course',
+            source_id: String(formationKey),
+            source_title: formation?.title || null,
             updated_at: new Date().toISOString(),
           },
           { onConflict: 'formation_id,student_id,day_id,video_id' }
@@ -1241,10 +1245,10 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
             const canShowPresentation = !!currentDayPowerpoint;
             const canShowQuiz = !!currentDayQuiz;
 
-            // ⚠️ GATING DÉSACTIVÉ (mode test) : Question / Discussion / Forum accessibles
-            // directement, sans condition. Pour RÉACTIVER la pédagogie (vidéo + présentation +
-            // quiz + 20 mots de cahier), remettre simplement GATING_ENABLED = true.
-            const GATING_ENABLED = false;
+            // Gating pédagogique (vidéo + présentation + quiz + 20 mots avant Question/
+            // Discussion/Forum). Piloté par ENV au lieu d'un `false` codé en dur (audit P1) :
+            // OFF par défaut (aucune régression), activable au build via VITE_COURSE_GATING=on.
+            const GATING_ENABLED = String(import.meta.env.VITE_COURSE_GATING ?? '').toLowerCase() === 'on';
             const questionsUnlocked = !GATING_ENABLED || (
               videoDone
               && (!canShowPresentation || presentationDone)

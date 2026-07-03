@@ -50,7 +50,10 @@ async function downloadFromR2(key, dest) {
 
 function extractAudio(input, output) {
   return new Promise((resolve, reject) => {
-    const p = spawn('ffmpeg', ['-y', '-i', input, '-vn', '-ar', '16000', '-ac', '1', '-c:a', 'pcm_s16le', output], { stdio: ['ignore', 'pipe', 'pipe'] });
+    // Opus 24 kbps mono (≈180 Ko/min) au lieu de WAV pcm_s16le (≈2 Mo/min) : un live
+    // de >13 min dépassait la limite 25 Mo de Whisper → post-prod échouait (audit P0).
+    // Opus 24k tient ~2 h dans 25 Mo, qualité voix suffisante pour la transcription.
+    const p = spawn('ffmpeg', ['-y', '-i', input, '-vn', '-ac', '1', '-c:a', 'libopus', '-b:a', '24k', output], { stdio: ['ignore', 'pipe', 'pipe'] });
     let err = '';
     p.stderr.on('data', (d) => (err += d.toString()));
     p.on('close', (c) => (c === 0 ? resolve(output) : reject(new Error(`ffmpeg ${c}: ${err.slice(-200)}`))));
@@ -69,7 +72,7 @@ async function transcribeAudio(audioPath) {
   for (const p of providers) {
     try {
       const form = new FormData();
-      form.append('file', new Blob([fileBuffer], { type: 'audio/wav' }), 'audio.wav');
+      form.append('file', new Blob([fileBuffer], { type: 'audio/ogg' }), 'audio.ogg');
       form.append('model', p.model);
       form.append('language', 'fr');
       form.append('response_format', 'verbose_json');
@@ -158,7 +161,7 @@ export async function pollReplayPostprod() {
     }
 
     const tmpV = path.join(os.tmpdir(), `replay-${sid}.mp4`);
-    const tmpA = path.join(os.tmpdir(), `replay-${sid}.wav`);
+    const tmpA = path.join(os.tmpdir(), `replay-${sid}.ogg`);
     try {
       await downloadFromR2(rec.storage_filepath, tmpV);
       await extractAudio(tmpV, tmpA);
