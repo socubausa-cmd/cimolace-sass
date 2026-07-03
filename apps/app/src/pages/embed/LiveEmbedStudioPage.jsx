@@ -16,6 +16,18 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+/**
+ * SÉCURITÉ postMessage : cibler l'origine RÉELLE de la page hôte (via
+ * document.referrer), jamais '*' (sinon toute origine peut lire les events de
+ * création/hôte de session depuis une iframe cachée). Repli same-origin.
+ */
+function getParentOrigin() {
+  try {
+    if (document.referrer) return new URL(document.referrer).origin;
+  } catch { /* referrer illisible */ }
+  return window.location.origin;
+}
+
 const SESSION_TYPES = [
   { id: 'webinar',      icon: '🎙️', label: 'Webinar',         desc: 'Conférence large audience' },
   { id: 'class',        icon: '📚', label: 'Cours en ligne',  desc: 'Classe interactive' },
@@ -133,7 +145,7 @@ export default function LiveEmbedStudioPage() {
           session_type: session.session_type,
           scheduled_at: session.scheduled_at,
         },
-      }, '*');
+      }, getParentOrigin());
     } catch (err) {
       setError(err.message);
     } finally {
@@ -146,7 +158,7 @@ export default function LiveEmbedStudioPage() {
       type: 'LIRI_HOST_SESSION',
       session_id: created.id,
       session_title: created.title,
-    }, '*');
+    }, getParentOrigin());
   };
 
   if (created) {

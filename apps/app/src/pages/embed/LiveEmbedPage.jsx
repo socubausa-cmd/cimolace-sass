@@ -20,6 +20,19 @@ import '@livekit/components-styles';
 import { getStableLiveKitRoomOptions, stableLiveKitConnectOptions } from '@/lib/livekitStableClient';
 import LiveDataSaverEffect from '@/features/live/LiveDataSaverEffect';
 
+/**
+ * SÉCURITÉ postMessage : ne PAS diffuser les événements (room, session, erreurs)
+ * à `'*'` (toute origine peut alors les lire depuis une iframe cachée). On cible
+ * l'origine RÉELLE de la page hôte, dérivée de document.referrer (l'URL de la
+ * page qui a chargé l'iframe). Repli same-origin si le referrer est masqué.
+ */
+function getParentOrigin() {
+  try {
+    if (document.referrer) return new URL(document.referrer).origin;
+  } catch { /* referrer illisible */ }
+  return window.location.origin;
+}
+
 // ── Styles inline (pas de Tailwind — page embed minimaliste) ─────────────────
 const S = {
   root: {
@@ -171,17 +184,17 @@ export default function LiveEmbedPage() {
         if (data.role) setResolvedRole(data.role);
         setPhase('live');
 
-        // Notifier le parent via postMessage
+        // Notifier le parent via postMessage (origine hôte ciblée, jamais '*')
         window.parent?.postMessage(
           { type: 'LIRI_SESSION_JOINED', sessionId, room: data.room_name },
-          '*',
+          getParentOrigin(),
         );
       } catch (err) {
         setErrorMsg(err?.message ?? 'Impossible de rejoindre la session');
         setPhase('error');
         window.parent?.postMessage(
           { type: 'LIRI_ERROR', sessionId, message: err?.message },
-          '*',
+          getParentOrigin(),
         );
       }
     }
@@ -305,7 +318,7 @@ export default function LiveEmbedPage() {
               setPhase('ended');
               window.parent?.postMessage(
                 { type: 'LIRI_SESSION_ENDED', sessionId },
-                '*',
+                getParentOrigin(),
               );
             }}
           >
