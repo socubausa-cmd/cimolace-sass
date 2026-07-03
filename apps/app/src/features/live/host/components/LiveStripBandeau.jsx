@@ -24,7 +24,7 @@ function LiveTopBarBrand({ sessionTitle }) {
           {sessionTitle || 'Salle live'}
         </span>
         <span style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', display: 'flex', alignItems: 'center', gap: 3 }}>
-          {_LSB_BRAND} <LiriProductBadge product="academy" size="xs" /> <ChevronDown size={10} aria-hidden />
+          {_LSB_IS_TENANT ? <>{_LSB_BRAND} </> : null}<LiriProductBadge product="academy" size="xs" /> <ChevronDown size={10} aria-hidden />
         </span>
       </div>
     </div>
