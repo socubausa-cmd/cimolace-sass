@@ -927,12 +927,13 @@ export const teleconsultApi = {
   ) =>
     api.post<ApiEnvelope<TeleconsultInvite>>(`/med/teleconsult/${id}/invites`, body).then(unwrap),
   // Membres du tenant (comptes existants) — pour inviter un soignant au live.
-  tenantMembers: () =>
+  // ⚠️ /tenant-portal/members est DOUBLE-emballé ({data:{data:[…]}}) : unwrap n'en
+  // retire qu'une couche → on déballe la seconde si besoin.
+  tenantMembers: (): Promise<{ user_id: string; email: string | null; full_name: string | null; role: string; status: string }[]> =>
     api
-      .get<ApiEnvelope<{ user_id: string; email: string | null; full_name: string | null; role: string; status: string }[]>>(
-        '/tenant-portal/members',
-      )
-      .then(unwrap),
+      .get<ApiEnvelope<any>>('/tenant-portal/members')
+      .then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : r?.data ?? [])),
   listInvites: (id: string) =>
     api.get<ApiEnvelope<TeleconsultInvite[]>>(`/med/teleconsult/${id}/invites`).then(unwrap),
   consentInvite: (id: string, inviteId: string, granted: boolean) =>
