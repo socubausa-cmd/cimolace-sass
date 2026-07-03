@@ -7,7 +7,7 @@ import { Roles } from "../common/decorators/roles.decorator";
 import { BillingService } from "./billing.service";
 
 @Controller("billing")
-@UseGuards(JwtAuthGuard, TenantGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 export class BillingController {
   constructor(private svc: BillingService) {}
   @Get("subscription") async getSubscription(@Req() req: any) { return { data: await this.svc.getSubscription(req.tenant.id) }; }
@@ -20,11 +20,14 @@ export class BillingController {
   @Get("plan") async plan(@Req() req: any) { return this.svc.getTenantSubscription(req.tenant.id); }
   // SELF-SERVE : choisir un forfait Cimolace (grille LIRI) → crée l'abo 'pending' à
   // payer ensuite via card-checkout (Stripe) ou collect (PawaPay). Body { planKey, provider? }.
-  @Post("subscribe") async subscribe(@Req() req: any, @Body() b: { planKey?: string; provider?: string }) {
+  // Écritures qui engagent de l'argent (créer un abo, déclencher une collecte/
+  // un checkout) → owner/admin uniquement (défense en profondeur, spec Billing/
+  // Rôles §matrice ; un student ne doit JAMAIS abonner/payer au nom du tenant).
+  @Post("subscribe") @Roles("owner", "admin") async subscribe(@Req() req: any, @Body() b: { planKey?: string; provider?: string }) {
     return this.svc.subscribeToPlan(req.tenant.id, b?.planKey ?? "", b?.provider);
   }
   // Mobile money (PawaPay — Afrique)
-  @Post("subscriptions/:id/collect") async collect(@Req() req: any, @Param("id") id: string, @Body() b: any) {
+  @Post("subscriptions/:id/collect") @Roles("owner", "admin") async collect(@Req() req: any, @Param("id") id: string, @Body() b: any) {
     return this.svc.collectSubscriptionViaPawaPay(req.tenant.id, id, b);
   }
   // Mobile money : polling du statut (compte PawaPay partagé → pas de webhook cimolace).
@@ -41,11 +44,11 @@ export class BillingController {
   @Post("refunds/sync") async syncRefunds(@Req() req: any) {
     return this.svc.syncPendingRefunds(req.tenant.id);
   }
-  // Carte bancaire (Stripe — Europe / international)
-  @Post("subscriptions/:id/card-checkout") async cardCheckout(@Req() req: any, @Param("id") id: string) {
+  // Carte bancaire (Stripe — Europe / international) — owner/admin (engage un paiement)
+  @Post("subscriptions/:id/card-checkout") @Roles("owner", "admin") async cardCheckout(@Req() req: any, @Param("id") id: string) {
     return this.svc.createCardCheckout(req.tenant.id, id);
   }
-  @Post("subscriptions/:id/card-confirm") async cardConfirm(@Req() req: any, @Param("id") id: string) {
+  @Post("subscriptions/:id/card-confirm") @Roles("owner", "admin") async cardConfirm(@Req() req: any, @Param("id") id: string) {
     return this.svc.confirmCardPayment(req.tenant.id, id);
   }
 

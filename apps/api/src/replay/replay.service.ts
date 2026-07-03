@@ -7,14 +7,27 @@ export class ReplayService {
   constructor(private readonly supabase: SupabaseService, private readonly config: ConfigService) {}
 
   async listRecordings(tenantId: string) {
-    const { data } = await (this.supabase.client as any).from('live_recordings').select('*')
-      .eq('tenant_slug', tenantId).order('created_at', { ascending: false });
+    // Scope tenant via la jointure live_sessions (même pattern que listReplays).
+    // NB : l'ancien filtre `.eq('tenant_slug', tenantId)` comparait un UUID à un
+    // slug → liste toujours vide. La jointure règle le bug ET la cloison.
+    const { data } = await (this.supabase.client as any)
+      .from('live_recordings')
+      .select('*, live_sessions!inner(tenant_id)')
+      .eq('live_sessions.tenant_id', tenantId)
+      .order('created_at', { ascending: false });
     return data ?? [];
   }
 
   async getRecording(tenantId: string, recordingId: string) {
-    const { data, error } = await (this.supabase.client as any).from('live_recordings').select('*')
-      .eq('id', recordingId).single();
+    // FAIL-CLOSED anti-IDOR : l'enregistrement doit appartenir au tenant courant
+    // (jointure live_sessions.tenant_id). Un id d'un AUTRE tenant → 404, jamais
+    // de lecture cross-tenant (audit sécurité 2026-07-03, P0).
+    const { data, error } = await (this.supabase.client as any)
+      .from('live_recordings')
+      .select('*, live_sessions!inner(tenant_id)')
+      .eq('id', recordingId)
+      .eq('live_sessions.tenant_id', tenantId)
+      .single();
     if (error || !data) throw new NotFoundException('Enregistrement introuvable');
     return data;
   }

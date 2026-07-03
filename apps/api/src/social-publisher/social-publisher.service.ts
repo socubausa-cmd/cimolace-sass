@@ -179,13 +179,13 @@ export class SocialPublisherService {
   // ─── Publier sur TikTok ──────────────────────────────────────────────────
 
   async publishToTikTok(tenantId: string, postId: string): Promise<boolean> {
-    const post = await this.getPost(postId);
+    const post = await this.getPost(tenantId, postId);
     if (!post) throw new Error('Post introuvable');
 
     const token = await this.getToken(tenantId, 'tiktok');
     if (!token) throw new Error('Token TikTok non configuré');
 
-    const clip = await this.getShortClip(post.short_clip_id);
+    const clip = await this.getShortClip(tenantId, post.short_clip_id);
     if (!clip) throw new Error('Clip introuvable');
 
     // Bucket R2 privé → on PRÉSIGNE pour que la plateforme puisse tirer la vidéo.
@@ -250,13 +250,13 @@ export class SocialPublisherService {
   // ─── Publier sur Facebook / Instagram Reels ──────────────────────────────
 
   async publishToFacebook(tenantId: string, postId: string): Promise<boolean> {
-    const post = await this.getPost(postId);
+    const post = await this.getPost(tenantId, postId);
     if (!post) throw new Error('Post introuvable');
 
     const token = await this.getToken(tenantId, 'facebook');
     if (!token) throw new Error('Token Facebook non configuré');
 
-    const clip = await this.getShortClip(post.short_clip_id);
+    const clip = await this.getShortClip(tenantId, post.short_clip_id);
     if (!clip) throw new Error('Clip introuvable');
 
     // Bucket R2 privé → on PRÉSIGNE pour que la plateforme puisse tirer la vidéo.
@@ -318,7 +318,7 @@ export class SocialPublisherService {
   // résolu à la connexion. Flux en 2 temps : conteneur REELS → attente encodage
   // → media_publish.
   async publishToInstagram(tenantId: string, postId: string): Promise<boolean> {
-    const post = await this.getPost(postId);
+    const post = await this.getPost(tenantId, postId);
     if (!post) throw new Error('Post introuvable');
 
     const token = await this.getToken(tenantId, 'facebook');
@@ -330,7 +330,7 @@ export class SocialPublisherService {
       );
     }
 
-    const clip = await this.getShortClip(post.short_clip_id);
+    const clip = await this.getShortClip(tenantId, post.short_clip_id);
     if (!clip) throw new Error('Clip introuvable');
 
     const videoUrl = clip.storage_key
@@ -414,7 +414,7 @@ export class SocialPublisherService {
   // LinkedIn n'a pas de PULL_FROM_URL : on initialise l'upload, on POUSSE les
   // octets, on finalise, puis on crée le post (/rest API, versionnée).
   async publishToLinkedIn(tenantId: string, postId: string): Promise<boolean> {
-    const post = await this.getPost(postId);
+    const post = await this.getPost(tenantId, postId);
     if (!post) throw new Error('Post introuvable');
 
     const token = await this.getToken(tenantId, 'linkedin');
@@ -422,7 +422,7 @@ export class SocialPublisherService {
     const author = token.page_id; // urn:li:person:xxx (résolu à la connexion)
     if (!author) throw new Error('URN auteur LinkedIn introuvable');
 
-    const clip = await this.getShortClip(post.short_clip_id);
+    const clip = await this.getShortClip(tenantId, post.short_clip_id);
     if (!clip) throw new Error('Clip introuvable');
 
     const bytes = clip.storage_key
@@ -594,20 +594,24 @@ export class SocialPublisherService {
 
   // ─── Helpers ─────────────────────────────────────────────────────────────
 
-  private async getPost(postId: string) {
+  // FAIL-CLOSED anti-IDOR : un post/clip ne peut être lu QUE par son tenant
+  // (audit sécurité 2026-07-03, P0). Un id d'un autre tenant → null → 404 amont.
+  private async getPost(tenantId: string, postId: string) {
     const { data } = await (this.supabase.client as any)
       .from('social_posts')
       .select('*')
       .eq('id', postId)
+      .eq('tenant_id', tenantId)
       .single();
     return data;
   }
 
-  private async getShortClip(clipId: string) {
+  private async getShortClip(tenantId: string, clipId: string) {
     const { data } = await (this.supabase.client as any)
       .from('short_clips')
       .select('*')
       .eq('id', clipId)
+      .eq('tenant_id', tenantId)
       .single();
     return data;
   }
