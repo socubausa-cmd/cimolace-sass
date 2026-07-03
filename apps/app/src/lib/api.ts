@@ -900,6 +900,11 @@ export const teleconsultApi = {
     api.post<ApiEnvelope<{ room: string; token: string; ttl: string }>>(`/med/teleconsult/${id}/token`).then(unwrap),
   join: (id: string) =>
     api.post<ApiEnvelope<TeleconsultSession>>(`/med/teleconsult/${id}/join`).then(unwrap),
+  // Rejoint (ou crée) la session téléconsult liée à un RDV → renvoie la session
+  // (id = live_session partagée). Sert au studio MEDOS pour lancer la salle
+  // téléconsult (JAMAIS l'arène Formation).
+  joinByAppointment: (appointmentId: string) =>
+    api.post<ApiEnvelope<TeleconsultSession>>(`/med/teleconsult/appointment/${appointmentId}/join`).then(unwrap),
   end: (id: string, body: { ended_reason?: string; connection_quality?: string; quick_note?: string } = {}) =>
     api.post<ApiEnvelope<TeleconsultSession>>(`/med/teleconsult/${id}/end`, body).then(unwrap),
   // Inviter un proche (+ consentement RGPD du patient)

@@ -13,6 +13,7 @@ import { Radio } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { pushWizardSmartboardToLiveScenes } from '@/lib/pushWizardSmartboardToLiveScenes';
 import { formatJoinCodeDisplay } from '@/lib/liveJoinCode';
+import { teleconsultApi } from '@/lib/api';
 
 export default function LiveStudioPage() {
   const { user } = useAuth();
@@ -89,6 +90,30 @@ export default function LiveStudioPage() {
     if (!user?.id) {
       toast({ title: 'Session requise', description: 'Veuillez vous reconnecter.', variant: 'destructive' });
       return;
+    }
+    // ⛔ MEDOS ≠ Formation. Depuis MEDOS (context=medos), lancer ouvre la salle
+    // TÉLÉCONSULT (cockpit clinique + patient) du RDV — JAMAIS l'arène Formation.
+    // On rejoint la session téléconsult du RDV (join par appointment) et on y va.
+    if ((medosContext || draft?.medos_mode === true) && payload.start_immediately) {
+      const apptId = searchParams.get('appointment');
+      if (!apptId) {
+        toast({ title: 'Téléconsultation', description: 'RDV introuvable pour lancer la salle MEDOS.', variant: 'destructive' });
+        return;
+      }
+      setCreating(true);
+      try {
+        const tc = await teleconsultApi.joinByAppointment(apptId);
+        const tcId = tc?.session_id || tc?.id;
+        if (!tcId) throw new Error('Session téléconsultation invalide');
+        const slug = searchParams.get('tenant') || '';
+        clearDraft();
+        navigate(`/teleconsult/${tcId}${slug ? `?tenant=${encodeURIComponent(slug)}` : ''}`);
+      } catch (e) {
+        toast({ title: 'Téléconsultation', description: e?.message || "Impossible d'ouvrir la salle MEDOS.", variant: 'destructive' });
+      } finally {
+        setCreating(false);
+      }
+      return; // en mode MEDOS on ne crée JAMAIS de live Formation
     }
     if (isStaff && !selectedTeacherId) {
       toast({ title: 'Enseignant requis', description: 'Sélectionnez un enseignant.', variant: 'destructive' });
