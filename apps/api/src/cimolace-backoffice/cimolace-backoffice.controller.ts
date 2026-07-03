@@ -20,6 +20,9 @@ export class CimolaceBackofficeController {
   @Get('finances/wallets') listWallets() { return this.svc.listWallets(); }
   @Post('finances/wallets') createWallet(@Body() b: any) { return this.svc.createWallet(b); }
   @Post('finances/wallets/:key/allocate') allocateWallet(@Req() req: any, @Param('key') key: string, @Body() b: any) { return this.svc.allocateWallet(key, b, req.user?.id ?? null); }
+  // Rail Airtel Money (décaissement direct — sandbox par défaut)
+  @Post('finances/airtel/disburse') airtelDisburse(@Req() req: any, @Body() b: any) { return this.svc.airtelDisburse(req.user?.id ?? null, b); }
+  @Get('finances/airtel/status/:id') airtelStatus(@Param('id') id: string) { return this.svc.airtelStatus(id); }
 
   @Get('clients') listClients() { return this.svc.listClients(); }
   @Post('clients') createClient(@Body() d: CreateClientDto) { return this.svc.createClient(d); }

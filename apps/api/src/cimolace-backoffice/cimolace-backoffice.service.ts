@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { randomUUID } from 'crypto';
 import { SupabaseService } from '../supabase/supabase.service';
 import { PawaPayService } from '../pawapay/pawapay.service';
+import { AirtelMoneyService } from '../airtel/airtel.service';
 import { CreateClientDto, UpdateClientDto } from './dto/backoffice.dto';
 import {
   SCHOOL_ENGINE_MANIFEST,
@@ -18,6 +19,7 @@ export class CimolaceBackofficeService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly pawapay: PawaPayService,
+    private readonly airtel: AirtelMoneyService,
   ) {}
 
   // ─── Finances PLATEFORME (console SaaS Cimolace) ──────────────────────────
@@ -104,6 +106,50 @@ export class CimolaceBackofficeService {
       throw e;
     }
     return { payout_id: payoutId, status: initStatus, amount_cents: amountCents, currency };
+  }
+
+  /**
+   * Décaissement Airtel Money (rail DIRECT, sandbox par défaut). Débite le wallet
+   * Airtel Money marchand — indépendant de pawaPay. Tracé dans billing_payouts
+   * (provider='airtel') comme les payouts pawaPay.
+   */
+  async airtelDisburse(
+    createdBy: string | null,
+    dto: { amountCents?: number; currency?: string; phoneNumber?: string; reference?: string; wallet?: string },
+  ) {
+    const amountCents = Math.round(Number(dto?.amountCents) || 0);
+    if (amountCents <= 0) throw new BadRequestException('amountCents (> 0) requis');
+    if (!dto?.phoneNumber) throw new BadRequestException('phoneNumber requis');
+    const currency = (dto.currency || 'XAF').toUpperCase();
+    const sb = this.supabase.client as any;
+    const payoutId = randomUUID();
+    await sb.from('billing_payouts').insert({
+      tenant_id: null, payout_id: payoutId, provider: 'airtel', status: 'pending',
+      amount_cents: amountCents, currency, phone_number: dto.phoneNumber,
+      reason: dto.reference ?? 'Décaissement Airtel Cimolace', created_by: createdBy, wallet: dto.wallet ?? null,
+    });
+    // XAF (zéro-décimale) → montant en unité majeure = amountCents ; sinon /100.
+    const amount = CimolaceBackofficeService.ZERO_DECIMAL.has(currency) ? amountCents : amountCents / 100;
+    let initStatus = 'pending';
+    try {
+      const res = await this.airtel.disburse({
+        msisdn: dto.phoneNumber, amount, transactionId: payoutId, reference: dto.reference,
+      });
+      initStatus = String(res?.data?.transaction?.status ?? 'accepted').toLowerCase();
+      await sb.from('billing_payouts').update({ status: initStatus, updated_at: new Date().toISOString() }).eq('payout_id', payoutId);
+      if (dto.wallet) {
+        await sb.from('cimolace_wallet_entries').insert({ wallet_key: dto.wallet, amount_cents: -amountCents, currency, kind: 'payout', note: dto.reference ?? 'Décaissement Airtel', ref_id: payoutId, created_by: createdBy });
+      }
+    } catch (e) {
+      await sb.from('billing_payouts').update({ status: 'failed', failure_message: (e as Error).message, updated_at: new Date().toISOString() }).eq('payout_id', payoutId);
+      throw e;
+    }
+    return { payout_id: payoutId, status: initStatus, amount_cents: amountCents, currency };
+  }
+
+  /** Statut d'un décaissement Airtel (polling). */
+  async airtelStatus(transactionId: string) {
+    return this.airtel.getDisbursementStatus(transactionId);
   }
 
   async getStats() {
