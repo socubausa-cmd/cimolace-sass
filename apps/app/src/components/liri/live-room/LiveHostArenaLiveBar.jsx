@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { MoreHorizontal, QrCode, Sparkles, Leaf, Layers, Sun, Maximize2, MessagesSquare, Link2, Check } from 'lucide-react';
 import { ARENA_LAYOUT } from '@/lib/liriArenaLayout';
+import LiriProductBadge from '@/components/brand/LiriProductBadge';
 import { buildSmartboardNavigatorScenes } from '@/lib/smartboardNavigatorScenes';
 import { SmartboardNavigatorSceneIcon } from '@/components/liri/live-room/SmartboardNavigatorSceneIcon';
 import GuestPermissionBar from '@/components/liri/liri-live/GuestPermissionBar';
@@ -262,6 +263,9 @@ export default function LiveHostArenaLiveBar({
           </button>
           </>
           )}
+          {/* Étiquette produit LIRI (Academy) — posée juste à côté du bouton « Formation »
+              (relocalisée depuis le bandeau du haut, qui prenait trop de place). */}
+          {!hub ? <LiriProductBadge product="academy" size="sm" style={{ flexShrink: 0 }} /> : null}
           {/* Bascule d'affichage Formation ⇄ Conférence (raccourci toujours visible dans la barre).
               Le sélecteur complet (Invité / Panel / Mur…) reste dans le hub. */}
           {!hub && (

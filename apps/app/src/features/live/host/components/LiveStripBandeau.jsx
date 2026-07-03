@@ -1,33 +1,11 @@
 import React, { useState } from 'react';
 import { Track } from 'livekit-client';
 import { ChevronDown } from 'lucide-react';
-import LiriProductBadge from '@/components/brand/LiriProductBadge';
 import { LiveLocalUserVignette } from '@/features/live/host/components/LiveLocalUserVignette';
 import { LiveMemberDockScroll } from '@/features/live/host/components/LiveMemberDockScroll';
 import { LiveStripActionButton } from '@/features/live/host/components/LiveStripActionButton';
 import { LiveStripOnlineCounter } from '@/features/live/host/components/LiveStripOnlineCounter';
 import { PHASE } from '@/features/live/host/liveHostConstants';
-import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
-
-// Marque blanche : nom du tenant sur son domaine, « LIRI »/logo sur l'hôte produit.
-const _LSB_BRAND = activeTenantConfig?.branding?.name || 'LIRI';
-const _LSB_IS_TENANT = !!activeTenantConfig?.slug;
-
-/** Bloc chrome gauche de la barre du haut : logo + titre de la session. */
-function LiveTopBarBrand({ sessionTitle }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, paddingRight: 4, height: '100%' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}>
-        <span style={{ fontSize: 12.5, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 150 }}>
-          {sessionTitle || 'Salle live'}
-        </span>
-        <span style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', display: 'flex', alignItems: 'center', gap: 3 }}>
-          {_LSB_IS_TENANT ? <>{_LSB_BRAND} </> : null}<LiriProductBadge product="academy" size="xs" /> <ChevronDown size={10} aria-hidden />
-        </span>
-      </div>
-    </div>
-  );
-}
 
 /**
  * Bandeau membres en haut de la zone centrale : vignette locale + bouton STOP/QUITTER
@@ -107,7 +85,6 @@ export const LiveStripBandeau = React.forwardRef(function LiveStripBandeau(
     return (
       <div className="lh-sp-dim" style={wrapperStyle}>
         <div style={innerStyle}>
-          <LiveTopBarBrand sessionTitle={sessionTitle} />
           {!stripConference && showStripLocalHost ? (
             <LiveLocalUserVignette
               variant="host"
