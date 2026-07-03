@@ -141,7 +141,7 @@ const DemoCoursePlayerContent = () => {
   return (
     <div className="min-h-screen bg-[#0b0b0f] text-white flex flex-col">
       {/* Header Progress */}
-      <div className="h-16 border-b border-white/10 flex items-center px-8 bg-[#15202B]">
+      <div className="h-16 border-b border-white/10 flex items-center px-8 bg-[#262624]">
          <div className="flex-1">
            <h1 className="text-lg font-bold flex items-center gap-2">
              <span className="text-gray-400">{module?.title}</span> <ChevronRight className="h-4 w-4"/>
@@ -176,7 +176,7 @@ const DemoCoursePlayerContent = () => {
 
           {step === 2 && (
             <motion.div key="summary" initial={{opacity: 0, x: 20}} animate={{opacity: 1, x: 0}} exit={{opacity: 0, x: -20}}>
-               <Card className="bg-[#192734] border border-white/10 p-8">
+               <Card className="bg-[#2e2b28] border border-white/10 p-8">
                   <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
                     <BookOpen className="text-[var(--school-accent)]"/> Ce que tu dois retenir
                   </h2>
@@ -192,7 +192,7 @@ const DemoCoursePlayerContent = () => {
 
           {step === 3 && (
             <motion.div key="writing" initial={{opacity: 0, x: 20}} animate={{opacity: 1, x: 0}} exit={{opacity: 0, x: -20}}>
-               <Card className="bg-[#192734] border border-white/10 p-8">
+               <Card className="bg-[#2e2b28] border border-white/10 p-8">
                   <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
                     <PenTool className="text-[var(--school-accent)]"/> Qu'as-tu retenu ?
                   </h2>
@@ -217,7 +217,7 @@ const DemoCoursePlayerContent = () => {
 
           {step === 4 && (
             <motion.div key="quiz" initial={{opacity: 0, x: 20}} animate={{opacity: 1, x: 0}} exit={{opacity: 0, x: -20}}>
-               <Card className="bg-[#192734] border border-white/10 p-8">
+               <Card className="bg-[#2e2b28] border border-white/10 p-8">
                   <h2 className="text-2xl font-bold mb-6">Quiz de validation</h2>
                   <div className="space-y-8">
                      {day.content.quiz.map((q, idx) => (
@@ -1058,9 +1058,9 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
           opacity: 0.42, filter: 'blur(3px)',
           WebkitMaskImage: 'radial-gradient(ellipse 50% 40% at 50% 28%, #000 0%, transparent 72%)',
           maskImage: 'radial-gradient(ellipse 50% 40% at 50% 28%, #000 0%, transparent 72%)' }} />
-        <span className="cpi-orb absolute -left-10 top-16 h-72 w-72 rounded-full" style={{ background: '#D4AF37' }} />
-        <span className="cpi-orb alt absolute -right-10 top-1/4 h-80 w-80 rounded-full" style={{ background: '#6f4cff', opacity: 0.1 }} />
-        <span className="cpi-orb absolute bottom-10 left-1/3 h-64 w-64 rounded-full" style={{ background: '#0fb3ff', opacity: 0.09 }} />
+        <span className="cpi-orb absolute -left-10 top-16 h-72 w-72 rounded-full" style={{ background: '#d97757' }} />
+        <span className="cpi-orb alt absolute -right-10 top-1/4 h-80 w-80 rounded-full" style={{ background: '#e0926a', opacity: 0.1 }} />
+        <span className="cpi-orb absolute bottom-10 left-1/3 h-64 w-64 rounded-full" style={{ background: '#c98b6a', opacity: 0.09 }} />
         <div className="absolute inset-0" style={{ boxShadow: 'inset 0 0 220px 50px rgba(0,0,0,0.5)' }} />
       </div>
 
@@ -1069,7 +1069,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="h-16 border-b border-white/10 flex items-center px-6 bg-[#151a21]/80 backdrop-blur-xl sticky top-0 z-20"
+        className="h-16 border-b border-white/10 flex items-center px-6 bg-[#2e2b28]/80 backdrop-blur-xl sticky top-0 z-20"
       >
         <Button variant="ghost" onClick={handleExit} className="text-gray-400 hover:text-white hover:bg-white/5 -ml-2">
           <ChevronRight className="w-4 h-4 rotate-180 mr-1" /> Retour
@@ -1287,9 +1287,9 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                 </div>
                 {/* Orbes flottants larges z-4 — couvrent TOUTE la scène vidéo (pointer-events-none, contrôles natifs toujours accessibles) */}
                 <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 4 }}>
-                  <span className="cpi-orb absolute rounded-full" style={{ background: '#D4AF37', opacity: 0.09, left: '-5%', top: '-10%', width: '55vw', height: '55vh', filter: 'blur(140px)' }} />
-                  <span className="cpi-orb alt absolute rounded-full" style={{ background: '#6f4cff', opacity: 0.07, right: '-5%', bottom: '-10%', width: '50vw', height: '50vh', filter: 'blur(130px)' }} />
-                  <span className="cpi-orb absolute rounded-full" style={{ background: '#0fb3ff', opacity: 0.045, left: '20%', bottom: '5%', width: '40vw', height: '40vh', filter: 'blur(120px)' }} />
+                  <span className="cpi-orb absolute rounded-full" style={{ background: '#d97757', opacity: 0.09, left: '-5%', top: '-10%', width: '55vw', height: '55vh', filter: 'blur(140px)' }} />
+                  <span className="cpi-orb alt absolute rounded-full" style={{ background: '#e0926a', opacity: 0.07, right: '-5%', bottom: '-10%', width: '50vw', height: '50vh', filter: 'blur(130px)' }} />
+                  <span className="cpi-orb absolute rounded-full" style={{ background: '#c98b6a', opacity: 0.045, left: '20%', bottom: '5%', width: '40vw', height: '40vh', filter: 'blur(120px)' }} />
                 </div>
                 {/* CSS leçon — fond noir sur la vidéo (état de chargement gris → noir) */}
                 <style>{`video{background:#0b0b0f!important}`}</style>
@@ -1302,7 +1302,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                           <Menu className="w-6 h-6" />
                         </Button>
                       </SheetTrigger>
-                      <SheetContent side="left" className="p-0 bg-[#192734] border-r border-white/10 w-[85%] sm:w-[350px]">
+                      <SheetContent side="left" className="p-0 bg-[#2e2b28] border-r border-white/10 w-[85%] sm:w-[350px]">
                         <ProgressivePlaylist
                           playlistData={playlistData}
                           currentFormationId={formationId}
@@ -1410,7 +1410,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                 border: smartboardOn
                                   ? '1px solid rgba(212,175,55,0.55)'
                                   : '1px solid rgba(255,255,255,0.12)',
-                                color: smartboardOn ? '#D4AF37' : 'rgba(255,255,255,0.55)',
+                                color: smartboardOn ? '#d97757' : 'rgba(255,255,255,0.55)',
                                 fontSize: '11px',
                                 fontWeight: 600,
                                 letterSpacing: '0.04em',
@@ -1524,13 +1524,13 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                           })()}
 
                           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                            <div className="lg:col-span-2 border border-white/10 rounded-xl bg-[#151a21]/60 backdrop-blur p-5">
+                            <div className="lg:col-span-2 border border-white/10 rounded-xl bg-[#2e2b28]/60 backdrop-blur p-5">
                               <div className="text-xs text-[var(--school-accent)] uppercase tracking-wider font-semibold mb-2">Résumé</div>
                               <div className="text-sm text-gray-200 whitespace-pre-wrap mt-2">
                                 {String(currentVideoMemo?.summary || currentVideoMemo?.description || '').trim() || '—'}
                               </div>
                             </div>
-                            <div className="border border-white/10 rounded-xl bg-[#151a21]/60 backdrop-blur p-5">
+                            <div className="border border-white/10 rounded-xl bg-[#2e2b28]/60 backdrop-blur p-5">
                               <div className="text-xs text-[var(--school-accent)] uppercase tracking-wider font-semibold mb-2">Points clés</div>
                               <div className="text-sm text-gray-200 whitespace-pre-wrap mt-2">
                                 {String(currentVideoMemo?.keyPoints || '').trim() || '—'}
@@ -1539,7 +1539,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                           </div>
 
                           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                            <div className="border border-white/10 rounded-xl bg-[#151a21]/60 backdrop-blur p-5">
+                            <div className="border border-white/10 rounded-xl bg-[#2e2b28]/60 backdrop-blur p-5">
                               <ChapterList
                                 timestamps={Array.isArray(currentVideoMemo?.timestamps) ? currentVideoMemo.timestamps : []}
                                 currentTimeSeconds={videoCurrentTime}
@@ -1607,7 +1607,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                 type="button"
                                 onClick={() => { videoPlayerRef.current?.pause?.(); setShowClassroom(true); }}
                                 title="Voir le cours en plein écran — le tableau qui enseigne (narré)"
-                                className="fixed right-5 top-24 z-[120] inline-flex items-center gap-2 rounded-full border border-[var(--school-accent,#D4AF37)]/40 bg-[#12111a]/90 px-4 py-2.5 text-sm font-semibold text-[var(--school-accent,#D4AF37)] shadow-xl backdrop-blur transition-colors hover:bg-[#12111a]"
+                                className="fixed right-5 top-24 z-[120] inline-flex items-center gap-2 rounded-full border border-[var(--school-accent,#d97757)]/40 bg-[#262624]/90 px-4 py-2.5 text-sm font-semibold text-[var(--school-accent,#d97757)] shadow-xl backdrop-blur transition-colors hover:bg-[#262624]"
                               >
                                 <Sparkles className="h-4 w-4" /> Salle de classe
                               </button>
@@ -1691,7 +1691,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                     !allNodesClicked
                                                       ? 'text-gray-600 cursor-not-allowed'
                                                       : mindmapTab === 'quiz'
-                                                      ? 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
+                                                      ? 'bg-[#d97757]/15 text-[#e58a5f] border border-[#d97757]/30'
                                                       : 'text-gray-400 hover:text-white'
                                                   }`}
                                                 >
@@ -1702,7 +1702,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                   onClick={() => setMindmapTab('question')}
                                                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                                                     mindmapTab === 'question'
-                                                      ? 'bg-blue-500/15 text-blue-300 border border-blue-500/30'
+                                                      ? 'bg-[#e0926a]/15 text-[#e0926a] border border-[#e0926a]/30'
                                                       : 'text-gray-400 hover:text-white'
                                                   }`}
                                                 >
@@ -1802,7 +1802,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                     onClick={() => setQuestionsSubTab('ia')}
                                                     className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
                                                       questionsSubTab === 'ia'
-                                                        ? 'bg-blue-500/15 text-blue-300 border border-blue-500/30'
+                                                        ? 'bg-[#e0926a]/15 text-[#e0926a] border border-[#e0926a]/30'
                                                         : 'text-gray-400 hover:text-white'
                                                     }`}
                                                   >
@@ -2658,7 +2658,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                   </div>
                 </div>
 
-                <div className="shrink-0 border-t border-white/10 bg-[#15202B] px-3 md:px-6 py-3 flex items-center justify-between gap-3">
+                <div className="shrink-0 border-t border-white/10 bg-[#262624] px-3 md:px-6 py-3 flex items-center justify-between gap-3">
                   <div className="text-xs text-gray-400 truncate">
                     {activePanel === 'video'
                       ? 'Vidéo'
