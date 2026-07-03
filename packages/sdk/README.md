@@ -12,8 +12,12 @@ Embarquez **n'importe quel moteur Cimolace** (LIRI live, MEDOS, mbolo…) dans
 **Script tag (le plus simple, aucun build) :**
 
 ```html
-<script src="https://api.cimolace.space/sdk/cimolace-sdk.js" defer></script>
+<script src="https://app.cimolace.space/sdk/cimolace-sdk.js" defer></script>
 ```
+
+> Servi en statique par le front (`apps/app/public/sdk/cimolace-sdk.js`, même
+> mécanisme que `liri-sdk.js`). La source canonique reste `packages/sdk/cimolace-sdk.js` ;
+> la copie `public/` doit rester synchronisée (identiques).
 
 **npm (bundlers) :**
 
