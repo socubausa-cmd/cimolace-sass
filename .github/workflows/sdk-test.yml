@@ -1,0 +1,35 @@
+name: SDK — @cimolace/sdk (tests)
+
+# Ancre le SDK universel dans la CI : les tests des URLs/statuts d'embed
+# (packages/sdk) vivent hors de apps/api/test, donc hors du job API existant.
+# Ne modifie PAS ci.yml (édité par une session parallèle).
+
+on:
+  push:
+    paths:
+      - 'packages/sdk/**'
+      - '.github/workflows/sdk-test.yml'
+  pull_request:
+    paths:
+      - 'packages/sdk/**'
+      - '.github/workflows/sdk-test.yml'
+  workflow_dispatch:
+
+jobs:
+  sdk-test:
+    name: SDK — node --test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Tests SDK (node --test, aucune dépendance)
+        run: node --test packages/sdk/sdk.test.js
+
+      - name: Vérifier la parité copie servie (public == source)
+        run: diff -q packages/sdk/cimolace-sdk.js apps/app/public/sdk/cimolace-sdk.js
