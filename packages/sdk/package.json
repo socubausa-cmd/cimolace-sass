@@ -1,0 +1,27 @@
+{
+  "name": "@cimolace/sdk",
+  "version": "0.1.0",
+  "description": "SDK universel Cimolace — embarquer n'importe quel moteur (LIRI live, MEDOS, mbolo…) dans n'importe quel site.",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "./cimolace-sdk.js",
+  "module": "./cimolace-sdk.js",
+  "unpkg": "./cimolace-sdk.js",
+  "exports": {
+    ".": "./cimolace-sdk.js"
+  },
+  "files": [
+    "cimolace-sdk.js",
+    "README.md"
+  ],
+  "keywords": [
+    "cimolace",
+    "embed",
+    "sdk",
+    "liri",
+    "medos",
+    "mbolo",
+    "iframe",
+    "widget"
+  ]
+}
