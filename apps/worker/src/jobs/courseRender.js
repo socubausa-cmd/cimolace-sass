@@ -2,6 +2,7 @@
 // pour la classe numérique (post-production). Lit la file `course_render_jobs`.
 // Filtergraph validé : [video → moitié gauche][slides concat → moitié droite] hstack.
 import { createClient } from '@supabase/supabase-js';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { spawn } from 'child_process';
 import { writeFile, unlink, readFile } from 'fs/promises';
 import { tmpdir } from 'os';
@@ -15,17 +16,30 @@ const R2_SECRET = process.env.CF_R2_SECRET_ACCESS_KEY;
 const R2_BUCKET = process.env.CF_R2_BUCKET || 'cimolace-media';
 function r2Configured() { return Boolean(R2_ACCOUNT && R2_KEY && R2_SECRET && R2_BUCKET); }
 
+function r2Client() {
+  return new S3Client({
+    region: 'auto',
+    endpoint: `https://${R2_ACCOUNT}.r2.cloudflarestorage.com`,
+    credentials: { accessKeyId: R2_KEY, secretAccessKey: R2_SECRET },
+    forcePathStyle: true,
+  });
+}
+
+// R2 est S3-compatible : l'upload EXIGE une signature AWS SigV4 (@aws-sdk/client-s3),
+// PAS du Basic auth (rejeté par R2 → 403 → l'upload du rendu de cours échouait, audit
+// P0 #6). On stocke la CLÉ R2 (même convention que replay-postprod / short-generator) ;
+// le bucket est privé → la lecture se fait par URL présignée côté API/front (presign-
+// on-read du rendered course = suivi, comme replay.service.generatePlaybackUrl).
 async function uploadToR2(filePath, key) {
   if (!r2Configured()) return null;
-  const fileBuffer = await readFile(filePath);
-  const url = `https://${R2_ACCOUNT}.r2.cloudflarestorage.com/${R2_BUCKET}/${key}`;
-  const res = await fetch(url, {
-    method: 'PUT',
-    headers: { Authorization: `Basic ${Buffer.from(R2_KEY + ':' + R2_SECRET).toString('base64')}`, 'Content-Type': 'application/octet-stream' },
-    body: fileBuffer,
-  });
-  if (!res.ok) throw new Error(`R2 upload failed: ${res.status}`);
-  return `https://${R2_BUCKET}.${R2_ACCOUNT}.r2.cloudflarestorage.com/${key}`;
+  const body = await readFile(filePath);
+  await r2Client().send(new PutObjectCommand({
+    Bucket: R2_BUCKET,
+    Key: key,
+    Body: body,
+    ContentType: 'video/mp4',
+  }));
+  return key;
 }
 
 // Récupère un asset (http(s) OU data: URL) vers un fichier local.
