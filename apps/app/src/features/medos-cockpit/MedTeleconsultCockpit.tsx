@@ -504,14 +504,14 @@ function PatientCockpit({ channel }: { channel: CockpitChannel }) {
   if (!hasScene) return null;
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} style={fabStyle} title="Voir le partage du praticien">
+      <button data-cr="cockpit-fab" onClick={() => setOpen(true)} style={fabStyle} title="Voir le partage du praticien">
         🩺
       </button>
     );
   }
 
   return (
-    <div style={{ ...panelStyle, ...COCKPIT_VARS }}>
+    <div data-cr="cockpit" style={{ ...panelStyle, ...COCKPIT_VARS }}>
       <div style={headerStyle}>
         <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>Partagé par votre praticien</span>
         <button onClick={() => setOpen(false)} style={closeBtn} title="Réduire">—</button>
@@ -730,7 +730,7 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} style={fabStyle} title={eduMode ? 'Jumeau 3D — éducation santé' : 'Dossier clinique du patient'}>
+      <button data-cr="cockpit-fab" onClick={() => setOpen(true)} style={fabStyle} title={eduMode ? 'Jumeau 3D — éducation santé' : 'Dossier clinique du patient'}>
         🩺
         {isSharing && <span style={fabDot} />}
       </button>
@@ -752,7 +752,7 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
       ];
 
   return (
-    <div style={{ ...panelStyle, ...COCKPIT_VARS }}>
+    <div data-cr="cockpit" style={{ ...panelStyle, ...COCKPIT_VARS }}>
       <div style={headerStyle}>
         <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {eduMode ? (studyCase ? `Cas : ${studyCase.title}` : 'Jumeau 3D — Éducation santé') : (ctx?.patient_name || 'Dossier patient')}

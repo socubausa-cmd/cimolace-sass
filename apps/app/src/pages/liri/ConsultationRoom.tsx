@@ -107,6 +107,27 @@ const CONSULT_SHELL_CSS = `
    téléconsult, mange l'espace → masqué. Les outils fonctionnels restent. Les
    attributs data-wb-guide ne font RIEN hors de ce scope (Formation intacte). */
 .consult-shell [data-wb-guide]{ display:none !important; }
+
+/* ── MOBILE (≤820px) ─────────────────────────────────────────────────────────
+   La salle desktop (rails fixes 340/300/224 + barre large) déborde sur téléphone.
+   On replie : panneaux droite en FEUILLE par le bas (bottom-sheet), rail
+   participants masqué, barre d'outils qui passe à la ligne, cockpit quasi plein
+   écran. Scopé `.consult-shell` → Formation (LiveHostPage) reste INTACTE. */
+@media (max-width: 820px) {
+  .consult-shell [data-cr="rightdock"]{
+    position:fixed !important; left:0 !important; right:0 !important; bottom:0 !important; top:auto !important;
+    width:100% !important; height:70vh !important; z-index:2147483200 !important;
+    box-shadow:0 -18px 50px rgba(0,0,0,0.55) !important;
+  }
+  .consult-shell [data-cr="rightdock"] > *{
+    width:100% !important; border-left:none !important;
+    border-top-left-radius:16px !important; border-top-right-radius:16px !important;
+  }
+  .consult-shell [data-cr="members"]{ display:none !important; }
+  .consult-shell [data-cr="bar"]{ flex-wrap:wrap !important; justify-content:center !important; padding:7px 8px !important; gap:6px !important; }
+  .consult-shell [data-cr="cockpit"]{ left:10px !important; right:10px !important; bottom:10px !important; width:auto !important; max-width:none !important; height:84vh !important; }
+  .consult-shell [data-cr="cockpit-fab"]{ bottom:76px !important; right:12px !important; }
+}
 `;
 
 // La téléconsult est un moteur MEDOS : à la sortie, le praticien revient à MEDOS
@@ -446,16 +467,22 @@ export default function ConsultationRoom() {
               />
             </div>
           </div>
-          {/* Panneau de droite — un seul ouvert à la fois. */}
-          {rightPanel === 'chat' ? <ChatPanel onClose={() => setRightPanel(null)} /> : null}
-          {rightPanel === 'copilot' && isHost ? (
-            <CopilotPanel sessionId={sessionId} onClose={() => setRightPanel(null)} />
-          ) : null}
-          {rightPanel === 'recall' && isHost && sessionId ? (
-            <ConsultationRecall sessionId={sessionId} patientName={ctx?.patient_name} onClose={() => setRightPanel(null)} />
-          ) : null}
-          {rightPanel === 'script' && isHost && sessionId ? (
-            <ConsultationScriptPanel sessionId={sessionId} onClose={() => setRightPanel(null)} />
+          {/* Panneau de droite — un seul ouvert à la fois. Enveloppé dans `rightdock`
+              (data-cr) : desktop = colonne à largeur fixe ; mobile (≤820px) = feuille
+              plein écran par le bas (cf. CONSULT_SHELL_CSS @media). */}
+          {rightPanel ? (
+            <div data-cr="rightdock" style={{ display: 'flex', minHeight: 0 }}>
+              {rightPanel === 'chat' ? <ChatPanel onClose={() => setRightPanel(null)} /> : null}
+              {rightPanel === 'copilot' && isHost ? (
+                <CopilotPanel sessionId={sessionId} onClose={() => setRightPanel(null)} />
+              ) : null}
+              {rightPanel === 'recall' && isHost && sessionId ? (
+                <ConsultationRecall sessionId={sessionId} patientName={ctx?.patient_name} onClose={() => setRightPanel(null)} />
+              ) : null}
+              {rightPanel === 'script' && isHost && sessionId ? (
+                <ConsultationScriptPanel sessionId={sessionId} onClose={() => setRightPanel(null)} />
+              ) : null}
+            </div>
           ) : null}
         </div>
         <RoomAudioRenderer />
@@ -1037,7 +1064,7 @@ function MembersRail({ tracks }: { tracks: any[] }) {
   // sous les yeux (jamais masqué silencieusement).
   const screen = tracks.find((t) => t?.source === Track.Source.ScreenShare && t?.publication);
   return (
-    <div style={{ width: 224, flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: 0, background: PANEL_BG, borderRadius: 14, border: PANEL_BORDER, overflow: 'hidden' }}>
+    <div data-cr="members" style={{ width: 224, flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: 0, background: PANEL_BG, borderRadius: 14, border: PANEL_BORDER, overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <Users size={15} color={GOLD} aria-hidden="true" />
         <span style={{ fontWeight: 600, fontSize: 13, color: '#fff' }}>Participants</span>
@@ -1128,7 +1155,7 @@ function ConsultationBar({
     onLeave();
   };
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '9px 14px', background: BAR, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+    <div data-cr="bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '9px 14px', background: BAR, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
       {/* Média — icônes seules, légende au survol (title). */}
       <TrackToggle source={Track.Source.Microphone} showIcon title="Micro" />
       <TrackToggle source={Track.Source.Camera} showIcon title="Caméra" />
