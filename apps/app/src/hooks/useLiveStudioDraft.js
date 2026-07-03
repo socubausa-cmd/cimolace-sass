@@ -87,6 +87,13 @@ export const DEFAULT_DRAFT = {
   /** Moteur LIRI (Arena) — playlist dans live_sessions.config */
   liri_audio_enabled: false,
   liri_audio_scenes: [],
+  // Étape « Dossier MEDOS » (Live santé) — visible seulement si medos_mode.
+  // Patient rattaché + éléments cliniques préparés (cockpit) + boutique tenant.
+  medos_mode: false,
+  medos_patient_id: '',
+  medos_patient_label: '',
+  medos_share: { twin_3d: true, wheel: true, labs: true, soap: false },
+  medos_shop_product_ids: [],
   // Meta
   lastSavedAt: null,
 };

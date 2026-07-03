@@ -10,6 +10,7 @@ import {
   Monitor,
   Sparkles,
   CheckCircle2,
+  Stethoscope,
 } from 'lucide-react';
 
 export const LIVE_STUDIO_STEPS = [
@@ -22,3 +23,26 @@ export const LIVE_STUDIO_STEPS = [
   { id: 7, key: 'interactions', label: 'Interactions & IA', progressLabel: 'INTERACTIONS & IA', icon: Sparkles },
   { id: 8, key: 'validation', label: 'Validation', progressLabel: 'VALIDATION', icon: CheckCircle2 },
 ];
+
+// Étape « Dossier MEDOS » (Live santé) — insérée AVANT Validation en mode medos.
+export const MEDOS_DOSSIER_STEP = {
+  id: 8, key: 'dossier_medos', label: 'Dossier MEDOS', progressLabel: 'DOSSIER MEDOS', icon: Stethoscope,
+};
+
+/**
+ * Liste ordonnée des étapes selon le mode. En Live santé (MEDOS) on insère
+ * « Dossier MEDOS » en id 8 et Validation passe en id 9. Les étapes 1..7 (et leurs
+ * sous-étapes 6/7 câblées en dur dans StudioBuilder) restent inchangées → aucune
+ * numérotation existante n'est cassée. Les id restent séquentiels 1..N (requis par
+ * la navigation de StudioBuilder : currentStep ∈ [1, steps.length]).
+ * @param {boolean} medosMode
+ */
+export function getLiveStudioSteps(medosMode) {
+  if (!medosMode) return LIVE_STUDIO_STEPS;
+  const validation = LIVE_STUDIO_STEPS[LIVE_STUDIO_STEPS.length - 1]; // id 8
+  return [
+    ...LIVE_STUDIO_STEPS.slice(0, -1), // 1..7 inchangées
+    MEDOS_DOSSIER_STEP,                // 8
+    { ...validation, id: 9 },          // Validation → 9
+  ];
+}

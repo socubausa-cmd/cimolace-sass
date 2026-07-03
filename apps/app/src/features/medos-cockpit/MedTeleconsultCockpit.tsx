@@ -598,7 +598,24 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
         getLabs(c.patient_id).then((r) => alive && setLabs(r)).catch(() => {});
         getSignedPrescriptions(c.patient_id).then((r) => alive && setPrescriptions(r)).catch(() => {});
         getAttachments(c.patient_id).then((r) => alive && setAttachments(r)).catch(() => {});
-        getStorefront().then((r) => { if (alive) { setShopProducts(r.products); setShopBrand(r.brand); } }).catch(() => {});
+        getStorefront().then((r) => {
+          if (!alive) return;
+          setShopProducts(r.products);
+          setShopBrand(r.brand);
+          // Pré-remplissage préparé au Studio Live Créateur (étape « Dossier MEDOS ») :
+          // pré-coche les produits choisis avant le lancement (ceux encore au catalogue).
+          try {
+            const raw = localStorage.getItem(`medos:prefill:${sessionId}`);
+            if (raw) {
+              const pre = JSON.parse(raw);
+              const ids: string[] = Array.isArray(pre?.shopProductIds) ? pre.shopProductIds : [];
+              if (ids.length) {
+                const valid = new Set(r.products.map((p) => p.id));
+                setSelectedShopIds(new Set(ids.filter((id) => valid.has(id))));
+              }
+            }
+          } catch { /* prefill absent/illisible : sélection vide */ }
+        }).catch(() => {});
       } catch {
         if (alive) setLoadFailed(true);
       } finally {

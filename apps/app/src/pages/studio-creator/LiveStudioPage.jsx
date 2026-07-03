@@ -96,15 +96,33 @@ export default function LiveStudioPage() {
     // On rejoint la session téléconsult du RDV (join par appointment) et on y va.
     if ((medosContext || draft?.medos_mode === true) && payload.start_immediately) {
       const apptId = searchParams.get('appointment');
-      if (!apptId) {
-        toast({ title: 'Téléconsultation', description: 'RDV introuvable pour lancer la salle MEDOS.', variant: 'destructive' });
+      const patientId = draft?.medos_patient_id || '';
+      if (!apptId && !patientId) {
+        toast({
+          title: 'Téléconsultation',
+          description: 'Choisissez un patient à l’étape « Dossier MEDOS » ou lancez depuis un rendez-vous.',
+          variant: 'destructive',
+        });
         return;
       }
       setCreating(true);
       try {
-        const tc = await teleconsultApi.joinByAppointment(apptId);
+        // Résout la session téléconsult : RDV existant (join, idempotent) OU patient
+        // choisi dans l'étape Dossier MEDOS (création d'une session à la volée).
+        const tc = apptId
+          ? await teleconsultApi.joinByAppointment(apptId)
+          : await teleconsultApi.create({ patient_id: patientId });
         const tcId = tc?.session_id || tc?.id;
         if (!tcId) throw new Error('Session téléconsultation invalide');
+        // Pré-remplissage du cockpit (boutique + éléments cliniques préparés) : lu
+        // par la salle au montage pour pré-cocher ce que le praticien a choisi ici.
+        try {
+          localStorage.setItem(`medos:prefill:${tcId}`, JSON.stringify({
+            shopProductIds: Array.isArray(draft?.medos_shop_product_ids) ? draft.medos_shop_product_ids : [],
+            share: draft?.medos_share || null,
+            patientLabel: draft?.medos_patient_label || '',
+          }));
+        } catch { /* localStorage indispo : le praticien re-sélectionnera dans la salle */ }
         const slug = searchParams.get('tenant') || '';
         clearDraft();
         navigate(`/teleconsult/${tcId}${slug ? `?tenant=${encodeURIComponent(slug)}` : ''}`);

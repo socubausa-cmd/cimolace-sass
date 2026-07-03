@@ -12,8 +12,9 @@ import { Step4Securite } from '@/components/liri/live-studio/steps/Step4Securite
 import { Step5Inviter } from '@/components/liri/live-studio/steps/Step5Inviter';
 import { Step6SalleVirtuelle } from '@/components/liri/live-studio/steps/Step6SalleVirtuelle';
 import { Step7Interactions } from '@/components/liri/live-studio/steps/Step7Interactions';
+import { Step7MedosDossier } from '@/components/liri/live-studio/steps/Step7MedosDossier';
 import { Step8Validation } from '@/components/liri/live-studio/steps/Step8Validation';
-import { LIVE_STUDIO_STEPS as STEPS } from '@/components/liri/live-studio/liveStudioSteps';
+import { getLiveStudioSteps } from '@/components/liri/live-studio/liveStudioSteps';
 
 const STEP_COMPONENTS = {
   informations: Step1Informations,
@@ -23,6 +24,7 @@ const STEP_COMPONENTS = {
   inviter: Step5Inviter,
   salle: Step6SalleVirtuelle,
   interactions: Step7Interactions,
+  dossier_medos: Step7MedosDossier,
   validation: Step8Validation,
 };
 
@@ -52,6 +54,8 @@ function getLiveStepCompletion({ stepKey, draft }) {
       return true;
     case 'interactions':
       return true;
+    case 'dossier_medos':
+      return true; // étape optionnelle (patient/cockpit facultatifs) — ne bloque pas
     case 'validation':
       return false;
     default:
@@ -67,7 +71,7 @@ export function LiveStudioBuilder(props) {
       && new URLSearchParams(window.location.search).get('context') === 'medos');
   return (
     <StudioBuilder
-      steps={STEPS}
+      steps={getLiveStudioSteps(medosContext)}
       stepComponents={STEP_COMPONENTS}
       nestedSubStepCounts={medosContext ? { 6: 1, 7: 3 } : { 6: 3, 7: 3 }}
       liveCreationShell
