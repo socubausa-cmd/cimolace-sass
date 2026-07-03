@@ -14,6 +14,8 @@ export function isMobileReelsShellExcluded(pathname, search) {
     /* ignore */
   }
 
+  // Pages EMBED (iframe sur des sites tiers) : jamais de coque app (barres nav).
+  if (p.startsWith('/embed/')) return true;
   if (p.startsWith('/studio/live-arena')) return true;
   if (p.startsWith('/live/') && !p.startsWith('/lives')) return true;
   if (

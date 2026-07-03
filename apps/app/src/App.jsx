@@ -961,6 +961,9 @@ const AppContent = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const isImmersiveEmbed = searchParams.get('immersive_embed') === '1';
+  // Pages EMBED (/embed/*) = iframe pristine sur un site tiers : aucun widget
+  // global (DiscoveryChat, coque). Traitées comme immersive_embed=1.
+  const isEmbedRoute = location.pathname.startsWith('/embed/');
   const { user } = useAuth();
 
   useEffect(() => {
@@ -1271,7 +1274,7 @@ isLiriHostDevPreviewRoute;
       <MobileReelsShellProvider active={mobileReelsShellActive}>
         <div className="flex min-h-screen flex-col marketing-public-shell">
           {!isLiveArenaRoute && <GraceBanner />}
-          {!isAdminRoute && !isImmersiveEmbed && !isLiveArenaRoute && <DiscoveryChat />}
+          {!isAdminRoute && !isImmersiveEmbed && !isEmbedRoute && !isLiveArenaRoute && <DiscoveryChat />}
           <main className="flex-grow min-h-[100dvh]">
             <React.Suspense fallback={<div className="flex min-h-[100dvh] items-center justify-center bg-[#f7f8fb] text-slate-500">Chargement…</div>}>
               <ProrascienceAppleStoryLandingLazy />
@@ -1289,7 +1292,7 @@ isLiriHostDevPreviewRoute;
       <MobileReelsShellProvider active={mobileReelsShellActive}>
         <div className="flex min-h-screen flex-col marketing-public-shell">
           {!isLiveArenaRoute && <GraceBanner />}
-          {!isAdminRoute && !isImmersiveEmbed && !isLiveArenaRoute && <DiscoveryChat />}
+          {!isAdminRoute && !isImmersiveEmbed && !isEmbedRoute && !isLiveArenaRoute && <DiscoveryChat />}
           <main className="flex-grow min-h-[100dvh]">
             <React.Suspense fallback={<div className="flex min-h-[100dvh] items-center justify-center bg-[#06070c] text-white/60">Chargement…</div>}>
               <ProrascienceAppleStoryV3Lazy />
@@ -1327,8 +1330,8 @@ isLiriHostDevPreviewRoute;
         </LazyShell>
       )}
 
-      {/* Discovery Chat — pages publiques. Exclu de l'espace élève (collision avec le FAB de la sidebar). */}
-      {!isAdminRoute && !isImmersiveEmbed && !isLiveArenaRoute && !isEleveMobileRoute && !isCimolaceRoute && !isStudentSpaceShell && (
+      {/* Discovery Chat — pages publiques. Exclu de l'espace élève (collision avec le FAB de la sidebar) et des embeds. */}
+      {!isAdminRoute && !isImmersiveEmbed && !isEmbedRoute && !isLiveArenaRoute && !isEleveMobileRoute && !isCimolaceRoute && !isStudentSpaceShell && (
         <LazyShell>
           <DiscoveryChat />
         </LazyShell>
