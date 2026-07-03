@@ -132,7 +132,7 @@ Portail LIRI (`/liri`), back-office tenant (`/cimolace/billing`, 14 sections), e
   - gating runtime générique (opt-in) ✅ **LIVE** (`5c65a2e9`, test 7/7) ;
   - ressusciter le provisioning école ✅ **LIVE** (`ce7d27d0`, 404→401 prouvé prod, test 3/3) ;
   - override tenant sur getDepositStatus ✅ (brique posée dans Vague 1) ;
-  - 🔴 **RESTE** : dé-hardcoder `isna` dans `offering-checkout.service.ts` (l.29/82/264) — refacto paiement LIVE, à faire avec test + revue (ne PAS bâcler en aveugle).
+  - dé-hardcoder `isna` dans `offering-checkout` ✅ (commit `b9ea2422`, test 2/2) — ADDITIF (champ DTO `tenantSlug`, défaut `isna` → rétrocompatible) ; **committé, NON déployé** (code paiement LIVE, à revoir avant deploy).
 - **Vague 3 — Opérabilité SaaS** : facturation admin sur vraies tables (`billing_invoices`) · monitoring réel (enregistrer `HealthCheckSchedulerService`) · route `PATCH .../app-tenant/branding` · UI gestion staff · consolidation double catalogue. 🔴
 - **Vague 4 — SDK universel** :
   - package `@cimolace/sdk` + API cliente unifiée `Cimolace.mount()` + postMessage sécurisé ✅ (`801a29bf`, test 7/7) ;
