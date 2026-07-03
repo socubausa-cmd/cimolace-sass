@@ -6,6 +6,7 @@ import { SmartboardNavigatorSceneIcon } from '@/components/liri/live-room/Smartb
 import GuestPermissionBar from '@/components/liri/liri-live/GuestPermissionBar';
 import LiveHostFooterMessaging from '@/components/liri/live-room/LiveHostFooterMessaging';
 import { supabase } from '@/lib/customSupabaseClient';
+import { useLiveDataSaver } from '@/hooks/useLiveDataSaver';
 
 const PHASE_LIVE = 'live';
 
@@ -84,6 +85,7 @@ export default function LiveHostArenaLiveBar({
 }) {
   const isLive = phase === PHASE_LIVE;
   const hub = variant === 'hub';
+  const { dataSaver, toggleDataSaver } = useLiveDataSaver();
 
   const group1 = (
     <div
@@ -403,6 +405,28 @@ export default function LiveHostArenaLiveBar({
           }}
         >
           AI
+        </button>
+      ) : null}
+      {!isGuestUi ? (
+        <button
+          type="button"
+          onClick={toggleDataSaver}
+          title={dataSaver
+            ? 'Mode éco data ACTIVÉ : caméras coupées en réception (audio + partage d’écran gardés). Cliquer pour réafficher.'
+            : 'Mode éco data : couper la réception des caméras pour tenir en connexion faible (garde l’audio + le partage d’écran).'}
+          style={{
+            borderRadius: '4px',
+            border: `1px solid ${dataSaver ? 'rgba(251,191,36,.55)' : 'rgba(212,163,106,.35)'}`,
+            background: dataSaver ? 'rgba(251,191,36,.16)' : 'rgba(168,118,58,.12)',
+            padding: hub ? '6px 8px' : '8px 10px',
+            color: dataSaver ? '#fde68a' : '#e3c79a',
+            display: 'flex',
+            alignItems: 'center',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" /><path d="M2 21c0-3 1.85-5.36 5.08-6" /></svg>
         </button>
       ) : null}
       <button

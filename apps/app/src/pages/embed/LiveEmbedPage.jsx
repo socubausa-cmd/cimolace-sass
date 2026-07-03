@@ -18,6 +18,7 @@ import {
 } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { getStableLiveKitRoomOptions, stableLiveKitConnectOptions } from '@/lib/livekitStableClient';
+import LiveDataSaverEffect from '@/features/live/LiveDataSaverEffect';
 
 // ── Styles inline (pas de Tailwind — page embed minimaliste) ─────────────────
 const S = {
@@ -308,6 +309,7 @@ export default function LiveEmbedPage() {
               );
             }}
           >
+            <LiveDataSaverEffect />
             <RoomAudioRenderer />
             <VideoConference />
             {/* Hôte : tous les contrôles — Viewer : aucun */}

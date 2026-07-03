@@ -33,6 +33,7 @@ import {
 import { Track, ConnectionState } from 'livekit-client';
 import { getStableLiveKitRoomOptions, stableLiveKitConnectOptions } from '@/lib/livekitStableClient';
 import LiveDataSaverEffect from '@/features/live/LiveDataSaverEffect';
+import { useLiveDataSaver } from '@/hooks/useLiveDataSaver';
 import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
@@ -1077,6 +1078,7 @@ function ConsultationBar({
   onToggleSettings: () => void;
 }) {
   const room = useRoomContext();
+  const { dataSaver, toggleDataSaver } = useLiveDataSaver();
   const leave = () => {
     try {
       room.disconnect();
@@ -1091,6 +1093,24 @@ function ConsultationBar({
       <TrackToggle source={Track.Source.Microphone} showIcon title="Micro" />
       <TrackToggle source={Track.Source.Camera} showIcon title="Caméra" />
       {isHost ? <TrackToggle source={Track.Source.ScreenShare} showIcon title="Partager l'écran" /> : null}
+      <button
+        type="button"
+        onClick={toggleDataSaver}
+        aria-pressed={dataSaver}
+        title={dataSaver
+          ? 'Éco data activé : vidéos coupées en réception (audio + partage d’écran gardés). Cliquer pour réafficher.'
+          : 'Éco data : couper la réception vidéo pour tenir en connexion faible (garde l’audio + le partage d’écran).'}
+        style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          width: 36, height: 36, borderRadius: 6,
+          border: `1px solid ${dataSaver ? 'rgba(251,191,36,.55)' : 'rgba(255,255,255,.12)'}`,
+          background: dataSaver ? 'rgba(251,191,36,.16)' : 'rgba(255,255,255,.04)',
+          color: dataSaver ? '#fde68a' : 'rgba(255,255,255,.8)',
+          cursor: 'pointer',
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" /><path d="M2 21c0-3 1.85-5.36 5.08-6" /></svg>
+      </button>
       <BarSep />
       {/* Outils praticien. */}
       {isHost && annotatable ? (
