@@ -66,13 +66,16 @@ live.unmount();
 
 ## Moteurs disponibles
 
-| `engine` | Options requises | Mode par défaut |
-|---|---|---|
-| `liri`  | `tenant`, `liveId` | live |
-| `medos` | `tenant` (+ `token` pour un patient précis) | `patient-portal` |
-| `mbolo` | `tenant` | `storefront` |
+| `engine` | Options requises | Statut | Surface réelle |
+|---|---|---|---|
+| `liri`  | `tenant`, `liveId` | ✅ ready | iframe `/embed/live/:id` (+ `/embed/studio`) |
+| `medos` | `token` (code SSO minté serveur) | ✅ ready | handoff SSO `med.cimolace.space/handoff?code=…` |
+| `mbolo` | `tenant` | 🟡 preview | route publique `/embed/boutique` à livrer (backend) — `mount()` rend un placeholder |
 
-`Cimolace.engines` liste les moteurs supportés à l'exécution.
+- **MEDOS** : le `token` est un **code SSO à usage unique** que VOTRE backend mint via `POST /v1/medos/embed/practitioner-token` (clé `mdk_`). La clé API n'est jamais exposée au navigateur.
+- **mbolo** : en attendant la route publique (catalogue anonyme via token Origin-whitelist, façon MEDOS Niveau 1), `mount({engine:'mbolo'})` affiche un placeholder « intégration bientôt disponible » + un `console.warn`, jamais une iframe cassée.
+
+`Cimolace.engines` liste les moteurs à l'exécution ; chaque entrée porte un `status` (`ready`/`preview`).
 
 ## Sécurité
 

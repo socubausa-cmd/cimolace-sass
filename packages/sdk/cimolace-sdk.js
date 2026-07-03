@@ -36,6 +36,7 @@
   var ENGINES = {
     liri: {
       label: 'LIRI Live',
+      status: 'ready', // routes /embed/live/:id et /embed/studio déployées
       // /embed/live/:id sur l'app (le hôte fournit liveId).
       iframeUrl: function (o, bases) {
         var id = required(o, 'liveId');
@@ -46,20 +47,23 @@
     },
     medos: {
       label: 'MEDOS',
-      // Widget praticien/patient hébergé sur med.cimolace.space.
+      status: 'ready',
+      // Le SEUL embed MEDOS iframe-able en prod = le HANDOFF SSO : un code à usage
+      // unique minté PAR VOTRE BACKEND (POST /v1/medos/embed/practitioner-token,
+      // clé mdk_) que le SDK échange dans med.cimolace.space/handoff. Le code (=
+      // `token`) n'expose jamais la clé API dans le navigateur.
       iframeUrl: function (o, bases) {
-        var q = query({
-          tenant: required(o, 'tenant'),
-          mode: o.mode || 'patient-portal',
-          token: o.token || undefined,
-          theme: o.theme,
-        });
-        return join(bases.medBase, '/embed') + q;
+        var code = required(o, 'token');
+        return join(bases.medBase, '/handoff') + query({ code: code, next: o.next || undefined });
       },
       originOf: function (bases) { return origin(bases.medBase); },
     },
     mbolo: {
       label: 'mbolo storefront',
+      // PREVIEW : la route publique /embed/boutique (catalogue anonyme via token
+      // Origin-whitelist, façon MEDOS Niveau 1) n'est PAS encore livrée côté
+      // backend. mount() rend un placeholder plutôt qu'une iframe cassée.
+      status: 'preview',
       iframeUrl: function (o, bases) {
         var q = query({ tenant: required(o, 'tenant'), mode: o.mode || 'storefront', theme: o.theme });
         return join(bases.appBase, '/embed/boutique') + q;
@@ -110,6 +114,21 @@
 
     var container = resolveContainer(opts.container);
     var bases = resolveBases(opts);
+
+    // Moteur en PREVIEW : sa route d'embed publique n'est pas encore déployée.
+    // On rend un placeholder clair plutôt qu'une iframe cassée (fallback SPA).
+    if (engine.status === 'preview') {
+      if (typeof console !== 'undefined' && console.warn) {
+        console.warn('[Cimolace SDK] moteur « ' + engineKey + ' » en PREVIEW : route d\'embed publique pas encore déployée.');
+      }
+      var ph = document.createElement('div');
+      ph.setAttribute('data-cimolace-preview', engineKey);
+      ph.style.cssText = 'padding:24px;border:1px dashed rgba(153,153,153,.4);border-radius:12px;font:14px/1.5 system-ui,sans-serif;color:#888;text-align:center';
+      ph.textContent = engine.label + ' — intégration bientôt disponible.';
+      container.appendChild(ph);
+      return { iframe: null, post: function () {}, unmount: function () { if (ph.parentNode) ph.parentNode.removeChild(ph); } };
+    }
+
     var src = engine.iframeUrl(opts, bases);
     var expectedOrigin = engine.originOf(bases);
 

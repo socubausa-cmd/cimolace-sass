@@ -29,23 +29,28 @@ test('liri → iframe /embed/live/:id sur app base, avec tenant+mode', () => {
   assert.strictEqual(ENGINES.liri.originOf(BASES), 'https://app.cimolace.space');
 });
 
-test('medos → med base /embed avec tenant + token', () => {
-  const url = ENGINES.medos.iframeUrl({ tenant: 'ma-clinique', token: 'jwt.short', mode: 'patient-portal' }, BASES);
-  assert.ok(url.startsWith('https://med.cimolace.space/embed'), url);
-  assert.ok(url.includes('tenant=ma-clinique'));
-  assert.ok(url.includes('token=jwt.short'));
+test('medos → handoff SSO (code = token minté serveur), origine med', () => {
+  const url = ENGINES.medos.iframeUrl({ token: 'sso-code-123' }, BASES);
+  assert.ok(url.startsWith('https://med.cimolace.space/handoff'), url);
+  assert.ok(url.includes('code=sso-code-123'));
   assert.strictEqual(ENGINES.medos.originOf(BASES), 'https://med.cimolace.space');
 });
 
-test('mbolo → app base /embed/boutique', () => {
+test('mbolo → route /embed/boutique (preview), app base', () => {
   const url = ENGINES.mbolo.iframeUrl({ tenant: 'ma-boutique' }, BASES);
   assert.ok(url.startsWith('https://app.cimolace.space/embed/boutique'), url);
   assert.ok(url.includes('tenant=ma-boutique'));
 });
 
+test('statut de disponibilité honnête par moteur', () => {
+  assert.strictEqual(ENGINES.liri.status, 'ready');
+  assert.strictEqual(ENGINES.medos.status, 'ready');
+  assert.strictEqual(ENGINES.mbolo.status, 'preview'); // route publique pas encore livrée
+});
+
 test('option requise manquante → erreur claire', () => {
   assert.throws(() => ENGINES.liri.iframeUrl({ tenant: 'x' }, BASES), /liveId/);
-  assert.throws(() => ENGINES.medos.iframeUrl({}, BASES), /tenant/);
+  assert.throws(() => ENGINES.medos.iframeUrl({}, BASES), /token/);
 });
 
 test('bases NEUTRES : aucun DOMAINE tenant en dur (prorascience.*, isna.*)', () => {
