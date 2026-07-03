@@ -118,8 +118,9 @@ Portail LIRI (`/liri`), back-office tenant (`/cimolace/billing`, 14 sections), e
 - Périmètre HTTP durci (helmet+CSP, HSTS, CORS dynamique `tenant_domains`, ValidationPipe). ✅
 - Auth API : JWT vérifié JWKS, guards multi-tenant, clés hashées SHA-256, webhooks Stripe/LiveKit/PawaPay signés. ✅
 - **Modèle 100 % applicatif** (API en service-role, RLS bypassée) → *un guard oublié = un trou*. Règle : chaque endpoint mutant porte JwtAuthGuard + TenantGuard + RolesGuard.
-- Corrigés 2026-07-03 : bypass paiement PawaPay (webhooks re-lus à la source), IDOR/PHI embed MEDOS, branding sans rôle, toggle legacy sans rôle, cron billing fail-closed, replay IDOR (déjà), escalade privilège `profiles` (trigger).
-- Reste (Phase G) : `/dev/*` en prod, postMessage `'*'`, `/auth/tenant-token` sans allowlist de rôle, scoping moteur par préfixe de clé, RLS write `tenant_services`.
+- Corrigés 2026-07-03 (**LIVE en prod**) : bypass paiement PawaPay (webhooks re-lus à la source — **forge rejetée prouvée en prod**), IDOR/PHI embed MEDOS, branding sans rôle, toggle legacy sans rôle, cron billing fail-closed, replay IDOR (déjà), escalade privilège `profiles` (trigger), postMessage embed `'*'`→origine hôte.
+- **Faux positifs de l'audit VÉRIFIÉS (2026-07-03) — PAS des failles** : (a) `/auth/tenant-token` : rôle DÉJÀ allowlisté (`@IsIn` + clé `mdk_` validée). (b) webhooks `billing-advanced` (PayPal/Chariow/CinetPay/NowPayments) : **no-ops sûrs** — ils ne font que `logWebhook()` puis renvoient `{todo:'…verify-and-apply'}`, **AUCUNE activation/marquage payé** (donc AUCUN bypass), la plupart gatés `BILLING_ENABLE_*`. (c) « credentials en clair » `billing-advanced` : les VALEURS secrètes ne sont PAS persistées (seuls les NOMS de clés le sont, `encrypted_credentials.keys`) → pas de fuite plaintext. Le vrai stockage provider (AES-256-GCM) vit dans `tenant-payment-config.service.ts`.
+- Reste (Phase G — non-sécurité ou faible risque) : `/dev/*` en prod = **cosmétique** (coques UI ; les données sont gatées serveur — garde front cosmétique) ; RLS write `tenant_services` (owner-scoped ; gating runtime opt-in) ; scoping moteur par préfixe de clé (feature SDK) ; stubs `billing-advanced` → 501 (propreté, pas sécurité). **Les vraies failles P0/P1 sont corrigées + LIVE.**
 
 ---
 
@@ -139,7 +140,8 @@ Portail LIRI (`/liri`), back-office tenant (`/cimolace/billing`, 14 sections), e
   - postMessage embed `'*'`→origine hôte ✅ **LIVE** (`c66cd5c5`) ;
   - 🔴 **RESTE (backend)** : clé unique `cml_<tenant>_<secret>` scopée par moteur (générateur + rotation) + secret JWT embed unique + routes iframe manquantes (`/embed/boutique`, med `/embed`) + modes A/B (wildcard + Cloudflare for SaaS).
 - **Vague 5 — Sécurité « tout vert » + Preuve** :
-  - 🔴 stubs billing-advanced (PayPal/Chariow/CinetPay/NowPayments) → 501 + chiffrer creds ; `/dev/*` en prod (gate DEV ou rôle) ; RLS write `tenant_services`.
+  - ✅ **Vraies failles P0/P1 corrigées + LIVE** ; 3 faux positifs de l'audit **vérifiés non-failles** (tenant-token, webhooks billing-advanced no-ops, creds non-persistés — cf. §8).
+  - 🟡 propreté (pas sécurité) : stubs billing-advanced → 501 ; `/dev/*` (cosmétique, données gatées serveur) ; RLS write `tenant_services` (owner-scoped).
   - 🔴 E2E client complet en prod (créer org → activer → payer → embarquer) — **écrit en prod, exige accord USER explicite** (dernier arbitrage : « déployer », pas « E2E write »). Ensuite ancrer en CI + nettoyer données test.
 
 ---
