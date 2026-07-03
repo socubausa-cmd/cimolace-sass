@@ -2,6 +2,7 @@ import React from 'react';
 import { Track } from 'livekit-client';
 import { Settings, ChevronDown } from 'lucide-react';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
+import LiriProductBadge from '@/components/brand/LiriProductBadge';
 import { LiveLocalUserVignette } from '@/features/live/host/components/LiveLocalUserVignette';
 import { LiveMemberDockScroll } from '@/features/live/host/components/LiveMemberDockScroll';
 import { LiveStripActionButton } from '@/features/live/host/components/LiveStripActionButton';
@@ -23,7 +24,7 @@ function LiveTopBarBrand({ sessionTitle }) {
           {sessionTitle || 'Salle live'}
         </span>
         <span style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', display: 'flex', alignItems: 'center', gap: 3 }}>
-          {_LSB_BRAND} <ChevronDown size={10} aria-hidden />
+          {_LSB_BRAND} <LiriProductBadge product="academy" size="xs" /> <ChevronDown size={10} aria-hidden />
         </span>
       </div>
     </div>

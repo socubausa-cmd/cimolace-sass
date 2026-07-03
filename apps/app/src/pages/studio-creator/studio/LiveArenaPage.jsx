@@ -18,6 +18,7 @@ import { Capacitor } from '@capacitor/core';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
+import LiriProductBadge from '@/components/brand/LiriProductBadge';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Room, RoomEvent, Track, ConnectionState,
@@ -822,8 +823,9 @@ function PhaseScreen({ phase, error, sessionId, isHost, recoveryAsHost, joinCode
             />
           </motion.div>
           <div className="relative z-10 text-center">
-            <div className="flex justify-center">
+            <div className="flex items-center justify-center gap-2">
               <LiriWordmark size="compact" className="text-[var(--school-accent,#D4AF37)] opacity-85" />
+              <LiriProductBadge product="studio" size="xs" />
             </div>
             <p className="text-[11px] text-white/45">Immersive Live Studio</p>
           </div>
