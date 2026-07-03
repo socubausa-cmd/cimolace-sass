@@ -216,6 +216,14 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
           className="lh-hoverrail-strip"
           style={{ display: 'flex', flex: 1, width: '100%', minHeight: 0, flexDirection: 'column', alignItems: 'center', gap: '10px', paddingTop: '2px' }}
         >
+          {/* Marque LIRI — ancrée sur le rail stable (marque blanche : masquée sur un domaine tenant). */}
+          {activeTenantConfig?.slug ? null : (
+            <LiriWordmark
+              variant="icon"
+              size="rail"
+              className="mb-1.5 shrink-0 opacity-95 drop-shadow-[0_2px_10px_rgba(212,163,106,.35)]"
+            />
+          )}
           <span
             className="h-2 w-2 shrink-0 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,.85)]"
             style={{ animation: 'lhPulse 2s infinite', marginBottom: '2px' }}

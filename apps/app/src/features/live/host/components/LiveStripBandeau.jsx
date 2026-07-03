@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Track } from 'livekit-client';
 import { Settings, ChevronDown } from 'lucide-react';
-import { LiriWordmark } from '@/components/brand/LiriWordmark';
 import LiriProductBadge from '@/components/brand/LiriProductBadge';
 import { LiveLocalUserVignette } from '@/features/live/host/components/LiveLocalUserVignette';
 import { LiveMemberDockScroll } from '@/features/live/host/components/LiveMemberDockScroll';
@@ -18,7 +17,6 @@ const _LSB_IS_TENANT = !!activeTenantConfig?.slug;
 function LiveTopBarBrand({ sessionTitle }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, paddingRight: 4, height: '100%' }}>
-      {_LSB_IS_TENANT ? null : <LiriWordmark variant="mark" size="rail" bulbColor="#d4a36a" bulbGlow="drop-shadow(0 0 12px rgba(212,163,106,.55))" letterClassName="text-white" className="text-white drop-shadow-[0_2px_10px_rgba(212,163,106,.35)]" />}
       <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}>
         <span style={{ fontSize: 12.5, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 150 }}>
           {sessionTitle || 'Salle live'}
@@ -101,16 +99,19 @@ export const LiveStripBandeau = React.forwardRef(function LiveStripBandeau(
   // Déclutter : par défaut les tuiles membres sont repliées derrière la pastille
   // « en ligne » ; un clic sur le compteur les déroule (barre plus lisible).
   const [membersExpanded, setMembersExpanded] = useState(false);
+  // Bandeau épuré façon rail latéral : fond commun (pas de carte),
+  // séparé de la scène par un simple liseré en bas — ni bordure complète,
+  // ni radius, ni ombre. La marque LIRI vit désormais sur le rail latéral.
   const wrapperStyle = {
     position: 'relative',
     zIndex: 95,
-    background: liveShell.stripBg,
-    borderRadius: liveShell.panelRadius,
-    border: liveShell.stripBorder,
+    background: 'transparent',
+    borderRadius: 0,
+    borderBottom: '1px solid rgba(245,244,238,0.09)',
     padding: stripConference ? '8px 10px' : '10px',
     height: stripConference ? 'auto' : '132px',
     flexShrink: 0,
-    boxShadow: '0 12px 40px rgba(0,0,0,.2)',
+    boxShadow: 'none',
   };
 
   const innerStyle = {
