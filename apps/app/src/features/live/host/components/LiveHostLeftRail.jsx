@@ -186,10 +186,12 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
         }}
         style={{
           order: hostCompactColOrder.left,
-          background:
-            'linear-gradient(180deg, rgba(26,22,18,.99) 0%, rgba(16,13,10,.995) 100%)',
-          borderRadius: liveShell.panelRadius,
-          border: liveShell.panelBorder,
+          // Épuré façon sidebar du portail LIRI : fond commun (pas de carte),
+          // séparé de la scène par un simple liseré à droite — ni bordure complète,
+          // ni radius, ni ombre.
+          background: 'transparent',
+          borderRadius: 0,
+          borderRight: '1px solid rgba(245,244,238,0.09)',
           padding: '12px 6px',
           display: 'flex',
           flexDirection: 'column',
@@ -205,8 +207,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
           minHeight: 0,
           minWidth: 0,
           alignSelf: 'stretch',
-          boxShadow:
-            'inset 0 0 0 1px rgba(255,255,255,.1), inset 0 1px 0 rgba(255,255,255,.06)',
+          boxShadow: 'none',
         }}
       >
         {/* Activity bar — icônes cliquables, un overlay focalisé à la fois.
@@ -235,10 +236,10 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
                 onClick={it.onClick}
                 title={it.label}
                 aria-label={it.label}
-                className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_rgba(255,255,255,.06)] transition ${
+                className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition ${
                   it.active
-                    ? 'border-amber-400/55 bg-amber-500/18 text-amber-100'
-                    : 'border-white/22 bg-white/[0.02] text-amber-200/90 hover:border-amber-400/40 hover:text-amber-100'
+                    ? 'bg-amber-500/15 text-amber-200'
+                    : 'bg-transparent text-white/55 hover:bg-white/[0.06] hover:text-white/90'
                 }`}
               >
                 <ItIcon className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
@@ -256,7 +257,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
             onClick={() => { if (inviteUrl && typeof window !== 'undefined') window.open(inviteUrl, '_blank', 'noopener,noreferrer'); }}
             title="Aperçu — vue participant (nouvel onglet)"
             aria-label="Aperçu — vue participant (nouvel onglet)"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/22 bg-white/[0.02] text-white/70 transition hover:border-amber-400/40 hover:text-amber-100"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition bg-transparent text-white/55 hover:bg-white/[0.06] hover:text-white/90"
           >
             <Eye className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
           </button>
