@@ -188,7 +188,7 @@ export default function VieScolaireScreen() {
           <View style={s.fill}><ActivityIndicator color={EV.accent} /></View>
         ) : errorMessage ? (
           <View style={s.fill}>
-            <View style={[s.emptyMark, { backgroundColor: '#FB718522' }]}><Feather name="alert-triangle" size={26} color="#FB7185" /></View>
+            <View style={[s.emptyMark, { backgroundColor: '#d46a5f22' }]}><Feather name="alert-triangle" size={26} color="#d46a5f" /></View>
             <Text style={s.emptyTitle}>Données indisponibles</Text>
             <Text style={s.emptySub}>{errorMessage}</Text>
             <Pressable style={s.retry} onPress={() => void load()}><Text style={s.retryTxt}>Réessayer</Text></Pressable>
