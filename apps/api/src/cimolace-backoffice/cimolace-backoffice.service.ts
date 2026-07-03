@@ -4,6 +4,8 @@ import { SupabaseService } from '../supabase/supabase.service';
 import { PawaPayService } from '../pawapay/pawapay.service';
 import { AirtelMoneyService } from '../airtel/airtel.service';
 import { CreateClientDto, UpdateClientDto } from './dto/backoffice.dto';
+import { ProvisionSchoolDto } from './dto/provision-school.dto';
+import type { InitiateSchoolCheckoutDto } from './school-onboarding.controller';
 import {
   SCHOOL_ENGINE_MANIFEST,
   SCHOOL_BASE_ENGINES,
@@ -873,6 +875,257 @@ export class CimolaceBackofficeService {
     await db.from('tenants').update({ metadata: { ...meta, branding }, updated_at: new Date().toISOString() }).eq('id', tenantId);
     await this.logChange(clientId, 'school:prepare', 'Tenant école préparé (moteurs + branding par défaut)');
     return { ok: true, prepared: true };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ONBOARDING ÉCOLE — endpoints /school-onboarding/* (SchoolOnboardingController)
+  // Ces 4 méthodes étaient appelées via `as any` sur un controller JAMAIS
+  // enregistré → 404 (audit 2026-07-03, P0 : « vendre un parcours qui n'existe
+  // pas »). Réimplémentées ici sur les mêmes patterns que le reste du service.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /** Manifeste des moteurs école (catalogue + tiers + quotas par plan). Lecture seule. */
+  getSchoolEngineManifest() {
+    return {
+      engines: SCHOOL_ENGINE_MANIFEST,
+      baseEngines: SCHOOL_BASE_ENGINES,
+      recommendedEngines: SCHOOL_RECOMMENDED_ENGINES,
+      planLimits: SCHOOL_PLAN_LIMITS,
+    };
+  }
+
+  /**
+   * DRY-RUN : ce qui SERAIT créé/activé pour une école, sans aucune écriture.
+   * Sert à l'écran de prévisualisation du wizard opérateur.
+   */
+  async previewProvisionSchool(dto: ProvisionSchoolDto) {
+    const plan = dto.plan ?? 'school';
+    const limits = SCHOOL_PLAN_LIMITS[plan] ?? SCHOOL_PLAN_LIMITS.school;
+    const db = this.supabase.client as any;
+    const { data: slugTaken } = await db
+      .from('tenants').select('id').eq('slug', dto.slug).maybeSingle();
+    const { data: ownerProfile } = await db
+      .from('profiles').select('id').eq('email', String(dto.owner_email).toLowerCase()).maybeSingle();
+    const engines = SCHOOL_RECOMMENDED_ENGINES.map((key) => {
+      const m = SCHOOL_ENGINE_MANIFEST.find((e) => e.key === key);
+      return {
+        key,
+        label: m?.label ?? key,
+        tier: m?.tier ?? 'recommended',
+        readiness: m?.readiness ?? 'ready',
+        providersNeeded: (m?.requiredProviders ?? []).filter((p) => !provConfigured(p)),
+      };
+    });
+    return {
+      willCreate: {
+        tenant: { name: dto.name, slug: dto.slug, plan, status: 'active' },
+        client: { name: dto.name, email: dto.contact_email ?? dto.owner_email, client_type: 'school' },
+        engines,
+        limits,
+        brandingZones: dto.branding_zones ?? {
+          header: true, footer: true, publicVitrine: true,
+          memberApp: true, liveStudio: true, adminBackoffice: true,
+        },
+      },
+      checks: {
+        slugAvailable: !slugTaken,
+        ownerHasAccount: !!ownerProfile?.id,
+        // Providers manquants tous moteurs confondus (informatif).
+        missingProviders: [
+          ...new Set(engines.flatMap((e) => e.providersNeeded)),
+        ],
+      },
+    };
+  }
+
+  /**
+   * PROVISIONNE une école de bout en bout (idempotent) : tenant + fiche client
+   * liée + moteurs recommandés + branding + quotas. L'accès owner est rattaché
+   * si un profil existe déjà pour owner_email, sinon marqué « pending » (à
+   * inviter via ensure_owner_membership). N'écrit AUCUN paiement (cf.
+   * initiateSchoolCheckout). Rejoue sans doublon (upsert sur slug/service_key).
+   */
+  async provisionSchoolFromTemplate(dto: ProvisionSchoolDto) {
+    const db = this.supabase.client as any;
+    const now = new Date().toISOString();
+    const plan = dto.plan ?? 'school';
+    const limits = SCHOOL_PLAN_LIMITS[plan] ?? SCHOOL_PLAN_LIMITS.school;
+    const brandColors = dto.brand_colors ?? {};
+    const brandingZones = dto.branding_zones ?? {
+      header: true, footer: true, publicVitrine: true,
+      memberApp: true, liveStudio: true, adminBackoffice: true,
+    };
+
+    // 1) Tenant (créer ou réutiliser par slug — idempotent).
+    let { data: tenant } = await db
+      .from('tenants').select('id, metadata').eq('slug', dto.slug).maybeSingle();
+    const baseMeta = {
+      ...(tenant?.metadata ?? {}),
+      branding: {
+        ...((tenant?.metadata as any)?.branding ?? {}),
+        name: dto.name,
+        font_family: dto.font_family ?? (tenant?.metadata as any)?.branding?.font_family ?? null,
+        radius: dto.radius ?? (tenant?.metadata as any)?.branding?.radius ?? null,
+        zones: brandingZones,
+      },
+      plan_limits: limits,
+      provisioned_by: 'school-onboarding',
+    };
+    if (!tenant) {
+      const newTenantId = randomUUID();
+      const { data: created, error: tErr } = await db.from('tenants').insert({
+        id: newTenantId,
+        name: dto.name,
+        slug: dto.slug,
+        plan,
+        status: 'active',
+        primary_domain: dto.domain ?? null,
+        logo_url: dto.logo_url ?? null,
+        brand_colors: brandColors,
+        infrastructure_type: 'school',
+        metadata: baseMeta,
+      }).select('id, metadata').single();
+      if (tErr) throw new BadRequestException(`Création tenant échouée : ${tErr.message}`);
+      tenant = created;
+    } else {
+      await db.from('tenants').update({
+        name: dto.name, plan, status: 'active',
+        primary_domain: dto.domain ?? undefined,
+        logo_url: dto.logo_url ?? undefined,
+        brand_colors: brandColors,
+        metadata: baseMeta,
+        updated_at: now,
+      }).eq('id', tenant.id);
+    }
+    const tenantId = tenant.id as string;
+
+    // 2) Fiche client Cimolace (créer ou réutiliser par tenant_id).
+    let { data: client } = await db
+      .from('cimolace_clients').select('id').eq('tenant_id', tenantId).maybeSingle();
+    if (!client) {
+      const { data: c } = await db.from('cimolace_clients').insert({
+        name: dto.name,
+        email: dto.contact_email ?? dto.owner_email,
+        plan,
+        status: 'active',
+        client_type: 'school',
+        tenant_id: tenantId,
+      }).select('id').single();
+      client = c;
+    }
+    const clientId = client?.id as string;
+
+    // 3) Owner : rattacher si un profil existe déjà, sinon marquer pending.
+    let ownerState = 'pending_invite';
+    const email = String(dto.owner_email).toLowerCase().trim();
+    const { data: prof } = await db.from('profiles').select('id').eq('email', email).maybeSingle();
+    if (prof?.id) {
+      const { data: existing } = await db
+        .from('tenant_memberships').select('id, role')
+        .eq('tenant_id', tenantId).eq('user_id', prof.id).maybeSingle();
+      if (existing?.id) {
+        if (existing.role !== 'owner') {
+          await db.from('tenant_memberships').update({ role: 'owner', status: 'active' }).eq('id', existing.id);
+        }
+      } else {
+        await db.from('tenant_memberships').insert({ tenant_id: tenantId, user_id: prof.id, role: 'owner', status: 'active' });
+      }
+      ownerState = 'linked';
+    } else {
+      // Trace l'email owner en attente : à inviter via ensure_owner_membership.
+      await db.from('tenants').update({
+        metadata: { ...baseMeta, pending_owner_email: email }, updated_at: now,
+      }).eq('id', tenantId);
+    }
+
+    // 4) Moteurs recommandés (upsert dans tenant_services).
+    const { data: existingSvcs } = await db.from('tenant_services').select('id, service_key').eq('tenant_id', tenantId);
+    const byKey = new Map((existingSvcs ?? []).map((s: any) => [s.service_key, s]));
+    const activated: string[] = [];
+    for (const key of SCHOOL_RECOMMENDED_ENGINES) {
+      const ex: any = byKey.get(key);
+      if (ex) {
+        await db.from('tenant_services').update({ active: true, updated_at: now }).eq('id', ex.id);
+      } else {
+        await db.from('tenant_services').insert({ tenant_id: tenantId, service_key: key, active: true });
+      }
+      activated.push(key);
+    }
+
+    if (clientId) {
+      await this.logChange(clientId, 'school:provision', `École provisionnée (${activated.length} moteurs, plan ${plan}, owner ${ownerState})`);
+    }
+    return {
+      ok: true,
+      tenantId,
+      clientId,
+      slug: dto.slug,
+      plan,
+      ownerState,
+      activatedEngines: activated,
+      limits,
+    };
+  }
+
+  /**
+   * Initie le PAIEMENT d'une école déjà provisionnée. Ne duplique PAS la
+   * plomberie Stripe/PawaPay : crée un abonnement `pending` + renvoie l'URL du
+   * back-office facturation tenant où le owner règle par carte (Stripe) ou
+   * mobile money (PawaPay) via les flux déjà prouvés. `checkoutUrl` est ce que
+   * le front doit ouvrir.
+   */
+  async initiateSchoolCheckout(dto: InitiateSchoolCheckoutDto, _user: { id?: string; email?: string }) {
+    const db = this.supabase.client as any;
+    const now = new Date().toISOString();
+    const { data: tenant } = await db
+      .from('tenants').select('id, slug, status').eq('slug', dto.slug).maybeSingle();
+    if (!tenant?.id) {
+      throw new BadRequestException(
+        `École « ${dto.slug} » introuvable — provisionnez-la d'abord (POST /school-onboarding/provision).`,
+      );
+    }
+    // Plan de facturation : clé billing_plans = plan école (starter/pro/business).
+    const planKey = dto.plan;
+    const { data: plan } = await db
+      .from('billing_plans').select('key, price_cents, currency, label').eq('key', planKey).maybeSingle();
+
+    // Abonnement pending (réutilisé s'il existe déjà en pending) — même modèle
+    // que BillingService.subscribeToPlan. La confirmation de paiement (webhook)
+    // le bascule en active + provisionne les services.
+    let { data: sub } = await db
+      .from('billing_subscriptions').select('id, status')
+      .eq('tenant_id', tenant.id).eq('plan_id', planKey)
+      .in('status', ['pending', 'past_due']).order('created_at', { ascending: false })
+      .limit(1).maybeSingle();
+    if (!sub) {
+      const { data: created, error: sErr } = await db.from('billing_subscriptions').insert({
+        tenant_id: tenant.id,
+        plan_id: planKey,
+        provider: dto.provider ?? 'stripe',
+        status: 'pending',
+        amount_cents: plan?.price_cents ?? null,
+        currency: plan?.currency ?? 'EUR',
+      }).select('id, status').single();
+      if (sErr) throw new BadRequestException(`Création abonnement échouée : ${sErr.message}`);
+      sub = created;
+    }
+
+    // URL de règlement = back-office facturation tenant (flux carte/MoMo prouvés).
+    const frontBase = process.env.FRONTEND_URL || 'https://app.cimolace.space';
+    const checkoutUrl =
+      dto.success_url ||
+      `${frontBase}/cimolace/billing?tenant=${encodeURIComponent(dto.slug)}&plan=${encodeURIComponent(planKey)}&subscription=${encodeURIComponent(String(sub?.id ?? ''))}`;
+
+    return {
+      ok: true,
+      checkoutUrl,
+      subscriptionId: sub?.id ?? null,
+      plan: planKey,
+      provider: dto.provider ?? 'stripe',
+      amountCents: plan?.price_cents ?? null,
+      currency: plan?.currency ?? 'EUR',
+      createdAt: now,
+    };
   }
 
   /** Pose les quotas recommandés sur les moteurs qui n'en ont pas (sans écraser). */

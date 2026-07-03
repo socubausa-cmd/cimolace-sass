@@ -4,6 +4,7 @@ import { IsIn, IsOptional, IsString, IsUrl, Matches, MaxLength, MinLength } from
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser, type AuthUser } from '../auth/current-user.decorator';
 import { CimolaceBackofficeService } from './cimolace-backoffice.service';
+import { CimolaceStaffGuard } from './cimolace-staff.guard';
 import { ProvisionSchoolDto, PreviewProvisionSchoolDto } from './dto/provision-school.dto';
 
 export class InitiateSchoolCheckoutDto {
@@ -77,23 +78,27 @@ export class InitiateSchoolCheckoutDto {
 @ApiTags('School Onboarding')
 @ApiBearerAuth()
 @Controller('school-onboarding')
-@UseGuards(JwtAuthGuard)
+// OPÉRATEUR uniquement : provisionner un tenant / activer des moteurs / lancer un
+// paiement école est une action de staff Cimolace, pas d'un utilisateur lambda
+// (sinon n'importe quel authentifié créerait des tenants). Même garde que
+// CimolaceBackofficeController (audit 2026-07-03, P0).
+@UseGuards(JwtAuthGuard, CimolaceStaffGuard)
 export class SchoolOnboardingController {
   constructor(private readonly svc: CimolaceBackofficeService) {}
 
   @Get('engines')
   getEngineManifest() {
-    return (this.svc as any).getSchoolEngineManifest();
+    return this.svc.getSchoolEngineManifest();
   }
 
   @Post('provision/preview')
   previewProvision(@Body() dto: PreviewProvisionSchoolDto) {
-    return (this.svc as any).previewProvisionSchool(dto);
+    return this.svc.previewProvisionSchool(dto);
   }
 
   @Post('provision')
   provision(@Body() dto: ProvisionSchoolDto) {
-    return (this.svc as any).provisionSchoolFromTemplate(dto);
+    return this.svc.provisionSchoolFromTemplate(dto);
   }
 
   /**
@@ -108,6 +113,6 @@ export class SchoolOnboardingController {
     @CurrentUser() user: AuthUser,
     @Body() dto: InitiateSchoolCheckoutDto,
   ) {
-    return (this.svc as any).initiateSchoolCheckout(dto, user);
+    return this.svc.initiateSchoolCheckout(dto, user);
   }
 }
