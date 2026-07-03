@@ -82,7 +82,10 @@ async function checkCimolaceStaff(token) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!resp.ok) return false;
-    const apiUser = await resp.json().catch(() => null);
+    const json = await resp.json().catch(() => null);
+    // Déballer l'enveloppe API { data: ... } (ResponseInterceptor) avant de lire
+    // role/cimolace_staff. Sinon isCimolaceOperator lit l'enveloppe → toujours false.
+    const apiUser = json && typeof json === 'object' && 'data' in json ? json.data : json;
     return isCimolaceOperator(apiUser);
   } catch {
     return false;

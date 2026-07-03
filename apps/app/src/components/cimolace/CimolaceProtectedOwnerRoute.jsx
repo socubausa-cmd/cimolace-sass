@@ -8,6 +8,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/lib/customSupabaseClient';
 import { authStore } from '@/lib/auth-store';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { Loader2 } from 'lucide-react';
@@ -26,6 +27,15 @@ function isCimolaceOperator(candidate) {
   );
 }
 
+/**
+ * Staff Cimolace décidé directement d'après la SESSION Supabase : le JWT porte
+ * `user_metadata.cimolace_staff`. C'est la SOURCE DE VÉRITÉ du fallback — elle ne
+ * dépend d'aucun appel réseau. (Même helper que CimolaceGoogleCallback.)
+ */
+function isCimolaceStaffFromSession(session) {
+  return session?.user?.user_metadata?.cimolace_staff === true;
+}
+
 async function fetchApiUserFromToken() {
   let token = authStore.getToken();
   for (let attempt = 0; !token && attempt < 8; attempt += 1) {
@@ -37,11 +47,32 @@ async function fetchApiUserFromToken() {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!response.ok) return null;
-  return response.json().catch(() => null);
+  const json = await response.json().catch(() => null);
+  // L'API enveloppe la réponse dans { data: ... } (ResponseInterceptor). On déballe
+  // pour exposer role/cimolace_staff/metadata à isCimolaceOperator (sinon on lisait
+  // l'enveloppe → tous les champs undefined → owner refusé en `?error=forbidden`).
+  if (json && typeof json === 'object' && 'data' in json) return json.data;
+  return json;
+}
+
+/**
+ * Repli quand `useAuth().user` est momentanément null alors que la session existe.
+ * 1) La session Supabase persistée (localStorage) porte `user_metadata.cimolace_staff` :
+ *    décision locale, sans réseau, robuste même si l'API est lente/en erreur.
+ * 2) À défaut, /auth/me enrichi (role + cimolace_staff), déballé.
+ */
+async function resolveFallbackOperator() {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (isCimolaceStaffFromSession(session)) return true;
+  } catch {
+    // ignore — repli sur /auth/me
+  }
+  return isCimolaceOperator(await fetchApiUserFromToken());
 }
 
 const CimolaceProtectedOwnerRoute = ({ children, redirectTo = '/cimolace/admin' }) => {
-  const { user, loading } = useAuth();
+  const { user, session, loading } = useAuth();
   const location = useLocation();
   const [fallbackStatus, setFallbackStatus] = useState('checking');
 
@@ -50,9 +81,17 @@ const CimolaceProtectedOwnerRoute = ({ children, redirectTo = '/cimolace/admin' 
     let cancelled = false;
     setFallbackStatus('checking');
 
-    fetchApiUserFromToken()
-      .then((apiUser) => {
-        if (!cancelled) setFallbackStatus(isCimolaceOperator(apiUser) ? 'ok' : 'denied');
+    // Chemin rapide : la session déjà hydratée dans le contexte porte le flag staff
+    // (JWT user_metadata.cimolace_staff). Décision synchrone, sans réseau.
+    if (isCimolaceStaffFromSession(session)) {
+      setFallbackStatus('ok');
+      return undefined;
+    }
+
+    // Repli async : session persistée (getSession) puis /auth/me enrichi.
+    resolveFallbackOperator()
+      .then((ok) => {
+        if (!cancelled) setFallbackStatus(ok ? 'ok' : 'denied');
       })
       .catch(() => {
         if (!cancelled) setFallbackStatus('denied');
@@ -61,7 +100,7 @@ const CimolaceProtectedOwnerRoute = ({ children, redirectTo = '/cimolace/admin' 
     return () => {
       cancelled = true;
     };
-  }, [loading, user]);
+  }, [loading, user, session]);
 
   if (loading || (!user && fallbackStatus === 'checking')) {
     return (

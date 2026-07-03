@@ -14,7 +14,9 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async me(@Req() req: any) {
-    return { data: { id: req.user.id, email: req.user.email } };
+    // Objet NU : ResponseInterceptor l'enveloppe une seule fois → { data: {...} }.
+    // (Auparavant on renvoyait déjà { data: ... } → double-wrap { data: { data } }.)
+    return this.authService.resolveCimolaceIdentity(req.user);
   }
 
   /**
