@@ -34,6 +34,7 @@ import { Track, ConnectionState } from 'livekit-client';
 import { getStableLiveKitRoomOptions, stableLiveKitConnectOptions } from '@/lib/livekitStableClient';
 import LiveDataSaverEffect from '@/features/live/LiveDataSaverEffect';
 import { useLiveDataSaver } from '@/hooks/useLiveDataSaver';
+import LiriProductBadge from '@/components/brand/LiriProductBadge';
 import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
@@ -66,6 +67,20 @@ const GOLD = '#d4a36a'; // --lh-accent (ambre chaud LIRI ; n'est plus du gold)
 const TILE_BG = '#1f1e1c'; // --lh-stage-bg (tuiles vidéo / scène)
 const PANEL_BG = 'rgba(48,48,46,0.97)'; // --lh-panel-bg (panneaux frostés chauds)
 const PANEL_BORDER = '1px solid rgba(245,244,238,0.09)'; // filet ivoire discret
+
+// Fond de scène « cahier quadrillé » (sombre chaud + grille ambre) — identique au
+// tableau. Sert de fond DE BASE à la zone de partage : plus de crème/blanc, mais le
+// même quadrillage que le reste de la salle (demande : garder le fond à grille).
+const SHARE_STAGE_BG: React.CSSProperties = {
+  backgroundColor: TILE_BG,
+  backgroundImage:
+    'linear-gradient(rgba(212,163,106,0.07) 1px, transparent 1px),'
+    + 'linear-gradient(90deg, rgba(212,163,106,0.07) 1px, transparent 1px),'
+    + 'linear-gradient(rgba(212,163,106,0.13) 1px, transparent 1px),'
+    + 'linear-gradient(90deg, rgba(212,163,106,0.13) 1px, transparent 1px)',
+  backgroundSize: '40px 40px, 40px 40px, 200px 200px, 200px 200px',
+  backgroundPosition: 'center center',
+};
 
 // ── Carreaux du TABLEAU + fond chaud, SCOPÉS à la consultation ──────────────────
 // Le SmartBoard (SCENE_STAGE_GRID) peint `bg-[var(--lh-stage-bg)]` + une grille
@@ -540,6 +555,7 @@ function ConsultationChrome({
         style={{ height: 26, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(212,163,106,0.32))', flexShrink: 0 }}
       />
       <span style={{ fontWeight: 600, fontSize: 14, whiteSpace: 'nowrap' }}>Consultation</span>
+      <LiriProductBadge product="care" size="xs" />
       {patientName ? (
         <span style={{ color: '#cbd5e1', fontSize: 13, whiteSpace: 'nowrap' }}>· {patientName}</span>
       ) : null}
@@ -976,7 +992,7 @@ export function ConsultationStage({
   const screen = tracks.find((t) => t?.source === Track.Source.ScreenShare && t?.publication);
   return (
     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'row', gap: 12, padding: 14 }}>
-      <div style={{ flex: 1, minWidth: 0, borderRadius: 16, overflow: 'hidden', position: 'relative', background: view === 'board' ? TILE_BG : '#f6f4ee' }}>
+      <div style={{ flex: 1, minWidth: 0, borderRadius: 16, overflow: 'hidden', position: 'relative', ...(view === 'board' ? { background: TILE_BG } : SHARE_STAGE_BG) }}>
         {view === 'board' ? (
           // Tableau intelligent (SmartBoard Konva) — outils de dessin/formes/texte +
           // NeuroInk côté praticien ; lecture seule côté patient. Sync patient
@@ -1051,10 +1067,10 @@ function MembersRail({ tracks }: { tracks: any[] }) {
 // Vue Partage sans artefact encore choisi (host).
 function SharePlaceholder() {
   return (
-    <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: '#6b6259', background: '#f6f4ee' }}>
+    <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: 'rgba(245,244,238,0.58)', background: 'transparent' }}>
       <div style={{ textAlign: 'center', maxWidth: 340, padding: '0 24px' }}>
-        <Share2 size={30} style={{ margin: '0 auto 10px', opacity: 0.7, color: '#c1743f' }} aria-hidden="true" />
-        <p style={{ fontSize: 14.5, fontWeight: 700, color: '#2b2420', marginBottom: 5 }}>Aucun élément partagé</p>
+        <Share2 size={30} style={{ margin: '0 auto 10px', opacity: 0.85, color: GOLD }} aria-hidden="true" />
+        <p style={{ fontSize: 14.5, fontWeight: 700, color: 'rgba(245,244,238,0.92)', marginBottom: 5 }}>Aucun élément partagé</p>
         <p style={{ fontSize: 12.5, lineHeight: 1.5 }}>
           Ouvrez le cockpit clinique <span aria-hidden="true">🩺</span> (en bas à droite), puis « Partager » un jumeau, un bilan, une ordonnance…
         </p>
