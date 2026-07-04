@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MoreHorizontal, QrCode, Sparkles, Leaf, Layers, Sun, Maximize2, MessagesSquare, Link2, Check } from 'lucide-react';
+import { MoreHorizontal, QrCode, Sparkles, Leaf, Layers, Sun, Maximize2, MessagesSquare, Link2, Check, ChevronDown } from 'lucide-react';
 import { ARENA_LAYOUT } from '@/lib/liriArenaLayout';
 import LiriProductBadge from '@/components/brand/LiriProductBadge';
 import { buildSmartboardNavigatorScenes } from '@/lib/smartboardNavigatorScenes';
@@ -266,56 +266,59 @@ export default function LiveHostArenaLiveBar({
           {/* Étiquette produit LIRI (Academy) — posée juste à côté du bouton « Formation »
               (relocalisée depuis le bandeau du haut, qui prenait trop de place). */}
           {!hub ? <LiriProductBadge product="academy" size="sm" style={{ flexShrink: 0 }} /> : null}
-          {/* Bascule d'affichage Formation ⇄ Conférence (raccourci toujours visible dans la barre).
-              Le sélecteur complet (Invité / Panel / Mur…) reste dans le hub. */}
-          {!hub && (
-            <div
-              role="group"
-              aria-label="Affichage de la salle"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-                padding: 2,
-                borderRadius: 10,
-                border: '1px solid rgba(255,255,255,.12)',
-                background: 'rgba(0,0,0,.3)',
-                flexShrink: 0,
-              }}
-            >
-              {[
-                { mode: ARENA_LAYOUT.SMARTBOARD, label: 'Formation', title: 'Affichage Formation (SmartBoard / cours)' },
-                { mode: ARENA_LAYOUT.CONFERENCE, label: 'Conférence', title: 'Affichage Conférence (grille type Meet + panneau membres)' },
-                { mode: ARENA_LAYOUT.PANEL, label: 'Débat', title: 'Affichage Débat (panel des débatteurs + bandeau débat si un débat est lié)' },
-              ].map((seg) => {
-                const active = arenaLayoutMode === seg.mode;
-                return (
+          {/* Mode d'affichage — menu déroulant (façon Zoom) : un seul bouton montrant le mode
+              courant, qui déroule les modes Formation / Conférence / Débat. */}
+          {!hub && (() => {
+            const MODES = [
+              { mode: ARENA_LAYOUT.SMARTBOARD, label: 'Formation', hint: 'SmartBoard / cours' },
+              { mode: ARENA_LAYOUT.CONFERENCE, label: 'Conférence', hint: 'Grille type Meet + membres' },
+              { mode: ARENA_LAYOUT.PANEL, label: 'Débat', hint: 'Panel des débatteurs' },
+            ];
+            const current = MODES.find((m) => m.mode === arenaLayoutMode) || MODES[0];
+            return (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <button
-                    key={seg.mode}
                     type="button"
-                    onClick={() => applyHostArenaLayoutMode(seg.mode)}
-                    title={seg.title}
-                    aria-pressed={active}
-                    className="lh-premium-btn"
+                    title="Choisir le mode d'affichage de la salle"
+                    aria-label="Mode d'affichage"
                     style={{
-                      borderRadius: 8,
-                      border: '1px solid transparent',
-                      background: active ? 'rgba(200,148,62,.22)' : 'transparent',
-                      padding: '5px 11px',
-                      fontSize: 10,
-                      fontWeight: 700,
-                      color: active ? '#d4a36a' : 'rgba(255,255,255,.6)',
-                      cursor: 'pointer',
-                      letterSpacing: '.04em',
-                      whiteSpace: 'nowrap',
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      borderRadius: 8, border: '1px solid rgba(212,163,106,.4)',
+                      background: 'rgba(200,148,62,.14)', color: '#d4a36a',
+                      fontSize: 10, fontWeight: 700, letterSpacing: '.04em',
+                      padding: '6px 11px', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
                     }}
                   >
-                    {seg.label}
+                    <Layers size={13} aria-hidden />
+                    {current.label}
+                    <ChevronDown size={12} aria-hidden />
                   </button>
-                );
-              })}
-            </div>
-          )}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="top" align="start" className="w-56 border-[rgba(212,163,106,0.28)] bg-[#171310]/97">
+                  <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#e3c79a]/70">
+                    Mode d'affichage
+                  </DropdownMenuLabel>
+                  {MODES.map((m) => {
+                    const active = arenaLayoutMode === m.mode;
+                    return (
+                      <DropdownMenuItem
+                        key={m.mode}
+                        onSelect={() => applyHostArenaLayoutMode(m.mode)}
+                        className={cn('flex flex-col items-start gap-0.5 text-[12px]', active && 'text-[var(--school-accent)]')}
+                      >
+                        <span className="flex w-full items-center">
+                          {m.label}
+                          {active ? <Check className="ml-auto h-3.5 w-3.5" /> : null}
+                        </span>
+                        <span className="text-[10px] text-white/40">{m.hint}</span>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          })()}
         </>
       ) : (
         <>
