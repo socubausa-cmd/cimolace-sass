@@ -151,7 +151,7 @@ const Tile = ({ m, lk, mediaEpoch, speaking, big = false, onClick, pinned = fals
   );
 };
 
-export default function ConferenceStage({ liveParticipants, livekitParticipantsMap, liveKitMediaEpoch, hostId = null, sharingScreen = false, onOpenLongia = null, onMemberPreview = null }) {
+export default function ConferenceStage({ liveParticipants, livekitParticipantsMap, liveKitMediaEpoch, hostId = null, sharingScreen = false, cameraOn = false, selfName = 'Vous', onStop = null, stopBusy = false, onOpenLongia = null, onMemberPreview = null }) {
   // Défaut = vue Orateur + panneau latéral (flux vidéo membres) : l'« interface conférence »
   // attendue (grand cadre à l'écran + colonne Membres). Togglable vers Grille / Vignettes bas.
   const [view, setView] = useState('speaker'); // 'grid' | 'speaker'
@@ -190,12 +190,15 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
   const q = search.trim().toLowerCase();
   // Panneau membres : si l'hôte (Animateur) est connu, il coiffe la liste ; sinon = la personne à l'écran.
   const host = hostId ? visible.find((m) => String(m.id) === String(hostId)) : null;
-  const panelTop = host || focus;
-  const panelTopLabel = host ? 'Animateur (1)' : "À l'écran";
-  const panelRest = panelTop ? visible.filter((m) => m !== panelTop) : visible;
+  // Vignette « à l'écran » du panneau membres = SELF-VIEW : la caméra LOCALE sortante de l'utilisateur
+  // (retour vidéo de soi façon Zoom/Meet), PAS l'orateur. Le grand cadre central, lui, suit l'orateur actif.
+  const localLk = livekitParticipantsMap['local'] || livekitParticipantsMap.local || null;
+  const panelTop = { id: 'local', name: selfName, init: String(selfName || 'VO').substring(0, 2).toUpperCase(), color: '#C8960C' };
+  const panelTopLabel = 'Vous · votre caméra';
+  const panelRest = visible.filter((m) => String(m.id) !== 'local' && !m.isLocal);
   const filteredPanelRest = q ? panelRest.filter((m) => String(m.name || '').toLowerCase().includes(q)) : panelRest;
-  const panelTopSpeaking = panelTop ? String(activeSpeakerId) === String(panelTop.id) : false;
-  const panelTopLk = panelTop ? lkOf(panelTop) : null;
+  const panelTopSpeaking = Boolean(localLk?.isSpeaking);
+  const panelTopLk = cameraOn ? localLk : null;
   const focusSpeaking = focus ? String(activeSpeakerId) === String(focus.id) : false;
   const focusLk = focus ? lkOf(focus) : null;
   const focusShowVid = hasCamera(focusLk);
@@ -219,13 +222,28 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
   const baseCols = n <= 1 ? 1 : n <= 2 ? 2 : n <= 6 ? 3 : n <= 12 ? 4 : 5;
   const cols = Math.max(1, Math.min(6, baseCols + (density === 's' ? 1 : density === 'l' ? -1 : 0)));
 
+  // STOP relogé dans la barre d'options (la bande du haut est masquée en conférence) —
+  // c'est le seul moyen d'arrêter le live, il doit rester accessible.
+  const stopBtn = onStop ? (
+    <button
+      type="button"
+      onClick={() => { if (!stopBusy) onStop(); }}
+      disabled={stopBusy}
+      title="Arrêter la session live"
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 8, border: '1px solid rgba(239,68,68,.5)', background: 'rgba(239,68,68,.16)', color: '#fca5a5', fontSize: 11, fontWeight: 800, letterSpacing: '.06em', padding: '6px 12px', cursor: stopBusy ? 'default' : 'pointer', opacity: stopBusy ? 0.6 : 1, flexShrink: 0 }}
+    >
+      <span style={{ width: 8, height: 8, borderRadius: 2, background: '#ef4444', flexShrink: 0 }} />
+      STOP
+    </button>
+  ) : null;
+
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 15, background: 'var(--lh-stage-bg, #1f1e1c)', display: 'flex', flexDirection: 'column' }}>
       {isSharing ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', flexShrink: 0 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, color: '#fff' }}><MonitorUp size={16} color={ACCENT} />{`${screenSharerName} partage son écran`}</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,.5)' }}><Users size={13} /> {visible.length}</span>
-          <div style={{ marginLeft: 'auto' }}><ToolbarBtn onClick={() => { try { shareFsRef.current?.requestFullscreen?.(); } catch { /* ignore */ } }} title="Plein écran">{<Maximize2 size={14} />}</ToolbarBtn></div>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>{stopBtn}<ToolbarBtn onClick={() => { try { shareFsRef.current?.requestFullscreen?.(); } catch { /* ignore */ } }} title="Plein écran">{<Maximize2 size={14} />}</ToolbarBtn></div>
         </div>
       ) : (
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', flexShrink: 0 }}>
@@ -253,7 +271,7 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
           </>
         ) : null}
         {view === 'grid' ? (
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 4, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
             <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.06em', color: 'rgba(255,255,255,.4)', marginRight: 2 }}>TAILLE</span>
             {['s', 'm', 'l'].map((d) => (
               <ToolbarBtn key={d} active={density === d} onClick={() => setDensity(d)} title={d === 's' ? 'Petites' : d === 'l' ? 'Grandes' : 'Moyennes'}>
@@ -262,6 +280,7 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
             ))}
           </div>
         ) : null}
+        {stopBtn ? <div style={{ marginLeft: 'auto' }}>{stopBtn}</div> : null}
       </div>
       )}
 

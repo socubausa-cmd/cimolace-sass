@@ -48,6 +48,9 @@ export const LiveCenterStageSmartBoard = ({
   liveParticipants,
   livekitParticipantsMap,
   cameraOn,
+  handleStop,
+  stopLiveBusy,
+  user,
   toggleNeuronQ,
   neuronQActive,
   debateArena,
@@ -173,6 +176,9 @@ export const LiveCenterStageSmartBoard = ({
                 hostLiveKitParticipant={hostLiveKitParticipant}
                 livekitParticipantsMap={livekitParticipantsMap}
                 cameraOn={cameraOn}
+                handleStop={handleStop}
+                stopLiveBusy={stopLiveBusy}
+                user={user}
                 liveKitMediaEpoch={liveKitMediaEpoch}
                 arenaGuestFocusUserId={arenaGuestFocusUserId}
                 promotedId={promotedId}

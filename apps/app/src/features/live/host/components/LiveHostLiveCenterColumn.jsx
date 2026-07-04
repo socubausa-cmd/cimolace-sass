@@ -191,7 +191,7 @@ export const LiveHostLiveCenterColumn = forwardRef(function LiveHostLiveCenterCo
       ) : (
         <>
           {/* Bandeau membres masqué en mode focus/formation (SmartBoard dominant). */}
-          {!lhStageFocusLayout && (
+          {!lhStageFocusLayout && arenaLayoutMode !== 'conference' && (
           <LiveStripBandeau
             ref={memberCardsRef}
             isGuestUi={isGuestUi}
@@ -251,6 +251,9 @@ export const LiveHostLiveCenterColumn = forwardRef(function LiveHostLiveCenterCo
             liveParticipants={liveParticipants}
             livekitParticipantsMap={livekitParticipantsMap}
             cameraOn={cameraOn}
+            handleStop={handleStop}
+            stopLiveBusy={stopLiveBusy}
+            user={user}
             toggleNeuronQ={toggleNeuronQ}
             neuronQActive={neuronQActive}
             debateArena={debateArena}

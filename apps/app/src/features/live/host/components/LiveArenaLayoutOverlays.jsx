@@ -41,6 +41,9 @@ export const LiveArenaLayoutOverlays = ({
   hostLiveKitParticipant,
   livekitParticipantsMap,
   cameraOn,
+  handleStop,
+  stopLiveBusy,
+  user,
   liveKitMediaEpoch,
   arenaGuestFocusUserId,
   promotedId,
@@ -269,6 +272,10 @@ export const LiveArenaLayoutOverlays = ({
           liveKitMediaEpoch={liveKitMediaEpoch}
           hostId={hostId}
           sharingScreen={sharingScreen}
+          cameraOn={cameraOn}
+          selfName={user?.full_name || 'Vous'}
+          onStop={handleStop}
+          stopBusy={stopLiveBusy}
           onOpenLongia={openLongiaHubCoachPanel}
           onMemberPreview={setMemberVideoPreview}
         />

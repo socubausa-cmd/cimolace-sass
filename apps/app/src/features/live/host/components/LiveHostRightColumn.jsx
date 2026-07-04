@@ -143,7 +143,11 @@ export const LiveHostRightColumn = React.forwardRef(function LiveHostRightColumn
   // (chevron sur le bord droit) plutôt que masqué. Fermé = languette, ouvert = panneau.
   const focusHost = !isGuestUi && phase === PHASE.LIVE; // poignée rétractable par défaut (hôte live — maquette)
   const collapsed = liveRightRailCollapsedStrip || liveRightGuestCollapsedStrip || (focusHost && !liveRightRailOpen);
-  const hidden = focusHost ? false : (lhStageFocusLayout || (lhLayoutCompact && !liveRightRailOpen));
+  // Mode Conférence (video-first type Meet) : on masque toute la colonne droite (vidéo hôte +
+  // MINDMAP + MASTERSCRIPT) pour laisser la place à la scène. display:none (composant monté, ref préservé).
+  const hidden = arenaLayoutMode === 'conference'
+    ? true
+    : (focusHost ? false : (lhStageFocusLayout || (lhLayoutCompact && !liveRightRailOpen)));
 
   return (
     <div
